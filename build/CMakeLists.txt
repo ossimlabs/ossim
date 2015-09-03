@@ -18,9 +18,10 @@ ELSE()
   SET(OSSIM_DEPENDENCIES "$ENV{OSSIM_DEPENDENCIES}" CACHE STRING "Cache the OSSIM dependency dir" FORCE)
 ENDIF()
 
+SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
 SET(CMAKE_INSTALL_PREFIX ${OSSIM_INSTALL_PREFIX})
-SET(CMAKE_MODULE_PATH "${OSSIM_DEV_HOME}/build/CMakeModules;${CMAKE_MODULE_PATH}")
+#SET(CMAKE_MODULE_PATH "${OSSIM_DEV_HOME}/build/CMakeModules;${CMAKE_MODULE_PATH}")
 
 IF(NOT OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
    SET(OSSIM_BUILD_ADDITIONAL_DIRECTORIES "" CACHE PATH "Specify full paths separated by ; to additional libraries you wish to include into the ossim build framework" FORCE)
@@ -242,17 +243,17 @@ IF (DOXYGEN_FOUND)
 ENDIF (DOXYGEN_FOUND)
 
 ############################## Setup shared file installation ##############################
-if(EXISTS ${OSSIM_DEV_HOME}/ossim-core/share/geoids/geoid1996/egm96.grd)
+if(EXISTS ${OSSIM_DEV_HOME}/core/share/geoids/geoid1996/egm96.grd)
 
-  INSTALL(FILES ${OSSIM_DEV_HOME}/ossim-core/share/geoids/geoid1996/egm96.grd DESTINATION "share/ossim/geoids/geoid1996" COMPONENT ossim)
+  INSTALL(FILES ${OSSIM_DEV_HOME}/core/share/geoids/geoid1996/egm96.grd DESTINATION "share/ossim/geoids/geoid1996" COMPONENT ossim)
 ELSE()
-  MESSAGE(WARNING "File ${OSSIM_DEV_HOME}/ossim-core/share/geoids/geoid1996/egm96.grd not found for install!")
+  MESSAGE(WARNING "File ${OSSIM_DEV_HOME}/core/share/geoids/geoid1996/egm96.grd not found for install!")
 ENDIF()
 # Fonts removed for rpms
 # INSTALL(FILES ${OSSIM_DEV_HOME}/ossim_package_support/fonts/arial.ttf DESTINATION "share/ossim/fonts" COMPONENT ossim)
 # INSTALL(FILES ${OSSIM_DEV_HOME}/ossim_package_support/fonts/times.ttf DESTINATION "share/ossim/fonts" COMPONENT ossim)
 
-FILE(GLOB ossim_cmake_modules ${OSSIM_DEV_HOME}/ossim-build/CmakeModules/*.cmake* )
+FILE(GLOB ossim_cmake_modules ${OSSIM_DEV_HOME}/build/CmakeModules/*.cmake* )
 INSTALL(FILES ${ossim_cmake_modules} DESTINATION share/ossim/${OSSIM_VERSION}/CMakeModules COMPONENT ossim)
 
 ############################## Setup the packages ###############################################################

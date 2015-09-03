@@ -1,12 +1,6 @@
 PROJECT(ossimcore)
 Message("################## Setting up OSSIM core library #########################")
 
-#SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
-SET(BUILD_RUNTIME_DIR "bin")
-SET(BUILD_LIBRARY_DIR "lib")
-SET(BUILD_SHARED_LIBS ON)
-SET(CMAKE_CXX_FLAGS "-std=c++11")
-
 IF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
    SET(OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES "" CACHE PATH "Specify full paths separated by ; to additional OSSIM applications you wish to include into the ossim build framework.  These will have variables setup for the ossim includes" FORCE)
 ENDIF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
@@ -139,13 +133,10 @@ if( BUILD_OSSIM_MPI_SUPPORT )
       include_directories( ${MPI_INCLUDE_DIR} )
       set( ossimDependentLibs ${ossimDependentLibs} ${MPI_LIBRARY} )
       set( OSSIM_HAS_MPI 1 )
-message( STATUS "&&&&&&& MPI_INCLUDE_DIR=${MPI_INCLUDE_DIR}" )
-message( STATUS "&&&&&&& ossimDependentLibs=${ossimDependentLibs}" )
    else ( MPI_FOUND )
       message( WARNING "Could not find optional MPI package!" )
    endif ( MPI_FOUND )
 endif( BUILD_OSSIM_MPI_SUPPORT )
-message( STATUS "&&&&&&& OSSIM_HAS_MPI=${OSSIM_HAS_MPI}" )
 
 # ZLIB - Optional:
 set( OSSIM_HAS_LIBZ 0 )
