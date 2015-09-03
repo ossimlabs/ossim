@@ -1,0 +1,44 @@
+usage()
+{
+	cat <<EOF
+Usage1: ossim-config [OPTIONS]
+Options:
+	[--prefix[=DIR]]
+	[--libs]
+	[--includes]
+	[--cflags]
+	[--cppflags]
+	[--version]
+EOF
+	exit $1
+}
+
+if test $# -eq 0; then
+	usage 1 1>&2
+fi
+
+case $1 in
+
+	  --includes)
+	    echo $OSSIM_INCLUDES
+	    ;;
+	  --libs)
+	    echo  $OSSIM_LIBS
+	    ;;
+	  --cflags)
+	    echo $OSSIM_CFLAGS
+	    ;;
+	  --prefix)
+	    echo $OSSIM_PREFIX
+	    ;;
+	  --cppflags)
+	    echo $OSSIM_CPPFLAGS
+	    ;;
+	  --version)
+	    echo $OSSIM_VERSION
+	    ;;
+	
+	  *)
+	    usage 1 1>&2
+	    ;;
+esac

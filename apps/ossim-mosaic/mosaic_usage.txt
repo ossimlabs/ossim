@@ -1,0 +1,102 @@
+This application allows one to construct a mosaic from an input file list.
+The mosaic application can take a keywordlist or specifiy all the input files on
+the command line: Below you will see an example of a keyword list and without a
+keyword list.
+
+I. USING THE KEYWORD LIST TO GENERATE A MOSAIC
+
+
+
+EXAMPLE KEYWORDLIST START:
+
+file1.filename: /data/aa4/drb/ossim_regression_test/emerge/utm_geotiff/17184_20001208_tile1.tif
+file2.filename: /data/aa4/drb/ossim_regression_test/emerge/utm_geotiff/17184_20001208_tile2.tif
+file3.filename: /data/aa4/drb/ossim_regression_test/emerge/utm_geotiff/17184_20001208_tile3.tif
+
+// :
+// :
+// fileN: <full path and file name to the Nth file in the list>
+
+// currently this option has been tested
+// with ossimTiffWriter and ossimJpegWriter
+// writer.type: ossimTiffWriter
+// writer.filename: <full path to output file>
+
+// Currently, the mosaic application supports
+// SIMPLE mosaics (ie. no blending algorithms)
+// FEATHER mosaic or
+// BLEND
+
+mosaic.type: SIMPLE
+
+// product type and projection information
+// is optional.  It will use the first images
+// geometry information instead.
+// the type is the class name. Go into the projections/map_projections directory
+// product.type:
+// product.meters_per_pixel_y: 
+// product.meters_per_pixel_x: 
+// product.central_meridian:   
+// product.origin_latitude: 
+// product.zone:
+// product.std_parallel_1:
+// product.std_parallel_2:
+// product.scale_factor:
+// product.false_easting:
+// product.false_northing:
+
+
+
+EXAMPLE KEYWORDLIST END
+
+
+then execute:
+
+ossim-mosaic -k <keywordlist> -o <optional output file name>
+
+Note: the <keywordlist> is an filename with the above options
+      the <optional output file name> is the output file the mosaic is
+          written to.  Note: I only support geotiff write now.
+
+
+
+II. USING NO KEYWORDLIST TO GENERATE A MOSAIC
+
+
+EXAMPLE OF MOSAICING COMMAND LINE WITHOUT KEYWORDLIST
+
+ossim-mosaic -m <optional mosaic type> -o <output file name> -i <file1> <file2> <file3> .... <fileN>
+
+
+Note:
+
+1. <optional mosaic type> can be 1) SIMPLE, 2) BLEND, 3) FEATHER
+
+2. the list of files you wish to mosaic must be last.  Notice you don't have the 
+ability to change projections like you did with the keyword list.  The default
+output projection is the first image in the list that is a map projection.
+
+
+
+III TIPS AND TRICKS
+
+
+1) How can I use mosaic application to quickly mosaic a number of images
+   in a given directory without hand typing the images in.
+
+  Under unix based systems we can capture the output of one program and
+  feed it as input into another:  Go to the directory that has all the images
+  you wish to mosaic and then issue the following:
+
+  ossim-mosaic -o ./output.tif -i `ls *.tif`
+
+  this will feed all images with a .tif extnesion into the mosaic app
+  and output a geotif file called output.tif.
+
+
+2) What if the files are in separate directories
+
+  ossim-mosaic -o ./output.tif -i `find . -name "*.tif"`
+
+will scan all subdirectories and feed the output as input to the mosaic application.
+

@@ -1,0 +1,43 @@
+// units can be 
+//     us_survey_feet
+//     feet
+//     meters
+//     degrees
+//     seconds
+//     minutes
+//     miles
+//     nautical_miles
+//
+units: meters
+
+// can be either:
+// pixel_is_point
+// pixel_is_area
+// 
+// this specifies where the easting northing values refer to.  If the easting northing is the edge
+// then the value should be pixel_is_area, if the easting northing refers to the center of the 
+// pixel then is is pixel_is_point
+//
+
+pixel_type: pixel_is_area
+
+
+// Give a pcs code you don't need to give the full projection
+// information defined below
+//
+pcs_code: 32149
+
+
+// If you don't have the pcs code then you must supply
+// all projection information for the projection desired.
+//
+
+// type:
+// origin_latitude:
+// central_meridian:
+// scale_factor:
+// zone:
+// std_parallel_1:
+// std_parallel_2:
+// tie_point_easting:
+// tie_point_northing:
