@@ -96,8 +96,8 @@ std::ostream& ossimElevCellHandler::print(ostream& out) const
          << "\n theFilename = "<< theFilename
          << "\n theMeanSpacing = "<< theMeanSpacing
          << "\n theAbsLE90 = "<< theAbsLE90
-         << "\n theAbsCE90 = "<< theAbsCE90
-         << ossimElevSource::print(cout);
+         << "\n theAbsCE90 = "<< theAbsCE90;
+         //<< ossimElevSource::print(out);
    return out;
 }
 

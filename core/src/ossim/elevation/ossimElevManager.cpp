@@ -635,7 +635,7 @@ double ossimElevManager::getMeanSpacingMeters() const
    return spacing;
 }
 
-std::ostream& ossimElevManager::print(ostream& out) const
+std::ostream& ossimElevManager::print(std::ostream& out) const
 {
    out << "\nossimElevManager @ "<< (ossim_uint64) this
          << "\nm_defaultHeightAboveEllipsoid = "<<m_defaultHeightAboveEllipsoid
@@ -647,9 +647,14 @@ std::ostream& ossimElevManager::print(ostream& out) const
    {
       out<<"\nm_dbRoundRobin["<<i<<"].size = "<<m_dbRoundRobin[i].size()<<endl;
       for (ossim_uint32 j=0; j<m_dbRoundRobin[i].size(); ++j)
-         out<<"m_dbRoundRobin["<<i<<"]["<<j<<"] = "<<m_dbRoundRobin[i][j]->print(out)<<endl;
+      {
+         out<<"m_dbRoundRobin["<<i<<"]["<<j<<"] = ";//<<m_dbRoundRobin[i][j]->print(out)<<endl;
+         m_dbRoundRobin[i][j]->print(out);
+      }
+
    }
-   cout<<"\n"<<ossimElevSource::print(cout);
+   out<<"\n";
+   ossimElevSource::print(out);
    return out;
 }
 
