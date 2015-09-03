@@ -8,7 +8,7 @@ Coming soon.
 
 # How to Build
 
-This repository provides the CMAKE infrastructure necessary to build the OSSIM core library and related plugins and applications. Throughout this document, reference is made to the local, top-level directory corresponding to this repository (./ossim). We'll call this directory simply *ossim-top-dir*. 
+This repository provides the CMAKE infrastructure necessary to build the OSSIM core library and related plugins and applications. Throughout this document, reference is made to the local, top-level directory corresponding to this repository (./OSSIM). We'll call this directory simply *ossim-top-dir*. 
 
 The following 3rd-party SDKs are needed in order to build the core ossim library:
 
