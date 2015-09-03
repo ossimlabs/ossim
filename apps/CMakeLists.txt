@@ -15,8 +15,6 @@ if( OSSIM_FOUND )
 else( OSSIM_FOUND )
    message( FATAL_ERROR "Could not find required OSSIM package!" )
 endif( OSSIM_FOUND )
-   message( STATUS "@@@@@@@@@@@@@ OSSIM_INCLUDE_DIR=${OSSIM_INCLUDE_DIR}" )
-   message( STATUS "@@@@@@@@@@@@@ CMAKE_INCLUDE_PATH=${CMAKE_INCLUDE_PATH}" )
 set(TARGET_COMMON_LIBRARIES ${OSSIM_LIBRARY} ${OPENTHREADS_LIBRARY})
 
 FOREACH(f ${OSSIM_APP_DIRS})
