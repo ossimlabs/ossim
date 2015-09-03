@@ -1,7 +1,7 @@
 PROJECT(ossimcore)
 Message("################## Setting up OSSIM core library #########################")
 
-SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/CMakeModules")
+#SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 SET(BUILD_RUNTIME_DIR "bin")
 SET(BUILD_LIBRARY_DIR "lib")
 SET(BUILD_SHARED_LIBS ON)

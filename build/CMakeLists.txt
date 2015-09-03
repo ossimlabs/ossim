@@ -6,7 +6,6 @@ ELSE()
     SET(OSSIM_DEV_HOME "$ENV{OSSIM_DEV_HOME}" CACHE STRING "Cache the OSSIM dev home" FORCE)
 
 ENDIF()
-
 IF ("$ENV{OSSIM_INSTALL_PREFIX}"  STREQUAL "")
   SET(OSSIM_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install" CACHE STRING "Cache the OSSIM install prefix" FORCE)
 ELSE()
@@ -19,10 +18,9 @@ ELSE()
   SET(OSSIM_DEPENDENCIES "$ENV{OSSIM_DEPENDENCIES}" CACHE STRING "Cache the OSSIM dependency dir" FORCE)
 ENDIF()
 
+
 SET(CMAKE_INSTALL_PREFIX ${OSSIM_INSTALL_PREFIX})
-SET(CMAKE_MODULE_PATH "${OSSIM_DEV_HOME}/build/CMakeModules")
-MESSAGE( STATUS "&&&&&&&&&&&&&&&&&&& OSSIM_DEV_HOME               = ${OSSIM_DEV_HOME}" )
-MESSAGE( STATUS "&&&&&&&&&&&&&&&&&&& CMAKE_MODULE_PATH               = ${CMAKE_MODULE_PATH}" )
+SET(CMAKE_MODULE_PATH "${OSSIM_DEV_HOME}/build/CMakeModules;${CMAKE_MODULE_PATH}")
 
 IF(NOT OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
    SET(OSSIM_BUILD_ADDITIONAL_DIRECTORIES "" CACHE PATH "Specify full paths separated by ; to additional libraries you wish to include into the ossim build framework" FORCE)
