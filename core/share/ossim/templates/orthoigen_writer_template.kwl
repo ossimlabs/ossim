@@ -1,0 +1,71 @@
+//---
+// $Id: orthoigen_writer_template.kwl 14387 2009-04-22 18:33:47Z dburken $
+// 
+// "orthoigen" writer template for --writer-template option.
+//
+// Uncomment keywords as needed.
+//
+// Sample orthoigen command using --writer-template option:
+// 
+// orthoigen --writer-template writer.kwl --utm 1024x1024.tif foo.tif
+// 
+// NOTE:  Generated using:
+// - "imagelinker->image_window->File->Save As"
+// - clicking edit writer and turning on "create_tiff_world_file"
+// - Stripping "object2."
+//
+//---
+
+// color_lut_flag:  0
+// compression_quality:  75
+// compression_type:  none
+// create_envi_hdr:  0
+// create_external_geometry:  0
+// create_fgdc:  0
+// create_histogram:  0
+// create_image:  1
+// create_jpeg_world_file:  0
+// create_overview:  0
+// create_readme:  0
+create_tiff_world_file:  1
+// description:  
+// enabled:  1
+// filename:  
+// input_connection1:  52
+// input_list_fixed:  1
+// linear_units:  default
+// number_inputs:  1
+// number_outputs:  0
+// output_geotiff_flag:  1
+// output_list_fixed:  0
+// output_tile_size_x:  64
+// output_tile_size_y:  64
+// overview_compression_quality:  75
+// overview_compression_type:  1
+// pixel_type:  point
+// pixel_type:  area
+// scale_to_eight_bit:  0
+
+// Uncomment a writer type:
+image_type:  tiff_tiled_band_separate
+// image_type:  tiff_strip
+// image_type:  tiff_strip_band_separate
+// image_type:  tiff_tiled
+// image_type:  tiff_tiled_band_separate
+// image_type:  jpeg
+// image_type:  general_raster_bip
+// image_type:  general_raster_bil
+// image_type:  general_raster_bsq
+// image_type:  general_raster_bip_envi
+// image_type:  general_raster_bil_envi
+// image_type:  general_raster_bsq_envi
+// image_type:  nitf_block_band_separate
+// image_type:  nitf_block_band_sequential
+// image_type:  ossim_png
+
+// Uncomment a writer:
+type:  ossimTiffWriter
+// type:  ossimJpegWriter
+// type:  ossimGeneralRasterWriter
+// type:  ossimPngWriter
+// type:  ossimNitfWriter

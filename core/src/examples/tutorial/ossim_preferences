@@ -1,0 +1,33 @@
+// ------------------------------------------------------------------------
+// $Id: ossim_preferences 4349 2003-03-27 19:52:21Z gpotts $
+// 
+// Description:  ossim_preferences_template
+// 
+// This file will be automatically loaded by ossim applications provided the
+// environment variable "OSSIM_PREFS_FILE" is set to point to some form of 
+// this file.
+//
+// Note:  c++ comments "//" can be used to comment a line.
+//
+// To set the environment variable for automatic preference file loading:
+//
+// This assumes a preference file in your home called "ossim_preferences".
+// Typically this would be put in a dot file read at startup of a shell.
+//
+// tcsh and csh users:  setenv OSSIM_PREFS_FILE ~/ossim_preferences
+//
+// bash and sh users:   export OSSIM_PREFS_FILE=~/ossim_preferences
+// 
+// windoze users:       I'll have to look this up...
+//
+// You can also use the "-P <preference_file>" option at application startup.
+// where <preference_file> is full path and filename
+// 
+// ------------------------------------------------------------------------
+
+// plugin support
+// plugin.dir1: /work/gpotts/ossim-plugin
+// You can also list files individually
+// plugin.file1:
+plugin.file1: /home/gpotts/ossim/src/examples/tutorial/ossimSharedBandAverageFilter.so
+

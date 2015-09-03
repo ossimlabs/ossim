@@ -1,0 +1,14 @@
+# pkg-config source file
+
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib@LIBSUFFIX@
+includedir=${prefix}/include
+
+Name: ossim
+Description: Open Source Software Image Map
+Version: @OSSIM_VERSION@
+Requires: openthreads tiff jpeg 
+Conflicts:
+Libs: -L${libdir} -lossim
+Cflags: -I${includedir}

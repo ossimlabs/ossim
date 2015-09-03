@@ -1,0 +1,38 @@
+// ****************************************************************************
+//  $Id: usgs_dem_template.kwl 8620 2006-01-10 16:14:33Z dburken $
+//
+//  DESCRIPTION:  
+//  This is a template keyword list for a USGS dem.
+//  The purpose of this is to simply identify the dem file as
+//  a USGS dem to the image handler that reads them.  This is
+//  needed because there is no magic number in a dem.
+// 
+//  This file should be renamed as such:
+//  If the USGS dem is called "66.cdo" this header file
+//  should be named "66_ossim.omd" for the dem to be picked up
+//  by the dem handler.
+//
+//  C++ comments are allowed throughout the keyword list file.
+//     
+//  A keyword is always delimited by a colon. After the keyword there
+//  are parameters associated with the keyword. Note that NOT all 
+//  keywords use a parameter.  The keywords are independent of order.
+//  For multiple-image keywords, sequential numbers are used prior to
+//  the colon to match keywords to a particular image.
+//
+//  The format is as follows:
+//
+//  keyword: <option> [parameter]
+//
+//  KEYWORDS:
+// ****************************************************************************
+dem_type:  usgs_dem
+
+
+// ---
+// The keyword "scalar_type" is to allow you to change the default scalar
+// type of ossim_sint16 to ossim_float32.  The default in the 
+// ossimUsgsDemTileSource is ossim_sint32.  Uncomment one of the below to 
+// override.
+// scalar_type: ossim_sint16
+// scalar_type: ossim_float32

@@ -1,0 +1,39 @@
+//  This shows how to add tiling support to the output.
+// theTile mask here is only for show.   The output file added to the orthoigen 
+// is used as the mask for generating named tile files.
+//
+// Note: When tiling is enabled any meter pixel overrides are ignored and is
+// computed based on the tiling parameters.
+//
+
+igen.slave_tile_buffers: 10
+
+// ---
+// One degree tiles with pixel size of 1.0/1024.0 or 
+// 0.000976562 degrees per pixel
+// ---
+igen.tiling.type: ossimTiling
+igen.tiling.tiling_distance: 1 1
+igen.tiling.tiling_distance_type: degrees
+igen.tiling.delta: 1024 1024
+igen.tiling.delta_type: total_pixels
+igen.tiling.tile_name_mask: tile_%r%_%c%
+igen.tiling.padding_size_in_pixels: 0 0
+
+
+object1.description:
+object1.enabled:  1
+object1.id:  1
+object1.object1.description:  
+object1.object1.enabled:  1
+object1.object1.id:  2
+object1.object1.resampler.magnify_type:  nearest
+object1.object1.resampler.minify_type:  nearest
+object1.object1.type:  ossimImageRenderer
+
+object1.type:  ossimImageChain
+
+product.projection.type: ossimEquDistCylProjection
+//product.projection.datum: WGE
+//product.projection.decimal_degrees_per_pixel_lat: 1
+//product.projection.decimal_degrees_per_pixel_lon: 1

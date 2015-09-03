@@ -1,0 +1,213 @@
+// ****************************************************************************
+//  FILE:              general_raster_template.omd (Ossim Meta Data)
+//
+//  DESCRIPTION:  This is a template keyword list for loading a general
+//                raster image into ossim.
+//
+//                This file should be renamed as such:
+//                If the raster image is called "foo.ras" this header file
+//                should be named "foo.omd" to be automatically picked up
+//                during the ossim->file->open.
+//
+//      C++ stye comments are allowed throughout the keyword list file.
+//     
+//      A keyword is always delimited by a colon. After the keyword there
+//      are parameters associated with the keyword. Note that NOT all 
+//      keywords use a parameter.  The keywords are independent of order.
+//      For multiple-image keywords, sequential numbers are used prior to
+//      the colon to match keywords to a particular image.
+//
+//      The format is as follows:
+//
+//            keyword: <option> [parameter]
+//
+//   KEYWORDS:
+// ****************************************************************************
+
+// *** start of sample ***
+
+// *** ossim meta data general raster header file ***
+filename:    t1.bil
+image_type:  general_raster_bil
+interleave_type:  bil
+number_bands:  3
+number_lines:  8000
+number_samples:  8000
+scalar_type:  uchar
+
+// NOTE:  Bands are one based, in other words band1 is first band.
+band1.null_value:  0
+band1.min_value:  1
+band1.max_value:  255
+band2.null_value:  0
+band2.min_value:  1
+band2.max_value:  255
+band3.null_value:  0
+band3.min_value:  1
+band3.max_value:  255
+
+// *** end of sample ***
+
+// Keyword definitions:
+
+// ***
+// Source raster image file.  Required keyword.
+// Note:  This can be a relative path to the directory that the ossim
+//        application was launched.  If in doubt, always use an absolute path.
+// 
+// filename: /data/image1/image1.ras
+// 
+// DEPRECATED:
+// image_file:  /data/image1/image1.ras
+// ***
+
+// ***
+// Null, min, and max values for each band. Required keywords.
+// NOTE:  Bands are one based, in other words band1 is first band.
+// Required for float, and 16 bit data that needs to be remapped to eight bit.
+// ***
+// band1.null_value:  0
+// band1.min_value:  1
+// band1.max_value:  255
+// band2.null_value:  0
+// band2.min_value:  1
+// band2.max_value:  255
+// band3.null_value:  0
+// band3.min_value:  1
+// band3.max_value:  255
+
+// ***
+// Interleave type.  Not required.  Default = bil (band interleaved by line).
+// Valid types:  bil, bip, bsq, and bsq_multi_file.
+// interleave_type:  bil
+// ***
+
+// ***
+// Overview image file.  Not required; however, preferred if zooming out is
+// desired.
+//
+// Note:  The command line application "img2rr" can be used to build a 
+//        reduced resolution data set file.
+// Example: img2rr /data/image1/image1.kwl /data/image1/image_ovr.tif
+//
+// overview_file:  /data/image1/image1_ovr.tif
+// ***
+
+// ***
+// Scalar type.  Not required.  Default = uchar (unsigned_char).
+// Valid types: 
+// uchar, ushort16, sshort16, ushort11, float, double
+// uchar = unsigned char, ushort16 = unsigned short 16 bit,
+// sshort16 = signed short 16 bit, ushort11 = unsigned short 11 bit data,
+// float = 32 bit floating point, double = 64 bit floating point.
+// scalar_type:  uchar
+// ***
+
+// ***
+// Byte Order.  If data is anything other than 8 bit (uchar) you should 
+// specify the byte order.
+// byte_order:  big_endian
+// byte_order:  little_endian
+// ***
+
+// ***
+// Number of bands.  Not required.  Default = 1.
+// number_bands:  1
+// ***
+
+// ***
+// Number of lines in image.  This is required.
+// number_lines:  100
+// ***
+
+// ***
+// Number of samples in image.  This is required.
+// number_samples:  100
+// ***
+
+
+// ***
+// NOTE: Using the valid start/stop line/sample you can cut any rectangle
+//       from a raster file.
+// ***
+
+// ***
+// Valid start line.  Not required.  Default is 0
+// NOTE:  image rectangles are zero based (first pixel 0, 0)
+// valid_start_line:  0
+// ***
+
+// ***
+// Valid start sample.  Not required.  Default is 0
+// NOTE:  image rectangles are zero based (first pixel 0, 0)
+// valid_start_sample:  0
+// ***
+
+// ***
+// Valid stop line.  Not required.  Default is number of lines - 1.
+// NOTE:  image rectangles are zero based (last pixel: numberOfLines - 1)
+// valid_stop_line:  99
+// ***
+
+// ***
+// Valid stop sample.  Not required.  Default is number of samples - 1.
+// NOTE:  image rectangles are zero based (last pixel: numberOfSamples - 1)
+// valid_stop_sample:  99
+// ***
+
+// ***
+// Sub-image's origin to full-image origin offset.  Not required.
+// Default is 0.
+// Allows the user to define the start line of image relative to the
+// full-image.
+// sub_image_offset_line: 0
+// ***
+
+// ***
+// Sub-image's origin to full-image origin offset.  Not required.
+// Default is 0.
+// Allows the user to define the start samp of image relative to the
+// full-image.
+// sub_image_offset_samp: 0
+// ***
+
+// ***
+// Header size.  Not required.  Default is 0.  This will be the
+// number of bytes bypassed in the image file.
+// header_size: 0
+// ***
+
+// ***
+// Set nulls mode.  Not required.  Default = mode 0.
+// mode 0:  Will do nothing to the pixels on ingest.
+// mode 1:  Will flip all zeroes on ingest to the minimum value of the
+//          pixel type.
+// mode 2:  If turned on the code will walk the image line in both
+//          directions to determine the edges of the image.  
+//          Any pixels outside of the edge will be set to the null value of the
+//          pixel type.  
+// set_fill_to_nulls_mode: 0
+// set_fill_to_nulls_mode: 1
+// set_fill_to_nulls_mode: 2
+// ***
+
+
+// ***
+// Pixels to chop.  Not required.  Defaulted to zero.  This allows the user
+// to specify pixels on the edge of the imageline to null out.  This can
+// be used to eliminate resampling error from the edge of the image while
+// not changing the image dimensions.
+// pixels_to_chop:
+// ***
+
+// ***
+// Model image start sample.  Not required.  Default is 0.  Allows the user
+// to define the image start sample relative to geometry file.
+// model_image_start_sample: 0
+// ***
+
+// ***
+// Model image stop sample.  Not required.  Default is image_samples - 1.
+// Allows the user to define the image stop sample relative to geometry file.
+// model_image_stop_sample: 99
+// ***

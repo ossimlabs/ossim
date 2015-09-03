@@ -1,0 +1,19 @@
+//
+// defines only the resampling chain and then the default
+// output is determined by the command line argument and the default projection is UTM
+// with the zone, hemisphere and meters per pixels determined by the center of input.
+//
+
+igen.slave_tile_buffers: 10
+
+object1.description:
+object1.enabled:  1
+object1.id:  1
+object1.object1.description:  
+object1.object1.enabled:  1
+object1.object1.id:  2
+object1.object1.resampler.magnify_type:  nearest
+object1.object1.resampler.minify_type:  nearest
+object1.object1.type:  ossimImageRenderer
+object1.type:  ossimImageChain
+

@@ -1,0 +1,80 @@
+adjustment_0.adj_param_0.center:  0
+adjustment_0.adj_param_0.description:  x_offset
+adjustment_0.adj_param_0.lock_flag:  0
+adjustment_0.adj_param_0.parameter:  0
+adjustment_0.adj_param_0.sigma:  20
+adjustment_0.adj_param_0.units:  unknown
+adjustment_0.adj_param_1.center:  0
+adjustment_0.adj_param_1.description:  y_offset
+adjustment_0.adj_param_1.lock_flag:  0
+adjustment_0.adj_param_1.parameter:  0
+adjustment_0.adj_param_1.sigma:  20
+adjustment_0.adj_param_1.units:  unknown
+adjustment_0.adj_param_2.center:  0
+adjustment_0.adj_param_2.description:  roll
+adjustment_0.adj_param_2.lock_flag:  0
+adjustment_0.adj_param_2.parameter:  0
+adjustment_0.adj_param_2.sigma:  0.1
+adjustment_0.adj_param_2.units:  degrees
+adjustment_0.adj_param_3.center:  0
+adjustment_0.adj_param_3.description:  pitch
+adjustment_0.adj_param_3.lock_flag:  0
+adjustment_0.adj_param_3.parameter:  0
+adjustment_0.adj_param_3.sigma:  0.1
+adjustment_0.adj_param_3.units:  degrees
+adjustment_0.adj_param_4.center:  0
+adjustment_0.adj_param_4.description:  heading
+adjustment_0.adj_param_4.lock_flag:  0
+adjustment_0.adj_param_4.parameter:  0
+adjustment_0.adj_param_4.sigma:  0.1
+adjustment_0.adj_param_4.units:  degrees
+adjustment_0.adj_param_5.center:  0
+adjustment_0.adj_param_5.description:  altitude
+adjustment_0.adj_param_5.lock_flag:  0
+adjustment_0.adj_param_5.parameter:  0
+adjustment_0.adj_param_5.sigma:  50
+adjustment_0.adj_param_5.units:  meters
+adjustment_0.description:  Initial adjustment
+adjustment_0.dirty_flag:  0
+adjustment_0.number_of_params:  6
+ce90_absolute:  0
+ce90_relative:  0
+current_adjustment:  0
+distortion.center:  0 0
+distortion.convergence_threshold:  1e-05
+distortion.dxdy:  0 0
+distortion.k0:  -8.15376945750675e-05
+distortion.k1:  -2.42434410095351e-05
+distortion.k2:  8.00435916479222e-09
+distortion.k3:  -2.14573540516252e-12
+distortion.max_iterations:  10
+distortion.type:  ossimMeanRadialLensDistortion
+ecef_platform_position:  -2411870.743 -4730740.965 3524595.274
+focal_length:  55.03
+heading:  359.58758
+image_id:  18056119
+ll_lat:  33.7477612884564
+ll_lon:  -117.018615975095
+lr_lat:  33.747827074449
+lr_lon:  -117.008698045221
+meters_per_pixel_x:  0.22801581544858
+meters_per_pixel_y:  0.228853673582399
+number_lines:  0
+number_of_adjustments:  1
+number_samples:  0
+pitch:  0.22249
+pixel_size:  0.009 0.009
+principal_point:  -0.31 0.012
+rect:  0 0 4076 4091
+ref_point_hgt:  0
+ref_point_lat:  33.7519054685536
+ref_point_line:  2046
+ref_point_lon:  -117.013823189972
+ref_point_samp:  2038.5
+roll:  -0.20272
+sensor:  sn0056
+type:  ossimApplanixEcefModel
+ul_lat:  33.7560906534809
+ul_lon:  -117.018696546959
+ur_lat:  33.7561457715824
+ur_lon:  -117.008758099403

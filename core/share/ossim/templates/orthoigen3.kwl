@@ -1,0 +1,49 @@
+//  This shows how to add tiling support to the output.
+// theTile mask here is only for show.   The output file added to the orthoigen 
+// is used as the mask for generating named tile files.
+//
+// Note:  When tiling is enabled any meter pixel overrides are ignored and is 
+// computed based on the tiling parameters.
+//
+
+igen.slave_tile_buffers: 10
+
+// Thirty km tiles with a pixel size of 15 meters:
+igen.tiling.delta: 15 15
+igen.tiling.delta_type: per_pixel
+igen.tiling.edge_to_edge: true
+igen.tiling.padding_size_in_pixels: 0 0
+igen.tiling.type: ossimTiling
+igen.tiling.tiling_distance: 30000 30000
+igen.tiling.tiling_distance_type: meters
+igen.tiling.tile_name_mask: tile_%r%_%c%
+
+
+object1.type:  ossimImageChain
+object1.description:
+object1.enabled:  1
+object1.id:  1
+object1.object1.description:  
+object1.object1.enabled:  1
+object1.object1.id:  2
+object1.object1.resampler.magnify_type:  nearest
+object1.object1.resampler.minify_type:  nearest
+object1.object1.type:  ossimImageRenderer
+
+//---
+// Example orthoigen command on Landsat7 scene:
+//---
+
+$ pwd
+/data1/test/data/public/ls7/p24r31
+
+// Tile data out:
+$ ossim-orthoigen -w tiff_tiled_band_separate --writer-prop pixel_type=area --utm --tiling-template t1.kwl l71024031_03119990929_hpn.fst tiles/t1.tif
+
+$ cd tiles
+
+// Move null edge tiles to image.null:
+$ for i in `ls *.tif`; do ossim-prune $i; done
+
+// Build overviews, histograms:
+$ ossim-preproc -o --ch *.tif

@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-15">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.0.2  (Linux)">
+	<META NAME="CREATED" CONTENT="20030325;10155400">
+	<META NAME="CHANGED" CONTENT="20030327;14552900">
+</HEAD>
+<BODY LANG="en-US">
+<P ALIGN=CENTER><FONT SIZE=5><B>Writing Your Own Simple Image
+Processing Filter</B></FONT></P>
+<P ALIGN=CENTER><B>Prepared by Garrett Potts</B></P>
+<P ALIGN=CENTER><B>ImageLinks, Inc</B></P>
+<P ALIGN=LEFT><BR><BR>
+</P>
+<P ALIGN=LEFT>We will take you through the steps to writing your
+first filter and adding it to the factory so it can be saved and
+loaded through the factory interface. We will show you both 1 )
+through the shared library plugin support and 2) through manual
+editing of the internal OSSIM factories. We will start with a simple
+filter that takes all bands and performs a weighted average on them
+and outputs a single band. Our filter should work with any data type
+such as uchar, sint16, uint16, float(and normalized float), double
+(and normalized doubles). For this filter we have two ways to do
+this: 1) normalize the input data, do the weighted average on the
+normalized data, and unnormalize back to its original type and make
+sure all values keep to within the min max values, or 2) use a
+template method to operate within native scalar types. If we choose
+option 1 we will need to allocate 2 buffers, one for output and one
+for normalization, but if we choose option 2 we will only have a
+single tile buffered. For this filter we chose option 2. If you want
+to see examples of option 1 for normalizing the input just look at
+src/ossim_core/imaging/ossimScalarRemapper The min max for weighted
+average should not occure if all weights sum to 1. We will gurantee
+that all weights sum to 1. <B>For complete code see
+src/examples/tutorial/ossimBandAverageFilter.h(.cc) and
+src/examples/tutorial/band_average.cc for example use of the filter</B>.</P>
+<OL TYPE=I>
+	<LI><P ALIGN=LEFT><B>Choosing a base class for our filter</B></P>
+	<P ALIGN=LEFT STYLE="font-weight: medium">Since this is a single
+	input in filter we will derive from ossimImageSourceFilter since it
+	already implements the basic setting up the input connection and
+	copying the pointer to an internal pointer call theInputConnection.
+	It will also pass most of the requests to the input. Based on the
+	description of the filter we will need to override the following: 1)
+	getTile method for getting the data being filtered, 2) load and save
+	state methods for being able to load and save the state of our new
+	object, 3) get number of output bands method since we are going to
+	always output a single band output, 4) general access methods for
+	our internal attributes, and 5) getMinPixelValue, getMaxPixelValue
+	and getNullPixelValue We will use a vector of doubles for the
+	weights of each band. It will be up to us to make sure this array is
+	of the correct size (i.e. Size is equal to the number of input
+	bands). We will use two ossimImageData objects where one is for the
+	outputtile which we will cal theTile and one is the normalized
+	buffer which we will call theNormBufferTile.</P>
+	<LI><P ALIGN=LEFT><B>getTile method</B></P>
+	<P ALIGN=LEFT STYLE="font-weight: medium">This will be the main
+	filtering algorithm. We must perform several checks before we
+	actually execute the filter: 1) We need to see if there is an input
+	to grab data from, 2) we need to see if our filter is actually
+	enabled or not, 3) we need to see if any needed buffer data has been
+	allocated, and 4) finally we need to set the output data rectangle.
+	Please see source for complete implementation</P>
+	<LI><P ALIGN=LEFT><B>Load and Save State Methods</B></P>
+	<P ALIGN=LEFT STYLE="font-weight: medium">These methods are very
+	important to allow your filter to be constructed from a keywordlist
+	( please see kwl.cc for sample usage of the keywordlist). For a
+	reminder, a keywordlist is no more than unique name value pairs that
+	identify all attributes within the system and your filter is just
+	one of many attributes that might exist in any of the ossim
+	applications. We will store the weights used in the weighted average
+	into a string list of weights. Please see the filter source for
+	detailed implementation.</P>
+	<LI><P ALIGN=LEFT><B>getNumberOfOutputBands method</B></P>
+	<P ALIGN=LEFT>Since our filter can be enabled and disabled this
+	should return 1 if our filter is enabled. If our filter is not
+	enabled we will need to return theInputConnection's
+	getNumberOfOutputBands (Please see the filter source for detailed
+	implementation).</P>
+	<LI><P ALIGN=LEFT><B>getMinPixelValue, getMaxPixelValue, and
+	getNullPixelValue</B></P>
+	<P ALIGN=LEFT>These are important since we are taking multiple bands
+	of data and collapsing it to a single band. Since each band can have
+	a differnet min and max null pix of the first band. Really the NULL
+	pixel value should be the same for al and null we need to keep it
+	consistent. Our min output should be the min of all bands and the
+	max should be the max of all bands and we will use the l bands.</P>
+	<LI><P ALIGN=LEFT><B>Adding to the factory by Editing the Factory
+	Manually</B></P>
+	<P ALIGN=LEFT STYLE="font-weight: medium">Since this is a filter we
+	will add it to the
+	src/ossim_core/imaging/factory/ossimImageSourceFactory.cc file. Add
+	your filter class name in the getTypeNameList and then add your
+	filter to the createObject method. Note, the getTypeNameList uses
+	the RTTI class name of the object. If you look at the bottom of the
+	ossimBandAverageFilter.h file you will see TYPE_DATA and this
+	declares the RTTI support for your class. If you look close to the
+	top of ossimBandAverageFilter.cc file you will see RTTI_DEF1 that
+	defines the RTTI support for your class where the 1 is the number of
+	classes you are deriving from (please see code for implementation).
+	The RTTI is very important since I use it to help uniquely id your
+	new class since no 2 classes can have the same name in ossim. Once
+	this is complete you now can compile OSSIM with the new filter and
+	then access it through the factory.</P>
+	<LI><P ALIGN=LEFT><B>Adding to the Factory through shared library</B></P>
+	<P ALIGN=LEFT><SPAN STYLE="font-weight: medium">You also have the
+	option of placing your filter into a shared library and using the
+	OSSIM plugin bridge to get access to code that instantiates you
+	filter.  It is important to note that this has only been tested
+	under Linux using .so interface.  I still need to test this in a
+	.dll file found under windows and .dylib found under macs.  The
+	plugin interface  is demonstrated in the
+	src/examples/tutorial/ossimSharedBandAverageFilter.h(.cc) file.  The
+	shared support code for OSSIM bridge is located at the bottom of the
+	.cc file.  It is fully documented to specify what each line is
+	doing.  Use the shared_band_average application found in the same
+	directory to demonstrate the loading of the shared library.  OSSIM
+	has a concept of a preference file and the current preferences and
+	documentation can be found in the file
+	ossim/etc/templates/ossim_preferences_template.  For you convenience
+	I have copied a preference file to the tutorial directory and only
+	have the single plugin file.  You wil have to change the path to
+	match your location. The preference file found in the template
+	directory shows you how to setup OSSIM to recognize the template
+	file.  Within the template is an explanation on how to add your
+	plugin to be loaded by any OSSIM app that calls the ossimInit
+	initialize code.  Once this is done and if it is done correctly you
+	should be able to run the application.  To test the plugin to see if
+	it is actually visible through the factory just run:
+	shared_band_average -P&lt;full path and filename of preference&gt; .
+	 If it was done correctly then you should see it print out that it
+	was able to construct ossimSharedBandAverageFilter else it will say
+	unable to create it. Try running the application without specifying
+	the preference file.  You should see that it was unable to create
+	the object of that type. </SPAN>
+	</P>
+</OL>
+</BODY>
+</HTML>

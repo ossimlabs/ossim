@@ -1,0 +1,57 @@
+sensor: sn0056
+
+// focal length in millimeters
+focal_length:  55.03
+
+// principal point in millimeters
+principal_point:  -.31 .012
+
+// image size 
+//
+image_size: 4077.0 4092.0
+
+// pixel size in millimeters
+pixel_size:  0.009
+
+// distortion values.  They can be in millimeters microns or pixels
+// internally they will be converted to millimeters
+//
+// Two values.  The radial distance followed by the distortion amount.
+// The radial distance must be in millimeters
+// the distortion amounts can be in millimeters, pixels or microns.
+//
+d0: 1 -.024
+d1: 2 -.191
+d2: 3 -.645
+d3: 4 -1.526
+d4: 5 -2.975
+d5: 6 -5.126
+d6: 7 -8.114
+d7: 8 -12.067
+d8: 9 -17.109
+d9: 10 -23.358
+d10: 11 -30.924
+d11: 12 -39.914
+d12: 12 -50.423
+d13: 14 -62.539
+d14: 15 -76.340
+d15: 16 -91.895
+d16: 17 -109.260
+d17: 18 -128.481
+d18: 19 -149.590
+d19: 20 -172.606
+d20: 21 -197.534
+d21: 22 -224.363
+d22: 23 -253.066
+d23: 24 -283.598
+d24: 25 -315.899
+d25: 26 -349.886
+
+// Specifies the units of the distortion values.  Note the distances must be in
+// millimeters
+//
+//  can be:
+//         millimeters
+//         microns
+//
+distortion_units: microns

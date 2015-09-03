@@ -1,0 +1,585 @@
+// ------------------------------------------------------------------------
+// 
+// Description:  ossim_preferences_template
+// 
+// This file will be automatically loaded by ossim applications provided the
+// environment variable "OSSIM_PREFS_FILE" is set to point to some form of 
+// this file.
+//
+// Note:  c++ comments "//" can be used to comment a line.
+//
+// To set the environment variable for automatic preference file loading:
+//
+// This assumes a preference file in your home called "ossim_preferences".
+// Typically this would be put in a dot file read at startup of a shell.
+//
+// tcsh and csh users:  setenv OSSIM_PREFS_FILE ~/ossim_preferences
+//
+// bash and sh users:   export OSSIM_PREFS_FILE=~/ossim_preferences
+// 
+// windoze users:       I'll have to look this up...
+//
+// You can also use the "-P <preference_file>" option at application startup.
+// where <preference_file> is full path and filename.
+//
+// Note that system environment variables found in this ossim preferences
+// file in the format "$(env_var_name)" will be expanded in place.
+//
+// To view your preferences use below command.  This is useful when trouble
+// shooting paths and so on:
+//
+// $ ossim-info --config
+// 
+// ------------------------------------------------------------------------
+
+//---
+// Elevation setup:
+//
+// Keyword pair: 
+// elevation_source.type
+// elevation_source.filename 
+// 
+// Indicates an elevation source.  These should be listed in pairs.  Numbering
+// should start with 0 with lowest number being the highest resolution.  This
+// can be a cell(file) or a directory.
+// 
+// There are four elevation_source.type types:
+// elevation_source.type: dted_directory
+// elevation_source.type: srtm_directory
+// elevation_source.type: general_raster_directory
+// 
+// The elevation_source.connection_string is a connection for your database.
+// Typically this is a directory location.
+// 
+// NOTES:
+// 
+// 1) Order dependent, i.e. ALWAYS put your highest resolution first.
+// 
+// 2) The elevation_source keyword replaces the deprecated keywords:
+// dted_directory
+// image_directory
+// srtm_directory
+// dted_cell 
+//
+// 3) We support bringing cells into memory for dted and srtm datasets.  You can also control the
+// number of open cells by specifying a min and max open cells.  If the number of cells opened
+// exceeds the maximum then it will shrink the active opened cells to the minumum.  We currently
+// use a least recently used algorithm.
+// 
+// 4) A good elevation source is the Shuttle Radar Topographic Mission(SRTM):
+//    http://srtm.usgs.gov/index.php
+
+// 5) Examples below are defaulted to some value.  To change enabled key to
+//    true, e.g.:
+//    elevation_manager.elevation_source0.enabled: true
+//    
+//---
+
+elevation_manager.elevation_source0.connection_string: $(OSSIM_DATA)/elevation/dted/level2
+elevation_manager.elevation_source0.enabled: true
+elevation_manager.elevation_source0.type: dted_directory
+elevation_manager.elevation_source0.min_open_cells: 25
+elevation_manager.elevation_source0.max_open_cells: 50
+elevation_manager.elevation_source0.memory_map_cells: false
+elevation_manager.elevation_source0.geoid.type: geoid1996
+
+elevation_manager.elevation_source1.connection_string: $(OSSIM_DATA)/elevation/srtm/1arc
+elevation_manager.elevation_source1.enabled: true
+elevation_manager.elevation_source1.type: srtm_directory
+elevation_manager.elevation_source1.min_open_cells: 25
+elevation_manager.elevation_source1.max_open_cells: 50
+elevation_manager.elevation_source1.memory_map_cells: false
+elevation_manager.elevation_source1.geoid.type: geoid1996
+
+elevation_manager.elevation_source2.connection_string: $(OSSIM_DATA)/elevation/dted/level1
+elevation_manager.elevation_source2.enabled: true
+elevation_manager.elevation_source2.type: dted_directory
+elevation_manager.elevation_source2.min_open_cells: 25
+elevation_manager.elevation_source2.max_open_cells: 50
+elevation_manager.elevation_source2.memory_map_cells: false
+elevation_manager.elevation_source2.geoid.type: geoid1996
+
+elevation_manager.elevation_source3.connection_string: $(OSSIM_DATA)/elevation/srtm/3arc
+elevation_manager.elevation_source3.enabled: true
+elevation_manager.elevation_source3.type: srtm_directory
+elevation_manager.elevation_source3.min_open_cells: 25
+elevation_manager.elevation_source3.max_open_cells: 50
+elevation_manager.elevation_source3.memory_map_cells: false
+elevation_manager.elevation_source3.geoid.type: geoid1996
+
+elevation_manager.elevation_source4.connection_string: $(OSSIM_DATA)/elevation/dted/level0
+elevation_manager.elevation_source4.enabled: true
+elevation_manager.elevation_source4.type: dted_directory
+elevation_manager.elevation_source4.min_open_cells: 25
+elevation_manager.elevation_source4.max_open_cells: 50
+elevation_manager.elevation_source4.memory_map_cells: true
+elevation_manager.elevation_source4.geoid.type: geoid1996
+
+// "image_directory" can be any type of image, i.e. tiff, nitf and so on.
+// elevation_manager.elevation_source5.connection_string: $(OSSIM_DATA)/elevation/some_dir
+// elevation_manager.elevation_source5.enabled: false
+// elevation_manager.elevation_source5.type: image_directory
+// elevation_manager.elevation_source5.min_open_cells: 25
+// elevation_manager.elevation_source5.max_open_cells: 50
+// elevation_manager.elevation_source5.memory_map_cells: false
+// elevation_manager.elevation_source5.geoid.type: geoid1996
+
+
+//---
+// Identity geoid is 0 everywhere, so MSL = Ellipsoid. Useful when DEM
+// provides posts relative to ellipsoid instead of customary MSL. This is
+// specific to each elev database:
+//---
+// elevation_manager.elevation_source3.geoid.type: identity
+
+//---
+// Default height above ellipsoid, for use when no elev data is present, 
+// instead of returning NAN:
+//---
+// elevation_manager.default_height_above_ellipsoid: 0.0
+
+// ---
+// This is n elevation offset that is added to the height returned from the
+// elevation manager.
+// if the value is nan then nothing is added.
+// ---
+//elevation_manager.elevation_offset: nan
+
+//---
+// Allows one to specify to the elevation manager to use the ellipsoid offset
+// as defined by the geoid manager if a getHeightAboveEllipsoid fails.
+//---
+elevation_manager.use_geoid_if_null: true
+
+//---
+// Keyword:  default_elevation_path
+// Default path for the elevation manager popup "Add" to start at.
+//---
+default_elevation_path: $(OSSIM_DATA)/elevation/dted/level2 
+// ---
+
+//---
+// Keyword:  elevation.enabled
+// If disabled calls to the elevation manager getHeightAboveMSL and 
+// getHeightAboveEllipsoid will return a null height.  (default=true)
+// Use: "true", "yes", "y" or "1" to enable, 
+//      "false", "no", "n" or "0" to disable.
+//---
+elevation_manager.enabled:  true
+
+//---
+// Keyword:  elevation.threads
+// Defines the number of instances of elevation databases to maintain for multithreading.
+// Can be boolean "yes" or "true" to use all available cores or an integer value for
+// custom experimentation. Set to "no" (or "false") or 1 for no multithreading capability. 
+// Default is "true".
+//---
+elevation_manager.threads: yes                 
+
+// ---
+// Location of datum grids:
+//
+// Snip from: http://www.ngs.noaa.gov/TOOLS/Nadcon/Nadcon.html
+// 
+// Advances in the accuracies now obtainable in geodetic surveys, specifically
+// through use of differential GPS, has allowed for the creation of state 
+// High Precision Geodetic Networks (HPGNs), also referred to as High Accuracy
+// Reference Networks (HARNs) throughout the country.
+// 
+// Latest ftp location(20100206):
+// ftp://ftp.ngs.noaa.gov/pub/pcsoft/nadcon/
+//
+// ---
+// datum_grids: $(OSSIM_DATA)/ossim/elevation/nadcon-grids
+
+//---
+// Look-up tables for European Petroleum Survey Group (EPSG) coded 
+// projections and datums.
+// These are expected to be delimiter-separated value (*.csv|tsv) files.
+// NOTE: ESRI codes are NOT EPSG codes, however, they do not conflict with 
+// EPSG so ingesting them as if they were EPSG. Eventually, separate 
+// databases or a multi-Db solution may need to be 
+// implemented. OLK 05/2010
+// --- 
+epsg_database_file0: $(OSSIM_INSTALL_PREFIX)/share/ossim/projection/ossim_epsg_projections-v7_4.csv
+epsg_database_file1: $(OSSIM_INSTALL_PREFIX)/share/ossim/projection/ossim_harn_state_plane_epsg.csv
+epsg_database_file2: $(OSSIM_INSTALL_PREFIX)/share/ossim/projection/ossim_state_plane_spcs.csv
+epsg_database_file3: $(OSSIM_INSTALL_PREFIX)/share/ossim/projection/ossim_harn_state_plane_esri.csv
+
+// Database file for WKT-based projection factory:
+wkt_database_file: $(OSSIM_INSTALL_PREFIX)/share/ossim/projection/ossim_wkt_pcs.csv
+
+//---
+// Geoid support:
+// Note:  Since the sensor models do earth intersects at height above the 
+//        ellipsoid and the vertical datum of DTED is geoid_egm_96_grid, you
+//        should have a geoid grid in place for accurate earth intersections.
+//---
+
+//---
+// Generic geoid support:
+// Specifying a "geoid_manager.geoid_source0.type: geoid_image" uses an image handler
+// based geoid reader.  So this can be any type of image, i.e. tiff, raster, provided
+// it can be opened and a good image geometry is returned.
+// 
+// In the below example for geoid_manager.geoid_source0 an external geometry file was
+// created for Und_min1x1_egm2008_isw_equal_82_WGS84_TideFree_SE.ras.
+//---
+geoid_manager.geoid_source0.connection_string: $(OSSIM_DATA)/elevation/geoids/egm2008/Und_min1x1_egm2008_isw_equal_82_WGS84_TideFree_SE.ras
+geoid_manager.geoid_source0.enabled: true
+geoid_manager.geoid_source0.geoid.type: egm2008
+geoid_manager.geoid_source0.memory_map: false
+geoid_manager.geoid_source0.type: geoid_image
+
+//---
+// GEOID 99:  Set keyword to the directory containing the GEOID 99 grids.
+// 
+// Notes:  
+// - Grids MUST be in the native byte order.
+// - Can be downloaded from:
+// http://www.ngs.noaa.gov/GEOID/GEOID99
+// ---
+// geoid_99_directory:  $(OSSIM_DATA)/ele1/geoid/geoid99
+
+//---
+// Generic support has been added to each NGS geoid grid. You can download
+// ngs grids for 1999, 2003.
+// Current release only allows for a single directory we will allow for
+//  multiple directories later and auto detecting if possible.
+//
+// Currently the file names are hard coded and need to be from the NGS 
+// distribution also downloadable from ftp.remotesensing.org under
+// /ossim/test_data.tgz
+//---
+geoid_ngs_directory: $(OSSIM_DATA)/elevation/geoids/geoid99
+geoid_ngs_directory.byte_order: little_endian
+// geoid_ngs_directory.byte_order: big_endian
+
+//---
+// GEOID EGM 96:  Set keyword to the path to the egm96.grd
+// 
+// Notes:
+// - Grid must be in BIG ENDIAN (UNIX) format.
+// - Can be downloaded from svn:
+// svn co http://svn.osgeo.org/ossim/trunk/ossim_package_support/geoids geoids
+//---
+geoid_egm_96_grid: $(OSSIM_INSTALL_PREFIX)/share/ossim/geoids/geoid1996/egm96.grd
+
+//---
+// Location of other shared files can be accessed using this preference to permit 
+// specifying paths relative to it.
+//---
+ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/ossim/share
+
+// ---
+// Font support:
+// NOTE:  To use the MapCompositionSource you must at least have "font.dir1"
+//        set to some default.
+// ---
+// font.file1: /usr/share/fonts/default/Type1/b018032l.pfb
+// font.dir1: /usr/share/fonts/default/Type1
+
+
+//---
+// OSSIM plugin support:
+//
+// Notes:  
+//
+// Notes:
+//
+// View plugins with:
+//
+// $ ossim-info --plugins
+//
+// To troubleshoot problems  embedded trace debug can be turned on using 
+// "ossimDynamic"
+//
+// $ ossim-info -T ossimDynamic --plugins 
+//
+// ossimDynamicLibrary::load DEBUG:
+// Loaded library:  /usr/local/lib/libossimpng_plugin.so
+// ossimDynamicLibrary::load DEBUG:
+// Loaded library:  /usr/local/lib/libossimgdal_plugin.so
+// ossimDynamicLibrary::load DEBUG:
+// Loaded library:  /usr/local/lib/libossimreg_plugin.so
+// ossimDynamicLibrary::load DEBUG:
+// Loaded library:  /usr/local/lib/libossimcontrib_plugin.so
+//
+// Keywords:
+//
+// plugin.dir1:  < directory where plugins are >
+//
+// you can also list by individual file names
+//
+// plugin.file1: < full path and file name >
+//---
+// Example, edit/uncomment as needed:
+plugin.file0: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimpng_plugin.so
+plugin.file5: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimkakadu_plugin.so
+plugin.file10: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimmrsid_plugin.so
+plugin.file15: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_plugin.so
+
+// Old hdf4/5 plugin:
+// plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimhdf_plugin.so
+
+// New split out hdf plugins
+plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimhdf5_plugin.so
+plugin.file23: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimhdf4_plugin.so
+
+plugin.file25: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimsqlite_plugin.so
+plugin.file30: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimlas_plugin.so
+plugin.file40: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimweb_plugin.so
+plugin.file45: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimkmlsuperoverlay_plugin.so
+plugin.file50: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimndf_plugin.so
+plugin.file55: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimgeopdf_plugin.so
+plugin.file60: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimopencv_plugin.so
+plugin.file65: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimgdal_plugin.so
+
+// plugin.file5: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimreg_plugin.so
+// plugin.file6: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimcontrib_plugin.so
+// 
+//
+// We also support a second style that allows one to pass options to any
+// plugins that support them
+// the options param is an embedded keywordlist that is surrounded by triple
+// quotes:
+// plugin0.file: <path to>/libossimkakadu_plugin
+// plugin0.options: """
+//                  read_factory.location: front
+//                  writer_factory.location: back
+//                  """
+//
+// END OSSIM plugin support
+//---
+
+// Toggles for recceVue application:
+statusLatLon: true
+statusHeight: true
+statusDatum: true
+statusGSD: true
+statusUpdateOnClick: true
+
+
+// ---
+// Keyword: cache_size
+// The cache size is in megabytes.
+// ---
+cache_size: 256
+// cache_size: 512
+// cache_size: 1024
+// cache_size: 2048
+
+
+// ---
+// Keyword: overview_stop_dimension
+//
+// Affects any overview building from img2rr, imagelinker, iview. Controls
+// the amount of resLevels created.  This is also used to control the amount
+// of levels the J2K writers use from the kakadu plugin.
+// 
+// This is the point where "img2rr" or the overview builder will stop 
+// decimating the image down.  So in other words, if the 
+// overview_stop_dimension keyword is 64, img2rr application will build 
+// overviews, decimating each level by 2 until both the width and height are 
+// less than or equal to 64.  Note the larger the dimension the less levels
+// created.
+// 
+// Uncomment one below.
+// ---
+overview_stop_dimension: 8
+// overview_stop_dimension: 16
+// overview_stop_dimension: 32
+// overview_stop_dimension: 64
+// overview_stop_dimension: 128
+// overview_stop_dimension: 256
+// overview_stop_dimension: 512
+
+// ---
+// Keyword: overview_builder.scan_for_min_max_null_if_float
+// 
+// Control overview sequencer scanning for min, max, nulls for float data. If
+// true and input data is float scalar type scanning will be performed and a
+// dot.omd file will be written with the min, max, nulls in it.
+// 
+// Type: boolean, set to true, false, 1, 0
+// 
+// CAUTION: Because the j2k overview builder requires the min/max up front for 
+// normalization this is NOT a good option to turn on.  In other word if you
+// are doing ossim-img2rr -r -t ossim_kakadu_nitf_j2k <float-image> you should
+// disable this and set the min/max with ossim-cmm(compute min max) or do it
+// manually.
+// ---
+// overview_builder.scan_for_min_max_null_if_float: true
+
+// ---
+// Keyword: tile_size
+//
+// Tile size x y
+//
+// Affects all ossim application.  This is the internal tile size of any
+// image chain unless overridden by the filter.
+// 
+// Notes: 
+// 1) OSSIM can handle any tile size; however it is best to use a size that
+// is a power of two.
+// 2) 
+// 
+// Uncomment one below.  
+// ---
+// tile_size: 32 32
+// tile_size: 64 64
+// tile_size: 128 128
+tile_size: 256 256
+// tile_size: 512 512
+// tile_size: 1024 1024
+
+
+// ---
+// Keyword: shapefile_colors_auto
+// 
+// Shape file colors set to automatic.
+// This is a boolean value.  If true pen and brush color of shape files will
+// be determined by indexing a color table in a round robin approach.  If set 
+// to true the auto colors override keywords for "pen" and "brush" color.
+// Default value if not found if "false".
+// 
+// Value can be: true, yes, y, 1, false, no, n or 0
+// ---
+shapefile_colors_auto: false
+
+// ---
+// Shape file pen color:
+// Three values for red, green and blue between 0 and 1.0 with 1.0 being 
+// brightness and 0.0 being black.
+// ---
+shapefile_normalized_rgb_pen_color: 0.004 1.0 0.004
+
+// ---
+// Shape file pen color:
+// Three values for red, green and blue between 0 and 1.0 with 1.0 being 
+// brightness and 0.0 being black.
+// ---
+shapefile_normalized_rgb_brush_color: 0.004 1.0 0.004
+
+// ---
+// Shape file point size:
+// Width and height for points in pixels.
+// ---
+shapefile_point_size: 6.0 6.0
+
+
+// --------------------------
+// Some keywords for the OSSIM GUI application
+//
+//
+// igen spec files output./  This is the directory location you would
+// like the igen export GUI to default to when outputing spec files
+ossim.igen_spec_output_directory: /work/gpotts/igen_test
+
+// this is the igen executable.  Make sure you put the full path
+ossim.igen_executable:  /work/gpotts/ossim/bin/igen
+
+// END keywords for OSSIM GUI
+//--------------------------
+
+// ---
+// Position Quality Evaluator (PQE) keywords. 
+// Note Circulay Error(CE) and Linear Error (LE)  units are in meters.
+// These keywords are for the imagelinker->image-window->PQE dialog box.
+// They allow the user to calculater position quality factoring in backdrop
+// and elevation uncertainty.
+// ---
+
+// Backdrop enter "name,ce90,le90" like "JOG-A,77,38".
+pqe_backdrop1: TLM50,31,25
+pqe_backdrop2: TLM100,61,25
+pqe_backdrop3: JOG-A,77,38
+pqe_backdrop4: TPC,613,47
+pqe_backdrop5: ONC,1226,93
+pqe_backdrop6: JNC,2452,187
+pqe_backdrop7: GNC,6129,465
+
+// Elevation enter "name,ce90,le90" like "SRTM_1ARC,20,16"
+// Accuracies vary widely depending on terrain and how they were computed.
+// These are just examples.
+pqe_elev1: SRTM_3ARC,20,16
+pqe_elev2: SRTM_1ARC,20,10
+pqe_elev3: DTED_LEVEL2,40,20
+pqe_elev4: DTED_LEVEL1,50,30
+pqe_elev5: RPC_No_DEM_State,-2,-1.6449
+// Special Case
+// RPC_No_DEM_State, Scale Divisor, 1-Sigma Divisor (minus signs required)
+
+pqe_normalized_rgb_ellipse_color: 0.004 1.0 0.004
+
+// End of PQE keywords...
+
+// ---
+// Log file support:  If set all output from ossimNotify to stdout and to 
+// stderr will be written to the log file.  Optionally users of ossim 
+// applications can use the "--ossim-logfile <some_file>" command line 
+// argument.  Note that the "--ossim-logfile" command line argument overrides
+// the preference setting.
+// 
+// Uncomment and set path to use log file:
+// ---
+// ossim.log.file: D:\tmp\ossim-log.txt
+
+// ---
+// Kakadu threads:
+// ---
+kakadu_threads: 4
+
+// ---
+// ossim threads:
+// ---
+ossim_threads: 4
+
+//---
+// Keyword for ingesting terrasar-x and radarsat-2 data. When TRUE, instructs
+// the sensor model to create an ossim coarse grid replacement model to
+// improve performance geometric_sar_sensor_model.create_ocg: true
+// Keyword parsed presently by orthoigen. If true, histograms will be
+// computed when needed for all images that do not yet have a histogram. 
+//---
+autogenerate_histogram: true
+
+//---
+// specify true or fals if you want the ossimInit to look in the current 
+// program path to see if any plugins are available.  Turn this off if you 
+// want to load them from a keyword list and remove the need to scan the 
+// directory for valid plugins
+//---
+ossim_init.auto_load_plugins: false
+
+//---
+// When true, indicates to orthoigen application that the specified cut
+// rectangle for the product shall be adjusted to fit the minimum bounding
+// valid image rect. This eliminates null exterior pixels when the cut rect
+// extends beyond the valid image rect. This preference can be overriden
+// by an option on the orthoigen command line. See the usage on orthoigen.
+// [default is false]
+//---
+orthoigen.clip_to_valid_rect: false
+
+//---
+// Specifies the preference for remapping null-valued pixels to 1 (min).
+// Possible settings are:
+// "none" -- Bypasses pixel flipper
+// "all_nulls" -- replaces any occurrence of the null value with 1. 
+//    Ex: (20,0,10) becomes (20,1,10), also (0,0,0) becomes (1,1,1)
+// "only_partial_nulls" -- 
+// replaces null-valued band only if another band is non-null.
+//    Ex: (20,0,10) becomes (20,1,10), but (0,0,0) is not remapped.
+// "all_bands_if_partial_null" -- 
+// Remaps all bands of a pixel if even one band is null.
+//    Ex: (20,0,10) becomes (1,1,1), but (0,0,0) is not remapped
+// "only_full_nulls" -- Remaps pixel only if all bands are null.
+//    Ex: (0,0,0) becomes (1,1,1), but (20,0,10) is not remapped
+//---
+orthoigen.flip_null_pixels: none
+
+// ---
+// NITF writer site configuration file:
+// ---
+// nitf_writer.site_configuration_file: $(OSSIM_DATA)/ossim/share/nitf-site-configuration.kwl

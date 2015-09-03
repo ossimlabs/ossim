@@ -1,0 +1,86 @@
+{
+    "name": "ossim-viewshed",
+    "description": {
+        "version" : "1.00",
+        "short_description": "OSSIM Viewshed Utility",
+        "long_description": "Utility for computing the viewshed from a given observer position for a specified area of interest."
+     },
+     "inputs": {
+        "radius": {         
+            "datatype": "double:positive_range",
+            "description": "Radius of interest (meters)",
+            "required": true    
+        },
+        "observer": {         
+            "datatype": "geo_pos_2d",
+            "description": "Geographic position of observer (lat-deg, lon-deg)",
+            "required": true   
+        },
+        "fovStart": {
+            "datatype": "int:azimuth_range",
+            "description": "FOV starting azimuth for clockwise sweep (deg).",
+            "required": false    
+        },
+        "fovEnd": {
+            "datatype": "int:azimuth_range",
+            "description": "FOV ending azimuth for clockwise sweep (deg).",
+            "required": false    
+        },
+        "dem": {
+            "datatype": "file:elevation",
+            "description": "Optional DEM file to se in lieu of default elevation database.",
+            "required": false    
+        },
+        "eyeHeight": {
+            "datatype": "double:positive_range",
+            "description": "eye height (meters)",
+            "datatype": "double:positive_range"
+        },
+        "gsd": {
+            "datatype": "double:positive_range",
+            "description": "Product resolution in meters-per-pixel. Defaults to the best resolution of elevation files referenced.",
+            "required": false    
+        },
+        "reticle": {
+            "datatype": "int:positive_range",
+            "description": "Size (in pixels) of reticle centered on observer's position. If non-zero, a border is drawn delineating the ROI.",
+            "required": false    
+        },
+        "lut": {
+            "datatype": "file:text",
+            "description": "Specifies the optional lookup table filename for mapping the single-band output image to an RGB. The LUT provided must be in the ossimIndexToRgbLutFilter format and must handle the three output viewshed values (see --values option).",
+            "required": false    
+        },
+        "visible_index": {
+            "datatype": "int:byte_range",
+            "description": "Specifies the pixel values (0-255) for the pixels representing visible terrain.",
+            "required": false    
+        },
+        "hidden_index": {
+            "datatype": "int:byte_range",
+            "description": "Specifies the pixel values (0-255) for the pixels representing hidden terrain.",
+            "required": false    
+        },
+        "reticle_index": {
+            "datatype": "int:byte_range",
+            "description": "Specifies the pixel values (0-255) to use for the reticle and borders.",
+            "required": false    
+        },
+        "outputFile": {
+            "datatype": "url:wms",
+            "description": "The URL/filename of the WMS server where the file is now accessible",
+            "required": true
+        },
+        "horizonFile": {
+            "datatype": "url:wms",
+            "description": "If specified, outputs the max elevation angles for all azimuths to specified URL/filename, for horizon profiling.",
+            "required": false    
+        }
+    },
+    "outputs": { },
+    "ranges" : {
+       "azimuth_range": [ 0.0, 360.0 ],
+       "positive_range": [ 0, "+inf"],
+       "byte_range": [ 0, 255 ]
+    }
+}

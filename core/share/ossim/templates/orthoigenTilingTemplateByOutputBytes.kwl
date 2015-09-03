@@ -1,0 +1,58 @@
+//---
+// $Id: orthoigenTilingTemplateByOutputBytes.kwl 9594 2006-09-21 18:13:55Z dburken $
+// 
+// This template computes tiles sizes by mega bytes.  You should only select
+// one of:
+// igen.tiling.output_size_in_bytes
+// igen.tiling.output_size_in_kilo_bytes
+// igen.tiling.output_size_in_mega_bytes
+// 
+// 
+// Here is a sample command that takes a four band 11 bit image and outputs
+// scaled geographic tiles at full resolution of input:
+// 
+// orthoigen --geo-scaled 36 --tiling-template tile.kwl 02SEP13182617-M2AS_R2C2-000000052984_01_P001.NTF tiles/
+//
+//
+// Here is a sample command that takes a four band 11 bit image and outputs
+// scaled geographic tiles at 2.0 meters resolution:
+// orthoigen --meters 2.0 --geo-scaled 36 --tiling-template tile.kwl 02SEP13182617-M2AS_R2C2-000000052984_01_P001.NTF tiles/
+//
+// Same command with some meaningful trace added:
+// orthoigen -T "ossimTiling|ossimOrtho" --meters 2.0 --geo-scaled 36 --tiling-template tile.kwl 02SEP13182617-M2AS_R2C2-000000052984_01_P001.NTF tiles/
+
+
+//---
+// Template follows:
+//---
+igen.tiling.type: ossimTiling
+
+// Target output size of each tile in bytes:
+// igen.tiling.output_size_in_bytes: 8388608
+
+// Target output size of each tile in kilo bytes (1024 X 1024).
+// igen.tiling.output_size_in_kilo_bytes: 8192
+
+// Target output size of each tile in kilo bytes (1024 X 1024 X 1024).
+igen.tiling.output_size_in_mega_bytes: 8 
+
+//---
+// Number of bands in the output image.  Needed only for "output_xxx_bytes"
+// option if bands are greater than one.
+//---
+igen.tiling.output_bands: 4
+
+//---
+// Number of bytes per pixel in the output image.  
+// Needed only for "output_xxx_bytes" option if bytes per pixel are greater 
+// than one.
+//---
+igen.tiling.output_bytes_per_pixel_per_band: 2
+
+//---
+// Output files come out like:
+// tile_0_0.tif, tile_0_1.tif, tile_1_0.tif and so on...
+//
+// Note:  Last arg of orthoigen should be a directory.
+//---
+igen.tiling.tile_name_mask: tile_%r%_%c%.tif

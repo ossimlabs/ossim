@@ -1,0 +1,66 @@
+//---
+// $Id: orthoigen_annotation_template.kwl 11359 2007-07-23 20:46:23Z dburken $
+//
+// Annonotation template for orthoigen --annotate option
+//---
+
+object1.type: ossimGeoAnnotationSource
+
+object1.object1.type: ossimGeoAnnotationEllipseObject
+object1.object1.center:  ( 42.403388263727003, -90.708557648541046, 0.0, WGE )
+object1.object1.ellipse_width: 500
+object1.object1.ellipse_height: 500
+// Azimuth is in decimal degrees. Azimuth of 0.0 puts major axis straight up.
+object1.object1.azimuth: 30.0
+object1.object1.fill: 0
+object1.object1.draw_axes: 1
+object1.object1.red: 1
+object1.object1.green: 255
+object1.object1.blue: 1
+object1.object1.thickness: 2
+// object1.object1.units: pixel
+object1.object1.units: meters
+// object1.object1.units: seconds
+// object1.object1.units: minutes
+// object1.object1.units: degrees
+
+
+object1.object2.type: ossimGeoAnnotationFontObject
+object1.object2.red: 1
+object1.object2.green: 255
+object1.object2.blue: 1
+// object1.object2.thickness: 2
+object1.object2.font:
+object1.object2.text: Dubuque Iowa Airport
+object1.object2.center: ( 42.42, -90.71, 0.0, WGE )
+// Choose one font family
+// object1.object2.family_name:
+// object1.object2.fixed_flag: 0
+// object1.object2.family_name: gd sans
+// object1.object2.family_name: URW Bookman L
+// object1.object2.family_name: Nimbus Roman No9 L
+object1.object2.family_name: Nimbus Sans L
+// object1.object2.family_name: URW Palladio L
+// object1.object2.family_name: Century Schoolbook L
+// object1.object2.family_name: Nimbus Mono L
+// object1.object2.family_name: Nimbus Sans L Condensed
+// Choose one font style
+object1.object2.style_name:  normal
+// object1.object2.style_name:  bold
+// object1.object2.style_name:  italic
+// object1.object2.style_name:  bold italic
+object1.object2.fixed_flag:  
+object1.object2.point_size: ( 18, 18 )
+object1.object2.rotation:  0.000000000000000
+object1.object2.scale: ( 1.0, 1.0 )
+object1.object2.shear: ( 0.0, 0.0 )
+
+object1.object3.type: ossimGeoAnnotationPolyObject
+object1.object3.red: 1
+object1.object3.green: 255
+object1.object3.blue: 1
+object1.object3.thickness: 2
+object1.object3.v0: ( 42.417943916808966, -90.730512794570259, 0.0, WGE )
+object1.object3.v1: ( 42.417943916808966, -90.687415415216321, 0.0, WGE )
+object1.object3.v2: ( 42.391071271524609, -90.687415415216321, 0.0, WGE )
+object1.object3.v3: ( 42.391071271524609, -90.730512794570259, 0.0, WGE )

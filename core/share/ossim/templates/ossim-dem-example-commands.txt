@@ -1,0 +1,15 @@
+// Basic ossim-dem command examples:
+
+ossim-dem --op color-relief --color-table color-relief-lut1.kwl --projection geo-scaled -t 512 -w ossim_png N37W123.hgt outputs/basic-color-relief.png
+
+outputs]$ ossim-dem --op hillshade --projection geo-scaled -t 512 -w ossim_png N37W123.hgt outputs/basic-hillshade.png
+
+ossim-dem --op hillshade --color-table color-relief-lut1.kwl --projection geo-scaled -t 512 -w ossim_png N37W123.hgt outputs/hillshade-with-index-color.png
+
+ossim-dem --op hillshade --color 128 1 1 --projection geo-scaled -t 512 -w ossim_png N37W123.hgt outputs/hillshade-with-fixed-rgb-color.png
+
+ossim-dem --op hillshade --azimuth 280 --elevation 25 --projection geo-scaled -t 512 -w ossim_png N37W123.hgt outputs/hillshade-sunset.png
+
+ossim-dem -T ossimDem -t 512 --color 85 26 139 --cut-bbox-ll 37.638185562865708 -122.60074516713874 38.051333442964719 -122.07659396546401 --projection geo-scaled --resample-filter cubic --azimuth 180 --elevation 45 --exaggeration 10 --smoothness-factor 1.0 --op hillshade -w ossim_png --input-dem N37W123.hgt --input-dem N38W123.hgt --input-img san_fran.ccf outputs/hillshade-with-image-source.png
+
+ossim-dem --options-keyword-list ossim-dem-options-1.kwl

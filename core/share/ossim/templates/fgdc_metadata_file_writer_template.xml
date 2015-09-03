@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<?xml-stylesheet type="text/xsl" href="/common/fgdc_classic.xsl" ?>
+
+<!-- $Id: fgdc_metadata_file_writer_template.xml 7918 2005-08-09 19:32:59Z dburken $ -->
+
+<!-- 
+  Fill this out as you see fit. This can be passed to the ossimFgdcFileWriter
+  via the ossimFgdcFileWriter::setTemplate method or picked up via the
+  ossimFgdcFileWriter::loadState method using the fgdc_template_doc
+  The img2md application can pick this up if you make a keyword list and put
+  the fgdc_template_doc keyword point to the template then do:
+  img2md -t my_keyword_list.kwl foo.tif foo.xml
+-->
+
+<metadata>
+	<idinfo>
+		<citation>
+			<citeinfo>
+				<origin></origin>
+				<pubdate></pubdate>
+				<title></title>
+				<edition></edition>
+				<geoform></geoform>
+				<serinfo>
+					<sername></sername>
+					<issue></issue>
+				</serinfo>
+				<pubinfo>
+					<pubplace></pubplace>
+					<publish></publish>
+				</pubinfo>
+			</citeinfo>
+		</citation>
+		<descript>
+			<abstract></abstract>
+			<purpose></purpose>
+			<supplinf></supplinf>
+		</descript>
+		<timeperd>
+			<timeinfo>
+				<sngdate>
+					<caldate></caldate>
+				</sngdate>
+			</timeinfo>
+			<current></current>
+		</timeperd>
+		<status>
+			<progress></progress>
+			<update></update>
+		</status>
+		<spdom>
+			<bounding>
+				<westbc></westbc>
+				<eastbc></eastbc>
+				<northbc></northbc>
+				<southbc></southbc>
+			</bounding>
+		</spdom>
+		<keywords>
+			<theme>
+				<themekt></themekt>
+				<themekey></themekey>
+			</theme>
+		</keywords>
+		<accconst></accconst>
+		<useconst></useconst>
+		<ptcontac>
+			<cntinfo>
+				<cntperp>
+					<cntper></cntper>
+				</cntperp>
+				<cntaddr>
+					<addrtype></addrtype>
+					<address></address>
+					<city></city>
+					<state></state>
+					<postal></postal>
+					<country></country>
+				</cntaddr>
+				<cntvoice></cntvoice>
+				<cntfax></cntfax>
+				<cntemail></cntemail>
+			</cntinfo>
+		</ptcontac>
+		<secinfo>
+			<secclass></secclass>
+			<secsys></secsys>
+			<sechandl></sechandl>
+		</secinfo>
+	</idinfo>
+	<distinfo>
+		<distrib>
+			<cntinfo>
+				<cntperp>
+					<cntper></cntper>
+				</cntperp>
+				<cntaddr>
+					<addrtype></addrtype>
+					<address></address>
+					<city></city>
+					<state></state>
+					<postal></postal>
+					<country></country>
+				</cntaddr>
+				<cntvoice></cntvoice>
+				<cntfax></cntfax>
+				<cntemail></cntemail>
+			</cntinfo>
+		</distrib>
+		<resdesc></resdesc>
+		<distliab></distliab>
+		<stdorder>
+			<digform>
+				<digtinfo>
+					<formname></formname>
+				</digtinfo>
+				<digtopt>
+					<onlinopt>
+						<computer>
+							<networka>
+								<networkr></networkr>
+							</networka>
+						</computer>
+					</onlinopt>
+				</digtopt>
+			</digform>
+			<fees></fees>
+		</stdorder>
+	</distinfo>
+	<metainfo>
+		<metd></metd>
+		<metc>
+			<cntinfo>
+				<cntperp>
+					<cntper></cntper>
+				</cntperp>
+				<cntaddr>
+					<addrtype></addrtype>
+					<address></address>
+					<city></city>
+					<state></state>
+					<postal></postal>
+					<country></country>
+				</cntaddr>
+				<cntvoice></cntvoice>
+				<cntfax></cntfax>
+				<cntemail></cntemail>
+			</cntinfo>
+		</metc>
+		<metstdn></metstdn>
+		<metstdv></metstdv>
+	</metainfo>
+</metadata>

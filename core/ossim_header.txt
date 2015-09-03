@@ -1,0 +1,8 @@
+/*****************************************************************************
+*                                                                            *
+*                                 O S S I M                                  *
+*            Open Source, Geospatial Image Processing Project                *
+*          License: MIT, see LICENSE at the top-level directory              *
+*                                                                            *
+******************************************************************************
+$Id: ossim_header.txt 23481 2015-08-26 15:42:55Z okramer $ */

@@ -1,0 +1,28 @@
+// This sample defines a rectification chain to Landsat and quickbird that 
+// need to reorder the bands into a 3,2,1 order for true color output
+//
+
+igen.slave_tile_buffers: 10
+
+object1.description:
+object1.enabled:  1
+object1.id:  1
+object1.object1.description:  
+object1.object1.enabled:  1
+object1.object1.id:  2
+object1.object1.band1:3
+object1.object1.band2:2
+object1.object1.band3:1
+object1.object1.resampler.minify_type:  nearest
+object1.object1.type:  ossimBandSelector
+
+object1.object2.description:  
+object1.object2.enabled:  1
+object1.object2.id:  3
+object1.object2.resampler.magnify_type:  nearest
+object1.object2.resampler.minify_type:  nearest
+object1.object2.type:  ossimImageRenderer
+object1.object2.input_connection1: 2
+
+object1.type:  ossimImageChain
+

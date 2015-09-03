@@ -1,0 +1,329 @@
+// ---
+// File: nitf-site-configuration.kwl
+// Edit as required.  Use "//" at beginning of line to comment out.  Leave
+// things you're not setting commented out.  
+// 
+// Reference:  MIL-STD-2500C
+// http://www.gwg.nga.mil/ntb/baseline/docs/2500c/2500C.pdf
+// ---
+// $Id: nitf-site-configuration.kwl 20196 2011-11-01 17:48:10Z dburken $
+
+//---
+// NOTES:
+// Basic Character Set (BCS)
+// Basic Character Set-Alphanumeric (BCS-A)
+// Basic Character Set-Numeric Integer (BCS-N integer)
+// Basic Character Set – Numeric Positive Integer (BCS-N positive integer)
+// BCS Space. BCS (and consequently ECS) code 0x20
+//---
+
+// ---
+// Field: OSTAID
+// 10 BCS-A
+// Originating Station ID. This field shall contain the identification code or
+// name of the originating organization, system, station, or product.
+// format: 10 ascii characters.
+// ---
+// nitf.file.OSTAID: McLean
+
+// ---
+// Field: FDT
+// 14 BCS-N integer CCYYMMDDhhmmss 
+// This field shall contain the time (UTC) (Zulu) of the file’s origination 
+// in the format CCYYMMDDhhmmss, where CC is the century (00 to 99), YY is the
+// last two digits of the year (00 to 99), MM is the month (01 to 12), DD is 
+// the day (01 to 31), hh is the hour (00 to 23), mm is the minute (00 to 59),
+// and ss is the second (00 to 59). UTC is assumed to be the time zone 
+// designator to express the time of day.
+// Field is set by nitf writer.
+// ---
+// nitf.file.FDT:
+
+// ---
+// Field: FTITLE
+// 80 ECS-A
+// This field shall contain the title of the file or shall be filled with ECS 
+// spaces (0x20).
+// ---
+// nitf.file.FTITLE: 
+
+// ---
+// Field: FSCLAS
+// 1 ECS-A
+// T      Top secret
+// S      Secret
+// C      Confidential
+// R      Restricted
+// U      Unclassified
+// ---
+// nitf.file.FSCLAS: U
+
+// ---
+// Field: FSCLSY
+// File Security Classification System. This field shall contain valid values 
+// indicating the national or multinational security system used to classify 
+// the file. Country Codes per FIPS PUB 10-4 shall be used to indicate 
+// national security systems. If this field is all ECS spaces (0x20), it shall
+// imply that no security classification system applies to the file.
+// ---
+// nitf.file.FSCLSY:
+
+// ---
+// Field: FSCODE
+// 11 BCS-A
+// File Codewords. This field shall contain a valid indicator of the security 
+// compartments associated with the file. Values include one or more of the 
+// digraphs found table A-4. Multiple entries shall be separated by a single 
+// ECS space (0x20): The selection of a relevant set of codewords is 
+// application specific. If this field is all ECS spaces (0x20), it shall 
+// imply that no codewords apply to the file.
+// ---
+// nitf.file.FSCODE:
+
+// ---
+// Field: FSCTLH
+// 2 ECS-A
+// File Codewords. This field shall contain a valid indicator of the security 
+// compartments associated with the file. Values include one or more of the 
+// digraphs found table A-4. Multiple entries shall be separated by a single 
+// ECS space (0x20): The selection of a relevant set of codewords is 
+// application specific. If this field is all ECS spaces (0x20), it shall 
+// imply that no codewords apply to the file.
+// ---
+// nitf.file.FSCTLH:
+
+// ---
+// Field: FSREL
+// 20 ECS-A
+// File Releasing Instructions. This field shall contain a valid list of 
+// country and/or multilateral entity codes to which countries and/or 
+// multilateral entities the file is authorized for release. Valid items in 
+// the list are one or more country codes as found in FIPS PUB 10-4 separated 
+// by a single ECS space (0x20). If this field is all ECS spaces (0x20), it 
+// shall imply that no file release instructions apply.
+// ---
+// nitf.file.FSREL:
+
+// ---
+// Field: FSDCTP
+// 2 ECS-A DD, DE, GD, GE, O, X  (Default is ECS spaces  (0x20)) 
+// File Declassification Type. This field shall contain a valid indicator of 
+// the type of security declassification or downgrading instructions which 
+// apply to the file. Valid values are DD (=declassify on a specific date), 
+// DE(=declassify upon occurrence of an event), GD (=downgrade to a specified 
+// level on a specific date), GE (=downgrade to a specified level upon 
+// occurrence of an event), O (=OADR), and X (= exempt from automatic
+// declassification). If this field is all ECS spaces (0x20), it shall imply 
+// that no file security declassification or downgrading instructions apply.
+// ---
+// nitf.file.FSDCTP: 
+
+// ---
+// Field: FSDCDT
+// 8 ECS-A CCYYMMDD (Default is ECS spaces (0x20)) 
+// File Declassification Date. This field shall indicate the date on which a 
+// file is to be declassified if the value in File Declassification Type is 
+// DD. If this field is all ECS spaces (0x20), it shall imply that no file 
+// declassification date applies.
+// ---
+// nitf.file.FSDCDT:
+
+// ---
+// Field: FSDCXM
+// 4 ECS-A X1 to X8, X251 to X259, (Default is ECS spaces (0x20)) 
+// File Declassification Exemption. This field shall indicate the reason the 
+// file is exempt from automatic declassification if the value in File 
+// Declassification Type is X. Valid values are X1 to X8 and X251 to X259. 
+// X1 to X8 correspond to the declassification exemptions found in DOD 
+// 5200.1-R, paragraphs 4-202b(1) to (8) for material exempt from the 10-year
+// rule. X251 to X259 correspond to the declassification exemptions found in 
+// DOD 5200.1-R, paragraphs 4-301a(1) to (9) for permanently valuable material
+// exempt from the 25-year declassification system. If this field is all ESC 
+// spaces (0x20), it shall imply that a file declassification exemption does 
+// not apply.
+// ---
+// nitf.file.FSDCXM:
+
+// ---
+// Field: FSDG
+// 1 ECS-A S, C, R (Default is ECS space (0x20)) 
+// File Downgrade. This field shall indicate the classification level to which
+// a file is to be downgraded if the values in File Declassification Type are 
+// GD or GE. Valid values are S (=Secret), C (=Confidential), R (=Restricted).
+// If this field contains an ECS space (0x20), it shall imply that file 
+// security downgrading does not apply.
+// ---
+// nitf.file.FSDG:
+
+// ---
+// Field: FSDGDT
+// 8 ECS-A CCYYMMDD (Default is ECS spaces (0x20)) 
+// File Downgrade Date. This field shall indicate the date on which a file is 
+// to be downgraded if the value in File Declassification Type is GD. If this 
+// field is all ECS spaces (0x20), it shall imply that a file security
+// downgrading date does not apply.
+// ---
+// nitf.file.FSDGDT:
+
+// ---
+// Field: FSCLTX
+// 43 ECS-A (Default is ECS spaces (0x20)) 
+// File Classification Text . This field shall be used to provide additional 
+// information about file classification to include identification of a 
+// declassification or downgrading event if the values in File Declassification
+// Type are DE or GE. It may also be used to identify multiple classification 
+// sources and/or any other special handling rules. Values are user defined 
+// free text. If this field is all ECS spaces (0x20), it shall imply that
+// additional information about file classification does not apply.
+// ---
+// nitf.file.FSCLTX:
+
+// ---
+// Field: FSCATP
+// 1 ECS-A (Default is ECS space (0x20)) 
+// File Classification Authority Type. This field shall indicate the type of 
+// authority used to classify the file. Valid values are O (= original 
+// classification authority), D (= derivative from a single source), and M (=
+// derivative from multiple sources). If this field contains an ECS space 
+// (0x20), it shall imply that file classification authority type does not 
+// apply.
+// ---
+// nitf.file.FSCATP:
+
+// ---
+// Field: FSCAUT
+// 40 ECS-A  (Default is ECS spaces (0x20)) 
+// File Classification Authority. This field shall identify the classification
+// authority for the file dependent upon the value in File Classification 
+// Authority Type. Values are user defined free text which should contain the
+// following information: orig inal classification authority name and position
+// or personal identifier if the value in File Classification Authority Type 
+// is O; title of the document or security classification guide used to 
+// classify the file if the value in File Classification Authority Type is D; 
+// and Derive-Multiple if the file classification was derived from multiple 
+// sources and the value of the FSCATP field is M. In the latter case, the 
+// file originator will maintain a record of the sources used in accordance
+// with existing security directives. One of the multiple sources may also be 
+// identified in File Classification Text if desired. If this field is all 
+// ECS spaces (0x20), it shall imply that no file classification authority 
+// applies.
+// ---
+// nitf.file.FSCAUT:
+
+// ---
+// Field: FSCRSN 
+// 1 ECS-A A to G (Default is ECS space (0x20)) 
+// File Classification Reason. This field shall contain values indicating the 
+// reason for classifying the file. Valid values are A to G. These correspond 
+// to the reasons for original classification per E.O. 12958, Section 1.5.(a) 
+// to (g). If this field contains an ECS space (0x20), it shall imply that no 
+// file classification reason applies.
+// ---
+// nitf.file.FSCRSN:
+
+// ---
+// Field: FSSRDT
+// 8 ECS-A CCYYMMDD (Default is ECS spaces (0x20)) 
+// File Security Source Date. This field shall indicate the date of the 
+// source used to derive the classification of the file. In the case of 
+// multiple sources, the date of the most recent source shall be used. If 
+// this field is all ECS
+// spaces (0x20), it shall imply that a file security source date does not 
+// apply.
+// ---
+// nitf.file.FSSRDT:
+
+
+// ---
+// Field: FSCTLN
+// 15 ECS-A (Default is ECS spaces (0x20)) 
+// File Security Control Number. This field shall contain a valid security 
+// control number associated with the file. The format of the security control
+// number shall be in accordance with the regulations governing the 
+// appropriate security channel(s). If this field is all ECS spaces (0x20), 
+// it shall imply that no file security control number applies.
+// ---
+// nitf.file.FSCTLN:
+
+// ---
+// Field: FSCOP
+// 00000 to 99999
+// File copy number:
+// This field shall contain the copy number of the file. If this field is
+// all BCS zeros (0x30), it shall imply that there is no tracking of
+// numbered filecopies.
+// ---
+// nitf.file.FSCOP: 00000
+
+// ---
+// Field: FSCPYS
+// 00000 to 99999
+// File Number of Copies
+// This field shall contain the total number of copies of the file. If this
+// field is all BCS zeros (0x30), it shall imply that there is no tracking of
+// numbered file copies. 
+// ---
+// nitf.file.FSCPYS: 00000
+
+// ---
+// Field: ENCRYP
+// 1 BCS-N positive integer (Default is BCS zero (0x30)) 0 = Not Encrypted 
+// Encryption. This field shall contain the value BCS zero  (0x30) until such 
+// time as this specification is updated to define the use of other values. 
+// ---
+// nitf.file.ENCRYP:
+
+// ---
+// Field: FBKGC
+// 3 Unsigned binary integer (0x00 to 0xFF, 0x00 to 0xFF, 0x00 to 0xFF) 
+// File Background Color. This field shall contain the three color components 
+// of the file background in the order Red, Green, Blue. Where (0x00, 0x00, 
+// 0x00) is black and (0xFF, 0xFF, 0xFF) is white. 
+// ---
+// nitf.file.FBKGC:
+
+// ---
+// Field: ONAME
+// 24 ECS-A (Default is ECS spaces (0x20)) 
+// Originator’s Name . This field shall contain a valid name for the operator 
+// who originated the file. If the field is all ECS spaces (0x20), it shall 
+// represent that no operator is assigned responsibility for origination. 
+// ---
+// nitf.file.ONAME:
+
+// ---
+// Field: OPHONE
+// 18 ECS-A (Default is ECS spaces (0x20)) 
+// Originator’s Phone Number. This field shall contain a valid phone number 
+// for the operator who originated the file. If the field is all ECS spaces 
+// (0x20), it shall represent that no phone number is available for the 
+// operator assigned responsibility for origination. 
+// ---
+// nitf.file.OPHONE:
+
+// ---
+// Field: IDATIM
+// 14 BCS-N 
+// CCYYMMDDhhmmss 
+// Image Date and Time. This field shall contain the time (UTC) of the image
+// acquisition in the format CCYYMMDDhhmmss, where CC is the century (00
+// to 99), YY is the last two digits of the year (00 to 99), MM is the month
+// (01 to 12), DD is the day (01 to 31), hh is the hour (00 to 23), mm is the
+// minute (00 to 59), ss is the second (00 to 59). UTC (Zulu) is assumed to
+// be the time zone designator to express the time of day. Populate the
+// unknown date/time two character subfield with two hyphen-minus characters
+// hexadecimal code "2D") indicating the portion of the date or time that is
+// unknown.
+// ---
+// nitf.image.IDATIM: --------------
+
+// ---
+// Field: ISCLAS
+// T      Top secret
+// S      Secret
+// C      Confidential
+// R      Restricted
+// U      Unclassified
+// ---
+// nitf.image.ISCLAS: U
+

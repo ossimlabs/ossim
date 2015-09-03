@@ -1,0 +1,96 @@
+{
+    "name": "ossim-hlz",
+    "description": {
+        "version" : "1.00",
+        "short_description": "OSSIM HLZ Utility",
+        "long_description": "Utility for finding suitable helicopter landing zones surrounding a speciflzied target location."
+     },
+     "inputs": {
+        "dem": {
+            "datatype": "file:elevation",
+            "description": "Optional DEM file to use in lieu of default elevation database.",
+            "required": false    
+        },
+        "gsd": {
+            "datatype": "double:positive_range",
+            "description": "Product resolution in meters-per-pixel. Defaults to the best resolution of elevation files referenced.",
+            "required": false    
+        },
+        "lut": {
+            "datatype": "file:text",
+            "description": "Specifies the optional lookup table filename for mapping the single-band output image to an RGB. The LUT provided must be in the ossimIndexToRgbLutFilter format and must handle the three output viewshed values (see --values option).",
+            "required": false    
+        },
+        "point_cloud": {
+            "datatype": "file:geopackage",
+            "description": "Specifies ancillary point-cloud data for level-2 search for obstructions.",
+            "required": false    
+        },
+        "reticle": {
+            "datatype": "int:positive_range",
+            "description": "Size (in pixels) of reticle centered on observer's position. If non-zero, a border is drawn delineating the ROI.",
+            "required": false    
+        },
+        "rlz": {         
+            "datatype": "double:positive_range",
+            "description": "Radius of interest (meters)",
+            "required": true    
+        },
+        "roi": {         
+            "datatype": "double:positive_range",
+            "description": "Radius of interest surrounding the target (meters)",
+            "required": true    
+        },
+        "roughness": {         
+            "datatype": "double:positive_range",
+            "description": "Threshold for acceptable landing zone terrain roughness (meters).",
+            "required": false    
+        },
+        "slope": {         
+            "datatype": "double:positive_range",
+            "description": "Threshold for acceptable landing zone terrain slope (deg).",
+            "required": false    
+        },
+        "target": {         
+            "datatype": "geo_pos_2d",
+            "description": "Geographic position of target (lat-deg, lon-deg)",
+            "required": true   
+        },
+        "threat-domes": {
+            "datatype": "file:text",
+            "description": "Optional file containing threat dome specifications.",
+            "required": false    
+        },
+        "viewsheds": {
+            "datatype": "file:text",
+            "description": "Optional file containing specifications of observers used in identifying visible or hidden LZs.",
+            "required": false    
+        },
+        "bad_zone_index": {
+            "datatype": "int:byte_range",
+            "description": "Specifies the pixel values (0-255) for the pixels representing unsuitable terrain.",
+            "required": false    
+        },
+        "marginal_zone_index": {
+            "datatype": "int:byte_range",
+            "description": "Specifies the pixel values (0-255) for the pixels representing marginal terrain.",
+            "required": false    
+        },
+        "good_zone_index": {
+            "datatype": "int:byte_range",
+            "description": "Specifies the pixel values (0-255) for the pixels representing good terrain.",
+            "required": false    
+        },
+        "outputFile": {
+            "datatype": "url:wms",
+            "description": "The URL/filename of the WMS server where the file is now accessible",
+            "required": true
+        }
+    },
+    "outputs": { },
+    "ranges" : {
+       "azimuth_range": [ 0.0, 360.0 ],
+       "positive_range": [ 0, "+inf"],
+       "byte_range": [ 0, 255 ]
+    }
+}

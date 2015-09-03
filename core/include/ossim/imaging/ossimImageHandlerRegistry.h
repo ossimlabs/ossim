@@ -1,0 +1,157 @@
+//*******************************************************************
+//
+// License:  See top level LICENSE.txt file.
+// 
+// Author:  Garrett Potts
+//
+// Description:  Contains class definition for the class
+//               ImageHandlerRegistry.
+//
+//*******************************************************************
+//  $Id: ossimImageHandlerRegistry.h 22636 2014-02-23 17:55:50Z dburken $
+
+#ifndef ossimImageHandlerRegistry_HEADER
+#define ossimImageHandlerRegistry_HEADER 1
+
+#include <ossim/base/ossimObjectFactory.h>
+#include <ossim/base/ossimRtti.h>
+#include <ossim/imaging/ossimImageHandlerFactoryBase.h>
+#include <ossim/base/ossimFactoryListInterface.h>
+#include <iosfwd>
+#include <vector>
+
+class ossimImageHandler;
+class ossimFilename;
+class ossimKeywordlist;
+
+class OSSIMDLLEXPORT ossimImageHandlerRegistry : public ossimObjectFactory,
+                                                public ossimFactoryListInterface<ossimImageHandlerFactoryBase, ossimImageHandler>
+{
+public:
+   virtual ~ossimImageHandlerRegistry();
+   
+   static ossimImageHandlerRegistry* instance();
+   
+
+   /**
+    * @brief open that takes a filename.
+    * @param fileName File to open.
+    * @param trySuffixFirst If true calls code to try to open by suffix first,
+    * then goes through the list of available handlers. default=true.
+    * @param openOverview If true image handler will attempt to open overview.
+    * default = true
+    * @return Pointer to image handler or null if cannot open.
+    */
+   virtual ossimImageHandler* open(const ossimFilename& fileName,
+                                   bool trySuffixFirst=true,
+                                   bool openOverview=true)const;
+   
+   /**
+    *  Given a keyword list return a pointer to an ImageHandler.  Returns
+    *  null if a valid handler cannot be found.
+    */
+   virtual ossimImageHandler* open(const ossimKeywordlist& kwl,
+                                   const char* prefix=0)const;
+
+   /**
+    *  @brief Open method.
+    *
+    *  This open takes a stream, position and a flag.
+    *
+    *  @param str Open stream to image.
+    *
+    *  @param restartPosition Typically 0, this is the stream offset to the
+    *  front of the image.
+    *
+    *  @param youOwnIt If true the opener takes ownership of the stream
+    *  pointer and will destroy on close.
+    *  
+    *  @return This implementation returns an ossimRefPtr with a null pointer.
+    */
+   virtual ossimRefPtr<ossimImageHandler> open( std::istream* str,
+                                                std::streamoff restartPosition,
+                                                bool youOwnIt ) const;   
+   
+   /**
+    * @brief Open overview that takes a file name.
+    *
+    * This will only check readers that can be overview handlers.
+    * 
+    * @param file File to open.
+    * 
+    * @return ossimRefPtr to image handler on success or null on failure.
+    */
+   virtual ossimRefPtr<ossimImageHandler> openOverview(
+      const ossimFilename& file ) const;
+
+   /*!
+    * Creates an object given a type name.
+    */
+   virtual ossimObject* createObject(const ossimString& typeName) const;
+   
+   /*!
+    * Creates and object given a keyword list.
+    */
+   virtual ossimObject* createObject(const ossimKeywordlist& kwl,
+                                     const char* prefix=0)const;
+
+   /**
+    * openBySuffix will call the mthod getImageHandlersBySuffix and go through
+    * each handler to try and open the file.  This should be a faster open
+    * for we do not have to do a magic number compare on all prior files and
+    * keep opening and closing files.
+    * @param openOverview If true image handler will attempt to open overview.
+    * default = true
+    */
+   virtual ossimRefPtr<ossimImageHandler> openBySuffix(const ossimFilename& file,
+                                                       bool openOverview=true)const; 
+   
+   /**
+    *
+    * Will add to the result list any handler that supports the passed in extensions
+    *
+    */
+   virtual void getImageHandlersBySuffix(ossimImageHandlerFactoryBase::ImageHandlerList& result,
+                                         const ossimString& ext)const;
+   /**
+    *
+    * Will add to the result list and handler that supports the passed in mime type
+    *
+    */
+   virtual void getImageHandlersByMimeType(ossimImageHandlerFactoryBase::ImageHandlerList& result,
+                                           const ossimString& mimeType)const;
+   
+   /*!
+    * This should return the type name of all objects in all factories.
+    * This is the name used to construct the objects dynamially and this
+    * name must be unique.
+    */
+   virtual void getTypeNameList( std::vector<ossimString>& typeList ) const;
+
+   virtual void getSupportedExtensions(
+      ossimImageHandlerFactoryBase::UniqueStringList& extensionList)const;
+
+   /**
+    * @brief Prints list of readers and properties.
+    * @param  out Stream to print to.
+    * @return std::ostream&
+    */
+   std::ostream& printReaderProps(std::ostream& out) const;
+   
+protected:
+   ossimImageHandlerRegistry();
+   ossimImageHandlerRegistry(const ossimImageHandlerRegistry& rhs);
+   const ossimImageHandlerRegistry&
+      operator=(const ossimImageHandlerRegistry& rhs);
+   
+   //static ossimImageHandlerRegistry*            theInstance;
+   
+TYPE_DATA
+};
+
+extern "C"
+{
+   OSSIM_DLL  void* ossimImageHandlerRegistryGetInstance();
+}
+
+#endif /* #ifndef ossimImageHandlerRegistry_HEADER */
