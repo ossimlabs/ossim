@@ -10,6 +10,15 @@ Coming soon.
 
 This repository provides the CMAKE infrastructure necessary to build the OSSIM core library and related plugins and applications. Throughout this document, reference is made to the local, top-level directory corresponding to this repository (./ossim). We'll call this directory simply *ossim-top-dir*. 
 
+The following 3rd-party SDKs are needed in order to build the core ossim library:
+
+    libtiff (preferrably version 4.x for BigTIFF support)
+    OpenThreads
+    libjpeg
+    libgeos
+
+Plugins will require additional 3rd-party packages.
+
 Building OSSIM and related repos from source is a two-step process: first create the make files using CMake, then run `make` to build the binaries. Scripts are available for Linux, Windows, and Mac to run CMake with default settings. You can run the script from any working directory and default settings will be used for creating the default build environment. It is possible to override specific defaults for your own custom requirements or preferences.
 
 ## Creating the Makefiles
