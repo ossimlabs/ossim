@@ -21,6 +21,8 @@ ENDIF()
 
 SET(CMAKE_INSTALL_PREFIX ${OSSIM_INSTALL_PREFIX})
 SET(CMAKE_MODULE_PATH "${OSSIM_DEV_HOME}/build/CMakeModules")
+MESSAGE( STATUS "&&&&&&&&&&&&&&&&&&& OSSIM_DEV_HOME               = ${OSSIM_DEV_HOME}" )
+MESSAGE( STATUS "&&&&&&&&&&&&&&&&&&& CMAKE_MODULE_PATH               = ${CMAKE_MODULE_PATH}" )
 
 IF(NOT OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
    SET(OSSIM_BUILD_ADDITIONAL_DIRECTORIES "" CACHE PATH "Specify full paths separated by ; to additional libraries you wish to include into the ossim build framework" FORCE)
