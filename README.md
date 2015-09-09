@@ -1,6 +1,6 @@
 ![ossim logo](/ossim-logo.png) 
 
-Welcome to OSSIM, an open source, C++, geospatial image processing library used by government, commercial, educational, and private entities throughout the planet. It has been in active development since 1996. This repository contains the full OSSIM package including core library, applications, tests, and build system
+Welcome to OSSIM, an open source, C++, geospatial image processing library used by government, commercial, educational, and private entities throughout the solar system. It has been in active development since 1996. This repository contains the full OSSIM package including core library, applications, tests, and build system
 
 # Related OssimLabs Repositories
 
