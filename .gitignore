@@ -1,8 +1,4 @@
 *~
-build/Debug
-build/Release
-build/RelWithDebInfo
-build/MinSizeRel
 core/include/ossim/ossimConfig.h
 core/include/ossim/ossimVersion.h
 
