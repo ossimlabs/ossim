@@ -2,26 +2,22 @@
 
 ##########################################################################
 #
-# CMake Configuration for OSSIM on Linux
+# CMake Configuration for OSSIM on Linux also generates Eclipse CDT4 
+# project files. You can import the project into Eclipse as "Existing 
+# Project into Workspace," and navigate to the output build directory
+# containing the Eclipse project files.
 #
 # DO NOT RELOCATE THIS SCRIPT. Its location is used to resolve relative
 # directory paths.
 #
-# Usage: <this_script_name> [<build_type>] 
+# Usage: <this_script_name>
 #
-# where the optional <build_type> is one of the following literals:
-# "Release" (default), "Debug", "RelWithDebInfo", or "MinSizeRel"
-#
-# If a build type = "eclipse" is specified, cmake will generate a Debug
-# build environment along with Eclipse CDT4 project files (in the build
-# directory) for importing as existing project.
-#
-# Instructions: Run this script to build the repository. This script can be
+# Instructions: Run this script to build the Makefiles. This script can be
 # run from any directory, but will assume a default relative directory
 # heirarchy when searching for related items.
 # 
 # No env vars need to be predefined. The build output will be written to
-# $OSSIM_DEV_HOME/build/<build_type> where $OSSIM_DEV_HOME is the top-level
+# $OSSIMLABS_DIR/build/Debug where $OSSIMLABS_DIR is the top-level
 # folder containing all OSSIM repositories (including this one).
 #
 # For customized output location, you can define the env var OSSIM_BUILD_DIR
@@ -33,23 +29,7 @@
 #set -x; trap read debug
 
 # Fetch the build type from command line:
-BUILD_TYPE_ARG=${1^^}
-case "$BUILD_TYPE_ARG" in
-  DEBUG)
-      CMAKE_BUILD_TYPE="Debug"
-      ;;
-  RELEASE)
-      CMAKE_BUILD_TYPE="Release"
-      ;;
-  RELWITHDEBINFO)
-      CMAKE_BUILD_TYPE="RelWithDebInfo"
-      ;;
-  MINSIZEREL)
-      CMAKE_BUILD_TYPE="MinSizeRel"
-      ;;
-  *)
-      CMAKE_BUILD_TYPE="Release"
-esac
+CMAKE_BUILD_TYPE="Debug"
 
 # Establish location of master CMakeLists.txt file. This is the cmake file
 # used to build all OSSIM-related repos (plugins, tests, oms, etc)
@@ -64,21 +44,23 @@ popd
 
 # Establish CMake's output build directory based on build type:
 if [ -z $OSSIM_BUILD_DIR ]; then
-  OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/build/$CMAKE_BUILD_TYPE
+  OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/../build/$CMAKE_BUILD_TYPE
 fi
 
 mkdir -p $OSSIM_BUILD_DIR
 pushd $OSSIM_BUILD_DIR
 rm CMakeCache.txt
 
+# Copy the master cmake file to the build dir:
+cp -f $CMAKE_DIR/CMakeLists.txt $OSSIM_DEV_HOME
+
 echo "Generating Makefiles in" $OSSIM_BUILD_DIR
 
-# CMAKE command 
-cmake -G "Unix Makefiles" \
+cmake -G "Eclipse CDT4 - Unix Makefiles" \
 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
 -DBUILD_OSSIM_APPS=ON \
 -DBUILD_OSSIM_TESTS=ON \
-$CMAKE_DIR
+$OSSIM_DEV_HOME
 
 popd
 

@@ -1,4 +1,3 @@
-PROJECT(ossimcore)
 Message("################## Setting up OSSIM core library #########################")
 
 IF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
@@ -35,8 +34,10 @@ CHECK_INCLUDE_FILE("malloc.h" CMAKE_HAVE_MALLOC_H)
 CHECK_INCLUDE_FILE("dlfcn.h" CMAKE_HAVE_DLFCN_H)
 
 # Set our include paths:
+MESSAGE(STATUS "@@@@@ PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
 include_directories( ${PROJECT_SOURCE_DIR}/include )
 include_directories( ${PROJECT_BINARY_DIR}/include )
+include_directories( ${OSSIM_INCLUDE_DIR} )
 
 # Stores list of libs to link with. Initialized throughout.
 set( ossimDependentLibs )
@@ -219,6 +220,6 @@ MESSAGE( STATUS "OSSIM DEPENDENT LIBRARIES       = ${ossimDependentLibs}" )
 #-----------------------------------------------------------------------------
 # uninstall target
 #-----------------------------------------------------------------------------
-OSSIM_ADD_COMMON_MAKE_UNINSTALL()
+#OSSIM_ADD_COMMON_MAKE_UNINSTALL()
 
 message("################## end of OSSIM core library setup #########################")

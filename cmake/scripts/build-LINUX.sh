@@ -1,4 +1,24 @@
 #!/bin/bash
+###############################################################################
+#
+# Build script for all OSSIM repositories
+#
+# This script can be run from anywhere. It performs three functions:
+# 
+#   1. If running in an interactive shell, it queries for user for a build type
+#      (Release, Debug, etc.),
+#   2. It invokes the cmake configuration script to generate Makefiles in the
+#      build directory.
+#   3. It builds all OSSIM code.
+#
+# No env vars need to be predefined. The build output will be written to
+# $OSSIMLABS_DIR/build/<build_type> where $OSSIMLABS_DIR is the top-level
+# folder containing all OSSIM repositories (including this one).
+#
+# For customized output location, you can define the env var OSSIM_BUILD_DIR
+# prior to running this script, and the output will be written there.
+#
+###############################################################################
 
 # Uncomment following line to debug script line by line:
 # set -x; trap read debug
@@ -49,8 +69,7 @@ fi
 
 # CMake successful, now run make in the build directory:
 pushd $OSSIM_BUILD_DIR
-# make -j
-make
+make -j 8
 if [ $? -ne 0 ]; then
   echo; echo "Error encountered during make. Check the console log and correct."
   popd

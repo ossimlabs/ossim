@@ -1,13 +1,14 @@
 PROJECT(ossim)
 
+MESSAGE(STATUS "@@@@@ CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}")
 IF ("$ENV{OSSIM_DEV_HOME}"  STREQUAL "")
-    SET(OSSIM_DEV_HOME "${CMAKE_CURRENT_SOURCE_DIR}/.." CACHE STRING "Cache the OSSIM dev home" FORCE)
+    SET(OSSIM_DEV_HOME "${CMAKE_CURRENT_SOURCE_DIR}/../.." CACHE STRING "Cache the OSSIM dev home" FORCE)
 ELSE()
     SET(OSSIM_DEV_HOME "$ENV{OSSIM_DEV_HOME}" CACHE STRING "Cache the OSSIM dev home" FORCE)
 
 ENDIF()
 IF ("$ENV{OSSIM_INSTALL_PREFIX}"  STREQUAL "")
-  SET(OSSIM_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install" CACHE STRING "Cache the OSSIM install prefix" FORCE)
+  SET(OSSIM_INSTALL_PREFIX "${OSSIM_DEV_HOME}/install" CACHE STRING "Cache the OSSIM install prefix" FORCE)
 ELSE()
   SET(OSSIM_INSTALL_PREFIX "$ENV{OSSIM_INSTALL_PREFIX}" CACHE STRING "Cache the OSSIM install prefix" FORCE)
 ENDIF()
@@ -18,10 +19,8 @@ ELSE()
   SET(OSSIM_DEPENDENCIES "$ENV{OSSIM_DEPENDENCIES}" CACHE STRING "Cache the OSSIM dependency dir" FORCE)
 ENDIF()
 
-SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
-
+SET(CMAKE_MODULE_PATH "${OSSIM_DEV_HOME}/ossim/cmake/CMakeModules")
 SET(CMAKE_INSTALL_PREFIX ${OSSIM_INSTALL_PREFIX})
-#SET(CMAKE_MODULE_PATH "${OSSIM_DEV_HOME}/build/CMakeModules;${CMAKE_MODULE_PATH}")
 
 IF(NOT OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
    SET(OSSIM_BUILD_ADDITIONAL_DIRECTORIES "" CACHE PATH "Specify full paths separated by ; to additional libraries you wish to include into the ossim build framework" FORCE)
@@ -64,7 +63,7 @@ IF(NOT OSSIM_LIBRARY)
 ENDIF(NOT OSSIM_LIBRARY)
 
 IF(NOT OSSIM_HOME)
-   SET(OSSIM_HOME "${OSSIM_DEV_HOME}/core" CACHE STRING "Caching" FORCE)
+   SET(OSSIM_HOME "${OSSIM_DEV_HOME}/ossim/core" CACHE STRING "Caching" FORCE)
 ENDIF(NOT OSSIM_HOME)
 
 IF(NOT OSSIM_INCLUDE_DIR)
@@ -129,10 +128,10 @@ ENDIF(NOT WMS_INCLUDE_DIR)
 
 
 ############################### Add subdirectories to build based on BUILD variables ###########################
-add_subdirectory(${OSSIM_HOME} ${CMAKE_CURRENT_BINARY_DIR}/core) 
+add_subdirectory(${OSSIM_HOME} ossim/core) 
 
-IF(BUILD_OSSIM_APPS AND EXISTS ${OSSIM_DEV_HOME}/apps )
-   add_subdirectory(${OSSIM_DEV_HOME}/apps ${CMAKE_CURRENT_BINARY_DIR}/apps)
+IF(BUILD_OSSIM_APPS AND EXISTS ${OSSIM_DEV_HOME}/ossim/apps )
+   add_subdirectory(${OSSIM_DEV_HOME}/ossim/apps ossim/apps)
 ENDIF()
 
 IF(BUILD_OSSIM_TESTS AND EXISTS ${OSSIM_DEV_HOME}/test )
@@ -243,17 +242,16 @@ IF (DOXYGEN_FOUND)
 ENDIF (DOXYGEN_FOUND)
 
 ############################## Setup shared file installation ##############################
-if(EXISTS ${OSSIM_DEV_HOME}/core/share/geoids/geoid1996/egm96.grd)
-
-  INSTALL(FILES ${OSSIM_DEV_HOME}/core/share/geoids/geoid1996/egm96.grd DESTINATION "share/ossim/geoids/geoid1996" COMPONENT ossim)
+if(EXISTS ${OSSIM_HOME}/share/ossim/geoids/egm96.grd)
+  INSTALL(FILES ${OSSIM_HOME}/share/ossim/geoids/egm96.grd DESTINATION "share/ossim/geoids" COMPONENT ossim)
 ELSE()
-  MESSAGE(WARNING "File ${OSSIM_DEV_HOME}/core/share/geoids/geoid1996/egm96.grd not found for install!")
+  MESSAGE(WARNING "File ${OSSIM_HOME}/share/ossim/geoids/egm96.grd not found for install!")
 ENDIF()
 # Fonts removed for rpms
 # INSTALL(FILES ${OSSIM_DEV_HOME}/ossim_package_support/fonts/arial.ttf DESTINATION "share/ossim/fonts" COMPONENT ossim)
 # INSTALL(FILES ${OSSIM_DEV_HOME}/ossim_package_support/fonts/times.ttf DESTINATION "share/ossim/fonts" COMPONENT ossim)
 
-FILE(GLOB ossim_cmake_modules ${OSSIM_DEV_HOME}/build/CmakeModules/*.cmake* )
+FILE(GLOB ossim_cmake_modules ${OSSIM_DEV_HOME}/ossim/cmake/CMakeModules/*.cmake* )
 INSTALL(FILES ${ossim_cmake_modules} DESTINATION share/ossim/${OSSIM_VERSION}/CMakeModules COMPONENT ossim)
 
 ############################## Setup the packages ###############################################################

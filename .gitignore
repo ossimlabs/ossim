@@ -1,4 +1,5 @@
 *~
 core/include/ossim/ossimConfig.h
 core/include/ossim/ossimVersion.h
+CMakeLists.txt
 
