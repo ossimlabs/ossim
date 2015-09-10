@@ -44,7 +44,7 @@ popd
 
 # Establish CMake's output build directory based on build type:
 if [ -z $OSSIM_BUILD_DIR ]; then
-  OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/../build/$CMAKE_BUILD_TYPE
+  OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/../eclipse
 fi
 
 mkdir -p $OSSIM_BUILD_DIR

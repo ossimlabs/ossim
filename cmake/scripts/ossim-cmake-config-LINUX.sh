@@ -30,7 +30,7 @@
 ##########################################################################
 
 # Uncomment following line to debug script line by line:
-#set -x; trap read debug
+set -x; trap read debug
 
 # Fetch the build type from command line:
 BUILD_TYPE_ARG=${1^^}
@@ -53,8 +53,9 @@ esac
 
 # Establish location of master CMakeLists.txt file. This is the cmake file
 # used to build all OSSIM-related repos (plugins, tests, oms, etc)
-pushd `dirname $0`/..
-CMAKE_DIR=$PWD
+SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+pushd $SCRIPT_DIR/..
+  CMAKE_DIR=$PWD
 popd
 
 # Establish the top-level directory above repo containing this script

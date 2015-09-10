@@ -21,10 +21,14 @@
 ###############################################################################
 
 # Uncomment following line to debug script line by line:
-# set -x; trap read debug
+#set -x; trap read debug
 
-SCRIPT_DIR=`dirname $0`
-CMAKE_CONFIG_SCRIPT=$SCRIPT_DIR/ossim-cmake-config-LINUX.sh
+SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+pushd $SCRIPT_DIR/../..
+REPO_DIR=$PWD
+popd
+
+CMAKE_CONFIG_SCRIPT=$REPO_DIR/cmake/scripts/ossim-cmake-config-LINUX.sh
 
 # Consider whether running in interactive shell or batch for possible 
 # prompting on build configuration:
