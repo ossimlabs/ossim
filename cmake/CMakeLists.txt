@@ -63,7 +63,7 @@ IF(NOT OSSIM_LIBRARY)
 ENDIF(NOT OSSIM_LIBRARY)
 
 IF(NOT OSSIM_HOME)
-   SET(OSSIM_HOME "${OSSIM_DEV_HOME}/ossim/core" CACHE STRING "Caching" FORCE)
+   SET(OSSIM_HOME "${OSSIM_DEV_HOME}/ossim" CACHE STRING "Caching" FORCE)
 ENDIF(NOT OSSIM_HOME)
 
 IF(NOT OSSIM_INCLUDE_DIR)
@@ -75,7 +75,7 @@ IF(NOT OSSIMPLANET_LIBRARY)
 ENDIF(NOT OSSIMPLANET_LIBRARY)
 
 IF(NOT OSSIMPLANET_INCLUDE_DIR)
-   SET(OSSIMPLANET_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossimPlanet/include" CACHE STRING "Caching" FORCE)
+   SET(OSSIMPLANET_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossim-planet/include" CACHE STRING "Caching" FORCE)
 ENDIF(NOT OSSIMPLANET_INCLUDE_DIR)
 
 IF(NOT OSSIMPLANETQT_LIBRARY)
@@ -90,16 +90,12 @@ IF(NOT OSSIMQT_LIBRARY)
    SET(OSSIMQT_LIBRARY "ossimQt" CACHE STRING "Caching" FORCE)
 ENDIF(NOT OSSIMQT_LIBRARY)
 
-IF(NOT OSSIMQT_INCLUDE_DIR)
-   SET(OSSIMQT_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossimQt/include" CACHE STRING "Caching" FORCE)
-ENDIF(NOT OSSIMQT_INCLUDE_DIR)
-
-IF(NOT OSSIMPREDATOR_LIBRARY AND BUILD_OSSIMPREDATOR)
-    SET(OSSIMPREDATOR_LIBRARY "ossimPredator" CACHE STRING "Caching" FORCE)
+IF(NOT OSSIMVIDEO_LIBRARY AND BUILD_OSSIMVIDEO)
+    SET(OSSIMVIDEO_LIBRARY "ossim-video" CACHE STRING "Caching" FORCE)
 ENDIF()
  
-IF(NOT OSSIMPREDATOR_INCLUDE_DIR AND BUILD_OSSIMPREDATOR)
-    SET(OSSIMPREDATOR_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossimPredator/include" CACHE STRING "Caching" FORCE)
+IF(NOT OSSIMVIDEO_INCLUDE_DIR AND BUILD_OSSIMVIDEO)
+    SET(OSSIMVIDEO_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossim-video/include" CACHE STRING "Caching" FORCE)
 ENDIF()
 
 IF(NOT CSMAPI_LIBRARY)
@@ -111,63 +107,43 @@ IF(NOT CSMAPI_INCLUDE_DIR)
 ENDIF(NOT CSMAPI_INCLUDE_DIR)
 
 IF(NOT OMS_LIBRARY)
-   SET(OMS_LIBRARY "oms" CACHE STRING "Caching" FORCE)
+   SET(OMS_LIBRARY "ossim-oms" CACHE STRING "Caching" FORCE)
 ENDIF(NOT OMS_LIBRARY)
 
 IF(NOT OMS_INCLUDE_DIR)
-   SET(OMS_INCLUDE_DIR "${OSSIM_DEV_HOME}/oms/coms/include" CACHE STRING "Caching" FORCE)
+   SET(OMS_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossim-oms/coms/include" CACHE STRING "Caching" FORCE)
 ENDIF(NOT OMS_INCLUDE_DIR)
 
 IF(NOT WMS_LIBRARY)
-   SET(WMS_LIBRARY "wms" CACHE STRING "Caching" FORCE)
+   SET(WMS_LIBRARY "ossim-wms" CACHE STRING "Caching" FORCE)
 ENDIF(NOT WMS_LIBRARY)
 
 IF(NOT WMS_INCLUDE_DIR)
-   SET(WMS_INCLUDE_DIR "$ENV{OSSIM_DEV_HOME}/libwms/include" CACHE STRING "Caching" FORCE)
+   SET(WMS_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossim-wms/include" CACHE STRING "Caching" FORCE)
 ENDIF(NOT WMS_INCLUDE_DIR)
 
 
 ############################### Add subdirectories to build based on BUILD variables ###########################
-add_subdirectory(${OSSIM_HOME} ossim/core) 
+add_subdirectory(${OSSIM_HOME} ${CMAKE_CURRENT_BINARY_DIR}/ossim) 
 
-IF(BUILD_OSSIM_APPS AND EXISTS ${OSSIM_DEV_HOME}/ossim/apps )
-   add_subdirectory(${OSSIM_DEV_HOME}/ossim/apps ossim/apps)
+IF(BUILD_WMS AND EXISTS ${OSSIM_DEV_HOME}/ossim-wms )
+   add_subdirectory(${OSSIM_DEV_HOME}/ossim-wms ${CMAKE_CURRENT_BINARY_DIR}/ossim-wms)
 ENDIF()
 
-IF(BUILD_OSSIM_TESTS AND EXISTS ${OSSIM_DEV_HOME}/test )
-   add_subdirectory(${OSSIM_DEV_HOME}/test ${CMAKE_CURRENT_BINARY_DIR}/test)
+IF(BUILD_OSSIMVIDEO AND EXISTS ${OSSIM_DEV_HOME}/ossim-video)
+   add_subdirectory(${OSSIM_DEV_HOME}/ossim-video ${CMAKE_CURRENT_BINARY_DIR}/ossim-video)
 ENDIF()
 
-IF(BUILD_WMS AND EXISTS ${OSSIM_DEV_HOME}/wms )
-   add_subdirectory(${OSSIM_DEV_HOME}/libwms ${CMAKE_CURRENT_BINARY_DIR}/wms)
+IF(BUILD_OMS AND EXISTS ${OSSIM_DEV_HOME}/ossim-oms)
+   add_subdirectory(${OSSIM_DEV_HOME}/ossim-oms ${CMAKE_CURRENT_BINARY_DIR}/ossim-oms)
 ENDIF()
 
-IF(BUILD_OSSIMPREDATOR AND EXISTS ${OSSIM_DEV_HOME}/ossimPredator)
-   add_subdirectory(${OSSIM_DEV_HOME}/ossimPredator ${CMAKE_CURRENT_BINARY_DIR}/ossimPredator)
+IF(BUILD_OSSIMPLANET AND EXISTS ${OSSIM_DEV_HOME}/ossim-planet)
+   add_subdirectory(${OSSIM_DEV_HOME}/ossim-planet ${CMAKE_CURRENT_BINARY_DIR}/ossim-planet)
 ENDIF()
 
-IF(BUILD_OMS AND EXISTS ${OSSIM_DEV_HOME}/oms)
-   add_subdirectory(${OSSIM_DEV_HOME}/oms ${CMAKE_CURRENT_BINARY_DIR}/oms)
-ENDIF()
-
-IF(BUILD_OSSIMJNI AND EXISTS ${OSSIM_DEV_HOME}/ossimjni)
-   add_subdirectory(${OSSIM_DEV_HOME}/ossimjni ${CMAKE_CURRENT_BINARY_DIR}/ossimjni)
-ENDIF()
-
-IF(BUILD_OSSIMPLANET AND EXISTS ${OSSIM_DEV_HOME}/ossimPlanet)
-   add_subdirectory(${OSSIM_DEV_HOME}/ossimPlanet ${CMAKE_CURRENT_BINARY_DIR}/ossimPlanet)
-ENDIF()
-
-IF(BUILD_OSSIMPLANET AND BUILD_OSSIMPLANETQT AND EXISTS ${OSSIM_DEV_HOME}/ossimPlanetQt)
-   add_subdirectory(${OSSIM_DEV_HOME}/ossimPlanetQt ${CMAKE_CURRENT_BINARY_DIR}/ossimPlanetQt)
-ENDIF()
-
-IF(BUILD_OSSIMQT4 AND EXISTS ${OSSIM_DEV_HOME}/ossim_qt4)
-     add_subdirectory(${OSSIM_DEV_HOME}/ossim_qt4 ${CMAKE_CURRENT_BINARY_DIR}/ossimQt4)
-ENDIF()
-
-IF(BUILD_OSSIMGUI AND EXISTS ${OSSIM_DEV_HOME}/ossimGui)
-     add_subdirectory(${OSSIM_DEV_HOME}/ossimGui ${CMAKE_CURRENT_BINARY_DIR}/ossimGui)
+IF(BUILD_OSSIMGUI AND EXISTS ${OSSIM_DEV_HOME}/ossim-gui)
+     add_subdirectory(${OSSIM_DEV_HOME}/ossim-gui ${CMAKE_CURRENT_BINARY_DIR}/ossim-gui)
 ENDIF()
 
 IF(OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
@@ -218,8 +194,8 @@ IF (DOXYGEN_FOUND)
 
      SET(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/doc/ossim-${OSSIM_VERSION}/ossimApi")
      OSSIM_GENERATE_DOXYGEN("${DOXYGEN_OUTPUT_DIRECTORY}"
-                      "${OSSIM_DEV_HOME}/ossim/Doxyfile.in"
-                      "${OSSIM_DEV_HOME}/ossim"
+                      "${OSSIM_DEV_HOME}/ossim/doc/Doxyfile.in"
+                      "${OSSIM_DEV_HOME}/ossim/doc"
                       "${CMAKE_BINARY_DIR}/OssimDoxyfile"
                       "ossim-api"
                       "ossim")
@@ -230,7 +206,7 @@ IF (DOXYGEN_FOUND)
         SET(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/doc/ossim-${OSSIM_VERSION}/ossimPlanetApi")
         OSSIM_GENERATE_DOXYGEN("${DOXYGEN_OUTPUT_DIRECTORY}"
                          "${OSSIM_DEV_HOME}/ossim/Doxyfile.in"
-                         "${OSSIM_DEV_HOME}/ossimPlanet"
+                         "${OSSIM_DEV_HOME}/ossim-planet"
                          "${CMAKE_BINARY_DIR}/OssimPlanetDoxyfile"
                          "ossimPlanet-api"
                          "ossimPlanet")

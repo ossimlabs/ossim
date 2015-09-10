@@ -30,7 +30,7 @@
 ##########################################################################
 
 # Uncomment following line to debug script line by line:
-set -x; trap read debug
+#set -x; trap read debug
 
 # Fetch the build type from command line:
 BUILD_TYPE_ARG=${1^^}

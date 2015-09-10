@@ -90,6 +90,7 @@ IF(GIT_EXECUTABLE)
     # SET(ENV{LC_ALL} C)
 
     EXECUTE_PROCESS(COMMAND ${GIT_EXECUTABLE} rev-list HEAD --count
+      WORKING_DIRECTORY ${dir}
       OUTPUT_VARIABLE ${prefix}_WC_REVISION
       ERROR_VARIABLE git_info_error
       RESULT_VARIABLE git_info_result
