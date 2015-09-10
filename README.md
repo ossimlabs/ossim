@@ -7,7 +7,7 @@ Welcome to OSSIM, an open source, C++, geospatial image processing library used 
 Coming soon.
 
 # How to Build
-The easy way is to just run the script in `ossim/build/scripts/build-<OS>.sh`. There are scripts for Linux, Mac, and Windows (the latter has a `.bat` extension). This is known as the "run-and-pray" approach and should work for the default build configuration. Assuming all dependencies were met and no compile/link errors occured, this script will generate all build binaries under the ossim/build subdirectory. 
+The easy way is to just run the script in `ossim/cmake/scripts/build-<OS>.sh`. There are scripts for Linux, Mac, and Windows (the latter has a `.bat` extension). This is known as the "run-and-pray" approach and should work for the default build configuration. Assuming all dependencies were met and no compile/link errors occured, this script will generate all build binaries under a sibling directory to the ossim repo directory, namely, `ossim/../build/<build_type>`
 
 This repository provides the CMAKE infrastructure necessary to build the OSSIM core library and related plugins and applications. Throughout this document, reference is made to the local, top-level directory corresponding to this repository (./ossim). We'll call this directory simply *ossim-top-dir*. 
 
@@ -25,7 +25,7 @@ Building OSSIM and related repos from source is a two-step process: first create
 ## Creating the Makefiles
 
 ### Creating a Default Build Environment
-The cmake configuration scripts are available in the `build/scripts` subdirectory. Assuming no OSSIM environment variables are available to override the defaults, an "out-of-source" build directory will be created under the `build` directory. On linux systems, it will be named "Debug", "Release", "RelWithDebInfo", or "MinSizeRel" depending on the type of build requested. The script (if run in an interactive shell) will query for the build type. If the script is run as part of a batch process, "Release" is assumed. If the build directory does not exist, it will be created.
+The cmake configuration scripts are available in the `cmake/scripts` subdirectory. Assuming no OSSIM environment variables are available to override the defaults, the "out-of-source" `build` directory will be created under the same parent directory containing the *ossim-top-dir* directory. On linux systems, the `build` directory will be contain the cmake-generated output subdirectories "Debug", "Release", "RelWithDebInfo", or "MinSizeRel" depending on the type of build requested. The script (if run in an interactive shell) will query for the build type. If the script is run as part of a batch process, "Release" is assumed. If the build directory does not exist, it will be created.
 
 ### Customizing the Build
 There are two ways to customize the build: via environment variables and by directly editing the cmake configuration script. 
@@ -33,11 +33,11 @@ There are two ways to customize the build: via environment variables and by dire
 #### Environment Variables
 The CMake system will locally define certain environment variables that live for the lifetime of the cmake config script execution. The following shell variables, if defined, are referenced to override the default settings.
 
-The developer has the option to override the default build directory location by setting the environment variable `OSSIM_BUILD_DIR` prior to running the cmake config script. If not present, the build directory will be located under `build` as described above. (There is a `.gitignore` in this repo that lists both "Debug" and "Release", so you won't be "polluting" your repository with unversioned items.)
-
-The location of the source code repository is assumed to be the *ossim-top-dir* directory containing build subdirectory. This top-level directory is represented in the cmake scripts by the local environment variable `OSSIM_DEV_HOME` and defaults to the *ossim-top-dir* directory. If, for some reason, the source is located elsewhere, you can override this with an environment var of the same name.
+The developer has the option to override the default build directory location by setting the environment variable `OSSIM_BUILD_DIR` prior to running the cmake config script. If not present, the `build` directory will be located as a sibling to *ossim-top-dir* as described above. 
 
 Another defaulted environment variable is `OSSIM_INSTALL_PREFIX`. This variable as two distinct functions. First, it indicates where to install the OSSIM SDK when running `make install`. Second, it serves to specify a path to SDKs that OSSIM depends on. The CMake system will scan `OSSIM_INSTALL_PREFIX` for the presence of dependency packages such as GeoTiff, JPEG, and others. This secondary purpose of `OSSIM_INSTALL_PREFIX` used to be handled by the now obsolete environment variable `OSSIM_DEPENDENCIES`. It is a reasonable consolidation since the OSSIM install will need to include these dependencies if they are not available in their standard installation locations (/usr/lib, /usr/local/lib, etc.), so placing these SDKs in the final OSSIM install directory prior to building OSSIM makes sense. If no override is defined for `OSSIM_INSTALL_PREFIX`, then the cmake config script will default to `$OSSIM_DEV_HOME/install`. You can populate that directory with non-standard installs of the OSSIM dependencies prior to running the script. If the directory does not exist, it is created by the script. Obviously, in that case, all OSSIM dependencies will be expected to be found in standard system install folders.
+
+NOTE: For legacy reasons, `OSSIM_DEPENDENCIES` is still scanned for dependency SDKs. New dependencies however should be "installed" in `OSSIM_INSTALL_PREFIX`.
 
 #### Editing the CMake Config Script
 The default configuration relies on the presence of the OSSIM repositories under the *ossim-top-dir* to decide whether to include those in the build. You may want to selectively exclude certain plugins or applications from the build without having to hide the workspaces from CMake. The flags enabling those are defined in the script. Simply set the corresponding variable to "OFF" and rerun the script. 
@@ -58,11 +58,14 @@ Once the cmake configuration script terminates successfully, you are ready to bu
 
 First change directory to the build folder created by the cmake config script (defaulted to either "Debug" or "Release"). There you will find a top-level Makefile that will bootstrap the build. From a terminal, run `make`. The build should proceed normally for a few minutes, longer if the first time through. Upon successful completion, you should find a "lib" and "bin" folder containing the ossim library and executable, respectively.
 
-Developers have different ways of working -- all we're helping you with here is building the OSSIM library and associated plugins and executables. You may choose to then run `make install` to copy the binaries to some standard system location (you'll need to have the appropriate permissions). Alternatively, you can append your `PATH` environment variable to include the Release/bin (or Debug/bin) folder containing the executables. You also need to update the library path to include Release/lib (or Debug/lib). These settings vary by OS so you're on your own here. (Side note: Ubuntu doesn't use the Linux standard `$LD_LIBRARY_PATH`, for example). 
+Developers have different ways of working -- all we're helping you with here is building the OSSIM library and associated plugins and executables. You may choose to then run `make install` to copy the binaries to some standard system location (you'll need to have the appropriate permissions). Alternatively, you can append your `PATH` environment variable to include the `build/Release/bin` (or `build/Debug/bin`) folder containing the executables. You also need to update the library path to include `build/Release/lib` (or `build/Debug/lib`). These settings vary by OS so you're on your own here. (Side note: Ubuntu doesn't use the Linux standard `$LD_LIBRARY_PATH`, for example). 
 
 ## Integrated Development Environments
 
 You may be able to import the build environment into your IDE "as a Makefile project." The Windows cmake configuration script will generate Visual Studio project files for direct import into Visual Studio. You may want to take a look at that script to see if there is a custom setting (or command line argument) you need to tinker with.
+
+### Eclipse Users
+For convenience, there is a script at `ossim/cmake/scripts/ossim-cmake-config-ECLIPSE.sh` that will generate the Eclipse CDT4 project files. The output `build` directory will necessarily be one directory up from the default `build` (i.e., in `<ossim-top-dir>/../../build`). This is required so that Eclipse will properly generate a link to the `Source` for indexed navigation. It is built with debug. To import into your Eclipse workspace, right-click in the Project Explorer and select Import->General->"Existing Project...", then select the root directory by browsing to <ossim-top-dir>/../../build/Debug` and clicking "OK".
 
 # How to Test
 
