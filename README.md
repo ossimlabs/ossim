@@ -1,10 +1,14 @@
 ![ossim logo](/ossim-logo.png) 
 
-Welcome to OSSIM, an open source, C++, geospatial image processing library used by government, commercial, educational, and private entities throughout the solar system. It has been in active development since 1996. This repository contains the full OSSIM package including core library, applications, tests, and build system
+Welcome to OSSIM, an open source, C++, geospatial image processing library used by government, commercial, educational, and private entities throughout the solar system. It has been in active development since 1996. This repository contains the full OSSIM package including core library, applications, tests, and build system. It does *not* contain the OSSIM plugins and other OSSIM-related code such as java-bindings (ossim-oms), GUI, and others
 
 # Related OssimLabs Repositories
 
-Coming soon.
+[ossim-oms](http://ossimlabs/ossim-oms),
+
+[ossim-mrsid-plugin](http://ossimlabs/ossim-mrsid-plugin),
+
+Others to be anounced when made available on github.
 
 # How to Build
 The easy way is to just run the script in `ossim/scripts/<OS>/build.sh`. There are (or son will be) scripts for Linux, Mac, and Windows. This is known as the "run-and-pray" approach and should work for the default build configuration. Assuming all dependencies were met and no compile/link errors occured, this script will generate all build binaries under a sibling directory to the ossim repo directory, namely, `ossim/../build/<build_type>`
