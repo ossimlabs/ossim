@@ -7,7 +7,7 @@ Welcome to OSSIM, an open source, C++, geospatial image processing library used 
 Coming soon.
 
 # How to Build
-The easy way is to just run the script in `ossim/cmake/scripts/build-<OS>.sh`. There are scripts for Linux, Mac, and Windows (the latter has a `.bat` extension). This is known as the "run-and-pray" approach and should work for the default build configuration. Assuming all dependencies were met and no compile/link errors occured, this script will generate all build binaries under a sibling directory to the ossim repo directory, namely, `ossim/../build/<build_type>`
+The easy way is to just run the script in `ossim/scripts/<OS>/build.sh`. There are (or son will be) scripts for Linux, Mac, and Windows. This is known as the "run-and-pray" approach and should work for the default build configuration. Assuming all dependencies were met and no compile/link errors occured, this script will generate all build binaries under a sibling directory to the ossim repo directory, namely, `ossim/../build/<build_type>`
 
 This repository provides the CMAKE infrastructure necessary to build the OSSIM core library and related plugins and applications. Throughout this document, reference is made to the local, top-level directory corresponding to this repository (./ossim). We'll call this directory simply *ossim-top-dir*. 
 
@@ -65,7 +65,7 @@ Developers have different ways of working -- all we're helping you with here is 
 You may be able to import the build environment into your IDE "as a Makefile project." The Windows cmake configuration script will generate Visual Studio project files for direct import into Visual Studio. You may want to take a look at that script to see if there is a custom setting (or command line argument) you need to tinker with.
 
 ### Eclipse Users
-For convenience, there is a script at `ossim/cmake/scripts/ossim-cmake-config-ECLIPSE.sh` that will generate the Eclipse CDT4 project files. The output `build` directory will necessarily be one directory up from the default `build` (i.e., in `<ossim-top-dir>/../../build`). This is required so that Eclipse will properly generate a link to the `Source` for indexed navigation. It is built with debug. To import into your Eclipse workspace, right-click in the Project Explorer and select Import->General->"Existing Project...", then select the root directory by browsing to <ossim-top-dir>/../../build/Debug` and clicking "OK".
+For convenience, there is a script at `ossim/cmake/scripts/ossim-cmake-config-ECLIPSE.sh` that will generate the Eclipse CDT4 project files. The output build directory will necessarily be one directory up from the default `build`, namely, in `<ossim-top-dir>/../../eclipse`). This is required so that Eclipse will properly generate a link to the `Source` for indexed navigation. It is built with debug. To import into your Eclipse workspace, right-click in the Project Explorer and select Import->General->"Existing Project...", then select the root directory by browsing to `<ossim-top-dir>/../../eclipse` and clicking "OK".
 
 # How to Test
 
