@@ -16,7 +16,7 @@
 //              Derived from ossimElevCellHandler.
 //<
 //*****************************************************************************
-// $Id: ossimDtedHandler.h 23117 2015-01-29 22:33:13Z okramer $
+// $Id: ossimDtedHandler.h 23497 2015-08-28 15:28:59Z okramer $
 
 #ifndef ossimDtedHandler_HEADER
 #define ossimDtedHandler_HEADER
@@ -115,6 +115,8 @@ public:
       return new ossimDtedHandler(this->getFilename(), (m_memoryMap.size() != 0));
    }
 
+   virtual ~ossimDtedHandler();
+
 protected:
 
    /// DtedPost, this class contains the height, weighting factor and status
@@ -154,7 +156,6 @@ protected:
    };
 
 
-   virtual ~ossimDtedHandler();
   // Disallow operator= and copy construction...
    const ossimDtedHandler& operator=(const ossimDtedHandler& rhs);
    ossimDtedHandler(const ossimDtedHandler&);

@@ -8,7 +8,7 @@
 // Author: Garrett Potts
 //
 //*************************************************************************
-// $Id: ossimDataObject.h 19931 2011-08-10 11:53:25Z gpotts $
+// $Id: ossimDataObject.h 23505 2015-09-08 19:04:19Z dburken $
 
 #ifndef ossimDataObject_HEADER
 #define ossimDataObject_HEADER
@@ -88,19 +88,6 @@ public:
    
    virtual void assign(const ossimDataObject* rhs);
 
-   /**
-    * Derived classes should implement this method.  For data objects
-    * there is usually 2 types of tests a shallow and a deep test.  If
-    * deepTest is false then a shallow test is performed.  I shallow test
-    * just doesn't compare the data but instead compares the fields that
-    * describes the data. For example if it were an ossimImageData then a
-    * shallow compare will just compare the origin, scale, width, height,
-    * number of bands, min, max, null, and scalar type.  If
-    * it were a deep compare it will also test the actual data to one another.
-    */
-   virtual bool isEqualTo(const ossimDataObject& rhs,
-                          bool deepTest=false)const=0;
-   
    virtual const ossimDataObject* operator =(const ossimDataObject* rhs);
    
    virtual const ossimDataObject& operator=(const ossimDataObject& rhs);
