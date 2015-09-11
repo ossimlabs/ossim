@@ -21,10 +21,13 @@
 #---
 # Find the include dirs:
 #---
+message(status " @@@@@ MRSID include path: ${CMAKE_CURRENT_SOURCE_DIR}/MRSID_SDK_DIR/Raster_DSDK/include")
 FIND_PATH( MRSID_RASTER_INCLUDE_DIR MrSIDImageReader.h
+           PATHS
            ${MRSID_DIR}/Raster_DSDK/include )
 
 FIND_PATH( MRSID_LIDAR_INCLUDE_DIR lidar/MG4PointReader.h
+           PATHS
            ${MRSID_DIR}/Lidar_DSDK/include )
 
 #---

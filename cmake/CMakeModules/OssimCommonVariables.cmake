@@ -220,12 +220,10 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    ENDIF(NOT OSSIM_DEPENDENCIES)
  
    #################################### ADd some common options for all modules to use ###################################
-   OPTION(BUILD_OSSIMPREDATOR "Set to ON to build the Predator video decoding library.  Use OFF to skip this module." ON)
+   OPTION(BUILD_OSSIMVIDEO "Set to ON to build the video decoding library.  Use OFF to skip this module." ON)
    OPTION(BUILD_OSSIMPLANET "Set to ON to build the 3-D visualization module.  Use OFF to skip this module." ON)
-   OPTION(BUILD_OSSIMPLANETQT "Set to ON to build the 3-D visualization Qt GUI module.  Use OFF to skip this module." ON)
-   OPTION(BUILD_OSSIMQT4 "Set to ON to build the 2-D Qt4 GUI." ON)
    OPTION(BUILD_OSSIMGUI "Set to ON to build the new ossimGui library and geocell application." ON)
-   OPTION(BUILD_CSMAPI "Set to ON to build the csm api library." ON)
+   OPTION(BUILD_MRSID_PLUGIN "Set to ON to build the MrSID plugin library." ON)
    OPTION(BUILD_OMS "Set to ON to build the oms api library." ON)
    OPTION(BUILD_WMS "Set to ON to build the wms api library." ON)
 

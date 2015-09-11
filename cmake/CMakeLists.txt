@@ -1,6 +1,5 @@
 PROJECT(ossim)
 
-MESSAGE(STATUS "@@@@@ CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}")
 IF ("$ENV{OSSIM_DEV_HOME}"  STREQUAL "")
     SET(OSSIM_DEV_HOME "${CMAKE_CURRENT_SOURCE_DIR}/../.." CACHE STRING "Cache the OSSIM dev home" FORCE)
 ELSE()
@@ -123,7 +122,7 @@ IF(NOT WMS_INCLUDE_DIR)
 ENDIF(NOT WMS_INCLUDE_DIR)
 
 
-############################### Add subdirectories to build based on BUILD variables ###########################
+############################### Add subdirectories to build based on BUILD variables and presence of repo ###########################
 add_subdirectory(${OSSIM_HOME} ${CMAKE_CURRENT_BINARY_DIR}/ossim) 
 
 IF(BUILD_WMS AND EXISTS ${OSSIM_DEV_HOME}/ossim-wms )
@@ -144,6 +143,10 @@ ENDIF()
 
 IF(BUILD_OSSIMGUI AND EXISTS ${OSSIM_DEV_HOME}/ossim-gui)
      add_subdirectory(${OSSIM_DEV_HOME}/ossim-gui ${CMAKE_CURRENT_BINARY_DIR}/ossim-gui)
+ENDIF()
+
+IF(BUILD_MRSID_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-mrsid-plugin)
+     add_subdirectory(${OSSIM_DEV_HOME}/ossim-mrsid-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-mrsid-plugin)
 ENDIF()
 
 IF(OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
