@@ -1,0 +1,47 @@
+#!/bin/bash
+###############################################################################
+#
+# Convenience script for performing git operations on multiple OSSIMLABS repos.
+# Up to three git parameters are handled, for example:
+#
+#    got commit -a
+#    got log --oneline --graph
+#
+# Obviously, only commands that make sense to run on all repos will work. You
+# can't commit a specific file for example.
+#
+# Run this script from ossimlabs parent directory (a.k.a. OSSIM_DEV_HOME) 
+#
+###############################################################################
+
+
+# FUNCTION: do_git <repo_name> <cmd_line_arg_1> <cmd_line_arg_2> <cmd_line_arg_3>
+function do_git {
+  if [ -d $1 ]; then
+    echo; 
+    echo "*******************************************************************************"
+    echo "*  $1"; 
+    echo "*******************************************************************************"
+    echo
+    pushd $1
+    git $2 $3 $4
+    popd
+    echo; echo; 
+  fi
+}
+ 
+if [ -z $1 ]; then
+  echo; echo "Runs specified git command across all ossimlabs repositories. Usage:"
+  echo; echo "  `basename "$0"` <git-arg1> [<git-arg2> [<git-arg3>]]"
+  echo; echo "This script must be run from the ossimlabs parent directory."
+  echo; echo "Examples:"; echo 
+  echo "  `basename "$0"` status"
+  echo "  `basename "$0"` log --oneline --graph"; echo  
+  exit 0
+fi
+
+do_git ossim $1 $2 $3
+do_git ossim-mrsid-plugin $1 $2 $3
+do_git ossim-oms $1 $2 $3
+
+
