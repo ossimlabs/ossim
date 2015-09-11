@@ -1,6 +1,8 @@
 #!/bin/bash
 ###############################################################################
 #
+# got = git for OSSIM
+#
 # Convenience script for performing git operations on multiple OSSIMLABS repos.
 # Up to three git parameters are handled, for example:
 #
@@ -29,15 +31,21 @@ function do_git {
     echo; echo; 
   fi
 }
- 
-if [ -z $1 ]; then
+
+# FUNCTION: usage <script_basename> 
+function usage {
   echo; echo "Runs specified git command across all ossimlabs repositories. Usage:"
-  echo; echo "  `basename "$0"` <git-arg1> [<git-arg2> [<git-arg3>]]"
+  echo; echo "  $1 <git-arg1> [<git-arg2> [<git-arg3>]]"
   echo; echo "This script must be run from the ossimlabs parent directory."
   echo; echo "Examples:"; echo 
-  echo "  `basename "$0"` status"
-  echo "  `basename "$0"` log --oneline --graph"; echo  
+  echo "  $1 status"
+  echo "  $1 log --oneline --graph"; echo  
   exit 0
+}
+
+# Body of script:
+if [ -z $1 ]; then
+  usage `basename "$0"`
 fi
 
 do_git ossim $1 $2 $3
