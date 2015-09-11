@@ -3,7 +3,7 @@
 Welcome to OSSIM, an open source, C++, geospatial image processing library used by government, commercial, educational, and private entities throughout the solar system. It has been in active development since 1996. This repository contains the full OSSIM package including core library, applications, tests, and build system. It does *not* contain the OSSIM plugins and other OSSIM-related code such as java-bindings (ossim-oms), and GUI. Those are available for individually cloning. Refer to the root github page for [ossimlabs](https://github.com/ossimlabs).
 
 # How to Build
-The easy way is to just run the script in `ossim/scripts/<OS>/build.sh`. There are (or son will be) scripts for Linux, Mac, and Windows. This is known as the "run-and-pray" approach and should work for the default build configuration. Assuming all dependencies were met and no compile/link errors occured, this script will generate all build binaries under a sibling directory to the ossim repo directory, namely, `ossim/../build/<build_type>`
+The easy way is to just run the script in `ossim/scripts/<OS>/build.sh`. There are (or soon will be) scripts for Linux, Mac, and Windows. This is known as the "run-and-pray" approach and should work for the default build configuration. Assuming all dependencies were met and no compile/link errors occured, this script will generate all build binaries under a sibling directory to the ossim repo directory, namely, `ossim/../build/<build_type>`
 
 This repository provides the CMAKE infrastructure necessary to build the OSSIM core library and related plugins and applications. Throughout this document, reference is made to the local, top-level directory corresponding to this repository (./ossim). We'll call this directory simply *ossim-top-dir*. 
 
