@@ -44,12 +44,14 @@ function usage {
 }
 
 # Body of script:
+
 if [ -z $1 ]; then
   usage `basename "$0"`
 fi
 
 do_git ossim $1 $2 $3
-do_git ossim-mrsid-plugin $1 $2 $3
 do_git ossim-oms $1 $2 $3
+do_git ossim-mrsid-plugin $1 $2 $3
+do_git ossim-kakadu-plugin $1 $2 $3
 
 

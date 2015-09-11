@@ -149,6 +149,10 @@ IF(BUILD_MRSID_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-mrsid-plugin)
      add_subdirectory(${OSSIM_DEV_HOME}/ossim-mrsid-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-mrsid-plugin)
 ENDIF()
 
+IF(BUILD_KAKADU_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-kakadu-plugin)
+     add_subdirectory(${OSSIM_DEV_HOME}/ossim-kakadu-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-kakadu-plugin)
+ENDIF()
+
 IF(OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
     FOREACH(it IN LISTS OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
         MESSAGE(STATUS "**********************Adding additional subdirectory ${it}*************************")
