@@ -28,7 +28,7 @@
 //  $Id: ossimSensorModel.h 23297 2015-05-05 20:32:16Z dburken $
 
 #ifndef ossimSensorModel_HEADER
-#define ossimSensorModel_HEADER
+#define ossimSensorModel_HEADER 1
 
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimBilinearProjection.h>
@@ -270,6 +270,18 @@ public:
     * @return Nothing but throws ossimException on error.
     */
    void computeGsd();
+
+   /**
+    * @brief Extracts geometry info from a non-ossim key,value pair 
+    * to an ossim keyword list.
+    *
+    * @param key non-ossim-based input ossimString 
+    * @param value non-ossim-based input ossimString
+    * @param geomKwl The keyword list to fill in.
+    */
+   virtual bool getImageGeometry( 
+      const ossimString& /* key */, const ossimString& /* value */, 
+      ossimKeywordlist& /* geomKwl */ ) const { return false; }
 
 protected:
    virtual ~ossimSensorModel();
