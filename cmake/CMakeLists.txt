@@ -153,6 +153,10 @@ IF(BUILD_KAKADU_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-kakadu-plugin)
      add_subdirectory(${OSSIM_DEV_HOME}/ossim-kakadu-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-kakadu-plugin)
 ENDIF()
 
+IF(BUILD_PDAL_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-pdal-plugin)
+     add_subdirectory(${OSSIM_DEV_HOME}/ossim-pdal-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-pdal-plugin)
+ENDIF()
+
 IF(OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
     FOREACH(it IN LISTS OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
         MESSAGE(STATUS "**********************Adding additional subdirectory ${it}*************************")
