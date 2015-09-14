@@ -100,12 +100,12 @@ std::ostream& ossimJp2Info::print(std::ostream& out) const
 
          const ossim_uint32 UUID_TYPE = 0x75756964;
          const ossim_uint8 GEOTIFF_UUID[GEOTIFF_UUID_SIZE] = 
-         {
-            0xb1, 0x4b, 0xf8, 0xbd,
-            0x08, 0x3d, 0x4b, 0x43,
-            0xa5, 0xae, 0x8c, 0xd7,
-            0xd5, 0xa6, 0xce, 0x03
-         };
+            {
+               0xb1, 0x4b, 0xf8, 0xbd,
+               0x08, 0x3d, 0x4b, 0x43,
+               0xa5, 0xae, 0x8c, 0xd7,
+               0xd5, 0xa6, 0xce, 0x03
+            };
          
          while ( str.good() )
          {
@@ -239,12 +239,89 @@ void ossimJp2Info::readUInt64(ossim_uint64& i, std::ifstream& str) const
    }
 }
 
+std::streamoff ossimJp2Info::findBoxData( const ossim_uint32& type,
+                                          std::ifstream& str,
+                                          ossim_uint32& length ) const
+{
+   std::streamoff boxPos = 0;
+   std::streamoff dataPosOfType = 0;
+
+   if ( str.good() )
+   {
+      ossim_uint32   lbox   = 0;
+      ossim_uint32   tbox   = 0;
+      ossim_uint64   xlbox  = 0;
+      std::streamoff offsetToDbox = 0;
+
+      while ( str.good() )
+      {
+         boxPos = str.tellg();
+
+         readUInt32( lbox, str );
+         readUInt32( tbox, str );
+
+         if ( lbox == 1 )
+         {
+            readUInt64( xlbox, str );
+            offsetToDbox = 16;
+         }
+         else
+         {
+            offsetToDbox = 8;
+         }
+
+         if ( traceDebug() )
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "jp2.lbox: " << std::dec << lbox << "\n"
+               << "jp2.tbox: " << std::hex << tbox << std::dec << "\n";
+            printTboxType( tbox, ossimNotify(ossimNotifyLevel_DEBUG)  );
+
+            if ( lbox == 1 )
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG) << "jp2.xlbox: " << xlbox << std::endl;
+            }
+         }            
+
+         if ( tbox == type )
+         {
+            dataPosOfType = boxPos + offsetToDbox; // set up return value
+            length = lbox;
+            break; // done...
+         }
+
+         if ( lbox == 0 ) // last box?
+         {
+            break;
+         }
+
+         // Seek to the next box.
+         std::streamoff nextBoxPos = boxPos;
+         if (lbox == 1)
+         {
+            nextBoxPos+= (std::streamoff)xlbox;
+         }
+         else
+         {
+            nextBoxPos+= (std::streamoff)lbox;
+         }
+
+         // Go to next box:
+         str.seekg(nextBoxPos, std::ios_base::beg);
+
+      } // matches: while ( str.good() )
+
+   } // matches: if ( str.good() )
+
+   return dataPosOfType;
+}
+
 std::streamoff ossimJp2Info::getBox( const ossim_uint32 type,
                                      bool includeAll,
                                      std::vector<ossim_uint8>& box ) const
 {
    std::streamoff boxPos = 0;
-   
+
    if ( m_file.size() )
    {
       // Open the file.
@@ -252,13 +329,13 @@ std::streamoff ossimJp2Info::getBox( const ossim_uint32 type,
       if (str.good())
       {
          boxPos = getBox( type, includeAll, str, box ) ;
-         
+
       } // matches: if ( str.is_open() )
-      
+
    } // matches: if ( m_file.size() ) 
-   
+
    return boxPos;
-   
+
 } // End: ossimJp2Info::getBox( type, includeAll, box ) const
 
 std::streamoff ossimJp2Info::getBox( const ossim_uint32& type,
@@ -267,6 +344,7 @@ std::streamoff ossimJp2Info::getBox( const ossim_uint32& type,
                                      std::vector<ossim_uint8>& box ) const
 {
    std::streamoff boxPos = 0;
+   std::streamoff boxPosOfType = 0;
    box.clear();
    
    if ( str.good() )
@@ -337,7 +415,7 @@ std::streamoff ossimJp2Info::getBox( const ossim_uint32& type,
             }
             boxSize -= offsetToDbox;
                
-            // Seek back to box start
+            // Seek to box data start
             str.seekg( boxPos + offsetToDbox, std::ios_base::beg );
                
             // std::vector::resize can throw a std::bad_alloc so wrap it...
@@ -354,6 +432,8 @@ std::streamoff ossimJp2Info::getBox( const ossim_uint32& type,
                       << "\n" << e.what() << std::endl;
                throw ossimException( errMsg.str() );
             }
+
+            boxPosOfType = boxPos; // set up return value 
             break; // done...
          }
             
@@ -380,7 +460,7 @@ std::streamoff ossimJp2Info::getBox( const ossim_uint32& type,
          
    } // matches: if ( str.good() )
    
-   return boxPos;
+   return boxPosOfType;
    
 } // End: ossimJp2Info::getBox( type, includeAll, str, box ) const
 
@@ -396,12 +476,12 @@ std::streamoff ossimJp2Info::getGeotiffBox(
       if ( boxPos && ( box.size() >= GEOTIFF_UUID_SIZE) )
       {
          const ossim_uint8 GEOTIFF_UUID[GEOTIFF_UUID_SIZE] = 
-         {
-            0xb1, 0x4b, 0xf8, 0xbd,
-            0x08, 0x3d, 0x4b, 0x43,
-            0xa5, 0xae, 0x8c, 0xd7,
-            0xd5, 0xa6, 0xce, 0x03
-         };
+            {
+               0xb1, 0x4b, 0xf8, 0xbd,
+               0x08, 0x3d, 0x4b, 0x43,
+               0xa5, 0xae, 0x8c, 0xd7,
+               0xd5, 0xa6, 0xce, 0x03
+            };
          
          if( memcmp( (char*)&box.front(), GEOTIFF_UUID, GEOTIFF_UUID_SIZE) != 0)
          {
@@ -419,19 +499,62 @@ std::streamoff ossimJp2Info::getGmlBox(
    std::streamoff boxPos = 0;
    if ( str.good() )
    {
-      const ossim_uint32 XML_TBOX_ID = 0x786D6C20;
+      const ossim_uint32 ASOC_TBOX_ID = 0x61736F63;
+      const ossim_uint32 LBL_TBOX_ID  = 0x6C626C20;
+      const ossim_uint32 XML_TBOX_ID  = 0x786D6C20;
       
-      boxPos = getBox( XML_TBOX_ID, false, str, box );
+      ossim_uint32 asoc0_data_length = 0;
+      std::streamoff dataPosAsoc0 = findBoxData( ASOC_TBOX_ID, str, asoc0_data_length );
 
-      // TODO: Add check for GML.
-      std::cout << "ossimJp2Info::getGmlBox found xml box.  Need gml check..." << std::endl;
-#if 0
-      if ( !gml )
+      if ( dataPosAsoc0 > 0 && asoc0_data_length > 0 )
       {
-         boxPos = 0;
-         box.clear();
+         ossim_uint32 lbl0_data_length = 0;
+         std::streamoff dataPosLbl0 = findBoxData( LBL_TBOX_ID, str, lbl0_data_length );
+
+         if ( dataPosLbl0 > 0 && lbl0_data_length > 0 )
+         {
+            std::string gmlDataStr;
+            gmlDataStr.resize( lbl0_data_length );
+
+            // Removed c++ 11 call for portablility...
+            // str.read( (char*)&gmlDataStr.front(), lbl0_data_length );
+            str.read( (char*)&gmlDataStr[0], lbl0_data_length );            
+
+            // Do we have a GML data asoc ?
+            if ( gmlDataStr.compare( 0, 8, "gml.data" ) == 0 )
+            {
+               // Seek to asoc 0 start of data
+               str.seekg( dataPosAsoc0, std::ios_base::beg );
+
+               ossim_uint32 asoc1_data_length = 0;
+               std::streamoff dataPosAsoc1 = findBoxData( ASOC_TBOX_ID, str, asoc1_data_length );
+
+               if ( dataPosAsoc1 > 0 && asoc1_data_length > 0 )
+               {
+                  ossim_uint32 lbl1_data_length = 0;
+                  std::streamoff dataPosLbl1 = findBoxData( LBL_TBOX_ID, str, lbl1_data_length );
+
+                  if ( dataPosLbl1 > 0 && lbl1_data_length > 0 )
+                  {
+                     std::string gmlRootInstanceStr;
+                     gmlRootInstanceStr.resize( lbl1_data_length );
+                     // Removed c++ 11 call for portablility...
+                     // str.read( (char*)&gmlRootInstanceStr.front(), lbl1_data_length );
+                     str.read( (char*)&gmlRootInstanceStr[0], lbl1_data_length );
+
+                     // Do we have a GML root-instance asoc ?
+                     if ( gmlRootInstanceStr.compare( 0, 17, "gml.root-instance" ) == 0 )
+                     {
+                        // Seek to asoc 1 start of data
+                        str.seekg( dataPosAsoc1, std::ios_base::beg );
+
+                        boxPos = getBox( XML_TBOX_ID, false, str, box );
+                     }
+                  }
+               }
+            }
+         }
       }
-#endif
    }
    return boxPos;
 }

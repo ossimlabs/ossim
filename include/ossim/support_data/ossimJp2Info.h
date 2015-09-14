@@ -106,6 +106,18 @@ public:
    std::streamoff getGmlBox( std::ifstream& str,
                              std::vector<ossim_uint8>& box ) const;
    
+   /**
+    * @brief This finds a box of type and returns the location of its data.
+    *
+    * @param type Defines box type. E.g. 0x6A703268 (jp2h)
+    * @param str Stream to read from.
+    * @param length Number of bytes in the data.
+    * @return The start position of the box (LBox) or zero if not found.
+    */
+   std::streamoff findBoxData( const ossim_uint32& type,
+                               std::ifstream& str,
+                               ossim_uint32& length ) const;
+
 protected:
 
    /** @brief Print tbox type as string if known. */
