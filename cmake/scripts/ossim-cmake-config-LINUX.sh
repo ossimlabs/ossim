@@ -38,6 +38,9 @@ case "$BUILD_TYPE_ARG" in
   DEBUG)
       CMAKE_BUILD_TYPE="Debug"
       ;;
+  ECLIPSE)
+      CMAKE_BUILD_TYPE="Debug"
+      ;;
   RELEASE)
       CMAKE_BUILD_TYPE="Release"
       ;;
@@ -68,6 +71,15 @@ if [ -z $OSSIM_BUILD_DIR ]; then
   OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/build/$CMAKE_BUILD_TYPE
 fi
 
+# Additional stuff for ECLIPSE CDT4 users:
+CMAKE_G_ARG="Unix Makefiles"
+if [ $BUILD_TYPE_ARG == "ECLIPSE" ]; then
+  CMAKE_G_ARG="Eclipse CDT4 - Unix Makefiles"
+  OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/../eclipse
+  cp -f $CMAKE_DIR/CMakeLists.txt $OSSIM_DEV_HOME
+  CMAKE_DIR=$OSSIM_DEV_HOME
+fi
+
 mkdir -p $OSSIM_BUILD_DIR
 pushd $OSSIM_BUILD_DIR
 rm CMakeCache.txt
@@ -75,7 +87,7 @@ rm CMakeCache.txt
 echo "Generating Makefiles in" $OSSIM_BUILD_DIR
 
 # CMAKE command 
-cmake -G "Unix Makefiles" \
+cmake -G "$CMAKE_G_ARG" \
 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
 -DBUILD_OSSIM_APPS=ON \
 -DBUILD_OSSIM_TESTS=ON \
