@@ -21,14 +21,12 @@
 function do_git {
   if [ -d $1 ]; then
     echo; 
-    echo "*******************************************************************************"
-    echo "*  $1"; 
-    echo "*******************************************************************************"
-    echo
+    echo "*************************** $(basename $1) ***************************"
+
     pushd $1
     git $2 $3 $4
     popd
-    echo; echo; 
+    echo; 
   fi
 }
 
@@ -49,12 +47,7 @@ if [ -z $1 ]; then
   usage `basename "$0"`
 fi
 
-do_git ossim $1 $2 $3
-do_git ossim-oms $1 $2 $3
-do_git ossim-video $1 $2 $3
-do_git ossim-mrsid-plugin $1 $2 $3
-do_git ossim-kakadu-plugin $1 $2 $3
-do_git ossim-pdal-plugin $1 $2 $3
-do_git ossim-gdal-plugin $1 $2 $3
+export -f do_git
+find . -maxdepth 1 -type d -name "ossim*" -exec bash -c "do_git {} $1 $2 $3" \;
 
 
