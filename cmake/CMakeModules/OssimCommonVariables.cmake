@@ -225,6 +225,8 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    OPTION(BUILD_OSSIMGUI "Set to ON to build the new ossimGui library and geocell application." ON)
    OPTION(BUILD_MRSID_PLUGIN "Set to ON to build the MrSID plugin library." ON)   
    OPTION(BUILD_KAKADU_PLUGIN "Set to ON to build the Kakadu plugin library." ON)
+   OPTION(BUILD_PDAL_PLUGIN "Set to ON to build the PDAL plugin library." ON)
+   OPTION(BUILD_GDAL_PLUGIN "Set to ON to build the GDAL plugin library." ON)
    OPTION(BUILD_OMS "Set to ON to build the oms api library." ON)
    OPTION(BUILD_WMS "Set to ON to build the wms api library." ON)
 

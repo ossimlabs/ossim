@@ -55,5 +55,6 @@ do_git ossim-video $1 $2 $3
 do_git ossim-mrsid-plugin $1 $2 $3
 do_git ossim-kakadu-plugin $1 $2 $3
 do_git ossim-pdal-plugin $1 $2 $3
+do_git ossim-gdal-plugin $1 $2 $3
 
 

@@ -1,11 +1,13 @@
-PROJECT(ossim)
+PROJECT(ossimlabs)
 
-IF ("$ENV{OSSIM_DEV_HOME}"  STREQUAL "")
+IF ("${OSSIM_DEV_HOME}"  STREQUAL "")
+  IF ("$ENV{OSSIM_DEV_HOME}"  STREQUAL "")
     SET(OSSIM_DEV_HOME "${CMAKE_CURRENT_SOURCE_DIR}/../.." CACHE STRING "Cache the OSSIM dev home" FORCE)
-ELSE()
+  ELSE()
     SET(OSSIM_DEV_HOME "$ENV{OSSIM_DEV_HOME}" CACHE STRING "Cache the OSSIM dev home" FORCE)
-
+  ENDIF()
 ENDIF()
+
 IF ("$ENV{OSSIM_INSTALL_PREFIX}"  STREQUAL "")
   SET(OSSIM_INSTALL_PREFIX "${OSSIM_DEV_HOME}/install" CACHE STRING "Cache the OSSIM install prefix" FORCE)
 ELSE()
@@ -155,6 +157,10 @@ ENDIF()
 
 IF(BUILD_PDAL_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-pdal-plugin)
      add_subdirectory(${OSSIM_DEV_HOME}/ossim-pdal-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-pdal-plugin)
+ENDIF()
+
+IF(BUILD_GDAL_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-gdal-plugin)
+     add_subdirectory(${OSSIM_DEV_HOME}/ossim-gdal-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-gdal-plugin)
 ENDIF()
 
 IF(OSSIM_BUILD_ADDITIONAL_DIRECTORIES)

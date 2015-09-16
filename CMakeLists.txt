@@ -1,3 +1,5 @@
+PROJECT(ossim)
+
 Message("################## Setting up OSSIM core library #########################")
 
 IF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)

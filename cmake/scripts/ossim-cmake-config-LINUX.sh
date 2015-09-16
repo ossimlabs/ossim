@@ -63,7 +63,7 @@ popd
 
 # Establish the top-level directory above repo containing this script
 pushd $CMAKE_DIR/../..
-export OSSIM_DEV_HOME=$PWD
+OSSIM_DEV_HOME=$PWD
 popd
 
 # Establish CMake's output build directory based on build type:
@@ -75,7 +75,7 @@ fi
 CMAKE_G_ARG="Unix Makefiles"
 if [ $BUILD_TYPE_ARG == "ECLIPSE" ]; then
   CMAKE_G_ARG="Eclipse CDT4 - Unix Makefiles"
-  OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/../eclipse
+  #OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/../build/ossimlabs
   cp -f $CMAKE_DIR/CMakeLists.txt $OSSIM_DEV_HOME
   CMAKE_DIR=$OSSIM_DEV_HOME
 fi
@@ -91,6 +91,7 @@ cmake -G "$CMAKE_G_ARG" \
 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
 -DBUILD_OSSIM_APPS=ON \
 -DBUILD_OSSIM_TESTS=ON \
+-DOSSIM_DEV_HOME=$OSSIM_DEV_HOME \
 $CMAKE_DIR
 
 popd
