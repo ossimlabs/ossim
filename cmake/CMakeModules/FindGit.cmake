@@ -86,7 +86,7 @@ IF(GIT_EXECUTABLE)
     # SET(GIT_SAVED_LC_ALL "$ENV{LC_ALL}")
     # SET(ENV{LC_ALL} C)
 
-    execute_process(COMMAND ${GIT_EXECUTABLE} rev-list HEAD --max-count 1
+    execute_process(COMMAND ${GIT_EXECUTABLE} rev-list HEAD --max-count=1
       WORKING_DIRECTORY ${dir}
       OUTPUT_VARIABLE ${prefix}_WC_REVISION
       ERROR_VARIABLE git_info_error
@@ -94,7 +94,7 @@ IF(GIT_EXECUTABLE)
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     IF(NOT ${git_info_result} EQUAL 0)
-      MESSAGE(WARNING "Command \"${GIT_EXECUTABLE} rev-list HEAD --max-count 1\" failed with output:\n${git_info_error}")
+      MESSAGE(WARNING "Command \"${GIT_EXECUTABLE} rev-list HEAD --max-count=1\" failed with output:\n${git_info_error}")
     ELSE(NOT ${git_info_result} EQUAL 0)
 	set(${prefix}_WC_INFO ${git_info_result})
     ENDIF(NOT ${git_info_result} EQUAL 0)
