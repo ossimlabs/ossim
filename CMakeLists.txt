@@ -19,7 +19,8 @@ INCLUDE(OssimCommonVariables)
 OPTION(BUILD_OSSIM_FREETYPE_SUPPORT "Set to ON to build OSSIM with freetype support.  Use OFF to turn off freetype support." ON)
 OPTION(BUILD_OSSIM_MPI_SUPPORT "Set to ON to build OSSIM with MPI support.  Use OFF to turn off MPI support." OFF)
 OPTION(BUILD_OSSIM_ID_SUPPORT "Set to ON to build OSSIM GIT ID support into the library.  Use OFF to turn off ID support." ON)
-
+OPTION(BUILD_OSSIM_APPS "Set to ON to build OSSIM applications." ON)
+OPTION(BUILD_OSSIM_TESTS "Set to ON to build OSSIM unit/functional tests." ON)
 
 ###################################################################################
 # Include the Utilities in the root make
