@@ -71,7 +71,8 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# CMake successful, now run make in the build directory:
+# CMake successful, now run make in the build directory (OSSIM_BUILD_DIR 
+# exported by cmake config script):
 pushd $OSSIM_BUILD_DIR
 make -j 8
 if [ $? -ne 0 ]; then
