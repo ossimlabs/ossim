@@ -58,13 +58,17 @@ esac
 # used to build all OSSIM-related repos (plugins, tests, oms, etc)
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $SCRIPT_DIR/..
-  CMAKE_DIR=$PWD
+CMAKE_DIR=$PWD
+echo CMAKE_DIR=$CMAKE_DIR
 popd
 
 # Establish the top-level directory above repo containing this script
-pushd $CMAKE_DIR/../..
-OSSIM_DEV_HOME=$PWD
+if [ -z OSSIM_DEV_HOME ]; then
+  pushd $CMAKE_DIR/../..
+  OSSIM_DEV_HOME=$PWD
+  echo OSSIM_DEV_HOME=$OSSIM_DEV_HOME
 popd
+fi 
 
 # Establish CMake's output build directory:
 if [ -z $OSSIM_BUILD_DIR ]; then
