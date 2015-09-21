@@ -9,8 +9,14 @@
 #
 # Usage: <this_script_name> [<build_type>] 
 #
-# where the optional <build_type> is one of the following literals:
-# "Release" (default), "Debug", "RelWithDebInfo", or "MinSizeRel"
+# where the optional <build_type> is one of the following literals 
+# (case-insensitive):
+#
+#     "release" (default), 
+#     "debug", 
+#     "relWithDebInfo", 
+#     "minSizeRel",
+#     "eclipse"
 #
 # If a build type = "eclipse" is specified, cmake will generate a Debug
 # build environment along with Eclipse CDT4 project files (in the build
@@ -59,18 +65,18 @@ esac
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $SCRIPT_DIR/..
 CMAKE_DIR=$PWD
-echo "@@@@@ CMAKE_DIR=$CMAKE_DIR"
+#echo "@@@@@ CMAKE_DIR=$CMAKE_DIR"
 popd
 
 # Establish the top-level directory above repo containing this script
-echo "@@@@@ BEFORE OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
+#echo "@@@@@ BEFORE OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
 if [ -z $OSSIM_DEV_HOME ]; then
   pushd $CMAKE_DIR/../..
   OSSIM_DEV_HOME=$PWD
-  echo "@@@@@ NEW OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
+  #echo "@@@@@ NEW OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
   popd
 else
-  echo "@@@@@ OSSIM_DEV_HOME UNCHANGED!"
+  #echo "@@@@@ OSSIM_DEV_HOME UNCHANGED!"
 fi 
 
 # Establish CMake's output build directory:
@@ -86,7 +92,7 @@ if [ $BUILD_TYPE_ARG == "ECLIPSE" ]; then
   CMAKE_DIR=$OSSIM_DEV_HOME
 fi
 
-echo "@@@@@ OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
+#echo "@@@@@ OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
 mkdir -p $OSSIM_BUILD_DIR
 pushd $OSSIM_BUILD_DIR
 rm CMakeCache.txt
