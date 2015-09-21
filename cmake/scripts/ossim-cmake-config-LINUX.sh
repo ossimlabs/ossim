@@ -75,7 +75,7 @@ if [ -z $OSSIM_DEV_HOME ]; then
   OSSIM_DEV_HOME=$PWD
   #echo "@@@@@ NEW OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
   popd
-else
+#else
   #echo "@@@@@ OSSIM_DEV_HOME UNCHANGED!"
 fi 
 
