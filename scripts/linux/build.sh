@@ -26,7 +26,7 @@
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $SCRIPT_DIR/../..
 REPO_DIR=$PWD
-echo REPO_DIR=$REPO_DIR
+echo "@@@@@ REPO_DIR=$REPO_DIR"
 popd
 
 CMAKE_CONFIG_SCRIPT=$REPO_DIR/cmake/scripts/ossim-cmake-config-LINUX.sh

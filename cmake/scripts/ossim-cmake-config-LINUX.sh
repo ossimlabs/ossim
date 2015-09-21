@@ -59,15 +59,17 @@ esac
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $SCRIPT_DIR/..
 CMAKE_DIR=$PWD
-echo CMAKE_DIR=$CMAKE_DIR
+echo "@@@@@ CMAKE_DIR=$CMAKE_DIR"
 popd
 
 # Establish the top-level directory above repo containing this script
 if [ -z OSSIM_DEV_HOME ]; then
   pushd $CMAKE_DIR/../..
   OSSIM_DEV_HOME=$PWD
-  echo OSSIM_DEV_HOME=$OSSIM_DEV_HOME
-popd
+  echo "@@@@@ NEW OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
+  popd
+else
+  echo "@@@@@ OLD NEW OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
 fi 
 
 # Establish CMake's output build directory:
@@ -83,6 +85,7 @@ if [ $BUILD_TYPE_ARG == "ECLIPSE" ]; then
   CMAKE_DIR=$OSSIM_DEV_HOME
 fi
 
+echo "@@@@@ OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
 mkdir -p $OSSIM_BUILD_DIR
 pushd $OSSIM_BUILD_DIR
 rm CMakeCache.txt
