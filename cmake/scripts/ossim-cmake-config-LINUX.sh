@@ -63,13 +63,14 @@ echo "@@@@@ CMAKE_DIR=$CMAKE_DIR"
 popd
 
 # Establish the top-level directory above repo containing this script
-if [ -z OSSIM_DEV_HOME ]; then
+echo "@@@@@ BEFORE OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
+if [ -z $OSSIM_DEV_HOME ]; then
   pushd $CMAKE_DIR/../..
   OSSIM_DEV_HOME=$PWD
   echo "@@@@@ NEW OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
   popd
 else
-  echo "@@@@@ OLD NEW OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
+  echo "@@@@@ OSSIM_DEV_HOME UNCHANGED!"
 fi 
 
 # Establish CMake's output build directory:
