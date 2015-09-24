@@ -1,0 +1,153 @@
+//===================================================================================
+// 
+// File: test1.kwl
+// Description: Contains assorted tests.
+// 
+// Control flags:
+// Use 1 or true, 0 or false to turn on and off sections.
+// Typically preprocess and expected results only turned on for first run.
+// Clean commands should erase anything created by this test.
+// Command order if flag turned on:
+// 1) clean, 2) pre-process, 3) expected, 4) test, 5) post-process
+// 
+// NOTES:
+// * The following environment variables must be set before running batch test:
+//     OSSIM_BATCH_TEST_DATA     Top-level dir containing all test source data
+//     OSSIM_BATCH_TEST_RESULTS  Top-level dir containing all test results (exp, 
+//                               out and log),
+// 
+// * The variables OBT_EXP_DIR and OBT_OUT_DIR are assigned during run-time to
+//   the proper paths according to the config filename. It isn't required to replace
+//   these nor predefine them in the environment. You can leave them as is or modify
+//   the paths to your unconventional file paths.
+// 
+// * In order to preserve platform independence, please utilize the following 
+//   variables for the common OS commands when adding new commands to the test
+//   configuration KWL file. Examples are provided in this template
+//       $(DIFF_CMD) Use this var for windows "fc" or linux "diff"
+//       $(COPY_CMD) Use this var for windows "copy" or linux "cp"
+//       $(MKDIR_CMD) Use this var for windows "mkdir" or linux "mkdir"
+//       $(RM_CMD) Use this var for windows "del /Q" or linux "rm -f"
+//       $(RMDIR_CMD) Use this var for windows "rmdir /S /Q" or linux "rm -rf"
+//   This application will set the environment variables to the proper values at 
+//   runtime, so no need to worry about defining these.
+// 
+// * Use forward slashes "//", at beginning of line for comments.
+// 
+// * You can use existing environment variables as $(YOUR_VARIABLE). They will be 
+//   expanded at run time if valid.
+// 
+// * Clean, preprocess, run, and accept test sections can be switched on or off
+//   at run time.  These override config file flags.  Optional arguments are:
+//      -c or --clean-test
+//      -p or --preprocess-test
+//      -r or --run-test
+//      -a or --accept-test
+//   Multiple tests can be entered by quoting string of space separated
+//   test, e.g. "test1 test2". To accept all tests use "all" for test.
+// 
+//===================================================================================
+
+// ---
+// Begin test1:
+// ---
+test1.name: test1
+test1.description: Test geographic projection with nitf format.
+test1.enabled: 1
+
+// Commands to generate expected results:
+
+test1.expected_results_command0: ossim-info -d -i -p $(OSSIM_BATCH_TEST_DATA)/public/ntf/Clinton_IA.ntf > $(OBT_EXP_DIR)/nitf-info.txt
+
+// The actual commands to test:
+
+test1.test_command0: ossim-info -d -i -p $(OSSIM_BATCH_TEST_DATA)/public/ntf/Clinton_IA.ntf > $(OBT_OUT_DIR)/nitf-info.txt
+
+// Post process commands for diffs and stuff:
+
+test1.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/nitf-info.txt $(OBT_OUT_DIR)/nitf-info.txt
+ 
+
+// ---
+// Begin test2:
+// ---
+test2.name: test2
+test2.description: Test geographic projection with jp2 format.
+test2.enabled: 1
+
+// Commands to generate expected results:
+
+test2.expected_results_command0: ossim-info -d -i -p $(OSSIM_BATCH_TEST_DATA)/public/jp2/Clinton_IA.jp2 > $(OBT_EXP_DIR)/jp2-info.txt
+
+// The actual commands to test:
+
+test2.test_command0: ossim-info -d -i -p $(OSSIM_BATCH_TEST_DATA)/public/jp2/Clinton_IA.jp2 > $(OBT_OUT_DIR)/jp2-info.txt
+
+// Post process commands for diffs and stuff:
+
+test2.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/jp2-info.txt $(OBT_OUT_DIR)/jp2-info.txt
+ 
+
+// ---
+// Begin test3:
+// ---
+test3.name: test3
+test3.description: Test geographic projection with tiff format.
+test3.enabled: 1
+
+// Commands to generate expected results:
+
+test3.expected_results_command0: ossim-info -d -i -p $(OSSIM_BATCH_TEST_DATA)/public/tif/Clinton_IA.tif > $(OBT_EXP_DIR)/tif-geo-info.txt
+
+// The actual commands to test:
+
+test3.test_command0: ossim-info -d -i -p $(OSSIM_BATCH_TEST_DATA)/public/tif/Clinton_IA.tif  > $(OBT_OUT_DIR)/tif-geo-info.txt
+
+// Post process commands for diffs and stuff:
+
+test3.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/tif-geo-info.txt $(OBT_OUT_DIR)/tif-geo-info.txt
+
+ 
+// ---
+// Begin test4:
+// ---
+test4.name: test4
+test4.description: Test utm projection with tiff format.
+test4.enabled: 1
+
+// Commands to generate expected results:
+
+test4.expected_results_command0: ossim-info -d -i -p $(OSSIM_BATCH_TEST_DATA)/public/tif/Iowa-utm.tif > $(OBT_EXP_DIR)/tif-utm-info.txt
+
+// The actual commands to test:
+
+test4.test_command0: ossim-info -d -i -p $(OSSIM_BATCH_TEST_DATA)/public/tif/Iowa-utm.tif  > $(OBT_OUT_DIR)/tif-utm-info.txt
+
+// Post process commands for diffs and stuff:
+
+test4.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/tif-utm-info.txt $(OBT_OUT_DIR)/tif-utm-info.txt
+
+ 
+// ---
+// Begin: test5
+// ---
+test5.name: test5
+test5.description: Test ossimImageData::loadTile from 16 to 8.  Test histogram dropping last bin.
+test5.enabled: 1
+
+// Commands to generate expected results:
+
+test5.expected_results_command0: ossim-loadtile-test > $(OBT_EXP_DIR)/test5.txt
+
+// The actual commands to test:
+
+test5.test_command0: ossim-loadtile-test > $(OBT_OUT_DIR)/test5.txt
+
+// Post process commands for diffs and stuff:
+
+test5.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/test5.txt $(OBT_OUT_DIR)/test5.txt
+
+// ---
+// End: test5
+// ---
+ 

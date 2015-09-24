@@ -231,7 +231,7 @@ IF(BUILD_OSSIM_APPS)
 ENDIF()
 
 IF(BUILD_OSSIM_TESTS)
-   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test ${CMAKE_CURRENT_BINARY_DIR}/ossim/test)
+   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test/src ${CMAKE_CURRENT_BINARY_DIR}/ossim/test/src)
 ENDIF()
 
 
