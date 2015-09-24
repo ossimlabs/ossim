@@ -1,5 +1,9 @@
 # $Id: CMakeLists.txt 23496 2015-08-28 15:26:18Z okramer $
 
+# Only "install" the following. 
+OSSIM_SETUP_APPLICATION(ossim-batch-test INSTALL COMPONENT_NAME ossim SOURCE_FILES ossim-batch-test.cpp)
+
+# Remainder to be built but not installed
 OSSIM_SETUP_APPLICATION(ossim-aux-dot-xml-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-aux-dot-xml-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-byte-stream-buffer-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-byte-stream-buffer-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-csv-file-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-csv-file-test.cpp)
