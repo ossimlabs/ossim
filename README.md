@@ -9,10 +9,10 @@ This repository provides the CMAKE infrastructure necessary to build the OSSIM c
 
 The following 3rd-party SDKs are needed in order to build the core ossim library:
 
-    libtiff (preferrably version 4.x for BigTIFF support)
-    OpenThreads
-    libjpeg
-    libgeos
+    libtiff-devel (preferrably version 4.x for BigTIFF support)
+    OpenThreads-devel
+    libjpeg-deevl
+    libgeos-devel
 
 Plugins will require additional 3rd-party packages.
 
