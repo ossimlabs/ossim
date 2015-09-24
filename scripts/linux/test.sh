@@ -12,7 +12,7 @@
 ###############################################################################
 
 # TEST 1: Check ossim-info version:
-COUNT=`/var/lib/go-agent/pipelines/ossimlabs-pipeline/build/bin/ossim-info --version | grep --count "ossim-info 1.9"`
+COUNT=`$OSSIM_BUILD_DIR/bin/ossim-info --version | grep --count "ossim-info 1.9"`
 if [ $COUNT != "1" ]; then
   echo "Failed TEST 1"; exit 1
 fi
