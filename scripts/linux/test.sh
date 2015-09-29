@@ -22,11 +22,15 @@ if [ $COUNT != "1" ]; then
 fi
 
 if [ -z $OSSIM_BATCH_TEST_DATA ]; then
-  OSSIM_BATCH_TEST_DATA = $PWD/ossim-test-data
+  export OSSIM_BATCH_TEST_DATA=$HOME/ossim-test-data
 fi
 if [ -z $OSSIM_BATCH_TEST_RESULTS ]; then
-  OSSIM_BATCH_TEST_RESULTS = $OSSIM_BATCH_TEST_DATA
+  export OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_DATA
 fi
+
+echo "########## OSSIM_BATCH_TEST_DATA=$OSSIM_BATCH_TEST_DATA"
+echo "########## OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_RESULTS"
+
 
 # Sync against S3 for test data:
 s3cmd -c .s3cfg sync s3://yumrepos-dev-rbtcloud/ossim_data/ossim-test-data $OSSIM_BATCH_TEST_DATA
