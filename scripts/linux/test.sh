@@ -31,6 +31,7 @@ echo "########## OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_RESULTS"
 
 
 # TEST 1: Check ossim-info version:
+echo; echo "STATUS: Running ossim-info test...";echo
 COUNT=`$OSSIM_BUILD_DIR/bin/ossim-info --version | grep --count "ossim-info 1.9"`
 if [ $COUNT != "1" ]; then
   echo "Failed TEST 1"; exit 1
@@ -38,9 +39,11 @@ fi
 
 
 # Sync against S3 for test data:
+echo; echo "STATUS: Syncing data directory to S3...";echo
 s3cmd -c .s3cfg sync s3://yumrepos-dev-rbtcloud/ossim_data/ossim-test-data $HOME/test_data
 
 # Run batch tests
+echo; echo "STATUS: Running batch tests...";echo
 pushd ossim/test/scripts
 EXIT_CODE=`$OSSIM_BUILD_DIR/bin/ossim-batch-test super-test.kwl`
 if [ $EXIT_CODE != 0 ]; then
