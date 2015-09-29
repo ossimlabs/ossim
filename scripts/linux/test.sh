@@ -15,25 +15,30 @@
 echo "########## PWD=$PWD"
 echo "########## HOME=$HOME"
 
+if [ -z $OSSIM_BUILD_DIR ]; then
+  export OSSIM_BUILD_DIR=$PWD/build
+fi
+if [ -z $OSSIM_BATCH_TEST_DATA ]; then
+  export OSSIM_BATCH_TEST_DATA=$HOME/test_data/ossim-test-data
+fi
+if [ -z $OSSIM_BATCH_TEST_RESULTS ]; then
+  export OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_DATA
+fi
+
+echo "########## OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
+echo "########## OSSIM_BATCH_TEST_DATA=$OSSIM_BATCH_TEST_DATA"
+echo "########## OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_RESULTS"
+
+
 # TEST 1: Check ossim-info version:
 COUNT=`$OSSIM_BUILD_DIR/bin/ossim-info --version | grep --count "ossim-info 1.9"`
 if [ $COUNT != "1" ]; then
   echo "Failed TEST 1"; exit 1
 fi
 
-if [ -z $OSSIM_BATCH_TEST_DATA ]; then
-  export OSSIM_BATCH_TEST_DATA=$HOME/ossim-test-data
-fi
-if [ -z $OSSIM_BATCH_TEST_RESULTS ]; then
-  export OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_DATA
-fi
-
-echo "########## OSSIM_BATCH_TEST_DATA=$OSSIM_BATCH_TEST_DATA"
-echo "########## OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_RESULTS"
-
 
 # Sync against S3 for test data:
-s3cmd -c .s3cfg sync s3://yumrepos-dev-rbtcloud/ossim_data/ossim-test-data $OSSIM_BATCH_TEST_DATA
+s3cmd -c .s3cfg sync s3://yumrepos-dev-rbtcloud/ossim_data/ossim-test-data $HOME/test_data
 
 # Run batch tests
 pushd ossim/test/scripts
