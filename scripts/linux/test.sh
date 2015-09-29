@@ -11,10 +11,32 @@
 #
 ###############################################################################
 
+# Debug:
+echo "########## PWD=$PWD"
+echo "########## HOME=$HOME"
+
 # TEST 1: Check ossim-info version:
 COUNT=`$OSSIM_BUILD_DIR/bin/ossim-info --version | grep --count "ossim-info 1.9"`
 if [ $COUNT != "1" ]; then
   echo "Failed TEST 1"; exit 1
+fi
+
+if [ -z $OSSIM_BATCH_TEST_DATA ]; then
+  OSSIM_BATCH_TEST_DATA = $PWD/ossim-test-data
+fi
+if [ -z $OSSIM_BATCH_TEST_RESULTS ]; then
+  OSSIM_BATCH_TEST_RESULTS = $OSSIM_BATCH_TEST_DATA
+fi
+
+# Sync against S3 for test data:
+s3cmd -c .s3cfg sync s3://yumrepos-dev-rbtcloud/ossim_data/ossim-test-data $OSSIM_BATCH_TEST_DATA
+
+# Run batch tests
+pushd ossim/test/scripts
+EXIT_CODE=`$OSSIM_BUILD_DIR/bin/ossim-batch-test super-test.kwl`
+if [ $EXIT_CODE != 0 ]; then
+  echo "Failed batch test"
+  exit 1
 fi
 
 # Success!
