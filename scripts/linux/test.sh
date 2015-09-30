@@ -36,7 +36,7 @@ export LD_LIBRARY_PATH=$OSSIM_BUILD_DIR/lib:$LD_LIBRARY_PATH
 
 # TEST 1: Check ossim-info version:
 echo; echo "STATUS: Running ossim-info test...";echo
-COUNT=`$OSSIM_BUILD_DIR/bin/ossim-info --version | grep --count "ossim-info 1.9"`
+COUNT=`ossim-info --version | grep --count "ossim-info 1.9"`
 if [ $COUNT != "1" ]; then
   echo "Failed TEST 1"; exit 1
 fi
@@ -48,7 +48,7 @@ s3cmd -c .s3cfg sync s3://yumrepos-dev-rbtcloud/ossim_data/ossim-test-data $HOME
 # Run batch tests
 echo; echo "STATUS: Running batch tests...";echo
 pushd ossim/test/scripts
-$OSSIM_BUILD_DIR/bin/ossim-batch-test super-test.kwl`
+ossim-batch-test super-test.kwl
 if [ $? -eq 0 ]; then
   echo "Failed batch test"
   exit 1
