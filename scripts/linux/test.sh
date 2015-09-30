@@ -9,6 +9,10 @@
 # 
 # No env vars need to be predefined. 
 #
+# Optional argument "genx" directs the script to generate expected results
+# if none are detected at $OSSIM_BATCH_TEST_RESULTS (assigned here) in lieu of
+# running tests.
+#
 ###############################################################################
 
 # Debug:
@@ -16,7 +20,7 @@
 #echo "########## HOME=$HOME"
 #echo "########## USER=`whoami`"
 
-if [ $1 == "generate_expected" ]; then
+if [ $1 == "genx" ]; then
   GENERATE_EXPECTED_RESULTS=1
 fi
 
@@ -45,28 +49,30 @@ if [ $COUNT != "1" ]; then
   echo "Failed TEST 1"; exit 1
 fi
 
-# Sync against S3 for test data:
-echo; echo "STATUS: Syncing data directory to S3...";echo
-s3cmd sync --no-check-md5 s3://yumrepos-dev-rbtcloud/ossim_data/public $HOME/test_data
-
 
 if [ $GENERATE_EXPECTED_RESULTS -eq 1 ]; then
 
   # Check if expected results are present, generate if not:
   if [ ! -e $OSSIM_BATCH_TEST_RESULTS ]; then
-    echo; echo "STATUS: No expected results detected, generating new expected results in $OSSIM_BATCH_TEST_RESULTS...";echo
+    echo; echo "STATUS: No expected results detected, generating new expected results in $OSSIM_BATCH_TEST_RESULTS..."
     pushd ossim/test/scripts
     ossim-batch-test --accept-test all super-test.kwl
     popd
+    echo "STATUS: ossim-batch-test exit code = $?";echo
+    if [ $? != 0 ]; then
+      echo "Failed batch test generating expected results."
+      exit 1
+    fi
   fi
 
 else
 
   # Run batch tests
-  echo; echo "STATUS: Running batch tests...";echo
+  echo; echo "STATUS: Running batch tests..."
   pushd ossim/test/scripts
   ossim-batch-test super-test.kwl
-  if [ $? -eq 0 ]; then
+  echo "STATUS: ossim-batch-test exit code = $?";echo
+  if [ $? != 0 ]; then
     echo "Failed batch test"
     exit 1
   fi
