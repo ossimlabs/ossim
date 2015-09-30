@@ -1,8 +1,14 @@
 #!/bin/sh
-echo Working Directory: $PWD
-mkdir -p build
-pushd build
-echo New working dir: $PWD
-popd
+echo
+echo "########## PWD=$PWD"
+echo
+echo "########## HOME=$HOME"
+echo
+echo "########## USER=`whoami`"
+echo
+echo "########## Listing of pipeline root <$PWD>:"
+echo
+echo `ls -la`
+echo
 exit 0
 
