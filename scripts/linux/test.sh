@@ -14,6 +14,7 @@
 # Debug:
 echo "########## PWD=$PWD"
 echo "########## HOME=$HOME"
+echo "########## USER=`whoami`"
 
 if [ -z $OSSIM_BUILD_DIR ]; then
   export OSSIM_BUILD_DIR=$PWD/build
