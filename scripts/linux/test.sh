@@ -27,7 +27,7 @@ if [ -z $OSSIM_BATCH_TEST_DATA ]; then
   export OSSIM_BATCH_TEST_DATA=$HOME/test_data
 fi
 if [ -z $OSSIM_BATCH_TEST_RESULTS ]; then
-  export OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_DATA/results
+  export OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_DATA/ossim-test-results
 fi
 
 #echo "########## OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
@@ -56,7 +56,7 @@ if [ $GENERATE_EXPECTED_RESULTS -eq 1 ]; then
   if [ ! -e $OSSIM_BATCH_TEST_RESULTS ]; then
     echo; echo "STATUS: No expected results detected, generating new expected results in $OSSIM_BATCH_TEST_RESULTS...";echo
     pushd ossim/test/scripts
-    ossim-batch-test --accept-test super-test.kwl
+    ossim-batch-test --accept-test all super-test.kwl
     popd
   fi
 
