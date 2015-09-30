@@ -59,17 +59,17 @@ test1.enabled: 1
 
 test1.expected_results_command0: ossim-orthoigen $(OSSIM_BATCH_TEST_DATA)/public/bmng/july/world.200407.3x5400x2700.jpg $(OBT_OUT_DIR)/t1.tif
 
-test1.expected_results_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram-fast $(OBT_OUT_DIR)/t1.tif
+//test1.expected_results_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram-fast $(OBT_OUT_DIR)/t1.tif
 
-test1.expected_results_command2: ossim-info -d -i -p $(OBT_OUT_DIR)/t1.tif > $(OBT_EXP_DIR)/t1-info.txt
+test1.expected_results_command1: ossim-info -d -i -p $(OBT_OUT_DIR)/t1.tif > $(OBT_EXP_DIR)/t1-info.txt
 
 // The actual commands to test:
 
 test1.test_command0: ossim-orthoigen $(OSSIM_BATCH_TEST_DATA)/public/bmng/july/world.200407.3x5400x2700.jpg $(OBT_OUT_DIR)/t1.tif
 
-test1.test_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram-fast $(OBT_OUT_DIR)/t1.tif
+//test1.test_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram-fast $(OBT_OUT_DIR)/t1.tif
 
-test1.test_command2: ossim-info -d -i -p $(OBT_OUT_DIR)/t1.tif > $(OBT_OUT_DIR)/t1-info.txt
+test1.test_command1: ossim-info -d -i -p $(OBT_OUT_DIR)/t1.tif > $(OBT_OUT_DIR)/t1-info.txt
 
 // Post process commands for diffs and stuff:
 

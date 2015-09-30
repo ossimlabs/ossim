@@ -12,23 +12,27 @@
 ###############################################################################
 
 # Debug:
-echo "########## PWD=$PWD"
-echo "########## HOME=$HOME"
-echo "########## USER=`whoami`"
+#echo "########## PWD=$PWD"
+#echo "########## HOME=$HOME"
+#echo "########## USER=`whoami`"
+
+if [ $1 == "generate_expected" ]; then
+  GENERATE_EXPECTED_RESULTS=1
+fi
 
 if [ -z $OSSIM_BUILD_DIR ]; then
   export OSSIM_BUILD_DIR=$PWD/build
 fi
 if [ -z $OSSIM_BATCH_TEST_DATA ]; then
-  export OSSIM_BATCH_TEST_DATA=$HOME/test_data/ossim-test-data
+  export OSSIM_BATCH_TEST_DATA=$HOME/test_data
 fi
 if [ -z $OSSIM_BATCH_TEST_RESULTS ]; then
-  export OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_DATA
+  export OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_DATA/results
 fi
 
-echo "########## OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
-echo "########## OSSIM_BATCH_TEST_DATA=$OSSIM_BATCH_TEST_DATA"
-echo "########## OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_RESULTS"
+#echo "########## OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
+#echo "########## OSSIM_BATCH_TEST_DATA=$OSSIM_BATCH_TEST_DATA"
+#echo "########## OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_RESULTS"
 
 #export the OSSIM runtime env to child processes:
 export PATH=$OSSIM_BUILD_DIR/bin:$PATH
@@ -43,15 +47,29 @@ fi
 
 # Sync against S3 for test data:
 echo; echo "STATUS: Syncing data directory to S3...";echo
-s3cmd -c .s3cfg sync s3://yumrepos-dev-rbtcloud/ossim_data/ossim-test-data $HOME/test_data
+s3cmd sync --no-check-md5 s3://yumrepos-dev-rbtcloud/ossim_data/public $HOME/test_data
 
-# Run batch tests
-echo; echo "STATUS: Running batch tests...";echo
-pushd ossim/test/scripts
-ossim-batch-test super-test.kwl
-if [ $? -eq 0 ]; then
-  echo "Failed batch test"
-  exit 1
+
+if [ $GENERATE_EXPECTED_RESULTS -eq 1 ]; then
+
+  # Check if expected results are present, generate if not:
+  if [ ! -e $OSSIM_BATCH_TEST_RESULTS ]; then
+    echo; echo "STATUS: No expected results detected, generating new expected results in $OSSIM_BATCH_TEST_RESULTS...";echo
+    pushd ossim/test/scripts
+    ossim-batch-test --accept-test super-test.kwl
+    popd
+  fi
+
+else
+
+  # Run batch tests
+  echo; echo "STATUS: Running batch tests...";echo
+  pushd ossim/test/scripts
+  ossim-batch-test super-test.kwl
+  if [ $? -eq 0 ]; then
+    echo "Failed batch test"
+    exit 1
+  fi
 fi
 
 # Success!

@@ -73,7 +73,7 @@ test1.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/nitf-info.txt $(OBT_OUT_D
 // ---
 test2.name: test2
 test2.description: Test geographic projection with jp2 format.
-test2.enabled: 1
+test2.enabled: 0
 
 // Commands to generate expected results:
 
