@@ -147,20 +147,20 @@ IF(BUILD_OSSIMGUI AND EXISTS ${OSSIM_DEV_HOME}/ossim-gui)
      add_subdirectory(${OSSIM_DEV_HOME}/ossim-gui ${CMAKE_CURRENT_BINARY_DIR}/ossim-gui)
 ENDIF()
 
-IF(BUILD_MRSID_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-mrsid-plugin)
-     add_subdirectory(${OSSIM_DEV_HOME}/ossim-mrsid-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-mrsid-plugin)
+IF(BUILD_MRSID_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-plugins/ossim-mrsid-plugin)
+     add_subdirectory(${OSSIM_DEV_HOME}/ossim-plugins/ossim-mrsid-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-plugins/ossim-mrsid-plugin)
 ENDIF()
 
-IF(BUILD_KAKADU_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-kakadu-plugin)
-     add_subdirectory(${OSSIM_DEV_HOME}/ossim-kakadu-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-kakadu-plugin)
+IF(BUILD_KAKADU_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-plugins/ossim-kakadu-plugin)
+     add_subdirectory(${OSSIM_DEV_HOME}/ossim-plugins/ossim-kakadu-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-plugins/ossim-kakadu-plugin)
 ENDIF()
 
-IF(BUILD_PDAL_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-pdal-plugin)
-     add_subdirectory(${OSSIM_DEV_HOME}/ossim-pdal-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-pdal-plugin)
+IF(BUILD_PDAL_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-plugins/ossim-pdal-plugin)
+     add_subdirectory(${OSSIM_DEV_HOME}/ossim-plugins/ossim-pdal-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-plugins/ossim-pdal-plugin)
 ENDIF()
 
-IF(BUILD_GDAL_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-gdal-plugin)
-     add_subdirectory(${OSSIM_DEV_HOME}/ossim-gdal-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-gdal-plugin)
+IF(BUILD_GDAL_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-plugins/ossim-gdal-plugin)
+     add_subdirectory(${OSSIM_DEV_HOME}/ossim-plugins/ossim-gdal-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-plugins/ossim-gdal-plugin)
 ENDIF()
 
 IF(OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
