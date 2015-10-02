@@ -78,8 +78,9 @@ else
   # Run batch tests
   echo; echo "STATUS: Running batch tests..."
   pushd ossim/test/scripts
-  ossim-batch-test super-test.kwl
-  echo "STATUS: ossim-batch-test exit code = $?";echo
+  EXIT_CODE=`ossim-batch-test super-test.kwl`
+  echo "STATUS: ossim-batch-test exit code = $?";echo  
+  echo "STATUS: EXIT_CODE = $EXIT_CODE";echo
   if [ $? != 0 ]; then
     echo "FAIL: Failed batch test"
     exit 1
