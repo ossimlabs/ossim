@@ -44,31 +44,33 @@ export PATH=$OSSIM_BUILD_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$OSSIM_BUILD_DIR/lib:$LD_LIBRARY_PATH
 
 # TEST 1: Check ossim-info version:
-echo; echo "STATUS: Running ossim-info test...";echo
+echo; echo "STATUS: Running ossim-info test...";
 COUNT=`ossim-info --version | grep --count "ossim-info 1.9"`
 if [ $COUNT != "1" ]; then
-  echo "Failed TEST 1"; exit 1
+  echo "FAIL: Failed ossim-info test"; exit 1
+else
+  echo "STATUS: Passed ossim-info test"; echo
 fi
 
 
-if [ $GENERATE_EXPECTED_RESULTS -eq 1 ]; then
+if [ $GENERATE_EXPECTED_RESULTS -eq 1 ] && [ ! -e $OSSIM_BATCH_TEST_RESULTS ]; then
 
   # Check if expected results are present, generate if not:
-  if [ ! -e $OSSIM_BATCH_TEST_RESULTS ]; then
-    echo; echo "STATUS: No expected results detected, generating new expected results in $OSSIM_BATCH_TEST_RESULTS..."
-    mkdir $OSSIM_BATCH_TEST_RESULTS
-    if [ $? -ne 0 ]; then
-      echo; echo "Failed while attempting to create results directory at <$OSSIM_BATCH_TEST_RESULTS>. Check permissions."
-      echo 1
-    fi
-    pushd ossim/test/scripts
-    ossim-batch-test --accept-test all super-test.kwl
-    popd
-    echo "STATUS: ossim-batch-test exit code = $?";echo
-    if [ $? != 0 ]; then
-      echo "Failed batch test generating expected results."
-      exit 1
-    fi
+  echo; echo "STATUS: No expected results detected, generating new expected results in <$OSSIM_BATCH_TEST_RESULTS>..."
+  mkdir $OSSIM_BATCH_TEST_RESULTS
+  if [ $? -ne 0 ]; then
+    echo; echo "ERROR: Failed while attempting to create results directory at <$OSSIM_BATCH_TEST_RESULTS>. Check permissions."
+    echo 1
+  fi
+  pushd ossim/test/scripts
+  ossim-batch-test --accept-test all super-test.kwl
+  popd
+  #echo "STATUS: ossim-batch-test exit code = $?";echo
+  if [ $? != 0 ]; then
+    echo "FAIL: Error encountered generating expected results."
+    exit 1
+  else
+    echo "STATUS: Successfully generated expected results."; echo
   fi
 
 else
@@ -77,14 +79,16 @@ else
   echo; echo "STATUS: Running batch tests..."
   pushd ossim/test/scripts
   ossim-batch-test super-test.kwl
-  echo "STATUS: ossim-batch-test exit code = $?";echo
+  #echo "STATUS: ossim-batch-test exit code = $?";echo
   if [ $? != 0 ]; then
-    echo "Failed batch test"
+    echo "FAIL: Failed batch test"
     exit 1
+  else
+    echo "STATUS: Passed batch test"; echo
   fi
 fi
 
 # Success!
-echo "Passed all tests."
+echo "STATUS: Passed all tests."
 exit 0
 
