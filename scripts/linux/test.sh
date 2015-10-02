@@ -2,23 +2,21 @@
 
 ###############################################################################
 #
-# Test script for all OSSIM repositories
-#
-# This script must be run from the top "ossimlabs" directory containing ossim, 
-# and other OSSIM-related repositories. It performs three functions:
+# Usage: test.sh [genx]
 # 
-# No env vars need to be predefined. 
+# Test script for all OSSIM repositories. The test data referenced must be 
+# available at $OSSIM_BATCH_TEST_DATA, which must be defined prior.
 #
-# Optional argument "genx" directs the script to generate expected results
-# if none are detected at $OSSIM_BATCH_TEST_RESULTS (assigned here) in lieu of
-# running tests.
+# The expected results should be in $OSSIM_BATCH_TEST_RESULTS. This environment 
+# variable can be predefined, otherise, will default to:
+#
+#    $OSSIM_BATCH_TEST_DATA/ossim-test-results
+#
+# If the optional "genx" argument is specified, then expected results will be
+# generated at $OSSIM_BATCH_TEST_RESULTS ONLY IF this directory is not present.
+# If $OSSIM_BATCH_TEST_RESULTS exists, no expected results will be generated.
 #
 ###############################################################################
-
-# Debug:
-#echo "########## PWD=$PWD"
-#echo "########## HOME=$HOME"
-#echo "########## USER=`whoami`"
 
 if [ $1 == "genx" ]; then
   GENERATE_EXPECTED_RESULTS=1
@@ -27,9 +25,12 @@ fi
 if [ -z $OSSIM_BUILD_DIR ]; then
   export OSSIM_BUILD_DIR=$PWD/build
 fi
+
 if [ -z $OSSIM_BATCH_TEST_DATA ]; then
-  export OSSIM_BATCH_TEST_DATA=$HOME/test_data
+  echo "ERROR: Required env var OSSIM_BATCH_TEST_DATA is not defined. Aborting setup..."; 
+  exit 1
 fi
+
 if [ -z $OSSIM_BATCH_TEST_RESULTS ]; then
   export OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_DATA/ossim-test-results
 fi
@@ -55,6 +56,11 @@ if [ $GENERATE_EXPECTED_RESULTS -eq 1 ]; then
   # Check if expected results are present, generate if not:
   if [ ! -e $OSSIM_BATCH_TEST_RESULTS ]; then
     echo; echo "STATUS: No expected results detected, generating new expected results in $OSSIM_BATCH_TEST_RESULTS..."
+    mkdir $OSSIM_BATCH_TEST_RESULTS
+    if [ $? -ne 0 ]; then
+      echo; echo "Failed while attempting to create results directory at <$OSSIM_BATCH_TEST_RESULTS>. Check permissions."
+      echo 1
+    fi
     pushd ossim/test/scripts
     ossim-batch-test --accept-test all super-test.kwl
     popd
