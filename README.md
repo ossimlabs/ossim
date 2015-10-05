@@ -4,11 +4,12 @@ Welcome to OSSIM, an open source, C++, geospatial image processing library used 
 
 Quick links:
 
+* [What to Get](#relationship-between-repositories)
 * [How to Build](#how-to-build)
 * [How to Test](#how-to-test)
 * [How to Package and Install](#how-to-package-and-install)
 
-# Relationship between Repositories
+# Relationship between Repositories (What to Get)
 
 The principal repository is this one (ossim), containing not only the core classes but also the command line utility applications code as well as the cmake build system files and related scripts. This repository must be cloned first before attempting to work with other _ossim-*_ repositories.
 
