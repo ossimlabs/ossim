@@ -51,7 +51,6 @@ int main(int argc, char *argv[])
          return_status = 0;  // Everything passed
    }
 
-   std::cout<<"ossim-batch-test main() return_status = "<<return_status<<std::endl;
    return return_status;
 }
 

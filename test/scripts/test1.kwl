@@ -69,26 +69,6 @@ test1.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/nitf-info.txt $(OBT_OUT_D
  
 
 // ---
-// Begin test2:
-// ---
-test2.name: test2
-test2.description: Test geographic projection with jp2 format.
-test2.enabled: 0
-
-// Commands to generate expected results:
-
-test2.expected_results_command0: ossim-info -d -i -p $(OSSIM_BATCH_TEST_DATA)/public/jp2/Clinton_IA.jp2 > $(OBT_EXP_DIR)/jp2-info.txt
-
-// The actual commands to test:
-
-test2.test_command0: ossim-info -d -i -p $(OSSIM_BATCH_TEST_DATA)/public/jp2/Clinton_IA.jp2 > $(OBT_OUT_DIR)/jp2-info.txt
-
-// Post process commands for diffs and stuff:
-
-test2.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/jp2-info.txt $(OBT_OUT_DIR)/jp2-info.txt
- 
-
-// ---
 // Begin test3:
 // ---
 test3.name: test3

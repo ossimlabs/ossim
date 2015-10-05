@@ -17,17 +17,19 @@
 # If $OSSIM_BATCH_TEST_RESULTS exists, no expected results will be generated.
 #
 ###############################################################################
+#set -x; trap read debug
 
 GENERATE_EXPECTED_RESULTS=0
 if [ ! -z $1 ] && [ $1 == "genx" ]; then
   GENERATE_EXPECTED_RESULTS=1
+  echo; echo "STATUS: Generating expected results..."; echo
 fi
 
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 if [ -z $OSSIM_BUILD_DIR ]; then
   pushd $SCRIPT_DIR/../../../build
   OSSIM_BUILD_DIR=$PWD
-  #echo "@@@@@ OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
+  #echo "#### DEBUG #### OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
   popd
   export OSSIM_BUILD_DIR
 fi
@@ -41,9 +43,9 @@ if [ -z $OSSIM_BATCH_TEST_RESULTS ]; then
   export OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_DATA/ossim-test-results
 fi
 
-#echo "########## OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
-#echo "########## OSSIM_BATCH_TEST_DATA=$OSSIM_BATCH_TEST_DATA"
-#echo "########## OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_RESULTS"
+#echo "#### DEBUG #### OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
+#echo "#### DEBUG #### OSSIM_BATCH_TEST_DATA=$OSSIM_BATCH_TEST_DATA"
+#echo "#### DEBUG #### OSSIM_BATCH_TEST_RESULTS=$OSSIM_BATCH_TEST_RESULTS"
 
 #export the OSSIM runtime env to child processes:
 export PATH=$OSSIM_BUILD_DIR/bin:$PATH
@@ -55,10 +57,8 @@ COUNT=`ossim-info --version | grep --count "ossim-info 1.9"`
 if [ $COUNT != "1" ]; then
   echo "FAIL: Failed ossim-info test"; exit 1
 else
-  echo "STATUS: Passed ossim-info test"; echo
+  echo "STATUS: Passed ossim-info test"
 fi
-
-set -x; trap read debug
 
 
 if [ $GENERATE_EXPECTED_RESULTS -eq 1 ] && [ ! -e $OSSIM_BATCH_TEST_RESULTS ]; then
@@ -89,12 +89,12 @@ else
   ossim-batch-test super-test.kwl
   EXIT_CODE=$?
   popd
-  echo "STATUS: EXIT_CODE = $EXIT_CODE";echo
+  #echo "#### DEBUG #### EXIT_CODE = $EXIT_CODE"
   if [ $EXIT_CODE != 0 ]; then
     echo "FAIL: Failed batch test"
     exit 1
   else
-    echo "STATUS: Passed batch test"; echo
+    echo "STATUS: Passed batch test"
   fi
 
 fi

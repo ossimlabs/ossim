@@ -96,7 +96,7 @@ test2.preprocess_command1: $(MKDIR_CMD) $(OBT_OUT_DIR)/test2
 // Commands to generate expected results:
 
 // Reduced res sets with histogram.
-test2.expected_results_command0: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --ch $(OSSIM_BATCH_TEST_DATA)/public/applanix/utm/17657707.tif
+test2.expected_results_command0: ossim-preproc -r --ch $(OSSIM_BATCH_TEST_DATA)/public/applanix/utm/17657707.tif
 
 test2.expected_results_command1: $(COPY_CMD) $(OSSIM_BATCH_TEST_DATA)/public/applanix/utm/17657707.his $(OBT_EXP_DIR)/test2/17657707.his
 
@@ -109,7 +109,7 @@ test2.expected_results_command3: $(COPY_CMD) $(OSSIM_BATCH_TEST_DATA)/public/app
 test2.expected_results_command4: ossim-info -d -i -p  $(OSSIM_BATCH_TEST_DATA)/public/applanix/utm/17657707.tif > $(OBT_EXP_DIR)/test2/17657707-info.txt
 
 // The actual commands to test:
-test2.test_command0: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --ch $(OSSIM_BATCH_TEST_DATA)/public/applanix/utm/17657707.tif
+test2.test_command0: ossim-preproc -r --ch $(OSSIM_BATCH_TEST_DATA)/public/applanix/utm/17657707.tif
 
 test2.test_command1: $(COPY_CMD) $(OSSIM_BATCH_TEST_DATA)/public/applanix/utm/17657707.his $(OBT_OUT_DIR)/test2/17657707.his
 
@@ -178,7 +178,7 @@ test4.preprocess_command1: $(MKDIR_CMD) $(OBT_OUT_DIR)/test4
 // Commands to generate expected results:
 
 // Reduced res sets with histogram.
-test4.expected_results_command0: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --ch --compute-min-max $(OSSIM_BATCH_TEST_DATA)/public/applanix/ecef/18056119.tif
+test4.expected_results_command0: ossim-preproc -r --ch --compute-min-max $(OSSIM_BATCH_TEST_DATA)/public/applanix/ecef/18056119.tif
 
 test4.expected_results_command1: $(COPY_CMD) $(OSSIM_BATCH_TEST_DATA)/public/applanix/ecef/18056119.his $(OBT_EXP_DIR)/test4/18056119.his
 
@@ -191,7 +191,7 @@ test4.expected_results_command3: $(COPY_CMD) $(OSSIM_BATCH_TEST_DATA)/public/app
 test4.expected_results_command4: ossim-info -d -i -p  $(OSSIM_BATCH_TEST_DATA)/public/applanix/ecef/18056119.tif > $(OBT_EXP_DIR)/test4/18056119-info.txt
 
 // The actual commands to test:
-test4.test_command0: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --ch --compute-min-max $(OSSIM_BATCH_TEST_DATA)/public/applanix/ecef/18056119.tif
+test4.test_command0: ossim-preproc -r --ch --compute-min-max $(OSSIM_BATCH_TEST_DATA)/public/applanix/ecef/18056119.tif
 
 test4.test_command1: $(COPY_CMD) $(OSSIM_BATCH_TEST_DATA)/public/applanix/ecef/18056119.his $(OBT_OUT_DIR)/test4/18056119.his
 
