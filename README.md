@@ -75,6 +75,8 @@ Testing is generally divided into unit, functional, and integration tests. At th
 
 There is however a _de facto_ scheme in place that has been used for implementing integration and functional testing using the `ossim-batch-test` command line executable. This application spawns other OSSIM utility applications to generate results, which are then compared against an expected-results dataset. This command-line app reads a configuration file that specifies a test or series of tests to run and possibly compare against expected results. There is an option to accept current results as the new expected results. While not explicitely required, the majority of testing done with `ossim-batch-test` will involve input source data, typically imagery, that the tester must preinstall on the target machine. The expected results will also need to be generated and its location specified on the command line. See the usage for `ossim-batch-test` for more detail.
 
+A rudimentary test suite is encapsulated in this [test script (linux version)](https://github.com/ossimlabs/ossim/blob/master/scripts/linux/test.sh). It defines the locations of the input source data and expected results, and runs the command-line test applications. 
+
 The _ossim_ repository contains `test/src` and `test/scripts` subdirectories which contain items available for testing OSSIM core functionality.
 
 ## test/src
