@@ -5,9 +5,7 @@ Welcome to OSSIM, an open source, C++, geospatial image processing library used 
 Quick links:
 
 * [How to Build](#how-to-build)
-    
 * [How to Test](#how-to-test)
-    
 * [How to Package and Install](#how-to-package-and-install)
 
 # Relationship between Repositories
