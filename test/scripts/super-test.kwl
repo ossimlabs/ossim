@@ -55,16 +55,13 @@
 // keywords. Otherwise, REMOVE THESE:
 
 test_config_file0: applanix-test.kwl
-test_config_file1: dot1.kwl
-test_config_file2: dot2.kwl
-test_config_file3: eq-test.kwl
-test_config_file4: fusion-test1.kw1
-test_config_file5: genras-writer-test.kwl
-test_config_file6: height-info-test.kwl
-test_config_file7: index-to-rgb-lut.kwl
-test_config_file8: oms-test1.kwl
-test_config_file9: test1.kwl
-test_config_file10: wrap-test.kwl
+test_config_file1: eq-test.kwl
+test_config_file2: fusion-test1.kw1
+test_config_file3: genras-writer-test.kwl
+test_config_file4: height-info-test.kwl
+test_config_file5: index-to-rgb-lut.kwl
+test_config_file6: test1.kwl
+test_config_file7: wrap-test.kwl
 
 
 

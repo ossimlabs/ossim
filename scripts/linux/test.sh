@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ###############################################################################
 #
@@ -18,12 +18,18 @@
 #
 ###############################################################################
 
-if [ $1 == "genx" ]; then
+GENERATE_EXPECTED_RESULTS=0
+if [ ! -z $1 ] && [ $1 == "genx" ]; then
   GENERATE_EXPECTED_RESULTS=1
 fi
 
+SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 if [ -z $OSSIM_BUILD_DIR ]; then
-  export OSSIM_BUILD_DIR=$PWD/build
+  pushd $SCRIPT_DIR/../../../build
+  OSSIM_BUILD_DIR=$PWD
+  #echo "@@@@@ OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
+  popd
+  export OSSIM_BUILD_DIR
 fi
 
 if [ -z $OSSIM_BATCH_TEST_DATA ]; then
@@ -52,6 +58,8 @@ else
   echo "STATUS: Passed ossim-info test"; echo
 fi
 
+set -x; trap read debug
+
 
 if [ $GENERATE_EXPECTED_RESULTS -eq 1 ] && [ ! -e $OSSIM_BATCH_TEST_RESULTS ]; then
 
@@ -62,7 +70,7 @@ if [ $GENERATE_EXPECTED_RESULTS -eq 1 ] && [ ! -e $OSSIM_BATCH_TEST_RESULTS ]; t
     echo; echo "ERROR: Failed while attempting to create results directory at <$OSSIM_BATCH_TEST_RESULTS>. Check permissions."
     echo 1
   fi
-  pushd ossim/test/scripts
+  pushd $SCRIPT_DIR/../../test/scripts
   ossim-batch-test --accept-test all super-test.kwl
   popd
   #echo "STATUS: ossim-batch-test exit code = $?";echo
@@ -77,17 +85,20 @@ else
 
   # Run batch tests
   echo; echo "STATUS: Running batch tests..."
-  pushd ossim/test/scripts
-  EXIT_CODE=`ossim-batch-test super-test.kwl`
-  echo "STATUS: ossim-batch-test exit code = $?";echo  
+  pushd $SCRIPT_DIR/../../test/scripts
+  ossim-batch-test super-test.kwl
+  EXIT_CODE=$?
+  popd
   echo "STATUS: EXIT_CODE = $EXIT_CODE";echo
-  if [ $? != 0 ]; then
+  if [ $EXIT_CODE != 0 ]; then
     echo "FAIL: Failed batch test"
     exit 1
   else
     echo "STATUS: Passed batch test"; echo
   fi
+
 fi
+
 
 # Success!
 echo "STATUS: Passed all tests."
