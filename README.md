@@ -71,7 +71,21 @@ For convenience, you can specify "eclipse" as the build-type to the script at `o
 
 # How to Test
 
-Coming soon. NOTE: We expect this will be a script in \test\scripts that will run all unit and functional tests.
+Testing is generally divided into unit, functional, and integration tests. At the moment, true unit testing in OSSIM is very limited, though "we hope that situation will change in the near future" (OLK 10/2005). Yes, that was an actual quote from ten years ago (OLK 10/2015). And, after all these years, our hopes have only grown stronger!
+
+There is however a _de facto_ scheme in place that has been used for implementing integration and functional testing using the `ossim-batch-test` command line executable. This application spawns other OSSIM utility applications to generate results, which are then compared against an expected-results dataset. This command-line app reads a configuration file that specifies a test or series of tests to run and possibly compare against expected results. There is an option to accept current results as the new expected results. While not explicitely required, the majority of testing done with `ossim-batch-test` will involve input source data, typically imagery, that the tester must preinstall on the target machine. The expected results will also need to be generated and its location specified on the command line. See the usage for `ossim-batch-test` for more detail.
+
+The _ossim_ repository contains `test/src` and `test/scripts` subdirectories which contain items available for testing OSSIM core functionality.
+
+## test/src
+
+This directory contains the source code for unit and functional testing of core OSSIM objects. It is automatically built by the cmake/make system, assuming `BUILD_OSSIM_TESTS` is set to `ON` (the default). The resulting executables, located in `build/bin`, can be run standalone on the command line. The code in this directory is also a good source of examples for interfacing to many important OSSIM classes. This directory also contains the source code for `ossim-batch-test`.
+
+## test/scripts
+
+This subdirectory contains, primarily, configuration files for existing `ossim-batch-test` runs, but can eventually contain any script that runs unit tests as well. 
+
+The input data referenced in the `ossim-batch-test` configuration files are presently hosted on an Amazon S3 storage. Contact the [OSSIM developer list](mailto:ossim-developer@lists.sourceforge.net) if you want access to this public data for your own testing.
 
 # How to Package and Install
 
