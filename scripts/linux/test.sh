@@ -62,6 +62,13 @@ export LD_LIBRARY_PATH=$OSSIM_BUILD_DIR/lib:$LD_LIBRARY_PATH
 
 # TEST 1: Check ossim-info version:
 echo; echo "STATUS: Running ossim-info test...";
+COMMAND1="ossim-info --config --plugins"
+$COMMAND1
+if [ $? -ne 0 ]; then
+  echo; echo "ERROR: Failed while attempting to run <$COMMAND1>."
+  exit 1
+fi
+
 COUNT=`ossim-info --version | grep --count "ossim-info 1.9"`
 if [ $COUNT != "1" ]; then
   echo "FAIL: Failed ossim-info test"; exit 1
