@@ -283,8 +283,6 @@ ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/ossim/share
 //---
 // OSSIM plugin support:
 //
-// Notes:  
-//
 // Notes:
 //
 // View plugins with:
@@ -292,7 +290,7 @@ ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/ossim/share
 // $ ossim-info --plugins
 //
 // To troubleshoot problems  embedded trace debug can be turned on using 
-// "ossimDynamic"
+// "ossimDynamic". Example:
 //
 // $ ossim-info -T ossimDynamic --plugins 
 //
@@ -314,36 +312,29 @@ ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/ossim/share
 // plugin.file1: < full path and file name >
 //---
 // Example, edit/uncomment as needed:
-plugin.file0: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimpng_plugin.so
-plugin.file5: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimkakadu_plugin.so
-plugin.file10: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimmrsid_plugin.so
-plugin.file15: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_plugin.so
+plugin.file0:  $(OSSIM_INSTALL_PREFIX)/plugins/libossim_png_plugin.so
+plugin.file5:  $(OSSIM_INSTALL_PREFIX)/plugins/libossim_kakadu_plugin.so
+plugin.file10: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_mrsid_plugin.so
+plugin.file15: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_cnes_plugin.so
+plugin.file20: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_hdf5_plugin.so
+plugin.file25: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_sqlite_plugin.so
+plugin.file40: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_web_plugin.so
+plugin.file45: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_kml_plugin.so
+plugin.file50: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_ndf_plugin.so
+plugin.file55: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_geopdf_plugin.so
+plugin.file60: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_opencv_plugin.so
+plugin.file61: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_pdal_plugin.so
+plugin.file65: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_gdal_plugin.so
 
-// Old hdf4/5 plugin:
-// plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimhdf_plugin.so
-
-// New split out hdf plugins
-plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimhdf5_plugin.so
-plugin.file23: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimhdf4_plugin.so
-
-plugin.file25: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimsqlite_plugin.so
-plugin.file30: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimlas_plugin.so
-plugin.file40: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimweb_plugin.so
-plugin.file45: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimkmlsuperoverlay_plugin.so
-plugin.file50: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimndf_plugin.so
-plugin.file55: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimgeopdf_plugin.so
-plugin.file60: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimopencv_plugin.so
-plugin.file65: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimgdal_plugin.so
-
-// plugin.file5: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimreg_plugin.so
-// plugin.file6: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossimcontrib_plugin.so
+// plugin.file1: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_reg_plugin.so
+// plugin.file2: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_contrib_plugin.so
 // 
 //
 // We also support a second style that allows one to pass options to any
 // plugins that support them
 // the options param is an embedded keywordlist that is surrounded by triple
 // quotes:
-// plugin0.file: <path to>/libossimkakadu_plugin
+// plugin0.file: <path to>/libossim_kakadu_plugin
 // plugin0.options: """
 //                  read_factory.location: front
 //                  writer_factory.location: back

@@ -2,15 +2,20 @@
 
 ###############################################################################
 #
+# Test script for all OSSIM repositories. 
+#
 # Usage: test.sh [genx]
 # 
-# Test script for all OSSIM repositories. The test data referenced must be 
-# available at $OSSIM_BATCH_TEST_DATA, which must be defined prior.
+# The only required environment variable is OSSIM_DATA which should also 
+# contain elevation data as specified in the ossim_preferences file.
+#
+# The test data referenced must be available at $OSSIM_BATCH_TEST_DATA. This 
+# environment variable can be predefined, otherwise, will default to:
+# $OSSIM_DATA.
 #
 # The expected results should be in $OSSIM_BATCH_TEST_RESULTS. This environment 
-# variable can be predefined, otherise, will default to:
-#
-#    $OSSIM_BATCH_TEST_DATA/ossim-test-results
+# variable can be predefined, otherwise, will default to
+# $OSSIM_BATCH_TEST_DATA/ossim-test-results.
 #
 # If the optional "genx" argument is specified, then expected results will be
 # generated at $OSSIM_BATCH_TEST_RESULTS ONLY IF this directory is not present.
@@ -34,9 +39,13 @@ if [ -z $OSSIM_BUILD_DIR ]; then
   export OSSIM_BUILD_DIR
 fi
 
-if [ -z $OSSIM_BATCH_TEST_DATA ]; then
-  echo "ERROR: Required env var OSSIM_BATCH_TEST_DATA is not defined. Aborting setup..."; 
+if [ -z $OSSIM_DATA ]; then
+  echo "ERROR: Required env var OSSIM_DATA is not defined. Aborting setup..."; 
   exit 1
+fi
+
+if [ -z $OSSIM_BATCH_TEST_DATA ]; then
+  export OSSIM_BATCH_TEST_DATA=$OSSIM_DATA
 fi
 
 if [ -z $OSSIM_BATCH_TEST_RESULTS ]; then
