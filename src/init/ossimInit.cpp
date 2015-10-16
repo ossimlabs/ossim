@@ -141,6 +141,8 @@ void ossimInit::initialize(ossimArgumentParser& parser)
       return;
    }
 
+
+
    theInstance->theAppName  = parser.getApplicationUsage()->getApplicationName();
    theInstance->parseNotifyOption(parser);
    theInstance->thePreferences = ossimPreferences::instance();
@@ -227,32 +229,6 @@ void ossimInit::finalize()
 {
    
 }
-/*!****************************************************************************
- *  Prints to stdout the list of command line options that this object parses.
- *****************************************************************************/
-void ossimInit::usage()
-{
-   ossimNotify(ossimNotifyLevel_INFO)
-      << "INFORMATION ossimInit::usage():\n"
-      << "Additional command-line options available are as follows: "
-      << "\n"
-      << "\n  -P<pref_filename> -- Allows the user to override the loading "
-      << "\n    of the default preferences with their own pref file."
-      << "\n"
-      << "\n  -K<keyword>[=<value>] -- Allows the user to specify additional"
-      << "\n    keyword/value pairs that are added onto the preferences "
-      << "\n    previously loaded. Keywords specified here override those in"
-      << "\n    the preferences file."
-      << "\n"
-      << "\n  -T<trace_tag> -- Lets user turn on specific trace flags."
-      << "\n"
-      << "\n  -S<session_filename> -- Allows user to specify a session file"
-      << "\n    to load."
-      << "\n  -V or --version -- Outputs version information."
-      << std::endl;
-   return;
-}
-
 bool ossimInit::getElevEnabledFlag() const
 {
    return theElevEnabledFlag;

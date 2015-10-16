@@ -18,6 +18,9 @@
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimGrect.h>
 #include <ossim/base/ossimIrect.h>
+#include <ossim/base/ossimException.h>
+#include <ossim/base/ossimString.h>
+#include <ossim/base/ossimKeywordNames.h>
 #include <ossim/elevation/ossimElevManager.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/projection/ossimImageViewProjectionTransform.h>
@@ -34,6 +37,13 @@
 
 using namespace std;
 
+const char* CENTER_KW = "center_lat_lon";
+const char* DEM_KW    = "dem_file"; // Also accepting ossimKeywordNames::ELEVATION_CELL_KW
+const char* REMAP_KW  = "remap_to_8bit";
+const char* LUT_KW    = "lut_file";
+const char* ROI_KW    = "roi_radius";
+
+
 ossimSlopeUtil::ossimSlopeUtil()
 :  m_aoiRadius(0),
    m_remapToByte(false)
@@ -45,30 +55,9 @@ ossimSlopeUtil::~ossimSlopeUtil()
 {
 }
 
-void ossimSlopeUtil::usage(ossimArgumentParser& ap)
+void ossimSlopeUtil::setUsage(ossimArgumentParser& ap)
 {
-   // Add global usage options.
-   ossimInit::instance()->addOptions(ap);
-
    // Add options.
-   addArguments(ap);
-
-   // Write usage.
-   ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
-
-   ossimNotify(ossimNotifyLevel_INFO)
-   << "\nUtility for computing the slope at each elevation post and generating "
-   << "a corresponding slope image. The output scalar type is a normalized float with 1.0 = 90 "
-   << "degree angle from the local vertical. Optional 8-bit scalar type is available."
-   << "Examples:\n\n"
-   << "    ossim-slope [options] --dem <input-dem> <output-slope-image-file>\n"
-   << "    ossim-slope [options] --center <lat> <lon> --roi <meters> <output-slope-image-file>\n"
-   << std::endl;
-}
-
-void ossimSlopeUtil::addArguments(ossimArgumentParser& ap)
-{
-   // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
    usageString += " [options] <output-image>";
@@ -92,81 +81,145 @@ void ossimSlopeUtil::addArguments(ossimArgumentParser& ap)
          "and should accomodate the output pixel range. This option forces remap to 8-bit, "
          "0-255 where 255 = 90 deg slope");
    au->addCommandLineOption(
-         "--request-api",
-         "Causes applications API to be output as JSON to stdout. Accepts optional filename "
-         "to store JSON output.");
-   au->addCommandLineOption(
          "--roi <meters>",
          "radius of interest surrounding the center point. If absent, the product defaults to "
          "1024 x 1024 pixels, with a radius of 512 * GSD. Alternatively, if a DEM file is "
          "specified, the product ROI defaults to the full DEM coverage.");
+
+   ossimString description =
+   "Utility for computing the slope at each elevation post and generating "
+   "a corresponding slope image. The output scalar type is a normalized float with 1.0 = 90 "
+   "degree angle from the local vertical. Optional 8-bit scalar type is available."
+   "Examples:\n\n"
+    "    ossim-slope [options] --dem <input-dem> <output-slope-image-file>\n"
+    "    ossim-slope [options] --center <lat> <lon> --roi <meters> <output-slope-image-file>\n";
+   au->setDescription(description);
+
+   // Base class has its own:
+   ossimUtility::setUsage(ap);
 }
 
 bool ossimSlopeUtil::initialize(ossimArgumentParser& ap)
 {
-   if ( (ap.argc() == 1) || ap.read("-h") || ap.read("--help") )
-   {
-      usage(ap);
+   // Base class first:
+   if (!ossimUtility::initialize(ap))
       return false;
-   }
 
    std::string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
    std::string ts2;
    ossimArgumentParser::ossimParameter sp2(ts2);
 
-   if (ap.read("--center", sp1, sp2))
+   if (ap.read("--center", sp1, sp2) || ap.read("--center-lat-lon", sp1, sp2))
    {
       m_centerGpt.lat = ossimString(ts1).toDouble();
       m_centerGpt.lon = ossimString(ts2).toDouble();
       m_centerGpt.hgt = 0.0;
    }
 
-   if (ap.read("--dem", sp1))
+   if (ap.read("--dem", sp1) || ap.read("--dem-file", sp1))
       m_demFile = ts1;
 
-   if ( ap.read("--remap"))
+   if ( ap.read("--remap") || ap.read("--remap-to-8bit"))
    {
       m_remapToByte = true;
    }
 
-   if ( ap.read("--lut", sp1) )
+   if ( ap.read("--lut", sp1) || ap.read("--lut-file", sp1))
       m_lutFile = ts1;
 
-   if ( ap.read("--request-api", sp1))
-   {
-      ofstream ofs ( ts1.c_str() );
-      printApiJson(ofs);
-      ofs.close();
-      return false;
-   }
-   if ( ap.read("--request-api"))
-   {
-      printApiJson(cout);
-      return false;
-   }
-
-   if (ap.read("--roi", sp1))
+   if (ap.read("--roi", sp1) || ap.read("--roi-radius", sp1))
       m_aoiRadius = ossimString(ts1).toDouble();
 
    if (m_demFile.empty() && m_centerGpt.hasNans())
    {
       ossimNotify(ossimNotifyLevel_WARN)<<"No DEM file nor center point provided. Cannot "
             <<"compute slope image."<<endl;
-      usage(ap);
+      setUsage(ap);
       return false;
    }
 
    // There should only be the required command line args left:
    if (ap.argc() != 2)
    {
-      usage(ap);
+      setUsage(ap);
       return false;
    }
 
    m_slopeFile = ap[1];
 
    return initializeChain();
+}
+
+bool ossimSlopeUtil::initialize(const ossimKeywordlist& kwl)
+{
+   clear();
+
+   // Base class first:
+   if (!ossimUtility::initialize(kwl))
+      return false;
+
+   ossimString value;
+   value = kwl.find(CENTER_KW);
+   if (!value.empty())
+   {
+      vector <ossimString> coordstr;
+      value.split(coordstr, ossimString(" ,"), false);
+      if (coordstr.size() == 2)
+      {
+         m_centerGpt.lat = coordstr[0].toDouble();
+         m_centerGpt.lon = coordstr[1].toDouble();
+         m_centerGpt.hgt = 0.0;
+      }
+   }
+   if (m_centerGpt.hasNans())
+   {
+      ostringstream msg;
+      msg <<"No center point provided. Cannot compute slope image."<<ends;
+      ossimException e (msg.str());
+      throw e;
+   }
+
+   m_demFile = kwl.find(DEM_KW);
+   if (m_demFile.empty())
+      m_demFile = kwl.find(ossimKeywordNames::ELEVATION_CELL_KW);
+   if (m_demFile.empty())
+   {
+      ostringstream msg;
+      msg <<"No DEM file provided."<<ends;
+      ossimException e (msg.str());
+      throw e;
+   }
+
+   value = kwl.getBoolKeywordValue(m_remapToByte, REMAP_KW);
+
+   m_lutFile = kwl.find(LUT_KW);
+
+   value = kwl.find(ROI_KW);
+   if (!value.empty())
+      m_aoiRadius = value.toDouble();
+
+   m_slopeFile = kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
+   if (value.empty())
+   {
+      ostringstream msg;
+      msg <<"No output slope file provided."<<ends;
+      ossimException e (msg.str());
+      throw e;
+   }
+
+   return initializeChain();
+}
+
+void ossimSlopeUtil::clear()
+{
+   m_centerGpt.makeNan();
+   m_demFile.clear();
+   m_lutFile.clear();
+   m_aoiRadius = 0;
+   m_procChain = 0;
+   m_slopeFile.clear();
+   m_remapToByte = false;
 }
 
 bool ossimSlopeUtil::initializeChain()
@@ -351,23 +404,8 @@ bool ossimSlopeUtil::execute()
    return all_good;
 }
 
-
-void ossimSlopeUtil::printApiJson(ostream& out) const
+void ossimSlopeUtil::getTemplate(ossimKeywordlist& kwl)
 {
-   ossimFilename json_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
-   json_path += "/ossim/util/ossimSlopeApi.json";
-   if (json_path.isReadable())
-   {
-      char line[256];
-      ifstream ifs (json_path.chars());
-      ifs.getline(line, 256);
-
-       while (ifs.good())
-       {
-         out << line << endl;
-         ifs.getline(line, 256);
-       }
-
-       ifs.close();
-   }
 }
+
+

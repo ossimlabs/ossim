@@ -13,6 +13,7 @@
 #include <ossim/util/ossimUtility.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimNotify.h>
+#include <ossim/init/ossimInit.h>
 #include <iostream>
 
 using namespace std;

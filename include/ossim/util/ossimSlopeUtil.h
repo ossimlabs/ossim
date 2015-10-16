@@ -10,12 +10,10 @@
 #ifndef ossimSlopeUtil_HEADER
 #define ossimSlopeUtil_HEADER
 
-#include <ossim/base/ossimObject.h>
+#include <ossim/util/ossimUtility.h>
 #include <ossim/base/ossimRefPtr.h>
-#include <ossim/base/ossimProcessInterface.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimGpt.h>
-#include <ossim/base/ossimArgumentParser.h>
 #include <ossim/imaging/ossimImageSource.h>
 #include <ostream>
 
@@ -23,36 +21,57 @@
  *  Class for computing the slope on each elevation post and generatinga corresponding slope image.
  *  The output scalar type is a normalized float unless unsigned 8-bit is selected via the options.
  */
-class OSSIMDLLEXPORT ossimSlopeUtil : public ossimObject,
-                                      public ossimProcessInterface,
-                                      public ossimListenerManager
+class OSSIMDLLEXPORT ossimSlopeUtil : public ossimUtility
 {
 public:
    ossimSlopeUtil();
    ~ossimSlopeUtil();
 
    /**
-    * Initializes from command line arguments.
+    * Initializes the aurgument parser with expected parameters and options. It does not output
+    * anything. To see the usage, the caller will need to do something like:
+    *
+    *   ap.getApplicationUsage()->write(<ostream>);
     */
-   bool initialize(ossimArgumentParser& ap);
+   virtual void setUsage(ossimArgumentParser& ap);
 
    /**
-    * Returns true if successful
+    * Initializes from command line arguments.
+    * @note Throws ossimException on error.
+    */
+   virtual bool initialize(ossimArgumentParser& ap);
+
+   /**
+    * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
+    * @note Throws ossimException on error.
+    */
+   virtual bool initialize(const ossimKeywordlist& kwl);
+
+   /**
+    * Writes product to output file. Returns true if successful.
+    * @note Throws ossimException on error.
     */
    virtual bool execute();
 
-   virtual ossimObject* getObject() { return this; }
-   virtual const ossimObject* getObject() const  { return this; }
-   virtual ossimListenerManager* getManager()  { return this; };
+   /**
+    * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
+    */
+   virtual void clear();
 
-   void printApiJson(std::ostream& out) const;
+   /**
+    * Kills current (asynchronous) process. Defaults to do nothing.
+    */
+   virtual void abort() {}
+
+   /**
+    * Assigns a template keywordlist for initializing derived classes.
+    */
+   virtual void getTemplate(ossimKeywordlist& kwl);
 
 protected:
    bool initializeChain();
    bool loadDemFile();
    bool loadElevDb();
-   void usage(ossimArgumentParser& ap);
-   void addArguments(ossimArgumentParser& ap);
    bool writeJsonApi(const ossimFilename& outfile);
 
    ossimFilename m_demFile;

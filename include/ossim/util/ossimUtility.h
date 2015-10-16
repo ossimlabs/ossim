@@ -38,15 +38,17 @@ public:
 
    /**
     * Initializes from command line arguments.
+    * This base class has some common arguments to read. The derived class should call this
+    * implementation in addition to setting its own arguments.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(ossimArgumentParser& ap) = 0;
+   virtual bool initialize(ossimArgumentParser& ap);
 
    /**
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(const ossimKeywordlist& kwl) = 0;
+   virtual bool initialize(const ossimKeywordlist& kwl) { return true; }
 
    /**
     * Writes product to output file. Returns true if successful.

@@ -183,6 +183,8 @@ ossimArgumentParser::ossimArgumentParser(int* argc,char **argv):
    theArgv(argv),
    theUsage(ossimApplicationUsage::instance())
 {
+   if (theArgc)
+      theUsage->setApplicationName(argv[0]);
 }
 
 ossimArgumentParser::~ossimArgumentParser()
