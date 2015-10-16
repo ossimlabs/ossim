@@ -3,10 +3,9 @@
 #
 # Setup script for all OSSIM repositories
 #
-# The test data directory, specified by the env var OSSIM_BATCH_TEST_DATA is
+# The test data directory, specified by the env var OSSIM_DATA is
 # syncronized against a master repository.
 #
-# OSSIM_BATCH_TEST_DATA must be defined prior.
 # If OSSIM_DATA is not set or the defined directory doesn't exist
 # This will create the dir and sync the data from S3.  NOTE: s3cmd credentials
 # must be stored on the machine that this test needs to run.
