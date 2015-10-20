@@ -101,7 +101,7 @@ fi
 #echo "@@@@@ OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
 mkdir -p $OSSIM_BUILD_DIR
 pushd $OSSIM_BUILD_DIR
-rm CMakeCache.txt
+rm -f CMakeCache.txt
 
 # Check for ENV vars set to override hardcoded plugins switches here:
 if [ -z $BUILD_MRSID_PLUGIN ]; then
