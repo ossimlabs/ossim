@@ -159,6 +159,7 @@ const char* ossimKeywordNames::SRS_NAME_KW = "srs_name";
 const char* ossimKeywordNames::STD_PARALLEL_1_KW = "std_parallel_1";
 const char* ossimKeywordNames::STD_PARALLEL_2_KW = "std_parallel_2";
 const char* ossimKeywordNames::THICKNESS_KW = "thickness";
+const char* ossimKeywordNames::THREADS_KW = "threads";
 const char* ossimKeywordNames::TIE_POINT_EASTING_KW = "tie_point_easting";  // ????
 const char* ossimKeywordNames::TIE_POINT_NORTHING_KW = "tie_point_northing";  // ????
 const char* ossimKeywordNames::TIE_POINT_XY_KW = "tie_point_xy";  // ????

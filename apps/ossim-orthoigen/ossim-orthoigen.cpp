@@ -17,7 +17,7 @@
 #include <iomanip>
 using namespace std;
 
-#include <ossim/parallel/ossimOrthoIgen.h>
+#include <ossim/util/ossimOrthoIgen.h>
 #include <ossim/parallel/ossimMpi.h>
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimException.h>

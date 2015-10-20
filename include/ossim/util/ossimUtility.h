@@ -67,14 +67,22 @@ public:
    virtual void abort() {}
 
    /**
-    * Assigns a template keywordlist for initializing derived classes.
+    * Assigns a template keywordlist to string for initializing derived classes.
     */
-   virtual void getTemplate(ossimKeywordlist& kwl) = 0;
+   virtual void getKwlTemplate(ossimString& kwl);
+
+   /**
+    * Outputs a JSON representation of the Utility's API.
+    */
+   void getUtilityApi(ossimString& out) const;
 
    virtual ossimObject* getObject() { return this; }
    virtual const ossimObject* getObject() const  { return this; }
    virtual ossimListenerManager* getManager()  { return this; };
+   virtual ossimString getClassName() const { return "ossimUtility"; }
 
+private:
+   bool readFile(const ossimFilename& filename, ossimString& contents) const;
 };
 
 #endif

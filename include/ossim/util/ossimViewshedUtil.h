@@ -12,7 +12,6 @@
 
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimRefPtr.h>
-#include <ossim/base/ossimProcessInterface.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimArgumentParser.h>
@@ -22,14 +21,13 @@
 #include <ossim/parallel/ossimJob.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <OpenThreads/ReadWriteMutex>
+#include <ossim/util/ossimUtility.h>
 
 /*!
  *  Class for computing the viewshed on a DEM given the viewer location and max range of visibility
  */
 
-class OSSIMDLLEXPORT ossimViewshedUtil : public ossimObject,
-                                         public ossimProcessInterface,
-                                         public ossimListenerManager
+class OSSIMDLLEXPORT ossimViewshedUtil : public ossimUtility
 {
    friend class SectorProcessorJob;
    friend class RadialProcessorJob;
@@ -40,47 +38,43 @@ public:
    ~ossimViewshedUtil();
 
    /**
+    * Initializes the aurgument parser with expected parameters and options. It does not output
+    * anything. To see the usage, the caller will need to do something like:
+    *
+    *   ap.getApplicationUsage()->write(<ostream>);
+    */
+   virtual void setUsage(ossimArgumentParser& ap);
+
+   /**
     * Initializes from command line arguments.
+    * @note Throws ossimException on error.
     */
-   bool initialize(ossimArgumentParser& ap);
-
-   /*
-    * Initializes after parameter set-methods have been called (in lieu of argument parser init)
-    */
-   bool initialize();
+   virtual bool initialize(ossimArgumentParser& ap);
 
    /**
-    * Directly assigns the maximum visibility radius property (in meters).
+    * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
+    * @note Throws ossimException on error.
     */
-   void setVisibilityRadius(const double& radius) { m_visRadius = radius; }
+   virtual bool initialize(const ossimKeywordlist& kwl);
 
    /**
-    * Directly assigns the observer's ground point property.
-    */
-   void setObserverGpt(const ossimGpt& vpt) { m_observerGpt = vpt; }
-
-   void setOutputFileName(const ossimFilename& fname) { m_filename = fname; }
-
-   /**
-    * Sets the nominal output resolution in meters
-    */
-   void setGSD(const double& meters_per_pixel);
-
-   /**
-    * Sets the boundary azimuths in degrees for the field-of-view (clockwise from start to stop)
-    */
-   void setFOV(const double& start_deg, const double& stop_deg);
-
-   /**
-    * Returns true if successful
+    * Writes product to output file. Returns true if successful.
+    * @note Throws ossimException on error.
     */
    virtual bool execute();
 
-   virtual ossimObject* getObject() { return this; }
-   virtual const ossimObject* getObject() const  { return this; }
-   virtual ossimListenerManager* getManager()  { return this; };
+   /**
+    * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
+    */
+   virtual void clear();
 
-   void printApiJson(ostream& out) const;
+   /**
+    * Kills current (asynchronous) process. Defaults to do nothing.
+    */
+   virtual void abort() {}
+
+   virtual ossimString getClassName() const { return "ossimViewshedUtil"; }
+
 
 protected:
    class Radial
@@ -94,15 +88,12 @@ protected:
       double elevation;
    };
 
-   /** @brief Initializes arg parser and outputs usage. */
-   void usage(ossimArgumentParser& ap);
-   void addArguments(ossimArgumentParser& ap);
+   bool initializeChain();
    bool writeFile();
    void dumpProductSummary() const;
    void paintReticle();
    void initRadials();
    bool writeHorizonProfile();
-   bool writeJsonApi(const ossimFilename& outfile);
 
    ossimGpt  m_observerGpt;
    ossimFilename m_demFile;

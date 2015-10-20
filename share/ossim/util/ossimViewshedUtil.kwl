@@ -1,0 +1,66 @@
+//***********************************
+// Template KWL for Viewshed Utility.
+//***********************************
+type: ossimViewshedUtil
+
+// Specifies the input DEM filename. If none provided, the elevation database is referenced 
+// as specified in prefs file for the center and ROI specified.
+elevation_cell: <dem_file>
+
+// Optional arguments specifying the field-of
+// -view boundary azimuths (in degrees). By default, a 360 deg FOV is
+//  computed. The arc is taken clockwise from start to end, so for a
+//  FOV of 225 deg from W, through N to SE, start=270 and end=135
+field_of_view: <start_az> <end_az>
+
+// Specifies output GSD in meters. Defaults to the same 
+// resolution as input DEM.
+meters_per_pixel: <meters>
+
+// Specifies the observers height-of-eye above the 
+// terrain in meters. Defaults to 1.5 m.
+height_of_eye: <meters>
+
+// Experimental. Outputs the max elevation angles 
+// for all azimuths to <filename>, for horizon profiling.
+horizon_file: <filename>
+
+// Specifies the optional lookup table filename for 
+// mapping the single-band output image to an RGB. The LUT provided must be 
+// in the ossimIndexToRgbLutFilter format and must handle the three output 
+// viewshed values (see --values option).
+lut_file: <filename>
+
+// Specifies max visibility in meters. Required 
+// unless --size is specified. This option constrains output to a circle, 
+// similar to a radar display
+radius: <meters>
+
+// Specifies the size of the reticle at the observer
+// location in pixels from the center (i.e., the radius of the reticle). 
+// Defaults to 2. A value of 0 hides the reticle. See --values option for 
+// setting reticle color.
+reticle: <int>
+
+// For engineering/debug purposes 
+simulation: true|false
+
+// Instead of a visibility radius, directly specifies 
+// the dimensions of the output product in pixels (output is 
+// square). Required unless --radius is specified.
+size: <int>
+
+// Causes a product summary to be output to the console.
+summary: true|false
+
+// For engineering/debug purposes 
+thread_by_sector: true|false
+
+// Number of threads. Defaults to use all available cores. 
+// For engineering/debug purposes 
+threads: <int>
+
+// Specifies the pixel values (0-255) for the visible,
+// hidden and reticle pixels, respectively. Defaults to visible=null (0), 
+// hidden=128, and observer position reticle is highlighted with 255.
+values: <int> <int> <int>

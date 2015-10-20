@@ -15,7 +15,6 @@
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimGpt.h>
 #include <ossim/imaging/ossimImageSource.h>
-#include <ostream>
 
 /*!
  *  Class for computing the slope on each elevation post and generatinga corresponding slope image.
@@ -63,16 +62,12 @@ public:
     */
    virtual void abort() {}
 
-   /**
-    * Assigns a template keywordlist for initializing derived classes.
-    */
-   virtual void getTemplate(ossimKeywordlist& kwl);
+   virtual ossimString getClassName() const { return "ossimSlopeUtil"; }
 
 protected:
    bool initializeChain();
    bool loadDemFile();
    bool loadElevDb();
-   bool writeJsonApi(const ossimFilename& outfile);
 
    ossimFilename m_demFile;
    ossimFilename m_slopeFile;

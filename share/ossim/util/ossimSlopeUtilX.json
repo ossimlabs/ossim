@@ -1,0 +1,39 @@
+{
+    "name": "ossim-slope",
+    "description": {
+        "version" : "1.00",
+        "short_description": "OSSIM Slope Utility",
+        "long_description": "Utility for computing the slope at each elevation post and generating corresponding slope image. The output scalar type is a normalized float with 1.0 = 90 degree angle from the local vertical. Optional 8-bit scalar type is available."   
+     },
+     "inputs": {
+        "dem": {
+            "datatype": "file:elevation",
+            "description": "DEM file to se in lieu of default elevation database.",
+            "required": false    
+        },
+        "lut": {
+            "datatype": "file:text",
+            "description": "Specifies the optional lookup table filename for mapping the single-band output image to an RGB. The LUT provided must be in the ossimIndexToRgbLutFilter format and must handle the three output viewshed values (see --values option).",
+            "required": false    
+        },
+        "roi": {         
+            "datatype": "double:positive_range",
+            "description": "Radius of interest (meters)",
+            "required": true    
+        },
+        "center": {         
+            "datatype": "geo_pos_2d",
+            "description": "Geographic position of center of area of interest (lat-deg, lon-deg)",
+            "required": true   
+        },
+        "outputFile": {
+            "datatype": "url:wms",
+            "description": "The URL/filename of the WMS server where the slope file will be accessible",
+            "required": true
+        }
+    },
+    "outputs": { },
+    "ranges" : { 
+        "positive_range": [ 0, "+inf"] 
+    }
+}

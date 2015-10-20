@@ -85,7 +85,9 @@ ossimWktProjectionFactory* ossimWktProjectionFactory::instance()
 void ossimWktProjectionFactory::loadRecords() const
 {
    // Fetch filename of WKT projection DB file specified in ossim_preferences:
-   ossimFilename db_name = ossimPreferences::instance()->preferencesKWL().find("wkt_database_file");
+   ossimFilename wkt_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
+   wkt_path += "/ossim/projection/";
+   ossimFilename db_name = wkt_path + ossimPreferences::instance()->preferencesKWL().find("wkt_database_file");
    if (!db_name.isReadable())
       return;
 

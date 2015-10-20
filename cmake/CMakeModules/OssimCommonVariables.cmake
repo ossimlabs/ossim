@@ -220,8 +220,8 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    ENDIF(NOT OSSIM_DEPENDENCIES)
  
    #################################### ADd some common options for all modules to use ###################################
-   OPTION(BUILD_OSSIMVIDEO "Set to ON to build the video decoding library.  Use OFF to skip this module." ON)
-   OPTION(BUILD_OSSIMPLANET "Set to ON to build the 3-D visualization module.  Use OFF to skip this module." ON)
+   OPTION(BUILD_OSSIMVIDEO "Set to ON to build the video decoding library.  Use OFF to skip this module." OFF)
+   OPTION(BUILD_OSSIMPLANET "Set to ON to build the 3-D visualization module.  Use OFF to skip this module." OFF)
    OPTION(BUILD_OSSIMGUI "Set to ON to build the new ossimGui library and geocell application." ON)
    OPTION(BUILD_MRSID_PLUGIN "Set to ON to build the MrSID plugin library." ON)   
    OPTION(BUILD_KAKADU_PLUGIN "Set to ON to build the Kakadu plugin library." ON)

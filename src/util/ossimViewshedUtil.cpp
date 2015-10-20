@@ -17,8 +17,9 @@
 #include <ossim/base/ossimRtti.h>
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossim2dTo2dShiftTransform.h>
-#include <ossim/init/ossimInit.h>
+#include <ossim/base/ossimException.h>
 #include <ossim/base/ossimPreferences.h>
+#include <ossim/init/ossimInit.h>
 #include <ossim/elevation/ossimElevManager.h>
 #include <ossim/elevation/ossimImageElevationDatabase.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
@@ -61,29 +62,7 @@ ossimViewshedUtil::~ossimViewshedUtil()
    delete [] m_radials;
 }
 
-void ossimViewshedUtil::usage(ossimArgumentParser& ap)
-{
-   // Add global usage options.
-   ossimInit::instance()->addOptions(ap);
-
-   // Add options.
-   addArguments(ap);
-
-   // Write usage.
-   ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
-
-   ossimNotify(ossimNotifyLevel_INFO)
-   <<"\nComputes the viewshed for the given viewpt coordinates. The output is a binary image "
-   << "with 0 representing hidden points, and 1 representing visible points.\n\n"
-   << "Examples:\n\n"
-   << "    ossim-viewshed --radius 50  28.0 -80.5 output-hlz.tif\n"
-   << "    ossim-viewshed --size 1024  28.0 -80.5 output-hlz.tif\n\n"
-   << "An alternate command line provides switch for observer lat and lon:\n\n"
-   << "    ossim-viewshed --rlz 25 --observer 28.0 -80.5  output-hlz.tif \n"
-   << std::endl;
-}
-
-void ossimViewshedUtil::addArguments(ossimArgumentParser& ap)
+void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
 {
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
@@ -158,15 +137,26 @@ void ossimViewshedUtil::addArguments(ossimArgumentParser& ap)
          "Specifies the pixel values (0-255) for the visible,"
          " hidden and reticle pixels, respectively. Defaults to visible=null (0), "
          "hidden=128, and observer position reticle is highlighted with 255.");
+
+   ossimString description =
+         "\nComputes the viewshed for the given viewpt coordinates. The output is a binary image "
+         "with 0 representing hidden points, and 1 representing visible points.\n\n"
+         "Examples:\n\n"
+         "    ossim-viewshed --radius 50  28.0 -80.5 output-hlz.tif\n"
+         "    ossim-viewshed --size 1024  28.0 -80.5 output-hlz.tif\n\n"
+         "An alternate command line provides switch for observer lat and lon:\n\n"
+         "    ossim-viewshed --rlz 25 --observer 28.0 -80.5  output-hlz.tif \n";
+   au->setDescription(description);
+
+   // Base class has its own:
+   ossimUtility::setUsage(ap);
 }
 
 bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
 {
-   if ( (ap.argc() == 1) || ap.read("-h") || ap.read("--help") )
-   {
-      usage(ap);
+   // Base class first:
+   if (!ossimUtility::initialize(ap))
       return false;
-   }
 
    std::string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
@@ -175,7 +165,7 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    std::string ts3;
    ossimArgumentParser::ossimParameter sp3(ts3);
 
-   if ( ap.read("--dem", sp1) )
+   if (ap.read("--dem", sp1) || ap.read("--dem-file", sp1))
       m_demFile = ts1;
 
    if ( ap.read("--fov", sp1, sp2) )
@@ -189,13 +179,13 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    if ( ap.read("--gsd", sp1) )
       m_gsd = ossimString(ts1).toDouble();
 
-   if ( ap.read("--hgt-of-eye", sp1) )
+   if ( ap.read("--hgt-of-eye", sp1) || ap.read("--height-of-eye", sp1) )
       m_obsHgtAbvTer = ossimString(ts1).toDouble();
 
-   if ( ap.read("--horizon", sp1) )
+   if ( ap.read("--horizon", sp1) || ap.read("--horizon-file", sp1))
       m_horizonFile = ossimString(ts1);
 
-   if ( ap.read("--lut", sp1) )
+   if ( ap.read("--lut", sp1) || ap.read("--lut-file", sp1))
       m_lutFile = ts1;
 
    if ( ap.read("--observer", sp1, sp2) )
@@ -208,18 +198,6 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    if ( ap.read("--radius", sp1) )
       m_visRadius = ossimString(ts1).toDouble();
 
-   if ( ap.read("--request-api", sp1))
-   {
-      ofstream ofs ( ts1.c_str() );
-      printApiJson(ofs);
-      ofs.close();
-      return false;
-   }
-   if ( ap.read("--request-api"))
-   {
-      printApiJson(cout);
-      return false;
-   }
    if ( ap.read("--reticle", sp1) )
       m_reticleSize = ossimString(ts1).toInt32();
 
@@ -249,7 +227,7 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    if ( (m_observerGpt.hasNans() && (ap.argc() != 4)) ||
         (!m_observerGpt.hasNans() && (ap.argc() != 2)) )
    {
-      usage(ap);
+      setUsage(ap);
       return false;
    }
 
@@ -259,9 +237,10 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
       ossimNotify(ossimNotifyLevel_WARN)
                   << "ossimViewshedUtil::initialize ERR: Command line is underspecified."
                   << std::endl;
-      usage(ap);
+      setUsage(ap);
       return false;
    }
+
    // Parse the required command line params:
    int ap_idx = 1;
    if (m_observerGpt.hasNans())
@@ -273,10 +252,131 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    }
    m_filename = ap[ap_idx];
 
-   return initialize();
+   return initializeChain();
 }
 
-bool ossimViewshedUtil::initialize()
+bool ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
+{
+   // Base class first:
+   if (!ossimUtility::initialize(kwl))
+      return false;
+
+   ossimString value;
+
+   m_demFile = kwl.find("dem_file");
+   if (m_demFile.empty())
+      m_demFile = kwl.find(ossimKeywordNames::ELEVATION_CELL_KW);
+
+
+   value = kwl.find("fov");
+   if (!value.empty())
+   {
+      vector <ossimString> coordstr;
+      value.split(coordstr, ossimString(" ,"), false);
+      if (coordstr.size() == 2)
+      {
+         m_startFov = coordstr[0].toDouble();
+         m_stopFov = coordstr[1].toDouble();
+         if (m_startFov < 0)
+            m_startFov += 360.0;
+      }
+   }
+
+   value = kwl.find("gsd");
+   if (value.empty())
+      value = kwl.find(ossimKeywordNames::METERS_PER_PIXEL_KW);
+   if (!value.empty())
+      m_gsd = value.toDouble();
+
+   value = kwl.find("height_of_eye");
+   if (!value.empty())
+      m_obsHgtAbvTer = value.toDouble();
+
+   m_horizonFile = kwl.find("horizon_file");
+
+   m_lutFile = kwl.find("lut_file");
+
+   value = kwl.find("observer");
+   if (!value.empty())
+   {
+      vector <ossimString> coordstr;
+      value.split(coordstr, ossimString(" ,"), false);
+      if (coordstr.size() == 2)
+      {
+         m_observerGpt.lat = coordstr[0].toDouble();
+         m_observerGpt.lon = coordstr[1].toDouble();
+         m_observerGpt.hgt = 0.0;
+      }
+   }
+
+   value = kwl.find("radius");
+   if (!value.empty())
+      m_visRadius = value.toDouble();
+
+   value = kwl.find("reticle");
+   if (!value.empty())
+      m_reticleSize = value.toInt32();
+
+   kwl.getBoolKeywordValue(m_threadBySector, "thread_by_sector");
+   kwl.getBoolKeywordValue(m_simulation, "simulation");
+   kwl.getBoolKeywordValue(m_outputSummary, "summary");
+
+   value = kwl.find("size");
+   if (!value.empty())
+      m_halfWindow = value.toInt32();
+
+   value = kwl.find(ossimKeywordNames::THREADS_KW);
+   if (!value.empty())
+      m_numThreads = value.toInt32();
+
+   value = kwl.find("values");
+   if (!value.empty())
+   {
+      vector <ossimString> coordstr;
+      value.split(coordstr, ossimString(" ,"), false);
+      if (coordstr.size() == 3)
+      {
+         m_visibleValue = coordstr[0].toUInt8();
+         m_hiddenValue = coordstr[1].toUInt8();
+         m_observerValue = coordstr[2].toUInt8();
+      }
+   }
+
+   m_filename = kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
+   if (value.empty())
+   {
+      ostringstream msg;
+      msg <<"No output file name provided."<<ends;
+      ossimException e (msg.str());
+      throw e;
+   }
+
+  // Verify minimum required args were specified:
+   if (m_demFile.empty() && (m_visRadius == 0) && (m_halfWindow == 0))
+   {
+      ostringstream msg;
+      msg << "ossimViewshedUtil::initialize ERR: Keywordlist is underspecified." << ends;
+      ossimException e (msg.str());
+      throw e;
+   }
+
+   return initializeChain();
+}
+
+void ossimViewshedUtil::clear()
+{
+   m_observerGpt.makeNan();
+   m_demFile.clear();
+   m_lutFile.clear();
+   m_visRadius = 0;
+   m_outBuffer = 0;
+   m_filename.clear();
+   m_horizonMap.clear();
+   m_jobMtQueue = 0;
+   m_geometry = 0;
+}
+
+bool ossimViewshedUtil::initializeChain()
 {
    if (m_observerGpt.hasNans())
    {
@@ -505,11 +605,7 @@ void ossimViewshedUtil::initRadials()
 bool ossimViewshedUtil::execute()
 {
    if (!m_initialized)
-   {
-      initialize();
-      if (!m_initialized)
-         return false;
-   }
+      return false;
 
    d_accumT = 0;
    bool success =  false;
@@ -851,22 +947,3 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
    } // end loop over radial's abscissas
 }
 
-void ossimViewshedUtil::printApiJson(ostream& out) const
-{
-   ossimFilename json_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
-   json_path += "/ossim/util/ossimViewshedApi.json";
-   if (json_path.isReadable())
-   {
-      char line[256];
-      ifstream ifs (json_path.chars());
-      ifs.getline(line, 256);
-
-       while (ifs.good())
-       {
-         out << line << endl;
-         ifs.getline(line, 256);
-       }
-
-       ifs.close();
-   }
-}

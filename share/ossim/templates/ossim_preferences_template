@@ -193,21 +193,28 @@ elevation_manager.threads: yes
 // datum_grids: $(OSSIM_DATA)/ossim/elevation/nadcon-grids
 
 //---
+// Location of other shared files can be accessed using this preference to permit 
+// specifying paths relative to it.
+//---
+ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/ossim/share
+
+//---
 // Look-up tables for European Petroleum Survey Group (EPSG) coded 
-// projections and datums.
+// projections and datums (located in <ossim_share_directory>/ossim/projection)
 // These are expected to be delimiter-separated value (*.csv|tsv) files.
 // NOTE: ESRI codes are NOT EPSG codes, however, they do not conflict with 
 // EPSG so ingesting them as if they were EPSG. Eventually, separate 
 // databases or a multi-Db solution may need to be 
 // implemented. OLK 05/2010
 // --- 
-epsg_database_file0: $(OSSIM_INSTALL_PREFIX)/share/ossim/projection/ossim_epsg_projections-v7_4.csv
-epsg_database_file1: $(OSSIM_INSTALL_PREFIX)/share/ossim/projection/ossim_harn_state_plane_epsg.csv
-epsg_database_file2: $(OSSIM_INSTALL_PREFIX)/share/ossim/projection/ossim_state_plane_spcs.csv
-epsg_database_file3: $(OSSIM_INSTALL_PREFIX)/share/ossim/projection/ossim_harn_state_plane_esri.csv
+epsg_database_file0: ossim_epsg_projections-v7_4.csv
+epsg_database_file1: ossim_harn_state_plane_epsg.csv
+epsg_database_file2: ossim_state_plane_spcs.csv
+epsg_database_file3: ossim_harn_state_plane_esri.csv
 
-// Database file for WKT-based projection factory:
-wkt_database_file: $(OSSIM_INSTALL_PREFIX)/share/ossim/projection/ossim_wkt_pcs.csv
+// Database file for WKT-based projection factory 
+// (located in <ossim_share_directory>/ossim/projection):
+wkt_database_file: ossim_wkt_pcs.csv
 
 //---
 // Geoid support:
@@ -264,12 +271,6 @@ geoid_ngs_directory.byte_order: little_endian
 // svn co http://svn.osgeo.org/ossim/trunk/ossim_package_support/geoids geoids
 //---
 geoid_egm_96_grid: $(OSSIM_INSTALL_PREFIX)/share/ossim/geoids/geoid1996/egm96.grd
-
-//---
-// Location of other shared files can be accessed using this preference to permit 
-// specifying paths relative to it.
-//---
-ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/ossim/share
 
 // ---
 // Font support:

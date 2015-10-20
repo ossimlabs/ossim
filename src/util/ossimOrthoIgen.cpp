@@ -8,7 +8,7 @@
 // $Id: ossimOrthoIgen.cpp 22813 2014-06-04 19:52:08Z okramer $
 
 
-#include <ossim/parallel/ossimOrthoIgen.h>
+#include <ossim/util/ossimOrthoIgen.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/init/ossimInit.h>

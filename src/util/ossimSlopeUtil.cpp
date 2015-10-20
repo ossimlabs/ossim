@@ -87,12 +87,12 @@ void ossimSlopeUtil::setUsage(ossimArgumentParser& ap)
          "specified, the product ROI defaults to the full DEM coverage.");
 
    ossimString description =
-   "Utility for computing the slope at each elevation post and generating "
-   "a corresponding slope image. The output scalar type is a normalized float with 1.0 = 90 "
-   "degree angle from the local vertical. Optional 8-bit scalar type is available."
-   "Examples:\n\n"
-    "    ossim-slope [options] --dem <input-dem> <output-slope-image-file>\n"
-    "    ossim-slope [options] --center <lat> <lon> --roi <meters> <output-slope-image-file>\n";
+         "Utility for computing the slope at each elevation post and generating "
+         "a corresponding slope image. The output scalar type is a normalized float with 1.0 = 90 "
+         "degree angle from the local vertical. Optional 8-bit scalar type is available."
+         "Examples:\n\n"
+         "    ossim-slope [options] --dem <input-dem> <output-slope-image-file>\n"
+         "    ossim-slope [options] --center <lat> <lon> --roi <meters> <output-slope-image-file>\n";
    au->setDescription(description);
 
    // Base class has its own:
@@ -172,26 +172,12 @@ bool ossimSlopeUtil::initialize(const ossimKeywordlist& kwl)
          m_centerGpt.hgt = 0.0;
       }
    }
-   if (m_centerGpt.hasNans())
-   {
-      ostringstream msg;
-      msg <<"No center point provided. Cannot compute slope image."<<ends;
-      ossimException e (msg.str());
-      throw e;
-   }
 
    m_demFile = kwl.find(DEM_KW);
    if (m_demFile.empty())
       m_demFile = kwl.find(ossimKeywordNames::ELEVATION_CELL_KW);
-   if (m_demFile.empty())
-   {
-      ostringstream msg;
-      msg <<"No DEM file provided."<<ends;
-      ossimException e (msg.str());
-      throw e;
-   }
 
-   value = kwl.getBoolKeywordValue(m_remapToByte, REMAP_KW);
+   kwl.getBoolKeywordValue(m_remapToByte, REMAP_KW);
 
    m_lutFile = kwl.find(LUT_KW);
 
@@ -204,6 +190,14 @@ bool ossimSlopeUtil::initialize(const ossimKeywordlist& kwl)
    {
       ostringstream msg;
       msg <<"No output slope file provided."<<ends;
+      ossimException e (msg.str());
+      throw e;
+   }
+
+   if (m_demFile.empty() && m_centerGpt.hasNans())
+   {
+      ostringstream msg;
+      msg <<"No center point provided and no DEM file provided. Cannot compute slope image."<<ends;
       ossimException e (msg.str());
       throw e;
    }
@@ -402,10 +396,6 @@ bool ossimSlopeUtil::execute()
    }
 
    return all_good;
-}
-
-void ossimSlopeUtil::getTemplate(ossimKeywordlist& kwl)
-{
 }
 
 

@@ -188,7 +188,10 @@ ossimEpsgProjectionDatabase::ossimEpsgProjectionDatabase()
 //*************************************************************************************************
 void ossimEpsgProjectionDatabase::initialize() const
 {
-   // Fetch filenames of all projection DB files specified in ossim_preferences:
+   // Fetch filenames of all projection DB files from the share directory specified in
+   // ossim_preferences:
+   ossimFilename epsg_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
+   epsg_path += "/ossim/projection/";
    ossimString regEx =  ossimString("^epsg_database_file[0-9]+");
    vector<ossimString> keys = 
       ossimPreferences::instance()->preferencesKWL().getSubstringKeyList(regEx);
@@ -203,7 +206,7 @@ void ossimEpsgProjectionDatabase::initialize() const
    // Loop over each file and read contents into memory:
    while ( i != keys.end() )
    {
-      db_name = ossimPreferences::instance()->preferencesKWL().find( (*i).c_str() );
+      db_name = epsg_path + ossimPreferences::instance()->preferencesKWL().find( (*i).c_str() );
       ++i;
       if (!db_name.isReadable())
          continue;

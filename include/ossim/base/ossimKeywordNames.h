@@ -170,6 +170,7 @@ public:
    static const char* STD_PARALLEL_1_KW;
    static const char* STD_PARALLEL_2_KW;
    static const char* THICKNESS_KW;
+   static const char* THREADS_KW;
    static const char* TIE_POINT_EASTING_KW;
    static const char* TIE_POINT_NORTHING_KW;
    static const char* TIE_POINT_XY_KW;
