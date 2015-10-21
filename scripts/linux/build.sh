@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 ###############################################################################
 #
 # Build script for all OSSIM repositories
@@ -24,10 +24,10 @@
 #set -x; trap read debug
 
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-pushd $SCRIPT_DIR/../..
+pushd $SCRIPT_DIR/../.. >/dev/null
 REPO_DIR=$PWD
 echo "@@@@@ REPO_DIR=$REPO_DIR"
-popd
+popd >/dev/null
 
 CMAKE_CONFIG_SCRIPT=$REPO_DIR/cmake/scripts/ossim-cmake-config-LINUX.sh
 
@@ -74,15 +74,15 @@ fi
 
 # CMake successful, now run make in the build directory (OSSIM_BUILD_DIR 
 # exported by cmake config script):
-pushd $OSSIM_BUILD_DIR
+pushd $OSSIM_BUILD_DIR >/dev/null
 make -j 8
 if [ $? -ne 0 ]; then
   echo; echo "Error encountered during make. Check the console log and correct."
-  popd
+  popd>/dev/null
   exit 1
 fi
 
 echo; echo "Build completed successfully. Binaries located in $OSSIM_BUILD_DIR"
-popd
+popd>/dev/null
 exit 0
 
