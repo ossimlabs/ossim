@@ -39,7 +39,7 @@
 #set -x; trap read debug
 
 # Fetch the build type from command line:
-BUILD_TYPE_ARG=${1^^}
+BUILD_TYPE_ARG="${1}"
 case "$BUILD_TYPE_ARG" in
   DEBUG)
       CMAKE_BUILD_TYPE="Debug"
@@ -63,25 +63,25 @@ esac
 # Establish location of master CMakeLists.txt file. This is the cmake file
 # used to build all OSSIM-related repos (plugins, tests, oms, etc)
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-pushd $SCRIPT_DIR/..
+pushd $SCRIPT_DIR/.. >/dev/null
 CMAKE_DIR=$PWD
 #echo "@@@@@ CMAKE_DIR=$CMAKE_DIR"
-popd
+popd >/dev/null
 
 # Establish the top-level directory above repo containing this script
 #echo "@@@@@ BEFORE OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
 if [ -z $OSSIM_DEV_HOME ]; then
-  pushd $CMAKE_DIR/../..
+  pushd $CMAKE_DIR/../.. >/dev/null
   OSSIM_DEV_HOME=$PWD
   #echo "@@@@@ NEW OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
-  popd
+  popd >/dev/null
 #else
   #echo "@@@@@ OSSIM_DEV_HOME UNCHANGED!"
 fi 
 
 # Establish CMake's output build directory:
-if [ -z $OSSIM_BUILD_DIR ]; then
-  if [ $BUILD_TYPE_ARG == "ECLIPSE" ]; then
+if [ -z "$OSSIM_BUILD_DIR" ]; then
+  if [ "$BUILD_TYPE_ARG" == "ECLIPSE" ]; then
      pushd $OSSIM_DEV_HOME/..
      OSSIM_BUILD_DIR=$PWD/ossimlabs_eclipse_build
      popd
@@ -92,15 +92,15 @@ fi
 
 # Additional stuff for ECLIPSE CDT4 users:
 CMAKE_G_ARG="Unix Makefiles"
-if [ $BUILD_TYPE_ARG == "ECLIPSE" ]; then
+if [ "$BUILD_TYPE_ARG" == "ECLIPSE" ]; then
   CMAKE_G_ARG="Eclipse CDT4 - Unix Makefiles"
   cp -f $CMAKE_DIR/CMakeLists.txt $OSSIM_DEV_HOME
   CMAKE_DIR=$OSSIM_DEV_HOME
 fi
 
-#echo "@@@@@ OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
+echo "@@@@@ OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
 mkdir -p $OSSIM_BUILD_DIR
-pushd $OSSIM_BUILD_DIR
+pushd $OSSIM_BUILD_DIR >/dev/null
 rm -f CMakeCache.txt
 
 # Check for ENV vars set to override hardcoded plugins switches here:
@@ -147,6 +147,9 @@ echo "Generating Makefiles in" $OSSIM_BUILD_DIR
 cmake -G "$CMAKE_G_ARG" \
 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
 -DOSSIM_DEV_HOME=$OSSIM_DEV_HOME \
+-DCMAKE_OSX_ARCHITECTURES="x86_64" \
+-DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk \
+-DBUILD_OSSIM_FRAMEWORKS=ON \
 -DBUILD_CNES_PLUGIN=$BUILD_CNES_PLUGIN \
 -DBUILD_GEOPDF_PLUGIN=$BUILD_GEOPDF_PLUGIN \
 -DBUILD_GDAL_PLUGIN=$BUILD_GDAL_PLUGIN \
@@ -161,5 +164,5 @@ cmake -G "$CMAKE_G_ARG" \
 -DBUILD_SQLITE_PLUGIN=$BUILD_SQLITE_PLUGIN \
 $CMAKE_DIR
 
-popd
+popd >/dev/null
 
