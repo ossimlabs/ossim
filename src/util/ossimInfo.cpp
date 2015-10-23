@@ -90,7 +90,7 @@ static const char PROJECTIONS_KW[]          = "projections";
 static const char RAD2DEG_KW[]              = "rad2deg";
 static const char READER_PROPS_KW[]         = "reader_props";
 static const char RESAMPLER_FILTERS_KW[]    = "resampler_filters";
-static const char REVISION_NUMBER_KW[]      = "revision_number";
+static const char REVISION_KW[]             = "revision";
 static const char UP_IS_UP_KW[]             = "up_is_up_angle";
 static const char VERSION_KW[]              = "version";
 static const char WRITERS_KW[]              = "writers_kw";
@@ -183,7 +183,7 @@ void ossimInfo::addArguments(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--resampler-filters", "Prints resampler filter list.");
 
-   au->addCommandLineOption("--revision-number", "Revision number of code.");
+   au->addCommandLineOption("--revision", "Revision of code.");
    
    au->addCommandLineOption("-s", "Force the ground rect to be the specified datum");
    
@@ -530,9 +530,9 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             }
          }
 
-         if( ap.read("--revision-number") )
+         if( ap.read("--revision") )
          {
-            m_kwl->add( REVISION_NUMBER_KW, TRUE_KW );
+            m_kwl->add( REVISION_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -835,11 +835,11 @@ void ossimInfo::execute()
             }
          }
 
-         if ( keyIsTrue( std::string(REVISION_NUMBER_KW) ) )
+         if ( keyIsTrue( std::string(REVISION_KW) ) )
          {
-            getRevisionNumber( value.string() );
+            getRevision( value.string() );
             ossimNotify(ossimNotifyLevel_INFO)
-               << REVISION_NUMBER_KW << ": " << value << "\n";
+               << REVISION_KW << ": " << value << "\n";
          }
 
          if ( keyIsTrue( std::string(VERSION_KW) ) )
@@ -2681,10 +2681,10 @@ void ossimInfo::getBuildDate(std::string& s) const
 #endif
 }
 
-void ossimInfo::getRevisionNumber(std::string& s) const
+void ossimInfo::getRevision(std::string& s) const
 {
-#ifdef OSSIM_REVISION_NUMBER
-   s = OSSIM_REVISION_NUMBER;
+#ifdef OSSIM_REVISION
+   s = OSSIM_REVISION;
 #else
    s = "unknown";
 #endif

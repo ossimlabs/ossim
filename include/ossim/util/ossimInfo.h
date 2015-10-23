@@ -499,10 +499,10 @@ public:
    void getBuildDate(std::string& s) const;
 
    /**
-    * @brief Gets revision number.
+    * @brief Gets revision.
     * @param s String to initialize.
     */
-   void getRevisionNumber(std::string& s) const;
+   void getRevision(std::string& s) const;
 
    /**
     * @brief Gets version.
