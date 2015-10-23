@@ -11,7 +11,7 @@
 //         David A. Horner (DAH) http://dave.thehorners.com
 //
 //*************************************************************************
-// $Id: ossimFilterResampler.cpp 20326 2011-12-07 13:48:18Z dburken $
+// $Id: ossimFilterResampler.cpp 23586 2015-10-19 10:45:22Z gpotts $
 
 #include <ossim/imaging/ossimFilterResampler.h>
 #include <ossim/base/ossimCommon.h>
@@ -277,6 +277,10 @@ ossimFilter* ossimFilterResampler::createNewFilter(
          return new ossimGaussianFilter();
       }
       case ossimFilterResampler_BSPLINE:
+      {
+         return new ossimBSplineFilter();
+      }
+      case ossimFilterResampler_MAGIC:
       {
          return new ossimBSplineFilter();
       }
@@ -622,6 +626,10 @@ ossimString ossimFilterResampler::getFilterTypeAsString(ossimFilterResamplerType
       {
          return "bspline";
       }
+      case ossimFilterResampler_MAGIC:
+      {
+         return "magic";
+      }
    }
 
    return "nearest neighbor";
@@ -646,6 +654,7 @@ void ossimFilterResampler::getFilterTypes(std::vector<ossimString>& filterTypes)
   filterTypes.push_back("mitchell");
   filterTypes.push_back("quadratic");
   filterTypes.push_back("sinc");
+  filterTypes.push_back("magic");
 }
 
 
@@ -725,6 +734,10 @@ ossimFilterResampler::ossimFilterResamplerType ossimFilterResampler::getFilterTy
    else if(typeUpper.contains("BSPLINE"))
    {
       return ossimFilterResampler_BSPLINE;
+   }
+   else if(typeUpper.contains("MAGIC"))
+   {
+      return ossimFilterResampler_MAGIC;
    }
    
    return ossimFilterResampler_NEAREST_NEIGHBOR;

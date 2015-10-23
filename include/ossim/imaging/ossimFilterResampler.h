@@ -9,7 +9,7 @@
 //         David A. Horner (DAH) http://dave.thehorners.com
 //
 //*************************************************************************
-// $Id: ossimFilterResampler.h 9696 2006-10-11 17:51:26Z gpotts $
+// $Id: ossimFilterResampler.h 23586 2015-10-19 10:45:22Z gpotts $
 #ifndef ossimFilterResampler_HEADER
 #define ossimFilterResampler_HEADER
 
@@ -43,7 +43,8 @@ public:
       ossimFilterResampler_BILINEAR         = 13,
       ossimFilterResampler_HERMITE          = 14,
       ossimFilterResampler_BELL             = 15,
-      ossimFilterResampler_BSPLINE          = 16
+      ossimFilterResampler_BSPLINE          = 16,
+      ossimFilterResampler_MAGIC            = 17
       
    };
    ossimFilterResampler();

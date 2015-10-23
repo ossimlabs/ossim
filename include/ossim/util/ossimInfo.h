@@ -12,7 +12,7 @@
 // See class doxygen descriptions below for more.
 // 
 //----------------------------------------------------------------------------
-// $Id: ossimInfo.h 23264 2015-04-21 17:47:42Z dburken $
+// $Id: ossimInfo.h 23588 2015-10-20 20:31:39Z dburken $
 
 #ifndef ossimInfo_HEADER
 #define ossimInfo_HEADER 1
@@ -491,6 +491,24 @@ public:
     * @param s String to initialize.
     */
    void getRadiometry(ossimScalarType scalar, std::string& s) const;
+
+   /**
+    * @brief Gets build date.
+    * @param s String to initialize.
+    */
+   void getBuildDate(std::string& s) const;
+
+   /**
+    * @brief Gets revision number.
+    * @param s String to initialize.
+    */
+   void getRevisionNumber(std::string& s) const;
+
+   /**
+    * @brief Gets version.
+    * @param s String to initialize.
+    */
+   void getVersion(std::string& s) const;
    
 private:
  
@@ -665,6 +683,9 @@ private:
    
    /** @brief Initializes arg parser and outputs usage. */
    void usage(ossimArgumentParser& ap);
+
+   /** @return true if key is set to true; false, if not. */
+   bool keyIsTrue( const std::string& key ) const;
 
    /** Hold all options passed into intialize except writer props. */
    ossimRefPtr<ossimKeywordlist> m_kwl;

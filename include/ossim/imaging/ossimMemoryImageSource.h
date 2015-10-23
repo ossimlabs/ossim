@@ -22,7 +22,7 @@ public:
    :ossimImageSource(src),
    m_image(src.m_image.valid()?(ossimImageData*)src.m_image->dup():(ossimImageData*)0),
    m_result(0),
-   m_geometry(m_geometry.valid()?(ossimImageGeometry*)src.m_geometry->dup():(ossimImageGeometry*)0),
+   m_geometry(src.m_geometry.valid()?(ossimImageGeometry*)src.m_geometry->dup():(ossimImageGeometry*)0),
    m_boundingRect(src.m_boundingRect)
    {
    }

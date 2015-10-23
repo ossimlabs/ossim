@@ -12,7 +12,7 @@
 // Contains class definition for TiffTileSource.
 //
 //*******************************************************************
-//  $Id: ossimTiffTileSource.cpp 23460 2015-08-04 19:58:19Z okramer $
+//  $Id: ossimTiffTileSource.cpp 23548 2015-09-28 21:01:36Z dburken $
 
 #include <ossim/imaging/ossimTiffTileSource.h>
 #include <ossim/support_data/ossimGeoTiff.h>
@@ -1761,7 +1761,7 @@ bool ossimTiffTileSource::loadFromU16Strip( const ossimIrect& clip_rect, ossimIm
                                                           bandStrip,
                                                           theBuffer+bufferOffsetInBytes,
                                                           bytesToRead );
-            if ( bytesRead != bytesToRead )
+           if ( bytesRead != bytesToRead )
             {
                if(traceDebug())
                {
@@ -2603,7 +2603,6 @@ void ossimTiffTileSource::allocateTile()
 bool ossimTiffTileSource::allocateBuffer()
 {
    bool bSuccess = true;
-
    // Allocate memory for a buffer to hold data grabbed from the tiff file.
    ossim_uint32 buffer_size=0;
    switch (theReadMethod[theCurrentDirectory])
@@ -2639,11 +2638,23 @@ bool ossimTiffTileSource::allocateBuffer()
       } 
       case READ_U16_STRIP:
       {
+//         std::cout << "DOING READ_U16_STRIP\n";
          // Encountered case where it was multiple rows per strip, yet PLANARCONFIG_CONTIG. The
          // case was in fact single band so planar config is irrelevant. (OLK July 2015)
-         buffer_size = theImageWidth[0]*theRowsPerStrip[theCurrentDirectory]*theBytesPerPixel;
-         if (thePlanarConfig[theCurrentDirectory] == PLANARCONFIG_CONTIG)
-            buffer_size *= theSamplesPerPixel;
+         
+         // I put the multiplication back in for the theSamplesPerPixel.  In the read method that is used for this
+         // it populates this buffer with all bands and then uses the load method on the image data object.
+         // so all bands has to be populated for the buffer. (GCP Sept 2015)
+         buffer_size = theImageWidth[0]*theRowsPerStrip[theCurrentDirectory]*theBytesPerPixel*
+                       theSamplesPerPixel;
+//         std::cout << "ROWS PER STRIP: " << theRowsPerStrip[theCurrentDirectory] << "\n"
+//                   << "ImageWidth:     " << theImageWidth[0] << "\n"
+//                   << "BytesPerPixel:  " << theBytesPerPixel << "\n";
+//         std::cout << thePlanarConfig[theCurrentDirectory] << " ==== " << PLANARCONFIG_CONTIG << "\n";
+
+         // I commented this out for this is core dumping for one of the tiff images. (GCP Sept 2015)
+        // if (thePlanarConfig[theCurrentDirectory] == PLANARCONFIG_CONTIG)
+          //  buffer_size *= theSamplesPerPixel;
          break;
       }
       case READ_SCAN_LINE:

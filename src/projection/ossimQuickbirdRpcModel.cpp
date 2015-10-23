@@ -10,7 +10,7 @@
 // LIMITATIONS: None.
 //
 //*****************************************************************************
-//  $Id: ossimQuickbirdRpcModel.cpp 20606 2012-02-24 12:29:52Z gpotts $
+//  $Id: ossimQuickbirdRpcModel.cpp 23564 2015-10-02 14:12:25Z dburken $
 
 #include <ossim/projection/ossimQuickbirdRpcModel.h>
 #include <ossim/base/ossimException.h>
@@ -137,10 +137,9 @@ bool ossimQuickbirdRpcModel::parseNitfFile(const ossimFilename& file)
    bool useInternalRpcTags = false;
    if(!parseRpcData(file))
       useInternalRpcTags = true;
-   
    if (!parseTileData(file))
       return false;
-  
+ 
    // Check for IMD (metadata) file:
    parseMetaData(file);
 
@@ -344,9 +343,8 @@ bool ossimQuickbirdRpcModel::parseTileData(const ossimFilename& image_file)
 {
    ossimFilename tileFile (image_file);
    tileFile.setExtension("TIL");
-   if (!findSupportFile(tileFile))
+  if (!findSupportFile(tileFile))
       return false;
-
    ossimQuickbirdTile tileHdr;
    if(!tileHdr.open(tileFile))
       return false;
@@ -354,7 +352,6 @@ bool ossimQuickbirdRpcModel::parseTileData(const ossimFilename& image_file)
    ossimQuickbirdTileInfo info;
    if(!tileHdr.getInfo(info, image_file.file()))
       return false;
-
    if((info.theUlXOffset != OSSIM_INT_NAN) && (info.theUlYOffset != OSSIM_INT_NAN) &&
       (info.theLrXOffset != OSSIM_INT_NAN) && (info.theLrYOffset != OSSIM_INT_NAN) &&
       (info.theLlXOffset != OSSIM_INT_NAN) && (info.theLlYOffset != OSSIM_INT_NAN) &&
@@ -459,32 +456,42 @@ bool ossimQuickbirdRpcModel::findSupportFile(ossimFilename& filename) const
 {
    ossimFilename f (filename);
    ossimString extension = f.ext();
-   while (true)
+   if(f.exists())
    {
-      // Search for support file with same basename as image:
-      extension.upcase();
-      f.setExtension(extension);
-      if (f.exists())  
-         break;
-      extension.downcase();
-      f.setExtension(extension);
-      if (f.exists())  
-         break;
-
-      // None found so far, search for mosaic-global support file:
-      f = f.replaceAllThatMatch("_R[0-9]+C[0-9]+");
-      if (f.exists())  
-         break;
-      extension.upcase();
-      f.setExtension(extension);
-      if (f.exists())  
-         break;
-
-      // Nothing found:
-      return false;
+      filename = f;
+      return true;
+   }
+   // Search for support file with same basename as image:
+   extension.upcase();
+   f.setExtension(extension);
+   if(f.exists())
+   {
+      filename = f;
+      return true;
+   }
+   extension.downcase();
+   if(f.exists())
+   {
+      filename = f;
+      return true;
    }
 
+   // None found so far, search for mosaic-global support file:
+   f = f.replaceAllThatMatch("_R[0-9]+C[0-9]+");
+   if(f.exists())
+   {
+      filename = f;
+      return true;
+   }
+  extension.upcase();
+   f.setExtension(extension);
+   if(f.exists())
+   {
+      filename = f;
+      return true;
+   }
+
+
    // Modify argument to match good filename:
-   filename = f;
-   return true;
+   return false;
 }

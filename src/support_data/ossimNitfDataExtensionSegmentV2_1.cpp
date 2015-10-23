@@ -121,8 +121,11 @@ void ossimNitfDataExtensionSegmentV2_1::parseStream(std::istream &in, ossim_uint
       {
          if (overflow)
          {
-            istream::pos_type dataBegin = in.tellg();
-            while (in.tellg() < dataBegin + static_cast<istream::pos_type>(dataLength))
+            std::streamoff dataBegin = in.tellg();
+            std::streamoff dataEnd   = dataBegin + static_cast<std::streamoff>(dataLength);
+            
+            // dataBegin + static_cast<istream::pos_type>(dataLength))
+            while (in.good() && (in.tellg() < dataEnd) ) 
             {
                ossimNitfTagInformation tag;
                tag.clearFields();
@@ -131,6 +134,7 @@ void ossimNitfDataExtensionSegmentV2_1::parseStream(std::istream &in, ossim_uint
             }
 
             ossimIFStream64::seekg64(in, dataBegin, ios::beg);
+            in.clear();
          }
 
          theData.resize(dataLength);

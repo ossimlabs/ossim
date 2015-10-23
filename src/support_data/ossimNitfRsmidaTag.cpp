@@ -539,3 +539,414 @@ void ossimNitfRsmidaTag::clearFields()
    m_svz[FLOAT21_SIZE] = '\0';
    m_saz[FLOAT21_SIZE] = '\0';
 }
+
+ossimString ossimNitfRsmidaTag::getIid() const
+{
+   return ossimString(m_iid);
+}
+
+ossimString ossimNitfRsmidaTag::getEdition() const
+{
+   return ossimString(m_edition);
+}
+
+ossimString ossimNitfRsmidaTag::getIsid() const
+{
+   return ossimString(m_isid);
+}
+
+ossimString ossimNitfRsmidaTag::getSid() const
+{
+   return ossimString(m_sid);
+}
+
+ossimString ossimNitfRsmidaTag::getStid() const
+{
+   return ossimString(m_stid);
+}
+
+ossimString ossimNitfRsmidaTag::getYear() const
+{
+   return ossimString(m_year);
+}
+
+ossimString ossimNitfRsmidaTag::getMonth() const
+{
+   return ossimString(m_month);
+}
+
+ossimString ossimNitfRsmidaTag::getDay() const
+{
+   return ossimString(m_day);
+}
+
+ossimString ossimNitfRsmidaTag::getHour() const
+{
+   return ossimString(m_hour);
+}
+
+ossimString ossimNitfRsmidaTag::getMinute() const
+{
+   return ossimString(m_minute);
+}
+
+ossimString ossimNitfRsmidaTag::getSecond() const
+{
+   return ossimString(m_second);
+}
+
+ossimString ossimNitfRsmidaTag::getNrg() const
+{
+   return ossimString(m_nrg);
+}
+
+ossimString ossimNitfRsmidaTag::getNcg() const
+{
+   return ossimString(m_ncg);
+}
+
+ossimString ossimNitfRsmidaTag::getTrg() const
+{
+   return ossimString(m_trg);
+}
+
+ossimString ossimNitfRsmidaTag::getTcg() const
+{
+   return ossimString(m_tcg);
+}
+
+ossimString ossimNitfRsmidaTag::getGrndd() const
+{
+   return ossimString(m_grndd);
+}
+   
+ossimString ossimNitfRsmidaTag::getXuor() const
+{
+   return ossimString(m_xuor);
+}
+
+ossimString ossimNitfRsmidaTag::getYuor() const
+{
+   return ossimString(m_yuor);
+}
+
+ossimString ossimNitfRsmidaTag::getZuor() const
+{
+   return ossimString(m_zuor);
+}
+
+ossimString ossimNitfRsmidaTag::getXuxr() const
+{
+   return ossimString(m_xuxr);
+}
+
+ossimString ossimNitfRsmidaTag::getXuyr() const
+{
+   return ossimString(m_xuyr);
+}
+
+ossimString ossimNitfRsmidaTag::getXuzr() const
+{
+   return ossimString(m_xuzr);
+}
+
+ossimString ossimNitfRsmidaTag::getYuxr() const
+{
+   return ossimString(m_yuxr);
+}
+
+ossimString ossimNitfRsmidaTag::getYuyr() const
+{
+   return ossimString(m_yuyr);
+}
+
+ossimString ossimNitfRsmidaTag::getYuzr() const
+{
+   return ossimString(m_yuzr);
+}
+
+ossimString ossimNitfRsmidaTag::getZuxr() const
+{
+   return ossimString(m_zuxr);
+}
+
+ossimString ossimNitfRsmidaTag::getZuyr() const
+{
+   return ossimString(m_zuyr);
+}
+
+ossimString ossimNitfRsmidaTag::getZuzr() const
+{
+   return ossimString(m_zuzr);
+}
+   
+ossimString ossimNitfRsmidaTag::getV1x() const
+{
+   return ossimString(m_v1x);
+}
+
+ossimString ossimNitfRsmidaTag::getV1y() const
+{
+   return ossimString(m_v1y);
+}
+
+ossimString ossimNitfRsmidaTag::getV1z() const
+{
+   return ossimString(m_v1z);
+}
+
+ossimString ossimNitfRsmidaTag::getV2x() const
+{
+   return ossimString(m_v2x);
+}
+
+ossimString ossimNitfRsmidaTag::getV2y() const
+{
+   return ossimString(m_v2y);
+}
+
+ossimString ossimNitfRsmidaTag::getV2z() const
+{
+   return ossimString(m_v2z);
+}
+
+ossimString ossimNitfRsmidaTag::getV3x() const
+{
+   return ossimString(m_v3x);
+}
+
+ossimString ossimNitfRsmidaTag::getV3y() const
+{
+   return ossimString(m_v3y);
+}
+
+ossimString ossimNitfRsmidaTag::getV3z() const
+{
+   return ossimString(m_v3z);
+}
+
+ossimString ossimNitfRsmidaTag::getV4x() const
+{
+   return ossimString(m_v4x);
+}
+
+ossimString ossimNitfRsmidaTag::getV4y() const
+{
+   return ossimString(m_v4y);
+}
+
+ossimString ossimNitfRsmidaTag::getV4z() const
+{
+   return ossimString(m_v4z);
+}
+
+ossimString ossimNitfRsmidaTag::getV5x() const
+{
+   return ossimString(m_v5x);
+}
+
+ossimString ossimNitfRsmidaTag::getV5y() const
+{
+   return ossimString(m_v5y);
+}
+
+ossimString ossimNitfRsmidaTag::getV5z() const
+{
+   return ossimString(m_v5z);
+}
+
+ossimString ossimNitfRsmidaTag::getV6x() const
+{
+   return ossimString(m_v6x);
+}
+
+ossimString ossimNitfRsmidaTag::getV6y() const
+{
+   return ossimString(m_v6y);
+}
+
+ossimString ossimNitfRsmidaTag::getV6z() const
+{
+   return ossimString(m_v6z);
+}
+
+ossimString ossimNitfRsmidaTag::getV7x() const
+{
+   return ossimString(m_v7x);
+}
+
+ossimString ossimNitfRsmidaTag::getV7y() const
+{
+   return ossimString(m_v7y);
+}
+
+ossimString ossimNitfRsmidaTag::getV7z() const
+{
+   return ossimString(m_v7z);
+}
+
+ossimString ossimNitfRsmidaTag::getV8x() const
+{
+   return ossimString(m_v8x);
+}
+
+ossimString ossimNitfRsmidaTag::getV8y() const
+{
+   return ossimString(m_v8y);
+}
+
+ossimString ossimNitfRsmidaTag::getV8z() const
+{
+   return ossimString(m_v8z);
+}
+   
+ossimString ossimNitfRsmidaTag::getGrpx() const
+{
+   return ossimString(m_grpx);
+}
+
+ossimString ossimNitfRsmidaTag::getGrpy() const
+{
+   return ossimString(m_grpy);
+}
+
+ossimString ossimNitfRsmidaTag::getGrpz() const
+{
+   return ossimString(m_grpz);
+}
+
+ossimString ossimNitfRsmidaTag::getFullr() const
+{
+   return ossimString(m_fullr);
+}
+
+ossimString ossimNitfRsmidaTag::getFullc() const
+{
+   return ossimString(m_fullc);
+}
+
+ossimString ossimNitfRsmidaTag::getMinr() const
+{
+   return ossimString(m_minr);
+}
+
+ossimString ossimNitfRsmidaTag::getMaxr() const
+{
+   return ossimString(m_maxr);
+}
+
+ossimString ossimNitfRsmidaTag::getMinc() const
+{
+   return ossimString(m_minc);
+}
+
+ossimString ossimNitfRsmidaTag::getMaxc() const
+{
+   return ossimString(m_maxc);
+}
+
+ossimString ossimNitfRsmidaTag::getIe0() const
+{
+   return ossimString(m_ie0);
+}
+
+ossimString ossimNitfRsmidaTag::getIer() const
+{
+   return ossimString(m_ier);
+}
+
+ossimString ossimNitfRsmidaTag::getIec() const
+{
+   return ossimString(m_iec);
+}
+
+ossimString ossimNitfRsmidaTag::getIerr() const
+{
+   return ossimString(m_ierr);
+}
+
+ossimString ossimNitfRsmidaTag::getIerc() const
+{
+   return ossimString(m_ierc);
+}
+
+ossimString ossimNitfRsmidaTag::getIecc() const
+{
+   return ossimString(m_iecc);
+}
+
+ossimString ossimNitfRsmidaTag::getIa0() const
+{
+   return ossimString(m_ia0);
+}
+
+ossimString ossimNitfRsmidaTag::getIar() const
+{
+   return ossimString(m_iar);
+}
+
+ossimString ossimNitfRsmidaTag::getIac() const
+{
+   return ossimString(m_iac);
+}
+
+ossimString ossimNitfRsmidaTag::getIarr() const
+{
+   return ossimString(m_iarr);
+}
+
+ossimString ossimNitfRsmidaTag::getIarc() const
+{
+   return ossimString(m_iarc);
+}
+
+ossimString ossimNitfRsmidaTag::getIacc() const
+{
+   return ossimString(m_iacc);
+}
+
+ossimString ossimNitfRsmidaTag::getSpx() const
+{
+   return ossimString(m_spx);
+}
+
+ossimString ossimNitfRsmidaTag::getSvx() const
+{
+   return ossimString(m_svx);
+}
+
+ossimString ossimNitfRsmidaTag::getSax() const
+{
+   return ossimString(m_sax);
+}
+
+ossimString ossimNitfRsmidaTag::getSpy() const
+{
+   return ossimString(m_spy);
+}
+
+ossimString ossimNitfRsmidaTag::getSvy() const
+{
+   return ossimString(m_svy);
+}
+
+ossimString ossimNitfRsmidaTag::getSay() const
+{
+   return ossimString(m_say);
+}
+
+ossimString ossimNitfRsmidaTag::getSpz() const
+{
+   return ossimString(m_spz);
+}
+
+ossimString ossimNitfRsmidaTag::getSvz() const
+{
+   return ossimString(m_svz);
+}
+
+ossimString ossimNitfRsmidaTag::getSaz() const
+{
+   return ossimString(m_saz);
+}
+

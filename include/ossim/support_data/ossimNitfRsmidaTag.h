@@ -45,6 +45,96 @@ public:
                                const std::string& prefix=std::string()) const;
    virtual void clearFields();
 
+   ossimString getIid() const;
+   ossimString getEdition() const;
+   ossimString getIsid() const;
+   ossimString getSid() const;
+   ossimString getStid() const;
+   ossimString getYear() const;
+   ossimString getMonth() const;
+   ossimString getDay() const;
+   ossimString getHour() const;
+   ossimString getMinute() const;
+   ossimString getSecond() const;
+   ossimString getNrg() const;
+   ossimString getNcg() const;
+   ossimString getTrg() const;
+   ossimString getTcg() const;
+   ossimString getGrndd() const;
+   
+   ossimString getXuor() const;
+   ossimString getYuor() const;
+   ossimString getZuor() const;
+   ossimString getXuxr() const;
+   ossimString getXuyr() const;
+   ossimString getXuzr() const;
+   ossimString getYuxr() const;
+   ossimString getYuyr() const;
+   ossimString getYuzr() const;
+   ossimString getZuxr() const;
+   ossimString getZuyr() const;
+   ossimString getZuzr() const;
+   
+   ossimString getV1x() const;
+   ossimString getV1y() const;
+   ossimString getV1z() const;
+   ossimString getV2x() const;
+   ossimString getV2y() const;
+   ossimString getV2z() const;
+   ossimString getV3x() const;
+   ossimString getV3y() const;
+   ossimString getV3z() const;
+   ossimString getV4x() const;
+   ossimString getV4y() const;
+   ossimString getV4z() const;
+   ossimString getV5x() const;
+   ossimString getV5y() const;
+   ossimString getV5z() const;
+   ossimString getV6x() const;
+   ossimString getV6y() const;
+   ossimString getV6z() const;
+   ossimString getV7x() const;
+   ossimString getV7y() const;
+   ossimString getV7z() const;
+   ossimString getV8x() const;
+   ossimString getV8y() const;
+   ossimString getV8z() const;
+   
+   ossimString getGrpx() const;
+   ossimString getGrpy() const;
+   ossimString getGrpz() const;
+
+   ossimString getFullr() const;
+   ossimString getFullc() const;
+
+   ossimString getMinr() const;
+   ossimString getMaxr() const;
+   ossimString getMinc() const;
+   ossimString getMaxc() const;
+
+   ossimString getIe0() const;
+   ossimString getIer() const;
+   ossimString getIec() const;
+   ossimString getIerr() const;
+   ossimString getIerc() const;
+   ossimString getIecc() const;
+   ossimString getIa0() const;
+   ossimString getIar() const;
+   ossimString getIac() const;
+   ossimString getIarr() const;
+   ossimString getIarc() const;
+   ossimString getIacc() const;
+
+   ossimString getSpx() const;
+   ossimString getSvx() const;
+   ossimString getSax() const;
+   ossimString getSpy() const;
+   ossimString getSvy() const;
+   ossimString getSay() const;
+   ossimString getSpz() const;
+   ossimString getSvz() const;
+   ossimString getSaz() const;
+
 protected:
    char m_iid[IID_SIZE+1];
    char m_edition[EDITION_SIZE+1];

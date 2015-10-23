@@ -6,7 +6,7 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfTagInformation.cpp 23245 2015-04-08 20:53:04Z rashadkm $
+// $Id: ossimNitfTagInformation.cpp 23572 2015-10-09 15:50:19Z dburken $
 
 #include <ossim/support_data/ossimNitfTagInformation.h>
 #include <ossim/base/ossimCommon.h>
@@ -115,11 +115,11 @@ ossimString ossimNitfTagInformation::getTagName()const
 
 std::ostream& ossimNitfTagInformation::print(std::ostream& out)const
 {
-   out << "theTagName:            " << theTagName
-       << "\ntheTagLength:        " << theTagLength
-       << "\theTagType:           " << theTagType
-       << "\ntheTagOffset:        " << theTagOffset
-       << "\ntheTagDataOffset:    " << theTagDataOffset
+   out << "theTagName:       " << theTagName
+       << "\ntheTagLength:     " << theTagLength
+       << "\ntheTagType:       " << theTagType
+       << "\ntheTagOffset:     " << theTagOffset
+       << "\ntheTagDataOffset: " << theTagDataOffset
        << std::endl;
 
    return out;

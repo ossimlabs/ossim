@@ -7,7 +7,7 @@
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimApplanixEcefModel.cpp 22271 2013-05-27 18:24:22Z gpotts $
+//  $Id: ossimApplanixEcefModel.cpp 23564 2015-10-02 14:12:25Z dburken $
 #include <sstream>
 #include <ossim/projection/ossimApplanixEcefModel.h>
 #include <ossim/base/ossimEllipsoid.h>
@@ -28,7 +28,7 @@ static ossimTrace traceDebug("ossimApplanixEcefModel:debug");
 RTTI_DEF1(ossimApplanixEcefModel, "ossimApplanixEcefModel", ossimSensorModel);
 
 #ifdef OSSIM_ID_ENABLED
-static const char OSSIM_ID[] = "$Id: ossimApplanixEcefModel.cpp 22271 2013-05-27 18:24:22Z gpotts $";
+static const char OSSIM_ID[] = "$Id: ossimApplanixEcefModel.cpp 23564 2015-10-02 14:12:25Z dburken $";
 #endif
 
 ossimApplanixEcefModel::ossimApplanixEcefModel()
@@ -205,12 +205,12 @@ void ossimApplanixEcefModel::lineSampleHeightToWorld(const ossimDpt& image_point
                                                  const double&   heightEllipsoid,
                                                  ossimGpt&       worldPoint) const
 {
-   if (!insideImage(image_point))
-   {
-      worldPoint.makeNan();
+//  if (!insideImage(image_point))
+//   {
+//      worldPoint.makeNan();
 //       worldPoint = extrapolate(image_point, heightEllipsoid);
-   }
-   else
+//   }
+//   else
    {
       //***
       // First establish imaging ray from image point:
@@ -225,6 +225,7 @@ void ossimApplanixEcefModel::lineSampleHeightToWorld(const ossimDpt& image_point
 void ossimApplanixEcefModel::worldToLineSample(const ossimGpt& world_point,
                                            ossimDpt&       image_point) const
 {
+   #if 0
    if((theBoundGndPolygon.getNumberOfVertices() > 0)&&
       (!theBoundGndPolygon.hasNans()))
    {
@@ -235,6 +236,7 @@ void ossimApplanixEcefModel::worldToLineSample(const ossimGpt& world_point,
 //         return;
       }         
    }
+   #endif
    ossimEcefPoint g_ecf(world_point);
    ossimEcefVector ecfRayDir(g_ecf - theAdjEcefPlatformPosition);
    ossimColumnVector3d camRayDir (theCompositeMatrixInverse*ecfRayDir.data());
@@ -574,6 +576,7 @@ bool ossimApplanixEcefModel::loadState(const ossimKeywordlist& kwl,
          }
          theImageClipRect = ossimDrect(0,0,w-1,h-1);
          theRefImgPt      = ossimDpt(w/2.0, h/2.0);
+         theImageSize     = ossimDpt(w,h);
       }
       if(sensor)
       {
@@ -789,6 +792,7 @@ bool ossimApplanixEcefModel::loadState(const ossimKeywordlist& kwl,
                                           << "principal: " << thePrincipalPoint << std::endl
                                           << "Ground:    " << ossimGpt(theEcefPlatformPosition) << std::endl;
    }
+
    return result;
 }
 

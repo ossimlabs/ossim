@@ -27,7 +27,7 @@
 // LIMITATIONS: None.
 //
 //*****************************************************************************
-//  $Id: ossimSensorModel.cpp 23297 2015-05-05 20:32:16Z dburken $
+//  $Id: ossimSensorModel.cpp 23564 2015-10-02 14:12:25Z dburken $
 #include <iostream>
 #include <sstream>
 using namespace std;
@@ -1196,97 +1196,134 @@ void ossimSensorModel::computeGsd()
    // Compute gsd in the y direction from top to bottom points across the middle of image.
    //---
 
-   ossim_float64 midLine = 0.0;
-   ossim_float64 midSamp = 0.0;
-   ossim_float64 endLine = 1.0;
-   ossim_float64 endSamp = 1.0;
-   if (theImageSize.x > 2)
-   {
-      midSamp = (theImageSize.x-1)/2.0;
-      endSamp = theImageSize.x-1;
+   // ossim_float64 midLine = 0.0;
+   // ossim_float64 midSamp = 0.0;
+   // ossim_float64 endLine = 1.0;
+   // ossim_float64 endSamp = 1.0;
+   // if (theImageSize.x > 2)
+   // {
+   //    midSamp = (theImageSize.x-1)/2.0;
+   //    endSamp = theImageSize.x-1;
          
-   }
-   if (theImageSize.y > 2)
+   // }
+   // if (theImageSize.y > 2)
+   // {
+   //    midLine = (theImageSize.y-1)/2.0;
+   //    endLine = theImageSize.y-1;
+   // }
+
+   ossimDpt centerImagePoint = theRefImgPt;
+   ossimDpt quarterSize;
+   if(!theImageSize.hasNans())
    {
-      midLine = (theImageSize.y-1)/2.0;
-      endLine = theImageSize.y-1;
+      quarterSize = ossimDpt(theImageSize.x/4.0, theImageSize.y/4.0);
+   }
+   else if(!theImageClipRect.hasNans())
+   {
+      ossim_float32 w = theImageClipRect.width();
+      ossim_float32 h = theImageClipRect.height();
+
+      quarterSize = ossimDpt(w/4.0, h/4.0);
+   }
+   else
+   {
+      quarterSize = ossimDpt(1.0,1.0);      
+   }
+   if(centerImagePoint.hasNans()&&(!theImageSize.hasNans()))
+   {
+      centerImagePoint.x = (theImageSize.x)/2.0;
+      centerImagePoint.y = (theImageSize.y-1.0)/2.0;
+   }
+   else if(centerImagePoint.hasNans()&&!theImageClipRect.hasNans())
+   {
+      centerImagePoint = theImageClipRect.midPoint();
    }
    
-   ossimDpt leftDpt  (0.0,     midLine);
-   ossimDpt rightDpt (endSamp, midLine);
-   ossimDpt topDpt   (midSamp, 0.0);
-   ossimDpt bottomDpt(midSamp, endLine);
-   
-   ossimGpt leftGpt;
-   ossimGpt rightGpt;
-   ossimGpt topGpt;
-   ossimGpt bottomGpt;
+   if(!centerImagePoint.hasNans())
+   {
+      ossimDpt leftDpt(centerImagePoint.x-quarterSize.x, centerImagePoint.y);//  (0.0,     midLine);
+      ossimDpt rightDpt(centerImagePoint.x+quarterSize.y, centerImagePoint.y);// (endSamp, midLine);
+      ossimDpt topDpt(centerImagePoint.x, centerImagePoint.y-quarterSize.y);//   (midSamp, 0.0);
+      ossimDpt bottomDpt(centerImagePoint.x, centerImagePoint.y+quarterSize.y);//(midSamp, endLine);
 
-   //---
-   // Left point.
-   // For the first point use lineSampleToWorld to get the height.
-   //---
-   lineSampleToWorld(leftDpt, leftGpt);
-   if (leftGpt.hasNans())
-   {
-      std::string e = MODULE;
-      e += "Error leftGpt has nans!";
-      throw ossimException(e);
-   }
+      ossimGpt leftGpt;
+      ossimGpt rightGpt;
+      ossimGpt topGpt;
+      ossimGpt bottomGpt;
 
-   //---
-   // Right point:
-   // Use lineSampleHeightToWorld using the left height since we want the horizontal distance.
-   //---
-   lineSampleHeightToWorld(rightDpt, leftGpt.hgt, rightGpt);
-   if (rightGpt.hasNans())
-   {
-      std::string e = MODULE;
-      e += "Error rightGpt has nans!";
-      throw ossimException(e);
-   }
+      //---
+      // Left point.
+      // For the first point use lineSampleToWorld to get the height.
+      //---
+      lineSampleToWorld(leftDpt, leftGpt);
+      if (leftGpt.hasNans())
+      {
+         std::string e = MODULE;
+         e += "Error leftGpt has nans!";
+         throw ossimException(e);
+      }
 
-   //---
-   // Top point:
-   // Use lineSampleHeightToWorld using the left height since we want the horizontal distance.
-   //---
-   lineSampleHeightToWorld(topDpt, leftGpt.hgt, topGpt);
-   if (topGpt.hasNans())
-   {
-      std::string e = MODULE;
-      e += "Error topGpt has nans!";
-      throw ossimException(e);
-   }
-   
-   //---
-   // Bottom point:
-   // Use lineSampleHeightToWorld using the left height since we want the horizontal distance.
-   //---
-   lineSampleHeightToWorld(bottomDpt, leftGpt.hgt, bottomGpt);
-   if (bottomGpt.hasNans())
-   {
-      std::string e = MODULE;
-      e += "Error bottomGpt has nans!";
-      throw ossimException(e);
-   }
+      //---
+      // Right point:
+      // Use lineSampleHeightToWorld using the left height since we want the horizontal distance.
+      //---
+      lineSampleHeightToWorld(rightDpt, leftGpt.hgt, rightGpt);
+      if (rightGpt.hasNans())
+      {
+         std::string e = MODULE;
+         e += "Error rightGpt has nans!";
+         throw ossimException(e);
+      }
+
+      //---
+      // Top point:
+      // Use lineSampleHeightToWorld using the left height since we want the horizontal distance.
+      //---
+      lineSampleHeightToWorld(topDpt, leftGpt.hgt, topGpt);
+      if (topGpt.hasNans())
+      {
+         std::string e = MODULE;
+         e += "Error topGpt has nans!";
+         throw ossimException(e);
+      }
+      
+      //---
+      // Bottom point:
+      // Use lineSampleHeightToWorld using the left height since we want the horizontal distance.
+      //---
+      lineSampleHeightToWorld(bottomDpt, leftGpt.hgt, bottomGpt);
+      if (bottomGpt.hasNans())
+      {
+         std::string e = MODULE;
+         e += "Error bottomGpt has nans!";
+         throw ossimException(e);
+      }
 
 #if 0 /* Please leave for debug. (drb) */
-   ossimNotify(ossimNotifyLevel_DEBUG)
-      << "image size:    " << theImageSize
-      << "\nleftDpt:   " << leftDpt
-      << "\nrightDpt:  " << rightDpt
-      << "\ntopDpt:    " << topDpt
-      << "\nbottomDpt: " << bottomDpt      
-      << "\nleftGpt:   " << leftGpt
-      << "\nrightGpt:  " << rightGpt
-      << "\ntopGpt:    " << topGpt
-      << "\nbottomGpt: " << bottomGpt      
-      << "\n";
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "image size:    " << theImageSize
+         << "\nleftDpt:   " << leftDpt
+         << "\nrightDpt:  " << rightDpt
+         << "\ntopDpt:    " << topDpt
+         << "\nbottomDpt: " << bottomDpt      
+         << "\nleftGpt:   " << leftGpt
+         << "\nrightGpt:  " << rightGpt
+         << "\ntopGpt:    " << topGpt
+         << "\nbottomGpt: " << bottomGpt      
+         << "\n";
 #endif
-      
-   theGSD.x   = leftGpt.distanceTo(rightGpt)/(rightDpt.x-leftDpt.x);
-   theGSD.y   = topGpt.distanceTo(bottomGpt)/(bottomDpt.y-topDpt.y);
-   theMeanGSD = (theGSD.x + theGSD.y)/2.0;
+         
+      theGSD.x   = leftGpt.distanceTo(rightGpt)/(rightDpt.x-leftDpt.x);
+      theGSD.y   = topGpt.distanceTo(bottomGpt)/(bottomDpt.y-topDpt.y);
+      theMeanGSD = (theGSD.x + theGSD.y)/2.0;
+
+   }
+   else
+   {
+         std::string e = MODULE;
+         e += "Error center has nans!";
+         throw ossimException(e);
+   }
 
    if (traceDebug())
    {

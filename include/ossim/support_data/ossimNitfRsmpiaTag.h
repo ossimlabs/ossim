@@ -20,12 +20,58 @@ public:
    
    ossimNitfRsmpiaTag();
 
+   /**
+    * @brief Reads in tag from stream.
+    * @param in
+    */
    virtual void parseStream(std::istream& in);
+
+   /**
+    * @brief Writes out tag to stream.
+    * @param out
+    */
    virtual void writeStream(std::ostream& out);
 
+   /**
+    * @brief Memsets fields to space.  Null terminates fields.
+    */
+   virtual void clearFields();
+
+   /**
+    * @brief prints all fields.
+    * @param out Output stream.
+    * @param prefix e.g. "nitf.image0.".
+    */
    virtual std::ostream& print( std::ostream& out,
                                 const std::string& prefix=std::string() ) const;
-   virtual void clearFields();
+
+   ossimString getIid() const;
+   ossimString getEdition() const;
+   ossimString getR0() const;
+   ossimString getRx() const;
+   ossimString getRy() const;
+   ossimString getRz() const;
+   ossimString getRxx() const;
+   ossimString getRxy() const;
+   ossimString getRxz() const;
+   ossimString getRyy() const;
+   ossimString getRyz() const;
+   ossimString getRzz() const;
+   ossimString getC0() const;
+   ossimString getCx() const;
+   ossimString getCy() const;
+   ossimString getCz() const;
+   ossimString getCxx() const;
+   ossimString getCxy() const;
+   ossimString getCxz() const;
+   ossimString getCyy() const;
+   ossimString getCyz() const;
+   ossimString getCzz() const;
+   ossimString getRnis() const;
+   ossimString getCnis() const;
+   ossimString getTnis() const;
+   ossimString getRssiz() const;
+   ossimString getCssiz() const;
 
 protected:
    char m_iid[IID_SIZE+1];

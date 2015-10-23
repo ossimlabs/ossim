@@ -167,6 +167,7 @@ endif()
 #####################################################################################
 set(OSSIM_VERSION_NUMBER "\"${OSSIM_VERSION}\"")
 set(OSSIM_BUILD_DATE "\"${OSSIM_BUILD_DATE}\"")
+set(OSSIM_REVISION_NUMBER "\"${OSSIM_GIT_REVISION_NUMBER}\"")
 
 # Setting of OSSIM_ID to variable expanded $Id$ results.  Embedded troughout code.
 set(OSSIM_ID_ENABLED   1)
@@ -206,7 +207,7 @@ INSTALL(FILES ${ossim_util_api_json} DESTINATION share/ossim/util COMPONENT ossi
 
 ###################### OUTPUT GENERAL VARIABLE SETTINGS #######################
 
-MESSAGE( STATUS "OSSIM_GIT_REVISION_NUMBER       = ${OSSIM_GIT_REVISION_NUMBER}" )
+MESSAGE( STATUS "OSSIM_REVISION_NUMBER           = ${OSSIM_REVISION_NUMBER}" )
 MESSAGE( STATUS "FREETYPE_LIBRARY                = ${FREETYPE_LIBRARIES}" )
 MESSAGE( STATUS "FREETYPE_INCLUDE                = ${FREETYPE_INCLUDE_DIRS}" )
 MESSAGE( STATUS "GEOTIFF_LIBRARY                 = ${GEOTIFF_LIBRARIES}" )

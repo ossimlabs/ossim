@@ -4,7 +4,7 @@
 //
 // Author: Garrett Potts
 //*******************************************************************
-//$Id: ossimPolyArea2d.h 23091 2015-01-22 14:50:46Z dburken $
+//$Id: ossimPolyArea2d.h 23548 2015-09-28 21:01:36Z dburken $
 
 #ifndef ossimPolyArea2d_HEADER
 #define ossimPolyArea2d_HEADER 1
@@ -64,6 +64,8 @@ public:
    const ossimPolyArea2d& operator +=(const ossimPolyArea2d& rhs);
    ossimPolyArea2d operator -(const ossimPolyArea2d& rhs)const;
    const ossimPolyArea2d& operator -=(const ossimPolyArea2d& rhs);
+   
+   bool intersects(const ossimPolyArea2d& rhs)const;
    
    void add(const ossimPolyArea2d& rhs);
    bool getVisiblePolygons(vector<ossimPolygon>& polyList)const;

@@ -32,7 +32,7 @@ class ossimArgumentParser;
 class ossimFileWalker;
 class ossimGpt;
 class ossimPropertyInterface;
-
+class ossimApplicationUsage;
 /**
  * @brief ossimImageUtil class.
  *
@@ -51,6 +51,7 @@ public:
    /** virtual destructor */
    virtual ~ossimImageUtil();
 
+   void addOptions(ossimApplicationUsage* au);
    /**
     * @brief Adds application arguments to the argument parser.
     * @param ap Parser to add to.

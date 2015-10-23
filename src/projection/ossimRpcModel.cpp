@@ -13,7 +13,7 @@
 // LIMITATIONS: Does not support parameter adjustment (YET)
 //
 //*****************************************************************************
-//  $Id: ossimRpcModel.cpp 22283 2013-06-10 18:41:54Z dburken $
+//  $Id: ossimRpcModel.cpp 23548 2015-09-28 21:01:36Z dburken $
 
 #include <ossim/projection/ossimRpcModel.h>
 #include <ossim/elevation/ossimElevManager.h>
@@ -265,13 +265,14 @@ void ossimRpcModel::worldToLineSample(const ossimGpt& ground_point,
    //***
    // First check if the world point is inside bounding rectangle:
    //***
-//   ossimDpt wdp (ground_point);
-//    if (!(theBoundGndPolygon.pointWithin(wdp)))
-//    {
-//      img_pt = extrapolate(ground_point);
-//       if (traceExec())  CLOG << "returning..." << endl;
-//       return;
-//    }
+   //ossimDpt wdp (ground_point);
+    //if (!(theBoundGndPolygon.pointWithin(ground_point)))
+   // {
+      //img_pt = extrapolate(ground_point);
+       //if (traceExec())  CLOG << "returning..." << endl;
+   //   img_pt.makeNan();
+   //    return;
+   // }
          
    //***
    // Normalize the lat, lon, hgt:
@@ -445,12 +446,13 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    //***
    // Extrapolate if point is outside image:
    //***
-//    if (!insideImage(image_point))
-//    {
+    if (!insideImage(image_point))
+    {
 //       gpt = extrapolate(image_point, ellHeight);
 //       if (traceExec())  CLOG << "returning..." << endl;
-//       return;
-//    }
+       gpt.makeNan();
+       return;
+    }
 
    //***
    // Constants for convergence tests:

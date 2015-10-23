@@ -528,20 +528,53 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
    
    if ( m_xmlDocument.valid() )
    {
+      vector< ossimRefPtr<ossimXmlNode> > xml_nodes;
       bool gotSensorImage    = false;
-      
       bool gotRectifiedImage = false;
-      // bool isGeographicGrid  = false; // only applies to rectified
       ossim_uint32 pcsCodeGrid = 32767; // only applies to rectified
 
-      // Need a check of the GMLJP2CoverageCollection attributes to see if a gml: needs to be placed in
-      // front of gml elements. For now, we're assuming gml is the default namespace. Also, if gml is not
-      // the default, we should determine if there is another default namespace and change the xpaths
-      // accordingly.
+      // Check the GMLJP2CoverageCollection attributes for the default namespace.
+      ossimString defaultNamespaceStr( "" );
+      ossimString xpath_root = "/gmljp2:GMLJP2CoverageCollection";
+      xml_nodes.clear();
+      m_xmlDocument->findNodes( xpath_root, xml_nodes );
+      if ( xml_nodes.size() == 0 ) 
+      {
+          // check if the default namespace is gmljp2
+          xpath_root = "/GMLJP2CoverageCollection";
+          m_xmlDocument->findNodes( xpath_root, xml_nodes );
+      }
+      if ( xml_nodes.size() >= 1 )
+      {
+         const ossimString defaultNamespaceIdentifierStr( "xmlns" );
+         ossimString defaultNamespacePrependStr = defaultNamespaceIdentifierStr + ":";
+
+         const ossimRefPtr<ossimXmlAttribute> defaultNamespaceAttribute = xml_nodes[0]->findAttribute( defaultNamespaceIdentifierStr );
+         ossimString defaultNamespaceSettingStr = defaultNamespaceAttribute->getValue();
+
+         // search for the attribute value in the other attributes
+         const ossimXmlNode::AttributeListType& attributeList = xml_nodes[0]->getAttributes();
+         size_t nAttributes = attributeList.size();
+         for ( size_t i=0; i<nAttributes; ++i )
+         {
+            const ossimRefPtr<ossimXmlAttribute> attribute = attributeList[i];
+         
+            const ossimString& attribute_name  = attribute->getName();
+            const ossimString& attribute_value = attribute->getValue();
+
+            if ( attribute_name  != defaultNamespaceIdentifierStr && 
+                 attribute_value == defaultNamespaceSettingStr )
+            {
+                defaultNamespaceStr = attribute_name.after( defaultNamespacePrependStr );
+                defaultNamespaceStr += ":";
+            }
+         }
+      }
        
       // Check for a sensor image
-      ossimString xpath0 = "/gmljp2:GMLJP2CoverageCollection/gmljp2:featureMember/gmljp2:GMLJP2ReferenceableGridCoverage/domainSet/gmlcov:ReferenceableGridBySensorModel";
-      vector< ossimRefPtr<ossimXmlNode> > xml_nodes;
+      ossimString xpath0 = "/gmljp2:GMLJP2CoverageCollection/gmljp2:featureMember/gmljp2:GMLJP2ReferenceableGridCoverage/gml:domainSet/gmlcov:ReferenceableGridBySensorModel";
+      xpath0 = xpath0.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
+      xml_nodes.clear();
       m_xmlDocument->findNodes( xpath0, xml_nodes );
       if ( xml_nodes.size() >= 1 )
       {
@@ -553,7 +586,8 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
          const ossimString srsNameStr( "srsName" );
          ossimString pcsCodeDefinitionStr( "http://www.opengis.net/def/crs/EPSG/0/" );
 
-         xpath0 = "/gmljp2:GMLJP2CoverageCollection/gmljp2:featureMember/gmljp2:GMLJP2RectifiedGridCoverage/domainSet/RectifiedGrid";
+         xpath0 = "/gmljp2:GMLJP2CoverageCollection/gmljp2:featureMember/gmljp2:GMLJP2RectifiedGridCoverage/gml:domainSet/gml:RectifiedGrid";
+         xpath0 = xpath0.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
          xml_nodes.clear();
          m_xmlDocument->findNodes( xpath0, xml_nodes );
          if ( xml_nodes.size() >= 1 )
@@ -580,8 +614,6 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
                }
                else // geographic
                {
-                  // isGeographicGrid = true;
-
                   geomKwl.add( ossimKeywordNames::TYPE_KW, 
                                ossimString( "ossimEquDistCylProjection" ) );
                }
@@ -591,8 +623,11 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
 
       /* Number of lines & samples, for either sensor or rectified imagery */
 
-      ossimString xpath_limits_low  = "/limits/GridEnvelope/low";
-      ossimString xpath_limits_high = "/limits/GridEnvelope/high";
+      ossimString xpath_limits_low  = "/gml:limits/gml:GridEnvelope/gml:low";
+      ossimString xpath_limits_high = "/gml:limits/gml:GridEnvelope/gml:high";
+
+      xpath_limits_low  = xpath_limits_low.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
+      xpath_limits_high = xpath_limits_high.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
 
       bool gotLow = false;
       ossim_int32 lowX, lowY;
@@ -611,7 +646,8 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
       }
 
       bool gotHigh = false;
-      ossim_int32 highX, highY;
+      ossim_int32 highX = 0;
+      ossim_int32 highY = 0;
       xpath = xpath0 + xpath_limits_high;
       xml_nodes.clear();
       m_xmlDocument->findNodes( xpath, xml_nodes );
@@ -639,6 +675,7 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
 
          ossimString sensorModelHref( "" );
          ossimString xpath_sensor_model = "/gmlcov:sensorModel";
+         xpath_sensor_model = xpath_sensor_model.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
          xpath = xpath0 + xpath_sensor_model;
          xml_nodes.clear();
          m_xmlDocument->findNodes( xpath, xml_nodes );
@@ -650,6 +687,7 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
 
          ossimString sensorInstanceHref( "" );
          ossimString xpath_sensor_typeOf = "/gmlcov:sensorInstance/sml:SimpleProcess/sml:typeOf";
+         xpath_sensor_typeOf = xpath_sensor_typeOf.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
          xpath = xpath0 + xpath_sensor_typeOf;
          xml_nodes.clear();
          m_xmlDocument->findNodes( xpath, xml_nodes );
@@ -661,7 +699,8 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
 
          ossimSensorModel* sensor_model = 0;
          ossimString sensorNameHref( "" );
-         ossimString xpath_sensor_name = "/gmlcov:sensorInstance/sml:SimpleProcess/name";
+         ossimString xpath_sensor_name = "/gmlcov:sensorInstance/sml:SimpleProcess/gml:name";
+         xpath_sensor_name = xpath_sensor_name.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
          xpath = xpath0 + xpath_sensor_name;
          xml_nodes.clear();
          m_xmlDocument->findNodes( xpath, xml_nodes );
@@ -703,6 +742,7 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
 
             /* sml:setValue */
             ossimString xpath_setValue = "/gmlcov:sensorInstance/sml:SimpleProcess/sml:configuration/sml:Settings/sml:setValue";
+            xpath_setValue = xpath_setValue.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
             xpath = xpath0 + xpath_setValue;
             xml_nodes.clear();
             m_xmlDocument->findNodes( xpath, xml_nodes );
@@ -724,6 +764,7 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
 
             /* sml:setArrayValues */
             ossimString xpath_setArrayValues = "/gmlcov:sensorInstance/sml:SimpleProcess/sml:configuration/sml:Settings/sml:setArrayValues";
+            xpath_setArrayValues = xpath_setArrayValues.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
             xpath = xpath0 + xpath_setArrayValues;
             xml_nodes.clear();
             m_xmlDocument->findNodes( xpath, xml_nodes );
@@ -763,7 +804,8 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
 
             /* axis labels for rectified imagery */
 
-            ossimString xpath_axisLabels  = "/axisLabels";
+            ossimString xpath_axisLabels = "/gml:axisLabels";
+            xpath_axisLabels = xpath_axisLabels.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
             ossimString firstAxisLabelString( "" );
             ossimString secondAxisLabelString( "" );
             ossimString xpath = xpath0 + xpath_axisLabels;
@@ -780,7 +822,8 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
             /* origin */
 
             ossim_uint32 pcsCodeOrigin = 32767;
-            ossimString xpath_originPoint = "/origin/Point";
+            ossimString xpath_originPoint = "/gml:origin/gml:Point";
+            xpath_originPoint = xpath_originPoint.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
             xpath = xpath0 + xpath_originPoint;
             xml_nodes.clear();
             m_xmlDocument->findNodes( xpath, xml_nodes );
@@ -821,7 +864,8 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
 
             /* offset vector */
 
-            ossimString xpath_offsetVector = "/offsetVector";
+            ossimString xpath_offsetVector = "/gml:offsetVector";
+            xpath_offsetVector = xpath_offsetVector.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
             xpath = xpath0 + xpath_offsetVector;
             xml_nodes.clear();
             m_xmlDocument->findNodes( xpath, xml_nodes );
@@ -985,12 +1029,12 @@ void ossimGmlSupportData::getGeoOrigin(
 
       std::ostringstream os2;
       os2.precision(15);
-      os2 << gsd.x << " " << "0.0";
+      os2 << -gsd.y << " " << "0.0";
       offsetVector1String = os2.str();
 
       std::ostringstream os3;
       os3.precision(15);
-      os3 << "0.0" << " " << -gsd.y;
+      os3 << "0.0" << " " << gsd.x;
       offsetVector2String = os3.str();
    }
 

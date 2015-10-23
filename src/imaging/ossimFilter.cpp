@@ -76,6 +76,7 @@ RTTI_DEF1(ossimLanczosFilter, "ossimLanczosFilter",ossimFilter);
 RTTI_DEF1(ossimMitchellFilter, "ossimMitchellFilter",ossimFilter);
 RTTI_DEF1(ossimQuadraticFilter, "ossimQuadraticFilter",ossimFilter);
 RTTI_DEF1(ossimTriangleFilter, "ossimTriangleFilter",ossimFilter);
+RTTI_DEF1(ossimMagicFilter, "ossimMagicFilter",ossimFilter);
 /*
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                             %

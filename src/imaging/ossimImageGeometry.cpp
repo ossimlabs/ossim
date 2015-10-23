@@ -685,6 +685,52 @@ bool ossimImageGeometry::getCornerGpts(ossimGpt& gul, ossimGpt& gur,
 
 void ossimImageGeometry::getTiePoint(ossimGpt& tie, bool edge) const
 {
+   ossimGrect grect;
+   getBoundingGroundRect(grect);
+   if ( m_projection.valid() && (m_imageSize.hasNans() == false) )
+   {
+      // Use the easting/northing version of this method if underlying projection is meters:
+      const ossimMapProjection* map_proj = 
+         dynamic_cast<const ossimMapProjection*>(m_projection.get());
+      if (map_proj)
+      {
+         if(!map_proj->isGeographic())
+         {
+            ossimDpt enTie;
+            getTiePoint(enTie, edge);
+            if (!enTie.hasNans())
+               tie = m_projection->inverse(enTie);
+            else
+               tie.makeNan();
+         }
+         else
+         {
+            ossimDpt dpp = map_proj->getDecimalDegreesPerPixel();
+            dpp.lat*=0.5;
+            dpp.lon*=0.5;
+            tie = grect.ul();
+            if(edge)
+            {
+               tie.lat -= dpp.lat;
+               tie.lon += dpp.lon; 
+            }
+         }
+      }
+      else
+      {
+
+         // must be a sensor model so we will set to the upper left bounds of the image
+         tie = grect.ul();
+//         std::cout << "GRECT ======= " << grect << "\n";
+//         std::cout << m_projection->getClassName() << std::endl;
+//         ossimDpt pt = m_projection->forward( tie );
+//         std::cout << "FORWARD:" <<pt << std::endl;
+      }
+   }
+
+
+#if 0
+  // std::cout << "GRECT ======= " << grect << "\n";
    if ( m_projection.valid() && (m_imageSize.hasNans() == false) )
    {
       // Use the easting/northing version of this method if underlying projection is meters:
@@ -723,16 +769,24 @@ void ossimImageGeometry::getTiePoint(ossimGpt& tie, bool edge) const
       localToWorld(iRight, gRight);
       localToWorld(iDown, gDown);
       
+      std::cout << "gul: " << gul << "\n"
+                << "gur: " << gur << "\n"
+                << "glr: " << glr << "\n"
+                << "gll: " << gll << "\n"
+                << "gRight: " << gRight << "\n"
+                << "gDown:  " << gDown << "\n";
       // Determine the direction of the image:
       if ( gul.lat > gDown.lat ) // oriented north up
       {
          if ( gul.lat >= gRight.lat ) // straight up or leaning right
          {
+            std::cout << "ONE\n";
             tie.lat = gul.lat;
             tie.lon = gll.lon;
          }
          else // leaning left
          {
+            std::cout << "TWO\n";
             tie.lat = gur.lat;
             tie.lon = gul.lon;
          }
@@ -741,15 +795,18 @@ void ossimImageGeometry::getTiePoint(ossimGpt& tie, bool edge) const
       {
          if ( gRight.lat >= gul.lat ) // straight down or leaning right
          {
+            std::cout << "THREE\n";
             tie.lat = glr.lat;
             tie.lon = gur.lon;
          }
          else // leaning left
          {
+            std::cout << "FOUR\n";
             tie.lat = gll.lat;
             tie.lon = glr.lon;
          }   
       }
+      std::cout << "TIE BEFORE ==== " << tie << "\n";
 
       if ( edge )
       {
@@ -760,12 +817,14 @@ void ossimImageGeometry::getTiePoint(ossimGpt& tie, bool edge) const
          tie = m_projection->inverse( pt );
       }
       
+      std::cout << "TIE ==== " << tie << "\n";
    } // if ( (m_imageSize.hasNans() == false) && m_projection.valid() )
    else
    { 
       tie.lat = ossim::nan();
       tie.lon = ossim::nan();
    }
+#endif
 }
 
 //**************************************************************************************************
@@ -919,6 +978,45 @@ bool ossimImageGeometry::isEqualTo(const ossimObject& obj, ossimCompareType comp
       }
    }
    return result;
+}
+
+bool ossimImageGeometry::getCrossesDateline()const
+{
+   bool result = false;
+   ossimIrect rect;
+   ossimGpt ul;
+   ossimGpt ur;
+   ossimGpt lr;
+   ossimGpt ll;
+   ossimGpt center;
+   ossimGpt wgs84;
+
+   getBoundingRect(rect);
+
+   localToWorld(rect.ul(), ul);
+   localToWorld(rect.ur(), ur);
+   localToWorld(rect.lr(), lr);
+   localToWorld(rect.ll(), ll);
+   localToWorld(rect.midPoint(), center);
+
+   if(ul.isLonNan()||ur.isLonNan()||lr.isLonNan()||ll.isLonNan()||center.isLonNan())
+   {
+      return result;
+   }
+   else
+   {
+      ul.changeDatum(wgs84.datum());
+      ur.changeDatum(wgs84.datum());
+      lr.changeDatum(wgs84.datum());
+      ll.changeDatum(wgs84.datum());
+      center.changeDatum(wgs84.datum());
+      result = ( (fabs(center.lond()-ul.lond()) > 180.0) ||
+                 (fabs(center.lond()-ur.lond()) > 180.0) ||
+                 (fabs(center.lond()-lr.lond()) > 180.0) ||
+                 (fabs(center.lond()-ll.lond()) > 180.0));
+   }
+
+   return result; 
 }
 
 void ossimImageGeometry::getBoundingRect(ossimIrect& bounding_rect) const

@@ -1,7 +1,7 @@
 //---
 // License:  See top level LICENSE.txt file.
 //
-// $Id: ossimPolyArea2d.cpp 23488 2015-08-28 13:07:53Z dburken $
+// $Id: ossimPolyArea2d.cpp 23548 2015-09-28 21:01:36Z dburken $
 //---
 
 #include <ossim/base/ossimPolyArea2d.h>
@@ -387,6 +387,18 @@ const ossimPolyArea2d& ossimPolyArea2d::operator =(const vector<ossimGpt>& polyg
    }
   
    return (*this = ossimPolygon(pts));
+}
+
+bool ossimPolyArea2d::intersects(const ossimPolyArea2d& rhs)const
+{
+   bool result = false;
+
+   if(m_privateData->m_geometry&&rhs.m_privateData->m_geometry)
+   {
+      result = m_privateData->m_geometry->intersects(rhs.m_privateData->m_geometry); 
+   }
+
+   return result;
 }
 
 ossimPolyArea2d ossimPolyArea2d::operator &(const ossimPolyArea2d& rhs)const

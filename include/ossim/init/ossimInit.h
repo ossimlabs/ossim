@@ -64,6 +64,12 @@ public:
 
    void finalize();
 
+   /*!
+    * METHOD: usage()
+    * Prints to stdout the list of command line options that this object parses
+    */
+   void usage();
+
    /** @return theElevEnabledFlag */
    bool getElevEnabledFlag() const;
 

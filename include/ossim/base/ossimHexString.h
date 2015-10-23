@@ -5,11 +5,14 @@
 // Author: Garrett Potts (gpotts@imagelinks.com)
 // 
 //********************************************************************
-// $Id: ossimHexString.h 12952 2008-06-01 16:23:19Z dburken $
+// $Id: ossimHexString.h 23584 2015-10-18 13:03:33Z dburken $
 
-#include <cstring>
+#ifndef ossimHexString_H
+#define ossimHexString_H 1
+
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimConstants.h>
+#include <cstring>
 
 class OSSIMDLLEXPORT ossimHexString : public ossimString
 {
@@ -140,3 +143,5 @@ public:
    void assign(ossim_uint32 value);
    void assign(ossim_uint8  value);
 };
+
+#endif /* #ifndef ossimHexString_H */

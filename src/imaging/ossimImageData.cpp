@@ -7,7 +7,7 @@
 // Author: Garrett Potts
 //
 //*************************************************************************
-// $Id: ossimImageData.cpp 23433 2015-07-15 17:01:30Z gpotts $
+// $Id: ossimImageData.cpp 23529 2015-09-22 18:00:06Z dburken $
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorCodes.h>
@@ -1598,6 +1598,8 @@ ossim_float64 ossimImageData::getPix(const ossimIpt& position,
 {
    ossimIpt relative( position.x - m_origin.x,
                       position.y - m_origin.y);
+   if((relative.x < 0) || (relative.x >= (ossim_int32)m_spatialExtents[0])) return 0.0;
+   if((relative.y < 0) || (relative.y >= (ossim_int32)m_spatialExtents[1])) return 0.0;
    return getPix((m_spatialExtents[0])*relative.y + relative.x, band);
 }
 

@@ -12,20 +12,20 @@
 #ifndef ossimBuckeyeSensor_HEADER
 #define ossimBuckeyeSensor_HEADER
 /**
- * The Buckey sensor has a set of simple orientation paramters.  For this model we are using the
- * orientation paramters found in the MetaData_GSTI.txt file typically found in the directory where the
+ * The Buckeye sensor has a set of simple orientation parameters.  For this model we are using the
+ * orientation parameters found in the MetaData_GSTI.txt file typically found in the directory where the
  * imagery sits.
  *
  * There are 2 forms the class takes for keyword lists.  The first allows one to point
- * to a file containing the frame numbers and all the orientation paramters. You will still
- * need to define the Camera information and callibrartion paramters.  The pixel_size, 
+ * to a file containing the frame numbers and all the orientation parameters. You will still
+ * need to define the Camera information and calibration parameters.  The pixel_size, 
  * focal_length and principal point are all in millimeters. 
  *
  * <pre>
  * EXAMPLE 1:
  *
  * type: ossimBuckeyeSensor
- * framemeta_gsti: /data/buckey/01-31@09/01-31@09/10-39-48/FrameMeta_GSTI.txt
+ * framemeta_gsti: /data/buckeye/01-31@09/01-31@09/10-39-48/FrameMeta_GSTI.txt
  * frame_number: 10001
  * pixel_size: (0.0068,0.0068)
  * focal_length: 211.0211
@@ -47,8 +47,7 @@
  * smac_decent: -.1483e-6 .1558e-6 -.1464e-18 .1233e-38
  * rect: 0 0 7239 5432
  */
-#include <ossim/projection/ossimFcsiModel.h>
-#include <ossim/base/ossimDpt3d.h>
+#include <ossim/projection/ossimSensorModel.h>
 #include "ossimSmacCallibrationSystem.h"
 
 class OSSIM_DLL ossimBuckeyeSensor : public ossimSensorModel
@@ -112,6 +111,18 @@ public:
 //   inline virtual bool useForward()const {return true;} //!ground to image faster (you don't need DEM)
    inline virtual bool useForward()const {return false;} //!ground to image faster (you don't need DEM)
    virtual bool setupOptimizer(const ossimString& init_file); //!uses file path to init model
+  
+   /**
+    * @brief Extracts geometry info from a non-ossim key,value pair 
+    * to an ossim keyword list.
+    *
+    * @param key non-ossim-based input ossimString 
+    * @param value non-ossim-based input ossimString
+    * @param geomKwl The keyword list to fill in.
+    */
+   virtual bool getImageGeometry( 
+      const ossimString& key, const ossimString& value, 
+      ossimKeywordlist& geomKwl ) const;
 
 protected:
    

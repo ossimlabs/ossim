@@ -3,7 +3,7 @@
 #include <math.h>
 #include <ossim/matrix/newmat.h>
 #include <ossim/base/ossimRtti.h>
-
+#include <ossim/base/ossimCommon.h>
 
 class ossimFilter
 {
@@ -395,6 +395,31 @@ public:
    virtual double getSupport()const
       {
          return 3.0;
+      }
+TYPE_DATA
+};
+
+class ossimMagicFilter : public ossimFilter
+{
+public:
+   ossimMagicFilter(){}
+   virtual ~ossimMagicFilter(){}
+   double filter(double x, double /* support */ )const
+      {
+         if (x <= -1.5)
+            return(0.0);
+         if (x <= -0.5)
+          return (0.5*ossim::square(x + 1.5));
+         if (x <=0.5)
+            return (0.75-ossim::square(x));
+         if(x <= 0.75)
+            return (0.5*ossim::square(x-1.5));
+
+         return(0.0);
+      }
+   virtual double getSupport()const
+      {
+         return 1.5;
       }
 TYPE_DATA
 };

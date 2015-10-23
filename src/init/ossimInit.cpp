@@ -18,7 +18,7 @@
 //   24Apr2001  Oscar Kramer
 //              Initial coding.
 //*****************************************************************************
-// $Id: ossimInit.cpp 22989 2014-11-23 16:21:15Z gpotts $
+// $Id: ossimInit.cpp 23588 2015-10-20 20:31:39Z dburken $
 
 
 #include <ossim/init/ossimInit.h>
@@ -105,7 +105,6 @@ void ossimInit::addOptions(ossimArgumentParser& parser)
    
    parser.getApplicationUsage()->addCommandLineOption("--ossim-logfile", "takes a logfile as an argument.  All output messages are redirected to the specified log file.  By default there is no log file and all messages are enabled.");
    parser.getApplicationUsage()->addCommandLineOption("--disable-notify", "Takes an argument. Arguments are ALL, WARN, NOTICE, INFO, FATAL, DEBUG.  If you want multiple disables then just do multiple --disable-notify on the command line.  All argument are case insensitive.  Default is all are enabled.");
-   parser.getApplicationUsage()->addCommandLineOption("-V or --version", "Display version information.");
 }
 
 /*!****************************************************************************
@@ -140,8 +139,6 @@ void ossimInit::initialize(ossimArgumentParser& parser)
       }
       return;
    }
-
-
 
    theInstance->theAppName  = parser.getApplicationUsage()->getApplicationName();
    theInstance->parseNotifyOption(parser);
@@ -229,6 +226,31 @@ void ossimInit::finalize()
 {
    
 }
+/*!****************************************************************************
+ *  Prints to stdout the list of command line options that this object parses.
+ *****************************************************************************/
+void ossimInit::usage()
+{
+   ossimNotify(ossimNotifyLevel_INFO)
+      << "INFORMATION ossimInit::usage():\n"
+      << "Additional command-line options available are as follows: "
+      << "\n"
+      << "\n  -P<pref_filename> -- Allows the user to override the loading "
+      << "\n    of the default preferences with their own pref file."
+      << "\n"
+      << "\n  -K<keyword>[=<value>] -- Allows the user to specify additional"
+      << "\n    keyword/value pairs that are added onto the preferences "
+      << "\n    previously loaded. Keywords specified here override those in"
+      << "\n    the preferences file."
+      << "\n"
+      << "\n  -T<trace_tag> -- Lets user turn on specific trace flags."
+      << "\n"
+      << "\n  -S<session_filename> -- Allows user to specify a session file"
+      << "\n    to load."
+      << std::endl;
+   return;
+}
+
 bool ossimInit::getElevEnabledFlag() const
 {
    return theElevEnabledFlag;
@@ -351,11 +373,6 @@ void ossimInit::parseOptions(ossimArgumentParser& parser)
    if(parser.read("--disable-plugin"))
    {
       thePluginLoaderEnabledFlag = false;
-   }
-   if (parser.read("--version") || parser.read("-V")) 
-   {
-      ossimNotify(ossimNotifyLevel_NOTICE)
-         << "\n" << parser.getApplicationName().c_str() << " " << version() << std::endl;
    }
 }
 

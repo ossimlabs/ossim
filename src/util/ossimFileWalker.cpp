@@ -409,6 +409,18 @@ std::vector<std::string>& ossimFileWalker::getFilteredExtensions()
    return m_filteredExtensions;
 }
 
+void ossimFileWalker::dumpFilteredExtensionList() const
+{
+   ossimNotify(ossimNotifyLevel_NOTICE) << "Filtered extension list:\n";
+   std::vector<std::string>::const_iterator i = m_filteredExtensions.begin();
+   while ( i != m_filteredExtensions.end() )
+   {
+      ossimNotify(ossimNotifyLevel_NOTICE) << (*i) << "\n";
+      ++i;
+   }
+   ossimNotify(ossimNotifyLevel_NOTICE) << std::endl;
+}
+
 void ossimFileWalker::initializeDefaultFilterList()
 {
    m_mutex.lock();
@@ -423,12 +435,14 @@ void ossimFileWalker::initializeDefaultFilterList()
    m_filteredExtensions.push_back(std::string("aux"));
    m_filteredExtensions.push_back(std::string("bin"));
    m_filteredExtensions.push_back(std::string("dbf"));
+   m_filteredExtensions.push_back(std::string("h5"));
    m_filteredExtensions.push_back(std::string("hdr"));
    m_filteredExtensions.push_back(std::string("jgw"));
    m_filteredExtensions.push_back(std::string("jpw"));   
    m_filteredExtensions.push_back(std::string("kwl"));
    m_filteredExtensions.push_back(std::string("log"));
    m_filteredExtensions.push_back(std::string("man"));
+   m_filteredExtensions.push_back(std::string("ocg"));
    m_filteredExtensions.push_back(std::string("out"));
    m_filteredExtensions.push_back(std::string("prj"));
    m_filteredExtensions.push_back(std::string("save"));
@@ -439,6 +453,7 @@ void ossimFileWalker::initializeDefaultFilterList()
    m_filteredExtensions.push_back(std::string("spec"));
    m_filteredExtensions.push_back(std::string("statistics"));
    m_filteredExtensions.push_back(std::string("tar"));
+   m_filteredExtensions.push_back(std::string("til"));   
    m_filteredExtensions.push_back(std::string("tfw"));
    m_filteredExtensions.push_back(std::string("tgz"));
    m_filteredExtensions.push_back(std::string("tmp"));

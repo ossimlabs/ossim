@@ -101,6 +101,9 @@ public:
     */
    std::vector<std::string>& getFilteredExtensions();
 
+   /** @brief Dumps filtered image extenstions to std out. */
+   void dumpFilteredExtensionList() const;
+
    /**
     * @brief Initializes the filter list with a default set of filtered out
     * file names.

@@ -203,3 +203,139 @@ void ossimNitfRsmpiaTag::clearFields()
    m_rssiz[FLOAT21_SIZE] = '\0';
    m_cssiz[FLOAT21_SIZE] = '\0';
 }
+
+
+ossimString ossimNitfRsmpiaTag::getIid() const
+{
+   return ossimString(m_iid);
+}
+
+ossimString ossimNitfRsmpiaTag::getEdition() const
+{
+   return ossimString(m_edition);
+}
+
+ossimString ossimNitfRsmpiaTag::getR0() const
+{
+   return ossimString(m_r0);
+}
+
+ossimString ossimNitfRsmpiaTag::getRx() const
+{
+   return ossimString(m_rx);
+}
+
+ossimString ossimNitfRsmpiaTag::getRy() const
+{
+   return ossimString(m_ry);
+}
+
+ossimString ossimNitfRsmpiaTag::getRz() const
+{
+   return ossimString(m_rz);
+}
+
+ossimString ossimNitfRsmpiaTag::getRxx() const
+{
+   return ossimString(m_rxx);
+}
+
+ossimString ossimNitfRsmpiaTag::getRxy() const
+{
+   return ossimString(m_rxy);
+}
+
+ossimString ossimNitfRsmpiaTag::getRxz() const
+{
+   return ossimString(m_rxz);
+}
+
+ossimString ossimNitfRsmpiaTag::getRyy() const
+{
+   return ossimString(m_ryy);
+}
+
+ossimString ossimNitfRsmpiaTag::getRyz() const
+{
+   return ossimString(m_ryz);
+}
+
+ossimString ossimNitfRsmpiaTag::getRzz() const
+{
+   return ossimString(m_rzz);
+}
+
+ossimString ossimNitfRsmpiaTag::getC0() const
+{
+   return ossimString(m_c0);
+}
+
+ossimString ossimNitfRsmpiaTag::getCx() const
+{
+   return ossimString(m_cx);
+}
+
+ossimString ossimNitfRsmpiaTag::getCy() const
+{
+   return ossimString(m_cy);
+}
+
+ossimString ossimNitfRsmpiaTag::getCz() const
+{
+   return ossimString(m_cz);
+}
+
+ossimString ossimNitfRsmpiaTag::getCxx() const
+{
+   return ossimString(m_cxx);
+}
+
+ossimString ossimNitfRsmpiaTag::getCxy() const
+{
+   return ossimString(m_cxy);
+}
+
+ossimString ossimNitfRsmpiaTag::getCxz() const
+{
+   return ossimString(m_cxz);
+}
+
+ossimString ossimNitfRsmpiaTag::getCyy() const
+{
+   return ossimString(m_cyy);
+}
+
+ossimString ossimNitfRsmpiaTag::getCyz() const
+{
+   return ossimString(m_cyz);
+}
+
+ossimString ossimNitfRsmpiaTag::getCzz() const
+{
+   return ossimString(m_czz);
+}
+
+ossimString ossimNitfRsmpiaTag::getRnis() const
+{
+   return ossimString(m_rnis);
+}
+
+ossimString ossimNitfRsmpiaTag::getCnis() const
+{
+   return ossimString(m_cnis);
+}
+
+ossimString ossimNitfRsmpiaTag::getTnis() const
+{
+   return ossimString(m_tnis);
+}
+
+ossimString ossimNitfRsmpiaTag::getRssiz() const
+{
+   return ossimString(m_rssiz);
+}
+
+ossimString ossimNitfRsmpiaTag::getCssiz() const
+{
+   return ossimString(m_cssiz);
+}

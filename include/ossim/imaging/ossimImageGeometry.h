@@ -317,6 +317,8 @@ public:
       return m_imageSize;
    }
 
+   bool getCrossesDateline()const;
+   
    /**
     * @brief Get the bounding rect of (0, 0) to (imageSize.x-1, imageSize.y-1).
     *

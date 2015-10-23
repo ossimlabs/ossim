@@ -109,15 +109,9 @@ ossimImageUtil::~ossimImageUtil()
       m_fileWalker = 0;
    }
 }
- 
-void ossimImageUtil::addArguments(ossimArgumentParser& ap)
+    
+void ossimImageUtil::addOptions(ossimApplicationUsage* au)
 {
-   // Set the general usage:
-   ossimApplicationUsage* au = ap.getApplicationUsage();
-   ossimString usageString = ap.getApplicationName();
-   usageString += " [options] <file-or-directory-to-walk>";
-   au->setCommandLineUsage(usageString);
-
    // Set the command line options:
    au->addCommandLineOption("-a or --include-fullres", "Copy full res dataset to overview file as well as building reduced res sets. Option only valid with tiff overview builder. Requires -o option.");
  
@@ -137,7 +131,7 @@ void ossimImageUtil::addArguments(ossimArgumentParser& ap)
  
    au->addCommandLineOption("-d", "<output_directory> Write overview to output directory specified.");
  
-   au->addCommandLineOption("--dump-filtered-image-list", "Outputs list of filtered images.");
+   au->addCommandLineOption("--dump-filtered-image-list", "Outputs list of filtered images and extensions.");
  
    au->addCommandLineOption("-h", "Display this information");
  
@@ -168,12 +162,23 @@ void ossimImageUtil::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption("--reader-prop", "Adds a property to send to the reader. format is name=value");
  
    au->addCommandLineOption("-s",  "Stop dimension for overviews.  This controls how \nmany layers will be built. If set to 64 then the builder will stop when height and width for current level are less than or equal to 64.  Note a default can be set in the ossim preferences file by setting the keyword \"overview_stop_dimension\".");
- 
+
    au->addCommandLineOption("--tile-size", "<size> Defines the tile size for overview builder.  Tiff option only. Must be a multiple of 16. Size will be used in both x and y directions. Note a default can be set in your ossim preferences file by setting the key \"tile_size\".");
  
    au->addCommandLineOption("--threads", "<threads> The number of threads to use. (default=1) Note a default can be set in your ossim preferences file by setting the key \"ossim_threads\".");
  
    au->addCommandLineOption("--writer-prop", "Adds a property to send to the writer. format is name=value");
+}
+
+void ossimImageUtil::addArguments(ossimArgumentParser& ap)
+{
+   // Set the general usage:
+   ossimApplicationUsage* au = ap.getApplicationUsage();
+   ossimString usageString = ap.getApplicationName();
+   usageString += " [options] <file-or-directory-to-walk>";
+   au->setCommandLineUsage(usageString);
+
+   addOptions(au);
  
 } // void ossimImageUtil::addArguments(ossimArgumentParser& ap)
  
@@ -502,7 +507,18 @@ bool ossimImageUtil::initialize(ossimArgumentParser& ap)
             {
                initializeDefaultFilterList();
             }
+
+            // Dump our filtered images.
             dumpFilteredImageList();
+
+            if ( !m_fileWalker )
+            {
+               m_fileWalker = new ossimFileWalker();
+               m_fileWalker->initializeDefaultFilterList();
+            }
+
+            // Dump the file walker's filtered extensions.
+            m_fileWalker->dumpFilteredExtensionList();
          }
          else
          {
@@ -538,17 +554,7 @@ ossim_int32 ossimImageUtil::execute()
 
    // Launch any prep system commands:
    executePrepCommands();
- 
-   if ( getDumpFilterImagesFlag() )
-   {
-      // Caller wants to see filtered image names:
-      if ( m_filteredImages.empty() )
-      {
-         initializeDefaultFilterList();
-      }
-      dumpFilteredImageList();
-   }
- 
+
    // Get the number of "file*" keywords.
    ossim_uint32 fileCount = m_kwl->numberOf("file");
  
@@ -559,12 +565,17 @@ ossim_int32 ossimImageUtil::execute()
          m_fileWalker = new ossimFileWalker();
       }
  
-      if ( !getOverrideFilteredImagesFlag() && m_filteredImages.empty() )
+      if ( !getOverrideFilteredImagesFlag() )
       {
-         initializeDefaultFilterList();
+         if ( m_filteredImages.empty() )
+         {
+            initializeDefaultFilterList();
+         }
+         if ( m_fileWalker->getFilteredExtensions().empty() )
+         {
+            m_fileWalker->initializeDefaultFilterList();
+         }
       }
- 
-      m_fileWalker->initializeDefaultFilterList();
  
       m_fileWalker->setNumberOfThreads( getNumberOfThreads() );
  
@@ -583,9 +594,9 @@ ossim_int32 ossimImageUtil::execute()
          ossim_uint32 i = 0;
          while ( processedFiles < fileCount )
          {
-            ossimString kw = FILE_KW;
-            kw += ossimString::toString(i);
-            std::string lookup = m_kwl->findKey( kw.string() );
+            ossimString key = FILE_KW;
+            key += ossimString::toString(i);
+            std::string lookup = m_kwl->findKey( key.string() );
             if ( lookup.size() )
             {
                files.push_back( ossimFilename(lookup) );
@@ -651,6 +662,18 @@ void ossimImageUtil::processFile(const ossimFilename& file)
  
       if ( ih.valid() && !ih->hasError() )
       {
+         // Check for output directory:
+         if ( m_kwl->hasKey( OUTPUT_DIRECTORY_KW ) )
+         {
+            ossimFilename outputDir;
+            outputDir.string() = m_kwl->findKey( OUTPUT_DIRECTORY_KW );
+
+            if ( outputDir.exists() && outputDir.isDir() )
+            {
+               ih->setSupplementaryDirectory( outputDir );
+            }
+         }
+         
          if ( isDirectoryBasedImage( ih.get() ) )
          {
             // Tell the walker not to recurse this directory.
@@ -1164,7 +1187,19 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
       ih->setCurrentEntry( entry );
  
       // Build the .omd file name.
-      ossimFilename omd_file = ih->getFilename();
+      ossimFilename omd_file = ih->getFilename();;
+
+      // Check for output directory:
+      if ( m_kwl->hasKey( OUTPUT_DIRECTORY_KW ) )
+      {
+         ossimFilename outputDir;
+         outputDir.string() = m_kwl->findKey( OUTPUT_DIRECTORY_KW );
+         
+         if ( outputDir.exists() && outputDir.isDir() )
+         {
+            omd_file = outputDir.dirCat( omd_file.file() );
+         }
+      }
  
       if ( useEntryIndex )
       {
@@ -1254,8 +1289,7 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
       ossimNotify(ossimNotifyLevel_INFO)
          << setiosflags(ios::fixed) << setprecision(0);
  
-      if((ossim::isnan(minValue))||
-         (ossim::isnan(maxValue)))
+      if( (ossim::isnan(minValue) ) || (ossim::isnan(maxValue) ) )
       {
          ossimRefPtr<ossimImageData> id = is->getNextTile();
          while(id.valid())
@@ -1274,6 +1308,7 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
                << flush;
          }
       }
+      
       if(!ossim::isnan(minValue))
       {
          std::fill(tmin.begin(), tmin.end(), minValue);
@@ -1954,14 +1989,12 @@ void ossimImageUtil::initializeDefaultFilterList()
 void ossimImageUtil::dumpFilteredImageList() const
 {
    ossimNotify(ossimNotifyLevel_NOTICE) << "Filtered image list:\n";
-
    std::vector<std::string>::const_iterator i = m_filteredImages.begin();
    while ( i != m_filteredImages.end() )
    {
       ossimNotify(ossimNotifyLevel_NOTICE) << (*i) << "\n";
       ++i;
    }
-
    ossimNotify(ossimNotifyLevel_NOTICE) << std::endl;
 }
 

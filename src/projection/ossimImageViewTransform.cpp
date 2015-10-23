@@ -57,9 +57,29 @@ ossimDpt ossimImageViewTransform::viewToImage(const ossimDpt& viewPoint)const
 }
 
 void ossimImageViewTransform::getRoundTripErrorView(ossimDpt& result,
-                                                    const ossimDpt& /* viewPt */)const
+                                                    const ossimDpt&  viewPt )const
 {
-   result = ossimDpt(0,0);
+  ossimDpt ipt;
+  ossimDpt vpt;
+  viewToImage(viewPt, ipt);
+  if(ipt.hasNans())
+  {
+    vpt.makeNan();
+  }
+  else
+  {
+    imageToView(ipt, vpt);
+  }
+
+  if(vpt.hasNans())
+  {
+    result.makeNan();
+  }
+  else
+  {
+    result = viewPt-vpt;
+  }
+ //  result = ossimDpt(0,0);
 }
 
 ossimDpt ossimImageViewTransform::getRoundTripErrorView(const ossimDpt& viewPt)const
@@ -70,9 +90,30 @@ ossimDpt ossimImageViewTransform::getRoundTripErrorView(const ossimDpt& viewPt)c
 }
 
 void ossimImageViewTransform::getRoundTripErrorImage(ossimDpt& result,
-                                                     const ossimDpt& /* imagePt */)const
+                                                     const ossimDpt& imagePt )const
 {
-   result = ossimDpt(0,0);
+  ossimDpt ipt;
+  ossimDpt vpt;
+  imageToView(imagePt, vpt);
+  if(vpt.hasNans())
+  {
+    ipt.makeNan();
+  }
+  else
+  {
+    viewToImage(vpt, ipt);
+  }
+
+  if(ipt.hasNans())
+  {
+    result.makeNan();
+  }
+  else
+  {
+    result = imagePt-ipt;
+  }
+
+//   result = ossimDpt(0,0);
 }
 
 ossimDpt ossimImageViewTransform::getRoundTripErrorImage(const ossimDpt& imagePt)const

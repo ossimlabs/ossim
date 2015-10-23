@@ -12,9 +12,10 @@
 // Utility class for getting information from the ossim library.
 // 
 //----------------------------------------------------------------------------
-// $Id: ossimInfo.cpp 23475 2015-08-26 14:24:23Z dburken $
+// $Id: ossimInfo.cpp 23594 2015-10-22 15:28:02Z dburken $
 
 #include <ossim/util/ossimInfo.h>
+#include <ossim/ossimVersion.h>
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimContainerProperty.h>
@@ -52,6 +53,7 @@
 #include <sstream>
 #include <vector>
 
+static const char BUILD_DATE_KW[]           = "build_date";
 static const char CENTER_GROUND_KW[]        = "center_ground";
 static const char CENTER_IMAGE_KW[]         = "center_image";
 static const char CONFIGURATION_KW[]        = "configuration";
@@ -88,7 +90,9 @@ static const char PROJECTIONS_KW[]          = "projections";
 static const char RAD2DEG_KW[]              = "rad2deg";
 static const char READER_PROPS_KW[]         = "reader_props";
 static const char RESAMPLER_FILTERS_KW[]    = "resampler_filters";
+static const char REVISION_NUMBER_KW[]      = "revision_number";
 static const char UP_IS_UP_KW[]             = "up_is_up_angle";
+static const char VERSION_KW[]              = "version";
 static const char WRITERS_KW[]              = "writers_kw";
 static const char WRITER_PROPS_KW[]         = "writer_props";
 static const char ZOOM_LEVEL_GSDS_KW[]      = "zoom_level_gsds";
@@ -115,6 +119,8 @@ void ossimInfo::addArguments(ossimArgumentParser& ap)
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
+   au->addCommandLineOption("--build-date", "Build date of code.");
+   
    au->addCommandLineOption("-c", "Will print ground and image center.");
 
    au->addCommandLineOption("--cg", "Will print out ground center.");
@@ -176,12 +182,16 @@ void ossimInfo::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption("--reader-props", "Prints readers and properties.");
 
    au->addCommandLineOption("--resampler-filters", "Prints resampler filter list.");
+
+   au->addCommandLineOption("--revision-number", "Revision number of code.");
    
    au->addCommandLineOption("-s", "Force the ground rect to be the specified datum");
    
    au->addCommandLineOption("-u or --up-is-up", "Rotation angle to \"up is up\" for an image.\nWill return 0 if image's projection is not affected by elevation.");
 
    au->addCommandLineOption("-v", "Overwrite existing geometry.");
+
+   au->addCommandLineOption("-V or --vesion", "Version of code, e.g. 1.8.20");
    
    au->addCommandLineOption("--writer-props", "Prints writers and properties.");
 
@@ -225,6 +235,15 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          std::string ts2;
          ossimArgumentParser::ossimParameter sp2(ts2);
          const char TRUE_KW[] = "true";
+         
+         if( ap.read("--build-date") )
+         {
+            m_kwl->add( BUILD_DATE_KW, TRUE_KW );
+            if ( ap.argc() < 2 )
+            {
+               break;
+            }
+         }
 
          if( ap.read("-c") )
          {
@@ -511,6 +530,15 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             }
          }
 
+         if( ap.read("--revision-number") )
+         {
+            m_kwl->add( REVISION_NUMBER_KW, TRUE_KW );
+            if ( ap.argc() < 2 )
+            {
+               break;
+            }
+         }
+         
          if( ap.read("-u") || ap.read("--up-is-up") )
          {
             m_kwl->add( UP_IS_UP_KW, TRUE_KW );
@@ -529,6 +557,15 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             }
          }
 
+         if( ap.read("--version") || ap.read("-V") )
+         {
+            m_kwl->add( VERSION_KW, TRUE_KW );
+            if ( ap.argc() < 2 )
+            {
+               break;
+            }
+         }
+         
          if( ap.read("--writer-props") )
          {
             m_kwl->add( WRITER_PROPS_KW, TRUE_KW );
@@ -627,6 +664,13 @@ void ossimInfo::execute()
       {
          ossimString value;
 
+         if ( keyIsTrue( std::string(BUILD_DATE_KW)) )
+         {
+            getBuildDate( value.string() );
+            ossimNotify(ossimNotifyLevel_INFO)
+               << BUILD_DATE_KW << ": " << value << "\n";
+         }
+         
          lookup = m_kwl->find(CONFIGURATION_KW);
          if ( lookup )
          {
@@ -791,6 +835,20 @@ void ossimInfo::execute()
             }
          }
 
+         if ( keyIsTrue( std::string(REVISION_NUMBER_KW) ) )
+         {
+            getRevisionNumber( value.string() );
+            ossimNotify(ossimNotifyLevel_INFO)
+               << REVISION_NUMBER_KW << ": " << value << "\n";
+         }
+
+         if ( keyIsTrue( std::string(VERSION_KW) ) )
+         {
+            getVersion( value.string() );
+            ossimNotify(ossimNotifyLevel_INFO)
+               << VERSION_KW << ": " << value << "\n";
+         }
+
          lookup = m_kwl->find(WRITERS_KW);
          if ( lookup )
          {
@@ -802,17 +860,6 @@ void ossimInfo::execute()
             }
          }
 
-         lookup = m_kwl->find(ZOOM_LEVEL_GSDS_KW);
-         if ( lookup )
-         {
-            ++consumedKeys;
-            value = lookup;
-            if ( value.toBool() )
-            {
-               printZoomLevelGsds();
-            }
-         }
-
          lookup = m_kwl->find(WRITER_PROPS_KW);
          if ( lookup )
          {
@@ -821,6 +868,17 @@ void ossimInfo::execute()
             if ( value.toBool() )
             {
                printWriterProps();
+            }
+         }
+
+         lookup = m_kwl->find(ZOOM_LEVEL_GSDS_KW);
+         if ( lookup )
+         {
+            ++consumedKeys;
+            value = lookup;
+            if ( value.toBool() )
+            {
+               printZoomLevelGsds();
             }
          }
          
@@ -2614,6 +2672,33 @@ void ossimInfo::getRadiometry(ossimScalarType scalar, std::string& s) const
    }
 }
 
+void ossimInfo::getBuildDate(std::string& s) const
+{
+#ifdef OSSIM_BUILD_DATE
+   s = OSSIM_BUILD_DATE;
+#else
+   s = "unknown";
+#endif
+}
+
+void ossimInfo::getRevisionNumber(std::string& s) const
+{
+#ifdef OSSIM_REVISION_NUMBER
+   s = OSSIM_REVISION_NUMBER;
+#else
+   s = "unknown";
+#endif
+}
+
+void ossimInfo::getVersion(std::string& s) const
+{
+#ifdef OSSIM_VERSION
+   s = OSSIM_VERSION;
+#else
+   s = "unknown";
+#endif
+}
+
 void ossimInfo::usage(ossimArgumentParser& ap)
 {
    // Add global usage options.
@@ -2673,3 +2758,16 @@ void ossimInfo::outputXml( const ossimKeywordlist& kwl, const ossimFilename& fil
    document.write( file );
 }
 
+bool ossimInfo::keyIsTrue( const std::string& key ) const
+{
+   bool result = false;
+   if ( m_kwl.valid() )
+   {
+      std::string value = m_kwl->findKey( key );
+      if ( value.size() )
+      {
+         result = ossimString(value).toBool();
+      }
+   }
+   return result;
+}

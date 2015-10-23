@@ -8,13 +8,14 @@
 // Author: Garrett Potts
 //
 //*******************************************************************
-// $Id: ossimImageRenderer.h 20236 2011-11-09 15:36:38Z dburken $
+// $Id: ossimImageRenderer.h 23548 2015-09-28 21:01:36Z dburken $
 
 #ifndef ossimImageRenderer_HEADER
 #define ossimImageRenderer_HEADER
 #include <ossim/imaging/ossimImageSourceFilter.h>
 #include <ossim/projection/ossimImageViewTransform.h>
 #include <ossim/base/ossimDrect.h>
+#include <ossim/base/ossimPolyArea2d.h>
 #include <ossim/base/ossimViewInterface.h>
 #include <ossim/base/ossimRationalNumber.h>
 
@@ -155,6 +156,14 @@ private:
    
    class ossimRendererSubRectInfo
    {
+    enum SplitFlag{
+      SPLIT_NONE = 0,
+      UPPER_LEFT_SPLIT_FLAG  = 1,
+      UPPER_RIGHT_SPLIT_FLAG = 2,
+      LOWER_RIGHT_SPLIT_FLAG = 4,
+      LOWER_LEFT_SPLIT_FLAG  = 8,
+      SPLIT_ALL = UPPER_LEFT_SPLIT_FLAG|UPPER_RIGHT_SPLIT_FLAG|LOWER_RIGHT_SPLIT_FLAG|LOWER_LEFT_SPLIT_FLAG
+    };
    public:
       friend std::ostream& operator <<(std::ostream& out, const ossimRendererSubRectInfo& rhs)
       {
@@ -170,8 +179,9 @@ private:
 
       }
 
-      ossimRendererSubRectInfo();
-      ossimRendererSubRectInfo(const ossimDpt& vul,
+      ossimRendererSubRectInfo(ossimImageViewTransform* transform=0);
+      ossimRendererSubRectInfo(ossimImageViewTransform* transform,
+                               const ossimDpt& vul,
                                const ossimDpt& vur,
                                const ossimDpt& vlr,
                                const ossimDpt& vll);
@@ -180,15 +190,16 @@ private:
       bool imageIsNan()const;
       bool viewHasNans()const;
       bool viewIsNan()const;
-      void splitView(ossimImageViewTransform* transform,
-                     ossimRendererSubRectInfo& ulRect,
-                     ossimRendererSubRectInfo& urRect,
-                     ossimRendererSubRectInfo& lrRect,
-                     ossimRendererSubRectInfo& llRect)const;
+
+      void splitView(std::vector<ossimRendererSubRectInfo>& result)const;
+      //void splitView(ossimRendererSubRectInfo& ulRect,
+      //               ossimRendererSubRectInfo& urRect,
+      //               ossimRendererSubRectInfo& lrRect,
+      //               ossimRendererSubRectInfo& llRect)const;
       
-      void transformViewToImage(ossimImageViewTransform* transform);
-      void transformImageToView(ossimImageViewTransform* transform);
-      
+      void transformViewToImage();
+      void transformImageToView();
+      bool tooBig()const;
       void roundToInteger();
       void stretchImageOut(bool enableRound=false);
       ossimDrect getViewRect()const;
@@ -197,11 +208,13 @@ private:
       void roundViewToInteger();
       bool isViewEqual(const ossimRendererSubRectInfo& infoRect)const;
       bool isViewEqual(const ossimDrect& viewRect)const;
+      ossimDpt computeViewToImageScale(const ossimDpt& viewPt, const ossimDpt& delta=ossimDpt(1.0,1.0))const;
       ossimDpt getAbsValueViewToImageScales()const;
       ossimDpt getAbsValueImageToViewScales()const;
+      ossimDpt computeRoundTripErrorViewPt(const ossimDpt& dpt)const;
       bool isViewAPoint()const;
       bool isIdentity()const;
-      bool canBilinearInterpolate(ossimImageViewTransform* transform, double error)const;
+      bool canBilinearInterpolate(double error)const;
 
       ossimDpt getParametricCenter(const ossimDpt& ul, const ossimDpt& ur, 
 				    const ossimDpt& lr, const ossimDpt& ll)const;
@@ -217,6 +230,7 @@ private:
 		       ossimDpt& bottomMid,
 		       ossimDpt& leftMid,
 		       ossimDpt& center)const;
+     ossim_uint16 getSplitFlags()const;
 
       ossimDpt m_Iul;
       ossimDpt m_Iur;
@@ -230,7 +244,25 @@ private:
 
       ossimDpt m_ViewToImageScale;
       ossimDpt m_ImageToViewScale;
-      
+
+
+      ossimDpt m_VulScale;
+      ossimDpt m_VurScale;
+      ossimDpt m_VlrScale;
+      ossimDpt m_VllScale;
+
+      ossimDpt m_ulRoundTripError;
+      ossimDpt m_urRoundTripError;
+      ossimDpt m_lrRoundTripError;
+      ossimDpt m_llRoundTripError;
+
+      mutable ossimRefPtr<ossimImageViewTransform> m_transform;
+      mutable const ossimPolyArea2d* m_viewBounds;
+
+    private:
+      void splitHorizontal(std::vector<ossimRendererSubRectInfo>& result)const;
+      void splitVertical(std::vector<ossimRendererSubRectInfo>& result)const;
+      void splitAll(std::vector<ossimRendererSubRectInfo>& result)const;
    };
 
    void recursiveResample(ossimRefPtr<ossimImageData> outputData,
@@ -303,11 +335,15 @@ private:
    ossim_uint32             m_MaxRecursionLevel;
    bool                     m_AutoUpdateInputTransform;
    ossim_uint32             m_MaxLevelsToCompute;
+
+   ossimPolyArea2d            m_viewArea;
    
 TYPE_DATA
 };
 
-inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo()
+inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(ossimImageViewTransform* transform)
+:m_transform(transform),
+m_viewBounds(0)
 {
    m_Vul.makeNan();
    m_Vur.makeNan();
@@ -321,14 +357,17 @@ inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo()
    m_ImageToViewScale.makeNan();            
 }
 
-inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(const ossimDpt& vul,
+inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(ossimImageViewTransform* transform,
+                         const ossimDpt& vul,
                          const ossimDpt& vur,
                          const ossimDpt& vlr,
                          const ossimDpt& vll)
                          :m_Vul(vul),
                          m_Vur(vur),
                          m_Vlr(vlr),
-                         m_Vll(vll)
+                         m_Vll(vll),
+                         m_transform(transform),
+                         m_viewBounds(0)
 {
    m_Iul.makeNan();
    m_Iur.makeNan();

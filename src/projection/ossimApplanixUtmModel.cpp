@@ -6,7 +6,7 @@
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimApplanixUtmModel.cpp 21214 2012-07-03 16:20:11Z dburken $
+//  $Id: ossimApplanixUtmModel.cpp 23564 2015-10-02 14:12:25Z dburken $
 #include <sstream>
 #include <ossim/projection/ossimApplanixUtmModel.h>
 #include <ossim/base/ossimEllipsoid.h>
@@ -26,7 +26,7 @@ static ossimTrace traceDebug("ossimApplanixUtmModel:debug");
 RTTI_DEF1(ossimApplanixUtmModel, "ossimApplanixUtmModel", ossimSensorModel);
 
 #ifdef OSSIM_ID_ENABLED
-static const char OSSIM_ID[] = "$Id: ossimApplanixUtmModel.cpp 21214 2012-07-03 16:20:11Z dburken $";
+static const char OSSIM_ID[] = "$Id: ossimApplanixUtmModel.cpp 23564 2015-10-02 14:12:25Z dburken $";
 #endif
 
 ossimApplanixUtmModel::ossimApplanixUtmModel()
@@ -755,6 +755,7 @@ bool ossimApplanixUtmModel::loadState(const ossimKeywordlist& kwl,
          }
          theImageClipRect = ossimDrect(0,0,w-1,h-1);
          theRefImgPt      = ossimDpt(w/2.0, h/2.0);
+         theImageSize     = ossimDpt(w, h);
       }
       if(sensor)
       {

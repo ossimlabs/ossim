@@ -7,18 +7,11 @@
 //
 //*******************************************************************
 //  $Id: ossimBuckeyeSensor.cpp  $
-#include <sstream>
+
 #include <ossim/projection/ossimBuckeyeSensor.h>
-#include <ossim/base/ossimEllipsoid.h>
-#include <ossim/base/ossimUnitConversionTool.h>
-#include <ossim/base/ossimUnitTypeLut.h>
-#include <ossim/base/ossimDatumFactory.h>
-#include <ossim/base/ossimDatum.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimLsrSpace.h>
 #include <ossim/base/ossimTrace.h>
-#include <ossim/base/ossimGeoidManager.h>
-#include <ossim/projection/ossimUtmProjection.h>
 #include <ossim/base/ossimMatrix4x4.h>
 #include <ossim/elevation/ossimElevManager.h>
 #include <ossim/base/ossimCsvFile.h>
@@ -32,15 +25,15 @@ ossimBuckeyeSensor::ossimBuckeyeSensor()
 
 	theCompositeMatrix			= ossimMatrix4x4::createIdentity();
 	theCompositeMatrixInverse	= ossimMatrix4x4::createIdentity();
-	theRoll						= 0.0;
-	thePitch					= 0.0;
-	theHeading					= 0.0;
-	theFocalLength				= 195.1000;
-	thePixelSize				= ossimDpt(.006, .006);
-	thePrincipalPoint			= ossimDpt(0, 0);
-	theEcefPlatformPosition		= ossimGpt(0.0,0.0, 1000.0);
-	theAdjEcefPlatformPosition	= ossimGpt(0.0,0.0, 1000.0);
-	theLensDistortion			= new ossimSmacCallibrationSystem();
+	theRoll						   = 0.0;
+	thePitch					      = 0.0;
+	theHeading					   = 0.0;
+	theFocalLength				   = 0.0;
+	thePixelSize				   = ossimDpt(0.0, 0.0);
+	thePrincipalPoint			   = ossimDpt(0.0, 0.0);
+	theEcefPlatformPosition		= ossimGpt(0.0, 0.0, 0.0);
+	theAdjEcefPlatformPosition	= ossimGpt(0.0, 0.0, 0.0);
+	theLensDistortion			   = new ossimSmacCallibrationSystem();
 
 	theGSD.makeNan();
 	initAdjustableParameters();
@@ -58,8 +51,8 @@ ossimBuckeyeSensor::ossimBuckeyeSensor(const ossimDrect& imageRect,
 {
 	if (traceDebug())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimBuckeyeSensor::ossimBuckeyeSensor(imageRect,platformPosition,roll,pitch,heading,ossimDpt,focalLength,pixelSize): entering..." << std::endl;
 
-	theImageClipRect			= imageRect;
-	theRefImgPt					= theImageClipRect.midPoint();
+	theImageClipRect			    = imageRect;
+	theRefImgPt					    = theImageClipRect.midPoint();
 	theCompositeMatrix          = ossimMatrix4x4::createIdentity();
 	theCompositeMatrixInverse   = ossimMatrix4x4::createIdentity();
 	theRoll                     = roll;
@@ -74,18 +67,6 @@ ossimBuckeyeSensor::ossimBuckeyeSensor(const ossimDrect& imageRect,
 
 	initAdjustableParameters();
 	updateModel();
-	
-	try
-	{
-		// Method throws ossimException.
-		computeGsd();
-	}
-	catch (const ossimException& e)
-	{
-		ossimNotify(ossimNotifyLevel_WARN)
-			<< "ossimBuckeyeSensor Constructor caught Exception:\n"
-			<< e.what() << std::endl;
-	}
 
 	if (traceDebug())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimBuckeyeSensor::ossimBuckeyeSensor(imageRect,platformPosition,roll,pitch,heading,ossimDpt,focalLength,pixelSize): returning..." << std::endl;
 }
@@ -261,7 +242,7 @@ void ossimBuckeyeSensor::updateModel()
 	theAdjEcefPlatformPosition = gpt;
 	ossimLsrSpace lsrSpace(theAdjEcefPlatformPosition, theHeading+computeParameterOffset(4));
 
-	// make a left handed roational matrix;
+	// make a left handed rotational matrix;
 	ossimMatrix4x4 lsrMatrix(lsrSpace.lsrToEcefRotMatrix());
 	NEWMAT::Matrix orientation = (ossimMatrix4x4::createRotationXMatrix(thePitch+computeParameterOffset(3), OSSIM_LEFT_HANDED)*
 		ossimMatrix4x4::createRotationYMatrix(theRoll+computeParameterOffset(2), OSSIM_LEFT_HANDED));
@@ -269,18 +250,29 @@ void ossimBuckeyeSensor::updateModel()
 	theCompositeMatrixInverse = theCompositeMatrix.i();
 
 	theBoundGndPolygon.resize(4);
-	// ossim_float64 w = theImageClipRect.width()*2.0;
-	// ossim_float64 h = theImageClipRect.height()*2.0;
+
 	theExtrapolateImageFlag = false;
 	theExtrapolateGroundFlag = false;
 
-	lineSampleToWorld(theImageClipRect.ul(),gpt);//+ossimDpt(-w, -h), gpt);
+   try
+   {
+      // Method throws ossimException.
+      computeGsd();
+   }
+   catch (const ossimException& e)
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+         << "ossimBuckeyeSensor Constructor caught Exception:\n"
+         << e.what() << std::endl;
+   }
+
+	lineSampleToWorld(theImageClipRect.ul(),gpt);
 	theBoundGndPolygon[0] = gpt;
-	lineSampleToWorld(theImageClipRect.ur(),gpt);//+ossimDpt(w, -h), gpt);
+	lineSampleToWorld(theImageClipRect.ur(),gpt);
 	theBoundGndPolygon[1] = gpt;
-	lineSampleToWorld(theImageClipRect.lr(),gpt);//+ossimDpt(w, h), gpt);
+	lineSampleToWorld(theImageClipRect.lr(),gpt);
 	theBoundGndPolygon[2] = gpt;
-	lineSampleToWorld(theImageClipRect.ll(),gpt);//+ossimDpt(-w, h), gpt);
+	lineSampleToWorld(theImageClipRect.ll(),gpt);
 	theBoundGndPolygon[3] = gpt;
 	if (traceDebug())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimBuckeyeSensor::updateModel: returning..." << std::endl;
 }
@@ -364,19 +356,19 @@ bool ossimBuckeyeSensor::loadState(const ossimKeywordlist& kwl,
 {
 	if (traceDebug())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimBuckeyeSensor::loadState: entering..." << std::endl;
 
-	theImageClipRect = ossimDrect(0,0,8984,6732);
-	theRefImgPt      = ossimDpt(4492, 3366);
-
 	ossimSensorModel::loadState(kwl, prefix);
+
+   // If theRefImgPt remains unset by ossimSensorModel::loadState(), 
+   // set it to the image center.
+   if ( theRefImgPt == ossimDpt(0, 0) )
+   {
+      theRefImgPt = theImageClipRect.midPoint();
+   }
+
 	if(getNumberOfAdjustableParameters() < 1)
 	{
 		initAdjustableParameters();
 	}
-	theEcefPlatformPosition    = ossimGpt(0.0,0.0,1000.0);
-	theAdjEcefPlatformPosition = ossimGpt(0.0,0.0,1000.0);
-	theRoll    = 0.0;
-	thePitch   = 0.0;
-	theHeading = 0.0;
 
 	ossimString framemeta_gsti = kwl.find(prefix, "framemeta_gsti");
 	ossimString framemeta = kwl.find(prefix,"framemeta");
@@ -413,7 +405,7 @@ bool ossimBuckeyeSensor::loadState(const ossimKeywordlist& kwl,
 
 	if (file_to_load.exists() && !frame_number.empty())
 	{
-		ossimCsvFile csv(" \t"); // we will use tab or spaces as seaparator
+		ossimCsvFile csv(" \t"); // we will use tab or spaces as separator
 		if(csv.open(file_to_load))
 		{
 			if(csv.readHeader())
@@ -527,7 +519,7 @@ bool ossimBuckeyeSensor::loadState(const ossimKeywordlist& kwl,
 		if((radial.size() == 5)&&
 			(decent.size() == 4))
 		{
-			// Just for debugging really.. optomization will make this sleeker
+			// Just for debugging really.. optimization will make this sleeker
 			double k0 = radial[0].toDouble();
 			double k1 = radial[1].toDouble();
 			double k2 = radial[2].toDouble();
@@ -539,16 +531,6 @@ bool ossimBuckeyeSensor::loadState(const ossimKeywordlist& kwl,
 			double p2 = decent[2].toDouble();
 			double p3 = decent[3].toDouble();
 
-			//theLensDistortion = new ossimSmacCallibrationSystem(radial[0].toDouble(),
-			//	radial[1].toDouble(),
-			//	radial[2].toDouble(),
-			//	radial[3].toDouble(),
-			//	radial[4].toDouble(),
-			//	decent[0].toDouble(),
-			//	decent[1].toDouble(),
-			//	decent[2].toDouble(),
-			//	decent[3].toDouble());
-
 			theLensDistortion = new ossimSmacCallibrationSystem(k0,k1,k2,k3,k4,p0,p1,p2,p3);
 		}
 	}
@@ -557,23 +539,6 @@ bool ossimBuckeyeSensor::loadState(const ossimKeywordlist& kwl,
 
 	updateModel();
 
-	if(theGSD.isNan())
-	{
-		try
-		{
-			// This will set theGSD and theMeanGSD. Method throws ossimException.
-			computeGsd();
-		}
-		catch (const ossimException& e)
-		{
-			if (traceDebug())
-			{
-				ossimNotify(ossimNotifyLevel_DEBUG)
-					<< "ossimBuckeyeSensor::loadState Caught Exception:\n"
-					<< e.what() << std::endl;
-			}
-		}
-	}
 	if (traceDebug())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimBuckeyeSensor::loadState: returning..." << std::endl;
 	return result;
 }
@@ -620,8 +585,136 @@ void ossimBuckeyeSensor::setFocalLength(double focalLength)
 
 void ossimBuckeyeSensor::setPlatformPosition(const ossimGpt& gpt)
 {
-	theRefGndPt            = gpt;
+	theRefGndPt             = gpt;
 	theEcefPlatformPosition = gpt;
 	updateModel();
 
+}
+
+bool ossimBuckeyeSensor::getImageGeometry( 
+    const ossimString& ref, const ossimString& value, 
+    ossimKeywordlist& geomKwl ) const
+{
+   if ( ref == ossimString( "parameters/fsmmgSensorImage/collectionTime" ) )
+   {
+      /* not currently used */
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorSession/sensorType" ) )
+   {
+      /* not currently used */
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorSession/focus/focalLength" ) )
+   {
+      geomKwl.add( "focal_length", value.toDouble() );
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorSession/pixelGridCharacteristics/numberOfRowsInImage" ) )
+   {
+      /* Add check to value already set from limits/GridEnvelope/low,high: should be equal */
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorSession/pixelGridCharacteristics/numberOfColumnsInImage" ) )
+   {
+      /* Add check to value already set from limits/GridEnvelope/low,high: should be equal */
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorSession/pixelGridCharacteristics/rowSpacing" ) )
+   {
+      ossimDpt point = ossimDpt();
+      ossimString pixel_size = geomKwl.find( "pixel_size" );
+      if ( !pixel_size.empty() )
+      {
+         point.toPoint( pixel_size );
+      }
+      point.y = value.toDouble();
+      geomKwl.add( "pixel_size", point.toString().c_str() );
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorSession/pixelGridCharacteristics/columnSpacing" ) )
+   {
+      ossimDpt point = ossimDpt();
+      ossimString pixel_size = geomKwl.find( "pixel_size" );
+      if ( !pixel_size.empty() )
+      {
+         point.toPoint( pixel_size );
+      }
+      point.x = value.toDouble();
+      geomKwl.add( "pixel_size", point.toString().c_str() );
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorImage/positionOrientationState/perspectiveCenter/geocentric-x-y-z" ) )
+   {
+      // first remove trailing spaces
+      size_t first_space = value.find_first_of( ' ', 0 );
+      ossimString truncatedValue = value.beforePos( first_space );
+      // change commas into spaces
+      ossimString platformPositionStr = truncatedValue.substitute( ossimString( "," ), ossimString( " " ), true );
+      // add to keywordlist
+      geomKwl.add( "ecef_platform_position", platformPositionStr );
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorImage/velocity/components/geocentric-x-y-z" ) )
+   {
+      /* not currently used */
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorSession/principalPointOffset/components/imagePlaneCRS-x0-y0" ) )
+   {
+      ossimDpt principal_point_offset;
+      size_t first_comma = value.find_first_of( ',', 0 );
+      ossimString offsetxStr = value.beforePos( first_comma );
+      ossimString offsetyStr = value.afterPos( first_comma );
+      principal_point_offset.x = offsetxStr.toDouble();
+      principal_point_offset.y = offsetyStr.toDouble();
+      geomKwl.add( "principal_point", principal_point_offset.toString().c_str() );
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorSession/radialDistortion/coefficients/k0-k1-k2-k3-k4" ) )
+   {
+      // first remove trailing spaces
+      size_t first_space = value.find_first_of( ' ', 0 );
+      ossimString truncatedValue = value.beforePos( first_space );
+      // change commas into spaces
+      ossimString radialDistortionStr = truncatedValue.substitute( ossimString( "," ), ossimString( " " ), true );
+      // add to keywordlist
+      geomKwl.add( "smac_radial", radialDistortionStr );
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgSensorSession/decenteringDistortion/coefficients/p0-p1-p2-p3" ) )
+   {
+      // first remove trailing spaces
+      size_t first_space = value.find_first_of( ' ', 0 );
+      ossimString truncatedValue = value.beforePos( first_space );
+      // change commas into spaces
+      ossimString decenteringDistortionStr = truncatedValue.substitute( ossimString( "," ), ossimString( " " ), true );
+      // add to keywordlist
+      geomKwl.add( "smac_decent", decenteringDistortionStr );
+   }
+   else
+   if ( ref == ossimString( "parameters/fsmmgPlatformImage/positionOrientationState/externalOrientation/platformCS-roll-pitch-yaw" ) )
+   {
+      size_t pos_comma = value.find_first_of( ',', 0 );
+      ossimString rollStr = value.beforePos( pos_comma );
+      ossimString remainderStr0 = value.afterPos( pos_comma );
+
+      pos_comma = remainderStr0.find_first_of( ',', 0 );
+      ossimString pitchStr = remainderStr0.beforePos( pos_comma );
+      ossimString remainderStr1 = remainderStr0.afterPos( pos_comma );
+
+      pos_comma = remainderStr1.find_first_of( ',', 0 );
+      ossimString yawStr = remainderStr1.beforePos( pos_comma );
+
+      geomKwl.add( "roll",    rollStr.toDouble() );
+      geomKwl.add( "pitch",   pitchStr.toDouble() );
+      geomKwl.add( "heading", yawStr.toDouble() );
+   }
+   else // need to add in all supported parameters from the primary SensorML document
+   {
+      /* Add debug message */
+      return false;
+   }
+
+   return true;
 }

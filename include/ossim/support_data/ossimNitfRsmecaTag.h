@@ -24,6 +24,12 @@ public:
    };
 
    ossimNitfRsmecaIsg();
+
+   /** @brief copy constructor */
+   ossimNitfRsmecaIsg(const ossimNitfRsmecaIsg& obj);
+   
+   /** @brief assignment operator */
+   const ossimNitfRsmecaIsg& operator=(const ossimNitfRsmecaIsg& rhs);
    
    void parseStream(std::istream& in);
    
@@ -82,6 +88,83 @@ public:
    
    virtual std::ostream& print( std::ostream& out,
                                 const std::string& prefix=std::string() ) const;
+
+   ossimString getIid() const;
+   ossimString getEdition() const;
+   ossimString getTid() const;
+   ossimString getInclic() const;
+   ossimString getIncluc() const;
+   ossimString getNpar() const;
+   ossimString getNparo() const;
+   ossimString getIgn() const;
+   ossimString getCvdate() const;
+   ossimString getXuol() const;
+   ossimString getYuol() const;
+   ossimString getZuol() const;
+   ossimString getXuxl() const;
+   ossimString getXuyl() const;
+   ossimString getXuzl() const;
+   ossimString getYuxl() const;
+   ossimString getYuyl() const;
+   ossimString getYuzl() const;
+   ossimString getZuxl() const;
+   ossimString getZuyl() const;
+   ossimString getZuzl() const;
+   ossimString getIro() const;
+   ossimString getIrx() const;
+   ossimString getIry() const;
+   ossimString getIrz() const;
+   ossimString getIrxx() const;
+   ossimString getIrxy() const;
+   ossimString getIrxz() const;
+   ossimString getIryy() const;
+   ossimString getIryz() const;
+   ossimString getIrzz() const;
+   ossimString getIco() const;
+   ossimString getIcx() const;
+   ossimString getIcy() const;
+   ossimString getIcz() const;
+   ossimString getIcxx() const;
+   ossimString getIcxy() const;
+   ossimString getIcxz() const;
+   ossimString getIcyy() const;
+   ossimString getIcyz() const;
+   ossimString getIczz() const;
+   ossimString getGxo() const;
+   ossimString getGyo() const;
+   ossimString getGzo() const;
+   ossimString getGxr() const;
+   ossimString getGyr() const;
+   ossimString getGzr() const;
+   ossimString getGs() const;
+   ossimString getGxx() const;
+   ossimString getGxy() const;
+   ossimString getGxz() const;
+   ossimString getGyx() const;
+   ossimString getGyy() const;
+   ossimString getGyz() const;
+   ossimString getGzx() const;
+   ossimString getGzy() const;
+   ossimString getGzz() const;
+   
+   ossimNitfRsmecaIsg getIsg(ossim_uint32 index) const;
+
+   ossimString getMap(ossim_uint32 index) const;
+   ossimString getUrr() const;
+   ossimString getUrc() const;
+   ossimString getUcc() const;
+   ossimString getUncsr() const;
+   ossimString getUcorsr(ossim_uint32 index) const;
+   ossimString getUtausr(ossim_uint32 index) const;
+   ossimString getUncsc() const;
+   ossimString getUcorsc(ossim_uint32 index) const;
+   ossimString getUtausc(ossim_uint32 index) const;
+   bool        getInclicFlag() const;
+   bool        getInclucFlag() const;
+   ossimString getIgnNum() const;
+   ossimString getMapNum() const;
+   ossimString getRowCorSegNum() const;
+   ossimString getColCorSegNum() const;
    
 protected:
    char m_iid[IID_SIZE+1];

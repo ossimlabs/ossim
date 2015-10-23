@@ -2,15 +2,15 @@
 // Copyright (C) 2001 ImageLinks Inc.  All rights reserved.
 //
 // License:  See top level LICENSE.txt file.
-// 
+//
 // Author:  Oscar Kramer (ossim port by D. Burken)
 //
-// Description:  
+// Description:
 //
 // Contains definition of class ossimXmlAttribute.
-// 
+//
 //*****************************************************************************
-// $Id: ossimXmlAttribute.cpp 19682 2011-05-31 14:21:20Z dburken $
+// $Id: ossimXmlAttribute.cpp 23503 2015-09-08 07:07:51Z rashadkm $
 
 #include <iostream>
 #include <sstream>
@@ -32,7 +32,7 @@ static std::istream& xmlskipws(std::istream& in)
       in.ignore(1);
       c = in.peek();
    }
-   
+
    return in;
 }
 
@@ -74,8 +74,8 @@ bool ossimXmlAttribute::read(std::istream& in)
       }
    }
    return false;
-   
-#if 0   
+
+#if 0
    //
    // Pull out name:
    //
@@ -87,7 +87,7 @@ bool ossimXmlAttribute::read(std::istream& in)
                                            << "Bad attribute format encountered near:\n\""<< spec<<"\"\n"
                                            << "Parsing aborted...\n";
       setErrorStatus();
-      
+
       return;
    }
    spec = spec.after('=');
@@ -150,7 +150,7 @@ void ossimXmlAttribute::setValue(const ossimString& value)
    theValue = value;
 }
 
-std::ostream& operator << (std::ostream& os, const ossimXmlAttribute* xml_attr) 
+std::ostream& operator << (std::ostream& os, const ossimXmlAttribute* xml_attr)
 {
    os << " " << xml_attr->theName << "=\"" << xml_attr->theValue << "\"";
 
@@ -192,9 +192,9 @@ bool ossimXmlAttribute::readValue(std::istream& in)
    if((c == '\'')||
       (c == '"'))
    {
-		startQuote = c;
+      startQuote = c;
       theValue += in.get();
-      while(!done&&!in.fail())
+    while(!done&&!in.fail())
       {
          c = in.peek();
          if(c==startQuote)
@@ -202,7 +202,6 @@ bool ossimXmlAttribute::readValue(std::istream& in)
             theValue += c;
             done = true;
             in.ignore(1);
-            
          }
          else if(c == '\n')
          {
@@ -215,6 +214,13 @@ bool ossimXmlAttribute::readValue(std::istream& in)
       }
    }
 
+   bool is_empty = false;
+   //then this could be empty with two qoutes
+    if(theValue.size() == 2 && theValue[0] == startQuote && theValue[1] == startQuote)
+    {
+       theValue = "";
+       is_empty = true;
+    }
    if(theValue != "")
    {
       std::string::iterator startIter = theValue.begin();
@@ -236,6 +242,5 @@ bool ossimXmlAttribute::readValue(std::istream& in)
       }
       theValue = ossimString(startIter, endIter);
    }
-   return ((!in.bad())&&
-           (theValue !=""));
+   return ((!in.bad())&& (is_empty || theValue !=""));
 }
