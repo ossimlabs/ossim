@@ -128,7 +128,7 @@ IF(BUILD_OMS AND EXISTS ${OSSIM_DEV_HOME}/ossim-oms)
   add_subdirectory(${OSSIM_DEV_HOME}/ossim-oms ${CMAKE_CURRENT_BINARY_DIR}/ossim-oms)
 ENDIF()
 
-IF(BUILD_OSSIMPLANET AND EXISTS ${OSSIM_DEV_HOME}/ossim-planet)
+IF(BUILD_OSSIM_PLANET AND EXISTS ${OSSIM_DEV_HOME}/ossim-planet)
   
   IF(NOT OSSIMPLANET_LIBRARY)
      SET(OSSIMPLANET_LIBRARY "ossimPlanet" CACHE STRING "Caching" FORCE)
@@ -140,7 +140,7 @@ IF(BUILD_OSSIMPLANET AND EXISTS ${OSSIM_DEV_HOME}/ossim-planet)
   add_subdirectory(${OSSIM_DEV_HOME}/ossim-planet ${CMAKE_CURRENT_BINARY_DIR}/ossim-planet)
 ENDIF()
 
-IF(BUILD_OSSIMGUI AND EXISTS ${OSSIM_DEV_HOME}/ossim-gui)
+IF(BUILD_OSSIM_GUI AND EXISTS ${OSSIM_DEV_HOME}/ossim-gui)
      add_subdirectory(${OSSIM_DEV_HOME}/ossim-gui ${CMAKE_CURRENT_BINARY_DIR}/ossim-gui)
 ENDIF()
 
@@ -204,7 +204,7 @@ IF (DOXYGEN_FOUND)
      FILE(GLOB ossim_docs "${DOXYGEN_OUTPUT_DIRECTORY}/html/*")
      INSTALL(FILES ${ossim_docs} DESTINATION "share/ossim/${OSSIM_VERSION}/docs/doxygen/ossimapi/html" COMPONENT ossim-doc)
 
-     IF(BUILD_OSSIMPLANET)
+     IF(BUILD_OSSIM_PLANET)
         SET(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/doc/ossim-${OSSIM_VERSION}/ossimPlanetApi")
         OSSIM_GENERATE_DOXYGEN("${DOXYGEN_OUTPUT_DIRECTORY}"
                          "${OSSIM_DEV_HOME}/ossim/Doxyfile.in"
@@ -214,7 +214,7 @@ IF (DOXYGEN_FOUND)
                          "ossimPlanet")
         FILE(GLOB ossim_docs "${DOXYGEN_OUTPUT_DIRECTORY}/html/*")
         INSTALL(FILES ${ossim_docs} DESTINATION "share/ossim/${OSSIM_VERSION}/docs/doxygen/ossimPlanetApi/html" COMPONENT ossim-doc)
-     ENDIF(BUILD_OSSIMPLANET)
+     ENDIF(BUILD_OSSIM_PLANET)
 
    ENDIF(OSSIM_BUILD_DOXYGEN)
 ENDIF (DOXYGEN_FOUND)
