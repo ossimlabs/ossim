@@ -39,7 +39,7 @@ ENDIF(NOT APPLE)
 
 
 if(NOT OSSIM_DEV_HOME)
-   MESSAGE(FATAL_ERROR "Please pass in or define the OSSIM_DEV_HOME root path where all modules are located. This includes ossim, ossimPlanet, libwms, ams, � etc.")
+   MESSAGE(FATAL_ERROR "Please pass in or define the OSSIM_DEV_HOME root path where all modules are located. This includes ossim, ossim-planet, ossim-wms, ams, � etc.")
 ENDIF(NOT OSSIM_DEV_HOME)
 
 #IF(NOT APPLE)
@@ -131,7 +131,7 @@ ENDIF()
 IF(BUILD_OSSIM_PLANET AND EXISTS ${OSSIM_DEV_HOME}/ossim-planet)
   
   IF(NOT OSSIMPLANET_LIBRARY)
-     SET(OSSIMPLANET_LIBRARY "ossimPlanet" CACHE STRING "Caching" FORCE)
+     SET(OSSIMPLANET_LIBRARY "ossim-planet" CACHE STRING "Caching" FORCE)
   ENDIF(NOT OSSIMPLANET_LIBRARY)
   IF(NOT OSSIMPLANET_INCLUDE_DIR)
      SET(OSSIMPLANET_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossim-planet/include" CACHE STRING "Caching" FORCE)
