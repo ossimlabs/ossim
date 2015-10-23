@@ -228,7 +228,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    OPTION(BUILD_PDAL_PLUGIN "Set to ON to build the PDAL plugin library." ON)
    OPTION(BUILD_GDAL_PLUGIN "Set to ON to build the GDAL plugin library." ON)
    OPTION(BUILD_OMS "Set to ON to build the oms api library." ON)
-   OPTION(BUILD_WMS "Set to ON to build the wms api library." ON)
+   OPTION(BUILD_OSSIM_WMS "Set to ON to build the wms api library." ON)
 
 
 ENDMACRO(OSSIM_ADD_COMMON_SETTINGS)
