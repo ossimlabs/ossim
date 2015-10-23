@@ -107,6 +107,10 @@ rm -f CMakeCache.txt
 if [ -z $BUILD_MRSID_PLUGIN ]; then
   BUILD_MRSID_PLUGIN=OFF
 fi
+# Check for ENV vars set to override hardcoded plugins switches here:
+if [ -z $BUILD_OSSIM_VIDEO ]; then
+  BUILD_OSSIM_VIDEO=OFF
+fi
 if [ -z $BUILD_KAKADU_PLUGIN ]; then
   BUILD_KAKADU_PLUGIN=OFF
 fi
@@ -162,6 +166,7 @@ cmake -G "$CMAKE_G_ARG" \
 -DBUILD_PDAL_PLUGIN=$BUILD_PDAL_PLUGIN \
 -DBUILD_PNG_PLUGIN=$BUILD_PNG_PLUGIN \
 -DBUILD_SQLITE_PLUGIN=$BUILD_SQLITE_PLUGIN \
+-DBUILD_OSSIM_VIDEO=$BUILD_OSSIM_VIDEO \
 $CMAKE_DIR
 
 popd >/dev/null
