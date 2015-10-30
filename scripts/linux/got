@@ -23,9 +23,9 @@ function do_git {
     echo; 
     echo "*************************** $(basename $1) ***************************"
 
-    pushd $1
-    git $2 $3 $4
-    popd
+    pushd $1 > /dev/null
+    git $2 $3 $4 $5
+    popd > /dev/null
     echo; 
   fi
 }
@@ -48,6 +48,6 @@ if [ -z $1 ]; then
 fi
 
 # Loop over all ossim repos in working dir:
-find . -maxdepth 1 -type d -name "ossim*" -exec bash -c "do_git {} $1 $2 $3" \;
+find . -maxdepth 1 -type d -name "ossim*" -exec bash -c "do_git {} $1 $2 $3 $4 $5" \;
 
 
