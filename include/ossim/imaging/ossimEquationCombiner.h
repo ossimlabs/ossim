@@ -1,8 +1,8 @@
 //*******************************************************************
-// Copyright (C) 2000 ImageLinks Inc. 
+// Copyright (C) 2000 ImageLinks Inc.
 //
 // License:  LGPL
-// 
+//
 // See LICENSE.txt file in the top level directory for more details.
 //
 // Author: Garrett Potts
@@ -15,6 +15,8 @@
 #include <ossim/base/ossimEquTokenizer.h>
 #include <stack>
 
+#include <ossim/imaging/ossimCastTileSourceFilter.h>
+
 class ossimCastTileSourceFilter;
 
 /**
@@ -25,12 +27,12 @@ class ossimCastTileSourceFilter;
  * rules:
  *
  * <pre>
- * 
- * Prog -> Expr EOF 
- * Expr -> Term RestExpr 
- * RestExpr -> + Term RestExpr | - Term RestExpr | <null> 
- * Term -> Storable RestTerm 
- * RestTerm -> * Factor RestTerm | / Factor RestTerm | <null> 
+ *
+ * Prog -> Expr EOF
+ * Expr -> Term RestExpr
+ * RestExpr -> + Term RestExpr | - Term RestExpr | <null>
+ * Term -> Storable RestTerm
+ * RestTerm -> * Factor RestTerm | / Factor RestTerm | <null>
  * Factor -> number | R | ( Expr )
  *
  *
@@ -157,10 +159,10 @@ class ossimCastTileSourceFilter;
  *
  * For indexed-type values,like NDVI, (with limited values) it is better
  * to rescale between 0.0 and 1.0 and use type NormalizedFloat.
- * 
+ *
  * Rescaled NDVI between 0 and 1:
  * (N+1)/2 = in[0]/(in[0]+in[1])
- * 
+ *
  * With an ossimImageToPlaneNormalFilter feeding the DEM-image input, the slope at each pixel,
  * normalized so that 1.0 = 90 deg from vertical, is computed with:
  * "acosd(band(in[0],2))/90"
@@ -175,7 +177,7 @@ public:
 
    virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& origin,
                                                ossim_uint32 resLevel=0);
-   
+
    virtual void initialize();
 
    virtual void setEquation(const ossimString& equ)
@@ -186,7 +188,7 @@ public:
       {
          return theEquation;
       }
-   
+
    virtual double getNullPixelValue(ossim_uint32 band=0)const;
    virtual double getMinPixelValue(ossim_uint32 band=0)const;
    virtual double getMaxPixelValue(ossim_uint32 band=0)const;
@@ -195,8 +197,8 @@ public:
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
-   
-   
+
+
    virtual void setOutputScalarType(ossimScalarType scalarType);
    /*!
     * Method to save the state of an object to a keyword list.
@@ -211,7 +213,7 @@ public:
     */
    virtual bool loadState(const ossimKeywordlist& kwl,
                           const char* prefix=0);
-   
+
    class ossimBinaryOp
    {
    public:
@@ -224,7 +226,7 @@ public:
       virtual ~ossimUnaryOp(){}
       virtual double apply(double v)const=0;
    };
-   
+
 protected:
    enum ossimEquValueType
    {
@@ -232,13 +234,13 @@ protected:
       OSSIM_EQU_DOUBLE_TYPE     = 1,
       OSSIM_EQU_IMAGE_DATA_TYPE = 2
    };
-   
+
    union ossimEquDataType
    {
       double           doubleValue;
       ossimImageData* imageDataValue;
    };
-   
+
    struct ossimEquValue
    {
       int              type;
@@ -246,15 +248,15 @@ protected:
    };
 
    virtual ~ossimEquationCombiner();
-   
-   
+
+
    ossimScalarType             theOutputScalarType;
    ossimString                 theEquation;
    mutable ossimEquTokenizer  *theLexer;
    ossimRefPtr<ossimImageData> theTile;
    ossimRefPtr<ossimCastTileSourceFilter>  theCastFilter;
    ossimRefPtr<ossimCastTileSourceFilter> theCastOutputFilter;
-   
+
    mutable int                theCurrentId;
    mutable std::stack<ossimEquValue> theValueStack;
    ossim_uint32                     theCurrentResLevel;
@@ -268,9 +270,9 @@ protected:
    virtual void deleteArgList(vector<ossimEquValue>& args);
    virtual bool parseArgList(vector<ossimEquValue>& args,
                              bool popValueStack = true);
-   
+
    virtual ossimRefPtr<ossimImageData> parseEquation();
-  
+
    virtual bool parseAssignBand();
    virtual bool parseExpression();
    virtual bool parseRestOfExp();
@@ -282,21 +284,21 @@ protected:
 
    virtual bool applyClamp(ossimImageData* &result,
                            const vector<ossimEquValue>& argList);
-                           
+
    virtual bool applyConvolution(ossimImageData* &result,
                                  const vector<ossimEquValue>& argList);
-   
+
    virtual bool applyBlurr(ossimImageData* &result,
                            const vector<ossimEquValue>& argList);
-   
+
    virtual bool applyShift(ossimImageData* &result,
                            const vector<ossimEquValue>& argList);
-   
+
    virtual bool applyOp(const ossimBinaryOp& op,
                         ossimEquValue& result,
                         ossimEquValue& v1,
                         ossimEquValue& v2);
-   
+
    virtual bool applyOp(const ossimBinaryOp& op,
                         ossimImageData* v1,
                         double          v2);
@@ -307,16 +309,16 @@ protected:
 
    virtual bool applyOp(const ossimBinaryOp& op,
                         ossimImageData* v1,
-                        ossimImageData* v2);      
+                        ossimImageData* v2);
 
-   
+
    virtual bool applyOp(const ossimUnaryOp& op,
                         ossimEquValue& result,
                         ossimEquValue& v1);
-   
+
    virtual bool applyOp(const ossimUnaryOp& op,
                         ossimImageData* v);
-   
+
 TYPE_DATA
 };
 #endif
