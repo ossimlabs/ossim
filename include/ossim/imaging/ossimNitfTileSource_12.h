@@ -1,7 +1,7 @@
 //*******************************************************************
 //
 // License:  LGPL
-// 
+//
 // See LICENSE.txt file in the top level directory for more details.
 //
 // Author:  Mingjie Su
@@ -15,14 +15,16 @@
 #ifndef ossimNitfTileSource_12_HEADER
 #define ossimNitfTileSource_12_HEADER
 
+#if defined(JPEG_DUAL_MODE_8_12)
+
 #include <ossim/base/ossimConstants.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/support_data/ossimNitfImageHeader.h>
 
-class OSSIM_DLL ossimNitfTileSource_12 
+class OSSIM_DLL ossimNitfTileSource_12
 {
 public:
-  static bool uncompressJpeg12Block(ossim_uint32 x, 
+  static bool uncompressJpeg12Block(ossim_uint32 x,
                                     ossim_uint32 y,
                                     ossimRefPtr<ossimImageData> cacheTile,
                                     ossimNitfImageHeader* hdr,
@@ -37,5 +39,7 @@ public:
 
   static bool loadJpegHuffmanTables(jpeg_decompress_struct& cinfo);
 };
-   
+
+#endif /* defined(JPEG_DUAL_MODE_8_12) */
+
 #endif /* #ifndef ossimNitfTileSource_12_HEADER */
