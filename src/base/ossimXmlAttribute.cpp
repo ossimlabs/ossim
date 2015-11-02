@@ -216,7 +216,9 @@ bool ossimXmlAttribute::readValue(std::istream& in)
 
    bool is_empty = false;
    //then this could be empty with two qoutes
-    if(theValue.size() == 2 && theValue[0] == startQuote && theValue[1] == startQuote)
+   std::string::size_type p = 0;
+   //then this could be empty with two qoutes
+    if(theValue.size() == 2 && theValue[p] == startQuote && theValue[p+1] == startQuote)
     {
        theValue = "";
        is_empty = true;
