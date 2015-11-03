@@ -6,7 +6,7 @@
 MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
    OPTION(OSSIM_COMPILE_WITH_FULL_WARNING "OSSIM developers : Compilation with FULL warning (use only for ossim developers)." OFF)
    MARK_AS_ADVANCED(OSSIM_COMPILE_WITH_FULL_WARNING)
-   
+
    IF(OSSIM_COMPILE_WITH_FULL_WARNING)
      IF(CMAKE_COMPILER_IS_GNUCXX)
        SET(OSSIM_COMMON_COMPILER_FLAGS "${OSSIM_COMMON_COMPILER_FLAGS} -Wall -Wunused  -Wunused-function  -Wunused-label  -Wunused-parameter -Wunused-value -Wunused-variable -Wuninitialized -Wsign-compare -Wparentheses -Wunknown-pragmas -Wswitch" CACHE STRING "List of compilation parameters.")
@@ -15,7 +15,7 @@ MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
 
    IF(WIN32)
       #---
-      # This option is to enable the /MP to compile multiple source files by using 
+      # This option is to enable the /MP to compile multiple source files by using
       # multiple processes.
       #---
       OPTION(WIN32_USE_MP "Set to ON to build OSSIM with the /MP option (Visual Studio 2005 and above)." OFF)
@@ -23,18 +23,18 @@ MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
       IF(WIN32_USE_MP)
          SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
       ENDIF(WIN32_USE_MP)
-     
-      set(OSSIM_COMMON_COMPILER_FLAGS "${OSSIM_COMMON_COMPILER_FLAGS} -DNOMINMAX -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE") 
- 
+
+      set(OSSIM_COMMON_COMPILER_FLAGS "${OSSIM_COMMON_COMPILER_FLAGS} -DNOMINMAX -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE")
+
       set(DEBUG_BUILD OFF)
       IF(CMAKE_BUILD_TYPE)
          string ( COMPARE EQUAL ${CMAKE_BUILD_TYPE} "Debug" DEBUG_BUILD )
       ENDIF(CMAKE_BUILD_TYPE)
-     
+
       ###
       # Currently must set /FORCE:MULTIPLE for Visual Studio 2010. 29 October 2010 - drb
       ###
-  
+
       IF(MSVC)
          message("MSVC_VERSION: ${MSVC_VERSION}")
 
@@ -46,15 +46,16 @@ MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
             else ( )
                SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:LIBCMTD /FORCE:MULTIPLE /MANIFEST:NO")
                SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMTD /FORCE:MULTIPLE /MANIFEST:NO")
-            endif (DEBUG_BUILD)
+             endif (DEBUG_BUILD)
 
+            SET(OSSIM_COMMON_COMPILER_FLAGS "${OSSIM_COMMON_COMPILER_FLAGS} /EHsc")
             SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMTD /FORCE:MULTIPLE")
          else( )
             SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:LIBCMTD")
          endif( (${MSVC_VERSION} EQUAL 1600) OR (${MSVC_VERSION} EQUAL 1700) )
       ENDIF(MSVC)
    ENDIF(WIN32)
-   
+
    OPTION(OSSIM_ADD_FPIC "Compilation with FPIC flag if static library.  The default is on since we have plugins that need to be shared." ON)
    MARK_AS_ADVANCED(OSSIM_ADD_FPIC)
    IF(OSSIM_ADD_FPIC)
@@ -93,7 +94,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
                SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.5 -ftree-vectorize -fvisibility-inlines-hidden" CACHE STRING "Flags used by the compiler during all build types.")
             ENDIF()
         ELSEIF(EXISTS /Developer/SDKs/MacOSX10.5.sdk)
-            # 64-bit compiles are not supported with Carbon. We should enable 
+            # 64-bit compiles are not supported with Carbon. We should enable
             SET(TEMP_CMAKE_OSX_ARCHITECTURES "i386;x86_64")
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.5 -ftree-vectorize -fvisibility-inlines-hidden" CACHE STRING "Flags used by the compiler during all build types.")
         ELSEIF(EXISTS /Developer/SDKs/MacOSX10.4u.sdk)
@@ -108,7 +109,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
            SET(CMAKE_OSX_ARCHITECTURES "${TEMP_CMAKE_OSX_ARCHITECTURES}" CACHE STRING "Build architectures for OSX" FORCE)
         ENDIF()
         OPTION(OSSIM_BUILD_APPLICATION_BUNDLES "Enable the building of applications and examples as OSX Bundles" OFF)
-        
+
        MARK_AS_ADVANCED(CMAKE_OSX_ARCHITECTURES)
        MARK_AS_ADVANCED(CMAKE_CXX_FLAGS)
        MARK_AS_ADVANCED(CMAKE_OSX_SYSROOT)
@@ -139,12 +140,12 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
        SET(OSSIM_USER_DEFINED_DYNAMIC_OR_STATIC "STATIC")
    ENDIF()
 
-#   IF(NOT OSSIM_LIBRARY_BUILD_OUTPUT_DIRECTORY)  
+#   IF(NOT OSSIM_LIBRARY_BUILD_OUTPUT_DIRECTORY)
 #      SET(OSSIM_LIBRARY_BUILD_OUTPUT_DIRECTORY ${${PROJECT_NAME}_SOURCE_DIR}/lib)
-#   ENDIF(NOT OSSIM_LIBRARY_BUILD_OUTPUT_DIRECTORY)  
-#   IF(NOT OSSIM_RUNTIME_BUILD_OUTPUT_DIRECTORY)  
+#   ENDIF(NOT OSSIM_LIBRARY_BUILD_OUTPUT_DIRECTORY)
+#   IF(NOT OSSIM_RUNTIME_BUILD_OUTPUT_DIRECTORY)
 #      SET(OSSIM_RUNTIME_BUILD_OUTPUT_DIRECTORY ${${PROJECT_NAME}_SOURCE_DIR}/bin)
-#   ENDIF(NOT OSSIM_RUNTIME_BUILD_OUTPUT_DIRECTORY)  
+#   ENDIF(NOT OSSIM_RUNTIME_BUILD_OUTPUT_DIRECTORY)
 
    IF(MAKE_APPENDS_BUILD_TYPE)
       SET(BUILD_FRAMEWORK_DIR "")
@@ -159,7 +160,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
       IF(NOT DEFINED BUILD_RUNTIME_DIR)
          SET(BUILD_RUNTIME_DIR   "bin")
       ENDIF()
-      IF(NOT DEFINED BUILD_LIBRARY_DIR)  
+      IF(NOT DEFINED BUILD_LIBRARY_DIR)
          SET(BUILD_LIBRARY_DIR   "lib")
       ENDIF()
       IF(NOT DEFINED BUILD_ARCHIVE_DIR)
@@ -175,18 +176,18 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    SET(INSTALL_INCLUDE_DIR   "include")
 
    # Libraries and archives go to lib or lib64.
-   get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)       
+   get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
    if(LIB64)
       set(LIBSUFFIX 64)
    else()
       set(LIBSUFFIX "")
-   endif()   
+   endif()
    set(INSTALL_LIBRARY_DIR lib${LIBSUFFIX} CACHE PATH "Installation directory for libraries")
    set(INSTALL_ARCHIVE_DIR lib${LIBSUFFIX} CACHE PATH "Installation directory for archive")
    mark_as_advanced(LIBSUFFIX)
    mark_as_advanced(INSTALL_LIBRARY_DIR)
    mark_as_advanced(INSTALL_ARCHIVE_DIR)
-   
+
    IF(WIN32)
        IF(NOT DEFINED CMAKE_DEBUG_POSTFIX)
           SET(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Debug variable used to add the postfix to dll's and exe's.  Defaults to 'd' on WIN32 builds and empty on all other platforms" FORCE)
@@ -212,18 +213,18 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    ENDIF(NOT OSSIM_DEV_HOME)
    IF(NOT CMAKE_INSTALL_PREFIX)
       SET(CMAKE_INSTALL_PREFIX "$ENV{OSSIM_INSTALL_PREFIX}")
-       GET_FILENAME_COMPONENT(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)   
+       GET_FILENAME_COMPONENT(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
    ENDIF(NOT CMAKE_INSTALL_PREFIX)
    IF(NOT OSSIM_DEPENDENCIES)
       SET(OSSIM_DEPENDENCIES "$ENV{OSSIM_DEPENDENCIES}")
-      GET_FILENAME_COMPONENT(OSSIM_DEPENDENCIES "${OSSIM_DEPENDENCIES}" ABSOLUTE)   
+      GET_FILENAME_COMPONENT(OSSIM_DEPENDENCIES "${OSSIM_DEPENDENCIES}" ABSOLUTE)
    ENDIF(NOT OSSIM_DEPENDENCIES)
- 
+
    #################################### ADd some common options for all modules to use ###################################
    OPTION(BUILD_OSSIM_VIDEO "Set to ON to build the video decoding library.  Use OFF to skip this module." OFF)
    OPTION(BUILD_OSSIM_PLANET "Set to ON to build the 3-D visualization module.  Use OFF to skip this module." OFF)
    OPTION(BUILD_OSSIM_GUI "Set to ON to build the new ossimGui library and geocell application." ON)
-   OPTION(BUILD_MRSID_PLUGIN "Set to ON to build the MrSID plugin library." ON)   
+   OPTION(BUILD_MRSID_PLUGIN "Set to ON to build the MrSID plugin library." ON)
    OPTION(BUILD_KAKADU_PLUGIN "Set to ON to build the Kakadu plugin library." ON)
    OPTION(BUILD_PDAL_PLUGIN "Set to ON to build the PDAL plugin library." ON)
    OPTION(BUILD_GDAL_PLUGIN "Set to ON to build the GDAL plugin library." ON)
@@ -235,4 +236,3 @@ ENDMACRO(OSSIM_ADD_COMMON_SETTINGS)
 
 
 OSSIM_ADD_COMMON_SETTINGS()
-

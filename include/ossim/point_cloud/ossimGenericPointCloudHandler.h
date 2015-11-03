@@ -75,7 +75,7 @@ public:
    virtual void close() {  }
 
 protected:
-   ossimGenericPointCloudHandler() {}
+   ossimGenericPointCloudHandler();
    ossimPointBlock m_pointBlock;
 };
 
