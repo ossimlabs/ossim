@@ -1,0 +1,21 @@
+# $Id: CMakeLists.txt 23496 2015-08-28 15:26:18Z okramer $
+
+# Remainder to be built but not installed
+OSSIM_SETUP_APPLICATION(ossim-get-pixel-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-get-pixel-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-gpkg-writer-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-gpkg-writer-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-gsd-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-gsd-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-image-chain-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-image-chain-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-image-handler-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-image-handler-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-image-writer-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-image-writer-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-index-to-rgb-lut-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-index-to-rgb-lut-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-loadtile-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-loadtile-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-mask-filter-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-mask-filter-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-piecewise-remapper-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-piecewise-remapper-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-pixel-flipper-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-pixel-flipper-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-range-dome-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-range-dome-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-read-write-consistency-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-read-write-consistency-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-remap-table-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-remap-table-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-shift-filter-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-shift-filter-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-single-image-chain-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-single-image-chain-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-single-image-chain-threaded-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-single-image-chain-threaded-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-threaded-chain-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-threaded-chain-test.cpp)

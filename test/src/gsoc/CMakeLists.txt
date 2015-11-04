@@ -1,0 +1,3 @@
+# $Id: CMakeLists.txt 23496 2015-08-28 15:26:18Z okramer $
+
+OSSIM_SETUP_APPLICATION(ossim-gsoc1 COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-gsoc1.cpp)
