@@ -8,7 +8,7 @@
 // Author: Garrett Potts
 //
 //*************************************************************************
-// $Id: ossimBandMergeSource.cpp 23108 2015-01-27 17:00:20Z okramer $
+// $Id: ossimBandMergeSource.cpp 23611 2015-11-06 19:37:12Z gpotts $
 #include <ossim/imaging/ossimBandMergeSource.h>
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
@@ -99,40 +99,48 @@ bool ossimBandMergeSource::getTile(ossimImageData* tile, ossim_uint32 resLevel)
    ossim_uint32 currentBand = 0;
    ossim_uint32 maxBands = tile->getNumberOfBands();
    ossim_uint32 inputIdx = 0;
+   ossimRefPtr<ossimImageData> currentTile;
    for(inputIdx = 0; inputIdx < getNumberOfInputs(); ++inputIdx)
    {
       ossimImageSource* input = PTR_CAST(ossimImageSource, getInput(inputIdx));
-      ossimRefPtr<ossimImageData> currentTile = new ossimImageData(*tile);
       ossim_uint32 maxInputBands = 1;
 
       if(input)
       {
-         input->getTile(currentTile.get(), resLevel);
-         maxInputBands = currentTile->getNumberOfBands();
-         if (maxInputBands == 0)
-            maxInputBands = 1;
+         currentTile = input->getTile(tile->getImageRectangle(), resLevel);
+         if(currentTile.valid())
+         {
+            maxInputBands = currentTile->getNumberOfBands();
+            //std::cout << "MAX INPUT BANDS === " << maxInputBands << "\n";
+            if (maxInputBands == 0)
+               maxInputBands = 1;
+         }
       }
       else
       {
          currentTile = 0;
       }
 
-      for(ossim_uint32 band = 0; (band < maxInputBands) && (currentBand < maxBands); ++band)
+      if(currentTile.valid()&&(currentTile->getBuf()))
       {
-         // clear the band with the actual NULL
-         tile->fill(currentBand, tile->getNullPix(band));
-
-         if(currentTile.valid())
+         for(ossim_uint32 band = 0; (band < maxInputBands) && (currentBand < maxBands); ++band)
          {
-            if((currentTile->getDataObjectStatus() != OSSIM_NULL) &&
-               (currentTile->getDataObjectStatus() != OSSIM_EMPTY))
+            //std::cout << "Actual Band, BAND == " << currentBand << ", " << band << "\n";
+            // clear the band with the actual NULL
+            tile->fill(currentBand, tile->getNullPix(band));
+
+            if(currentTile.valid())
             {
-               memmove(tile->getBuf(currentBand),
-                       currentTile->getBuf(band),
-                       currentTile->getSizePerBandInBytes());
+               if((currentTile->getDataObjectStatus() != OSSIM_NULL) &&
+                  (currentTile->getDataObjectStatus() != OSSIM_EMPTY))
+               {
+                  memmove(tile->getBuf(currentBand),
+                          currentTile->getBuf(band),
+                          currentTile->getSizePerBandInBytes());
+               }
             }
+            ++currentBand;
          }
-         ++currentBand;
       }
    }
    tile->validate();

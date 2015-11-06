@@ -7,7 +7,7 @@
 // Author: Garrett Potts
 // 
 //----------------------------------------------------------------------------
-// $Id: ossimFilterTable.cpp 9094 2006-06-13 19:12:40Z dburken $
+// $Id: ossimFilterTable.cpp 23604 2015-10-28 13:40:09Z gpotts $
 #include <iostream>
 #include <ossim/imaging/ossimFilterTable.h>
 #include <ossim/imaging/ossimFilter.h>
@@ -79,32 +79,31 @@ void ossimFilterTable::buildTable(ossim_uint32  filterSteps,
      
      // Calculate subpixel sample step.
      // ---------------------------------- 
-     dy = subpixelLine / (double)(filterSteps);
-     for (subpixelSample = 0; subpixelSample < (int)filterSteps; 
-	  subpixelSample++)
+       dy = subpixelLine / (double)(filterSteps);
+       for (subpixelSample = 0; subpixelSample < (int)filterSteps; subpixelSample++)
        {
-      
-	 // Calculate subpixel sample step.
-	 // ---------------------------------- 
-	 dx = subpixelSample / (double)(filterSteps);
-	 
-	 for (kernelV=top; kernelV<=bottom;
-	      kernelV++)
-	   {
-	     y = kernelV - dy;
-	     double tempWeight = yFilter.filter(y, yFilter.getSupport());
-	     for(kernelH=left; kernelH<=right;++kernelH)
-	       {
-		 x = kernelH - dx;
+        
+         // Calculate subpixel sample step.
+         // ---------------------------------- 
+         dx = subpixelSample / (double)(filterSteps);
          
-		 // Get the weight for the current pixel.
-		 //   ----------------------------------------
-		 theWeights[idx] = tempWeight*xFilter.filter(x, xFilter.getSupport());
-		 ++idx;
-	       }
-	   }
-       }
-   }
+         for (kernelV=top; kernelV<=bottom;
+              kernelV++)
+         {
+             y = kernelV - dy;
+             double tempWeight = yFilter.filter(y, yFilter.getSupport());
+             for(kernelH=left; kernelH<=right;++kernelH)
+             {
+               x = kernelH - dx;
+                   
+               // Get the weight for the current pixel.
+               //   ----------------------------------------
+               theWeights[idx] = tempWeight*xFilter.filter(x, xFilter.getSupport());
+               ++idx;
+             }
+          }
+        }
+     }
 }
 
 ossim_uint32 ossimFilterTable::getWidthByHeight()const
