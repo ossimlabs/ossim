@@ -73,7 +73,7 @@ public:
       
       bool valid(const char* str) const;
       bool assign(const char* str);
-      
+
    protected:
       
       ossimParameterType   theType;
@@ -163,11 +163,25 @@ public:
              ossimParameter value6);
    
    /**
+<<<<<<< Updated upstream
+=======
+    * Alternate form for reading variable length arguments (must be comma-separated), e.g.,
+    *
+    *    --input_files file1, file2, file3,file4
+    * Noote that spaces between arguments are optional.
+    * @param str The option string (with "-" or "--")
+    * @param param_list Vector to contain results as strings. Always cleared before populating
+    * @return True if option found (param_list may be empty f no args followed).
+    */
+   bool read(const std::string& str, std::vector<ossimString>& param_list);
+
+   /**
+>>>>>>> Stashed changes
     * @return The number of parameters of type value associated with specified
     * option, or -1 if option not found
     */
    int numberOfParams(const std::string& str,
-                      const ossimParameter& value) const;
+                      const ossimParameter value) const;
    
    /**
     * if the argument value at the position pos matches specified string, and

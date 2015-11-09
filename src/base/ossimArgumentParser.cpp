@@ -14,6 +14,8 @@
 #include <iostream>
 #include <set>
 
+using namespace std;
+
 bool ossimArgumentParser::isOption(const char* str)
 {
    return str && str[0]=='-';
@@ -140,42 +142,28 @@ bool ossimArgumentParser::ossimParameter::valid(const char* str) const
 
 bool ossimArgumentParser::ossimParameter::assign(const char* str)
 {
-   if (valid(str))
-   {
-      switch(theType)
-      {
-         case ossimParameter::OSSIM_FLOAT_PARAMETER:
-         {
-            *theValue.theFloat = (float)ossimString(str).toDouble();
-            break;
-         }
-         case ossimParameter::OSSIM_DOUBLE_PARAMETER:
-         {
-            *theValue.theDouble = ossimString(str).toDouble();
-            break;
-         }
-         case ossimParameter::OSSIM_INT_PARAMETER:
-         {
-            *theValue.theInt = ossimString(str).toInt();
-            break;
-         }
-         case ossimParameter::OSSIM_UNSIGNED_INT_PARAMETER:
-         {
-            *theValue.theUint = ossimString(str).toUInt32();
-            break;
-         }
-         case ossimParameter::OSSIM_STRING_PARAMETER:
-         {
-            *theValue.theString = str;
-            break;
-         }
-      }
-      return true;
-   }
-   else
-   {
+   if (!valid(str))
       return false;
+
+   switch(theType)
+   {
+   case ossimParameter::OSSIM_FLOAT_PARAMETER:
+      *theValue.theFloat = (float)ossimString(str).toDouble();
+      break;
+   case ossimParameter::OSSIM_DOUBLE_PARAMETER:
+      *theValue.theDouble = ossimString(str).toDouble();
+      break;
+   case ossimParameter::OSSIM_INT_PARAMETER:
+      *theValue.theInt = ossimString(str).toInt();
+      break;
+   case ossimParameter::OSSIM_UNSIGNED_INT_PARAMETER:
+      *theValue.theUint = ossimString(str).toUInt32();
+      break;
+   case ossimParameter::OSSIM_STRING_PARAMETER:
+      *theValue.theString = ossimString(str).chars();
+      break;
    }
+   return true;
 }
 
 ossimArgumentParser::ossimArgumentParser(int* argc,char **argv):
@@ -250,7 +238,7 @@ bool ossimArgumentParser::containsOptions() const
    return false;
 }
 
-int ossimArgumentParser::numberOfParams(const std::string& str, const ossimParameter& param) const
+int ossimArgumentParser::numberOfParams(const std::string& str, const ossimParameter param) const
 {
    int pos=find(str);
    if (pos<=0) 
@@ -409,6 +397,43 @@ bool ossimArgumentParser::read(const std::string& str, ossimParameter value1,
    return true;
 }
 
+bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>& param_list)
+{
+   param_list.clear();
+
+   int pos=find(str);
+   if (pos<=0)
+      return false;
+
+   // Option is removed even if no values found:
+   remove(pos, 1);
+   bool done = false;
+   while ((pos < *theArgc) && (theArgv[pos][0] != '-') && !done)
+   {
+
+      // Handle comma separated with no spaces (i.e., multiple args reflected as one in theArgv):
+      ossimString arg = theArgv[pos];
+      if (arg.contains(","))
+      {
+         vector<ossimString> sub_args = arg.split(",", true);
+         for (ossim_uint32 i=0; i<sub_args.size(); ++i)
+            param_list.push_back(sub_args[i]);
+
+         // Possible space after last comma, so check if comma present:
+         if (arg[arg.length()-1] != ',')
+            done = true;
+      }
+      else
+      {
+         // This is the last entry of comma and space separated list:
+         param_list.push_back(arg);
+         done = true;
+      }
+      remove(pos, 1);
+   }
+
+   return true;
+}
 
 /** if the argument value at the posotion pos matches specified string, and subsequent
  * parameters are also matched then set the paramter values and remove the from the list of arguments.*/
