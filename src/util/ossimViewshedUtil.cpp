@@ -1,14 +1,9 @@
-//*******************************************************************
-// Copyright (C) 2000 ImageLinks Inc.
+//**************************************************************************************************
 //
-// License:  LGPL
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  Oscar Kramer
-//
-//*******************************************************************
-//  $Id$
+//**************************************************************************************************
 
 #include <ossim/util/ossimViewshedUtil.h>
 #include <ossim/base/ossimApplicationUsage.h>
@@ -31,6 +26,11 @@
 #include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
 #include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/imaging/ossimIndexToRgbLutFilter.h>
+
+const char* ossimViewshedUtil::DESCRIPTION =
+      "Computes bitmap image representing the viewshed from specified location using only "
+      "DEM information.";
+
 
 ossimViewshedUtil::ossimViewshedUtil()
 :   m_obsHgtAbvTer (1.5),
@@ -66,7 +66,8 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
 {
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
-   ossimString usageString = ap.getApplicationName();
+   ossimString appName = ap.getApplicationName();
+   ossimString usageString = appName;
    usageString += " [options] <obs_lat> <obs_lon> <output-image>";
    au->setCommandLineUsage(usageString);
 
@@ -78,10 +79,6 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
          " computed. The arc is taken clockwise from start to end, so for a"
          " FOV of 225 deg from W, through N to SE, start=270 and end=135");
    au->addCommandLineOption(
-         "--gsd <meters>",
-         "Specifies output GSD in meters. Defaults to the same "
-         "resolution as input DEM.");
-   au->addCommandLineOption(
          "--hgt-of-eye <meters>",
          "Specifies the observers height-of-eye above the "
          "terrain in meters. Defaults to 1.5 m.");
@@ -90,24 +87,10 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
          "Experimental. Outputs the max elevation angles "
          "for all azimuths to <filename>, for horizon profiling.");
    au->addCommandLineOption(
-         "--dem <filename>",
-         "Specifies the input DEM filename. If none "
-         "provided, the elevation database is referenced as specified in prefs file");
-   au->addCommandLineOption(
-         "--lut <filename>",
-         "Specifies the optional lookup table filename for "
-         "mapping the single-band output image to an RGB. The LUT provided must be "
-         "in the ossimIndexToRgbLutFilter format and must handle the three output "
-         "viewshed values (see --values option).");
-   au->addCommandLineOption(
          "--radius <meters>",
          "Specifies max visibility in meters. Required "
          "unless --size is specified. This option constrains output to a circle, "
          "similar to a radar display");
-   au->addCommandLineOption(
-         "--request-api",
-         "Causes applications API to be output as JSON to stdout."
-         " Accepts optional filename to store JSON output.");
    au->addCommandLineOption(
          "--reticle <int>",
          "Specifies the size of the reticle at the observer"
@@ -123,9 +106,6 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
          "the dimensions of the output product in pixels (output is "
          "square). Required unless --radius is specified.");
    au->addCommandLineOption(
-         "--summary",
-         "Causes a product summary to be output to the console.");
-   au->addCommandLineOption(
          "--tbs",
          "\"Thread By Sector\". For engineering/debug purposes ");
    au->addCommandLineOption(
@@ -138,22 +118,22 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
          " hidden and reticle pixels, respectively. Defaults to visible=null (0), "
          "hidden=128, and observer position reticle is highlighted with 255.");
 
-   ossimString description =
-         "\nComputes the viewshed for the given viewpt coordinates. The output is a binary image "
-         "with 0 representing hidden points, and 1 representing visible points.\n\n"
-         "Examples:\n\n"
-         "    ossim-viewshed --radius 50  28.0 -80.5 output-hlz.tif\n"
-         "    ossim-viewshed --size 1024  28.0 -80.5 output-hlz.tif\n\n"
-         "An alternate command line provides switch for observer lat and lon:\n\n"
-         "    ossim-viewshed --rlz 25 --observer 28.0 -80.5  output-hlz.tif \n";
-   au->setDescription(description);
-
    // Base class has its own:
-   ossimUtility::setUsage(ap);
+   ossimChipProcUtil::setUsage(ap);
+
+   ostringstream description;
+   description << DESCRIPTION << "\n\nExamples:\n\n"
+         "    "<<appName<<" --radius 50  28.0 -80.5 output-hlz.tif\n"
+         "    "<<appName<<" --size 1024  28.0 -80.5 output-hlz.tif\n\n"
+         "An alternate command line provides switch for observer lat and lon:\n\n"
+         "    "<<appName<<" --rlz 25 --observer 28.0 -80.5  output-hlz.tif \n";
+   au->setDescription(description.str());
 }
 
 bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
 {
+   ostringstream xmsg ("ossimViewshedUtil::initialize(ossimArgumentParser) -- ");
+
    // Base class first:
    if (!ossimUtility::initialize(ap))
       return false;
@@ -164,6 +144,7 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    ossimArgumentParser::ossimParameter sp2(ts2);
    std::string ts3;
    ossimArgumentParser::ossimParameter sp3(ts3);
+
 
    if (ap.read("--dem", sp1) || ap.read("--dem-file", sp1))
       m_demFile = ts1;
@@ -234,11 +215,8 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    // Verify minimum required args were specified:
    if (m_demFile.empty() && (m_visRadius == 0) && (m_halfWindow == 0))
    {
-      ossimNotify(ossimNotifyLevel_WARN)
-                  << "ossimViewshedUtil::initialize ERR: Command line is underspecified."
-                  << std::endl;
-      setUsage(ap);
-      return false;
+      xmsg<<"Command line is underspecified."<<ends;
+      throw ossimException(xmsg.str());
    }
 
    // Parse the required command line params:
@@ -252,13 +230,16 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    }
    m_filename = ap[ap_idx];
 
-   return initializeChain();
+   initializeChain();
+   return true;
 }
 
 bool ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
 {
+   ostringstream xmsg ("ossimViewshedUtil::initialize(kwl) -- ");
+
    // Base class first:
-   if (!ossimUtility::initialize(kwl))
+   if (!ossimChipProcUtil::initialize(kwl))
       return false;
 
    ossimString value;
@@ -345,22 +326,19 @@ bool ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
    m_filename = kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
    if (value.empty())
    {
-      ostringstream msg;
-      msg <<"No output file name provided."<<ends;
-      ossimException e (msg.str());
-      throw e;
+      xmsg <<"No output file name provided."<<ends;
+      throw ossimException(xmsg.str());
    }
 
   // Verify minimum required args were specified:
    if (m_demFile.empty() && (m_visRadius == 0) && (m_halfWindow == 0))
    {
-      ostringstream msg;
-      msg << "ossimViewshedUtil::initialize ERR: Keywordlist is underspecified." << ends;
-      ossimException e (msg.str());
-      throw e;
+      xmsg << "Keywordlist is underspecified." << ends;
+      throw ossimException(xmsg.str());
    }
 
-   return initializeChain();
+   initializeChain();
+   return true;
 }
 
 void ossimViewshedUtil::clear()
@@ -376,29 +354,31 @@ void ossimViewshedUtil::clear()
    m_geometry = 0;
 }
 
-bool ossimViewshedUtil::initializeChain()
+void ossimViewshedUtil::initializeChain()
 {
+   ostringstream xmsg ("ossimViewshedUtil::initializeChain() -- ");
+
+   // TODO: Need to implement throws
+   // TODO: Accept srcLayers as imagery to blend with viewshed
+   // TODO: Define additional --dem input files? NO -- ALWAYS DATA BASE
+
    if (m_observerGpt.hasNans())
    {
-      ossimNotify(ossimNotifyLevel_WARN)
-                  << "ossimViewshedUtil::initialize ERR: Observer ground position has not been set."
-                  << std::endl;
-      return false;
+      xmsg<<"Observer ground position has not been set."<<ends;
+      throw ossimException(xmsg.str());
    }
 
    ossimElevManager* elevMgr = ossimElevManager::instance();
 
-   // If DEM provided as file on command line, reset the elev manager to use only this:
+   // If DEMs provided as files on command line, reset the elev manager to use only these:
    if (!m_demFile.empty())
    {
       elevMgr->clear();
       ossimRefPtr<ossimImageElevationDatabase> ied = new ossimImageElevationDatabase;
       if(!ied->open(m_demFile))
       {
-         ossimNotify(ossimNotifyLevel_WARN)
-                     << "ossimViewshedUtil::initialize ERR: Cannot open DEM file at <"<<m_demFile<<">\n"
-                     << std::endl;
-         return false;
+         xmsg << "Cannot open DEM file at <"<<m_demFile<<">\n" << ends;
+         throw ossimException(xmsg.str());
       }
 
       if (m_simulation)
@@ -414,18 +394,14 @@ bool ossimViewshedUtil::initializeChain()
          ossimRefPtr<ossimImageHandler> dem = ossimImageHandlerRegistry::instance()->open(m_demFile);
          if (!dem.valid())
          {
-            ossimNotify(ossimNotifyLevel_WARN)
-                        << "ossimViewshedUtil::initialize ERR: Cannot open DEM file at <"<<m_demFile<<">\n"
-                        << std::endl;
-            return false;
+            xmsg << "Cannot open DEM file at <"<<m_demFile<<">" << ends;
+            throw ossimException(xmsg.str());
          }
          ossimRefPtr<ossimImageGeometry> geom = dem->getImageGeometry();
          if (!geom.valid())
          {
-            ossimNotify(ossimNotifyLevel_WARN)
-                        << "ossimViewshedUtil::initialize ERR: Could not establish geometry of DEM file at <"<<m_demFile<<">\n"
-                        << std::endl;
-            return false;
+            xmsg<<"Could not establish geometry of DEM file at <"<<m_demFile<<">" << ends;
+            throw ossimException(xmsg.str());
          }
 
          // Hack workaround for ossimElevManager::getMeanSpacingMeters() returning 0 when DEM file
@@ -467,10 +443,8 @@ bool ossimViewshedUtil::initializeChain()
    // Compute the bounding rect in pixel space given the visibility range and the GSD:
    if ((m_gsd == 0) || ((m_visRadius == 0) && (m_halfWindow == 0)))
    {
-      ossimNotify(ossimNotifyLevel_WARN)
-                  << "ossimViewshedUtil::initialize ERR: GSD, visibility radius or image size have not"
-                  " been set."  << std::endl;
-      return false;
+      xmsg<<"GSD, visibility radius or image size have not been set." << ends;
+      throw ossimException(xmsg.str());
    }
    if (m_halfWindow == 0)
       m_halfWindow = ossim::round<ossim_int32, double>(m_visRadius/m_gsd);
@@ -501,7 +475,10 @@ bool ossimViewshedUtil::initializeChain()
    m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1,
                                                            m_viewRect.width(), m_viewRect.height());
    if(!m_outBuffer.valid())
-      return false;
+   {
+      xmsg<<"Output buffer allocation failed." << ends;
+      throw ossimException(xmsg.str());
+   }
 
    // Initialize the image with all points hidden:
    m_outBuffer->initialize();
@@ -529,7 +506,6 @@ bool ossimViewshedUtil::initializeChain()
       dumpProductSummary();
 
    m_initialized = true;
-   return true;
 }
 
 void ossimViewshedUtil::initRadials()

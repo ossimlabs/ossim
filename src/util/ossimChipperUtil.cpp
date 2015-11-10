@@ -410,19 +410,19 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
       m_kwl->addPair( CONTRAST_KW, tempString1 );
    }
 
-   if( ap.read("--cut-width", tempString1) )
+   if( ap.read("--cut-width", stringParam1) )
    {
       m_kwl->addPair( CUT_WIDTH_KW,   tempString1 );
    }
-   if( ap.read("--cut-height", tempString1) )
+   if( ap.read("--cut-height", stringParam1) )
    {
       m_kwl->addPair( CUT_HEIGHT_KW,  tempString1 );
    }
-   if( ap.read("--cut-wms-bbox", tempString1) )
+   if( ap.read("--cut-wms-bbox", stringParam1) )
    {
       m_kwl->addPair(CUT_WMS_BBOX_KW, tempString1);
    }
-   if( ap.read("--cut-wms-bbox-ll", tempString1) )
+   if( ap.read("--cut-wms-bbox-ll", stringParam1) )
    {
       m_kwl->addPair(CUT_WMS_BBOX_LL_KW, tempString1);
    }
