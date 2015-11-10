@@ -1,8 +1,9 @@
-//*******************************************************************
-// License:  See top level LICENSE.txt file.
-// Author:  Oscar Kramer
-//*******************************************************************
-//  $Id: ossimHLZUtil.cpp 23465 2015-08-13 13:36:26Z okramer $
+//**************************************************************************************************
+//
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
+//
+//**************************************************************************************************
 
 #include <ossim/util/ossimHLZUtil.h>
 
@@ -32,6 +33,8 @@
 
 const char* MASK_PREFIX = "mask";
 const char* MASK_EXCLUDE_KW = "exclude";
+const char* ossimHLZUtil::DESCRIPTION =
+      "Computes bitmap of helicopter landing zones given ROI and DEM.";
 
 ossimHLZUtil::ossimHLZUtil()
 : m_slopeThreshold(7.0),
@@ -48,6 +51,7 @@ ossimHLZUtil::ossimHLZUtil()
   m_goodLzValue(2),
   m_reticleValue(3),
   m_useLsFitMethod(false),
+  m_isInitialized(false),
   m_numThreads(1),
   d_accumT(0)
 {
@@ -208,13 +212,17 @@ bool ossimHLZUtil::parseCommand(ossimArgumentParser& ap)
    if ( ap.read("--request-api", sp1))
    {
       ofstream ofs ( ts1.c_str() );
-      printApiJson(ofs);
+      ossimString api;
+      getAPI(api);
+      ofs << api << ends;
       ofs.close();
       return false;
    }
    if ( ap.read("--request-api"))
    {
-      printApiJson(cout);
+      ossimString api;
+      getAPI(api);
+      cout << api << endl;
       return false;
    }
    if (ap.read("--reticle", sp1))
@@ -377,7 +385,8 @@ bool ossimHLZUtil::initialize()
    // Establish connection to DEM posts directly as raster "images" versus using the OSSIM elev
    // manager that performs interpolation of DEM posts for arbitrary locations. These elev images
    // feed into a combiner in order to have a common tap for elev pixels:
-   if (!initProcessingChain())
+   initializeChain();
+   if (!m_isInitialized)
       return false;
 
    if (!initHlzFilter())
@@ -473,9 +482,10 @@ void ossimHLZUtil::createInputChain(ossimRefPtr<ossimImageHandler>& handler,
 }
 
 
-bool ossimHLZUtil::initProcessingChain()
+void ossimHLZUtil::initializeChain()
 {
    // If a DEM file was not provided as an argument, the elev sources array needs be initialized:
+   m_isInitialized = false;
    if (!m_combinedElevSource.valid())
    {
       // HLZ requires access to individual elevation posts for computing statistics. We use the
@@ -499,7 +509,7 @@ bool ossimHLZUtil::initProcessingChain()
             ossimNotify(ossimNotifyLevel_WARN)
                     << "ossimHLZUtil::initElevSources() ERR: Cannot open DEM file at <"
                     <<*fname_iter<<">\n"<< std::endl;
-            return false;
+            return;
          }
 
          ossimRefPtr<ossimImageSource> chain;
@@ -528,8 +538,7 @@ bool ossimHLZUtil::initProcessingChain()
       if (!m_slopeFile.empty())
          writeSlopeImage();
    }
-
-   return true;
+   m_isInitialized = true;
 }
 
 bool ossimHLZUtil::loadPcFile()
@@ -1028,26 +1037,6 @@ bool ossimHLZUtil::NormChipProcessorJob::level1Test()
 
    m_status = 1; // indicates passed level 1
    return true;
-}
-
-void ossimHLZUtil::printApiJson(ostream& out) const
-{
-   ossimFilename json_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
-   json_path += "/ossim/util/ossimHlzApi.json";
-   if (json_path.isReadable())
-   {
-      char line[256];
-      ifstream ifs (json_path.chars());
-      ifs.getline(line, 256);
-
-       while (ifs.good())
-       {
-         out << line << endl;
-         ifs.getline(line, 256);
-       }
-
-       ifs.close();
-   }
 }
 
 ossimHLZUtil::MaskSource::MaskSource(ossimHLZUtil* hlzUtil, ossimKeywordlist& kwl,

@@ -1,13 +1,14 @@
-//*******************************************************************
+//**************************************************************************************************
 //
-// License:  See top level LICENSE.txt file.
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-//*************************************************************************
-// $Id$
+//**************************************************************************************************
 
 #ifndef ossimUtility_HEADER
-#define ossimUtility_HEADER
+#define ossimUtility_HEADER 1
 
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimProcessInterface.h>
 #include <ossim/base/ossimListenerManager.h>
@@ -17,9 +18,9 @@
 /*!
  *  Base class for all OSSIM utility applications.
  */
-class OSSIMDLLEXPORT ossimUtility : public ossimObject,
-                                    public ossimProcessInterface,
-                                    public ossimListenerManager
+class OSSIM_DLL ossimUtility : public ossimObject,
+                               public ossimProcessInterface,
+                               public ossimListenerManager
 {
 public:
    ossimUtility();
@@ -74,14 +75,22 @@ public:
    /**
     * Outputs a JSON representation of the Utility's API.
     */
-   void getUtilityApi(ossimString& out) const;
+   void getAPI(ossimString& out) const;
 
    virtual ossimObject* getObject() { return this; }
    virtual const ossimObject* getObject() const  { return this; }
    virtual ossimListenerManager* getManager()  { return this; };
    virtual ossimString getClassName() const { return "ossimUtility"; }
 
+   // NOTE: The ossimUtilityFactory::getCapabilities() needs to access a brief description of each
+   // utility. For convenience, the ossimUtility-derived (final) classes should declare a public
+   // static member to hold the description string. See ossimViewshedUtility for an example.
+   // static const char* DESCRIPTION;
+
 private:
+   /**
+    * Used for reading text files of template and JSON API from disk ONLY.
+    */
    bool readFile(const ossimFilename& filename, ossimString& contents) const;
 };
 
