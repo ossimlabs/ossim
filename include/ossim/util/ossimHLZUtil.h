@@ -1,16 +1,14 @@
-//*******************************************************************
+//**************************************************************************************************
 //
-// License:  See top level LICENSE.txt file.
-// 
-// Author: Oscar Kramer
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-//*************************************************************************
-// $Id: ossimHLZUtil.h 23465 2015-08-13 13:36:26Z okramer $
+//**************************************************************************************************
 
 #ifndef ossimHLZUtil_HEADER
 #define ossimHLZUtil_HEADER
 
-#include <ossim/base/ossimObject.h>
+#include <ossim/util/ossimChipProcUtil.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimProcessInterface.h>
 #include <ossim/base/ossimFilename.h>
@@ -34,9 +32,7 @@
  *  Class for finding helicopter landing zones (HLZ) on a DEM given the final destination and max
  *  range from destination.
  */
-class OSSIMDLLEXPORT ossimHLZUtil : public ossimObject,
-                                    public ossimProcessInterface,
-                                    public ossimListenerManager
+class OSSIMDLLEXPORT ossimHLZUtil : public ossimChipProcUtil
 {
 public:
    ossimHLZUtil();
@@ -65,11 +61,8 @@ public:
     */
    virtual bool execute();
 
-   virtual ossimObject* getObject() { return this; }
-   virtual const ossimObject* getObject() const  { return this; }
-   virtual ossimListenerManager* getManager()  { return this; };
-
-   void printApiJson(ostream& out) const;
+   /** Used by ossimUtilityFactory */
+   static const char* DESCRIPTION;
 
 protected:
    class MaskSource
@@ -88,7 +81,7 @@ protected:
    bool loadDemFile();
    bool loadPcFile();
    bool loadMaskFiles();
-   bool initProcessingChain();
+   virtual void initializeChain();
    bool initHlzFilter();
    bool writeFile();
    void dumpProductSummary() const;
@@ -121,6 +114,7 @@ protected:
    ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;
    bool m_outputSummary;
    ossim_uint32 m_jobCount;
+   bool m_isInitialized;
 
    ossim_uint8 m_badLzValue;
    ossim_uint8 m_marginalLzValue;

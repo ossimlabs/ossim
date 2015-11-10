@@ -1,14 +1,9 @@
-//*******************************************************************
-// Copyright (C) 2000 ImageLinks Inc.
+//**************************************************************************************************
 //
-// License:  LGPL
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  Oscar Kramer
-//
-//*******************************************************************
-//  $Id: ossimSlopeUtil.cpp 23450 2015-07-27 13:58:00Z okramer $
+//**************************************************************************************************
 
 #include <ossim/util/ossimSlopeUtil.h>
 #include <ossim/init/ossimInit.h>
@@ -43,6 +38,9 @@ const char* REMAP_KW  = "remap_to_8bit";
 const char* LUT_KW    = "lut_file";
 const char* ROI_KW    = "roi_radius";
 
+const char* ossimSlopeUtil::DESCRIPTION =
+      "Computes raster image with pixels representing the angle between the local surface"
+      " normal and the local vertical given a DEM.";
 
 ossimSlopeUtil::ossimSlopeUtil()
 :  m_aoiRadius(0),

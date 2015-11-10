@@ -1,14 +1,9 @@
-//*******************************************************************
-// Copyright (C) 2000 ImageLinks Inc.
+//**************************************************************************************************
 //
-// License:  LGPL
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  Oscar Kramer
-//
-//*******************************************************************
-//  $Id: ossimSlopeUtil.cpp 23450 2015-07-27 13:58:00Z okramer $
+//**************************************************************************************************
 
 #include <ossim/util/ossimUtility.h>
 #include <ossim/base/ossimApplicationUsage.h>
@@ -33,7 +28,10 @@ void ossimUtility::setUsage(ossimArgumentParser& ap)
    // Add global usage options.
    ossimInit::instance()->addOptions(ap);
 
+   std::string appName = ap.getApplicationName();
    ossimApplicationUsage* au = ap.getApplicationUsage();
+   au->setApplicationName( ossimString( appName ) );
+
    au->addCommandLineOption(
          "--write-api <filename>",
          "Writes a JSON API specification to the specified filename.");
@@ -59,7 +57,7 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
    {
       ofstream ofs ( ts1.c_str() );
       ossimString json_str;
-      getUtilityApi(json_str);
+      getAPI(json_str);
       ofs << json_str <<endl;
       return false;
    }
@@ -83,7 +81,7 @@ void ossimUtility::getKwlTemplate(ossimString& kwl)
    readFile(kwl_path, kwl);
 }
 
-void ossimUtility::getUtilityApi(ossimString& json) const
+void ossimUtility::getAPI(ossimString& json) const
 {
    ossimFilename json_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
    json_path += "/ossim/util/" + getClassName() + ".json";
