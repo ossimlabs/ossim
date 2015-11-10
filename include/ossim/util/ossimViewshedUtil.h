@@ -1,33 +1,24 @@
-//*******************************************************************
+//**************************************************************************************************
 //
-// License:  See top level LICENSE.txt file.
-// 
-// Author: Oscar Kramer
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-//*************************************************************************
-// $Id: ossimViewshedUtil.h 23409 2015-07-08 16:24:41Z okramer $
+//**************************************************************************************************
 
 #ifndef ossimViewshedUtil_HEADER
 #define ossimViewshedUtil_HEADER
 
-#include <ossim/base/ossimObject.h>
-#include <ossim/base/ossimRefPtr.h>
-#include <ossim/base/ossimFilename.h>
-#include <ossim/base/ossimIrect.h>
-#include <ossim/base/ossimArgumentParser.h>
+#include <ossim/util/ossimChipProcUtil.h>
 #include <ossim/projection/ossimMapProjection.h>
-#include <ossim/imaging/ossimImageGeometry.h>
-#include <ossim/imaging/ossimImageData.h>
 #include <ossim/parallel/ossimJob.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <OpenThreads/ReadWriteMutex>
-#include <ossim/util/ossimUtility.h>
 
 /*!
  *  Class for computing the viewshed on a DEM given the viewer location and max range of visibility
  */
 
-class OSSIMDLLEXPORT ossimViewshedUtil : public ossimUtility
+class OSSIMDLLEXPORT ossimViewshedUtil : public ossimChipProcUtil
 {
    friend class SectorProcessorJob;
    friend class RadialProcessorJob;
@@ -75,6 +66,8 @@ public:
 
    virtual ossimString getClassName() const { return "ossimViewshedUtil"; }
 
+   /** Used by ossimUtilityFactory */
+   static const char* DESCRIPTION;
 
 protected:
    class Radial
@@ -88,7 +81,7 @@ protected:
       double elevation;
    };
 
-   bool initializeChain();
+   virtual void initializeChain();
    bool writeFile();
    void dumpProductSummary() const;
    void paintReticle();
