@@ -1,7 +1,7 @@
 //---
 // License:  See top level LICENSE.txt file.
 //
-// $Id: ossimPolyArea2d.cpp 23548 2015-09-28 21:01:36Z dburken $
+// $Id: ossimPolyArea2d.cpp 23608 2015-10-28 13:51:35Z gpotts $
 //---
 
 #include <ossim/base/ossimPolyArea2d.h>
@@ -14,6 +14,7 @@
 #include <geos/geom/CoordinateArraySequence.h>
 #include <geos/geom/GeometryFactory.h>
 #include <geos/geom/LinearRing.h>
+#include <geos/opBuffer.h>
 #include <geos/geom/Point.h>
 #include <geos/geom/Polygon.h>
 #include <geos/geom/PrecisionModel.h>
@@ -389,6 +390,11 @@ const ossimPolyArea2d& ossimPolyArea2d::operator =(const vector<ossimGpt>& polyg
    return (*this = ossimPolygon(pts));
 }
 
+const ossimPolyArea2d& ossimPolyArea2d::operator =(const vector<ossimDpt>& polygon)
+{
+   return (*this = ossimPolygon(polygon));
+}
+
 bool ossimPolyArea2d::intersects(const ossimPolyArea2d& rhs)const
 {
    bool result = false;
@@ -558,7 +564,8 @@ const ossimPolyArea2d& ossimPolyArea2d::operator -=(const ossimPolyArea2d& rhs)
 
 void ossimPolyArea2d::add(const ossimPolyArea2d& rhs)
 {
-   m_privateData->setGeometry(m_privateData->m_geometry->Union(rhs.m_privateData->m_geometry));
+   geos::geom::Geometry* geom = m_privateData->m_geometry->Union(rhs.m_privateData->m_geometry);
+   if(geom) m_privateData->setGeometry(geom);
 }
 
 void ossimPolyArea2d::clearPolygons()
@@ -682,6 +689,18 @@ void ossimPolyArea2d::getBoundingRect(ossimDrect& rect)
    }
 }
 
+std::string ossimPolyArea2d::toString()const
+{
+   std::string result = "";
+
+   if(m_privateData->m_geometry)
+   {
+      result = m_privateData->m_geometry->toString();
+   }
+
+   return result;
+}
+
 ossimPolyArea2d ossimPolyArea2d::getBufferedShape(double distance) const{
 	ossimPolyArea2d result;
 	try{
@@ -697,6 +716,67 @@ ossimPolyArea2d ossimPolyArea2d::getBufferedShape(double distance) const{
 		result.clearPolygons();
 	}
 	return result;
+}
+ossimPolyArea2d& ossimPolyArea2d::setToBufferedShape(double distance)
+{
+   try{
+      geos::operation::buffer::BufferOp buffer_operation(m_privateData->m_geometry);
+      m_privateData->setGeometry( buffer_operation.getResultGeometry(distance));
+   }catch( const std::exception& e ){
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimPolyArea2d::getBufferedShape Caught exception: " << e.what() << std::endl;
+   }catch( ... ){
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimPolyArea2d::getBufferedShape Caught exception!" << std::endl;
+   }
+   return *this;
+}
+
+ossimPolyArea2d& ossimPolyArea2d::toMultiPolygon()
+{
+
+
+   try{
+      if(m_privateData->m_geometry)
+      {
+         switch(m_privateData->m_geometry->getGeometryTypeId())
+         {
+            case geos::geom::GEOS_POLYGON:
+            {
+               std::vector<geos::geom::Geometry*> values;
+               values.push_back(m_privateData->m_geometry->clone());
+
+               m_privateData->setGeometry(m_privateData->m_geometry->getFactory()->createMultiPolygon(values));
+               break;
+            }
+            case geos::geom::GEOS_MULTIPOLYGON:
+            {
+               // intentionally left blank
+               break;
+            }
+            default:
+            {  
+               // might need an error at a later date
+               ossimNotify(ossimNotifyLevel_WARN)
+                  << "ossimPolyArea2d::toMultiPolygon Geometry type can not be converted to a multi polygon: " <<m_privateData->m_geometry->getGeometryType()<< std::endl;
+
+               break;
+            }
+         }
+      }
+   }
+   catch(const std::exception& e)
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+         << "ossimPolyArea2d::toMultiPolygon Caught exception: " << e.what() << std::endl;
+   }
+   catch(...)
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+         << "ossimPolyArea2d::toMultiPolygon Caught exception!" << std::endl;
+   }
+
+   return *this;
 }
 
 bool ossimPolyArea2d::saveState(ossimKeywordlist& kwl,
