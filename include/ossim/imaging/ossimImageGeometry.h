@@ -20,6 +20,7 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimRtti.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/base/ossimPolyArea2d.h>
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/base/ossim2dTo2dTransform.h>
@@ -319,6 +320,29 @@ public:
 
    bool getCrossesDateline()const;
    
+   /**
+   * This is the first stage implementation.   It will determine if it crosses the dateline
+   * and do a special multi polygon for the ossimPolyArea2d result.  For each edge
+   * of the image we walk "partitions" number of points.   If we cross a dateline we calculate
+   * the crossing lat by using the parametric form of the equation.   For example, if we
+   * are crossing from positive to negative that means we are going through the 180 degree lon
+   * location and we will need to solve for the paramtetric parameter t and plug back into the parametric
+   * equation to solve for the latitude.  Basic form:  start + (end-start)*t = 180.  If we are coming from
+   * negative to positive then we solve basic form: start + (end-start)*t = -180.  Where deltaPoint is (end-start) 
+   *
+   *                   ossim_float64 t = ((180-start.x)/deltaPoint.x);
+   *                   ossim_float64 lat = (start.y+deltaPoint.y*t);
+   *
+   * If we do not cross the dateline then if the image is affected by elevation (i.e. a sensor model) then we use the partitions
+   * paraemter to calculate that number of partitions to sample along each edge.
+   *
+   * if The geometry is not affected by elevation then we just use the corner points and ignore the partitions parameter
+   *
+   * @param poly holds the resulting polygon.  This could be a MultiPolygon depending on the geometry
+   * @param partitions These are the number of steps you want when walking the border.
+   */
+   void calculatePolyBounds(ossimPolyArea2d& result, ossim_int32 partitions = 25)const;
+
    /**
     * @brief Get the bounding rect of (0, 0) to (imageSize.x-1, imageSize.y-1).
     *
