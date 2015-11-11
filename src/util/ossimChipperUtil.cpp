@@ -12,7 +12,7 @@
 // models(dems).
 // 
 //----------------------------------------------------------------------------
-// $Id: ossimChipperUtil.cpp 23423 2015-07-13 19:07:38Z dburken $
+// $Id: ossimChipperUtil.cpp 23613 2015-11-11 16:38:51Z dburken $
 
 #include <ossim/util/ossimChipperUtil.h>
 
@@ -410,19 +410,19 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
       m_kwl->addPair( CONTRAST_KW, tempString1 );
    }
 
-   if( ap.read("--cut-width", tempString1) )
+   if( ap.read("--cut-width", stringParam1) )
    {
       m_kwl->addPair( CUT_WIDTH_KW,   tempString1 );
    }
-   if( ap.read("--cut-height", tempString1) )
+   if( ap.read("--cut-height", stringParam1) )
    {
       m_kwl->addPair( CUT_HEIGHT_KW,  tempString1 );
    }
-   if( ap.read("--cut-wms-bbox", tempString1) )
+   if( ap.read("--cut-wms-bbox", stringParam1) )
    {
       m_kwl->addPair(CUT_WMS_BBOX_KW, tempString1);
    }
-   if( ap.read("--cut-wms-bbox-ll", tempString1) )
+   if( ap.read("--cut-wms-bbox-ll", stringParam1) )
    {
       m_kwl->addPair(CUT_WMS_BBOX_LL_KW, tempString1);
    }
@@ -3683,10 +3683,14 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::addIndexToRgbLutFilter(
       lutFile.string() = m_kwl->findKey( LUT_FILE_KW );
       if ( lutFile.exists() )
       {
-         lut->setLut(lutFile);
-         
+         //---
          // Connect to dems:
+         // Must do this first so that the min and max get set from the input
+         // connection prior to initializing the lut.
+         //---
          lut->connectMyInputTo( source.get() );
+
+         lut->setLut(lutFile);
 
          // Note sure about this.  Make option maybe? (drb)
          lut->setMode(ossimIndexToRgbLutFilter::REGULAR);
@@ -4561,8 +4565,7 @@ ossimScalarType ossimChipperUtil::getOutputScalarType() const
 bool ossimChipperUtil::scaleToEightBit() const
 {
    bool result = false;
-   if ( ( m_operation == OSSIM_CHIPPER_OP_COLOR_RELIEF ) || // Always 8 bit...
-        ( getOutputScalarType() == OSSIM_UINT8 ) )
+   if ( getOutputScalarType() == OSSIM_UINT8 )
    {
       result = true;
    }
