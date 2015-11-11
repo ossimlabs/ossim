@@ -8,7 +8,7 @@
 // Author: Oscar Kramer
 //
 //*************************************************************************
-// $Id: ossimIndexToRgbLutFilter.h 23190 2015-03-13 13:45:41Z okramer $
+// $Id: ossimIndexToRgbLutFilter.h 23616 2015-11-11 19:50:29Z dburken $
 #ifndef ossimIndexToRgbLutFilter_HEADER
 #define ossimIndexToRgbLutFilter_HEADER
 
@@ -117,6 +117,17 @@ public:
    void           setMode(Mode mode) { theMode = mode; }
    Mode           getMode() const { return theMode; }
 
+   /**
+    * @brief Set lookup table(lut) method.
+    *
+    * This opens the keyword list and initializes lut.
+    *
+    * CAUTION: Requires theMinValue, theMaxValue, and theMode to be set.  Typically a
+    * connection is made prior to this call.  If not connected to an input, "min",
+    * "max" and "mode" keywords should be passed in the keyword list file.
+    *
+    * @param file Keyword list containing lut.
+    */
    void           setLut(const ossimFilename& file);
    
    double         getMinValue()const;

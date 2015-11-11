@@ -12,7 +12,7 @@
 // models(dems).
 // 
 //----------------------------------------------------------------------------
-// $Id: ossimChipperUtil.cpp 23613 2015-11-11 16:38:51Z dburken $
+// $Id: ossimChipperUtil.cpp 23616 2015-11-11 19:50:29Z dburken $
 
 #include <ossim/util/ossimChipperUtil.h>
 
@@ -3690,10 +3690,10 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::addIndexToRgbLutFilter(
          //---
          lut->connectMyInputTo( source.get() );
 
-         lut->setLut(lutFile);
-
          // Note sure about this.  Make option maybe? (drb)
          lut->setMode(ossimIndexToRgbLutFilter::REGULAR);
+
+         lut->setLut(lutFile);
          
          // Set as color source for bump shade.
          result = lut.get();
