@@ -1,7 +1,7 @@
 //---
 // License:  See top level LICENSE.txt file.
 //
-// $Id: ossimPolyArea2d.cpp 23608 2015-10-28 13:51:35Z gpotts $
+// $Id: ossimPolyArea2d.cpp 23623 2015-11-13 18:24:28Z gpotts $
 //---
 
 #include <ossim/base/ossimPolyArea2d.h>
@@ -17,6 +17,7 @@
 #include <geos/opBuffer.h>
 #include <geos/geom/Point.h>
 #include <geos/geom/Polygon.h>
+#include <geos/geom/MultiPolygon.h>
 #include <geos/geom/PrecisionModel.h>
 #include <geos/io/WKTReader.h>
 #include <geos/io/WKTWriter.h>
