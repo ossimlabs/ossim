@@ -15,7 +15,6 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimGrect.h>
-#include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimLeastSquaresPlane.h>
 #include <ossim/imaging/ossimImageSource.h>
 #include <ossim/imaging/ossimImageGeometry.h>
@@ -32,34 +31,18 @@
  *  Class for finding helicopter landing zones (HLZ) on a DEM given the final destination and max
  *  range from destination.
  */
-class OSSIMDLLEXPORT ossimHLZUtil : public ossimChipProcUtil
+class OSSIMDLLEXPORT ossimHlzUtil : public ossimChipProcUtil
 {
 public:
-   ossimHLZUtil();
-   ~ossimHLZUtil();
+   ossimHlzUtil();
+   ~ossimHlzUtil();
 
-   /**
-    * Initializes from command line arguments.
-    */
-   bool parseCommand(ossimArgumentParser& ap);
-
-   /*
-    * Initializes after parameter set-methods have been called (in lieu of argument parser init)
-    */
-   bool initialize();
-
-   void setAoiRadius(const double& meters) { m_aoiRadius = meters; }
-   void setDestinationGpt(const ossimGpt& dest) { m_destinationGpt = dest; }
-   void setRoughnessThreshold(const double& meters) { m_roughnessThreshold = meters; }
-   void setSlopeThreshold(const double& degrees) { m_slopeThreshold = degrees; }
-   void setLZRadiusThreshold(const double& meters) { m_hlzMinRadius = meters; }
-   void setProductGSD(const double& meters_per_pixel);
-   void setOutputFileName(const ossimFilename& fname) { m_productFile = fname; }
-
-   /**
-    * Returns true if successful
-    */
+   virtual void setUsage(ossimArgumentParser& ap);
+   virtual bool initialize(ossimArgumentParser& ap);
+   virtual bool initialize(const ossimKeywordlist& kwl);
    virtual bool execute();
+   virtual void abort() {}
+   virtual ossimString getClassName() const { return "ossimHLZUtil"; }
 
    /** Used by ossimUtilityFactory */
    static const char* DESCRIPTION;
@@ -68,20 +51,27 @@ protected:
    class MaskSource
    {
    public:
-      MaskSource(ossimHLZUtil* hlzUtil, ossimKeywordlist& kwl, ossim_uint32 index);
-      MaskSource(ossimHLZUtil* hlzUtil, const ossimFilename& mask_image);
+      MaskSource(ossimHlzUtil* hlzUtil, const ossimFilename& mask_image, bool exclude);
       ossimRefPtr<ossimImageSource> image;
       bool exclude;
       bool valid;
    };
 
+   virtual void initializeChain();
+
+   /** @brief Hidden from use copy constructor. */
+   ossimHlzUtil( const ossimHlzUtil& obj );
+
+   /** @brief Hidden from use assignment operator. */
+   const ossimHlzUtil& operator=( const ossimHlzUtil& rhs );
+
    /** @brief Initializes arg parser and outputs usage. */
+   bool initialize();
    void usage(ossimArgumentParser& ap);
    void addArguments(ossimArgumentParser& ap);
    bool loadDemFile();
    bool loadPcFile();
    bool loadMaskFiles();
-   virtual void initializeChain();
    bool initHlzFilter();
    bool writeFile();
    void dumpProductSummary() const;
@@ -89,6 +79,7 @@ protected:
    void createInputChain(ossimRefPtr<ossimImageHandler>& handler,
                          ossimRefPtr<ossimImageSource>& chain);
    void writeSlopeImage();
+   void setProductGSD(const double& meters_per_pixel);
 
    ossimGpt m_destinationGpt;
    double m_slopeThreshold; // (degrees)
@@ -98,8 +89,6 @@ protected:
    ossimFilename m_pcFile; // optional level-2 point-cloud file
    ossimFilename m_maskFile; // optional mask specification (may be KWL file with multiple masks)
    ossimFilename m_slopeFile; // optional byproduct output
-   double m_aoiRadius; // meters
-   ossimRefPtr<ossimImageGeometry> m_productGeom;
    ossimIrect m_demRect; // rect (in raster coordinates) of the input dem for AOI
    ossimIrect m_viewRect; // rect (in raster coordinates) of output image.
    ossimGrect m_gndRect;
@@ -133,14 +122,14 @@ protected:
    class ChipProcessorJob : public ossimJob
    {
    public:
-      ChipProcessorJob(ossimHLZUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0);
+      ChipProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0);
 
       virtual void start();
       virtual bool level1Test() = 0;
       bool level2Test();
       bool maskTest();
 
-      ossimHLZUtil* m_hlzUtil;
+      ossimHlzUtil* m_hlzUtil;
       ossimIpt m_demChipUL;
       ossimIpt m_demChipLR;
       ossim_uint8 m_status;
@@ -153,7 +142,7 @@ protected:
    class LsFitChipProcessorJob : public ChipProcessorJob
    {
    public:
-      LsFitChipProcessorJob(ossimHLZUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0)
+      LsFitChipProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0)
          : ChipProcessorJob(hlzUtil, origin, chip_id),
            m_plane (new ossimLeastSquaresPlane) {}
 
@@ -165,7 +154,7 @@ protected:
    class NormChipProcessorJob : public ChipProcessorJob
    {
    public:
-      NormChipProcessorJob(ossimHLZUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0)
+      NormChipProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0)
          : ChipProcessorJob(hlzUtil, origin, chip_id) {}
 
       virtual bool level1Test();

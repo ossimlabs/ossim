@@ -158,9 +158,6 @@ void ossimHillshadeUtil::initializeChain()
 {
    static const char MODULE[] = "ossimHillshadeUtil::initializeChain";
 
-   m_procChain = combineLayers(m_srcLayers);
-   bool hasLUT = hasLutFile();
-
    // Set up the normal source.
    ossimRefPtr<ossimImageToPlaneNormalFilter> normSource = new ossimImageToPlaneNormalFilter;
    normSource->setTrackScaleFlag(true);
@@ -203,6 +200,7 @@ void ossimHillshadeUtil::initializeChain()
    }
    bumpShade->setElevationAngle(elevationAngle);
 
+   bool hasLUT = m_lutFile.isReadable();
    if ( !hasLUT )
    {
       // Set the color.
@@ -231,11 +229,11 @@ void ossimHillshadeUtil::initializeChain()
    // bump shade. If both LUT and color source (single-band), the LUT is applied to the color source.
    // The latter is convenient for using a "colorized DEM" as a color source for the bump shade.
    std::vector< ossimRefPtr<ossimSingleImageChain> > colorLayers;
-   initSources(colorLayers, COLOR_SOURCE_KW);
-   if (!colorLayers.empty())
+   loadImageFiles();
+   if (!m_imgLayers.empty())
    {
       // A color source image (or list) is provided. Add them as input to bump shade:
-      ossimRefPtr<ossimImageSource> colorSource = combineLayers( colorLayers );
+      ossimRefPtr<ossimImageSource> colorSource = combineLayers( m_imgLayers );
       if (hasLUT)
          addIndexToRgbLutFilter(colorSource); // Need to apply LUT to single-band color source
       bumpShade->connectMyInputTo(1, colorSource.get());

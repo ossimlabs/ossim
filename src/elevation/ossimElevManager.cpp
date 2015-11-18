@@ -200,12 +200,12 @@ void ossimElevManager::loadStandardElevationPaths()
    }
 }
 
-bool ossimElevManager::loadElevationPath(const ossimFilename& path)
+bool ossimElevManager::loadElevationPath(const ossimFilename& path, bool set_as_first)
 {
    bool result = false;
    ossimElevationDatabase* database = ossimElevationDatabaseRegistry::instance()->open(path);
    
-   if(!database&&path.isDir())
+   if(!database && path.isDir())
    {
       ossimDirectory dir;
       
@@ -219,7 +219,7 @@ bool ossimElevManager::loadElevationPath(const ossimFilename& path)
             if(database)
             {
                result = true;
-               addDatabase(database);
+               addDatabase(database, set_as_first);
             }
          }while(dir.getNext(file));
       }
@@ -227,7 +227,7 @@ bool ossimElevManager::loadElevationPath(const ossimFilename& path)
    else if(database)
    {
       result = true;
-      addDatabase(database);
+      addDatabase(database, set_as_first);
    }
    
    return result;
@@ -593,7 +593,7 @@ inline ossimElevManager::ElevationDatabaseListType& ossimElevManager::getNextEle
    return m_dbRoundRobin[index];
 }
 
-void ossimElevManager::addDatabase(ossimElevationDatabase* database)
+void ossimElevManager::addDatabase(ossimElevationDatabase* database, bool set_as_first)
 {
    if(!database)
       return;
@@ -604,14 +604,20 @@ void ossimElevManager::addDatabase(ossimElevationDatabase* database)
    std::vector<ElevationDatabaseListType>::iterator rri = m_dbRoundRobin.begin();
    if (std::find(rri->begin(), rri->end(), database) == rri->end())
    {
-      (*rri).push_back(database);
-      ++rri;
+      if (set_as_first)
+         rri->insert(rri->begin(), database);
+      else
+         rri->push_back(database);
 
       // Populate the parallel lists in the round-robin with duplicates:
+      ++rri;
       while ( rri != m_dbRoundRobin.end() )
       {
          ossimRefPtr<ossimElevationDatabase> dupDb = (ossimElevationDatabase*) database->dup();
-         (*rri).push_back(dupDb);
+         if (set_as_first)
+            rri->insert(rri->begin(), dupDb);
+         else
+            rri->push_back(dupDb);
          ++rri;
       }
    }

@@ -8,8 +8,8 @@
 #include <ossim/util/ossimUtilityFactory.h>
 #include <ossim/util/ossimUtilityManager.h>
 #include <ossim/util/ossimHillshadeUtil.h>
+#include <ossim/util/ossimHlzUtil.h>
 #include <ossim/util/ossimViewshedUtil.h>
-#include <ossim/util/ossimHLZUtil.h>
 #include <ossim/util/ossimSlopeUtil.h>
 
 ossimUtilityFactory* ossimUtilityFactory::s_Instance = 0;
@@ -47,7 +47,7 @@ ossimUtility* ossimUtilityFactory::createUtility(const ossimString& argName) con
       return new ossimSlopeUtil;
 
    if ((utilName == "hlz") || (utilName == "ossimHLZUtil"))
-      return new ossimHLZUtil;
+      return new ossimHlzUtil;
 
    return 0;
 }
@@ -57,7 +57,7 @@ void ossimUtilityFactory::getCapabilities(std::map<std::string, std::string>& ca
    capabilities.insert(pair<string, string>("hillshade", ossimHillshadeUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("viewshed", ossimViewshedUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("slope", ossimSlopeUtil::DESCRIPTION));
-   capabilities.insert(pair<string, string>("hlz", ossimHLZUtil::DESCRIPTION));
+   capabilities.insert(pair<string, string>("hlz", ossimHlzUtil::DESCRIPTION));
 }
 
 void ossimUtilityFactory::getTypeNameList(vector<ossimString>& typeList) const
