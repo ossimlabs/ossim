@@ -20,7 +20,7 @@ using namespace std;
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimTimer.h>
-#include <ossim/util/ossimHLZUtil.h>
+#include <ossim/util/ossimHlzUtil.h>
 
 int main(int argc, char *argv[])
 {
@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
 
    double t0 = ossimTimer::instance()->time_s();
 
-   ossimRefPtr<ossimHLZUtil> hlz = new ossimHLZUtil;
-   if (!hlz->parseCommand(ap))
+   ossimRefPtr<ossimHlzUtil> hlz = new ossimHlzUtil;
+   if (!hlz->initialize(ap))
       exit(1);
 
    // Add a listener for the percent complete to standard output.

@@ -1,0 +1,34 @@
+X  AutoReg 
+X  Equation
+U  FileWalker
+U  Info
+X  OrthoIgen
+CP PointCloud
+   --pc
+   
+CP Slope
+   --dem|BB
+   
+CP Viewshed
+   --dem|BB --image
+   
+CP Hillshade
+   --dem|BB [--image]
+   
+CP HLZ
+   [--pc] --dem|BB [--image]
+   
+CP 2CMV
+   --imageA --imageB
+   
+CP ColorRelief
+   --dem|BB --lut
+   
+CP Ortho
+   --image [--dem]
+   
+CP Chip
+   --image
+   
+CP PSM
+   --image_pan --image_ms

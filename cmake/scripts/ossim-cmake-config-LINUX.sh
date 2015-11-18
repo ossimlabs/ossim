@@ -109,7 +109,7 @@ if [ -z $BUILD_MRSID_PLUGIN ]; then
 fi
 # Check for ENV vars set to override hardcoded plugins switches here:
 if [ -z $BUILD_OSSIM_VIDEO ]; then
-  BUILD_OSSIM_VIDEO=OFF
+  BUILD_OSSIM_VIDEO=ON
 fi
 if [ -z $BUILD_OSSIM_PLANET ]; then
   BUILD_OSSIM_PLANET=OFF
@@ -118,7 +118,7 @@ if [ -z $BUILD_OSSIM_WMS ]; then
   BUILD_OSSIM_WMS=OFF
 fi
 if [ -z $BUILD_OSSIM_GUI ]; then
-  BUILD_OSSIM_GUI=OFF
+  BUILD_OSSIM_GUI=ON
 fi
 if [ -z $BUILD_KAKADU_PLUGIN ]; then
   BUILD_KAKADU_PLUGIN=OFF
@@ -150,6 +150,9 @@ fi
 if [ -z $BUILD_PNG_PLUGIN ]; then
   BUILD_PNG_PLUGIN=OFF
 fi
+if [ -z $BUILD_OMS ]; then
+  BUILD_OMS=ON
+fi
 if [ -z $BUILD_SQLITE_PLUGIN ]; then
   BUILD_SQLITE_PLUGIN=OFF
 fi
@@ -163,6 +166,7 @@ cmake -G "$CMAKE_G_ARG" \
 -DCMAKE_OSX_ARCHITECTURES="x86_64" \
 -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk \
 -DBUILD_OSSIM_FRAMEWORKS=ON \
+-DBUILD_OMS=$BUILD_OMS \
 -DBUILD_CNES_PLUGIN=$BUILD_CNES_PLUGIN \
 -DBUILD_GEOPDF_PLUGIN=$BUILD_GEOPDF_PLUGIN \
 -DBUILD_GDAL_PLUGIN=$BUILD_GDAL_PLUGIN \

@@ -79,8 +79,19 @@ public:
    {
       return m_dbRoundRobin[0][idx].get();
    }
-   void addDatabase(ossimElevationDatabase* database);
-   bool loadElevationPath(const ossimFilename& path);
+
+   /**
+    * Adds a new elevation database to the collection. Normally pushed on to the tail of the list,
+    * unless set_as_first=true, in which case this database will receive the first requests.
+    */
+   void addDatabase(ossimElevationDatabase* database, bool set_as_first=false);
+
+   /**
+    * Adds a new elevation file (or multiple files if path is a directory) to the collection.
+    * Normally pushed on to the tail of the list, unless set_as_first=true, in which case this
+    * source will receive the first requests.
+    */
+   bool loadElevationPath(const ossimFilename& path, bool set_as_first=false);
    
    void setDefaultHeightAboveEllipsoid(double meters) {m_defaultHeightAboveEllipsoid=meters;}
    void setElevationOffset(double meters) {m_elevationOffset=meters;}

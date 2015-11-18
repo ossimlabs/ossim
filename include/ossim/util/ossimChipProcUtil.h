@@ -16,18 +16,25 @@
 #include <ossim/imaging/ossimRectangleCutFilter.h>
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimImageViewAffineTransform.h>
+#include <ossim/util/ossimUtility.h>
 #include <map>
 #include <vector>
-#include <ossim/util/ossimUtility.h>
-#include <ossim/base/ossimArgumentParser.h>
 
-// Forward class declarations:
-/**
- * @brief ossimChipProcUtil class.
+/***************************************************************************************************
+ * @brief Base class for all utilities that process chips of image (or DEM) pixels.
+ *
+ * Many utilities share parameters in common, especially ROI (bounding box), input imagery,
+ * color look-up tables, DEM file specification, etc. This class does the following:
+ *   * Consolidates the parsing of common parameters,
+ *   * Provides for creating input chains with needed handlers and resamplers. The derived classes
+ *     would finish populating the processing chain(s) according to their requirements.
+ *   * Inserts the chipper filter at the end of the processing chain
+ *   * Appends the appropriate writer
+ *   * Provides a functional, default implementation of execute() and getChip()
  *
  * @note Almost all methods use throw for stack unwinding.  This is not in
  * method declarations to alleviate build errors on windows.  Sorry...
- */
+ **************************************************************************************************/
 class OSSIM_DLL ossimChipProcUtil : public ossimUtility
 {
 public:
@@ -115,19 +122,15 @@ protected:
     */
    virtual void appendCutRectFilter();
 
-   /**
-    * @brief Initializes the output projection and propagates to image chains.
-    * @note Throws ossimException on error.
-    */
-   void initOutputProjection();
-   
    /** @brief Creates chains for image entries associated with specified keyword. This is usually
-    * the input image sources but could also be used for reading list of dem or color sources
+    * the input image sources but could also be used for reading list of color sources
     * @note Throws ossimException on error.
     */
-   void initSources(std::vector< ossimRefPtr<ossimSingleImageChain> >& layers,
-                    const ossimString& keyword) const;
+   void loadImageFiles();
    
+   /** Loads all DEM files specified in master KWL into the elev manager's database */
+   void loadDemFiles();
+
    /**
     * @brief Creates the ossimSingleImageChain from file and populates the chain with the reader
     * handler ONLY. Derived classes must finish constructing the chain according to their
@@ -142,18 +145,8 @@ protected:
                                                   ossim_uint32 entryIndex=0) const;
 
    /**
-    * @brief Creates a ossimSingleImageChain from ossimSrcRecord and populates the chain with the
-    * handler ONLY. Derived classes must finish constructing the chain according to their
-    * processing needs.
-    * @param src Record.
-    * @return Ref pointer to ossimSingleImageChain.
-    * @note Throws ossimException on error.
-    */
-   ossimRefPtr<ossimSingleImageChain> createChain(const ossimSrcRecord& rec) const;
-
-   /**
     * @brief Creates the output or view projection.
-    * @note All chains should be constructed prior to calling this.
+    * @note All chains must be constructed prior to calling this.
     */
    void createOutputProjection();
    
@@ -194,8 +187,7 @@ protected:
     * @brief Convenience method to get a projection from an srs code.
     * @return new ossimMapProjection.
     */  
-   ossimRefPtr<ossimMapProjection> getNewProjectionFromSrsCode(
-      const std::string& code );
+   ossimRefPtr<ossimMapProjection> getNewProjectionFromSrsCode( const std::string& code );
 
    /**
     * @brief Convenience method to get a utm projection.
@@ -389,6 +381,11 @@ protected:
    void assignAoiViewRect(const ossimGrect& bbox);
 
    /**
+    * Assigns the AOI to be the bounding rect of the union of all inputs
+    */
+   void setAoiToInputs();
+
+   /**
     * @brief Method to calculate and initialize scale and area of interest
     * for making a thumbnail.
     *
@@ -399,9 +396,6 @@ protected:
     */
    void initializeThumbnailProjection();
 
-   /** @return true if BANDS keyword is set; false, if not. */
-   bool hasBandSelection() const;
-
    /**
     * @brief Gets the band list if BANDS keyword is set.
     *
@@ -411,9 +405,6 @@ protected:
     * @param bandList List initialized by this.
     */
    void getBandList( std::vector<ossim_uint32>& bandList ) const;
-
-   /** @return true if color table (lut) is set; false, if not. */
-   bool hasLutFile() const;
 
    /** @return true if brightness or contrast option is set; false, if not. */
    bool hasBrightnesContrastOperation() const;
@@ -426,21 +417,6 @@ protected:
 
    /** @return true if histogram option is set; false, if not. */
    bool hasHistogramOperation() const;
-
-   /** @return true if file extension is "hgt", "dem" or contains "dtN" (dted). */
-   bool isDemFile(const ossimFilename& file) const;
-
-   /** @return true if file extension is "src" */
-   bool isSrcFile(const ossimFilename& file) const;
-
-   /** @brief Initializes m_srcKwl if option was set. */
-   void initializeSrcKwl();
-
-   /**
-    * @return The number of DEM_KW and IMG_KW found in the m_kwl and m_srcKwl
-    * keyword list.
-    */
-   ossim_uint32 getNumberOfInputs() const;
 
    /**
     * @brief Gets the emumerated output projection type.
@@ -462,9 +438,6 @@ protected:
 
    /** @return true if scale to eight bit option is set; false, if not. */
    bool scaleToEightBit() const;
-
-   /** @return true if snap tie to origin option is set; false, if not. */
-   bool snapTieToOrigin() const;
 
    /**
     * @brief Gets the image space scale.
@@ -497,9 +470,6 @@ protected:
 
    /** @return true if NORTH_UP_KW option is set; false, if not. */
    bool northUp() const;
-
-   /** @return true if operation is "chip" or identity; false, if not. */
-   bool isIdentity() const;
 
    /** @return true if key is set to true; false, if not. */
    bool keyIsTrue( const std::string& key ) const;
@@ -544,27 +514,11 @@ protected:
    bool hasScaleOption() const;
    
    /**
-    * @return true if three band out is true, false if not.
-    */  
-   bool isThreeBandOut() const;
-
-   /**
-    * @return true if pad thumbnail is true, false if not.
-    */  
-   bool padThumbnail() const;
-
-   /**
     * @brief Passes reader properties to single image handler if any.
     * @param ih Image handler to set properties on.
     */
    void setReaderProps( ossimImageHandler* ih ) const;
    
-   /**
-    * @brief Adds application arguments to the argument parser.
-    * @param ap Parser to add to.
-    */
-   void addArguments(ossimArgumentParser& ap);
-
    void getClipPolygon(ossimGeoPolygon& polygon)const;
    /**
     * @brief Gets the brightness level.
@@ -596,7 +550,7 @@ protected:
    std::string getSharpenMode() const;
 
    /** @brief Hidden from use copy constructor. */
-   ossimChipProcUtil( const ossimChipProcUtil& /* obj */) {}
+   ossimChipProcUtil( const ossimChipProcUtil& /* obj */) : m_projIsIdentity(false) {}
 
    /** @brief Hidden from use assignment operator. */
    const ossimChipProcUtil& operator=( const ossimChipProcUtil& /*rhs*/ ) { return *this; }
@@ -606,9 +560,6 @@ protected:
 
    /** Hold all options passed into intialize. */
    ossimKeywordlist m_kwl;
-
-   /** Hold contents of src file if --src is used. */
-   ossimKeywordlist m_srcKwl;
 
    /**
     * The image geometry.  In chip mode this will be from the input image. So
@@ -625,7 +576,10 @@ protected:
    ossimRefPtr<ossimImageViewAffineTransform> m_ivt;
 
    /**  Array of chains. */
-   std::vector< ossimRefPtr<ossimSingleImageChain> > m_srcLayers;
+   std::vector< ossimRefPtr<ossimSingleImageChain> > m_imgLayers;
+
+   /** Stores list of DEMs provided to the utility (versus pulled from the elevation database) */
+   std::vector< ossimFilename > m_demSources;
 
    /**
     *  We need access to the writer so we can support aborting
@@ -639,8 +593,8 @@ protected:
    ossimRefPtr<ossimImageSource> m_procChain;
    ossimRefPtr<ossimRectangleCutFilter> m_cutRectFilter;
 
-
-    ossimFilename m_lutFile;
+   bool m_projIsIdentity;
+   ossimFilename m_lutFile;
 };
 
 #endif /* #ifndef ossimChipProcUtil_HEADER */
