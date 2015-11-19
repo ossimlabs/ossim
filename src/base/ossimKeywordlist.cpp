@@ -5,7 +5,7 @@
 // Description: This class provides capabilities for keywordlists.
 //
 //********************************************************************
-// $Id: ossimKeywordlist.cpp 22516 2013-12-14 17:19:47Z dburken $
+// $Id: ossimKeywordlist.cpp 23632 2015-11-19 20:43:06Z dburken $
 
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDirectory.h>
@@ -28,7 +28,7 @@ static const char NULL_KEY_NOTICE[]
 
 #ifdef OSSIM_ID_ENABLED
 static const bool TRACE = false;
-static const char OSSIM_ID[] = "$Id: ossimKeywordlist.cpp 22516 2013-12-14 17:19:47Z dburken $";
+static const char OSSIM_ID[] = "$Id: ossimKeywordlist.cpp 23632 2015-11-19 20:43:06Z dburken $";
 #endif
 
 const std::string ossimKeywordlist::NULL_KW = "";
@@ -916,7 +916,10 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readValue(ossimString&
          {
             if(quoteCount < 1)
             {
-               // if quoted
+               //---
+               // If string has leading tripple quoted bump the "quoteCount" so
+               // we start skipping line breaks, preserving paragraph style strings.
+               //---
                if(ossimString(sequence.begin(), sequence.begin()+3) == "\"\"\"")
                {
                   ++quoteCount;
@@ -932,7 +935,17 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readValue(ossimString&
          }
          if(quoteCount > 1)
          {
-            sequence = ossimString(sequence.begin()+3, sequence.begin()+(sequence.size()-3));
+            //---
+            // Have leading and trailing tripple quotes. Some tiff writers, e.g. Space
+            // Imaging are using four quotes.  Below code strips all quotes from each end.
+            //---
+            char quote = '"';
+            std::string::size_type startPos = sequence.string().find_first_not_of(quote);
+            std::string::size_type stopPos  = sequence.string().find_last_not_of(quote);
+            if ( ( startPos != std::string::npos ) && (stopPos != std::string::npos) )
+            {
+               sequence = sequence.string().substr( startPos, stopPos-startPos+1 );
+            }
             break;
          }
       }
