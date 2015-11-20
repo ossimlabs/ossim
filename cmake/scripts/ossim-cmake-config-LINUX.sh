@@ -109,7 +109,7 @@ if [ -z $BUILD_MRSID_PLUGIN ]; then
 fi
 # Check for ENV vars set to override hardcoded plugins switches here:
 if [ -z $BUILD_OSSIM_VIDEO ]; then
-  BUILD_OSSIM_VIDEO=ON
+  BUILD_OSSIM_VIDEO=OFF
 fi
 if [ -z $BUILD_OSSIM_PLANET ]; then
   BUILD_OSSIM_PLANET=OFF
@@ -118,7 +118,7 @@ if [ -z $BUILD_OSSIM_WMS ]; then
   BUILD_OSSIM_WMS=OFF
 fi
 if [ -z $BUILD_OSSIM_GUI ]; then
-  BUILD_OSSIM_GUI=ON
+  BUILD_OSSIM_GUI=OFF
 fi
 if [ -z $BUILD_KAKADU_PLUGIN ]; then
   BUILD_KAKADU_PLUGIN=OFF
@@ -151,7 +151,7 @@ if [ -z $BUILD_PNG_PLUGIN ]; then
   BUILD_PNG_PLUGIN=OFF
 fi
 if [ -z $BUILD_OMS ]; then
-  BUILD_OMS=ON
+  BUILD_OMS=OFF
 fi
 if [ -z $BUILD_SQLITE_PLUGIN ]; then
   BUILD_SQLITE_PLUGIN=OFF
