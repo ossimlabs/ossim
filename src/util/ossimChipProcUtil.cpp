@@ -135,13 +135,14 @@ void ossimChipProcUtil::clear()
    }
 }
 
-bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
+void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 {
    clear();
    if( ap.read("-h") || ap.read("--help") || (ap.argc() == 1) )
    {
       setUsage(ap);
-      return false; // Indicates process should be terminated to caller.
+      ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
+      return;
    }
 
    std::string tempString1;
@@ -380,11 +381,9 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 
    if(ap.read("--combiner-type", stringParam1))
       m_kwl.addPair(COMBINER_TYPE_KW, tempString1);
-
-   return true;
 }
 
-bool ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
+void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
 {
    ossimString  key    = "";
    ossim_uint32 inputIdx = 0;
@@ -399,8 +398,7 @@ bool ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
       if ( !m_kwl.find(ossimKeywordNames::OUTPUT_FILE_KW) )
       {
          ap.writeErrorMessages(ossimNotify(ossimNotifyLevel_NOTICE));
-         std::string errMsg = "Must supply an output file.";
-         throw ossimException(errMsg);
+         throw ossimException("Must supply an output file.");
       }
    }
 
@@ -430,14 +428,13 @@ bool ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
    if ( ap.errors() )
    {
       ap.writeErrorMessages(ossimNotify(ossimNotifyLevel_NOTICE));
-      std::string errMsg = "Unknown option...";
-      throw ossimException(errMsg);
+      throw ossimException("Unknown option...");
    }
 
-   return initialize(m_kwl);
+   initialize(m_kwl);
 }
 
-bool ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
+void ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
 {
    clear();
 
@@ -474,11 +471,7 @@ bool ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
 
    // Can only do ONE rotation option.
    if ( rotationOptionCount > 1 )
-   {
-      std::ostringstream errMsg;
-      errMsg << "Multiple rotation options do not make sense!";
-      throw ossimException( errMsg.str() );
-   }
+      throw ossimException( "Multiple rotation options do not make sense!" );
 
    m_lutFile = m_kwl.find( LUT_FILE_KW.c_str() );
 
@@ -491,7 +484,10 @@ bool ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
    // Initialize projection and propagate to chains.
    createOutputProjection();
 
-   return true;
+   // Pass control to derived class so it can add its specific processing to the chain(s). This
+   // should return an initialized m_procChain.
+   initProcessingChain();
+   appendCutRectFilter();
 }
 
 void ossimChipProcUtil::appendCutRectFilter()
@@ -552,14 +548,14 @@ void ossimChipProcUtil::appendCutRectFilter()
 bool ossimChipProcUtil::execute()
 {
    if ( !m_procChain.valid() )
-      return false;
+      throw ossimException("Null pointer encountered for m_procChain!");
 
    // This mode of operation requires a cut-rect filter to be appended with desired AOI:
    if (!m_cutRectFilter.valid())
       appendCutRectFilter();
 
    if (m_geom->getImageSize().hasNans())
-      return 0;
+      throw ossimException("Image size is NaN!");
 
    // Set up the writer.
    m_writer = createNewWriter();
@@ -575,38 +571,30 @@ bool ossimChipProcUtil::execute()
    //---
    m_writer->setAreaOfInterest(m_aoiViewRect);
 
-   if (m_writer->getErrorStatus() == ossimErrorCodes::OSSIM_OK)
-   {
-      // Add a listener to get percent complete.
-      ossimStdOutProgress prog(0, true);
-      m_writer->addListener(&prog);
-
-      if ( traceLog() )
-      {
-         ossimKeywordlist logKwl;
-         m_writer->saveStateOfAllInputs(logKwl);
-
-         ossimFilename logFile;
-         getOutputFilename(logFile);
-         logFile.setExtension("log");
-
-         logKwl.write( logFile.c_str() );
-      }
-
-      // Write the file:
-      m_writer->execute();
-
-      m_writer->removeListener(&prog);
-
-      if(m_writer->isAborted())
-      {
-         throw ossimException( "Writer Process aborted!" );
-      }
-   }
-   else
-   {
+   if (m_writer->getErrorStatus() != ossimErrorCodes::OSSIM_OK)
       throw ossimException( "Unable to initialize writer for execution" );
+
+   // Add a listener to get percent complete.
+   ossimStdOutProgress prog(0, true);
+   m_writer->addListener(&prog);
+
+   if ( traceLog() )
+   {
+      ossimKeywordlist logKwl;
+      m_writer->saveStateOfAllInputs(logKwl);
+
+      ossimFilename logFile;
+      getOutputFilename(logFile);
+      logFile.setExtension("log");
+
+      logKwl.write( logFile.c_str() );
    }
+
+   // Write the file:
+   m_writer->execute();
+   m_writer->removeListener(&prog);
+   if(m_writer->isAborted())
+      throw ossimException( "Writer Process aborted!" );
 
    return true;
 }

@@ -43,16 +43,16 @@ public:
     * implementation in addition to setting its own arguments.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(ossimArgumentParser& ap);
+   virtual void initialize(ossimArgumentParser& ap);
 
    /**
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(const ossimKeywordlist& kwl) { return true; }
+   virtual void initialize(const ossimKeywordlist& /*kwl*/) { }
 
    /**
-    * Writes product to output file. Returns true if successful.
+    * Writes product to output file. Always returns true since using exception on error.
     * @note Throws ossimException on error.
     */
    virtual bool execute() = 0;
@@ -60,7 +60,7 @@ public:
    /**
     * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
     */
-   virtual void clear() = 0;
+   virtual void clear() {}
 
    /**
     * Kills current (asynchronous) process. Defaults to do nothing.
@@ -82,6 +82,24 @@ public:
    virtual ossimListenerManager* getManager()  { return this; };
    virtual ossimString getClassName() const { return "ossimUtility"; }
 
+   /**
+    * @brief Gets build date.
+    * @param s String to initialize.
+    */
+   void getBuildDate(std::string& s) const;
+
+   /**
+    * @brief Gets revision.
+    * @param s String to initialize.
+    */
+   void getRevision(std::string& s) const;
+
+   /**
+    * @brief Gets version.
+    * @param s String to initialize.
+    */
+   void getVersion(std::string& s) const;
+
    // NOTE: The ossimUtilityFactory::getCapabilities() needs to access a brief description of each
    // utility. For convenience, the ossimUtility-derived (final) classes should declare a public
    // static member to hold the description string. See ossimViewshedUtility for an example.
@@ -91,7 +109,7 @@ private:
    /**
     * Used for reading text files of template and JSON API from disk ONLY.
     */
-   bool readFile(const ossimFilename& filename, ossimString& contents) const;
+   bool readTextFile(const ossimFilename& filename, ossimString& contents) const;
 };
 
 #endif

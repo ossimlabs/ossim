@@ -40,13 +40,13 @@ public:
     * Initializes from command line arguments.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(ossimArgumentParser& ap);
+   virtual void initialize(ossimArgumentParser& ap);
 
    /**
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(const ossimKeywordlist& kwl);
+   virtual void initialize(const ossimKeywordlist& kwl);
 
    /**
     * Writes product to output file. Returns true if successful.
@@ -58,11 +58,6 @@ public:
     * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
     */
    virtual void clear();
-
-   /**
-    * Kills current (asynchronous) process. Defaults to do nothing.
-    */
-   virtual void abort() {}
 
    virtual ossimString getClassName() const { return "ossimViewshedUtil"; }
 
@@ -81,7 +76,7 @@ protected:
       double elevation;
    };
 
-   virtual void initializeChain();
+   virtual void initProcessingChain();
    bool writeFile();
    void dumpProductSummary() const;
    void paintReticle();

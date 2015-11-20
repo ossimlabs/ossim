@@ -61,7 +61,6 @@
 
 static ossimTrace traceDebug("ossimHillshadeUtil:debug");
 
-static const std::string LUT_FILE_KW             = "lut_file";
 static const std::string COLOR_BLUE_KW           = "color_blue";
 static const std::string COLOR_GREEN_KW          = "color_green";
 static const std::string COLOR_RED_KW            = "color_red";
@@ -92,13 +91,12 @@ ossimHillshadeUtil::~ossimHillshadeUtil()
    clear();
 }
 
-bool ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
+void ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
 {
    static const char MODULE[] = "ossimChipProcUtil::initialize(ossimArgumentParser)";
 
    // Permit base class to pull out common options first.
-   if (!ossimChipProcUtil::initialize(ap))
-      return false;
+   ossimChipProcUtil::initialize(ap);
 
    std::string tempString1;
    ossimArgumentParser::ossimParameter stringParam1(tempString1);
@@ -150,11 +148,10 @@ bool ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
       m_kwl.addPair( GAIN_KW, tempString1 );
    }
 
-   if (!processRemainingArgs(ap))
-      return false;
+   processRemainingArgs(ap);
 }
 
-void ossimHillshadeUtil::initializeChain()
+void ossimHillshadeUtil::initProcessingChain()
 {
    static const char MODULE[] = "ossimHillshadeUtil::initializeChain";
 
