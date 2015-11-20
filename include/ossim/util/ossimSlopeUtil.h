@@ -8,7 +8,7 @@
 #ifndef ossimSlopeUtil_HEADER
 #define ossimSlopeUtil_HEADER
 
-#include <ossim/util/ossimUtility.h>
+#include <ossim/util/ossimChipProcUtil.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimGpt.h>
@@ -18,7 +18,7 @@
  *  Class for computing the slope on each elevation post and generatinga corresponding slope image.
  *  The output scalar type is a normalized float unless unsigned 8-bit is selected via the options.
  */
-class OSSIMDLLEXPORT ossimSlopeUtil : public ossimUtility
+class OSSIMDLLEXPORT ossimSlopeUtil : public ossimChipProcUtil
 {
 public:
    ossimSlopeUtil();
@@ -36,29 +36,13 @@ public:
     * Initializes from command line arguments.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(ossimArgumentParser& ap);
+   virtual void initialize(ossimArgumentParser& ap);
 
    /**
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(const ossimKeywordlist& kwl);
-
-   /**
-    * Writes product to output file. Returns true if successful.
-    * @note Throws ossimException on error.
-    */
-   virtual bool execute();
-
-   /**
-    * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
-    */
-   virtual void clear();
-
-   /**
-    * Kills current (asynchronous) process. Defaults to do nothing.
-    */
-   virtual void abort() {}
+   virtual void initialize(const ossimKeywordlist& kwl);
 
    virtual ossimString getClassName() const { return "ossimSlopeUtil"; }
 
@@ -66,17 +50,12 @@ public:
    static const char* DESCRIPTION;
 
 protected:
-   bool initializeChain();
-   bool loadDemFile();
+   virtual void initProcessingChain();
+
    bool loadElevDb();
 
-   ossimFilename m_demFile;
-   ossimFilename m_slopeFile;
-   ossimFilename m_lutFile;
    ossimGpt m_centerGpt;
-   double m_aoiRadius; // meters
    bool m_remapToByte;
-   ossimRefPtr<ossimImageSource> m_procChain;
 };
 
 #endif

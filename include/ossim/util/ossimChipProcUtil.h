@@ -62,20 +62,30 @@ public:
    virtual void clear();
    
    /**
-    * @brief Initial method to be ran prior to execute.
+    * Initial method to be ran prior to execute. Intended for command-line app usage.
     * @param ap Arg parser to initialize from.
     * @note Throws ossimException on error.
     * @note A throw with an error message of "usage" is used to get out when
     * a usage is printed.
     */
-   virtual bool initialize(ossimArgumentParser& ap);
+   virtual void initialize(ossimArgumentParser& ap);
 
    /**
-    * @brief Initialize method to be ran prior to execute.
-    * 
+    * This method is responsible for completely setting up the full processing chain according to
+    * the specifications given in the kwl passed in. If the utility is run from a command line,
+    * the initialize(ossimArgumentParser) will assign the member master KWL and pass it to this
+    * method. Web service calls will fill a KWL and pass it.
+    *
+    * This base class implementation should be called by the derived class implementation (assuming
+    * the derived class needs to pull some parameters out of the KWL before the chains are set up.
+    *
+    * This method will instantiate the output projection and define the output bounding rect and
+    * product size in pixels. The processing chain (stored in m_procChain) will be completely
+    * initialized and ready for calls to getTile(). Then either getChip() or execute() can be called
+    * depending on usage to fetch product.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(const ossimKeywordlist& kwl);
+   virtual void initialize(const ossimKeywordlist& kwl);
 
    /**
     * @brief execute method.  Performs the actual product write.
@@ -108,13 +118,14 @@ protected:
    /**
     * Intended to be called after derived class has picked off its own options from the parser, and
     * arguments remain (such as input and output filenames).
+    * @note Throws ossimException on error.
     */
-   bool processRemainingArgs(ossimArgumentParser& ap);
+   void processRemainingArgs(ossimArgumentParser& ap);
 
    /**
     * Derived classes initialize their custom chains here.
     */
-   virtual void initializeChain() = 0;
+   virtual void initProcessingChain() = 0;
 
    /**
     * Sets up the AOI box cutter filter and related stuff and initializes area of interest(aoi).
@@ -557,42 +568,15 @@ protected:
 
    ossimRefPtr<ossimImageSource> createCombiner()const;
 
-
-   /** Hold all options passed into intialize. */
    ossimKeywordlist m_kwl;
-
-   /**
-    * The image geometry.  In chip mode this will be from the input image. So
-    * this may or may not have a map projection. In any other mode it
-    * will the view or output geometry which will be a map projection.
-    */
-   ossimRefPtr<ossimImageGeometry> m_geom;
+   ossimRefPtr<ossimImageGeometry> m_geom; //> Product chip/image geometry
    ossimIrect m_aoiViewRect;
-
-   /**
-    * Image view transform(IVT). Only set/used in "chip"(identity) operation as
-    * the IVT for the resampler(ossimImageRenderer).
-    */
    ossimRefPtr<ossimImageViewAffineTransform> m_ivt;
-
-   /**  Array of chains. */
    std::vector< ossimRefPtr<ossimSingleImageChain> > m_imgLayers;
-
-   /** Stores list of DEMs provided to the utility (versus pulled from the elevation database) */
-   std::vector< ossimFilename > m_demSources;
-
-   /**
-    *  We need access to the writer so we can support aborting
-    */
+   std::vector< ossimFilename > m_demSources; //> Stores list of DEMs provided to the utility (versus pulled from the elevation database)
    mutable ossimRefPtr<ossimImageFileWriter> m_writer;
-
-   /**
-   * We need to support changing clips without doing a full initilization.  
-   * we will save the ImageSource pointer on first initialization
-   */
    ossimRefPtr<ossimImageSource> m_procChain;
    ossimRefPtr<ossimRectangleCutFilter> m_cutRectFilter;
-
    bool m_projIsIdentity;
    ossimFilename m_lutFile;
 };

@@ -40,14 +40,14 @@ void ossimUtility::setUsage(ossimArgumentParser& ap)
          "Writes a template keyword-list to the specified filename.");
 }
 
-bool ossimUtility::initialize(ossimArgumentParser& ap)
+void ossimUtility::initialize(ossimArgumentParser& ap)
 {
    if ( (ap.argc() == 1) || ap.read("-h") || ap.read("--help") )
    {
       // Write usage.
       setUsage(ap);
       ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
-      return false;
+      return;
    }
 
    std::string ts1;
@@ -59,7 +59,7 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
       ossimString json_str;
       getAPI(json_str);
       ofs << json_str <<endl;
-      return false;
+      return;
    }
 
    if ( ap.read("--write-template", sp1))
@@ -68,27 +68,25 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
       ossimString kwl_str;
       getKwlTemplate(kwl_str);
       ofs << kwl_str <<endl;
-      return false;
+      return;
    }
-
-   return true;
 }
 
 void ossimUtility::getKwlTemplate(ossimString& kwl)
 {
    ossimFilename kwl_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
    kwl_path += "/ossim/util/" + getClassName() + ".kwl";
-   readFile(kwl_path, kwl);
+   readTextFile(kwl_path, kwl);
 }
 
 void ossimUtility::getAPI(ossimString& json) const
 {
    ossimFilename json_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
    json_path += "/ossim/util/" + getClassName() + ".json";
-   readFile(json_path, json);
+   readTextFile(json_path, json);
 }
 
-bool ossimUtility::readFile(const ossimFilename& filename, ossimString& contents) const
+bool ossimUtility::readTextFile(const ossimFilename& filename, ossimString& contents) const
 {
    contents.clear();
 
@@ -112,5 +110,32 @@ bool ossimUtility::readFile(const ossimFilename& filename, ossimString& contents
    delete [] buffer;
 
    return true;
+}
+
+void ossimUtility::getBuildDate(std::string& s) const
+{
+#ifdef OSSIM_BUILD_DATE
+   s = OSSIM_BUILD_DATE;
+#else
+   s = "unknown";
+#endif
+}
+
+void ossimUtility::getRevision(std::string& s) const
+{
+#ifdef OSSIM_REVISION
+   s = OSSIM_REVISION;
+#else
+   s = "unknown";
+#endif
+}
+
+void ossimUtility::getVersion(std::string& s) const
+{
+#ifdef OSSIM_VERSION
+   s = OSSIM_VERSION;
+#else
+   s = "unknown";
+#endif
 }
 

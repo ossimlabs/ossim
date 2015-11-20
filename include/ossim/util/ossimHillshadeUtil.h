@@ -48,14 +48,14 @@ public:
     * @note A throw with an error message of "usage" is used to get out when
     * a usage is printed.
     */
-   virtual bool initialize(ossimArgumentParser& ap);
+   virtual void initialize(ossimArgumentParser& ap);
 
    /** Used by ossimUtilityFactory */
    static const char* DESCRIPTION;
 
 protected:
 
-   virtual void initializeChain();
+   virtual void initProcessingChain();
 
    /** @brief Hidden from use copy constructor. */
    ossimHillshadeUtil( const ossimHillshadeUtil& obj );

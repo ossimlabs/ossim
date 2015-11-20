@@ -19,6 +19,7 @@ using namespace std;
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimStdOutProgress.h>
+#include <ossim/base/ossimException.h>
 #include <ossim/base/ossimTimer.h>
 #include <ossim/util/ossimHlzUtil.h>
 
@@ -33,26 +34,32 @@ int main(int argc, char *argv[])
       cout<<" "<<argv[i];
    cout<<"\n"<<endl;
 
-   // Initialize ossim stuff, factories, plugin, etc.
-   ossimInit::instance()->initialize(ap);
-
    double t0 = ossimTimer::instance()->time_s();
+   try
+   {
+      // Initialize ossim stuff, factories, plugin, etc.
+      ossimInit::instance()->initialize(ap);
 
-   ossimRefPtr<ossimHlzUtil> hlz = new ossimHlzUtil;
-   if (!hlz->initialize(ap))
+      t0 = ossimTimer::instance()->time_s();
+
+      ossimRefPtr<ossimHlzUtil> hlz = new ossimHlzUtil;
+      hlz->initialize(ap);
+
+      // Add a listener for the percent complete to standard output.
+      ossimStdOutProgress prog(0, true);
+      hlz->addListener(&prog);
+
+      // Start the viewshed process:
+      bool success = hlz->execute();
+      hlz = 0;
+   }
+   catch  (const ossimException& e)
+   {
+      ossimNotify(ossimNotifyLevel_FATAL)<<e.what()<<endl;
       exit(1);
+   }
 
-   // Add a listener for the percent complete to standard output.
-   ossimStdOutProgress prog(0, true);
-   hlz->addListener(&prog);
-   
-   // Start the viewshed process:
-   bool success = hlz->execute();
-   hlz = 0;
-   
    double dt = ossimTimer::instance()->time_s() - t0;
    cout << argv[0] << "Elapsed Time: " << dt << " s\n" << endl;
-   if (success)
-      exit(0);
-   exit(1);
+   exit(0);
 }

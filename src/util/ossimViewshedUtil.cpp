@@ -130,13 +130,12 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
    au->setDescription(description.str());
 }
 
-bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
+void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
 {
    ostringstream xmsg ("ossimViewshedUtil::initialize(ossimArgumentParser) -- ");
 
    // Base class first:
-   if (!ossimUtility::initialize(ap))
-      return false;
+   ossimChipProcUtil::initialize(ap);
 
    std::string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
@@ -209,7 +208,7 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
         (!m_observerGpt.hasNans() && (ap.argc() != 2)) )
    {
       setUsage(ap);
-      return false;
+      return;
    }
 
    // Verify minimum required args were specified:
@@ -230,17 +229,12 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    }
    m_filename = ap[ap_idx];
 
-   initializeChain();
-   return true;
+   processRemainingArgs(ap);
 }
 
-bool ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
+void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
 {
    ostringstream xmsg ("ossimViewshedUtil::initialize(kwl) -- ");
-
-   // Base class first:
-   if (!ossimChipProcUtil::initialize(kwl))
-      return false;
 
    ossimString value;
 
@@ -337,8 +331,8 @@ bool ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
       throw ossimException(xmsg.str());
    }
 
-   initializeChain();
-   return true;
+   // Base class does most work:
+   ossimChipProcUtil::initialize(kwl);
 }
 
 void ossimViewshedUtil::clear()
@@ -354,7 +348,7 @@ void ossimViewshedUtil::clear()
    m_geometry = 0;
 }
 
-void ossimViewshedUtil::initializeChain()
+void ossimViewshedUtil::initProcessingChain()
 {
    ostringstream xmsg ("ossimViewshedUtil::initializeChain() -- ");
 

@@ -38,11 +38,10 @@ public:
    ~ossimHlzUtil();
 
    virtual void setUsage(ossimArgumentParser& ap);
-   virtual bool initialize(ossimArgumentParser& ap);
-   virtual bool initialize(const ossimKeywordlist& kwl);
+   virtual void initialize(ossimArgumentParser& ap);
+   virtual void initialize(const ossimKeywordlist& kwl);
    virtual bool execute();
-   virtual void abort() {}
-   virtual ossimString getClassName() const { return "ossimHLZUtil"; }
+   virtual ossimString getClassName() const { return "ossimHlzUtil"; }
 
    /** Used by ossimUtilityFactory */
    static const char* DESCRIPTION;
@@ -57,7 +56,7 @@ protected:
       bool valid;
    };
 
-   virtual void initializeChain();
+   virtual void initProcessingChain();
 
    /** @brief Hidden from use copy constructor. */
    ossimHlzUtil( const ossimHlzUtil& obj );
@@ -66,10 +65,8 @@ protected:
    const ossimHlzUtil& operator=( const ossimHlzUtil& rhs );
 
    /** @brief Initializes arg parser and outputs usage. */
-   bool initialize();
    void usage(ossimArgumentParser& ap);
    void addArguments(ossimArgumentParser& ap);
-   bool loadDemFile();
    bool loadPcFile();
    bool loadMaskFiles();
    bool initHlzFilter();

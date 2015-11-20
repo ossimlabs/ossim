@@ -43,8 +43,7 @@ const char* ossimSlopeUtil::DESCRIPTION =
       " normal and the local vertical given a DEM.";
 
 ossimSlopeUtil::ossimSlopeUtil()
-:  m_aoiRadius(0),
-   m_remapToByte(false)
+:  m_remapToByte(false)
 {
    m_centerGpt.makeNan();
 }
@@ -66,24 +65,8 @@ void ossimSlopeUtil::setUsage(ossimArgumentParser& ap)
          "--center <lat> <lon>",
          "The center position of the output product. Required if no input DEM is specified.");
    au->addCommandLineOption(
-         "--dem <filename>",
-         "Specifies the input DEM filename. If none provided, the elevation database is referenced "
-         "as specified in prefs file for the center and ROI specified.");
-   au->addCommandLineOption(
          "--remap",
          "The range of slope angle (0.0 to 90.0) is remapped to 0-255 (one byte/pixel)");
-   au->addCommandLineOption(
-         "--lut <filename>",
-         "Specifies the optional lookup table filename for mapping the single-band output "
-         "image to an RGB. The LUT provided must be in the ossimIndexToRgbLutFilter format "
-         "and should accomodate the output pixel range. This option forces remap to 8-bit, "
-         "0-255 where 255 = 90 deg slope");
-   au->addCommandLineOption(
-         "--roi <meters>",
-         "radius of interest surrounding the center point. If absent, the product defaults to "
-         "1024 x 1024 pixels, with a radius of 512 * GSD. Alternatively, if a DEM file is "
-         "specified, the product ROI defaults to the full DEM coverage.");
-
    ossimString description =
          "Utility for computing the slope at each elevation post and generating "
          "a corresponding slope image. The output scalar type is a normalized float with 1.0 = 90 "
@@ -94,14 +77,13 @@ void ossimSlopeUtil::setUsage(ossimArgumentParser& ap)
    au->setDescription(description);
 
    // Base class has its own:
-   ossimUtility::setUsage(ap);
+   ossimChipProcUtil::setUsage(ap);
 }
 
-bool ossimSlopeUtil::initialize(ossimArgumentParser& ap)
+void ossimSlopeUtil::initialize(ossimArgumentParser& ap)
 {
    // Base class first:
-   if (!ossimUtility::initialize(ap))
-      return false;
+   ossimChipProcUtil::initialize(ap);
 
    std::string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
@@ -115,47 +97,18 @@ bool ossimSlopeUtil::initialize(ossimArgumentParser& ap)
       m_centerGpt.hgt = 0.0;
    }
 
-   if (ap.read("--dem", sp1) || ap.read("--dem-file", sp1))
-      m_demFile = ts1;
-
    if ( ap.read("--remap") || ap.read("--remap-to-8bit"))
    {
       m_remapToByte = true;
    }
 
-   if ( ap.read("--lut", sp1) || ap.read("--lut-file", sp1))
-      m_lutFile = ts1;
-
-   if (ap.read("--roi", sp1) || ap.read("--roi-radius", sp1))
-      m_aoiRadius = ossimString(ts1).toDouble();
-
-   if (m_demFile.empty() && m_centerGpt.hasNans())
-   {
-      ossimNotify(ossimNotifyLevel_WARN)<<"No DEM file nor center point provided. Cannot "
-            <<"compute slope image."<<endl;
-      setUsage(ap);
-      return false;
-   }
-
-   // There should only be the required command line args left:
-   if (ap.argc() != 2)
-   {
-      setUsage(ap);
-      return false;
-   }
-
-   m_slopeFile = ap[1];
-
-   return initializeChain();
+   processRemainingArgs(ap);
 }
 
-bool ossimSlopeUtil::initialize(const ossimKeywordlist& kwl)
+void ossimSlopeUtil::initialize(const ossimKeywordlist& kwl)
 {
+   // This method
    clear();
-
-   // Base class first:
-   if (!ossimUtility::initialize(kwl))
-      return false;
 
    ossimString value;
    value = kwl.find(CENTER_KW);
@@ -171,59 +124,21 @@ bool ossimSlopeUtil::initialize(const ossimKeywordlist& kwl)
       }
    }
 
-   m_demFile = kwl.find(DEM_KW);
-   if (m_demFile.empty())
-      m_demFile = kwl.find(ossimKeywordNames::ELEVATION_CELL_KW);
-
    kwl.getBoolKeywordValue(m_remapToByte, REMAP_KW);
 
-   m_lutFile = kwl.find(LUT_KW);
-
-   value = kwl.find(ROI_KW);
-   if (!value.empty())
-      m_aoiRadius = value.toDouble();
-
-   m_slopeFile = kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
-   if (value.empty())
-   {
-      ostringstream msg;
-      msg <<"No output slope file provided."<<ends;
-      ossimException e (msg.str());
-      throw e;
-   }
-
-   if (m_demFile.empty() && m_centerGpt.hasNans())
-   {
-      ostringstream msg;
-      msg <<"No center point provided and no DEM file provided. Cannot compute slope image."<<ends;
-      ossimException e (msg.str());
-      throw e;
-   }
-
-   return initializeChain();
+   // Base class does the heavy work:
+   ossimChipProcUtil::initialize(kwl);
 }
 
-void ossimSlopeUtil::clear()
+void ossimSlopeUtil::initProcessingChain()
 {
-   m_centerGpt.makeNan();
-   m_demFile.clear();
-   m_lutFile.clear();
-   m_aoiRadius = 0;
-   m_procChain = 0;
-   m_slopeFile.clear();
-   m_remapToByte = false;
-}
+   std::ostringstream errMsg;
 
-bool ossimSlopeUtil::initializeChain()
-{
-   // Establish connection to elevation data. Image handler (or combiner) returned in m_procChain:
-   if (!m_demFile.empty())
+   if (!loadElevDb())
    {
-      if (!loadDemFile())
-      return false;
+      errMsg << "Must supply an output file."<<std::endl;
+      throw ossimException(errMsg.str());
    }
-   else if (!loadElevDb())
-      return false;
 
    ossimRefPtr<ossimSlopeFilter> slope_filter = new ossimSlopeFilter(m_procChain.get());
    slope_filter->setSlopeType(ossimSlopeFilter::NORMALIZED);
@@ -250,26 +165,13 @@ bool ossimSlopeUtil::initializeChain()
       }
       else
       {
-         ossimNotify(ossimNotifyLevel_WARN)<<"The LUT file specified, <"<<m_lutFile<<"> is "
-               "not readbale. The LUT remap will be ignored."<<endl;
+         errMsg << "The LUT file specified, <"<<m_lutFile<<"> is "
+               "not readable. The LUT remap will be ignored."<<std::endl;
+         throw ossimException(errMsg.str());
       }
    }
 
    m_procChain->initialize();
-   return true;
-}
-
-bool ossimSlopeUtil::loadDemFile()
-{
-   m_procChain = ossimImageHandlerRegistry::instance()->open(m_demFile, true, false);
-   if (!m_procChain.valid())
-   {
-      ossimNotify(ossimNotifyLevel_FATAL) << "Could not open DEM file at <"<<m_demFile
-            <<">. Aborting..."<<endl;
-      return false;
-   }
-
-   return true;
 }
 
 bool ossimSlopeUtil::loadElevDb()
@@ -287,17 +189,17 @@ bool ossimSlopeUtil::loadElevDb()
    }
 
    // Establish output radius if not provided:
-   ossimIrect viewRect(0, 0, 1023, 1023);
-   if (m_aoiRadius == 0)
+   assignAoiViewRect();
+   if (m_aoiViewRect.hasNans())
    {
-      // The radius of interest can default given a GSD to achieve a specific output image size.
-      m_aoiRadius = (viewRect.size().x + viewRect.size().y -2) * gsd / 4.0;
+      m_aoiViewRect = ossimIrect(0, 0, 1023, 1023);
    }
+   double aoiRadius = (m_aoiViewRect.size().x + m_aoiViewRect.size().y -2) * gsd / 4.0;
 
    // Establish ground-space AOI rectangle:
    ossimDpt metersPerDeg (m_centerGpt.metersPerDegree());
-   double dlat = m_aoiRadius/metersPerDeg.y;
-   double dlon = m_aoiRadius/metersPerDeg.x;
+   double dlat = aoiRadius/metersPerDeg.y;
+   double dlon = aoiRadius/metersPerDeg.x;
    ossimGrect gndRect (m_centerGpt.lat + dlat, m_centerGpt.lon - dlon,
                        m_centerGpt.lat - dlat, m_centerGpt.lon + dlon);
 
@@ -334,12 +236,12 @@ bool ossimSlopeUtil::loadElevDb()
    ossimRefPtr<ossimImageGeometry> productGeom = new ossimImageGeometry(0, mapProj.get());
    ossimDpt viewPt;
    productGeom->worldToLocal(gndRect.ul(), viewPt);
-   viewRect.set_ulx(ossim::round<ossim_int32, double>(viewPt.x));
-   viewRect.set_uly(ossim::round<ossim_int32, double>(viewPt.y));
+   m_aoiViewRect.set_ulx(ossim::round<ossim_int32, double>(viewPt.x));
+   m_aoiViewRect.set_uly(ossim::round<ossim_int32, double>(viewPt.y));
    productGeom->worldToLocal(gndRect.lr(), viewPt);
-   viewRect.set_lrx(ossim::round<ossim_int32, double>(viewPt.x));
-   viewRect.set_lry(ossim::round<ossim_int32, double>(viewPt.y));
-   ossimIpt image_size(viewRect.width(), viewRect.height());
+   m_aoiViewRect.set_lrx(ossim::round<ossim_int32, double>(viewPt.x));
+   m_aoiViewRect.set_lry(ossim::round<ossim_int32, double>(viewPt.y));
+   ossimIpt image_size(m_aoiViewRect.width(), m_aoiViewRect.height());
    productGeom->setImageSize(image_size);
 
    // Now loop to add a renderer to each input cell to insure common output projection:
@@ -359,41 +261,6 @@ bool ossimSlopeUtil::loadElevDb()
    // Finally create the combiner:
    m_procChain = new ossimImageMosaic(elevChains);
    return true;
-}
-
-bool ossimSlopeUtil::execute()
-{
-   if (!m_procChain.valid())
-   {
-      if (!initializeChain())
-         return false;
-   }
-
-   // Set up the writer:
-   bool all_good = false;
-
-   ossimRefPtr<ossimTiffWriter> tif_writer =  new ossimTiffWriter();
-   tif_writer->setGeotiffFlag(true);
-
-   tif_writer->setFilename(m_slopeFile);
-   if (tif_writer.valid())
-   {
-      tif_writer->connectMyInputTo(0, m_procChain.get());
-      ossimIrect viewRect;
-      m_procChain->getImageGeometry()->getBoundingRect(viewRect);
-      tif_writer->setAreaOfInterest(viewRect);
-
-      all_good = tif_writer->execute();
-      if (all_good)
-         ossimNotify(ossimNotifyLevel_INFO)<<"Output written to <"<<m_slopeFile<<">"<<endl;
-      else
-      {
-         ossimNotify(ossimNotifyLevel_FATAL)<<"Error encountered writing out slope image to <"
-               <<m_slopeFile<<">."<<endl;
-      }
-   }
-
-   return all_good;
 }
 
 

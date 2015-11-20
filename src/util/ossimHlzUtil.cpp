@@ -9,6 +9,7 @@
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimRtti.h>
 #include <ossim/base/ossimGrect.h>
+#include <ossim/base/ossimException.h>
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimKeywordlist.h>
@@ -131,10 +132,9 @@ void ossimHlzUtil::setUsage(ossimArgumentParser& ap)
 
 }
 
-bool ossimHlzUtil::initialize(ossimArgumentParser& ap)
+void ossimHlzUtil::initialize(ossimArgumentParser& ap)
 {
-   if (!ossimChipProcUtil::initialize(ap))
-      return false;
+   ossimChipProcUtil::initialize(ap);
 
    std::string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
@@ -215,14 +215,11 @@ bool ossimHlzUtil::initialize(ossimArgumentParser& ap)
       m_reticleValue = ossimString(ts4).toUInt8();
    }
 
-   return ossimChipProcUtil::processRemainingArgs(ap);
+   processRemainingArgs(ap);
 }
 
-bool ossimHlzUtil::initialize(const ossimKeywordlist& kwl)
+void ossimHlzUtil::initialize(const ossimKeywordlist& kwl)
 {
-   if (!ossimChipProcUtil::initialize(kwl))
-      return false;
-
    ossimString value;
 
    m_slopeFile = m_kwl.find(SLOPE_OUTPUT_FILE_KW);
@@ -256,10 +253,10 @@ bool ossimHlzUtil::initialize(const ossimKeywordlist& kwl)
       }
    }
 
-   return true;
+   ossimChipProcUtil::initialize(kwl);
 }
 
-bool ossimHlzUtil::initialize()
+void ossimHlzUtil::initProcessingChain()
 {
    // Establish the ground rect:
    ossimGpt ul, ur, lr, ll;
@@ -268,17 +265,17 @@ bool ossimHlzUtil::initialize()
    // If PC provided as file on command line, Load it. This uses the output ground rect so needs to
    // be after the initialization of m_geometry:
    if (!m_pcFile.empty() && !loadPcFile())
-      return false;
+      throw ossimException("Error loading point cloud file.");
 
    // If threat-domes spec (or any mask) provided as file on command line, Load it:
    if (!loadMaskFiles())
-      return false;
+      throw ossimException("Error loading mask file.");
 
    // Allocate the output image buffer:
    m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_viewRect.width(),
                                                            m_viewRect.height());
    if (!m_outBuffer.valid())
-      return false;
+      throw ossimException("Error encountered allocating output image buffer.");
 
    // Initialize the image with all points hidden:
    m_outBuffer->initialize();
@@ -288,46 +285,6 @@ bool ossimHlzUtil::initialize()
    // Establish connection to DEM posts directly as raster "images" versus using the OSSIM elev
    // manager that performs interpolation of DEM posts for arbitrary locations. These elev images
    // feed into a combiner in order to have a common tap for elev pixels:
-   initializeChain();
-   if (!m_isInitialized)
-      return false;
-
-   if (!initHlzFilter())
-      return false;
-
-   if (m_outputSummary)
-      dumpProductSummary();
-
-   return true;
-}
-
-void ossimHlzUtil::setProductGSD(const double& meters_per_pixel)
-{
-   m_gsd = meters_per_pixel;
-
-   if (m_geom.valid())
-   {
-      ossimMapProjection* map_proj =
-            dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
-      if (map_proj)
-         map_proj->setMetersPerPixel(ossimDpt(m_gsd, m_gsd));
-   }
-}
-
-void ossimHlzUtil::createInputChain(ossimRefPtr<ossimImageHandler>& handler,
-                                    ossimRefPtr<ossimImageSource>& chain)
-{
-   ossimRefPtr<ossimImageViewProjectionTransform> ivt = new ossimImageViewProjectionTransform;
-   ivt->setImageGeometry(handler->getImageGeometry().get());
-   ivt->setViewGeometry(m_geom.get());
-
-   chain = new ossimImageRenderer(handler.get(),ivt.get());
-   chain->initialize();
-}
-
-
-void ossimHlzUtil::initializeChain()
-{
    // If a DEM file was not provided as an argument, the elev sources array needs be initialized:
    m_isInitialized = false;
    if (!m_combinedElevSource.valid())
@@ -384,7 +341,38 @@ void ossimHlzUtil::initializeChain()
          writeSlopeImage();
    }
    m_isInitialized = true;
+
+   if (!initHlzFilter())
+      return;
+
+   if (m_outputSummary)
+      dumpProductSummary();
 }
+
+void ossimHlzUtil::setProductGSD(const double& meters_per_pixel)
+{
+   m_gsd = meters_per_pixel;
+
+   if (m_geom.valid())
+   {
+      ossimMapProjection* map_proj =
+            dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
+      if (map_proj)
+         map_proj->setMetersPerPixel(ossimDpt(m_gsd, m_gsd));
+   }
+}
+
+void ossimHlzUtil::createInputChain(ossimRefPtr<ossimImageHandler>& handler,
+                                    ossimRefPtr<ossimImageSource>& chain)
+{
+   ossimRefPtr<ossimImageViewProjectionTransform> ivt = new ossimImageViewProjectionTransform;
+   ivt->setImageGeometry(handler->getImageGeometry().get());
+   ivt->setViewGeometry(m_geom.get());
+
+   chain = new ossimImageRenderer(handler.get(),ivt.get());
+   chain->initialize();
+}
+
 
 bool ossimHlzUtil::loadPcFile()
 {
