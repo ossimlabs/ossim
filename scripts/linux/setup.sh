@@ -19,7 +19,7 @@ if [ -z $OSSIM_DATA ] || [ ! -d $OSSIM_DATA ] ; then
   export OSSIM_DATA=/data/ossim_data;
 fi
 
-if [ -z $USING_S3SYNC ] ; then
+if [ ! -z $USING_S3SYNC ] ; then
   echo "STATUS: Syncing data directory to S3...";
   s3cmd sync --no-check-md5 s3://yumrepos-dev-rbtcloud/ossim_data/public $OSSIM_DATA/;
   if [ $? != 0 ]; then
