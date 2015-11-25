@@ -1,41 +1,27 @@
 #!/bin/sh
 ###############################################################################
 #
-# Setup script for all OSSIM repositories
+# Test data setup script for all OSSIM repositories.
 #
 # The test data directory, specified by the env var OSSIM_DATA is
-# syncronized against a master repository.
-#
-# If OSSIM_DATA is not set or the defined directory doesn't exist
-# This will create the dir and sync the data from S3.  NOTE: s3cmd credentials
-# must be stored on the machine that this test needs to run.
+# syncronized against a master repository. The master data repository is
+# assumed to be NFS-mounted at the mount point specified in the environment
+# variable "OSSIM_DATA_REPOSITORY". The data will be rsynced to the local
+# directory specified by "OSSIM_DATA" env var.
 #
 ###############################################################################
 
 echo; echo "Running setup.sh script from <$PWD>...";
-echo; echo "STATUS: Checking presence of env var OSSIM_DATA = <$OSSIM_DATA>...";
-if [ -z $OSSIM_DATA ] || [ ! -d $OSSIM_DATA ] ; then
-  mkdir -p /data/ossim_data;
-  export OSSIM_DATA=/data/ossim_data;
-fi
 
-if [ ! -z $USING_S3SYNC ] ; then
-  echo "STATUS: Syncing data directory to S3...";
-  s3cmd sync --no-check-md5 s3://yumrepos-dev-rbtcloud/ossim_data/public $OSSIM_DATA/;
-  if [ $? != 0 ]; then
-    echo "ERROR: Failed S3 sync.";
-    exit 1;
-  fi
-  exit 0;
+echo "STATUS: Checking presence of env var OSSIM_DATA = <$OSSIM_DATA>...";
+if [ -z $OSSIM_DATA ] || [ ! -d $OSSIM_DATA ] ; then
+  echo "ERROR: Env var OSSIM_DATA must be defined and exist in order to syncronize against data repository.";
+  exit 1;
 fi
 
 echo "STATUS: Checking access to data repository at <$OSSIM_DATA_REPOSITORY>...";
-if [ ! -z $OSSIM_DATA_REPOSITORY ] ; then
-  echo "ERROR: Env var OSSIM_DATA_REPOSITORY must be defined in order to syncronize against data repository.";
-  exit 1;
-fi
-if [ ! -d $OSSIM_DATA_REPOSITORY ] ; then
-  echo "ERROR: $OSSIM_DATA_REPOSITORY is not a valid directory/mount point.";
+if [ -z $OSSIM_DATA_REPOSITORY ] || [ ! -d $OSSIM_DATA_REPOSITORY ] ; then
+  echo "ERROR: Env var OSSIM_DATA_REPOSITORY must be defined and exist in order to syncronize against data repository.";
   exit 1;
 fi
 
