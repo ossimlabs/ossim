@@ -27,7 +27,7 @@ fi
 
 # rsync elevation data:
 echo "STATUS: Syncing elevation data...";
-rsync -rm --delete $OSSIM_DATA_REPOSITORY/elevation/dted/level0 $OSSIM_DATA/elevation/dted;
+rsync -rmv --delete $OSSIM_DATA_REPOSITORY/elevation/dted/level0 $OSSIM_DATA/elevation/dted;
 if [ $? != 0 ] ; then 
   echo "ERROR: Failed data repository rsync of elevation.";
   exit 1;
@@ -39,6 +39,15 @@ rsync -rm --delete $OSSIM_DATA_REPOSITORY/elevation/nadcon $OSSIM_DATA/elevation
 if [ $? != 0 ] ; then 
   echo "ERROR: Failed data repository rsync of nadcon grids.";
   exit 1;
+fi
+
+if [ ! -d $OSSIM_DATA/elevation/geoids ] ; then
+  echo "STATUS: Creating missing geoids subdirectory";
+  mkdir $OSSIM_DATA/elevation/geoids; 
+  if [ $? != 0 ] ; then 
+    echo "ERROR: Failed creatiion of geoids directory at <$OSSIM_DATA/elevation/geoids>.";
+    exit 1;
+  fi
 fi
 
 # rsync geoid 96 data:
