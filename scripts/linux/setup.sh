@@ -1,7 +1,11 @@
 #!/bin/sh
-###############################################################################
+#####################################################################################
 #
-# Test data setup script for all OSSIM repositories.
+# Test data setup script for all OSSIM repositories. The following env vars must be 
+# set in the GoCD environment:
+#
+#   OSSIM_DATA_REPOSITORY -- local NFS mount point for data repository
+#   OSSIM_DATA -- Local directory to contain elevation, imagery, and expected results
 #
 # The test data directory, specified by the env var OSSIM_DATA is
 # syncronized against a master repository. The master data repository is
@@ -9,7 +13,7 @@
 # variable "OSSIM_DATA_REPOSITORY". The data will be rsynced to the local
 # directory specified by "OSSIM_DATA" env var.
 #
-###############################################################################
+#####################################################################################
 
 echo; echo "Running setup.sh script from <$PWD>...";
 
@@ -68,7 +72,7 @@ fi
 
 #rsync imagery
 echo "STATUS: Syncing image data...";
-rsync -rm --delete $OSSIM_DATA_REPOSITORY/test/data/public/ $OSSIM_DATA/ossim_data;
+rsync -rm --delete $OSSIM_DATA_REPOSITORY/test/data/public $OSSIM_DATA/ossim_data;
 if [ $? != 0 ] ; then 
   echo "ERROR: Failed data repository rsync of imagery.";
   exit 1;
