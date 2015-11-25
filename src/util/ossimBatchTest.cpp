@@ -408,29 +408,48 @@ ossim_uint8 ossimBatchTest::execute()
    if (m_templateModeActive)
       return (ossim_uint8) TEST_PASSED;
 
+   // Fetch possible existing env vars for the expected and output directories:
+   char* obt_exp_dir = getenv("OBT_EXP_DIR");
+   char* obt_out_dir = getenv("OBT_OUT_DIR");
+
    // Establish the top-level test directory that will contain log, exp and out subdirs:
-   ossimFilename base_output_dir = ossimEnvironmentUtility::instance()->getEnvironmentVariable(
-         ossimString("OSSIM_BATCH_TEST_RESULTS") );
-   if (base_output_dir.empty())
+   ossimFilename base_output_dir;
+   if (!obt_exp_dir || !obt_out_dir)
    {
-      cout<<"\nossimBatchTest WARNING: The environment variable OSSIM_BATCH_TEST_RESULTS is not "
-         "defined. Results will be written relative to the current working directory."<<endl;
+      base_output_dir = ossimEnvironmentUtility::instance()->getEnvironmentVariable(
+            ossimString("OSSIM_BATCH_TEST_RESULTS") );
+      if (base_output_dir.empty())
+      {
+         cout<<"\nossimBatchTest WARNING: The environment variable OSSIM_BATCH_TEST_RESULTS is not "
+               "defined. Results will be written relative to the current working directory."<<endl;
+      }
+      base_output_dir = base_output_dir.expand().dirCat(m_configFileName.fileNoExtension());
    }
-   base_output_dir = base_output_dir.expand().dirCat(m_configFileName.fileNoExtension());
-   
+
    // The following env vars permits the user to specify the test directory as a variable in the KWL
-   // config file:
-   m_outDir = base_output_dir.dirCat("out");
-   m_expDir = base_output_dir.dirCat("exp");
+   // config file. Only define default OBT dirs if the environment variables are not already
+   // defined (OLK 11/2015)
+   if (obt_out_dir == 0)
+   {
+      m_outDir = base_output_dir.dirCat("out");
 #if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
-   ossimString env_spec = ossimString("OBT_OUT_DIR=") + m_outDir;
-   _putenv(env_spec.chars());
-   env_spec = ossimString("OBT_EXP_DIR=") + m_expDir;
-   _putenv(env_spec.chars());
+      ossimString env_spec = ossimString("OBT_OUT_DIR=") + m_outDir;
+      _putenv(env_spec.chars());
 #else
-   setenv("OBT_OUT_DIR", m_outDir.chars(), 1);
-   setenv("OBT_EXP_DIR", m_expDir.chars(), 1);
+      setenv("OBT_OUT_DIR", m_outDir.chars(), 1);
 #endif
+   }
+
+   if (obt_exp_dir == 0)
+   {
+      m_expDir = base_output_dir.dirCat("exp");
+#if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
+      env_spec = ossimString("OBT_EXP_DIR=") + m_expDir;
+      _putenv(env_spec.chars());
+#else
+      setenv("OBT_EXP_DIR", m_expDir.chars(), 1);
+#endif
+   }
 
    // Turn expansion of for like: $(OBT_TEST_RESULTS)
    ossimKeywordlist kwl;
