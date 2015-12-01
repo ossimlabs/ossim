@@ -408,6 +408,8 @@ ossim_uint8 ossimBatchTest::execute()
    if (m_templateModeActive)
       return (ossim_uint8) TEST_PASSED;
 
+   cout << "\nExecuting batch test for config file: <" << m_configFileName << ">" << endl;
+
    // Fetch possible existing env vars for the expected and output directories:
    char* obt_exp_dir = getenv("OBT_EXP_DIR");
    char* obt_out_dir = getenv("OBT_OUT_DIR");
@@ -439,11 +441,6 @@ ossim_uint8 ossimBatchTest::execute()
       setenv("OBT_OUT_DIR", m_outDir.chars(), 1);
 #endif
    }
-   else
-   {
-      cout<<"\nOBT_OUT_DIR = <"<<obt_out_dir<<"> was already defined in the environment. Using this"
-            " location for test output."<<endl;
-   }
 
    if (obt_exp_dir == 0)
    {
@@ -454,11 +451,6 @@ ossim_uint8 ossimBatchTest::execute()
 #else
       setenv("OBT_EXP_DIR", m_expDir.chars(), 1);
 #endif
-   }
-   else
-   {
-      cout<<"\nOBT_EXP_DIR = <"<<obt_exp_dir<<"> was already defined in the environment. Using this"
-            " location for test output."<<endl;
    }
 
    // Turn expansion of for like: $(OBT_TEST_RESULTS)
