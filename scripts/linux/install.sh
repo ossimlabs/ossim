@@ -1,9 +1,9 @@
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $SCRIPT_DIR/../../..
 OSSIM_DEV_HOME=$PWD
-echo "@@@@@ OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
+echo "STATUS: Setting OSSIM_DEV_HOME = <$OSSIM_DEV_HOME>"
 
-echo "STATUS: Checking presence of env var OSSIM_DATA = <$OSSIM_BUILD_DIR>...";
+echo "STATUS: Checking presence of env var OSSIM_BUILD_DIR = <$OSSIM_BUILD_DIR>...";
 if [ -z $OSSIM_BUILD_DIR ] || [ ! -d $OSSIM_BUILD_DIR ] ; then
   echo "ERROR: Env var OSSIM_BUILD_DIR must be defined and exist in order to install the built binaries.";
   exit 1;
