@@ -8,7 +8,8 @@ if [ -z $OSSIM_BUILD_DIR ]; then
   OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/build;
   if [ ! -d $OSSIM_BUILD_DIR ] ; then
     echo "ERROR: OSSIM_BUILD_DIR = <$OSSIM_BUILD_DIR> does not exist at this location. Cannot install";
-  exit 1;
+    exit 1;
+  fi
 fi
 
 if [ -z $OSSIM_INSTALL_DIR ]; then
