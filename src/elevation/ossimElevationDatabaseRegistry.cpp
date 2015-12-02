@@ -1,5 +1,6 @@
 #include <ossim/elevation/ossimElevationDatabaseRegistry.h>
 #include <ossim/elevation/ossimElevationDatabaseFactory.h>
+#include <ossim/elevation/ossimElevationDatabase.h>
 
 ossimElevationDatabaseRegistry* ossimElevationDatabaseRegistry::m_instance = 0;
 ossimElevationDatabaseRegistry* ossimElevationDatabaseRegistry::instance()

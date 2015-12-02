@@ -16,7 +16,7 @@
 #ifndef ossimImageElevationDatabase_HEADER
 #define ossimImageElevationDatabase_HEADER 1
 
-#include <ossim/elevation/ossimElevationDatabase.h>
+#include <ossim/elevation/ossimElevationCellDatabase.h>
 #include <ossim/base/ossimFileProcessorInterface.h>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimFilename.h>

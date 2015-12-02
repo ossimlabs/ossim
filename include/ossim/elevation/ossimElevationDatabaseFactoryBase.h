@@ -1,6 +1,7 @@
 #ifndef ossimElevationDatabaseFactoryBase_HEADER
-#define ossimElevationDatabaseFactoryBase_HEADER
+#define ossimElevationDatabaseFactoryBase_HEADER 1
 #include <ossim/base/ossimObjectFactory.h>
+#include <ossim/base/ossimObject.h>
 #include <ossim/elevation/ossimElevationDatabase.h>
 
 class OSSIM_DLL ossimElevationDatabaseFactoryBase : public ossimObjectFactory
