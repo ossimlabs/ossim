@@ -427,6 +427,10 @@ ossim_uint8 ossimBatchTest::execute()
       }
       base_output_dir = base_output_dir.expand().dirCat(m_configFileName.fileNoExtension());
    }
+   else
+   {
+      base_output_dir = obt_out_dir;
+   }
 
    // The following env vars permits the user to specify the test directory as a variable in the KWL
    // config file. Only define default OBT dirs if the environment variables are not already
@@ -441,6 +445,10 @@ ossim_uint8 ossimBatchTest::execute()
       setenv("OBT_OUT_DIR", m_outDir.chars(), 1);
 #endif
    }
+   else
+   {
+      m_outDir = obt_out_dir;
+   }
 
    if (obt_exp_dir == 0)
    {
@@ -451,6 +459,10 @@ ossim_uint8 ossimBatchTest::execute()
 #else
       setenv("OBT_EXP_DIR", m_expDir.chars(), 1);
 #endif
+   }
+   else
+   {
+      m_expDir = obt_exp_dir;
    }
 
    // Turn expansion of for like: $(OBT_TEST_RESULTS)
