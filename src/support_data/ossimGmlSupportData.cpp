@@ -698,35 +698,25 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
          }
 
          ossimSensorModel* sensor_model = 0;
-         ossimString sensorNameHref( "" );
          ossimString xpath_sensor_name = "/gmlcov:sensorInstance/sml:SimpleProcess/gml:name";
          xpath_sensor_name = xpath_sensor_name.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
          xpath = xpath0 + xpath_sensor_name;
          xml_nodes.clear();
          m_xmlDocument->findNodes( xpath, xml_nodes );
-         if ( xml_nodes.size() == 1 )
+         int nSensorNames = (int)xml_nodes.size();
+         for ( int i=0; i<nSensorNames; ++i )
          {
-            const ossimRefPtr<ossimXmlAttribute> hrefAttribute = xml_nodes[0]->findAttribute( codeSpaceStr );
-            sensorNameHref = hrefAttribute->getValue();
+            const ossimString& sensorName = xml_nodes[i]->getText();
 
-            if ( sensorNameHref == ossimString( "http://www.ossim.org/dictionaries" ) )
+            ossimProjectionFactoryRegistry* registry = ossimProjectionFactoryRegistry::instance();
+            ossimProjection* proj = registry->createProjection( sensorName );
+
+            // Is it a sensor model ?
+            sensor_model = dynamic_cast<ossimSensorModel*>( proj );
+            if ( sensor_model != 0 )
             {
-               const ossimString& sensorName = xml_nodes[0]->getText();
-
-               ossimProjectionFactoryRegistry* registry = ossimProjectionFactoryRegistry::instance();
-               ossimProjection* proj = registry->createProjection( sensorName );
-
-               // Is it a sensor model ?
-               sensor_model = dynamic_cast<ossimSensorModel*>( proj );
-               if ( sensor_model != 0 )
-               {
-                  geomKwl.add( ossimKeywordNames::TYPE_KW, sensorName.c_str() );
-               }
-            }
-            else
-            {
-               // Add debug message
-               return false;
+               geomKwl.add( ossimKeywordNames::TYPE_KW, sensorName.c_str() );
+               break;
             }
          }
          if ( sensor_model == 0 )

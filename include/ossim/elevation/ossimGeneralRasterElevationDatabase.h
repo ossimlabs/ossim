@@ -1,6 +1,7 @@
 #ifndef ossimGeneralRasterElevationDatabase_HEADER
-#define ossimGeneralRasterElevationDatabase_HEADER
-#include "ossimElevationDatabase.h"
+#define ossimGeneralRasterElevationDatabase_HEADER 1
+
+#include <ossim/elevation/ossimElevationCellDatabase.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/elevation/ossimGeneralRasterElevHandler.h>
 #include <OpenThreads/Mutex>

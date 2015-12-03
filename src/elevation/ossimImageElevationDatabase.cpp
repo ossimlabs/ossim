@@ -23,7 +23,7 @@
 
 static ossimTrace traceDebug(ossimString("ossimImageElevationDatabase:debug"));
 
-RTTI_DEF1(ossimImageElevationDatabase, "ossimImageElevationDatabase", ossimElevationDatabase);
+RTTI_DEF1(ossimImageElevationDatabase, "ossimImageElevationDatabase", ossimElevationCellDatabase);
 
 ossimImageElevationDatabase::ossimImageElevationDatabase()
    :
@@ -357,7 +357,7 @@ bool ossimImageElevationDatabase::loadState(const ossimKeywordlist& kwl, const c
       std::string type = lookup;
       if ( ( type == "image_directory" ) || ( type == "ossimImageElevationDatabase" ) )
       {
-         result = ossimElevationDatabase::loadState(kwl, prefix);
+         result = ossimElevationCellDatabase::loadState(kwl, prefix);
 
          if ( result )
          {
@@ -376,7 +376,7 @@ bool ossimImageElevationDatabase::loadState(const ossimKeywordlist& kwl, const c
 
 bool ossimImageElevationDatabase::saveState(ossimKeywordlist& kwl, const char* prefix) const
 {
-   return ossimElevationDatabase::saveState(kwl, prefix);
+   return ossimElevationCellDatabase::saveState(kwl, prefix);
 }
 
 void ossimImageElevationDatabase::processFile(const ossimFilename& file)

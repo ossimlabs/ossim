@@ -35,10 +35,16 @@ using namespace std;
 //**************************************************************************************************
 ossimBatchTest::ossimBatchTest()
    :
-   m_allIsDisabled(false),
-   m_templateModeActive(false)
+   m_acceptTestList(),
+   m_cleanTestList(),
+   m_preprocessTestList(),
+   m_runTestList(),
+   m_templateModeActive(false),
+   m_configFileName(),
+   m_outDir(),
+   m_expDir(),
+   m_logStr()
 {
-
 }
 
 //**************************************************************************************************
@@ -99,7 +105,6 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    {
       if ( tempString.size() )
       {
-         m_allIsDisabled = true;
          ossimString os = tempString;
          ossimString separatorList = " ";
          std::vector<ossimString> result;
@@ -117,7 +122,6 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    {
       if ( tempString.size() )
       {
-         m_allIsDisabled = true;
          ossimString os = tempString;
          ossimString separatorList = " ";
          std::vector<ossimString> result;
@@ -135,7 +139,6 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    {
       if ( tempString.size() )
       {
-         m_allIsDisabled = true;
          ossimString os = tempString;
          ossimString separatorList = " ";
          std::vector<ossimString> result;
@@ -153,7 +156,6 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    {
       if ( tempString.size() )
       {
-         m_allIsDisabled = true;
          ossimString os = tempString;
          ossimString separatorList = " ";
          std::vector<ossimString> result;
@@ -436,16 +438,17 @@ ossim_uint8 ossimBatchTest::execute()
    ossimKeywordlist kwl;
    kwl.setExpandEnvVarsFlag(true);
    if (!kwl.addFile(m_configFileName))
+   {
       return (ossim_uint8) TEST_ERROR;
+   }
 
    // The KWL may contain names of other test config files. Is this a list of config files? If the
    // status returns anything other than TBD, then a list was present and processed:
    ossim_uint8 status = processConfigList(kwl);
    if (status != TEST_TBD)
+   {
       return status;
-
-   if ( m_allIsDisabled )
-      disableAllKwl(kwl);
+   }
 
    // Pick up individual test options passed in by user.  These will adjust the keyword list
    // flags loaded in memory.
@@ -679,10 +682,13 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
    m_logStr << "\n----------------------------------------------------------------------\n";
 
    // See if test is disabled/enabled:
+   
    bool enabled = true;
    lookup = kwl.find( prefix, "enabled" );
    if ( lookup )
+   {
       enabled = ossimString(lookup).toBool();
+   }
 
    if ( !enabled )
    {
@@ -696,13 +702,13 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
       {
          statusString = "test: disabled";
       }
-      cout << "test name: " << testName << "\n" << statusString << endl;
-      m_logStr << "test name: " << testName << "\n" << statusString << endl;
+      cout << "test_name: " << testName << "\n" << statusString << endl;
+      m_logStr << "test_name: " << testName << "\n" << statusString << endl;
       return testStatus;
    }
 
-   cout << "\n\nProcessing Test: " << testName << "\n";
-   m_logStr << "\n\nProcessing Test: " << testName << "\n";   
+   cout     << "\n\nbegin_test:\n" << prefix << "name: " << testName << "\n";
+   m_logStr << "\n\nbegin_test:\n" << prefix << "name: " << testName << "\n";   
    lookup = kwl.find( prefix, "description" );
    if ( lookup )
       m_logStr << "description: " << lookup << "\n";
@@ -716,30 +722,40 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
 
    lookup = kwl.find(prefix.c_str(), "run_clean_commands");
    if ( lookup )
+   {
       cleanFlag = ossimString(lookup).toBool();
+   }
 
    lookup = kwl.find(prefix.c_str(), "run_preprocessing_commands");
    if ( lookup )
+   {  
       preProcessFlag = ossimString(lookup).toBool();
+   }
 
    lookup = kwl.find(prefix.c_str(), "run_expected_results_commands");
    if ( lookup )
+   {
       expectedFlag = ossimString(lookup).toBool();
+   }
 
    lookup = kwl.find(prefix.c_str(), "run_test_commands");
    if ( lookup )
+   {
       testFlag = ossimString(lookup).toBool();
+   }
 
    lookup = kwl.find(prefix.c_str(), "run_postprocessing_commands");
    if ( lookup )
+   {
       postProcessFlag = ossimString(lookup).toBool();
+   }
 
    m_logStr << "preProcessFlag:  " << preProcessFlag
-      << "\nexpectedFlag:    " <<expectedFlag
-      << "\ntestFlag:        " <<testFlag
-      << "\npostProcessFlag: " <<postProcessFlag
-      << "\ncleanFlag:       " <<cleanFlag
-      << "\n";
+            << "\nexpectedFlag:    " <<expectedFlag
+            << "\ntestFlag:        " <<testFlag
+            << "\npostProcessFlag: " <<postProcessFlag
+            << "\ncleanFlag:       " <<cleanFlag
+            << "\n";
 
    // Run the clean first if set...
    if ( cleanFlag )
@@ -779,7 +795,8 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
       }
    }
 
-   m_logStr << "end_test: " << testName << "\n";
+   cout     << "end_test:\n";
+   m_logStr << "end_test:\n";
 
    m_logStr << "----------------------------------------------------------------------\n"; 
    return testStatus; 
@@ -953,7 +970,9 @@ void ossimBatchTest::preprocessKwl(const std::vector<std::string>& testList,
    ossimString firstTest(*testIter);
    firstTest.downcase();
    if ( firstTest == "all" )
+   {
       enableAllTestFlag = true;
+   }
 
    while ( testIter != testList.end() )
    {
@@ -1004,7 +1023,11 @@ void ossimBatchTest::preprocessKwl(const std::vector<std::string>& testList,
          {
             if ( test_name_matches || enableAllTestFlag )
             {
-               kwl.add(prefix.c_str(), "enabled", "1", true);
+               //---
+               // Removed adjustment of "enable" flag. Let the config file "enable" key
+               // control this.  drb - 20151202
+               // kwl.add(prefix.c_str(), "enabled", "1", true);
+               //---
                kwl.add(prefix.c_str(), testCommand.c_str(), "1", true);
                if ( testCommand == "run_expected_results_commands" )
                {
@@ -1028,40 +1051,6 @@ void ossimBatchTest::preprocessKwl(const std::vector<std::string>& testList,
    } // End: while ( testIter != testList.end() )
    
 } // End: preprocessKwl method
-
-//**************************************************************************************************
-void ossimBatchTest::disableAllKwl(ossimKeywordlist& kwl)
-{
-   if ( kwl.getSize() )
-   {
-      // Get the number of test:
-      ossimString regExpStr = "test[0-9]+\\.";
-      const ossim_uint32 COUNT = kwl.getNumberOfSubstringKeys(regExpStr);
-      const ossim_uint32 MAX_INDEX = COUNT + 1000;
-      ossimString prefixBase = "test";
-      ossim_uint32 index = 0;
-      ossim_uint32 processedIndexes = 0;
-      
-      while ( processedIndexes < COUNT )
-      {
-         ossimString prefix =  prefixBase + ossimString::toString(index) + ".";
-         const char* lookup = kwl.find( prefix, "name" );
-         if (lookup)
-         {
-            kwl.add(prefix.c_str(), "enabled", "0", true);
-            kwl.add(prefix.c_str(), "run_clean_commands", "0", true);
-            kwl.add(prefix.c_str(), "run_expected_results_commands", "0", true);
-            kwl.add(prefix.c_str(), "run_test_commands", "0", true);
-            kwl.add(prefix.c_str(), "run_postprocessing_commands", "0", true);
-            ++processedIndexes;
-         }
-         ++index;
-         if ( index >= MAX_INDEX ) break; 
-      }
-   }
-   
-} // End: disableAllKwl(ossimKeywordlist& kwl)
-
 
 //**************************************************************************************************
 //! Default preprocessing step makes expected and output results directories. Returns TRUE if
