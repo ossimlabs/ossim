@@ -111,10 +111,6 @@ pushd $OSSIM_BUILD_DIR >/dev/null
 rm -f CMakeCache.txt
 
 # Check for ENV vars set to override hardcoded plugins switches here:
-if [ -z $BUILD_MRSID_PLUGIN ]; then
-  BUILD_MRSID_PLUGIN=ON
-fi
-# Check for ENV vars set to override hardcoded plugins switches here:
 if [ -z $BUILD_OSSIM_VIDEO ]; then
   BUILD_OSSIM_VIDEO=OFF
 fi
@@ -127,8 +123,16 @@ fi
 if [ -z $BUILD_OSSIM_GUI ]; then
   BUILD_OSSIM_GUI=OFF
 fi
+if [ -z $BUILD_OMS ]; then
+  BUILD_OMS=OFF
+fi
+
+# Plugins:
 if [ -z $BUILD_KAKADU_PLUGIN ]; then
   BUILD_KAKADU_PLUGIN=ON
+fi
+if [ -z $BUILD_MRSID_PLUGIN ]; then
+  BUILD_MRSID_PLUGIN=ON
 fi
 if [ -z $BUILD_PDAL_PLUGIN ]; then
   BUILD_PDAL_PLUGIN=ON
@@ -137,7 +141,7 @@ if [ -z $BUILD_GDAL_PLUGIN ]; then
   BUILD_GDAL_PLUGIN=ON
 fi
 if [ -z $BUILD_GEOPDF_PLUGIN ]; then
-  BUILD_GEOPDF_PLUGIN=ON
+  BUILD_GEOPDF_PLUGIN=OFF
 fi
 if [ -z $BUILD_CNES_PLUGIN ]; then
   BUILD_CNES_PLUGIN=ON
@@ -149,16 +153,13 @@ if [ -z $BUILD_KML_PLUGIN ]; then
   BUILD_KML_PLUGIN=ON
 fi
 if [ -z $BUILD_OPENCV_PLUGIN ]; then
-  BUILD_OPENCV_PLUGIN=ON
+  BUILD_OPENCV_PLUGIN=OFF
 fi
 if [ -z $BUILD_OPENJPEG_PLUGIN ]; then
-  BUILD_OPENJPEG_PLUGIN=ON
+  BUILD_OPENJPEG_PLUGIN=OFF
 fi
 if [ -z $BUILD_PNG_PLUGIN ]; then
   BUILD_PNG_PLUGIN=ON
-fi
-if [ -z $BUILD_OMS ]; then
-  BUILD_OMS=OFF
 fi
 if [ -z $BUILD_SQLITE_PLUGIN ]; then
   BUILD_SQLITE_PLUGIN=ON
