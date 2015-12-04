@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
    ossimBatchTest obt;
    if (!obt.initialize(ap))
    {
-      return_status = -1;
+      return_status = 4;
    }
    else
    {
@@ -42,11 +42,11 @@ int main(int argc, char *argv[])
       
       // Bitwise and ops to isolate status bits (see ossimBatchTest.h for bit definitions)
       if (status == ossimBatchTest::TEST_TBD)
-         return_status = -1; // nothing was done
+         return_status = 1; // nothing was done
       else if (status & ossimBatchTest::TEST_ERROR)
-         return_status = -1; // an error occurred running a command
+         return_status = 2; // an error occurred running a command
       else if (status & ossimBatchTest::TEST_FAILED)
-         return_status = 1;  // A test failed post-processing (diff)
+         return_status = 3;  // A test failed post-processing (diff)
       else
          return_status = 0;  // Everything passed
    }
