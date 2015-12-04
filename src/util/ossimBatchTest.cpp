@@ -636,6 +636,7 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
          if (m_configFileName.isReadable())
          {
             overall_test_status |= execute();
+            cout<<"\n#### DEBUG 3 #### overall_test_status = "<<overall_test_status<<endl;
             ++processedIndexes;
          }
 
@@ -648,6 +649,7 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
       }
    }
 
+   cout<<"\n#### DEBUG 4 #### overall_test_status = "<<overall_test_status<<endl;
    return overall_test_status;
 }
 
@@ -785,11 +787,13 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
    {
       ossimString prefixBase = prefix + "preprocess_command";
       testStatus |= processCommands( prefixBase, kwl, testName, false );
+      cout<<"\n#### DEBUG 1 #### testStatus = "<<testStatus<<endl;
    }
    if ( expectedFlag  && !(testStatus & TEST_ERROR))
    {
       ossimString prefixBase = prefix + "expected_results_command";
       testStatus |= processCommands( prefixBase, kwl, testName, true );
+      cout<<"\n#### DEBUG 2 #### testStatus = "<<testStatus<<endl;
    }
    if ( testFlag  && !(testStatus & TEST_ERROR))
    {
