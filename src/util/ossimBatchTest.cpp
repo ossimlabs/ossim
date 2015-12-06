@@ -19,6 +19,7 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimTimer.h>
+#include <ossim/base/ossimException.h>
 #include <ossim/init/ossimInit.h>
 
 #include <cstdlib> /* for system() */
@@ -406,195 +407,211 @@ void ossimBatchTest::writeTemplate(const ossimFilename& templateFile, bool write
 ossim_uint8 ossimBatchTest::execute()
 {
    if (m_templateModeActive)
-      return (ossim_uint8) TEST_PASSED;
+      return TEST_PASSED;
 
-   cout << "\nExecuting batch test for config file: <" << m_configFileName << ">" << endl;
+   ostringstream errmsg;
+   ossim_uint8 status = TEST_TBD;
 
-   // Fetch possible existing env vars for the expected and output directories:
-   char* obt_exp_dir = getenv("OBT_EXP_DIR");
-   char* obt_out_dir = getenv("OBT_OUT_DIR");
-
-   // Establish the top-level test directory that will contain log, exp and out subdirs:
-   ossimFilename base_output_dir;
-   if (!obt_exp_dir || !obt_out_dir)
+   try
    {
-      base_output_dir = ossimEnvironmentUtility::instance()->getEnvironmentVariable(
-            ossimString("OSSIM_BATCH_TEST_RESULTS") );
-      if (base_output_dir.empty())
+      cout << "\nExecuting batch test for config file: <" << m_configFileName << ">" << endl;
+
+      // Fetch possible existing env vars for the expected and output directories:
+      char* obt_exp_dir = getenv("OBT_EXP_DIR");
+      char* obt_out_dir = getenv("OBT_OUT_DIR");
+
+      // Establish the top-level test directory that will contain log, exp and out subdirs:
+      ossimFilename base_output_dir;
+      if (!obt_exp_dir || !obt_out_dir)
       {
-         cout<<"\nossimBatchTest WARNING: The environment variable OSSIM_BATCH_TEST_RESULTS is not "
-               "defined. Results will be written relative to the current working directory."<<endl;
+         base_output_dir = ossimEnvironmentUtility::instance()->getEnvironmentVariable(
+               ossimString("OSSIM_BATCH_TEST_RESULTS") );
+         if (base_output_dir.empty())
+         {
+            cout<<"\nossimBatchTest WARNING: The environment variable OSSIM_BATCH_TEST_RESULTS is not "
+                  "defined. Results will be written relative to the current working directory."<<endl;
+         }
+         base_output_dir = base_output_dir.expand().dirCat(m_configFileName.fileNoExtension());
       }
-      base_output_dir = base_output_dir.expand().dirCat(m_configFileName.fileNoExtension());
-   }
-   else
-   {
-      base_output_dir = obt_out_dir;
-   }
-
-   // The following env vars permits the user to specify the test directory as a variable in the KWL
-   // config file. Only define default OBT dirs if the environment variables are not already
-   // defined (OLK 11/2015)
-   if (obt_out_dir == 0)
-   {
-      m_outDir = base_output_dir.dirCat("out");
-#if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
-      ossimString env_spec = ossimString("OBT_OUT_DIR=") + m_outDir;
-      _putenv(env_spec.chars());
-#else
-      setenv("OBT_OUT_DIR", m_outDir.chars(), 1);
-#endif
-   }
-   else
-   {
-      m_outDir = obt_out_dir;
-   }
-
-   if (obt_exp_dir == 0)
-   {
-      m_expDir = base_output_dir.dirCat("exp");
-#if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
-      env_spec = ossimString("OBT_EXP_DIR=") + m_expDir;
-      _putenv(env_spec.chars());
-#else
-      setenv("OBT_EXP_DIR", m_expDir.chars(), 1);
-#endif
-   }
-   else
-   {
-      m_expDir = obt_exp_dir;
-   }
-
-   // Turn expansion of for like: $(OBT_TEST_RESULTS)
-   ossimKeywordlist kwl;
-   kwl.setExpandEnvVarsFlag(true);
-   if (!kwl.addFile(m_configFileName))
-      return (ossim_uint8) TEST_ERROR;
-
-   // The KWL may contain names of other test config files. Is this a list of config files? If the
-   // status returns anything other than TBD, then a list was present and processed:
-   ossim_uint8 status = processConfigList(kwl);
-   if (status != TEST_TBD)
-      return status;
-
-   if ( m_allIsDisabled )
-      disableAllKwl(kwl);
-
-   // Pick up individual test options passed in by user.  These will adjust the keyword list
-   // flags loaded in memory.
-   if ( m_cleanTestList.size() ) // Do this first always...
-   {
-      std::string testCommand = "run_clean_commands";
-      preprocessKwl(m_cleanTestList, testCommand, kwl);
-   }
-
-   if ( m_preprocessTestList.size() )
-   {
-      std::string testCommand = "run_preprocessing_commands";
-      preprocessKwl(m_preprocessTestList, testCommand, kwl);
-   }
-
-   if ( m_acceptTestList.size() )
-   {
-      std::string testCommand = "run_expected_results_commands";
-      preprocessKwl(m_acceptTestList, testCommand, kwl);
-   }
-
-   if ( m_runTestList.size() ) // Do this last always...
-   {
-      std::string testCommand = "run_test_commands";
-      preprocessKwl(m_runTestList, testCommand, kwl);
-   }
-
-   ossimFilename logDir = base_output_dir.dirCat("log");
-   const char* lookup = kwl.find("log_directory");
-   if ( lookup )
-   {
-      logDir = convertToNative( lookup ).c_str();
-   }
-
-   if ( logDir.exists() == false ) 
-   {
-      if ( logDir.createDirectory() == false )
+      else
       {
-         cerr << "Could not create: " << logDir << endl;
-         return (ossim_uint8) TEST_ERROR;
+         base_output_dir = obt_out_dir;
       }
-   }
 
-   // Establish path to and active stream for the log file:
-   ossimFilename logFile;
-   getLogFilename(logFile);
-   logFile = logDir.dirCat(logFile);
-   ossimSetLogFilename(logFile);
-   m_logStr.open(logFile.c_str());
-   if ( m_logStr.fail() )
-   {
-      cerr << "Could not open: " << logFile << endl;
-      return (ossim_uint8) TEST_ERROR;
-   }
-   else
-   {
+      // The following env vars permits the user to specify the test directory as a variable in the KWL
+      // config file. Only define default OBT dirs if the environment variables are not already
+      // defined (OLK 11/2015)
+      if (obt_out_dir == 0)
+      {
+         m_outDir = base_output_dir.dirCat("out");
+#if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
+         ossimString env_spec = ossimString("OBT_OUT_DIR=") + m_outDir;
+         _putenv(env_spec.chars());
+#else
+         setenv("OBT_OUT_DIR", m_outDir.chars(), 1);
+#endif
+      }
+      else
+      {
+         m_outDir = obt_out_dir;
+      }
+
+      if (obt_exp_dir == 0)
+      {
+         m_expDir = base_output_dir.dirCat("exp");
+#if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
+         env_spec = ossimString("OBT_EXP_DIR=") + m_expDir;
+         _putenv(env_spec.chars());
+#else
+         setenv("OBT_EXP_DIR", m_expDir.chars(), 1);
+#endif
+      }
+      else
+      {
+         m_expDir = obt_exp_dir;
+      }
+
+      // Turn expansion of for like: $(OBT_TEST_RESULTS)
+      ossimKeywordlist kwl;
+      kwl.setExpandEnvVarsFlag(true);
+      if (!kwl.addFile(m_configFileName))
+      {
+         status = TEST_ERROR;
+         errmsg << "Error encountered reading test config at <"<<m_configFileName<<">."<<endl;
+         throw ossimException(errmsg.str());
+      }
+
+      // The KWL may contain names of other test config files. Is this a list of config files? If the
+      // status returns anything other than TBD, then a list was present and processed:
+      status = processConfigList(kwl);
+      if (status != TEST_TBD)
+         throw ossimException("Processed list of config files."); // Not really an exception, just bumping out of execution
+
+      if ( m_allIsDisabled )
+         disableAllKwl(kwl);
+
+      // Pick up individual test options passed in by user.  These will adjust the keyword list
+      // flags loaded in memory.
+      if ( m_cleanTestList.size() ) // Do this first always...
+      {
+         std::string testCommand = "run_clean_commands";
+         preprocessKwl(m_cleanTestList, testCommand, kwl);
+      }
+
+      if ( m_preprocessTestList.size() )
+      {
+         std::string testCommand = "run_preprocessing_commands";
+         preprocessKwl(m_preprocessTestList, testCommand, kwl);
+      }
+
+      if ( m_acceptTestList.size() )
+      {
+         std::string testCommand = "run_expected_results_commands";
+         preprocessKwl(m_acceptTestList, testCommand, kwl);
+      }
+
+      if ( m_runTestList.size() ) // Do this last always...
+      {
+         std::string testCommand = "run_test_commands";
+         preprocessKwl(m_runTestList, testCommand, kwl);
+      }
+
+      ossimFilename logDir = base_output_dir.dirCat("log");
+      const char* lookup = kwl.find("log_directory");
+      if ( lookup )
+      {
+         logDir = convertToNative( lookup ).c_str();
+      }
+
+      if (( logDir.exists() == false ) && ( logDir.createDirectory() == false ))
+      {
+         status = TEST_ERROR;
+         errmsg << "Could not create: <" << logDir << ">."<< endl;
+         throw ossimException(errmsg.str());
+      }
+
+      // Establish path to and active stream for the log file:
+      ossimFilename logFile;
+      getLogFilename(logFile);
+      logFile = logDir.dirCat(logFile);
+      ossimSetLogFilename(logFile);
+      m_logStr.open(logFile.c_str());
+      if ( m_logStr.fail() )
+      {
+         status = TEST_ERROR;
+         errmsg << "Could not open: <" << logFile  << ">."<< endl;
+         throw ossimException(errmsg.str());
+      }
+
       cout << "Logging to file: " << logFile << "\n";
-   }
 
-   ossimString date;
-   getDateString(date);
-   m_logStr << "// ---\n"
-      << "// ossim-batch-test log:\n"
-      << "// date format = yyyymmddhhmmss\n"
-      << "//---\n"
-      << "start_time: " << date << "\n"
-      << "config_file: " << m_configFileName<< "\n";
-   // Start the timer.
-   ossimTimer::instance()->setStartTick();
+      ossimString date;
+      getDateString(date);
+      m_logStr << "// ---\n"
+            << "// ossim-batch-test log:\n"
+            << "// date format = yyyymmddhhmmss\n"
+            << "//---\n"
+            << "start_time: " << date << "\n"
+            << "config_file: " << m_configFileName<< "\n";
+      // Start the timer.
+      ossimTimer::instance()->setStartTick();
 
-   double startTime = ossimTimer::instance()->time_s();
+      double startTime = ossimTimer::instance()->time_s();
 
-   // Get the number of test:
-   ossimString regExpStr = "test[0-9]+\\.";
-   ossim_uint32 num_tests = kwl.getNumberOfSubstringKeys(regExpStr);
-   const ossim_uint32 MAX_INDEX = num_tests + 1000;
-   ossimString prefixBase = "test";
-   ossim_uint32 index = 0;
-   ossim_uint32 processedIndexes = 0;
-   ossimString prefix;
+      // Get the number of test:
+      ossimString regExpStr = "test[0-9]+\\.";
+      ossim_uint32 num_tests = kwl.getNumberOfSubstringKeys(regExpStr);
+      const ossim_uint32 MAX_INDEX = num_tests + 1000;
+      ossimString prefixBase = "test";
+      ossim_uint32 index = 0;
+      ossim_uint32 processedIndexes = 0;
+      ossimString prefix;
 
-   // If no test prefix is used, this implies a single test:
-   bool is_single_test = (num_tests == 0);
-   if (is_single_test)
-   {
-      num_tests = 1;
-      prefix = "";
-   }
-   
-   ossim_uint8 overall_test_status = (ossim_uint8) TEST_TBD;
-   while ( processedIndexes < num_tests )
-   {
-      if (!is_single_test)
-         prefix = prefixBase + ossimString::toString(index) + ".";
+      // If no test prefix is used, this implies a single test:
+      bool is_single_test = (num_tests == 0);
+      if (is_single_test)
+      {
+         num_tests = 1;
+         prefix = "";
+      }
 
-      ossim_uint8 individual_test_status = processTest( prefix, kwl);
-      if ( individual_test_status != (ossim_uint8) TEST_TBD)
-         ++processedIndexes;
+      status = (ossim_uint8) TEST_TBD;
+      while ( processedIndexes < num_tests )
+      {
+         if (!is_single_test)
+            prefix = prefixBase + ossimString::toString(index) + ".";
 
-      overall_test_status |= individual_test_status;
-      ++index;
-      if ( index >= MAX_INDEX ) 
-         break; 
-   }
+         ossim_uint8 individual_test_status = processTest( prefix, kwl);
+         if ( individual_test_status != (ossim_uint8) TEST_TBD)
+            ++processedIndexes;
 
-   getDateString(date);
-   m_logStr << "\nstop_time: " << date << "\n";
-   double stopTime = ossimTimer::instance()->time_s();
-   m_logStr << "total elapsed time in seconds: "
-      << std::setiosflags(ios::fixed) << std::setprecision(4)
+         status |= individual_test_status;
+         cout << "\n#### DEBUG 5 #### status = "<<(int)status<<endl;
+
+         ++index;
+         if ( index >= MAX_INDEX )
+            break;
+      }
+
+      getDateString(date);
+      m_logStr << "\nstop_time: " << date << "\n";
+      double stopTime = ossimTimer::instance()->time_s();
+      m_logStr << "total elapsed time in seconds: "
+            << std::setiosflags(ios::fixed) << std::setprecision(4)
       << (stopTime-startTime)
       << endl; // flush
-   m_logStr.close();
+      m_logStr.close();
+      cout << "\nWrote log: " << logFile << "\n" << endl;
+   }
+   catch (ossimException& e)
+   {
+      cout << "\nossimBatchTest::execute() -- " << e.what() <<" Exiting with status = "
+            << (int) status << endl;
+      return status;
+   }
 
-   cout << "\nWrote log: " << logFile << "\n" << endl;
-   return overall_test_status;
+   cout <<"\nossimBatchTest::execute() exiting with status = "<< (int) status << endl;
+   return status;
 }
 
 //************************************************************************************************
