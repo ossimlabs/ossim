@@ -1186,9 +1186,9 @@ bool ossimBatchTest::getTempFileName( const ossimString& prefix,
 
 bool ossimBatchTest::getDefaultTempFileDir( ossimFilename& tempFile ) const
 {
-   // Create a default tmp directory under OSSIM_BATCH_TEST_RESULTS.
-   tempFile = ossimEnvironmentUtility::instance()->getEnvironmentVariable(
-      ossimString("OSSIM_BATCH_TEST_RESULTS") );
+   // Create a default tmp directory under OBT_OUT_DIR.
+   tempFile = ossimEnvironmentUtility::instance()->
+         getEnvironmentVariable(ossimString("OBT_OUT_DIR"));
    if (!tempFile.empty())
       tempFile = tempFile.dirCat("tmp");
    else
