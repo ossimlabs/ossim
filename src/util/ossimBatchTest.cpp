@@ -586,7 +586,7 @@ ossim_uint8 ossimBatchTest::execute()
             ++processedIndexes;
 
          status |= individual_test_status;
-         cout << "\n#### DEBUG 5 #### status = "<<(int)status<<endl;
+         cout << "\n#### DEBUG 5 #### status = "<<(int)status<<endl; //TODO: remove
 
          ++index;
          if ( index >= MAX_INDEX )
@@ -653,7 +653,7 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
          if (m_configFileName.isReadable())
          {
             overall_test_status |= execute();
-            cout<<"\n#### DEBUG 3 #### overall_test_status = "<<(int)overall_test_status<<endl;
+            cout<<"\n#### DEBUG 3 #### overall_test_status = "<<(int)overall_test_status<<endl; //TODO: remove
             ++processedIndexes;
          }
 
@@ -666,7 +666,7 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
       }
    }
 
-   cout<<"\n#### DEBUG 4 #### overall_test_status = "<<(int)overall_test_status<<endl;
+   cout<<"\n#### DEBUG 4 #### overall_test_status = "<<(int)overall_test_status<<endl; //TODO: remove
    return overall_test_status;
 }
 
@@ -804,18 +804,19 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
    {
       ossimString prefixBase = prefix + "preprocess_command";
       testStatus |= processCommands( prefixBase, kwl, testName, false );
-      cout<<"\n#### DEBUG 1 #### testStatus = "<<(int)testStatus<<endl;
+      cout<<"\n#### DEBUG 1 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
    }
    if ( expectedFlag  && !(testStatus & TEST_ERROR))
    {
       ossimString prefixBase = prefix + "expected_results_command";
       testStatus |= processCommands( prefixBase, kwl, testName, true );
-      cout<<"\n#### DEBUG 2 #### testStatus = "<<(int)testStatus<<endl;
+      cout<<"\n#### DEBUG 2 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
    }
    if ( testFlag  && !(testStatus & TEST_ERROR))
    {
       ossimString prefixBase = prefix + "test_command";
       testStatus |= processCommands( prefixBase, kwl, testName, true );
+      cout<<"\n#### DEBUG 6 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
    }
    if ( postProcessFlag  && !(testStatus & TEST_ERROR))
    {
@@ -825,14 +826,17 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
       {
          ossimString prefixBase = prefix + "postprocess_command";
          testStatus |= processCommands( prefixBase, kwl, testName, false, tempFile );
+         cout<<"\n#### DEBUG 7 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
       }
       else
       {
          m_logStr << testName << ": ERROR temp file could not be derived..." << endl;
          testStatus |= TEST_ERROR; // Set an error bit...
-      }
+         cout<<"\n#### DEBUG 8 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
+     }
    }
 
+   cout<<"\n#### DEBUG 9 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
    m_logStr << "end_test: " << testName << "\n";
 
    m_logStr << "----------------------------------------------------------------------\n"; 
