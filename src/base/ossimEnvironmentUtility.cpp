@@ -1,5 +1,6 @@
 #include <ossim/base/ossimEnvironmentUtility.h>
 #include <cstdlib>
+#include <sstream>
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
 #  define OSSIM_ENVIRONMENT_UTILITY_UNIX 0
@@ -7,6 +8,8 @@
 #else
 #  define OSSIM_ENVIRONMENT_UTILITY_UNIX 1
 #endif
+
+using namespace std;
 
 ossimEnvironmentUtility* ossimEnvironmentUtility::theInstance=0;
 
@@ -48,6 +51,20 @@ ossimString ossimEnvironmentUtility::getEnvironmentVariable(const ossimString& v
       result = (const char*)lookup;
    }
    return result;
+}
+
+void ossimEnvironmentUtility::setEnvironmentVariable(const char* variable, const char* value) const
+{
+#if OSSIM_ENVIRONMENT_UTILITY_UNIX
+   setenv(variable,  value,    1); // For backwards compatiblity.
+#else
+   ostringstream arg;
+   arg<<variable<<"="<<value<<ends;
+   char varExp [512];
+   arg.str().copy(varExp, 512);
+   _putenv(varExp); // For backwards compatiblity.
+#endif
+
 }
 
 ossimFilename ossimEnvironmentUtility::getUserOssimSupportDir()const

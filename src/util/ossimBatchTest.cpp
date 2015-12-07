@@ -71,7 +71,6 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    setenv("MKDIR_CMD", "mkdir -p", 1);
    setenv("RM_CMD",    "rm -f",    1);
    setenv("RMDIR_CMD", "rm -rf",   1);
-   
 #endif
    
    std::string tempString;
@@ -243,8 +242,8 @@ void ossimBatchTest::writeTemplate(const ossimFilename& templateFile, bool write
          << "// NOTES:\n"
          << "// * The following environment variables must be set before running batch test:\n"
          << "//     OSSIM_BATCH_TEST_DATA     Top-level dir containing all test source data\n"
-         << "//     OBT_EXP_DIR  Top-level dir containing all test expected results \n"
-         << "//     OBT_OUT_DIR  Top-level dir containing all test results and logging output \n"
+         << "//     OSSIM_BATCH_TEST_EXPECTED Top-level dir containing all test expected results \n"
+         << "//     OSSIM_BATCH_TEST_RESULTS  Top-level dir containing all test results and logging output \n"
          << "// \n"
          << "// * The variables OBT_EXP_DIR and OBT_OUT_DIR are assigned during run-time to\n"
          << "//   the proper paths according to the config filename. It isn't required to replace\n"
@@ -359,8 +358,8 @@ void ossimBatchTest::writeTemplate(const ossimFilename& templateFile, bool write
          << "// NOTES:\n"
          << "// * The following environment variables must be set before running batch test:\n"
          << "//     OSSIM_BATCH_TEST_DATA     Top-level dir containing all test source data\n"
-         << "//     OBT_EXP_DIR  Top-level dir containing all test expected results \n"
-         << "//     OBT_OUT_DIR  Top-level dir containing all test results and logging output \n"
+         << "//     OSSIM_BATCH_TEST_EXPECTED Top-level dir containing all test expected results \n"
+         << "//     OSSIM_BATCH_TEST_RESULTS  Top-level dir containing all test results and logging output \n"
          << "// \n"
          << "// * You can use existing environment variables as $(YOUR_VARIABLE). They will be \n"
          << "//   expanded at run time if valid.\n"
@@ -414,35 +413,39 @@ ossim_uint8 ossimBatchTest::execute()
 
    try
    {
-      cout << "\nExecuting batch test for config file: <" << m_configFileName << ">" << endl;
+      ossimString configName (m_configFileName.fileNoExtension());
+      cout << "\nExecuting batch test for config: <" << configName << ">" << endl;
+      ossimEnvironmentUtility* ossimEnv = ossimEnvironmentUtility::instance();
 
       // Fetch possible existing env vars for the expected and output directories:
-      m_expDir = getenv("OBT_EXP_DIR");
-      ossimFilename base_output_dir = getenv("OBT_OUT_DIR");
-
+      ossimFilename base_output_dir =
+            ossimEnv->getEnvironmentVariable(ossimString("OSSIM_BATCH_TEST_RESULTS"));
       if (base_output_dir.empty())
       {
          // Need to establish the top-level test directory that will contain log and out subdirs:
-         ossimEnvironmentUtility* ossimEnv = ossimEnvironmentUtility::instance();
-         base_output_dir = ossimEnv->getEnvironmentVariable(ossimString("OSSIM_BATCH_TEST_RESULTS"));
-         if (base_output_dir.empty())
-         {
-            cout<<"\nossimBatchTest WARNING: The environment variable OBT_OUT_DIR is not "
-                  "defined. Results will be written relative to the current working directory."<<endl;
-            base_output_dir = ossimEnv->getCurrentWorkingDir();
-         }
-
-         cout<<"Note: Env var OSSIM_BATCH_TEST_RESULTS found even though it is deprecated. Please"
-               " use OBT_EXP_DIR and OBT_OUT_DIR instead. Continuing with deprecated value."<<endl;
-         base_output_dir = base_output_dir.expand().dirCat(m_configFileName.fileNoExtension());
+         cout<<"\nossimBatchTest WARNING: The environment variable OSSIM_BATCH_TEST_RESULTS is not "
+               "defined. Results will be written relative to the current working directory."<<endl;
+         base_output_dir = ossimEnv->getCurrentWorkingDir();
       }
-      m_outDir = base_output_dir.dirCat("out");
 
+      // The base output directory is appended with the name of the test config file. Need to export
+      // the corresponding env var so that the KeywordList class can expand the same env var used
+      // in the config file:
+      base_output_dir = base_output_dir.dirCat(configName);
+      m_outDir = base_output_dir.dirCat("out");
+      ossimEnv->setEnvironmentVariable("OBT_OUT_DIR", m_outDir.chars());
+
+      m_expDir = ossimEnv->getEnvironmentVariable(ossimString("OSSIM_BATCH_TEST_EXPECTED"));
       if (m_expDir.empty())
       {
          // Need to establish the top-level test directory that will contain expected results:
          m_expDir = base_output_dir.dirCat("exp");
       }
+      else
+      {
+         m_expDir = m_expDir.dirCat(configName);
+      }
+      ossimEnv->setEnvironmentVariable("OBT_EXP_DIR", m_expDir.chars());
 
       // Turn expansion of for like: $(OBT_OUT_DIR)
       ossimKeywordlist kwl;
