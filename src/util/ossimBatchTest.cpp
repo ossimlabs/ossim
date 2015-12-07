@@ -420,9 +420,9 @@ ossim_uint8 ossimBatchTest::execute()
       m_expDir = getenv("OBT_EXP_DIR");
       ossimFilename base_output_dir = getenv("OBT_OUT_DIR");
 
-      // Establish the top-level test directory that will contain log and out subdirs:
       if (base_output_dir.empty())
       {
+         // Need to establish the top-level test directory that will contain log and out subdirs:
          ossimEnvironmentUtility* ossimEnv = ossimEnvironmentUtility::instance();
          base_output_dir = ossimEnv->getEnvironmentVariable(ossimString("OSSIM_BATCH_TEST_RESULTS"));
          if (base_output_dir.empty())
@@ -435,28 +435,13 @@ ossim_uint8 ossimBatchTest::execute()
          cout<<"Note: Env var OSSIM_BATCH_TEST_RESULTS found even though it is deprecated. Please"
                " use OBT_EXP_DIR and OBT_OUT_DIR instead. Continuing with deprecated value."<<endl;
          base_output_dir = base_output_dir.expand().dirCat(m_configFileName.fileNoExtension());
-
-         // The following env vars permits the user to specify the test directory as a variable in the KWL
-         // config file. Only define default OBT dirs if the environment variables are not already
-         // defined (OLK 11/2015)
-#if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
-         ossimString env_spec = ossimString("OBT_OUT_DIR=") + m_outDir;
-         _putenv(env_spec.chars());
-#else
-         setenv("OBT_OUT_DIR", base_output_dir.chars(), 1);
-#endif
       }
       m_outDir = base_output_dir.dirCat("out");
 
       if (m_expDir.empty())
       {
+         // Need to establish the top-level test directory that will contain expected results:
          m_expDir = base_output_dir.dirCat("exp");
-#if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
-         env_spec = ossimString("OBT_EXP_DIR=") + m_expDir;
-         _putenv(env_spec.chars());
-#else
-         setenv("OBT_EXP_DIR", m_expDir.chars(), 1);
-#endif
       }
 
       // Turn expansion of for like: $(OBT_OUT_DIR)
