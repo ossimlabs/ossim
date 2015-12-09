@@ -74,6 +74,7 @@ public:
    static const char* FALSE_EASTING_KW;
    static const char* FALSE_NORTHING_KW;
    static const char* FEATURE_NAME_KW;
+   static const char* FILE_KW;
    static const char* FILENAME_KW;
    static const char* FILEPATH_KW;
    static const char* FILL_FLAG_KW;

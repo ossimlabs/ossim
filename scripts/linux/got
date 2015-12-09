@@ -17,7 +17,7 @@
 ###############################################################################
 
 
-# FUNCTION: do_git <repo_name> <cmd_line_arg_1> <cmd_line_arg_2> <cmd_line_arg_3>
+# FUNCTION: do_git <repo_name> <cmd_line_arg_1> <cmd_line_arg_2> <cmd_line_arg_3> <cmd_line_arg_4>
 function do_git {
   if [ -d $1 ]; then
     echo; 

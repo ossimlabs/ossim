@@ -64,6 +64,7 @@ const char* ossimKeywordNames::FALSE_EASTING_NORTHING_UNITS_KW = "false_easting_
 const char* ossimKeywordNames::FALSE_EASTING_KW = "false_easting";
 const char* ossimKeywordNames::FALSE_NORTHING_KW = "false_northing";
 const char* ossimKeywordNames::FEATURE_NAME_KW = "feature_name";
+const char* ossimKeywordNames::FILE_KW = "file";
 const char* ossimKeywordNames::FILENAME_KW = "filename";
 const char* ossimKeywordNames::FILEPATH_KW = "filepath";
 const char* ossimKeywordNames::FILL_FLAG_KW = "fill_flag";
