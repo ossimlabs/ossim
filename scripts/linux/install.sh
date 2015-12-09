@@ -58,11 +58,13 @@ echo; echo "STATUS: Install completed successfully. Install located in $OSSIM_IN
 popd # out of OSSIM_BUILD_DIR
 
 if [ "$DO_ZIP" == "zip" ] ; then
-  pushd $OSSIM_INSTALL_PREFIX/..
-  echo; echo "STATUS: Zipping up install directory..."
-  TIMESTAMP=`date +%Y-%m-%d-%H%M`
+  pushd $OSSIM_INSTALL_PREFIX
+  INSTALL_DIRNAME=${PWD##*/}
+  echo; echo "STATUS: Zipping up install directory: <$INSTALL_DIRNAME>..."
+  cd ..
+  TIMESTAMP=`date +%Y-%m-%d`
   FILENAME_TS="install_$TIMESTAMP.zip"
-  zip -r $FILENAME_TS $OSSIM_INSTALL_PREFIX
+  zip -r $FILENAME_TS $INSTALL_DIRNAME
 
   # Make a copy that can be used as artifact of latest build/install. This will overwrite previous sandboxes so only
   # the latest is used for testing (standalone) or generating expected results
