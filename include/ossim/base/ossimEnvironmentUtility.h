@@ -12,6 +12,7 @@ public:
    static ossimEnvironmentUtility* instance();
 
    ossimString getEnvironmentVariable(const ossimString& variable)const;
+   void setEnvironmentVariable(const char* variable, const char* value) const;
 
    ossimFilename getUserDir()const;
    ossimString   getUserName()const;
