@@ -10,7 +10,7 @@
 // Description:
 // Contains class definition for ossimGeneralRasterInfo
 //*******************************************************************
-// $Id: ossimGeneralRasterInfo.cpp 21745 2012-09-16 15:21:53Z dburken $
+// $Id: ossimGeneralRasterInfo.cpp 23645 2015-12-04 13:17:34Z gpotts $
 
 #include <ossim/imaging/ossimGeneralRasterInfo.h>
 #include <ossim/base/ossimInterleaveTypeLut.h>
@@ -424,10 +424,13 @@ bool ossimGeneralRasterInfo::loadState(const ossimKeywordlist& kwl, const char* 
       // Check for errors in the ossimKeywordlist.
       if(kwl.getErrorStatus() == ossimErrorCodes::OSSIM_ERROR)
       {
-         ossimNotify(ossimNotifyLevel_WARN)
+        if(traceDebug())
+        {
+          ossimNotify(ossimNotifyLevel_WARN)
             << MODULE << " ERROR:\n"
             << "Detected an error in the keywordlist:  " << kwl
             << std::endl;
+        }
          break;
       }
 

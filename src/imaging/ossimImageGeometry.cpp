@@ -224,17 +224,25 @@ bool ossimImageGeometry::worldToLocal(const ossimGpt& world_pt, ossimDpt& local_
    
    if ( m_projection.valid() )
    {
-      const ossimEquDistCylProjection* eqProj =
-         dynamic_cast<const ossimEquDistCylProjection*>( m_projection.get() );
+      //const ossimEquDistCylProjection* eqProj =
+      //   dynamic_cast<const ossimEquDistCylProjection*>( m_projection.get() );
       
       ossimDpt full_image_pt;
 
-      if ( eqProj && (m_imageSize.hasNans() == false) )
-      {
+      //***** GCP
+      // I am having major problems with the call and is messing up on Image that are edge to edge -180 to 180.
+      // It appears to wrap and think that the image is onl 1 pixel wide.  I am commenting out for now
+      // until a better solution can be done for points that wrap.  We need a general implementation that will work
+      // with any projector
+      //
+
+      //if ( eqProj && (m_imageSize.hasNans() == false) )
+     // {
          // Call specialized method to handle wrapping...
-         eqProj->worldToLineSample( world_pt, m_imageSize, full_image_pt );
-      }
-      else if( isAffectedByElevation() )
+     //    eqProj->worldToLineSample( world_pt, m_imageSize, full_image_pt );
+     // }
+     // else if( isAffectedByElevation() )
+      if( isAffectedByElevation() )
       {
          ossimGpt copyPt( world_pt );
          if(world_pt.isHgtNan())

@@ -19,11 +19,11 @@
 //              Initial coding.
 //<
 //**************************************************************************
-// $Id: ossimElevManager.cpp 23442 2015-07-17 15:55:05Z okramer $
+// $Id: ossimElevManager.cpp 23641 2015-12-02 20:32:06Z dburken $
 
 #include <ossim/elevation/ossimElevManager.h>
 #include <ossim/base/ossimEnvironmentUtility.h>
-#include <ossim/elevation/ossimElevationDatabase.h>
+#include <ossim/elevation/ossimElevationCellDatabase.h>
 #include <ossim/base/ossimDirectory.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimGeoidManager.h>
@@ -641,7 +641,7 @@ double ossimElevManager::getMeanSpacingMeters() const
    return spacing;
 }
 
-std::ostream& ossimElevManager::print(std::ostream& out) const
+std::ostream& ossimElevManager::print(ostream& out) const
 {
    out << "\nossimElevManager @ "<< (ossim_uint64) this
          << "\nm_defaultHeightAboveEllipsoid = "<<m_defaultHeightAboveEllipsoid
@@ -653,14 +653,9 @@ std::ostream& ossimElevManager::print(std::ostream& out) const
    {
       out<<"\nm_dbRoundRobin["<<i<<"].size = "<<m_dbRoundRobin[i].size()<<endl;
       for (ossim_uint32 j=0; j<m_dbRoundRobin[i].size(); ++j)
-      {
-         out<<"m_dbRoundRobin["<<i<<"]["<<j<<"] = ";//<<m_dbRoundRobin[i][j]->print(out)<<endl;
-         m_dbRoundRobin[i][j]->print(out);
-      }
-
+         out<<"m_dbRoundRobin["<<i<<"]["<<j<<"] = "<<m_dbRoundRobin[i][j]->print(out)<<endl;
    }
-   out<<"\n";
-   ossimElevSource::print(out);
+   cout<<"\n"<<ossimElevSource::print(cout);
    return out;
 }
 

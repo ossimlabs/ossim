@@ -9,7 +9,8 @@
 
 #ifndef ossimSrtmElevationDatabase_HEADER
 #define ossimSrtmElevationDatabase_HEADER 1
-#include "ossimElevationDatabase.h"
+
+#include <ossim/elevation/ossimElevationCellDatabase.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/elevation/ossimSrtmHandler.h>
 #include <OpenThreads/Mutex>

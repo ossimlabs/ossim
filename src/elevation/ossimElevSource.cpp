@@ -269,9 +269,8 @@ std::ostream& ossimElevSource::print(std::ostream& out) const
          << "\ntheMaxHeightAboveMSL = "<<theMaxHeightAboveMSL
          << "\ntheNullHeightValue = "<<theNullHeightValue
          << "\ntheSeaLevelValue = "<<theSeaLevelValue
-         << "\ntheGroundRect = "<<theGroundRect;
-         //<< ossimSource::print(out);
-   ossimSource::print(out);
+         << "\ntheGroundRect = "<<theGroundRect
+         << ossimSource::print(out);
    return out;
 }
 

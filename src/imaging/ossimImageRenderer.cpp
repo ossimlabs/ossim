@@ -7,7 +7,7 @@
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimImageRenderer.cpp 23564 2015-10-02 14:12:25Z dburken $
+//  $Id: ossimImageRenderer.cpp 23619 2015-11-12 18:35:57Z dburken $
 
 #include <ossim/imaging/ossimImageRenderer.h>
 #include <ossim/base/ossimDpt.h>
@@ -39,7 +39,7 @@
 using namespace std;
 
 #ifdef OSSIM_ID_ENABLED
-static const char OSSIM_ID[] = "$Id: ossimImageRenderer.cpp 23564 2015-10-02 14:12:25Z dburken $";
+static const char OSSIM_ID[] = "$Id: ossimImageRenderer.cpp 23619 2015-11-12 18:35:57Z dburken $";
 #endif
 
 static ossimTrace traceDebug("ossimImageRenderer:debug");
@@ -1468,13 +1468,12 @@ void ossimImageRenderer::getBoundingRect(ossimIrect& rect, ossim_uint32 resLevel
 void ossimImageRenderer::initializeBoundingRects()
 {
    m_rectsDirty = true;
-
+   
    // Get the input bounding rect:
-   if ( theInputConnection )
+   if ( theInputConnection && m_ImageViewTransform.valid())
    {
       m_inputR0Rect = theInputConnection->getBoundingRect(0);
-   
-      if ( m_ImageViewTransform.valid() && !m_inputR0Rect.hasNans() )
+      if (!m_inputR0Rect.hasNans() )
       {
          // This will call ossim::round<int> on the dpt's.
          m_viewRect = m_ImageViewTransform->getImageToViewBounds(m_inputR0Rect);
@@ -1483,88 +1482,88 @@ void ossimImageRenderer::initializeBoundingRects()
             // Clear the dirty flag:
             m_rectsDirty = false;
          }
+         
+         // now get a coarse estimate of the boundary poly
+         ossimDpt uli = m_inputR0Rect.ul();
+         ossimDpt uri = m_inputR0Rect.ur();
+         ossimDpt lri = m_inputR0Rect.lr();
+         ossimDpt lli = m_inputR0Rect.ll();
+         ossim_int32 stepSize = 50;
+
+         std::vector<ossimDpt> poly;
+
+         ossimDpt deltaUpper = (uri-uli)*(1.0/stepSize);
+         ossimDpt deltaRight = (lri-uri)*(1.0/stepSize);
+         ossimDpt deltaLower = (lli-lri)*(1.0/stepSize);
+         ossimDpt deltaLeft  = (uli-lli)*(1.0/stepSize);
+
+         ossimDpt p;
+         ossim_int32 idx = 0;
+         ossimDpt initialPoint= uli;
+
+         for(idx = 0; idx < stepSize;++idx)
+         {
+            m_ImageViewTransform->imageToView(initialPoint, p);
+            if(!p.hasNans())
+            {
+               poly.push_back(p);
+            }
+            initialPoint.x+=deltaUpper.x;
+            initialPoint.y+=deltaUpper.y;
+         }
+
+         initialPoint= uri;
+         for(idx = 0; idx < stepSize;++idx)
+         {
+            m_ImageViewTransform->imageToView(initialPoint, p);
+            if(!p.hasNans())
+            {
+               poly.push_back(p);
+            }
+            initialPoint.x+=deltaRight.x;
+            initialPoint.y+=deltaRight.y;
+         }
+
+         initialPoint= lri;
+         for(idx = 0; idx < stepSize;++idx)
+         {
+            m_ImageViewTransform->imageToView(initialPoint, p);
+            if(!p.hasNans())
+            {
+               poly.push_back(p);
+            }
+            initialPoint.x+=deltaLower.x;
+            initialPoint.y+=deltaLower.y;
+         }
+
+         initialPoint= lli;
+         for(idx = 0; idx < stepSize;++idx)
+         {
+            m_ImageViewTransform->imageToView(initialPoint, p);
+            if(!p.hasNans())
+            {
+               poly.push_back(p);
+            }
+            initialPoint.x+=deltaLeft.x;
+            initialPoint.y+=deltaLeft.y;
+         }
+
+         // Close the polygon and set the view area:
+         if (poly.size() >= 4)
+         {
+            poly.push_back(poly[0]);
+            m_viewArea = ossimPolyArea2d(ossimPolygon(poly));
+         }
       }
-      // now get a coarse estimate of the boundary poly
-      //
-      if(!m_inputR0Rect.hasNans())
-      {
-        ossimDpt uli = m_inputR0Rect.ul();
-        ossimDpt uri = m_inputR0Rect.ur();
-        ossimDpt lri = m_inputR0Rect.lr();
-        ossimDpt lli = m_inputR0Rect.ll();
-        ossim_int32 stepSize = 50;
-
-        std::vector<ossimDpt> poly;
-
-        ossimDpt deltaUpper = (uri-uli)*(1.0/stepSize);
-        ossimDpt deltaRight = (lri-uri)*(1.0/stepSize);
-        ossimDpt deltaLower = (lli-lri)*(1.0/stepSize);
-        ossimDpt deltaLeft  = (uli-lli)*(1.0/stepSize);
-
-        ossimDpt p;
-        ossim_int32 idx = 0;
-        ossimDpt initialPoint= uli;
-
-        for(idx = 0; idx < stepSize;++idx) 
-        {
-          m_ImageViewTransform->imageToView(initialPoint, p);
-          if(!p.hasNans())
-          {
-            poly.push_back(p);
-          }
-          initialPoint.x+=deltaUpper.x;
-          initialPoint.y+=deltaUpper.y;
-        }
-        
-        initialPoint= uri;
-        for(idx = 0; idx < stepSize;++idx) 
-        {
-          m_ImageViewTransform->imageToView(initialPoint, p);
-          if(!p.hasNans())
-          {
-            poly.push_back(p);
-          }
-          initialPoint.x+=deltaRight.x;
-          initialPoint.y+=deltaRight.y;
-        }
-        
-        initialPoint= lri;
-        for(idx = 0; idx < stepSize;++idx) 
-        {
-          m_ImageViewTransform->imageToView(initialPoint, p);
-          if(!p.hasNans())
-          {
-            poly.push_back(p);
-          }
-          initialPoint.x+=deltaLower.x;
-          initialPoint.y+=deltaLower.y;
-        }
-        
-        initialPoint= lli;
-        for(idx = 0; idx < stepSize;++idx) 
-        {
-          m_ImageViewTransform->imageToView(initialPoint, p);
-          if(!p.hasNans())
-          {
-            poly.push_back(p);
-          }
-          initialPoint.x+=deltaLeft.x;
-          initialPoint.y+=deltaLeft.y;
-        }
-        poly.push_back(poly[0]);
-
-        m_viewArea = ossimPolyArea2d(ossimPolygon(poly));
-      }
-
+      
       //ossimPolyArea2d testPolyarea = polyArea&ossimPolyArea2d(tileRect);
-
    }
 
    if ( m_rectsDirty )
    {
       m_viewRect.makeNan();
    }
-
+   
 #if 0 /* Please leave for debug. */
    ossimNotify(ossimNotifyLevel_DEBUG)
       << "ossimImageRenderer::initializeBoundingRects() debug:\n"

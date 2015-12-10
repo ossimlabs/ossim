@@ -1,4 +1,5 @@
 #include <ossim/elevation/ossimElevationDatabaseFactory.h>
+#include <ossim/elevation/ossimElevationDatabase.h>
 #include <ossim/elevation/ossimDtedElevationDatabase.h>
 #include <ossim/elevation/ossimSrtmElevationDatabase.h>
 #include <ossim/elevation/ossimGeneralRasterElevationDatabase.h>

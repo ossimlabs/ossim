@@ -1,6 +1,7 @@
 #ifndef ossimDtedElevationDatabase_HEADER
-#define ossimDtedElevationDatabase_HEADER
-#include "ossimElevationDatabase.h"
+#define ossimDtedElevationDatabase_HEADER 1
+
+#include <ossim/elevation/ossimElevationCellDatabase.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/elevation/ossimDtedHandler.h>
 #include <OpenThreads/Mutex>

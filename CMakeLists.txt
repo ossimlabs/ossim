@@ -6,11 +6,7 @@ IF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
    SET(OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES "" CACHE PATH "Specify full paths separated by ; to additional OSSIM applications you wish to include into the ossim build framework.  These will have variables setup for the ossim includes" FORCE)
 ENDIF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
 
-IF(NOT APPLE)
-  cmake_minimum_required(VERSION 2.6)
-ELSE(NOT APPLE)
-  cmake_minimum_required(VERSION 2.8)
-ENDIF(NOT APPLE)
+cmake_minimum_required(VERSION 2.8)
 
 INCLUDE(OssimVersion)
 INCLUDE(OssimCommonVariables)

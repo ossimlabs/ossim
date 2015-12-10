@@ -225,7 +225,7 @@ ossimRefPtr<ossimElevCellHandler> ossimDtedElevationDatabase::createCell(const o
 
 bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const char* prefix )
 {
-   bool result = ossimElevationDatabase::loadState(kwl, prefix);
+   bool result = ossimElevationCellDatabase::loadState(kwl, prefix);
    if(result)
    {
       if(!m_connectionString.empty()&&ossimFilename(m_connectionString).exists())
@@ -244,7 +244,7 @@ bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
 
 bool ossimDtedElevationDatabase::saveState(ossimKeywordlist& kwl, const char* prefix)const
 {
-   bool result = ossimElevationDatabase::saveState(kwl, prefix);
+   bool result = ossimElevationCellDatabase::saveState(kwl, prefix);
    
    return result;
 }

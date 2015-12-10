@@ -12,7 +12,7 @@
 // models(dems).
 // 
 //----------------------------------------------------------------------------
-// $Id: ossimChipperUtil.cpp 23423 2015-07-13 19:07:38Z dburken $
+// $Id: ossimChipperUtil.cpp 23616 2015-11-11 19:50:29Z dburken $
 
 #include <ossim/util/ossimChipperUtil.h>
 
@@ -3683,13 +3683,17 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::addIndexToRgbLutFilter(
       lutFile.string() = m_kwl->findKey( LUT_FILE_KW );
       if ( lutFile.exists() )
       {
-         lut->setLut(lutFile);
-         
+         //---
          // Connect to dems:
+         // Must do this first so that the min and max get set from the input
+         // connection prior to initializing the lut.
+         //---
          lut->connectMyInputTo( source.get() );
 
          // Note sure about this.  Make option maybe? (drb)
          lut->setMode(ossimIndexToRgbLutFilter::REGULAR);
+
+         lut->setLut(lutFile);
          
          // Set as color source for bump shade.
          result = lut.get();
@@ -4561,8 +4565,7 @@ ossimScalarType ossimChipperUtil::getOutputScalarType() const
 bool ossimChipperUtil::scaleToEightBit() const
 {
    bool result = false;
-   if ( ( m_operation == OSSIM_CHIPPER_OP_COLOR_RELIEF ) || // Always 8 bit...
-        ( getOutputScalarType() == OSSIM_UINT8 ) )
+   if ( getOutputScalarType() == OSSIM_UINT8 )
    {
       result = true;
    }
