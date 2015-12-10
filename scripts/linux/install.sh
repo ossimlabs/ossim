@@ -65,16 +65,16 @@ if [ "$DO_ZIP" == "zip" ] ; then
   TIMESTAMP=`date +%Y-%m-%d`
   FILENAME_TS="install_$TIMESTAMP.zip"
   zip -r $FILENAME_TS $INSTALL_DIRNAME
-
-  # Make a copy that can be used as artifact of latest build/install. This will overwrite previous sandboxes so only
-  # the latest is used for testing (standalone) or generating expected results
-  cp $FILENAME_TS install.zip
-
   if [ $? -ne 0 ]; then
     echo; echo "ERROR: Error encountered while zipping the install dir. Check the console log and correct."
     popd
     exit 1
   fi
+
+  # Create a link that can be used as artifact of latest build/install. This will overwrite previous sandboxes so only
+  # the latest is used for testing (standalone) or generating expected results
+  ln -s $FILENAME_TS install.zip
+
   echo "STATUS: Successfully zipped install dir to <$PWD/$FILENAME> and made a copy (install.zip)"
   popd # Out of dir containing install subdir
 fi
