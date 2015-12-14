@@ -92,9 +92,7 @@ fi
 
 # Establish CMAKE's install directory:
 if [ -z "$OSSIM_INSTALL_PREFIX" ]; then
-  if [ "$BUILD_TYPE_ARG" == "ECLIPSE" ]; then
-    OSSIM_INSTALL_PREFIX=$OSSIM_DEV_HOME/install
-  fi
+  OSSIM_INSTALL_PREFIX=$OSSIM_DEV_HOME/install
 fi
 # Additional stuff for ECLIPSE CDT4 users:
 CMAKE_G_ARG="Unix Makefiles"
