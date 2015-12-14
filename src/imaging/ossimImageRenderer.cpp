@@ -7,7 +7,7 @@
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimImageRenderer.cpp 23619 2015-11-12 18:35:57Z dburken $
+//  $Id: ossimImageRenderer.cpp 23663 2015-12-11 21:10:54Z dburken $
 
 #include <ossim/imaging/ossimImageRenderer.h>
 #include <ossim/base/ossimDpt.h>
@@ -39,7 +39,7 @@
 using namespace std;
 
 #ifdef OSSIM_ID_ENABLED
-static const char OSSIM_ID[] = "$Id: ossimImageRenderer.cpp 23619 2015-11-12 18:35:57Z dburken $";
+static const char OSSIM_ID[] = "$Id: ossimImageRenderer.cpp 23663 2015-12-11 21:10:54Z dburken $";
 #endif
 
 static ossimTrace traceDebug("ossimImageRenderer:debug");
@@ -1940,8 +1940,8 @@ void ossimImageRenderer::checkIVT()
             // ossimMapProjection::update we do that before setUlTiePoints as it in
             // turn calls setUlEastingNorthing(forward(gpt)) which depends on the orgin.
             //---
-           // myMapProj->setOrigin(inputProj->origin());
-           // myMapProj->setUlTiePoints( inputProj->origin() );
+            myMapProj->setOrigin(inputProj->origin());
+            myMapProj->setUlTiePoints( inputProj->origin() );
 
          }
          myMapProj->setMetersPerPixel(meters);

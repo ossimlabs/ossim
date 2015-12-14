@@ -15,11 +15,11 @@
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimEnvironmentUtility.h>
+#include <ossim/base/ossimException.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimTimer.h>
-#include <ossim/base/ossimException.h>
 #include <ossim/init/ossimInit.h>
 
 #include <cstdlib> /* for system() */
@@ -36,10 +36,16 @@ using namespace std;
 //**************************************************************************************************
 ossimBatchTest::ossimBatchTest()
    :
-   m_allIsDisabled(false),
-   m_templateModeActive(false)
+   m_acceptTestList(),
+   m_cleanTestList(),
+   m_preprocessTestList(),
+   m_runTestList(),
+   m_templateModeActive(false),
+   m_configFileName(),
+   m_outDir(),
+   m_expDir(),
+   m_logStr()
 {
-
 }
 
 //**************************************************************************************************
@@ -71,6 +77,7 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    setenv("MKDIR_CMD", "mkdir -p", 1);
    setenv("RM_CMD",    "rm -f",    1);
    setenv("RMDIR_CMD", "rm -rf",   1);
+   
 #endif
    
    std::string tempString;
@@ -99,7 +106,6 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    {
       if ( tempString.size() )
       {
-         m_allIsDisabled = true;
          ossimString os = tempString;
          ossimString separatorList = " ";
          std::vector<ossimString> result;
@@ -117,7 +123,6 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    {
       if ( tempString.size() )
       {
-         m_allIsDisabled = true;
          ossimString os = tempString;
          ossimString separatorList = " ";
          std::vector<ossimString> result;
@@ -135,7 +140,6 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    {
       if ( tempString.size() )
       {
-         m_allIsDisabled = true;
          ossimString os = tempString;
          ossimString separatorList = " ";
          std::vector<ossimString> result;
@@ -153,7 +157,6 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    {
       if ( tempString.size() )
       {
-         m_allIsDisabled = true;
          ossimString os = tempString;
          ossimString separatorList = " ";
          std::vector<ossimString> result;
@@ -198,9 +201,9 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    return true;
 }
 
-//**************************************************************************************************
+//---
 // Writes a template (either long form or short) to the file name specified.
-//**************************************************************************************************
+//---
 void ossimBatchTest::writeTemplate(const ossimFilename& templateFile, bool write_long_form)
 {
    if (templateFile.exists())
@@ -397,7 +400,6 @@ void ossimBatchTest::writeTemplate(const ossimFilename& templateFile, bool write
 
    out.close();
    ossimNotify(ossimNotifyLevel_NOTICE) << "Wrote file: " << templateFile.c_str() << std::endl;
-
 }
 
 //**************************************************************************************************
@@ -406,9 +408,10 @@ void ossimBatchTest::writeTemplate(const ossimFilename& templateFile, bool write
 ossim_uint8 ossimBatchTest::execute()
 {
    if (m_templateModeActive)
+   {
       return TEST_PASSED;
+   }
 
-   ostringstream errmsg;
    ossim_uint8 status = TEST_TBD;
 
    try
@@ -447,12 +450,13 @@ ossim_uint8 ossimBatchTest::execute()
       }
       ossimEnv->setEnvironmentVariable("OBT_EXP_DIR", m_expDir.chars());
 
-      // Turn expansion of for like: $(OBT_OUT_DIR)
+      // Turn expansion of for like: $(OBT_TEST_RESULTS)
       ossimKeywordlist kwl;
       kwl.setExpandEnvVarsFlag(true);
       if (!kwl.addFile(m_configFileName))
       {
          status = TEST_ERROR;
+         ostringstream errmsg;
          errmsg << "Error encountered reading test config at <"<<m_configFileName<<">."<<endl;
          throw ossimException(errmsg.str());
       }
@@ -461,10 +465,10 @@ ossim_uint8 ossimBatchTest::execute()
       // status returns anything other than TBD, then a list was present and processed:
       status = processConfigList(kwl);
       if (status != TEST_TBD)
-         throw ossimException("Processed list of config files."); // Not really an exception, just bumping out of execution
-
-      if ( m_allIsDisabled )
-         disableAllKwl(kwl);
+      {
+         // Not really an exception, just bumping out of execution
+         throw ossimException("Processed list of config files.");
+      }
 
       // Pick up individual test options passed in by user.  These will adjust the keyword list
       // flags loaded in memory.
@@ -485,7 +489,7 @@ ossim_uint8 ossimBatchTest::execute()
          std::string testCommand = "run_expected_results_commands";
          preprocessKwl(m_acceptTestList, testCommand, kwl);
       }
-
+      
       if ( m_runTestList.size() ) // Do this last always...
       {
          std::string testCommand = "run_test_commands";
@@ -502,6 +506,7 @@ ossim_uint8 ossimBatchTest::execute()
       if (( logDir.exists() == false ) && ( logDir.createDirectory() == false ))
       {
          status = TEST_ERROR;
+         ostringstream errmsg;
          errmsg << "Could not create: <" << logDir << ">."<< endl;
          throw ossimException(errmsg.str());
       }
@@ -515,6 +520,7 @@ ossim_uint8 ossimBatchTest::execute()
       if ( m_logStr.fail() )
       {
          status = TEST_ERROR;
+         ostringstream errmsg;
          errmsg << "Could not open: <" << logFile  << ">."<< endl;
          throw ossimException(errmsg.str());
       }
@@ -524,16 +530,16 @@ ossim_uint8 ossimBatchTest::execute()
       ossimString date;
       getDateString(date);
       m_logStr << "// ---\n"
-            << "// ossim-batch-test log:\n"
-            << "// date format = yyyymmddhhmmss\n"
-            << "//---\n"
-            << "start_time: " << date << "\n"
-            << "config_file: " << m_configFileName<< "\n";
+               << "// ossim-batch-test log:\n"
+               << "// date format = yyyymmddhhmmss\n"
+               << "//---\n"
+               << "start_time: " << date << "\n"
+               << "config_file: " << m_configFileName<< "\n";
       // Start the timer.
       ossimTimer::instance()->setStartTick();
-
+      
       double startTime = ossimTimer::instance()->time_s();
-
+      
       // Get the number of test:
       ossimString regExpStr = "test[0-9]+\\.";
       ossim_uint32 num_tests = kwl.getNumberOfSubstringKeys(regExpStr);
@@ -542,7 +548,7 @@ ossim_uint8 ossimBatchTest::execute()
       ossim_uint32 index = 0;
       ossim_uint32 processedIndexes = 0;
       ossimString prefix;
-
+      
       // If no test prefix is used, this implies a single test:
       bool is_single_test = (num_tests == 0);
       if (is_single_test)
@@ -550,43 +556,45 @@ ossim_uint8 ossimBatchTest::execute()
          num_tests = 1;
          prefix = "";
       }
-
-      status = (ossim_uint8) TEST_TBD;
+      
+      status = TEST_TBD;
       while ( processedIndexes < num_tests )
       {
          if (!is_single_test)
             prefix = prefixBase + ossimString::toString(index) + ".";
-
+         
          ossim_uint8 individual_test_status = processTest( prefix, kwl);
-         if ( individual_test_status != (ossim_uint8) TEST_TBD)
-            ++processedIndexes;
-
+         
+         if ( individual_test_status != TEST_TBD) ++processedIndexes;
+         
          status |= individual_test_status;
-         //cout << "\n#### DEBUG 5 #### status = "<<(int)status<<endl; //TODO: remove
-
          ++index;
-         if ( index >= MAX_INDEX )
-            break;
+         
+         if ( index >= MAX_INDEX ) break; 
       }
-
+      
       getDateString(date);
       m_logStr << "\nstop_time: " << date << "\n";
       double stopTime = ossimTimer::instance()->time_s();
       m_logStr << "total elapsed time in seconds: "
-            << std::setiosflags(ios::fixed) << std::setprecision(4)
-      << (stopTime-startTime)
-      << endl; // flush
+               << std::setiosflags(ios::fixed) << std::setprecision(4)
+               << (stopTime-startTime)
+               << endl; // flush
       m_logStr.close();
+      
       cout << "\nWrote log: " << logFile << "\n" << endl;
    }
    catch (ossimException& e)
    {
-      cout << "\nossimBatchTest::execute() -- " << e.what() <<" Exiting with status = "
-            << (int) status << endl;
-      return status;
+      cerr << "\nossimBatchTest::execute() caught exception: " << e.what() << endl;
+   }
+   catch ( ... )
+   {
+      cerr << "\nossimBatchTest::execute() caught unhandled exception: " << endl;
    }
 
    cout <<"\nossimBatchTest::execute() exiting with status = "<< (int) status << endl;
+
    return status;
 }
 
@@ -595,7 +603,7 @@ ossim_uint8 ossimBatchTest::execute()
 //************************************************************************************************
 ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
 {
-   ossim_uint8 overall_test_status = (ossim_uint8) TEST_TBD;
+   ossim_uint8 overall_test_status = TEST_TBD;
    ossimFilename config_list_path = m_configFileName.path();
 
    // Look for keywords for config file name:
@@ -629,7 +637,6 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
          if (m_configFileName.isReadable())
          {
             overall_test_status |= execute();
-            //cout<<"\n#### DEBUG 3 #### overall_test_status = "<<(int)overall_test_status<<endl; //TODO: remove
             ++processedIndexes;
          }
 
@@ -642,7 +649,6 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
       }
    }
 
-   //cout<<"\n#### DEBUG 4 #### overall_test_status = "<<(int)overall_test_status<<endl; //TODO: remove
    return overall_test_status;
 }
 
@@ -707,10 +713,13 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
    m_logStr << "\n----------------------------------------------------------------------\n";
 
    // See if test is disabled/enabled:
+   
    bool enabled = true;
    lookup = kwl.find( prefix, "enabled" );
    if ( lookup )
+   {
       enabled = ossimString(lookup).toBool();
+   }
 
    if ( !enabled )
    {
@@ -724,13 +733,13 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
       {
          statusString = "test: disabled";
       }
-      cout << "test name: " << testName << "\n" << statusString << endl;
-      m_logStr << "test name: " << testName << "\n" << statusString << endl;
+      cout << "test_name: " << testName << "\n" << statusString << endl;
+      m_logStr << "test_name: " << testName << "\n" << statusString << endl;
       return testStatus;
    }
 
-   cout << "\n\nProcessing Test: " << testName << "\n";
-   m_logStr << "\n\nProcessing Test: " << testName << "\n";   
+   cout     << "\n\nbegin_test:\n" << prefix << "name: " << testName << "\n";
+   m_logStr << "\n\nbegin_test:\n" << prefix << "name: " << testName << "\n";   
    lookup = kwl.find( prefix, "description" );
    if ( lookup )
       m_logStr << "description: " << lookup << "\n";
@@ -744,30 +753,40 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
 
    lookup = kwl.find(prefix.c_str(), "run_clean_commands");
    if ( lookup )
+   {
       cleanFlag = ossimString(lookup).toBool();
+   }
 
    lookup = kwl.find(prefix.c_str(), "run_preprocessing_commands");
    if ( lookup )
+   {  
       preProcessFlag = ossimString(lookup).toBool();
+   }
 
    lookup = kwl.find(prefix.c_str(), "run_expected_results_commands");
    if ( lookup )
+   {
       expectedFlag = ossimString(lookup).toBool();
+   }
 
    lookup = kwl.find(prefix.c_str(), "run_test_commands");
    if ( lookup )
+   {
       testFlag = ossimString(lookup).toBool();
+   }
 
    lookup = kwl.find(prefix.c_str(), "run_postprocessing_commands");
    if ( lookup )
+   {
       postProcessFlag = ossimString(lookup).toBool();
+   }
 
    m_logStr << "preProcessFlag:  " << preProcessFlag
-      << "\nexpectedFlag:    " <<expectedFlag
-      << "\ntestFlag:        " <<testFlag
-      << "\npostProcessFlag: " <<postProcessFlag
-      << "\ncleanFlag:       " <<cleanFlag
-      << "\n";
+            << "\nexpectedFlag:    " <<expectedFlag
+            << "\ntestFlag:        " <<testFlag
+            << "\npostProcessFlag: " <<postProcessFlag
+            << "\ncleanFlag:       " <<cleanFlag
+            << "\n";
 
    // Run the clean first if set...
    if ( cleanFlag )
@@ -780,19 +799,16 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
    {
       ossimString prefixBase = prefix + "preprocess_command";
       testStatus |= processCommands( prefixBase, kwl, testName, false );
-      //cout<<"\n#### DEBUG 1 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
    }
    if ( expectedFlag  && !(testStatus & TEST_ERROR))
    {
       ossimString prefixBase = prefix + "expected_results_command";
       testStatus |= processCommands( prefixBase, kwl, testName, true );
-      //cout<<"\n#### DEBUG 2 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
    }
    if ( testFlag  && !(testStatus & TEST_ERROR))
    {
       ossimString prefixBase = prefix + "test_command";
       testStatus |= processCommands( prefixBase, kwl, testName, true );
-      //cout<<"\n#### DEBUG 6 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
    }
    if ( postProcessFlag  && !(testStatus & TEST_ERROR))
    {
@@ -802,18 +818,16 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
       {
          ossimString prefixBase = prefix + "postprocess_command";
          testStatus |= processCommands( prefixBase, kwl, testName, false, tempFile );
-         //cout<<"\n#### DEBUG 7 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
       }
       else
       {
          m_logStr << testName << ": ERROR temp file could not be derived..." << endl;
          testStatus |= TEST_ERROR; // Set an error bit...
-         //cout<<"\n#### DEBUG 8 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
-     }
+      }
    }
 
-   //cout<<"\n#### DEBUG 9 #### testStatus = "<<(int)testStatus<<endl; //TODO: remove
-   m_logStr << "end_test: " << testName << "\n";
+   cout     << "end_test:\n";
+   m_logStr << "end_test:\n";
 
    m_logStr << "----------------------------------------------------------------------\n"; 
    return testStatus; 
@@ -987,7 +1001,9 @@ void ossimBatchTest::preprocessKwl(const std::vector<std::string>& testList,
    ossimString firstTest(*testIter);
    firstTest.downcase();
    if ( firstTest == "all" )
+   {
       enableAllTestFlag = true;
+   }
 
    while ( testIter != testList.end() )
    {
@@ -1038,7 +1054,11 @@ void ossimBatchTest::preprocessKwl(const std::vector<std::string>& testList,
          {
             if ( test_name_matches || enableAllTestFlag )
             {
-               kwl.add(prefix.c_str(), "enabled", "1", true);
+               //---
+               // Removed adjustment of "enable" flag. Let the config file "enable" key
+               // control this.  drb - 20151202
+               // kwl.add(prefix.c_str(), "enabled", "1", true);
+               //---
                kwl.add(prefix.c_str(), testCommand.c_str(), "1", true);
                if ( testCommand == "run_expected_results_commands" )
                {
@@ -1062,40 +1082,6 @@ void ossimBatchTest::preprocessKwl(const std::vector<std::string>& testList,
    } // End: while ( testIter != testList.end() )
    
 } // End: preprocessKwl method
-
-//**************************************************************************************************
-void ossimBatchTest::disableAllKwl(ossimKeywordlist& kwl)
-{
-   if ( kwl.getSize() )
-   {
-      // Get the number of test:
-      ossimString regExpStr = "test[0-9]+\\.";
-      const ossim_uint32 COUNT = kwl.getNumberOfSubstringKeys(regExpStr);
-      const ossim_uint32 MAX_INDEX = COUNT + 1000;
-      ossimString prefixBase = "test";
-      ossim_uint32 index = 0;
-      ossim_uint32 processedIndexes = 0;
-      
-      while ( processedIndexes < COUNT )
-      {
-         ossimString prefix =  prefixBase + ossimString::toString(index) + ".";
-         const char* lookup = kwl.find( prefix, "name" );
-         if (lookup)
-         {
-            kwl.add(prefix.c_str(), "enabled", "0", true);
-            kwl.add(prefix.c_str(), "run_clean_commands", "0", true);
-            kwl.add(prefix.c_str(), "run_expected_results_commands", "0", true);
-            kwl.add(prefix.c_str(), "run_test_commands", "0", true);
-            kwl.add(prefix.c_str(), "run_postprocessing_commands", "0", true);
-            ++processedIndexes;
-         }
-         ++index;
-         if ( index >= MAX_INDEX ) break; 
-      }
-   }
-   
-} // End: disableAllKwl(ossimKeywordlist& kwl)
-
 
 //**************************************************************************************************
 //! Default preprocessing step makes expected and output results directories. Returns TRUE if
@@ -1189,9 +1175,9 @@ bool ossimBatchTest::getTempFileName( const ossimString& prefix,
 
 bool ossimBatchTest::getDefaultTempFileDir( ossimFilename& tempFile ) const
 {
-   // Create a default tmp directory under OBT_OUT_DIR.
-   tempFile = ossimEnvironmentUtility::instance()->
-         getEnvironmentVariable(ossimString("OBT_OUT_DIR"));
+   // Create a default tmp directory under OSSIM_BATCH_TEST_RESULTS.
+   tempFile = ossimEnvironmentUtility::instance()->getEnvironmentVariable(
+      ossimString("OSSIM_BATCH_TEST_RESULTS") );
    if (!tempFile.empty())
       tempFile = tempFile.dirCat("tmp");
    else
