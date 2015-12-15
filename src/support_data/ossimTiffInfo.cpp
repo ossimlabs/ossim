@@ -22,7 +22,8 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTieGptSet.h>
 #include <ossim/base/ossimTrace.h>
-
+#include <ossim/base/ossimXmlDocument.h>
+#include <ossim/base/ossimXmlNode.h>
 #include <ossim/projection/ossimBilinearProjection.h>
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimEpsgProjectionFactory.h>
@@ -1709,6 +1710,20 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          break;
       }
 
+      case OTIFFTAG_MAKE: // tag 271
+      {
+         out << prefix << "make: ";
+         printArray(out, type, count, valueArray);
+         break;
+      }
+      
+      case OTIFFTAG_MODEL: // tag 272
+      {
+         out << prefix << "model: ";
+         printArray(out, type, count, valueArray);
+         break;
+      }
+
       case OTIFFTAG_STRIPOFFSETS: // tag 273
       {
          if (traceDump())
@@ -2016,6 +2031,20 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          printValue(out, type, valueArray);
          break;
       }
+
+      case OTIFFTAG_XMLPACKET: // tag 700
+      {
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << prefix << "xml: ";
+            printArray(ossimNotify(ossimNotifyLevel_DEBUG),
+                       OTIFF_BYTE, count, valueArray);
+         }
+         printXmpMetadata(out, prefix, count, valueArray);
+         break;
+      }
+      
       case OTIFFTAG_COPYRIGHT: // tag 33432
       {
          out << prefix << "copyright: ";
@@ -2280,6 +2309,147 @@ std::ostream& ossimTiffInfo::printGdalMetadata(std::ostream& out,
              << ":" << children[idx]->getText() << std::endl;
       }
    }
+   return out;
+}
+
+std::ostream& ossimTiffInfo::printXmpMetadata(std::ostream& out,
+                                              const std::string& prefix,
+                                              ossim_uint64 count,
+                                              ossim_uint8* valueArray) const
+{
+   ossimString xmlString(valueArray, valueArray+count);
+   ossimRefPtr<ossimXmlNode> xmlNode = new ossimXmlNode();
+   std::istringstream in(xmlString);
+
+   ossimRefPtr<ossimXmlDocument> xdoc = new ossimXmlDocument();
+
+   // Read the xml document:
+   if ( xdoc->read( in ) )
+   {
+      std::vector<ossimRefPtr<ossimXmlNode> > xnodes;
+
+      // Wavelength:
+      ossimString path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:CentralWavelength";
+      ossimString result;
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.central_wavelength: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:BandName";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.band_name: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:WavelengthFWHM";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.wavelength_fwhm: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:BandSensitivity";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.band_sensitivity: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:RigCameraIndex";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.rig_camera_index: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:Yaw";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.yaw: " << result << "\n";
+            }
+         }
+      }     
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:Pitch";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.pitch: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:Roll";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.roll: " << result << "\n";
+            }
+         }
+      }
+   }
+   
    return out;
 }
 
