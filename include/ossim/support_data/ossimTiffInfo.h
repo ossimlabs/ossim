@@ -58,6 +58,7 @@ public:
       OTIFFTAG_PHOTOMETRIC                = 262,
       OTIFFTAG_FILLORDER                  = 266,
       OTIFFTAG_IMAGEDESCRIPTION           = 270,
+      OTIFFTAG_MAKE                       = 271,
       OTIFFTAG_MODEL                      = 272,
       OTIFFTAG_STRIPOFFSETS               = 273,
       OTIFFTAG_ORIENTATION                = 274,
@@ -74,6 +75,7 @@ public:
       OTIFFTAG_SOFTWARE                   = 305,
       OTIFFTAG_DATETIME                   = 306,  // FORMAT is YYYY:MM:DD HH:MM:SS
       OTIFFTAG_ARTIST                     = 315,
+      OTIFFTAG_SUBIFD                     = 330,
       OTIFFTAG_TILEWIDTH                  = 322,
       OTIFFTAG_TILELENGTH                 = 323,
       OTIFFTAG_TILEOFFSETS                = 324,
@@ -82,13 +84,14 @@ public:
       OTIFFTAG_SAMPLEFORMAT               = 339,
       OTIFFTAG_SMINSAMPLEVALUE            = 340,
       OTIFFTAG_SMAXSAMPLEVALUE            = 341,
+      OTIFFTAG_XMLPACKET                  = 700,
       OSAMPLEFORMAT_UINT                  = 1,
       OSAMPLEFORMAT_INT                   = 2,
       OSAMPLEFORMAT_IEEEFP                = 3,
       OSAMPLEFORMAT_VOID                  = 4,
       OSAMPLEFORMAT_COMPLEXINT            = 5,
       OSAMPLEFORMAT_COMPLEXIEEEFP         = 6,
-      OTIFFTAG_SUBIFD                     = 330,
+
       OGT_MODEL_TYPE_GEO_KEY              = 1024,
       OGT_RASTER_TYPE_GEO_KEY             = 1025,
       OGT_CITATION_GEO_KEY                = 1026,
@@ -432,6 +435,12 @@ private:
                                    const std::string& prefix,
                                    ossim_uint64 count,
                                    ossim_uint8* valueArray) const;
+
+   /** @brief Prints OTIFFTAG_XMLPACKET (700) */ 
+   std::ostream& printXmpMetadata(std::ostream& out,
+                                  const std::string& prefix,
+                                  ossim_uint64 count,
+                                  ossim_uint8* valueArray) const;
 
    /** @brief Prints key 1024 */
    std::ostream& printModelType(std::ostream& out,
