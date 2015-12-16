@@ -24,7 +24,14 @@ The remaining _ossim-*_ repositories are independent of each other and can be cl
 
 # Branching Scheme and Pull Requests
 
-To be resolved.
+The "master" branches (for all OSSIM family repos) contains the most stable code. It is periodically merged with "dev" branch. If you don't plan on developing code, but want to build from source, this is the branch you want. For bleeding edge development, use the "dev" branch. This branch serves as the parent to all feature branches and is frequently merged with those feature branches once those branches are tested by the developers responsible for them.
+
+If you want to contribute code, you'll need to:
+ * create your own feature branch from dev, 
+ * test your modification, 
+ * then create a pull request. 
+
+The moderators will review the request and merge your changes to "dev". At that point, the automated continuous integration system (GoCD) will get triggered to perform a build and test. If there are any failures, your merge commit will be backed out and you'll be ridiculed in front of the entire community.
 
 #How to Build
 The easy way is to just run the script in `ossim/scripts/<OS>/build.sh`. There are (or soon will be) scripts for Linux, Mac, and Windows. This is known as the "run-and-pray" approach and should work for the default build configuration. Assuming all dependencies were met and no compile/link errors occured, this script will generate all build binaries under a sibling directory to the ossim repo directory, namely, `ossim/../build/<build_type>`
