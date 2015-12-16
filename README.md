@@ -3,7 +3,7 @@
 Agent | GoCD Status
 ------------ | -------------
 centos6 | ![master Build Status](http://omar.ossim.org.com/gocd/centos6_status.png)
-centos7 | ![dev Build Status](http://omar.ossim.org.com/gocd/centos6_status.png)
+centos7 | ![dev Build Status](http://omar.ossim.org.com/gocd/centos7_status.png)
 mac | ![dev Build Status](http://omar.ossim.org.com/gocd/mac_status.png)
 win7x64 | ![dev Build Status](http://omar.ossim.org.com/gocd/win7x64_status.png)
 
