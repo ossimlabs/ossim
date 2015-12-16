@@ -24,7 +24,7 @@ The remaining _ossim-*_ repositories are independent of each other and can be cl
 
 # Branching Scheme and Pull Requests
 
-The "master" branches (for all OSSIM family repos) contains the most stable code. It is periodically merged with "dev" branch. If you don't plan on developing code, but want to build from source, this is the branch you want. For bleeding edge development, use the "dev" branch. This branch serves as the parent to all feature branches and is frequently merged with those feature branches once those branches are tested by the developers responsible for them.
+The "master" branches (for all OSSIM family repos) contain the most stable code. It is periodically merged with "dev" branch. If you don't plan on developing code, but want to build from source, this is the branch you want. For bleeding edge development, use the "dev" branch. This branch serves as the parent to all feature branches and is frequently merged with those feature branches once those branches are tested by the developers responsible for them.
 
 If you want to contribute code, you'll need to:
  * create your own feature branch from dev, 
