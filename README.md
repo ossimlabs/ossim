@@ -1,4 +1,6 @@
-![ossim logo](/ossim-logo.png)         ![Build Status](/current_status.png)  
+![ossim logo](/ossim-logo.png)         
+
+GoCD Build Status (centos6/7): master: ![Build Status](https://github.com/ossimlabs/ossim/blob/master/current_status.png)   dev: ![Build Status](https://github.com/ossimlabs/ossim/blob/dev/current_status.png)
 
 Welcome to OSSIM, an open source, C++, geospatial image processing library used by government, commercial, educational, and private entities throughout the solar system. It has been in active development since 1996. This repository contains the full OSSIM package including core library, applications, tests, and build system. It does *not* contain the OSSIM plugins and other OSSIM-related code such as java-bindings ([ossim-oms](https://github.com/ossimlabs/ossim-oms)), and GUI. Those are available for individually cloning. Refer to the root github page for [ossimlabs](https://github.com/ossimlabs).
 
@@ -13,7 +15,7 @@ Quick links:
 
 The principal repository is this one (ossim), containing not only the core classes but also the command line utility applications code as well as the cmake build system files and related scripts. This repository must be cloned first before attempting to work with other _ossim-*_ repositories.
 
-The remaining _ossim-*_ repositories are independent of each other and can be cloned in any order. However, it will be necessary to re-run the [build script (linux version)](https://github.com/ossimlabs/ossim/blob/master/scripts/linux/build.sh) or at least regenerate makefiles with the [cmake script (linux version)](https://github.com/ossimlabs/ossim/blob/master/cmake/scripts/ossim-cmake-config-LINUX.sh) before building. This must be done each time a new ossim-* repository is added to the ossimlabs build. See below for detailed build instructions.
+The remaining _ossim-*_ repositories are independent of each other and can be cloned in any order. However, it will be necessary to re-run the [build script (linux version)](/scripts/linux/build.sh) or at least regenerate makefiles with the [cmake script (linux version)](/cmake/scripts/ossim-cmake-config-LINUX.sh) before building. This must be done each time a new ossim-* repository is added to the ossimlabs build. See below for detailed build instructions.
 
 # Branching Scheme and Pull Requests
 
@@ -86,7 +88,7 @@ Testing is generally divided into unit, functional, and integration tests. At th
 
 There is however a _de facto_ scheme in place that has been used for implementing integration and functional testing using the `ossim-batch-test` command line executable. This application spawns other OSSIM utility applications to generate results, which are then compared against an expected-results dataset. This command-line app reads a configuration file that specifies a test or series of tests to run and possibly compare against expected results. There is an option to accept current results as the new expected results. While not explicitely required, the majority of testing done with `ossim-batch-test` will involve input source data, typically imagery, that the tester must preinstall on the target machine. The expected results will also need to be generated and its location specified on the command line. See the usage for `ossim-batch-test` for more detail.
 
-A rudimentary test suite is encapsulated in this [test script (linux version)](https://github.com/ossimlabs/ossim/blob/master/scripts/linux/test.sh). It defines the locations of the input source data and expected results, and runs the command-line test applications. 
+A rudimentary test suite is encapsulated in this [test script (linux version)](/scripts/linux/test.sh). It defines the locations of the input source data and expected results, and runs the command-line test applications. 
 
 The _ossim_ repository contains `test/src` and `test/scripts` subdirectories which contain items available for testing OSSIM core functionality.
 
