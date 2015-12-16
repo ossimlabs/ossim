@@ -36,38 +36,69 @@ static ossimTrace traceDebug ("ossimRsmModel:debug");
 
 RTTI_DEF1(ossimRsmModel, "ossimRsmModel", ossimSensorModel);
 
-static const char* MODEL_TYPE = "ossimRsmModel";
-static const char* RNRMO_KW   = "rnrmo";
-static const char* CNRMO_KW   = "cnrmo";
-static const char* XNRMO_KW   = "xnrmo";
-static const char* YNRMO_KW   = "ynrmo";
-static const char* ZNRMO_KW   = "znrmo";
-static const char* RNRMSF_KW  = "rnrmsf";
-static const char* CNRMSF_KW  = "cnrmsf";
-static const char* XNRMSF_KW  = "xnrmsf";
-static const char* YNRMSF_KW  = "ynrmsf";
-static const char* ZNRMSF_KW  = "znrmsf";
-static const char* RNPWRX_KW  = "rnpwrx";
-static const char* RNPWRY_KW  = "rnpwry";
-static const char* RNPWRZ_KW  = "rnpwrz";
-static const char* RNTRMS_KW  = "rntrms";
-static const char* RNPCF_KW   = "rnpcf";
-static const char* RDPWRX_KW  = "rdpwrx";
-static const char* RDPWRY_KW  = "rdpwry";
-static const char* RDPWRZ_KW  = "rdpwrz";
-static const char* RDTRMS_KW  = "rdtrms";
-static const char* RDPCF_KW   = "rdpcf";
-static const char* CNPWRX_KW  = "cnpwrx";
-static const char* CNPWRY_KW  = "cnpwry";
-static const char* CNPWRZ_KW  = "cnpwrz";
-static const char* CNTRMS_KW  = "cntrms";
-static const char* CNPCF_KW   = "cnpcf";
-static const char* CDPWRX_KW  = "cdpwrx";
-static const char* CDPWRY_KW  = "cdpwry";
-static const char* CDPWRZ_KW  = "cdpwrz";
-static const char* CDTRMS_KW  = "cdtrms";
-static const char* CDPCF_KW   = "cdpcf";
-      
+static std::string MODEL_TYPE_KW  = "ossimRsmModel";
+static std::string PCA_IID_KW     = "pca.iid";
+static std::string PCA_EDITION_KW = "pca.edition";
+static std::string PCA_RNRMO_KW   = "pca.rnrmo";
+static std::string PCA_CNRMO_KW   = "pca.cnrmo";
+static std::string PCA_XNRMO_KW   = "pca.xnrmo";
+static std::string PCA_YNRMO_KW   = "pca.ynrmo";
+static std::string PCA_ZNRMO_KW   = "pca.znrmo";
+static std::string PCA_RNRMSF_KW  = "pca.rnrmsf";
+static std::string PCA_CNRMSF_KW  = "pca.cnrmsf";
+static std::string PCA_XNRMSF_KW  = "pca.xnrmsf";
+static std::string PCA_YNRMSF_KW  = "pca.ynrmsf";
+static std::string PCA_ZNRMSF_KW  = "pca.znrmsf";
+static std::string PCA_RNPWRX_KW  = "pca.rnpwrx";
+static std::string PCA_RNPWRY_KW  = "pca.rnpwry";
+static std::string PCA_RNPWRZ_KW  = "pca.rnpwrz";
+static std::string PCA_RNTRMS_KW  = "pca.rntrms";
+static std::string PCA_RNPCF_KW   = "pca.rnpcf";
+static std::string PCA_RDPWRX_KW  = "pca.rdpwrx";
+static std::string PCA_RDPWRY_KW  = "pca.rdpwry";
+static std::string PCA_RDPWRZ_KW  = "pca.rdpwrz";
+static std::string PCA_RDTRMS_KW  = "pca.rdtrms";
+static std::string PCA_RDPCF_KW   = "pca.rdpcf";
+static std::string PCA_CNPWRX_KW  = "pca.cnpwrx";
+static std::string PCA_CNPWRY_KW  = "pca.cnpwry";
+static std::string PCA_CNPWRZ_KW  = "pca.cnpwrz";
+static std::string PCA_CNTRMS_KW  = "pca.cntrms";
+static std::string PCA_CNPCF_KW   = "pca.cnpcf";
+static std::string PCA_CDPWRX_KW  = "pca.cdpwrx";
+static std::string PCA_CDPWRY_KW  = "pca.cdpwry";
+static std::string PCA_CDPWRZ_KW  = "pca.cdpwrz";
+static std::string PCA_CDTRMS_KW  = "pca.cdtrms";
+static std::string PCA_CDPCF_KW   = "pca.cdpcf";
+
+static std::string PIA_IID_KW     = "pia.iid";
+static std::string PIA_EDITION_KW = "pia.edition";
+static std::string PIA_R0_KW      = "pia.r0";
+static std::string PIA_RX_KW      = "pia.rx";
+static std::string PIA_RY_KW      = "pia.ry";
+static std::string PIA_RZ_KW      = "pia.rz";
+static std::string PIA_RXX_KW     = "pia.rxx";
+static std::string PIA_RXY_KW     = "pia.rxy";
+static std::string PIA_RXZ_KW     = "pia.rxz";
+static std::string PIA_RYY_KW     = "pia.ryy";
+static std::string PIA_RYZ_KW     = "pia.ryz";
+static std::string PIA_RZZ_KW     = "pia.rzz";
+static std::string PIA_C0_KW      = "pia.c0";
+static std::string PIA_CX_KW      = "pia.cx";
+static std::string PIA_CY_KW      = "pia.cy";
+static std::string PIA_CZ_KW      = "pia.cz";
+static std::string PIA_CXX_KW     = "pia.cxx";
+static std::string PIA_CXY_KW     = "pia.cxy";
+static std::string PIA_CXZ_KW     = "pia.cxz";
+static std::string PIA_CYY_KW     = "pia.cyy";
+static std::string PIA_CYZ_KW     = "pia.cyz";
+static std::string PIA_CZZ_KW     = "pia.czz";
+static std::string PIA_RNIS_KW    = "pia.rnis";
+static std::string PIA_CNIS_KW    = "pia.cnis";
+static std::string PIA_TNIS_KW    = "pia.tnis";
+static std::string PIA_RSSIZ_KW   = "pia.rssiz";
+static std::string PIA_CSSIZ_KW   = "pia.cssiz";
+
+
 ossimRsmModel::ossimRsmModel()
    :
    ossimSensorModel(),
@@ -117,7 +148,35 @@ ossimRsmModel::ossimRsmModel()
    m_cdpwrz(0),
    m_cdtrms(0),
 
-   m_cdpcf()
+   m_cdpcf(),
+
+   m_pia_iid(),
+   m_pia_edition(),
+   m_pia_r0(0.0),
+   m_pia_rx(0.0),
+   m_pia_ry(0.0),
+   m_pia_rz(0.0),
+   m_pia_rxx(0.0),
+   m_pia_rxy(0.0),
+   m_pia_rxz(0.0),
+   m_pia_ryy(0.0),
+   m_pia_ryz(0.0),
+   m_pia_rzz(0.0),
+   m_pia_c0(0.0),
+   m_pia_cx(0.0),
+   m_pia_cy(0.0),
+   m_pia_cz(0.0),
+   m_pia_cxx(0.0),
+   m_pia_cxy(0.0),
+   m_pia_cxz(0.0),   
+   m_pia_cyy(0.0),
+   m_pia_cyz(0.0),
+   m_pia_czz(0.0),
+   m_pia_rnis(0),
+   m_pia_cnis(0),
+   m_pia_tnis(0),
+   m_pia_rssiz(0.0),
+   m_pia_cssiz(0.0)
 {
    initAdjustableParameters();
    
@@ -172,7 +231,35 @@ ossimRsmModel::ossimRsmModel( const ossimRsmModel& obj )
    m_cdpwrz( obj.m_cdpwrz ),
    m_cdtrms( obj.m_cdtrms ),
 
-   m_cdpcf( obj.m_cdpcf )
+   m_cdpcf( obj.m_cdpcf ),
+
+   m_pia_iid( obj.m_pia_iid ),
+   m_pia_edition( obj.m_pia_edition ),
+   m_pia_r0( obj.m_pia_r0 ),
+   m_pia_rx( obj.m_pia_rx ),
+   m_pia_ry( obj.m_pia_ry ),
+   m_pia_rz( obj.m_pia_rz ),
+   m_pia_rxx( obj.m_pia_rxx ),
+   m_pia_rxy( obj.m_pia_rxy ),
+   m_pia_rxz( obj.m_pia_rxz ),
+   m_pia_ryy( obj.m_pia_ryy ),
+   m_pia_ryz( obj.m_pia_ryz ),
+   m_pia_rzz( obj.m_pia_rzz ),
+   m_pia_c0( obj.m_pia_c0 ),
+   m_pia_cx( obj.m_pia_cx ),
+   m_pia_cy( obj.m_pia_cy ),
+   m_pia_cz( obj.m_pia_cz ),
+   m_pia_cxx( obj.m_pia_cxx ),
+   m_pia_cxy( obj.m_pia_cxy ),
+   m_pia_cxz( obj.m_pia_cxz ),   
+   m_pia_cyy( obj.m_pia_cyy ),
+   m_pia_cyz( obj.m_pia_cyz ),   
+   m_pia_czz( obj.m_pia_czz ),
+   m_pia_rnis( obj.m_pia_rnis ),
+   m_pia_cnis( obj.m_pia_cnis ),
+   m_pia_tnis( obj.m_pia_tnis ),
+   m_pia_rssiz( obj.m_pia_rssiz ),
+   m_pia_cssiz( obj.m_pia_cssiz )
 {
    
 } // End: ossimRsmModel::ossimRsmModel( const ossimRsmModel& obj )
@@ -229,6 +316,34 @@ const ossimRsmModel& ossimRsmModel::operator=( const ossimRsmModel& rhs )
       m_cdtrms = rhs.m_cdtrms;
       
       m_cdpcf = rhs.m_cdpcf;
+
+      m_pia_iid = rhs.m_pia_iid    ;
+      m_pia_edition = rhs.m_pia_edition;
+      m_pia_r0 = rhs.m_pia_r0;
+      m_pia_rx = rhs.m_pia_rx;
+      m_pia_ry = rhs.m_pia_ry;
+      m_pia_rz = rhs.m_pia_rz;
+      m_pia_rxx = rhs.m_pia_rxx;
+      m_pia_rxy = rhs.m_pia_rxy;
+      m_pia_rxz = rhs.m_pia_rxz;
+      m_pia_ryy = rhs.m_pia_ryy;
+      m_pia_ryz = rhs.m_pia_ryz;
+      m_pia_rzz = rhs.m_pia_rzz;
+      m_pia_c0 = rhs.m_pia_c0;
+      m_pia_cx = rhs.m_pia_cx;
+      m_pia_cy = rhs.m_pia_cy;
+      m_pia_cz = rhs.m_pia_cz;
+      m_pia_cxx = rhs.m_pia_cxx;
+      m_pia_cxy = rhs.m_pia_cxy;
+      m_pia_cxz = rhs.m_pia_cxz;      
+      m_pia_cyy = rhs.m_pia_cyy;
+      m_pia_cyz = rhs.m_pia_cyz;      
+      m_pia_czz = rhs.m_pia_czz;
+      m_pia_rnis = rhs.m_pia_rnis;
+      m_pia_cnis = rhs.m_pia_cnis;
+      m_pia_tnis = rhs.m_pia_tnis;
+      m_pia_rssiz = rhs.m_pia_rssiz;
+      m_pia_cssiz = rhs.m_pia_cssiz;
    }
    
    return *this;
@@ -568,7 +683,7 @@ bool ossimRsmModel::saveState(ossimKeywordlist& kwl,
          << "DEBUG ossimRsmModel::saveState(): entering..." << std::endl;
    }
 
-   kwl.add(prefix, ossimKeywordNames::TYPE_KW, MODEL_TYPE);
+   kwl.add(prefix, ossimKeywordNames::TYPE_KW, MODEL_TYPE_KW.c_str());
 
    //---
    // Hand off to base class for common stuff:
@@ -578,62 +693,63 @@ bool ossimRsmModel::saveState(ossimKeywordlist& kwl,
    //---
    // Save off offsets and scales:
    //---
-   kwl.add(prefix, RNRMO_KW, m_rnrmo);
-   kwl.add(prefix, CNRMO_KW, m_cnrmo);
-   kwl.add(prefix, XNRMO_KW, m_xnrmo);
-   kwl.add(prefix, YNRMO_KW, m_ynrmo);
-   kwl.add(prefix, ZNRMO_KW, m_znrmo);
-   kwl.add(prefix, RNRMSF_KW, m_rnrmsf);
-   kwl.add(prefix, CNRMSF_KW, m_cnrmsf);
-   kwl.add(prefix, XNRMSF_KW, m_xnrmsf);
-   kwl.add(prefix, YNRMSF_KW, m_ynrmsf);
-   kwl.add(prefix, ZNRMSF_KW, m_znrmsf);
+   
+   kwl.add(prefix, PCA_RNRMO_KW.c_str(), m_rnrmo);
+   kwl.add(prefix, PCA_CNRMO_KW.c_str(), m_cnrmo);
+   kwl.add(prefix, PCA_XNRMO_KW.c_str(), m_xnrmo);
+   kwl.add(prefix, PCA_YNRMO_KW.c_str(), m_ynrmo);
+   kwl.add(prefix, PCA_ZNRMO_KW.c_str(), m_znrmo);
+   kwl.add(prefix, PCA_RNRMSF_KW.c_str(), m_rnrmsf);
+   kwl.add(prefix, PCA_CNRMSF_KW.c_str(), m_cnrmsf);
+   kwl.add(prefix, PCA_XNRMSF_KW.c_str(), m_xnrmsf);
+   kwl.add(prefix, PCA_YNRMSF_KW.c_str(), m_ynrmsf);
+   kwl.add(prefix, PCA_ZNRMSF_KW.c_str(), m_znrmsf);
 
-   kwl.add(prefix, RNPWRX_KW, m_rnpwrx);
-   kwl.add(prefix, RNPWRY_KW, m_rnpwry);
-   kwl.add(prefix, RNPWRZ_KW, m_rnpwrz);
-   kwl.add(prefix, RNTRMS_KW, m_rntrms);
+   kwl.add(prefix, PCA_RNPWRX_KW.c_str(), m_rnpwrx);
+   kwl.add(prefix, PCA_RNPWRY_KW.c_str(), m_rnpwry);
+   kwl.add(prefix, PCA_RNPWRZ_KW.c_str(), m_rnpwrz);
+   kwl.add(prefix, PCA_RNTRMS_KW.c_str(), m_rntrms);
    for (ossim_uint32 i=0; i<m_rntrms; ++i)
    {
       ossimString key;
-      key = RNPCF_KW;
+      key = PCA_RNPCF_KW.c_str();
       key += ossimString::toString(i);
       kwl.add(prefix, key.c_str(), m_rnpcf[i]);
    }
 
-   kwl.add(prefix, RDPWRX_KW, m_rdpwrx);
-   kwl.add(prefix, RDPWRY_KW, m_rdpwry);
-   kwl.add(prefix, RDPWRZ_KW, m_rdpwrz);
-   kwl.add(prefix, RDTRMS_KW, m_rdtrms);
+   kwl.add(prefix, PCA_RDPWRX_KW.c_str(), m_rdpwrx);
+   kwl.add(prefix, PCA_RDPWRY_KW.c_str(), m_rdpwry);
+   kwl.add(prefix, PCA_RDPWRZ_KW.c_str(), m_rdpwrz);
+   kwl.add(prefix, PCA_RDTRMS_KW.c_str(), m_rdtrms);
    for (ossim_uint32 i=0; i<m_rdtrms; ++i)
    {
 	
       ossimString key;
-      key = RDPCF_KW;
+      key = PCA_RDPCF_KW.c_str();
       key += ossimString::toString(i);
       kwl.add(prefix, key.c_str(), m_rdpcf[i]);
    }
 
-   kwl.add(prefix, CNPWRX_KW, m_cnpwrx);
-   kwl.add(prefix, CNPWRY_KW, m_cnpwry);
-   kwl.add(prefix, CNPWRZ_KW, m_cnpwrz);
-   kwl.add(prefix, CNTRMS_KW, m_cntrms);
+   kwl.add(prefix, PCA_CNPWRX_KW.c_str(), m_cnpwrx);
+   kwl.add(prefix, PCA_CNPWRY_KW.c_str(), m_cnpwry);
+   kwl.add(prefix, PCA_CNPWRZ_KW.c_str(), m_cnpwrz);
+   kwl.add(prefix, PCA_CNTRMS_KW.c_str(), m_cntrms);
    for (ossim_uint32 i=0; i<m_cntrms; ++i)
    {
       ossimString key;
-      key = CNPCF_KW;
+      key = PCA_CNPCF_KW.c_str();
       key += ossimString::toString(i);
       kwl.add(prefix, key.c_str(), m_cnpcf[i]);
    }
 
-   kwl.add(prefix, CDPWRX_KW, m_cdpwrx);
-   kwl.add(prefix, CDPWRY_KW, m_cdpwry);
-   kwl.add(prefix, CDPWRZ_KW, m_cdpwrz);
-   kwl.add(prefix, CDTRMS_KW, m_cdtrms);
+   kwl.add(prefix, PCA_CDPWRX_KW.c_str(), m_cdpwrx);
+   kwl.add(prefix, PCA_CDPWRY_KW.c_str(), m_cdpwry);
+   kwl.add(prefix, PCA_CDPWRZ_KW.c_str(), m_cdpwrz);
+   kwl.add(prefix, PCA_CDTRMS_KW.c_str(), m_cdtrms);
    for (ossim_uint32 i=0; i<m_cdtrms; ++i)
    {
       ossimString key;
-      key = CDPCF_KW;
+      key = PCA_CDPCF_KW.c_str();
       key += ossimString::toString(i);
       kwl.add(prefix, key.c_str(), m_cdpcf[i]);
    }
@@ -655,253 +771,412 @@ bool ossimRsmModel::saveState(ossimKeywordlist& kwl,
 //  
 //---
 bool ossimRsmModel::loadState(const ossimKeywordlist& kwl,
-                                  const char* prefix) 
+                              const char* prefix) 
 {
+   static const char MODULE[] = "ossimRsmModel::loadState";
    if (traceExec())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "DEBUG ossimRsmModel::loadState(): entering..." << std::endl;
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
-   
-   const char* value;
    
    //---
    // Pass on to the base-class for parsing first:
    //---
-   bool success = ossimSensorModel::loadState(kwl, prefix);
-   if (!success)
+   bool result = ossimSensorModel::loadState(kwl, prefix);
+   if ( result )
    {
-      if (traceExec())
+      std::string pfx = (prefix != 0) ? prefix : "";
+      std::string key;
+      std::string value;
+
+      result = false; // Set to true on last key.
+      
+      while( 1 ) // Break out on error.
       {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "DEBUG ossimRsmModel::loadState(): returning with error..."
+         //---
+         // Continue parsing for local members:
+         //---
+         key = PCA_RNRMO_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_rnrmo = ossimString(value).toFloat64();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_CNRMO_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_cnrmo = ossimString(value).toFloat64();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_XNRMO_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_xnrmo = ossimString(value).toFloat64();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_YNRMO_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_ynrmo = ossimString(value).toFloat64();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_ZNRMO_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_znrmo = ossimString(value).toFloat64();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_RNRMSF_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_rnrmsf = ossimString(value).toFloat64();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_CNRMSF_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_cnrmsf = ossimString(value).toFloat64();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_XNRMSF_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_xnrmsf = ossimString(value).toFloat64();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_YNRMSF_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_ynrmsf = ossimString(value).toFloat64();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_ZNRMSF_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_znrmsf = ossimString(value).toFloat64();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_RNPWRX_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_rnpwrx = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_RNPWRY_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_rnpwry = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_RNPWRZ_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_rnpwrz = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_RNTRMS_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_rntrms = ossimString(value).toUInt32();
+            m_rnpcf.resize(m_rntrms);
+            bool keysParsed = true; // Set to false if not found.
+            for (ossim_uint32 i=0; i<m_rntrms; ++i)
+            {
+               key = PCA_RNPCF_KW;
+               key += ossimString::toString(i).string();
+               value = kwl.findKey(pfx, key);
+               if ( !value.size() )
+               {
+                  keysParsed = false;
+                  break; // Break from for loop.
+               }
+               m_rnpcf[i] = ossimString(value).toFloat64();
+            }
+            if ( keysParsed == false )
+            {
+               break; // Break from while (FOREVER) loop.
+            }
+         }
+
+         key = PCA_RDPWRX_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_rdpwrx = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_RDPWRY_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_rdpwry = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_RDPWRZ_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_rdpwrz = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_RDTRMS_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_rdtrms = ossimString(value).toUInt32();
+            m_rdpcf.resize(m_rdtrms);
+            bool keysParsed = true; // Set to false if not found.
+            for (ossim_uint32 i=0; i<m_rdtrms; ++i)
+            {
+               key = PCA_RDPCF_KW;
+               key += ossimString::toString(i).string();
+               value = kwl.findKey(pfx, key);
+               if ( !value.size() )
+               {
+                  keysParsed = false;
+                  break; // Break from for loop.
+               }
+               m_rdpcf[i] = ossimString(value).toFloat64();
+            }
+            if ( keysParsed == false )
+            {
+               break; // Break from while (FOREVER) loop.
+            }
+         }
+
+         key = PCA_CNPWRX_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_cnpwrx = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_CNPWRY_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_cnpwry = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_CNPWRZ_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_cnpwrz = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_CNTRMS_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_cntrms = ossimString(value).toUInt32();
+            m_cnpcf.resize(m_cntrms);
+            bool keysParsed = true; // Set to false if not found.
+            for (ossim_uint32 i=0; i<m_cntrms; ++i)
+            {
+               key = PCA_CNPCF_KW;
+               key += ossimString::toString(i).string();
+               value = kwl.findKey(pfx, key);
+               if ( !value.size() )
+               {
+                  keysParsed = false;
+                  break; // Break from for loop.
+               }
+               m_cnpcf[i] = ossimString(value).toFloat64();
+            }
+            if ( keysParsed == false )
+            {
+               break; // Break from while (FOREVER) loop.
+            }
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_CDPWRX_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_cdpwrx = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_CDPWRY_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_cdpwry = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_CDPWRZ_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_cdpwrz = ossimString(value).toUInt32();
+         }
+         else
+         {
+            break;
+         }
+
+         key = PCA_CDTRMS_KW;
+         value = kwl.findKey(pfx, key);
+         if ( value.size() )
+         {
+            m_cdtrms = ossimString(value).toUInt32();
+            m_cdpcf.resize(m_cdtrms);
+            bool keysParsed = true; // Set to false if not found.
+            for (ossim_uint32 i=0; i<m_cdtrms; ++i)
+            {
+               key = PCA_CDPCF_KW;
+               key += ossimString::toString(i).string();
+               value = kwl.findKey(pfx, key);
+               if ( !value.size() )
+               {
+                  keysParsed = false;
+                  break; // Break from for loop.
+               }
+               m_cdpcf[i] = ossimString(value).toFloat64();
+            }
+             if ( keysParsed == false )
+            {
+               break; // Break from while (FOREVER) loop.
+            }
+         }
+         else
+         {
+            break;
+         }
+
+         // If we get here we're good, so set the status for downstream code.
+         result = true;
+
+         // Final break from while forever loop.
+         break;
+         
+      } // Matches while( FOREVER ){ ...
+
+      if ( result )
+      {  
+         updateModel();
+      }
+      else // Find on key failed...
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING:\n"
+            << "Error encountered parsing the following required keyword: "
+            << "<" << key << ">. Check the keywordlist for proper syntax."
             << std::endl;
       }
-      return false;
-   }
-   
-   //---
-   // Continue parsing for local members:
-   //---
-   value = kwl.find(prefix, RNRMO_KW);
-   if (value)
-   {
-      m_rnrmo = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, CNRMO_KW);
-   if (value)
-   {
-      m_cnrmo = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, XNRMO_KW);
-   if (value)
-   {
-      m_xnrmo = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, YNRMO_KW);
-   if (value)
-   {
-      m_ynrmo = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, ZNRMO_KW);
-   if (value)
-   {
-      m_znrmo = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, RNRMSF_KW);
-   if (value)
-   {
-      m_rnrmsf = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, CNRMSF_KW);
-   if (value)
-   {
-      m_cnrmsf = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, XNRMSF_KW);
-   if (value)
-   {
-      m_xnrmsf = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, YNRMSF_KW);
-   if (value)
-   {
-      m_ynrmsf = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, ZNRMSF_KW);
-   if (value)
-   {
-      m_znrmsf = ossimString(value).toFloat64();
-   }
+      
+   } // Matches: if ( result ){ ...
 
-   value = kwl.find(prefix, RNPWRX_KW);
-   if (value)
-   {
-      m_rnpwrx = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, RNPWRY_KW);
-   if (value)
-   {
-      m_rnpwry = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, RNPWRZ_KW);
-   if (value)
-   {
-      m_rnpwrz = ossimString(value).toUInt32();
-   }
-   
-   value = kwl.find(prefix, RNTRMS_KW);
-   if (value)
-   {
-      m_rntrms = ossimString(value).toUInt32();
-      m_rnpcf.resize(m_rntrms);      
-      for (ossim_uint32 i=0; i<m_rntrms; ++i)
-      {
-         ossimString keyword;
-         keyword = RNPCF_KW;
-         keyword += ossimString::toString(i); 
-         value = kwl.find(prefix, keyword.c_str());
-         if (!value)
-         {
-            ossimNotify(ossimNotifyLevel_FATAL)
-               << "FATAL ossimRsmModel::loadState(): Error "
-               << "encountered parsing the following required keyword: "
-               << "<" << keyword << ">. Check the keywordlist for proper syntax."
-               << std::endl;
-            return false;
-         }
-         m_rnpcf[i] = ossimString(value).toFloat64();
-      }
-   }
-
-   value = kwl.find(prefix, RDPWRX_KW);
-   if (value)
-   {
-      m_rdpwrx = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, RDPWRY_KW);
-   if (value)
-   {
-      m_rdpwry = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, RDPWRZ_KW);
-   if (value)
-   {
-      m_rdpwrz = ossimString(value).toUInt32();
-   }
-
-   value = kwl.find(prefix, RDTRMS_KW);
-   if (value)
-   {
-      m_rdtrms = ossimString(value).toUInt32();
-      m_rdpcf.resize(m_rdtrms);
-      for (ossim_uint32 i=0; i<m_rdtrms; ++i)
-      {
-         ossimString keyword;
-         keyword = RDPCF_KW;
-         keyword += ossimString::toString(i);
-         value = kwl.find(prefix, keyword.c_str());
-         if (!value)
-         {
-            ossimNotify(ossimNotifyLevel_FATAL)
-               << "FATAL ossimRsmModel::loadState(): Error "
-               << "encountered parsing the following required keyword: "
-               << "<" << keyword << ">. Check the keywordlist for proper syntax."
-               << std::endl;
-            return false;
-         }
-         m_rdpcf[i] = ossimString(value).toFloat64();
-      } 
-   }
-
-   value = kwl.find(prefix, CNPWRX_KW);
-   if (value)
-   {
-      m_cnpwrx = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, CNPWRY_KW);
-   if (value)
-   {
-      m_cnpwry = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, CNPWRZ_KW);
-   if (value)
-   {
-      m_cnpwrz = ossimString(value).toUInt32();
-   }
-
-   value = kwl.find(prefix, CNTRMS_KW);
-   if (value)
-   {
-      m_cntrms = ossimString(value).toUInt32();
-      m_cnpcf.resize(m_cntrms);
-      for (ossim_uint32 i=0; i<m_cntrms; ++i)
-      {
-         ossimString keyword;
-         keyword = CNPCF_KW;
-         keyword += ossimString::toString(i);
-         value = kwl.find(prefix, keyword.c_str());
-         if (!value)
-         {
-            ossimNotify(ossimNotifyLevel_FATAL)
-               << "FATAL ossimRsmModel::loadState(): Error "
-               << "encountered parsing the following required keyword: "
-               << "<" << keyword << ">. Check the keywordlist for proper syntax."
-               << std::endl;
-            return false;
-         }
-         m_cnpcf[i] = ossimString(value).toFloat64();
-      } 
-   }
-
-   value = kwl.find(prefix, CDPWRX_KW);
-   if (value)
-   {
-      m_cdpwrx = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, CDPWRY_KW);
-   if (value)
-   {
-      m_cdpwry = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, CDPWRZ_KW);
-   if (value)
-   {
-      m_cdpwrz = ossimString(value).toUInt32();
-   }
-
-   value = kwl.find(prefix, CDTRMS_KW);
-   if (value)
-   {
-      m_cdtrms = ossimString(value).toUInt32();
-      m_cdpcf.resize(m_cdtrms);
-      for (ossim_uint32 i=0; i<m_cdtrms; ++i)
-      {
-         ossimString keyword;
-         keyword = CDPCF_KW;
-         keyword += ossimString::toString(i);
-         value = kwl.find(prefix, keyword.c_str());
-         if (!value)
-         {
-            ossimNotify(ossimNotifyLevel_FATAL)
-               << "FATAL ossimRsmModel::loadState(): Error "
-               << "encountered parsing the following required keyword: "
-               << "<" << keyword << ">. Check the keywordlist for proper syntax."
-               << std::endl;
-            return false;
-         }
-         m_cdpcf[i] = ossimString(value).toFloat64();
-      }
-   }
-
-   updateModel();
-   
    if (traceExec())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "DEBUG ossimRsmModel::loadState(): returning..." << std::endl;
+         << MODULE << " exit status = " << (result?"true":"false\n")
+         << std::endl;
    }
-   return true;
+   
+   return result;
 }
 
 double ossimRsmModel::polynomial(
