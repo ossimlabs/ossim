@@ -1,9 +1,11 @@
 ![ossim logo](/ossim-logo.png)         
 
-Branch | GoCD Status (centos)
+Agent | GoCD Status
 ------------ | -------------
-master | ![master Build Status](https://github.com/ossimlabs/ossim/blob/master/current_status.png)
-dev | ![dev Build Status](https://github.com/ossimlabs/ossim/blob/dev/current_status.png)
+centos6 | ![master Build Status](http://omar.ossim.org.com/gocd/centos6_status.png)
+centos7 | ![dev Build Status](http://omar.ossim.org.com/gocd/centos6_status.png)
+mac | ![dev Build Status](http://omar.ossim.org.com/gocd/mac_status.png)
+win7x64 | ![dev Build Status](http://omar.ossim.org.com/gocd/win7x64_status.png)
 
 Welcome to OSSIM, an open source, C++, geospatial image processing library used by government, commercial, educational, and private entities throughout the solar system. It has been in active development since 1996. This repository contains the full OSSIM package including core library, applications, tests, and build system. It does *not* contain the OSSIM plugins and other OSSIM-related code such as java-bindings ([ossim-oms](https://github.com/ossimlabs/ossim-oms)), and GUI. Those are available for individually cloning. Refer to the root github page for [ossimlabs](https://github.com/ossimlabs).
 
