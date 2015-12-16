@@ -1,5 +1,3 @@
-![ossim logo](/ossim-logo.png)         
-
 Agent | GoCD Status
 ------------ | -------------
 centos6 | ![master Build Status](http://omar.ossim.org/gocd/centos6_status.png)
