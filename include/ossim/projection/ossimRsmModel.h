@@ -111,7 +111,8 @@ protected:
    
    /** @brief virtual destructor */
    virtual ~ossimRsmModel();
-   
+
+   // RSCPCA:
    ossimString m_iid;
    ossimString m_edition;
 
@@ -158,6 +159,35 @@ protected:
    ossim_uint32 m_cdtrms;
 
    std::vector<ossim_float64> m_cdpcf;
+
+   // RSMPIA:
+   ossimString   m_pia_iid;
+   ossimString   m_pia_edition;
+   ossim_float64 m_pia_r0;
+   ossim_float64 m_pia_rx;
+   ossim_float64 m_pia_ry;
+   ossim_float64 m_pia_rz;
+   ossim_float64 m_pia_rxx;
+   ossim_float64 m_pia_rxy;
+   ossim_float64 m_pia_rxz;
+   ossim_float64 m_pia_ryy;
+   ossim_float64 m_pia_ryz;
+   ossim_float64 m_pia_rzz;
+   ossim_float64 m_pia_c0;
+   ossim_float64 m_pia_cx;
+   ossim_float64 m_pia_cy;
+   ossim_float64 m_pia_cz;
+   ossim_float64 m_pia_cxx;
+   ossim_float64 m_pia_cxy;
+   ossim_float64 m_pia_cxz;   
+   ossim_float64 m_pia_cyy;
+   ossim_float64 m_pia_cyz;
+   ossim_float64 m_pia_czz;
+   ossim_uint32  m_pia_rnis;
+   ossim_uint32  m_pia_cnis;
+   ossim_uint32  m_pia_tnis;
+   ossim_uint32  m_pia_rssiz;
+   ossim_uint32  m_pia_cssiz;
 
    TYPE_DATA
       
