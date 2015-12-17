@@ -36,7 +36,7 @@ public:
                                      ossimIpt cacheSize,
                                      std::vector<ossim_uint8> compressedBuf,
                                      ossim_uint32 readBlockSizeInBytes,
-                                    ossim_uint32 bands);
+                                     ossim_uint32 bands);
    
    
    static bool loadJpegQuantizationTables(ossimNitfImageHeader* hdr,
