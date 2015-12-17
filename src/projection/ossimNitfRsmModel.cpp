@@ -92,7 +92,7 @@ bool ossimNitfRsmModel::parseImageHeader(const ossimNitfImageHeader* ih)
 
    if ( getRsmData(ih) )
    {
-      theImageID = m_iid.trim();
+      theImageID = m_pca_iid.trim();
       
       ossimIrect imageRect = ih->getImageRect();
       
@@ -330,8 +330,8 @@ bool ossimNitfRsmModel::initializeModel( const ossimNitfRsmpcaTag* rsmpcaTag )
 
    if ( rsmpcaTag )
    {
-      m_iid = rsmpcaTag->getIid();
-      m_edition = rsmpcaTag->getEdition();
+      m_pca_iid = rsmpcaTag->getIid().trim();
+      m_pca_edition = rsmpcaTag->getEdition().trim();
       m_rsn = rsmpcaTag->getRsn().toUInt32();
       m_csn = rsmpcaTag->getCsn().toUInt32();
       
@@ -414,31 +414,33 @@ bool ossimNitfRsmModel::initializeModel( const ossimNitfRsmpiaTag* rsmpiaTag )
 
    if ( rsmpiaTag )
    {
-      m_pia_r0    = rsmpiaTag->getR0().toFloat64();
-      m_pia_rx    = rsmpiaTag->getRx().toFloat64();
-      m_pia_ry    = rsmpiaTag->getRy().toFloat64();
-      m_pia_rz    = rsmpiaTag->getRz().toFloat64();
-      m_pia_rxx   = rsmpiaTag->getRxx().toFloat64();
-      m_pia_rxy   = rsmpiaTag->getRxy().toFloat64();
-      m_pia_rxz   = rsmpiaTag->getRxz().toFloat64();
-      m_pia_ryy   = rsmpiaTag->getRyy().toFloat64();
-      m_pia_ryz   = rsmpiaTag->getRyz().toFloat64();
-      m_pia_rzz   = rsmpiaTag->getRzz().toFloat64();
-      m_pia_c0    = rsmpiaTag->getC0().toFloat64();
-      m_pia_cx    = rsmpiaTag->getCx().toFloat64();
-      m_pia_cy    = rsmpiaTag->getCy().toFloat64();
-      m_pia_cz    = rsmpiaTag->getCz().toFloat64();
-      m_pia_cxx   = rsmpiaTag->getCxx().toFloat64();
-      m_pia_cxy   = rsmpiaTag->getCxy().toFloat64();
-      m_pia_cxz   = rsmpiaTag->getCxz().toFloat64();
-      m_pia_cyy   = rsmpiaTag->getCyy().toFloat64();
-      m_pia_cyz   = rsmpiaTag->getCyz().toFloat64();
-      m_pia_czz   = rsmpiaTag->getCzz().toFloat64();
-      m_pia_rnis  = rsmpiaTag->getRnis().toUInt32();
-      m_pia_cnis  = rsmpiaTag->getCnis().toUInt32();
-      m_pia_tnis  = rsmpiaTag->getTnis().toUInt32();
-      m_pia_rssiz = rsmpiaTag->getRssiz().toFloat64();
-      m_pia_cssiz = rsmpiaTag->getCssiz().toFloat64();
+      m_pia_iid     = rsmpiaTag->getIid().trim();
+      m_pia_edition = rsmpiaTag->getEdition().trim();
+      m_pia_r0      = rsmpiaTag->getR0().toFloat64();
+      m_pia_rx      = rsmpiaTag->getRx().toFloat64();
+      m_pia_ry      = rsmpiaTag->getRy().toFloat64();
+      m_pia_rz      = rsmpiaTag->getRz().toFloat64();
+      m_pia_rxx     = rsmpiaTag->getRxx().toFloat64();
+      m_pia_rxy     = rsmpiaTag->getRxy().toFloat64();
+      m_pia_rxz     = rsmpiaTag->getRxz().toFloat64();
+      m_pia_ryy     = rsmpiaTag->getRyy().toFloat64();
+      m_pia_ryz     = rsmpiaTag->getRyz().toFloat64();
+      m_pia_rzz     = rsmpiaTag->getRzz().toFloat64();
+      m_pia_c0      = rsmpiaTag->getC0().toFloat64();
+      m_pia_cx      = rsmpiaTag->getCx().toFloat64();
+      m_pia_cy      = rsmpiaTag->getCy().toFloat64();
+      m_pia_cz      = rsmpiaTag->getCz().toFloat64();
+      m_pia_cxx     = rsmpiaTag->getCxx().toFloat64();
+      m_pia_cxy     = rsmpiaTag->getCxy().toFloat64();
+      m_pia_cxz     = rsmpiaTag->getCxz().toFloat64();
+      m_pia_cyy     = rsmpiaTag->getCyy().toFloat64();
+      m_pia_cyz     = rsmpiaTag->getCyz().toFloat64();
+      m_pia_czz     = rsmpiaTag->getCzz().toFloat64();
+      m_pia_rnis    = rsmpiaTag->getRnis().toUInt32();
+      m_pia_cnis    = rsmpiaTag->getCnis().toUInt32();
+      m_pia_tnis    = rsmpiaTag->getTnis().toUInt32();
+      m_pia_rssiz   = rsmpiaTag->getRssiz().toFloat64();
+      m_pia_cssiz   = rsmpiaTag->getCssiz().toFloat64();
       status = true;
    }
 

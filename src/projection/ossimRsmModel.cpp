@@ -103,8 +103,8 @@ ossimRsmModel::ossimRsmModel()
    :
    ossimSensorModel(),
 
-   m_iid(),
-   m_edition(),
+   m_pca_iid(),
+   m_pca_edition(),
 
    m_rsn(0),
    m_csn(0),
@@ -186,8 +186,8 @@ ossimRsmModel::ossimRsmModel( const ossimRsmModel& obj )
    :
    ossimSensorModel( obj ),
 
-   m_iid( obj.m_iid ),
-   m_edition( obj.m_edition ),
+   m_pca_iid( obj.m_pca_iid ),
+   m_pca_edition( obj.m_pca_edition ),
 
    m_rsn( obj.m_rsn ),
    m_csn( obj.m_csn ),
@@ -270,8 +270,8 @@ const ossimRsmModel& ossimRsmModel::operator=( const ossimRsmModel& rhs )
    {
       ossimSensorModel::operator=(rhs);
 
-      m_iid = rhs.m_iid;
-      m_edition = rhs.m_edition;
+      m_pca_iid = rhs.m_pca_iid;
+      m_pca_edition = rhs.m_pca_edition;
       
       m_rsn = rhs.m_rsn;
       m_csn = rhs.m_csn;
@@ -690,6 +690,9 @@ bool ossimRsmModel::saveState(ossimKeywordlist& kwl,
    //---
    ossimSensorModel::saveState(kwl, prefix);
 
+   kwl.add(prefix, PCA_IID_KW.c_str(), m_pca_iid.c_str());
+   kwl.add(prefix, PCA_EDITION_KW.c_str(), m_pca_edition.c_str());
+   
    //---
    // Save off offsets and scales:
    //---
@@ -754,6 +757,35 @@ bool ossimRsmModel::saveState(ossimKeywordlist& kwl,
       kwl.add(prefix, key.c_str(), m_cdpcf[i]);
    }
 
+   // PIA:
+   kwl.add(prefix, PIA_IID_KW.c_str(), m_pia_iid.c_str());
+   kwl.add(prefix, PIA_EDITION_KW.c_str(), m_pia_edition.c_str());
+   kwl.add(prefix, PIA_R0_KW.c_str(), m_pia_r0);
+   kwl.add(prefix, PIA_RX_KW.c_str(), m_pia_rx);
+   kwl.add(prefix, PIA_RY_KW.c_str(), m_pia_ry);
+   kwl.add(prefix, PIA_RZ_KW.c_str(), m_pia_rz);
+   kwl.add(prefix, PIA_RXX_KW.c_str(), m_pia_rxx);
+   kwl.add(prefix, PIA_RXY_KW.c_str(), m_pia_rxy);
+   kwl.add(prefix, PIA_RXZ_KW.c_str(), m_pia_rxz);
+   kwl.add(prefix, PIA_RYY_KW.c_str(), m_pia_ryy);
+   kwl.add(prefix, PIA_RYZ_KW.c_str(), m_pia_ryz);
+   kwl.add(prefix, PIA_RZZ_KW.c_str(), m_pia_rzz);
+   kwl.add(prefix, PIA_C0_KW.c_str(), m_pia_c0);
+   kwl.add(prefix, PIA_CX_KW.c_str(), m_pia_cx);
+   kwl.add(prefix, PIA_CY_KW.c_str(), m_pia_cy);
+   kwl.add(prefix, PIA_CZ_KW.c_str(), m_pia_cz);
+   kwl.add(prefix, PIA_CXX_KW.c_str(), m_pia_cxx);
+   kwl.add(prefix, PIA_CXY_KW.c_str(), m_pia_cxy);
+   kwl.add(prefix, PIA_CXZ_KW.c_str(), m_pia_cxz);
+   kwl.add(prefix, PIA_CYY_KW.c_str(), m_pia_cyy);
+   kwl.add(prefix, PIA_CYZ_KW.c_str(), m_pia_cyz);
+   kwl.add(prefix, PIA_CZZ_KW.c_str(), m_pia_czz);
+   kwl.add(prefix, PIA_RNIS_KW.c_str(), m_pia_rnis);
+   kwl.add(prefix, PIA_CNIS_KW.c_str(), m_pia_cnis);
+   kwl.add(prefix, PIA_TNIS_KW.c_str(), m_pia_tnis);
+   kwl.add(prefix, PIA_RSSIZ_KW.c_str(), m_pia_rssiz);
+   kwl.add(prefix, PIA_CSSIZ_KW.c_str(), m_pia_cssiz);
+
    if (traceExec())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
@@ -778,11 +810,18 @@ bool ossimRsmModel::loadState(const ossimKeywordlist& kwl,
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
+
+   bool result = false;
    
-   //---
-   // Pass on to the base-class for parsing first:
-   //---
-   bool result = ossimSensorModel::loadState(kwl, prefix);
+   // Check for type match before preceeding:
+   std::string myPrefix = ( prefix ? prefix : "" );
+   std::string type = kwl.findKey( myPrefix, std::string(ossimKeywordNames::TYPE_KW) );
+   if ( (type == "ossimNitfRsmModel" ) || ( type == MODEL_TYPE_KW ) )
+   {
+      // Pass on to the base-class for parsing first:
+      result = ossimSensorModel::loadState(kwl, prefix);
+   }
+   
    if ( result )
    {
       std::string pfx = (prefix != 0) ? prefix : "";

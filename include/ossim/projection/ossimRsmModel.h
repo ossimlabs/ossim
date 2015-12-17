@@ -113,8 +113,8 @@ protected:
    virtual ~ossimRsmModel();
 
    // RSCPCA:
-   ossimString m_iid;
-   ossimString m_edition;
+   ossimString m_pca_iid;
+   ossimString m_pca_edition;
 
    ossim_uint32 m_rsn;
    ossim_uint32 m_csn;
