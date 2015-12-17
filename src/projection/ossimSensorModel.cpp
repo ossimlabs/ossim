@@ -411,9 +411,9 @@ void ossimSensorModel::worldToLineSample(const ossimGpt& worldPoint,
       //***
       // Compute numerical partials at current guessed point:
       //***
-      lineSampleHeightToWorld(ip,    height, gp);
-      lineSampleHeightToWorld(ip_du, height, gp_du);
-      lineSampleHeightToWorld(ip_dv, height, gp_dv);
+      lineSampleToWorld(ip,    gp);
+      lineSampleToWorld(ip_du, gp_du);
+      lineSampleToWorld(ip_dv, gp_dv);
 
       if(gp.isLatNan() || gp.isLonNan())
       {
