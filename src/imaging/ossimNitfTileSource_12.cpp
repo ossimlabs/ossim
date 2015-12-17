@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -11,18 +11,19 @@
 // Contains class declaration for NitfTileSource_12.
 //
 //*******************************************************************
-//  $Id: ossimNitfTileSource_12.cpp 958 2010-06-03 23:00:32Z ming.su $
-
-//#if defined(JPEG_DUAL_MODE_8_12)
-#include <fstream>
+//  $Id$
 
 #if defined(JPEG_DUAL_MODE_8_12)
+
+#include <fstream>
 #include <jpeg12/jpeglib.h>
 
 //ossim includes
-#include <ossim//imaging/ossimJpegMemSrc.h>
+#include <ossim/imaging/ossimImageData.h>
+#include <ossim/imaging/ossimJpegMemSrc.h>
 #include <ossim/imaging/ossimNitfTileSource_12.h>
 #include <ossim/imaging/ossimJpegDefaultTable.h>
+#include <ossim/support_data/ossimNitfImageHeader.h>
 
 bool ossimNitfTileSource_12::uncompressJpeg12Block(ossim_uint32 x, ossim_uint32 y,
                                                    ossimRefPtr<ossimImageData> cacheTile,
@@ -43,9 +44,9 @@ bool ossimNitfTileSource_12::uncompressJpeg12Block(ossim_uint32 x, ossim_uint32 
    /* Establish the setjmp return context for my_error_exit to use. */
    if (setjmp(jerr.setjmp_buffer))
    {
-     jpeg_destroy_decompress(&cinfo);
+      jpeg_destroy_decompress(&cinfo);
    
-     return false;
+      return false;
    }
 
    jpeg_CreateDecompress(&cinfo, JPEG_LIB_VERSION, sizeof(cinfo));
@@ -69,8 +70,8 @@ bool ossimNitfTileSource_12::uncompressJpeg12Block(ossim_uint32 x, ossim_uint32 
       // This will load table specified in COMRAT field.
       if (loadJpegQuantizationTables(hdr, cinfo) == false)
       {
-        jpeg_destroy_decompress(&cinfo);
-        return false;
+         jpeg_destroy_decompress(&cinfo);
+         return false;
       }
    }
 
@@ -80,8 +81,8 @@ bool ossimNitfTileSource_12::uncompressJpeg12Block(ossim_uint32 x, ossim_uint32 
       // This will load default huffman tables into .
       if (loadJpegHuffmanTables(cinfo) == false)
       {
-        jpeg_destroy_decompress(&cinfo);
-        return false;
+         jpeg_destroy_decompress(&cinfo);
+         return false;
       }
    }
 
@@ -122,10 +123,10 @@ bool ossimNitfTileSource_12::uncompressJpeg12Block(ossim_uint32 x, ossim_uint32 
    if ( (SAMPLES > cacheTile->getWidth()) ||
         (LINES_TO_READ > cacheTile->getHeight()) )
    {
-     jpeg_finish_decompress(&cinfo);
-     jpeg_destroy_decompress(&cinfo);
+      jpeg_finish_decompress(&cinfo);
+      jpeg_destroy_decompress(&cinfo);
 
-     return false;
+      return false;
    }
    
    // Get pointers to the cache tile buffers.
@@ -133,7 +134,7 @@ bool ossimNitfTileSource_12::uncompressJpeg12Block(ossim_uint32 x, ossim_uint32 
    ossim_uint32 band = 0;
    for (band = 0; band < bands; ++band)
    {
-     destinationBuffer[band] = cacheTile->getUshortBuf(band);
+      destinationBuffer[band] = cacheTile->getUshortBuf(band);
    }
 
    std::vector<ossim_uint16> lineBuffer(ROW_STRIDE);
@@ -142,23 +143,23 @@ bool ossimNitfTileSource_12::uncompressJpeg12Block(ossim_uint32 x, ossim_uint32 
 
    while (cinfo.output_scanline < LINES_TO_READ)
    {
-     // Read a line from the jpeg file.
-     jpeg_read_scanlines(&cinfo, jbuf, 1);
+      // Read a line from the jpeg file.
+      jpeg_read_scanlines(&cinfo, jbuf, 1);
 
-     ossim_uint32 index = 0;
-     for (ossim_uint32 sample = 0; sample < SAMPLES; ++sample)         
-     {
-       for (band = 0; band < bands; ++band)
-       {
-         destinationBuffer[band][sample] = lineBuffer[index];
-         ++index;
-       }
-     }
+      ossim_uint32 index = 0;
+      for (ossim_uint32 sample = 0; sample < SAMPLES; ++sample)         
+      {
+         for (band = 0; band < bands; ++band)
+         {
+            destinationBuffer[band][sample] = lineBuffer[index];
+            ++index;
+         }
+      }
 
-     for (band = 0; band < bands; ++band)
-     {
-       destinationBuffer[band] += cacheSize.x;         
-     }
+      for (band = 0; band < bands; ++band)
+      {
+         destinationBuffer[band] += cacheSize.x;         
+      }
    }
 
    jpeg_finish_decompress(&cinfo);
@@ -167,89 +168,89 @@ bool ossimNitfTileSource_12::uncompressJpeg12Block(ossim_uint32 x, ossim_uint32 
    return true;
 }
 
-bool ossimNitfTileSource_12::loadJpegQuantizationTables(ossimNitfImageHeader* hdr,
-                                jpeg_decompress_struct& cinfo)
+bool ossimNitfTileSource_12::loadJpegQuantizationTables(
+   ossimNitfImageHeader* hdr, jpeg_decompress_struct& cinfo)
 {
-  if (!hdr)
-  {
-    return false;
-  }
+   if (!hdr)
+   {
+      return false;
+   }
 
-  ossimString comrat = hdr->getCompressionRateCode();
-  ossim_uint32 tableIndex = 0;
-  if (comrat.size() >= 4)
-  {
-    // COMRAT string like: "00.2" = use table 2. (between 1 and 5).
-    ossimString s;
-    s.push_back(comrat[static_cast<std::string::size_type>(3)]);
-    ossim_int32 comTbl = s.toInt32();
-    if ( (comTbl > 0) && (comTbl < 6) )
-    {
-      tableIndex = comTbl-1;
-    }
-    else
-    {
-      ossimNotify(ossimNotifyLevel_WARN)
-        << "ossimNitfTileSource_12::loadJpegQuantizationTables WARNING\n"
-        << "\nNo quantization tables specified!"
-        << endl;
-      return false;  
-    }
-  }
+   ossimString comrat = hdr->getCompressionRateCode();
+   ossim_uint32 tableIndex = 0;
+   if (comrat.size() >= 4)
+   {
+      // COMRAT string like: "00.2" = use table 2. (between 1 and 5).
+      ossimString s;
+      s.push_back(comrat[static_cast<std::string::size_type>(3)]);
+      ossim_int32 comTbl = s.toInt32();
+      if ( (comTbl > 0) && (comTbl < 6) )
+      {
+         tableIndex = comTbl-1;
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << "ossimNitfTileSource_12::loadJpegQuantizationTables WARNING\n"
+            << "\nNo quantization tables specified!"
+            << endl;
+         return false;  
+      }
+   }
 
-  cinfo.quant_tbl_ptrs[0] = jpeg_alloc_quant_table((j_common_ptr) &cinfo);
+   cinfo.quant_tbl_ptrs[0] = jpeg_alloc_quant_table((j_common_ptr) &cinfo);
 
-  JQUANT_TBL* quant_ptr = cinfo.quant_tbl_ptrs[0]; // quant_ptr is JQUANT_TBL*
+   JQUANT_TBL* quant_ptr = cinfo.quant_tbl_ptrs[0]; // quant_ptr is JQUANT_TBL*
 
-  for (ossim_int32 i = 0; i < 64; ++i)
-  {
-    /* Qtable[] is desired quantization table, in natural array order */
-    quant_ptr->quantval[i] = QTABLE_ARRAY[tableIndex][i];
-  }
-  return true;
+   for (ossim_int32 i = 0; i < 64; ++i)
+   {
+      /* Qtable[] is desired quantization table, in natural array order */
+      quant_ptr->quantval[i] = QTABLE_ARRAY[tableIndex][i];
+   }
+   return true;
 }
 
 bool ossimNitfTileSource_12::loadJpegHuffmanTables(jpeg_decompress_struct& cinfo)
 {
-  if ( (cinfo.ac_huff_tbl_ptrs[0] != NULL) &&
-    (cinfo.dc_huff_tbl_ptrs[0] != NULL) )
-  {
-    return false;
-  }
+   if ( (cinfo.ac_huff_tbl_ptrs[0] != NULL) &&
+        (cinfo.dc_huff_tbl_ptrs[0] != NULL) )
+   {
+      return false;
+   }
 
-  cinfo.ac_huff_tbl_ptrs[0] = jpeg_alloc_huff_table((j_common_ptr)&cinfo);
-  cinfo.dc_huff_tbl_ptrs[0] = jpeg_alloc_huff_table((j_common_ptr)&cinfo);
+   cinfo.ac_huff_tbl_ptrs[0] = jpeg_alloc_huff_table((j_common_ptr)&cinfo);
+   cinfo.dc_huff_tbl_ptrs[0] = jpeg_alloc_huff_table((j_common_ptr)&cinfo);
 
-  ossim_int32 i;
-  JHUFF_TBL* huff_ptr;
+   ossim_int32 i;
+   JHUFF_TBL* huff_ptr;
 
-  // Copy the ac tables.
-  huff_ptr = cinfo.ac_huff_tbl_ptrs[0]; /* huff_ptr is JHUFF_TBL* */     
-  for (i = 0; i < 16; ++i) 
-  {
-    // huff_ptr->bits is array of 17 bits[0] is unused; hence, the i+1
-    huff_ptr->bits[i+1] = AC_BITS[i]; 
-  }
+   // Copy the ac tables.
+   huff_ptr = cinfo.ac_huff_tbl_ptrs[0]; /* huff_ptr is JHUFF_TBL* */     
+   for (i = 0; i < 16; ++i) 
+   {
+      // huff_ptr->bits is array of 17 bits[0] is unused; hence, the i+1
+      huff_ptr->bits[i+1] = AC_BITS[i]; 
+   }
 
-  for (i = 0; i < 256; ++i)
-  {
-    huff_ptr->huffval[i] = AC_HUFFVAL[i];
-  }
+   for (i = 0; i < 256; ++i)
+   {
+      huff_ptr->huffval[i] = AC_HUFFVAL[i];
+   }
 
-  // Copy the dc tables.
-  huff_ptr = cinfo.dc_huff_tbl_ptrs[0]; /* huff_ptr is JHUFF_TBL* */
-  for (i = 0; i < 16; ++i)
-  {
-    // huff_ptr->bits is array of 17 bits[0] is unused; hence, the i+1
-    huff_ptr->bits[i+1] = DC_BITS[i];
-  }
+   // Copy the dc tables.
+   huff_ptr = cinfo.dc_huff_tbl_ptrs[0]; /* huff_ptr is JHUFF_TBL* */
+   for (i = 0; i < 16; ++i)
+   {
+      // huff_ptr->bits is array of 17 bits[0] is unused; hence, the i+1
+      huff_ptr->bits[i+1] = DC_BITS[i];
+   }
 
-  for (i = 0; i < 256; i++)
-  {
-    /* symbols[] is the list of Huffman symbols, in code-length order */
-    huff_ptr->huffval[i] = DC_HUFFVAL[i];
-  }
-  return true;
+   for (i = 0; i < 256; i++)
+   {
+      /* symbols[] is the list of Huffman symbols, in code-length order */
+      huff_ptr->huffval[i] = DC_HUFFVAL[i];
+   }
+   return true;
 }
 
 #endif /* defined(JPEG_DUAL_MODE_8_12) */
