@@ -421,7 +421,7 @@ private:
     * @brief Creates a new writer.
     *
     * This will use the writer option (-w or --writer), if present; else,
-    * it will be derived from the output file extention.
+    * it will be derived from the output file extension.
     *
     * This will also set any writer properties passed in.
     *

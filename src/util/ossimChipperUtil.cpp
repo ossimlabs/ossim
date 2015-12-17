@@ -4210,7 +4210,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                rect = source->getBoundingRect(0);
             }
       
-         } // if ( m_getOuputGeometry.valid() )
+         } // if ( m_getOutputGeometry.valid() )
          else
          {
             // Should never happer...

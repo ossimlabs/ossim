@@ -445,7 +445,7 @@ void ossimNitfImageHeaderV2_1::writeStream(std::ostream &out)
       out.write(theUserDefinedOverflow, 3);
    }
 
-   // need to ouput tagged data
+   // need to output tagged data
    // here
    //
    ossim_uint32 totalLength = getTotalTagLength();

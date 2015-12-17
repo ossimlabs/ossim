@@ -170,7 +170,7 @@ ossimEquationUtil::ossimEquationUtil(ossimArgumentParser& ap)
    m_usage.addCommandLineOption("-k <filename>", "keyword list to load from");
    m_usage.addCommandLineOption("-w <type>", "Writer type (tiff_strip, jpeg, etc... see ossim-info --writers) (default=tiff_strip)");
    m_usage.addCommandLineOption("--writer-prop <string>", "Adds a property to send to the writer. format is name=value");
-   m_usage.addCommandLineOption("-t <filename>", "ouput a keyword list template");
+   m_usage.addCommandLineOption("-t <filename>", "output a keyword list template");
 }
 
 bool ossimEquationUtil::execute()

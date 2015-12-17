@@ -78,7 +78,7 @@ void ossimSlopeUtil::setUsage(ossimArgumentParser& ap)
          "--lut <filename>",
          "Specifies the optional lookup table filename for mapping the single-band output "
          "image to an RGB. The LUT provided must be in the ossimIndexToRgbLutFilter format "
-         "and should accomodate the output pixel range. This option forces remap to 8-bit, "
+         "and should accommodate the output pixel range. This option forces remap to 8-bit, "
          "0-255 where 255 = 90 deg slope");
    au->addCommandLineOption(
          "--roi <meters>",
