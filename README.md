@@ -5,7 +5,7 @@ centos6 | ![centos6 Status](http://omar.ossim.org/gocd/centos6_status.png)
 centos7 | ![centos7 Status](http://omar.ossim.org/gocd/centos7_status.png)
 mac | ![mac Status](http://omar.ossim.org/gocd/mac_status.png)
 win7x64 | ![win7x64 Status](http://omar.ossim.org/gocd/win7x64_status.png)
-coverity | ![CoverityStatus](<a class="navbar-brand nav-cov-link" href="https://scan.coverity.com/" title="Coverity"><img alt="Coverity logo white" src="/assets/coverity-logo-white-de6df87c3ce06411c8d5bd05e2fdfbf9.png" /></a>)
+coverity | ![Coverity Status](https://scan.coverity.com/projects/ossim/assets/coverity-logo-white-de6df87c3ce06411c8d5bd05e2fdfbf9.png)
 
 
 # Welcome to OSSIM
