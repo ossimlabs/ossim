@@ -21,6 +21,24 @@
 #include <iostream>
 using namespace std;
 
+static void usage( const std::string& app )
+{
+   cout << app
+        << " <chipper_options> <output_file>"
+        << "\n\nWrites out a single image data raster buffer.\n"
+        << "\nSample chipper options file that can be cut and pasted in a "
+        << "\"chipper_options.kwl\" file for test.\n"
+        << "hist_op: auto-minmax\n"
+        << "image0.file: /data1/test/data/public/applanix/utm/17657707.tif\n"
+        << "image0.entry: 0\n"
+        << "operation: chip\n"
+        << "thumbnail_resolution: 256\n"
+        << "three_band_out: true\n"
+        << "output_radiometry: U8\n"
+        << "pad_thumbnail: true\n"
+        << endl;
+}
+
 int main(int argc, char* argv[])
 {
    int status = -1;
@@ -51,7 +69,7 @@ int main(int argc, char* argv[])
                
                // ossimRefPtr<ossimImageData> chip = chipper->getChip( kwl->getMap() );
                ossimRefPtr<ossimImageData> chip = chipper->getChip( );
-               cout << "chip:\n" << *(chip.get()) << endl;
+               cout << "returned image data chip:\n" << *(chip.get()) << endl;
                if ( chip.valid() )
                {
                   status = chip->getDataObjectStatus();
@@ -89,8 +107,7 @@ int main(int argc, char* argv[])
       }
       else // Matches: if (argc == 3 ){ ... }
       {
-         cout << argv[0] << " <chipper_options> <output_file>"
-              << "\n\nWrites out a single image data raster buffer.\n" << endl;
+         usage( std::string( argv[0] ) );
       }
    }
    catch( const ossimException& e )
