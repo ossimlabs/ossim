@@ -105,7 +105,6 @@ void ossimNitfImageHeader::getTagData(
    std::vector< const ossimNitfRegisteredTag* > &tags ) const
 {
    tags.clear();
-   
    if(theTagList.size())
    {
       for(ossim_uint32 idx = 0; idx < theTagList.size(); ++idx)

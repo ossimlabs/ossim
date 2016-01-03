@@ -5,7 +5,10 @@
 #define ossimRsmModel_H 1
 
 #include <ossim/projection/ossimSensorModel.h>
+#include <ossim/support_data/ossimRsmpca.h>
+#include <ossim/support_data/ossimRsmpia.h>
 #include <iosfwd>
+#include <vector>
 
 /**
  * @class ossimRsmModel
@@ -112,82 +115,8 @@ protected:
    /** @brief virtual destructor */
    virtual ~ossimRsmModel();
 
-   // RSCPCA:
-   ossimString m_pca_iid;
-   ossimString m_pca_edition;
-
-   ossim_uint32 m_rsn;
-   ossim_uint32 m_csn;
-
-   ossim_float64 m_rfep;
-   ossim_float64 m_cfep;
-   ossim_float64 m_rnrmo;
-   ossim_float64 m_cnrmo;
-   ossim_float64 m_xnrmo;
-   ossim_float64 m_ynrmo;
-   ossim_float64 m_znrmo;
-   ossim_float64 m_rnrmsf;
-   ossim_float64 m_cnrmsf;
-   ossim_float64 m_xnrmsf;
-   ossim_float64 m_ynrmsf;
-   ossim_float64 m_znrmsf;
-   
-   ossim_uint32 m_rnpwrx;
-   ossim_uint32 m_rnpwry;
-   ossim_uint32 m_rnpwrz;
-   ossim_uint32 m_rntrms;
-
-   std::vector<ossim_float64> m_rnpcf;
-
-   ossim_uint32 m_rdpwrx;
-   ossim_uint32 m_rdpwry;
-   ossim_uint32 m_rdpwrz;
-   ossim_uint32 m_rdtrms;
-
-   std::vector<ossim_float64> m_rdpcf;
-
-   ossim_uint32 m_cnpwrx;
-   ossim_uint32 m_cnpwry;
-   ossim_uint32 m_cnpwrz;
-   ossim_uint32 m_cntrms;
-
-   std::vector<ossim_float64> m_cnpcf;
-
-   ossim_uint32 m_cdpwrx;
-   ossim_uint32 m_cdpwry;
-   ossim_uint32 m_cdpwrz;
-   ossim_uint32 m_cdtrms;
-
-   std::vector<ossim_float64> m_cdpcf;
-
-   // RSMPIA:
-   ossimString   m_pia_iid;
-   ossimString   m_pia_edition;
-   ossim_float64 m_pia_r0;
-   ossim_float64 m_pia_rx;
-   ossim_float64 m_pia_ry;
-   ossim_float64 m_pia_rz;
-   ossim_float64 m_pia_rxx;
-   ossim_float64 m_pia_rxy;
-   ossim_float64 m_pia_rxz;
-   ossim_float64 m_pia_ryy;
-   ossim_float64 m_pia_ryz;
-   ossim_float64 m_pia_rzz;
-   ossim_float64 m_pia_c0;
-   ossim_float64 m_pia_cx;
-   ossim_float64 m_pia_cy;
-   ossim_float64 m_pia_cz;
-   ossim_float64 m_pia_cxx;
-   ossim_float64 m_pia_cxy;
-   ossim_float64 m_pia_cxz;   
-   ossim_float64 m_pia_cyy;
-   ossim_float64 m_pia_cyz;
-   ossim_float64 m_pia_czz;
-   ossim_uint32  m_pia_rnis;
-   ossim_uint32  m_pia_cnis;
-   ossim_uint32  m_pia_tnis;
-   ossim_uint32  m_pia_rssiz;
-   ossim_uint32  m_pia_cssiz;
+   ossimRsmpia m_pia;
+   vector<ossimRsmpca> m_pca;
 
    TYPE_DATA
       
