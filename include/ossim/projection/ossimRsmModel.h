@@ -5,6 +5,7 @@
 #define ossimRsmModel_H 1
 
 #include <ossim/projection/ossimSensorModel.h>
+#include <ossim/support_data/ossimRsmida.h>
 #include <ossim/support_data/ossimRsmpca.h>
 #include <ossim/support_data/ossimRsmpia.h>
 #include <iosfwd>
@@ -115,8 +116,9 @@ protected:
    /** @brief virtual destructor */
    virtual ~ossimRsmModel();
 
+   ossimRsmida m_ida;
    ossimRsmpia m_pia;
-   vector<ossimRsmpca> m_pca;
+   std::vector<ossimRsmpca> m_pca;
 
    TYPE_DATA
       

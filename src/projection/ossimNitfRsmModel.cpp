@@ -224,7 +224,7 @@ bool ossimNitfRsmModel::getRsmData(const ossimNitfImageHeader* ih)
                      dynamic_cast<ossimNitfRsmidaTag*>( tag.get() );
                   if ( rsmidaTag.valid() )
                   {
-                     if ( initializeModel( rsmidaTag.get() ) )
+                     if ( m_ida.initialize( rsmidaTag.get() ) )
                      {
                         // RSMPIA:
                         const ossimString RSMPIA_TAG = "RSMPIA";
@@ -336,20 +336,6 @@ bool ossimNitfRsmModel::initializeModel( const ossimNitfRsmecaTag* rsmecaTag )
    return status;
    
 } // End: ossimNitfRsmModel::initializeModel( rsmecaTag )
-
-bool ossimNitfRsmModel::initializeModel( const ossimNitfRsmidaTag* rsmidaTag )
-{
-   bool status = false;
-
-   if ( rsmidaTag )
-   {
-      // TODO:
-      status = true;
-   }
-
-   return status;
-   
-} // End: ossimNitfRsmModel::initializeModel( rsmidaTag )
 
 ossimObject* ossimNitfRsmModel::dup() const
 {

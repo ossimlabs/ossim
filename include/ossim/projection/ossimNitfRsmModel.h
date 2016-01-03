@@ -63,12 +63,6 @@ public:
     */
    bool initializeModel( const ossimNitfRsmecaTag* rsmecaTag );
 
-   /**
-    * @brief Initializes model from RSMECA tag.
-    * @param rsmecaTag
-    */
-   bool initializeModel( const ossimNitfRsmidaTag* rsmidaTag );
-
 protected:
    /** @brief virtual destructor */
    virtual ~ossimNitfRsmModel();

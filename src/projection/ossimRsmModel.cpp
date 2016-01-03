@@ -41,7 +41,8 @@ static std::string MODEL_TYPE_KW  = "ossimRsmModel";
 ossimRsmModel::ossimRsmModel()
    :
    ossimSensorModel(),
-   m_pia(),
+   m_ida(),
+   m_pia(),   
    m_pca()
 {
    initAdjustableParameters();
@@ -51,6 +52,7 @@ ossimRsmModel::ossimRsmModel()
 ossimRsmModel::ossimRsmModel( const ossimRsmModel& obj )
    :
    ossimSensorModel( obj ),
+   m_ida( obj.m_ida ),
    m_pia( obj.m_pia ),
    m_pca( obj.m_pca )
 {
@@ -62,7 +64,8 @@ const ossimRsmModel& ossimRsmModel::operator=( const ossimRsmModel& rhs )
    if (this != &rhs)
    {
       ossimSensorModel::operator=(rhs);
-      m_pia = rhs.m_pia;
+      m_ida = rhs.m_ida;
+      m_pia = rhs.m_pia;      
       m_pca = rhs.m_pca;
    }
    return *this;  
@@ -411,15 +414,18 @@ bool ossimRsmModel::saveState(ossimKeywordlist& kwl,
 
    std::string pfx = (prefix ? prefix : "" );
 
+   // IDA:
+   m_ida.saveState( kwl, prefix );
+
+   // PIA:
+   m_pia.saveState( kwl, prefix );  
+
    // PCA:
    for ( ossim_uint32 i = 0; i < m_pca.size(); ++i )
    {
       m_pca[i].saveState( kwl, pfx, i );
    }
-
-   // PIA:
-   m_pia.saveState( kwl, prefix );
-
+   
    if (traceExec())
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
@@ -445,41 +451,47 @@ bool ossimRsmModel::loadState(const ossimKeywordlist& kwl,
    if ( (type == "ossimNitfRsmModel" ) || ( type == MODEL_TYPE_KW ) )
    {
       // Pass on to the base-class for parsing first:
-      status = ossimSensorModel::loadState(kwl, prefix);
-   }
-   
-   if ( status )
-   {
-      if ( m_pia.loadState( kwl, pfx ) )
+      if ( ossimSensorModel::loadState(kwl, prefix) )
       {
-         m_pca.clear();
-         
-         for ( ossim_uint32 tagIndex = 0; tagIndex < m_pia.m_tnis; ++tagIndex )
+         if ( m_ida.loadState( kwl, pfx ) )
          {
-            ossimRsmpca pca;
-            if ( pca.loadState( kwl, pfx, tagIndex ) )
+            if ( m_pia.loadState( kwl, pfx ) )
             {
-               m_pca.push_back( pca );
-            }
-            else
-            {
-               ossimNotify(ossimNotifyLevel_WARN)
-                  << "WARNING! RSMPCA[" << tagIndex << "] intitialization failed!"
-                  << std::endl;
-               status = false;
-               break; // Get out...
-            }
-         }
+               m_pca.clear();
+               
+               for ( ossim_uint32 tagIndex = 0; tagIndex < m_pia.m_tnis; ++tagIndex )
+               {
+                  ossimRsmpca pca;
+                  if ( pca.loadState( kwl, pfx, tagIndex ) )
+                  {
+                     m_pca.push_back( pca );
+                  }
+                  else
+                  {
+                     ossimNotify(ossimNotifyLevel_WARN)
+                        << "WARNING! RSMPCA[" << tagIndex << "] intitialization failed!"
+                        << std::endl;
+                     break; // Get out...
+                  }
+               }
 
-         if ( status )
-         {
-            updateModel();
-         }
+               // Should now have a rsmpca record for each segment.
+               if ( m_pia.m_tnis == (ossim_uint32)m_pca.size() )
+               {
+                  // Set the status for downstream code.
+                  status = true;
+                  
+                  updateModel();
+               }
+               
+            } // Matches: if ( m_pia.loadState( kwl, pfx ) )
+            
+         } // Matches:if ( m_ida.loadState( kwl, pfx ) ) 
          
-      } // Matches: if ( m_pia.loadState( kwl, pfx ) )
+      } // Matches: if ( ossimSensorModel::loadState(kwl, prefix) )
       
-   } // Matches: if ( result ){ ...
-
+   } // Matches: if ( (type == "ossimNitfRsmModel" ) || ...
+   
    if (traceExec())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
