@@ -52,14 +52,14 @@ bool ossimNitfImageHeader::getTagInformation(ossimNitfTagInformation& tagInfo,
    return false;
 }
 
-bool ossimNitfImageHeader::getTagInformation(ossimNitfTagInformation& tag,
-                                             ossim_uint32 idx)const
+bool ossimNitfImageHeader::getTagInformation(
+   ossimNitfTagInformation& tagInfo, ossim_uint32 idx) const
 {
    bool result = false;
    
    if(idx < theTagList.size())
    {
-      tag = theTagList[idx];
+      tagInfo = theTagList[idx];
       result = true;
    }
    
@@ -98,6 +98,24 @@ const ossimRefPtr<ossimNitfRegisteredTag> ossimNitfImageHeader::getTagData(
    }
    
    return ossimRefPtr<ossimNitfRegisteredTag>();
+}
+
+void ossimNitfImageHeader::getTagData(
+   const ossimString& tagName,
+   std::vector< const ossimNitfRegisteredTag* > &tags ) const
+{
+   tags.clear();
+   
+   if(theTagList.size())
+   {
+      for(ossim_uint32 idx = 0; idx < theTagList.size(); ++idx)
+      {
+         if(theTagList[idx].getTagName() == tagName)
+         {
+            tags.push_back( theTagList[idx].getTagData().get() );
+         }
+      }
+   }
 }
 
 ossim_uint32 ossimNitfImageHeader::getNumberOfTags()const
