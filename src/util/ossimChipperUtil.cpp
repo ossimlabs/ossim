@@ -12,7 +12,7 @@
 // models(dems).
 // 
 //----------------------------------------------------------------------------
-// $Id: ossimChipperUtil.cpp 23657 2015-12-08 19:46:26Z dburken $
+// $Id: ossimChipperUtil.cpp 23675 2015-12-22 18:16:28Z dburken $
 
 #include <ossim/util/ossimChipperUtil.h>
 
@@ -1436,9 +1436,9 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist& op
 
   ossimIrect aoi;
   
-  if(optionsKwl.getSize() > 0)
+  if( optionsKwl.getSize() > 0 )
   {
-    m_kwl->addList(optionsKwl, true);
+     m_kwl->addList(optionsKwl, true);
   }
 
   // (GP)
@@ -1446,14 +1446,26 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist& op
   // as well as moving windows we will just always initialize
   // the output projection
   //
+
   initializeOutputProjection();
   if(!m_source.valid())
   {
     m_source = initializeChain( aoi );
   }
-  getAreaOfInterest(m_source.get(), aoi);
 
-  m_geom->setImageSize( aoi.size() );
+  if ( optionsKwl.getSize() > 0 )
+  {
+     //---
+     // Only do this if new options were passed in. This was causing an off by
+     // one error when now options were passed in using thumbnail option.
+     // The m_source->getBoundingRect(...) was returning 257 instead of 256.
+     // Need to hunt that down but for right now this fixes problem.
+     // (drb 20151222)
+     //---
+     getAreaOfInterest(m_source.get(), aoi);
+     
+     m_geom->setImageSize( aoi.size() );
+  }
 
   if ( m_source.valid() )
   {    

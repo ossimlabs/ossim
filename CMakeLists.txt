@@ -1,4 +1,5 @@
 PROJECT(ossim)
+SET(CMAKE_MODULE_PATH "${${PROJECT_NAME}_SOURCE_DIR}/cmake/CMakeModules;$ENV{OSSIM_DEV_HOME}/ossim/cmake/CMakeModules;${CMAKE_MODULE_PATH}")
 
 Message("################## Setting up OSSIM core library #########################")
 

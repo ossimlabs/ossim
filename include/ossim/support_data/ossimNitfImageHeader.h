@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -11,9 +11,7 @@
 //********************************************************************
 // $Id: ossimNitfImageHeader.h 22417 2013-09-26 14:54:58Z gpotts $
 #ifndef ossimNitfImageHeader_HEADER
-#define ossimNitfImageHeader_HEADER
-
-#include <vector>
+#define ossimNitfImageHeader_HEADER 1
 
 #include <ossim/base/ossimNBandLutDataObject.h>
 #include <ossim/base/ossimObject.h>
@@ -21,6 +19,7 @@
 #include <ossim/support_data/ossimNitfTagInformation.h>
 #include <ossim/support_data/ossimNitfCompressionHeader.h>
 #include <ossim/support_data/ossimNitfImageBand.h>
+#include <vector>
 
 class ossimString;
 class ossimDpt;
@@ -39,11 +38,25 @@ public:
    
    virtual bool getTagInformation(ossimNitfTagInformation& tagInfo,
                                   const ossimString& tagName) const;
-
+   
    ossimRefPtr<ossimNitfRegisteredTag> getTagData(const ossimString& tagName);
+   
    
    const ossimRefPtr<ossimNitfRegisteredTag> getTagData(
       const ossimString& tagName) const;
+
+   /**
+    * @brief Returns all tags of type tagName.
+    *
+    * Vector passed in "tags" is cleared, then initialized with all tags
+    * found of "tagName".  Size of vector is returned.
+    * 
+    * @param tagName E.g. "RSMPCA"
+    * @param tags Initialized by this.
+    */
+   void getTagData(
+      const ossimString& tagName,
+      std::vector< const ossimNitfRegisteredTag*> &tags ) const;
    
    virtual ossim_uint32 getNumberOfTags()const;
 
