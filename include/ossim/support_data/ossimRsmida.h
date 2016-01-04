@@ -78,7 +78,7 @@ public:
    ossim_float64 m_trg;
    ossim_float64 m_tcg;
 
-   char m_grndd;
+   std::string m_grndd;
 
    ossim_float64 m_xuor;
    ossim_float64 m_yuor;
@@ -143,12 +143,15 @@ public:
    ossim_float64 m_ie0;
    ossim_float64 m_ier;
    ossim_float64 m_iec;
+   
    ossim_float64 m_ierr;
    ossim_float64 m_ierc;
    ossim_float64 m_iecc;
+
    ossim_float64 m_ia0;
    ossim_float64 m_iar;
    ossim_float64 m_iac;
+   
    ossim_float64 m_iarr;
    ossim_float64 m_iarc;
    ossim_float64 m_iacc;
