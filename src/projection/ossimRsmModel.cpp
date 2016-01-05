@@ -33,8 +33,8 @@
 RTTI_DEF1(ossimRsmModel, "ossimRsmModel", ossimSensorModel);
 
 // Define Trace flags for use within this file:
-static ossimTrace traceExec  ("ossimRsmModel:exec");
-static ossimTrace traceDebug ("ossimRsmModel:debug");
+static const ossimTrace traceExec  ("ossimRsmModel:exec");
+static const ossimTrace traceDebug ("ossimRsmModel:debug");
 
 static std::string MODEL_TYPE_KW  = "ossimRsmModel";
 
