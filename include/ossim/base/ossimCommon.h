@@ -512,6 +512,12 @@ namespace ossim
    template <>
    OSSIM_DLL void toSimpleStringList(ossimString& result,
                                      const std::vector<ossim_uint8>& valuesList);
+   template <>
+   OSSIM_DLL void toSimpleStringList(ossimString& result,
+                                     const std::vector<ossim_float64>& valuesList);
+   template <>
+   OSSIM_DLL void toSimpleStringList(ossimString& result,
+                                     const std::vector<ossim_float32>& valuesList);
    
    /**
     * Generic function to extract a list of values into a vector of string where
