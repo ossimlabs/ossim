@@ -58,18 +58,18 @@ public:
     */
    bool initialize( const ossimNitfRsmidaTag* rsmidaTag );
    
-   std::string   m_iid;
-   std::string   m_edition;
+   std::string m_iid;
+   std::string m_edition;
 
    std::string m_isid;
    std::string m_sid;
    std::string m_stid;
    
-   ossim_uint32 m_year;
-   ossim_uint32 m_month;
-   ossim_uint32 m_day;
-   ossim_uint32 m_hour;
-   ossim_uint32 m_minute;
+   ossim_uint32  m_year;
+   ossim_uint32  m_month;
+   ossim_uint32  m_day;
+   ossim_uint32  m_hour;
+   ossim_uint32  m_minute;
    ossim_float64 m_second;
 
    ossim_uint32 m_nrg;

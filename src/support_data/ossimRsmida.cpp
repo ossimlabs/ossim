@@ -9,19 +9,22 @@
 #include <ossim/support_data/ossimRsmida.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimTrace.h>
 #include <ossim/support_data/ossimNitfRsmidaTag.h>
+
+static const ossimTrace traceDebug("ossimRsmida:debug");
 
 static std::string IID_KW     = "iid";
 static std::string EDITION_KW = "edition";
 
 static std::string ISID_KW = "isid";
-static std::string SID_KW = "sid";
+static std::string SID_KW  = "sid";
 static std::string STID_KW = "stid";
 
-static std::string YEAR_KW = "year";
-static std::string MONTH_KW = "month";
-static std::string DAY_KW = "day";
-static std::string HOUR_KW = "hour";
+static std::string YEAR_KW   = "year";
+static std::string MONTH_KW  = "month";
+static std::string DAY_KW    = "day";
+static std::string HOUR_KW   = "hour";
 static std::string MINUTE_KW = "minute";
 static std::string SECOND_KW = "second";
 
@@ -557,6 +560,14 @@ void ossimRsmida::saveState( ossimKeywordlist& kwl,
    kwl.add(pfx.c_str(), IERC_KW.c_str(), m_ierc);   
    kwl.add(pfx.c_str(), IECC_KW.c_str(), m_iecc);
 
+   kwl.add(pfx.c_str(), IA0_KW.c_str(), m_ie0);
+   kwl.add(pfx.c_str(), IAR_KW.c_str(), m_ier);  
+   kwl.add(pfx.c_str(), IAC_KW.c_str(), m_iec);
+
+   kwl.add(pfx.c_str(), IARR_KW.c_str(), m_ie0);
+   kwl.add(pfx.c_str(), IARC_KW.c_str(), m_ier);  
+   kwl.add(pfx.c_str(), IACC_KW.c_str(), m_iec);
+
    kwl.add(pfx.c_str(), SPX_KW.c_str(), m_spx);
    kwl.add(pfx.c_str(), SVX_KW.c_str(), m_svx);   
    kwl.add(pfx.c_str(), SAX_KW.c_str(), m_sax);
@@ -574,6 +585,7 @@ void ossimRsmida::saveState( ossimKeywordlist& kwl,
 bool ossimRsmida::loadState( const ossimKeywordlist& kwl,
                              const std::string& prefix )
 {
+   static const char MODULE[] = "ossimRsmida::loadState";
    std::string pfx = prefix + std::string("rsmida.");
    std::string key;
    std::string value;
@@ -597,7 +609,7 @@ bool ossimRsmida::loadState( const ossimKeywordlist& kwl,
       value = kwl.findKey( pfx, key );
       if ( value.size() )
       {
-        m_edition = value;
+         m_edition = value;
       }
       else
       {
@@ -608,29 +620,39 @@ bool ossimRsmida::loadState( const ossimKeywordlist& kwl,
       value = kwl.findKey( pfx, key );
       if ( value.size() )
       {
-        m_isid = value;
+         m_isid = value;
       }
-      else
+      else // Not required at this time.  Blank in nitf test data.
       {
-         break;
+         m_isid.clear();
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_NOTICE)
+               << MODULE << " NOTICE: " << ISID_KW << "was not found or is blank.\n";
+         }
       }
 
       key = SID_KW;
       value = kwl.findKey( pfx, key );
       if ( value.size() )
       {
-        m_sid = value;
+         m_sid = value;
       }
-      else
+      else // Not required at this time.  Blank in nitf test data.
       {
-         break;
+         m_sid.clear();
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_NOTICE)
+               << MODULE << " NOTICE: " << ISID_KW << "was not found or is blank.\n";
+         }
       }
 
       key = STID_KW;
       value = kwl.findKey( pfx, key );
       if ( value.size() )
       {
-        m_stid = value;
+         m_stid = value;
       }
       else
       {
@@ -653,6 +675,17 @@ bool ossimRsmida::loadState( const ossimKeywordlist& kwl,
       if ( value.size() )
       {
          m_month = ossimString(value).toUInt32();
+      }
+      else
+      {
+         break;
+      }
+
+      key = DAY_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_day = ossimString(value).toUInt32();
       }
       else
       {
@@ -740,7 +773,7 @@ bool ossimRsmida::loadState( const ossimKeywordlist& kwl,
       value = kwl.findKey( pfx, key );
       if ( value.size() )
       {
-         m_grndd = ossimString(value).toFloat64();
+         m_grndd = value;
       }
       else
       {
@@ -784,7 +817,7 @@ bool ossimRsmida::loadState( const ossimKeywordlist& kwl,
       value = kwl.findKey( pfx, key );
       if ( value.size() )
       {
-         m_zuor = ossimString(value).toFloat64();
+         m_xuxr = ossimString(value).toFloat64();
       }
       else
       {
@@ -795,16 +828,687 @@ bool ossimRsmida::loadState( const ossimKeywordlist& kwl,
       value = kwl.findKey( pfx, key );
       if ( value.size() )
       {
-         m_zuor = ossimString(value).toFloat64();
+         m_xuyr = ossimString(value).toFloat64();
       }
       else
       {
          break;
       }
 
-     // If we get here we're good, so set the status for downstream code.
-      result = true;
+      key = XUZR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_xuzr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
 
+      key = YUXR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_yuxr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = YUYR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_yuyr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = YUZR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_yuzr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+      
+      key = ZUXR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_zuxr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = ZUYR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_zuyr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = ZUZR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_zuzr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V1X_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v1x = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V1Y_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v1y = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V1Z_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v1z = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+      
+      key = V2X_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v2x = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V2Y_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v2y = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V2Z_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v2z = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+      
+      key = V3X_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v3x = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V3Y_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v3y = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V3Z_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v3z = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V4X_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v4x = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+      
+      key = V4Y_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v4y = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V4Z_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v4z = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+      
+      key = V5X_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v5x = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V5Y_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v5y = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V5Z_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v5z = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+      
+      key = V6X_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v6x = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V6Y_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v6y = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V6Z_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v6z = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V7X_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v7x = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V7Y_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v7y = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V7Z_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v7z = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V8X_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v8x = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V8Y_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v8y = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = V8Z_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_v8z = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+      
+      key = GRPX_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_grpx = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = GRPY_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_grpy = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+      
+      key = GRPZ_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_grpz = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = FULLR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_fullr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+      
+      key = FULLC_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_fullc = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = MINR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_minr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = MAXR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_maxr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = MINC_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_minc = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = MAXC_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_maxc = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IE0_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_ie0 = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IER_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_ier = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IEC_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_iec = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IERR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_ierr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IERC_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_ierc = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IECC_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_iecc = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IA0_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_ia0 = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IAR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_iar = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IAC_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_iac = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IARR_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_iarr = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IARC_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_iarc = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = IACC_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_iacc = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = SPX_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_spx = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = SVX_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_svx = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+      
+      key = SAX_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_sax = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+     
+      key = SPY_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_spy = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+     
+      key = SVY_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_svy = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+     
+      key = SAY_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_say = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+     
+      key = SPZ_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_spz = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+     
+      key = SVZ_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_svz = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      key = SAZ_KW;
+      value = kwl.findKey( pfx, key );
+      if ( value.size() )
+      {
+         m_saz = ossimString(value).toFloat64();
+      }
+      else
+      {
+         break;
+      }
+
+      // If we get here we're good, so set the status for downstream code.
+      result = true;
+      
       // Final break from while forever loop.
       break;
       
@@ -814,9 +1518,10 @@ bool ossimRsmida::loadState( const ossimKeywordlist& kwl,
    {  
       // Find on key failed...
       ossimNotify(ossimNotifyLevel_WARN)
-         << "ossimRsmida::loadState WARNING:\n"
+         << MODULE << " WARNING:\n"
          << "Error encountered parsing the following required keyword: "
-         << "<" << key << ">. Check the keywordlist for proper syntax."
+         << key
+         << "\nCheck the keywordlist for required key:value pairs."
          << std::endl;
    }
    
