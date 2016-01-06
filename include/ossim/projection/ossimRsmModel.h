@@ -69,25 +69,6 @@ public:
 
    inline virtual bool useForward()const {return false;}
 
-   double polynomial( const double& x, const double& y, const double& z,
-                      const ossim_uint32& maxx, const ossim_uint32& maxy,
-                      const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf ) const;
-   
-   double dPoly_dLat( const double& x, const double& y, const double& z,
-                      const ossim_uint32& maxx, const ossim_uint32& maxy,
-                      const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf) const;
-   
-   double dPoly_dLon( const double& x, const double& y, const double& z,
-                      const ossim_uint32& maxx, const ossim_uint32& maxy,
-                      const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf ) const;
-   
-   double dPoly_dHgt( const double& x, const double& y, const double& z,
-                      const ossim_uint32& maxx, const ossim_uint32& maxy,
-                      const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf ) const;
 
    /**
     * @brief print()
@@ -112,6 +93,33 @@ public:
                           const char* prefix=0);
    
 protected:
+
+   ossim_uint32 getSectionIndex( const ossimGpt& groundPoint ) const;
+   ossim_uint32 getSectionIndex( const ossimDpt& imagePoint ) const;
+
+   void lowOrderPolynomial( const ossimGpt& grountPoint,
+                            ossimDpt& imagePoint ) const;
+   
+   double polynomial( const double& x, const double& y, const double& z,
+                      const ossim_uint32& maxx, const ossim_uint32& maxy,
+                      const ossim_uint32& maxz,
+                      std::vector<ossim_float64> pcf ) const;
+   
+   double dPoly_dLat( const double& x, const double& y, const double& z,
+                      const ossim_uint32& maxx, const ossim_uint32& maxy,
+                      const ossim_uint32& maxz,
+                      std::vector<ossim_float64> pcf) const;
+   
+   double dPoly_dLon( const double& x, const double& y, const double& z,
+                      const ossim_uint32& maxx, const ossim_uint32& maxy,
+                      const ossim_uint32& maxz,
+                      std::vector<ossim_float64> pcf ) const;
+   
+   double dPoly_dHgt( const double& x, const double& y, const double& z,
+                      const ossim_uint32& maxx, const ossim_uint32& maxy,
+                      const ossim_uint32& maxz,
+                      std::vector<ossim_float64> pcf ) const;
+
    
    /** @brief virtual destructor */
    virtual ~ossimRsmModel();

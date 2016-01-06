@@ -501,6 +501,26 @@ bool ossimRsmModel::loadState(const ossimKeywordlist& kwl,
    return status;
 }
 
+ossim_uint32 ossimRsmModel::getSectionIndex( const ossimGpt& groundPoint) const
+{
+   ossimDpt ipt;
+   lowOrderPolynomial( groundPoint, ipt );
+   
+   return getSectionIndex( ipt );
+}
+
+ossim_uint32 ossimRsmModel::getSectionIndex( const ossimDpt& /* imagePoint */) const
+{
+   ossim_uint32 result = 0;
+
+   return result;
+}
+
+void ossimRsmModel::lowOrderPolynomial( const ossimGpt& /* groundPoint */ ,
+                                        ossimDpt& /* imagePoint */) const
+{
+}
+
 double ossimRsmModel::polynomial(
    const double& x, const double& y, const double& z, const ossim_uint32& maxx,
    const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<ossim_float64> pcf) const
