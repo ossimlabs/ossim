@@ -25,7 +25,7 @@
 
 # Working directory must be top-level dir:
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-pushd $SCRIPT_DIR/../../..
+pushd $SCRIPT_DIR/../..
 OSSIM_DEV_HOME=$PWD
 
 CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config.sh

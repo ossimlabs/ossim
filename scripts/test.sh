@@ -32,7 +32,7 @@ fi
 
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 if [ -z $OSSIM_BUILD_DIR ]; then
-  pushd $SCRIPT_DIR/../../../build
+  pushd $SCRIPT_DIR/../../build
   OSSIM_BUILD_DIR=$PWD
   #echo "#### DEBUG #### OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
   popd
