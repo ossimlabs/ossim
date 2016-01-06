@@ -28,7 +28,7 @@ SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $SCRIPT_DIR/../../..
 OSSIM_DEV_HOME=$PWD
 
-CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config-LINUX.sh
+CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config.sh
 
 # Consider whether running in interactive shell or batch for possible 
 # prompting on build configuration:
@@ -71,9 +71,9 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# CMake successful, now run make in the build directory (OSSIM_BUILD_DIR may have been exported 
-# by cmake config script):
-pushd $OSSIM_BUILD_DIR
+# CMake successful, now run make in the build directory (OSSIM_BUILD_DIR 
+# exported by cmake config script):
+pushd $OSSIM_BUILD_DIR >/dev/null
 make -j 8
 if [ $? -ne 0 ]; then
   echo; echo "Error encountered during make. Check the console log and correct."
