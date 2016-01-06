@@ -27,7 +27,6 @@
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $SCRIPT_DIR/../../..
 OSSIM_DEV_HOME=$PWD
-echo "@@@@@ OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
 
 CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config-LINUX.sh
 

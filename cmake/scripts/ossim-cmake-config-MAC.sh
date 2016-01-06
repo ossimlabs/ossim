@@ -90,6 +90,10 @@ if [ -z "$OSSIM_BUILD_DIR" ]; then
   fi
 fi
 
+# Establish CMAKE's install directory:
+if [ -z "$OSSIM_INSTALL_PREFIX" ]; then
+  OSSIM_INSTALL_PREFIX=$OSSIM_DEV_HOME/install
+fi
 # Additional stuff for ECLIPSE CDT4 users:
 CMAKE_G_ARG="Unix Makefiles"
 if [ "$BUILD_TYPE_ARG" == "ECLIPSE" ]; then
@@ -116,11 +120,17 @@ fi
 if [ -z $BUILD_OSSIM_GUI ]; then
   BUILD_OSSIM_GUI=OFF
 fi
+if [ -z $BUILD_OMS ]; then
+  BUILD_OMS=OFF
+fi
+
+# Plugins:
+if [ -z $BUILD_KAKADU_PLUGIN ]; then
+  BUILD_KAKADU_PLUGIN=ON
+fi
+
 if [ -z $BUILD_MRSID_PLUGIN ]; then
   BUILD_MRSID_PLUGIN=OFF
-fi
-if [ -z $BUILD_KAKADU_PLUGIN ]; then
-  BUILD_KAKADU_PLUGIN=OFF
 fi
 if [ -z $BUILD_PDAL_PLUGIN ]; then
   BUILD_PDAL_PLUGIN=OFF
@@ -162,6 +172,7 @@ cmake -G "$CMAKE_G_ARG" \
 -DCMAKE_OSX_ARCHITECTURES="x86_64" \
 -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk \
 -DBUILD_OSSIM_FRAMEWORKS=ON \
+-DBUILD_OMS=$BUILD_OMS \
 -DBUILD_CNES_PLUGIN=$BUILD_CNES_PLUGIN \
 -DBUILD_GEOPDF_PLUGIN=$BUILD_GEOPDF_PLUGIN \
 -DBUILD_GDAL_PLUGIN=$BUILD_GDAL_PLUGIN \
