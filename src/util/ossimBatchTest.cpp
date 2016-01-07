@@ -606,46 +606,44 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
    ossim_uint8 overall_test_status = TEST_TBD;
    ossimFilename config_list_path = m_configFileName.path();
 
-   // Look for keywords for config file name:
    ossimString prefixBase = "test_config_file";
-   ossimString regExpStr = prefixBase + "[0-9]+";
-   const ossim_uint32 count = kwl.getNumberOfSubstringKeys(regExpStr);
-   const ossim_uint32 MAX_INDEX = count + 100;
-   if (count != 0)
+   ossimString regExpression =  ossimString("^(") + prefixBase + "[0-9])";
+   vector<ossimString> keys =
+      kwl.getSubstringKeyList( regExpression );
+   long numberOfConfigFiles = (long)keys.size();//kwl.getNumberOfSubstringKeys(regExpression);
+
+   int offset = (int)(prefixBase).size();
+   int idx = 0;
+   std::vector<int> numberList(numberOfConfigFiles);
+   for(idx = 0; idx < (int)numberList.size();++idx)
+     {
+       ossimString numberStr(keys[idx].begin() + offset,
+              keys[idx].end());
+       numberList[idx] = numberStr.toInt();
+     }
+   std::sort(numberList.begin(), numberList.end());
+
+   for(idx=0;idx < (int)numberList.size();++idx)
    {
-      // This is indeed a list of config files:
-      ossim_uint32 index = 0;
-      ossim_uint32 processedIndexes = 0;
-      while (processedIndexes < count)
+      // Looping over each config file listed, performing an execute() on each:
+      ossimString kw = prefixBase + ossimString::toString(idx);
+      m_configFileName = ossimFilename(kwl.find(kw.chars()));
+      
+      if (!m_configFileName.empty())
       {
-         // Looping over each config file listed, performing an execute() on each:
-         ossimString kw = prefixBase + ossimString::toString(index);
-         m_configFileName = ossimFilename(kwl.find(kw.chars()));
-         
-         if (!m_configFileName.empty())
-         {
-            // Expand any environment variable:
-            if (m_configFileName.contains("$("))
-               m_configFileName = m_configFileName.expand();
+         // Expand any environment variable:
+         if (m_configFileName.contains("$("))
+            m_configFileName = m_configFileName.expand();
 
-            // Handle paths relative to the master config list file:
-            if (m_configFileName.path().empty())
-               m_configFileName = m_configFileName.setPath(config_list_path);
-         }
+         // Handle paths relative to the master config list file:
+         if (m_configFileName.path().empty())
+            m_configFileName = m_configFileName.setPath(config_list_path);
+      }
 
-         // Execute this config file:
-         if (m_configFileName.isReadable())
-         {
-            overall_test_status |= execute();
-            ++processedIndexes;
-         }
-
-         ++index;
-         
-         if ( index >= MAX_INDEX )
-         {
-            break;  // Config file has bad numbering...
-         }
+      // Execute this config file:
+      if (m_configFileName.isReadable())
+      {
+         overall_test_status |= execute();
       }
    }
 
