@@ -126,7 +126,7 @@ fi
 
 # Plugins:
 if [ -z $BUILD_KAKADU_PLUGIN ]; then
-  BUILD_KAKADU_PLUGIN=ON
+  BUILD_KAKADU_PLUGIN=OFF
 fi
 
 if [ -z $BUILD_MRSID_PLUGIN ]; then
