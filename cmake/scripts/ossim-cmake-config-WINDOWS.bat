@@ -11,7 +11,7 @@
 ::  Optional arguments (in any order):
 ::
 ::    win32 | win64 | x64 (defaults to x64)
-::    vs2005 | vs2010 (defaults vs2010)
+::    vs2005 | vs2010 | vs2015 (defaults vs2015)
 ::    ide | nmake (defaults to ide)
 ::
 ::  No environment variables need be defined prior to running this script. However,
@@ -22,11 +22,13 @@
 ::*************************************************************************************
 
 :: Edit these to your local system:
-set OSSIM_DEPENDENCIES=C:\Dev\osgeo\ossim_dependencies
+if NOT DEFINED OSSIM_DEPENDENCIES (
+  set OSSIM_DEPENDENCIES=C:\Dev\osgeo\ossim_dependencies
+)
 
 :: Default settings:
 set PLATFORM=x64
-set DEVENV=vs2010
+set DEVENV=vs2015
 set GEN_TYPE=IDE
 
 :while_valid_arg
@@ -34,6 +36,7 @@ set GEN_TYPE=IDE
   if "%1"=="win64" set PLATFORM=x64
   if "%1"=="vs2005" set DEVENV=vs2005
   if "%1"=="vs2008" set DEVENV=vs2008
+  if "%1"=="vs2015" set DEVENV=vs2015
   if "%1"=="nmake" set GEN_TYPE=NMAKE
   shift
 if not "%1"=="" goto while_valid_arg
@@ -113,7 +116,17 @@ IF %DEVENV%==vs2010 (
   )
 )
 
-set DEPLIBDIR=%OSSIM_DEPENDENCIES%/lib/x64
+IF %DEVENV%==vs2015 (
+  IF %PLATFORM%==Win32 (
+    set TARGET_SYSTEM="Visual Studio 14 Win32"
+    call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall" x86
+  ) ELSE (
+    set TARGET_SYSTEM="Visual Studio 14 Win64"
+    call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall" x64
+  )
+)
+
+set DEPLIBDIR=%OSSIM_DEPENDENCIES%/lib
 set DEPINCDIR=%OSSIM_DEPENDENCIES%/include
 
 :: Here are the cmake options. Everything is about setting variables except the 

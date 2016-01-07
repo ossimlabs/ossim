@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -11,31 +11,40 @@
 // Contains class declaration for NitfTileSource_12.
 //
 //*******************************************************************
-//  $Id: ossimNitfTileSource_12.h 958 2010-06-03 23:00:32Z ming.su $
+//  $Id$
 #ifndef ossimNitfTileSource_12_HEADER
-#define ossimNitfTileSource_12_HEADER
+#define ossimNitfTileSource_12_HEADER 1
+
+#if defined(JPEG_DUAL_MODE_8_12)
 
 #include <ossim/base/ossimConstants.h>
-#include <ossim/imaging/ossimImageHandler.h>
-#include <ossim/support_data/ossimNitfImageHeader.h>
+#include <ossim/base/ossimIpt.h>
+#include <ossim/base/ossimRefPtr.h>
+#include <jpeg12/jpeglib.h>
+#include <vector>
+
+class ossimImageData;
+class ossimNitfImageHeader;
 
 class OSSIM_DLL ossimNitfTileSource_12 
 {
 public:
-  static bool uncompressJpeg12Block(ossim_uint32 x, 
-                                    ossim_uint32 y,
-                                    ossimRefPtr<ossimImageData> cacheTile,
-                                    ossimNitfImageHeader* hdr,
-                                    ossimIpt cacheSize,
-                                    std::vector<ossim_uint8> compressedBuf,
-                                    ossim_uint32 readBlockSizeInBytes,
-                                    ossim_uint32 bands);
-
-
-  static bool loadJpegQuantizationTables(ossimNitfImageHeader* hdr,
-                                         jpeg_decompress_struct& cinfo);
-
-  static bool loadJpegHuffmanTables(jpeg_decompress_struct& cinfo);
-};
+   static bool uncompressJpeg12Block(ossim_uint32 x, 
+                                     ossim_uint32 y,
+                                     ossimRefPtr<ossimImageData> cacheTile,
+                                     ossimNitfImageHeader* hdr,
+                                     ossimIpt cacheSize,
+                                     std::vector<ossim_uint8> compressedBuf,
+                                     ossim_uint32 readBlockSizeInBytes,
+                                     ossim_uint32 bands);
    
+   
+   static bool loadJpegQuantizationTables(ossimNitfImageHeader* hdr,
+                                          jpeg_decompress_struct& cinfo);
+   
+   static bool loadJpegHuffmanTables(jpeg_decompress_struct& cinfo);
+};
+
+#endif /* #if defined(JPEG_DUAL_MODE_8_12) */
+
 #endif /* #ifndef ossimNitfTileSource_12_HEADER */

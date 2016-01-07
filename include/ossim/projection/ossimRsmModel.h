@@ -5,7 +5,11 @@
 #define ossimRsmModel_H 1
 
 #include <ossim/projection/ossimSensorModel.h>
+#include <ossim/support_data/ossimRsmida.h>
+#include <ossim/support_data/ossimRsmpca.h>
+#include <ossim/support_data/ossimRsmpia.h>
 #include <iosfwd>
+#include <vector>
 
 /**
  * @class ossimRsmModel
@@ -65,25 +69,6 @@ public:
 
    inline virtual bool useForward()const {return false;}
 
-   double polynomial( const double& x, const double& y, const double& z,
-                      const ossim_uint32& maxx, const ossim_uint32& maxy,
-                      const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf ) const;
-   
-   double dPoly_dLat( const double& x, const double& y, const double& z,
-                      const ossim_uint32& maxx, const ossim_uint32& maxy,
-                      const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf) const;
-   
-   double dPoly_dLon( const double& x, const double& y, const double& z,
-                      const ossim_uint32& maxx, const ossim_uint32& maxy,
-                      const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf ) const;
-   
-   double dPoly_dHgt( const double& x, const double& y, const double& z,
-                      const ossim_uint32& maxx, const ossim_uint32& maxy,
-                      const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf ) const;
 
    /**
     * @brief print()
@@ -108,56 +93,40 @@ public:
                           const char* prefix=0);
    
 protected:
+
+   ossim_uint32 getSectionIndex( const ossimGpt& groundPoint ) const;
+   ossim_uint32 getSectionIndex( const ossimDpt& imagePoint ) const;
+
+   void lowOrderPolynomial( const ossimGpt& grountPoint,
+                            ossimDpt& imagePoint ) const;
+   
+   double polynomial( const double& x, const double& y, const double& z,
+                      const ossim_uint32& maxx, const ossim_uint32& maxy,
+                      const ossim_uint32& maxz,
+                      std::vector<ossim_float64> pcf ) const;
+   
+   double dPoly_dLat( const double& x, const double& y, const double& z,
+                      const ossim_uint32& maxx, const ossim_uint32& maxy,
+                      const ossim_uint32& maxz,
+                      std::vector<ossim_float64> pcf) const;
+   
+   double dPoly_dLon( const double& x, const double& y, const double& z,
+                      const ossim_uint32& maxx, const ossim_uint32& maxy,
+                      const ossim_uint32& maxz,
+                      std::vector<ossim_float64> pcf ) const;
+   
+   double dPoly_dHgt( const double& x, const double& y, const double& z,
+                      const ossim_uint32& maxx, const ossim_uint32& maxy,
+                      const ossim_uint32& maxz,
+                      std::vector<ossim_float64> pcf ) const;
+
    
    /** @brief virtual destructor */
    virtual ~ossimRsmModel();
-   
-   ossimString m_iid;
-   ossimString m_edition;
 
-   ossim_uint32 m_rsn;
-   ossim_uint32 m_csn;
-
-   ossim_float64 m_rfep;
-   ossim_float64 m_cfep;
-   ossim_float64 m_rnrmo;
-   ossim_float64 m_cnrmo;
-   ossim_float64 m_xnrmo;
-   ossim_float64 m_ynrmo;
-   ossim_float64 m_znrmo;
-   ossim_float64 m_rnrmsf;
-   ossim_float64 m_cnrmsf;
-   ossim_float64 m_xnrmsf;
-   ossim_float64 m_ynrmsf;
-   ossim_float64 m_znrmsf;
-   
-   ossim_uint32 m_rnpwrx;
-   ossim_uint32 m_rnpwry;
-   ossim_uint32 m_rnpwrz;
-   ossim_uint32 m_rntrms;
-
-   std::vector<ossim_float64> m_rnpcf;
-
-   ossim_uint32 m_rdpwrx;
-   ossim_uint32 m_rdpwry;
-   ossim_uint32 m_rdpwrz;
-   ossim_uint32 m_rdtrms;
-
-   std::vector<ossim_float64> m_rdpcf;
-
-   ossim_uint32 m_cnpwrx;
-   ossim_uint32 m_cnpwry;
-   ossim_uint32 m_cnpwrz;
-   ossim_uint32 m_cntrms;
-
-   std::vector<ossim_float64> m_cnpcf;
-
-   ossim_uint32 m_cdpwrx;
-   ossim_uint32 m_cdpwry;
-   ossim_uint32 m_cdpwrz;
-   ossim_uint32 m_cdtrms;
-
-   std::vector<ossim_float64> m_cdpcf;
+   ossimRsmida m_ida;
+   ossimRsmpia m_pia;
+   std::vector<ossimRsmpca> m_pca;
 
    TYPE_DATA
       

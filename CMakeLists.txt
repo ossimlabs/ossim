@@ -1,4 +1,5 @@
 PROJECT(ossim)
+SET(CMAKE_MODULE_PATH "${${PROJECT_NAME}_SOURCE_DIR}/cmake/CMakeModules;${CMAKE_MODULE_PATH}")
 
 Message("################## Setting up OSSIM core library #########################")
 
@@ -15,7 +16,9 @@ INCLUDE(OssimCommonVariables)
 OPTION(BUILD_OSSIM_FREETYPE_SUPPORT "Set to ON to build OSSIM with freetype support.  Use OFF to turn off freetype support." ON)
 OPTION(BUILD_OSSIM_MPI_SUPPORT "Set to ON to build OSSIM with MPI support.  Use OFF to turn off MPI support." OFF)
 OPTION(BUILD_OSSIM_ID_SUPPORT "Set to ON to build OSSIM GIT ID support into the library.  Use OFF to turn off ID support." ON)
+
 OPTION(BUILD_OSSIM_APPS "Set to ON to build OSSIM applications." ON)
+OPTION(BUILD_OSSIM_CURL_APPS "Set to ON to build ossim curl dependent apps. Use ON to enable." OFF)
 OPTION(BUILD_OSSIM_TESTS "Set to ON to build OSSIM unit/functional tests." ON)
 
 ###################################################################################
@@ -227,8 +230,17 @@ IF(BUILD_OSSIM_APPS)
    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/apps ${CMAKE_CURRENT_BINARY_DIR}/apps)
 ENDIF()
 
+#---
+# Building curl dependant apps optional. default=OFF
+#---
+if(BUILD_OSSIM_CURL_APPS)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/apps/curl_apps)
+endif()
+
 IF(BUILD_OSSIM_TESTS)
    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test/src ${CMAKE_CURRENT_BINARY_DIR}/test/src)
 ENDIF()
+
+
 
 

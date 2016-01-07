@@ -1,0 +1,28 @@
+//---
+// File ossim-eq-test.kwl
+//---
+
+// ---
+// Begin test1:
+// ---
+test1.name: test1
+test1.description: Test  ossimEquDistCylProjection
+
+// Clean up commands.
+test1.clean_command0: $(RMDIR_CMD) $(OBT_OUT_DIR)/t1-info.txt
+
+// Commands to generate expected results:
+
+test1.expected_results_command0: ossim-eq-projection-test > $(OBT_EXP_DIR)/t1-info.txt
+
+// The actual commands to test:
+
+test1.test_command0: ossim-eq-projection-test > $(OBT_OUT_DIR)/t1-info.txt
+
+// Post process commands for diffs and stuff:
+
+test1.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/t1-info.txt $(OBT_OUT_DIR)/t1-info.txt
+ 
+// ---
+// End test1:
+// ---
