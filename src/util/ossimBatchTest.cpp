@@ -626,7 +626,7 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
    for(idx=0;idx < (int)numberList.size();++idx)
    {
       // Looping over each config file listed, performing an execute() on each:
-      ossimString kw = prefixBase + ossimString::toString(idx);
+      ossimString kw = prefixBase + ossimString::toString(numberList[idx]);
       m_configFileName = ossimFilename(kwl.find(kw.chars()));
       
       if (!m_configFileName.empty())
