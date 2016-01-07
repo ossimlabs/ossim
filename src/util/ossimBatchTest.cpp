@@ -540,13 +540,17 @@ ossim_uint8 ossimBatchTest::execute()
       
       double startTime = ossimTimer::instance()->time_s();
       
-      // Get the number of test:
-      ossimString regExpStr = "test[0-9]+\\.";
-      ossim_uint32 num_tests = kwl.getNumberOfSubstringKeys(regExpStr);
-      const ossim_uint32 MAX_INDEX = num_tests + 1000;
+   
       ossimString prefixBase = "test";
-      ossim_uint32 index = 0;
-      ossim_uint32 processedIndexes = 0;
+      std::vector<ossim_uint32> numberList = getArrayIndicesFromKwl(kwl, prefixBase);
+
+      // Get the number of test:
+   //   ossimString regExpStr = "test[0-9]+\\.";
+      ossim_uint32 num_tests = numberList.size();//kwl.getNumberOfSubstringKeys(regExpStr);
+    //  const ossim_uint32 MAX_INDEX = num_tests + 1000;
+    //  ossimString prefixBase = "test";
+    //  ossim_uint32 index = 0;
+    //  ossim_uint32 processedIndexes = 0;
       ossimString prefix;
       
       // If no test prefix is used, this implies a single test:
@@ -558,19 +562,19 @@ ossim_uint8 ossimBatchTest::execute()
       }
       
       status = TEST_TBD;
-      while ( processedIndexes < num_tests )
+      ossim_uint32 idx = 0;
+      for(idx = 0; idx < numberList.size(); ++idx)
+      //while ( processedIndexes < num_tests )
       {
          if (!is_single_test)
-            prefix = prefixBase + ossimString::toString(index) + ".";
+            prefix = prefixBase + ossimString::toString(numberList[idx]) + ".";
          
          ossim_uint8 individual_test_status = processTest( prefix, kwl);
          
-         if ( individual_test_status != TEST_TBD) ++processedIndexes;
+         //if ( individual_test_status != TEST_TBD) ++processedIndexes;
          
          status |= individual_test_status;
-         ++index;
          
-         if ( index >= MAX_INDEX ) break; 
       }
       
       getDateString(date);
@@ -607,22 +611,8 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
    ossimFilename config_list_path = m_configFileName.path();
 
    ossimString prefixBase = "test_config_file";
-   ossimString regExpression =  ossimString("^(") + prefixBase + "[0-9])";
-   vector<ossimString> keys =
-      kwl.getSubstringKeyList( regExpression );
-   long numberOfConfigFiles = (long)keys.size();//kwl.getNumberOfSubstringKeys(regExpression);
-
-   int offset = (int)(prefixBase).size();
-   int idx = 0;
-   std::vector<int> numberList(numberOfConfigFiles);
-   for(idx = 0; idx < (int)numberList.size();++idx)
-     {
-       ossimString numberStr(keys[idx].begin() + offset,
-              keys[idx].end());
-       numberList[idx] = numberStr.toInt();
-     }
-   std::sort(numberList.begin(), numberList.end());
-
+   std::vector<ossim_uint32> numberList = getArrayIndicesFromKwl(kwl, prefixBase);
+   ossim_uint32 idx = 0;
    for(idx=0;idx < (int)numberList.size();++idx)
    {
       // Looping over each config file listed, performing an execute() on each:
@@ -1283,4 +1273,26 @@ std::string ossimBatchTest::convertToNative( const char* lookup ) const
    
    return s;
 }
+std::vector<ossim_uint32> ossimBatchTest::getArrayIndicesFromKwl(
+   const ossimKeywordlist& kwl, 
+   const ossimString& prefix)const
+{
+   ossimString regExpression =  ossimString("^(") + prefix + "[0-9])";
+   vector<ossimString> keys =
+      kwl.getSubstringKeyList( regExpression );
+   long numberOfConfigFiles = (long)keys.size();//kwl.getNumberOfSubstringKeys(regExpression);
+
+   int offset = (int)(prefix).size();
+   int idx = 0;
+   std::vector<ossim_uint32> numberList(numberOfConfigFiles);
+   for(idx = 0; idx < (int)numberList.size();++idx)
+     {
+       ossimString numberStr(keys[idx].begin() + offset,
+              keys[idx].end());
+       numberList[idx] = numberStr.toInt();
+     }
+   std::sort(numberList.begin(), numberList.end());
+   return numberList;
+}
+
 
