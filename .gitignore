@@ -4,3 +4,6 @@ include/ossim/ossimVersion.h
 *CMakeFiles*
 *Makefile
 cmake_install*
+*.swp
+CmakeCache.txt
+
