@@ -269,16 +269,8 @@ bool ossimNitfRsmModel::getRsmData(const ossimNitfImageHeader* ih)
                                        }
                                     }
 
-                                    if ( m_pca.size() == m_pia.m_tnis )
-                                    {
-                                       status = true;
-                                    }
-                                    else
-                                    {
-                                       ossimNotify(ossimNotifyLevel_WARN)
-                                          << "WARNING did not find required RSMPCA tags count of: " << m_pia.m_tnis
-                                          << std::endl;
-                                    }
+                                    // Call base ossimRsmModel::validate() for sanity check:
+                                    status = validate();
                                  }
                                  
                               } // Matches: if ( m_pia.initialize( rsmpiaTag ) )
