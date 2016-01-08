@@ -466,8 +466,9 @@ ossim_uint8 ossimBatchTest::execute()
       status = processConfigList(kwl);
       if (status != TEST_TBD)
       {
-         // Not really an exception, just bumping out of execution
-         throw ossimException("Processed list of config files.");
+         cout<<"\nossimBatchTest::execute() exiting <"<<configName<<"> with overall status = "
+               <<(int)status<<"\n"<<endl;
+         return status;
       }
 
       // Pick up individual test options passed in by user.  These will adjust the keyword list
