@@ -1,5 +1,5 @@
-### Status of *dev* branch
-Resource | GoCD Status
+### Status of the branches
+Resource | GoCD *dev* Status
 ------------ | -------------
 centos6 | ![centos6 Status](http://omar.ossim.org/gocd/status/centos6_status.png)
 centos7 | ![centos7 Status](http://omar.ossim.org/gocd/status/centos7_status.png)
