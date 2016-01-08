@@ -90,23 +90,40 @@ void ossimRsmModel::worldToLineSample(const ossimGpt& ground_point,
       return;
    }
 
-   ossim_uint32 pcaIndex = 0; // tmp drb...
-   
+   //---
+   // RSMIDA GRNDD Ground Domain Form:
+   // G: Geodetic: range x is -pi to pi, y is -pi/2 to pi/2
+   // H: Geodetic: range x is 0 to 2pi, y is -pi/2 to pi/2 (where image is close to pi.
+   // R: Rectangular (not supported).
+   //---
+
+   // Initial xyz for computing the pca index.
+   double x;
+   if ( m_ida.m_grndd == 'H' )
+   {
+      x = ossim::degreesToRadians((ground_point.lon >= 0.0) ?
+                                  ground_point.lon : ground_point.lon + 360.0);
+   }
+   else
+   {
+      x = ossim::degreesToRadians( ground_point.lon );
+   }
+      
+   double y = ossim::degreesToRadians(ground_point.lat);
+   double z = ground_point.hgt;
+   if ( ossim::isnan( z ) )
+   {
+      z = 0.0; // ??? drb
+   }
+
+   ossim_uint32 pcaIndex = getPcaIndex( x, y, z );
+
    //---
    // Normalize the lat, lon, hgt:
    // a_norm = (a-offset)/scalefactor
-   //
-   // Note:
-   //
-   // Was getting bogus line sample values in Western hemisphere; hence, the
-   // test on longitude. (drb - 22 May 2015)
    //---
-   double lon = (ground_point.lon >= 0.0) ? ground_point.lon : ground_point.lon + 360.0;
-   double y = (ossim::degreesToRadians(ground_point.lat) - m_pca[pcaIndex].m_ynrmo) / m_pca[pcaIndex].m_ynrmsf;
-   // double x = (ossim::degreesToRadians(ground_point.lon) - m_xnrmo) / m_xnrmsf;
-   double x = ( ossim::degreesToRadians(lon) - m_pca[pcaIndex].m_xnrmo) / m_pca[pcaIndex].m_xnrmsf;   
-   double z;
-
+   y = (y - m_pca[pcaIndex].m_ynrmo) / m_pca[pcaIndex].m_ynrmsf;
+   x = (x - m_pca[pcaIndex].m_xnrmo) / m_pca[pcaIndex].m_xnrmsf;   
    if( ground_point.isHgtNan() )
    {
      z = ( - m_pca[pcaIndex].m_znrmo) / m_pca[pcaIndex].m_znrmsf;
@@ -501,29 +518,55 @@ bool ossimRsmModel::loadState(const ossimKeywordlist& kwl,
    return status;
 }
 
-ossim_uint32 ossimRsmModel::getSectionIndex( const ossimGpt& groundPoint) const
+ossim_uint32 ossimRsmModel::getPcaIndex(
+   const double& x, const double& y, const double& z) const
 {
    ossimDpt ipt;
-   lowOrderPolynomial( groundPoint, ipt );
-   
-   return getSectionIndex( ipt );
+   lowOrderPolynomial( x, y, z, ipt );
+   return getPcaIndex( ipt );
 }
 
-ossim_uint32 ossimRsmModel::getSectionIndex( const ossimDpt& /* imagePoint */) const
+ossim_uint32 ossimRsmModel::getPcaIndex( const ossimDpt& ipt ) const
 {
-   ossim_uint32 result = 0;
+   // Row section number:
+   double rsn = std::floor( ( ipt.y - (double)(m_ida.m_minr) ) / (double)(m_pia.m_rssiz) );
+   if ( rsn < 0.0 )
+   {
+      rsn = 0.0;
+   }
+   else if ( rsn > (m_pia.m_rnis-1) )
+   {
+      rsn = m_pia.m_rnis-1;
+   }
+   // Column section number:
+   double csn = std::floor( ( ipt.x - (double)(m_ida.m_minc) ) / (double)(m_pia.m_cssiz) );
+   if ( csn < 0.0 )
+   {
+      csn = 0.0;
+   }
+   else if ( csn > (m_pia.m_cnis-1) )
+   {
+      csn = m_pia.m_cnis-1;
+   }
 
-   return result;
+   return static_cast<ossim_uint32>(rsn) * m_pia.m_rnis + static_cast<ossim_uint32>(csn);
 }
 
-void ossimRsmModel::lowOrderPolynomial( const ossimGpt& /* groundPoint */ ,
-                                        ossimDpt& /* imagePoint */) const
+void ossimRsmModel::lowOrderPolynomial(
+   const double& x, const double& y, const double& z, ossimDpt& ipt ) const
 {
+   ipt.y = m_pia.m_r0 + m_pia.m_rx * x + m_pia.m_ry * y + m_pia.m_rz * z +
+      m_pia.m_rxx * x * x + m_pia.m_rxy * x * y + m_pia.m_rxz * x * z +
+      m_pia.m_ryy * y * y + m_pia.m_ryz * y * z + m_pia.m_rzz * z * z;
+
+   ipt.x = m_pia.m_c0 + m_pia.m_cx * x + m_pia.m_cy * y + m_pia.m_cz * z +
+      m_pia.m_cxx * x * x + m_pia.m_cxy * x * y + m_pia.m_cxz * x * z +
+      m_pia.m_cyy * y * y + m_pia.m_cyz * y * z + m_pia.m_czz * z * z;
 }
 
 double ossimRsmModel::polynomial(
    const double& x, const double& y, const double& z, const ossim_uint32& maxx,
-   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<ossim_float64> pcf) const
+   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<double> pcf) const
 {
    double r = 0.0;
    ossim_uint32 index = 0;
@@ -543,7 +586,7 @@ double ossimRsmModel::polynomial(
 
 double ossimRsmModel::dPoly_dLat(
    const double& x, const double& y, const double& z, const ossim_uint32& maxx,
-   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<ossim_float64> pcf) const
+   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<double> pcf) const
                                  
 {
    double dr = 0.0;
@@ -567,7 +610,7 @@ double ossimRsmModel::dPoly_dLat(
 
 double ossimRsmModel::dPoly_dLon(
    const double& x, const double& y, const double& z, const ossim_uint32& maxx,
-   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<ossim_float64> pcf) const
+   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<double> pcf) const
 {
    double dr = 0.0;
    ossim_uint32 index = 0;
@@ -591,7 +634,7 @@ double ossimRsmModel::dPoly_dLon(
 
 double ossimRsmModel::dPoly_dHgt(
    const double& x, const double& y, const double& z, const ossim_uint32& maxx,
-   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<ossim_float64> pcf) const
+   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<double> pcf) const
 {
    double dr = 0.0;
    ossim_uint32 index = 0;
@@ -612,3 +655,58 @@ double ossimRsmModel::dPoly_dHgt(
    }
    return dr;
 }
+
+bool ossimRsmModel::validate() const
+{
+   static const char MODULE[] = "ossimRsmModel::validate";
+
+   bool status = true;
+
+   if (  (m_pia.m_rnis == 0) ||  (m_pia.m_rnis == 0) || (m_pia.m_tnis == 0) )
+   {
+      status = false;
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmpia must have at least one section!" << std::endl;
+   }
+
+   if ( m_pca.size() != m_pia.m_tnis )
+   {
+      status = false;
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmpca array not equal to section count!" << std::endl;
+   }
+   if ( ( m_ida.m_grndd != 'G' ) && ( m_ida.m_grndd != 'H' ) && ( m_ida.m_grndd != 'R' ) )
+   {
+      status = false;
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmida grndd Ground Domain Form not set!" << std::endl;
+   }
+   if ( m_ida.m_grndd == 'R' )
+   {
+      status = false;
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmida grndd Rectangular Ground Domain not supported!" << std::endl;
+   }
+   if ( m_pia.m_rssiz == 0 )
+   {
+      status = false; // divide by zero.
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmpia rrsiz Section row size cannot be zero!" << std::endl;
+   }
+   if ( m_pia.m_cssiz == 0 )
+   {
+      status = false; // divide by zero.
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmpia cssiz Section column size cannot be zero!" << std::endl;
+   }
+
+   return status;
+}
+
+

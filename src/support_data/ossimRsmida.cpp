@@ -144,7 +144,7 @@ ossimRsmida::ossimRsmida()
    m_trg(0.0),
    m_tcg(0.0),
    
-   m_grndd(),
+   m_grndd('\0'),
 
    m_xuor(0.0),
    m_yuor(0.0),
@@ -490,7 +490,7 @@ void ossimRsmida::saveState( ossimKeywordlist& kwl,
    kwl.add(pfx.c_str(), TRG_KW.c_str(), m_trg);
    kwl.add(pfx.c_str(), TCG_KW.c_str(), m_tcg);
    
-   kwl.add(pfx.c_str(), GRNDD_KW.c_str(), m_grndd.c_str());
+   kwl.add(pfx.c_str(), GRNDD_KW.c_str(), m_grndd);
 
    kwl.add(pfx.c_str(), XUOR_KW.c_str(), m_xuor);   
    kwl.add(pfx.c_str(), YUOR_KW.c_str(), m_yuor);
@@ -773,7 +773,7 @@ bool ossimRsmida::loadState( const ossimKeywordlist& kwl,
       value = kwl.findKey( pfx, key );
       if ( value.size() )
       {
-         m_grndd = value;
+         m_grndd = value[0];
       }
       else
       {
@@ -1555,7 +1555,15 @@ bool ossimRsmida::initialize( const ossimNitfRsmidaTag* rsmidaTag )
       m_trg = rsmidaTag->getTrg().toFloat64();
       m_tcg = rsmidaTag->getTcg().toFloat64();
 
-      m_grndd = rsmidaTag->getGrndd().string();
+      std::string s = rsmidaTag->getGrndd().string();
+      if ( s.size() )
+      {
+         m_grndd = s[0];
+      }
+      else
+      {
+         m_grndd = '\0'; // This should not happen. return false??? (drb)
+      }
       
       m_xuor = rsmidaTag->getXuor().toFloat64();
       m_yuor = rsmidaTag->getYuor().toFloat64();
