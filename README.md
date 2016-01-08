@@ -1,9 +1,9 @@
 ### GoCD Status builds 
 Resource | *master* | *dev* | 
 ------------ | ------------- | -------------
-centos6 | ![centos6 Status](http://omar.ossim.org/gocd/status/centos6_status.png) | ![centos6 Status](http://omar.ossim.org/gocd/status/centos6_status.png)
-centos7 | ![centos7 Status](http://omar.ossim.org/gocd/status/centos7_status.png) | ![centos7 Status](http://omar.ossim.org/gocd/status/centos7_status.png)
-
+centos6 | ![centos6 Status](http://omar.ossim.org/gocd/status/centos6_master_status.svg) | ![centos6 Status](http://omar.ossim.org/gocd/status/centos6_dev_status.svg)
+centos7 | ![centos7 Status](http://omar.ossim.org/gocd/status/centos7_master_status.svg) | ![centos7 Status](http://omar.ossim.org/gocd/status/centos7_dev_status.svg)
+ 
 <a href="https://scan.coverity.com/projects/ossimlabs">
   <img alt="Coverity Scan Build Status"
        src="https://scan.coverity.com/projects/7328/badge.svg"/>
