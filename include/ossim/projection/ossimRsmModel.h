@@ -94,32 +94,63 @@ public:
    
 protected:
 
-   ossim_uint32 getSectionIndex( const ossimGpt& groundPoint ) const;
-   ossim_uint32 getSectionIndex( const ossimDpt& imagePoint ) const;
+   /**
+    * @brief Gets index into RSM Polynomial Coefficients(rsmpca) container
+    * array for a given ground point.
+    *
+    * @param x Longitude in radians.
+    * @param y Latitude, in radians.
+    * @param z Height in meters.
+    * @return Index into m_pca vector.
+    */
+   ossim_uint32 getPcaIndex( const double& x, const double& y, const double& z ) const;
 
-   void lowOrderPolynomial( const ossimGpt& grountPoint,
-                            ossimDpt& imagePoint ) const;
+   /**
+    * @brief Gets index into RSM Polynomial Coefficients(rsmpca) container
+    * array for a given image point.
+    *
+    * @ipt Image line, sample.
+    * @return Index into m_pca vector.
+    */    
+   ossim_uint32 getPcaIndex( const ossimDpt& ipt ) const;
+
+   /**
+    * @brief Gets index into RSM Polynomial Coefficients(rsmpca) container
+    * array for a given ground point.
+    *
+    * @param x Longitude in radians.
+    * @param y Latitude, in radians.
+    * @param z Height in meters.
+    * @parma ipt Initialized by this.
+    */    
+   void lowOrderPolynomial( const double& x, const double& y, const double& z,
+                            ossimDpt& ipt ) const;
    
    double polynomial( const double& x, const double& y, const double& z,
                       const ossim_uint32& maxx, const ossim_uint32& maxy,
                       const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf ) const;
+                      std::vector<double> pcf ) const;
    
    double dPoly_dLat( const double& x, const double& y, const double& z,
                       const ossim_uint32& maxx, const ossim_uint32& maxy,
                       const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf) const;
+                      std::vector<double> pcf) const;
    
    double dPoly_dLon( const double& x, const double& y, const double& z,
                       const ossim_uint32& maxx, const ossim_uint32& maxy,
                       const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf ) const;
+                      std::vector<double> pcf ) const;
    
    double dPoly_dHgt( const double& x, const double& y, const double& z,
                       const ossim_uint32& maxx, const ossim_uint32& maxy,
                       const ossim_uint32& maxz,
-                      std::vector<ossim_float64> pcf ) const;
+                      std::vector<double> pcf ) const;
 
+   /**
+    * @brief Performs sanity check on key/required rsm data.
+    * @return true on success, false on error.
+    */
+   bool validate() const;
    
    /** @brief virtual destructor */
    virtual ~ossimRsmModel();

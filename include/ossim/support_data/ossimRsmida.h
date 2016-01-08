@@ -78,7 +78,7 @@ public:
    ossim_float64 m_trg;
    ossim_float64 m_tcg;
 
-   std::string m_grndd;
+   char m_grndd;
 
    ossim_float64 m_xuor;
    ossim_float64 m_yuor;
