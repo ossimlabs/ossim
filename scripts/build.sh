@@ -88,7 +88,6 @@ fi
 echo; echo "Build completed successfully. Binaries located in $OSSIM_BUILD_DIR"
 popd # out of $OSSIM_BUILD_DIR
 
-popd # out of $OSSIM_DEV_HOME
 
 exit 0
 
