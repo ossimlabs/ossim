@@ -1,10 +1,10 @@
 ### Status of *dev* branch
 Resource | GoCD Status
 ------------ | -------------
-centos6 | ![centos6 Status](http://omar.ossim.org/gocd/centos6_status.png)
-centos7 | ![centos7 Status](http://omar.ossim.org/gocd/centos7_status.png)
-mac | ![mac Status](http://omar.ossim.org/gocd/mac_status.png)
-win7x64 | ![win7x64 Status](http://omar.ossim.org/gocd/win7x64_status.png)
+centos6 | ![centos6 Status](http://omar.ossim.org/gocd/status/centos6_status.png)
+centos7 | ![centos7 Status](http://omar.ossim.org/gocd/status/centos7_status.png)
+mac | ![mac Status](http://omar.ossim.org/gocd/status/mac_status.png)
+win7x64 | ![win7x64 Status](http://omar.ossim.org/gocd/status/win7x64_status.png)
 
 <a href="https://scan.coverity.com/projects/ossimlabs">
   <img alt="Coverity Scan Build Status"
