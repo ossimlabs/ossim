@@ -208,7 +208,7 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    static const int    MAX_NUM_ITERATIONS  = 100;
    static const double CONVERGENCE_EPSILON = 0.05;  // pixels
 
-   ossim_uint32 pcaIndex = 0; // tmp drb...
+   ossim_uint32 pcaIndex = getPcaIndex( image_point );
    
    // double U    = (image_point.y-m_rnrmo) / (m_rnrmsf);
    // double V    = (image_point.x-m_cnrmo) / (m_cnrmsf);
