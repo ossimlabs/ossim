@@ -356,7 +356,7 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
 void ossimRsmModel::imagingRay(const ossimDpt& imagePoint,
                                ossimEcefRay&   imageRay) const
 {
-   ossim_uint32 pcaIndex = 0; // tmp drb
+   ossim_uint32 pcaIndex = getPcaIndex( imagePoint );
    
    //---
    // For "from point", "to point" we want the image ray to be from above the
