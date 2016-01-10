@@ -6,7 +6,7 @@ centos7 | ![centos7 Status](http://omar.ossim.org/gocd/status/centos7_master_sta
  
 <a href="https://scan.coverity.com/projects/ossimlabs">
   <img alt="Coverity Scan Build Status"
-       src="https://scan.coverity.com/projects/7328/badge.svg"/>
+       src="https://img.shields.io/coverity/scan/7516.svg"/>
 </a>
 
 
