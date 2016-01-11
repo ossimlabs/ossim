@@ -8,6 +8,10 @@ if [ -z "$OSSIM_DEV_HOME" ]; then
    export OSSIM_DEV_HOME=$PWD
    popd >/dev/null
 fi
+if [ -z "$OSSIM_MAKE_JOBS" ]; then
+   export OSSIM_MAKE_JOBS=4
+fi
+
 if [ -z "$OSSIM_INSTALL_PREFIX" ]; then
    export OSSIM_INSTALL_PREFIX=$OSSIM_DEV_HOME/install
 fi
