@@ -75,6 +75,7 @@
 //    
 //---
 
+// One arc second post spacing dted, ~30 meters, default enabled:
 elevation_manager.elevation_source0.connection_string: $(OSSIM_DATA)/elevation/dted/level2
 elevation_manager.elevation_source0.enabled: true
 elevation_manager.elevation_source0.type: dted_directory
@@ -83,14 +84,16 @@ elevation_manager.elevation_source0.max_open_cells: 50
 elevation_manager.elevation_source0.memory_map_cells: false
 elevation_manager.elevation_source0.geoid.type: geoid1996
 
+// One arc second post spacing srtm, ~30 meters, default disabled:
 elevation_manager.elevation_source1.connection_string: $(OSSIM_DATA)/elevation/srtm/1arc
-elevation_manager.elevation_source1.enabled: true
+elevation_manager.elevation_source1.enabled: false
 elevation_manager.elevation_source1.type: srtm_directory
 elevation_manager.elevation_source1.min_open_cells: 25
 elevation_manager.elevation_source1.max_open_cells: 50
 elevation_manager.elevation_source1.memory_map_cells: false
 elevation_manager.elevation_source1.geoid.type: geoid1996
 
+// Three arc seconds post spacing dted, ~90 meters, default enabled:
 elevation_manager.elevation_source2.connection_string: $(OSSIM_DATA)/elevation/dted/level1
 elevation_manager.elevation_source2.enabled: true
 elevation_manager.elevation_source2.type: dted_directory
@@ -99,14 +102,16 @@ elevation_manager.elevation_source2.max_open_cells: 50
 elevation_manager.elevation_source2.memory_map_cells: false
 elevation_manager.elevation_source2.geoid.type: geoid1996
 
+// Three arc seconds post spacing srtm, ~90 meters, default disabled:
 elevation_manager.elevation_source3.connection_string: $(OSSIM_DATA)/elevation/srtm/3arc
-elevation_manager.elevation_source3.enabled: true
+elevation_manager.elevation_source3.enabled: false
 elevation_manager.elevation_source3.type: srtm_directory
 elevation_manager.elevation_source3.min_open_cells: 25
 elevation_manager.elevation_source3.max_open_cells: 50
 elevation_manager.elevation_source3.memory_map_cells: false
 elevation_manager.elevation_source3.geoid.type: geoid1996
 
+// One Kilometer post spacing, can memory map, default enabled, always last:
 elevation_manager.elevation_source4.connection_string: $(OSSIM_DATA)/elevation/dted/level0
 elevation_manager.elevation_source4.enabled: true
 elevation_manager.elevation_source4.type: dted_directory
@@ -114,16 +119,6 @@ elevation_manager.elevation_source4.min_open_cells: 25
 elevation_manager.elevation_source4.max_open_cells: 50
 elevation_manager.elevation_source4.memory_map_cells: true
 elevation_manager.elevation_source4.geoid.type: geoid1996
-
-// "image_directory" can be any type of image, i.e. tiff, nitf and so on.
-// elevation_manager.elevation_source5.connection_string: $(OSSIM_DATA)/elevation/some_dir
-// elevation_manager.elevation_source5.enabled: false
-// elevation_manager.elevation_source5.type: image_directory
-// elevation_manager.elevation_source5.min_open_cells: 25
-// elevation_manager.elevation_source5.max_open_cells: 50
-// elevation_manager.elevation_source5.memory_map_cells: false
-// elevation_manager.elevation_source5.geoid.type: geoid1996
-
 
 //---
 // Identity geoid is 0 everywhere, so MSL = Ellipsoid. Useful when DEM
@@ -314,6 +309,10 @@ geoid_egm_96_grid: $(OSSIM_INSTALL_PREFIX)/share/ossim/geoids/geoid1996/egm96.gr
 //---
 // Example, edit/uncomment as needed:
 plugin.file0:  $(OSSIM_INSTALL_PREFIX)/plugins/libossim_png_plugin.so
+
+// NTM plugin, alway make second plugin:
+plugin.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
+
 plugin.file5:  $(OSSIM_INSTALL_PREFIX)/plugins/libossim_kakadu_plugin.so
 plugin.file10: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_mrsid_plugin.so
 plugin.file15: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_cnes_plugin.so
@@ -325,6 +324,11 @@ plugin.file50: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_ndf_plugin.so
 plugin.file55: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_geopdf_plugin.so
 plugin.file60: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_opencv_plugin.so
 plugin.file61: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_pdal_plugin.so
+
+//---
+// Always put gdal last as it has duplicate readers and need to pick ours up
+// first.
+//---
 plugin.file65: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_gdal_plugin.so
 
 // plugin.file1: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_reg_plugin.so
@@ -575,3 +579,7 @@ orthoigen.flip_null_pixels: none
 // NITF writer site configuration file:
 // ---
 // nitf_writer.site_configuration_file: $(OSSIM_DATA)/ossim/share/nitf-site-configuration.kwl
+
+// TFRD support files(ntm plugin):
+tfrd_fq_file: $(OSSIM_INSTALL_PREFIX)/share/ossim/tfrd-tables/fq.dat
+tfrd_iamp_file: $(OSSIM_INSTALL_PREFIX)/share/ossim/tfrd-tables/oamt.dat
