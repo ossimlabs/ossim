@@ -113,6 +113,11 @@ public:
     */
    double length() const { return sqrt((double)x*x + (double)y*y); }
    
+   /**
+    * Returns fabs(X * Y).
+    */
+   double area() const { return fabs(x * y); }
+
    //***
    // OPERATORS: +, -, +=, -=
    // Point add/subtract with other point:

@@ -10,6 +10,8 @@
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/base/ossimIrect.h>
+#include <ossim/base/ossimGrect.h>
 #include <ossim/imaging/ossimImageSource.h>
 #include <ossim/imaging/ossimSingleImageChain.h>
 #include <ossim/imaging/ossimImageFileWriter.h>
@@ -106,7 +108,7 @@ public:
    * The meat and potatos of this class. Performs an execute on specified rect.
    */
    ossimRefPtr<ossimImageData> getChip(const ossimGrect& gnd_rect);
-   ossimRefPtr<ossimImageData> getChip(const ossimIrect& img_rect);
+   virtual ossimRefPtr<ossimImageData> getChip(const ossimIrect& img_rect);
 
    /**
     * @brief Gets the output file name.
@@ -129,9 +131,10 @@ protected:
 
    /**
     * Sets up the AOI box cutter filter and related stuff and initializes area of interest(aoi).
-    * The filter is appended to the current m_procChain.
+    * The filter is appended to the current m_procChain. Expected to be called by derived class'
+    * initProcessingChain() if convenient.
     */
-   virtual void appendCutRectFilter();
+   virtual void finalizeChain();
 
    /** @brief Creates chains for image entries associated with specified keyword. This is usually
     * the input image sources but could also be used for reading list of color sources
@@ -152,8 +155,8 @@ protected:
     * @return Ref pointer to ossimSingleImageChain.
     * @note Throws ossimException on error.
     */
-   ossimRefPtr<ossimSingleImageChain> createChain(const ossimFilename& file,
-                                                  ossim_uint32 entryIndex=0) const;
+   ossimRefPtr<ossimSingleImageChain> createInputChain(const ossimFilename& image_file,
+                                                       ossim_uint32 entry_index=0);
 
    /**
     * @brief Creates the output or view projection.
@@ -181,12 +184,6 @@ protected:
 
    /**
     * @brief Convenience method to get geographic projection.
-    * @return new ossimEquDistCylProjection.
-    */
-   ossimRefPtr<ossimMapProjection> getNewGeoProjection();
-
-   /**
-    * @brief Convenience method to get geographic projection.
     *
     * This method sets the origin to the center of the scene bounding rect
     * of all layers.
@@ -207,18 +204,6 @@ protected:
    ossimRefPtr<ossimMapProjection> getNewUtmProjection();
 
    /**
-    * @brief Convenience method to get a pointer to the  output map
-    * projection.
-    *
-    * Callers should check for valid() as the pointer could be
-    * 0 if not initialized.
-    * 
-    * @returns The ossimMapProjection* from the m_outputGeometry as a ref
-    * pointer.
-    */
-   ossimRefPtr<ossimMapProjection> getMapProjection();
-
-   /**
     * @brief Sets the projection tie point to the scene bounding rect corner.
     * @note Throws ossimException on error.
     */
@@ -234,13 +219,14 @@ protected:
    void initializeProjectionGsd();   
 
    /**
-    * @brief Initializes the image view transform(IVT) scale.
+    * @brief Initializes m_aoiViewRect with the output area of interest as specified in master KWL.
     *
-    * Chip mode only. Sets IVT scale to output / input.
-    * 
+    * Initialization will either come from user defined cut options or the
+    * source bounding rect with user options taking precidence.
+    *
     * @note Throws ossimException on error.
     */
-   void initializeIvtScale();   
+   void initializeAOI();
 
    /**
     * @brief Loops through all layers to get the upper left tie point.
@@ -285,24 +271,6 @@ protected:
    void getMetersPerPixel(ossimSingleImageChain* chain, ossimDpt& gsd);
 
    /**
-    * @brief Gets value of key "central_meridan" if set, nan if not.
-    *
-    * @return Value as a double or nan if keyord is not set.
-    * 
-    * @note Throws ossimException on range error.
-    */
-   ossim_float64 getCentralMeridian() const;
-
-   /**
-    * @brief Gets value of key "origin_latitude" if set, nan if not.
-    *
-    * @return Value as a double or nan if keyord is not set.
-    * 
-    * @note Throws ossimException on range error.
-    */
-   ossim_float64 getOriginLatitude() const;
-
-   /**
     * @brief Loops through all layers to get the scene center ground point.
     * @param gpt Point to initialize.
     * @note Throws ossimException on error.
@@ -337,13 +305,6 @@ protected:
    void propagateOutputProjectionToChains();
 
    /**
-    * @brief Creates ossimIndexToRgbLutFilter and appends it to source. The source is modified
-    * to point to the new chain head.
-    * @note Throws ossimException on error.
-    */
-   void addIndexToRgbLutFilter(ossimRefPtr<ossimImageSource> &source) const;
-
-   /**
     * When multiple input sources are present, this method instantiates a combiner and adds inputs
     * @return Reference to the combiner.
     */
@@ -351,61 +312,14 @@ protected:
    combineLayers(std::vector< ossimRefPtr<ossimSingleImageChain> >& layers) const;
 
    /**
-    * @brief Creates ossimScalarRemapper and connects to source.  The source is modified
-    * to point to the new chain head.
-    * @param Source to connect to.
-    * @param scalar Scalar type.
-    * @note Throws ossimException on error.
+    * @brief Initializes m_aoiViewRect given m_aoiGroundRect.
     */
-   void addScalarRemapper(ossimRefPtr<ossimImageSource> &source,
-                          ossimScalarType scalar) const;
-
-   /**
-    * @brief Set up ossimHistogramRemapper for a chain.
-    * @param chain Chain to set up.
-    * @return true on success, false on error.
-    */
-   bool setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& chain) const;
-
-   /**
-    * @brief Sets entry for a chain.
-    * @param chain Chain to set up.
-    * @param entryIndex Zero based index.
-    * @return true on success, false on error.
-    */
-   bool setChainEntry( ossimRefPtr<ossimSingleImageChain>& chain,
-                       ossim_uint32 entryIndex ) const;
-
-   /**
-    * @brief Initializes m_aoiViewRect with the output area of interest as specified in master KWL.
-    *
-    * Initialization will either come from user defined cut options or the
-    * source bounding rect with user options taking precidence.
-    *
-    * @note Throws ossimException on error.
-    */
-   void assignAoiViewRect();
-
-   /**
-    * @brief Initializes m_aoiViewRect from specified ground rect.
-    */
-   void assignAoiViewRect(const ossimGrect& bbox);
+   void computeViewRect();
 
    /**
     * Assigns the AOI to be the bounding rect of the union of all inputs
     */
-   void setAoiToInputs();
-
-   /**
-    * @brief Method to calculate and initialize scale and area of interest
-    * for making a thumbnail.
-    *
-    * Sets the scale of the output projection so that the adjusted rectangle
-    * meets the cut rect and demension requirements set in options.
-    *
-    * @note Throws ossimException on error.
-    */
-   void initializeThumbnailProjection();
+   void setAOIsToInputs();
 
    /**
     * @brief Gets the band list if BANDS keyword is set.
@@ -416,18 +330,6 @@ protected:
     * @param bandList List initialized by this.
     */
    void getBandList( std::vector<ossim_uint32>& bandList ) const;
-
-   /** @return true if brightness or contrast option is set; false, if not. */
-   bool hasBrightnesContrastOperation() const;
-
-   /** @return true if any Geo Poly cutter option is set */
-   bool hasGeoPolyCutterOption()const;
-   
-   /** @return true if thumbnail option is set; false, if not. */
-   bool hasThumbnailResolution() const;
-
-   /** @return true if histogram option is set; false, if not. */
-   bool hasHistogramOperation() const;
 
    /**
     * @brief Gets the emumerated output projection type.
@@ -449,41 +351,6 @@ protected:
 
    /** @return true if scale to eight bit option is set; false, if not. */
    bool scaleToEightBit() const;
-
-   /**
-    * @brief Gets the image space scale.
-    *
-    * This is a "chip" operation only.
-    *
-    * Keys: 
-    * IMAGE_SPACE_SCALE_X_KW
-    * IMAGE_SPACE_SCALE_Y_KW
-    *
-    * Scale will be 1.0, 1.0 if keys not found. 
-    */
-   void getImageSpaceScale( ossimDpt& imageSpaceScale ) const;
-   
-   /**
-    * @brief Gets rotation.
-    *
-    * @return Rotation in decimal degrees if ROTATION_KW option is set;
-    * ossim::nan, if not.
-    *
-    * @note Throws ossimException on range error.
-    */
-   ossim_float64 getRotation() const;
-
-   /** @return true if ROTATION_KW option is set; false, if not. */
-   bool hasRotation() const;
-
-   /** @return true if UP_IS_UP_KW option is set; false, if not. */
-   bool upIsUp() const;
-
-   /** @return true if NORTH_UP_KW option is set; false, if not. */
-   bool northUp() const;
-
-   /** @return true if key is set to true; false, if not. */
-   bool keyIsTrue( const std::string& key ) const;
 
    /**
     * @return The entry number if set.  Zero if ossimKeywordNames::ENTRY_KW not
@@ -510,75 +377,32 @@ protected:
    bool hasSensorModelInput();
 
    /**
-    * @return true if all size cut box width height keywords are true.
-    */
-   bool hasCutBoxWidthHeight() const;
-
-   /**
-   *  @return true if the WMS style cut and the width and height keywords are set
-   */
-   bool hasWmsBboxCutWidthHeight() const;
-
-   /**
-    * @return true if meters, degrees or cut box with width and height option.
-    */  
-   bool hasScaleOption() const;
-   
-   /**
     * @brief Passes reader properties to single image handler if any.
     * @param ih Image handler to set properties on.
     */
    void setReaderProps( ossimImageHandler* ih ) const;
    
-   void getClipPolygon(ossimGeoPolygon& polygon)const;
-   /**
-    * @brief Gets the brightness level.
-    * 
-    * This will return 0.0 if the keyword is not found or if the range check
-    * is not between -1.0 and 1.0.
-    *
-    * @return brightness
-    */
-   ossim_float64 getBrightness() const;
-
-   /**
-    * @brief Gets the contrast level.
-    * 
-    * This will return 1.0 if the keyword is not found or if the range check
-    * is not between 0.0 and 20.0.
-    *
-    * @return brightness
-    */   
-   ossim_float64 getContrast() const;
-
-   /**
-    * @brief Gets the sharpen mode.
-    *
-    * Valid modes: light, heavy
-    * 
-    * @return sharpness mode
-    */   
-   std::string getSharpenMode() const;
-
    /** @brief Hidden from use copy constructor. */
    ossimChipProcUtil( const ossimChipProcUtil& /* obj */) : m_projIsIdentity(false) {}
 
    /** @brief Hidden from use assignment operator. */
    const ossimChipProcUtil& operator=( const ossimChipProcUtil& /*rhs*/ ) { return *this; }
 
-   ossimRefPtr<ossimImageSource> createCombiner()const;
+   ossimRefPtr<ossimImageSource> createCombiner() const;
+   ossimRefPtr<ossimGeoPolygon>  createClipPolygon()const;
 
    ossimKeywordlist m_kwl;
    ossimRefPtr<ossimImageGeometry> m_geom; //> Product chip/image geometry
    ossimIrect m_aoiViewRect;
+   ossimGrect m_aoiGroundRect;
    ossimRefPtr<ossimImageViewAffineTransform> m_ivt;
    std::vector< ossimRefPtr<ossimSingleImageChain> > m_imgLayers;
    std::vector< ossimFilename > m_demSources; //> Stores list of DEMs provided to the utility (versus pulled from the elevation database)
    mutable ossimRefPtr<ossimImageFileWriter> m_writer;
-   ossimRefPtr<ossimImageSource> m_procChain;
+   ossimRefPtr<ossimImageChain> m_procChain;
    ossimRefPtr<ossimRectangleCutFilter> m_cutRectFilter;
    bool m_projIsIdentity;
-   ossimFilename m_lutFile;
+   ossimDpt m_gsd; // meters
 };
 
 #endif /* #ifndef ossimChipProcUtil_HEADER */

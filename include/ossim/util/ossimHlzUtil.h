@@ -41,6 +41,8 @@ public:
    virtual void initialize(ossimArgumentParser& ap);
    virtual void initialize(const ossimKeywordlist& kwl);
    virtual bool execute();
+   virtual ossimRefPtr<ossimImageData> getChip(const ossimIrect& img_rect);
+
    virtual ossimString getClassName() const { return "ossimHlzUtil"; }
 
    /** Used by ossimUtilityFactory */
@@ -51,9 +53,8 @@ protected:
    {
    public:
       MaskSource(ossimHlzUtil* hlzUtil, const ossimFilename& mask_image, bool exclude);
-      ossimRefPtr<ossimImageSource> image;
+      ossimRefPtr<ossimSingleImageChain> image;
       bool exclude;
-      bool valid;
    };
 
    virtual void initProcessingChain();
@@ -73,12 +74,9 @@ protected:
    bool writeFile();
    void dumpProductSummary() const;
    void paintReticle();
-   void createInputChain(ossimRefPtr<ossimImageHandler>& handler,
-                         ossimRefPtr<ossimImageSource>& chain);
    void writeSlopeImage();
    void setProductGSD(const double& meters_per_pixel);
 
-   ossimGpt m_destinationGpt;
    double m_slopeThreshold; // (degrees)
    double m_roughnessThreshold; // peak deviation from plane (meters)
    double m_hlzMinRadius; // meters
@@ -87,7 +85,6 @@ protected:
    ossimFilename m_maskFile; // optional mask specification (may be KWL file with multiple masks)
    ossimFilename m_slopeFile; // optional byproduct output
    ossimIrect m_demRect; // rect (in raster coordinates) of the input dem for AOI
-   ossimIrect m_viewRect; // rect (in raster coordinates) of output image.
    ossimGrect m_gndRect;
    ossimIpt m_demFilterSize;
    ossimRefPtr<ossimImageData> m_demBuffer;

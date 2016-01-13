@@ -51,11 +51,7 @@ public:
 
 protected:
    virtual void initProcessingChain();
-
-   bool loadElevDb();
-
-   ossimGpt m_centerGpt;
-   bool m_remapToByte;
+   bool m_recursiveCall;
 };
 
 #endif

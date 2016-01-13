@@ -158,7 +158,7 @@ void ossimHillshadeUtil::initProcessingChain()
    // Set up the normal source.
    ossimRefPtr<ossimImageToPlaneNormalFilter> normSource = new ossimImageToPlaneNormalFilter;
    normSource->setTrackScaleFlag(true);
-   normSource->connectMyInputTo( m_procChain.get() );
+   m_procChain->add( normSource.get() );
 
    // Set the smoothness factor.
    ossim_float64 gain = 1.0;
@@ -169,7 +169,7 @@ void ossimHillshadeUtil::initProcessingChain()
 
    // Create the bump shade.
    ossimRefPtr<ossimBumpShadeTileSource> bumpShade = new ossimBumpShadeTileSource;
-   m_procChain = bumpShade.get();
+   m_procChain->add(bumpShade.get());
 
    // Set the azimuth angle.
    ossim_float64 azimuthAngle = 180;
@@ -197,52 +197,31 @@ void ossimHillshadeUtil::initProcessingChain()
    }
    bumpShade->setElevationAngle(elevationAngle);
 
-   bool hasLUT = m_lutFile.isReadable();
-   if ( !hasLUT )
+
+   // Color can be added via color image source:
+   if (!m_imgLayers.empty())
    {
-      // Set the color.
+      // A color source image (or list) is provided. Add them as input to bump shade:
+      ossimRefPtr<ossimImageSource> colorSource = combineLayers( m_imgLayers );
+      bumpShade->connectMyInputTo(1, colorSource.get());
+   }
+   else
+   {
+      // Default colors are grey:
       ossim_uint8 r = 0xff;
       ossim_uint8 g = 0xff;
       ossim_uint8 b = 0xff;
       lookup = m_kwl.findKey( COLOR_RED_KW );
       if ( lookup.size() )
          r = lookup.toUInt8();
-
       lookup = m_kwl.findKey( COLOR_GREEN_KW );
       if ( lookup.size() )
          g = lookup.toUInt8();
-
       lookup = m_kwl.findKey( COLOR_BLUE_KW );
       if ( lookup.size() )
          b = lookup.toUInt8();
-
       bumpShade->setRgbColorSource(r, g, b);
    }
-
-   // Connect the normal source and add color source if requested:
-   bumpShade->connectMyInputTo(0, normSource.get());
-
-   // Color can be added via color image source and/or LUT. If LUT only, the remap happens after the
-   // bump shade. If both LUT and color source (single-band), the LUT is applied to the color source.
-   // The latter is convenient for using a "colorized DEM" as a color source for the bump shade.
-   std::vector< ossimRefPtr<ossimSingleImageChain> > colorLayers;
-   loadImageFiles();
-   if (!m_imgLayers.empty())
-   {
-      // A color source image (or list) is provided. Add them as input to bump shade:
-      ossimRefPtr<ossimImageSource> colorSource = combineLayers( m_imgLayers );
-      if (hasLUT)
-         addIndexToRgbLutFilter(colorSource); // Need to apply LUT to single-band color source
-      bumpShade->connectMyInputTo(1, colorSource.get());
-   }
-   else if (hasLUT)
-   {
-      // Apply LUT to bump shade result:
-      addIndexToRgbLutFilter(m_procChain);
-   }
-
-   // While it seems a cut-rect filter should be appended here, it may not be necessary if the
-   // getChip() interface is used. Only when execute() is called is that needed.
 }
 
 void ossimHillshadeUtil::setUsage(ossimArgumentParser& ap)

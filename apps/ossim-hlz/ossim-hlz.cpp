@@ -1,16 +1,11 @@
-//*******************************************************************
-//
-// License:  See top level LICENSE.txt file.
-// 
-// Author:  Oscar Kramer
-//
-// Description:
-//
-// Application for finding helicopter landing zones (HLZ) on a DEM given the final destination and
-// max range from destination.
-//
-//*******************************************************************
-//  $Id: ossim-hlz.cpp 23167 2015-02-24 22:07:14Z okramer $
+/*****************************************************************************
+*                                                                            *
+*                                 O S S I M                                  *
+*            Open Source, Geospatial Image Processing Project                *
+*          License: MIT, see LICENSE at the top-level directory              *
+*                                                                            *
+******************************************************************************
+$Id: ossim_header.txt 23481 2015-08-26 15:42:55Z okramer $ */
 
 #include <iostream>
 using namespace std;
@@ -23,6 +18,10 @@ using namespace std;
 #include <ossim/base/ossimTimer.h>
 #include <ossim/util/ossimHlzUtil.h>
 
+//*****************************************************************************
+// Application for finding helicopter landing zones (HLZ) on a DEM given the
+// final destination and max range from destination.
+//*****************************************************************************
 int main(int argc, char *argv[])
 {
    ossimArgumentParser ap(&argc, argv);

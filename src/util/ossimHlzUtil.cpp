@@ -49,7 +49,6 @@ ossimHlzUtil::ossimHlzUtil()
   m_roughnessThreshold(0.5),
   m_hlzMinRadius(25.0),
   m_outBuffer(NULL),
-  m_gsd(0),
   m_reticleSize(10),
   m_outputSummary(false),
   m_jobCount(0),
@@ -62,7 +61,6 @@ ossimHlzUtil::ossimHlzUtil()
   m_numThreads(1),
   d_accumT(0)
 {
-   m_destinationGpt.makeNan();
 }
 
 ossimHlzUtil::~ossimHlzUtil()
@@ -242,17 +240,6 @@ void ossimHlzUtil::initialize(const ossimKeywordlist& kwl)
    if (!value.empty())
       m_slopeThreshold = value.toDouble();
 
-   value = m_kwl.find(TARGET_GEOLOCATION_KW);
-   if (!value.empty())
-   {
-      vector<ossimString> latlon = value.split(", ", true);
-      if (latlon.size() == 2)
-      {
-         m_destinationGpt.lat = latlon[0].toDouble();
-         m_destinationGpt.lon = latlon[1].toDouble();
-      }
-   }
-
    ossimChipProcUtil::initialize(kwl);
 }
 
@@ -272,15 +259,21 @@ void ossimHlzUtil::initProcessingChain()
       throw ossimException("Error loading mask file.");
 
    // Allocate the output image buffer:
-   m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_viewRect.width(),
-                                                           m_viewRect.height());
+   m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
+                                                           m_aoiViewRect.height());
    if (!m_outBuffer.valid())
       throw ossimException("Error encountered allocating output image buffer.");
 
    // Initialize the image with all points hidden:
    m_outBuffer->initialize();
-   m_outBuffer->setImageRectangle(m_viewRect);
+   m_outBuffer->setImageRectangle(m_aoiViewRect);
    m_outBuffer->fill(m_badLzValue);
+
+   // The "chain" for this utility is just the memory source containing the output buffer:
+   ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
+   memSource->setImage(m_outBuffer);
+   memSource->setImageGeometry(m_geom.get());
+   ossimRefPtr<ossimImageSource>last_source = memSource.get(); // TODO: Finish
 
    // Establish connection to DEM posts directly as raster "images" versus using the OSSIM elev
    // manager that performs interpolation of DEM posts for arbitrary locations. These elev images
@@ -303,9 +296,9 @@ void ossimHlzUtil::initProcessingChain()
       std::vector<std::string>::iterator fname_iter = cells.begin();
       while (fname_iter != cells.end())
       {
-         ossimRefPtr<ossimImageHandler> dem =
-               ossimImageHandlerRegistry::instance()->open(*fname_iter);
-         if (!dem.valid())
+         ossimRefPtr<ossimConnectableObject> chain =
+               (ossimConnectableObject*) createInputChain(*fname_iter).get();
+         if (!chain.valid())
          {
             ossimNotify(ossimNotifyLevel_WARN)
                     << "ossimHLZUtil::initElevSources() ERR: Cannot open DEM file at <"
@@ -313,10 +306,7 @@ void ossimHlzUtil::initProcessingChain()
             return;
          }
 
-         ossimRefPtr<ossimImageSource> chain;
-         createInputChain(dem, chain);
-         ossimRefPtr<ossimConnectableObject> connectable = chain.get();
-         elevChains.push_back(connectable);
+         elevChains.push_back(chain);
          ++fname_iter;
       }
 
@@ -348,31 +338,6 @@ void ossimHlzUtil::initProcessingChain()
    if (m_outputSummary)
       dumpProductSummary();
 }
-
-void ossimHlzUtil::setProductGSD(const double& meters_per_pixel)
-{
-   m_gsd = meters_per_pixel;
-
-   if (m_geom.valid())
-   {
-      ossimMapProjection* map_proj =
-            dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
-      if (map_proj)
-         map_proj->setMetersPerPixel(ossimDpt(m_gsd, m_gsd));
-   }
-}
-
-void ossimHlzUtil::createInputChain(ossimRefPtr<ossimImageHandler>& handler,
-                                    ossimRefPtr<ossimImageSource>& chain)
-{
-   ossimRefPtr<ossimImageViewProjectionTransform> ivt = new ossimImageViewProjectionTransform;
-   ivt->setImageGeometry(handler->getImageGeometry().get());
-   ivt->setViewGeometry(m_geom.get());
-
-   chain = new ossimImageRenderer(handler.get(),ivt.get());
-   chain->initialize();
-}
-
 
 bool ossimHlzUtil::loadPcFile()
 {
@@ -418,7 +383,7 @@ bool ossimHlzUtil::loadMaskFiles()
          break;
 
       MaskSource mask_image (this, m_maskFile, true);
-      if (mask_image.valid)
+      if (mask_image.image.valid())
          m_maskSources.push_back(mask_image);
    }
 
@@ -433,7 +398,7 @@ bool ossimHlzUtil::loadMaskFiles()
 
       // First check if the filename specified is an image file:
       MaskSource mask_image (this, m_maskFile, false);
-      if (mask_image.valid)
+      if (mask_image.image.valid())
          m_maskSources.push_back(mask_image);
    }
 
@@ -478,6 +443,15 @@ bool ossimHlzUtil::initHlzFilter()
       return false;
 
    return true;
+}
+
+ossimRefPtr<ossimImageData> ossimHlzUtil::getChip(const ossimIrect& bounding_irect)
+{
+   m_aoiViewRect = bounding_irect;
+   m_geom->setImageSize( m_aoiViewRect.size() );
+
+   ossimGrect grect;
+   m_geom->getBoundingGroundRect(grect);
 }
 
 bool ossimHlzUtil::execute()
@@ -576,7 +550,7 @@ void ossimHlzUtil::paintReticle()
 {
    // Highlight the observer position with X reticle:
    ossimDpt center;
-   m_viewRect.getCenter(center);
+   m_aoiViewRect.getCenter(center);
 
    if (m_reticleSize > 0)
    {
@@ -589,31 +563,27 @@ void ossimHlzUtil::paintReticle()
    }
 
    // Also outline the square area of interest:
-   for (ossim_int32 x = m_viewRect.ul().x; x <= m_viewRect.lr().x; ++x)
+   for (ossim_int32 x = m_aoiViewRect.ul().x; x <= m_aoiViewRect.lr().x; ++x)
    {
-      m_outBuffer->setValue(x, m_viewRect.ul().y, m_reticleValue);
-      m_outBuffer->setValue(x, m_viewRect.lr().y, m_reticleValue);
+      m_outBuffer->setValue(x, m_aoiViewRect.ul().y, m_reticleValue);
+      m_outBuffer->setValue(x, m_aoiViewRect.lr().y, m_reticleValue);
    }
-   for (ossim_int32 y = m_viewRect.ul().y; y <= m_viewRect.lr().y; ++y)
+   for (ossim_int32 y = m_aoiViewRect.ul().y; y <= m_aoiViewRect.lr().y; ++y)
    {
-      m_outBuffer->setValue(m_viewRect.ul().x, y, m_reticleValue);
-      m_outBuffer->setValue(m_viewRect.lr().x, y, m_reticleValue);
+      m_outBuffer->setValue(m_aoiViewRect.ul().x, y, m_reticleValue);
+      m_outBuffer->setValue(m_aoiViewRect.lr().x, y, m_reticleValue);
    }
 }
 
 bool ossimHlzUtil::writeFile()
 {
-   ossimIrect rect(0, 0, m_viewRect.width() - 1, m_viewRect.height() - 1);
+   ossimIrect rect(0, 0, m_aoiViewRect.width() - 1, m_aoiViewRect.height() - 1);
    m_outBuffer->setImageRectangle(rect);
 
    ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
    memSource->setImage(m_outBuffer);
    memSource->setImageGeometry(m_geom.get());
    ossimRefPtr<ossimImageSource>last_source = memSource.get();
-
-   // See if an LUT is requested:
-   if (m_lutFile.isReadable())
-      addIndexToRgbLutFilter(last_source);
 
    // Set up the writer:
    bool success = false;
@@ -636,7 +606,7 @@ void ossimHlzUtil::writeSlopeImage()
    tif_writer->setFilename(m_slopeFile);
    writer = tif_writer;
    writer->connectMyInputTo(0, m_combinedElevSource.get());
-   writer->setAreaOfInterest(m_viewRect);
+   writer->setAreaOfInterest(m_aoiViewRect);
    if (writer->execute())
       cout<<"Wrote slope image to <"<<m_slopeFile<<">."<<endl;
    else
@@ -751,7 +721,6 @@ bool ossimHlzUtil::ChipProcessorJob::level2Test()
    return true;
 }
 
-
 bool ossimHlzUtil::ChipProcessorJob::maskTest()
 {
    // Threat dome only valid if a point cloud dataset is available:
@@ -785,7 +754,6 @@ bool ossimHlzUtil::ChipProcessorJob::maskTest()
 
    return test_passed;
 }
-
 
 bool ossimHlzUtil::LsFitChipProcessorJob::level1Test()
 {
@@ -853,31 +821,10 @@ bool ossimHlzUtil::NormChipProcessorJob::level1Test()
    return true;
 }
 
-ossimHlzUtil::MaskSource::MaskSource(ossimHlzUtil* hlzUtil, const ossimFilename& mask_image,
+ossimHlzUtil::MaskSource::MaskSource(ossimHlzUtil* hlzUtil,
+                                     const ossimFilename& mask_image,
                                      bool exclusion)
-:  exclude (exclusion),
-   valid (false)
+:  exclude (exclusion)
 {
-   ossimRefPtr<ossimImageHandler> handler = ossimImageHandlerRegistry::instance()->open(mask_image);
-   if (handler.valid())
-   {
-      hlzUtil->createInputChain(handler, image);
-      valid = true;
-   }
+   image = hlzUtil->createInputChain(mask_image);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

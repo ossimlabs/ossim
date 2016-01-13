@@ -813,7 +813,6 @@ void SectorProcessorJob::start()
       RadialProcessor::doRadial(m_vsUtil, m_sector, r);
 }
 
-
 void RadialProcessorJob::start()
 {
    RadialProcessor::doRadial(m_vsUtil, m_sector, m_radial);
