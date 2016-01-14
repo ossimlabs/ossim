@@ -649,8 +649,10 @@ std::ostream& ossimElevManager::print(ostream& out) const
       for (ossim_uint32 j=0; j<m_dbRoundRobin[i].size(); ++j)
       {
          out<<"m_dbRoundRobin["<<i<<"]["<<j<<"] = ";
+         // GP: We have to separate this line.  On MS it will not compile
+         // otherwise
          m_dbRoundRobin[i][j]->print(out);
-         
+
       }
          out<<endl;
    }
