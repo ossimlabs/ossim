@@ -240,7 +240,7 @@ void ossimLocalTm::setTimezoneOffsetFromGmt()
    //gmt.tm_sec -= tm_gmtoff; // Seconds east of UTC
    m_timezoneOffset = tm_gmtoff;
 #else
-   get_timezone(&m_timezoneOffset);
+   _get_timezone(&m_timezoneOffset);
    //m_timezoneOffset = timezone; // Seconds west of UTC
    if ( tm_isdst )
    {
@@ -679,7 +679,7 @@ ossimLocalTm ossimLocalTm::convertToGmt()const
    gmt.tm_sec -= tm_gmtoff; // Seconds east of UTC
 #else
    ossim_uint64 tempTimeZone;
-   get_timezone(&tempTimeZone);
+   _get_timezone(&tempTimeZone);
    gmt.tm_sec += tempTimeZone; // Seconds west of UTC
    if ( tm_isdst )
    {
