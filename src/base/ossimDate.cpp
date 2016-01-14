@@ -252,9 +252,9 @@ void ossimLocalTm::setTimezoneOffsetFromGmt()
    m_timezoneOffset = timezone; // Seconds west of UTC
    if ( tm_isdst )
    {
-      timezoneOffset -= 3600; // Subtract an hour.
+      m_timezoneOffset -= 3600; // Subtract an hour.
    }
-   m_timezoneOffset = -timezoneOffset;
+   m_timezoneOffset = -m_timezoneOffset;
 #endif
    m_mutex.unlock();
    
@@ -698,9 +698,9 @@ ossimLocalTm ossimLocalTm::convertToGmt()const
    m_timezoneOffset = timezone; // Seconds west of UTC
    if ( tm_isdst )
    {
-      timezoneOffset -= 3600; // Subtract an hour.
+      m_timezoneOffset -= 3600; // Subtract an hour.
    }
-   m_timezoneOffset = -timezoneOffset;
+   m_timezoneOffset = -m_timezoneOffset;
 #endif
    
    time_t t = mktime(&gmt);
