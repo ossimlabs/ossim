@@ -239,7 +239,7 @@ void ossimLocalTm::setTimezoneOffsetFromGmt()
 #if ( defined(__APPLE__) || defined(__FreeBSD__)  || defined(__OpenBSD__) )
    //gmt.tm_sec -= tm_gmtoff; // Seconds east of UTC
    m_timezoneOffset = tm_gmtoff;
-#else if (defined(WIN32))
+#elif (defined(WIN32))
    long timezoneOffset=0;
    _get_timezone(&timezoneOffset);
    //m_timezoneOffset = timezone; // Seconds west of UTC
@@ -685,7 +685,7 @@ ossimLocalTm ossimLocalTm::convertToGmt()const
 
 #if ( defined(__APPLE__) || defined(__FreeBSD__)  || defined(__OpenBSD__) )
    gmt.tm_sec -= tm_gmtoff; // Seconds east of UTC
-#else if (defined(WIN32))
+#elif (defined(WIN32))
    long timezoneOffset=0;
    _get_timezone(&timezoneOffset);
    //m_timezoneOffset = timezone; // Seconds west of UTC
