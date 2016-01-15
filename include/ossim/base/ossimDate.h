@@ -235,7 +235,7 @@ protected:
    void setTimezoneOffsetFromGmt();
    static OpenThreads::Mutex m_mutex;
    double theFractionalSecond;
-   int m_timezoneOffset;
+   mutable int m_timezoneOffset;
 };
 
 

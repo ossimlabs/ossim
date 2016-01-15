@@ -21,6 +21,7 @@
 find_path( HDF5A_INCLUDE_DIR hdf5.h
            PATHS 
            ${CMAKE_INSTALL_PREFIX}/include
+           $ENV{HDF5_DIR}/include
            /usr/include
            /usr/local/include
            /usr/local/ossim/include )
@@ -28,6 +29,8 @@ find_path( HDF5A_INCLUDE_DIR hdf5.h
 # Find HDF5A library:
 find_library( HDF5A_LIB NAMES hdf5a hdf5
               PATHS
+              $ENV{HDF5_DIR}/lib
+              $ENV{HDF5_DIR}/lib
               ${CMAKE_INSTALL_PREFIX}/lib64
               /usr/lib64
               ${CMAKE_INSTALL_PREFIX}/lib
@@ -38,6 +41,8 @@ find_library( HDF5A_LIB NAMES hdf5a hdf5
 # Find HDF5A CPP library:
 find_library( HDF5A_CPP_LIB NAMES hdf5a_cpp hdf5_cpp
               PATHS
+              $ENV{HDF5_DIR}/lib64
+              $ENV{HDF5_DIR}/lib
               ${CMAKE_INSTALL_PREFIX}/lib64
               /usr/lib64
               ${CMAKE_INSTALL_PREFIX}/lib

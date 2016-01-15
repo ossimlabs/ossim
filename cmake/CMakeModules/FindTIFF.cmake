@@ -22,6 +22,8 @@
 
 FIND_PATH(TIFF_INCLUDE_DIR tiff.h
           PATHS 
+          $ENV{TIFF_DIR}/include
+          $ENV{TIFF_DIR}/include/tiff
           ${CMAKE_INSTALL_PREFIX}/include
           /usr/local/include 
           /usr/local/include/tiff
@@ -35,6 +37,8 @@ SET(TIFF_NAMES ${TIFF_NAMES} tiff libtiff_i libtiff tiff3 libtiff3)
 FIND_LIBRARY(TIFF_LIBRARY 
              NAMES ${TIFF_NAMES} 
              PATHS 
+             $ENV{TIFF_DIR}/lib
+             $ENV{TIFF_DIR}/lib64
              ${CMAKE_INSTALL_PREFIX}/lib
              /usr/local/lib
              /usr/lib 
