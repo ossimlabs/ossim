@@ -272,9 +272,9 @@ void ossimSpectraboticsRedEdgeModel::updateModel()
 
    NEWMAT::Matrix heading = ossimMatrix4x4::createRotationZMatrix(m_heading+computeParameterOffset(4), OSSIM_RIGHT_HANDED);
    NEWMAT::Matrix roll = ossimMatrix4x4::createRotationYMatrix(m_roll+computeParameterOffset(2), OSSIM_RIGHT_HANDED);
-   NEWMAT::Matrix pitch = ossimMatrix4x4::createRotationXMatrix(m_pitch+computeParameterOffset(3), OSSIM_RIGHT_HANDED);
+   NEWMAT::Matrix pitch = ossimMatrix4x4::createRotationXMatrix(m_pitch+computeParameterOffset(3), OSSIM_LEFT_HANDED);
    ossimMatrix4x4 lsrMatrix(lsrSpace.lsrToEcefRotMatrix());
-   NEWMAT::Matrix orientation = roll*pitch*heading;
+   NEWMAT::Matrix orientation = heading*pitch*roll;//roll*pitch*heading;
    m_compositeMatrix        = (lsrMatrix.getData()*orientation);
    m_compositeMatrixInverse = m_compositeMatrix.i();
 
