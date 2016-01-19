@@ -16,6 +16,7 @@ FIND_PATH(OSG_INCLUDE_DIR osg/Node
     $ENV{OSGDIR}/include
     $ENV{OSGDIR}
     $ENV{OSG_ROOT}/include
+    ${CMAKE_INSTALL_PREFIX}/include
     NO_DEFAULT_PATH
 )
 
@@ -40,6 +41,8 @@ MACRO(FIND_OSG_LIBRARY MYLIBRARY MYLIBRARYNAME)
         $ENV{OSGDIR}
         $ENV{OSG_ROOT}/lib
         $ENV{OSG_ROOT}/lib64
+        ${CMAKE_INSTALL_PREFIX}/lib
+        ${CMAKE_INSTALL_PREFIX}/lib64
         NO_DEFAULT_PATH
     )
 
@@ -58,6 +61,8 @@ MACRO(FIND_OSG_LIBRARY MYLIBRARY MYLIBRARYNAME)
         /opt/lib
         [HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session\ Manager\\Environment;OSG_ROOT]/lib
         /usr/freeware/lib64
+        ${CMAKE_INSTALL_PREFIX}/lib
+        ${CMAKE_INSTALL_PREFIX}/lib64
     )
     
     FIND_LIBRARY(${MYLIBRARY}
@@ -77,6 +82,8 @@ MACRO(FIND_OSG_LIBRARY MYLIBRARY MYLIBRARYNAME)
         $ENV{OSGDIR}
         $ENV{OSG_ROOT}/lib
         $ENV{OSG_ROOT}/lib64
+        ${CMAKE_INSTALL_PREFIX}/lib
+        ${CMAKE_INSTALL_PREFIX}/lib64
         NO_DEFAULT_PATH
     )
 
@@ -93,6 +100,8 @@ MACRO(FIND_OSG_LIBRARY MYLIBRARY MYLIBRARYNAME)
         /opt/local/lib
         /opt/csw/lib
         /opt/lib
+        ${CMAKE_INSTALL_PREFIX}/lib
+        ${CMAKE_INSTALL_PREFIX}/lib64
         [HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session\ Manager\\Environment;OSG_ROOT]/lib
         /usr/freeware/lib64
     )

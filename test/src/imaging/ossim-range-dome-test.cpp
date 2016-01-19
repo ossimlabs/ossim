@@ -21,7 +21,7 @@
 
 using namespace std;
 
-const char* data = "OSSIM_RANGE_DOMES 1.0\n"
+const char* globalData = "OSSIM_RANGE_DOMES 1.0\n"
       "# ID, Lat, Lon, Hgt, Radius, Classification [, Az_start, Az_end] [, \"Description\"]\n"
       "1, 25.8607, -80.1343, 0, 20, 1\n"
       "2, 25.8601, -80.1336, 0, 40, 3, 135, 45, NATO friendly dome\n"
@@ -159,7 +159,7 @@ bool Executive::run()
                << "Could not write out temporary CSV file to CWD. Check permissions." << endl;
          return false;
       }
-      ofs << data << endl;
+      ofs << globalData << endl;
       ofs.close();
    }
 

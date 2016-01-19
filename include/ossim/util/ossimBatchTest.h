@@ -131,6 +131,7 @@ private:
     */
    std::string convertToNative( const char* lookup ) const;
 
+   std::vector<ossim_uint32> getArrayIndicesFromKwl(const ossimKeywordlist& kwl, const ossimString& prefix)const;
    std::vector<std::string> m_acceptTestList;
    std::vector<std::string> m_cleanTestList;
    std::vector<std::string> m_preprocessTestList;

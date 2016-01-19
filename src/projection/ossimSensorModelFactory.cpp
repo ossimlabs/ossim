@@ -59,6 +59,7 @@ static ossimTrace traceDebug = ossimTrace("ossimSensorModelFactory:debug");
 #include <ossim/support_data/ossimFfL5.h>
 #include <ossim/support_data/ossimPpjFrameSensorFile.h>
 #include <ossim/support_data/ossimAlphaSensorSupportData.h>
+#include <ossim/projection/ossimSpectraboticsRedEdgeModel.h>
 
 //***
 // ADD_MODEL: List names of all sensor models produced by this factory:
@@ -220,6 +221,11 @@ ossimSensorModelFactory::createProjection(const ossimString &name) const
    {
       return new ossimNitfRsmModel();
    }
+   if(name == STATIC_TYPE_NAME(ossimSpectraboticsRedEdgeModel))
+   {
+      return new ossimSpectraboticsRedEdgeModel();
+   }
+   
 
    //***
    // ADD_MODEL: (Please leave this comment for the next programmer)
@@ -276,6 +282,7 @@ ossimSensorModelFactory::getTypeNameList(std::vector<ossimString>& typeList)
    typeList.push_back(STATIC_TYPE_NAME(ossimAlphaSensorHRI));
    typeList.push_back(STATIC_TYPE_NAME(ossimAlphaSensorHSI));
    typeList.push_back(STATIC_TYPE_NAME(ossimNitfRsmModel));
+   typeList.push_back(STATIC_TYPE_NAME(ossimSpectraboticsRedEdgeModel));
    //***
    // ADD_MODEL: Please leave this comment for the next programmer. Add above.
    //***

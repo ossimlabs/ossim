@@ -79,7 +79,7 @@ fi
 # CMake successful, now run make in the build directory (OSSIM_BUILD_DIR 
 # exported by cmake config script):
 pushd $OSSIM_BUILD_DIR >/dev/null
-make -j 8
+make -j $OSSIM_MAKE_JOBS
 if [ $? -ne 0 ]; then
   echo; echo "Error encountered during make. Check the console log and correct."
   popd>/dev/null
@@ -88,7 +88,6 @@ fi
 echo; echo "Build completed successfully. Binaries located in $OSSIM_BUILD_DIR"
 popd # out of $OSSIM_BUILD_DIR
 
-popd # out of $OSSIM_DEV_HOME
 
 exit 0
 
