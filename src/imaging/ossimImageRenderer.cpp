@@ -468,10 +468,8 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
 //  std::cout << "TRANSFORM VIEW TO IMAGE!!!!!!!!!!!!!!\n";
 
    ossimDrect vrect = getViewRect();
-   ossim_float64 w = vrect.width();
+   ossim_float64 w = vrect.width() - 1; // subtract 1 to prevent core dump in full-earth view rect
    ossim_float64 h = vrect.height();
-   // ossim_float64 w2 = w*0.5;
-   // ossim_float64 h2 = h*0.5;
 
    m_transform->viewToImage(m_Vul, m_Iul);
    m_transform->viewToImage(m_Vur, m_Iur);
@@ -480,14 +478,14 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
 
 //  m_ulRoundTripError = m_transform->getRoundTripErrorView(m_Vul);
 //  m_urRoundTripError = m_transform->getRoundTripErrorView(m_Vur);
-//  m_lrRoundTripError = m_transform->getRoundTripErrorView(m_Vlr);;
-//  m_llRoundTripError = m_transform->getRoundTripErrorView(m_Vll);;
+//  m_lrRoundTripError = m_transform->getRoundTripErrorView(m_Vlr);
+//  m_llRoundTripError = m_transform->getRoundTripErrorView(m_Vll);
 
 #if 1
-   m_VulScale = computeViewToImageScale(m_Vul, ossimDpt(w,h));
-   m_VurScale = computeViewToImageScale(m_Vur, ossimDpt(-w,h));
+   m_VulScale = computeViewToImageScale(m_Vul, ossimDpt( w, h));
+   m_VurScale = computeViewToImageScale(m_Vur, ossimDpt(-w, h));
    m_VlrScale = computeViewToImageScale(m_Vlr, ossimDpt(-w,-h));
-   m_VllScale = computeViewToImageScale(m_Vll, ossimDpt(w,-h));
+   m_VllScale = computeViewToImageScale(m_Vll, ossimDpt( w,-h));
 
    ossim_int32 n = 0;
    m_ViewToImageScale.x = 0.0;
@@ -513,23 +511,16 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
       m_ViewToImageScale += m_VllScale; 
       ++n;
    }
-
    if(!n)
    {
       m_ViewToImageScale.makeNan();
-      m_ImageToViewScale.makeNan();
    }
    else
    {
       m_ViewToImageScale.x/=n;
       m_ViewToImageScale.y/=n;
-
-      m_ImageToViewScale.x = 1.0/m_ViewToImageScale.x;
-      m_ImageToViewScale.y = 1.0/m_ViewToImageScale.y;
    }
 
-
-//std::cout << m_ViewToImageScale << std::endl;
 #else
    {
       m_ViewToImageScale = ossimDpt(1.0, 1.0);
@@ -554,33 +545,26 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
       double lengthViewP1P3 = deltaViewP1P3.length();//+1;
 
       if(lengthViewP1P2 > FLT_EPSILON)
-      {
          m_ViewToImageScale.x = averageHoriz/lengthViewP1P2;
-      }
       else
-      {
          m_ViewToImageScale.makeNan();
-      }
       if(lengthViewP1P3 > FLT_EPSILON)
-      {
          m_ViewToImageScale.y = averageVert/lengthViewP1P3;
-      }
       else
-      {
          m_ViewToImageScale.makeNan();
-      }
-
-      if(!m_ViewToImageScale.hasNans())
-      {
-         m_ImageToViewScale.x = 1.0/m_ViewToImageScale.x;
-         m_ImageToViewScale.y = 1.0/m_ViewToImageScale.y;
-      }
-      else
-      {
-         m_ImageToViewScale.makeNan();
-      }
    }
 #endif
+
+   //std::cout << m_ViewToImageScale << std::endl;
+   if(!m_ViewToImageScale.hasNans())
+   {
+      m_ImageToViewScale.x = 1.0/m_ViewToImageScale.x;
+      m_ImageToViewScale.y = 1.0/m_ViewToImageScale.y;
+   }
+   else
+   {
+      m_ImageToViewScale.makeNan();
+   }
 }
 
 ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::computeViewToImageScale(const ossimDpt& viewPt,
