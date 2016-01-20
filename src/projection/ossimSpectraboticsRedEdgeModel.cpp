@@ -233,17 +233,19 @@ void ossimSpectraboticsRedEdgeModel::worldToLineSample(const ossimGpt& world_poi
     ossimDpt film (scale*camRayDir[0], scale*camRayDir[1]);
     film.x /= m_pixelSize.x; // get into pixel coordinates
     film.y /= m_pixelSize.y;
-    film.x /= m_norm; // normalize radial
-    film.y /= m_norm;
+
+
     // now distort to find the true image coordinate location
     if (m_lensDistortion.valid())
     {
       ossimDpt filmOut;
-      m_lensDistortion->distort(film, filmOut);
+      film.x /= m_norm; // normalize radial
+      film.y /= m_norm;
+       m_lensDistortion->distort(film, filmOut);
       film = filmOut;//+m_lensDistortion->getCenter();
+      film.x *= m_norm;
+      film.y *= m_norm; 
     }
-    film.x *= m_norm;
-    film.y *= m_norm; 
 
     // invert Y to get back to left handed image space
     ossimDpt f1(film.x+m_calibratedCenter.x, m_calibratedCenter.y-film.y);
@@ -270,9 +272,9 @@ void ossimSpectraboticsRedEdgeModel::updateModel()
 
    NEWMAT::Matrix heading = ossimMatrix4x4::createRotationZMatrix(m_heading+computeParameterOffset(4), OSSIM_RIGHT_HANDED);
    NEWMAT::Matrix roll = ossimMatrix4x4::createRotationYMatrix(m_roll+computeParameterOffset(2), OSSIM_RIGHT_HANDED);
-   NEWMAT::Matrix pitch = ossimMatrix4x4::createRotationXMatrix(m_pitch+computeParameterOffset(3), OSSIM_RIGHT_HANDED);
+   NEWMAT::Matrix pitch = ossimMatrix4x4::createRotationXMatrix(m_pitch+computeParameterOffset(3), OSSIM_LEFT_HANDED);
    ossimMatrix4x4 lsrMatrix(lsrSpace.lsrToEcefRotMatrix());
-   NEWMAT::Matrix orientation = roll*pitch*heading;
+   NEWMAT::Matrix orientation = heading*pitch*roll;//roll*pitch*heading;
    m_compositeMatrix        = (lsrMatrix.getData()*orientation);
    m_compositeMatrixInverse = m_compositeMatrix.i();
 
@@ -472,7 +474,6 @@ bool ossimSpectraboticsRedEdgeModel::loadState(const ossimKeywordlist& kwl,
       gpsPos&&
       gpsAlt)
    {
-    std::cout << "DOING EXIF LOAD STATE!!!!!!!!!!!!!!\n";
       theSensorID = "MicaSense RedEdge";
       m_roll = ossimString(roll).toDouble();
       m_pitch = ossimString(pitch).toDouble();
@@ -486,6 +487,7 @@ bool ossimSpectraboticsRedEdgeModel::loadState(const ossimKeywordlist& kwl,
       theImageClipRect = ossimDrect(0,0,theImageSize.x-1,theImageSize.y-1);
       theRefImgPt      = ossimDpt(theImageSize.x/2.0, theImageSize.y/2.0);
      
+     m_calibratedCenter = theImageClipRect.midPoint();
       // now lets use the field of view and the focal length to 
       // calculate the pixel size on the ccd in millimeters
       double d = tan((m_fov*0.5)*M_PI/180.0)*m_focalLength;
@@ -529,7 +531,10 @@ bool ossimSpectraboticsRedEdgeModel::loadState(const ossimKeywordlist& kwl,
 
       h = h+ossimGeoidManager::instance()->offsetFromEllipsoid(ossimGpt(lat,lon));
       m_ecefPlatformPosition = ossimGpt(lat,lon,h);
-      //double height1 = ossimElevManager::instance()->getHeightAboveEllipsoid(ossimGpt(lat, lon));
+      double height1 = ossimElevManager::instance()->getHeightAboveEllipsoid(ossimGpt(lat, lon));
+     
+//std::cout << "PLATFORM HEIGHT: " << h << "\n" 
+//          << "ELEVATION: " << height1 << "\n";
      // std::cout << m_ecefPlatformPosition << std::endl;
      // std::cout << "POINT: " << ossimGpt(lat,lon,h) << std::endl;
      // std::cout << "MSL:   " << height1 << "\n";
@@ -569,6 +574,9 @@ bool ossimSpectraboticsRedEdgeModel::loadState(const ossimKeywordlist& kwl,
     else
     {
       m_lensDistortion = 0;
+      m_calibratedCenter = theImageClipRect.midPoint();
+      m_norm = theImageSize.length()*0.5;
+      m_principalPoint = ossimDpt(0,0);
     }
      updateModel();
    }
@@ -584,7 +592,6 @@ bool ossimSpectraboticsRedEdgeModel::loadState(const ossimKeywordlist& kwl,
       heading           = kwl.find(prefix, "heading");
       fov               = kwl.find(prefix, "field_of_view");
       focalLength       = kwl.find(prefix, "focal_length");
-    std::cout << "DOING regular LOAD STATE!!!!!!!!!!!!!!\n";
 
       if(roll)
       {
@@ -746,7 +753,7 @@ bool ossimSpectraboticsRedEdgeModel::loadState(const ossimKeywordlist& kwl,
           << "ossimSpectraboticsRedEdgeModel::loadState Caught Exception:\n"
           << e.what() << std::endl;
     }
-    std::cout << "METERS PER PIXEL :    " << getMetersPerPixel() << std::endl;
+   // std::cout << "METERS PER PIXEL :    " << getMetersPerPixel() << std::endl;
    if(traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << std::setprecision(15) << std::endl;
@@ -761,6 +768,14 @@ bool ossimSpectraboticsRedEdgeModel::loadState(const ossimKeywordlist& kwl,
                                           << "Ground:    " << ossimGpt(m_ecefPlatformPosition) << std::endl;
    }
 
+   // ossimGpt wpt;
+   // ossimDpt dpt(100,100);
+   // lineSampleToWorld(dpt, wpt);
+   // std::cout << "dpt: " << dpt << "\n"
+   //           << "wpt: " << wpt << "\n";
+   // worldToLineSample(wpt,dpt);
+   // std::cout << "dpt: " << dpt << "\n"
+   //           << "wpt: " << wpt << "\n";
    return result;
 }
 
