@@ -109,10 +109,17 @@ protected:
     * @brief Gets index into RSM Polynomial Coefficients(rsmpca) container
     * array for a given image point.
     *
-    * @ipt Image line, sample.
+    * @note (0,0) in ossim space is (0.5, 0.5) in rsm space.
+    *
+    * @param ipt Image line, sample.
+    * 
+    * @param shiftPoint If true ipt is shifted +0.5 to go from ossim
+    * space(0 is center of pixel) to RSM space(0 is upper left of pixel).
+    * If false point is coming from rsm space and does not need to be shifted.
+    * 
     * @return Index into m_pca vector.
     */    
-   ossim_uint32 getPcaIndex( const ossimDpt& ipt ) const;
+   ossim_uint32 getPcaIndex( const ossimDpt& ipt, bool shiftPoint ) const;
 
    /**
     * @brief Gets index into RSM Polynomial Coefficients(rsmpca) container
