@@ -898,7 +898,7 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readValue(ossimString&
          break;
       }
    }
-   // The ifstream object will end in 'ÿ' (character 255 or -1) if the end-of-file indicator 
+   // The ifstream object will end in 'ï¿½' (character 255 or -1) if the end-of-file indicator 
    // will not be set(e.g \n). In this case, end-of-file conditions would never be detected. 
    // add EOF (which is actually the integer -1 or 255) check here.
    // Reference link http://www.cplusplus.com/forum/general/33821/
@@ -980,9 +980,11 @@ bool ossimKeywordlist::parseStream(std::istream& is)
    while(!is.eof() && !is.bad())
    {
       skipWhitespace(is);
-      if(is.eof() || is.bad()) return true; // we skipped to end so valid keyword list
+      if(is.eof() || is.bad())
+         return true; // we skipped to end so valid keyword list
       state = readComments(sequence, is);
-      if(state & KeywordlistParseState_BAD_STREAM) return false;
+      if(state & KeywordlistParseState_BAD_STREAM)
+         return false;
       // if we failed a comment parse then try key value parse.
       if(state == KeywordlistParseState_FAIL)
       {
@@ -995,13 +997,19 @@ bool ossimKeywordlist::parseStream(std::istream& is)
             {
                return true;
             }
-            if ( m_expandEnvVars == true )
+
+            // Check for the "include" special key for adding additional keyword lists to current:
+            if (key == "include")
             {
-               ossimString result = value.expandEnvironmentVariable();
-               m_map.insert(std::make_pair(key.string(), result.string()));
+               if ( m_expandEnvVars == true )
+                  value = value.expandEnvironmentVariable();
+               if (!addFile(value.chars()))
+                  return false;
             }
             else
             {
+               if ( m_expandEnvVars == true )
+                  value = value.expandEnvironmentVariable();
                m_map.insert(std::make_pair(key.string(), value.string()));
             }
          }

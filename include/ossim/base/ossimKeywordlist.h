@@ -26,7 +26,31 @@ static const char DEFAULT_DELIMITER = ':';
 
 class ossimFilename;
 
-
+/**
+ * Represents serializable keyword/value map. The format is
+ *
+ *   [<prefix>.]<keyword>: value [value ...]
+ *
+ * The map is not a multimap, i.e., the keywords must be unique. Only the last occurrence of
+ * identical keywords will be saved in the map. Methods are provided for reading from and writing
+ * to an ascii file. Methods are also provided for merging multiple maps (a.k.a. "lists" or "KWLs")
+ * as well as assorted operations for pruning and counting.
+ *
+ * The reserved keyword "include" is read from a file by this class. The value specifies another
+ * external file that will be merged with the current list. This is convenient for sourcing common
+ * settings needed by multiple KWL files. Instead of duplicating all common keywords/value
+ * pairs, the various KWL files can all specify, for example,
+ *
+ *      include: common_prefs.kwl
+ *      include: common_config.kwl
+ *
+ * Note that multiple "include" keywords can exist in a single file. This is different than the
+ * normal behavior for duplicate keys: the "include" entry is removed from the
+ * list upon merging the external KWL file, so will never conflict with subsequent entries of the
+ * "include" keyword. Adding "include" to an in-memory KWL will have no immediate effect and will be
+ * handled just like any other keyword/value pair, i.e., only one entry will be supported. Its
+ * behavior is unpredictable and should be avoided unless immediately writing the list out to disk.
+ */
 class OSSIM_DLL ossimKeywordlist : public ossimErrorStatusInterface,
    public ossimReferenced
 {
