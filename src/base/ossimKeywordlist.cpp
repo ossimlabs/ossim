@@ -793,21 +793,60 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readComments(ossimStri
          while(!in.bad()&&!in.eof())
          {
             c = (char)in.get();
+            if (in.bad() || in.eof())
+               break;
+
             if(!isValidKeywordlistCharacter(c))
             {
                result = KeywordlistParseState_BAD_STREAM;
                break;
             }
-            if((c == '\n')||
-               (c == '\r'))
-            {
+            if((c == '\n')|| (c == '\r'))
                break;
-            }
+
             sequence += c;
          }
       }
    }
    return result;
+}
+
+ossimKeywordlist::KeywordlistParseState
+ossimKeywordlist::readPreprocDirective(std::istream& in)
+{
+   KeywordlistParseState status = KeywordlistParseState_FAIL;
+
+   char c = (char)in.peek();
+   while (c == '#')
+   {
+      // Read the line as one big value:
+      ossimString sequence;
+      status = readValue(sequence, in);
+      if (status)
+         break;
+
+      ossimString directive = sequence.before(" ");
+
+      // Check for external KWL include file:
+      if (directive == "#include")
+      {
+         ossimFilename includeFile = sequence.after(" ");
+         if (includeFile.empty())
+            break; // ignore bogus preproc line
+         includeFile.trim("\"");
+         includeFile.expandEnvironmentVariable();
+         addFile(includeFile); // Quietly ignore any errors loading external KWL.
+      }
+
+//      else if (directive == "#add_new_directive_here")
+//      {
+//         process directive
+//      }
+
+      status = KeywordlistParseState_OK;
+      break;
+   }
+   return status;
 }
 
 ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readKey(ossimString& sequence, std::istream& in)const
@@ -982,9 +1021,19 @@ bool ossimKeywordlist::parseStream(std::istream& is)
       skipWhitespace(is);
       if(is.eof() || is.bad())
          return true; // we skipped to end so valid keyword list
-      state = readComments(sequence, is);
+
+      state = readPreprocDirective(is);
       if(state & KeywordlistParseState_BAD_STREAM)
          return false;
+
+      // if we failed a preprocessor directive parse then try comment parse.
+      if(state == KeywordlistParseState_FAIL)
+      {
+         state = readComments(sequence, is);
+         if(state & KeywordlistParseState_BAD_STREAM)
+            return false;
+      }
+
       // if we failed a comment parse then try key value parse.
       if(state == KeywordlistParseState_FAIL)
       {
@@ -994,24 +1043,11 @@ bool ossimKeywordlist::parseStream(std::istream& is)
          {
             key = key.trim();
             if(key.empty())
-            {
                return true;
-            }
 
-            // Check for the "include" special key for adding additional keyword lists to current:
-            if (key == "include")
-            {
-               if ( m_expandEnvVars == true )
-                  value = value.expandEnvironmentVariable();
-               if (!addFile(value.chars()))
-                  return false;
-            }
-            else
-            {
-               if ( m_expandEnvVars == true )
-                  value = value.expandEnvironmentVariable();
-               m_map.insert(std::make_pair(key.string(), value.string()));
-            }
+            if ( m_expandEnvVars == true )
+               value = value.expandEnvironmentVariable();
+            m_map.insert(std::make_pair(key.string(), value.string()));
          }
          else if(testKeyValueState & KeywordlistParseState_BAD_STREAM)
          {

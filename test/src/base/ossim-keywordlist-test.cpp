@@ -6,15 +6,15 @@
 
 using namespace std;
 
-void runTestForFileVariations()
+bool runTestForFileVariations()
 {
    cout << "------------------ Running tests on different file variations ---------------- \n";
-   
+   bool test_failed = false;
+
    ossimTempFilename tempFile(".", "temp","txt",true,false);
    tempFile.generateRandomFile();
    
    {
-      
       ofstream out(tempFile.c_str());
       
       out<< "";
@@ -24,11 +24,12 @@ void runTestForFileVariations()
       cout << "Empty File Test? ";
       if(kwl.addFile(tempFile))
       {
-         cout << "passed" << endl;
+         cout << "PASSED" << endl;
       }
       else 
       {
-         cout << "failed" << endl;
+         cout << "FAILED" << endl;
+         test_failed = false;
       }
    }
    {
@@ -58,11 +59,12 @@ void runTestForFileVariations()
       if((kwlUnix.addFile(tempFile)&&kwlDos.addFile(tempFileDos))&&
          (kwlUnix.getMap() == kwlDos.getMap()))
       {
-         cout << "passed" << endl;
+         cout << "PASSED" << endl;
       }
       else 
       {
-         cout << "failed" << endl;
+         cout << "FAILED" << endl;
+         test_failed = true;
       }
    }
    {
@@ -73,13 +75,14 @@ void runTestForFileVariations()
       
       ossimKeywordlist kwl;
       cout << "bad comment? ";
-      if(!kwl.addFile(tempFile))
+      if(kwl.addFile(tempFile))
       {
-         cout << "passed" << endl;
+         cout << "PASSED" << endl;
       }
       else 
       {
-         cout << "failed" << endl;
+         cout << "FAILED" << endl;
+         test_failed = true;
       }
    }
    {
@@ -92,11 +95,12 @@ void runTestForFileVariations()
       cout << "good comment? ";
       if(kwl.addFile(tempFile))
       {
-         cout << "passed" << endl;
+         cout << "PASSED" << endl;
       }
       else 
       {
-         cout << "failed" << endl;
+         cout << "FAILED" << endl;
+         test_failed = true;
       }
    }
    {
@@ -109,11 +113,12 @@ void runTestForFileVariations()
       cout << "good comment no end of line? ";
       if(kwl.addFile(tempFile))
       {
-         cout << "passed" << endl;
+         cout << "PASSED" << endl;
       }
       else 
       {
-         cout << "failed" << endl;
+         cout << "FAILED" << endl;
+         test_failed = true;
       }
    }
    {
@@ -127,13 +132,25 @@ void runTestForFileVariations()
       cout << "Accepted file? ";
       if(kwl.addFile(tempFile))
       {
-         cout << "passed" << endl;
+         cout << "PASSED" << endl;
       }
       else 
       {
-         cout << "failed" << endl;
+         cout << "FAILED" << endl;
+         test_failed = true;
       }
-      cout << "Verify key? " << (kwl.find("/test")?"passed\n":"failed\n");
+
+      cout << "Verify key? ";
+      const char* value = kwl.find("/test");
+      if (value)
+      {
+         cout << "PASSED" << endl;
+      }
+      else
+      {
+         cout << "FAILED" << endl;
+         test_failed = true;
+      }
    }
    {
       ofstream out(tempFile.c_str());
@@ -146,16 +163,27 @@ void runTestForFileVariations()
       cout << "Accepted file? ";
       if(kwl.addFile(tempFile))
       {
-         cout << "passed" << endl;
+         cout << "PASSED" << endl;
       }
       else 
       {
-         cout << "failed" << endl;
+         cout << "FAILED" << endl;
+         test_failed = true;
       }
-      cout << "Verify key? " << (kwl.find("test")?"passed\n":"failed\n");
+
+      cout << "Verify key? ";
+      const char* value = kwl.find("test");
+      if (value)
+      {
+         cout << "PASSED" << endl;
+      }
+      else
+      {
+         cout << "FAILED" << endl;
+         test_failed = true;
+      }
    }
    {
-
       ossimKeywordlist kwl;
       ossimString value1 ="   --leading and trailing---   ";
       ossimString value2 ="   --trailing---";
@@ -165,15 +193,38 @@ void runTestForFileVariations()
       kwl.add("","key3", value3);
       kwl.trimAllValues();
       cout << "----------- Testing utility method trimAll values ------------ \n";
-      cout << "Verify  value1? " << ((value1.trim() == ossimString(kwl.find("key1")))?"passed":"failed") << endl;
-      cout << "Verify  value2? " << ((value2.trim() == ossimString(kwl.find("key2")))?"passed":"failed") << endl;
-      cout << "Verify  value3? " << ((value3.trim() == ossimString(kwl.find("key3")))?"passed":"failed") << endl;
+      cout << "Verify  value1? ";
+      if (value1.trim() == ossimString(kwl.find("key1")))
+         cout << "PASSED" << endl;
+      else
+      {
+         cout << "FAILED" << endl;
+         test_failed = true;
+      }
+      cout << "Verify  value2? ";
+      if (value2.trim() == ossimString(kwl.find("key2")))
+         cout << "PASSED" << endl;
+      else
+      {
+         cout << "FAILED" << endl;
+         test_failed = true;
+      }
+      cout << "Verify  value3? ";
+      if (value3.trim() == ossimString(kwl.find("key3")))
+         cout << "PASSED" << endl;
+      else
+      {
+         cout << "FAILED" << endl;
+         test_failed = true;
+      }
    }
+   return test_failed;
 }
 
-void runIncludeTest()
+bool runIncludeTest()
 {
-   cout << "----------- Testing \"include\" keyword handling ------------ \n";
+   cout << "----------- Testing #include directive handling ------------ \n";
+
 
    ossimTempFilename t1(".", "f1","kwl",true,false);
    ossimTempFilename t2(".", "f2","kwl",true,false);
@@ -190,8 +241,8 @@ void runIncludeTest()
    ofstream f3 (t3.chars());
    ofstream f4 (t4.chars());
 
-   f1<<"f1k1: f1v1\nf1k2: f1v2\ninclude: "<<t2<<"\ninclude: "<<t3<<endl;
-   f2<<"f2k1: f2v1\ninclude: "<<t4<<"\nf2k2: f2v2"<<endl;
+   f1<<"f1k1: f1v1\nf1k2: f1v2\n#include "<<t2<<"\n#include \""<<t3<<"\""<<endl;
+   f2<<"f2k1: f2v1\n#include "<<t4<<"\nf2k2: f2v2"<<endl;
    f3<<"f3k1: f3v1\nf3k2: f3v2"<<endl;
    f4<<"f4k1: f4v1\nf4k2: f4v2"<<endl;
 
@@ -204,7 +255,7 @@ void runIncludeTest()
    kwl.print(cout);
 
    ossimString value;
-   bool success = false;
+   bool test_failed = true;
    while (true)
    {
       value = kwl.find("f1k1");
@@ -231,17 +282,17 @@ void runIncludeTest()
       value = kwl.find("f4k2");
       if (value != "f4v2")
          break;
-      value = kwl.find("include"); // Should not be in the final KWL
-      if (value.size())
-         break;
 
-      success = true;
+      test_failed = false;
       break;
    }
-   if (success)
-      cout << "Passed \"include\" test."<<endl;
+
+   if (!test_failed)
+      cout << "#include test PASSED."<<endl;
    else
-      cout << "Failed \"include\" test."<<endl;
+      cout << "#include test FAILED."<<endl;
+
+   return test_failed;
 }
 
 int main(int argc, char* argv[])
@@ -330,12 +381,19 @@ int main(int argc, char* argv[])
    cout << kwl3 << endl;
    cout << "------------------ Running sanity tests to make sure that triple quotes are retained ---------------- \n";
  
-   cout << "kwl1 == kwl2? " << ((kwl.getMap() == kwl2.getMap())?"passed":"failed") << endl;
-   cout << "testValueAllBlanks preserved? " << ((ossimString(kwl2.find("testAllBlanks.value"))==testValueAllBlanks)?"passed":"failed") << endl;
-   cout << "testValueLeftBlanks preserved? " << ((ossimString(kwl2.find("testLeftBlanks.value"))==testValueLeftBlanks)?"passed":"failed") << endl;
-   cout << "testValueRightBlanks preserved? " << ((ossimString(kwl2.find("testRightBlanks.value"))==testValueRightBlanks)?"passed":"failed") << endl;
-   cout << "testRightBlanksEol preserved? " << ((ossimString(kwl2.find("testRightBlanksEol.value"))==testValueRightBlanksEol)?"passed":"failed") << endl;
-   cout << "complicatedHtmlEmbed preserved? " << ((ossimString(kwl2.find("complicatedHtmlEmbed.value"))==complicatedHtmlEmbed)?"passed":"failed") << endl;
-   runTestForFileVariations();
-   runIncludeTest();
+   cout << "kwl1 == kwl2? " << ((kwl.getMap() == kwl2.getMap())?"PASSED":"FAILED") << endl;
+   cout << "testValueAllBlanks preserved? " << ((ossimString(kwl2.find("testAllBlanks.value"))==testValueAllBlanks)?"PASSED":"FAILED") << endl;
+   cout << "testValueLeftBlanks preserved? " << ((ossimString(kwl2.find("testLeftBlanks.value"))==testValueLeftBlanks)?"PASSED":"FAILED") << endl;
+   cout << "testValueRightBlanks preserved? " << ((ossimString(kwl2.find("testRightBlanks.value"))==testValueRightBlanks)?"PASSED":"FAILED") << endl;
+   cout << "testRightBlanksEol preserved? " << ((ossimString(kwl2.find("testRightBlanksEol.value"))==testValueRightBlanksEol)?"PASSED":"FAILED") << endl;
+   cout << "complicatedHtmlEmbed preserved? " << ((ossimString(kwl2.find("complicatedHtmlEmbed.value"))==complicatedHtmlEmbed)?"PASSED":"FAILED") << endl;
+   bool test_failed = runTestForFileVariations();
+   test_failed |= runIncludeTest();
+
+   if (!test_failed)
+      cout<<"\nAll tests PASSED.\n"<<endl;
+   else
+      cout<<"\nEnountered at least one FAILED.\n"<<endl;
+
+   return test_failed;
 }
