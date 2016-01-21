@@ -55,10 +55,8 @@ static const std::string LUT_FILE_KW             = "lut_file";
 static const std::string GSD_KW                  = "gsd";
 static const std::string OUTPUT_RADIOMETRY_KW    = "output_radiometry";
 static const std::string READER_PROPERTY_KW      = "reader_property";
-static const std::string SCALE_2_8_BIT_KW        = "scale_2_8_bit";
 static const std::string SNAP_TIE_TO_ORIGIN_KW   = "snap_tie_to_origin";
 static const std::string SRS_KW                  = "srs";
-static const std::string THREE_BAND_OUT_KW       = "three_band_out"; // bool
 static const std::string TILE_SIZE_KW            = "tile_size"; // pixels
 static const std::string TRUE_KW                 = "true";
 static const std::string WRITER_KW               = "writer";
@@ -127,6 +125,7 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    ossim_uint32 readerPropIdx = 0;
    ossim_uint32 writerPropIdx = 0;
    ossimString  key           = "";
+   ostringstream keys;
 
    // Extract optional arguments and stuff them in a keyword list.
    if ( ap.read("--aoi--geo-bbox", stringParam1, stringParam2, stringParam3, stringParam4))
@@ -180,11 +179,9 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    {
       for(ossim_uint32 idx=0; idx<paramList.size(); ++idx)
       {
-         key = ELEV_SOURCE_KW;
-         key += ossimString::toString(idx);
-         key += ".";
-         key += ossimKeywordNames::FILE_KW;
-         m_kwl.addPair(key.string(), paramList[idx].string() );
+         ostringstream key;
+         key<<ELEV_SOURCE_KW<<idx<<"."<<ossimKeywordNames::FILE_KW;
+         m_kwl.addPair(key.str(), paramList[idx].string() );
       }
    }
 
@@ -198,11 +195,9 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    ap.read("--image", imageFnames);
    for(ossim_uint32 idx=0; idx<imageFnames.size(); ++idx)
    {
-      key = IMAGE_SOURCE_KW;
-      key += ossimString::toString(idx);
-      key += ".";
-      key += ossimKeywordNames::FILE_KW;
-      m_kwl.addPair(key.string(), imageFnames[idx] );
+      ostringstream key;
+      key<<IMAGE_SOURCE_KW<<idx<<"."<<ossimKeywordNames::FILE_KW;
+      m_kwl.addPair(key.str(), imageFnames[idx] );
    }
 
    if( ap.read("--origin-latitude", stringParam1) )
@@ -219,14 +214,11 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 
    while (ap.read("--reader-prop", stringParam1))
    {
-      key = READER_PROPERTY_KW;
-      key += ossimString::toString(readerPropIdx);
-      m_kwl.addPair(key.string(), tempString1 );
+      ostringstream key;
+      key << READER_PROPERTY_KW << readerPropIdx;
+      m_kwl.addPair(key.str(), tempString1 );
       ++readerPropIdx;
    }
-
-   if ( ap.read("--scale-to-8-bit") )
-      m_kwl.addPair( SCALE_2_8_BIT_KW, TRUE_KW);
 
    if ( ap.read("--snap-tie-to-origin") )
       m_kwl.addPair( SNAP_TIE_TO_ORIGIN_KW, TRUE_KW);
@@ -238,9 +230,6 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
          os.gsub( ossimString("EPSG:"), ossimString("") );
       m_kwl.addPair( SRS_KW, os.string() );
    }
-
-   if ( ap.read("--three-band-out") )
-      m_kwl.addPair( THREE_BAND_OUT_KW, TRUE_KW);
 
    if( ap.read("--tile-size", stringParam1) )
       m_kwl.addPair( TILE_SIZE_KW, tempString1 );
@@ -367,11 +356,9 @@ void ossimChipProcUtil::finalizeChain()
    // Connect chipper input to source chain.
    m_procChain->add(m_cutRectFilter.get());
 
-   //---
    // Set the image size here.  Note must be set after combineLayers.  This is needed for
    // the ossimImageGeometry::worldToLocal call for a geographic projection to handle wrapping
    // accross the date line.
-   //---
    m_geom->setImageSize( m_aoiViewRect.size() );
 
    // Reset the source bounding rect if it changed.
@@ -392,12 +379,8 @@ bool ossimChipProcUtil::execute()
    // Connect the writer to the processing chain.
    m_writer->connectMyInputTo(0, m_procChain.get());
 
-   //---
-   // Set the area of interest.
-   // NOTE: This must be called after the writer->connectMyInputTo as
-   // ossimImageFileWriter::initialize incorrectly resets theAreaOfInterest
-   // back to the bounding rect.
-   //---
+   // Set the area of interest. NOTE: This must be called after the writer->connectMyInputTo as
+   // ossimImageFileWriter::initialize incorrectly resets AOI back to the bounding rect.
    m_writer->setAreaOfInterest(m_aoiViewRect);
 
    if (m_writer->getErrorStatus() != ossimErrorCodes::OSSIM_OK)
@@ -465,24 +448,13 @@ void ossimChipProcUtil::loadImageFiles()
 
    while ( foundRecords < imgCount )
    {
-      ossimString key = IMAGE_SOURCE_KW;
-      key += ossimString::toString(i);
-      key += ".";
-      key += ossimKeywordNames::FILE_KW;
-      ossimFilename f = m_kwl.findKey( key.string() );
+      ostringstream key;
+      key <<  IMAGE_SOURCE_KW << i << "." << ossimKeywordNames::FILE_KW;
+      ossimFilename f = m_kwl.findKey( key.str() );
       if ( f.size() )
       {
-         // Look for the entry key, e.g. image0.entry: 10
-         ossim_uint32 entryIndex = 0;
-         key = IMAGE_SOURCE_KW;
-         key += ossimString::toString(i);
-         key += ".";
-         key += ossimKeywordNames::ENTRY_KW;
-         std::string value = m_kwl.findKey( key.string() );
-         if ( value.size() )
-            entryIndex = ossimString(value).toUInt32();
-         else
-            entryIndex = getEntryNumber(); // Get global entry.  Set by "-e" on command line apps.
+         // Look for the entry key, e.g. image_source0.entry: 10
+         ossim_uint32 entryIndex = getEntryNumber(i);
 
          // Add it:
          ossimRefPtr<ossimSingleImageChain> ic = createInputChain(f, entryIndex);
@@ -492,6 +464,12 @@ void ossimChipProcUtil::loadImageFiles()
             errMsg<<"ERROR: ossimChipProcUtil ["<<__LINE__<<"] Could not open <"<<f<<">"<<ends;
             throw ossimException(errMsg.str());
          }
+
+         // Need a band selector?
+         std::vector<ossim_uint32> bandList(0);
+         getBandList(i, bandList );
+         if ( bandList.size() )
+            ic->setBandSelection( bandList );
 
          m_imgLayers.push_back(ic);
          ++foundRecords;
@@ -620,9 +598,14 @@ void ossimChipProcUtil::createOutputProjection()
    ossimRefPtr<ossimMapProjection> proj = 0;
 
    // If an srs code use that first.
-   if ( srs.size() )
+   if (srs == "4326")  // Avoid factory call for this.
    {
-      proj = getNewProjectionFromSrsCode( srs );
+      proj = new ossimEquDistCylProjection();
+   }
+   else if ( srs.size() )
+   {
+      proj = PTR_CAST( ossimMapProjection,
+                       ossimProjectionFactoryRegistry::instance()->createProjection(srs));
    }
    else if ( op.size() )
    {
@@ -874,70 +857,46 @@ void ossimChipProcUtil::getTiePoint(ossimGpt& tie)
 
    // Loop through layers.
    ossimGpt chainTiePoint;
-   std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx = m_imgLayers.begin();
-   while ( chainIdx != m_imgLayers.end() )
+   std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIter = m_imgLayers.begin();
+   while ( chainIter != m_imgLayers.end() )
    {
-      getTiePoint( (*chainIdx).get(), chainTiePoint );
-      if ( tie.hasNans() )
+      while (true)
       {
-         tie = chainTiePoint;
-      }
-      else
-      {
-         if ( chainTiePoint.lat > tie.lat )
-         {
-            tie.lat = chainTiePoint.lat;
-         }
-         if ( chainTiePoint.lon < tie.lon )
-         {
-            tie.lon = chainTiePoint.lon;
-         }
-      }
-      ++chainIdx;
-   }
-}
-
-void ossimChipProcUtil::getTiePoint(ossimSingleImageChain* chain, ossimGpt& tie)
-{
-   if (chain)
-   {
-      //---
-      // The view is not set yet in the chain so we get the tie point from the
-      // image handler geometry not from the chain which will come from the
-      // ossimImageRenderer.
-      //---
-      ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
-      if ( ih.valid() )
-      {
+         // While Loop provides scope to permit breaking out when null but noncritical condition hit
+         if (!chainIter->valid())
+            break;
+         ossimRefPtr<ossimImageHandler> ih = (*chainIter)->getImageHandler();
+         if ( !ih.valid() )
+            break;
          ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
-         if ( geom.valid() )
-         {
-            geom->getTiePoint( tie, true );
-         }
+         if ( !geom.valid() )
+            break;
 
-
-         // Set height to 0.0 even though it's not used so hasNans test works.
-         tie.hgt = 0.0;
-
-         if ( tie.hasNans() )
+         // The view is not set yet in the chain so we get the tie point from the
+         // image handler geometry not from the chain which will come from the
+         // ossimImageRenderer.
+         geom->getTiePoint( chainTiePoint, true );
+         if ( chainTiePoint.isLatLonNan() )
          {
             ostringstream errMsg;
             errMsg << "ossimChipProcUtil ["<<__LINE__<<"] tie point has nans!"<<ends;
             throw ossimException(errMsg.str());
          }
+
+         if ( tie.isLatLonNan() )
+         {
+            tie = chainTiePoint;
+         }
+         else
+         {
+            if ( chainTiePoint.lat > tie.lat )
+               tie.lat = chainTiePoint.lat;
+            if ( chainTiePoint.lon < tie.lon )
+               tie.lon = chainTiePoint.lon;
+         }
+         break; // prevent infinite loop
       }
-      else
-      {
-         ostringstream errMsg;
-         errMsg << "ossimChipProcUtil ["<<__LINE__<<"] No image handler in chain."<<ends;
-         throw ossimException(errMsg.str());
-      }
-   }
-   else
-   {
-      ostringstream errMsg;
-      errMsg << "ossimChipProcUtil ["<<__LINE__<<"] Null chain passed to method!"<<ends;
-      throw ossimException(errMsg.str());
+      ++chainIter;
    }
 }
 
@@ -947,62 +906,46 @@ void ossimChipProcUtil::getTiePoint(ossimDpt& tie)
 
    // Loop through dem layers.
    ossimDpt chainTiePoint;
-   std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx = m_imgLayers.begin();
-   while ( chainIdx != m_imgLayers.end() )
+   std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIter = m_imgLayers.begin();
+   while ( chainIter != m_imgLayers.end() )
    {
-      getTiePoint( (*chainIdx).get(), chainTiePoint );
-      if ( tie.hasNans() )
+      while (true)
       {
-         tie = chainTiePoint;
-      }
-      else
-      {
-         if ( chainTiePoint.y > tie.y )
+         // Loop scope to permit breaking out when null but noncritical condition hit:
+         if (!chainIter->valid())
+            break;
+         ossimRefPtr<ossimImageHandler> ih = (*chainIter)->getImageHandler();
+         if ( !ih.valid() )
+            break;
+         ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
+         if ( !geom.valid() )
+            break;
+
+         // The view is not set yet in the chain so we get the tie point from the
+         // image handler geometry not from the chain which will come from the
+         // ossimImageRenderer.
+         geom->getTiePoint( chainTiePoint, true );
+         if ( chainTiePoint.hasNans() )
          {
-            tie.y = chainTiePoint.y;
+            ostringstream errMsg;
+            errMsg << "ossimChipProcUtil ["<<__LINE__<<"] tie point has nans!"<<ends;
+            throw ossimException(errMsg.str());
          }
-         if ( chainTiePoint.x < tie.x )
+
+         if ( tie.hasNans() )
          {
-            tie.x = chainTiePoint.x;
+            tie = chainTiePoint;
          }
+         else
+         {
+            if ( chainTiePoint.y > tie.y )
+               tie.y = chainTiePoint.y;
+            if ( chainTiePoint.x < tie.x )
+               tie.x = chainTiePoint.x;
+         }
+         break; // prevent infinite loop
       }
-      ++chainIdx;
-   }
-}
-
-void ossimChipProcUtil::getTiePoint(ossimSingleImageChain* chain, ossimDpt& tie)
-{
-   if (!chain)
-   {
-      ostringstream errMsg;
-      errMsg << "ossimChipProcUtil ["<<__LINE__<<"] Null chain passed to method!"<<ends;
-      throw ossimException(errMsg.str());
-   }
-
-   //---
-   // The view is not set yet in the chain so we get the tie point from the
-   // image handler geometry not from the chain which will come from the
-   // ossimImageRenderer.
-   //---
-   ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
-   if ( !ih.valid() )
-   {
-      ostringstream errMsg;
-      errMsg << "ossimChipProcUtil ["<<__LINE__<<"] No handler for chain!"<<ends;
-      throw ossimException(errMsg.str());
-   }
-
-   ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
-   if ( geom.valid() )
-   {
-      geom->getTiePoint( tie, true );
-   }
-
-   if ( tie.hasNans() )
-   {
-      ostringstream errMsg;
-      errMsg << "ossimChipProcUtil ["<<__LINE__<<"] tie point has nans!"<<ends;
-      throw ossimException(errMsg.str());
+      ++chainIter;
    }
 }
 
@@ -1010,52 +953,71 @@ void ossimChipProcUtil::getMetersPerPixel(ossimDpt& gsd)
 {
    gsd.makeNan();
    ossimDpt chainGsd;
+   ossimRefPtr<ossimImageGeometry> geom = 0;
 
    // Loop through dem layers.
-   std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx = m_imgLayers.begin();
-   while ( chainIdx != m_imgLayers.end() )
+   std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIter = m_imgLayers.begin();
+   while ( chainIter != m_imgLayers.end() )
    {
-      getMetersPerPixel( (*chainIdx).get(), chainGsd);
-      if ( gsd.hasNans() || ( chainGsd.x < gsd.x ) ) 
+      if (chainIter->valid())
       {
-         gsd = chainGsd;
+         geom = (*chainIter)->getImageGeometry();
+         if ( !geom.valid() )
+         {
+            ostringstream errMsg;
+            errMsg << "ossimChipProcUtil ["<<__LINE__<<"] Null geometry for chain!"<<ends;
+            throw ossimException(errMsg.str());
+         }
+
+         geom->getMetersPerPixel( chainGsd );
+         if ( chainGsd.hasNans() )
+         {
+            ostringstream errMsg;
+            errMsg << "ossimChipProcUtil ["<<__LINE__<<"] GSD has nans!"<<ends;
+            throw ossimException(errMsg.str());
+         }
+
+         if ( gsd.hasNans() || ( chainGsd.x < gsd.x ) )
+            gsd = chainGsd;
       }
-      ++chainIdx;
+      ++chainIter;
    }
 }
 
-void ossimChipProcUtil::getMetersPerPixel(ossimSingleImageChain* chain, ossimDpt& gsd)
+void ossimChipProcUtil::getProjectionOrigin(ossimGpt& gpt)
 {
-   static const char MODULE[] = "ossimChipProcUtil::getMetersPerPixel()";
-   if (!chain)
+   gpt.makeNan();
+
+   ossimString lookup = m_kwl.find(ossimKeywordNames::ORIGIN_LATITUDE_KW);
+   if ( lookup.size() )
    {
-      ostringstream errMsg;
-      errMsg << "ossimChipProcUtil ["<<__LINE__<<"] Null chain passed to method!"<<ends;
-      throw ossimException(errMsg.str());
+      gpt.lat = lookup.toFloat64();
+      if ( (gpt.lat < -90) || (gpt.lat > 90.0) )
+      {
+         std::string errMsg = "origin latitude range error! Valid range: -90 to 90";
+         throw ossimException(errMsg);
+      }
    }
 
-   ossimRefPtr<ossimImageGeometry> geom = chain->getImageGeometry();
-   if ( !geom.valid() )
+   lookup = m_kwl.find(ossimKeywordNames::CENTRAL_MERIDIAN_KW);
+   if ( lookup.size() )
    {
-      ostringstream errMsg;
-      errMsg << "ossimChipProcUtil ["<<__LINE__<<"] Null geometry for chain!"<<ends;
-      throw ossimException(errMsg.str());
+      gpt.lon = lookup.toFloat64();
+      if ( (gpt.lon < -180.0) || (gpt.lon > 180.0) )
+      {
+         std::string errMsg = "central meridian range error! Valid range: -180 to 180";
+         throw ossimException(errMsg);
+      }
    }
 
-   geom->getMetersPerPixel( gsd );
-   if ( gsd.hasNans() )
-   {
-      ostringstream errMsg;
-      errMsg << "ossimChipProcUtil ["<<__LINE__<<"] GSD has nans!"<<ends;
-      throw ossimException(errMsg.str());
-   }
-
+   gpt.hgt = 0.0;
 }
 
 void ossimChipProcUtil::getSceneCenter(ossimGpt& gpt)
 {
    std::vector<ossimGpt> centerGptArray;
    ossimGpt centerGpt;
+   ostringstream errMsg;
 
    if (m_imgLayers.empty())
    {
@@ -1066,9 +1028,25 @@ void ossimChipProcUtil::getSceneCenter(ossimGpt& gpt)
    std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIter= m_imgLayers.begin();
    while ( chainIter != m_imgLayers.end() )
    {
-      getSceneCenter( (*chainIter).get(), centerGpt);
-      if ( !centerGpt.hasNans() )
+      centerGpt.makeNan();
+      if (chainIter->valid())
       {
+         ossimRefPtr<ossimImageGeometry> geom = (*chainIter)->getImageGeometry();
+         if ( geom.valid() )
+         {
+            ossimIrect boundingRect = (*chainIter)->getBoundingRect();
+            ossimDpt midPoint = boundingRect.midPoint();
+            geom->localToWorld(midPoint, centerGpt);
+            centerGpt.hgt = 0.0;
+
+         }
+         if ( centerGpt.hasNans() )
+         {
+            errMsg <<"ossimChipProcUtil ["<<__LINE__<<"] geom->localToWorld returned nan for <"
+                  << (*chainIter)->getFilename()<<">."<<ends;
+            throw ossimException(errMsg.str());
+         }
+
          centerGptArray.push_back( centerGpt );
       }
       ++chainIter;
@@ -1103,41 +1081,6 @@ void ossimChipProcUtil::getSceneCenter(ossimGpt& gpt)
             << "\nlongitude = "
             << ossimString::toString(lon).string();
       throw ossimException( errMsg.str() );
-   }
-}
-
-void ossimChipProcUtil::getSceneCenter(ossimSingleImageChain* chain, ossimGpt& gpt)
-{
-   ostringstream errMsg;
-
-   if (chain)
-   {
-      ossimRefPtr<ossimImageGeometry> geom = chain->getImageGeometry();
-      if ( geom.valid() )
-      {
-         ossimIrect boundingRect = chain->getBoundingRect();
-         ossimDpt midPoint = boundingRect.midPoint();
-         geom->localToWorld(midPoint, gpt);
-         gpt.hgt = 0.0;
-
-         if ( gpt.hasNans() )
-         {
-            errMsg <<"ossimChipProcUtil ["<<__LINE__<<"] geom->localToWorld returned nan for <"
-                  << chain->getFilename()<<">."<<ends;
-            throw ossimException(errMsg.str());
-         }
-      }
-      else
-      {
-         errMsg <<"ossimChipProcUtil ["<<__LINE__<<"] No geometry for <"<< chain->getFilename()
-               <<">."<<ends;
-         throw ossimException(errMsg.str());
-      }
-   }
-   else
-   {
-      errMsg<<"ossimChipProcUtil ["<<__LINE__<<"] Null chain passed to method!";
-      throw ossimException(errMsg.str());
    }
 }
 
@@ -1179,32 +1122,22 @@ ossimRefPtr<ossimMapProjection> ossimChipProcUtil::getNewGeoScaledProjection()
 {
    // Make projection:
    ossimRefPtr<ossimMapProjection> result = new ossimEquDistCylProjection();
+
+   // Determine scaling latitude:
    ossimGpt origin;
-   getSceneCenter( origin );
-   if ( !origin.hasNans() )
+   getProjectionOrigin(origin);
+   if (ossim::isnan(origin.lat))
+      getSceneCenter( origin );
+
+   // Set reference lat in projection:
+   if ( !ossim::isnan(origin.lat) )
+   {
+      // Pass a valid lon just in case:
+      if (ossim::isnan(origin.lon))
+         origin.lon = 0.0;
       result->setOrigin(origin);
-
-   return result;
-}
-
-ossimRefPtr<ossimMapProjection> ossimChipProcUtil::getNewProjectionFromSrsCode(
-      const std::string& code)
-{
-   ossimRefPtr<ossimMapProjection> result = 0;
-
-   if (code == "4326")  // Avoid factory call for this.
-   {
-      result = new ossimEquDistCylProjection();
    }
-   else
-   {
-      ossimRefPtr<ossimProjection> proj = ossimProjectionFactoryRegistry::instance()->
-            createProjection(code);
-      if ( proj.valid() )
-      {
-         result = PTR_CAST( ossimMapProjection, proj.get() );
-      }
-   }
+
    return result;
 }
 
@@ -1247,9 +1180,18 @@ ossimRefPtr<ossimMapProjection> ossimChipProcUtil::getNewUtmProjection()
    {
       // First check for user set "central_meridian" and "origin_latitude":
       ossimGpt origin;
-      getSceneCenter( origin );
+      getProjectionOrigin(origin);
+      if (ossim::isnan(origin.lon))
+         getSceneCenter( origin );
 
-      if ( origin.hasNans() )
+      // Set reference lon in projection:
+      if ( !ossim::isnan(origin.lon) )
+      {
+         // Pass a valid lat just in case:
+         if (ossim::isnan(origin.lat))
+            origin.lat = 0.0;
+      }
+      else
       {
          ostringstream errMsg;
          errMsg << "ossimChipProcUtil ["<<__LINE__<<"] Origin has nans!"<<ends;
@@ -1608,15 +1550,23 @@ void ossimChipProcUtil::setReaderProps( ossimImageHandler* ih ) const
    }
 }
 
-void ossimChipProcUtil::getBandList( std::vector<ossim_uint32>& bandList ) const
+void ossimChipProcUtil::getBandList(ossim_uint32 image_idx,
+                                    std::vector<ossim_uint32>& bandList ) const
 {
    bandList.clear();
-   ossimString os;
-   os.string() = m_kwl.findKey( std::string( ossimKeywordNames::BANDS_KW ) );
+   ostringstream key;
+   key <<  IMAGE_SOURCE_KW << image_idx << "." << ossimKeywordNames::BANDS_KW;
+   ossimString os = m_kwl.findKey(key.str());
+   if (os.empty())
+   {
+      // Look for possible global bands selection:
+      os = m_kwl.find(ossimKeywordNames::BANDS_KW);
+   }
+
    if ( os.size() )
    {
       std::vector<ossimString> band_list(0);
-      os.split( band_list, ossimString(","), false );
+      os.split( band_list, ossimString(", "), false );
       if ( band_list.size() )
       {
          std::vector<ossimString>::const_iterator i = band_list.begin();
@@ -1631,7 +1581,6 @@ void ossimChipProcUtil::getBandList( std::vector<ossim_uint32>& bandList ) const
          }
       }
    }
-
 } // End: ossimChipProcUtil::getBandList
 
 ossimRefPtr<ossimImageSource>
@@ -1685,14 +1634,21 @@ bool ossimChipProcUtil::scaleToEightBit() const
    return ( getOutputScalarType() == OSSIM_UINT8 );
 }
 
-ossim_uint32 ossimChipProcUtil::getEntryNumber() const
+ossim_uint32 ossimChipProcUtil::getEntryNumber(ossim_uint32 image_idx) const
 {
    ossim_uint32 result = 0;
-   std::string value = m_kwl.findKey( std::string( ossimKeywordNames::ENTRY_KW ) );
-   if ( value.size() )
+   ostringstream key;
+   key <<  IMAGE_SOURCE_KW << image_idx << "." << ossimKeywordNames::ENTRY_KW;
+   ossimString os = m_kwl.findKey(key.str());
+   if (os.empty())
    {
-      result = ossimString(value).toUInt32();
+      // Look for possible global bands selection:
+      os = m_kwl.find(ossimKeywordNames::ENTRY_KW);
    }
+
+   if ( os.size() )
+      result = os.toUInt32();
+
    return result;
 }
 
@@ -1706,7 +1662,6 @@ ossim_int32 ossimChipProcUtil::getZone() const
    }
    return result;
 }
-
 
 std::string ossimChipProcUtil::getHemisphere() const
 {
@@ -1802,35 +1757,25 @@ void ossimChipProcUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--aoi-map-bbox", "<min-x> <min-y> <max-x> <max-y>\nSpecify a space-separated list for the upper-left and lower-right corners of the scene rect in decimal degrees.");
    au->addCommandLineOption("--aoi-map-center", "<x> <y>\nCenter of scene/AOI in map coordinates.");
    au->addCommandLineOption("--aoi-map-size", "<dx> <dy>,\nSize of AOI in map coordinates.");
-   au->addCommandLineOption( "--brightness", "<brightness>\nApply brightness to input image(s). Valid range: -1.0 to 1.0" );
    au->addCommandLineOption( "-b or --bands <n,n...>", "Use the specified bands in given order: e.g. \"3,2,1\" will select bands 3, 2 and 1 of the input image.\nNote: it is 1 based" );
    au->addCommandLineOption("--central-meridian","<lon>\nNote if set this will be used for the central meridian of the projection.  This can be used to lock the utm zone.");
    au->addCommandLineOption("--color-table | --lut","<color-table.kwl>\nKeyword list containing color table for color-relief option.");
-   au->addCommandLineOption("--combiner-type", "<type>\nossimBlendMosaic, ossimFeatherMosaic, ossimImageMosaic.  Default: ossimImageMosaic.  Example --combiner-type ossimImageMosaic\n");
-   au->addCommandLineOption( "--contrast", "<constrast>\nApply constrast to input image(s). Valid range: -1.0 to 1.0" );
    au->addCommandLineOption("--deg-per-pixel","<dpp_xy> | <dpp_x> <dpp_y>\nSpecifies an override for degrees per pixel. Takes either a single value applied equally to x and y directions, or two values applied correspondingly to x then y. This option takes precedence over the \"--meters\" option.");
    au->addCommandLineOption("--dem", "<file1>[,<file2>...]\n Input DEM file(s) (comma-separated) to process.");
    au->addCommandLineOption("-e or --entry", "<entry> For multi image handlers which entry do you wish to extract. For list of entries use: \"ossim-info -i <your_image>\" ");
    au->addCommandLineOption("--gsd", "<meters>\nSpecifies an override for the meters per pixel");
    au->addCommandLineOption("-h or --help", "Display this help and exit.");
    au->addCommandLineOption("--hemisphere", "<hemisphere>\nSpecify a projection hemisphere if supported. E.g. UTM projection. This will lock the hemisphere even if input scene center is the other hemisphere. Valid values for UTM are \"N\" and \"S\"");
-   au->addCommandLineOption("--histogram-op", "<operation>\nHistogram operation to perform. Valid operations are \"auto-minmax\", \"std-stretch-1\", \"std-stretch-2\" and \"std-stretch-3\".");
    au->addCommandLineOption("--image", "<file1>[, <file2>...] Input image file(s) (comma-separated) to process.");
-   au->addCommandLineOption("-n or --north-up", "Rotates image North up. \"chip\" operation only.");
    au->addCommandLineOption("--origin-latitude","<latidude_in_decimal_degrees>\nNote if set this will be used for the origin latitude of the projection.  Setting this to something other than 0.0 with a geographic projection creates a scaled geographic projection.");
    au->addCommandLineOption("--output-radiometry", "<R>\nSpecifies the desired product's pixel radiometry type. Possible values for <R> are: U8, U11, U16, S16, F32. Note this overrides the deprecated option \"scale-to-8-bit\".");
-   au->addCommandLineOption("--pad-thumbnail", "<boolean>\nIf true, output thumbnail dimensions will be padded in width or height to make square; else, it will have the aspect ratio of input,  Default=false");
    au->addCommandLineOption("--projection", "<output_projection> Valid projections: geo, geo-scaled, input or utm\ngeo = Equidistant Cylindrical, origin latitude = 0.0\ngeo-scaled = Equidistant Cylindrical, origin latitude = image center\ninput Use first images projection. Must be a map projecion.\nutm = Universal Tranverse Mercator\nIf input and multiple sources the projection of the first image will be used.\nIf utm the zone will be set from the scene center of first image.\nNOTE: --srs takes precedence over this option.");
-   au->addCommandLineOption("--resample-filter","<type>\nSpecify what resampler filter to use, e.g. nearest neighbor, bilinear, cubic, sinc.\nSee ossim-info --resampler-filters");
-   au->addCommandLineOption("-r or --rotate", "<degrees>\nRotate image by degrees. \"chip\" operation only.");
    au->addCommandLineOption("--reader-prop", "<string>Adds a property to send to the reader. format is name=value");
    au->addCommandLineOption("--scale-to-8-bit", "Scales the output to unsigned eight bits per band. This option has been deprecated by the newer \"--output-radiometry\" option.");
    au->addCommandLineOption("--snap-tie-to-origin", "Snaps tie point to projection origin so that (tie-origin)/gsd come out on an even integer boundary.");
    au->addCommandLineOption("--srs","<src_code>\nSpecify a spatial reference system(srs) code for the output projection. Example: --srs EPSG:4326");
    au->addCommandLineOption("-t or --thumbnail", "<max_dimension>\nSpecify a thumbnail resolution.\nScale will be adjusted so the maximum dimension = argument given.");
-   au->addCommandLineOption("--three-band-out", "Force three band output even if input is not. Attempts to map bands to RGB if possible.");
    au->addCommandLineOption("--tile-size", "<size_in_pixels>\nSets the output tile size if supported by writer.  Notes: This sets both dimensions. Must be a multiple of 16, e.g. 1024.");
-   au->addCommandLineOption("-u or --up-is-up", "Rotates image to up is up. \"chip\" operation only.");
    au->addCommandLineOption("-w or --writer","<writer>\nSpecifies the output writer.  Default uses output file extension to determine writer. For valid output writer types use: \"ossim-info --writers\"\n");
    au->addCommandLineOption("--writer-prop", "<writer-property>\nPasses a name=value pair to the writer for setting it's property. Any number of these can appear on the line.");
    au->addCommandLineOption("--zone", "<zone>\nSpecify a projection zone if supported.  E.g. UTM projection. This will lock the zone even if input scene center is in another zone. Valid values for UTM are \"1\" to \"60\"");

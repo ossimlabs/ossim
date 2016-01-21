@@ -82,37 +82,44 @@ void ossimSlopeUtil::initialize(const ossimKeywordlist& kwl)
 
 void ossimSlopeUtil::initProcessingChain()
 {
+   ostringstream key;
+
    // Reinitialization needs to skip this method if called recursively:
    if (m_recursiveCall)
       return;
 
-   // Need to establish list of input DEM cells given the bounding rect:
-   // Establish ground-space AOI rectangle:
-   // Query elevation manager for cells providing needed coverage:
-   std::vector<std::string> cells;
-    ossimElevManager::instance()->getCellsForBounds(m_aoiGroundRect, cells);
-
-   // Insert the list of DEM cells into the KWL as input images:
-   ossimConnectableObject::ConnectableObjectList elevChains;
-   std::vector<std::string>::iterator fname_iter = cells.begin();
-   for(ossim_uint32 idx=0; idx<cells.size(); ++idx)
+   // Need to establish list of DEM cells given either the bounding rect or explicit DEM cells:
+   if (m_demSources.empty())
    {
-      // Add the DEM as an image source to the KWL:
-      ossimString key = IMAGE_SOURCE_KW;
-      key += ossimString::toString(idx);
-      key += ".";
-      key += ossimKeywordNames::FILE_KW;
-      m_kwl.addPair(key.string(), cells[idx] );
+      // Query elevation manager for cells providing needed coverage:
+      std::vector<std::string> cells;
+      ossimElevManager::instance()->getCellsForBounds(m_aoiGroundRect, cells);
+
+      // Insert the list of DEM cells into the KWL as input images:
+      ossimConnectableObject::ConnectableObjectList elevChains;
+      for(ossim_uint32 idx=0; idx<cells.size(); ++idx)
+      {
+         // Add the DEM as an image source to the KWL:
+         ostringstream key;
+         key<<IMAGE_SOURCE_KW<<ossimString::toString(idx)<<"."<<ossimKeywordNames::FILE_KW;
+         m_kwl.addPair(key.str(), cells[idx] );
+      }
+   }
+   else
+   {
+      // DEMs explicitly listed in keywordlist, use these:
+      for(ossim_uint32 idx=0; idx<m_demSources.size(); ++idx)
+      {
+         // Add the DEM as an image source to the KWL:
+         ostringstream key;
+         key<<IMAGE_SOURCE_KW<<ossimString::toString(idx)<<"."<<ossimKeywordNames::FILE_KW;
+         m_kwl.addPair(key.str(), m_demSources[idx].string() );
+      }
    }
 
    // Remove any occurence of elev_source in the KWL:
    ossimString regex = ELEV_SOURCE_KW + ".*";
-   cout<<"BEFORE:"<<endl;
-   m_kwl.print(cout);
-   cout<<"\nREMOVING <"<<regex<<">\n"<<endl;
    m_kwl.removeKeysThatMatch(regex);
-   cout<<"AFTER:"<<endl;
-   m_kwl.print(cout);
 
    // Reinitialize the object with the DEMs listed as input images and create a mosaic of them:
    m_recursiveCall = true;
