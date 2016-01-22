@@ -64,7 +64,7 @@
  *                        larger than max to max
  *
  * band(I, band_index)    returns a single band image object
- *                        by selecting band num from input image x.  Note
+ *                        by selecting band num from input image I.  Note
  *                        the first argument must be an image
  *                        and the second argument must be a number
  *
