@@ -133,6 +133,7 @@ public:
    //! is available in the ground_pt argument. This method depends on the existence of elevation
    //! information. If no DEM is available, the results will be incorrect or inaccurate.
    bool localToWorld(const ossimDpt& local_pt, ossimGpt& world_pt) const;
+   bool localToWorld(const ossimDrect& local_rect, ossimGrect& world_rect) const;
 
    //! Exposes the 3D projection from image to world coordinates given a constant height above 
    //! ellipsoid. The caller should verify that a valid projection exists before calling this
@@ -143,6 +144,7 @@ public:
    //! that a valid projection exists before calling this method. Returns TRUE if a valid image 
    //! point is available in the local_pt argument.
    bool worldToLocal(const ossimGpt& world_pt, ossimDpt& local_pt) const;
+   bool worldToLocal(const ossimGrect& world_rect, ossimDrect& local_rect) const;
 
    //! Sets the transform to be used for local-to-full-image coordinate transformation
    void setTransform(ossim2dTo2dTransform* transform);

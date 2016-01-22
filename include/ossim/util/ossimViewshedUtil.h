@@ -68,42 +68,36 @@ protected:
    class Radial
    {
    public:
-      Radial() : azimuth (0), elevation (-99999999.0) {}
-      Radial (const double& az) : azimuth (az), elevation (-99999999.0) {}
+      Radial() : azimuth (0), elevation (-99999999.0), insideAoi(false) {}
 
       // Angles are stored as arctangents: azimuth = dy/dx,  elevation = dz/dx
       double azimuth;
       double elevation;
+      bool insideAoi;
    };
 
    virtual void initProcessingChain();
-   bool writeFile();
-   void dumpProductSummary() const;
    void paintReticle();
    void initRadials();
    bool writeHorizonProfile();
+   void computeRadius();
+   void optimizeFOV();
 
    ossimGpt  m_observerGpt;
-   ossimFilename m_demFile;
+   ossimDpt  m_observerVpt;
    double m_obsHgtAbvTer; // meters above the terrain
    double m_visRadius; // meters
    Radial** m_radials;
-   ossimRefPtr<ossimImageGeometry> m_geometry;
    bool m_initialized;
-   ossimIrect m_viewRect;
    ossim_uint32 m_halfWindow; // visRadius adjusted by GSD (in pixels)
    ossimRefPtr<ossimImageData> m_outBuffer;
-   double m_gsd;
-   ossimFilename m_filename;
    ossim_uint8 m_visibleValue;
    ossim_uint8 m_hiddenValue;
-   ossim_uint8 m_observerValue;
+   ossim_uint8 m_overlayValue;
    ossim_int32 m_reticleSize;
-   ossimFilename m_lutFile;
    bool m_simulation;
    ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;
    ossim_uint32 m_numThreads;
-   bool m_outputSummary;
    double m_startFov;
    double m_stopFov;
    bool m_threadBySector;

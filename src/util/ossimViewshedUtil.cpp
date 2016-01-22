@@ -1,9 +1,9 @@
-//**************************************************************************************************
+//*****************************************************************************
 //
 //     OSSIM Open Source Geospatial Data Processing Library
 //     See top level LICENSE.txt file for license information
 //
-//**************************************************************************************************
+//*****************************************************************************
 
 #include <ossim/util/ossimViewshedUtil.h>
 #include <ossim/base/ossimApplicationUsage.h>
@@ -27,10 +27,18 @@
 #include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/imaging/ossimIndexToRgbLutFilter.h>
 
+using namespace std;
+
 const char* ossimViewshedUtil::DESCRIPTION =
       "Computes bitmap image representing the viewshed from specified location using only "
       "DEM information.";
-
+const string FOV_KW             = "fov";
+const string HEIGHT_OF_EYE_KW   = "height_of_eye";
+const string HORIZON_FILE_KW    = "horizon_file";
+const string OBSERVER_KW        = "observer";
+const string RADIUS_KW          = "radius";
+const string RETICLE_KW         = "reticle";
+const string VIEWSHED_CODING_KW = "viewshed_coding";
 
 ossimViewshedUtil::ossimViewshedUtil()
 :   m_obsHgtAbvTer (1.5),
@@ -39,14 +47,12 @@ ossimViewshedUtil::ossimViewshedUtil()
     m_initialized (false),
     m_halfWindow (0),
     m_outBuffer (NULL),
-    m_gsd (0),
     m_visibleValue (0),
     m_hiddenValue (128),
-    m_observerValue (255),
+    m_overlayValue (255),
     m_reticleSize(2),
     m_simulation (false),
     m_numThreads(0),
-    m_outputSummary(false),
     m_startFov(0),
     m_stopFov(0),
     m_threadBySector(false),
@@ -73,50 +79,37 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
 
    // Set the command line options:
    au->addCommandLineOption(
-         "--fov <start> <end>",
-         "Optional arguments specifying the field-of"
+         "--fov <start> <end>", "Optional arguments specifying the field-of"
          "-view boundary azimuths (in degrees). By default, a 360 deg FOV is"
          " computed. The arc is taken clockwise from start to end, so for a"
          " FOV of 225 deg from W, through N to SE, start=270 and end=135");
    au->addCommandLineOption(
-         "--hgt-of-eye <meters>",
-         "Specifies the observers height-of-eye above the "
+         "--height-of-eye <meters>", "Specifies the observers height-of-eye above the "
          "terrain in meters. Defaults to 1.5 m.");
    au->addCommandLineOption(
-         "--horizon <filename>",
-         "Experimental. Outputs the max elevation angles "
+         "--horizon <filename>", "Experimental. Outputs the max elevation angles "
          "for all azimuths to <filename>, for horizon profiling.");
    au->addCommandLineOption(
-         "--radius <meters>",
-         "Specifies max visibility in meters. Required "
+         "--radius <meters>", "Specifies max visibility in meters. Required "
          "unless --size is specified. This option constrains output to a circle, "
          "similar to a radar display");
    au->addCommandLineOption(
-         "--reticle <int>",
-         "Specifies the size of the reticle at the observer"
+         "--reticle <int>", "Specifies the size of the reticle at the observer"
          "location in pixels from the center (i.e., the radius of the reticle). "
          "Defaults to 2. A value of 0 hides the reticle. See --values option for "
          "setting reticle color.");
    au->addCommandLineOption(
-         "--simulation",
+         "--simulation", "For engineering/debug purposes ");
+   au->addCommandLineOption(
+         "--tbs", "\"Thread By Sector\". For engineering/debug purposes ");
+   au->addCommandLineOption(
+         "--threads <n>", "Number of threads. Defaults to use all available cores. "
          "For engineering/debug purposes ");
    au->addCommandLineOption(
-         "--size <int>",
-         "Instead of a visibility radius, directly specifies "
-         "the dimensions of the output product in pixels (output is "
-         "square). Required unless --radius is specified.");
-   au->addCommandLineOption(
-         "--tbs",
-         "\"Thread By Sector\". For engineering/debug purposes ");
-   au->addCommandLineOption(
-         "--threads <n>",
-         "Number of threads. Defaults to use all available cores. "
-         "For engineering/debug purposes ");
-   au->addCommandLineOption(
-         "--values <int int int>",
-         "Specifies the pixel values (0-255) for the visible,"
-         " hidden and reticle pixels, respectively. Defaults to visible=null (0), "
-         "hidden=128, and observer position reticle is highlighted with 255.");
+         "--viewshed-coding <int int int>", "Specifies the pixel values (0-255) for the visible,"
+         " hidden and overlay pixels, respectively. Defaults to visible=null (0), "
+         "hidden=128, and overlay (observer position, reticle, and circumference) is "
+         "highlighted with 255.");
 
    // Base class has its own:
    ossimChipProcUtil::setUsage(ap);
@@ -124,7 +117,6 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
    ostringstream description;
    description << DESCRIPTION << "\n\nExamples:\n\n"
          "    "<<appName<<" --radius 50  28.0 -80.5 output-hlz.tif\n"
-         "    "<<appName<<" --size 1024  28.0 -80.5 output-hlz.tif\n\n"
          "An alternate command line provides switch for observer lat and lon:\n\n"
          "    "<<appName<<" --rlz 25 --observer 28.0 -80.5  output-hlz.tif \n";
    au->setDescription(description.str());
@@ -137,97 +129,58 @@ void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    // Base class first:
    ossimChipProcUtil::initialize(ap);
 
-   std::string ts1;
+   string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
-   std::string ts2;
+   string ts2;
    ossimArgumentParser::ossimParameter sp2(ts2);
-   std::string ts3;
+   string ts3;
    ossimArgumentParser::ossimParameter sp3(ts3);
-
-
-   if (ap.read("--dem", sp1) || ap.read("--dem-file", sp1))
-      m_demFile = ts1;
 
    if ( ap.read("--fov", sp1, sp2) )
    {
-      m_startFov = ossimString(ts1).toDouble();
-      m_stopFov = ossimString(ts2).toDouble();
-      if (m_startFov < 0)
-         m_startFov += 360.0;
+      double startFov = ossimString(ts1).toDouble();
+      if (startFov < 0)
+         startFov += 360.0;
+      ostringstream value;
+      value<<startFov<<" "<<ts2;
+      m_kwl.addPair( FOV_KW, value.str() );
    }
 
-   if ( ap.read("--gsd", sp1) )
-      m_gsd = ossimString(ts1).toDouble();
-
    if ( ap.read("--hgt-of-eye", sp1) || ap.read("--height-of-eye", sp1) )
-      m_obsHgtAbvTer = ossimString(ts1).toDouble();
+      m_kwl.addPair( HEIGHT_OF_EYE_KW, ts1 );
 
    if ( ap.read("--horizon", sp1) || ap.read("--horizon-file", sp1))
-      m_horizonFile = ossimString(ts1);
-
-   if ( ap.read("--lut", sp1) || ap.read("--lut-file", sp1))
-      m_lutFile = ts1;
+      m_kwl.addPair( HORIZON_FILE_KW, ts1 );
 
    if ( ap.read("--observer", sp1, sp2) )
    {
-      m_observerGpt.lat = ossimString(ts1).toDouble();
-      m_observerGpt.lon = ossimString(ts2).toDouble();
-      m_observerGpt.hgt = 0.0;
+      ostringstream value;
+      value<<ts1<<" "<<ts2;
+      m_kwl.addPair( OBSERVER_KW, value.str() );
    }
 
    if ( ap.read("--radius", sp1) )
-      m_visRadius = ossimString(ts1).toDouble();
+      m_kwl.addPair( RADIUS_KW, ts1 );
 
    if ( ap.read("--reticle", sp1) )
-      m_reticleSize = ossimString(ts1).toInt32();
+      m_kwl.addPair( RETICLE_KW, ts1 );
 
+   if ( ap.read("--values", sp1, sp2, sp3) || ap.read("--viewshed-coding", sp1, sp2, sp3))
+   {
+      ostringstream value;
+      value<<ts1<<" "<<ts2<<" "<<ts3;
+      m_kwl.addPair( VIEWSHED_CODING_KW, value.str() );
+   }
+
+   // The remaining options are available only via command line (i.e., no KWL entries defined)
    if ( ap.read("--tbs") )
       m_threadBySector = true;
 
    if ( ap.read("--simulation") )
       m_simulation = true;
 
-   if ( ap.read("--summary") )
-      m_outputSummary = true;
-
-   if ( ap.read("--size", sp1) )
-      m_halfWindow = ossimString(ts1).toUInt32() / 2;
-
    if ( ap.read("--threads", sp1) )
       m_numThreads = ossimString(ts1).toUInt32();
-
-   if ( ap.read("--values", sp1, sp2, sp3) )
-   {
-      m_visibleValue = ossimString(ts1).toUInt8();
-      m_hiddenValue = ossimString(ts2).toUInt8();
-      m_observerValue = ossimString(ts3).toUInt8();
-   }
-
-   // There should only be the required command line args left:
-   if ( (m_observerGpt.hasNans() && (ap.argc() != 4)) ||
-        (!m_observerGpt.hasNans() && (ap.argc() != 2)) )
-   {
-      setUsage(ap);
-      return;
-   }
-
-   // Verify minimum required args were specified:
-   if (m_demFile.empty() && (m_visRadius == 0) && (m_halfWindow == 0))
-   {
-      xmsg<<"Command line is underspecified."<<ends;
-      throw ossimException(xmsg.str());
-   }
-
-   // Parse the required command line params:
-   int ap_idx = 1;
-   if (m_observerGpt.hasNans())
-   {
-      m_observerGpt.lat =  ossimString(ap[1]).toDouble();
-      m_observerGpt.lon =  ossimString(ap[2]).toDouble();
-      m_observerGpt.hgt =  0;
-      ap_idx = 3;
-   }
-   m_filename = ap[ap_idx];
 
    processRemainingArgs(ap);
 }
@@ -238,12 +191,7 @@ void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
 
    ossimString value;
 
-   m_demFile = kwl.find("dem_file");
-   if (m_demFile.empty())
-      m_demFile = kwl.find(ossimKeywordNames::ELEVATION_CELL_KW);
-
-
-   value = kwl.find("fov");
+   value = kwl.findKey(FOV_KW);
    if (!value.empty())
    {
       vector <ossimString> coordstr;
@@ -257,21 +205,13 @@ void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
       }
    }
 
-   value = kwl.find("gsd");
-   if (value.empty())
-      value = kwl.find(ossimKeywordNames::METERS_PER_PIXEL_KW);
-   if (!value.empty())
-      m_gsd = value.toDouble();
-
-   value = kwl.find("height_of_eye");
+   value = kwl.findKey(HEIGHT_OF_EYE_KW);
    if (!value.empty())
       m_obsHgtAbvTer = value.toDouble();
 
-   m_horizonFile = kwl.find("horizon_file");
+   m_horizonFile = kwl.findKey(HORIZON_FILE_KW);
 
-   m_lutFile = kwl.find("lut_file");
-
-   value = kwl.find("observer");
+   value = kwl.findKey(OBSERVER_KW);
    if (!value.empty())
    {
       vector <ossimString> coordstr;
@@ -284,27 +224,15 @@ void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
       }
    }
 
-   value = kwl.find("radius");
+   value = kwl.findKey(RADIUS_KW);
    if (!value.empty())
       m_visRadius = value.toDouble();
 
-   value = kwl.find("reticle");
+   value = kwl.findKey(RETICLE_KW);
    if (!value.empty())
       m_reticleSize = value.toInt32();
 
-   kwl.getBoolKeywordValue(m_threadBySector, "thread_by_sector");
-   kwl.getBoolKeywordValue(m_simulation, "simulation");
-   kwl.getBoolKeywordValue(m_outputSummary, "summary");
-
-   value = kwl.find("size");
-   if (!value.empty())
-      m_halfWindow = value.toInt32();
-
-   value = kwl.find(ossimKeywordNames::THREADS_KW);
-   if (!value.empty())
-      m_numThreads = value.toInt32();
-
-   value = kwl.find("values");
+   value = kwl.findKey(VIEWSHED_CODING_KW);
    if (!value.empty())
    {
       vector <ossimString> coordstr;
@@ -313,22 +241,8 @@ void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
       {
          m_visibleValue = coordstr[0].toUInt8();
          m_hiddenValue = coordstr[1].toUInt8();
-         m_observerValue = coordstr[2].toUInt8();
+         m_overlayValue = coordstr[2].toUInt8();
       }
-   }
-
-   m_filename = kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
-   if (value.empty())
-   {
-      xmsg <<"No output file name provided."<<ends;
-      throw ossimException(xmsg.str());
-   }
-
-  // Verify minimum required args were specified:
-   if (m_demFile.empty() && (m_visRadius == 0) && (m_halfWindow == 0))
-   {
-      xmsg << "Keywordlist is underspecified." << ends;
-      throw ossimException(xmsg.str());
    }
 
    // Base class does most work:
@@ -338,23 +252,18 @@ void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
 void ossimViewshedUtil::clear()
 {
    m_observerGpt.makeNan();
-   m_demFile.clear();
-   m_lutFile.clear();
    m_visRadius = 0;
    m_outBuffer = 0;
-   m_filename.clear();
    m_horizonMap.clear();
    m_jobMtQueue = 0;
-   m_geometry = 0;
+   ossimChipProcUtil::clear();
 }
 
 void ossimViewshedUtil::initProcessingChain()
 {
-   ostringstream xmsg ("ossimViewshedUtil::initializeChain() -- ");
+   ostringstream xmsg ("ossimViewshedUtil::initProcessingChain() -- ");
 
-   // TODO: Need to implement throws
    // TODO: Accept srcLayers as imagery to blend with viewshed
-   // TODO: Define additional --dem input files? NO -- ALWAYS DATA BASE
 
    if (m_observerGpt.hasNans())
    {
@@ -363,143 +272,176 @@ void ossimViewshedUtil::initProcessingChain()
    }
 
    ossimElevManager* elevMgr = ossimElevManager::instance();
-
-   // If DEMs provided as files on command line, reset the elev manager to use only these:
-   if (!m_demFile.empty())
-   {
-      elevMgr->clear();
-      ossimRefPtr<ossimImageElevationDatabase> ied = new ossimImageElevationDatabase;
-      if(!ied->open(m_demFile))
-      {
-         xmsg << "Cannot open DEM file at <"<<m_demFile<<">\n" << ends;
-         throw ossimException(xmsg.str());
-      }
-
-      if (m_simulation)
-         ied->setGeoid(new ossimIdentityGeoid);
-
-      elevMgr->addDatabase(ied.get());
-
-      // Possibly the image size has not been specified, in which case we use the same dimensions
-      // as the input dem:
-      if (((m_halfWindow == 0) && (m_visRadius == 0)) || (m_gsd == 0))
-      {
-
-         ossimRefPtr<ossimImageHandler> dem = ossimImageHandlerRegistry::instance()->open(m_demFile);
-         if (!dem.valid())
-         {
-            xmsg << "Cannot open DEM file at <"<<m_demFile<<">" << ends;
-            throw ossimException(xmsg.str());
-         }
-         ossimRefPtr<ossimImageGeometry> geom = dem->getImageGeometry();
-         if (!geom.valid())
-         {
-            xmsg<<"Could not establish geometry of DEM file at <"<<m_demFile<<">" << ends;
-            throw ossimException(xmsg.str());
-         }
-
-         // Hack workaround for ossimElevManager::getMeanSpacingMeters() returning 0 when DEM file
-         // specified:
-         if (m_gsd == 0)
-         {
-            ossimDpt gsd = geom->getMetersPerPixel();
-            m_gsd = (gsd.x + gsd.y)/2.0;
-         }
-         if ((m_halfWindow == 0) && (m_visRadius == 0))
-         {
-            ossimIpt size = geom->getImageSize();
-            m_halfWindow = (size.x + size.y) / 4;
-         }
-      }
-
-      // When DEM file specified, need to turn off all defaulting to ellipsoid/geoid to make sure
-      // only the DEM file data is processed:
-      elevMgr->setDefaultHeightAboveEllipsoid(ossim::nan());
-      elevMgr->setUseGeoidIfNullFlag(false);
-   }
-
    if (m_simulation)
       elevMgr->setEnableFlag(false);
 
    // Initialize the height of eye component of observer position:
    m_observerGpt.hgt = ossimElevManager::instance()->getHeightAboveEllipsoid(m_observerGpt);
    m_observerGpt.hgt += m_obsHgtAbvTer;
+   m_geom->worldToLocal(m_observerGpt, m_observerVpt);
 
    // Determine if default GSD needs to be computed.
-   if (m_gsd == 0)
+   if (m_gsd.hasNans())
    {
-      // This is incorrectly returning 0 when DEM is provided on command line:
-      m_gsd = ossimElevManager::instance()->getMeanSpacingMeters();
-      if (ossim::isnan(m_gsd))
-         m_gsd = 0;
+      m_gsd.x = m_gsd.y = ossimElevManager::instance()->getMeanSpacingMeters();
+      ossimRefPtr<ossimMapProjection> mapProj =
+            dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
+      if (mapProj.valid()) // already validated but just in case
+         mapProj->setMetersPerPixel(m_gsd);
    }
 
-   // Compute the bounding rect in pixel space given the visibility range and the GSD:
-   if ((m_gsd == 0) || ((m_visRadius == 0) && (m_halfWindow == 0)))
+   // If no radius specified, need to compute R large enough to cover the requested AOI:
+   if (m_visRadius == 0)
+      computeRadius();
+   if (m_halfWindow == 0)
+      m_halfWindow = ossim::round<ossim_int32, double>(m_visRadius/m_gsd.x);
+   ossim_uint32 size = 2*m_halfWindow + 1;
+
+   // If no AOI defined, just use the visibility rectangle:
+   ossimIrect visRect (ossimIpt(m_observerVpt), size, size);
+   if (m_aoiViewRect.hasNans())
    {
-      xmsg<<"GSD, visibility radius or image size have not been set." << ends;
+      m_aoiViewRect = visRect;
+      m_geom->localToWorld(ossimDrect(m_aoiViewRect), m_aoiGroundRect);
+   }
+
+   // Allocate the output image buffer. It covers the intersection of the visibility rect and the
+   // requested AOI:
+   ossimIrect bufViewRect = visRect.clipToRect(m_aoiViewRect);
+   if (bufViewRect.area() == 0)
+   {
+      xmsg<<"The requested AOI rect is outside the visibility range." << ends;
       throw ossimException(xmsg.str());
    }
-   if (m_halfWindow == 0)
-      m_halfWindow = ossim::round<ossim_int32, double>(m_visRadius/m_gsd);
-
-   m_viewRect.set_ulx(-m_halfWindow);
-   m_viewRect.set_uly(-m_halfWindow);
-   m_viewRect.set_lrx(m_halfWindow);
-   m_viewRect.set_lry(m_halfWindow);
-   ossimIpt image_size (m_viewRect.width(), m_viewRect.height());
-
-   // Establish the image geometry's map projection:
-   ossimRefPtr<ossimEquDistCylProjection> mapProj = new ossimEquDistCylProjection();
-   mapProj->setOrigin(m_observerGpt);
-   mapProj->setMetersPerPixel(ossimDpt(m_gsd, m_gsd));
-   ossimDpt degPerPixel (mapProj->getDecimalDegreesPerPixel());
-   mapProj->setElevationLookupFlag(true);
-   ossimGpt ulTiePt (m_observerGpt);
-   ulTiePt.lat += degPerPixel.lat * m_halfWindow;
-   ulTiePt.lon -= degPerPixel.lon * m_halfWindow;
-   mapProj->setUlTiePoints(ulTiePt);
-
-   // Need a transform so that we can use the observer point as the output image origin (0,0):
-   ossimRefPtr<ossim2dTo2dTransform> transform =  new ossim2dTo2dShiftTransform(m_viewRect.lr());
-   m_geometry = new ossimImageGeometry(transform.get(), mapProj.get());
-   m_geometry->setImageSize(image_size);
-
-   // Allocate the output image buffer:
-   m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1,
-                                                           m_viewRect.width(), m_viewRect.height());
+   m_outBuffer = ossimImageDataFactory::instance()->
+         create(0, OSSIM_UINT8, 1, bufViewRect.width(), bufViewRect.height());
    if(!m_outBuffer.valid())
    {
       xmsg<<"Output buffer allocation failed." << ends;
       throw ossimException(xmsg.str());
    }
+   m_outBuffer->setImageRectangle(bufViewRect);
 
-   // Initialize the image with all points hidden:
+   // The processing chain for this class is simply a memory source containing the output buffer:
+   ossimRefPtr<ossimMemoryImageSource> memsource = new ossimMemoryImageSource;
+   memsource->setImage(m_outBuffer);
+   memsource->setImageGeometry(m_geom.get());
+
+   // If input image(s) provided, need to combine them with the product:
+   if (m_imgLayers.empty())
+   {
+      m_procChain->add(memsource.get());
+   }
+   else
+   {
+      ossimRefPtr<ossimImageSource> combiner = combineLayers(m_imgLayers);
+      combiner->connectMyInputTo(memsource.get());
+      m_procChain->add(combiner.get());
+   }
+
+   // Initialize the image with all points NULL:
    m_outBuffer->initialize();
-   m_outBuffer->setImageRectangle(m_viewRect);
-   m_outBuffer->fill(m_visibleValue);
+   m_outBuffer->fill(m_procChain->getNullPixelValue());
 
 #if 0
    //### TODO: REMOVE DEBUG BLOCK
    {
       ossimDpt viewPt;
-      m_geometry->worldToLocal(m_observerGpt, viewPt);
+      m_geom->worldToLocal(m_observerGpt, viewPt);
       cout<<"ossimViewshedUtil::initialize() should get (0,0)... viewPt="<<viewPt<<endl;
       ossimGpt testPt(m_observerGpt);
       testPt.lat -= 100*degPerPixel.y;
       testPt.lon += 100*degPerPixel.x;
-      m_geometry->worldToLocal(testPt, viewPt);
+      m_geom->worldToLocal(testPt, viewPt);
       cout<<"ossimViewshedUtil::initialize() should get ~(100,100)... viewPt="<<viewPt<<endl;
    }
 #endif
 
    // Initialize the radials:
+   optimizeFOV();
    initRadials();
 
-   if (m_outputSummary)
-      dumpProductSummary();
-
    m_initialized = true;
+}
+
+void ossimViewshedUtil::optimizeFOV()
+{
+   // If the observer position lies outside of the requested AOI, we can reduce the search area:
+   if (m_aoiGroundRect.pointWithin(m_observerGpt))
+      return;
+
+   // Determine cardinal region (N, NE, E, ...) of observer relative to AOI:
+   enum CardinalDirections { N=1, S=2, E=4, W=8, NE=5, NW=9, SE=6, SW=10 };
+   int direction = 0;
+   if (m_observerGpt.lat > m_aoiGroundRect.ul().lat)
+      direction = (int) N;
+   else if (m_observerGpt.lat < m_aoiGroundRect.ll().lat)
+      direction = (int) S;
+   if (m_observerGpt.lon < m_aoiGroundRect.ul().lon)
+      direction += (int) W;
+   else if (m_observerGpt.lon > m_aoiGroundRect.ur().lon)
+      direction += (int) E;
+
+   // Calculate start and stop FOV depending on region:
+   switch ((CardinalDirections) direction)
+   {
+   case N:
+      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
+      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
+      break;
+   case NE:
+      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
+      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
+      break;
+   case E:
+      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
+      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
+      break;
+   case SE:
+      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
+      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
+      break;
+   case S:
+      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
+      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
+      break;
+   case SW:
+      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
+      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
+      break;
+   case W:
+      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
+      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
+      break;
+   case NW:
+      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
+      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
+      break;
+   }
+}
+
+void ossimViewshedUtil::computeRadius()
+{
+   ostringstream xmsg ("ossimViewshedUtil::computeRadius() -- ");
+
+   // AOI is required for computing R
+   if (m_aoiViewRect.hasNans())
+   {
+      xmsg<<"AOI undefined. Cannot compute visibility radius." << ends;
+      throw ossimException(xmsg.str());
+   }
+
+   // Compute distance from observer to farthest corner of AOI. This is the radius
+   m_visRadius= m_observerGpt.distanceTo(m_aoiGroundRect.ul());
+   double d = m_observerGpt.distanceTo(m_aoiGroundRect.ur());
+   if (d > m_visRadius)
+      m_visRadius = d;
+   d = m_observerGpt.distanceTo(m_aoiGroundRect.lr());
+   if (d > m_visRadius)
+      m_visRadius = d;
+   d = m_observerGpt.distanceTo(m_aoiGroundRect.ll());
+   if (d > m_visRadius)
+      m_visRadius = d;
 }
 
 void ossimViewshedUtil::initRadials()
@@ -512,7 +454,7 @@ void ossimViewshedUtil::initRadials()
 
    // First determine which sectors are involved given the desired FOV:
    bool* sectorInFov = new bool[8];
-   std::memset(sectorInFov, false, 8);
+   memset(sectorInFov, false, 8);
    bool crossed_north = true;
    if (m_stopFov <= m_startFov) // Crosses 0 azimuth
       crossed_north = false;
@@ -574,6 +516,9 @@ void ossimViewshedUtil::initRadials()
 
 bool ossimViewshedUtil::execute()
 {
+   // The viewshed process necessarily first fills the output buffer with the complete result before
+   // the writer requests a tile. Control is passed later to the base class execute() for writing.
+
    if (!m_initialized)
       return false;
 
@@ -639,16 +584,15 @@ if (m_numThreads > 1)
    cout << "Finished processing radials."<<endl;
    paintReticle();
 
-   cout << "Writing output file..." <<endl;
-   success = writeFile();
-
    if (!m_horizonFile.empty())
    {
       cout << "Writing horizon profile output file..." <<endl;
       success = writeHorizonProfile();
    }
 
-   cout << "Returning..."<<endl;
+   if (success)
+      success = ossimChipProcUtil::execute();
+
    return success;
 }
 
@@ -657,11 +601,11 @@ void ossimViewshedUtil::paintReticle()
    // Highlight the observer position with X reticle:
    if (m_reticleSize > 0)
    {
-      m_outBuffer->setValue(0, 0, m_observerValue);
+      m_outBuffer->setValue(m_observerVpt.x, m_observerVpt.y, m_overlayValue);
       for (int i=-m_reticleSize; i<=m_reticleSize; ++i)
       {
-         m_outBuffer->setValue(i, 0, m_observerValue);
-         m_outBuffer->setValue(0,  i, m_observerValue);
+         m_outBuffer->setValue(i, 0, m_overlayValue);
+         m_outBuffer->setValue(0,  i, m_overlayValue);
       }
    }
 
@@ -671,66 +615,12 @@ void ossimViewshedUtil::paintReticle()
       ossim_int32 hw = (ossim_int32) m_halfWindow;
       for (ossim_int32 u=-hw; u<=hw; ++u)
       {
-         m_outBuffer->setValue(  u,-hw, m_observerValue);
-         m_outBuffer->setValue(  u, hw, m_observerValue);
-         m_outBuffer->setValue(-hw,  u, m_observerValue);
-         m_outBuffer->setValue( hw,  u, m_observerValue);
+         m_outBuffer->setValue(u, m_observerVpt.y-hw, m_overlayValue);
+         m_outBuffer->setValue(u, m_observerVpt.y+hw, m_overlayValue);
+         m_outBuffer->setValue(m_observerVpt.x-hw, u, m_overlayValue);
+         m_outBuffer->setValue(m_observerVpt.x+hw, u, m_overlayValue);
       }
    }
-}
-
-bool ossimViewshedUtil::writeFile()
-{
-   ossimIrect rect (0, 0, m_viewRect.width()-1, m_viewRect.height()-1);
-   m_outBuffer->setImageRectangle(rect);
-
-   ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
-   memSource->setImage(m_outBuffer);
-   memSource->setImageGeometry(m_geometry.get());
-   ossimImageSource* last_source = memSource.get();
-
-   // See if an LUT is requested:
-   ossimRefPtr<ossimIndexToRgbLutFilter> lutSource = 0;
-   if (!m_lutFile.empty())
-   {
-      ossimKeywordlist lut_kwl;
-      lut_kwl.addFile(m_lutFile);
-      lutSource = new ossimIndexToRgbLutFilter;
-      if (!lutSource->loadState(lut_kwl))
-      {
-         ossimNotify(ossimNotifyLevel_WARN) << "ossimViewshedUtil::writeFile() ERROR: The LUT "
-               "file <"<<m_lutFile<<"> could not be read. Ignoring remap request.\n"<< std::endl;
-         lutSource = 0;
-      }
-      else
-      {
-         lutSource->connectMyInputTo(last_source);
-         lutSource->initialize();
-         last_source = lutSource.get();
-      }
-   }
-
-   // Set up the writer:
-   ossimRefPtr<ossimImageFileWriter> writer = 0;
-   if (m_filename.ext().contains("tif"))
-   {
-      ossimTiffWriter* tif_writer = new ossimTiffWriter();
-      tif_writer->setGeotiffFlag(true);
-      tif_writer->setFilename(m_filename);
-      writer = tif_writer;
-   }
-   else
-   {
-      writer = ossimImageWriterFactoryRegistry::instance()->createWriter(m_filename);
-   }
-   bool success = false;
-   if (writer.valid())
-   {
-      writer->connectMyInputTo(0, last_source);
-      success = writer->execute();
-   }
-
-   return success;
 }
 
 bool ossimViewshedUtil::writeHorizonProfile()
@@ -783,7 +673,7 @@ bool ossimViewshedUtil::writeHorizonProfile()
    ofstream fstr (m_horizonFile.chars());
    if (!fstr.is_open())
       return false;
-   std::map<double, double>::iterator iter = m_horizonMap.begin();
+   map<double, double>::iterator iter = m_horizonMap.begin();
    while (iter != m_horizonMap.end())
    {
       fstr << iter->first << ", " << iter->second << endl;
@@ -792,18 +682,6 @@ bool ossimViewshedUtil::writeHorizonProfile()
 
    fstr.close();
    return true;
-}
-
-void ossimViewshedUtil::dumpProductSummary() const
-{
-   ossimIpt isize (m_geometry->getImageSize());
-   cout  << "\nSummary of Viewshed product image:"
-         << "\n   Output file name: " << m_filename
-         << "\n   Image size: " << isize
-         << "\n   product GSD: " << m_gsd << " m"
-         << "\n   View radius: " << (int) (m_gsd * isize.x/2.0) << " m"
-         << "\n   Scalar type: " << m_outBuffer->getScalarTypeAsString()
-         << endl;
 }
 
 void SectorProcessorJob::start()
@@ -822,21 +700,24 @@ OpenThreads::ReadWriteMutex RadialProcessor::m_bufMutex;
 OpenThreads::ReadWriteMutex RadialProcessor::m_radMutex;
 
 void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
-                               ossim_uint32 sector,
-                               ossim_uint32 radial)
+                               ossim_uint32 sector_idx,
+                               ossim_uint32 radial_idx)
 {
    double v;
-   ossimDpt pt_i;
+   ossimDpt pt_i, vpt_i;
    double elev_i, elev;
    double r2_max = vsUtil->m_halfWindow*vsUtil->m_halfWindow;
+
+   // Establish shorthand access to radial:
+   ossimViewshedUtil::Radial& radial = vsUtil->m_radials[sector_idx][radial_idx];
 
    // Walk along the radial using the appropriate coordinate abscissa for that sector and
    // compute ordinate using the radials azimuth:
    for (double u=1.0; u <= (double) vsUtil->m_halfWindow; u += 1.0)
    {
       // Compute ordinate from abscissa and slope of this radial:
-      v = vsUtil->m_radials[sector][radial].azimuth*(u);
-      switch (sector)
+      v = radial.azimuth*(u);
+      switch (sector_idx)
       {
       case 0: // N-NE, (u, v) = (-y, x)
          pt_i.y = -u;
@@ -874,21 +755,31 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
          break;
       }
 
-      ossimIpt ipt (ossim::round<ossim_int32,double>(pt_i.x),
-                    ossim::round<ossim_int32,double>(pt_i.y));
+      // Shift to actual view coordinates:
+      vpt_i = pt_i + vsUtil->m_observerVpt;
+      ossimIpt ipt (ossim::round<ossim_int32,double>(vpt_i.x),
+                    ossim::round<ossim_int32,double>(vpt_i.y));
+
+      // Check if we are exiting the AOI (no more processing required for this radial):
+      if (radial.insideAoi && !vsUtil->m_aoiViewRect.pointWithin(ipt))
+         break;
+
+      // Alternatively, check if we were OUTSIDE and now moving INSIDE:
+      if (!radial.insideAoi && vsUtil->m_aoiViewRect.pointWithin(ipt))
+         radial.insideAoi = true;
 
       // Check if we passed beyong the visibilty radius, and exit loop if so:
       if ((vsUtil->m_visRadius > 0) && ((u*u + v*v) >= r2_max))
       {
          OpenThreads::ScopedWriteLock lock (m_bufMutex);
-         vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_observerValue);
+         vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_overlayValue);
          break;
       }
 
       // Fetch the pixel value as the elevation value and compute elevation angle from
       // the observer pt as dz/dx
       ossimGpt gpt_i;
-      vsUtil->m_geometry->localToWorld(pt_i, gpt_i);
+      vsUtil->m_geom->localToWorld(vpt_i, gpt_i);
 
       if (vsUtil->m_simulation && ossim::isnan(gpt_i.hgt))
          gpt_i.hgt = vsUtil->m_observerGpt.hgt-vsUtil->m_obsHgtAbvTer; // ground level
@@ -897,15 +788,14 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
       {
          // Compare elev angle to max angle latched so far along this radial:
          elev_i = (gpt_i.hgt - vsUtil->m_observerGpt.hgt) / u;
-         elev = vsUtil->m_radials[sector][radial].elevation;
+         elev = radial.elevation;
          if (elev_i > elev)
          {
             // point is visible, latch this line-of-sight as the new max elevation angle for this
             // radial, and mark the output pixel as visible:
-            //   m_outBuffer->setValue(ossim::round<ossim_int32,double>(pt_i.x),
-            //                           ossim::round<ossim_int32,double>(pt_i.y), m_visibleValue);
-            //OpenThreads::ScopedWriteLock lock (m_radMutex);
-            vsUtil->m_radials[sector][radial].elevation = elev_i;
+            radial.elevation = elev_i;
+            OpenThreads::ScopedWriteLock lock (m_bufMutex);
+            vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_visibleValue);
          }
          else
          {

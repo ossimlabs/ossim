@@ -677,13 +677,6 @@ void ossimChipProcUtil::createOutputProjection()
 
    // Set the tie.
    intiailizeProjectionTiePoint();
-   bool snapToTP = false;
-   m_kwl.getBoolKeywordValue(snapToTP, SNAP_TIE_TO_ORIGIN_KW.c_str());
-   if ( snapToTP )
-   {
-      // Adjust the projection tie to the origin.
-      proj->snapTiePointToOrigin();
-   }
 
    // Setup the view in all the chains.
    propagateOutputProjectionToChains();
@@ -806,6 +799,12 @@ void ossimChipProcUtil::intiailizeProjectionTiePoint()
          mapProj->setUlTiePoints(tiePoint);
       }
    }
+
+   // Adjust the projection tie to the origin.
+   bool snapToTP = false;
+   m_kwl.getBoolKeywordValue(snapToTP, SNAP_TIE_TO_ORIGIN_KW.c_str());
+   if ( snapToTP )
+      mapProj->snapTiePointToOrigin();
 }
 
 void ossimChipProcUtil::initializeProjectionGsd()
@@ -1486,6 +1485,8 @@ void ossimChipProcUtil::computeViewRect()
 {
    // Nan rect for starters.
    m_aoiViewRect.makeNan();
+   if (m_aoiGroundRect.hasNans())
+      return;
 
    // Assume cut box is edge to edge or "Pixel Is Area". Our
    // AOI(area of interest) uses center of pixel or "Pixel Is Point"

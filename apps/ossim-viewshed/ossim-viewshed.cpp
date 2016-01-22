@@ -53,6 +53,10 @@ int main(int argc, char *argv[])
       ossimNotify(ossimNotifyLevel_FATAL)<<e.what()<<endl;
       exit(1);
    }
+   catch( ... )
+   {
+      cerr << "Caught unknown exception!" << endl;
+   }
 
    double dt = ossimTimer::instance()->time_s() - t0;
    cout << argv[0] << "Elapsed Time: " << dt << " s\n" << endl;
