@@ -267,6 +267,7 @@ curl library.
 # -T on setup = Disable the automatic unpacking of the archives.
 #---
 # %setup -q -D -T
+# %setup -q -D
 %setup -q
 
 # Delete bundled libraw
@@ -374,13 +375,6 @@ chmod 755 %{buildroot}%{_libdir}/libjoms.so
 
 popd
 
-# ossimjni "ant" build:
-pushd ossimjni/java
-ant install
-# Fix bad perms:
-chmod 755 %{buildroot}%{_libdir}/libossimjni-swig.so
-popd
-
 %post
 /sbin/ldconfig
 
@@ -416,29 +410,29 @@ rm -f %{_javadir}/joms.jar
 %{_sysconfdir}/profile.d/ossim.csh
 
 # Weed out apps:
-%exclude %{_bindir}/ossim-adrg-dump
-%exclude %{_bindir}/ossim-btoa
-%exclude %{_bindir}/ossim-computeSrtmStats
-%exclude %{_bindir}/ossim-correl 
-%exclude %{_bindir}/ossim-create-bitmask
-%exclude %{_bindir}/ossim-dump-ocg
-%exclude %{_bindir}/ossim-image-compare
-%exclude %{_bindir}/ossim-modopt
-%exclude %{_bindir}/ossimplanet
-%exclude %{_bindir}/ossimplanetklv
-%exclude %{_bindir}/ossimplanet-chip
-%exclude %{_bindir}/ossimplanettest
-%exclude %{_bindir}/ossim-rejout
-%exclude %{_bindir}/ossim-rpf 
-%exclude %{_bindir}/ossim-senint
-%exclude %{_bindir}/ossim-space-imaging
-%exclude %{_bindir}/ossim-src2src
-%exclude %{_bindir}/ossim-swapbytes
-%exclude %{_bindir}/ossim-ws-cmp
+# %exclude %{_bindir}/ossim-adrg-dump
+# %exclude %{_bindir}/ossim-btoa
+# %exclude %{_bindir}/ossim-computeSrtmStats
+# %exclude %{_bindir}/ossim-correl 
+# %exclude %{_bindir}/ossim-create-bitmask
+# %exclude %{_bindir}/ossim-dump-ocg
+# %exclude %{_bindir}/ossim-image-compare
+# %exclude %{_bindir}/ossim-modopt
+# %exclude %{_bindir}/ossimplanet
+# %exclude %{_bindir}/ossimplanetklv
+# %exclude %{_bindir}/ossimplanet-chip
+# %exclude %{_bindir}/ossimplanettest
+# %exclude %{_bindir}/ossim-rejout
+# %exclude %{_bindir}/ossim-rpf 
+# %exclude %{_bindir}/ossim-senint
+# %exclude %{_bindir}/ossim-space-imaging
+# %exclude %{_bindir}/ossim-src2src
+# %exclude %{_bindir}/ossim-swapbytes
+# %exclude %{_bindir}/ossim-ws-cmp
 
 # These are in the geocell package:
-%exclude %{_bindir}/ossim-geocell
-%exclude %{_bindir}/ossimplanetviewer
+# %exclude %{_bindir}/ossim-geocell
+# %exclude %{_bindir}/ossimplanetviewer
 
 %files devel
 %{_includedir}/ossim
