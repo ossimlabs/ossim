@@ -63,9 +63,12 @@ ossimViewshedUtil::ossimViewshedUtil()
 
 ossimViewshedUtil::~ossimViewshedUtil()
 {
-   for (int i=0; i<4; ++i)
-      delete [] m_radials[i];
-   delete [] m_radials;
+   if (m_radials)
+   {
+      for (int i=0; i<4; ++i)
+         delete [] m_radials[i];
+      delete [] m_radials;
+   }
 }
 
 void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
@@ -366,7 +369,7 @@ void ossimViewshedUtil::initProcessingChain()
 
 void ossimViewshedUtil::optimizeFOV()
 {
-   // If the observer position lies outside of the requested AOI, we can reduce the search area:
+   // If the observer position lies outside of the requested AOI, we can reduce the search arc:
    if (m_aoiGroundRect.pointWithin(m_observerGpt))
       return;
 
@@ -383,40 +386,96 @@ void ossimViewshedUtil::optimizeFOV()
       direction += (int) E;
 
    // Calculate start and stop FOV depending on region:
+   double start, stop;
    switch ((CardinalDirections) direction)
    {
    case N:
-      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
-      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
+      start = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
+      stop  = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
       break;
    case NE:
-      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
-      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
+      start = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
+      stop  = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
       break;
    case E:
-      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
-      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
+      start = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
+      stop  = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
       break;
    case SE:
-      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
-      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
+      start = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
+      stop  = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
       break;
    case S:
-      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
-      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
+      start = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
+      stop  = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
       break;
    case SW:
-      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
-      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
+      start = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
+      stop  = m_observerGpt.azimuthTo(m_aoiGroundRect.lr());
       break;
    case W:
-      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
-      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
+      start = m_observerGpt.azimuthTo(m_aoiGroundRect.ul());
+      stop  = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
       break;
    case NW:
-      m_startFov = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
-      m_stopFov  = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
+      start = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
+      stop  = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
       break;
+   }
+
+   // Now need to intersect this arc with the requested FOV:
+   if (m_startFov == m_stopFov)
+   {
+      // There was no requested FOV (i.e, FOV = 360). So use the optimized FOV straight away:
+      m_startFov = start;
+      m_stopFov  = stop;
+   }
+   else
+   {
+      // Pick m_startFov as reference, and make sure all others are greater:
+      double a1 = m_stopFov;
+      double a2 = start;
+      double a3 = stop;
+      if (m_startFov > m_stopFov)
+         a1 += 360;
+      if (m_startFov > start)
+         a2 += 360;
+      if (m_startFov > stop)
+         a3 += 360;
+
+      // Map to sort remaining azimuths by increasing angle clockwise:
+      map<double, int> angle_map;
+      angle_map.insert(pair<double, int>(a1, 1));
+      angle_map.insert(pair<double, int>(a2, 2));
+      angle_map.insert(pair<double, int>(a3, 3));
+
+      map<double, int>::iterator iter = angle_map.begin();
+      bool intersects = false;
+      if (iter->second == 1)
+      {
+         ++iter;
+         if (iter->second == 3)
+            intersects = true;
+      }
+      else if (iter->second == 2)
+      {
+         m_startFov = start;
+         intersects = true;
+         ++iter;
+         if (iter->second == 3)
+            m_stopFov = stop;
+      }
+      else
+      {
+         intersects = true;
+         m_stopFov = stop;
+      }
+
+      if (!intersects)
+      {
+         throw ossimException("ossimViewshedUtil::optimizeFOV() -- The requested FOV does not"
+               " intersect with the requested AOI. Nothing to do!");
+      }
    }
 }
 
