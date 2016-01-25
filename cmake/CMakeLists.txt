@@ -244,7 +244,7 @@ ENDIF()
 set(PKGCONFIG_FILES ossim)
 
 foreach(PKGCONFIG_FILE ${PKGCONFIG_FILES})
-  configure_file(${OSSIM_DEV_HOME}/${PROJECT_NAME}/ossim/cmake/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
+  configure_file(${OSSIM_DEV_HOME}/ossim/cmake/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
     ${${PROJECT_NAME}_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc
     @ONLY
     )
