@@ -232,7 +232,7 @@ ENDIF()
 FILE(GLOB ossim_cmake_modules ${OSSIM_DEV_HOME}/ossim/cmake/CMakeModules/*.cmake* )
 INSTALL(FILES ${ossim_cmake_modules} DESTINATION share/ossim/${OSSIM_VERSION}/CMakeModules COMPONENT ossim)
 
-############################## Setup the packages ###############################################################
+############################## Setup the packages ##############################
 # present the packaging option only if we have the cpack command defined (effectively >= 2.6.0)
 IF(CMAKE_CPACK_COMMAND)
     OPTION(BUILD_OSSIM_PACKAGES "Set to ON to generate CPack configuration files and packaging targets" OFF)
@@ -240,6 +240,17 @@ IF(CMAKE_CPACK_COMMAND)
       INCLUDE(OssimCPack)
     ENDIF()
 ENDIF()
+
+set(PKGCONFIG_FILES ossim)
+
+FOREACH(PKGCONFIG_FILE ${PKGCONFIG_FILES})
+  CONFIGURE_FILE(${OSSIM_DEV_HOME}/${PROJECT_NAME}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
+    ${${PROJECT_NAME}_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc
+    @ONLY
+    )
+  INSTALL(FILES ${${PROJECT_NAME}_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc DESTINATION lib${LIBSUFFIX}/pkgconfig COMPONENT ossim)
+ENDFOREACH(PKGCONFIG_FILE)
+
 
 #####################################################################################################
 # We may want to add this as a build step instead so it can capture different output directories
