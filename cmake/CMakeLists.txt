@@ -243,8 +243,8 @@ ENDIF()
 
 set(PKGCONFIG_FILES ossim)
 
-FOREACH(PKGCONFIG_FILE ${PKGCONFIG_FILES})
-  CONFIGURE_FILE(${OSSIM_DEV_HOME}/${PROJECT_NAME}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
+foreach(PKGCONFIG_FILE ${PKGCONFIG_FILES})
+  configure_file(${OSSIM_DEV_HOME}/${PROJECT_NAME}/cmake/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
     ${${PROJECT_NAME}_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc
     @ONLY
     )
