@@ -267,8 +267,8 @@ curl library.
 # -T on setup = Disable the automatic unpacking of the archives.
 #---
 # %setup -q -D -T
-# %setup -q -D
-%setup -q
+%setup -q -D
+# %setup -q
 
 # Delete bundled libraw
 rm -rf ossim_plugins/libraw/LibRaw-0.9.0/
@@ -276,10 +276,13 @@ rm -rf ossim_plugins/libraw/LibRaw-0.9.0/
 
 %build
 
-# Exports for ossim build:
+# Exports for ossim and java builds:
+export GROOVY_HOME=/usr/share/groovy
+export JAVA_HOME=/usr/lib/jvm/java
 export OSSIM_DEV_HOME=%{_builddir}/%{name}-%{version}
 export OSSIM_BUILD_DIR=%{_builddir}/%{name}-%{version}/build
 export OSSIM_BUILD_TYPE=RelWithDebInfo
+export OSSIM_INSTALL_PREFIX=%{buildroot}/usr
 
 mkdir -p build
 pushd build
@@ -323,16 +326,14 @@ pushd build
 -DBUILD_WMS=ON \
 -DCMAKE_BUILD_TYPE=$OSSIM_BUILD_TYPE \
 -DCMAKE_MODULE_PATH=$OSSIM_DEV_HOME/ossim_package_support/cmake/CMakeModules \
--DOSSIMPLANET_ENABLE_EPHEMERIS=OFF \
 -DCMAKE_PREFIX_PATH=/usr \
+-DOSSIMPLANET_ENABLE_EPHEMERIS=OFF \
 ../ossim/cmake
 make VERBOSE=1 %{?_smp_mflags}
 popd
 
-# Exports for java builds:
-# export JAVA_HOME=/usr/lib/jvm/java
-#export JAVA_HOME=/usr/java/latest
-export OSSIM_INSTALL_PREFIX=%{buildroot}/usr
+# 
+
 # Build c++ jni bindings and java side of oms module:
 pushd ossim-oms/joms
 cp local.properties.template local.properties
@@ -341,25 +342,23 @@ popd
 
 %install
 
-# Exports for ossim build:
+# Exports for ossim and java installs:
+export GROOVY_HOME=/usr/share/groovy
+export JAVA_HOME=/usr/lib/jvm/java
 export OSSIM_DEV_HOME=%{_builddir}/%{name}-%{version}
 export OSSIM_BUILD_DIR=%{_builddir}/%{name}-%{version}/build
 export OSSIM_BUILD_TYPE=RelWithDebInfo
+# export OSSIM_INSTALL_PREFIX=%{buildroot}/usr
 export OSSIM_VERSION=%{RPM_OSSIM_VERSION}
 
 pushd build
 make install DESTDIR=%{buildroot}
-
+# make install
 popd
 
 install -p -m644 -D ossim/support/linux/etc/profile.d/ossim.sh %{buildroot}%{_sysconfdir}/profile.d/ossim.sh
 install -p -m644 -D ossim/support/linux/etc/profile.d/ossim.csh %{buildroot}%{_sysconfdir}/profile.d/ossim.csh
 install -p -m644 -D ossim/share/ossim/templates/ossim_preferences_template %{buildroot}%{_datadir}/ossim/ossim-preferences-template
-
-# Exports for java builds:
-# export JAVA_HOME=/usr/lib/jvm/java
-#export JAVA_HOME=/usr/java/latest
-export OSSIM_INSTALL_PREFIX=%{buildroot}/usr
 
 # oms "ant" build:
 pushd ossim-oms/joms
