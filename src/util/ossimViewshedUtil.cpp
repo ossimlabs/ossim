@@ -127,7 +127,8 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
 
 void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
 {
-   ostringstream xmsg ("ossimViewshedUtil::initialize(ossimArgumentParser) -- ");
+   ostringstream xmsg;
+   xmsg<<"ossimViewshedUtil::initialize(ossimArgumentParser) -- ";
 
    // Base class first:
    ossimChipProcUtil::initialize(ap);
@@ -185,13 +186,28 @@ void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    if ( ap.read("--threads", sp1) )
       m_numThreads = ossimString(ts1).toUInt32();
 
-   processRemainingArgs(ap);
+   // There next should be the observer position lat & lon on command line before output filename:
+   if ( ap.argc() < 4 )
+   {
+      xmsg<<"Expecting more arguments.";
+      ap.reportError(xmsg.str());
+      throw(xmsg.str());
+   }
+   else
+   {
+      ossimString latstr = ap[1];
+      ossimString lonstr = ap[2];
+      ostringstream value;
+      value<<latstr<<" "<<lonstr;
+      m_kwl.addPair( OBSERVER_KW, value.str() );
+      ap.remove(1,2);
+      processRemainingArgs(ap);
+   }
 }
 
 void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
 {
-   ostringstream xmsg ("ossimViewshedUtil::initialize(kwl) -- ");
-
+   clear();
    ossimString value;
 
    value = kwl.findKey(FOV_KW);
@@ -264,9 +280,8 @@ void ossimViewshedUtil::clear()
 
 void ossimViewshedUtil::initProcessingChain()
 {
-   ostringstream xmsg ("ossimViewshedUtil::initProcessingChain() -- ");
-
-   // TODO: Accept srcLayers as imagery to blend with viewshed
+   ostringstream xmsg;
+   xmsg<<"ossimViewshedUtil::initProcessingChain() -- ";
 
    if (m_observerGpt.hasNans())
    {
@@ -298,7 +313,7 @@ void ossimViewshedUtil::initProcessingChain()
       computeRadius();
    if (m_halfWindow == 0)
       m_halfWindow = ossim::round<ossim_int32, double>(m_visRadius/m_gsd.x);
-   ossim_uint32 size = 2*m_halfWindow + 1;
+   ossim_uint32 size = 2*m_halfWindow;
 
    // If no AOI defined, just use the visibility rectangle:
    ossimIrect visRect (ossimIpt(m_observerVpt), size, size);
@@ -360,18 +375,22 @@ void ossimViewshedUtil::initProcessingChain()
    }
 #endif
 
-   // Initialize the radials:
-   optimizeFOV();
-   initRadials();
-
-   m_initialized = true;
+   // Initialize the radials after intersecting the requested FOV with the FOV required to see the
+   // full AOI (not applicable if observer inside AOI). Skip radial init if no intersection found:
+   if (optimizeFOV())
+   {
+      initRadials();
+      m_initialized = true;
+   }
 }
 
-void ossimViewshedUtil::optimizeFOV()
+bool ossimViewshedUtil::optimizeFOV()
 {
+   bool intersects = false;
+
    // If the observer position lies outside of the requested AOI, we can reduce the search arc:
    if (m_aoiGroundRect.pointWithin(m_observerGpt))
-      return;
+      return true;
 
    // Determine cardinal region (N, NE, E, ...) of observer relative to AOI:
    enum CardinalDirections { N=1, S=2, E=4, W=8, NE=5, NW=9, SE=6, SW=10 };
@@ -429,6 +448,7 @@ void ossimViewshedUtil::optimizeFOV()
       // There was no requested FOV (i.e, FOV = 360). So use the optimized FOV straight away:
       m_startFov = start;
       m_stopFov  = stop;
+      intersects = true;
    }
    else
    {
@@ -450,7 +470,6 @@ void ossimViewshedUtil::optimizeFOV()
       angle_map.insert(pair<double, int>(a3, 3));
 
       map<double, int>::iterator iter = angle_map.begin();
-      bool intersects = false;
       if (iter->second == 1)
       {
          ++iter;
@@ -470,13 +489,15 @@ void ossimViewshedUtil::optimizeFOV()
          intersects = true;
          m_stopFov = stop;
       }
-
-      if (!intersects)
-      {
-         throw ossimException("ossimViewshedUtil::optimizeFOV() -- The requested FOV does not"
-               " intersect with the requested AOI. Nothing to do!");
-      }
    }
+
+   if (!intersects)
+   {
+      ossimNotify(ossimNotifyLevel_INFO)<<
+            "ossimViewshedUtil::optimizeFOV() -- No FOV intersection found. Nothing to do."<<endl;
+   }
+
+   return intersects;
 }
 
 void ossimViewshedUtil::computeRadius()
@@ -642,6 +663,7 @@ if (m_numThreads > 1)
 
    cout << "Finished processing radials."<<endl;
    paintReticle();
+   success = true;
 
    if (!m_horizonFile.empty())
    {
@@ -658,27 +680,13 @@ if (m_numThreads > 1)
 void ossimViewshedUtil::paintReticle()
 {
    // Highlight the observer position with X reticle:
-   if (m_reticleSize > 0)
-   {
-      m_outBuffer->setValue(m_observerVpt.x, m_observerVpt.y, m_overlayValue);
-      for (int i=-m_reticleSize; i<=m_reticleSize; ++i)
-      {
-         m_outBuffer->setValue(i, 0, m_overlayValue);
-         m_outBuffer->setValue(0,  i, m_overlayValue);
-      }
-   }
+   if ((m_reticleSize == 0) || !m_aoiGroundRect.pointWithin(m_observerGpt))
+      return;
 
-   if (m_visRadius == 0)
+   for (int i=-m_reticleSize; i<=m_reticleSize; ++i)
    {
-      // Also outline the square area of interest:
-      ossim_int32 hw = (ossim_int32) m_halfWindow;
-      for (ossim_int32 u=-hw; u<=hw; ++u)
-      {
-         m_outBuffer->setValue(u, m_observerVpt.y-hw, m_overlayValue);
-         m_outBuffer->setValue(u, m_observerVpt.y+hw, m_overlayValue);
-         m_outBuffer->setValue(m_observerVpt.x-hw, u, m_overlayValue);
-         m_outBuffer->setValue(m_observerVpt.x+hw, u, m_overlayValue);
-      }
+      m_outBuffer->setValue(m_observerVpt.x + i, m_observerVpt.y    , m_overlayValue);
+      m_outBuffer->setValue(m_observerVpt.x    , m_observerVpt.y + i, m_overlayValue);
    }
 }
 
@@ -816,15 +824,15 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
 
       // Shift to actual view coordinates:
       vpt_i = pt_i + vsUtil->m_observerVpt;
-      ossimIpt ipt (ossim::round<ossim_int32,double>(vpt_i.x),
-                    ossim::round<ossim_int32,double>(vpt_i.y));
+      ossimIpt ipt (vpt_i);
 
       // Check if we are exiting the AOI (no more processing required for this radial):
-      if (radial.insideAoi && !vsUtil->m_aoiViewRect.pointWithin(ipt))
+      bool pointInsideAoi = vsUtil->m_aoiViewRect.pointWithin(ipt);
+      if (radial.insideAoi && !pointInsideAoi)
          break;
 
       // Alternatively, check if we were OUTSIDE and now moving INSIDE:
-      if (!radial.insideAoi && vsUtil->m_aoiViewRect.pointWithin(ipt))
+      if (!radial.insideAoi && pointInsideAoi)
          radial.insideAoi = true;
 
       // Check if we passed beyong the visibilty radius, and exit loop if so:
@@ -865,3 +873,63 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
    } // end loop over radial's abscissas
 }
 
+void ossimViewshedUtil::test()
+{
+   m_aoiGroundRect = ossimGrect(1.0, 0.0, 0.0, 1.0);
+
+   m_observerGpt = ossimGpt(1.5, 0.5);
+   m_startFov = 180;
+   m_stopFov = 270;
+   cout<<"Before: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<endl;
+   optimizeFOV();
+   cout<<"After: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<"\n"<<endl;
+
+   m_observerGpt = ossimGpt(1.5, 0.5);
+   m_startFov = 335;
+   m_stopFov = 180;
+   cout<<"Before: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<endl;
+   optimizeFOV();
+   cout<<"After: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<"\n"<<endl;
+
+   m_observerGpt = ossimGpt(1.5, 0.5);
+   m_startFov = 270;
+   m_stopFov = 0;
+   cout<<"Before: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<endl;
+   optimizeFOV();
+   cout<<"After: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<"\n"<<endl;
+
+   m_observerGpt = ossimGpt(-0.5, 0.5);
+   m_startFov = 270;
+   m_stopFov = 10;
+   cout<<"Before: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<endl;
+   optimizeFOV();
+   cout<<"After: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<"\n"<<endl;
+
+   m_observerGpt = ossimGpt(-0.5, 0.5);
+   m_startFov = 350;
+   m_stopFov = 90;
+   cout<<"Before: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<endl;
+   optimizeFOV();
+   cout<<"After: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<"\n"<<endl;
+
+   m_observerGpt = ossimGpt(-0.5, 0.5);
+   m_startFov = 10;
+   m_stopFov = 20;
+   cout<<"Before: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<endl;
+   optimizeFOV();
+   cout<<"After: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<"\n"<<endl;
+
+   m_observerGpt = ossimGpt(-0.5, 0.5);
+   m_startFov = 270;
+   m_stopFov = 90;
+   cout<<"Before: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<endl;
+   optimizeFOV();
+   cout<<"After: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<"\n"<<endl;
+
+   m_observerGpt = ossimGpt(-0.5, 0.5);
+   m_startFov = 90;
+   m_stopFov = 270;
+   cout<<"Before: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<endl;
+   optimizeFOV();
+   cout<<"After: m_startFov="<<m_startFov<<"  m_stopFov="<<m_stopFov<<"\n"<<endl;
+}

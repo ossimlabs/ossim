@@ -181,6 +181,7 @@ protected:
    
    // if an elevation is returned that's null for ellipsoid then use the geoid manager to calculate a shift
    bool m_useGeoidIfNullFlag;
+   bool m_useStandardPaths;
    
    mutable ossim_uint32 m_currentDatabaseIdx;
    

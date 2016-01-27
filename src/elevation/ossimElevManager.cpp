@@ -82,6 +82,7 @@ ossimElevManager::ossimElevManager()
     m_defaultHeightAboveEllipsoid(ossim::nan()),
     m_elevationOffset(ossim::nan()),
     m_useGeoidIfNullFlag(false),
+    m_useStandardPaths(false),
     m_currentDatabaseIdx(0),
     m_mutex()
 {
@@ -165,6 +166,9 @@ double ossimElevManager::getHeightAboveMSL(const ossimGpt& gpt)
 
 void ossimElevManager::loadStandardElevationPaths()
 {
+   if (!m_useStandardPaths)
+      return;
+
    ossimFilename userDir    = ossimEnvironmentUtility::instance()->getUserOssimSupportDir();
    ossimFilename installDir = ossimEnvironmentUtility::instance()->getInstalledOssimSupportDir();
    
@@ -408,6 +412,7 @@ bool ossimElevManager::saveState(ossimKeywordlist& kwl, const char* prefix) cons
    kwl.add(prefix, "elevation_offset", m_elevationOffset, true);
    kwl.add(prefix, "default_height_above_ellipsoid", m_defaultHeightAboveEllipsoid, true);
    kwl.add(prefix, "use_geoid_if_null", m_useGeoidIfNullFlag, true);
+   kwl.add(prefix, "use_standard_elev_paths", m_useStandardPaths, true);
    kwl.add(prefix, "threads", ossimString::toString(m_maxRoundRobinSize), true);
 
    return ossimElevSource::saveState(kwl, prefix);
@@ -432,21 +437,16 @@ bool ossimElevManager::loadState(const ossimKeywordlist& kwl, const char* prefix
    ossimString copyPrefix(prefix);
    ossimString elevationOffset = kwl.find(copyPrefix, "elevation_offset");
    ossimString defaultHeightAboveEllipsoid = kwl.find(copyPrefix, "default_height_above_ellipsoid");
-   ossimString useGeoidIfNull = kwl.find(copyPrefix, "use_geoid_if_null");
    ossimString elevRndRbnSize = kwl.find(copyPrefix, "threads");
 
+   kwl.getBoolKeywordValue(m_useGeoidIfNullFlag, "use_geoid_if_null", copyPrefix.chars());
+   kwl.getBoolKeywordValue(m_useStandardPaths, "use_standard_elev_paths", copyPrefix.chars());
+
    if(!elevationOffset.empty())
-   {
       m_elevationOffset = elevationOffset.toDouble();
-   }
+
    if(!defaultHeightAboveEllipsoid.empty())
-   {
       m_defaultHeightAboveEllipsoid = defaultHeightAboveEllipsoid.toDouble();
-   }
-   if(!useGeoidIfNull.empty())
-   {
-      m_useGeoidIfNullFlag = useGeoidIfNull.toBool();
-   }
 
    ossim_uint32 numThreads = 1;
    if(!elevRndRbnSize.empty())

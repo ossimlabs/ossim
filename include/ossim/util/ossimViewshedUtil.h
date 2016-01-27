@@ -64,6 +64,9 @@ public:
    /** Used by ossimUtilityFactory */
    static const char* DESCRIPTION;
 
+   /** For engineering/debug */
+   void test();
+
 protected:
    class Radial
    {
@@ -81,7 +84,7 @@ protected:
    void initRadials();
    bool writeHorizonProfile();
    void computeRadius();
-   void optimizeFOV();
+   bool optimizeFOV();
 
    ossimGpt  m_observerGpt;
    ossimDpt  m_observerVpt;
@@ -89,6 +92,7 @@ protected:
    double m_visRadius; // meters
    Radial** m_radials;
    bool m_initialized;
+   bool m_obsInsideAoi;
    ossim_uint32 m_halfWindow; // visRadius adjusted by GSD (in pixels)
    ossimRefPtr<ossimImageData> m_outBuffer;
    ossim_uint8 m_visibleValue;

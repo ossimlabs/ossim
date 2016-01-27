@@ -36,11 +36,10 @@ int main(int argc, char* argv[])
    try
    {
       ossimArgumentParser ap(&argc, argv);
-      ap.getApplicationUsage()->setApplicationName(argv[0]);
       ossimInit::instance()->initialize(ap);
       
       ossimRefPtr<ossimViewshedUtil> viewshed = new ossimViewshedUtil;
-      viewshed->initialize(ap);
+      viewshed->test();
    }
    catch( const ossimException& e )
    {

@@ -99,7 +99,6 @@ void ossimChipProcUtil::clear()
 
 void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 {
-   clear();
    if( ap.read("-h") || ap.read("--help") || (ap.argc() == 1) )
    {
       setUsage(ap);
@@ -299,8 +298,6 @@ void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
 
 void ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
 {
-   clear();
-
    // Don't copy KWL if member KWL passed in:
    if (&kwl != &m_kwl)
    {
@@ -669,6 +666,7 @@ void ossimChipProcUtil::createOutputProjection()
    }
 
    // Create our ossimImageGeometry with projection (no transform).
+   proj->setElevationLookupFlag(true);
    m_geom->setProjection(proj.get());
 
    // Set the scale and AOI.
@@ -805,6 +803,13 @@ void ossimChipProcUtil::intiailizeProjectionTiePoint()
    m_kwl.getBoolKeywordValue(snapToTP, SNAP_TIE_TO_ORIGIN_KW.c_str());
    if ( snapToTP )
       mapProj->snapTiePointToOrigin();
+
+   // Re-establish the AOI view rect based on updated projection:
+   ossimDrect drect;
+   m_geom->worldToLocal(m_aoiGroundRect, drect);
+   m_aoiViewRect = ossimIrect(drect);
+   cout<<"m_aoiViewRect:"<<m_aoiViewRect<<endl;
+
 }
 
 void ossimChipProcUtil::initializeProjectionGsd()
@@ -820,13 +825,11 @@ void ossimChipProcUtil::initializeProjectionGsd()
 
    ossimString lookup = m_kwl.findKey( GSD_KW );
    if ( lookup.size() )
-   {
       m_gsd.y = m_gsd.x = lookup.toFloat64();
-   }
-   else
+
+   if (m_gsd.hasNans())
    {
       // No GSD specified, use minimum among all inputs:
-      m_gsd.makeNan();
       ossimGpt chainTiePoint;
       std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx = m_imgLayers.begin();
       while ( chainIdx != m_imgLayers.end() )
@@ -844,6 +847,15 @@ void ossimChipProcUtil::initializeProjectionGsd()
          ++chainIdx;
       }
    }
+
+   if (m_gsd.hasNans())
+   {
+      // Still no GSD specified, use the elevation database nominal GSD at center as output GSD.
+      // This is valid since most operations without input images depend on DEM data:
+     ossimElevManager::instance()->getHeightAboveEllipsoid(m_aoiGroundRect.midPoint());
+     m_gsd.y = m_gsd.x = ossimElevManager::instance()->getMeanSpacingMeters();
+   }
+
    if (!m_gsd.hasNans())
       mapProj->setMetersPerPixel(m_gsd);
 }
@@ -1519,6 +1531,7 @@ void ossimChipProcUtil::computeViewRect()
    }
 
    m_aoiViewRect = ossimIrect( ossimIpt(ulPt), ossimIpt(lrPt) );
+   cout<<"m_aoiViewRect:"<<m_aoiViewRect<<endl;
 
    // If no user defined rect set to scene bounding rect.
    if ( m_aoiViewRect.hasNans() )
