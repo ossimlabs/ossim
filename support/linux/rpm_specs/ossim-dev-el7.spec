@@ -1,6 +1,11 @@
 #---
 # Example usage:
 # rpmbuild -ba --define 'RPM_OSSIM_VERSION 1.9.0' --define 'BUILD_RELEASE 1' ossimlabs.spec
+#
+# Caveats: 
+# 1) Builder/user needs "groovy" in their search path.
+# 2) Use "archive.sh" script in ossim/scripts/archive.sh to generate the source
+#    tar ball, e.g. ossim-1.9.0.tar.gz, from appropriate git branch.
 #---
 Name:           ossim
 Version:        %{RPM_OSSIM_VERSION} 
@@ -40,7 +45,7 @@ BuildRequires: gpstk-devel
 OSSIM is a powerful suite of geospatial libraries and applications
 used to process remote sensing imagery, maps, terrain, and vector data.
 
-%package 	    devel
+%package 	devel
 Summary:        Develelopment files for ossim
 Group:          System Environment/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
@@ -48,16 +53,15 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %description devel
 Development files for ossim.
 
-%package 	    gdal-plugin
-Summary:        GDAL ossim plugin
+%package 	libs
+Summary:        Develelopment files for ossim
 Group:          System Environment/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 
-%description gdal-plugin
-This sub-package contains the gdal ossim plugin for reading/writing images
-supported by the gdal library.
+%description libs
+Libraries for ossim.
 
-%package 	    geocell
+%package 	geocell
 Summary:        Desktop electronic light table
 Group:          System Environment/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
@@ -65,103 +69,6 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %description geocell
 Desktop electronic light table for geospatial image processing. Has 2D, 2 1/2D
 and 3D viewer with image chain editing capabilities.
-
-%package 	    geopdf-plugin
-Summary:        geopdf ossim plugin
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description geopdf-plugin
-This sub-package contains the geopdf ossim plugin for reading geopdf files via
-the podofo library.
-
-%if 0
-%package 	    hdf-plugin
-Summary:        HDF ossim plugin
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description hdf-plugin
-This sub-package contains the Hierarchical Data Format(hdf) ossim plugin for
-reading hdf4 and hdf5 images via the hdf4 and hdf5 libraries.
-%endif
-
-%if 0
-%package 	    hdf4-plugin
-Summary:        HDF4 ossim plugin
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description hdf4-plugin
-This sub-package contains the Hierarchical Data Format(hdf) ossim plugin for
-reading hdf4 images via the hdf4 libraries.
-%endif
-
-%if 1
-%package 	    hdf5-plugin
-Summary:        HDF5 ossim plugin
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description hdf5-plugin
-This sub-package contains the Hierarchical Data Format(hdf) ossim plugin for
-reading hdf5 images via the hdf5 libraries.
-%endif
-
-%package  	    kmlsuperoverlay-plugin
-Summary:        kmlsuperoverlay ossim plugin
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description kmlsuperoverlay-plugin
-This sub-package contains the kmlsuperoverlay ossim plugin for reading/writing
-kml super overlays.
-
-%package  	    las-plugin
-Summary:        LAS ossim plugin
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description las-plugin
-This sub-package contains the las ossim plugin for reading ASPRS LASer(LAS)
-data.  Limited support for version 1.2.
-
-# Removing until code changed to use external libraw package.(drb)
-%if 0
-%package  	    libraw-plugin
-Summary:        libraw ossim plugin
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description libraw-plugin
-This sub-package contains the libraw ossim plugin for reading data via the
-libraw library.
-%endif
-
-# libwms does not depend on ossim
-%package        wms
-Summary:        wms ossim library
-Group:          System Environment/Libraries
-
-%description    wms
-This sub-package contains the web mapping service (wms) library.
-
-%package  	wms-devel
-Summary:        Development files wms
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description    wms-devel
-This sub-package contains the development files for wms.
-
-%package  	ndf-plugin
-Summary:        ndf ossim plugin
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description ndf-plugin
-This sub-package contains the ndf ossim plugin for reading National Landsat
-Archive Production System (NLAPS) Data Format (NDF).
 
 %package        oms
 Summary:        Wrapper library/java bindings for interfacing with ossim.
@@ -180,25 +87,6 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %description    oms-devel
 This sub-package contains the development files for oms.
 
-%package  	opencv-plugin
-Summary:        OSSIM OpenCV plugin, contains registration code.
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description opencv-plugin
-This sub-package contains the ossim opencv plugin with various pieces of 
-image registration code.
-
-%package 	    ossim-plugin
-Summary:        Plugin with various SAR sensor models
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description ossim-plugin
-This sub-package contains the ossim plugin which has various SAR sensor models,
-readers, and support data parsers.  Most of this code was provided by the ORFEO
-Toolbox (OTB) group.
-
 %package 	    planet
 Summary:        3D ossim library interface via OpenSceneGraph
 Group:          System Environment/Libraries
@@ -215,32 +103,89 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %description planet-devel
 This sub-package contains development files for ossim planet.
 
-%package 	    png-plugin
+%package        test-apps
+Summary:        Ossim test apps.
+Group:          System Environment/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description    test-apps
+A suite of ossim test apps.
+
+# libwms does not depend on ossim
+%package        wms
+Summary:        wms ossim library
+Group:          System Environment/Libraries
+
+%description    wms
+This sub-package contains the web mapping service (wms) library.
+
+%package 	wms-devel
+Summary:        Development files libwms
+Group:          System Environment/Libraries
+Requires:       libwms%{?_isa} = %{version}-%{release}
+
+%description    wms-devel
+This sub-package contains the development files for libwms.
+
+#---
+# ossim plugins:
+#---
+%package 	cnes-plugin
+Summary:        Plugin with various sensor models
+Group:          System Environment/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description cnes-plugin
+This sub-package contains the ossim plugin which has various SAR sensor models,
+readers, and support data parsers.  Most of this code was provided by the ORFEO
+Toolbox (OTB) group / Centre national d'études spatiales.
+
+%package 	gdal-plugin
+Summary:        GDAL ossim plugin
+Group:          System Environment/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description gdal-plugin
+This sub-package contains the Geospatial Data Abstraction Library(gdal) ossim
+plugin for reading/writing images supported by the gdal library.
+
+%package 	geopdf-plugin
+Summary:        geopdf ossim plugin
+Group:          System Environment/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description geopdf-plugin
+This sub-package contains the geopdf ossim plugin for reading geopdf files via
+the podofo library.
+
+%package 	hdf5-plugin
+Summary:        HDF5 ossim plugin
+Group:          System Environment/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description hdf5-plugin
+This sub-package contains the Hierarchical Data Format(hdf) ossim plugin for
+reading hdf5 images via the hdf5 libraries
+
+%package  	kml-plugin
+Summary:        kml ossim plugin
+Group:          System Environment/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description kml-plugin
+This sub-package contains the kmlsuperoverlay ossim plugin for reading/writing
+kml super overlays.
+
+%package 	png-plugin
 Summary:        PNG ossim plugin
 Group:          System Environment/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description png-plugin
-This sub-package contains the Portable Network Graphic (png) ossim plugin for
-reading/writing png images via the png library. 
+This sub-package contains the Portable Network Graphic(png) ossim plugin for
+reading/writing png images via the png library.
 
-%package 	    predator
-Summary:        Ossim vedeo library.
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description predator
-Ossim vedeo library.
-
-%package 	    predator-devel
-Summary:        Development files for ossim planet.
-Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-
-%description predator-devel
-This sub-package contains development files for ossim planet.
-
-%package  	    sqlite-plugin
+%package  	sqlite-plugin
 Summary:        OSSIM sqlite plugin, contains GeoPackage reader/writer.
 Group:          System Environment/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
@@ -248,7 +193,7 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %description sqlite-plugin
 This sub-package contains GeoPackage reader/writer.
 
-%package 	    web-plugin
+%package 	web-plugin
 Summary:        web ossim plugin
 Group:          System Environment/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
@@ -256,7 +201,6 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %description web-plugin
 This sub-package contains the web ossim plugin for interfacing with http via
 curl library. 
-
 
 %prep
 
@@ -266,8 +210,8 @@ curl library.
 # -D on setup = Do not delete the directory before unpacking.
 # -T on setup = Disable the automatic unpacking of the archives.
 #---
-# %setup -q -D -T
-%setup -q -D
+%setup -q -D -T
+# %setup -q -D
 # %setup -q
 
 # Delete bundled libraw
@@ -276,13 +220,12 @@ rm -rf ossim_plugins/libraw/LibRaw-0.9.0/
 
 %build
 
-# Exports for ossim and java builds:
-export GROOVY_HOME=/usr/share/groovy
-export JAVA_HOME=/usr/lib/jvm/java
+# Exports for ossim abuild:
 export OSSIM_DEV_HOME=%{_builddir}/%{name}-%{version}
 export OSSIM_BUILD_DIR=%{_builddir}/%{name}-%{version}/build
 export OSSIM_BUILD_TYPE=RelWithDebInfo
-export OSSIM_INSTALL_PREFIX=%{buildroot}/usr
+export OSSIM_INSTALL_PREFIX=/usr
+export OSSIM_VERSION=%{RPM_OSSIM_VERSION}
 
 mkdir -p build
 pushd build
@@ -332,7 +275,10 @@ pushd build
 make VERBOSE=1 %{?_smp_mflags}
 popd
 
-# 
+
+# Exports for java builds:
+export JAVA_HOME=/usr/lib/jvm/java
+#export JAVA_HOME=/usr/java/latest
 
 # Build c++ jni bindings and java side of oms module:
 pushd ossim-oms/joms
@@ -342,37 +288,34 @@ popd
 
 %install
 
-# Exports for ossim and java installs:
-export GROOVY_HOME=/usr/share/groovy
-export JAVA_HOME=/usr/lib/jvm/java
+# Exports for ossim install:
 export OSSIM_DEV_HOME=%{_builddir}/%{name}-%{version}
 export OSSIM_BUILD_DIR=%{_builddir}/%{name}-%{version}/build
 export OSSIM_BUILD_TYPE=RelWithDebInfo
-# export OSSIM_INSTALL_PREFIX=%{buildroot}/usr
 export OSSIM_VERSION=%{RPM_OSSIM_VERSION}
 
 pushd build
 make install DESTDIR=%{buildroot}
-# make install
 popd
 
 install -p -m644 -D ossim/support/linux/etc/profile.d/ossim.sh %{buildroot}%{_sysconfdir}/profile.d/ossim.sh
 install -p -m644 -D ossim/support/linux/etc/profile.d/ossim.csh %{buildroot}%{_sysconfdir}/profile.d/ossim.csh
 install -p -m644 -D ossim/share/ossim/templates/ossim_preferences_template %{buildroot}%{_datadir}/ossim/ossim-preferences-template
 
+# Exports for java builds:
+export JAVA_HOME=/usr/lib/jvm/java
+#export JAVA_HOME=/usr/java/latest
+export OSSIM_INSTALL_PREFIX=%{buildroot}/usr
+
 # oms "ant" build:
 pushd ossim-oms/joms
-
 ant dist
 ant install
-
-# mvn-install needed for omar rpm build!
-ant mvn-install
-
+# ant mvn-install
 # Fix bad perms:
 chmod 755 %{buildroot}%{_libdir}/libjoms.so
-
 popd
+
 
 %post
 /sbin/ldconfig
@@ -382,123 +325,77 @@ if [ ! -f %{_datadir}/ossim/ossim-site-preferences ]; then
    cp %{_datadir}/ossim/ossim-preferences-template %{_datadir}/ossim/ossim-site-preferences
 fi
 
-%postun
-/sbin/ldconfig
-
-%post wms -p /sbin/ldconfig
-%postun wms -p /sbin/ldconfig
-
 %post oms
 /sbin/ldconfig
 rm -f %{_javadir}/joms.jar
 ln -s %{_javadir}/joms-%{version}.jar %{_javadir}/joms.jar
 
+%post wms
+/sbin/ldconfig
+
+%postun
+/sbin/ldconfig
+
 %postun oms
 /sbin/ldconfig
 rm -f %{_javadir}/joms.jar
 
-%post planet -p /sbin/ldconfig
-%postun planet -p /sbin/ldconfig
+%postun wms
+/sbin/ldconfig
+
 
 %files
 %{_bindir}/*
-%{_datadir}/ossim/
-%doc ossim/LICENSE.txt
-%{_libdir}/libossim.so.*
-%{_sysconfdir}/profile.d/ossim.sh
-%{_sysconfdir}/profile.d/ossim.csh
 
 # Weed out apps:
-# %exclude %{_bindir}/ossim-adrg-dump
-# %exclude %{_bindir}/ossim-btoa
-# %exclude %{_bindir}/ossim-computeSrtmStats
-# %exclude %{_bindir}/ossim-correl 
-# %exclude %{_bindir}/ossim-create-bitmask
-# %exclude %{_bindir}/ossim-dump-ocg
-# %exclude %{_bindir}/ossim-image-compare
-# %exclude %{_bindir}/ossim-modopt
-# %exclude %{_bindir}/ossimplanet
-# %exclude %{_bindir}/ossimplanetklv
-# %exclude %{_bindir}/ossimplanet-chip
-# %exclude %{_bindir}/ossimplanettest
-# %exclude %{_bindir}/ossim-rejout
-# %exclude %{_bindir}/ossim-rpf 
-# %exclude %{_bindir}/ossim-senint
-# %exclude %{_bindir}/ossim-space-imaging
-# %exclude %{_bindir}/ossim-src2src
-# %exclude %{_bindir}/ossim-swapbytes
-# %exclude %{_bindir}/ossim-ws-cmp
+%exclude %{_bindir}/ossim-*-test
+
+%exclude %{_bindir}/ossim-adrg-dump
+%exclude %{_bindir}/ossim-btoa
+%exclude %{_bindir}/ossim-computeSrtmStats
+%exclude %{_bindir}/ossim-correl 
+%exclude %{_bindir}/ossim-create-bitmask
+%exclude %{_bindir}/ossim-dump-ocg
+%exclude %{_bindir}/ossim-image-compare
+%exclude %{_bindir}/ossim-modopt
+%exclude %{_bindir}/ossimplanet
+%exclude %{_bindir}/ossimplanetklv
+%exclude %{_bindir}/ossimplanet-chip
+%exclude %{_bindir}/ossimplanettest
+%exclude %{_bindir}/ossim-rejout
+%exclude %{_bindir}/ossim-rpf 
+%exclude %{_bindir}/ossim-senint
+%exclude %{_bindir}/ossim-space-imaging
+%exclude %{_bindir}/ossim-src2src
+%exclude %{_bindir}/ossim-swapbytes
+%exclude %{_bindir}/ossim-ws-cmp
 
 # These are in the geocell package:
-# %exclude %{_bindir}/ossim-geocell
-# %exclude %{_bindir}/ossimplanetviewer
+%exclude %{_bindir}/ossim-geocell
+%exclude %{_bindir}/ossimplanetviewer
 
 %files devel
 %{_includedir}/ossim
-%{_libdir}/libossim.so
-%{_libdir}/pkgconfig/ossim.pc
 
-%files gdal-plugin
-%{_libdir}/ossim/plugins/libossimgdal_plugin.so
+%files libs
+%{_datadir}/ossim/
+%doc ossim/LICENSE.txt
+%{_libdir}/libossim.so*
+%{_libdir}/pkgconfig/ossim.pc
+%{_sysconfdir}/profile.d/ossim.sh
+%{_sysconfdir}/profile.d/ossim.csh
 
 %files geocell
 %{_bindir}/ossim-geocell
 %{_libdir}/libossimGui.so*
 
-%files geopdf-plugin
-%{_libdir}/ossim/plugins/libossimgeopdf_plugin.so
-
-%if 0
-%files hdf-plugin
-%{_libdir}/ossim/plugins/libossimhdf_plugin.so
-%endif
-
-%if 0 
-%files hdf4-plugin
-%{_libdir}/ossim/plugins/libossimhdf4_plugin.so
-%endif
-
-%if 1
-%files hdf5-plugin
-%{_libdir}/ossim/plugins/libossimhdf5_plugin.so
-%endif
-
-%files kmlsuperoverlay-plugin
-%{_libdir}/ossim/plugins/libossimkmlsuperoverlay_plugin.so
-
-%files las-plugin
-%{_libdir}/ossim/plugins/libossimlas_plugin.so
-
-# Removing until code changed to use external libraw package.(drb)
-%if 0
-%files libraw-plugin
-%{_libdir}/ossim/plugins/libossimlibraw_plugin.so
-%endif
-
-%files wms
-%{_libdir}/libwms.so.*
-
-%files wms-devel
-%{_includedir}/wms/
-%{_libdir}/libwms.so
-
-%files ndf-plugin
-%{_libdir}/ossim/plugins/libossimndf_plugin.so
-
 %files oms
 %{_javadir}/joms-%{version}.jar
 %{_libdir}/libjoms.so
-%{_libdir}/liboms.so.*
+%{_libdir}/liboms.so*
 
 %files oms-devel
 %{_includedir}/oms/
-%{_libdir}/liboms.so
-
-%files opencv-plugin
-%{_libdir}/ossim/plugins/libossimopencv_plugin.so
-
-%files ossim-plugin
-%{_libdir}/ossim/plugins/libossim_plugin.so
 
 %files planet
 %{_bindir}/ossimplanet
@@ -509,20 +406,41 @@ rm -f %{_javadir}/joms.jar
 %files planet-devel
 %{_includedir}/ossimPlanet
 
+%files test-apps
+%{_bindir}/ossim-*-test
+
+%files wms
+%{_includedir}/wms/
+%{_libdir}/libossim-wms.so*
+
+#---
+# ossim plugins
+#---
+%files cnes-plugin
+%{_libdir}/ossim/plugins/libossim_cnes_plugin.so
+
+%files gdal-plugin
+%{_libdir}/ossim/plugins/libossim_gdal_plugin.so
+
+%files geopdf-plugin
+%{_libdir}/ossim/plugins/libossim_geopdf_plugin.so
+
+%files hdf5-plugin
+%{_libdir}/ossim/plugins/libossim_hdf5_plugin.so
+
+%files kml-plugin
+%{_libdir}/ossim/plugins/libossim_kml_plugin.so
+
 %files png-plugin
-%{_libdir}/ossim/plugins/libossimpng_plugin.so
-
-%files predator
-%{_libdir}/libossimPredator.so*
-
-%files predator-devel
-%{_includedir}/ossimPredator
+%{_libdir}/ossim/plugins/libossim_png_plugin.so
 
 %files sqlite-plugin
-%{_libdir}/ossim/plugins/libossimsqlite_plugin.so
+%{_libdir}/ossim/plugins/libossim_sqlite_plugin.so
 
 %files web-plugin
-%{_libdir}/ossim/plugins/libossimweb_plugin.so
+%{_libdir}/ossim/plugins/libossim_web_plugin.so
+
+
 
 %changelog
 * Sun Dec 29 2013 Volker Fröhlich <volker27@gmx.at> - yes-1
