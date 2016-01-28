@@ -7,7 +7,7 @@
 # up bigtiff support.
 #
 # Example usage:
-# rpmbuild -ba --define 'RPM_OSSIM_VERSION 1.9.0' --define 'BUILD_RELEASE 1' ossimlabs.spec
+# rpmbuild -ba --define 'RPM_OSSIM_VERSION 1.9.0' --define 'BUILD_RELEASE 1' ossim-el6.spec
 #
 # Caveats: 
 # 1) Builder/user needs "groovy" in their search path.
