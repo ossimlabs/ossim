@@ -251,9 +251,9 @@ curl library.
 # -D on setup = Do not delete the directory before unpacking.
 # -T on setup = Disable the automatic unpacking of the archives.
 #---
-%setup -q -D -T
+# %setup -q -D -T
 # %setup -q -D
-# %setup -q
+%setup -q
 
 # Delete bundled libraw
 rm -rf ossim_plugins/libraw/LibRaw-0.9.0/
