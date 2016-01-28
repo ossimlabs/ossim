@@ -17,6 +17,7 @@
 
 #include <ossim/base/ossimEllipsoid.h>
 #include <ossim/base/ossimDpt.h>
+#include <ossim/base/ossimGpt.h>
 #include <ossim/base/ossimEllipsoidFactory.h>
 #include <ossim/base/ossimEcefRay.h>
 #include <ossim/base/ossimEcefPoint.h>
@@ -131,7 +132,7 @@ bool ossimEllipsoid::nearestIntersection(const ossimEcefRay &ray,
 //*****************************************************************************
 //  METHOD: ossimEllipsoid::nearestIntersection
 //  
-//   geographic objects that are derive this class will asssume that
+//   geographic objects that are derive this class will assume that
 //   the reference datum is wgs84 and that the ray origin is a
 //   geocentric coordinate relative to the wgs84 datum.  Will return
 //   true if the object was intersected and false otherwise.
@@ -148,9 +149,8 @@ bool ossimEllipsoid::nearestIntersection(const ossimEcefRay &ray,
 //  
 //     x^2/theXRadius^2 + y^2/theYRadius^2 + z^2/theZRadius^2 = 1
 //  
-//  
-//   the intersection is achived by substituting the parametric line
-//   into the equation of the sphereroid.  By doing this you should
+//   the intersection is achieved by substituting the parametric line
+//   into the equation of the spheroid.  By doing this you should
 //   get a quadratic in t and the equation should look like this:
 //  
 //    a*t^2 + b*t + c = 0
@@ -159,103 +159,143 @@ bool ossimEllipsoid::nearestIntersection(const ossimEcefRay &ray,
 //      let b = 2*(x0*dx/theXRadius^2 +y0*dy/theYRadius^2 + z0*dz/theZRadius^2
 //      let c = x0^2/theXRadius^2 + y0^2/theYRadius^2 + z0^2/theZRadius^2 - 1
 //  
-//  
 //    Now solve the quadratic (-b +- sqrt(b^2 - 4ac) ) / 2a
 //  
 //    After solving for t, the parameter is applied to the ray to determine
 //    the 3D point position in X,Y,Z, passed back in rtnPt. The boolean
 //    "true" is returned if an intersection was found.
+//    
+//    ESH 1/14/2016: I noticed that the radii used for the spheroid are dependent
+//    on latitude and this was not taken into account, leading to small errors in 
+//    the results. The current point on the ray is now used to estimate latitude and 
+//    update the radii. Iterations stop when the intersection point has an elevation 
+//    value close to the ellipsoid 'offset'. This approach appears to converge very 
+//    fast (<=3 iterations). Before this fix, it was noticed that the rtnPt can be 
+//    off as the absolute value of 'offset' gets large. For example, at 10000 meters, 
+//    rtnPt can be off by almost 2 centimeters.
 //
 //*****************************************************************************
-bool ossimEllipsoid::nearestIntersection(const ossimEcefRay& ray,
-                                         const double&       offset,
-                                         ossimEcefPoint&     rtnPt) const
+bool ossimEllipsoid::nearestIntersection( const ossimEcefRay& ray,
+                                          const double&       offset,
+                                          ossimEcefPoint&     rtnPt ) const
 {
    static const char MODULE[] = "ossimEllipsoid::nearestIntersection";
-   if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG: " << MODULE << ", entering...\n";
+   if (traceExec())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG: " << MODULE << ", entering...\n";
+   }
 
-   
-   double A_squared = (theA + offset)*(theA + offset);
-   double B_squared = (theB + offset)*(theB + offset);
+   bool success = false;
 
-//    double adjustedOffset = offset/theA;
-//    double bOverA = theB/theA;
-//    double A_squared = (1.0+adjustedOffset)*(1.0+adjustedOffset);
-//    double B_squared = ((bOverA+adjustedOffset)*(bOverA+adjustedOffset));//(theB + offset)*(theB + offset);
-   
+   const double eccSqComp = 1.0 - theEccentricitySquared;
+   const double CONVERGENCE_THRESHOLD = 0.0001;
+   const int    MAX_NUM_ITERATIONS    = 10;
+
    //***
    // get the origin and direction of ray:
    //***
    ossimEcefPoint  start = ray.origin();   
    ossimEcefVector direction = ray.direction();
-//    start = ossimEcefPoint(start.x()/theA,
-//                           start.y()/theA,
-//                           start.z()/theA);
-   //***
-   // Solve the coefficents of the quadratic formula
-   //***
-   double a = ((direction.x() * direction.x())/A_squared) +
-              ((direction.y() * direction.y())/A_squared) +
-              ((direction.z() * direction.z())/B_squared);
-
-   double b = 2.0*( ((start.x()*direction.x())/A_squared) +
-                    ((start.y()*direction.y())/A_squared) +
-                    ((start.z()*direction.z())/B_squared) );
-
-   double c = ((start.x()*start.x())/A_squared) +
-              ((start.y()*start.y())/A_squared) +
-              ((start.z()*start.z())/B_squared) - 1.0;
    
-   //***
-   // solve the quadratic
-   //***
-   double root = b*b - 4*a*c;
-   double t;
-   if(root < 0.0)
-   {
-      return false;
-   }
-   else
-   {
-      double squareRoot = sqrt(root);
-      double t1 = (-b + squareRoot ) / (2.0*a);
-      double t2 = (-b - squareRoot ) / (2.0*a);
+   double start_x = start.x();
+   double start_y = start.y();
+   double start_z = start.z();
 
+   double direction_x = direction.x();
+   double direction_y = direction.y();
+   double direction_z = direction.z();
+
+   ossimGpt rayGpt( start );
+
+   int iterations = 0;
+   bool done = false;
+   do
+   {
+      double rayLat    = rayGpt.latd();
+      double raySinLat = ossim::sind( rayLat );
+      double rayScale  = 1.0 / sqrt( 1.0 - theEccentricitySquared * raySinLat * raySinLat );
+      double rayN      = theA * rayScale;
+
+      double A_offset = rayN + offset;
+      double B_offset = rayN * eccSqComp + offset;
+
+      double A_offset_inv = 1.0 / A_offset;
+      double B_offset_inv = 1.0 / B_offset;
+
+      double scaled_x = start_x * A_offset_inv;
+      double scaled_y = start_y * A_offset_inv;
+      double scaled_z = start_z * B_offset_inv;
+
+      double A_over_B = A_offset * B_offset_inv;
+
+      //***
+      // Solve the coefficients of the quadratic formula
+      //***
+
+      double a = (direction_x*direction_x + direction_y*direction_y) * A_offset_inv;
+      a += (direction_z*direction_z * B_offset_inv * A_over_B);
+
+      double b = 2.0 * ( scaled_x*direction_x + scaled_y*direction_y +
+                         scaled_z*direction_z*A_over_B );
+
+      double c = scaled_x*start_x + scaled_y*start_y;
+      c += (scaled_z*start_z * A_over_B);
+      c -= A_offset;
+
+      //***
+      // solve the quadratic
+      //***
+      double root = b*b - 4.0*a*c;
+      if ( root < 0.0 )
+      {
+         return false;
+      }
+
+      double squareRoot = sqrt(root);
+      double oneOver2a  = 1.0 / (2.0*a);
+
+      double t1 = (-b + squareRoot) * oneOver2a;
+      double t2 = (-b - squareRoot) * oneOver2a;
+      
       //***
       // sort t1 and t2 and take the nearest intersection if they
       // are in front of the ray.
       //***
-      if(t2 < t1)
+      if ( t2 < t1 )
       {
          double temp = t1;
          t1 = t2;
          t2 = temp;
       }     
 
-       if(t1 > 0.0)
-          t = t1;
-       else
-          t = t2;
-//      t = t1;
+      double tEstimate = ( t1 > 0.0 ) ? t1 : t2;
+
+      // Get estimated intersection point.
+      ossimEcefPoint rayEcef = ray.extend( tEstimate );
+
+      rayGpt = ossimGpt( rayEcef );
+      double offsetError = fabs( rayGpt.height() - offset );
+      if ( offsetError < CONVERGENCE_THRESHOLD )
+      {
+         done = true;
+         success = true;
+         rtnPt = rayEcef;
+      }
+
+   }  while ( (!done) && (iterations++ < MAX_NUM_ITERATIONS) );
+
+   if (iterations >= MAX_NUM_ITERATIONS)
+   {
+      if(traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << "WARNING ossimEllipsoid::nearestIntersection: Max number of iterations reached"
+            << " solving for intersection point. Result is probably inaccurate." << std::endl;
+      }
    }
 
-   //***
-   // Now apply solved t to ray to extrapolate correct distance to intersection
-   //***
-//    bool rtnval = false;
-//    if (t >= 0)
-//    {
-//       rtnval = true;
-//       rtnPt  = ray.extend(t); 
-// //       rtnPt  = ray.extend(t*theA); 
-//    }
-      
-   bool rtnval = true;
-   rtnPt  = ray.extend(t); 
-
-   return rtnval; 
+   return success; 
 }
-
 
 //*****************************************************************************
 //  METHOD: ossimEllipsoid::evaluate(ossimColumnVector3d)
