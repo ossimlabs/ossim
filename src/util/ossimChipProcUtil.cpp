@@ -127,21 +127,21 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    ostringstream keys;
 
    // Extract optional arguments and stuff them in a keyword list.
-   if ( ap.read("--aoi--geo-bbox", stringParam1, stringParam2, stringParam3, stringParam4))
+   if ( ap.read("--aoi-geo-bbox", stringParam1, stringParam2, stringParam3, stringParam4))
    {
       ostringstream ostr;
       ostr<<tempString1<<" "<<tempString2<<" "<<tempString3<<" "<<tempString4<<ends;
       m_kwl.addPair( AOI_GEO_RECT_KW, ostr.str() );
    }
 
-   if ( ap.read("--aoi--geo-center", stringParam1, stringParam2))
+   if ( ap.read("--aoi-geo-center", stringParam1, stringParam2))
    {
       ostringstream ostr;
       ostr<<tempString1<<" "<<tempString2<<ends;
       m_kwl.addPair( AOI_GEO_CENTER_KW, ostr.str() );
    }
 
-   if ( ap.read("--aoi--map-bbox", stringParam1, stringParam2, stringParam3, stringParam4))
+   if ( ap.read("--aoi-map-bbox", stringParam1, stringParam2, stringParam3, stringParam4))
    {
       ostringstream ostr;
       ostr<<tempString1<<" "<<tempString2<<" "<<tempString3<<" "<<tempString4<<ends;
@@ -762,12 +762,12 @@ void ossimChipProcUtil::intiailizeProjectionTiePoint()
       ossimDpt deg_per_pixel =  m_geom->getDegreesPerPixel();
       if (!tiePoint.hasNans() && !deg_per_pixel.hasNans())
       {
-         // The tie point coordinates currently reflect the UL edge of the UL pixel.
-         // We'll need to shift the tie point back from the edge to the center base on the
-         // output gsd.
-         ossimDpt half_pixel_shift = deg_per_pixel * 0.5;
-         tiePoint.lat -= half_pixel_shift.lat;
-         tiePoint.lon += half_pixel_shift.lon;
+//         // The tie point coordinates currently reflect the UL edge of the UL pixel.
+//         // We'll need to shift the tie point back from the edge to the center base on the
+//         // output gsd.
+//         ossimDpt half_pixel_shift = deg_per_pixel * 0.5;
+//         tiePoint.lat -= half_pixel_shift.lat;
+//         tiePoint.lon += half_pixel_shift.lon;
          mapProj->setUlTiePoints(tiePoint);
       }
    }
@@ -786,14 +786,14 @@ void ossimChipProcUtil::intiailizeProjectionTiePoint()
       ossimDpt gsd =  m_geom->getMetersPerPixel();
       if (!tiePoint.hasNans() && !gsd.hasNans())
       {
-         //---
-         // The tie point coordinates currently reflect the UL edge of the UL pixel.
-         // We'll need to shift the tie point bac from the edge to the center base on the
-         // output gsd.
-         //---
-         ossimDpt half_pixel_shift = gsd * 0.5;
-         tiePoint.y -= half_pixel_shift.y;
-         tiePoint.x += half_pixel_shift.x;
+//         //---
+//         // The tie point coordinates currently reflect the UL edge of the UL pixel.
+//         // We'll need to shift the tie point bac from the edge to the center base on the
+//         // output gsd.
+//         //---
+//         ossimDpt half_pixel_shift = gsd * 0.5;
+//         tiePoint.y -= half_pixel_shift.y;
+//         tiePoint.x += half_pixel_shift.x;
          mapProj->setUlTiePoints(tiePoint);
       }
    }
@@ -808,7 +808,7 @@ void ossimChipProcUtil::intiailizeProjectionTiePoint()
    ossimDrect drect;
    m_geom->worldToLocal(m_aoiGroundRect, drect);
    m_aoiViewRect = ossimIrect(drect);
-   cout<<"m_aoiViewRect:"<<m_aoiViewRect<<endl;
+   cout<<"\nossimChipProcUtil:"<<__LINE__<<"  m_aoiViewRect:"<<m_aoiViewRect<<endl;
 
 }
 
@@ -1383,7 +1383,10 @@ void ossimChipProcUtil::initializeAOI()
          m_geom->localToWorld(ulvpt, ulgpt);
          m_geom->localToWorld(lrvpt, lrgpt);
          m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
-         computeViewRect();
+         ossimDrect viewRect;
+         m_geom->worldToLocal(m_aoiGroundRect, viewRect);
+         m_aoiViewRect = ossimIrect(viewRect);
+         //computeViewRect();
       }
    }
 
@@ -1419,14 +1422,15 @@ void ossimChipProcUtil::initializeAOI()
       ossimGpt ulgpt (maxLatF, minLonF);
       ossimGpt lrgpt (minLatF , maxLonF);
       m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
-      computeViewRect();
+      ossimDrect viewRect;
+      m_geom->worldToLocal(m_aoiGroundRect, viewRect);
+      m_aoiViewRect = ossimIrect(viewRect);
+      //computeViewRect();
    }
 
    // If no user defined rect set to scene bounding rect.
    if ( m_aoiViewRect.hasNans() )
-   {
       setAOIsToInputs();
-   }
 }
 
 void ossimChipProcUtil::setAOIsToInputs()
@@ -1490,7 +1494,10 @@ void ossimChipProcUtil::setAOIsToInputs()
       bbox = bbox.clipToRect(bbox_dems);
 
    m_aoiGroundRect = bbox;
-   computeViewRect();
+   ossimDrect viewRect;
+   m_geom->worldToLocal(m_aoiGroundRect, viewRect);
+   m_aoiViewRect = ossimIrect(viewRect);
+   //computeViewRect();
 }
 
 void ossimChipProcUtil::computeViewRect()
@@ -1531,7 +1538,6 @@ void ossimChipProcUtil::computeViewRect()
    }
 
    m_aoiViewRect = ossimIrect( ossimIpt(ulPt), ossimIpt(lrPt) );
-   cout<<"m_aoiViewRect:"<<m_aoiViewRect<<endl;
 
    // If no user defined rect set to scene bounding rect.
    if ( m_aoiViewRect.hasNans() )
@@ -1765,7 +1771,7 @@ void ossimChipProcUtil::setUsage(ossimArgumentParser& ap)
    ossimUtility::setUsage(ap);
 
    // Add options.
-   au->addCommandLineOption("--aoi-geo-bbox", "<min-lat> <min-lon> <max-lat> <max-lon>\nSpecify a space-separated list for the upper-left and lower-right corners of the scene rect in decimal degrees.");
+   au->addCommandLineOption("--aoi-geo-bbox", "<min-lat> <min-lon> <max-lat> <max-lon>\nSpecify a comma-separated list for the upper-left and lower-right corners of the scene rect in decimal degrees.");
    au->addCommandLineOption("--aoi-geo-center", "<lat> <lon>\nCenter of scene/AOI in decimal degrees.");
    au->addCommandLineOption("--aoi-geo-size", "<dlat> <dlon>\nSize of AOI in degrees.");
    au->addCommandLineOption("--aoi-map-bbox", "<min-x> <min-y> <max-x> <max-y>\nSpecify a space-separated list for the upper-left and lower-right corners of the scene rect in decimal degrees.");

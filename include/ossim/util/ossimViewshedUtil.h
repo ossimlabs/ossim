@@ -93,6 +93,7 @@ protected:
    Radial** m_radials;
    bool m_initialized;
    bool m_obsInsideAoi;
+   bool m_displayAsRadar; // True when explicit visRadius is supplied
    ossim_uint32 m_halfWindow; // visRadius adjusted by GSD (in pixels)
    ossimRefPtr<ossimImageData> m_outBuffer;
    ossim_uint8 m_visibleValue;

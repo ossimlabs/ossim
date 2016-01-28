@@ -45,6 +45,8 @@ ossimViewshedUtil::ossimViewshedUtil()
     m_visRadius (0.0),
     m_radials (0),
     m_initialized (false),
+    m_obsInsideAoi (true),
+    m_displayAsRadar (false),
     m_halfWindow (0),
     m_outBuffer (NULL),
     m_visibleValue (0),
@@ -130,6 +132,8 @@ void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    ostringstream xmsg;
    xmsg<<"ossimViewshedUtil::initialize(ossimArgumentParser) -- ";
 
+   int numArgsExpected = 4;
+
    // Base class first:
    ossimChipProcUtil::initialize(ap);
 
@@ -161,6 +165,7 @@ void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
       ostringstream value;
       value<<ts1<<" "<<ts2;
       m_kwl.addPair( OBSERVER_KW, value.str() );
+      numArgsExpected -= 2;
    }
 
    if ( ap.read("--radius", sp1) )
@@ -186,8 +191,7 @@ void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    if ( ap.read("--threads", sp1) )
       m_numThreads = ossimString(ts1).toUInt32();
 
-   // There next should be the observer position lat & lon on command line before output filename:
-   if ( ap.argc() < 4 )
+   if ( ap.argc() < numArgsExpected )
    {
       xmsg<<"Expecting more arguments.";
       ap.reportError(xmsg.str());
@@ -245,7 +249,10 @@ void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
 
    value = kwl.findKey(RADIUS_KW);
    if (!value.empty())
+   {
       m_visRadius = value.toDouble();
+      m_displayAsRadar = true;
+   }
 
    value = kwl.findKey(RETICLE_KW);
    if (!value.empty())
@@ -262,6 +269,13 @@ void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
          m_hiddenValue = coordstr[1].toUInt8();
          m_overlayValue = coordstr[2].toUInt8();
       }
+   }
+
+   // If running simulation, clear out all pre-loaded elevation databases:
+   if (m_simulation)
+   {
+      ossimElevManager::instance()->clear();
+      ossimElevManager::instance()->setUseGeoidIfNullFlag(false);
    }
 
    // Base class does most work:
@@ -290,18 +304,16 @@ void ossimViewshedUtil::initProcessingChain()
    }
 
    ossimElevManager* elevMgr = ossimElevManager::instance();
-   if (m_simulation)
-      elevMgr->setEnableFlag(false);
 
    // Initialize the height of eye component of observer position:
-   m_observerGpt.hgt = ossimElevManager::instance()->getHeightAboveEllipsoid(m_observerGpt);
+   m_observerGpt.hgt = elevMgr->getHeightAboveEllipsoid(m_observerGpt);
    m_observerGpt.hgt += m_obsHgtAbvTer;
    m_geom->worldToLocal(m_observerGpt, m_observerVpt);
 
    // Determine if default GSD needs to be computed.
    if (m_gsd.hasNans())
    {
-      m_gsd.x = m_gsd.y = ossimElevManager::instance()->getMeanSpacingMeters();
+      m_gsd.x = m_gsd.y = elevMgr->getMeanSpacingMeters();
       ossimRefPtr<ossimMapProjection> mapProj =
             dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
       if (mapProj.valid()) // already validated but just in case
@@ -313,7 +325,7 @@ void ossimViewshedUtil::initProcessingChain()
       computeRadius();
    if (m_halfWindow == 0)
       m_halfWindow = ossim::round<ossim_int32, double>(m_visRadius/m_gsd.x);
-   ossim_uint32 size = 2*m_halfWindow;
+   ossim_uint32 size = 2*m_halfWindow + 1;
 
    // If no AOI defined, just use the visibility rectangle:
    ossimIrect visRect (ossimIpt(m_observerVpt), size, size);
@@ -658,6 +670,8 @@ if (m_numThreads > 1)
          if (needsAborting())
             return false;
 
+         m_outBuffer->write(ossimFilename("chipB.tif"));//TODO: REMOVE DEBUG
+
       } // end loop over sectors
    }
 
@@ -670,6 +684,8 @@ if (m_numThreads > 1)
       cout << "Writing horizon profile output file..." <<endl;
       success = writeHorizonProfile();
    }
+
+   m_outBuffer->write(ossimFilename("chipC.tif"));//TODO: REMOVE DEBUG
 
    if (success)
       success = ossimChipProcUtil::execute();
@@ -687,6 +703,22 @@ void ossimViewshedUtil::paintReticle()
    {
       m_outBuffer->setValue(m_observerVpt.x + i, m_observerVpt.y    , m_overlayValue);
       m_outBuffer->setValue(m_observerVpt.x    , m_observerVpt.y + i, m_overlayValue);
+   }
+
+   // Paint boundary rectangle if no visibility radius painted:
+   if (!m_displayAsRadar)
+   {
+      ossimIrect bufRect = m_outBuffer->getImageRectangle();
+      for (int y=bufRect.ul().y; y<=bufRect.lr().y; y++)
+      {
+         m_outBuffer->setValue(bufRect.ul().x, y, m_overlayValue);
+         m_outBuffer->setValue(bufRect.lr().x, y, m_overlayValue);
+      }
+      for (int x=bufRect.ul().x; x<=bufRect.lr().x; x++)
+      {
+         m_outBuffer->setValue(x, bufRect.ul().y, m_overlayValue);
+         m_outBuffer->setValue(x, bufRect.lr().y, m_overlayValue);
+      }
    }
 }
 
@@ -770,7 +802,7 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
                                ossim_uint32 sector_idx,
                                ossim_uint32 radial_idx)
 {
-   double v;
+   double u, v;
    ossimDpt pt_i, vpt_i;
    double elev_i, elev;
    double r2_max = vsUtil->m_halfWindow*vsUtil->m_halfWindow;
@@ -780,7 +812,7 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
 
    // Walk along the radial using the appropriate coordinate abscissa for that sector and
    // compute ordinate using the radials azimuth:
-   for (double u=1.0; u <= (double) vsUtil->m_halfWindow; u += 1.0)
+   for (u=1.0; u <= (double) vsUtil->m_halfWindow; u += 1.0)
    {
       // Compute ordinate from abscissa and slope of this radial:
       v = radial.azimuth*(u);
@@ -836,7 +868,7 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
          radial.insideAoi = true;
 
       // Check if we passed beyong the visibilty radius, and exit loop if so:
-      if ((vsUtil->m_visRadius > 0) && ((u*u + v*v) >= r2_max))
+      if (vsUtil->m_displayAsRadar && ((u*u + v*v) == r2_max))
       {
          OpenThreads::ScopedWriteLock lock (m_bufMutex);
          vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_overlayValue);
@@ -851,7 +883,7 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
       if (vsUtil->m_simulation && ossim::isnan(gpt_i.hgt))
          gpt_i.hgt = vsUtil->m_observerGpt.hgt-vsUtil->m_obsHgtAbvTer; // ground level
 
-      else if (!gpt_i.hasNans())
+      if (!gpt_i.hasNans())
       {
          // Compare elev angle to max angle latched so far along this radial:
          elev_i = (gpt_i.hgt - vsUtil->m_observerGpt.hgt) / u;
