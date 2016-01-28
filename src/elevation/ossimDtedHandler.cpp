@@ -294,15 +294,19 @@ double ossimDtedHandler::getHeightAboveMSL(const ossimGpt& gpt, bool readFromFil
 
        memcpy(&us, buf+offset, POST_SIZE);
        postData.m_posts[0].m_height = convertSignedMagnitude(us);
+       postData.m_posts[0].m_status = true;
        memcpy(&us, buf+offset+POST_SIZE, POST_SIZE);
        postData.m_posts[1].m_height = convertSignedMagnitude(us);
+       postData.m_posts[1].m_status = true;
 
        // Move over to the next column.
        offset += m_dtedRecordSizeInBytes;
        memcpy(&us, buf+offset, POST_SIZE);
        postData.m_posts[2].m_height = convertSignedMagnitude(us);
+       postData.m_posts[2].m_status = true;
        memcpy(&us, buf+offset+POST_SIZE, POST_SIZE);
        postData.m_posts[3].m_height = convertSignedMagnitude(us);
+       postData.m_posts[3].m_status = true;
      }
    }
    // Perform bilinear interpolation:
