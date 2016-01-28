@@ -1,4 +1,11 @@
 #---
+# File: ossim-el7.spec
+#
+# Spec file for building ossim rpms with rpmbuild.
+#
+# NOTE: This files differs from ossim-el6.spec on in el6 need libtiff4 to pick
+# up bigtiff support.
+#
 # Example usage:
 # rpmbuild -ba --define 'RPM_OSSIM_VERSION 1.9.0' --define 'BUILD_RELEASE 1' ossimlabs.spec
 #
@@ -87,7 +94,7 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %description    oms-devel
 This sub-package contains the development files for oms.
 
-%package 	    planet
+%package 	planet
 Summary:        3D ossim library interface via OpenSceneGraph
 Group:          System Environment/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
@@ -95,7 +102,7 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %description planet
 3D ossim library interface via OpenSceneGraph.
 
-%package 	    planet-devel
+%package 	planet-devel
 Summary:        Development files for ossim planet.
 Group:          System Environment/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
@@ -110,6 +117,22 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description    test-apps
 A suite of ossim test apps.
+
+%package 	video
+Summary:        Ossim vedeo library.
+Group:          System Environment/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description    video
+Ossim vedeo library.
+
+%package 	video-devel
+Summary:        Development files for ossim planet.
+Group:          System Environment/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description    video-devel
+This sub-package contains development files for ossim planet.
 
 # libwms does not depend on ossim
 %package        wms
@@ -172,9 +195,27 @@ Summary:        kml ossim plugin
 Group:          System Environment/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 
-%description kml-plugin
+%description    kml-plugin
 This sub-package contains the kmlsuperoverlay ossim plugin for reading/writing
 kml super overlays.
+
+%package  	opencv-plugin
+Summary:        OSSIM OpenCV plugin, contains registration code.
+Group:          System Environment/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description    opencv-plugin
+This sub-package contains the ossim opencv plugin with various pieces of 
+image registration code.
+
+%package  	openjpeg-plugin
+Summary:        OpenJPEG ossim plugin
+Group:          System Environment/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description    openjpeg-plugin
+This sub-package contains the OpenJPEG ossim plugin for
+reading/writing J2K compressed images via the OpenJPEG library.
 
 %package 	png-plugin
 Summary:        PNG ossim plugin
@@ -235,42 +276,42 @@ pushd build
 -DBUILD_OSSIM=ON \
 -DBUILD_OSSIM_APPS=ON \
 -DBUILD_OSSIM_CURL_APPS=ON \
+-DBUILD_OSSIM_GUI=ON \
+-DBUILD_OSSIM_TESTS=ON \
+-DBUILD_OSSIM_MPI_SUPPORT=OFF \
+-DBUILD_OSSIM_PLANET=ON \
+-DBUILD_OSSIM_PLANET_QT=OFF \
+-DBUILD_OSSIM_VIDEO=ON \
+\
 -DBUILD_CNES_PLUGIN=ON \
--DBUILD_CONTRIB_PLUGIN=ON \
+-DBUILD_CONTRIB_PLUGIN=OFF \
 -DBUILD_CSM_PLUGIN=OFF \
 -DBUILD_GDAL_PLUGIN=ON \
 -DBUILD_GEOPDF_PLUGIN=ON \
 -DBUILD_HDF5_PLUGIN=ON \
 -DBUILD_KAKADU_PLUGIN=OFF \
 -DBUILD_KML_PLUGIN=ON \
--DBUILD_LIBRAW_PLUGIN=ON \
+-DBUILD_LIBRAW_PLUGIN=OFF \
 -DBUILD_MRSID_PLUGIN=OFF \
 -DBUILD_OSSIMMRSID_PLUGIN=ON \
 -DBUILD_NDF_PLUGIN=OFF \
--DBUILD_OPENCV_PLUGIN=OFF \
--DBUILD_OPENJPEG_PLUGIN=OFF \
+-DBUILD_OPENCV_PLUGIN=ON \
+-DBUILD_OPENJPEG_PLUGIN=ON \
 -DBUILD_PDAL_PLUGIN=OFF \
 -DBUILD_PNG_PLUGIN=ON \
--DBUILD_OSSIOPENCV_PLUGIN=ON \
--DBUILD_OSSIMOPENJPEG_PLUGIN=ON \
 -DBUILD_REGISTRATION_PLUGIN=OFF \
 -DBUILD_SQLITE_PLUGIN=ON \
 -DBUILD_WEB_PLUGIN=ON \
--DBUILD_OSSIMGUI=ON \
--DBUILD_OSSIM_MPI_SUPPORT=OFF \
--DBUILD_OSSIMPLANET=ON \
--DBUILD_OSSIMPLANETQT=ON \
--DBUILD_OSSIMPREDATOR=ON \
--DBUILD_OSSIMQT4=OFF \
--DBUILD_OSSIMSQLITE_PLUGIN=ON \
--DBUILD_OSSIM_TEST_APPS=OFF \
+\
 -DBUILD_RUNTIME_DIR=bin \
 -DBUILD_SHARED_LIBS=ON \
 -DBUILD_WMS=ON \
+\
+-DOSSIMPLANET_ENABLE_EPHEMERIS=OFF \
+\
 -DCMAKE_BUILD_TYPE=$OSSIM_BUILD_TYPE \
 -DCMAKE_MODULE_PATH=$OSSIM_DEV_HOME/ossim_package_support/cmake/CMakeModules \
 -DCMAKE_PREFIX_PATH=/usr \
--DOSSIMPLANET_ENABLE_EPHEMERIS=OFF \
 ../ossim/cmake
 make VERBOSE=1 %{?_smp_mflags}
 popd
@@ -330,6 +371,9 @@ fi
 rm -f %{_javadir}/joms.jar
 ln -s %{_javadir}/joms-%{version}.jar %{_javadir}/joms.jar
 
+%post planet
+/sbin/ldconfig
+
 %post wms
 /sbin/ldconfig
 
@@ -339,6 +383,9 @@ ln -s %{_javadir}/joms-%{version}.jar %{_javadir}/joms.jar
 %postun oms
 /sbin/ldconfig
 rm -f %{_javadir}/joms.jar
+
+%postun planet
+/sbin/ldconfig
 
 %postun wms
 /sbin/ldconfig
@@ -358,7 +405,6 @@ rm -f %{_javadir}/joms.jar
 %exclude %{_bindir}/ossim-dump-ocg
 %exclude %{_bindir}/ossim-image-compare
 %exclude %{_bindir}/ossim-modopt
-%exclude %{_bindir}/ossimplanet
 %exclude %{_bindir}/ossimplanetklv
 %exclude %{_bindir}/ossimplanet-chip
 %exclude %{_bindir}/ossimplanettest
@@ -398,16 +444,22 @@ rm -f %{_javadir}/joms.jar
 %{_includedir}/oms/
 
 %files planet
-%{_bindir}/ossimplanet
+# %{_bindir}/ossimplanet
 %{_bindir}/ossimplanetviewer
-%{_libdir}/libossimPlanet.so*
-%{_libdir}/libossimPlanetQt.so*
+%{_libdir}/libossim-planet.so*
+# %{_libdir}/libossimPlanetQt.so*
 
 %files planet-devel
 %{_includedir}/ossimPlanet
 
 %files test-apps
 %{_bindir}/ossim-*-test
+
+%files video
+%{_libdir}/libossim-video.so*
+
+%files video-devel
+%{_includedir}/ossimPredator
 
 %files wms
 %{_includedir}/wms/
@@ -430,6 +482,12 @@ rm -f %{_javadir}/joms.jar
 
 %files kml-plugin
 %{_libdir}/ossim/plugins/libossim_kml_plugin.so
+
+%files opencv-plugin
+%{_libdir}/ossim/plugins/libossim_opencv_plugin.so
+
+%files openjpeg-plugin
+%{_libdir}/ossim/plugins/libossim_openjpeg_plugin.so
 
 %files png-plugin
 %{_libdir}/ossim/plugins/libossim_png_plugin.so
