@@ -11,9 +11,9 @@
 if [ $# -ne 5 ]
 then
   echo "Usage:    $(basename $0) <remote_url> <output_dir> <version> <branch> <path_to_kakadu_source>"
-  echo "Example:  $(basename $0) https://github.com/ossimlabs ossimlabs 1.9.0 dev"
-  echo "Where:    ossimlabs is directory to put archived files and tar ball."
-  echo -n "Creates:  ossim-1.9.0.tar.gz suitable for building rpms with "
+  echo "Example:  $(basename $0) https://github.com/ossimlabs ossimlabs-1.9.0 1.9.0 dev ~/code/kakadu/v7_7_1-01123C"
+  echo "Where:    ossimlabs-1.9.0 is directory to put archived files and tar ball."
+  echo -n "Creates:  ossim-1.9.0.tar.gz and ossim-kakadu-plugin-1.9.0.tar.gz suitable for building rpms with "
   echo "rpmbuild."
   exit 1
 fi
