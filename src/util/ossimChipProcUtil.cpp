@@ -808,8 +808,6 @@ void ossimChipProcUtil::intiailizeProjectionTiePoint()
    ossimDrect drect;
    m_geom->worldToLocal(m_aoiGroundRect, drect);
    m_aoiViewRect = ossimIrect(drect);
-   cout<<"\nossimChipProcUtil:"<<__LINE__<<"  m_aoiViewRect:"<<m_aoiViewRect<<endl;
-
 }
 
 void ossimChipProcUtil::initializeProjectionGsd()

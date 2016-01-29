@@ -508,6 +508,12 @@ bool ossimViewshedUtil::optimizeFOV()
       ossimNotify(ossimNotifyLevel_INFO)<<
             "ossimViewshedUtil::optimizeFOV() -- No FOV intersection found. Nothing to do."<<endl;
    }
+   else
+   {
+      ossimNotify(ossimNotifyLevel_INFO)<<"ossimViewshedUtil::optimizeFOV() -- "
+            "The start and stop FOV azimuths have been optimized to "<<m_startFov<<" -> "
+            <<m_stopFov<<" deg."<<endl;
+   }
 
    return intersects;
 }
@@ -670,8 +676,6 @@ if (m_numThreads > 1)
          if (needsAborting())
             return false;
 
-         m_outBuffer->write(ossimFilename("chipB.tif"));//TODO: REMOVE DEBUG
-
       } // end loop over sectors
    }
 
@@ -684,8 +688,6 @@ if (m_numThreads > 1)
       cout << "Writing horizon profile output file..." <<endl;
       success = writeHorizonProfile();
    }
-
-   m_outBuffer->write(ossimFilename("chipC.tif"));//TODO: REMOVE DEBUG
 
    if (success)
       success = ossimChipProcUtil::execute();
@@ -787,7 +789,9 @@ void SectorProcessorJob::start()
 {
    // Loop over all the sector's radials and walk over each one.
    for (ossim_uint32 r=0; r<=m_numRadials; ++r)
+   {
       RadialProcessor::doRadial(m_vsUtil, m_sector, r);
+   }
 }
 
 void RadialProcessorJob::start()
@@ -868,7 +872,7 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
          radial.insideAoi = true;
 
       // Check if we passed beyong the visibilty radius, and exit loop if so:
-      if (vsUtil->m_displayAsRadar && ((u*u + v*v) == r2_max))
+      if (vsUtil->m_displayAsRadar && ((u*u + v*v) >= r2_max))
       {
          OpenThreads::ScopedWriteLock lock (m_bufMutex);
          vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_overlayValue);

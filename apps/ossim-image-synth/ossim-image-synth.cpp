@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
    filename.setExtension(".tif");
 
    // Set the destination image size:
-   ossimIpt image_size (256 , 256);
+   ossimIpt image_size (512 , 512);
    ossimRefPtr<ossimImageData> outImage =
          ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, image_size.x, image_size.y);
    if(outImage.valid())
@@ -52,6 +52,9 @@ int main(int argc, char *argv[])
    
    // Fill the buffer with test image pattern. Start with fill:
    outImage->fill(1);
+
+   for (int y=128; y<256; y++)
+      outImage->setValue(128, y, 255);
 
    // Establish the image geometry's map projection:
    ossimGpt observerGpt (0, 0, 0);
@@ -68,6 +71,7 @@ int main(int argc, char *argv[])
    ossimRefPtr<ossimImageGeometry> geometry = new ossimImageGeometry(0, mapProj.get());
    geometry->setImageSize(image_size);
 
+#if 0
    // Define different tile textures: noisy, inclined, flat, combo.
    ossim_uint32 tile_size = 32;
 
@@ -168,7 +172,7 @@ int main(int argc, char *argv[])
          outImage->loadTile(tile);
       }
    }
-
+#endif
    // Create output image chain:
    ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
    memSource->setImage(outImage);

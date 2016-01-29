@@ -2626,7 +2626,8 @@ void ossimImageData::setImageRectangle(const ossimIrect& rect)
 
 void ossimImageData::assign(const ossimDataObject* data)
 {
-   if(!data) return;
+   if(!data)
+      return;
    ossimImageData* d = PTR_CAST(ossimImageData, data);
    if(d)
    {
@@ -2668,6 +2669,13 @@ void ossimImageData::assign(const ossimImageData* data)
       {
          initializeDefaults();
       }
+
+      ossim_uint32 source_size = data->getSizeInBytes();
+      const void*  s = data->getBuf();
+      void*        d = getBuf();
+      if (s && d)
+         memcpy(d, s, source_size);
+
    }
 }
 
