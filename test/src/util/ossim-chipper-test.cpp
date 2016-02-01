@@ -68,8 +68,8 @@ int main(int argc, char* argv[])
 
       ossimFilename chipperOptions = argv[1];
       ossimFilename outputFile = argv[2];
-      cout << "chipper spec file: " << chipperOptions
-            << "output file:          " << outputFile << "\n";
+      cout << "chipper options file: " << chipperOptions
+           << "output file:          " << outputFile << "\n";
 
       ossimKeywordlist kwl;
       if ( !kwl.addFile( chipperOptions ) )
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
          throw (ossimException(exceptionMsg.str()));
       }
 
-      cout << "chipper input specifications:\n" << kwl << endl;
+      cout << "chipper input options:\n" << kwl << endl;
 
       ossimRefPtr<ossimChipperUtil> chipper = new ossimChipperUtil();
       chipper->initialize( kwl);

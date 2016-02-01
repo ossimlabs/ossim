@@ -208,11 +208,11 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    static const int    MAX_NUM_ITERATIONS  = 100;
    static const double CONVERGENCE_EPSILON = 0.05;  // pixels
 
-   ossim_uint32 pcaIndex = getPcaIndex( image_point );
+   ossim_uint32 pcaIndex = getPcaIndex( image_point, true );
    
+   // Image point of 0 to ossim is 0.5 to RSM.
    // double U    = (image_point.y-m_rnrmo) / (m_rnrmsf);
    // double V    = (image_point.x-m_cnrmo) / (m_cnrmsf);
-
 
    double U = (image_point.y+0.5-m_pca[pcaIndex].m_rnrmo) / (m_pca[pcaIndex].m_rnrmsf);
    double V = (image_point.x+0.5-m_pca[pcaIndex].m_cnrmo) / (m_pca[pcaIndex].m_cnrmsf);
@@ -356,7 +356,7 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
 void ossimRsmModel::imagingRay(const ossimDpt& imagePoint,
                                ossimEcefRay&   imageRay) const
 {
-   ossim_uint32 pcaIndex = getPcaIndex( imagePoint );
+   ossim_uint32 pcaIndex = getPcaIndex( imagePoint, true );
    
    //---
    // For "from point", "to point" we want the image ray to be from above the
@@ -523,13 +523,20 @@ ossim_uint32 ossimRsmModel::getPcaIndex(
 {
    ossimDpt ipt;
    lowOrderPolynomial( x, y, z, ipt );
-   return getPcaIndex( ipt );
+   return getPcaIndex( ipt, false );
 }
 
-ossim_uint32 ossimRsmModel::getPcaIndex( const ossimDpt& ipt ) const
+ossim_uint32 ossimRsmModel::getPcaIndex( const ossimDpt& ipt, bool shiftPoint ) const
 {
+   //---
+   //  RSM (0,0) is upper left corner of pixel(0,0). OSSIM (0,0) is
+   //  center of the pixel; hence, the shift 0.5 if coming from ossim.
+   //---
+   double shift = shiftPoint ? 0.5 : 0.0;
+   
    // Row section number:
-   double rsn = std::floor( ( ipt.y - (double)(m_ida.m_minr) ) / (double)(m_pia.m_rssiz) );
+   double rsn = std::floor( ( ipt.y + shift - (double)(m_ida.m_minr) ) /
+                            (double)(m_pia.m_rssiz) );
    if ( rsn < 0.0 )
    {
       rsn = 0.0;
@@ -539,7 +546,7 @@ ossim_uint32 ossimRsmModel::getPcaIndex( const ossimDpt& ipt ) const
       rsn = m_pia.m_rnis-1;
    }
    // Column section number:
-   double csn = std::floor( ( ipt.x - (double)(m_ida.m_minc) ) / (double)(m_pia.m_cssiz) );
+   double csn = std::floor( ( ipt.x + shift - (double)(m_ida.m_minc) ) / (double)(m_pia.m_cssiz) );
    if ( csn < 0.0 )
    {
       csn = 0.0;
