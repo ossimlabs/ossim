@@ -23,13 +23,17 @@
 # Uncomment following line to debug script line by line:
 #set -x; trap read debug
 
-SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-pushd $SCRIPT_DIR/../.. >/dev/null
-REPO_DIR=$PWD
-echo "@@@@@ REPO_DIR=$REPO_DIR"
-popd >/dev/null
+# Working directory must be top-level dir:
+#SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+#pushd $SCRIPT_DIR/../..
+#OSSIM_DEV_HOME=$PWD
 
-CMAKE_CONFIG_SCRIPT=$REPO_DIR/cmake/scripts/ossim-cmake-config-MAC.sh
+#CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config.sh
+pushd `dirname $0` >/dev/null
+export SCRIPT_DIR=`pwd -P`
+popd >/dev/null
+# source variables used during the builds
+. $SCRIPT_DIR/env.sh
 
 # Consider whether running in interactive shell or batch for possible 
 # prompting on build configuration:
@@ -75,14 +79,15 @@ fi
 # CMake successful, now run make in the build directory (OSSIM_BUILD_DIR 
 # exported by cmake config script):
 pushd $OSSIM_BUILD_DIR >/dev/null
-make -j 8
+make -j $OSSIM_MAKE_JOBS
 if [ $? -ne 0 ]; then
   echo; echo "Error encountered during make. Check the console log and correct."
   popd>/dev/null
   exit 1
 fi
-
 echo; echo "Build completed successfully. Binaries located in $OSSIM_BUILD_DIR"
-popd>/dev/null
+popd # out of $OSSIM_BUILD_DIR
+
+
 exit 0
 

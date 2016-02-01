@@ -25,6 +25,7 @@ public:
    {
       theCenter = center;
    }
+   const ossimDpt& getCenter()const{return theCenter;}
    virtual void forward(const ossimDpt& input,
                         ossimDpt& output) const
    {

@@ -26,7 +26,26 @@ static const char DEFAULT_DELIMITER = ':';
 
 class ossimFilename;
 
-
+/**
+ * Represents serializable keyword/value map. The format is
+ *
+ *   [<prefix>.]<keyword>: value [value ...]
+ *
+ * The map is not a multimap, i.e., the keywords must be unique. Only the last occurrence of
+ * identical keywords will be saved in the map. Methods are provided for reading from and writing
+ * to an ascii file. Methods are also provided for merging multiple maps (a.k.a. "lists" or "KWLs")
+ * as well as assorted operations for pruning and counting.
+ *
+ * Disk files representing a KWL can use the C-style "#include <filename>" preprocessor directive,
+ * where <filename> specifies another external KWL file that will be merged with the current list.
+ * This is convenient for sourcing common settings needed by multiple KWL files. Instead of
+ * duplicating all common keywords/value pairs, the various KWL files can all specify, for example,
+ *
+ *      #include common_prefs.kwl
+ *      #include "common config.kwl"
+ *
+ * The second form with quotes can be used, especially if the filename has spaces.
+ */
 class OSSIM_DLL ossimKeywordlist : public ossimErrorStatusInterface,
    public ossimReferenced
 {
@@ -510,6 +529,7 @@ protected:
    bool isValidKeywordlistCharacter(ossim_uint8 c)const;
    void skipWhitespace(std::istream& in)const;
    KeywordlistParseState readComments(ossimString& sequence, std::istream& in)const;
+   KeywordlistParseState readPreprocDirective(std::istream& in);
    KeywordlistParseState readKey(ossimString& sequence, std::istream& in)const;
    KeywordlistParseState readValue(ossimString& sequence, std::istream& in)const;
    KeywordlistParseState readKeyAndValuePair(ossimString& key, ossimString& value, std::istream& in)const;

@@ -18,6 +18,7 @@
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimTimer.h>
 #include <ossim/elevation/ossimImageElevationDatabase.h>
 
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
          
          cout << "elev-dir: " << elevDir << "\n";
          
-         ossimImageElevationDatabase* elevdb = new ossimImageElevationDatabase();
+         ossimRefPtr<ossimImageElevationDatabase> elevdb = new ossimImageElevationDatabase();
          if ( elevdb->open(elevDir) )
          {
             std::vector<ossimGpt> pts(10);

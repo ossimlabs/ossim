@@ -108,7 +108,7 @@ void ossimLensDistortion::distort(const ossimDpt& input, ossimDpt& output)const
       // Compute linearized estimate of image point given gp delta:
       //***
       inverse_norm = dr_dy.u*dr_dx.v - dr_dx.u*dr_dy.v; // fg-eh
-      if (inverse_norm != 0)
+      if (std::fabs(inverse_norm) > DBL_EPSILON)
       {
          l_diff.u = (-dr_dy.v*r_diff.u + dr_dy.u*r_diff.v)/inverse_norm;
          l_diff.v = ( dr_dx.v*r_diff.u - dr_dx.u*r_diff.v)/inverse_norm;
@@ -125,8 +125,6 @@ void ossimLensDistortion::distort(const ossimDpt& input, ossimDpt& output)const
    } while (((fabs(l_diff.u) > theConvergenceThreshold) ||
              (fabs(l_diff.v) > theConvergenceThreshold)) &&
             (iters < theMaxIterations));
-   
-   
    output = left;
 }
 
