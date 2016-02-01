@@ -141,7 +141,7 @@ function createKakaduTarball()
       $command
 
       # ossim-plugins/kakadu code:
-      command="cp -r $archive/ossim-plugins/kakadu $kakadu_archive/"
+      command="cp -r $archive/ossim-plugins/kakadu $kakadu_archive/."
       echo $command
       $command
 
@@ -194,7 +194,7 @@ function createMrsidTarball()
       $command
 
       # ossim-plugins/mrsid code:
-      command="cp -r $archive/ossim-plugins/mrsid $mrsid_archive/"
+      command="cp -r $archive/ossim-plugins/mrsid $mrsid_archive/."
       echo $command
       $command
 
