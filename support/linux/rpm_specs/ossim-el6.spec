@@ -46,6 +46,7 @@ BuildRequires: podofo-devel
 BuildRequires: qt4-devel
 BuildRequires: sqlite-devel
 BuildRequires: gpstk-devel
+BuildRequires: openjpeg2-devel
 #BuildRequires: swig
 
 %description
@@ -307,7 +308,7 @@ pushd build
 -DBUILD_SHARED_LIBS=ON \
 -DBUILD_WMS=ON \
 \
--DOSSIMPLANET_ENABLE_EPHEMERIS=OFF \
+-DOSSIMPLANET_ENABLE_EPHEMERIS=ON \
 \
 -DCMAKE_BUILD_TYPE=$OSSIM_BUILD_TYPE \
 -DCMAKE_MODULE_PATH=$OSSIM_DEV_HOME/ossim_package_support/cmake/CMakeModules \
