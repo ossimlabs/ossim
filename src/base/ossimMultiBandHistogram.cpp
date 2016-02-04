@@ -90,7 +90,7 @@ void ossimMultiBandHistogram::create(const ossimImageSource* input)
             // both types.  Basically we don't want to count the null values as
             // a valid pixel. drb - 04 Feb. 2016
             //
-            // NOTE: OSSIM_DEFAULT_MIN_PIX_SINT16 = -32768
+            // NOTE: OSSIM_DEFAULT_MIN_PIX_SINT16 = -32767
             //---
             minValue     = OSSIM_DEFAULT_MIN_PIX_SINT16+1;
             maxValue     = OSSIM_DEFAULT_MAX_PIX_SINT16;
