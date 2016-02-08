@@ -41,16 +41,6 @@
 class OSSIM_DLL ossimChipProcUtil : public ossimUtility
 {
 public:
-   enum OutputProjectionType
-   {
-      UNKNOWN_PROJ    = 0,
-      GEO_PROJ        = 1,
-      GEO_SCALED_PROJ = 2,
-      INPUT_PROJ      = 3,
-      UTM_PROJ        = 4,
-      IDENTITY        = 5
-   };
-
    /** default constructor */
    ossimChipProcUtil();
 
@@ -98,10 +88,6 @@ public:
    ossimRefPtr<ossimImageData> getChip(const ossimGrect& gnd_rect);
    virtual ossimRefPtr<ossimImageData> getChip(const ossimIrect& img_rect);
 
-   /** Gets the output file name.
-    * @param f Initialized by this with the filename. */
-   void getOutputFilename(ossimFilename& f) const;
-
 protected:
    /** Intended to be called after derived class has picked off its own options from the parser, and
     * arguments remain (such as input and output filenames).
@@ -142,25 +128,11 @@ protected:
    /** Sets the single image chain for identity operations view to a ossimImageViewAffineTransform.
     *  This will have a rotation if up is up is selected.  Also set m_outputProjection to the
     *  input's for area of interest. */
-   void createIdentityProjection();
-
-   /** Gets the first input projection. This gets the output projection of the first dem layer if
-    * present; if not, the first image layer.
-    * @return ref ptr to projection, could be null. */
-   ossimRefPtr<ossimMapProjection> getFirstInputProjection();
-
-   /** Convenience method to get geographic projection. This method sets the origin to the center
-    *  of the scene bounding rect of all layers.
-    * @return new ossimEquDistCylProjection. */
-   ossimRefPtr<ossimMapProjection> getNewGeoScaledProjection();
+   ossimRefPtr<ossimMapProjection>  newIdentityProjection();
 
    /** Convenience method to get a utm projection.
     * @return new ossimUtmProjection. */
-   ossimRefPtr<ossimMapProjection> getNewUtmProjection();
-
-   /** Sets the projection tie point to the scene bounding rect corner.
-    * @note Throws ossimException on error. */
-   void intiailizeProjectionTiePoint();
+   ossimRefPtr<ossimMapProjection> newUtmProjection();
 
    /** Initializes the projection gsd. This loops through all chains to find the minimum gsd.
     * @note Throws ossimException on error. */
@@ -172,38 +144,22 @@ protected:
     * @note Throws ossimException on error. */
    void initializeAOI();
 
-   /** Loops through all layers to get the upper left tie point.
-    * @param tie Point to initialize. */
-   void getTiePoint(ossimGpt& tie);
-
-   /** Loops through all layers to get the upper left tie point.
-    * @param tie Point to initialize. */
-   void getTiePoint(ossimDpt& tie);
-
-   /** Loops through all layers to get the best gsd.
-    * @param gsd Point to initialize. */
-   void getMetersPerPixel(ossimDpt& gsd);
-
-   /**f Loops through all layers to get the scene center ground point.
-    * @param gpt Point to initialize.
-    * @note Throws ossimException on error. */
-   void getSceneCenter(ossimGpt& gpt);
-
    /** Reads the KWL for origin latitude and central meridian.
-    * @param gpt Point to initialize.
+    * @param gpt Point to initialize. Set to 0 unless lat or lon specified in KWL
+    * @return false if no items found in KWL.
     * @note Throws ossimException on error. */
-   void getProjectionOrigin(ossimGpt& gpt);
+   bool getProjectionOrigin(ossimGpt& gpt);
 
    /** Creates a new writer. This will use the writer option (-w or --writer), if present; else,
     * it will be derived from the output file extention. This will also set any writer properties
     * passed in.
     * @return new ossimImageFileWriter.
     * @note Throws ossimException on error. */
-   ossimRefPtr<ossimImageFileWriter> createNewWriter() const;
+   ossimRefPtr<ossimImageFileWriter> newWriter();
 
    /** Loops through all chains and sets the output projection.
     * @note Throws ossimException on error. */
-   void propagateOutputProjectionToChains();
+   void propagateGeometryToChains();
 
    /** When multiple input sources are present, this method instantiates a combiner and adds inputs
     * @return Reference to the combiner. */
@@ -211,38 +167,16 @@ protected:
    combineLayers(std::vector< ossimRefPtr<ossimSingleImageChain> >& layers) const;
 
    /** Initializes m_aoiViewRect given m_aoiGroundRect. */
-   void computeViewRect();
+   void computeAdjustedViewFromGrect();
 
    /** Assigns the AOI to be the bounding rect of the union of all inputs. */
-   void setAOIsToInputs();
+   void setAoiToInputs();
 
    /** Gets the band list if BANDS keyword is set.
     * NOTE: BANDS keyword values are ONE based.  bandList values are ZERO based.
     * @param input image index for which the band selection applies
     * @param bandList List initialized by this. */
    void getBandList(ossim_uint32 image_idx, std::vector<ossim_uint32>& bandList ) const;
-
-   /** Gets the input image entry number (for multi-image files).
-    * @param input image index for which the band selection applies
-    * @return Entry index (0 if not specified) */
-   ossim_uint32 getEntryNumber(ossim_uint32 image_idx) const;
-
-   /** Gets the emumerated output projection type. This looks in m_kwl for
-    * ossimKeywordNames::PROJECTION_KW.
-    * @return The enumerated output projection type.
-    * @note This does not cover SRS keyword which could be any type of projection. */
-   OutputProjectionType getOutputProjectionType() const;
-
-   /** Returns the scalar type from OUTPUT_RADIOMETRY_KW keyword if
-    * present. Deprecated SCALE_2_8_BIT_KW is also checked.
-    * @return scalar type. Note this can be OSSIM_SCALAR_UNKNOWN if the keywords aren't present.*/
-   ossimScalarType getOutputScalarType() const;
-
-   bool scaleToEightBit() const;
-   ossim_int32 getZone() const;
-   std::string getHemisphere() const;
-
-   bool hasSensorModelInput();
 
    /** Passes reader properties to single image handler if any.
     * @param ih Image handler to set properties on. */
@@ -254,14 +188,17 @@ protected:
    /** Hidden from use assignment operator. */
    const ossimChipProcUtil& operator=( const ossimChipProcUtil& /*rhs*/ ) { return *this; }
 
-   ossimRefPtr<ossimImageSource> createCombiner() const;
    ossimRefPtr<ossimGeoPolygon>  createClipPolygon()const;
+
+   /** Tries to determine the AOI center point based on KWL entries, else returns NaNs in gpt.
+    * Needed for bootstrapping the GSD computation when information in KWL is sparse */
+   void findCenterGpt(ossimGpt& gpt);
 
    ossimKeywordlist m_kwl;
    ossimRefPtr<ossimImageGeometry> m_geom; //> Product chip/image geometry
    ossimIrect m_aoiViewRect;
    ossimGrect m_aoiGroundRect;
-   ossimRefPtr<ossimImageViewAffineTransform> m_ivt;
+   bool m_aoiExplicitelyRequested;
    std::vector< ossimRefPtr<ossimSingleImageChain> > m_imgLayers;
    std::vector< ossimFilename > m_demSources; //> Stores list of DEMs provided to the utility (versus pulled from the elevation database)
    mutable ossimRefPtr<ossimImageFileWriter> m_writer;
@@ -269,6 +206,9 @@ protected:
    ossimRefPtr<ossimRectangleCutFilter> m_cutRectFilter;
    bool m_projIsIdentity;
    ossimDpt m_gsd; // meters
+   bool m_geoScaled;
+   ossimFilename m_productFilename;
+   ossimScalarType m_productScalarType;
 };
 
 #endif /* #ifndef ossimChipProcUtil_HEADER */

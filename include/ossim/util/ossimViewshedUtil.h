@@ -99,6 +99,7 @@ protected:
    ossim_uint8 m_visibleValue;
    ossim_uint8 m_hiddenValue;
    ossim_uint8 m_overlayValue;
+   ossim_uint8 m_nullValue;
    ossim_int32 m_reticleSize;
    bool m_simulation;
    ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;
@@ -169,7 +170,6 @@ public:
 
 private:
    static OpenThreads::ReadWriteMutex m_bufMutex;
-   static OpenThreads::ReadWriteMutex m_radMutex;
    RadialProcessor() {};
 };
 

@@ -22,6 +22,7 @@
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <cmath>
 
 RTTI_DEF1(ossimImageGeometry, "ossimImageGeometry", ossimObject);
@@ -80,6 +81,20 @@ m_targetRrds(0)
 ossimImageGeometry::~ossimImageGeometry()
 {
    // Nothing to do
+}
+
+bool ossimImageGeometry::open(const ossimFilename& image)
+{
+   ossimRefPtr<ossimImageHandler> handler = ossimImageHandlerRegistry::instance()->open(image);
+   if (!handler.valid())
+      return false;
+
+   ossimRefPtr<ossimImageGeometry> geom = handler->getImageGeometry();
+   if (!geom.valid())
+      return false;
+
+   *this = *geom;
+   return true;
 }
 
 void ossimImageGeometry::rnToRn(const ossimDpt& inRnPt, ossim_uint32 inResolutionLevel,

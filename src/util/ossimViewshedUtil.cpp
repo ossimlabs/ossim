@@ -49,7 +49,7 @@ ossimViewshedUtil::ossimViewshedUtil()
     m_displayAsRadar (false),
     m_halfWindow (0),
     m_outBuffer (NULL),
-    m_visibleValue (0),
+    m_visibleValue (1),
     m_hiddenValue (128),
     m_overlayValue (255),
     m_reticleSize(2),
@@ -310,12 +310,13 @@ void ossimViewshedUtil::initProcessingChain()
    m_observerGpt.hgt += m_obsHgtAbvTer;
    m_geom->worldToLocal(m_observerGpt, m_observerVpt);
 
+   ossimRefPtr<ossimMapProjection> mapProj =
+         dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
+
    // Determine if default GSD needs to be computed.
    if (m_gsd.hasNans())
    {
       m_gsd.x = m_gsd.y = elevMgr->getMeanSpacingMeters();
-      ossimRefPtr<ossimMapProjection> mapProj =
-            dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
       if (mapProj.valid()) // already validated but just in case
          mapProj->setMetersPerPixel(m_gsd);
    }
@@ -329,10 +330,11 @@ void ossimViewshedUtil::initProcessingChain()
 
    // If no AOI defined, just use the visibility rectangle:
    ossimIrect visRect (ossimIpt(m_observerVpt), size, size);
-   if (m_aoiViewRect.hasNans())
+   if (m_aoiViewRect.hasNans() || !m_aoiExplicitelyRequested)
    {
       m_aoiViewRect = visRect;
       m_geom->localToWorld(ossimDrect(m_aoiViewRect), m_aoiGroundRect);
+      m_geom->setImageSize(m_aoiViewRect.size());
    }
 
    // Allocate the output image buffer. It covers the intersection of the visibility rect and the
@@ -371,21 +373,8 @@ void ossimViewshedUtil::initProcessingChain()
 
    // Initialize the image with all points NULL:
    m_outBuffer->initialize();
-   m_outBuffer->fill(m_procChain->getNullPixelValue());
-
-#if 0
-   //### TODO: REMOVE DEBUG BLOCK
-   {
-      ossimDpt viewPt;
-      m_geom->worldToLocal(m_observerGpt, viewPt);
-      cout<<"ossimViewshedUtil::initialize() should get (0,0)... viewPt="<<viewPt<<endl;
-      ossimGpt testPt(m_observerGpt);
-      testPt.lat -= 100*degPerPixel.y;
-      testPt.lon += 100*degPerPixel.x;
-      m_geom->worldToLocal(testPt, viewPt);
-      cout<<"ossimViewshedUtil::initialize() should get ~(100,100)... viewPt="<<viewPt<<endl;
-   }
-#endif
+   m_nullValue = m_procChain->getNullPixelValue();
+   m_outBuffer->fill(m_nullValue);
 
    // Initialize the radials after intersecting the requested FOV with the FOV required to see the
    // full AOI (not applicable if observer inside AOI). Skip radial init if no intersection found:
@@ -626,7 +615,7 @@ bool ossimViewshedUtil::execute()
    if (m_numThreads == 0)
       m_numThreads = ossim::getNumberOfThreads();
 
-if (m_numThreads > 1)
+   if (m_numThreads > 1)
    {
       ossimRefPtr<ossimJobQueue> jobQueue = new ossimJobQueue();
       for (int sector=0; sector<8; ++sector)
@@ -685,13 +674,12 @@ if (m_numThreads > 1)
 
    if (!m_horizonFile.empty())
    {
-      cout << "Writing horizon profile output file..." <<endl;
       success = writeHorizonProfile();
+      if (success)
+         cout << "Wrote horizon profile to <"<<m_horizonFile<<">" <<endl;
    }
 
-   if (success)
-      success = ossimChipProcUtil::execute();
-
+   success = ossimChipProcUtil::execute();
    return success;
 }
 
@@ -800,7 +788,6 @@ void RadialProcessorJob::start()
 }
 
 OpenThreads::ReadWriteMutex RadialProcessor::m_bufMutex;
-OpenThreads::ReadWriteMutex RadialProcessor::m_radMutex;
 
 void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
                                ossim_uint32 sector_idx,
@@ -808,6 +795,7 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
 {
    double u, v;
    ossimDpt pt_i, vpt_i;
+   ossimGpt gpt_i;
    double elev_i, elev;
    double r2_max = vsUtil->m_halfWindow*vsUtil->m_halfWindow;
 
@@ -862,6 +850,10 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
       vpt_i = pt_i + vsUtil->m_observerVpt;
       ossimIpt ipt (vpt_i);
 
+      // Check if alread accounted for at this location:
+      //if (!vsUtil->m_outBuffer->isNull(vpt_i))
+      //   continue;
+
       // Check if we are exiting the AOI (no more processing required for this radial):
       bool pointInsideAoi = vsUtil->m_aoiViewRect.pointWithin(ipt);
       if (radial.insideAoi && !pointInsideAoi)
@@ -874,16 +866,14 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
       // Check if we passed beyong the visibilty radius, and exit loop if so:
       if (vsUtil->m_displayAsRadar && ((u*u + v*v) >= r2_max))
       {
-         OpenThreads::ScopedWriteLock lock (m_bufMutex);
+         //OpenThreads::ScopedWriteLock lock (m_bufMutex);
          vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_overlayValue);
          break;
       }
 
       // Fetch the pixel value as the elevation value and compute elevation angle from
       // the observer pt as dz/dx
-      ossimGpt gpt_i;
       vsUtil->m_geom->localToWorld(vpt_i, gpt_i);
-
       if (vsUtil->m_simulation && ossim::isnan(gpt_i.hgt))
          gpt_i.hgt = vsUtil->m_observerGpt.hgt-vsUtil->m_obsHgtAbvTer; // ground level
 
@@ -897,12 +887,12 @@ void RadialProcessor::doRadial(ossimViewshedUtil* vsUtil,
             // point is visible, latch this line-of-sight as the new max elevation angle for this
             // radial, and mark the output pixel as visible:
             radial.elevation = elev_i;
-            OpenThreads::ScopedWriteLock lock (m_bufMutex);
+            //OpenThreads::ScopedWriteLock lock (m_bufMutex);
             vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_visibleValue);
          }
          else
          {
-            OpenThreads::ScopedWriteLock lock (m_bufMutex);
+            //OpenThreads::ScopedWriteLock lock (m_bufMutex);
             vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_hiddenValue);
          }
       }

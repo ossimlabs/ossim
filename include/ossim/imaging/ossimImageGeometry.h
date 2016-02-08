@@ -82,6 +82,11 @@ public:
    //! can be NULL -- the associated mapping would be identity.
    ossimImageGeometry(ossim2dTo2dTransform* transform, ossimProjection* projection);
 
+   //! Shortcut way of getting to an image's geometry when access to pixels is not needed.
+   //! @param image Image to open
+   //! @return true if open was successful and a valid geometry was initialized.
+   bool open(const ossimFilename& image);
+
    //! rnToRn is a utility method that takes a rn resolution image point and maps it to the another
    //! rn resolution image point.
    //!

@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
    cout << "ORIG: "<<proj.getOrigin()<<endl;
    cout << "TP: "<<proj.getUlGpt()<<endl;
    cout << "GSD: "<<proj.getMetersPerPixel() << endl;
+   cout << "Deg/pixel: "<<proj.getDecimalDegreesPerPixel() << endl;
    proj.lineSampleHeightToWorld(ipt_ul, 0.0, gpt);
    cout << "UL: " <<gpt << endl;
    proj.lineSampleHeightToWorld(ipt_lr, 0.0, gpt);
@@ -31,6 +32,7 @@ int main(int argc, char *argv[])
    cout << "ORIG: "<<proj.getOrigin()<<endl;
    cout << "TP: "<<proj.getUlGpt()<<endl;
    cout << "GSD: "<<proj.getMetersPerPixel() << endl;
+   cout << "Deg/pixel: "<<proj.getDecimalDegreesPerPixel() << endl;
    proj.lineSampleHeightToWorld(ipt_ul, 0.0, gpt);
    cout << "UL: " <<gpt << endl;
    proj.lineSampleHeightToWorld(ipt_lr, 0.0, gpt);
@@ -42,6 +44,7 @@ int main(int argc, char *argv[])
    cout << "ORIG: "<<proj.getOrigin()<<endl;
    cout << "TP: "<<proj.getUlGpt()<<endl;
    cout << "GSD: "<<proj.getMetersPerPixel() << endl;
+   cout << "Deg/pixel: "<<proj.getDecimalDegreesPerPixel() << endl;
    proj.lineSampleHeightToWorld(ipt_ul, 0.0, gpt);
    cout << "UL: " <<gpt << endl;
    proj.lineSampleHeightToWorld(ipt_lr, 0.0, gpt);

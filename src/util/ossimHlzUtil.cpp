@@ -587,7 +587,7 @@ bool ossimHlzUtil::writeFile()
 
    // Set up the writer:
    bool success = false;
-   ossimRefPtr<ossimImageFileWriter> writer = createNewWriter();
+   ossimRefPtr<ossimImageFileWriter> writer = newWriter();
    if (writer.valid())
    {
       writer->connectMyInputTo(0, last_source.get());
