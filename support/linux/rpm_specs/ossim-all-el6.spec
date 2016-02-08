@@ -17,8 +17,7 @@
 Name:           ossim
 Version:        %{RPM_OSSIM_VERSION} 
 Release:        %{BUILD_RELEASE}%{?dist}
-Summary:        Open 
-  Source Software Image Map library and command line applications
+Summary:        Open Source Software Image Map library and command line applications
 Group:          System Environment/Libraries
 #TODO: Which version?
 License:        LGPLv2+
