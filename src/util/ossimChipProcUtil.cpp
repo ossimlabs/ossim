@@ -837,7 +837,8 @@ void ossimChipProcUtil::initializeAOI()
       }
 
       // Convert pixels to GEO rect:
-      if (imageSize.area() > 0)
+      ossim_uint32 area = imageSize.x * imageSize.y;
+      if (area > 0)
       {
          ossimDpt ulvpt (centerViewPt.x-imageSize.x/2.0, centerViewPt.y-imageSize.y/2.0);
          ossimDpt lrvpt (centerViewPt.x+imageSize.x/2.0, centerViewPt.y+imageSize.y/2.0);
