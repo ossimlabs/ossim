@@ -1,10 +1,10 @@
 #---
-# File: ossim-el7.spec
+# File: ossim-all-el6.spec
 #
 # Spec file for building ossim rpms with rpmbuild.
 #
-# NOTE: This files differs from ossim-el6.spec on in el6 need libtiff4 to pick
-# up bigtiff support.
+# NOTE: This files differs from ossim-all-el7.spec in that it needs libtiff4
+# to pick up bigtiff support.
 #
 # Example usage:
 # rpmbuild -ba --define 'RPM_OSSIM_VERSION 1.9.0' --define 'BUILD_RELEASE 1' ossim-el7.spec
@@ -36,7 +36,7 @@ BuildRequires: libcurl-devel
 BuildRequires: libgeotiff-devel
 BuildRequires: libjpeg-devel
 BuildRequires: libpng-devel
-BuildRequires: libtiff-devel
+BuildRequires: libtiff4-devel
 #BuildRequires: libRaw-devel
 BuildRequires: minizip-devel
 BuildRequires: opencv-devel
@@ -201,6 +201,24 @@ Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 This sub-package contains the kmlsuperoverlay ossim plugin for reading/writing
 kml super overlays.
 
+%package  	kakadu-plugin
+Summary:        kakadu ossim plugin
+Group:          System Environment/Libraries
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
+
+%description    kakadu-plugin
+This sub-package contains the kakadu ossim plugin for reading/writing
+J2K compressed data via the Kakadu library.
+
+%package  	mrsid-plugin
+Summary:        mrsid ossim plugin
+Group:          System Environment/Libraries
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
+
+%description    mrsid-plugin
+This sub-package contains the mrsid ossim plugin for reading/writing
+mrsid compressed data via the MrSID library.
+
 %package  	opencv-plugin
 Summary:        OSSIM OpenCV plugin, contains registration code.
 Group:          System Environment/Libraries
@@ -291,10 +309,10 @@ pushd build
 -DBUILD_GDAL_PLUGIN=ON \
 -DBUILD_GEOPDF_PLUGIN=ON \
 -DBUILD_HDF5_PLUGIN=ON \
--DBUILD_KAKADU_PLUGIN=OFF \
+-DBUILD_KAKADU_PLUGIN=ON \
 -DBUILD_KML_PLUGIN=ON \
 -DBUILD_LIBRAW_PLUGIN=OFF \
--DBUILD_MRSID_PLUGIN=OFF \
+-DBUILD_MRSID_PLUGIN=ON \
 -DBUILD_OSSIMMRSID_PLUGIN=ON \
 -DBUILD_NDF_PLUGIN=OFF \
 -DBUILD_OPENCV_PLUGIN=ON \
@@ -314,6 +332,13 @@ pushd build
 -DCMAKE_BUILD_TYPE=$OSSIM_BUILD_TYPE \
 -DCMAKE_MODULE_PATH=$OSSIM_DEV_HOME/ossim_package_support/cmake/CMakeModules \
 -DCMAKE_PREFIX_PATH=/usr \
+\
+-DKAKADU_ROOT_SRC=/opt/kakadu/latest \
+-DKAKADU_AUX_LIBRARY=/opt/kakadu/latest/lib/Linux-x86-64-gcc/libkdu_aux.a \
+-DKAKADU_LIBRARY=/opt/kakadu/latest/lib/Linux-x86-64-gcc/libkdu.a  \
+\
+-DMRSID_DIR=/opt/mrsid/latest \
+\
 ../ossim/cmake
 make VERBOSE=1 %{?_smp_mflags}
 popd
@@ -484,6 +509,12 @@ rm -f %{_javadir}/joms.jar
 
 %files kml-plugin
 %{_libdir}/ossim/plugins/libossim_kml_plugin.so
+
+%files kakadu-plugin
+%{_libdir}/ossim/plugins/libossim_kakadu_plugin.so
+
+%files mrsid-plugin
+%{_libdir}/ossim/plugins/libossim_mrsid_plugin.so
 
 %files opencv-plugin
 %{_libdir}/ossim/plugins/libossim_opencv_plugin.so
