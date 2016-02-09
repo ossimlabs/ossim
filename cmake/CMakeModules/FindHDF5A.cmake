@@ -27,7 +27,7 @@ find_path( HDF5A_INCLUDE_DIR hdf5.h
            /usr/local/ossim/include )
 
 # Find HDF5A library:
-find_library( HDF5A_LIB NAMES hdf5a
+find_library( HDF5A_LIB NAMES hdf5a hdf5
               PATHS
               $ENV{HDF5_DIR}/lib
               $ENV{HDF5_DIR}/lib
@@ -39,7 +39,7 @@ find_library( HDF5A_LIB NAMES hdf5a
               /usr/local/ossim/lib )
 
 # Find HDF5A CPP library:
-find_library( HDF5A_CPP_LIB NAMES hdf5a_cpp
+find_library( HDF5A_CPP_LIB NAMES hdf5a_cpp hdf5_cpp
               PATHS
               $ENV{HDF5_DIR}/lib64
               $ENV{HDF5_DIR}/lib
