@@ -175,6 +175,16 @@ bool omarDataMgrUtil::initialize(ossimArgumentParser& ap)
          if( ap.read("--preproc"))
          {
             m_imageUtil = new ossimImageUtil();
+
+            if ( getOverrideFilteredImagesFlag() )
+            {
+               //---
+               // User requested override but the arg parser for omarDataMgr has
+               // stripped the argument for image util so manually set it.
+               //---
+               m_imageUtil->setOverrideFilteredImagesFlag( true );
+            }
+            
             m_imageUtil->initialize(ap);
          }
 
@@ -278,9 +288,8 @@ ossim_int32 omarDataMgrUtil::execute()
       if ( !getOverrideFilteredImagesFlag() && m_filteredImages.empty() )
       {
          initializeDefaultFilterList();
+         m_fileWalker->initializeDefaultFilterList();
       }
-      
-      m_fileWalker->initializeDefaultFilterList();
 
       //---
       // Passing getNumberOfThreads() to ossimFileWalker::setNumberOfThreads was
@@ -801,7 +810,7 @@ void omarDataMgrUtil::clean( const ossimFilename& file ) const
    // Base image file:
    if ( f.exists() )
    {
-      ossimNotify(ossimNotifyLevel_NOTICE) << "Removing file: " << f << "\n";
+      ossimNotify(ossimNotifyLevel_NOTICE) << "\nRemoving file: " << f << "\n";
       ossimFilename::remove( f );
    }
    
