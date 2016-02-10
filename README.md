@@ -108,21 +108,20 @@ There is however a _de facto_ scheme in place that has been used for implementin
 
 A rudimentary test suite is encapsulated in this [test script (linux version)](/scripts/linux/test.sh). It defines the locations of the input source data and expected results, and runs the command-line test applications. 
 
-The _ossim_ repository contains `test/src` and `test/scripts` subdirectories which contain items available for testing OSSIM core functionality.
+The _ossim_ repository contains `test/src` and `test/config` subdirectories which contain items available for testing OSSIM core functionality. At some point when we start including unit tests, there will be a third directory, `test/scripts`, that will contain the commands to run those unit tests.
 
 ## test/src
 
 This directory contains the source code for unit and functional testing of core OSSIM objects. It is automatically built by the cmake/make system, assuming `BUILD_OSSIM_TESTS` is set to `ON` (the default). The resulting executables, located in `build/bin`, can be run standalone on the command line. The code in this directory is also a good source of examples for interfacing to many important OSSIM classes. This directory also contains the source code for `ossim-batch-test`.
 
-## test/scripts
+## test/config
 
-This subdirectory contains, primarily, configuration files for existing `ossim-batch-test` runs, but can eventually contain any script that runs unit tests as well. 
+This subdirectory contains, primarily, configuration files for existing `ossim-batch-test` runs. 
 
 The input data referenced in the `ossim-batch-test` configuration files are presently hosted on an Amazon S3 storage. Contact the [OSSIM developer list](mailto:ossim-developer@lists.sourceforge.net) if you want access to this public data for your own testing.
 
 # How to Package and Install
 
-Coming soon. NOTE: We expect this will be a script in \test\scripts that will run all unit and functional tests.
+Coming soon. NOTE: We expect this will be a script in `test\scripts` that will run all unit and functional tests.
 
 
-ll
