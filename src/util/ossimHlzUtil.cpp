@@ -25,24 +25,26 @@
 #include <ossim/imaging/ossimSlopeFilter.h>
 #include <ossim/imaging/ossimTiffWriter.h>
 #include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
-#include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/imaging/ossimIndexToRgbLutFilter.h>
 #include <ossim/point_cloud/ossimPointCloudHandlerRegistry.h>
 #include <ossim/util/ossimHlzUtil.h>
 #include <fstream>
 
-static const char* MASK_EXCLUDE_KW = "excludes";
-static const char* MASK_INCLUDE_KW = "includes";
-static const char* SLOPE_OUTPUT_FILE_KW = "slope_output_file";
-static const char* POINT_CLOUD_FILE_KW = "point_cloud_file";
-static const char* RETICLE_SIZE_KW = "reticle_size";
-static const char* LZ_MIN_RADIUS_KW = "lz_min_radius";
-static const char* ROUGHNESS_THRESHOLD_KW = "roughness_threshold";
-static const char* SLOPE_THRESHOLD_KW = "slope_threshold";
-static const char* TARGET_GEOLOCATION_KW = "target_geolocation";
+static const string MASK_EXCLUDE_KW = "excludes";
+static const string MASK_INCLUDE_KW = "includes";
+static const string SLOPE_OUTPUT_FILE_KW = "slope_output_file";
+static const string POINT_CLOUD_FILE_KW = "point_cloud_file";
+static const string RETICLE_SIZE_KW = "reticle_size";
+static const string HLZ_CODING_KW = "hlz_coding";
+static const string LZ_MIN_RADIUS_KW = "lz_min_radius";
+static const string ROUGHNESS_THRESHOLD_KW = "roughness_threshold";
+static const string SLOPE_THRESHOLD_KW = "slope_threshold";
+static const string TARGET_GEOLOCATION_KW = "target_geolocation";
 
 const char* ossimHlzUtil::DESCRIPTION =
       "Computes bitmap of helicopter landing zones given ROI and DEM.";
+
+using namespace std;
 
 ossimHlzUtil::ossimHlzUtil()
 : m_slopeThreshold(7.0),
@@ -55,7 +57,6 @@ ossimHlzUtil::ossimHlzUtil()
   m_badLzValue(0),
   m_marginalLzValue(1),
   m_goodLzValue(2),
-  m_reticleValue(3),
   m_useLsFitMethod(false),
   m_isInitialized(false),
   m_numThreads(1),
@@ -83,6 +84,11 @@ void ossimHlzUtil::setUsage(ossimArgumentParser& ap)
          "--excludes <file1>[, <file2>...]",
          "List of raster image(s) representing mask files that defines regions to be excluded from."
          "HLZ solutions. Any non-zero pixel is excluded Multiple filenames must be comma-separated.");
+   au->addCommandLineOption(
+         "--hlz-coding <bad marginal good>",
+         "Specifies the pixel values (0-255) for the output product corresponding to bad, marginal, "
+         "and good landing zones, respectively, with the fourth value representing the reticle "
+         "value. Defaults to bad=0 (null), marginal=1, , good=2, and reticle is highlighted with 3.");
    au->addCommandLineOption(
          "--includes <file1>[, <file2>...]",
          "List of raster image(s) representing mask files that defines regions where the HLZs ."
@@ -117,16 +123,8 @@ void ossimHlzUtil::setUsage(ossimArgumentParser& ap)
          "--slope <degrees>",
          "Threshold for acceptable landing zone terrain slope. Defaults to 7 deg.");
    au->addCommandLineOption(
-         "--summary",
-         "Causes a product summary to be output to the console.");
-   au->addCommandLineOption(
          "--threads <n>",
          "Number of threads. Defaults to use single core. For engineering/debug purposes.");
-   au->addCommandLineOption(
-         "--values <bad marg good ret>",
-         "Specifies the pixel values (0-255) for the output product corresponding to bad, marginal, "
-         "and good landing zones, respectively, with the fourth value representing the reticle "
-         "value. Defaults to bad=0 (null), marg=1, , good=2, and reticle is highlighted with 3.");
 
 }
 
@@ -134,14 +132,12 @@ void ossimHlzUtil::initialize(ossimArgumentParser& ap)
 {
    ossimChipProcUtil::initialize(ap);
 
-   std::string ts1;
+   string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
-   std::string ts2;
+   string ts2;
    ossimArgumentParser::ossimParameter sp2(ts2);
-   std::string ts3;
+   string ts3;
    ossimArgumentParser::ossimParameter sp3(ts3);
-   std::string ts4;
-   ossimArgumentParser::ossimParameter sp4(ts4);
    ossimString  key ;
 
    if (ap.read("--ls-fit"))
@@ -159,6 +155,13 @@ void ossimHlzUtil::initialize(ossimArgumentParser& ap)
       m_kwl.addPair(key.string(), maskFnames[idx] );
    }
 
+   if (ap.read("--hlz-coding", sp1, sp2, sp3) || ap.read("--values", sp1, sp2, sp3))
+   {
+      ostringstream value;
+      value<<ts1<<" "<<ts2<<" "<<ts3;
+      m_kwl.addPair( HLZ_CODING_KW, value.str() );
+   }
+
    maskFnames.clear();
    ap.read("--includes", maskFnames);
    for(ossim_uint32 idx=0; idx<maskFnames.size(); ++idx)
@@ -169,7 +172,7 @@ void ossimHlzUtil::initialize(ossimArgumentParser& ap)
    }
 
    if ( ap.read("--output-slope", sp1))
-      m_kwl.add(SLOPE_OUTPUT_FILE_KW, ts1.c_str());
+      m_kwl.addPair(SLOPE_OUTPUT_FILE_KW, ts1);
 
    vector<ossimString> pcFnames;
    ap.read("--point-clouds", pcFnames);
@@ -181,36 +184,27 @@ void ossimHlzUtil::initialize(ossimArgumentParser& ap)
    }
 
    if (ap.read("--reticle", sp1))
-      m_kwl.add(RETICLE_SIZE_KW, ts1.c_str());
+      m_kwl.addPair(RETICLE_SIZE_KW, ts1);
 
    if (ap.read("--rlz", sp1))
-      m_kwl.add(LZ_MIN_RADIUS_KW, ts1.c_str());
+      m_kwl.addPair(LZ_MIN_RADIUS_KW, ts1);
 
    if (ap.read("--roughness", sp1))
-      m_kwl.add(ROUGHNESS_THRESHOLD_KW, ts1.c_str());
+      m_kwl.addPair(ROUGHNESS_THRESHOLD_KW, ts1);
 
    if (ap.read("--slope", sp1))
-      m_kwl.add(SLOPE_THRESHOLD_KW, ts1.c_str());
+      m_kwl.addPair(SLOPE_THRESHOLD_KW, ts1);
 
    if (ap.read("--target", sp1, sp2))
    {
       ossimString geolocstr = ts1 + " " + ts2;
-      m_kwl.add(TARGET_GEOLOCATION_KW, geolocstr.chars());
+      m_kwl.addPair(TARGET_GEOLOCATION_KW, geolocstr);
    }
 
    if (ap.read("--threads", sp1))
    {
       // Command line mode only
       m_numThreads = ossimString(ts1).toUInt32();
-   }
-
-   if (ap.read("--values", sp1, sp2, sp3, sp4))
-   {
-      // Command line mode only
-      m_badLzValue = ossimString(ts1).toUInt8();
-      m_marginalLzValue = ossimString(ts2).toUInt8();
-      m_goodLzValue = ossimString(ts3).toUInt8();
-      m_reticleValue = ossimString(ts4).toUInt8();
    }
 
    processRemainingArgs(ap);
@@ -220,100 +214,88 @@ void ossimHlzUtil::initialize(const ossimKeywordlist& kwl)
 {
    ossimString value;
 
-   m_slopeFile = m_kwl.find(SLOPE_OUTPUT_FILE_KW);
-   m_pcFile = m_kwl.find(POINT_CLOUD_FILE_KW);
-
-   value = m_kwl.find(RETICLE_SIZE_KW);
+   value = m_kwl.findKey(RETICLE_SIZE_KW);
    if (!value.empty())
       m_reticleSize = value.toInt32();
 
-   value = m_kwl.find(LZ_MIN_RADIUS_KW);
+   value = m_kwl.findKey(LZ_MIN_RADIUS_KW);
    if (!value.empty())
       m_hlzMinRadius = value.toDouble();
 
-   value = m_kwl.find(ROUGHNESS_THRESHOLD_KW);
+   value = m_kwl.findKey(ROUGHNESS_THRESHOLD_KW);
    if (!value.empty())
       m_roughnessThreshold = value.toDouble();
 
-
-   value = m_kwl.find(SLOPE_THRESHOLD_KW);
+   value = m_kwl.findKey(SLOPE_THRESHOLD_KW);
    if (!value.empty())
       m_slopeThreshold = value.toDouble();
+
+   value = m_kwl.findKey(HLZ_CODING_KW);
+   if (!value.empty())
+   {
+      vector<ossimString> values = value.split(" ");
+      if (values.size() == 3)
+      {
+         m_badLzValue = values[0].toUInt8();
+         m_marginalLzValue = values[1].toUInt8();
+         m_goodLzValue = values[2].toUInt8();
+      }
+      else
+      {
+         ostringstream xmsg;
+         xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Unexpected number of values encountered for keyword <"
+               <<HLZ_CODING_KW<<">.";
+         throw(xmsg.str());
+      }
+   }
 
    ossimChipProcUtil::initialize(kwl);
 }
 
 void ossimHlzUtil::initProcessingChain()
 {
-   // Establish the ground rect:
-   ossimGpt ul, ur, lr, ll;
-   m_geom->getBoundingGroundRect(m_gndRect);
+   ostringstream xmsg;
+
+   if (m_aoiGroundRect.hasNans() || m_aoiViewRect.hasNans())
+   {
+      xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Encountered NaNs in AOI."<<ends;
+      throw ossimException(xmsg.str());
+   }
+
 
    // If PC provided as file on command line, Load it. This uses the output ground rect so needs to
-   // be after the initialization of m_geometry:
-   if (!m_pcFile.empty() && !loadPcFile())
-      throw ossimException("Error loading point cloud file.");
+   // be after the initialization of m_geom:
+   loadPcFiles();
 
    // If threat-domes spec (or any mask) provided as file on command line, Load it:
-   if (!loadMaskFiles())
-      throw ossimException("Error loading mask file.");
+   loadMaskFiles();
 
-   // Allocate the output image buffer:
-   m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
-                                                           m_aoiViewRect.height());
-   if (!m_outBuffer.valid())
-      throw ossimException("Error encountered allocating output image buffer.");
-
-   // Initialize the image with all points hidden:
-   m_outBuffer->initialize();
-   m_outBuffer->setImageRectangle(m_aoiViewRect);
-   m_outBuffer->fill(m_badLzValue);
+   // In order to use the slope filter to establish terrain quality, the elevation data needs to
+   // be loaded as images, not elevation cells. Need to transfer relevant cells to image chains:
+   loadElevCells();
 
    // The "chain" for this utility is just the memory source containing the output buffer:
-   ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
-   memSource->setImage(m_outBuffer);
-   memSource->setImageGeometry(m_geom.get());
-   ossimRefPtr<ossimImageSource>last_source = memSource.get(); // TODO: Finish
-
-   // Establish connection to DEM posts directly as raster "images" versus using the OSSIM elev
-   // manager that performs interpolation of DEM posts for arbitrary locations. These elev images
-   // feed into a combiner in order to have a common tap for elev pixels:
-   // If a DEM file was not provided as an argument, the elev sources array needs be initialized:
-   m_isInitialized = false;
-   if (!m_combinedElevSource.valid())
+   m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
+                                                           m_aoiViewRect.height());
+   if (!m_outBuffer.valid() || !m_memSource.valid())
    {
-      // HLZ requires access to individual elevation posts for computing statistics. We use the
-      // elevation manager to identify cells that provide coverage over the AOI, then we open those
-      // cells as images with associated geometries.
-      ossimElevManager* elevMgr = ossimElevManager::instance();
+      xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Error encountered allocating output image buffer.";
+      throw(xmsg.str());
+   }
+   m_memSource = new ossimMemoryImageSource;
+   m_memSource->setImage(m_outBuffer);
+   m_memSource->setImageGeometry(m_geom.get());
 
-      // Query elevation manager for cells providing needed coverage:
-      std::vector<std::string> cells;
-      elevMgr->getCellsForBounds(m_gndRect, cells);
-
-      // Open a raster image for each elevation source being considered:
-      ossimConnectableObject::ConnectableObjectList elevChains;
-      std::vector<std::string>::iterator fname_iter = cells.begin();
-      while (fname_iter != cells.end())
-      {
-         ossimRefPtr<ossimConnectableObject> chain =
-               (ossimConnectableObject*) createInputChain(*fname_iter).get();
-         if (!chain.valid())
-         {
-            ossimNotify(ossimNotifyLevel_WARN)
-                    << "ossimHLZUtil::initElevSources() ERR: Cannot open DEM file at <"
-                    <<*fname_iter<<">\n"<< std::endl;
-            return;
-         }
-
-         elevChains.push_back(chain);
-         ++fname_iter;
-      }
-
-      if (elevChains.size() == 1)
-         m_combinedElevSource = (ossimImageSource*) elevChains[0].get();
-      else
-         m_combinedElevSource = new ossimImageMosaic(elevChains);
+   // If input image(s) provided, need to combine them with the product:
+   if (m_imgLayers.empty())
+   {
+      m_procChain->add(m_memSource.get());
+   }
+   else
+   {
+      ossimRefPtr<ossimImageSource> combiner = combineLayers(m_imgLayers);
+      combiner->connectMyInputTo(m_memSource.get());
+      m_procChain->add(combiner.get());
    }
 
    if (!m_useLsFitMethod)
@@ -326,50 +308,58 @@ void ossimHlzUtil::initProcessingChain()
       m_combinedElevSource = slope_filter.get();
       m_combinedElevSource->initialize();
 
-      m_slopeFile = m_kwl.find(SLOPE_OUTPUT_FILE_KW);
+      m_slopeFile = m_kwl.findKey(SLOPE_OUTPUT_FILE_KW);
       if (!m_slopeFile.empty())
          writeSlopeImage();
    }
    m_isInitialized = true;
 
-   if (!initHlzFilter())
-      return;
-
-   if (m_outputSummary)
-      dumpProductSummary();
+   initHlzFilter();
 }
 
-bool ossimHlzUtil::loadPcFile()
+void ossimHlzUtil::loadPcFiles()
 {
-   // When a PC file is provided, certain parameters can be implied versus explicitely provided
-   // in the command-line arguments:
-   ossimRefPtr<ossimPointCloudHandler> pc_handler =
-         ossimPointCloudHandlerRegistry::instance()->open(m_pcFile);
-   if (!pc_handler.valid())
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-            << "ossimHLZUtil::loadPointCloudFile ERR: Cannot open point-cloud file <" << m_pcFile << "> "
-            << std::endl;
-      return false;
-   }
+   ostringstream xmsg;
 
-   // Verify that PC bounding rect overlaps the output bounding rect:
+   ossimString key;
+   ossimFilename pc_file;
+   ossimPointCloudHandlerRegistry* registry = ossimPointCloudHandlerRegistry::instance();
    ossimGrect pc_bbox;
-   pc_handler->getBounds(pc_bbox);
-   if (!m_gndRect.intersects(pc_bbox))
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-            << "ossimHLZUtil::loadPointCloudFile ERR: point-cloud file <" << m_pcFile << "> "
-            << "does not overlap the output ROI." << std::endl;
-      return false;
-   }
 
-   m_pcSources.push_back(pc_handler);
-   return true;
+   for(ossim_uint32 idx=0; true; ++idx)
+   {
+      key = POINT_CLOUD_FILE_KW;
+      key += ossimString::toString(idx++);
+      pc_file = m_kwl.find(key.chars());
+      if (pc_file.empty())
+         break;
+
+      ossimRefPtr<ossimPointCloudHandler> pc_handler =  registry->open(pc_file);
+      if (!pc_handler.valid())
+      {
+         xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Error loading point cloud file <"<<pc_file<<">.";
+         throw(xmsg.str());
+      }
+
+      // Verify that PC bounding rect overlaps the output bounding rect:
+      pc_handler->getBounds(pc_bbox);
+      if (m_aoiGroundRect.intersects(pc_bbox))
+      {
+         m_pcSources.push_back(pc_handler);
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+               << "ossimHLZUtil::loadPcFile() WARNING: point-cloud file <" << pc_file << "> "
+               << "does not overlap the output ROI." << endl;
+      }
+   }
 }
 
-bool ossimHlzUtil::loadMaskFiles()
+void ossimHlzUtil::loadMaskFiles()
 {
+   ostringstream xmsg;
+
    ossimString key;
    ossimFilename mask_file;
 
@@ -382,7 +372,7 @@ bool ossimHlzUtil::loadMaskFiles()
       if (mask_file.empty())
          break;
 
-      MaskSource mask_image (this, m_maskFile, true);
+      MaskSource mask_image (this, mask_file, true);
       if (mask_image.image.valid())
          m_maskSources.push_back(mask_image);
    }
@@ -397,12 +387,60 @@ bool ossimHlzUtil::loadMaskFiles()
          break;
 
       // First check if the filename specified is an image file:
-      MaskSource mask_image (this, m_maskFile, false);
+      MaskSource mask_image (this, mask_file, false);
       if (mask_image.image.valid())
          m_maskSources.push_back(mask_image);
    }
+}
 
-   return true;
+void ossimHlzUtil::loadElevCells()
+{
+   ostringstream xmsg;
+
+   // Establish connection to DEM posts directly as raster "images" versus using the OSSIM elev
+   // manager that performs interpolation of DEM posts for arbitrary locations. These elev images
+   // feed into a combiner in order to have a common tap for elev pixels:
+   // If a DEM file was not provided as an argument, the elev sources array needs be initialized:
+   m_isInitialized = false;
+   if (!m_combinedElevSource.valid())
+   {
+      // HLZ requires access to individual elevation posts for computing statistics. We use the
+      // elevation manager to identify cells that provide coverage over the AOI, then we open those
+      // cells as images with associated geometries.
+      ossimElevManager* elevMgr = ossimElevManager::instance();
+
+      // Query elevation manager for cells providing needed coverage:
+      vector<string> cells;
+      elevMgr->getCellsForBounds(m_aoiGroundRect, cells);
+
+      // Open a raster image for each elevation source being considered:
+      ossimConnectableObject::ConnectableObjectList elevChains;
+      vector<string>::iterator fname_iter = cells.begin();
+      while (fname_iter != cells.end())
+      {
+         ossimRefPtr<ossimSingleImageChain> chain = createInputChain(*fname_iter).get();
+         if (!chain.valid() || !chain->getImageRenderer().valid() )
+         {
+            xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Cannot open DEM file at <"<<*fname_iter<<">";
+            throw(xmsg.str());
+         }
+
+         // Set up the input chain with proper renderer IVT:
+         ossimRefPtr<ossimImageViewProjectionTransform> ivt = new ossimImageViewProjectionTransform
+               (chain->getImageHandler()->getImageGeometry().get(), m_geom.get());
+         chain->getImageRenderer()->setImageViewTransform(ivt.get());
+         ossimRefPtr<ossimConnectableObject> connectable = chain.get();
+         elevChains.push_back(connectable);
+         ++fname_iter;
+      }
+
+      if (elevChains.size() == 1)
+         m_combinedElevSource = (ossimImageSource*) elevChains[0].get();
+      else
+         m_combinedElevSource = new ossimImageMosaic(elevChains);
+   }
+
+
 }
 
 bool ossimHlzUtil::initHlzFilter()
@@ -411,34 +449,25 @@ bool ossimHlzUtil::initHlzFilter()
       return false;
 
    // Determine number of posts (in one dimension) needed to cover the specified LZ radius:
-   m_demGsd = m_geom->getMetersPerPixel();
-   m_demFilterSize.x = (int) ceil(m_hlzMinRadius/m_demGsd.x);
-   m_demFilterSize.y = (int) ceil(m_hlzMinRadius/m_demGsd.y);
+   if ((m_gsd.x == 0) || (m_gsd.y == 0) || m_gsd.hasNans())
+   {
+      ostringstream xmsg;
+      xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Invalid GSD: "<<m_gsd;
+      throw(xmsg.str());
+   }
+
+   m_demFilterSize.x = (int) ceil(m_hlzMinRadius/m_gsd.x);
+   m_demFilterSize.y = (int) ceil(m_hlzMinRadius/m_gsd.y);
    if ((m_demFilterSize.x < 2) || (m_demFilterSize.y < 2))
    {
       ossimNotify(ossimNotifyLevel_WARN)
                   << "ossimHLZUtil::initHlzFilter() ERR: The DEM provided does not have sufficient"
-                  " resolution to determine HLZs. Aborting..." << std::endl;
+                  " resolution to determine HLZs. Aborting..." << endl;
       return false;
    }
 
-   // clip the requested output geo rect by the rect available from the dem:
-   ossimGrect demGndRect;
-   m_geom->getBoundingGroundRect(demGndRect);
-   if (m_gndRect.hasNans())
-      m_gndRect = demGndRect;
-   else
-      m_gndRect = m_gndRect.clipToRect(demGndRect);
-
-   // Convert (clipped) requested rect to raster coordinate space in the DEM file:
-   ossimDpt ulp, lrp;
-   m_geom->worldToLocal(m_gndRect.ul(), ulp);
-   m_geom->worldToLocal(m_gndRect.lr(), lrp);
-   m_demRect.set_ul(ulp);
-   m_demRect.set_lr(lrp);
-
    // To help with multithreading, just load entire AOI of DEM into memory:
-   m_demBuffer = m_combinedElevSource->getTile(m_demRect);
+   m_demBuffer = m_combinedElevSource->getTile(m_aoiViewRect);
    if (!m_demBuffer.valid())
       return false;
 
@@ -447,35 +476,43 @@ bool ossimHlzUtil::initHlzFilter()
 
 ossimRefPtr<ossimImageData> ossimHlzUtil::getChip(const ossimIrect& bounding_irect)
 {
+   ostringstream xmsg;
+   if (!m_geom.valid())
+      return 0;
+
    m_aoiViewRect = bounding_irect;
    m_geom->setImageSize( m_aoiViewRect.size() );
 
-   ossimGrect grect;
-   m_geom->getBoundingGroundRect(grect);
+   // Allocate the output image buffer:
+   m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
+                                                           m_aoiViewRect.height());
+   if (!m_outBuffer.valid() || !m_memSource.valid())
+   {
+      xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Error encountered allocating output image buffer.";
+      throw(xmsg.str());
+   }
 
-   return 0;
-}
-
-bool ossimHlzUtil::execute()
-{
-   if (!m_geom.valid())
-      return false;
+   // Initialize the image with all points hidden:
+   m_outBuffer->initialize();
+   m_outBuffer->setImageRectangle(m_aoiViewRect);
+   m_outBuffer->fill(0);
+   m_memSource->setImage(m_outBuffer);
 
    d_accumT = 0;
    bool success = false;
 
    // Establish loop limits in input DEM raster coordinate space:
-   ossim_int32 min_x = m_demRect.ul().x;
-   ossim_int32 min_y = m_demRect.ul().y;
-   ossim_int32 max_x = m_demRect.lr().x - m_demFilterSize.x;
-   ossim_int32 max_y = m_demRect.lr().y - m_demFilterSize.y;
+   ossim_int32 min_x = m_aoiViewRect.ul().x;
+   ossim_int32 min_y = m_aoiViewRect.ul().y;
+   ossim_int32 max_x = m_aoiViewRect.lr().x - m_demFilterSize.x;
+   ossim_int32 max_y = m_aoiViewRect.lr().y - m_demFilterSize.y;
    ossimIpt chip_origin;
-   ossim_uint32 numChips = (max_x-min_x)*(max_y-min_y);
+   ossim_uint32 numPatches = (max_x-min_x)*(max_y-min_y);
 
    // Determine the DEM step size as a fraction of the LZ radius:
    const double CHIP_STEP_FACTOR = 0.25; // chip position increment as fraction of chip width
    ossim_int32 dem_step =
-         (ossim_int32) floor(4*CHIP_STEP_FACTOR*m_hlzMinRadius/(m_demGsd.x+m_demGsd.y));
+         (ossim_int32) floor(4*CHIP_STEP_FACTOR*m_hlzMinRadius/(m_gsd.x+m_gsd.y));
 
    // Hack: degrading to single thread when slope-image scheme is used. Runs extremely slow in
    // multithread mode, but much faster as single thread than multithreaded ls-fit
@@ -488,14 +525,14 @@ bool ossimHlzUtil::execute()
       {
          for (chip_origin.x = min_x; chip_origin.x <= max_x; chip_origin.x += dem_step)
          {
-            ossimHlzUtil::ChipProcessorJob* job = 0;
+            ossimHlzUtil::PatchProcessorJob* job = 0;
             if (m_useLsFitMethod)
-               job = new ossimHlzUtil::LsFitChipProcessorJob(this, chip_origin, chipId++);
+               job = new ossimHlzUtil::LsFitPatchProcessorJob(this, chip_origin, chipId++);
             else
-               job = new ossimHlzUtil::NormChipProcessorJob(this, chip_origin, chipId++);
+               job = new ossimHlzUtil::NormPatchProcessorJob(this, chip_origin, chipId++);
             job->start();
          }
-         setPercentComplete(100*chipId/numChips);
+         setPercentComplete(100*chipId/numPatches);
       }
    }
    else
@@ -507,7 +544,7 @@ bool ossimHlzUtil::execute()
       ossimRefPtr<ossimJobQueue> jobQueue = new ossimJobQueue();
       m_jobMtQueue = new ossimJobMultiThreadQueue(jobQueue.get(), m_numThreads);
 
-      cout << "\nPreparing " << numChips << " jobs..." << endl; // TODO: DEBUG
+      cout << "\nPreparing " << numPatches << " jobs..." << endl; // TODO: DEBUG
       setPercentComplete(0);
       ossim_int32 qsize = 0;
       ossimIpt chip_origin;
@@ -517,15 +554,15 @@ bool ossimHlzUtil::execute()
          for (chip_origin.x = min_x; chip_origin.x <= max_x; ++chip_origin.x)
          {
             //cout << "Submitting " << chipId << endl;
-            ossimHlzUtil::ChipProcessorJob* job = 0;
+            ossimHlzUtil::PatchProcessorJob* job = 0;
             if (m_useLsFitMethod)
-               job = new ossimHlzUtil::LsFitChipProcessorJob(this, chip_origin, chipId++);
+               job = new ossimHlzUtil::LsFitPatchProcessorJob(this, chip_origin, chipId++);
             else
-               job = new ossimHlzUtil::NormChipProcessorJob(this, chip_origin, chipId++);
+               job = new ossimHlzUtil::NormPatchProcessorJob(this, chip_origin, chipId++);
             jobQueue->add(job, false);
          }
          qsize = jobQueue->size();
-         setPercentComplete(100*(chipId-qsize)/numChips);
+         setPercentComplete(100*(chipId-qsize)/numPatches);
       }
 
       // Wait until all chips have been processed before proceeding:
@@ -533,70 +570,20 @@ bool ossimHlzUtil::execute()
       while (m_jobMtQueue->hasJobsToProcess() || m_jobMtQueue->numberOfBusyThreads())
       {
          qsize = m_jobMtQueue->getJobQueue()->size();
-         setPercentComplete(100*(numChips-qsize)/numChips);
+         setPercentComplete(100*(numPatches-qsize)/numPatches);
          OpenThreads::Thread::microSleep(10000);
       }
    }
 
    cout << "Finished processing chips." << endl;
-   paintReticle();
 
-   cout << "Writing output file..." << endl;
-   success = writeFile();
-
-   cout << "Returning..." << endl;
-   return success;
+   return m_outBuffer;
 }
 
-void ossimHlzUtil::paintReticle()
+bool ossimHlzUtil::execute()
 {
-   // Highlight the observer position with X reticle:
-   ossimDpt center;
-   m_aoiViewRect.getCenter(center);
-
-   if (m_reticleSize > 0)
-   {
-      m_outBuffer->setValue((int) center.x, (int) center.y, m_reticleValue);
-      for (int i = -m_reticleSize; i <= m_reticleSize; ++i)
-      {
-         m_outBuffer->setValue(i + (int) center.x,       (int) center.y, m_reticleValue);
-         m_outBuffer->setValue(    (int) center.x  , i + (int) center.y, m_reticleValue);
-      }
-   }
-
-   // Also outline the square area of interest:
-   for (ossim_int32 x = m_aoiViewRect.ul().x; x <= m_aoiViewRect.lr().x; ++x)
-   {
-      m_outBuffer->setValue(x, m_aoiViewRect.ul().y, m_reticleValue);
-      m_outBuffer->setValue(x, m_aoiViewRect.lr().y, m_reticleValue);
-   }
-   for (ossim_int32 y = m_aoiViewRect.ul().y; y <= m_aoiViewRect.lr().y; ++y)
-   {
-      m_outBuffer->setValue(m_aoiViewRect.ul().x, y, m_reticleValue);
-      m_outBuffer->setValue(m_aoiViewRect.lr().x, y, m_reticleValue);
-   }
-}
-
-bool ossimHlzUtil::writeFile()
-{
-   ossimIrect rect(0, 0, m_aoiViewRect.width() - 1, m_aoiViewRect.height() - 1);
-   m_outBuffer->setImageRectangle(rect);
-
-   ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
-   memSource->setImage(m_outBuffer);
-   memSource->setImageGeometry(m_geom.get());
-   ossimRefPtr<ossimImageSource>last_source = memSource.get();
-
-   // Set up the writer:
-   bool success = false;
-   ossimRefPtr<ossimImageFileWriter> writer = newWriter();
-   if (writer.valid())
-   {
-      writer->connectMyInputTo(0, last_source.get());
-      success = writer->execute();
-   }
-
-   return success;
+   getChip(m_aoiViewRect);
+   return ossimChipProcUtil::execute();
 }
 
 void ossimHlzUtil::writeSlopeImage()
@@ -618,33 +605,20 @@ void ossimHlzUtil::writeSlopeImage()
    }
 }
 
-void ossimHlzUtil::dumpProductSummary() const
-{
-   ossimIpt isize(m_geom->getImageSize());
-   cout << "\nSummary of HLZ product image:" << "\n   Output file name: " << m_productFile
-         << "\n   Image size: " << isize
-         << "\n   Slope threshold: " << m_slopeThreshold << " deg"
-         << "\n   Roughness threshold: " << m_roughnessThreshold << " m"
-         << "\n   Min LZ radius: " << m_hlzMinRadius << " m"
-         << "\n   product GSD: " << m_gsd << " m"
-         << "\n   radius-of-interest: " << (int) (m_gsd * isize.x / 2.0) << " m"
-         << "\n   Scalar type: " << m_outBuffer->getScalarTypeAsString() << endl;
-}
+OpenThreads::ReadWriteMutex ossimHlzUtil::PatchProcessorJob::m_bufMutex;
 
-OpenThreads::ReadWriteMutex ossimHlzUtil::ChipProcessorJob::m_bufMutex;
-
-ossimHlzUtil::ChipProcessorJob::ChipProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin,
+ossimHlzUtil::PatchProcessorJob::PatchProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin,
                                    ossim_uint32 /*chip_id*/)
 : m_hlzUtil (hlzUtil),
-  m_demChipUL (origin),
+  m_demPatchUL (origin),
   m_status (0),
   m_nullValue (hlzUtil->m_demBuffer->getNullPix(0))
 {
-   m_demChipLR.x = m_demChipUL.x + m_hlzUtil->m_demFilterSize.x;
-   m_demChipLR.y = m_demChipUL.y + m_hlzUtil->m_demFilterSize.y;
+   m_demPatchLR.x = m_demPatchUL.x + m_hlzUtil->m_demFilterSize.x;
+   m_demPatchLR.y = m_demPatchUL.y + m_hlzUtil->m_demFilterSize.y;
 }
 
-void ossimHlzUtil::ChipProcessorJob::start()
+void ossimHlzUtil::PatchProcessorJob::start()
 {
    if (level1Test() && level2Test() && maskTest())
    {
@@ -652,9 +626,9 @@ void ossimHlzUtil::ChipProcessorJob::start()
       // appropriately as marginal or good:
       ossimIpt p;
 
-      for (p.y = m_demChipUL.y; p.y < m_demChipLR.y; ++p.y)
+      for (p.y = m_demPatchUL.y; p.y < m_demPatchLR.y; ++p.y)
       {
-         for (p.x = m_demChipUL.x; p.x < m_demChipLR.x; ++p.x)
+         for (p.x = m_demPatchUL.x; p.x < m_demPatchLR.x; ++p.x)
          {
             OpenThreads::ScopedWriteLock lock (m_bufMutex);
             if (m_status == 2)
@@ -666,7 +640,7 @@ void ossimHlzUtil::ChipProcessorJob::start()
    }
 }
 
-bool ossimHlzUtil::ChipProcessorJob::level2Test()
+bool ossimHlzUtil::PatchProcessorJob::level2Test()
 {
    // Level 2 only valid if a point cloud dataset is available:
    if (m_hlzUtil->m_pcSources.empty())
@@ -677,8 +651,8 @@ bool ossimHlzUtil::ChipProcessorJob::level2Test()
 
    // Need to convert DEM file coordinate bounds to geographic.
    ossimGpt chipUlGpt, chipLrGpt;
-   m_hlzUtil->m_geom->localToWorld(ossimDpt(m_demChipUL), chipUlGpt);
-   m_hlzUtil->m_geom->localToWorld(ossimDpt(m_demChipLR), chipLrGpt);
+   m_hlzUtil->m_geom->localToWorld(ossimDpt(m_demPatchUL), chipUlGpt);
+   m_hlzUtil->m_geom->localToWorld(ossimDpt(m_demPatchLR), chipLrGpt);
    chipUlGpt.hgt = ossim::nan();
    chipLrGpt.hgt = ossim::nan();
    ossimGrect grect (chipUlGpt, chipLrGpt);
@@ -723,13 +697,13 @@ bool ossimHlzUtil::ChipProcessorJob::level2Test()
    return true;
 }
 
-bool ossimHlzUtil::ChipProcessorJob::maskTest()
+bool ossimHlzUtil::PatchProcessorJob::maskTest()
 {
    // Threat dome only valid if a point cloud dataset is available:
    if (m_hlzUtil->m_maskSources.empty())
       return true;
 
-   ossimIrect chipRect (m_demChipUL, m_demChipLR);
+   ossimIrect chipRect (m_demPatchUL, m_demPatchLR);
    vector<MaskSource>::iterator mask_source = m_hlzUtil->m_maskSources.begin();
    bool test_passed = true;
    ossimIpt p;
@@ -738,9 +712,9 @@ bool ossimHlzUtil::ChipProcessorJob::maskTest()
    while (mask_source != m_hlzUtil->m_maskSources.end())
    {
       ossimRefPtr<ossimImageData> mask_data = mask_source->image->getTile(chipRect);
-      for (p.y = m_demChipUL.y; (p.y < m_demChipLR.y) && test_passed; ++p.y)
+      for (p.y = m_demPatchUL.y; (p.y < m_demPatchLR.y) && test_passed; ++p.y)
       {
-         for (p.x = m_demChipUL.x; (p.x < m_demChipLR.x) && test_passed; ++p.x)
+         for (p.x = m_demPatchUL.x; (p.x < m_demPatchLR.x) && test_passed; ++p.x)
          {
             mask_value = mask_data->getPix(p);
             if (  ( mask_value &&  mask_source->exclude) ||
@@ -757,21 +731,21 @@ bool ossimHlzUtil::ChipProcessorJob::maskTest()
    return test_passed;
 }
 
-bool ossimHlzUtil::LsFitChipProcessorJob::level1Test()
+bool ossimHlzUtil::LsFitPatchProcessorJob::level1Test()
 {
    // Start with computing best-fit plane:
    ossimIpt p;
    double z;
    double y_meters;
-   for (p.y = m_demChipUL.y; p.y < m_demChipLR.y; ++p.y)
+   for (p.y = m_demPatchUL.y; p.y < m_demPatchLR.y; ++p.y)
    {
-      y_meters = p.y*m_hlzUtil->m_demGsd.y;
-      for (p.x = m_demChipUL.x; p.x < m_demChipLR.x; ++p.x)
+      y_meters = p.y*m_hlzUtil->m_gsd.y;
+      for (p.x = m_demPatchUL.x; p.x < m_demPatchLR.x; ++p.x)
       {
          z = m_hlzUtil->m_demBuffer->getPix(p, 0);
          if ((z == m_nullValue) || ossim::isnan(z))
             return false;
-         m_plane->addSample(p.x*m_hlzUtil->m_demGsd.x, y_meters, z);
+         m_plane->addSample(p.x*m_hlzUtil->m_gsd.x, y_meters, z);
       }
    }
    if (!m_plane->solveLS())
@@ -788,9 +762,9 @@ bool ossimHlzUtil::LsFitChipProcessorJob::level1Test()
 
    // Passed the slope test. Now measure the roughness as peak deviation from the plane:
    double distance;
-   for (p.y = m_demChipUL.y; (p.y < m_demChipLR.y); ++p.y)
+   for (p.y = m_demPatchUL.y; (p.y < m_demPatchLR.y); ++p.y)
    {
-      for (p.x = m_demChipUL.x; (p.x < m_demChipLR.x); ++p.x)
+      for (p.x = m_demPatchUL.x; (p.x < m_demPatchLR.x); ++p.x)
       {
          z = m_hlzUtil->m_demBuffer->getPix(p, 0);
          distance = fabs(z_proj * (a*p.x + b*p.y + c - z));
@@ -803,15 +777,15 @@ bool ossimHlzUtil::LsFitChipProcessorJob::level1Test()
    return true;
 }
 
-bool ossimHlzUtil::NormChipProcessorJob::level1Test()
+bool ossimHlzUtil::NormPatchProcessorJob::level1Test()
 {
    // The processing chain is outputing slope values in degrees from vertical.
    // Scan the data tile for slopes outside the threshold:
    ossimIpt p;
    float theta;
-   for (p.y = m_demChipUL.y; p.y < m_demChipLR.y; ++p.y)
+   for (p.y = m_demPatchUL.y; p.y < m_demPatchLR.y; ++p.y)
    {
-      for (p.x = m_demChipUL.x; p.x < m_demChipLR.x; ++p.x)
+      for (p.x = m_demPatchUL.x; p.x < m_demPatchLR.x; ++p.x)
       {
          theta = m_hlzUtil->m_demBuffer->getPix(p, 0);
          if ((theta == m_nullValue) || ossim::isnan(theta) || (theta > m_hlzUtil->m_slopeThreshold))

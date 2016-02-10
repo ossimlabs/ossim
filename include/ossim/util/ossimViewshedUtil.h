@@ -10,6 +10,7 @@
 
 #include <ossim/util/ossimChipProcUtil.h>
 #include <ossim/projection/ossimMapProjection.h>
+#include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/parallel/ossimJob.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <OpenThreads/ReadWriteMutex>
@@ -36,27 +37,22 @@ public:
     */
    virtual void setUsage(ossimArgumentParser& ap);
 
-   /**
-    * Initializes from command line arguments.
-    * @note Throws ossimException on error.
-    */
+   /** Initializes from command line arguments.
+    * @note Throws ossimException on error. */
    virtual void initialize(ossimArgumentParser& ap);
 
-   /**
-    * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
-    * @note Throws ossimException on error.
-    */
+   /** Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
+    * @note Throws ossimException on error. */
    virtual void initialize(const ossimKeywordlist& kwl);
 
-   /**
-    * Writes product to output file. Returns true if successful.
-    * @note Throws ossimException on error.
-    */
+   /** Computes the viewshed for the area represented by argument AOI. */
+   virtual ossimRefPtr<ossimImageData> getChip(const ossimIrect& img_rect);
+
+   /** Writes product to output file. Returns true if successful.
+    * @note Throws ossimException on error. */
    virtual bool execute();
 
-   /**
-    * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
-    */
+   /** Disconnects and clears the DEM and image layers. Leaves OSSIM initialized. */
    virtual void clear();
 
    virtual ossimString getClassName() const { return "ossimViewshedUtil"; }
@@ -91,15 +87,14 @@ protected:
    double m_obsHgtAbvTer; // meters above the terrain
    double m_visRadius; // meters
    Radial** m_radials;
-   bool m_initialized;
    bool m_obsInsideAoi;
    bool m_displayAsRadar; // True when explicit visRadius is supplied
    ossim_uint32 m_halfWindow; // visRadius adjusted by GSD (in pixels)
    ossimRefPtr<ossimImageData> m_outBuffer;
+   ossimRefPtr<ossimMemoryImageSource> m_memSource;
    ossim_uint8 m_visibleValue;
    ossim_uint8 m_hiddenValue;
    ossim_uint8 m_overlayValue;
-   ossim_uint8 m_nullValue;
    ossim_int32 m_reticleSize;
    bool m_simulation;
    ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;

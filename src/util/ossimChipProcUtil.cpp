@@ -44,7 +44,6 @@
 
 static const std::string AOI_GEO_RECT_KW         = "aoi_geo_rect";
 static const std::string AOI_MAP_RECT_KW         = "aoi_map_rect";
-static const std::string AOI_IMAGE_RECT_KW       = "aoi_image_rect";
 static const std::string AOI_GEO_CENTER_KW       = "aoi_geo_center";
 static const std::string AOI_SIZE_METERS_KW      = "aoi_size_meters";
 static const std::string AOI_SIZE_PIXELS_KW      = "aoi_size_pixels";

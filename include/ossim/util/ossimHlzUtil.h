@@ -20,6 +20,7 @@
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageHandler.h>
+#include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/projection/ossimImageViewProjectionTransform.h>
 #include <ossim/parallel/ossimJob.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
@@ -68,41 +69,29 @@ protected:
    /** @brief Initializes arg parser and outputs usage. */
    void usage(ossimArgumentParser& ap);
    void addArguments(ossimArgumentParser& ap);
-   bool loadPcFile();
-   bool loadMaskFiles();
+   void loadPcFiles(); // throws exception
+   void loadMaskFiles(); // throws exception
+   void loadElevCells(); // throws exception
    bool initHlzFilter();
-   bool writeFile();
-   void dumpProductSummary() const;
-   void paintReticle();
    void writeSlopeImage();
    void setProductGSD(const double& meters_per_pixel);
 
    double m_slopeThreshold; // (degrees)
    double m_roughnessThreshold; // peak deviation from plane (meters)
    double m_hlzMinRadius; // meters
-   ossimFilename m_demFile;
-   ossimFilename m_pcFile; // optional level-2 point-cloud file
-   ossimFilename m_maskFile; // optional mask specification (may be KWL file with multiple masks)
    ossimFilename m_slopeFile; // optional byproduct output
-   ossimIrect m_demRect; // rect (in raster coordinates) of the input dem for AOI
-   ossimGrect m_gndRect;
    ossimIpt m_demFilterSize;
    ossimRefPtr<ossimImageData> m_demBuffer;
    ossimRefPtr<ossimImageData> m_outBuffer;
-   double m_gsd;
-   ossimDpt m_demGsd;
-   ossimFilename m_productFile;
+   ossimRefPtr<ossimMemoryImageSource> m_memSource;
    ossim_int32 m_reticleSize;
-   ossimFilename m_lutFile;
    ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;
    bool m_outputSummary;
    ossim_uint32 m_jobCount;
    bool m_isInitialized;
-
    ossim_uint8 m_badLzValue;
    ossim_uint8 m_marginalLzValue;
    ossim_uint8 m_goodLzValue;
-   ossim_uint8 m_reticleValue;
    bool m_useLsFitMethod;
    ossimRefPtr<ossimImageSource> m_combinedElevSource;
    std::vector< ossimRefPtr<ossimPointCloudHandler> > m_pcSources;
@@ -113,10 +102,10 @@ protected:
    ossim_uint32 m_numThreads;
    double d_accumT;
 
-   class ChipProcessorJob : public ossimJob
+   class PatchProcessorJob : public ossimJob
    {
    public:
-      ChipProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0);
+      PatchProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0);
 
       virtual void start();
       virtual bool level1Test() = 0;
@@ -124,8 +113,8 @@ protected:
       bool maskTest();
 
       ossimHlzUtil* m_hlzUtil;
-      ossimIpt m_demChipUL;
-      ossimIpt m_demChipLR;
+      ossimIpt m_demPatchUL;
+      ossimIpt m_demPatchLR;
       ossim_uint8 m_status;
       float m_nullValue;
 
@@ -133,23 +122,23 @@ protected:
       static OpenThreads::ReadWriteMutex m_bufMutex;
    };
 
-   class LsFitChipProcessorJob : public ChipProcessorJob
+   class LsFitPatchProcessorJob : public PatchProcessorJob
    {
    public:
-      LsFitChipProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0)
-         : ChipProcessorJob(hlzUtil, origin, chip_id),
+      LsFitPatchProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0)
+         : PatchProcessorJob(hlzUtil, origin, chip_id),
            m_plane (new ossimLeastSquaresPlane) {}
 
-      ~LsFitChipProcessorJob() { delete m_plane; }
+      ~LsFitPatchProcessorJob() { delete m_plane; }
       virtual bool level1Test();
       ossimLeastSquaresPlane* m_plane;
    };
 
-   class NormChipProcessorJob : public ChipProcessorJob
+   class NormPatchProcessorJob : public PatchProcessorJob
    {
    public:
-      NormChipProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0)
-         : ChipProcessorJob(hlzUtil, origin, chip_id) {}
+      NormPatchProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0)
+         : PatchProcessorJob(hlzUtil, origin, chip_id) {}
 
       virtual bool level1Test();
    };

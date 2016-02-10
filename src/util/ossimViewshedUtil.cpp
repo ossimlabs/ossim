@@ -44,7 +44,6 @@ ossimViewshedUtil::ossimViewshedUtil()
 :   m_obsHgtAbvTer (1.5),
     m_visRadius (0.0),
     m_radials (0),
-    m_initialized (false),
     m_obsInsideAoi (true),
     m_displayAsRadar (false),
     m_halfWindow (0),
@@ -52,7 +51,7 @@ ossimViewshedUtil::ossimViewshedUtil()
     m_visibleValue (1),
     m_hiddenValue (128),
     m_overlayValue (255),
-    m_reticleSize(2),
+    m_reticleSize(25),
     m_simulation (false),
     m_numThreads(0),
     m_startFov(0),
@@ -295,11 +294,10 @@ void ossimViewshedUtil::clear()
 void ossimViewshedUtil::initProcessingChain()
 {
    ostringstream xmsg;
-   xmsg<<"ossimViewshedUtil::initProcessingChain() -- ";
 
    if (m_observerGpt.hasNans())
    {
-      xmsg<<"Observer ground position has not been set."<<ends;
+      xmsg<<"ossimViewshedUtil:"<<__LINE__<<" Observer ground position has not been set."<<ends;
       throw ossimException(xmsg.str());
    }
 
@@ -337,52 +335,145 @@ void ossimViewshedUtil::initProcessingChain()
       m_geom->setImageSize(m_aoiViewRect.size());
    }
 
-   // Allocate the output image buffer. It covers the intersection of the visibility rect and the
-   // requested AOI:
+   // Allocate the output image buffer:
    ossimIrect bufViewRect = visRect.clipToRect(m_aoiViewRect);
    if (bufViewRect.area() == 0)
    {
-      xmsg<<"The requested AOI rect is outside the visibility range." << ends;
+      xmsg<<"ossimViewshedUtil:"<<__LINE__<<" The requested AOI rect is outside the visibility range." << ends;
       throw ossimException(xmsg.str());
    }
    m_outBuffer = ossimImageDataFactory::instance()->
-         create(0, OSSIM_UINT8, 1, bufViewRect.width(), bufViewRect.height());
+         create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(), m_aoiViewRect.height());
    if(!m_outBuffer.valid())
    {
-      xmsg<<"Output buffer allocation failed." << ends;
+      xmsg<<"ossimViewshedUtil:"<<__LINE__<<" Output buffer allocation failed." << ends;
       throw ossimException(xmsg.str());
    }
-   m_outBuffer->setImageRectangle(bufViewRect);
+   m_outBuffer->setImageRectangle(m_aoiViewRect);
 
    // The processing chain for this class is simply a memory source containing the output buffer:
-   ossimRefPtr<ossimMemoryImageSource> memsource = new ossimMemoryImageSource;
-   memsource->setImage(m_outBuffer);
-   memsource->setImageGeometry(m_geom.get());
+   m_memSource = new ossimMemoryImageSource;
+   m_memSource->setImage(m_outBuffer);
+   m_memSource->setImageGeometry(m_geom.get());
 
    // If input image(s) provided, need to combine them with the product:
    if (m_imgLayers.empty())
    {
-      m_procChain->add(memsource.get());
+      m_procChain->add(m_memSource.get());
    }
    else
    {
       ossimRefPtr<ossimImageSource> combiner = combineLayers(m_imgLayers);
-      combiner->connectMyInputTo(memsource.get());
+      combiner->connectMyInputTo(m_memSource.get());
       m_procChain->add(combiner.get());
    }
+}
 
-   // Initialize the image with all points NULL:
+ossimRefPtr<ossimImageData> ossimViewshedUtil::getChip(const ossimIrect& bounding_irect)
+{
+   ostringstream xmsg;
+   if (!m_geom.valid())
+      return 0;
+
+   m_aoiViewRect = bounding_irect;
+   m_geom->setImageSize( m_aoiViewRect.size() );
+   m_geom->localToWorld(m_aoiViewRect, m_aoiGroundRect);
+
+   // Allocate the output image buffer:
+   m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
+                                                           m_aoiViewRect.height());
+   if (!m_outBuffer.valid() || !m_memSource.valid())
+   {
+      xmsg<<"ossimViewshedUtil:"<<__LINE__<<"  Error encountered allocating output image buffer.";
+      throw(xmsg.str());
+   }
+
+   // Initialize the image with all points hidden:
    m_outBuffer->initialize();
-   m_nullValue = m_procChain->getNullPixelValue();
-   m_outBuffer->fill(m_nullValue);
+   m_outBuffer->setImageRectangle(m_aoiViewRect);
+   m_outBuffer->fill(m_procChain->getNullPixelValue());
+   m_memSource->setImage(m_outBuffer);
 
    // Initialize the radials after intersecting the requested FOV with the FOV required to see the
    // full AOI (not applicable if observer inside AOI). Skip radial init if no intersection found:
-   if (optimizeFOV())
+   if (!optimizeFOV())
+      return 0;
+   initRadials();
+
+   // The viewshed process necessarily first fills the output buffer with the complete result before
+   // the writer requests a tile. Control is passed later to the base class execute() for writing.
+   d_accumT = 0;
+
+   if (m_numThreads == 0)
+      m_numThreads = ossim::getNumberOfThreads();
+
+   if (m_numThreads > 1)
    {
-      initRadials();
-      m_initialized = true;
+      ossimRefPtr<ossimJobQueue> jobQueue = new ossimJobQueue();
+      for (int sector=0; sector<8; ++sector)
+      {
+         if (m_radials[sector] == 0)
+            continue;
+
+         if (m_threadBySector)
+         {
+            SectorProcessorJob* job = new SectorProcessorJob(this, sector, m_halfWindow);
+            jobQueue->add(job, false);
+         }
+         else
+         {
+            for (ossim_uint32 r=0; r<=m_halfWindow; ++r)
+            {
+               RadialProcessorJob* job = new RadialProcessorJob(this, sector, r, m_halfWindow);
+               jobQueue->add(job, false);
+            }
+         }
+         if (needsAborting())
+            return 0;
+      }
+
+      cout << "\nSubmitting "<<jobQueue->size()<<" jobs..."<<endl;
+      m_jobMtQueue = new ossimJobMultiThreadQueue(jobQueue.get(), m_numThreads);
+
+      // Wait until all radials have been processed before proceeding:
+      cout << "Waiting for job threads to finish..."<<endl;
+      while (m_jobMtQueue->hasJobsToProcess() || m_jobMtQueue->numberOfBusyThreads())
+         OpenThreads::Thread::microSleep(250);
    }
+   else
+   {
+      // Unthreaded processing:
+      cout << "\nProcessing radials (non-threaded)..."<<endl;
+
+      // Loop over pixels in layer for each sector:
+      for (int sector=0; sector<8; ++sector)
+      {
+         if (m_radials[sector] == 0)
+            continue;
+
+         SectorProcessorJob spj (this, sector, m_halfWindow);
+         spj.start();
+
+         if (needsAborting())
+            return 0;
+
+      } // end loop over sectors
+   }
+
+   cout << "Finished processing radials."<<endl;
+   paintReticle();
+
+   return m_outBuffer;
+}
+
+bool ossimViewshedUtil::execute()
+{
+   getChip(m_aoiViewRect);
+
+   if (!m_horizonFile.empty() && writeHorizonProfile())
+      cout << "Wrote horizon profile to <"<<m_horizonFile<<">" <<endl;
+
+   return ossimChipProcUtil::execute();
 }
 
 bool ossimViewshedUtil::optimizeFOV()
@@ -601,113 +692,43 @@ void ossimViewshedUtil::initRadials()
    sectorInFov = 0;
 }
 
-bool ossimViewshedUtil::execute()
-{
-   // The viewshed process necessarily first fills the output buffer with the complete result before
-   // the writer requests a tile. Control is passed later to the base class execute() for writing.
-
-   if (!m_initialized)
-      return false;
-
-   d_accumT = 0;
-   bool success =  false;
-
-   if (m_numThreads == 0)
-      m_numThreads = ossim::getNumberOfThreads();
-
-   if (m_numThreads > 1)
-   {
-      ossimRefPtr<ossimJobQueue> jobQueue = new ossimJobQueue();
-      for (int sector=0; sector<8; ++sector)
-      {
-         if (m_radials[sector] == 0)
-            continue;
-
-         if (m_threadBySector)
-         {
-            SectorProcessorJob* job = new SectorProcessorJob(this, sector, m_halfWindow);
-            jobQueue->add(job, false);
-         }
-         else
-         {
-            for (ossim_uint32 r=0; r<=m_halfWindow; ++r)
-            {
-               RadialProcessorJob* job = new RadialProcessorJob(this, sector, r, m_halfWindow);
-               jobQueue->add(job, false);
-            }
-         }
-         if (needsAborting())
-            return false;
-      }
-
-      cout << "\nSubmitting "<<jobQueue->size()<<" jobs..."<<endl;
-      m_jobMtQueue = new ossimJobMultiThreadQueue(jobQueue.get(), m_numThreads);
-
-      // Wait until all radials have been processed before proceeding:
-      cout << "Waiting for job threads to finish..."<<endl;
-      while (m_jobMtQueue->hasJobsToProcess() || m_jobMtQueue->numberOfBusyThreads())
-         OpenThreads::Thread::microSleep(250);
-   }
-   else
-   {
-      // Unthreaded processing:
-      cout << "\nProcessing radials (non-threaded)..."<<endl;
-
-      // Loop over pixels in layer for each sector:
-      for (int sector=0; sector<8; ++sector)
-      {
-         if (m_radials[sector] == 0)
-            continue;
-
-         SectorProcessorJob spj (this, sector, m_halfWindow);
-         spj.start();
-
-         if (needsAborting())
-            return false;
-
-      } // end loop over sectors
-   }
-
-   cout << "Finished processing radials."<<endl;
-   paintReticle();
-   success = true;
-
-   if (!m_horizonFile.empty())
-   {
-      success = writeHorizonProfile();
-      if (success)
-         cout << "Wrote horizon profile to <"<<m_horizonFile<<">" <<endl;
-   }
-
-   success = ossimChipProcUtil::execute();
-   return success;
-}
-
 void ossimViewshedUtil::paintReticle()
 {
-   // Highlight the observer position with X reticle:
-   if ((m_reticleSize == 0) || !m_aoiGroundRect.pointWithin(m_observerGpt))
+   if (m_reticleSize == 0)
       return;
 
-   for (int i=-m_reticleSize; i<=m_reticleSize; ++i)
+   // Highlight the observer position with X reticle:
+   ossimDpt obsViewPt;
+   m_geom->worldToLocal(m_observerGpt, obsViewPt);
+   if (m_aoiViewRect.pointWithin(ossimIpt(obsViewPt)))
    {
-      m_outBuffer->setValue(m_observerVpt.x + i, m_observerVpt.y    , m_overlayValue);
-      m_outBuffer->setValue(m_observerVpt.x    , m_observerVpt.y + i, m_overlayValue);
+      for (int i=-m_reticleSize; i<=m_reticleSize; ++i)
+      {
+         if (m_aoiViewRect.pointWithin(ossimIpt(m_observerVpt.x + i, m_observerVpt.y)))
+            m_outBuffer->setValue(m_observerVpt.x + i, m_observerVpt.y    , m_overlayValue);
+         if (m_aoiViewRect.pointWithin(ossimIpt(m_observerVpt.x, m_observerVpt.y + i)))
+            m_outBuffer->setValue(m_observerVpt.x    , m_observerVpt.y + i, m_overlayValue);
+      }
    }
 
    // Paint boundary rectangle if no visibility radius painted:
+   ossimDrect viewRect;
+   m_geom->worldToLocal(m_aoiGroundRect, viewRect);
    if (!m_displayAsRadar)
    {
-      ossimIrect bufRect = m_outBuffer->getImageRectangle();
-      for (int y=bufRect.ul().y; y<=bufRect.lr().y; y++)
+      for (int y=viewRect.ul().y; y<=viewRect.lr().y; y++)
       {
-         m_outBuffer->setValue(bufRect.ul().x, y, m_overlayValue);
-         m_outBuffer->setValue(bufRect.lr().x, y, m_overlayValue);
+         if (m_aoiViewRect.pointWithin(ossimIpt(viewRect.ul().x, y)))
+            m_outBuffer->setValue(viewRect.ul().x, y, m_overlayValue);
+         if (m_aoiViewRect.pointWithin(ossimIpt(viewRect.lr().x, y)))
+            m_outBuffer->setValue(viewRect.lr().x, y, m_overlayValue);
       }
-      for (int x=bufRect.ul().x; x<=bufRect.lr().x; x++)
+      for (int x=viewRect.ul().x; x<=viewRect.lr().x; x++)
       {
-         m_outBuffer->setValue(x, bufRect.ul().y, m_overlayValue);
-         m_outBuffer->setValue(x, bufRect.lr().y, m_overlayValue);
+         if (m_aoiViewRect.pointWithin(ossimIpt(x, viewRect.ul().y)))
+            m_outBuffer->setValue(x, viewRect.ul().y, m_overlayValue);
+         if (m_aoiViewRect.pointWithin(ossimIpt(x, viewRect.lr().y)))
+            m_outBuffer->setValue(x, viewRect.lr().y, m_overlayValue);
       }
    }
 }
