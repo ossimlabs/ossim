@@ -54,9 +54,9 @@ ossimHlzUtil::ossimHlzUtil()
   m_reticleSize(10),
   m_outputSummary(false),
   m_jobCount(0),
-  m_badLzValue(0),
-  m_marginalLzValue(1),
-  m_goodLzValue(2),
+  m_badLzValue(255),
+  m_marginalLzValue(128),
+  m_goodLzValue(64),
   m_useLsFitMethod(false),
   m_isInitialized(false),
   m_numThreads(1),
@@ -80,52 +80,40 @@ void ossimHlzUtil::setUsage(ossimArgumentParser& ap)
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
-   au->addCommandLineOption(
-         "--excludes <file1>[, <file2>...]",
+   au->addCommandLineOption("--excludes <file1>[, <file2>...]",
          "List of raster image(s) representing mask files that defines regions to be excluded from."
          "HLZ solutions. Any non-zero pixel is excluded Multiple filenames must be comma-separated.");
-   au->addCommandLineOption(
-         "--hlz-coding <bad marginal good>",
+   au->addCommandLineOption("--hlz-coding <bad> <marginal> <good>",
          "Specifies the pixel values (0-255) for the output product corresponding to bad, marginal, "
-         "and good landing zones, respectively, with the fourth value representing the reticle "
-         "value. Defaults to bad=0 (null), marginal=1, , good=2, and reticle is highlighted with 3.");
-   au->addCommandLineOption(
-         "--includes <file1>[, <file2>...]",
+         "and good landing zones, respectively. Defaults to bad=255 (null), marginal=128, and "
+         "good=64.");
+   au->addCommandLineOption("--includes <file1>[, <file2>...]",
          "List of raster image(s) representing mask files that defines regions where the HLZs ."
          "identified must overlap. Any non-zero pixel represents an inclusion zone. Multiple "
          "filenames must be comma-separated.");
-   au->addCommandLineOption(
-         "--ls-fit",
+   au->addCommandLineOption("--ls-fit",
          "Slope is computed via an LS fit to a plane instead of the default slope computation using "
          "differences to compute normal vector.");
-   au->addCommandLineOption(
-         "--output-slope <filename.tif>",
+   au->addCommandLineOption("--output-slope <filename.tif>",
          "Generates a slope byproduct image (floating point degrees) to the specified filename. "
          "Only valid if normal-vector method used (i.e., --ls-fit option NOT specified)");
-   au->addCommandLineOption(
-         "--pc | --point-cloud <file1>[, <file2>...]",
+   au->addCommandLineOption("--pc | --point-cloud <file1>[, <file2>...]",
          "Specifies ancillary point-cloud data file(s) for level-2 search for obstructions. "
          "Must be comma-separated file names.");
-   au->addCommandLineOption(
-         "--reticle <int>",
+   au->addCommandLineOption("--reticle <int>",
          "Specifies the size of the reticle at the destination point location in pixels from the "
          "center (i.e., the radius of the reticle). Defaults to 10. A value of 0 hides the reticle. "
          "See --values option for setting reticle color.");
-   au->addCommandLineOption(
-         "--rlz <meters>",
+   au->addCommandLineOption("--rlz <meters>",
          "Specifies minimum radius of landing zone. Defaults to 25 m. ");
-   au->addCommandLineOption(
-         "--roughness <meters>",
+   au->addCommandLineOption("--roughness <meters>",
          "Specifies the terrain roughness threshold (meters). This is the maximum deviation from a "
          "flat plane permitted. Defaults to 0.5 m. Valid only with --ls-fit specified.");
    au->addCommandLineOption("--simulation", "For engineering/debug purposes ");
-   au->addCommandLineOption(
-         "--slope <degrees>",
+   au->addCommandLineOption("--slope <degrees>",
          "Threshold for acceptable landing zone terrain slope. Defaults to 7 deg.");
-   au->addCommandLineOption(
-         "--threads <n>",
+   au->addCommandLineOption("--threads <n>",
          "Number of threads. Defaults to use single core. For engineering/debug purposes.");
-
 }
 
 void ossimHlzUtil::initialize(ossimArgumentParser& ap)
@@ -277,7 +265,7 @@ void ossimHlzUtil::initProcessingChain()
    // The "chain" for this utility is just the memory source containing the output buffer:
    m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
                                                            m_aoiViewRect.height());
-   if (!m_outBuffer.valid() || !m_memSource.valid())
+   if (!m_outBuffer.valid())
    {
       xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Error encountered allocating output image buffer.";
       throw(xmsg.str());
