@@ -1,33 +1,24 @@
-//*******************************************************************
+//**************************************************************************************************
 //
-// License:  See top level LICENSE.txt file.
-// 
-// Author: Oscar Kramer
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-//*************************************************************************
-// $Id: ossimViewshedUtil.h 23409 2015-07-08 16:24:41Z okramer $
+//**************************************************************************************************
 
 #ifndef ossimViewshedUtil_HEADER
 #define ossimViewshedUtil_HEADER
 
-#include <ossim/base/ossimObject.h>
-#include <ossim/base/ossimRefPtr.h>
-#include <ossim/base/ossimFilename.h>
-#include <ossim/base/ossimIrect.h>
-#include <ossim/base/ossimArgumentParser.h>
+#include <ossim/util/ossimChipProcUtil.h>
 #include <ossim/projection/ossimMapProjection.h>
-#include <ossim/imaging/ossimImageGeometry.h>
-#include <ossim/imaging/ossimImageData.h>
 #include <ossim/parallel/ossimJob.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <OpenThreads/ReadWriteMutex>
-#include <ossim/util/ossimUtility.h>
 
 /*!
  *  Class for computing the viewshed on a DEM given the viewer location and max range of visibility
  */
 
-class OSSIMDLLEXPORT ossimViewshedUtil : public ossimUtility
+class OSSIMDLLEXPORT ossimViewshedUtil : public ossimChipProcUtil
 {
    friend class SectorProcessorJob;
    friend class RadialProcessorJob;
@@ -49,13 +40,13 @@ public:
     * Initializes from command line arguments.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(ossimArgumentParser& ap);
+   virtual void initialize(ossimArgumentParser& ap);
 
    /**
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(const ossimKeywordlist& kwl);
+   virtual void initialize(const ossimKeywordlist& kwl);
 
    /**
     * Writes product to output file. Returns true if successful.
@@ -68,54 +59,51 @@ public:
     */
    virtual void clear();
 
-   /**
-    * Kills current (asynchronous) process. Defaults to do nothing.
-    */
-   virtual void abort() {}
-
    virtual ossimString getClassName() const { return "ossimViewshedUtil"; }
 
+   /** Used by ossimUtilityFactory */
+   static const char* DESCRIPTION;
+
+   /** For engineering/debug */
+   void test();
 
 protected:
    class Radial
    {
    public:
-      Radial() : azimuth (0), elevation (-99999999.0) {}
-      Radial (const double& az) : azimuth (az), elevation (-99999999.0) {}
+      Radial() : azimuth (0), elevation (-99999999.0), insideAoi(false) {}
 
       // Angles are stored as arctangents: azimuth = dy/dx,  elevation = dz/dx
       double azimuth;
       double elevation;
+      bool insideAoi;
    };
 
-   bool initializeChain();
-   bool writeFile();
-   void dumpProductSummary() const;
+   virtual void initProcessingChain();
    void paintReticle();
    void initRadials();
    bool writeHorizonProfile();
+   void computeRadius();
+   bool optimizeFOV();
 
    ossimGpt  m_observerGpt;
-   ossimFilename m_demFile;
+   ossimDpt  m_observerVpt;
    double m_obsHgtAbvTer; // meters above the terrain
    double m_visRadius; // meters
    Radial** m_radials;
-   ossimRefPtr<ossimImageGeometry> m_geometry;
    bool m_initialized;
-   ossimIrect m_viewRect;
+   bool m_obsInsideAoi;
+   bool m_displayAsRadar; // True when explicit visRadius is supplied
    ossim_uint32 m_halfWindow; // visRadius adjusted by GSD (in pixels)
    ossimRefPtr<ossimImageData> m_outBuffer;
-   double m_gsd;
-   ossimFilename m_filename;
    ossim_uint8 m_visibleValue;
    ossim_uint8 m_hiddenValue;
-   ossim_uint8 m_observerValue;
+   ossim_uint8 m_overlayValue;
+   ossim_uint8 m_nullValue;
    ossim_int32 m_reticleSize;
-   ossimFilename m_lutFile;
    bool m_simulation;
    ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;
    ossim_uint32 m_numThreads;
-   bool m_outputSummary;
    double m_startFov;
    double m_stopFov;
    bool m_threadBySector;
@@ -182,7 +170,6 @@ public:
 
 private:
    static OpenThreads::ReadWriteMutex m_bufMutex;
-   static OpenThreads::ReadWriteMutex m_radMutex;
    RadialProcessor() {};
 };
 

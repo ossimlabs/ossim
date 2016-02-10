@@ -8,4 +8,3 @@ OSSIM_SETUP_APPLICATION(ossim-projection-factory-test INSTALL COMMAND_LINE COMPO
 OSSIM_SETUP_APPLICATION(ossim-projection-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-projection-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-wkt-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-wkt-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-wkt-proj-factory-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-wkt-proj-factory-test.cpp)
-

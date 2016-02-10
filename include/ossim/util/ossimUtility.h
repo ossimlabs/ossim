@@ -1,13 +1,14 @@
-//*******************************************************************
+//**************************************************************************************************
 //
-// License:  See top level LICENSE.txt file.
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-//*************************************************************************
-// $Id$
+//**************************************************************************************************
 
 #ifndef ossimUtility_HEADER
-#define ossimUtility_HEADER
+#define ossimUtility_HEADER 1
 
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimProcessInterface.h>
 #include <ossim/base/ossimListenerManager.h>
@@ -17,9 +18,9 @@
 /*!
  *  Base class for all OSSIM utility applications.
  */
-class OSSIMDLLEXPORT ossimUtility : public ossimObject,
-                                    public ossimProcessInterface,
-                                    public ossimListenerManager
+class OSSIM_DLL ossimUtility : public ossimObject,
+                               public ossimProcessInterface,
+                               public ossimListenerManager
 {
 public:
    ossimUtility();
@@ -42,16 +43,16 @@ public:
     * implementation in addition to setting its own arguments.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(ossimArgumentParser& ap);
+   virtual void initialize(ossimArgumentParser& ap);
 
    /**
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(const ossimKeywordlist& kwl) { return true; }
+   virtual void initialize(const ossimKeywordlist& /*kwl*/) { }
 
    /**
-    * Writes product to output file. Returns true if successful.
+    * Writes product to output file. Always returns true since using exception on error.
     * @note Throws ossimException on error.
     */
    virtual bool execute() = 0;
@@ -59,7 +60,7 @@ public:
    /**
     * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
     */
-   virtual void clear() = 0;
+   virtual void clear() {}
 
    /**
     * Kills current (asynchronous) process. Defaults to do nothing.
@@ -74,15 +75,41 @@ public:
    /**
     * Outputs a JSON representation of the Utility's API.
     */
-   void getUtilityApi(ossimString& out) const;
+   void getAPI(ossimString& out) const;
 
    virtual ossimObject* getObject() { return this; }
    virtual const ossimObject* getObject() const  { return this; }
    virtual ossimListenerManager* getManager()  { return this; };
    virtual ossimString getClassName() const { return "ossimUtility"; }
 
+   /**
+    * @brief Gets build date.
+    * @param s String to initialize.
+    */
+   void getBuildDate(std::string& s) const;
+
+   /**
+    * @brief Gets revision.
+    * @param s String to initialize.
+    */
+   void getRevision(std::string& s) const;
+
+   /**
+    * @brief Gets version.
+    * @param s String to initialize.
+    */
+   void getVersion(std::string& s) const;
+
+   // NOTE: The ossimUtilityFactory::getCapabilities() needs to access a brief description of each
+   // utility. For convenience, the ossimUtility-derived (final) classes should declare a public
+   // static member to hold the description string. See ossimViewshedUtility for an example.
+   // static const char* DESCRIPTION;
+
 private:
-   bool readFile(const ossimFilename& filename, ossimString& contents) const;
+   /**
+    * Used for reading text files of template and JSON API from disk ONLY.
+    */
+   bool readTextFile(const ossimFilename& filename, ossimString& contents) const;
 };
 
 #endif

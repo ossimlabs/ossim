@@ -150,6 +150,7 @@ ossimChipperUtil::ossimChipperUtil()
 
 // Private/hidden from use.
 ossimChipperUtil::ossimChipperUtil( const ossimChipperUtil& /* obj */ )
+:  m_operation(OSSIM_CHIPPER_OP_UNKNOWN)
 {
 }
 

@@ -4,7 +4,7 @@
 # got = git for OSSIM
 #
 # Convenience script for performing git operations on multiple OSSIMLABS repos.
-# Up to three git parameters are handled, for example:
+# Up to four git parameters are handled, for example:
 #
 #    got commit -a
 #    got log --oneline --graph

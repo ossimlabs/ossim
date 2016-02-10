@@ -163,8 +163,6 @@ public:
              ossimParameter value6);
    
    /**
-<<<<<<< Updated upstream
-=======
     * Alternate form for reading variable length arguments (must be comma-separated), e.g.,
     *
     *    --input_files file1, file2, file3,file4
@@ -176,7 +174,6 @@ public:
    bool read(const std::string& str, std::vector<ossimString>& param_list);
 
    /**
->>>>>>> Stashed changes
     * @return The number of parameters of type value associated with specified
     * option, or -1 if option not found
     */

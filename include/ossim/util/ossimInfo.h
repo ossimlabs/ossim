@@ -509,9 +509,9 @@ public:
     * @param s String to initialize.
     */
    void getVersion(std::string& s) const;
-   
+
 private:
- 
+
    /**
     * @brief Populates keyword list with metadata.
     * @param ih Pointer to an image handler.

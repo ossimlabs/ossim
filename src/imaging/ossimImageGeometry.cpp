@@ -22,6 +22,7 @@
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <cmath>
 
 RTTI_DEF1(ossimImageGeometry, "ossimImageGeometry", ossimObject);
@@ -80,6 +81,20 @@ m_targetRrds(0)
 ossimImageGeometry::~ossimImageGeometry()
 {
    // Nothing to do
+}
+
+bool ossimImageGeometry::open(const ossimFilename& image)
+{
+   ossimRefPtr<ossimImageHandler> handler = ossimImageHandlerRegistry::instance()->open(image);
+   if (!handler.valid())
+      return false;
+
+   ossimRefPtr<ossimImageGeometry> geom = handler->getImageGeometry();
+   if (!geom.valid())
+      return false;
+
+   *this = *geom;
+   return true;
 }
 
 void ossimImageGeometry::rnToRn(const ossimDpt& inRnPt, ossim_uint32 inResolutionLevel,
@@ -184,6 +199,18 @@ bool ossimImageGeometry::localToWorld(const ossimDpt& local_pt, ossimGpt& world_
    return true;
 }
 
+bool ossimImageGeometry::localToWorld(const ossimDrect& local_rect, ossimGrect& world_rect) const
+{
+   ossimGpt gp1, gp2, gp3, gp4;
+   if (  localToWorld(local_rect.ul(), gp1) && localToWorld(local_rect.ur(), gp2) &&
+         localToWorld(local_rect.lr(), gp3) && localToWorld(local_rect.ll(), gp4))
+   {
+      world_rect = ossimGrect(gp1, gp2, gp3, gp4);
+      return true;
+   }
+   return false;
+}
+
 //**************************************************************************************************
 //! Exposes the 3D projection from image to world coordinates given a constant height above 
 //! ellipsoid. The caller should verify that a valid projection exists before calling this
@@ -271,6 +298,18 @@ bool ossimImageGeometry::worldToLocal(const ossimGpt& world_pt, ossimDpt& local_
    return result;
    
 } // End: ossimImageGeometry::worldToLocal(const ossimGpt&, ossimDpt&)
+
+bool ossimImageGeometry::worldToLocal(const ossimGrect& world_rect, ossimDrect& local_rect) const
+{
+   ossimDpt dp1, dp2, dp3, dp4;
+   if (  worldToLocal(world_rect.ul(), dp1) && worldToLocal(world_rect.ur(), dp2) &&
+         worldToLocal(world_rect.lr(), dp3) && worldToLocal(world_rect.ll(), dp4))
+   {
+      local_rect = ossimDrect(dp1, dp2, dp3, dp4);
+      return true;
+   }
+   return false;
+}
 
 //**************************************************************************************************
 //! Sets the transform to be used for local-to-full-image coordinate transformation

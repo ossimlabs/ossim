@@ -72,37 +72,34 @@ ossimElevationDatabase* ossimElevationDatabaseFactory::createDatabase(const ossi
 
 ossimElevationDatabase* ossimElevationDatabaseFactory::open(const ossimString& connectionString)const
 {
-   ossimRefPtr<ossimElevationDatabase> result = new ossimDtedElevationDatabase();
-   if(!result->open(connectionString))
+   ossimRefPtr<ossimElevationDatabase> result = 0;
+   do
    {
+      result = new ossimDtedElevationDatabase();
+      if (result->open(connectionString))
+         break;
+
       result = new ossimSrtmElevationDatabase;
-      if(!result->open(connectionString))
+      if (result->open(connectionString))
+         break;
+
+      result = new ossimGeneralRasterElevationDatabase;
+      if (result->open(connectionString))
+         break;
+
+      // This method will only open individual image files for use as dems. It will not utilize the
+      // file walker to search over directories:
+      ossimFilename filename (connectionString);
+      if (filename.isFile())
       {
-         result = new ossimGeneralRasterElevationDatabase;
-         if(!result->open(connectionString))
-         {
-            result = 0;
-         }
-         
-#if 0         
-         //---
-         // Commented out as the ossimImageElevationDatabase can load any type and the
-         // elevation manager is passing in elevation. This stops it opening your entire
-         // elevation directory if you happen to start you application where there is an
-         // elevation directory in there. Note you can still explicitly declare a
-         // "image_directory in your preferences.  drb - 20110509
-         //---
-         if(!result->open(connectionString))
-         {
-            result = new ossimImageElevationDatabase;
-            if(!result->open(connectionString))
-            {
-               result = 0;
-            }
-         }
-#endif
+         result = new ossimImageElevationDatabase;
+         if (result->open(connectionString))
+            break;
       }
-   }
+
+      result = 0;
+   } while (0);
+
    return result.release();
 }
 

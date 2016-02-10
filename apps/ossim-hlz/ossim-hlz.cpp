@@ -1,16 +1,11 @@
-//*******************************************************************
-//
-// License:  See top level LICENSE.txt file.
-// 
-// Author:  Oscar Kramer
-//
-// Description:
-//
-// Application for finding helicopter landing zones (HLZ) on a DEM given the final destination and
-// max range from destination.
-//
-//*******************************************************************
-//  $Id: ossim-hlz.cpp 23167 2015-02-24 22:07:14Z okramer $
+/*****************************************************************************
+*                                                                            *
+*                                 O S S I M                                  *
+*            Open Source, Geospatial Image Processing Project                *
+*          License: MIT, see LICENSE at the top-level directory              *
+*                                                                            *
+******************************************************************************
+$Id: ossim_header.txt 23481 2015-08-26 15:42:55Z okramer $ */
 
 #include <iostream>
 using namespace std;
@@ -19,9 +14,14 @@ using namespace std;
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimStdOutProgress.h>
+#include <ossim/base/ossimException.h>
 #include <ossim/base/ossimTimer.h>
-#include <ossim/util/ossimHLZUtil.h>
+#include <ossim/util/ossimHlzUtil.h>
 
+//*****************************************************************************
+// Application for finding helicopter landing zones (HLZ) on a DEM given the
+// final destination and max range from destination.
+//*****************************************************************************
 int main(int argc, char *argv[])
 {
    ossimArgumentParser ap(&argc, argv);
@@ -33,26 +33,32 @@ int main(int argc, char *argv[])
       cout<<" "<<argv[i];
    cout<<"\n"<<endl;
 
-   // Initialize ossim stuff, factories, plugin, etc.
-   ossimInit::instance()->initialize(ap);
-
    double t0 = ossimTimer::instance()->time_s();
+   try
+   {
+      // Initialize ossim stuff, factories, plugin, etc.
+      ossimInit::instance()->initialize(ap);
 
-   ossimRefPtr<ossimHLZUtil> hlz = new ossimHLZUtil;
-   if (!hlz->parseCommand(ap))
+      t0 = ossimTimer::instance()->time_s();
+
+      ossimRefPtr<ossimHlzUtil> hlz = new ossimHlzUtil;
+      hlz->initialize(ap);
+
+      // Add a listener for the percent complete to standard output.
+      ossimStdOutProgress prog(0, true);
+      hlz->addListener(&prog);
+
+      // Start the viewshed process:
+      bool success = hlz->execute();
+      hlz = 0;
+   }
+   catch  (const ossimException& e)
+   {
+      ossimNotify(ossimNotifyLevel_FATAL)<<e.what()<<endl;
       exit(1);
+   }
 
-   // Add a listener for the percent complete to standard output.
-   ossimStdOutProgress prog(0, true);
-   hlz->addListener(&prog);
-   
-   // Start the viewshed process:
-   bool success = hlz->execute();
-   hlz = 0;
-   
    double dt = ossimTimer::instance()->time_s() - t0;
    cout << argv[0] << "Elapsed Time: " << dt << " s\n" << endl;
-   if (success)
-      exit(0);
-   exit(1);
+   exit(0);
 }

@@ -1,15 +1,15 @@
-//*******************************************************************
-// License:  See top level LICENSE.txt file.
-// Author:  Oscar Kramer
-//*******************************************************************
-//  $Id: ossimHLZUtil.cpp 23465 2015-08-13 13:36:26Z okramer $
-
-#include <ossim/util/ossimHLZUtil.h>
+//**************************************************************************************************
+//
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
+//
+//**************************************************************************************************
 
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimRtti.h>
 #include <ossim/base/ossimGrect.h>
+#include <ossim/base/ossimException.h>
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimKeywordlist.h>
@@ -28,18 +28,27 @@
 #include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/imaging/ossimIndexToRgbLutFilter.h>
 #include <ossim/point_cloud/ossimPointCloudHandlerRegistry.h>
+#include <ossim/util/ossimHlzUtil.h>
 #include <fstream>
 
-const char* MASK_PREFIX = "mask";
-const char* MASK_EXCLUDE_KW = "exclude";
+static const char* MASK_EXCLUDE_KW = "excludes";
+static const char* MASK_INCLUDE_KW = "includes";
+static const char* SLOPE_OUTPUT_FILE_KW = "slope_output_file";
+static const char* POINT_CLOUD_FILE_KW = "point_cloud_file";
+static const char* RETICLE_SIZE_KW = "reticle_size";
+static const char* LZ_MIN_RADIUS_KW = "lz_min_radius";
+static const char* ROUGHNESS_THRESHOLD_KW = "roughness_threshold";
+static const char* SLOPE_THRESHOLD_KW = "slope_threshold";
+static const char* TARGET_GEOLOCATION_KW = "target_geolocation";
 
-ossimHLZUtil::ossimHLZUtil()
+const char* ossimHlzUtil::DESCRIPTION =
+      "Computes bitmap of helicopter landing zones given ROI and DEM.";
+
+ossimHlzUtil::ossimHlzUtil()
 : m_slopeThreshold(7.0),
   m_roughnessThreshold(0.5),
   m_hlzMinRadius(25.0),
-  m_aoiRadius(0),
   m_outBuffer(NULL),
-  m_gsd(0),
   m_reticleSize(10),
   m_outputSummary(false),
   m_jobCount(0),
@@ -48,40 +57,21 @@ ossimHLZUtil::ossimHLZUtil()
   m_goodLzValue(2),
   m_reticleValue(3),
   m_useLsFitMethod(false),
+  m_isInitialized(false),
   m_numThreads(1),
   d_accumT(0)
 {
-   m_destinationGpt.makeNan();
 }
 
-ossimHLZUtil::~ossimHLZUtil()
+ossimHlzUtil::~ossimHlzUtil()
 {
 }
 
-void ossimHLZUtil::usage(ossimArgumentParser& ap)
+void ossimHlzUtil::setUsage(ossimArgumentParser& ap)
 {
    // Add global usage options.
-   ossimInit::instance()->addOptions(ap);
+   ossimChipProcUtil::setUsage(ap);
 
-   // Add options.
-   addArguments(ap);
-
-   // Write usage.
-   ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
-
-   ossimNotify(ossimNotifyLevel_INFO)
-   << "\nFinds acceptable helicopter landing zones given terrain data and LZ criteria. The "
-   << "output is an 8-bit, single band, raster image. Options exist for customizing the output"
-   << " pixel values including an option to generate a color raster with the use of a look-up"
-   << " table.\n\n"
-   << "Examples:\n\n"
-   << "    "<<ap.getApplicationName()<<" [options] --roi 5000 --rlz 25 --target 25.5000 -80.000 output-hlz.tif\n"
-   << "    "<<ap.getApplicationName()<<" [options] --dem mydata.hgt --rlz 25 output-hlz.tif \n\n"
-   << std::endl;
-}
-
-void ossimHLZUtil::addArguments(ossimArgumentParser& ap)
-{
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
@@ -90,39 +80,26 @@ void ossimHLZUtil::addArguments(ossimArgumentParser& ap)
 
    // Set the command line options:
    au->addCommandLineOption(
-         "--gsd <meters>",
-         "Specifies output GSD in meters. Defaults to the same resolution as best input DEM. "
-         "Alternatively, if a DEM file is specified, the product GSD defaults to the input DEM's GSD.");
+         "--excludes <file1>[, <file2>...]",
+         "List of raster image(s) representing mask files that defines regions to be excluded from."
+         "HLZ solutions. Any non-zero pixel is excluded Multiple filenames must be comma-separated.");
    au->addCommandLineOption(
-         "--dem <filename>",
-         "Specifies the input DEM filename to use for level-1 processing. If none provided, the "
-         "elevation database is referenced as specified in prefs file for the ROI specified.");
+         "--includes <file1>[, <file2>...]",
+         "List of raster image(s) representing mask files that defines regions where the HLZs ."
+         "identified must overlap. Any non-zero pixel represents an inclusion zone. Multiple "
+         "filenames must be comma-separated.");
    au->addCommandLineOption(
          "--ls-fit",
          "Slope is computed via an LS fit to a plane instead of the default slope computation using "
          "differences to compute normal vector.");
    au->addCommandLineOption(
-         "--lut <filename>",
-         "Specifies the optional lookup table filename for mapping the single-band output image to "
-         "an RGB. The LUT provided must be in the ossimIndexToRgbLutFilter format and must handle "
-         "the discrete output values (see --values option).");
-   au->addCommandLineOption(
-         "--mask <filename>",
-         "Either a Keyword-list file or raster image. The KWL file can contain multiple mask files "
-         "and how to interpret them, i.e., whether non-null pixels define exclusion zones (cannot "
-         "land inside) or inclusion (must land inside). A single mask raster image is assumed to "
-         "represent exclusion zones.");
-   au->addCommandLineOption(
          "--output-slope <filename.tif>",
          "Generates a slope byproduct image (floating point degrees) to the specified filename. "
          "Only valid if normal-vector method used (i.e., --ls-fit option NOT specified)");
    au->addCommandLineOption(
-         "--pc | --point-cloud <filename>",
-         "Specifies ancillary point-cloud data file for level-2 search for obstructions.");
-   au->addCommandLineOption(
-         "--request-api",
-         "Causes applications API to be output as JSON to stdout. Accepts optional filename to "
-         "store JSON output.");
+         "--pc | --point-cloud <file1>[, <file2>...]",
+         "Specifies ancillary point-cloud data file(s) for level-2 search for obstructions. "
+         "Must be comma-separated file names.");
    au->addCommandLineOption(
          "--reticle <int>",
          "Specifies the size of the reticle at the destination point location in pixels from the "
@@ -132,30 +109,16 @@ void ossimHLZUtil::addArguments(ossimArgumentParser& ap)
          "--rlz <meters>",
          "Specifies minimum radius of landing zone. Defaults to 25 m. ");
    au->addCommandLineOption(
-         "--roi <meters>",
-         "radius of interest surrounding the destination point. If absent, the product defaults to "
-         "1024 x 1024 pixels, with a radius of 512 * GSD. Alternatively, if a DEM file is "
-         "specified, the product ROI defaults to the full DEM coverage.");
-   au->addCommandLineOption(
          "--roughness <meters>",
          "Specifies the terrain roughness threshold (meters). This is the maximum deviation from a "
          "flat plane permitted. Defaults to 0.5 m. Valid only with --ls-fit specified.");
    au->addCommandLineOption("--simulation", "For engineering/debug purposes ");
-   au->addCommandLineOption(
-         "--size <int>",
-         "Instead of a radius of interest, directly specifies the dimensions of the "
-         " output product in pixels (output is square). Required unless --roi is specified and/or "
-         "an inout DEM is specified.");
    au->addCommandLineOption(
          "--slope <degrees>",
          "Threshold for acceptable landing zone terrain slope. Defaults to 7 deg.");
    au->addCommandLineOption(
          "--summary",
          "Causes a product summary to be output to the console.");
-   au->addCommandLineOption(
-         "--target <lat> <lon>",
-         "The center target destination around which suitable HLZs are identified. This can be "
-         "omitted if an input DEM file is provided, in which case the center of the DEM is the target.");
    au->addCommandLineOption(
          "--threads <n>",
          "Number of threads. Defaults to use single core. For engineering/debug purposes.");
@@ -164,15 +127,12 @@ void ossimHLZUtil::addArguments(ossimArgumentParser& ap)
          "Specifies the pixel values (0-255) for the output product corresponding to bad, marginal, "
          "and good landing zones, respectively, with the fourth value representing the reticle "
          "value. Defaults to bad=0 (null), marg=1, , good=2, and reticle is highlighted with 3.");
+
 }
 
-bool ossimHLZUtil::parseCommand(ossimArgumentParser& ap)
+void ossimHlzUtil::initialize(ossimArgumentParser& ap)
 {
-   if ((ap.argc() == 1) || ap.read("-h") || ap.read("--help"))
-   {
-      usage(ap);
-      return false;
-   }
+   ossimChipProcUtil::initialize(ap);
 
    std::string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
@@ -182,300 +142,144 @@ bool ossimHLZUtil::parseCommand(ossimArgumentParser& ap)
    ossimArgumentParser::ossimParameter sp3(ts3);
    std::string ts4;
    ossimArgumentParser::ossimParameter sp4(ts4);
-
-   if (ap.read("--gsd", sp1))
-      m_gsd = ossimString(ts1).toDouble();
-
-   if (ap.read("--dem", sp1))
-      m_demFile = ts1;
+   ossimString  key ;
 
    if (ap.read("--ls-fit"))
+   {
+      // Command line mode only
       m_useLsFitMethod = true;
+   }
 
-   if (ap.read("--lut", sp1))
-      m_lutFile = ts1;
+   vector<ossimString> maskFnames;
+   ap.read("--excludes", maskFnames);
+   for(ossim_uint32 idx=0; idx<maskFnames.size(); ++idx)
+   {
+      key = MASK_EXCLUDE_KW;
+      key += ossimString::toString(idx++);
+      m_kwl.addPair(key.string(), maskFnames[idx] );
+   }
 
-   if (ap.read("--mask", sp1))
-      m_maskFile = ts1;
+   maskFnames.clear();
+   ap.read("--includes", maskFnames);
+   for(ossim_uint32 idx=0; idx<maskFnames.size(); ++idx)
+   {
+      key = MASK_INCLUDE_KW;
+      key += ossimString::toString(idx++);
+      m_kwl.addPair(key.string(), maskFnames[idx] );
+   }
 
    if ( ap.read("--output-slope", sp1))
-   {
-      m_slopeFile = ts1;
-   }
-   if (ap.read("--pc", sp1) || ap.read("--point-cloud", sp1))
-      m_pcFile = ts1;
+      m_kwl.add(SLOPE_OUTPUT_FILE_KW, ts1.c_str());
 
-   if ( ap.read("--request-api", sp1))
+   vector<ossimString> pcFnames;
+   ap.read("--point-clouds", pcFnames);
+   for(ossim_uint32 idx=0; idx<pcFnames.size(); ++idx)
    {
-      ofstream ofs ( ts1.c_str() );
-      printApiJson(ofs);
-      ofs.close();
-      return false;
+      key = POINT_CLOUD_FILE_KW;
+      key += ossimString::toString(idx++);
+      m_kwl.addPair(key.string(), pcFnames[idx] );
    }
-   if ( ap.read("--request-api"))
-   {
-      printApiJson(cout);
-      return false;
-   }
+
    if (ap.read("--reticle", sp1))
-      m_reticleSize = ossimString(ts1).toInt32();
+      m_kwl.add(RETICLE_SIZE_KW, ts1.c_str());
 
    if (ap.read("--rlz", sp1))
-      m_hlzMinRadius = ossimString(ts1).toDouble();
-
-   if (ap.read("--roi", sp1))
-      m_aoiRadius = ossimString(ts1).toDouble();
+      m_kwl.add(LZ_MIN_RADIUS_KW, ts1.c_str());
 
    if (ap.read("--roughness", sp1))
-      m_roughnessThreshold = ossimString(ts1).toDouble();
-
-   if (ap.read("--summary"))
-      m_outputSummary = true;
-
-   if (ap.read("--size", sp1))
-   {
-      m_viewRect.set_lrx(ossimString(ts1).toUInt32());
-      m_viewRect.set_lry(m_viewRect.lr().x);
-   }
+      m_kwl.add(ROUGHNESS_THRESHOLD_KW, ts1.c_str());
 
    if (ap.read("--slope", sp1))
-      m_slopeThreshold = ossimString(ts1).toDouble();
+      m_kwl.add(SLOPE_THRESHOLD_KW, ts1.c_str());
 
    if (ap.read("--target", sp1, sp2))
    {
-      m_destinationGpt.lat = ossimString(ts1).toDouble();
-      m_destinationGpt.lon = ossimString(ts2).toDouble();
+      ossimString geolocstr = ts1 + " " + ts2;
+      m_kwl.add(TARGET_GEOLOCATION_KW, geolocstr.chars());
    }
 
    if (ap.read("--threads", sp1))
    {
+      // Command line mode only
       m_numThreads = ossimString(ts1).toUInt32();
    }
 
    if (ap.read("--values", sp1, sp2, sp3, sp4))
    {
+      // Command line mode only
       m_badLzValue = ossimString(ts1).toUInt8();
       m_marginalLzValue = ossimString(ts2).toUInt8();
       m_goodLzValue = ossimString(ts3).toUInt8();
       m_reticleValue = ossimString(ts4).toUInt8();
    }
 
-   // There should only be the required command line args left:
-   if (ap.argc() != 2)
-   {
-      usage(ap);
-      return false;
-   }
-
-   // Parse the required command line params:
-   m_productFile = ap[1];
-
-   // Verify minimum required args were specified:
-   if (m_demFile.empty() && m_destinationGpt.isLonLatNan())
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-                  << "ossimHLZUtil::initialize ERR: Command line is underspecified." << std::endl;
-      usage(ap);
-      return false;
-   }
-   return initialize();
+   processRemainingArgs(ap);
 }
 
-bool ossimHLZUtil::initialize()
+void ossimHlzUtil::initialize(const ossimKeywordlist& kwl)
 {
-   m_productGeom = new ossimImageGeometry;
+   ossimString value;
 
-   // If DEM provided as file on command line, reset the elev manager to use only this:
-   if (!m_demFile.empty() && !loadDemFile())
-      return false;
+   m_slopeFile = m_kwl.find(SLOPE_OUTPUT_FILE_KW);
+   m_pcFile = m_kwl.find(POINT_CLOUD_FILE_KW);
 
-   // Determine if default GSD needs to be computed.
-   if (m_gsd == 0)
-   {
-      // Query for target H so as to autoload cell(s):
-      ossimElevManager::instance()->getHeightAboveEllipsoid(m_destinationGpt);
-      m_gsd = ossimElevManager::instance()->getMeanSpacingMeters();
-      if (ossim::isnan(m_gsd))
-         m_gsd = 0;
-   }
+   value = m_kwl.find(RETICLE_SIZE_KW);
+   if (!value.empty())
+      m_reticleSize = value.toInt32();
 
-   // Make sure that AOI and GSD are initialized:
-   if ((m_aoiRadius == 0) && (m_gsd != 0))
-   {
-      // The radius of interest can default given a GSD to achieve a specific output image size.
-      if (m_viewRect.area() <= 1)
-            m_viewRect = ossimIrect(0, 0, 1023, 1023);
-      m_aoiRadius = (m_viewRect.size().x + m_viewRect.size().y - 2) * m_gsd / 4.0;
-   }
-   else if ((m_gsd == 0) && (m_aoiRadius != 0))
-   {
-      // Likewise, the GSD can default given an AOI and image size:
-      if (m_viewRect.area() <= 1)
-            m_viewRect = ossimIrect(0,0,1023,1023);
-      m_gsd = 4.0 * m_aoiRadius / (m_viewRect.size().x + m_viewRect.size().y - 2);
-   }
-   if ((m_gsd == 0) || (m_aoiRadius == 0))
-   {
-      ossimNotify(ossimNotifyLevel_WARN) << "ossimHLZUtil::initialize() ERROR: GSD and/or AOI "
-            "radius have not been set." << std::endl;
-      return false;
-   }
+   value = m_kwl.find(LZ_MIN_RADIUS_KW);
+   if (!value.empty())
+      m_hlzMinRadius = value.toDouble();
 
-   // If needed, compute the bounding rect in pixel space given the visibility range and the GSD:
-   if (m_viewRect.area() <= 1)
-   {
-      m_viewRect.set_lrx(2.0 * ossim::round<ossim_int32, double>(m_aoiRadius / m_gsd) - 1);
-      m_viewRect.set_lry(m_viewRect.lr().x);
-   }
+   value = m_kwl.find(ROUGHNESS_THRESHOLD_KW);
+   if (!value.empty())
+      m_roughnessThreshold = value.toDouble();
 
-   // Establish the output image geometry's map projection if not already done:
-   ossimRefPtr<ossimMapProjection> mapProj = m_productGeom->getAsMapProjection();
-   if (!mapProj.valid())
-   {
-      mapProj = new ossimEquDistCylProjection();
-      m_productGeom->setProjection(mapProj.get());
-   }
 
-   mapProj->setOrigin(m_destinationGpt);
-   mapProj->setMetersPerPixel(ossimDpt(m_gsd, m_gsd));
-   ossimDpt degPerPixel(mapProj->getDecimalDegreesPerPixel());
-   mapProj->setElevationLookupFlag(false);
-   ossimGpt ulTiePt(m_destinationGpt);
-   ossimIpt image_size(m_viewRect.width(), m_viewRect.height());
-   ossimDpt offset (-image_size.x / 2.0, -image_size.y / 2.0);
-   ulTiePt.lat -= degPerPixel.lat * offset.y;
-   ulTiePt.lon += degPerPixel.lon * offset.x;
-   mapProj->setUlTiePoints(ulTiePt);
+   value = m_kwl.find(SLOPE_THRESHOLD_KW);
+   if (!value.empty())
+      m_slopeThreshold = value.toDouble();
 
-   // Need a transform so that we can use the observer point as the output image origin (0,0):
-   m_productGeom->setImageSize(image_size);
+   ossimChipProcUtil::initialize(kwl);
+}
 
+void ossimHlzUtil::initProcessingChain()
+{
    // Establish the ground rect:
    ossimGpt ul, ur, lr, ll;
-   m_productGeom->getBoundingGroundRect(m_gndRect);
+   m_geom->getBoundingGroundRect(m_gndRect);
 
    // If PC provided as file on command line, Load it. This uses the output ground rect so needs to
    // be after the initialization of m_geometry:
    if (!m_pcFile.empty() && !loadPcFile())
-      return false;
+      throw ossimException("Error loading point cloud file.");
 
    // If threat-domes spec (or any mask) provided as file on command line, Load it:
-   if (!m_maskFile.empty() && !loadMaskFiles())
-      return false;
+   if (!loadMaskFiles())
+      throw ossimException("Error loading mask file.");
 
    // Allocate the output image buffer:
-   m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_viewRect.width(),
-                                                           m_viewRect.height());
+   m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
+                                                           m_aoiViewRect.height());
    if (!m_outBuffer.valid())
-      return false;
+      throw ossimException("Error encountered allocating output image buffer.");
 
    // Initialize the image with all points hidden:
    m_outBuffer->initialize();
-   m_outBuffer->setImageRectangle(m_viewRect);
+   m_outBuffer->setImageRectangle(m_aoiViewRect);
    m_outBuffer->fill(m_badLzValue);
+
+   // The "chain" for this utility is just the memory source containing the output buffer:
+   ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
+   memSource->setImage(m_outBuffer);
+   memSource->setImageGeometry(m_geom.get());
+   ossimRefPtr<ossimImageSource>last_source = memSource.get(); // TODO: Finish
 
    // Establish connection to DEM posts directly as raster "images" versus using the OSSIM elev
    // manager that performs interpolation of DEM posts for arbitrary locations. These elev images
    // feed into a combiner in order to have a common tap for elev pixels:
-   if (!initProcessingChain())
-      return false;
-
-   if (!initHlzFilter())
-      return false;
-
-   if (m_outputSummary)
-      dumpProductSummary();
-
-   return true;
-}
-
-void ossimHLZUtil::setProductGSD(const double& meters_per_pixel)
-{
-   m_gsd = meters_per_pixel;
-
-   if (m_productGeom.valid())
-   {
-      ossimMapProjection* map_proj =
-            dynamic_cast<ossimMapProjection*>(m_productGeom->getProjection());
-      if (map_proj)
-         map_proj->setMetersPerPixel(ossimDpt(m_gsd, m_gsd));
-   }
-}
-
-bool ossimHLZUtil::loadDemFile()
-{
-   ossimElevManager* elevMgr = ossimElevManager::instance();
-   elevMgr->clear();
-
-   ossimRefPtr<ossimImageElevationDatabase> ied = new ossimImageElevationDatabase;
-   if (!ied->open(m_demFile))
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-               << "ossimHLZUtil::initialize ERR: Cannot open DEM file at <" << m_demFile << ">\n"
-               << std::endl;
-      return false;
-   }
-   elevMgr->addDatabase(ied.get());
-
-   // When a dem file is provided, certain parameters can be implied versus explicitely provided
-   // in the command-line arguments:
-   ossimRefPtr<ossimImageHandler> dem_handler =
-         ossimImageHandlerRegistry::instance()->open(m_demFile, true, false);
-   if (!dem_handler.valid())
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-               << "ossimHLZUtil::initialize ERR: Cannot open DEM file <" << m_demFile << "> "
-               "as image handler.\n" << std::endl;
-      return false;
-   }
-
-   // Create the processing chain used for this elevation single image source:
-   createInputChain(dem_handler, m_combinedElevSource);
-   ossimRefPtr<ossimImageGeometry> dem_geom = dem_handler->getImageGeometry();
-   if (dem_geom == 0)
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-               << "ossimHLZUtil::loadDemFile() ERR: DEM file <" << m_demFile << "> "
-               "does not have valid geometry.\n" << std::endl;
-      return false;
-   }
-
-   // Match the DEM's projection:
-   //m_productGeom = new ossimImageGeometry(*dem_geom);
-   dem_geom->getBoundingGroundRect(m_gndRect);
-   if (m_destinationGpt.isLatLonNan())
-   {
-      m_destinationGpt = m_gndRect.midPoint();
-   }
-   if (m_gsd == 0)
-   {
-      ossimDpt gsdPt (dem_geom->getMetersPerPixel());
-      m_gsd = 0.5 * (gsdPt.x + gsdPt.y);
-   }
-   if (m_aoiRadius == 0)
-   {
-      ossimDpt mtrsPerDeg (m_destinationGpt.metersPerDegree());
-      m_aoiRadius = 0.25 * (m_gndRect.width()*mtrsPerDeg.x + m_gndRect.height()*mtrsPerDeg.y);
-   }
-
-   return true;
-}
-
-void ossimHLZUtil::createInputChain(ossimRefPtr<ossimImageHandler>& handler,
-                                    ossimRefPtr<ossimImageSource>& chain)
-{
-   ossimRefPtr<ossimImageViewProjectionTransform> ivt = new ossimImageViewProjectionTransform;
-   ivt->setImageGeometry(handler->getImageGeometry().get());
-   ivt->setViewGeometry(m_productGeom.get());
-
-   chain = new ossimImageRenderer(handler.get(),ivt.get());
-   chain->initialize();
-}
-
-
-bool ossimHLZUtil::initProcessingChain()
-{
    // If a DEM file was not provided as an argument, the elev sources array needs be initialized:
+   m_isInitialized = false;
    if (!m_combinedElevSource.valid())
    {
       // HLZ requires access to individual elevation posts for computing statistics. We use the
@@ -492,20 +296,17 @@ bool ossimHLZUtil::initProcessingChain()
       std::vector<std::string>::iterator fname_iter = cells.begin();
       while (fname_iter != cells.end())
       {
-         ossimRefPtr<ossimImageHandler> dem =
-               ossimImageHandlerRegistry::instance()->open(*fname_iter);
-         if (!dem.valid())
+         ossimRefPtr<ossimConnectableObject> chain =
+               (ossimConnectableObject*) createInputChain(*fname_iter).get();
+         if (!chain.valid())
          {
             ossimNotify(ossimNotifyLevel_WARN)
                     << "ossimHLZUtil::initElevSources() ERR: Cannot open DEM file at <"
                     <<*fname_iter<<">\n"<< std::endl;
-            return false;
+            return;
          }
 
-         ossimRefPtr<ossimImageSource> chain;
-         createInputChain(dem, chain);
-         ossimRefPtr<ossimConnectableObject> connectable = chain.get();
-         elevChains.push_back(connectable);
+         elevChains.push_back(chain);
          ++fname_iter;
       }
 
@@ -525,14 +326,20 @@ bool ossimHLZUtil::initProcessingChain()
       m_combinedElevSource = slope_filter.get();
       m_combinedElevSource->initialize();
 
+      m_slopeFile = m_kwl.find(SLOPE_OUTPUT_FILE_KW);
       if (!m_slopeFile.empty())
          writeSlopeImage();
    }
+   m_isInitialized = true;
 
-   return true;
+   if (!initHlzFilter())
+      return;
+
+   if (m_outputSummary)
+      dumpProductSummary();
 }
 
-bool ossimHLZUtil::loadPcFile()
+bool ossimHlzUtil::loadPcFile()
 {
    // When a PC file is provided, certain parameters can be implied versus explicitely provided
    // in the command-line arguments:
@@ -561,38 +368,50 @@ bool ossimHLZUtil::loadPcFile()
    return true;
 }
 
-bool ossimHLZUtil::loadMaskFiles()
+bool ossimHlzUtil::loadMaskFiles()
 {
-   // First check if the filename specified is an image file:
-   MaskSource mask_image (this, m_maskFile);
-   if (mask_image.valid)
+   ossimString key;
+   ossimFilename mask_file;
+
+  // Exclusion masks:
+   for(ossim_uint32 idx=0; true; ++idx)
    {
-      m_maskSources.push_back(mask_image);
-      return true;
+      key = MASK_EXCLUDE_KW;
+      key += ossimString::toString(idx++);
+      mask_file = m_kwl.find(key.chars());
+      if (mask_file.empty())
+         break;
+
+      MaskSource mask_image (this, m_maskFile, true);
+      if (mask_image.image.valid())
+         m_maskSources.push_back(mask_image);
    }
 
-   ossimKeywordlist mask_kwl (m_maskFile);
-   ossim_uint32 index = 0;
-   while (true)
+   // Inclusion masks:
+   for(ossim_uint32 idx=0; true; ++idx)
    {
-      MaskSource mask_source (this, mask_kwl, index);
-      if (mask_source.valid)
-         m_maskSources.push_back(mask_source);
-      else if (index > 0)
+      key = MASK_INCLUDE_KW;
+      key += ossimString::toString(idx++);
+      mask_file = m_kwl.find(key.chars());
+      if (mask_file.empty())
          break;
-      ++index;
+
+      // First check if the filename specified is an image file:
+      MaskSource mask_image (this, m_maskFile, false);
+      if (mask_image.image.valid())
+         m_maskSources.push_back(mask_image);
    }
 
    return true;
 }
 
-bool ossimHLZUtil::initHlzFilter()
+bool ossimHlzUtil::initHlzFilter()
 {
    if ((m_hlzMinRadius == 0) || !m_combinedElevSource.valid())
       return false;
 
    // Determine number of posts (in one dimension) needed to cover the specified LZ radius:
-   m_demGsd = m_productGeom->getMetersPerPixel();
+   m_demGsd = m_geom->getMetersPerPixel();
    m_demFilterSize.x = (int) ceil(m_hlzMinRadius/m_demGsd.x);
    m_demFilterSize.y = (int) ceil(m_hlzMinRadius/m_demGsd.y);
    if ((m_demFilterSize.x < 2) || (m_demFilterSize.y < 2))
@@ -605,7 +424,7 @@ bool ossimHLZUtil::initHlzFilter()
 
    // clip the requested output geo rect by the rect available from the dem:
    ossimGrect demGndRect;
-   m_productGeom->getBoundingGroundRect(demGndRect);
+   m_geom->getBoundingGroundRect(demGndRect);
    if (m_gndRect.hasNans())
       m_gndRect = demGndRect;
    else
@@ -613,8 +432,8 @@ bool ossimHLZUtil::initHlzFilter()
 
    // Convert (clipped) requested rect to raster coordinate space in the DEM file:
    ossimDpt ulp, lrp;
-   m_productGeom->worldToLocal(m_gndRect.ul(), ulp);
-   m_productGeom->worldToLocal(m_gndRect.lr(), lrp);
+   m_geom->worldToLocal(m_gndRect.ul(), ulp);
+   m_geom->worldToLocal(m_gndRect.lr(), lrp);
    m_demRect.set_ul(ulp);
    m_demRect.set_lr(lrp);
 
@@ -626,9 +445,18 @@ bool ossimHLZUtil::initHlzFilter()
    return true;
 }
 
-bool ossimHLZUtil::execute()
+ossimRefPtr<ossimImageData> ossimHlzUtil::getChip(const ossimIrect& bounding_irect)
 {
-   if (!m_productGeom.valid() && !initialize())
+   m_aoiViewRect = bounding_irect;
+   m_geom->setImageSize( m_aoiViewRect.size() );
+
+   ossimGrect grect;
+   m_geom->getBoundingGroundRect(grect);
+}
+
+bool ossimHlzUtil::execute()
+{
+   if (!m_geom.valid())
       return false;
 
    d_accumT = 0;
@@ -658,11 +486,11 @@ bool ossimHLZUtil::execute()
       {
          for (chip_origin.x = min_x; chip_origin.x <= max_x; chip_origin.x += dem_step)
          {
-            ossimHLZUtil::ChipProcessorJob* job = 0;
+            ossimHlzUtil::ChipProcessorJob* job = 0;
             if (m_useLsFitMethod)
-               job = new ossimHLZUtil::LsFitChipProcessorJob(this, chip_origin, chipId++);
+               job = new ossimHlzUtil::LsFitChipProcessorJob(this, chip_origin, chipId++);
             else
-               job = new ossimHLZUtil::NormChipProcessorJob(this, chip_origin, chipId++);
+               job = new ossimHlzUtil::NormChipProcessorJob(this, chip_origin, chipId++);
             job->start();
          }
          setPercentComplete(100*chipId/numChips);
@@ -687,11 +515,11 @@ bool ossimHLZUtil::execute()
          for (chip_origin.x = min_x; chip_origin.x <= max_x; ++chip_origin.x)
          {
             //cout << "Submitting " << chipId << endl;
-            ossimHLZUtil::ChipProcessorJob* job = 0;
+            ossimHlzUtil::ChipProcessorJob* job = 0;
             if (m_useLsFitMethod)
-               job = new ossimHLZUtil::LsFitChipProcessorJob(this, chip_origin, chipId++);
+               job = new ossimHlzUtil::LsFitChipProcessorJob(this, chip_origin, chipId++);
             else
-               job = new ossimHLZUtil::NormChipProcessorJob(this, chip_origin, chipId++);
+               job = new ossimHlzUtil::NormChipProcessorJob(this, chip_origin, chipId++);
             jobQueue->add(job, false);
          }
          qsize = jobQueue->size();
@@ -718,11 +546,11 @@ bool ossimHLZUtil::execute()
    return success;
 }
 
-void ossimHLZUtil::paintReticle()
+void ossimHlzUtil::paintReticle()
 {
    // Highlight the observer position with X reticle:
    ossimDpt center;
-   m_viewRect.getCenter(center);
+   m_aoiViewRect.getCenter(center);
 
    if (m_reticleSize > 0)
    {
@@ -735,76 +563,41 @@ void ossimHLZUtil::paintReticle()
    }
 
    // Also outline the square area of interest:
-   for (ossim_int32 x = m_viewRect.ul().x; x <= m_viewRect.lr().x; ++x)
+   for (ossim_int32 x = m_aoiViewRect.ul().x; x <= m_aoiViewRect.lr().x; ++x)
    {
-      m_outBuffer->setValue(x, m_viewRect.ul().y, m_reticleValue);
-      m_outBuffer->setValue(x, m_viewRect.lr().y, m_reticleValue);
+      m_outBuffer->setValue(x, m_aoiViewRect.ul().y, m_reticleValue);
+      m_outBuffer->setValue(x, m_aoiViewRect.lr().y, m_reticleValue);
    }
-   for (ossim_int32 y = m_viewRect.ul().y; y <= m_viewRect.lr().y; ++y)
+   for (ossim_int32 y = m_aoiViewRect.ul().y; y <= m_aoiViewRect.lr().y; ++y)
    {
-      m_outBuffer->setValue(m_viewRect.ul().x, y, m_reticleValue);
-      m_outBuffer->setValue(m_viewRect.lr().x, y, m_reticleValue);
+      m_outBuffer->setValue(m_aoiViewRect.ul().x, y, m_reticleValue);
+      m_outBuffer->setValue(m_aoiViewRect.lr().x, y, m_reticleValue);
    }
 }
 
-bool ossimHLZUtil::writeFile()
+bool ossimHlzUtil::writeFile()
 {
-   ossimIrect rect(0, 0, m_viewRect.width() - 1, m_viewRect.height() - 1);
+   ossimIrect rect(0, 0, m_aoiViewRect.width() - 1, m_aoiViewRect.height() - 1);
    m_outBuffer->setImageRectangle(rect);
 
    ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
    memSource->setImage(m_outBuffer);
-   memSource->setImageGeometry(m_productGeom.get());
-   ossimImageSource* last_source = memSource.get();
-
-   // See if an LUT is requested:
-   ossimRefPtr<ossimIndexToRgbLutFilter> lutSource = 0;
-   if (!m_lutFile.empty())
-   {
-      ossimKeywordlist lut_kwl;
-      lut_kwl.addFile(m_lutFile);
-      lutSource = new ossimIndexToRgbLutFilter;
-      if (!lutSource->loadState(lut_kwl))
-      {
-         ossimNotify(ossimNotifyLevel_WARN) << "ossimHLZUtil::writeFile() ERROR: The LUT "
-               "file <"
-               << m_lutFile
-               << "> could not be read. Ignoring remap request.\n"
-               << std::endl;
-         lutSource = 0;
-      }
-      else
-      {
-         lutSource->connectMyInputTo(last_source);
-         lutSource->initialize();
-         last_source = lutSource.get();
-      }
-   }
+   memSource->setImageGeometry(m_geom.get());
+   ossimRefPtr<ossimImageSource>last_source = memSource.get();
 
    // Set up the writer:
-   ossimRefPtr<ossimImageFileWriter> writer = 0;
-   if (m_productFile.ext().contains("tif"))
-   {
-      ossimTiffWriter* tif_writer = new ossimTiffWriter();
-      tif_writer->setGeotiffFlag(true);
-      tif_writer->setFilename(m_productFile);
-      writer = tif_writer;
-   }
-   else
-   {
-      writer = ossimImageWriterFactoryRegistry::instance()->createWriter(m_productFile);
-   }
    bool success = false;
+   ossimRefPtr<ossimImageFileWriter> writer = newWriter();
    if (writer.valid())
    {
-      writer->connectMyInputTo(0, last_source);
+      writer->connectMyInputTo(0, last_source.get());
       success = writer->execute();
    }
 
    return success;
 }
 
-void ossimHLZUtil::writeSlopeImage()
+void ossimHlzUtil::writeSlopeImage()
 {
    // Set up the writer:
    ossimRefPtr<ossimImageFileWriter> writer = 0;
@@ -813,7 +606,7 @@ void ossimHLZUtil::writeSlopeImage()
    tif_writer->setFilename(m_slopeFile);
    writer = tif_writer;
    writer->connectMyInputTo(0, m_combinedElevSource.get());
-   writer->setAreaOfInterest(m_viewRect);
+   writer->setAreaOfInterest(m_aoiViewRect);
    if (writer->execute())
       cout<<"Wrote slope image to <"<<m_slopeFile<<">."<<endl;
    else
@@ -823,9 +616,9 @@ void ossimHLZUtil::writeSlopeImage()
    }
 }
 
-void ossimHLZUtil::dumpProductSummary() const
+void ossimHlzUtil::dumpProductSummary() const
 {
-   ossimIpt isize(m_productGeom->getImageSize());
+   ossimIpt isize(m_geom->getImageSize());
    cout << "\nSummary of HLZ product image:" << "\n   Output file name: " << m_productFile
          << "\n   Image size: " << isize
          << "\n   Slope threshold: " << m_slopeThreshold << " deg"
@@ -836,9 +629,9 @@ void ossimHLZUtil::dumpProductSummary() const
          << "\n   Scalar type: " << m_outBuffer->getScalarTypeAsString() << endl;
 }
 
-OpenThreads::ReadWriteMutex ossimHLZUtil::ChipProcessorJob::m_bufMutex;
+OpenThreads::ReadWriteMutex ossimHlzUtil::ChipProcessorJob::m_bufMutex;
 
-ossimHLZUtil::ChipProcessorJob::ChipProcessorJob(ossimHLZUtil* hlzUtil, const ossimIpt& origin,
+ossimHlzUtil::ChipProcessorJob::ChipProcessorJob(ossimHlzUtil* hlzUtil, const ossimIpt& origin,
                                    ossim_uint32 /*chip_id*/)
 : m_hlzUtil (hlzUtil),
   m_demChipUL (origin),
@@ -849,7 +642,7 @@ ossimHLZUtil::ChipProcessorJob::ChipProcessorJob(ossimHLZUtil* hlzUtil, const os
    m_demChipLR.y = m_demChipUL.y + m_hlzUtil->m_demFilterSize.y;
 }
 
-void ossimHLZUtil::ChipProcessorJob::start()
+void ossimHlzUtil::ChipProcessorJob::start()
 {
    if (level1Test() && level2Test() && maskTest())
    {
@@ -871,7 +664,7 @@ void ossimHLZUtil::ChipProcessorJob::start()
    }
 }
 
-bool ossimHLZUtil::ChipProcessorJob::level2Test()
+bool ossimHlzUtil::ChipProcessorJob::level2Test()
 {
    // Level 2 only valid if a point cloud dataset is available:
    if (m_hlzUtil->m_pcSources.empty())
@@ -882,8 +675,8 @@ bool ossimHLZUtil::ChipProcessorJob::level2Test()
 
    // Need to convert DEM file coordinate bounds to geographic.
    ossimGpt chipUlGpt, chipLrGpt;
-   m_hlzUtil->m_productGeom->localToWorld(ossimDpt(m_demChipUL), chipUlGpt);
-   m_hlzUtil->m_productGeom->localToWorld(ossimDpt(m_demChipLR), chipLrGpt);
+   m_hlzUtil->m_geom->localToWorld(ossimDpt(m_demChipUL), chipUlGpt);
+   m_hlzUtil->m_geom->localToWorld(ossimDpt(m_demChipLR), chipLrGpt);
    chipUlGpt.hgt = ossim::nan();
    chipLrGpt.hgt = ossim::nan();
    ossimGrect grect (chipUlGpt, chipLrGpt);
@@ -928,8 +721,7 @@ bool ossimHLZUtil::ChipProcessorJob::level2Test()
    return true;
 }
 
-
-bool ossimHLZUtil::ChipProcessorJob::maskTest()
+bool ossimHlzUtil::ChipProcessorJob::maskTest()
 {
    // Threat dome only valid if a point cloud dataset is available:
    if (m_hlzUtil->m_maskSources.empty())
@@ -963,8 +755,7 @@ bool ossimHLZUtil::ChipProcessorJob::maskTest()
    return test_passed;
 }
 
-
-bool ossimHLZUtil::LsFitChipProcessorJob::level1Test()
+bool ossimHlzUtil::LsFitChipProcessorJob::level1Test()
 {
    // Start with computing best-fit plane:
    ossimIpt p;
@@ -1010,7 +801,7 @@ bool ossimHLZUtil::LsFitChipProcessorJob::level1Test()
    return true;
 }
 
-bool ossimHLZUtil::NormChipProcessorJob::level1Test()
+bool ossimHlzUtil::NormChipProcessorJob::level1Test()
 {
    // The processing chain is outputing slope values in degrees from vertical.
    // Scan the data tile for slopes outside the threshold:
@@ -1030,79 +821,10 @@ bool ossimHLZUtil::NormChipProcessorJob::level1Test()
    return true;
 }
 
-void ossimHLZUtil::printApiJson(ostream& out) const
+ossimHlzUtil::MaskSource::MaskSource(ossimHlzUtil* hlzUtil,
+                                     const ossimFilename& mask_image,
+                                     bool exclusion)
+:  exclude (exclusion)
 {
-   ossimFilename json_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
-   json_path += "/ossim/util/ossimHlzApi.json";
-   if (json_path.isReadable())
-   {
-      char line[256];
-      ifstream ifs (json_path.chars());
-      ifs.getline(line, 256);
-
-       while (ifs.good())
-       {
-         out << line << endl;
-         ifs.getline(line, 256);
-       }
-
-       ifs.close();
-   }
+   image = hlzUtil->createInputChain(mask_image);
 }
-
-ossimHLZUtil::MaskSource::MaskSource(ossimHLZUtil* hlzUtil, ossimKeywordlist& kwl,
-                                     ossim_uint32 index)
-:  exclude (true),
-   valid (false)
-{
-   ossimString prefix (MASK_PREFIX);
-   prefix += ossimString::toString(index) + ".";
-
-   ossimFilename maskFile = kwl.find(prefix.chars(), ossimKeywordNames::FILENAME_KW);
-   if (maskFile.empty())
-      return;
-
-   ossimRefPtr<ossimImageHandler> handler = ossimImageHandlerRegistry::instance()->open(maskFile);
-   if (!handler.valid())
-   {
-      ossimNotify(ossimNotifyLevel_WARN) <<
-            "ossimHLZUtil::MaskSource -- Error encountered instantiating mask image <"
-            <<maskFile<<">. Ignoring mask source." << endl;
-      return;
-   }
-
-   kwl.getBoolKeywordValue(exclude, MASK_EXCLUDE_KW, prefix.chars());
-
-   hlzUtil->createInputChain(handler, image);
-   valid = true;
-};
-
-
-
-ossimHLZUtil::MaskSource::MaskSource(ossimHLZUtil* hlzUtil, const ossimFilename& mask_image)
-:  exclude (true),
-   valid (false)
-{
-   ossimRefPtr<ossimImageHandler> handler = ossimImageHandlerRegistry::instance()->open(mask_image);
-   if (handler.valid())
-   {
-      hlzUtil->createInputChain(handler, image);
-      valid = true;
-   }
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

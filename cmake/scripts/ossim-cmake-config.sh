@@ -94,6 +94,7 @@ fi
 if [ -z "$OSSIM_INSTALL_PREFIX" ]; then
   OSSIM_INSTALL_PREFIX=$OSSIM_DEV_HOME/install
 fi
+
 # Additional stuff for ECLIPSE CDT4 users:
 CMAKE_G_ARG="Unix Makefiles"
 if [ "$BUILD_TYPE_ARG" == "ECLIPSE" ]; then
@@ -128,7 +129,6 @@ fi
 if [ -z $BUILD_KAKADU_PLUGIN ]; then
   BUILD_KAKADU_PLUGIN=OFF
 fi
-
 if [ -z $BUILD_MRSID_PLUGIN ]; then
   BUILD_MRSID_PLUGIN=OFF
 fi
