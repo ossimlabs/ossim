@@ -1295,11 +1295,11 @@ void ossimChipProcUtil::setUsage(ossimArgumentParser& ap)
 
    // Add options.
    au->addCommandLineOption("--aoi-geo-bbox", "<min-lat> <min-lon> <max-lat> <max-lon>\nSpecify a comma-separated list for the upper-left and lower-right corners of the scene rect in decimal degrees.");
-   au->addCommandLineOption("--aoi-geo-center", "<lat> <lon>\nCenter of scene/AOI in decimal degrees.");
-   au->addCommandLineOption("--aoi-geo-size", "<dlat> <dlon>\nSize of AOI in degrees.");
+   au->addCommandLineOption("--aoi-geo-center", "<lat> <lon>\nCenter of AOI in decimal degrees.");
    au->addCommandLineOption("--aoi-map-bbox", "<min-x> <min-y> <max-x> <max-y>\nSpecify a space-separated list for the upper-left and lower-right corners of the scene rect in decimal degrees.");
-   au->addCommandLineOption("--aoi-map-center", "<x> <y>\nCenter of scene/AOI in map coordinates.");
-   au->addCommandLineOption("--aoi-map-size", "<dx> <dy>,\nSize of AOI in map coordinates.");
+   au->addCommandLineOption("--aoi-map-center", "<x> <y>\nCenter of AOI in map coordinates.");
+   au->addCommandLineOption("--aoi-size-pixels", "<dx> <dy>,\nSize of AOI in output product pixels.");
+   au->addCommandLineOption("--aoi-size-meters", "<dx> <dy>,\nSize of AOI in meters.");
    au->addCommandLineOption( "-b or --bands <n,n...>", "Use the specified bands in given order: e.g. \"3,2,1\" will select bands 3, 2 and 1 of the input image.\nNote: it is 1 based" );
    au->addCommandLineOption("--central-meridian","<lon>\nNote if set this will be used for the central meridian of the projection.  This can be used to lock the utm zone.");
    au->addCommandLineOption("--color-table | --lut","<color-table.kwl>\nKeyword list containing color table for color-relief option.");
