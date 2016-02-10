@@ -13,8 +13,6 @@
 #include <map>
 #include <string>
 
-class ossimUtility;
-
 class OSSIMDLLEXPORT ossimUtilityManager : public ossimUtilityFactoryBase,
                                            public ossimFactoryListInterface<ossimUtilityFactoryBase, ossimUtility>
 {

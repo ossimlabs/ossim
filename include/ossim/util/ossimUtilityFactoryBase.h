@@ -11,8 +11,7 @@
 #include <ossim/base/ossimObjectFactory.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
-
-class ossimUtility;
+#include <ossim/util/ossimUtility.h>
 
 class OSSIM_DLL ossimUtilityFactoryBase : public ossimObjectFactory
 {
