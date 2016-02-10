@@ -452,6 +452,8 @@ ossimRefPtr<ossimImageData> ossimHlzUtil::getChip(const ossimIrect& bounding_ire
 
    ossimGrect grect;
    m_geom->getBoundingGroundRect(grect);
+
+   return 0;
 }
 
 bool ossimHlzUtil::execute()
