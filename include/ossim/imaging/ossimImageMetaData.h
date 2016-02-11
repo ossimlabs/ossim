@@ -19,6 +19,7 @@
 #include <ossim/base/ossimConstants.h>
 #include <iosfwd>
 #include <string>
+#include <vector>
 
 class ossimKeywordlist;
 
@@ -41,6 +42,27 @@ public:
    void setNumberOfBands(ossim_uint32 numberOfBands);
    
    ossim_uint32 getNumberOfBands()const;
+
+   /**
+    * @return string reference containing rgb band order, e.g. "(2,1,0)".
+    * Will be an emptry string if not set.
+    */
+   const std::string& getRgbBands() const;
+
+   /**
+    * @brief Convenience method to get the zero based rgb output band list.
+    *
+    * This method returns true on success; false, if rgb_bands key is not set
+    * in dot omd file.
+    *
+    * @note: Current ossimImageMetaData logic requires key "number_bands" to
+    * be set and at least 3.
+    * 
+    * @param bandList Initialized by this on success.
+    * 
+    * @return false
+    */
+   bool getRgbBands(std::vector<ossim_uint32>& bandList) const;
    
    void setScalarType(ossimScalarType aType);
    
@@ -133,6 +155,13 @@ private:
    ossimScalarType theScalarType;
    ossim_uint32    theBytesPerPixel;
    ossim_uint32    theNumberOfBands;
+
+   //---
+   // String containing rgb bands, e.g. (2,1,0);
+   // Added to allow tiled tiffs to set band selection correctly by picking
+   // up order from omd file.
+   //---
+   std::string theRgbBands; 
 };
 
 #endif /* #ifndef ossimImageMetaData_HEADER */
