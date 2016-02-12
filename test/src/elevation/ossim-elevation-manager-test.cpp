@@ -40,10 +40,10 @@ int main(int argc, char *argv[])
    }
 #endif
 #if 1
-   std::vector<std::string> cells;
+   std::vector<ossimFilename> cells;
    ossimElevManager::instance()->getCellsForBounds( 24.0, -83.0, 28.0, -80.0, cells );
 
-   std::vector<std::string>::const_iterator i = cells.begin();
+   std::vector<ossimFilename>::const_iterator i = cells.begin();
    while ( i != cells.end() )
    {
       cout << "cell: " << (*i) << endl;

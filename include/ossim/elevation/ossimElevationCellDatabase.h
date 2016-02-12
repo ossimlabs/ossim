@@ -113,7 +113,7 @@ public:
                            const ossim_float64& minLon,
                            const ossim_float64& maxLat,
                            const ossim_float64& maxLon,
-                           std::vector<std::string>& cells,
+                           std::vector<ossimFilename>& cells,
                            ossim_uint32 maxNumberOfCells=0 );
 
    virtual ossim_uint64 createId(const ossimGpt& /* pt */)const

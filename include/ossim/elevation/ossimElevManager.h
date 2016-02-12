@@ -116,7 +116,7 @@ public:
                            const ossim_float64& minLon,
                            const ossim_float64& maxLat,
                            const ossim_float64& maxLon,
-                           std::vector<std::string>& cells,
+                           std::vector<ossimFilename>& cells,
                            ossim_uint32 maxNumberOfCells=0 );
 
    /**
@@ -138,10 +138,10 @@ public:
                            const ossim_float64& minLon,
                            const ossim_float64& maxLat,
                            const ossim_float64& maxLon,
-                           std::vector<std::string>& cells,
+                           std::vector<ossimFilename>& cells,
                            ossim_uint32 maxNumberOfCells=0 );
    void getCellsForBounds( const ossimGrect& bounds,
-                           std::vector<std::string>& cells,
+                           std::vector<ossimFilename>& cells,
                            ossim_uint32 maxNumberOfCells=0 );
 
    void setUseGeoidIfNullFlag(bool flag) { m_useGeoidIfNullFlag = flag; }

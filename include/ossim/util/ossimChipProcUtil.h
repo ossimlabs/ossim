@@ -106,10 +106,10 @@ protected:
    /** Creates chains for image entries associated with specified keyword. This is usually
     * the input image sources but could also be used for reading list of color sources.
     * @note Throws ossimException on error. */
-   void loadImageFiles();
+   virtual void loadImageFiles();
    
    /** Loads all DEM files specified in master KWL into the elev manager's database */
-   void loadDemFiles();
+   virtual void loadDemFiles();
 
    /** Creates the ossimSingleImageChain from file and populates the chain with the reader
     * handler ONLY. Derived classes must finish constructing the chain according to their

@@ -407,7 +407,7 @@ bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>&
 
    // Option is removed even if no values found:
    remove(pos, 1);
-   while ((pos < *theArgc))
+   while (pos < (*theArgc - 1))
    {
       // Check for occurence of t option:
       if ((theArgv[pos][0] == '-') && (theArgv[pos][1] == '-'))
@@ -420,6 +420,10 @@ bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>&
          param_list.push_back(sub_args[i]);
 
       remove(pos, 1);
+
+      // Expecting a comma for the start of the next param in the list:
+      if ((pos == (*theArgc - 1)) || (theArgv[pos][0] != ','))
+         break;
    }
 
    return true;

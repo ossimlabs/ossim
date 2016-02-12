@@ -260,7 +260,7 @@ void ossimElevManager::getCellsForBounds( const std::string& connectionString,
                                           const ossim_float64& minLon,
                                           const ossim_float64& maxLat,
                                           const ossim_float64& maxLon,
-                                          std::vector<std::string>& cells, 
+                                          std::vector<ossimFilename>& cells,
                                           ossim_uint32 maxNumberOfCells)
 {
    ossimRefPtr<ossimElevationCellDatabase> cellDatabase = 0;
@@ -299,7 +299,7 @@ void ossimElevManager::getCellsForBounds( const ossim_float64& minLat,
                                           const ossim_float64& minLon,
                                           const ossim_float64& maxLat,
                                           const ossim_float64& maxLon,
-                                          std::vector<std::string>& cells, 
+                                          std::vector<ossimFilename>& cells,
                                           ossim_uint32 maxNumberOfCells )
 {
    //TODO: Presently incrementing by 0.1 deg. If an elev cell
@@ -329,14 +329,14 @@ void ossimElevManager::getCellsForBounds( const ossim_float64& minLat,
    std::vector<ossimFilename>::iterator iter = open_cells.begin();
    while ((iter != open_cells.end()) && (cells.size() < limitCells))
    {
-      cells.push_back(iter->string());
+      cells.push_back(*iter);
       ++iter;
    }
 }
 
 
 void ossimElevManager::getCellsForBounds( const ossimGrect& bbox,
-                                          std::vector<std::string>& cells,
+                                          std::vector<ossimFilename>& cells,
                                           ossim_uint32 maxCells)
 {
    getCellsForBounds(bbox.lr().lat, bbox.ul().lon, bbox.ul().lat, bbox.lr().lon, cells, maxCells);

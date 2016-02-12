@@ -48,7 +48,6 @@ static const std::string AOI_GEO_CENTER_KW       = "aoi_geo_center";
 static const std::string AOI_SIZE_METERS_KW      = "aoi_size_meters";
 static const std::string AOI_SIZE_PIXELS_KW      = "aoi_size_pixels";
 static const std::string CLIP_POLY_LAT_LON_KW    = "clip_poly_lat_lon";
-static const std::string ELEV_SOURCE_KW          = "elev_source";
 static const std::string IMAGE_SOURCE_KW         = "image_source";
 static const std::string LUT_FILE_KW             = "lut_file";
 static const std::string GSD_KW                  = "gsd";
@@ -181,7 +180,7 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
       for(ossim_uint32 idx=0; idx<paramList.size(); ++idx)
       {
          ostringstream key;
-         key<<ELEV_SOURCE_KW<<idx<<"."<<ossimKeywordNames::FILE_KW;
+         key<<ossimKeywordNames::ELEVATION_SOURCE_KW<<idx<<"."<<ossimKeywordNames::FILE_KW;
          m_kwl.addPair(key.str(), paramList[idx].string() );
       }
    }
@@ -559,7 +558,7 @@ ossimChipProcUtil::createInputChain(const ossimFilename& fname, ossim_uint32 ent
 
 void ossimChipProcUtil::loadDemFiles()
 {
-   ossim_uint32 demCount = m_kwl.numberOf( ELEV_SOURCE_KW.c_str() );
+   ossim_uint32 demCount = m_kwl.numberOf( ossimKeywordNames::ELEVATION_SOURCE_KW );
    if (demCount == 0)
       return;
 
@@ -568,7 +567,7 @@ void ossimChipProcUtil::loadDemFiles()
    ossim_uint32 i = 0;
    while ( (foundRecords < demCount) && (i < maxIndex) )
    {
-      ossimString key = ELEV_SOURCE_KW;
+      ossimString key = ossimKeywordNames::ELEVATION_SOURCE_KW;
       key += ossimString::toString(i);
       key += ".";
       key += ossimKeywordNames::FILE_KW;

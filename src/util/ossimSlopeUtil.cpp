@@ -92,7 +92,7 @@ void ossimSlopeUtil::initProcessingChain()
    if (m_demSources.empty())
    {
       // Query elevation manager for cells providing needed coverage:
-      std::vector<std::string> cells;
+      std::vector<ossimFilename> cells;
       ossimElevManager::instance()->getCellsForBounds(m_aoiGroundRect, cells);
 
       // Insert the list of DEM cells into the KWL as input images:
@@ -102,7 +102,7 @@ void ossimSlopeUtil::initProcessingChain()
          // Add the DEM as an image source to the KWL:
          ostringstream key;
          key<<IMAGE_SOURCE_KW<<ossimString::toString(idx)<<"."<<ossimKeywordNames::FILE_KW;
-         m_kwl.addPair(key.str(), cells[idx] );
+         m_kwl.addPair(key.str(), cells[idx].string() );
       }
    }
    else

@@ -71,8 +71,7 @@ protected:
    void addArguments(ossimArgumentParser& ap);
    void loadPcFiles(); // throws exception
    void loadMaskFiles(); // throws exception
-   void loadElevCells(); // throws exception
-   bool initHlzFilter();
+   virtual void mosaicDemSources(); // throws exception
    void writeSlopeImage();
    void setProductGSD(const double& meters_per_pixel);
 
@@ -85,17 +84,12 @@ protected:
    ossimRefPtr<ossimImageData> m_outBuffer;
    ossimRefPtr<ossimMemoryImageSource> m_memSource;
    ossim_int32 m_reticleSize;
-   ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;
-   bool m_outputSummary;
-   ossim_uint32 m_jobCount;
-   bool m_isInitialized;
    ossim_uint8 m_badLzValue;
    ossim_uint8 m_marginalLzValue;
    ossim_uint8 m_goodLzValue;
    bool m_useLsFitMethod;
    ossimRefPtr<ossimImageSource> m_combinedElevSource;
    std::vector< ossimRefPtr<ossimPointCloudHandler> > m_pcSources;
-   OpenThreads::Mutex m_chainMutex;
    std::vector<MaskSource> m_maskSources;
 
    // For debugging:

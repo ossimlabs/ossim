@@ -18,12 +18,12 @@ void ossimElevationCellDatabase::getCellsForBounds( const ossim_float64& minLat,
                                                     const ossim_float64& minLon,
                                                     const ossim_float64& maxLat,
                                                     const ossim_float64& maxLon,
-                                                    std::vector<std::string>& cells,
+                                                    std::vector<ossimFilename>& cells,
                                                     ossim_uint32 maxNumberOfCells )
 {
    const ossim_float64 SEARCH_SPACING = 0.1;
    ossimGpt gpt(0.0, 0.0, 0.0);
-   std::string f;
+   ossimFilename f;
    ossim_uint32 limitNumberOfCells = maxNumberOfCells>0?maxNumberOfCells:static_cast<ossim_uint32>(9999999999);
    // Latitude loop:
    ossim_float64 lat = minLat;
@@ -41,12 +41,12 @@ void ossimElevationCellDatabase::getCellsForBounds( const ossim_float64& minLat,
          if ( h.valid() )
          {
             // Get the file name:
-            f = h->getFilename().string();
+            f = h->getFilename();
             
             if ( f.size() )
             {
                // See if it's already in the list, i.e. duplicate:
-               std::vector<std::string>::const_iterator i = cells.begin();
+               std::vector<ossimFilename>::const_iterator i = cells.begin();
                while ( i != cells.end() )
                {
                   if ( f == (*i) )
