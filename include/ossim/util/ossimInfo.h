@@ -239,26 +239,20 @@ public:
    void getCenterImage(ossimKeywordlist& kwl);
 
    /**
-    * @brief Populates keyword list with image center point..
-    * @param entry Entry number to select.  Note this is the entry number
-    * from the getEntryList call not a simple zero based entry index.
-    * @param kwl Keyword list to populate.
-    */
-   void getCenterImage(ossim_uint32 entry, ossimKeywordlist& kwl);
-
-   /**
     * @brief Populates keyword list with image center ground point..
     * @param kwl Keyword list to populate.
     */  
    void getCenterGround(ossimKeywordlist& kwl);
 
    /**
-    * @brief Populates keyword list with image center ground point..
-    * @param entry Entry number to select.  Note this is the entry number
-    * from the getEntryList call not a simple zero based entry index.
+    * @brief Populates keyword list with ground point for image point.
+    *
+    * Associated input key values: "img2grd: <x> <y>"
+    * Output key: image0.ground_point:  (lat,lon,hgt,datum)
+    * 
     * @param kwl Keyword list to populate.
     */
-   void getCenterGround(ossim_uint32 entry, ossimKeywordlist& kwl);
+   void getImg2grd(ossimKeywordlist& kwl);
 
    /**
     * @brief Populates keyword list with up_is_up_angle.
@@ -581,12 +575,37 @@ private:
    void getCenterImage( ossimImageHandler* ih,
                         ossim_uint32 entry, 
                         ossimKeywordlist& kwl ) const;
+
    void getCenterGround( ossimImageHandler* ih,
                          ossimKeywordlist& kwl ) const;
    void getCenterGround( ossimImageHandler* ih,
                          ossim_uint32 entry, 
                          ossimKeywordlist& kwl ) const;
 
+   /**
+    * @brief Gets gound point from image point.
+    *
+    * Input key:value "img2grd: <x> <y>"
+    *
+    * @param Pointer to an image handler.
+    * @param kwl Keyword list to populate.
+    */
+   void getImg2grd( ossimImageHandler* ih,
+                    ossimKeywordlist& kwl ) const;
+   /**
+    * @brief Gets gound point from image point.
+    *
+    * Input key:value "img2grd: <x> <y>"
+    *
+    * @param Pointer to an image handler.
+    * @param entry Entry number to select. Note this is the entry number
+    * from the getEntryList call not a simple zero based entry index.
+    * @param kwl Keyword list to populate.
+    */
+   void getImg2grd( ossimImageHandler* ih,
+                    ossim_uint32 entry, 
+                    ossimKeywordlist& kwl ) const;
+   
    /**
     * @brief Populates keyword list with up_is_up_angle.
     * @param kwl Keyword list to populate.
