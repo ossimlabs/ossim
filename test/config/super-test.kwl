@@ -63,6 +63,7 @@ test_config_file5: index-to-rgb-lut.kwl
 test_config_file6: test1.kwl
 test_config_file7: wrap-test.kwl
 test_config_file8: hlz-test.kwl
+test_config_file9: viewshed-test.kwl
 
 
 

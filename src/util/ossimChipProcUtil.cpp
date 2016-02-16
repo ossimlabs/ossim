@@ -62,7 +62,6 @@ static const std::string WRITER_PROPERTY_KW      = "writer_property";
 
 ossimChipProcUtil::ossimChipProcUtil()
 :  m_projIsIdentity(false),
-   m_aoiExplicitelyRequested(false),
    m_geoScaled(false),
    m_productScalarType(OSSIM_SCALAR_UNKNOWN)
 {
@@ -845,7 +844,6 @@ void ossimChipProcUtil::initializeAOI()
          m_geom->localToWorld(lrvpt, lrgpt);
          m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
          computeAdjustedViewFromGrect();
-         m_aoiExplicitelyRequested = true;
       }
    }
 
@@ -881,7 +879,6 @@ void ossimChipProcUtil::initializeAOI()
       ossimGpt ulgpt (maxLatF, minLonF);
       ossimGpt lrgpt (minLatF , maxLonF);
       m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
-      m_aoiExplicitelyRequested = true;
       computeAdjustedViewFromGrect();
    }
 
@@ -995,8 +992,8 @@ void ossimChipProcUtil::findCenterGpt(ossimGpt& gpt)
 void ossimChipProcUtil::setAoiToInputs()
 {
    ossimRefPtr<ossimImageGeometry> geom;
-   ossimGrect bbox, bbox_i;
-   bbox.makeNan();
+   ossimGrect bbox_i;
+   m_aoiGroundRect.makeNan();
 
    //  Assign the AOI to be the bounding rect of the union of all inputs. Start with image inputs:
    std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chain = m_imgLayers.begin();
@@ -1008,10 +1005,10 @@ void ossimChipProcUtil::setAoiToInputs()
           geom->getBoundingGroundRect(bbox_i);
           if (!bbox_i.hasNans())
           {
-             if (bbox.hasNans())
-                bbox = bbox_i;
+             if (m_aoiGroundRect.hasNans())
+                m_aoiGroundRect = bbox_i;
              else
-                bbox.expandToInclude(bbox_i);
+                m_aoiGroundRect.expandToInclude(bbox_i);
           }
       }
       ++chain;
@@ -1023,36 +1020,29 @@ void ossimChipProcUtil::setAoiToInputs()
    std::vector<ossimFilename>::iterator dem_file = m_demSources.begin();
    while (dem_file != m_demSources.end())
    {
-      ossimRefPtr<ossimImageHandler> dem_handler =
-            ossimImageHandlerRegistry::instance()->open(*dem_file, true, false);
-      if (!dem_handler.valid())
+      ossimRefPtr<ossimImageGeometry> geom = new ossimImageGeometry;
+      if (!geom->open(*dem_file))
       {
          ossimNotify(ossimNotifyLevel_WARN)
                   << "ossimHLZUtil::initialize ERR: Cannot open DEM file <" << *dem_file << "> "
                   "as image handler. Ignoring entry for bounding box computation.\n" << std::endl;
       }
-      geom = dem_handler->getImageGeometry();
-      if (geom.valid())
+      geom->getBoundingGroundRect(bbox_i);
+      if (!bbox_i.hasNans())
       {
-          geom->getBoundingGroundRect(bbox_i);
-          if (!bbox_i.hasNans())
-          {
-             if (bbox_dems.hasNans())
-                bbox_dems = bbox_i;
-             else
-                bbox_dems.expandToInclude(bbox_i);
-          }
+         if (bbox_dems.hasNans())
+            bbox_dems = bbox_i;
+         else
+            bbox_dems.expandToInclude(bbox_i);
       }
       ++dem_file;
    }
 
    // Finally compute the AOI as the intersection of the image and DEM inputs:
-   if (bbox.hasNans())
-      bbox = bbox_dems;
+   if (m_aoiGroundRect.hasNans())
+      m_aoiGroundRect = bbox_dems;
    else if (!bbox_dems.hasNans())
-      bbox = bbox.clipToRect(bbox_dems);
-
-   m_aoiGroundRect = bbox;
+      m_aoiGroundRect = m_aoiGroundRect.clipToRect(bbox_dems);
 }
 
 void ossimChipProcUtil::computeAdjustedViewFromGrect()

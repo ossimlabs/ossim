@@ -1,0 +1,45 @@
+//===================================================================================
+// 
+// File: viewshed-test.kwl
+//
+// Description: ossim-batch-test template config file.
+// 
+// NOTES:
+// * The following environment variables must be set before running batch test:
+//     OSSIM_BATCH_TEST_DATA     Top-level dir containing all test source data
+//     OSSIM_BATCH_TEST_RESULTS  Top-level dir containing all test results (exp, 
+//                               out and log),
+// 
+// * You can use existing environment variables as $(YOUR_VARIABLE). They will be 
+//   expanded at run time if valid.
+// 
+// * If the config file contains more than a single test, then it will be necessary 
+//   to prefix all test-specific keywords with "testN."
+// 
+// * The variables OBT_EXP_DIR and OBT_OUT_DIR are assigned during runtime to
+//   the proper paths according to the config filename. It isn't required to replace
+//   these nor predefine them in the environment. You can leave them as is or modify
+//   the paths to your unconventional file paths.
+// 
+//===================================================================================
+
+test1.description: Viewshed test using synthesized test pattern as input DEM
+
+//---------------------------------------
+// Commands to generate expected results.
+//---------------------------------------
+test1.expected_results_command0: ossim-viewshed --dem $OSSIM_BATCH_TEST_DATA/public/viewshed/vs-test-dem.tif --lut $OSSIM_BATCH_TEST_DATA/public/viewshed/vs.lut 0 0 $(OBT_EXP_DIR)/viewshed-test.tif
+
+//---------------------------------------
+// The actual commands to test.
+//---------------------------------------
+test1.test_command0: ossim-viewshed --dem $OSSIM_BATCH_TEST_DATA/public/viewshed/vs-test-dem.tif --lut $OSSIM_BATCH_TEST_DATA/public/viewshed/vs.lut 0 0 $(OBT_OUT_DIR)/viewshed-test.tif 
+
+//---------------------------------------
+// The post-processing (comparison) commands. Typically these involve a file 
+// comparison of last run command against expected results.
+//---------------------------------------
+test1.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/viewshed-test.tif $(OBT_OUT_DIR)/viewshed-test.tif
+
+
+

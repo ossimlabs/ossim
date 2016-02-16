@@ -198,7 +198,6 @@ protected:
    ossimRefPtr<ossimImageGeometry> m_geom; //> Product chip/image geometry
    ossimIrect m_aoiViewRect;
    ossimGrect m_aoiGroundRect;
-   bool m_aoiExplicitelyRequested;
    std::vector< ossimRefPtr<ossimSingleImageChain> > m_imgLayers;
    std::vector< ossimFilename > m_demSources; //> Stores list of DEMs provided to the utility (versus pulled from the elevation database)
    mutable ossimRefPtr<ossimImageFileWriter> m_writer;

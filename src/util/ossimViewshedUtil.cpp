@@ -53,7 +53,7 @@ ossimViewshedUtil::ossimViewshedUtil()
     m_overlayValue (255),
     m_reticleSize(25),
     m_simulation (false),
-    m_numThreads(0),
+    m_numThreads(1),
     m_startFov(0),
     m_stopFov(0),
     m_threadBySector(false),
@@ -328,7 +328,7 @@ void ossimViewshedUtil::initProcessingChain()
 
    // If no AOI defined, just use the visibility rectangle:
    ossimIrect visRect (ossimIpt(m_observerVpt), size, size);
-   if (m_aoiViewRect.hasNans() || !m_aoiExplicitelyRequested)
+   if (m_aoiViewRect.hasNans())
    {
       m_aoiViewRect = visRect;
       m_geom->localToWorld(ossimDrect(m_aoiViewRect), m_aoiGroundRect);
@@ -712,23 +712,17 @@ void ossimViewshedUtil::paintReticle()
    }
 
    // Paint boundary rectangle if no visibility radius painted:
-   ossimDrect viewRect;
-   m_geom->worldToLocal(m_aoiGroundRect, viewRect);
    if (!m_displayAsRadar)
    {
-      for (int y=viewRect.ul().y; y<=viewRect.lr().y; y++)
+      for (int y=m_aoiViewRect.ul().y; y<=m_aoiViewRect.lr().y; y++)
       {
-         if (m_aoiViewRect.pointWithin(ossimIpt(viewRect.ul().x, y)))
-            m_outBuffer->setValue(viewRect.ul().x, y, m_overlayValue);
-         if (m_aoiViewRect.pointWithin(ossimIpt(viewRect.lr().x, y)))
-            m_outBuffer->setValue(viewRect.lr().x, y, m_overlayValue);
+         m_outBuffer->setValue(m_aoiViewRect.ul().x, y, m_overlayValue);
+         m_outBuffer->setValue(m_aoiViewRect.lr().x, y, m_overlayValue);
       }
-      for (int x=viewRect.ul().x; x<=viewRect.lr().x; x++)
+      for (int x=m_aoiViewRect.ul().x; x<=m_aoiViewRect.lr().x; x++)
       {
-         if (m_aoiViewRect.pointWithin(ossimIpt(x, viewRect.ul().y)))
-            m_outBuffer->setValue(x, viewRect.ul().y, m_overlayValue);
-         if (m_aoiViewRect.pointWithin(ossimIpt(x, viewRect.lr().y)))
-            m_outBuffer->setValue(x, viewRect.lr().y, m_overlayValue);
+         m_outBuffer->setValue(x, m_aoiViewRect.ul().y, m_overlayValue);
+         m_outBuffer->setValue(x, m_aoiViewRect.lr().y, m_overlayValue);
       }
    }
 }
