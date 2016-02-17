@@ -1192,32 +1192,9 @@ void ossimKeywordlist::getSubstringKeyList(std::vector<ossimString>& result,
 ossim_uint32 ossimKeywordlist::getNumberOfSubstringKeys(const ossimString& regularExpression)const
 {
    KeywordMap::const_iterator i;
-   std::list<ossimString> currentList;
-   ossim_uint32 result = 0;
-   ossimRegExp regExp;
-   
-   regExp.compile(regularExpression.c_str());
-   
-   for(i = m_map.begin(); i != m_map.end(); ++i)
-   {
-      if(regExp.find( (*i).first.c_str()))
-      {
-         ossimString value = ossimString((*i).first.begin()+regExp.start(),
-                                         (*i).first.begin()+regExp.start()+regExp.end());
-         
-         // make sure we have not already marked it as
-         // found
-         if(std::find(currentList.begin(),
-                      currentList.end(),
-                      value) == currentList.end())
-         {
-            currentList.push_back(value);
-            ++result;
-         }
-      }
-   }
-   
-   return result;
+   std::vector<ossimString> currentList;
+   getSubstringKeyList(currentList, regularExpression);
+   return currentList.size();
 }
 
 void ossimKeywordlist::addPrefixToAll(const ossimString& prefix)

@@ -23,7 +23,9 @@
 // 
 //===================================================================================
 
+test1.name: viewshed-test-pattern
 test1.description: Viewshed test using synthesized test pattern as input DEM
+test1.enabled: 1
 
 //---------------------------------------
 // Commands to generate expected results.
