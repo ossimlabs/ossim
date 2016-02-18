@@ -86,6 +86,13 @@ void ossimUtility::getAPI(string& json) const
    readTextFile(json_path, json);
 }
 
+string ossimUtility::getAPI() const
+{
+   string result;
+   getAPI(result);
+   return result;
+}
+
 bool ossimUtility::readTextFile(const ossimFilename& filename, string& contents) const
 {
    contents.clear();

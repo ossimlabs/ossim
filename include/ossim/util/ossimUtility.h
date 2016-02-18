@@ -76,6 +76,7 @@ public:
     * Outputs a JSON representation of the Utility's API.
     */
    void getAPI(std::string& out) const;
+   std::string getAPI() const;
 
    virtual ossimObject* getObject() { return this; }
    virtual const ossimObject* getObject() const  { return this; }
