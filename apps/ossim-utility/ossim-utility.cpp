@@ -59,42 +59,43 @@ int main(int argc, char *argv[])
 
          // Query for config filename:
          ossimKeywordlist kwl;
+         bool valid_kwl = false;
          cout << "\nEnter config file name or <return> for template: ";
          getline(cin,input);
          if (!input.empty())
          {
-            if (kwl.addFile(input.chars()))
-               utility->initialize(kwl);
-            else
+            valid_kwl = kwl.addFile(input.chars());
+            if (!valid_kwl)
                cout<<"\nCould not load config file at <"<<input<<">";
          }
 
-         // Display API:
-//         if (kwl.)
-         ossimString api;
-         utility->getKwlTemplate(api);
-         kwl.parseString(api);
-         cout << "\nUtility template specification: "<<endl;
-         cout << kwl << endl;
-
-         // Accept inputs:
-         while (getline(cin,input))
+         if (!valid_kwl)
          {
-            if (!kwl.parseString(input))
-               break;
+            // Display API:
+            utility->getKwlTemplate(kwl);
+            cout << "\nUtility template specification: "<<endl;
+            cout << kwl << endl;
+
+            // Accept inputs:
+            while (getline(cin,input))
+            {
+               if (!kwl.parseString(input))
+                  break;
+            }
+
+            // Display final KWL:
+            cout << "\nUtility final specification: "<<endl;
+            cout << kwl << endl;
          }
 
-         // Display final KWL:
-         cout << "\nUtility final specification: "<<endl;
-         cout << kwl << endl;
+         // Perform operation:
          cout << "\nPerform operation? [y|n]: "<<endl;
          cin >> input;
          if (input == "n")
             continue;
-
-         // Perform operation:
-
-
+         utility->initialize(kwl);
+         utility->execute();
+         break;
       }
    }
    catch  (const ossimException& e)

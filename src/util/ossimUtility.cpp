@@ -65,25 +65,22 @@ void ossimUtility::initialize(ossimArgumentParser& ap)
    if ( ap.read("--write-template", sp1))
    {
       ofstream ofs ( ts1.c_str() );
-      ossimString kwl_str;
-      getKwlTemplate(kwl_str);
-      ofs << kwl_str <<endl;
+      ossimKeywordlist kwl;
+      getKwlTemplate(kwl);
+      ofs << kwl <<endl;
       return;
    }
 }
 
-void ossimUtility::getKwlTemplate(ossimString& kwl)
+void ossimUtility::getKwlTemplate(ossimKeywordlist& kwl)
 {
    ossimFilename kwl_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
    kwl_path += "/ossim/util/" + getClassName() + ".kwl";
-   readTextFile(kwl_path, kwl);
-}
-
-std::string ossimUtility::getKwlTemplate()
-{
-   ossimString result;
-   getKwlTemplate(result);
-   return result.string();
+   if (!kwl.addFile(kwl_path))
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::getKwlTemplate() -- Could not read <"
+            <<kwl_path<<">.";
+   }
 }
 
 void ossimUtility::getAPI(string& json) const
