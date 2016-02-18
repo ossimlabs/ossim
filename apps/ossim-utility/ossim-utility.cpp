@@ -15,7 +15,7 @@ using namespace std;
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimTimer.h>
 #include <ossim/base/ossimString.h>
-#include <ossim/util/ossimUtilityFactory.h>
+#include <ossim/util/ossimUtilityRegistry.h>
 #include <ossim/base/ossimException.h>
 
 int main(int argc, char *argv[])
@@ -28,14 +28,17 @@ int main(int argc, char *argv[])
       // Initialize ossim stuff, factories, plugin, etc.
       ossimInit::instance()->initialize(ap);
 
-      ossimUtilityFactory* factory = ossimUtilityFactory::instance();
-
+      ossimUtilityFactoryBase* factory = ossimUtilityRegistry::instance();
       map<string, string> capabilities;
       factory->getCapabilities(capabilities);
 
-      double t0 = ossimTimer::instance()->time_s();
-      t0 = ossimTimer::instance()->time_s();
-
+      // Display list of capabilities:
+      map<string, string>::iterator iter = capabilities.begin();
+      cout<<"\nCapabilities:"<<endl;
+      for (;iter != capabilities.end(); ++iter)
+      {
+         cout<<"  "<<iter->first<<" -- "<<iter->second<<endl;
+      }
    }
    catch  (const ossimException& e)
    {
@@ -47,7 +50,5 @@ int main(int argc, char *argv[])
       cerr << "Caught unknown exception!" << endl;
    }
 
-   //double dt = ossimTimer::instance()->time_s() - t0;
-   //cout << argv[0] << "Elapsed Time: " << dt << " s\n" << endl;
    exit(0);
 }
