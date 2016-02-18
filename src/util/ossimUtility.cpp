@@ -79,14 +79,14 @@ void ossimUtility::getKwlTemplate(ossimString& kwl)
    readTextFile(kwl_path, kwl);
 }
 
-void ossimUtility::getAPI(ossimString& json) const
+void ossimUtility::getAPI(string& json) const
 {
    ossimFilename json_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
    json_path += "/ossim/util/" + getClassName() + ".json";
    readTextFile(json_path, json);
 }
 
-bool ossimUtility::readTextFile(const ossimFilename& filename, ossimString& contents) const
+bool ossimUtility::readTextFile(const ossimFilename& filename, string& contents) const
 {
    contents.clear();
 

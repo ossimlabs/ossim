@@ -23,8 +23,6 @@ ossimUtilityFactory* ossimUtilityFactory::instance()
 
 ossimUtilityFactory::ossimUtilityFactory()
 {
-   // Register this factory:
-   ossimUtilityRegistry::instance()->registerFactory(this, true);
 }
 
 ossimUtilityFactory::~ossimUtilityFactory()

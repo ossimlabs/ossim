@@ -15,6 +15,10 @@
 
 class ossimUtility;
 
+/**
+ * Registry of all utility factories. Presently only one factory exists, ossimUtilityFactory, but
+ * eventually plugins can provide their own utilities and corresponding factories.
+ */
 class OSSIMDLLEXPORT ossimUtilityRegistry : public ossimUtilityFactoryBase,
                                            public ossimFactoryListInterface<ossimUtilityFactoryBase, ossimUtility>
 {

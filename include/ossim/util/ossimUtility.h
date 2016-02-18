@@ -75,7 +75,7 @@ public:
    /**
     * Outputs a JSON representation of the Utility's API.
     */
-   void getAPI(ossimString& out) const;
+   void getAPI(std::string& out) const;
 
    virtual ossimObject* getObject() { return this; }
    virtual const ossimObject* getObject() const  { return this; }
@@ -109,7 +109,7 @@ private:
    /**
     * Used for reading text files of template and JSON API from disk ONLY.
     */
-   bool readTextFile(const ossimFilename& filename, ossimString& contents) const;
+   bool readTextFile(const ossimFilename& filename, std::string& contents) const;
 };
 
 #endif

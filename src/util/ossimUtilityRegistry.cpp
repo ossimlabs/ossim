@@ -6,6 +6,7 @@
 //**************************************************************************************************
 
 #include <ossim/util/ossimUtilityRegistry.h>
+#include <ossim/util/ossimUtilityFactory.h>
 
 using namespace std;
 
@@ -20,7 +21,7 @@ ossimUtilityRegistry* ossimUtilityRegistry::instance()
 
 ossimUtilityRegistry::ossimUtilityRegistry()
 {
-
+   registerFactory(ossimUtilityFactory::instance(), true);
 }
 
 ossimUtilityRegistry::~ossimUtilityRegistry()
