@@ -6,11 +6,11 @@
 //**************************************************************************************************
 
 #include <ossim/util/ossimUtilityFactory.h>
-#include <ossim/util/ossimUtilityManager.h>
 #include <ossim/util/ossimHillshadeUtil.h>
 #include <ossim/util/ossimHlzUtil.h>
 #include <ossim/util/ossimViewshedUtil.h>
 #include <ossim/util/ossimSlopeUtil.h>
+#include <ossim/util/ossimUtilityRegistry.h>
 
 ossimUtilityFactory* ossimUtilityFactory::s_Instance = 0;
 
@@ -24,12 +24,12 @@ ossimUtilityFactory* ossimUtilityFactory::instance()
 ossimUtilityFactory::ossimUtilityFactory()
 {
    // Register this factory:
-   ossimUtilityManager::instance()->registerFactory(this, true);
+   ossimUtilityRegistry::instance()->registerFactory(this, true);
 }
 
 ossimUtilityFactory::~ossimUtilityFactory()
 {
-   ossimUtilityManager::instance()->unregisterFactory(this);
+   ossimUtilityRegistry::instance()->unregisterFactory(this);
 }
 
 ossimUtility* ossimUtilityFactory::createUtility(const std::string& argName) const
