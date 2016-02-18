@@ -35,16 +35,16 @@ ossimUtility* ossimUtilityFactory::createUtility(const std::string& argName) con
    ossimString utilName (argName);
    utilName.downcase();
 
-   if ((utilName == "hillshade") || (utilName == "ossimHillshadeUtil"))
+   if ((utilName == "hillshade") || (argName == "ossimHillshadeUtil"))
       return new ossimHillshadeUtil;
 
-   if ((utilName == "viewshed") || (utilName == "ossimViewshedUtil"))
+   if ((utilName == "viewshed") || (argName == "ossimViewshedUtil"))
       return new ossimViewshedUtil;
 
-   if ((utilName == "slope") || (utilName == "ossimSlopeUtil"))
+   if ((utilName == "slope") || (argName == "ossimSlopeUtil"))
       return new ossimSlopeUtil;
 
-   if ((utilName == "hlz") || (utilName == "ossimHlzUtil"))
+   if ((utilName == "hlz") || (argName == "ossimHlzUtil"))
       return new ossimHlzUtil;
 
    return 0;

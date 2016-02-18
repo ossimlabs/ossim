@@ -99,7 +99,11 @@ bool ossimUtility::readTextFile(const ossimFilename& filename, string& contents)
 
    std::ifstream is(filename.chars());
    if (!is)
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::readTextFile() -- Could not read <"
+            <<filename<<">.";
       return false;
+   }
 
    // get length of file:
    is.seekg (0, is.end);

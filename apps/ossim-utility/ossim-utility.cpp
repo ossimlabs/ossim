@@ -57,13 +57,19 @@ int main(int argc, char *argv[])
             continue;
          }
 
+         // Query for config filename:
+         ossimKeywordlist kwl;
          cout << "\nEnter config file name or <return> for template: ";
          getline(cin,input);
+         if (!input.empty())
+         {
+            //if (kwl.)
+            //utility->initialize()
+         }
 
          // Display API:
          ossimString api;
          utility->getKwlTemplate(api);
-         ossimKeywordlist kwl;
          kwl.parseString(api);
          cout << "\nUtility template specification: "<<endl;
          cout << kwl << endl;
