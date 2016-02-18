@@ -36,8 +36,9 @@ public:
     * name without the "ossim" prefix nor "Util" suffix, all lowercase.
     */
    virtual void getCapabilities(std::map<std::string, std::string>& capabilities) const;
+   virtual std::map<std::string, std::string> getCapabilities() const;
 
-   virtual ossimUtility* createUtility(const ossimString& typeName) const;
+   virtual ossimUtility* createUtility(const std::string& typeName) const;
 
    virtual ossimString getClassName() const { return "ossimUtilityManager"; }
 

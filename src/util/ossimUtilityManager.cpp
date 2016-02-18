@@ -48,7 +48,14 @@ void ossimUtilityManager::getCapabilities(map<string, string>& capabilities) con
    }
 }
 
-ossimUtility* ossimUtilityManager::createUtility(const ossimString& argName) const
+std::map<std::string, std::string> ossimUtilityManager::getCapabilities() const
+{
+   std::map<std::string, std::string> result;
+   getCapabilities(result);
+   return result;
+}
+
+ossimUtility* ossimUtilityManager::createUtility(const std::string& argName) const
 {
    ossimUtility* result = 0;
    vector<ossimUtilityFactoryBase*>::const_iterator iter = m_factoryList.begin();

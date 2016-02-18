@@ -32,7 +32,7 @@ ossimUtilityFactory::~ossimUtilityFactory()
    ossimUtilityManager::instance()->unregisterFactory(this);
 }
 
-ossimUtility* ossimUtilityFactory::createUtility(const ossimString& argName) const
+ossimUtility* ossimUtilityFactory::createUtility(const std::string& argName) const
 {
    ossimString utilName (argName);
    utilName.downcase();
@@ -58,6 +58,13 @@ void ossimUtilityFactory::getCapabilities(std::map<std::string, std::string>& ca
    capabilities.insert(pair<string, string>("viewshed", ossimViewshedUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("slope", ossimSlopeUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("hlz", ossimHlzUtil::DESCRIPTION));
+}
+
+std::map<std::string, std::string> ossimUtilityFactory::getCapabilities() const
+{
+   std::map<std::string, std::string> result;
+   getCapabilities(result);
+   return result;
 }
 
 void ossimUtilityFactory::getTypeNameList(vector<ossimString>& typeList) const

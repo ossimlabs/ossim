@@ -1,17 +1,9 @@
-//*******************************************************************
+//**************************************************************************************************
 //
-// License:  See top level LICENSE.txt file.
-// 
-// Author:  David Burken
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-// Description:
-//
-// Application to scan image and attemp to detect the valid image vertices and
-// write them to a keyword list file for later use.  Note that if input
-// file is "foo.tif" this will create "foo_vertices.kwl".
-//
-//*******************************************************************
-//  $Id: ossim-viewshed.cpp 23084 2015-01-15 23:56:48Z okramer $
+//**************************************************************************************************
 
 #include <iostream>
 using namespace std;

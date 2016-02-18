@@ -12,6 +12,7 @@
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/util/ossimUtility.h>
+#include <string>
 
 class OSSIM_DLL ossimUtilityFactoryBase : public ossimObjectFactory
 {
@@ -22,7 +23,7 @@ public:
    virtual ossimObject* createObject(const ossimKeywordlist& kwl, const char* prefix=0) const
    { return (ossimObject*) createUtility(kwl, prefix); }
 
-   virtual ossimUtility* createUtility(const ossimString& typeName) const=0;
+   virtual ossimUtility* createUtility(const std::string& typeName) const=0;
 
    virtual ossimUtility* createUtility(const ossimKeywordlist& kwl, const char* prefix=0) const
    {
@@ -36,6 +37,7 @@ public:
     * name without the "ossim" prefix nor "Util" suffix, all lowercase.
     */
    virtual void getCapabilities(std::map<std::string, std::string>& capabilities) const = 0;
+   virtual std::map<std::string, std::string> getCapabilities() const = 0;
 };
 
 #endif
