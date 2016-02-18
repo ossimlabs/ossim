@@ -1,4 +1,3 @@
-### Status of the branches
 ### GoCD Status builds 
 Resource | *master* | *dev* | 
 ------------ | ------------- | -------------
