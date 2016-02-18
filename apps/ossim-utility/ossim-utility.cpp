@@ -39,6 +39,54 @@ int main(int argc, char *argv[])
       {
          cout<<"  "<<iter->first<<" -- "<<iter->second<<endl;
       }
+
+      while (1)
+      {
+         // Query for operation:
+         ossimString input;
+         cout << "\nEnter utility class ('x' to exit): ";
+         cin >> input;
+         if (input == "x")
+            break;
+
+         // Fetch the utility object:
+         ossimRefPtr<ossimUtility> utility = factory->createUtility(input.string());
+         if (!utility.valid())
+         {
+            cout << "\nCould not create utility <"<<input<<">"<<endl;
+            continue;
+         }
+
+         cout << "\nEnter config file name or <return> for template: ";
+         getline(cin,input);
+
+         // Display API:
+         ossimString api;
+         utility->getKwlTemplate(api);
+         ossimKeywordlist kwl;
+         kwl.parseString(api);
+         cout << "\nUtility template specification: "<<endl;
+         cout << kwl << endl;
+
+         // Accept inputs:
+         while (getline(cin,input))
+         {
+            if (!kwl.parseString(input))
+               break;
+         }
+
+         // Display final KWL:
+         cout << "\nUtility final specification: "<<endl;
+         cout << kwl << endl;
+         cout << "\nPerform operation? [y|n]: "<<endl;
+         cin >> input;
+         if (input == "n")
+            continue;
+
+         // Perform operation:
+
+
+      }
    }
    catch  (const ossimException& e)
    {
