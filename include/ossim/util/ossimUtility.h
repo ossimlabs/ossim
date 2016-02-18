@@ -71,6 +71,7 @@ public:
     * Assigns a template keywordlist to string for initializing derived classes.
     */
    virtual void getKwlTemplate(ossimString& kwl);
+   std::string getKwlTemplate();
 
    /**
     * Outputs a JSON representation of the Utility's API.

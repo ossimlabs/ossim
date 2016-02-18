@@ -63,11 +63,14 @@ int main(int argc, char *argv[])
          getline(cin,input);
          if (!input.empty())
          {
-            //if (kwl.)
-            //utility->initialize()
+            if (kwl.addFile(input.chars()))
+               utility->initialize(kwl);
+            else
+               cout<<"\nCould not load config file at <"<<input<<">";
          }
 
          // Display API:
+//         if (kwl.)
          ossimString api;
          utility->getKwlTemplate(api);
          kwl.parseString(api);
