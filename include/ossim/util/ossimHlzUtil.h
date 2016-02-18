@@ -83,7 +83,6 @@ protected:
    ossimRefPtr<ossimImageData> m_demBuffer;
    ossimRefPtr<ossimImageData> m_outBuffer;
    ossimRefPtr<ossimMemoryImageSource> m_memSource;
-   ossim_int32 m_reticleSize;
    ossim_uint8 m_badLzValue;
    ossim_uint8 m_marginalLzValue;
    ossim_uint8 m_goodLzValue;

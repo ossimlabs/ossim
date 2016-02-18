@@ -4,7 +4,6 @@
 //***************************************************************
 
 // *** Specifications of Area-of-Interest (AOI) can be in various forms ***
-
 aoi_geo_rect: <min_lat> <min_lon> <max_lat> <max_lon>
 // or
 aoi_map_rect: <min_x> <min_y> <max_x> <max_y>
@@ -25,8 +24,8 @@ origin_latitude: <lat>
 hemisphere: N|S
 zone: <utm_zone>
 
-// Specifies any number of input image filenames. Also can optionally specify band selection for multispectral 
-// and entry index for multi-image files:
+// Specifies any number of input image filenames. Also can optionally specify band selection for 
+// multispectral and entry index for multi-image files:
 image_source<n>.file: <image_file>
 image_source<n>.bands: <R> <G> <B>
 image_source<n>.entry: <int>

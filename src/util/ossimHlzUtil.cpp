@@ -34,7 +34,6 @@ static const string MASK_EXCLUDE_KW = "excludes";
 static const string MASK_INCLUDE_KW = "includes";
 static const string SLOPE_OUTPUT_FILE_KW = "slope_output_file";
 static const string POINT_CLOUD_FILE_KW = "point_cloud_file";
-static const string RETICLE_SIZE_KW = "reticle_size";
 static const string HLZ_CODING_KW = "hlz_coding";
 static const string LZ_MIN_RADIUS_KW = "lz_min_radius";
 static const string ROUGHNESS_THRESHOLD_KW = "roughness_threshold";
@@ -50,7 +49,6 @@ ossimHlzUtil::ossimHlzUtil()
   m_roughnessThreshold(0.5),
   m_hlzMinRadius(25.0),
   m_outBuffer(NULL),
-  m_reticleSize(10),
   m_badLzValue(255),
   m_marginalLzValue(128),
   m_goodLzValue(64),
@@ -93,10 +91,6 @@ void ossimHlzUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--pc | --point-cloud <file1>[, <file2>...]",
          "Specifies ancillary point-cloud data file(s) for level-2 search for obstructions. "
          "Must be comma-separated file names.");
-   au->addCommandLineOption("--reticle <int>",
-         "Specifies the size of the reticle at the destination point location in pixels from the "
-         "center (i.e., the radius of the reticle). Defaults to 10. A value of 0 hides the reticle. "
-         "See --values option for setting reticle color.");
    au->addCommandLineOption("--min-lz-radius <meters>",
          "Specifies minimum radius of landing zone. Defaults to 25 m. ");
    au->addCommandLineOption("--max-roughness <meters>",
@@ -160,9 +154,6 @@ void ossimHlzUtil::initialize(ossimArgumentParser& ap)
       m_kwl.addPair(key.string(), pcFnames[idx] );
    }
 
-   if (ap.read("--reticle", sp1))
-      m_kwl.addPair(RETICLE_SIZE_KW, ts1);
-
    if (ap.read("--min-lz-radius", sp1) || ap.read("--rlz", sp1))
       m_kwl.addPair(LZ_MIN_RADIUS_KW, ts1);
 
@@ -191,10 +182,6 @@ void ossimHlzUtil::initialize(const ossimKeywordlist& kwl)
 {
    ossimString value;
    ostringstream xmsg;
-
-   value = m_kwl.findKey(RETICLE_SIZE_KW);
-   if (!value.empty())
-      m_reticleSize = value.toInt32();
 
    value = m_kwl.findKey(LZ_MIN_RADIUS_KW);
    if (!value.empty())

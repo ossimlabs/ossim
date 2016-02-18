@@ -46,7 +46,7 @@ ossimUtility* ossimUtilityFactory::createUtility(const ossimString& argName) con
    if ((utilName == "slope") || (utilName == "ossimSlopeUtil"))
       return new ossimSlopeUtil;
 
-   if ((utilName == "hlz") || (utilName == "ossimHLZUtil"))
+   if ((utilName == "hlz") || (utilName == "ossimHlzUtil"))
       return new ossimHlzUtil;
 
    return 0;

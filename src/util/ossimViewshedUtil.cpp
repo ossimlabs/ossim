@@ -32,13 +32,13 @@ using namespace std;
 const char* ossimViewshedUtil::DESCRIPTION =
       "Computes bitmap image representing the viewshed from specified location using only "
       "DEM information.";
-const string FOV_KW             = "fov";
-const string HEIGHT_OF_EYE_KW   = "height_of_eye";
-const string HORIZON_FILE_KW    = "horizon_file";
-const string OBSERVER_KW        = "observer";
-const string RADIUS_KW          = "radius";
-const string RETICLE_KW         = "reticle";
-const string VIEWSHED_CODING_KW = "viewshed_coding";
+const string FOV_KW               = "fov";
+const string HEIGHT_OF_EYE_KW     = "height_of_eye";
+const string HORIZON_FILE_KW      = "horizon_file";
+const string OBSERVER_KW          = "observer";
+const string VISIBILITY_RADIUS_KW = "visibility_radius";
+const string RETICLE_SIZE_KW      = "reticle_size";
+const string VIEWSHED_CODING_KW   = "viewshed_coding";
 
 ossimViewshedUtil::ossimViewshedUtil()
 :   m_obsHgtAbvTer (1.5),
@@ -168,10 +168,10 @@ void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    }
 
    if ( ap.read("--radius", sp1) )
-      m_kwl.addPair( RADIUS_KW, ts1 );
+      m_kwl.addPair( VISIBILITY_RADIUS_KW, ts1 );
 
    if ( ap.read("--reticle", sp1) )
-      m_kwl.addPair( RETICLE_KW, ts1 );
+      m_kwl.addPair( RETICLE_SIZE_KW, ts1 );
 
    if ( ap.read("--values", sp1, sp2, sp3) || ap.read("--viewshed-coding", sp1, sp2, sp3))
    {
@@ -246,14 +246,7 @@ void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
       }
    }
 
-   value = kwl.findKey(RADIUS_KW);
-   if (!value.empty())
-   {
-      m_visRadius = value.toDouble();
-      m_displayAsRadar = true;
-   }
-
-   value = kwl.findKey(RETICLE_KW);
+   value = kwl.findKey(RETICLE_SIZE_KW);
    if (!value.empty())
       m_reticleSize = value.toInt32();
 
@@ -268,6 +261,13 @@ void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
          m_hiddenValue = coordstr[1].toUInt8();
          m_overlayValue = coordstr[2].toUInt8();
       }
+   }
+
+   value = kwl.findKey(VISIBILITY_RADIUS_KW);
+   if (!value.empty())
+   {
+      m_visRadius = value.toDouble();
+      m_displayAsRadar = true;
    }
 
    // If running simulation, clear out all pre-loaded elevation databases:
