@@ -551,7 +551,6 @@ ossim_uint8 ossimBatchTest::execute()
          prefixes.push_back("");
       
       status = TEST_TBD;
-      ossim_uint32 idx = 0;
       for(ossim_uint32 idx = 0; idx < prefixes.size(); ++idx)
       {
          ossim_uint8 individual_test_status = processTest( prefixes[idx], kwl);
@@ -591,13 +590,11 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
    ossim_uint8 overall_test_status = TEST_TBD;
    ossimFilename config_list_path = m_configFileName.path();
 
-   cout << kwl<<endl;//TODO:REMOVE
-
    ossimString keywordRegEx = "test_config_file[0-9]+";
    std::vector<ossimString> keywords;
    kwl.getSubstringKeyList(keywords, keywordRegEx);
 
-   for(ossim_uint32 idx=0;idx < (int)keywords.size();++idx)
+   for(ossim_uint32 idx=0;idx < (ossim_uint32)keywords.size(); ++idx)
    {
       // Looping over each config file listed, performing an execute() on each:
       m_configFileName = kwl.findKey(keywords[idx]);
