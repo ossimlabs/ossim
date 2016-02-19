@@ -6,11 +6,11 @@
 //**************************************************************************************************
 
 #include <ossim/util/ossimUtilityFactory.h>
-#include <ossim/util/ossimUtilityManager.h>
 #include <ossim/util/ossimHillshadeUtil.h>
 #include <ossim/util/ossimHlzUtil.h>
 #include <ossim/util/ossimViewshedUtil.h>
 #include <ossim/util/ossimSlopeUtil.h>
+#include <ossim/util/ossimUtilityRegistry.h>
 
 ossimUtilityFactory* ossimUtilityFactory::s_Instance = 0;
 
@@ -23,30 +23,28 @@ ossimUtilityFactory* ossimUtilityFactory::instance()
 
 ossimUtilityFactory::ossimUtilityFactory()
 {
-   // Register this factory:
-   ossimUtilityManager::instance()->registerFactory(this, true);
 }
 
 ossimUtilityFactory::~ossimUtilityFactory()
 {
-   ossimUtilityManager::instance()->unregisterFactory(this);
+   ossimUtilityRegistry::instance()->unregisterFactory(this);
 }
 
-ossimUtility* ossimUtilityFactory::createUtility(const ossimString& argName) const
+ossimUtility* ossimUtilityFactory::createUtility(const std::string& argName) const
 {
    ossimString utilName (argName);
    utilName.downcase();
 
-   if ((utilName == "hillshade") || (utilName == "ossimHillshadeUtil"))
+   if ((utilName == "hillshade") || (argName == "ossimHillshadeUtil"))
       return new ossimHillshadeUtil;
 
-   if ((utilName == "viewshed") || (utilName == "ossimViewshedUtil"))
+   if ((utilName == "viewshed") || (argName == "ossimViewshedUtil"))
       return new ossimViewshedUtil;
 
-   if ((utilName == "slope") || (utilName == "ossimSlopeUtil"))
+   if ((utilName == "slope") || (argName == "ossimSlopeUtil"))
       return new ossimSlopeUtil;
 
-   if ((utilName == "hlz") || (utilName == "ossimHlzUtil"))
+   if ((utilName == "hlz") || (argName == "ossimHlzUtil"))
       return new ossimHlzUtil;
 
    return 0;
@@ -58,6 +56,13 @@ void ossimUtilityFactory::getCapabilities(std::map<std::string, std::string>& ca
    capabilities.insert(pair<string, string>("viewshed", ossimViewshedUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("slope", ossimSlopeUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("hlz", ossimHlzUtil::DESCRIPTION));
+}
+
+std::map<std::string, std::string> ossimUtilityFactory::getCapabilities() const
+{
+   std::map<std::string, std::string> result;
+   getCapabilities(result);
+   return result;
 }
 
 void ossimUtilityFactory::getTypeNameList(vector<ossimString>& typeList) const

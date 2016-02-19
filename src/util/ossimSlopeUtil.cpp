@@ -36,10 +36,7 @@ static const std::string IMAGE_SOURCE_KW = "image_source";
 static const std::string ELEV_SOURCE_KW  = "elev_source";
 const char* ossimSlopeUtil::DESCRIPTION  =
       "Utility for computing the slope at each elevation post and generating "
-      "a corresponding slope image. The output scalar type is a normalized float with 1.0 = 90 "
-      "degree angle from the local vertical. Optional 8-bit scalar type is available."
-      "Examples:\n\n"
-      "    ossim-slope [options] [--dem <input-dem>] <output-slope-image-file>\n";
+      "a corresponding slope image.";
 
 ossimSlopeUtil::ossimSlopeUtil()
 : m_recursiveCall (false)

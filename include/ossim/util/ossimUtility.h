@@ -70,12 +70,13 @@ public:
    /**
     * Assigns a template keywordlist to string for initializing derived classes.
     */
-   virtual void getKwlTemplate(ossimString& kwl);
+   virtual void getKwlTemplate(ossimKeywordlist& kwl);
 
    /**
     * Outputs a JSON representation of the Utility's API.
     */
-   void getAPI(ossimString& out) const;
+   void getAPI(std::string& out) const;
+   std::string getAPI() const;
 
    virtual ossimObject* getObject() { return this; }
    virtual const ossimObject* getObject() const  { return this; }
@@ -109,7 +110,7 @@ private:
    /**
     * Used for reading text files of template and JSON API from disk ONLY.
     */
-   bool readTextFile(const ossimFilename& filename, ossimString& contents) const;
+   bool readTextFile(const ossimFilename& filename, std::string& contents) const;
 };
 
 #endif
