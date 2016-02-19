@@ -40,17 +40,18 @@ int main(int argc, char *argv[])
          cout<<"  "<<iter->first<<" -- "<<iter->second<<endl;
       }
 
-      while (1)
+      do
       {
+         char input[256];
+
          // Query for operation:
-         ossimString input;
          cout << "\nEnter utility class ('x' to exit): ";
-         cin >> input;
-         if (input == "x")
+         cin.getline(input, 256);
+         if (input[0] == 'x')
             break;
 
          // Fetch the utility object:
-         ossimRefPtr<ossimUtility> utility = factory->createUtility(input.string());
+         ossimRefPtr<ossimUtility> utility = factory->createUtility(string(input));
          if (!utility.valid())
          {
             cout << "\nCould not create utility <"<<input<<">"<<endl;
@@ -60,28 +61,31 @@ int main(int argc, char *argv[])
          // Query for config filename:
          ossimKeywordlist kwl;
          bool valid_kwl = false;
-         cout << "\nEnter config file name or <return> for template: ";
-         getline(cin,input);
-         if (!input.empty())
+         cout << "\nEnter config file name or <return> for template: " << ends;
+         cin.getline(input, 256);
+         if (input[0])
          {
-            valid_kwl = kwl.addFile(input.chars());
+            valid_kwl = kwl.addFile(input);
             if (!valid_kwl)
-               cout<<"\nCould not load config file at <"<<input<<">";
+               cout<<"\nCould not load config file at <"<<input<<">"<<endl;
          }
 
          if (!valid_kwl)
          {
             // Display API:
-            utility->getKwlTemplate(kwl);
+            ossimKeywordlist kwl_template;
+            utility->getKwlTemplate(kwl_template);
             cout << "\nUtility template specification: "<<endl;
-            cout << kwl << endl;
+            cout << kwl_template << endl;
 
             // Accept inputs:
-            while (getline(cin,input))
+            do
             {
-               if (!kwl.parseString(input))
+               cout << "Enter keyword: value (or 'x' to finish): ";
+               cin.getline(input, 256);
+               if (input[0] == 'x' || (!kwl.parseString(string(input))))
                   break;
-            }
+            } while (1);
 
             // Display final KWL:
             cout << "\nUtility final specification: "<<endl;
@@ -89,14 +93,21 @@ int main(int argc, char *argv[])
          }
 
          // Perform operation:
-         cout << "\nPerform operation? [y|n]: "<<endl;
-         cin >> input;
-         if (input == "n")
-            continue;
-         utility->initialize(kwl);
-         utility->execute();
-         break;
-      }
+         while (1)
+         {
+            cout << "Perform operation? [y|n]: ";
+            cin.getline(input, 256);
+            if (input[0] == 'n')
+               break;
+            else if (input[0] == 'y')
+            {
+               utility->initialize(kwl);
+               utility->execute();
+               break;
+            }
+         }
+
+      } while (false);
    }
    catch  (const ossimException& e)
    {

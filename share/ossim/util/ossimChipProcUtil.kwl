@@ -35,7 +35,7 @@ reader_property<n>: <key=value>
 
 // Specifies any number of input DEM filenames. If none provided, the elevation database is referenced 
 // as specified in prefs file for the center and ROI specified.
-elev_source<n>.file: <dem_file>
+elevation_source<n>.file: <dem_file>
 
 // Specify product resolution in meters per pixel:
 gsd: <meters>
