@@ -183,6 +183,34 @@ bool ossimHistogramRemapper::openHistogram(const ossimFilename& histogram_file)
    return false;
 }
 
+bool ossimHistogramRemapper::computeHistogram(const ossimIrect& roi)
+{
+   bool result = false;
+   if ( theInputConnection )
+   {
+      ossimRefPtr<ossimImageData> tile = theInputConnection->getTile(roi, 0);
+      if ( tile.valid() )
+      {
+         ossimDataObjectStatus tile_status = tile->getDataObjectStatus();
+         if ( (tile_status != OSSIM_NULL) && (tile_status != OSSIM_EMPTY) )
+         {
+            ossimRefPtr<ossimMultiBandHistogram> h = new ossimMultiBandHistogram;
+            h->create( theInputConnection );
+
+            tile->populateHistogram(h);
+
+            ossimRefPtr<ossimMultiResLevelHistogram> histo = new ossimMultiResLevelHistogram();
+
+            histo->addHistogram( h.get() );
+
+            setHistogram( histo );
+            result = true;
+         }
+      }
+   }
+   return result;
+}
+
 ossimRefPtr<ossimImageData> ossimHistogramRemapper::getTile(
    const ossimIrect& tile_rect,
    ossim_uint32 resLevel)

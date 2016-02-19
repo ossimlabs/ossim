@@ -43,6 +43,7 @@
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandler.h>
+#include <ossim/imaging/ossimImageHistogramSource.h>
 #include <ossim/imaging/ossimImageMosaic.h>
 #include <ossim/imaging/ossimImageRenderer.h>
 #include <ossim/imaging/ossimImageSource.h>
@@ -97,7 +98,10 @@ static const std::string CUT_WIDTH_KW            = "cut_width";   // pixels
 static const std::string DEM_KW                  = "dem";
 static const std::string GAIN_KW                 = "gain";
 static const std::string FILE_KW                 = "file";
-static const std::string HISTO_OP_KW             = "hist_op";
+static const std::string HIST_AOI_KW             = "hist_aoi";
+static const std::string HIST_CENTER_KW          = "hist_center";
+static const std::string HIST_LLWH_KW            = "hist_llwh";
+static const std::string HIST_OP_KW              = "hist_op";
 static const std::string IMAGE_SPACE_SCALE_X_KW  = "image_space_scale_x";
 static const std::string IMAGE_SPACE_SCALE_Y_KW  = "image_space_scale_y";
 static const std::string IMG_KW                  = "image";
@@ -241,7 +245,13 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption("-h or --help", "Display this help and exit.");
 
    au->addCommandLineOption("--hemisphere", "<hemisphere>\nSpecify a projection hemisphere if supported. E.g. UTM projection. This will lock the hemisphere even if input scene center is the other hemisphere. Valid values for UTM are \"N\" and \"S\""); 
-   
+
+   au->addCommandLineOption("--histogram-aoi", "<x>,<y>,<width>,<height>\nSets single image region of interest(roi) to compute histogram from. Coordinates are zero based image space.  Single image operation only. Comma separated, no spaces.");
+
+   au->addCommandLineOption("--histogram-center-tile", "Will compute histogram from center tile of image.");
+
+   au->addCommandLineOption("--histogram-llwh", "<latitude>,<longitude>,<width>,<height>\nSpecify the region of interest(roi) to compute histogram from. Latitude and longitude will be roi center space with width and height in pixels. Comma separated, no spaces.");
+
    au->addCommandLineOption("--histogram-op", "<operation>\nHistogram operation to perform. Valid operations are \"auto-minmax\", \"std-stretch-1\", \"std-stretch-2\" and \"std-stretch-3\".");
 
    au->addCommandLineOption("--image-space-scale","<x> <y>\nSpecifies an image space scale for x and y direction. \"chip\" operation only.");
@@ -524,9 +534,24 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
       m_kwl->addPair( std::string(ossimKeywordNames::HEMISPHERE_KW), tempString1 );
    }
 
+   if ( ap.read("--histogram-aoi", stringParam1) )
+   {
+      m_kwl->addPair( HIST_AOI_KW, tempString1 );
+   }
+
+   if ( ap.read("--histogram-center-tile", stringParam1) )
+   {
+      m_kwl->addPair( HIST_CENTER_KW, TRUE_KW );
+   }
+
+   if ( ap.read("--histogram-llwh", stringParam1) )
+   {
+      m_kwl->addPair( HIST_LLWH_KW, tempString1 );
+   }
+
    if ( ap.read("--histogram-op", stringParam1) )
    {
-      m_kwl->addPair( HISTO_OP_KW, tempString1 );
+      m_kwl->addPair( HIST_OP_KW, tempString1 );
    }
 
    if ( ap.read("--image-space-scale", doubleParam1, doubleParam2) )
@@ -3831,79 +3856,117 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
    
    bool result = false;
 
+   ossimHistogramRemapper::StretchMode mode =
+      (ossimHistogramRemapper::StretchMode)getHistoMode();
+            
    if ( chain.valid() )
    {
       ossimRefPtr<ossimHistogramRemapper> remapper = chain->getHistogramRemapper();
-
       if ( remapper.valid() )
       {
-         if ( remapper->getHistogramFile() == ossimFilename::NIL )
+         if ( mode != ossimHistogramRemapper::STRETCH_UNKNOWN )
          {
-            ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
-            if ( ih.valid() )
+            result = true;
+            
+            bool roiStretch = ( m_kwl->hasKey( HIST_AOI_KW ) || m_kwl->hasKey( HIST_LLWH_KW ) ||
+                                m_kwl->hasKey( HIST_CENTER_KW ) );
+            
+            if ( !roiStretch )
             {
-               ossimFilename f = ih->getFilenameWithThisExtension( ossimString("his") );
-
-               if ( f.empty() || (f.exists() == false) )
+               bool openedHistogram = false;
+               if ( remapper->getHistogramFile() == ossimFilename::NIL )
                {
-                  // For backward compatibility check if single entry and _e0.his
-                  f = ih->getFilenameWithThisExtension( ossimString("his"), true );
-               }
-
-               if ( remapper->openHistogram( f ) == false )
-               {
-                  if(traceDebug())
+                  // Open histogram file.
+                  ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
+                  if ( ih.valid() )
                   {
-                     ossimNotify(ossimNotifyLevel_WARN)
-                        << MODULE << " WARNING:"
-                        << "\nCould not open:  " << f << "\n";
+                     ossimFilename f = ih->getFilenameWithThisExtension( ossimString("his") );
+                     if ( f.empty() || (f.exists() == false) )
+                     {
+                        // For backward compatibility check if single entry and _e0.his
+                        f = ih->getFilenameWithThisExtension( ossimString("his"), true );
+                     }
+                     
+                     openedHistogram = remapper->openHistogram( f );
+                     
+                     if ( !openedHistogram && traceDebug() )
+                     {
+                        ossimNotify(ossimNotifyLevel_WARN)
+                           << MODULE << " WARNING:"
+                           << "\nCould not open:  " << f << "\n";
+                     }
                   }
                }
-            }
-         }
-
-         if ( remapper->getHistogramFile() != ossimFilename::NIL )
-         {
-            ossimString op = m_kwl->findKey( HISTO_OP_KW );
-            if ( op.size() )
-            {
-               result = true;
                
-               // Enable.
-               remapper->setEnableFlag(true);
-               
-               // Set the histo mode:
-               op.downcase();
-               if ( op == "auto-minmax" )
+               if ( !openedHistogram )
                {
-                  remapper->setStretchMode( ossimHistogramRemapper::LINEAR_AUTO_MIN_MAX );
+                  // Use center tile.
+                  roiStretch = true;
                }
-               else if ( (op == "std-stretch-1") || (op == "std-stretch 1") )
+            }
+            
+            // Enable.
+            remapper->setEnableFlag(true);
+            remapper->setStretchMode( mode );
+            
+            if ( roiStretch )
+            {
+               ossimIrect aoi;
+               
+               std::string value =  m_kwl->findKey( HIST_AOI_KW );
+               if ( value.size() )
                {
-                  remapper->setStretchMode( ossimHistogramRemapper::LINEAR_1STD_FROM_MEAN );
-               } 
-               else if ( (op == "std-stretch-2") || (op == "std-stretch 2") )
-               {
-                  remapper->setStretchMode( ossimHistogramRemapper::LINEAR_2STD_FROM_MEAN );
-               } 
-               else if ( (op == "std-stretch-3") || (op == "std-stretch 3") )
-               {
-                  remapper->setStretchMode( ossimHistogramRemapper::LINEAR_3STD_FROM_MEAN );
+                  result = getIrect( value, aoi );
                }
                else
                {
-                  result = false;
-                  remapper->setEnableFlag(false);
-                  if(traceDebug())
+                  value =  m_kwl->findKey( HIST_LLWH_KW );
+                  if ( value.size() )
                   {
-                     ossimNotify(ossimNotifyLevel_WARN)
-                        << MODULE << "\nUnhandled operation: " << op << "\n";
+                     result = getIrect( chain, value, aoi );
+                  }
+                  else //  Use center of image.
+                  {
+                     result = getIrect( chain, aoi );
+                  }  
+               }
+
+               if ( result )
+               {
+#if 1
+                  ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
+                  ossimRefPtr<ossimHistogramRemapper> hr = chain->getHistogramRemapper();
+                  if ( ih.valid() && hr.valid() )
+                  {
+                     ossimRefPtr<ossimImageHistogramSource> ihist =
+                        new ossimImageHistogramSource();
+                     ihist->setAreaOfInterest( aoi );
+                     ihist->connectMyInputTo( ih.get() );
+                     hr->connectMyInputTo( ihist.get() );
+                  }
+#else
+                  ossimRefPtr<ossimHistogramRemapper> hr = chain->getHistogramRemapper();
+                  if ( hr.valid() )
+                  {
+                     hr->computeHistogram( aoi );
+                  }
+#endif
+                  else
+                  {
+                     result = false;
                   }
                }
             }
          }
-      }
-   }
+
+         if ( !result ) // Disable.
+         {
+            remapper->setEnableFlag(false);
+         }
+         
+      } // Matches: if ( remapper.valid() )
+      
+   } // Matches: if ( chain.valid() )
 
    if ( traceDebug() )
    {
@@ -3949,19 +4012,8 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
       if (  m_kwl->hasKey( CUT_BBOX_XYWH_KW ) )
       {
          // <x>,<y>,<w>,<h>
-         ossimString cutBbox = m_kwl->findKey( CUT_BBOX_XYWH_KW );
-         std::vector<ossimString> keys;
-         cutBbox.split(keys, ",");
-         if( keys.size() > 3 )
-         {
-            ossimIpt ul;
-            ossimIpt lr;
-            ul.x = keys[0].toInt32();
-            ul.y = keys[1].toInt32();
-            lr.x = ul.x + keys[2].toInt32() - 1;
-            lr.y = ul.y + keys[3].toInt32() - 1;
-            rect = ossimIrect(ul, lr);
-         }
+         std::string cutBbox = m_kwl->findKey( CUT_BBOX_XYWH_KW );
+         getIrect( cutBbox, rect );
       }
       
       if ( rect.hasNans() )
@@ -4252,6 +4304,93 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
    
 } // End: ossimChipperUtil::getAreaOfInterest
 
+bool ossimChipperUtil::getIrect( const std::string& s, ossimIrect& rect ) const
+{
+   bool result = false;
+   if ( s.size() )
+   {
+      // <x>,<y>,<w>,<h>
+      ossimString cutBbox = s;
+      std::vector<ossimString> keys;
+      cutBbox.split(keys, ",");
+      if( keys.size() > 3 )
+      {
+         ossimIpt ul;
+         ossimIpt lr;
+         ul.x = keys[0].toInt32();
+         ul.y = keys[1].toInt32();
+         lr.x = ul.x + keys[2].toInt32() - 1;
+         lr.y = ul.y + keys[3].toInt32() - 1;
+         rect = ossimIrect(ul, lr);
+         result = true;
+      }
+   }
+   return result;
+}
+
+bool ossimChipperUtil::getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
+                                 const std::string& s,
+                                 ossimIrect& rect ) const
+{
+   bool result = false;
+
+   if ( chain.valid() )
+   {
+      ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
+      if ( ih.valid() )
+      {
+         // Get the geometry from the image handler.      
+         ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
+         if ( geom.valid() )
+         {
+            // <lat>,<lon>,<w>,<h>
+            ossimString cutBbox = s;
+            std::vector<ossimString> keys;
+            cutBbox.split(keys, ",");
+            if( keys.size() > 3 )
+            {
+               ossimGpt gpt;
+               gpt.lat = keys[0].toFloat64();
+               gpt.lon = keys[1].toFloat64();
+               ossim_int32 w = keys[2].toInt32();
+               ossim_int32 h = keys[3].toInt32();
+               ossimDpt dpt;
+               geom->worldToLocal( gpt, dpt );
+               ossimIpt ul = dpt;
+               ul.x -= w/2;
+               ul.y -= h/2;
+               ossimIpt lr( ul.x + w - 1, ul.y + h - 1);
+               rect = ossimIrect(ul, lr);
+               result = true;
+            }
+         }
+      }
+   }
+   
+   return result;
+}
+
+bool ossimChipperUtil::getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
+                                 ossimIrect& rect ) const
+{
+   bool result = false;
+   if ( chain.valid() )
+   {
+      ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
+      if ( ih.valid() )
+      {
+         ossimIrect r = ih->getImageRectangle();
+         ossimIpt ul = r.midPoint();
+         ul.x -= 128;
+         ul.y -= 128;
+         ossimIpt lr( ul.x + 255, ul.y +255 );
+         rect = ossimIrect(ul, lr);
+         result = true;
+      }
+   }
+   return result;
+}
+   
 void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalRect,
                                                      ossimIrect& adjustedRect)
 {
@@ -4578,12 +4717,28 @@ bool ossimChipperUtil::hasThumbnailResolution() const
 bool ossimChipperUtil::hasHistogramOperation() const
 {
    bool result = false;
-   
    if ( m_kwl.valid() )
    {
-      result = ( m_kwl->find( HISTO_OP_KW.c_str() ) != 0 );
+      result = m_kwl->hasKey( HIST_OP_KW );
    }
-   // No option for this right now.  Only through src file.
+   return result;
+}
+
+bool ossimChipperUtil::hasHistogramRoiOperation() const
+{
+   bool result = false;
+   if ( m_kwl.valid() )
+   {
+      std::string key = m_kwl->findKey( HIST_OP_KW );
+      if ( key.size() )
+      {
+         if ( ( key == "auto-minmax-roi" )   || ( key == "std-stretch-1-roi" ) ||
+              ( key == "std-stretch-2-roi" ) || ( key == "std-stretch-3-roi" ) )
+         {
+            result = true;
+         }
+      }
+   }
    return result;
 }
 
@@ -4594,9 +4749,8 @@ bool ossimChipperUtil::isDemFile(const ossimFilename& file) const
    if ( ext.size() >= 2 )
    {
       ext.downcase();
-      if ( ( ext == "hgt" ) ||
-           ( ext == "dem" ) ||
-          ( ( (*ext.begin()) == 'd' ) && ( (*(ext.begin()+1)) == 't' ) ) )
+      if ( ( ext == "hgt" ) || ( ext == "dem" ) ||
+           ( ( (*ext.begin()) == 'd' ) && ( (*(ext.begin()+1)) == 't' ) ) )
       {
          result = true;
       }
@@ -5024,6 +5178,38 @@ std::string ossimChipperUtil::getSharpenMode() const
       }
    }
    return mode.string();
+}
+
+int ossimChipperUtil::getHistoMode() const
+{
+   int result = ossimHistogramRemapper::STRETCH_UNKNOWN;
+
+   ossimString op = m_kwl->findKey( HIST_OP_KW );
+   op.downcase();
+   
+   if ( ( op.string() == "auto-minmax" ) )
+   {
+      result = ossimHistogramRemapper::LINEAR_AUTO_MIN_MAX;
+   }
+   else if ( (op == "std-stretch-1") || (op == "std-stretch 1") )
+   {
+      result = ossimHistogramRemapper::LINEAR_1STD_FROM_MEAN;
+   } 
+   else if ( (op == "std-stretch-2") || (op == "std-stretch 2") )
+   {
+      result = ossimHistogramRemapper::LINEAR_2STD_FROM_MEAN;
+   } 
+   else if ( (op == "std-stretch-3") || (op == "std-stretch 3") )
+   {
+      result = ossimHistogramRemapper::LINEAR_3STD_FROM_MEAN;
+   }
+   else if( traceDebug() )
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+         << "ossimChipperUtil::getHistoMode: Unhandled operation: " << op << "\n";
+   }
+
+   return result;
 }
 
 void ossimChipperUtil::usage(ossimArgumentParser& ap)
