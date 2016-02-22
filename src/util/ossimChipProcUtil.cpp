@@ -825,45 +825,39 @@ void ossimChipProcUtil::initializeAOI()
    m_aoiGroundRect.makeNan();
    ossimString lookup;
 
-   // The view rect can be specified in different ways:
-   ossimDpt centerViewPt;
-   centerViewPt.makeNan();
+   // The AOI rect can be specified in different ways:
    if ( m_kwl.hasKey( AOI_GEO_CENTER_KW.c_str() ) )
    {
       // A center point was given:
       ossimGpt centerGpt;
       findCenterGpt(centerGpt);
-      if ( !centerGpt.isLatNan() && !centerGpt.isLonNan() )
-         m_geom->worldToLocal(centerGpt, centerViewPt);
 
       // A center point spec can be accompanied by a width/height (in meters or pixels):
-      ossimIpt imageSize;
+      ossimDpt sizeMeters;
+      sizeMeters.makeNan();
       if (m_kwl.hasKey(AOI_SIZE_METERS_KW))
       {
          lookup = m_kwl.findKey( AOI_SIZE_METERS_KW );
          lookup.trim();
-         imageSize.x = (ossim_uint32) lookup.before(" ").toDouble()/ m_gsd.x;
-         imageSize.y = (ossim_uint32) lookup.after(" ").toDouble() / m_gsd.y;
+         sizeMeters.x = lookup.before(" ").toDouble();
+         sizeMeters.y = lookup.after(" ").toDouble();
       }
       else if (m_kwl.hasKey(AOI_SIZE_PIXELS_KW))
       {
          lookup = m_kwl.findKey( AOI_SIZE_PIXELS_KW );
          lookup.trim();
-         imageSize.x = lookup.before(" ").toUInt32();
-         imageSize.y = lookup.after(" ").toUInt32();
+         ossimIpt imageSize (lookup.before(" ").toUInt32(), lookup.after(" ").toUInt32());
+         sizeMeters.x = imageSize.x*m_gsd.x;
+         sizeMeters.y = imageSize.y*m_gsd.y;
       }
-
-      // Convert pixels to GEO rect:
-      ossim_uint32 area = imageSize.x * imageSize.y;
-      if (area > 0)
+      if (!sizeMeters.hasNans())
       {
-         ossimDpt ulvpt (centerViewPt.x-imageSize.x/2.0, centerViewPt.y-imageSize.y/2.0);
-         ossimDpt lrvpt (centerViewPt.x+imageSize.x/2.0, centerViewPt.y+imageSize.y/2.0);
-         ossimGpt ulgpt, lrgpt;
-         m_geom->localToWorld(ulvpt, ulgpt);
-         m_geom->localToWorld(lrvpt, lrgpt);
+         ossimDpt metersPerDegree (centerGpt.metersPerDegree());
+         double dlat = sizeMeters.y/metersPerDegree.y/2.0;
+         double dlon = sizeMeters.x/metersPerDegree.x/2.0;
+         ossimGpt ulgpt (centerGpt.lat + dlat, centerGpt.lon - dlon);
+         ossimGpt lrgpt (centerGpt.lat - dlat, centerGpt.lon + dlon);
          m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
-         computeAdjustedViewFromGrect();
       }
    }
 
@@ -899,11 +893,10 @@ void ossimChipProcUtil::initializeAOI()
       ossimGpt ulgpt (maxLatF, minLonF);
       ossimGpt lrgpt (minLatF , maxLonF);
       m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
-      computeAdjustedViewFromGrect();
    }
 
    // If no user defined rect set to scene bounding rect.
-   if ( m_aoiViewRect.hasNans() )
+   if ( m_aoiGroundRect.hasNans() )
       setAoiToInputs();
 
    // If AOI established, we can set projection TP and origin if applicable:
