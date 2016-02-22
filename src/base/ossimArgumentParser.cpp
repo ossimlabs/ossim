@@ -420,10 +420,6 @@ bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>&
          param_list.push_back(sub_args[i]);
 
       remove(pos, 1);
-
-      // Expecting a comma for the start of the next param in the list:
-      if ((pos == (*theArgc - 1)) || (theArgv[pos][0] != ','))
-         break;
    }
 
    return true;

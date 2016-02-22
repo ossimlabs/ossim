@@ -48,6 +48,7 @@ static const std::string AOI_GEO_CENTER_KW       = "aoi_geo_center";
 static const std::string AOI_SIZE_METERS_KW      = "aoi_size_meters";
 static const std::string AOI_SIZE_PIXELS_KW      = "aoi_size_pixels";
 static const std::string CLIP_POLY_LAT_LON_KW    = "clip_poly_lat_lon";
+static const std::string ELEV_SOURCES_KW         = "elev_sources";
 static const std::string IMAGE_SOURCE_KW         = "image_source";
 static const std::string LUT_FILE_KW             = "lut_file";
 static const std::string GSD_KW                  = "gsd";
@@ -126,7 +127,15 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    ossimString  key           = "";
    ostringstream keys;
 
-   // Extract optional arguments and stuff them in a keyword list.
+   if ( ap.read("--load-options", stringParam1))
+   {
+      if (!m_kwl.addFile(tempString1.c_str()))
+      {
+         ap.writeErrorMessages(ossimNotify(ossimNotifyLevel_NOTICE));
+         throw ossimException("Must supply an output file.");
+      }
+   }
+
    if ( ap.read("--aoi-geo-bbox", stringParam1, stringParam2, stringParam3, stringParam4))
    {
       ostringstream ostr;
@@ -176,12 +185,10 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 
    if (ap.read("--dem", paramList))
    {
+      ostringstream value;
       for(ossim_uint32 idx=0; idx<paramList.size(); ++idx)
-      {
-         ostringstream key;
-         key<<ossimKeywordNames::ELEVATION_SOURCE_KW<<idx<<"."<<ossimKeywordNames::FILE_KW;
-         m_kwl.addPair(key.str(), paramList[idx].string() );
-      }
+         value<<paramList[idx]<<",";
+      m_kwl.addPair(ELEV_SOURCES_KW, value.str() );
    }
 
    if( ap.read("--gsd", stringParam1) )
@@ -236,6 +243,19 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    if( ap.read("-w", stringParam1) || ap.read("--writer", stringParam1) )
       m_kwl.addPair( WRITER_KW, tempString1);
 
+   if( ap.read("-write-template", stringParam1))
+   {
+      ossimKeywordlist template_kwl;
+      getKwlTemplate(template_kwl);
+      if (!template_kwl.write(tempString1.c_str()))
+      {
+         ostringstream xmsg;
+         xmsg<<"ossimChipProcUtil:"<<__LINE__<<" Error encountered writing template file to <"
+               <<tempString1<<">";
+         throw ossimException(xmsg.str());
+      }
+   }
+
    while (ap.read("--writer-prop", stringParam1))
    {
       key = WRITER_PROPERTY_KW;
@@ -252,6 +272,10 @@ void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
 {
    ossimString  key    = "";
    ossim_uint32 inputIdx = 0;
+
+   bool dumpKwl = false;
+   if ( ap.read("--dump-options") )
+      dumpKwl = true;
 
    if ( ap.argc() >= 2 )
    {
@@ -291,6 +315,19 @@ void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
    {
       ap.writeErrorMessages(ossimNotify(ossimNotifyLevel_NOTICE));
       throw ossimException("Unknown option...");
+   }
+
+   if (dumpKwl)
+   {
+      ossimFilename f = getClassName();
+      f.setExtension("kwl");
+      if (!m_kwl.write(f.chars()))
+      {
+         ostringstream xmsg;
+         xmsg<<"ossimChipProcUtil:"<<__LINE__<<" Error encountered writing options file to <"<<f<<">";
+         throw ossimException(xmsg.str());
+      }
+      cout<<"\nWrote options file to <"<<f<<">"<<endl;
    }
 
    initialize(m_kwl);
@@ -476,25 +513,25 @@ void ossimChipProcUtil::loadImageFiles()
          ossimString os = m_kwl.findKey(entryKey.str());
          if (!os.empty())
             entryIndex = os.toUInt32();
-         else
-            entryIndex = globalEntryValue;
+      else
+         entryIndex = globalEntryValue;
 
-         // Add it:
-         ossimRefPtr<ossimSingleImageChain> ic = createInputChain(f, entryIndex);
-         if (!ic.valid())
-         {
-            ostringstream errMsg;
-            errMsg<<"ERROR: ossimChipProcUtil ["<<__LINE__<<"] Could not open <"<<f<<">"<<ends;
-            throw ossimException(errMsg.str());
-         }
+      // Add it:
+      ossimRefPtr<ossimSingleImageChain> ic = createInputChain(f, entryIndex);
+      if (!ic.valid())
+      {
+         ostringstream errMsg;
+         errMsg<<"ERROR: ossimChipProcUtil ["<<__LINE__<<"] Could not open <"<<f<<">"<<ends;
+         throw ossimException(errMsg.str());
+      }
 
-         // Need a band selector?
-         std::vector<ossim_uint32> bandList(0);
-         getBandList(i, bandList );
-         if ( bandList.size() )
-            ic->setBandSelection( bandList );
+      // Need a band selector?
+      std::vector<ossim_uint32> bandList(0);
+      getBandList(i, bandList );
+      if ( bandList.size() )
+         ic->setBandSelection( bandList );
 
-         m_imgLayers.push_back(ic);
+      m_imgLayers.push_back(ic);
          ++foundRecords;
       }
       ++i;
@@ -557,20 +594,21 @@ ossimChipProcUtil::createInputChain(const ossimFilename& fname, ossim_uint32 ent
 
 void ossimChipProcUtil::loadDemFiles()
 {
-   ossim_uint32 demCount = m_kwl.numberOf( ossimKeywordNames::ELEVATION_SOURCE_KW );
-   if (demCount == 0)
+   ossimString value = m_kwl.findKey(ELEV_SOURCES_KW);
+   if (value.empty())
       return;
 
-   ossim_uint32 maxIndex = demCount + 100; // Allow for skippage in numbering.
-   ossim_uint32 foundRecords = 0;
+   vector<ossimString> input_files = value.split(", ");
    ossim_uint32 i = 0;
-   while ( (foundRecords < demCount) && (i < maxIndex) )
+   while ( i < input_files.size() )
    {
-      ossimString key = ossimKeywordNames::ELEVATION_SOURCE_KW;
-      key += ossimString::toString(i);
-      key += ".";
-      key += ossimKeywordNames::FILE_KW;
-      ossimFilename f = m_kwl.findKey( key.string() );
+      ossimFilename f = input_files[i].trim();
+      if ( f.empty() )
+      {
+         ++i;
+         continue;
+      }
+
       if (!f.isReadable())
       {
          ostringstream errMsg;
@@ -580,8 +618,6 @@ void ossimChipProcUtil::loadDemFiles()
 
       m_demSources.push_back(f);
       ossimElevManager::instance()->loadElevationPath(f, true);
-
-      ++foundRecords;
       ++i;
    }
 }
@@ -1294,11 +1330,13 @@ void ossimChipProcUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--color-table | --lut","<color-table.kwl>\nKeyword list containing color table for color-relief option.");
    au->addCommandLineOption("--deg-per-pixel","<dpp_xy> | <dpp_x> <dpp_y>\nSpecifies an override for degrees per pixel. Takes either a single value applied equally to x and y directions, or two values applied correspondingly to x then y. This option takes precedence over the \"--meters\" option.");
    au->addCommandLineOption("--dem", "<file1>[,<file2>...]\n Input DEM file(s) (comma-separated) to process.");
+   au->addCommandLineOption("--dump-options","The current state of the utility (after the entire command line is parsed) is written to the file $PWD/<utility>.kwl, where <utility> is the name of the operation being performed. See \"--load-options\".");
    au->addCommandLineOption("-e or --entry", "<entry> For multi image handlers which entry do you wish to extract. For list of entries use: \"ossim-info -i <your_image>\" ");
    au->addCommandLineOption("--gsd", "<meters>\nSpecifies an override for the meters per pixel");
    au->addCommandLineOption("-h or --help", "Display this help and exit.");
    au->addCommandLineOption("--hemisphere", "<hemisphere>\nSpecify a projection hemisphere if supported. E.g. UTM projection. This will lock the hemisphere even if input scene center is the other hemisphere. Valid values for UTM are \"N\" and \"S\"");
    au->addCommandLineOption("--image", "<file1>[, <file2>...] Input image file(s) (comma-separated) to process.");
+   au->addCommandLineOption("--load-options","[<filename>]\nThe contents of <filename> (keyword-value pairs) are loaded as command options. The command-line options take precedence.  See \"--load-options\" and \"--write-template\" options.");
    au->addCommandLineOption("--origin-latitude","<latidude_in_decimal_degrees>\nNote if set this will be used for the origin latitude of the projection.  Setting this to something other than 0.0 with a geographic projection creates a scaled geographic projection.");
    au->addCommandLineOption("--output-radiometry", "<R>\nSpecifies the desired product's pixel radiometry type. Possible values for <R> are: U8, U11, U16, S16, F32. Note this overrides the deprecated option \"scale-to-8-bit\".");
    au->addCommandLineOption("--projection", "<output_projection> Valid projections: geo, geo-scaled, input or utm\ngeo = Equidistant Cylindrical, origin latitude = 0.0\ngeo-scaled = Equidistant Cylindrical, origin latitude = image center\ninput Use first images projection. Must be a map projecion.\nutm = Universal Tranverse Mercator\nIf input and multiple sources the projection of the first image will be used.\nIf utm the zone will be set from the scene center of first image.\nNOTE: --srs takes precedence over this option.");
@@ -1310,6 +1348,7 @@ void ossimChipProcUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--tile-size", "<size_in_pixels>\nSets the output tile size if supported by writer.  Notes: This sets both dimensions. Must be a multiple of 16, e.g. 1024.");
    au->addCommandLineOption("-w or --writer","<writer>\nSpecifies the output writer.  Default uses output file extension to determine writer. For valid output writer types use: \"ossim-info --writers\"\n");
    au->addCommandLineOption("--writer-prop", "<writer-property>\nPasses a name=value pair to the writer for setting it's property. Any number of these can appear on the line.");
+   au->addCommandLineOption("--write-template", "<filename>\nWrites a keywrd list template to the filename specified.");
    au->addCommandLineOption("--zone", "<zone>\nSpecify a projection zone if supported.  E.g. UTM projection. This will lock the zone even if input scene center is in another zone. Valid values for UTM are \"1\" to \"60\"");
 }
 
