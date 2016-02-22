@@ -577,12 +577,6 @@ private:
    /** @return true if histogram option is set; false, if not. */
    bool hasHistogramOperation() const;
 
-   /**
-    * @brief Checks for histogram region of interest(roi) operation.
-    * @return true if histogram roi option is set; false, if not.
-    */
-   bool hasHistogramRoiOperation() const;
-
    /** @return true if file extension is "hgt", "dem" or contains "dtN" (dted). */
    bool isDemFile(const ossimFilename& file) const;
 
