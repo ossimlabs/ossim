@@ -136,13 +136,13 @@ protected:
 
    /** Initializes the projection gsd. This loops through all chains to find the minimum gsd.
     * @note Throws ossimException on error. */
-   void initializeProjectionGsd();   
+   virtual void initializeProjectionGsd();
 
    /** Initializes m_aoiViewRect with the output area of interest as specified in master KWL.
     *  Initialization will either come from user defined cut options or the
     *  source bounding rect with user options taking precidence.
     * @note Throws ossimException on error. */
-   void initializeAOI();
+   virtual void initializeAOI();
 
    /** Reads the KWL for origin latitude and central meridian.
     * @param gpt Point to initialize. Set to 0 unless lat or lon specified in KWL

@@ -100,12 +100,7 @@ void ossimChipProcUtil::clear()
 
 void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 {
-   if( ap.read("-h") || ap.read("--help") || (ap.argc() == 1) )
-   {
-      setUsage(ap);
-      ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
-      return;
-   }
+   ossimUtility::initialize(ap);
 
    std::string tempString1;
    ossimArgumentParser::ossimParameter stringParam1(tempString1);
@@ -243,19 +238,6 @@ void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    if( ap.read("-w", stringParam1) || ap.read("--writer", stringParam1) )
       m_kwl.addPair( WRITER_KW, tempString1);
 
-   if( ap.read("-write-template", stringParam1))
-   {
-      ossimKeywordlist template_kwl;
-      getKwlTemplate(template_kwl);
-      if (!template_kwl.write(tempString1.c_str()))
-      {
-         ostringstream xmsg;
-         xmsg<<"ossimChipProcUtil:"<<__LINE__<<" Error encountered writing template file to <"
-               <<tempString1<<">";
-         throw ossimException(xmsg.str());
-      }
-   }
-
    while (ap.read("--writer-prop", stringParam1))
    {
       key = WRITER_PROPERTY_KW;
@@ -335,6 +317,8 @@ void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
 
 void ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
 {
+   cout<<kwl<<endl;//TODO:REMOVE
+
    // Don't copy KWL if member KWL passed in:
    if (&kwl != &m_kwl)
    {
@@ -1319,7 +1303,7 @@ void ossimChipProcUtil::setUsage(ossimArgumentParser& ap)
    ossimUtility::setUsage(ap);
 
    // Add options.
-   au->addCommandLineOption("--aoi-geo-bbox", "<min-lat> <min-lon> <max-lat> <max-lon>\nSpecify a comma-separated list for the upper-left and lower-right corners of the scene rect in decimal degrees.");
+   au->addCommandLineOption("--aoi-geo-bbox", "<min-lat> <min-lon> <max-lat> <max-lon>\nSpecify a comma-separated list for the lower-left and upper-right corners of the scene rect in decimal degrees.");
    au->addCommandLineOption("--aoi-geo-center", "<lat> <lon>\nCenter of AOI in decimal degrees.");
    au->addCommandLineOption("--aoi-map-bbox", "<min-x> <min-y> <max-x> <max-y>\nSpecify a space-separated list for the upper-left and lower-right corners of the scene rect in decimal degrees.");
    au->addCommandLineOption("--aoi-map-center", "<x> <y>\nCenter of AOI in map coordinates.");

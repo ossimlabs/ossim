@@ -291,6 +291,54 @@ void ossimViewshedUtil::clear()
    ossimChipProcUtil::clear();
 }
 
+void ossimViewshedUtil::initializeProjectionGsd()
+{
+   // First try normal base class initialization. If that doesn't work, then probably no DEM
+   // or input images were provided, so need to use elev manager resoltion at observer point.
+
+   ossimChipProcUtil::initializeProjectionGsd();
+   if (!m_gsd.hasNans() || m_observerGpt.hasNans())
+      return;
+
+   ossimMapProjection* proj = dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
+   if (!proj)
+      return;
+
+   ossimElevManager* elevMgr = ossimElevManager::instance();
+   elevMgr->getHeightAboveEllipsoid(m_observerGpt);
+   m_gsd.x = m_gsd.y = ossimElevManager::instance()->getMeanSpacingMeters();
+   if (m_geoScaled)
+      proj->setOrigin(m_observerGpt);
+   proj->setMetersPerPixel(m_gsd);
+}
+
+void ossimViewshedUtil::initializeAOI()
+{
+   ossimChipProcUtil::initializeAOI();
+   if (!m_aoiGroundRect.hasNans())
+      return;
+
+   // Not enough info available to base class to determine AOI, maybe can determine from observer
+   // position and radius:
+   if ((m_visRadius != 0) && !m_observerGpt.hasNans())
+   {
+      ossimMapProjection* proj = dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
+      if (!proj)
+         return;
+
+      ossimDpt metersPerDegree (m_observerGpt.metersPerDegree());
+      double dlat = m_visRadius/metersPerDegree.y;
+      double dlon = m_visRadius/metersPerDegree.x;
+      ossimGpt ulg (m_observerGpt.lat + dlat, m_observerGpt.lon - dlon);
+      ossimGpt lrg (m_observerGpt.lat - dlat, m_observerGpt.lon + dlon);
+
+      m_aoiGroundRect = ossimGrect(ulg, lrg);
+      proj->setUlTiePoints(ulg);
+
+      computeAdjustedViewFromGrect();
+   }
+}
+
 void ossimViewshedUtil::initProcessingChain()
 {
    ostringstream xmsg;
@@ -310,14 +358,6 @@ void ossimViewshedUtil::initProcessingChain()
 
    ossimRefPtr<ossimMapProjection> mapProj =
          dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
-
-   // Determine if default GSD needs to be computed.
-   if (m_gsd.hasNans())
-   {
-      m_gsd.x = m_gsd.y = elevMgr->getMeanSpacingMeters();
-      if (mapProj.valid()) // already validated but just in case
-         mapProj->setMetersPerPixel(m_gsd);
-   }
 
    // If no radius specified, need to compute R large enough to cover the requested AOI:
    if (m_visRadius == 0)

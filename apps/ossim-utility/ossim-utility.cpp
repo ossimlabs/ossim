@@ -68,31 +68,34 @@ int main(int argc, char *argv[])
             valid_kwl = kwl.addFile(input);
             if (!valid_kwl)
                cout<<"\nCould not load config file at <"<<input<<">"<<endl;
-         }
-
-         if (!valid_kwl)
-         {
-            // Display API:
-            ossimKeywordlist kwl_template;
-            utility->getKwlTemplate(kwl_template);
-            cout << "\nUtility template specification: "<<endl;
-            cout << kwl_template << endl;
-
-            // Accept inputs:
-            do
+            else
             {
-               cout << "Enter keyword: value (or 'x' to finish): ";
-               cin.getline(input, 256);
-               if (input[0] == 'x' || (!kwl.parseString(string(input))))
-                  break;
-            } while (1);
-
-            // Display final KWL:
-            cout << "\nUtility final specification: "<<endl;
-            cout << kwl << endl;
+               utility->initialize(kwl);
+               utility->execute();
+               break;
+            }
          }
 
-         // Perform operation:
+         // Display API:
+         ossimKeywordlist kwl_template;
+         utility->getKwlTemplate(kwl_template);
+         cout << "\nUtility template specification: "<<endl;
+         cout << kwl_template << endl;
+
+         // Accept inputs:
+         do
+         {
+            cout << "Enter keyword: value (or 'x' to finish): ";
+            cin.getline(input, 256);
+            if (input[0] == 'x' || (!kwl.parseString(string(input))))
+               break;
+         } while (1);
+
+         // Display final KWL:
+         cout << "\nUtility final specification: "<<endl;
+         cout << kwl << endl;
+
+         // Query go-aheadPerform operation:
          while (1)
          {
             cout << "Perform operation? [y|n]: ";

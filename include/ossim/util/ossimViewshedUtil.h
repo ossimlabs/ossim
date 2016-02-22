@@ -76,6 +76,8 @@ protected:
    };
 
    virtual void initProcessingChain();
+   virtual void initializeProjectionGsd();
+   virtual void initializeAOI();
    void paintReticle();
    void initRadials();
    bool writeHorizonProfile();
