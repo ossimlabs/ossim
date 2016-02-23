@@ -30,14 +30,13 @@ int main(int argc, char *argv[])
       t0 = ossimTimer::instance()->time_s();
 
       ossimRefPtr<ossimViewshedUtil> viewshed = new ossimViewshedUtil;
-      viewshed->initialize(ap);
-
-      // Add a listener for the percent complete to standard output.
-      ossimStdOutProgress prog(0, true);
-      viewshed->addListener(&prog);
-
-      // Start the viewshed process:
-      viewshed->execute();
+      if (viewshed->initialize(ap))
+      {
+         // Add a listener for the percent complete to standard output.
+         ossimStdOutProgress prog(0, true);
+         viewshed->addListener(&prog);
+         viewshed->execute();
+      }
       viewshed = 0;
    }
    catch  (const ossimException& e)

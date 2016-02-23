@@ -40,14 +40,14 @@ void ossimUtility::setUsage(ossimArgumentParser& ap)
          "Writes a template keyword-list to the specified filename.");
 }
 
-void ossimUtility::initialize(ossimArgumentParser& ap)
+bool ossimUtility::initialize(ossimArgumentParser& ap)
 {
    if ( (ap.argc() == 1) || ap.read("-h") || ap.read("--help") )
    {
       // Write usage.
       setUsage(ap);
       ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
-      return;
+      return false;
    }
 
    std::string ts1;
@@ -59,7 +59,7 @@ void ossimUtility::initialize(ossimArgumentParser& ap)
       ossimString json_str;
       getAPI(json_str);
       ofs << json_str <<endl;
-      return;
+      return false;
    }
 
    if ( ap.read("--write-template", sp1))
@@ -68,8 +68,10 @@ void ossimUtility::initialize(ossimArgumentParser& ap)
       ossimKeywordlist kwl;
       getKwlTemplate(kwl);
       ofs << kwl <<endl;
-      return;
+      return false;
    }
+
+   return true;
 }
 
 void ossimUtility::getKwlTemplate(ossimKeywordlist& kwl)

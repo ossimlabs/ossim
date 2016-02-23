@@ -42,14 +42,13 @@ int main(int argc, char *argv[])
       t0 = ossimTimer::instance()->time_s();
 
       ossimRefPtr<ossimHlzUtil> hlz = new ossimHlzUtil;
-      hlz->initialize(ap);
-
-      // Add a listener for the percent complete to standard output.
-      ossimStdOutProgress prog(0, true);
-      hlz->addListener(&prog);
-
-      // Start the viewshed process:
-      bool success = hlz->execute();
+      if (hlz->initialize(ap))
+      {
+         // Add a listener for the percent complete to standard output.
+         ossimStdOutProgress prog(0, true);
+         hlz->addListener(&prog);
+         bool success = hlz->execute();
+      }
       hlz = 0;
    }
    catch  (const ossimException& e)

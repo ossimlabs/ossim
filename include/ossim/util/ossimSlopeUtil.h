@@ -34,9 +34,10 @@ public:
 
    /**
     * Initializes from command line arguments.
+    * @return FALSE if --help option requested or no params provided, so that derived classes can
     * @note Throws ossimException on error.
     */
-   virtual void initialize(ossimArgumentParser& ap);
+   virtual bool initialize(ossimArgumentParser& ap);
 
    /**
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.

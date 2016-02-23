@@ -62,9 +62,11 @@ void ossimSlopeUtil::setUsage(ossimArgumentParser& ap)
    ossimChipProcUtil::setUsage(ap);
 }
 
-void ossimSlopeUtil::initialize(ossimArgumentParser& ap)
+bool ossimSlopeUtil::initialize(ossimArgumentParser& ap)
 {
-   ossimChipProcUtil::initialize(ap);
+   if (!ossimChipProcUtil::initialize(ap))
+      return false;
+
    processRemainingArgs(ap);
 }
 

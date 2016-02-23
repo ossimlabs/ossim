@@ -98,9 +98,10 @@ void ossimChipProcUtil::clear()
    }
 }
 
-void ossimChipProcUtil::initialize(ossimArgumentParser& ap)
+bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 {
-   ossimUtility::initialize(ap);
+   if (!ossimUtility::initialize(ap))
+      return false;
 
    std::string tempString1;
    ossimArgumentParser::ossimParameter stringParam1(tempString1);

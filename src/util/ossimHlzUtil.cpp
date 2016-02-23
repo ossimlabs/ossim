@@ -105,9 +105,10 @@ void ossimHlzUtil::setUsage(ossimArgumentParser& ap)
          "least-squares fit to a plane (prefered). For engineering/debug purposes.");
 }
 
-void ossimHlzUtil::initialize(ossimArgumentParser& ap)
+bool ossimHlzUtil::initialize(ossimArgumentParser& ap)
 {
-   ossimChipProcUtil::initialize(ap);
+   if (!ossimChipProcUtil::initialize(ap))
+      return false;
 
    string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);

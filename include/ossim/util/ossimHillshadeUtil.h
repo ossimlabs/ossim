@@ -44,11 +44,12 @@ public:
    /**
     * @brief Initial method to be ran prior to execute.
     * @param ap Arg parser to initialize from.
+    * @return FALSE if --help option requested or no params provided, so that derived classes can
     * @note Throws ossimException on error.
     * @note A throw with an error message of "usage" is used to get out when
     * a usage is printed.
     */
-   virtual void initialize(ossimArgumentParser& ap);
+   virtual bool initialize(ossimArgumentParser& ap);
 
    /** Used by ossimUtilityFactory */
    static const char* DESCRIPTION;

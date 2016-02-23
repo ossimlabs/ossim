@@ -126,7 +126,7 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
    au->setDescription(description.str());
 }
 
-void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
+bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
 {
    ostringstream xmsg;
    xmsg<<"ossimViewshedUtil::initialize(ossimArgumentParser) -- ";
@@ -134,7 +134,8 @@ void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    int numArgsExpected = 4;
 
    // Base class first:
-   ossimChipProcUtil::initialize(ap);
+   if (!ossimChipProcUtil::initialize(ap))
+      return false;
 
    string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
@@ -193,8 +194,7 @@ void ossimViewshedUtil::initialize(ossimArgumentParser& ap)
    if ( ap.argc() < numArgsExpected )
    {
       xmsg<<"Expecting more arguments.";
-      ap.reportError(xmsg.str());
-      throw(xmsg.str());
+      throw(ossimException(xmsg.str()));
    }
    else
    {
@@ -425,7 +425,7 @@ ossimRefPtr<ossimImageData> ossimViewshedUtil::getChip(const ossimIrect& boundin
    if (!m_outBuffer.valid() || !m_memSource.valid())
    {
       xmsg<<"ossimViewshedUtil:"<<__LINE__<<"  Error encountered allocating output image buffer.";
-      throw(xmsg.str());
+      throw ossimException(xmsg.str());
    }
 
    // Initialize the image with all points hidden:
