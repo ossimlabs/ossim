@@ -206,6 +206,8 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
       ap.remove(1,2);
       processRemainingArgs(ap);
    }
+
+   return true;
 }
 
 void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)

@@ -68,6 +68,7 @@ bool ossimSlopeUtil::initialize(ossimArgumentParser& ap)
       return false;
 
    processRemainingArgs(ap);
+   return true;
 }
 
 void ossimSlopeUtil::initialize(const ossimKeywordlist& kwl)

@@ -150,6 +150,7 @@ bool ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
    }
 
    processRemainingArgs(ap);
+   return true;
 }
 
 void ossimHillshadeUtil::initProcessingChain()

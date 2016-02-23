@@ -249,6 +249,8 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 
    if( ap.read("--zone", stringParam1) )
       m_kwl.addPair( std::string(ossimKeywordNames::ZONE_KW), tempString1);
+
+   return true;
 }
 
 void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)

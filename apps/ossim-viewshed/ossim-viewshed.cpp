@@ -50,6 +50,6 @@ int main(int argc, char *argv[])
    }
 
    double dt = ossimTimer::instance()->time_s() - t0;
-   cout << argv[0] << "Elapsed Time: " << dt << " s\n" << endl;
+   cout << argv[0] << " Elapsed Time: " << dt << " s\n" << endl;
    exit(0);
 }

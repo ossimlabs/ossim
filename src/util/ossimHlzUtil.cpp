@@ -177,6 +177,7 @@ bool ossimHlzUtil::initialize(ossimArgumentParser& ap)
    }
 
    processRemainingArgs(ap);
+   return true;
 }
 
 void ossimHlzUtil::initialize(const ossimKeywordlist& kwl)
