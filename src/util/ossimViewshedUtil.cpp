@@ -699,7 +699,7 @@ void ossimViewshedUtil::initRadials()
          sectorInFov[7] = true;
 
       azimuth += 45.0;
-      if (azimuth >= 360.0)
+      if (azimuth > 360.0)
       {
          azimuth -= 360.0;
          crossed_north = true;
