@@ -30,14 +30,14 @@
 #include <ossim/util/ossimHlzUtil.h>
 #include <fstream>
 
-static const string MASK_EXCLUDE_KW = "excludes";
-static const string MASK_INCLUDE_KW = "includes";
+static const string MASK_EXCLUDE_KW = "exclude_regions";
+static const string MASK_INCLUDE_KW = "include_regions";
 static const string SLOPE_OUTPUT_FILE_KW = "slope_output_file";
-static const string POINT_CLOUD_FILE_KW = "point_cloud_file";
+static const string POINT_CLOUD_FILE_KW = "point_clouds";
 static const string HLZ_CODING_KW = "hlz_coding";
-static const string LZ_MIN_RADIUS_KW = "lz_min_radius";
-static const string ROUGHNESS_THRESHOLD_KW = "roughness_threshold";
-static const string SLOPE_THRESHOLD_KW = "slope_threshold";
+static const string LZ_MIN_RADIUS_KW = "min_lz_radius";
+static const string ROUGHNESS_THRESHOLD_KW = "max_roughness";
+static const string SLOPE_THRESHOLD_KW = "max_slope";
 
 const char* ossimHlzUtil::DESCRIPTION =
       "Computes bitmap of helicopter landing zones given ROI and DEM.";
@@ -74,21 +74,21 @@ void ossimHlzUtil::setUsage(ossimArgumentParser& ap)
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
-   au->addCommandLineOption("--excludes <file1>[, <file2>...]",
-         "List of raster image(s) representing mask files that defines regions to be excluded from."
+   au->addCommandLineOption("--exclude-regions <file1>[, <file2>...]",
+         "List of raster image(s) representing mask files that defines regions to be excluded from "
          "HLZ solutions. Any non-zero pixel is excluded Multiple filenames must be comma-separated.");
    au->addCommandLineOption("--hlz-coding <bad> <marginal> <good>",
          "Specifies the pixel values (0-255) for the output product corresponding to bad, marginal, "
          "and good landing zones, respectively. Defaults to bad=255 (null), marginal=128, and "
          "good=64.");
-   au->addCommandLineOption("--includes <file1>[, <file2>...]",
+   au->addCommandLineOption("--include-regions <file1>[, <file2>...]",
          "List of raster image(s) representing mask files that defines regions where the HLZs ."
          "identified must overlap. Any non-zero pixel represents an inclusion zone. Multiple "
          "filenames must be comma-separated.");
    au->addCommandLineOption("--output-slope <filename.tif>",
          "Generates a slope byproduct image (floating point degrees) to the specified filename. "
          "Only valid if normal-vector method used (i.e., --ls-fit option NOT specified)");
-   au->addCommandLineOption("--pc | --point-cloud <file1>[, <file2>...]",
+   au->addCommandLineOption("--point-clouds <file1>[, <file2>...]",
          "Specifies ancillary point-cloud data file(s) for level-2 search for obstructions. "
          "Must be comma-separated file names.");
    au->addCommandLineOption("--min-lz-radius <meters>",
@@ -119,7 +119,7 @@ bool ossimHlzUtil::initialize(ossimArgumentParser& ap)
    ossimString  key ;
 
    vector<ossimString> maskFnames;
-   ap.read("--excludes", maskFnames);
+   ap.read("--exclude-regions", maskFnames);
    for(ossim_uint32 idx=0; idx<maskFnames.size(); ++idx)
    {
       key = MASK_EXCLUDE_KW;
@@ -135,7 +135,7 @@ bool ossimHlzUtil::initialize(ossimArgumentParser& ap)
    }
 
    maskFnames.clear();
-   ap.read("--includes", maskFnames);
+   ap.read("--include-regions", maskFnames);
    for(ossim_uint32 idx=0; idx<maskFnames.size(); ++idx)
    {
       key = MASK_INCLUDE_KW;
