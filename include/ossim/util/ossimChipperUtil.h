@@ -10,7 +10,7 @@
 //
 // Description:
 // 
-// Utility class to for chipping out images. , orthorectifying imagery with an
+// Utility class to for chipping out images. Orthorectifying imagery with an
 // added slant toward doing digital elevation model(DEM) operations.
 // 
 //----------------------------------------------------------------------------
@@ -496,6 +496,39 @@ private:
    void getAreaOfInterest( ossimImageSource* source, ossimIrect& rect ) const;
 
    /**
+    * Gets rect from string in the form of <x>,<y>,<w>,<h>.
+    * @param s String to parse.
+    * @rect Initialized by this.
+    * @return true on success, false, on error.
+    */
+   bool getIrect( const std::string& s, ossimIrect& rect ) const;
+
+   /**
+    * Gets image rect from string in the form of <lat>,<lon>,<w>,<h>.
+    *
+    * Computes image rect from world point assumed to be center of aoi.
+    *
+    * @param chain
+    * @param s String to parse.
+    * @rect Initialized by this.
+    * @return true on success, false, on error.
+    */
+   bool getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
+                  const std::string& s, ossimIrect& rect ) const;
+   
+   /**
+    * Gets 256 x 256 image rect from center of the image.
+    *
+    * Computes image rect from world point assumed to be center of aoi.
+    *
+    * @param chain
+    * @rect Initialized by this.
+    * @return true on success, false, on error.
+    */
+   bool getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
+                  ossimIrect& rect ) const;
+   
+   /**
     * @brief Method to calculate and initialize scale and area of interest
     * for making a thumbnail.
     *
@@ -711,6 +744,8 @@ private:
     * @return sharpness mode
     */   
    std::string getSharpenMode() const;
+
+   int getHistoMode() const;
 
    /** @brief Initializes arg parser and outputs usage. */
    void usage(ossimArgumentParser& ap);

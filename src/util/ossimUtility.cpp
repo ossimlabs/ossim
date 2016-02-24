@@ -40,14 +40,14 @@ void ossimUtility::setUsage(ossimArgumentParser& ap)
          "Writes a template keyword-list to the specified filename.");
 }
 
-void ossimUtility::initialize(ossimArgumentParser& ap)
+bool ossimUtility::initialize(ossimArgumentParser& ap)
 {
    if ( (ap.argc() == 1) || ap.read("-h") || ap.read("--help") )
    {
       // Write usage.
       setUsage(ap);
       ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
-      return;
+      return false;
    }
 
    std::string ts1;
@@ -59,40 +59,57 @@ void ossimUtility::initialize(ossimArgumentParser& ap)
       ossimString json_str;
       getAPI(json_str);
       ofs << json_str <<endl;
-      return;
+      return false;
    }
 
    if ( ap.read("--write-template", sp1))
    {
       ofstream ofs ( ts1.c_str() );
-      ossimString kwl_str;
-      getKwlTemplate(kwl_str);
-      ofs << kwl_str <<endl;
-      return;
+      ossimKeywordlist kwl;
+      getKwlTemplate(kwl);
+      ofs << kwl <<endl;
+      return false;
    }
+
+   return true;
 }
 
-void ossimUtility::getKwlTemplate(ossimString& kwl)
+void ossimUtility::getKwlTemplate(ossimKeywordlist& kwl)
 {
    ossimFilename kwl_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
    kwl_path += "/ossim/util/" + getClassName() + ".kwl";
-   readTextFile(kwl_path, kwl);
+   if (!kwl.addFile(kwl_path))
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::getKwlTemplate() -- Could not read <"
+            <<kwl_path<<">.";
+   }
 }
 
-void ossimUtility::getAPI(ossimString& json) const
+void ossimUtility::getAPI(string& json) const
 {
    ossimFilename json_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
    json_path += "/ossim/util/" + getClassName() + ".json";
    readTextFile(json_path, json);
 }
 
-bool ossimUtility::readTextFile(const ossimFilename& filename, ossimString& contents) const
+string ossimUtility::getAPI() const
+{
+   string result;
+   getAPI(result);
+   return result;
+}
+
+bool ossimUtility::readTextFile(const ossimFilename& filename, string& contents) const
 {
    contents.clear();
 
    std::ifstream is(filename.chars());
    if (!is)
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::readTextFile() -- Could not read <"
+            <<filename<<">.";
       return false;
+   }
 
    // get length of file:
    is.seekg (0, is.end);

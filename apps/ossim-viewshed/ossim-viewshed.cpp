@@ -1,17 +1,9 @@
-//*******************************************************************
+//**************************************************************************************************
 //
-// License:  See top level LICENSE.txt file.
-// 
-// Author:  David Burken
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-// Description:
-//
-// Application to scan image and attemp to detect the valid image vertices and
-// write them to a keyword list file for later use.  Note that if input
-// file is "foo.tif" this will create "foo_vertices.kwl".
-//
-//*******************************************************************
-//  $Id: ossim-viewshed.cpp 23084 2015-01-15 23:56:48Z okramer $
+//**************************************************************************************************
 
 #include <iostream>
 using namespace std;
@@ -38,14 +30,13 @@ int main(int argc, char *argv[])
       t0 = ossimTimer::instance()->time_s();
 
       ossimRefPtr<ossimViewshedUtil> viewshed = new ossimViewshedUtil;
-      viewshed->initialize(ap);
-
-      // Add a listener for the percent complete to standard output.
-      ossimStdOutProgress prog(0, true);
-      viewshed->addListener(&prog);
-
-      // Start the viewshed process:
-      viewshed->execute();
+      if (viewshed->initialize(ap))
+      {
+         // Add a listener for the percent complete to standard output.
+         ossimStdOutProgress prog(0, true);
+         viewshed->addListener(&prog);
+         viewshed->execute();
+      }
       viewshed = 0;
    }
    catch  (const ossimException& e)
@@ -59,6 +50,6 @@ int main(int argc, char *argv[])
    }
 
    double dt = ossimTimer::instance()->time_s() - t0;
-   cout << argv[0] << "Elapsed Time: " << dt << " s\n" << endl;
+   cout << argv[0] << " Elapsed Time: " << dt << " s\n" << endl;
    exit(0);
 }

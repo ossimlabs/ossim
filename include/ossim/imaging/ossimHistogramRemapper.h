@@ -30,7 +30,7 @@
 //*************************************************************************
 // $Id: ossimHistogramRemapper.h 22746 2014-04-23 16:16:28Z gpotts $
 #ifndef ossimHistogramRemapper_HEADER
-#define ossimHistogramRemapper_HEADER
+#define ossimHistogramRemapper_HEADER 1
 
 #include <ossim/imaging/ossimTableRemapper.h>
 #include <ossim/base/ossimMultiResLevelHistogram.h>
@@ -430,6 +430,15 @@ public:
     * Returns true on success, false on error.
     */
    bool openHistogram(const ossimFilename& histogram_file);
+
+   /**
+    * Compute the histogram from input connection and region of interest.
+    * With this method the histogram is owned by this object.
+    *
+    * @param roi Region of inte
+    * Returns true on success, false on error.
+    */
+   bool computeHistogram(const ossimIrect& roi);
 
    /**
     * Returns the currently opened histogram.

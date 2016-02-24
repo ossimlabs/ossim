@@ -15,14 +15,18 @@
 
 class ossimUtility;
 
-class OSSIMDLLEXPORT ossimUtilityManager : public ossimUtilityFactoryBase,
+/**
+ * Registry of all utility factories. Presently only one factory exists, ossimUtilityFactory, but
+ * eventually plugins can provide their own utilities and corresponding factories.
+ */
+class OSSIMDLLEXPORT ossimUtilityRegistry : public ossimUtilityFactoryBase,
                                            public ossimFactoryListInterface<ossimUtilityFactoryBase, ossimUtility>
 {
 public:
-   ossimUtilityManager();
-   ~ossimUtilityManager();
+   ossimUtilityRegistry();
+   ~ossimUtilityRegistry();
 
-   static ossimUtilityManager* instance();
+   static ossimUtilityRegistry* instance();
 
    /**
     * Initializes the utility factory. Returns TRUE if successful.
@@ -36,15 +40,16 @@ public:
     * name without the "ossim" prefix nor "Util" suffix, all lowercase.
     */
    virtual void getCapabilities(std::map<std::string, std::string>& capabilities) const;
+   virtual std::map<std::string, std::string> getCapabilities() const;
 
-   virtual ossimUtility* createUtility(const ossimString& typeName) const;
+   virtual ossimUtility* createUtility(const std::string& typeName) const;
 
    virtual ossimString getClassName() const { return "ossimUtilityManager"; }
 
    virtual void getTypeNameList(std::vector<ossimString>& typeList) const;
 
 private:
-   static ossimUtilityManager* s_instance;
+   static ossimUtilityRegistry* s_instance;
 };
 
 #endif

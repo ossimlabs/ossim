@@ -31,8 +31,8 @@ int main(int argc, char *argv[])
       ossimInit::instance()->initialize(ap);
 
       ossimRefPtr<ossimSlopeUtil> slopeUtil = new ossimSlopeUtil;
-      slopeUtil->initialize(ap);
-      slopeUtil->execute();
+      if (slopeUtil->initialize(ap))
+         slopeUtil->execute();
    }
    catch  (const ossimException& e)
    {

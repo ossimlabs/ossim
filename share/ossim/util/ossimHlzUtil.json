@@ -22,8 +22,8 @@
             "required": false    
         },
         "point_cloud": {
-            "datatype": "file:geopackage",
-            "description": "Specifies ancillary point-cloud data for level-2 search for obstructions.",
+            "datatype": "list:file:geopackage",
+            "description": "Specifies CSV list of ancillary point-cloud data for level-2 search for obstructions.",
             "required": false    
         },
         "reticle": {

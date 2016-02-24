@@ -41,9 +41,11 @@ public:
     * Initializes from command line arguments.
     * This base class has some common arguments to read. The derived class should call this
     * implementation in addition to setting its own arguments.
+    * @return FALSE if --help option requested or no params provided, so that derived classes can
+    * exit without error.
     * @note Throws ossimException on error.
     */
-   virtual void initialize(ossimArgumentParser& ap);
+   virtual bool initialize(ossimArgumentParser& ap);
 
    /**
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
@@ -70,12 +72,13 @@ public:
    /**
     * Assigns a template keywordlist to string for initializing derived classes.
     */
-   virtual void getKwlTemplate(ossimString& kwl);
+   virtual void getKwlTemplate(ossimKeywordlist& kwl);
 
    /**
     * Outputs a JSON representation of the Utility's API.
     */
-   void getAPI(ossimString& out) const;
+   void getAPI(std::string& out) const;
+   std::string getAPI() const;
 
    virtual ossimObject* getObject() { return this; }
    virtual const ossimObject* getObject() const  { return this; }
@@ -109,7 +112,7 @@ private:
    /**
     * Used for reading text files of template and JSON API from disk ONLY.
     */
-   bool readTextFile(const ossimFilename& filename, ossimString& contents) const;
+   bool readTextFile(const ossimFilename& filename, std::string& contents) const;
 };
 
 #endif

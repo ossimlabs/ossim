@@ -5,35 +5,36 @@
 //
 //**************************************************************************************************
 
-#include <ossim/util/ossimUtilityManager.h>
+#include <ossim/util/ossimUtilityRegistry.h>
+#include <ossim/util/ossimUtilityFactory.h>
 
 using namespace std;
 
-ossimUtilityManager* ossimUtilityManager::s_instance = 0;
+ossimUtilityRegistry* ossimUtilityRegistry::s_instance = 0;
 
-ossimUtilityManager* ossimUtilityManager::instance()
+ossimUtilityRegistry* ossimUtilityRegistry::instance()
 {
    if (!s_instance)
-      s_instance = new ossimUtilityManager;
+      s_instance = new ossimUtilityRegistry;
    return s_instance;
 }
 
-ossimUtilityManager::ossimUtilityManager()
+ossimUtilityRegistry::ossimUtilityRegistry()
+{
+   registerFactory(ossimUtilityFactory::instance(), true);
+}
+
+ossimUtilityRegistry::~ossimUtilityRegistry()
 {
 
 }
 
-ossimUtilityManager::~ossimUtilityManager()
-{
-
-}
-
-bool ossimUtilityManager::initialize()
+bool ossimUtilityRegistry::initialize()
 {
    return false;
 }
 
-void ossimUtilityManager::getCapabilities(map<string, string>& capabilities) const
+void ossimUtilityRegistry::getCapabilities(map<string, string>& capabilities) const
 {
    capabilities.clear();
    ossimString name, descr;
@@ -48,7 +49,14 @@ void ossimUtilityManager::getCapabilities(map<string, string>& capabilities) con
    }
 }
 
-ossimUtility* ossimUtilityManager::createUtility(const ossimString& argName) const
+std::map<std::string, std::string> ossimUtilityRegistry::getCapabilities() const
+{
+   std::map<std::string, std::string> result;
+   getCapabilities(result);
+   return result;
+}
+
+ossimUtility* ossimUtilityRegistry::createUtility(const std::string& argName) const
 {
    ossimUtility* result = 0;
    vector<ossimUtilityFactoryBase*>::const_iterator iter = m_factoryList.begin();
@@ -60,7 +68,7 @@ ossimUtility* ossimUtilityManager::createUtility(const ossimString& argName) con
    return result;
 }
 
-void ossimUtilityManager::getTypeNameList(vector<ossimString>& typeList) const
+void ossimUtilityRegistry::getTypeNameList(vector<ossimString>& typeList) const
 {
    typeList.clear();
    vector<ossimUtilityFactoryBase*>::const_iterator iter = m_factoryList.begin();

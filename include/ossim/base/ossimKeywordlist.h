@@ -17,6 +17,7 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorCodes.h>
 #include <ossim/base/ossimString.h>
+#include <ossim/base/ossimFilename.h>
 #include <iosfwd>
 #include <map>
 #include <vector>
@@ -543,6 +544,7 @@ protected:
    char                     m_delimiter;
    bool                     m_preserveKeyValues; // enables preserving empty field values, multi lines, ... etc
    bool                     m_expandEnvVars;
+   ossimFilename            m_currentlyParsing; // enables relative paths in #include directive
 };
 
 #endif /* #ifndef ossimKeywordlist_HEADER */

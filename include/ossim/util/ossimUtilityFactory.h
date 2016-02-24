@@ -21,7 +21,7 @@ public:
    virtual ~ossimUtilityFactory();
    static ossimUtilityFactory* instance();
 
-   virtual ossimUtility* createUtility(const ossimString& typeName) const;
+   virtual ossimUtility* createUtility(const std::string& typeName) const;
 
    /*!
     * This should return the type name of all objects in all factories.
@@ -35,6 +35,7 @@ public:
     * name without the "ossim" prefix nor "Util" suffix, all lowercase.
     */
    virtual void getCapabilities(std::map<std::string, std::string>& capabilities) const;
+   virtual std::map<std::string, std::string> getCapabilities() const;
 
 protected:
    ossimUtilityFactory();

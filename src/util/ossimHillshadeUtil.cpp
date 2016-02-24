@@ -91,12 +91,13 @@ ossimHillshadeUtil::~ossimHillshadeUtil()
    clear();
 }
 
-void ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
+bool ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
 {
    static const char MODULE[] = "ossimChipProcUtil::initialize(ossimArgumentParser)";
 
    // Permit base class to pull out common options first.
-   ossimChipProcUtil::initialize(ap);
+   if (!ossimChipProcUtil::initialize(ap))
+      return false;
 
    std::string tempString1;
    ossimArgumentParser::ossimParameter stringParam1(tempString1);
@@ -149,6 +150,7 @@ void ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
    }
 
    processRemainingArgs(ap);
+   return true;
 }
 
 void ossimHillshadeUtil::initProcessingChain()

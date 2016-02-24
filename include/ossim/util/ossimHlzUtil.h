@@ -39,7 +39,7 @@ public:
    ~ossimHlzUtil();
 
    virtual void setUsage(ossimArgumentParser& ap);
-   virtual void initialize(ossimArgumentParser& ap);
+   virtual bool initialize(ossimArgumentParser& ap);
    virtual void initialize(const ossimKeywordlist& kwl);
    virtual bool execute();
    virtual ossimRefPtr<ossimImageData> getChip(const ossimIrect& img_rect);
