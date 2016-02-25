@@ -50,4 +50,9 @@ fi
 # Loop over all ossim repos in working dir:
 find . -maxdepth 1 -type d -name "ossim*" -exec bash -c "do_git {} $1 $2 $3 $4 $5" \;
 
+# Check OMAR as well...
+if [ -d omar ]; then
+  bash -c "do_git omar $1 $2 $3 $4 $5"
+fi
+
 

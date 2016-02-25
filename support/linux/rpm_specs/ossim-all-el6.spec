@@ -24,6 +24,7 @@ License:        LGPLv2+
 URL:            https://github.com/orgs/ossimlabs/dashboard
 Source0:        http://download.osgeo.org/ossim/source/%{name}-%{version}.tar.gz
 
+
 BuildRequires: ant
 BuildRequires: cmake
 BuildRequires: ffmpeg-devel
@@ -375,6 +376,11 @@ export JAVA_HOME=/usr/lib/jvm/java
 #export JAVA_HOME=/usr/java/latest
 export OSSIM_INSTALL_PREFIX=%{buildroot}/usr
 
+# mrsid libraries:
+# Need to replace /opt/mrsid/latest with variable later
+install -p -m755 -D /opt/mrsid/latest/Lidar_DSDK/lib/liblti_lidar_dsdk.so %{buildroot}%{_libdir}
+install -p -m755 -D /opt/mrsid/latest/Raster_DSDK/lib/libltidsdk.so %{buildroot}%{_libdir}
+
 # oms "ant" build:
 pushd ossim-oms/joms
 ant dist
@@ -515,6 +521,8 @@ rm -f %{_javadir}/joms.jar
 
 %files mrsid-plugin
 %{_libdir}/ossim/plugins/libossim_mrsid_plugin.so
+%{_libdir}/liblti_lidar_dsdk.so
+%{_libdir}/libltidsdk.so
 
 %files opencv-plugin
 %{_libdir}/ossim/plugins/libossim_opencv_plugin.so

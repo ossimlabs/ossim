@@ -186,7 +186,7 @@ void ossimInfo::addArguments(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--resampler-filters", "Prints resampler filter list.");
 
-   au->addCommandLineOption("--revision-number", "Revision number of code.");
+   au->addCommandLineOption("--revision", "Revision of code.");
    
    au->addCommandLineOption("-s", "Force the ground rect to be the specified datum");
    
@@ -549,7 +549,8 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             }
          }
 
-         if( ap.read("--revision-number") )
+         if( ap.read("--revision") ||
+             ap.read("--revision-number") ) // backwards compat
          {
             m_kwl->add( REVISION_NUMBER_KW, TRUE_KW );
             if ( ap.argc() < 2 )
@@ -2772,8 +2773,8 @@ void ossimInfo::getBuildDate(std::string& s) const
 
 void ossimInfo::getRevisionNumber(std::string& s) const
 {
-#ifdef OSSIM_REVISION_NUMBER
-   s = OSSIM_REVISION_NUMBER;
+#ifdef OSSIM_REVISION
+   s = OSSIM_REVISION;
 #else
    s = "unknown";
 #endif
