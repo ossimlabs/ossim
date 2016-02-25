@@ -318,7 +318,13 @@ void ossimViewshedUtil::initializeAOI()
 {
    ossimChipProcUtil::initializeAOI();
    if (!m_aoiGroundRect.hasNans())
+   {
+      // AOI established by base class, nothing to do except take this opportunity to set the
+      // observer location to AOI center if not already defined:
+      if (m_observerGpt.hasNans())
+         m_observerGpt = m_aoiGroundRect.midPoint();
       return;
+   }
 
    // Not enough info available to base class to determine AOI, maybe can determine from observer
    // position and radius:
