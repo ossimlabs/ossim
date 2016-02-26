@@ -335,12 +335,6 @@ void ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
          getScalarTypeFromString( m_kwl.findKey( OUTPUT_RADIOMETRY_KW ) );
 
    m_productFilename = m_kwl.findKey( std::string(ossimKeywordNames::OUTPUT_FILE_KW) );
-   if ( m_productFilename == ossimFilename::NIL)
-   {
-      ostringstream errMsg;
-      errMsg << "ossimChipProcUtil ["<<__LINE__<<"] No output filename provided!"<<ends;
-      throw ossimException(errMsg.str());
-   }
 
    // Create chains for input sources.
    loadImageFiles();
@@ -448,9 +442,13 @@ ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimGrect& boundin
    if (!m_geom.valid())
       return chip;
 
-   // Set the new cut rectangle:
-   m_aoiGroundRect = bounding_grect;
-   computeAdjustedViewFromGrect();
+   // Set the new cut rectangle. Note that a NaN rect passed in implies the full AOI:
+   if (!bounding_grect.hasNans())
+   {
+      m_aoiGroundRect = bounding_grect;
+      computeAdjustedViewFromGrect();
+   }
+
    return getChip(m_aoiViewRect);
 }
 
