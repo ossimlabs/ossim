@@ -65,7 +65,6 @@ static const std::string COLOR_BLUE_KW           = "color_blue";
 static const std::string COLOR_GREEN_KW          = "color_green";
 static const std::string COLOR_RED_KW            = "color_red";
 static const std::string COLOR_SOURCE_KW         = "color_source";
-static const std::string GAIN_KW                 = "gain";
 
 const char*  ossimHillshadeUtil::DESCRIPTION =
    "Computes shaded representation of input elevation surface with specified lighting parameters.";
@@ -144,14 +143,10 @@ bool ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
       m_kwl.addPair( std::string(ossimKeywordNames::ELEVATION_ANGLE_KW), tempString1 );
    }
 
-   if ( ap.read("--exaggeration", stringParam1) )
-   {
-      m_kwl.addPair( GAIN_KW, tempString1 );
-   }
-
    processRemainingArgs(ap);
    return true;
 }
+
 
 void ossimHillshadeUtil::initProcessingChain()
 {
@@ -164,9 +159,6 @@ void ossimHillshadeUtil::initProcessingChain()
 
    // Set the smoothness factor.
    ossim_float64 gain = 1.0;
-   ossimString lookup = m_kwl.findKey( GAIN_KW );
-   if ( lookup.size() )
-      gain = lookup.toFloat64();
    normSource->setSmoothnessFactor(gain);
 
    // Create the bump shade.
@@ -175,7 +167,7 @@ void ossimHillshadeUtil::initProcessingChain()
 
    // Set the azimuth angle.
    ossim_float64 azimuthAngle = 180;
-   lookup = m_kwl.findKey( ossimKeywordNames::AZIMUTH_ANGLE_KW );
+   ossimString lookup = m_kwl.findKey( ossimKeywordNames::AZIMUTH_ANGLE_KW );
    if ( lookup.size() )
    {
       ossim_float64 f = lookup.toFloat64();
@@ -243,7 +235,6 @@ void ossimHillshadeUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--color","<r> <g> <b>\nSet the red, green and blue color values to be used with hillshade.\nRange 0 to 255, Defualt r=255, g=255, b=255");
    au->addCommandLineOption("--color-source","<file>\nSpecifies the image file to use as a color source instead of a fixed RGB value.");
    au->addCommandLineOption("--elevation", "<elevation>\nhillshade option - Light source elevation angle for bumb shade.\nRange: 0 to 90, Default = 45.0");
-   au->addCommandLineOption("--exaggeration", "<factor>\nMultiplier for elevation values when computing surface normals. Has the effect of lengthening shadows for oblique lighting.\nRange: .0001 to 50000, Default = 1.0");
 
    // Base class has its own:
    ossimChipProcUtil::setUsage(ap);

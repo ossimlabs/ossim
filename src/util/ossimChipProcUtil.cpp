@@ -445,6 +445,7 @@ ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimGrect& boundin
    // Set the new cut rectangle. Note that a NaN rect passed in implies the full AOI:
    if (!bounding_grect.hasNans())
    {
+      cout <<"\nossimChipProcUtil::getChip(grect) -- NaN rect provided. Using full AOI."<<endl;
       m_aoiGroundRect = bounding_grect;
       computeAdjustedViewFromGrect();
    }
