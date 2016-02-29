@@ -86,8 +86,9 @@ public:
    virtual bool isChipProcessor() const { return true; }
 
    /** The meat and potatos of this class. Performs an execute on specified rect. */
-   ossimRefPtr<ossimImageData> getChip(const ossimGrect& gnd_rect);
    virtual ossimRefPtr<ossimImageData> getChip(const ossimIrect& img_rect);
+
+   virtual ossimRefPtr<ossimImageData> getChip(const ossimGrect& gnd_rect);
 
 protected:
    /** Intended to be called after derived class has picked off its own options from the parser, and
