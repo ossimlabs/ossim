@@ -185,6 +185,14 @@ void ossimHlzUtil::initialize(const ossimKeywordlist& kwl)
    ossimString value;
    ostringstream xmsg;
 
+   // Don't copy KWL if member KWL passed in:
+   if (&kwl != &m_kwl)
+   {
+      // Start with clean options keyword list.
+      m_kwl.clear();
+      m_kwl.addList( kwl, true );
+   }
+
    value = m_kwl.findKey(LZ_MIN_RADIUS_KW);
    if (!value.empty())
       m_hlzMinRadius = value.toDouble();

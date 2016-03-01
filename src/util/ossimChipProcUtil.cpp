@@ -320,7 +320,6 @@ void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
 
 void ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
 {
-   cout<<kwl<<endl;//TODO:REMOVE
 
    // Don't copy KWL if member KWL passed in:
    if (&kwl != &m_kwl)
@@ -329,6 +328,8 @@ void ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
       m_kwl.clear();
       m_kwl.addList( kwl, true );
    }
+
+   cout<<"ossimChipProcUtil::initialize(kwl) -- m_kwl:\n"<<m_kwl<<endl;//TODO:REMOVE
 
    // Assign some members from KWL:
    m_productScalarType = ossimScalarTypeLut::instance()->

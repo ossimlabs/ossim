@@ -16,7 +16,9 @@ using namespace std;
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimTimer.h>
+#include <ossim/base/ossimKeywordlist.h>
 #include <ossim/util/ossimHlzUtil.h>
+#include <ossim/util/ossimUtilityRegistry.h>
 
 //*****************************************************************************
 // Application for finding helicopter landing zones (HLZ) on a DEM given the
@@ -41,7 +43,11 @@ int main(int argc, char *argv[])
 
       t0 = ossimTimer::instance()->time_s();
 
-      ossimRefPtr<ossimHlzUtil> hlz = new ossimHlzUtil;
+      ossimUtilityFactoryBase* factory = ossimUtilityRegistry::instance();
+      ossimRefPtr<ossimUtility> hlz = factory->createUtility(string("hlz"));
+
+      //ossimKeywordlist kwl(argv[1]);
+      //hlz->initialize(kwl);
       if (hlz->initialize(ap))
       {
          // Add a listener for the percent complete to standard output.
