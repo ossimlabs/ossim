@@ -439,14 +439,22 @@ void ossimChipProcUtil::abort()
 ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimDrect& map_bounding_rect,
                                                        const ossimDpt& gsd)
 {
+   cerr<<"\nossimChipProcUtil:"<<__LINE__<<endl;//TODO:remove debug
+   cerr<<"map_bounding_rect:"<<map_bounding_rect<<endl;//TODO:remove debug
+   cerr<<"gsd:"<<gsd<<endl;//TODO:remove debug
    ostringstream xmsg;
    if (!m_geom.valid())
       return 0;
 
+   cerr<<"ossimChipProcUtil:"<<__LINE__<<endl;//TODO:remove debug
    ossimMapProjection* proj = m_geom->getAsMapProjection();
    if (proj == 0)
+   {
+      cerr<<"ossimChipProcUtil: NULL PROJ"<<endl;//TODO:remove debug
       return 0;
+   }
 
+   cerr<<"ossimChipProcUtil:"<<__LINE__<<endl;//TODO:remove debug
    proj->setMetersPerPixel(gsd);
    ossimGpt ulGpt = proj->inverse(map_bounding_rect.ul());
    ossimGpt lrGpt = proj->inverse(map_bounding_rect.lr());
@@ -456,6 +464,7 @@ ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimDrect& map_bou
    m_aoiViewRect = view_rect;
    m_geom->setImageSize( m_aoiViewRect.size() );
 
+   cerr<<"ossimChipProcUtil:"<<__LINE__<<endl;//TODO:remove debug
    return getChip(m_aoiViewRect);
 }
 
@@ -932,7 +941,7 @@ void ossimChipProcUtil::initializeAOI()
       {
          ossimString lookup = m_kwl.findKey(AOI_MAP_RECT_KW);
          lookup.trim();
-         vector<ossimString> substrings = lookup.split(" ");
+         vector<ossimString> substrings = lookup.split(", ", true);
          if (substrings.size() != 4)
          {
             ostringstream errMsg;

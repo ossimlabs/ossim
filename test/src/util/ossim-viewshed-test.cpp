@@ -37,11 +37,11 @@ int main(int argc, char* argv[])
    {
       ossimArgumentParser ap(&argc, argv);
       ossimInit::instance()->initialize(ap);
-      
+
       ossimKeywordlist kwl;
       kwl.add("observer", "48.48 -113.79");
-      kwl.add("aoi_map_rect", "-12688527.58 6168162.43 -12645531.75 6205998.76");
-      kwl.add("visibility_radius", "8000");
+      kwl.add("aoi_map_rect", "-12684715.289296463,6168162.4345005825,-12649344.0544575,6205998.763501747");
+      //kwl.add("visibility_radius", "8000");
       kwl.add("srs", "3857");
       kwl.add("height_of_eye", "5");
       kwl.add("lut_file", "/data/TEST/HLZ/N48W114/vs.lut");
@@ -49,9 +49,9 @@ int main(int argc, char* argv[])
       ossimRefPtr<ossimChipProcUtil> viewshed = new ossimViewshedUtil;
       viewshed->initialize(kwl);
 
-      ossimGrect grect;
-      grect.makeNan();
-      ossimRefPtr<ossimImageData> tile = viewshed->getChip(grect);
+      ossimDrect map_bbox (-12684715.289296463, 6168162.4345005825, -12649344.0544575, 6205998.763501747);
+      ossimDpt gsd (30, 30);
+      ossimRefPtr<ossimImageData> tile = viewshed->getChip(map_bbox, gsd);
       tile->write("debug_chip.ras");
    }
    catch( const ossimException& e )

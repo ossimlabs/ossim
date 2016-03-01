@@ -430,14 +430,17 @@ void ossimViewshedUtil::initProcessingChain()
 
 ossimRefPtr<ossimImageData> ossimViewshedUtil::getChip(const ossimIrect& bounding_irect)
 {
+   cerr<<"ossimViewshedUtil:"<<__LINE__<<endl;//TODO:remove debug
    ostringstream xmsg;
    if (!m_geom.valid())
       return 0;
 
+   cerr<<"ossimViewshedUtil:"<<__LINE__<<endl;//TODO:remove debug
    m_aoiViewRect = bounding_irect;
    m_geom->setImageSize( m_aoiViewRect.size() );
    m_geom->localToWorld(m_aoiViewRect, m_aoiGroundRect);
 
+   cerr<<"ossimViewshedUtil:"<<__LINE__<<endl;//TODO:remove debug
    if (computeViewshed())
    {
       // The memory source has been populated, now do the getTile on the full chain to pick up
@@ -464,6 +467,7 @@ bool ossimViewshedUtil::computeViewshed()
    // Allocate the output image buffer:
    m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
                                                            m_aoiViewRect.height());
+   cerr<<"ossimViewshedUtil:"<<__LINE__<<endl;//TODO:remove debug
    ostringstream xmsg;
    if (!m_outBuffer.valid() || !m_memSource.valid())
    {
