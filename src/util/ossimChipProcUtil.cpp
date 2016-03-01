@@ -436,17 +436,40 @@ void ossimChipProcUtil::abort()
    }
 }
 
-ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimGrect& bounding_grect)
+ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimDrect& map_bounding_rect,
+                                                       const ossimDpt& gsd)
+{
+   ostringstream xmsg;
+   if (!m_geom.valid())
+      return 0;
+
+   ossimMapProjection* proj = m_geom->getAsMapProjection();
+   if (proj == 0)
+      return 0;
+
+   proj->setMetersPerPixel(gsd);
+   ossimGpt ulGpt = proj->inverse(map_bounding_rect.ul());
+   ossimGpt lrGpt = proj->inverse(map_bounding_rect.lr());
+   m_aoiGroundRect = ossimGrect(ulGpt, lrGpt);
+   ossimDrect view_rect;
+   m_geom->worldToLocal(m_aoiGroundRect, view_rect);
+   m_aoiViewRect = view_rect;
+   m_geom->setImageSize( m_aoiViewRect.size() );
+
+   return getChip(m_aoiViewRect);
+}
+
+ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimGrect& geo_bounding_grect)
 {
    ossimRefPtr<ossimImageData> chip = 0;
    if (!m_geom.valid())
       return chip;
 
    // Set the new cut rectangle. Note that a NaN rect passed in implies the full AOI:
-   if (!bounding_grect.hasNans())
+   if (!geo_bounding_grect.hasNans())
    {
       cout <<"\nossimChipProcUtil::getChip(grect) -- NaN rect provided. Using full AOI."<<endl;
-      m_aoiGroundRect = bounding_grect;
+      m_aoiGroundRect = geo_bounding_grect;
       computeAdjustedViewFromGrect();
    }
 
@@ -634,8 +657,12 @@ void ossimChipProcUtil::createOutputProjection()
       proj = new ossimEquDistCylProjection();
 
    else if (srs.size())
+   {
       proj = PTR_CAST(ossimMapProjection,
                       ossimProjectionFactoryRegistry::instance()->createProjection(srs));
+      if (!proj.valid())
+         throw ossimException("ossimChipProcUtil::createOutputProjection() -- Bad EPSG code passed.");
+   }
    else if (op == "geo-scaled")
    {
       m_geoScaled = true; // used later when reference latitude is known
@@ -895,6 +922,50 @@ void ossimChipProcUtil::initializeAOI()
       ossimGpt ulgpt (maxLatF, minLonF);
       ossimGpt lrgpt (minLatF , maxLonF);
       m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
+   }
+
+   else if ( m_kwl.hasKey( AOI_MAP_RECT_KW ) )
+   {
+      ossimRefPtr<ossimMapProjection> mapProj =
+            dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
+      if (mapProj.valid())
+      {
+         ossimString lookup = m_kwl.findKey(AOI_MAP_RECT_KW);
+         lookup.trim();
+         vector<ossimString> substrings = lookup.split(" ");
+         if (substrings.size() != 4)
+         {
+            ostringstream errMsg;
+            errMsg << "ossimChipProcUtil ["<<__LINE__<<"] Incorrect number of values specified for "
+                  "aoi_geo_rect!";
+            throw( ossimException(errMsg.str()) );
+         }
+         ossim_float64 minX = substrings[0].toFloat64();
+         ossim_float64 minY = substrings[1].toFloat64();
+         ossim_float64 maxX = substrings[2].toFloat64();
+         ossim_float64 maxY = substrings[3].toFloat64();
+
+         // Check for swap so we don't get a negative height.
+         // Note no swap check for longitude as box could cross date line.
+         if ( minX > maxX )
+         {
+            ossim_float64 tmpF = minX;
+            minX = maxX;
+            maxX = tmpF;
+         }
+         if ( minY > maxY )
+         {
+            ossim_float64 tmpF = minY;
+            minY = maxY;
+            maxY = tmpF;
+         }
+
+         ossimDpt ulMap (minX, maxY);
+         ossimDpt lrMap (maxX , minY);
+         ossimGpt ulGeo = mapProj->inverse(ulMap);
+         ossimGpt lrGeo = mapProj->inverse(lrMap);
+         m_aoiGroundRect = ossimGrect(ulGeo, lrGeo);
+      }
    }
 
    // If no user defined rect set to scene bounding rect.

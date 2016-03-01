@@ -87,8 +87,8 @@ public:
 
    /** The meat and potatos of this class. Performs an execute on specified rect. */
    virtual ossimRefPtr<ossimImageData> getChip(const ossimIrect& img_rect);
-
    virtual ossimRefPtr<ossimImageData> getChip(const ossimGrect& gnd_rect);
+   ossimRefPtr<ossimImageData> getChip(const ossimDrect& map_bounding_rect, const ossimDpt& gsd);
 
 protected:
    /** Intended to be called after derived class has picked off its own options from the parser, and
