@@ -420,8 +420,8 @@ bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>&
       if (arg == ",")
       {
          remove(pos, 1);
-         continue;
          includeNextItem = true;
+         continue;
       }
 
       if (!includeNextItem && (arg[0] != ','))
