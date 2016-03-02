@@ -56,40 +56,7 @@ void ossimSlopeUtil::setUsage(ossimArgumentParser& ap)
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
-<<<<<<< HEAD
-   au->addCommandLineOption(
-         "--center <lat> <lon>",
-         "The center position of the output product. Required if no input DEM is specified.");
-   au->addCommandLineOption(
-         "--dem <filename>",
-         "Specifies the input DEM filename. If none provided, the elevation database is referenced "
-         "as specified in prefs file for the center and ROI specified.");
-   au->addCommandLineOption(
-         "--remap",
-         "The range of slope angle (0.0 to 90.0) is remapped to 0-255 (one byte/pixel)");
-   au->addCommandLineOption(
-         "--lut <filename>",
-         "Specifies the optional lookup table filename for mapping the single-band output "
-         "image to an RGB. The LUT provided must be in the ossimIndexToRgbLutFilter format "
-         "and should accommodate the output pixel range. This option forces remap to 8-bit, "
-         "0-255 where 255 = 90 deg slope");
-   au->addCommandLineOption(
-         "--roi <meters>",
-         "radius of interest surrounding the center point. If absent, the product defaults to "
-         "1024 x 1024 pixels, with a radius of 512 * GSD. Alternatively, if a DEM file is "
-         "specified, the product ROI defaults to the full DEM coverage.");
-
-   ossimString description =
-         "Utility for computing the slope at each elevation post and generating "
-         "a corresponding slope image. The output scalar type is a normalized float with 1.0 = 90 "
-         "degree angle from the local vertical. Optional 8-bit scalar type is available."
-         "Examples:\n\n"
-         "    ossim-slope [options] --dem <input-dem> <output-slope-image-file>\n"
-         "    ossim-slope [options] --center <lat> <lon> --roi <meters> <output-slope-image-file>\n";
-   au->setDescription(description);
-=======
    au->setDescription(DESCRIPTION);
->>>>>>> dev
 
    // Base class has its own:
    ossimChipProcUtil::setUsage(ap);
