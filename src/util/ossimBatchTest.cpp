@@ -466,8 +466,9 @@ ossim_uint8 ossimBatchTest::execute()
       status = processConfigList(kwl);
       if (status != TEST_TBD)
       {
-         // Not really an exception, just bumping out of execution
-         throw ossimException("Processed list of config files.");
+         cout<<"\nossimBatchTest::execute() exiting <"<<configName<<"> with overall status = "
+               <<(int)status<<"\n"<<endl;
+         return status;
       }
 
       // Pick up individual test options passed in by user.  These will adjust the keyword list
@@ -541,40 +542,19 @@ ossim_uint8 ossimBatchTest::execute()
       double startTime = ossimTimer::instance()->time_s();
       
    
-      ossimString prefixBase = "test";
-      std::vector<ossim_uint32> numberList = getArrayIndicesFromKwl(kwl, prefixBase);
-
-      // Get the number of test:
-   //   ossimString regExpStr = "test[0-9]+\\.";
-      ossim_uint32 num_tests = numberList.size();//kwl.getNumberOfSubstringKeys(regExpStr);
-    //  const ossim_uint32 MAX_INDEX = num_tests + 1000;
-    //  ossimString prefixBase = "test";
-    //  ossim_uint32 index = 0;
-    //  ossim_uint32 processedIndexes = 0;
-      ossimString prefix;
+      ossimString regExpStr = "test[0-9]+\\.";
+      std::vector<ossimString> prefixes;
+      kwl.getSubstringKeyList(prefixes, regExpStr);
       
       // If no test prefix is used, this implies a single test:
-      bool is_single_test = (num_tests == 0);
-      if (is_single_test)
-      {
-         num_tests = 1;
-         prefix = "";
-      }
+      if (prefixes.empty())
+         prefixes.push_back("");
       
       status = TEST_TBD;
-      ossim_uint32 idx = 0;
-      for(idx = 0; idx < numberList.size(); ++idx)
-      //while ( processedIndexes < num_tests )
+      for(ossim_uint32 idx = 0; idx < prefixes.size(); ++idx)
       {
-         if (!is_single_test)
-            prefix = prefixBase + ossimString::toString(numberList[idx]) + ".";
-         
-         ossim_uint8 individual_test_status = processTest( prefix, kwl);
-         
-         //if ( individual_test_status != TEST_TBD) ++processedIndexes;
-         
+         ossim_uint8 individual_test_status = processTest( prefixes[idx], kwl);
          status |= individual_test_status;
-         
       }
       
       getDateString(date);
@@ -610,14 +590,14 @@ ossim_uint8 ossimBatchTest::processConfigList(const ossimKeywordlist& kwl)
    ossim_uint8 overall_test_status = TEST_TBD;
    ossimFilename config_list_path = m_configFileName.path();
 
-   ossimString prefixBase = "test_config_file";
-   std::vector<ossim_uint32> numberList = getArrayIndicesFromKwl(kwl, prefixBase);
-   ossim_uint32 idx = 0;
-   for(idx=0;idx < (int)numberList.size();++idx)
+   ossimString keywordRegEx = "test_config_file[0-9]+";
+   std::vector<ossimString> keywords;
+   kwl.getSubstringKeyList(keywords, keywordRegEx);
+
+   for(ossim_uint32 idx=0;idx < (ossim_uint32)keywords.size(); ++idx)
    {
       // Looping over each config file listed, performing an execute() on each:
-      ossimString kw = prefixBase + ossimString::toString(numberList[idx]);
-      m_configFileName = ossimFilename(kwl.find(kw.chars()));
+      m_configFileName = kwl.findKey(keywords[idx]);
       
       if (!m_configFileName.empty())
       {
@@ -1272,27 +1252,6 @@ std::string ossimBatchTest::convertToNative( const char* lookup ) const
    } // Matches: if ( lookup )
    
    return s;
-}
-std::vector<ossim_uint32> ossimBatchTest::getArrayIndicesFromKwl(
-   const ossimKeywordlist& kwl, 
-   const ossimString& prefix)const
-{
-   ossimString regExpression =  ossimString("^(") + prefix + "[0-9])";
-   vector<ossimString> keys =
-      kwl.getSubstringKeyList( regExpression );
-   long numberOfConfigFiles = (long)keys.size();//kwl.getNumberOfSubstringKeys(regExpression);
-
-   int offset = (int)(prefix).size();
-   int idx = 0;
-   std::vector<ossim_uint32> numberList(numberOfConfigFiles);
-   for(idx = 0; idx < (int)numberList.size();++idx)
-     {
-       ossimString numberStr(keys[idx].begin() + offset,
-              keys[idx].end());
-       numberList[idx] = numberStr.toInt();
-     }
-   std::sort(numberList.begin(), numberList.end());
-   return numberList;
 }
 
 

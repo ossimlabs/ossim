@@ -724,18 +724,20 @@ ossimKeywordlist::getMapEntry(const ossimString& key)
 bool ossimKeywordlist::parseFile(const ossimFilename& file,
                                  bool ignoreBinaryChars)
 {
-   if(!file.exists()) return false;
+   if(!file.exists())
+      return false;
+
    bool result = false;
    std::ifstream is;
    is.open(file.c_str(), std::ios::in | std::ios::binary);
-   
+
    if(!is.fail())
    {
+      m_currentlyParsing = file;
       result = parseStream(is, ignoreBinaryChars);
    }
-   
+
    is.close();
-   
    return result;
 }
 
@@ -835,7 +837,15 @@ ossimKeywordlist::readPreprocDirective(std::istream& in)
             break; // ignore bogus preproc line
          includeFile.trim("\"");
          includeFile.expandEnvironmentVariable();
+
+         // The filename can be either relative to the current file being parsed or absolute:
+         if (includeFile[0] != '/')
+            includeFile = m_currentlyParsing.path() + "/" + includeFile;
+
+         // Save the current path in case the new one contains it's own include directive!
+         ossimFilename savedCurrentPath = m_currentlyParsing;
          addFile(includeFile); // Quietly ignore any errors loading external KWL.
+         m_currentlyParsing = savedCurrentPath;
       }
 
 //      else if (directive == "#add_new_directive_here")
@@ -1192,32 +1202,9 @@ void ossimKeywordlist::getSubstringKeyList(std::vector<ossimString>& result,
 ossim_uint32 ossimKeywordlist::getNumberOfSubstringKeys(const ossimString& regularExpression)const
 {
    KeywordMap::const_iterator i;
-   std::list<ossimString> currentList;
-   ossim_uint32 result = 0;
-   ossimRegExp regExp;
-   
-   regExp.compile(regularExpression.c_str());
-   
-   for(i = m_map.begin(); i != m_map.end(); ++i)
-   {
-      if(regExp.find( (*i).first.c_str()))
-      {
-         ossimString value = ossimString((*i).first.begin()+regExp.start(),
-                                         (*i).first.begin()+regExp.start()+regExp.end());
-         
-         // make sure we have not already marked it as
-         // found
-         if(std::find(currentList.begin(),
-                      currentList.end(),
-                      value) == currentList.end())
-         {
-            currentList.push_back(value);
-            ++result;
-         }
-      }
-   }
-   
-   return result;
+   std::vector<ossimString> currentList;
+   getSubstringKeyList(currentList, regularExpression);
+   return currentList.size();
 }
 
 void ossimKeywordlist::addPrefixToAll(const ossimString& prefix)

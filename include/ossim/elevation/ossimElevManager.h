@@ -79,8 +79,19 @@ public:
    {
       return m_dbRoundRobin[0][idx].get();
    }
-   void addDatabase(ossimElevationDatabase* database);
-   bool loadElevationPath(const ossimFilename& path);
+
+   /**
+    * Adds a new elevation database to the collection. Normally pushed on to the tail of the list,
+    * unless set_as_first=true, in which case this database will receive the first requests.
+    */
+   void addDatabase(ossimElevationDatabase* database, bool set_as_first=false);
+
+   /**
+    * Adds a new elevation file (or multiple files if path is a directory) to the collection.
+    * Normally pushed on to the tail of the list, unless set_as_first=true, in which case this
+    * source will receive the first requests.
+    */
+   bool loadElevationPath(const ossimFilename& path, bool set_as_first=false);
    
    void setDefaultHeightAboveEllipsoid(double meters) {m_defaultHeightAboveEllipsoid=meters;}
    void setElevationOffset(double meters) {m_elevationOffset=meters;}
@@ -105,7 +116,7 @@ public:
                            const ossim_float64& minLon,
                            const ossim_float64& maxLat,
                            const ossim_float64& maxLon,
-                           std::vector<std::string>& cells,
+                           std::vector<ossimFilename>& cells,
                            ossim_uint32 maxNumberOfCells=0 );
 
    /**
@@ -127,10 +138,10 @@ public:
                            const ossim_float64& minLon,
                            const ossim_float64& maxLat,
                            const ossim_float64& maxLon,
-                           std::vector<std::string>& cells,
+                           std::vector<ossimFilename>& cells,
                            ossim_uint32 maxNumberOfCells=0 );
    void getCellsForBounds( const ossimGrect& bounds,
-                           std::vector<std::string>& cells,
+                           std::vector<ossimFilename>& cells,
                            ossim_uint32 maxNumberOfCells=0 );
 
    void setUseGeoidIfNullFlag(bool flag) { m_useGeoidIfNullFlag = flag; }
@@ -170,6 +181,7 @@ protected:
    
    // if an elevation is returned that's null for ellipsoid then use the geoid manager to calculate a shift
    bool m_useGeoidIfNullFlag;
+   bool m_useStandardPaths;
    
    mutable ossim_uint32 m_currentDatabaseIdx;
    

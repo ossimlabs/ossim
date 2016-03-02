@@ -163,12 +163,12 @@ public:
              ossimParameter value6);
    
    /**
-<<<<<<< Updated upstream
-=======
     * Alternate form for reading variable length arguments (must be comma-separated), e.g.,
     *
-    *    --input_files file1, file2, file3,file4
-    * Noote that spaces between arguments are optional.
+    *    --input_files file1, file2, file3,file4 next_arg
+    *
+    * Note that spaces between arguments are optional. The next_arg entry will not be considered
+    * part of the list since there's no comma separator and will be left on the argument array.
     * @param str The option string (with "-" or "--")
     * @param param_list Vector to contain results as strings. Always cleared before populating
     * @return True if option found (param_list may be empty f no args followed).
@@ -176,7 +176,6 @@ public:
    bool read(const std::string& str, std::vector<ossimString>& param_list);
 
    /**
->>>>>>> Stashed changes
     * @return The number of parameters of type value associated with specified
     * option, or -1 if option not found
     */

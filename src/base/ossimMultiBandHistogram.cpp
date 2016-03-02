@@ -84,9 +84,17 @@ void ossimMultiBandHistogram::create(const ossimImageSource* input)
          case OSSIM_FLOAT32:
          case OSSIM_FLOAT64:
          {
-            minValue     = OSSIM_DEFAULT_MIN_PIX_SINT16;
+            //---
+            // Special case to handle DTED which has a null of -32767 and SRTM
+            // which has null of -32768.  Set the min to -32766 which is OK for
+            // both types.  Basically we don't want to count the null values as
+            // a valid pixel. drb - 04 Feb. 2016
+            //
+            // NOTE: OSSIM_DEFAULT_MIN_PIX_SINT16 = -32767
+            //---
+            minValue     = OSSIM_DEFAULT_MIN_PIX_SINT16+1;
             maxValue     = OSSIM_DEFAULT_MAX_PIX_SINT16;
-            numberOfBins = (OSSIM_DEFAULT_MAX_PIX_SINT16-OSSIM_DEFAULT_MIN_PIX_SINT16) + 1;
+            numberOfBins = (OSSIM_DEFAULT_MAX_PIX_SINT16-OSSIM_DEFAULT_MIN_PIX_SINT16);
             break;
          }
          case OSSIM_NORMALIZED_FLOAT:
@@ -117,9 +125,7 @@ void ossimMultiBandHistogram::create(ossim_int32 numberOfBands,
                                      float minValue,
                                      float maxValue)
 {
-   // make sure we clear our internal lists before
-   // we start.
-   //
+   // Make sure we clear our internal lists before we start.
    deleteHistograms();
 
    if(numberOfBands > 0)

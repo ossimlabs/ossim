@@ -1,13 +1,13 @@
 #---
-# File: ossim-el6.spec
+# File: ossim-el7.spec
 #
 # Spec file for building ossim rpms with rpmbuild.
 #
-# NOTE: This files differs from ossim-el7.spec on in el6 needs libtiff4 to pick
+# NOTE: This files differs from ossim-el6.spec on in el6 need libtiff4 to pick
 # up bigtiff support.
 #
 # Example usage:
-# rpmbuild -ba --define 'RPM_OSSIM_VERSION 1.9.0' --define 'BUILD_RELEASE 1' ossim-el6.spec
+# rpmbuild -ba --define 'RPM_OSSIM_VERSION 1.9.0' --define 'BUILD_RELEASE 1' ossim-el7.spec
 #
 # Caveats: 
 # 1) Builder/user needs "groovy" in their search path.
@@ -46,7 +46,10 @@ BuildRequires: podofo-devel
 BuildRequires: qt4-devel
 BuildRequires: sqlite-devel
 BuildRequires: gpstk-devel
+BuildRequires: openjpeg2-devel
 #BuildRequires: swig
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
+
 
 %description
 OSSIM is a powerful suite of geospatial libraries and applications
@@ -55,7 +58,7 @@ used to process remote sensing imagery, maps, terrain, and vector data.
 %package 	devel
 Summary:        Develelopment files for ossim
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description devel
 Development files for ossim.
@@ -63,7 +66,6 @@ Development files for ossim.
 %package 	libs
 Summary:        Develelopment files for ossim
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description libs
 Libraries for ossim.
@@ -71,7 +73,7 @@ Libraries for ossim.
 %package 	geocell
 Summary:        Desktop electronic light table
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description geocell
 Desktop electronic light table for geospatial image processing. Has 2D, 2 1/2D
@@ -80,7 +82,7 @@ and 3D viewer with image chain editing capabilities.
 %package        oms
 Summary:        Wrapper library/java bindings for interfacing with ossim.
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description    oms
 This sub-package contains the oms wrapper library with java bindings for
@@ -89,7 +91,7 @@ interfacing with the ossim library from java.
 %package        oms-devel
 Summary:        Development files for ossim oms wrapper library.
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description    oms-devel
 This sub-package contains the development files for oms.
@@ -97,7 +99,7 @@ This sub-package contains the development files for oms.
 %package 	planet
 Summary:        3D ossim library interface via OpenSceneGraph
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description planet
 3D ossim library interface via OpenSceneGraph.
@@ -105,7 +107,7 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %package 	planet-devel
 Summary:        Development files for ossim planet.
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description planet-devel
 This sub-package contains development files for ossim planet.
@@ -113,7 +115,7 @@ This sub-package contains development files for ossim planet.
 %package        test-apps
 Summary:        Ossim test apps.
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description    test-apps
 A suite of ossim test apps.
@@ -121,7 +123,7 @@ A suite of ossim test apps.
 %package 	video
 Summary:        Ossim vedeo library.
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description    video
 Ossim vedeo library.
@@ -129,7 +131,7 @@ Ossim vedeo library.
 %package 	video-devel
 Summary:        Development files for ossim planet.
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description    video-devel
 This sub-package contains development files for ossim planet.
@@ -156,7 +158,7 @@ This sub-package contains the development files for libwms.
 %package 	cnes-plugin
 Summary:        Plugin with various sensor models
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description cnes-plugin
 This sub-package contains the ossim plugin which has various SAR sensor models,
@@ -166,7 +168,7 @@ Toolbox (OTB) group / Centre national d'études spatiales.
 %package 	gdal-plugin
 Summary:        GDAL ossim plugin
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description gdal-plugin
 This sub-package contains the Geospatial Data Abstraction Library(gdal) ossim
@@ -175,7 +177,7 @@ plugin for reading/writing images supported by the gdal library.
 %package 	geopdf-plugin
 Summary:        geopdf ossim plugin
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description geopdf-plugin
 This sub-package contains the geopdf ossim plugin for reading geopdf files via
@@ -184,7 +186,7 @@ the podofo library.
 %package 	hdf5-plugin
 Summary:        HDF5 ossim plugin
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description hdf5-plugin
 This sub-package contains the Hierarchical Data Format(hdf) ossim plugin for
@@ -193,7 +195,7 @@ reading hdf5 images via the hdf5 libraries
 %package  	kml-plugin
 Summary:        kml ossim plugin
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description    kml-plugin
 This sub-package contains the kmlsuperoverlay ossim plugin for reading/writing
@@ -202,7 +204,7 @@ kml super overlays.
 %package  	opencv-plugin
 Summary:        OSSIM OpenCV plugin, contains registration code.
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description    opencv-plugin
 This sub-package contains the ossim opencv plugin with various pieces of 
@@ -211,7 +213,7 @@ image registration code.
 %package  	openjpeg-plugin
 Summary:        OpenJPEG ossim plugin
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description    openjpeg-plugin
 This sub-package contains the OpenJPEG ossim plugin for
@@ -220,7 +222,7 @@ reading/writing J2K compressed images via the OpenJPEG library.
 %package 	png-plugin
 Summary:        PNG ossim plugin
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description png-plugin
 This sub-package contains the Portable Network Graphic(png) ossim plugin for
@@ -229,7 +231,7 @@ reading/writing png images via the png library.
 %package  	sqlite-plugin
 Summary:        OSSIM sqlite plugin, contains GeoPackage reader/writer.
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description sqlite-plugin
 This sub-package contains GeoPackage reader/writer.
@@ -237,7 +239,7 @@ This sub-package contains GeoPackage reader/writer.
 %package 	web-plugin
 Summary:        web ossim plugin
 Group:          System Environment/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description web-plugin
 This sub-package contains the web ossim plugin for interfacing with http via

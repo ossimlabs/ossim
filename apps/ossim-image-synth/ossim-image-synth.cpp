@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
    filename.setExtension(".tif");
 
    // Set the destination image size:
-   ossimIpt image_size (256 , 256);
+   ossimIpt image_size (512 , 512);
    ossimRefPtr<ossimImageData> outImage =
          ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, image_size.x, image_size.y);
    if(outImage.valid())

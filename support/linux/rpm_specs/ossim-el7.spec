@@ -46,6 +46,7 @@ BuildRequires: podofo-devel
 BuildRequires: qt4-devel
 BuildRequires: sqlite-devel
 BuildRequires: gpstk-devel
+BuildRequires: openjpeg2-devel
 #BuildRequires: swig
 Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 

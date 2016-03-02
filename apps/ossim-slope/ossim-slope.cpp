@@ -15,6 +15,7 @@
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/util/ossimSlopeUtil.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/base/ossimException.h>
 #include <ossim/init/ossimInit.h>
 #include <iostream>
 
@@ -24,15 +25,20 @@ int main(int argc, char *argv[])
 {
    int returnCode = 0;
    
-   ossimArgumentParser ap(&argc, argv);
-   ossimInit::instance()->initialize(ap);
-   
-   ossimRefPtr<ossimSlopeUtil> slopeUtil = new ossimSlopeUtil;
-   if (!slopeUtil->initialize(ap))
-      exit(1);
+   try
+   {
+      ossimArgumentParser ap(&argc, argv);
+      ossimInit::instance()->initialize(ap);
 
-   if (!slopeUtil->execute())
+      ossimRefPtr<ossimSlopeUtil> slopeUtil = new ossimSlopeUtil;
+      if (slopeUtil->initialize(ap))
+         slopeUtil->execute();
+   }
+   catch  (const ossimException& e)
+   {
+      ossimNotify(ossimNotifyLevel_FATAL)<<e.what()<<endl;
       exit(1);
+   }
 
    exit(0);
 }

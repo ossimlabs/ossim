@@ -1,0 +1,36 @@
+//***********************************
+// Template KWL for HLZ Utility.
+//***********************************
+type: ossimHlzUtil
+
+#include ossimChipProcUtil.kwl
+
+// List of raster image(s) representing mask files that defines regions to be excluded from HLZ 
+// solutions. Any non-zero pixel represents an exclusion zone.
+excludes1: <file1>
+excludes2: <file2>
+
+// Specifies the pixel values (0-255) for the output product corresponding to bad, marginal, and 
+// good landing zones, respectively. Defaults to bad=255 (null), marginal=128, and good=64.
+hlz-coding: <bad> <marginal> <good>
+
+// List of raster image(s) representing mask files that defines regions where the HLZs
+// identified must overlap. Any non-zero pixel represents an inclusion zone. 
+includes1: <file1>
+includes2: <file2>
+
+// Specifies minimum radius of landing zone. Defaults to 25 m.
+lz_min_radius: <meters>
+
+// Specifies ancillary point-cloud data file(s) for level-2 search for obstructions.
+point_cloud_file1: <file1>
+point_cloud_file2: <file2>
+
+// Specifies the terrain roughness threshold (meters). This is the maximum deviation from a 
+// flat plane permitted. Defaults to 0.5 m. Valid only with ls-fit used.
+roughness_threshold: <meters>
+
+// Threshold for acceptable landing zone terrain slope. Defaults to 7 deg.
+slope_threshold: <degrees>
+
+

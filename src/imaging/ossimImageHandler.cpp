@@ -1102,10 +1102,10 @@ bool ossimImageHandler::setOutputBandList(const std::vector<ossim_uint32>& /* ba
    return false;
 }
 
-bool ossimImageHandler::getRgbBandList(
-   std::vector<ossim_uint32>& /* bandList */) const
+bool ossimImageHandler::getRgbBandList( std::vector<ossim_uint32>& bandList ) const
 {
-   return false;
+   // Looks for "rgb_bands" key in dot omd file.  E.g. "rgb_bands: (2,1,0)"
+   return theMetaData.getRgbBands( bandList );
 }
 
 bool ossimImageHandler::setOutputToInputBandList()

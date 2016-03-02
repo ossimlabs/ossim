@@ -1,0 +1,66 @@
+//***************************************************************
+// Template KWL for all chip-processor utilities.
+// See ossimUtility.kwl for common keywords also referenced.
+//***************************************************************
+
+// *** Specifications of Area-of-Interest (AOI) can be in various forms ***
+aoi_geo_rect: <min_lat> <min_lon> <max_lat> <max_lon>
+// or
+aoi_map_rect: <min_x> <min_y> <max_x> <max_y>
+// or
+aoi_geo_center: <lat> <lon>
+
+// When aoi_geo_center provided, the AOI must also include the size as follows:
+aoi_size_meters: <DX> <DY>
+// or
+aoi_size_pixels:  <DX> <DY>
+
+// *** End of AOI specification ***
+
+// Indicate the desired projection origin/zone (used for latitude scaling of geographic projection
+// or selecting UTM zone):
+central_meridian: <lon>
+origin_latitude: <lat>
+hemisphere: N|S
+zone: <utm_zone>
+
+// Specifies any number of input image filenames. Also can optionally specify band selection for 
+// multispectral and entry index for multi-image files:
+image_source<n>.file: <image_file>
+image_source<n>.bands: <R> <G> <B>
+image_source<n>.entry: <int>
+
+// Reader properties (applies to all input images):
+reader_property<n>: <key=value>
+
+// Specifies any number of input DEM filenames. If none provided, the elevation database is referenced 
+// as specified in prefs file for the center and ROI specified.
+elevation_source<n>.file: <dem_file>
+
+// Specify product resolution in meters per pixel:
+gsd: <meters>
+
+// Output product filename:
+output_file: <image_file>
+
+// Product pixel radiometry. The 'N' entries mean "normalized":
+output_radiometry: U8 | S8 | U11 |U16 | S16 | F32 | F64 | N32 | N64
+
+// Output projection specification:
+projection: geo | geo-scaled | input | utm | identity
+// or
+srs: <epsg code>
+
+// If true, forces the output scene tie-point to be set to the projection origin location:
+snap_tie_to_origin: true|false
+
+// Specifies the optional lookup table filename for mapping the single-band output 
+// image to an RGB. The LUT provided must be in the ossimIndexToRgbLutFilter format 
+// and should accomodate the output pixel range. 
+lut_file: <lut_file>
+
+// Specifies to product writer the size of the output file's tiling in pixels (always square):
+tile_size: <int>
+
+// Geographic polygon defining a clip region that excludes all imagery outside the polygon
+clip_poly_lat_lon: (lat1, lon1) (lat2, lon2) (lat3, lon3) [...]

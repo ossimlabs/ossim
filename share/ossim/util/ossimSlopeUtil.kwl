@@ -1,8 +1,10 @@
-//***********************************
+//***************************************************************
 // Template KWL for Slope Utility.
-//***********************************
+// See ossimChipProcUtil.kwl for common keywords also referenced
+//***************************************************************
 type: ossimSlopeUtil
 
+<<<<<<< HEAD
 // The center position of the output product. Required if no input DEM is specified.
 center_lat_lon: <dec_lat> <dec_lon>
 
@@ -24,3 +26,6 @@ lut_file: <lut_file>
 // specified, the product ROI defaults to the full DEM coverage.
 roi_radius: <meters>
 
+=======
+#include ossimChipProcUtil.kwl
+>>>>>>> dev

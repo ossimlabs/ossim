@@ -144,6 +144,12 @@ public:
    friend OSSIMDLLEXPORT std::istream& operator>>(std::istream& is,
                                                   ossimDpt& pt);
    bool isEqualTo(const ossimDpt& rhs, ossimCompareType compareType=OSSIM_COMPARE_FULL)const;
+
+   /**
+    * Returns the average of x and y
+    */
+   double mean() const { return (x + y) / 2.0; }
+
    //***
    // Public data members:
    //***

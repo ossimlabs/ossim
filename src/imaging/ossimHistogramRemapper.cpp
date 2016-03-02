@@ -87,7 +87,7 @@ void ossimHistogramRemapper::initialize()
          << "ossimHistogramRemapper::initialize entered..." << endl;
    }
 
-   theResetBandIndicesFlag=(dynamic_cast<const ossimHistogramSource*>(getInput(1))!=0);
+   theResetBandIndicesFlag = (dynamic_cast<const ossimHistogramSource*>(getInput(1))!=0);
 
    //---
    // Call the base class initialize.
@@ -140,14 +140,14 @@ void ossimHistogramRemapper::initialize()
 
    // Update the band list with the latest.
    theBandList = bandList;
-	
+
+   verifyEnabled();
+   
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "ossimHistogramRemapper::initialize exited..." << endl;
    }
-   verifyEnabled();
-
 }
 
 void ossimHistogramRemapper::reset()
@@ -158,8 +158,7 @@ void ossimHistogramRemapper::reset()
    verifyEnabled();
 }
 
-void
-ossimHistogramRemapper::setHistogram(ossimRefPtr<ossimMultiResLevelHistogram> histogram)
+void ossimHistogramRemapper::setHistogram(ossimRefPtr<ossimMultiResLevelHistogram> histogram)
 {
    theHistogram = histogram;
    setNullCount();
@@ -181,6 +180,34 @@ bool ossimHistogramRemapper::openHistogram(const ossimFilename& histogram_file)
 	
    // Import failed if here!
    return false;
+}
+
+bool ossimHistogramRemapper::computeHistogram(const ossimIrect& roi)
+{
+   bool result = false;
+   if ( theInputConnection )
+   {
+      ossimRefPtr<ossimImageData> tile = theInputConnection->getTile(roi, 0);
+      if ( tile.valid() )
+      {
+         ossimDataObjectStatus tile_status = tile->getDataObjectStatus();
+         if ( (tile_status != OSSIM_NULL) && (tile_status != OSSIM_EMPTY) )
+         {
+            ossimRefPtr<ossimMultiBandHistogram> h = new ossimMultiBandHistogram;
+            h->create( theInputConnection );
+
+            tile->populateHistogram(h);
+
+            ossimRefPtr<ossimMultiResLevelHistogram> histo = new ossimMultiResLevelHistogram();
+
+            histo->addHistogram( h.get() );
+
+            setHistogram( histo );
+            result = true;
+         }
+      }
+   }
+   return result;
 }
 
 ossimRefPtr<ossimImageData> ossimHistogramRemapper::getTile(
@@ -1398,7 +1425,7 @@ template <class T> void ossimHistogramRemapper::buildLinearTable(T /* dummy */)
          }
          return; 
       }
-		//std::cout << "MIN OUTPUT ==== " << theMinOutputValue[band] << std::endl;
+      //std::cout << "MIN OUTPUT ==== " << theMinOutputValue[band] << std::endl;
       const T NULL_PIX = static_cast<T>(getNullPixelValue(band));
       const T MIN_PIX  = static_cast<T>(theMinOutputValue[band]);
       const T MAX_PIX  = static_cast<T>(theMaxOutputValue[band]);
@@ -1877,7 +1904,7 @@ void ossimHistogramRemapper::verifyEnabled()
    // Since this filter can be constructed with no input connection do not
    // output and error, simply return.
    //---	
-      setBypassFlag(true);
+   setBypassFlag(true);
    //if (theInputConnection)
    {
 

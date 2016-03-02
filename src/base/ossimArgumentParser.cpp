@@ -399,6 +399,7 @@ bool ossimArgumentParser::read(const std::string& str, ossimParameter value1,
 
 bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>& param_list)
 {
+   // This method reads a comma-separated list.
    param_list.clear();
 
    int pos=find(str);
@@ -407,28 +408,34 @@ bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>&
 
    // Option is removed even if no values found:
    remove(pos, 1);
-   bool done = false;
-   while ((pos < *theArgc) && (theArgv[pos][0] != '-') && !done)
+   bool includeNextItem = true;
+   while (pos < (*theArgc - 1))
    {
+      // Check for occurence of next option:
+      if ((theArgv[pos][0] == '-') && (theArgv[pos][1] == '-'))
+         break;
+
+      // Skip a comma surrounded by spaces:
+      ossimString arg = theArgv[pos];
+      if (arg == ",")
+      {
+         remove(pos, 1);
+         includeNextItem = true;
+         continue;
+      }
+
+      if (!includeNextItem && (arg[0] != ','))
+         break;
 
       // Handle comma separated with no spaces (i.e., multiple args reflected as one in theArgv):
-      ossimString arg = theArgv[pos];
-      if (arg.contains(","))
-      {
-         vector<ossimString> sub_args = arg.split(",", true);
-         for (ossim_uint32 i=0; i<sub_args.size(); ++i)
-            param_list.push_back(sub_args[i]);
+      vector<ossimString> sub_args = arg.split(",", true);
+      for (ossim_uint32 i=0; i<sub_args.size(); ++i)
+         param_list.push_back(sub_args[i]);
 
-         // Possible space after last comma, so check if comma present:
-         if (arg[arg.length()-1] != ',')
-            done = true;
-      }
-      else
-      {
-         // This is the last entry of comma and space separated list:
-         param_list.push_back(arg);
-         done = true;
-      }
+      // If current item ends with comma, the list continues:
+      if (arg[arg.length()-1] != ',')
+         includeNextItem = false;
+
       remove(pos, 1);
    }
 
