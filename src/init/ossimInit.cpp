@@ -150,7 +150,7 @@ void ossimInit::initialize(ossimArgumentParser& parser)
    ossimString traceVariable = ossimEnvironmentUtility::instance()->getEnvironmentVariable("OSSIM_TRACE");
    if(!traceVariable.empty())
    {
-      ossimTraceManager::instance()->setTracePattern(ossimString(traceVariable));
+      ossimTraceManager::instance()->setTracePattern(traceVariable);
    }
    //Parse the command line:
    theInstance->parseOptions(parser);
