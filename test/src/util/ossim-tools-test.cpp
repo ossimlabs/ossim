@@ -16,7 +16,8 @@
 #include <ossim/base/ossimTimer.h>
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/init/ossimInit.h>
-#include <ossim/util/ossimViewshedUtil.h>
+#include <ossim/util/ossimChipProcUtil.h>
+#include <ossim/util/ossimUtilityRegistry.h>
 
 #include <iostream>
 using namespace std;
@@ -39,19 +40,34 @@ int main(int argc, char* argv[])
       ossimInit::instance()->initialize(ap);
 
       ossimKeywordlist kwl;
-      kwl.add("observer", "48.48 -113.79");
-      kwl.add("aoi_map_rect", "-12684715.289296463,6168162.4345005825,-12649344.0544575,6205998.763501747");
-      //kwl.add("visibility_radius", "8000");
-      kwl.add("srs", "3857");
+      kwl.add("observer", "48.433324 -113.7850077");
+      //kwl.add("aoi_map_rect", "-12684715.289296463,6168162.4345005825,-12649344.0544575,6205998.763501747");
+      kwl.add("visibility_radius", "1000");
+      //kwl.add("srs", "3857");
       kwl.add("height_of_eye", "5");
       kwl.add("lut_file", "/data/TEST/HLZ/N48W114/vs.lut");
+      kwl.add("lz_min_radius", "100");
+      kwl.add("roughness_threshold", "1.5");
+      kwl.add("slope_threshold", "7.0");
+      kwl.add("output_file", "test.tif");
+      kwl.add("elev_sources", "N48W114.hgt");
 
-      ossimRefPtr<ossimChipProcUtil> viewshed = new ossimViewshedUtil;
-      viewshed->initialize(kwl);
+      if (argc < 2)
+      {
+         cout<<"\nNeed tool name!"<<endl;
+         return 0;
+      }
+      string toolName = argv[1];
+      ossimRefPtr<ossimChipProcUtil> chipProcUtil =
+            (ossimChipProcUtil*) ossimUtilityRegistry::instance()->createUtility(toolName);
+      if (chipProcUtil == 0)
+         cerr<<"OssimTools() Bad opeation requested: <"<<toolName<<">. Ignoring."<<endl;
+
+      chipProcUtil->initialize(kwl);
 
       ossimDrect map_bbox (-12684715.289296463, 6168162.4345005825, -12649344.0544575, 6205998.763501747);
       ossimDpt gsd (30, 30);
-      ossimRefPtr<ossimImageData> tile = viewshed->getChip(map_bbox, gsd);
+      ossimRefPtr<ossimImageData> tile = chipProcUtil->getChip(map_bbox, gsd);
       tile->write("debug_chip.ras");
    }
    catch( const ossimException& e )

@@ -16,9 +16,7 @@ using namespace std;
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimTimer.h>
-#include <ossim/base/ossimKeywordlist.h>
-#include <ossim/util/ossimHlzUtil.h>
-#include <ossim/util/ossimUtilityRegistry.h>
+#include <ossim/util/ossimHillshadeUtil.h>
 
 //*****************************************************************************
 // Application for finding helicopter landing zones (HLZ) on a DEM given the
@@ -30,11 +28,6 @@ int main(int argc, char *argv[])
    ap.getApplicationUsage()->setApplicationName(argv[0]);
 
    // While in development mode, echo the command line for logging:
-   cout<<"\nCommand: ";
-   for (int i=0; i<argc; ++i)
-      cout<<" "<<argv[i];
-   cout<<"\n"<<endl;
-
    double t0 = ossimTimer::instance()->time_s();
    try
    {
@@ -43,23 +36,24 @@ int main(int argc, char *argv[])
 
       t0 = ossimTimer::instance()->time_s();
 
-      ossimUtilityFactoryBase* factory = ossimUtilityRegistry::instance();
-      ossimRefPtr<ossimUtility> hlz = factory->createUtility(string("hlz"));
-
-      //ossimKeywordlist kwl(argv[1]);
-      //hlz->initialize(kwl);
-      if (hlz->initialize(ap))
+      ossimRefPtr<ossimHillshadeUtil> util = new ossimHillshadeUtil;
+      if (util->initialize(ap))
       {
          // Add a listener for the percent complete to standard output.
          ossimStdOutProgress prog(0, true);
-         hlz->addListener(&prog);
-         bool success = hlz->execute();
+         util->addListener(&prog);
+         bool success = util->execute();
       }
-      hlz = 0;
+      util = 0;
    }
    catch  (const ossimException& e)
    {
       ossimNotify(ossimNotifyLevel_FATAL)<<e.what()<<endl;
+      exit(1);
+   }
+   catch (...)
+   {
+      ossimNotify(ossimNotifyLevel_FATAL)<<" Caught unknown exception."<<endl;
       exit(1);
    }
 

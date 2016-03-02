@@ -84,6 +84,7 @@ protected:
    bool writeHorizonProfile();
    void computeRadius();
    bool optimizeFOV();
+   bool computeViewshed(); // assigns m_outBuffer with single-band viewshed image
 
    ossimGpt  m_observerGpt;
    ossimDpt  m_observerVpt;

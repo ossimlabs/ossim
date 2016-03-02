@@ -74,6 +74,7 @@ protected:
    virtual void mosaicDemSources(); // throws exception
    void writeSlopeImage();
    void setProductGSD(const double& meters_per_pixel);
+   bool computeHLZ();
 
    double m_slopeThreshold; // (degrees)
    double m_roughnessThreshold; // peak deviation from plane (meters)
