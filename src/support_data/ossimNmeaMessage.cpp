@@ -64,7 +64,7 @@ void ossimNmeaMessage::parseMessage(std::istream& in)throw(ossimException)
    m_message = "";
    if(!isValidStartChar(static_cast<char>(in.peek())))
    {
-      throw ossimException(ossimString("Starting NMEA messsage indicator not found, expected one of ") +
+      throw ossimException(ossimString("Starting NMEA message indicator not found, expected one of ") +
                            m_startChars + " but found " +
                            ossimString((char)in.peek()));
    }

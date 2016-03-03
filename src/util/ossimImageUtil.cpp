@@ -1445,7 +1445,7 @@ void ossimImageUtil::usage(ossimArgumentParser& ap)
 
       << "\n\nExpanded command option variables:\n\n"
       << "%{basename}        = filename without path\n"
-      << "%{basename_no_ext} = filename without path and without extention\n"
+      << "%{basename_no_ext} = filename without path and without extension\n"
       << "%{date}            = Expanded to current zulu time. Default format=yyyymmdd\n"
       << "                     output format controlled by command0.strf_time_format key.\n"
       << "%{dirname}         = path of filename\n"
