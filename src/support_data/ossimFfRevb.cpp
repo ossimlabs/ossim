@@ -564,7 +564,7 @@ void ossimFfRevb::write(ostream& os) const
       << RADIANCE_DESC;
 
    int i;
-   for (i=0; i<NUMBER_OF_BANDS-1; i++) // Ouput six of the seven bands.
+   for (i=0; i<NUMBER_OF_BANDS-1; i++) // Output six of the seven bands.
    {
       os << setw(RADIANCE_SIZE) << theBandRadiance[i] << SPACE;
    }

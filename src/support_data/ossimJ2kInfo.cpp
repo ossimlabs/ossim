@@ -216,7 +216,7 @@ std::ostream& ossimJ2kInfo::printUnknownMarker(std::ostream& out,
    readUInt16(segmentLength, str);
 
    std::string pfx = prefix;
-   pfx += "unkown.";
+   pfx += "unknown.";
 
    out.setf(std::ios_base::hex, std::ios_base::basefield);
    out << pfx << "marker: 0x" << std::setfill('0') << std::setw(4)

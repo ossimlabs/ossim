@@ -1062,7 +1062,7 @@ ossimRpcProjection::optimizeFit(const ossimTieGptSet& tieSet, double* /* targetV
    //note : please limit the number of tie points
    //
    //INPUTS: requires Jacobian matrix (partial derivatives with regards to parameters)
-   //OUPUTS: will also compute parameter covariance matrix
+   //OUTPUTS: will also compute parameter covariance matrix
    //
    //TBD: use targetVariance!
  

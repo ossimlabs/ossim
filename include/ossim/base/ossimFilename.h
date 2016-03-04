@@ -218,7 +218,7 @@ public:
     * 
     * @return True on success, false on error.
     */
-   bool copyFileTo(const ossimFilename& ouputFile) const;
+   bool copyFileTo(const ossimFilename& outputFile) const;
 
    /**
     * @brief Checks whether file name is relative or absolute.
