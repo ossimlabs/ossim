@@ -195,7 +195,7 @@ ossimTieGpt::importFromGmlNode(ossimRefPtr<ossimXmlNode> aGmlNode, ossimString a
       else {
          //try to read coordinates
          //TBD
-         ossimNotify(ossimNotifyLevel_WARN) << "WARNING: ossimTieGpt::importFromGmlNode gml:coordinates not developped yet for ground\n";
+         ossimNotify(ossimNotifyLevel_WARN) << "WARNING: ossimTieGpt::importFromGmlNode gml:coordinates not developed yet for ground\n";
          return false;
       }
 
@@ -226,7 +226,7 @@ ossimTieGpt::importFromGmlNode(ossimRefPtr<ossimXmlNode> aGmlNode, ossimString a
       else {
          //try to read coordinates
          //TBD
-         ossimNotify(ossimNotifyLevel_WARN) << "WARNING: ossimTieGpt::importFromGmlNode gml:coordinates not developped yet for image\n";
+         ossimNotify(ossimNotifyLevel_WARN) << "WARNING: ossimTieGpt::importFromGmlNode gml:coordinates not developed yet for image\n";
          return false;
       }
 

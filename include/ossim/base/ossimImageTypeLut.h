@@ -7,7 +7,7 @@
 // Description:
 //
 // Contains class declaration for ImageTypeLut.  Currently has mapping of
-// ouput image writes from enumeration to string and string to
+// output image writes from enumeration to string and string to
 // enumeration.
 //
 //*******************************************************************

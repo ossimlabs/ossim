@@ -54,6 +54,8 @@ Plugins will require additional 3rd-party packages.
 
 Building OSSIM and related repos from source is a two-step process: first create the make files using CMake, then run `make` to build the binaries. Scripts are available for Linux/Mac and (soon) Windows to run CMake with default settings. You can run the script from any working directory and default settings will be used for creating the default build environment. It is possible to override specific defaults for your own custom requirements or preferences.
 
+Presently, the default setting is to disable the building of all plugins. If you want specific plugin libraries to be built, you'll need to edit your cmake script at `cmake/scripts/ossim-cmake-config.sh` (or similar `.bat` file for Windows). Scroll down to the "Plugins" section and set the corresponding variables to "ON". Note that you could also define those variables in your shell environment in lieu of editing the script.
+
 ## Creating the Makefiles
 
 ### Creating a Default Build Environment
@@ -69,10 +71,12 @@ The developer has the option to override the default build directory location by
 
 Another defaulted environment variable is `OSSIM_INSTALL_PREFIX`. This variable as two distinct functions. First, it indicates where to install the OSSIM SDK when running `make install`. Second, it serves to specify a path to SDKs that OSSIM depends on. The CMake system will scan `OSSIM_INSTALL_PREFIX` for the presence of dependency packages such as GeoTiff, JPEG, and others. This secondary purpose of `OSSIM_INSTALL_PREFIX` used to be handled by the now obsolete environment variable `OSSIM_DEPENDENCIES`. It is a reasonable consolidation since the OSSIM install will need to include these dependencies if they are not available in their standard installation locations (/usr/lib, /usr/local/lib, etc.), so placing these SDKs in the final OSSIM install directory prior to building OSSIM makes sense. If no override is defined for `OSSIM_INSTALL_PREFIX`, then the cmake config script will default to `$OSSIM_DEV_HOME/install`. You can populate that directory with non-standard installs of the OSSIM dependencies prior to running the script. If the directory does not exist, it is created by the script. Obviously, in that case, all OSSIM dependencies will be expected to be found in standard system install folders.
 
+As already mentioned, you can enable the building of specific plugins by defining the corresponding environment variable: `BUILD_<NAME>_PLUGIN=ON`.
+
 NOTE: For legacy reasons, `OSSIM_DEPENDENCIES` is still scanned for dependency SDKs. New dependencies however should be "installed" in `OSSIM_INSTALL_PREFIX`.
 
 #### Editing the CMake Config Script
-The default configuration relies on the presence of the OSSIM repositories under the *ossim-dev-home* to decide whether to include those in the build. You may want to selectively exclude certain plugins or applications from the build without having to hide the workspaces from CMake. The flags enabling those are defined in the script. Simply set the corresponding variable to "OFF" and rerun the script. 
+The default configuration relies on the presence of the OSSIM repositories under the *ossim-dev-home* to decide whether to include those in the build (with the exception of the plugins, which default to "OFF"). You may want to selectively exclude certain applications from the build without having to hide the workspaces from CMake. The flags enabling those are defined in the script. Simply set the corresponding variable to "OFF" and rerun the script. Likewise, for the plugins, you can modify the default ("OFF") by changing the corresponding variables in the script to "ON".
 
 There are other flags available that direct CMake to generate project files for IDEs such as Eclipse and Visual Studio. You can also specify multi-threaded builds, non-standard output directories, and more. Feel free to experiment, but know that you'll be voiding the warranty.
 
@@ -107,21 +111,20 @@ There is however a _de facto_ scheme in place that has been used for implementin
 
 A rudimentary test suite is encapsulated in this [test script (linux version)](/scripts/test.sh). It defines the locations of the input source data and expected results, and runs the command-line test applications. 
 
-The _ossim_ repository contains `test/src` and `test/scripts` subdirectories which contain items available for testing OSSIM core functionality.
+The _ossim_ repository contains `test/src` and `test/config` subdirectories which contain items available for testing OSSIM core functionality. At some point when we start including unit tests, there will be a third directory, `test/scripts`, that will contain the commands to run those unit tests.
 
 ## test/src
 
 This directory contains the source code for unit and functional testing of core OSSIM objects. It is automatically built by the cmake/make system, assuming `BUILD_OSSIM_TESTS` is set to `ON` (the default). The resulting executables, located in `build/bin`, can be run standalone on the command line. The code in this directory is also a good source of examples for interfacing to many important OSSIM classes. This directory also contains the source code for `ossim-batch-test`.
 
-## test/scripts
+## test/config
 
-This subdirectory contains, primarily, configuration files for existing `ossim-batch-test` runs, but can eventually contain any script that runs unit tests as well. 
+This subdirectory contains, primarily, configuration files for existing `ossim-batch-test` runs. 
 
 The input data referenced in the `ossim-batch-test` configuration files are presently hosted on an Amazon S3 storage. Contact the [OSSIM developer list](mailto:ossim-developer@lists.sourceforge.net) if you want access to this public data for your own testing.
 
 # How to Package and Install
 
-Coming soon. NOTE: We expect this will be a script in \test\scripts that will run all unit and functional tests.
+Coming soon. NOTE: We expect this will be a script in `test\scripts` that will run all unit and functional tests.
 
 
-ll

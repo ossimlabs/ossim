@@ -32,13 +32,14 @@ using namespace std;
 const char* ossimViewshedUtil::DESCRIPTION =
       "Computes bitmap image representing the viewshed from specified location using only "
       "DEM information.";
-const string FOV_KW               = "fov";
-const string HEIGHT_OF_EYE_KW     = "height_of_eye";
-const string HORIZON_FILE_KW      = "horizon_file";
-const string OBSERVER_KW          = "observer";
-const string VISIBILITY_RADIUS_KW = "visibility_radius";
-const string RETICLE_SIZE_KW      = "reticle_size";
-const string VIEWSHED_CODING_KW   = "viewshed_coding";
+static const string FOV_KW               = "fov";
+static const string HEIGHT_OF_EYE_KW     = "height_of_eye";
+static const string HORIZON_FILE_KW      = "horizon_file";
+static const string OBSERVER_KW          = "observer";
+static const string VISIBILITY_RADIUS_KW = "visibility_radius";
+static const string RETICLE_SIZE_KW      = "reticle_size";
+static const string VIEWSHED_CODING_KW   = "viewshed_coding";
+static const string AOI_SIZE_METERS_KW   = "aoi_size_meters";
 
 ossimViewshedUtil::ossimViewshedUtil()
 :   m_obsHgtAbvTer (1.5),
@@ -328,6 +329,16 @@ void ossimViewshedUtil::initializeAOI()
 
    // Not enough info available to base class to determine AOI, maybe can determine from observer
    // position and radius:
+   if ((m_visRadius == 0) && m_kwl.hasKey(AOI_SIZE_METERS_KW))
+   {
+      ossimString lookup = m_kwl.findKey( AOI_SIZE_METERS_KW );
+      lookup.trim();
+      m_visRadius = 0.5*(lookup.before(" ").toDouble() + lookup.after(" ").toDouble());
+      m_displayAsRadar = true;
+   }
+   if (m_observerGpt.hasNans())
+      findCenterGpt(m_observerGpt);
+
    if ((m_visRadius != 0) && !m_observerGpt.hasNans())
    {
       ossimMapProjection* proj = dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
@@ -419,17 +430,45 @@ void ossimViewshedUtil::initProcessingChain()
 
 ossimRefPtr<ossimImageData> ossimViewshedUtil::getChip(const ossimIrect& bounding_irect)
 {
+   cerr<<"ossimViewshedUtil:"<<__LINE__<<endl;//TODO:remove debug
    ostringstream xmsg;
    if (!m_geom.valid())
       return 0;
 
+   cerr<<"ossimViewshedUtil:"<<__LINE__<<endl;//TODO:remove debug
    m_aoiViewRect = bounding_irect;
    m_geom->setImageSize( m_aoiViewRect.size() );
    m_geom->localToWorld(m_aoiViewRect, m_aoiGroundRect);
 
+   cerr<<"ossimViewshedUtil:"<<__LINE__<<endl;//TODO:remove debug
+   if (computeViewshed())
+   {
+      // The memory source has been populated, now do the getTile on the full chain to pick up
+      // other filters inserted after the memsource:
+      return m_procChain->getTile( m_aoiViewRect, 0 );
+   }
+   // else:
+   return 0;
+}
+
+bool ossimViewshedUtil::execute()
+{
+   if (!computeViewshed())
+      return false;
+
+   if (!m_horizonFile.empty() && writeHorizonProfile())
+      cout << "Wrote horizon profile to <"<<m_horizonFile<<">" <<endl;
+
+   return ossimChipProcUtil::execute();
+}
+
+bool ossimViewshedUtil::computeViewshed()
+{
    // Allocate the output image buffer:
    m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
                                                            m_aoiViewRect.height());
+   cerr<<"ossimViewshedUtil:"<<__LINE__<<endl;//TODO:remove debug
+   ostringstream xmsg;
    if (!m_outBuffer.valid() || !m_memSource.valid())
    {
       xmsg<<"ossimViewshedUtil:"<<__LINE__<<"  Error encountered allocating output image buffer.";
@@ -445,7 +484,7 @@ ossimRefPtr<ossimImageData> ossimViewshedUtil::getChip(const ossimIrect& boundin
    // Initialize the radials after intersecting the requested FOV with the FOV required to see the
    // full AOI (not applicable if observer inside AOI). Skip radial init if no intersection found:
    if (!optimizeFOV())
-      return 0;
+      return false;
    initRadials();
 
    // The viewshed process necessarily first fills the output buffer with the complete result before
@@ -503,7 +542,7 @@ ossimRefPtr<ossimImageData> ossimViewshedUtil::getChip(const ossimIrect& boundin
          spj.start();
 
          if (needsAborting())
-            return 0;
+            return false;
 
       } // end loop over sectors
    }
@@ -511,17 +550,7 @@ ossimRefPtr<ossimImageData> ossimViewshedUtil::getChip(const ossimIrect& boundin
    cout << "Finished processing radials."<<endl;
    paintReticle();
 
-   return m_outBuffer;
-}
-
-bool ossimViewshedUtil::execute()
-{
-   getChip(m_aoiViewRect);
-
-   if (!m_horizonFile.empty() && writeHorizonProfile())
-      cout << "Wrote horizon profile to <"<<m_horizonFile<<">" <<endl;
-
-   return ossimChipProcUtil::execute();
+   return true;
 }
 
 bool ossimViewshedUtil::optimizeFOV()

@@ -34,7 +34,7 @@ static void usage()
    ossimNotify(ossimNotifyLevel_INFO)
       << "\nNOTES:"
       << "\n- Output is to a \".omd\" file so if the image was"
-      << " \"N27W081.hgt\" ouput will be a \"N27W081.omd\" file."
+      << " \"N27W081.hgt\" output will be a \"N27W081.omd\" file."
       << "\n- Example:  computeSrtmStats *.hgt"
       << endl;
 }
