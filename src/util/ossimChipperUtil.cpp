@@ -3220,8 +3220,12 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getNewProjectionFromSrsCode(
 {
    ossimRefPtr<ossimMapProjection> result = 0;
 
-   if (code == "4326")  // Avoid factory call for this.
+   ossimString os = code;
+   os.downcase();
+   
+   if ( ( os == "epsg:4326" ) || ( code == "4326" ) )
    {
+      // Avoid factory call for this.
       result = new ossimEquDistCylProjection();
    }
    else
