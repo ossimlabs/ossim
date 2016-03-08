@@ -8,6 +8,7 @@
 #include <ossim/util/ossimUtilityFactory.h>
 #include <ossim/util/ossimHillshadeUtil.h>
 #include <ossim/util/ossimHlzUtil.h>
+#include <ossim/util/ossimShorelineUtil.h>
 #include <ossim/util/ossimViewshedUtil.h>
 #include <ossim/util/ossimSlopeUtil.h>
 #include <ossim/util/ossimUtilityRegistry.h>
@@ -47,6 +48,9 @@ ossimUtility* ossimUtilityFactory::createUtility(const std::string& argName) con
    if ((utilName == "hlz") || (argName == "ossimHlzUtil"))
       return new ossimHlzUtil;
 
+   if ((utilName == "shoreline") || (argName == "ossimShorelineUtil"))
+      return new ossimShorelineUtil;
+
    return 0;
 }
 
@@ -56,6 +60,7 @@ void ossimUtilityFactory::getCapabilities(std::map<std::string, std::string>& ca
    capabilities.insert(pair<string, string>("viewshed", ossimViewshedUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("slope", ossimSlopeUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("hlz", ossimHlzUtil::DESCRIPTION));
+   capabilities.insert(pair<string, string>("shoreline", ossimShorelineUtil::DESCRIPTION));
 }
 
 std::map<std::string, std::string> ossimUtilityFactory::getCapabilities() const
@@ -71,5 +76,6 @@ void ossimUtilityFactory::getTypeNameList(vector<ossimString>& typeList) const
    typeList.push_back("ossimViewshedUtil");
    typeList.push_back("ossimSlopeUtil");
    typeList.push_back("ossimHLZUtil");
+   typeList.push_back("ossimShorelineUtil");
 }
 

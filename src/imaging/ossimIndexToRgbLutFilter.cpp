@@ -470,7 +470,7 @@ void ossimIndexToRgbLutFilter::setLut(const ossimFilename& file)
    theLutFile = file;
    if(file.exists())
    {
-      ossimKeywordlist kwl(file.c_str());
+      ossimKeywordlist kwl(theLutFile);
       loadState(kwl);
    }
 }
