@@ -891,7 +891,7 @@ void ossimOverviewSequencer::resampleTile(const ossimImageData* inputTile)
       }
       default:
          ossimNotify(ossimNotifyLevel_WARN)
-            << "ossimOverviewSequencer::resampleTile Unkown pixel type!"
+            << "ossimOverviewSequencer::resampleTile Unknown pixel type!"
             << std::endl;
          return;
          

@@ -269,7 +269,7 @@ bool ossimArcInfoGridWriter::writeBinaryAigHeader()
          {
             ossimNotify(ossimNotifyLevel_WARN)
                << "ossimArcInfoGridWriter::writeBinaryAigHeader: "
-               << "unkown scalar type" << std::endl;
+               << "unknown scalar type" << std::endl;
          }
       }
       

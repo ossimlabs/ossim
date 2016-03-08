@@ -179,7 +179,7 @@ public:
     * Will write a world file.  The extension will be derived from the
     * image extension.
     *
-    * Currently handles the following image extentions:
+    * Currently handles the following image extensions:
     * 
     * "tif" or "tiff" -> "tfw"
     * "jpg" of "jpeg" -> "jpw"

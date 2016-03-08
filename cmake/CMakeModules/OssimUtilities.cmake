@@ -266,10 +266,16 @@ MACRO(OSSIM_LINK_LIBRARY)
                              BUILD_WITH_INSTALL_RPATH ON 
                              INSTALL_NAME_DIR @rpath/Frameworks)
         ELSE(BUILD_OSSIM_FRAMEWORKS)
+          #---
+          # Given install prefix=/usr/local and 
+          # install lib dir = lib64 and 
+          # link name = libossim.dylib
+          # You get "/usr/local/lib64/libossim.dylib" in the rpath.
+          #---
           SET_TARGET_PROPERTIES(${LINK_NAME} PROPERTIES 
-                             FRAMEWORK FALSE
-                             BUILD_WITH_INSTALL_RPATH ON 
-                             INSTALL_NAME_DIR @rpath/lib)
+                                FRAMEWORK FALSE
+                                BUILD_WITH_INSTALL_RPATH ON 
+                                INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_LIBRARY_DIR}")
         ENDIF(BUILD_OSSIM_FRAMEWORKS)
       ELSE(BUILD_SHARED_LIBRARY)
           SET_TARGET_PROPERTIES(${LINK_NAME} PROPERTIES 

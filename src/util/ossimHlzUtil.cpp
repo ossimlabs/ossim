@@ -185,6 +185,14 @@ void ossimHlzUtil::initialize(const ossimKeywordlist& kwl)
    ossimString value;
    ostringstream xmsg;
 
+   // Don't copy KWL if member KWL passed in:
+   if (&kwl != &m_kwl)
+   {
+      // Start with clean options keyword list.
+      m_kwl.clear();
+      m_kwl.addList( kwl, true );
+   }
+
    value = m_kwl.findKey(LZ_MIN_RADIUS_KW);
    if (!value.empty())
       m_hlzMinRadius = value.toDouble();
@@ -425,15 +433,36 @@ ossimRefPtr<ossimImageData> ossimHlzUtil::getChip(const ossimIrect& bounding_ire
 
    m_aoiViewRect = bounding_irect;
    m_geom->setImageSize( m_aoiViewRect.size() );
+   m_geom->localToWorld(m_aoiViewRect, m_aoiGroundRect);
+
+   if (computeHLZ())
+   {
+      // The memory source has been populated, now do the getTile on the full chain to pick up
+      // other filters inserted after the memsource:
+      return m_procChain->getTile( m_aoiViewRect, 0 );
+   }
+   // else:
+   return 0;
+}
+
+bool ossimHlzUtil::execute()
+{
+   getChip(m_aoiViewRect);
+   return ossimChipProcUtil::execute();
+}
+
+bool ossimHlzUtil::computeHLZ()
+{
 
    // To help with multithreading, just load entire AOI of DEM into memory:
    m_demBuffer = m_combinedElevSource->getTile(m_aoiViewRect);
    if (!m_demBuffer.valid())
-      return 0;
+      return false;
 
    // Allocate the output image buffer:
    m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
                                                            m_aoiViewRect.height());
+   ostringstream xmsg;
    if (!m_outBuffer.valid() || !m_memSource.valid())
    {
       xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Error encountered allocating output image buffer.";
@@ -447,7 +476,6 @@ ossimRefPtr<ossimImageData> ossimHlzUtil::getChip(const ossimIrect& bounding_ire
    m_memSource->setImage(m_outBuffer);
 
    d_accumT = 0;
-   bool success = false;
 
    // Establish loop limits in input DEM raster coordinate space:
    ossim_int32 min_x = m_aoiViewRect.ul().x;
@@ -528,14 +556,7 @@ ossimRefPtr<ossimImageData> ossimHlzUtil::getChip(const ossimIrect& bounding_ire
    }
 
    cout << "Finished processing chips." << endl;
-
-   return m_outBuffer;
-}
-
-bool ossimHlzUtil::execute()
-{
-   getChip(m_aoiViewRect);
-   return ossimChipProcUtil::execute();
+   return true;
 }
 
 void ossimHlzUtil::writeSlopeImage()

@@ -143,7 +143,15 @@ void ossimInit::initialize(ossimArgumentParser& parser)
    theInstance->theAppName  = parser.getApplicationUsage()->getApplicationName();
    theInstance->parseNotifyOption(parser);
    theInstance->thePreferences = ossimPreferences::instance();
-      
+   
+   // we will also support defining a trace pattern from an Environment
+   // variable.  This will make JNI code easier to enable tracing
+   //
+   ossimString traceVariable = ossimEnvironmentUtility::instance()->getEnvironmentVariable("OSSIM_TRACE");
+   if(!traceVariable.empty())
+   {
+      ossimTraceManager::instance()->setTracePattern(traceVariable);
+   }
    //Parse the command line:
    theInstance->parseOptions(parser);
 

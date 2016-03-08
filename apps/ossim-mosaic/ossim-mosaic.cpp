@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
 	argumentParser.getApplicationUsage()->addCommandLineOption("-m", "Mosiac type (SIMPLE, BLEND, FEATHER, or any MosaicCombinerType [ossimClosestToCenter, ossimFeatherMosaic, etc..]) (default=SIMPLE");
 	argumentParser.getApplicationUsage()->addCommandLineOption("-w", "Writer type (tiff_strip, jpeg, etc... see ossim-info --writers) (default=tiff_strip)");
 	argumentParser.getApplicationUsage()->addCommandLineOption("--writer-prop <string>", "Adds a property to send to the writer. format is name=value");
-	argumentParser.getApplicationUsage()->addCommandLineOption("-t", "ouput a keyword list template");
+	argumentParser.getApplicationUsage()->addCommandLineOption("-t", "output a keyword list template");
 
 	// Allocate some stuff up front for use later
 	ossimKeywordlist kwl;
@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
    {
       ossimNotify(ossimNotifyLevel_WARN)
          << "mosaic ERROR:"
-         << "\nOuput file " << outfile << " exits and will not be overwritten!"
+         << "\nOutput file " << outfile << " exits and will not be overwritten!"
          << "\nExiting..."
          << std::endl;
       exit(1);
