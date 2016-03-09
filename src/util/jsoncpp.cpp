@@ -1414,9 +1414,9 @@ bool OurReader::readToken(Token& token) {
     break;
   case '\'':
     if (features_.allowSingleQuotes_) {
-    token.type_ = tokenString;
-    ok = readStringSingleQuote();
-    break;
+      token.type_ = tokenString;
+      ok = readStringSingleQuote();
+      break;
     } // else continue
   case '/':
     token.type_ = tokenComment;
@@ -2093,7 +2093,7 @@ public:
   {}
   bool parse(
       char const* beginDoc, char const* endDoc,
-      Value* root, std::string* errs) override {
+      Value* root, std::string* errs) {
     bool ok = reader_.parse(beginDoc, endDoc, *root, collectComments_);
     if (errs) {
       *errs = reader_.getFormattedErrorMessages();
@@ -3060,6 +3060,7 @@ JSONCPP_STRING Value::asString() const {
   default:
     JSON_FAIL_MESSAGE("Type is not convertible to string");
   }
+  return "";
 }
 
 #ifdef JSON_USE_CPPTL
@@ -3092,6 +3093,7 @@ Value::Int Value::asInt() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to Int.");
+  return nullValue;
 }
 
 Value::UInt Value::asUInt() const {
@@ -3114,6 +3116,7 @@ Value::UInt Value::asUInt() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to UInt.");
+  return nullValue;
 }
 
 #if defined(JSON_HAS_INT64)
@@ -3137,6 +3140,7 @@ Value::Int64 Value::asInt64() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to Int64.");
+  return nullValue;
 }
 
 Value::UInt64 Value::asUInt64() const {
@@ -3158,6 +3162,7 @@ Value::UInt64 Value::asUInt64() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to UInt64.");
+  return nullValue;
 }
 #endif // if defined(JSON_HAS_INT64)
 
@@ -3197,6 +3202,7 @@ double Value::asDouble() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to double.");
+  return nullValue;
 }
 
 float Value::asFloat() const {
@@ -3220,6 +3226,7 @@ float Value::asFloat() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to float.");
+  return nullValue;
 }
 
 bool Value::asBool() const {
@@ -3239,6 +3246,7 @@ bool Value::asBool() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to bool.");
+  return nullValue;
 }
 
 bool Value::isConvertibleTo(ValueType other) const {
@@ -4821,7 +4829,7 @@ struct BuiltStyledStreamWriter : public StreamWriter
       std::string const& endingLineFeedSymbol,
       bool useSpecialFloats,
       unsigned int precision);
-  int write(Value const& root, JSONCPP_OSTREAM* sout) override;
+  int write(Value const& root, JSONCPP_OSTREAM* sout);
 private:
   void writeValue(Value const& value);
   void writeArrayValue(Value const& value);
