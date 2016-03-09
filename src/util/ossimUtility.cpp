@@ -16,11 +16,40 @@
 using namespace std;
 
 ossimUtility::ossimUtility()
+   : m_kwl()
 {
 }
 
 ossimUtility::~ossimUtility()
 {
+}
+
+void ossimUtility::clear()
+{
+}
+
+void ossimUtility::abort()
+{
+}
+
+ossimObject* ossimUtility::getObject()
+{
+   return this;
+}
+
+const ossimObject* ossimUtility::getObject() const
+{
+   return this;
+}
+
+ossimListenerManager* ossimUtility::getManager()
+{
+   return this;
+};
+
+ossimString ossimUtility::getClassName() const
+{
+   return "ossimUtility";
 }
 
 void ossimUtility::setUsage(ossimArgumentParser& ap)
@@ -72,6 +101,11 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
    }
 
    return true;
+}
+
+void ossimUtility::initialize(const ossimKeywordlist& kwl)
+{
+   m_kwl = kwl;
 }
 
 void ossimUtility::getKwlTemplate(ossimKeywordlist& kwl)

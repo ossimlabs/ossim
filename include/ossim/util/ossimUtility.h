@@ -24,7 +24,7 @@ class OSSIM_DLL ossimUtility : public ossimObject,
 {
 public:
    ossimUtility();
-   ~ossimUtility();
+   virtual ~ossimUtility();
 
    /**
     * Initializes from command line arguments.
@@ -40,7 +40,7 @@ public:
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
     * @note Throws ossimException on error.
     */
-   virtual void initialize(const ossimKeywordlist& kwl) { m_kwl = kwl; }
+   virtual void initialize(const ossimKeywordlist& kwl);
 
    /**
     * Writes product to output file. Always returns true since using exception on error.
@@ -51,12 +51,12 @@ public:
    /**
     * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
     */
-   virtual void clear() {}
+   virtual void clear();
 
    /**
     * Kills current (asynchronous) process. Defaults to do nothing.
     */
-   virtual void abort() {}
+   virtual void abort();
 
    /**
     * Assigns a template keywordlist to string for initializing derived classes.
@@ -69,10 +69,10 @@ public:
    void getAPI(std::string& out) const;
    std::string getAPI() const;
 
-   virtual ossimObject* getObject() { return this; }
-   virtual const ossimObject* getObject() const  { return this; }
-   virtual ossimListenerManager* getManager()  { return this; };
-   virtual ossimString getClassName() const { return "ossimUtility"; }
+   virtual ossimObject* getObject();
+   virtual const ossimObject* getObject() const;
+   virtual ossimListenerManager* getManager();
+   virtual ossimString getClassName() const;
 
    /**
     * @brief Gets build date.
