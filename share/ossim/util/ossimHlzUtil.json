@@ -6,67 +6,37 @@
         "long_description": "Utility for finding suitable helicopter landing zones surrounding a speciflzied target location."
      },
      "inputs": {
-        "dem": {
-            "datatype": "file:elevation",
-            "description": "Optional DEM file to use in lieu of default elevation database.",
+        "exclude_regions": {         
+            "datatype": "list:string:csv_file",
+            "description": List of raster image(s) representing mask files that defines regions to be excluded from HLZ solutions",
             "required": false    
         },
-        "gsd": {
-            "datatype": "double:positive_range",
-            "description": "Product resolution in meters-per-pixel. Defaults to the best resolution of elevation files referenced.",
+        "include_regions": {         
+            "datatype": "list:file:csv_file",
+            "description": List of raster image(s) representing mask files that defines regions that must be included in HLZ solutions",
             "required": false    
         },
-        "lut": {
-            "datatype": "file:text",
-            "description": "Specifies the optional lookup table filename for mapping the single-band output image to an RGB. The LUT provided must be in the ossimIndexToRgbLutFilter format and must handle the three output viewshed values (see --values option).",
-            "required": false    
-        },
-        "point_cloud": {
-            "datatype": "list:file:geopackage",
-            "description": "Specifies CSV list of ancillary point-cloud data for level-2 search for obstructions.",
-            "required": false    
-        },
-        "reticle": {
-            "datatype": "int:positive_range",
-            "description": "Size (in pixels) of reticle centered on observer's position. If non-zero, a border is drawn delineating the ROI.",
-            "required": false    
-        },
-        "rlz": {         
-            "datatype": "double:positive_range",
-            "description": "Radius of interest (meters)",
-            "required": true    
-        },
-        "roi": {         
-            "datatype": "double:positive_range",
-            "description": "Radius of interest surrounding the target (meters)",
-            "required": true    
-        },
-        "roughness": {         
+        "max_roughness": {         
             "datatype": "double:positive_range",
             "description": "Threshold for acceptable landing zone terrain roughness (meters).",
             "required": false    
         },
-        "slope": {         
+        "max_slope": {         
             "datatype": "double:positive_range",
             "description": "Threshold for acceptable landing zone terrain slope (deg).",
             "required": false    
         },
-        "target": {         
-            "datatype": "geo_pos_2d",
-            "description": "Geographic position of target (lat-deg, lon-deg)",
-            "required": true   
+        "min_lz_radius": {         
+            "datatype": "double:positive_range",
+            "description": "Minimum radius of landing zone (meters)",
+            "required": true    
         },
-        "threat-domes": {
-            "datatype": "file:text",
-            "description": "Optional file containing threat dome specifications.",
+        "point_clouds": {
+            "datatype": "list:file:csv",
+            "description": "Specifies list of ancillary point-cloud data for level-2 search for obstructions.",
             "required": false    
         },
-        "viewsheds": {
-            "datatype": "file:text",
-            "description": "Optional file containing specifications of observers used in identifying visible or hidden LZs.",
-            "required": false    
-        },
-        "bad_zone_index": {
+        "hlz_coding": {
             "datatype": "int:byte_range",
             "description": "Specifies the pixel values (0-255) for the pixels representing unsuitable terrain.",
             "required": false    
