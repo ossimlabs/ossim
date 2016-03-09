@@ -2063,21 +2063,25 @@ void ossimChipperUtil::createOutputProjection()
    {
       if ( *(inputProj.get()) == *(proj.get()) )
       {
+         // Get the origin used for scaling. 
+         ossimGpt origin = proj->getOrigin();
+
+         // Copy the input projection to our projection.  Has the tie and scale we need.
+         proj = inputProj;
+         
          if ( projType == OSSIM_CHIPPER_PROJ_GEO_SCALED )
          {
-            // Get the origin used for scaling. 
-            ossimGpt origin = proj->getOrigin();
-
-            // Copy the input projection to our projection.  Has the tie and scale we need.
-            proj = inputProj;
-
             // Set the origin for scaling.
             proj->setOrigin(origin);
          }
-         else
+         else if ( projType == ossimChipperUtil::OSSIM_CHIPPER_PROJ_GEO )
          {
-            proj = inputProj;
+            origin.lat = 0.0; // Square pixels in decimal degrees.
+            
+            // Set the origin for scaling.
+            proj->setOrigin(origin);
          }
+
          usingInput = true;
       }
    }
@@ -3220,8 +3224,12 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getNewProjectionFromSrsCode(
 {
    ossimRefPtr<ossimMapProjection> result = 0;
 
-   if (code == "4326")  // Avoid factory call for this.
+   ossimString os = code;
+   os.downcase();
+
+   if ( ( os == "epsg:4326" ) || ( code == "4326" ) )  
    {
+      // Avoid factory call for this.
       result = new ossimEquDistCylProjection();
    }
    else
