@@ -2861,3 +2861,8 @@ bool ossimInfo::keyIsTrue( const std::string& key ) const
    }
    return result;
 }
+
+ossimString ossimInfo::getClassName() const
+{
+   return "ossimInfo";
+}
