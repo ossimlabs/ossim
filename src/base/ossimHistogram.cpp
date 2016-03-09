@@ -579,7 +579,7 @@ inline void RemoveFlatPeaks(int nbins, float* cnts, bool cyclic)
 
    //Here we define a small state machine - parsing for runs of peaks
    //init is the state corresponding to an initial run (starting at i ==0)
-   bool init=GetExtendedCount(0, nbins, cnts, cyclic);
+   bool init=(GetExtendedCount(0, nbins, cnts, cyclic) !=0 ) ? true : false;
    int init_end =0;
 
    //start is the state corresponding to any other run of peaks
