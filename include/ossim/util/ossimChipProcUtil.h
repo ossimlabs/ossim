@@ -196,7 +196,6 @@ protected:
     * Needed for bootstrapping the GSD computation when information in KWL is sparse */
    void findCenterGpt(ossimGpt& gpt);
 
-   ossimKeywordlist m_kwl;
    ossimRefPtr<ossimImageGeometry> m_geom; //> Product chip/image geometry
    ossimIrect m_aoiViewRect;
    ossimGrect m_aoiGroundRect;

@@ -27,17 +27,6 @@ public:
    ~ossimUtility();
 
    /**
-    * Initializes the aurgument parser with expected parameters and options. It does not output
-    * anything. To see the usage, the caller will need to do something like:
-    *
-    *   ap.getApplicationUsage()->write(<ostream>);
-    *
-    * This base class has some common arguments to add. The derived class should call this
-    * implementation in addition to setting its own arguments.
-    */
-   virtual void setUsage(ossimArgumentParser& ap);
-
-   /**
     * Initializes from command line arguments.
     * This base class has some common arguments to read. The derived class should call this
     * implementation in addition to setting its own arguments.
@@ -51,7 +40,7 @@ public:
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
     * @note Throws ossimException on error.
     */
-   virtual void initialize(const ossimKeywordlist& /*kwl*/) { }
+   virtual void initialize(const ossimKeywordlist& kwl) { m_kwl = kwl; }
 
    /**
     * Writes product to output file. Always returns true since using exception on error.
@@ -107,6 +96,20 @@ public:
    // utility. For convenience, the ossimUtility-derived (final) classes should declare a public
    // static member to hold the description string. See ossimViewshedUtility for an example.
    // static const char* DESCRIPTION;
+
+protected:
+   /**
+    * Initializes the aurgument parser with expected parameters and options. It does not output
+    * anything. To see the usage, the caller will need to do something like:
+    *
+    *   ap.getApplicationUsage()->write(<ostream>);
+    *
+    * This base class has some common arguments to add. The derived class should call this
+    * implementation in addition to setting its own arguments.
+    */
+   virtual void setUsage(ossimArgumentParser& ap);
+
+   ossimKeywordlist m_kwl;
 
 private:
    /**

@@ -1,0 +1,20 @@
+{
+    "name": "ossim-shoreline",
+    "description": {
+        "version" : "1.00",
+        "short_description": "OSSIM Shoreline Utility",
+        "long_description": "Utility for extracting the shoreline as a raster edge detection given input image(s)."
+     },
+     "inputs": {
+        "gsd": {
+            "datatype": "double:positive_range",
+            "description": "Product resolution in meters-per-pixel. Defaults to the best resolution of elevation files referenced.",
+            "required": false    
+        },
+        "outputFile": {
+            "datatype": "url:wms",
+            "description": "The URL/filename of the WMS server where the file is now accessible",
+            "required": true
+        },
+    "outputs": { }
+}
