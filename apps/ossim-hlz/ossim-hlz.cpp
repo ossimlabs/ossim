@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
       t0 = ossimTimer::instance()->time_s();
 
       ossimUtilityFactoryBase* factory = ossimUtilityRegistry::instance();
-      ossimRefPtr<ossimUtility> hlz = factory->createUtility(string("hlz"));
+      ossimRefPtr<ossimChipProcUtil> hlz = (ossimChipProcUtil*)factory->createUtility(string("hlz"));
 
       //ossimKeywordlist kwl(argv[1]);
       //hlz->initialize(kwl);

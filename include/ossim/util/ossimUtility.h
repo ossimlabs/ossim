@@ -10,17 +10,13 @@
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimObject.h>
-#include <ossim/base/ossimProcessInterface.h>
-#include <ossim/base/ossimListenerManager.h>
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimKeywordlist.h>
 
 /*!
  *  Base class for all OSSIM utility applications.
  */
-class OSSIM_DLL ossimUtility : public ossimObject,
-                               public ossimProcessInterface,
-                               public ossimListenerManager
+class OSSIM_DLL ossimUtility : public ossimObject
 {
 public:
    ossimUtility();
@@ -69,9 +65,6 @@ public:
    void getAPI(std::string& out) const;
    std::string getAPI() const;
 
-   virtual ossimObject* getObject();
-   virtual const ossimObject* getObject() const;
-   virtual ossimListenerManager* getManager();
    virtual ossimString getClassName() const;
 
    /**
@@ -95,7 +88,12 @@ public:
    // NOTE: The ossimUtilityFactory::getCapabilities() needs to access a brief description of each
    // utility. For convenience, the ossimUtility-derived (final) classes should declare a public
    // static member to hold the description string. See ossimViewshedUtility for an example.
-   // static const char* DESCRIPTION;
+   //static const char* DESCRIPTION;
+
+   /** Overrides base class implementation to indicate this class supports getChip() calls.
+    * Can be done with dunamic cast and pointer test, but not sure how that is supported in SWIG
+    * (OLK 11/2015). */
+   virtual bool isChipProcessor() const { return false; }
 
 protected:
    /**

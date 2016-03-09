@@ -32,21 +32,6 @@ void ossimUtility::abort()
 {
 }
 
-ossimObject* ossimUtility::getObject()
-{
-   return this;
-}
-
-const ossimObject* ossimUtility::getObject() const
-{
-   return this;
-}
-
-ossimListenerManager* ossimUtility::getManager()
-{
-   return this;
-};
-
 ossimString ossimUtility::getClassName() const
 {
    return "ossimUtility";

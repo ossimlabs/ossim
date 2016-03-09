@@ -76,7 +76,7 @@ public:
     */
    virtual bool execute();
 
-   virtual ossimString getClassName() const;
+   virtual ossimString getClassName() const { return "ossimInfo"; }
 
    /**
     * @brief handles image options.

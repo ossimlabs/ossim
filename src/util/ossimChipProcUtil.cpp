@@ -508,6 +508,21 @@ ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimIrect& boundin
    return m_procChain->getTile( m_aoiViewRect, 0 );
 }
 
+ossimListenerManager* ossimChipProcUtil::getManager()
+{
+   return this;
+};
+
+ossimObject* ossimChipProcUtil::getObject()
+{
+   return this;
+}
+
+const ossimObject* ossimChipProcUtil::getObject() const
+{
+   return this;
+}
+
 void ossimChipProcUtil::loadImageFiles()
 {
    ossim_uint32 imgCount = m_kwl.numberOf( IMAGE_SOURCE_KW.c_str() );

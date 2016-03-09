@@ -19,6 +19,8 @@
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimImageViewAffineTransform.h>
 #include <ossim/util/ossimUtility.h>
+#include <ossim/base/ossimProcessInterface.h>
+#include <ossim/base/ossimListenerManager.h>
 #include <map>
 #include <vector>
 
@@ -38,7 +40,10 @@
  * @note Almost all methods use throw for stack unwinding.  This is not in
  * method declarations to alleviate build errors on windows.  Sorry...
  **************************************************************************************************/
-class OSSIM_DLL ossimChipProcUtil : public ossimUtility
+class OSSIM_DLL ossimChipProcUtil : public ossimUtility,
+                                    public ossimProcessInterface,
+                                    public ossimListenerManager
+
 {
 public:
    /** default constructor */
@@ -84,6 +89,10 @@ public:
     * Can be done with dunamic cast and pointer test, but not sure how that is supported in SWIG
     * (OLK 11/2015). */
    virtual bool isChipProcessor() const { return true; }
+
+   virtual ossimListenerManager* getManager();
+   virtual ossimObject* getObject();
+   virtual const ossimObject* getObject() const;
 
    /** The meat and potatos of this class. Performs an execute on specified rect. */
    virtual ossimRefPtr<ossimImageData> getChip(const ossimIrect& img_rect);
