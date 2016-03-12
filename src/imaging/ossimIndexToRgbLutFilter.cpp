@@ -203,49 +203,6 @@ void ossimIndexToRgbLutFilter::initialize()
    }
 }
 
-void ossimIndexToRgbLutFilter::setProperty(ossimRefPtr<ossimProperty> property)
-{
-   if(property.valid())
-   {
-      ossimString value = property->valueToString();
-      value = value.trim();
-
-      if(property->getName() == "LUT file")
-      {
-         setLut(ossimFilename(property->valueToString()));
-      }
-      else
-      {
-         ossimImageSourceFilter::setProperty(property);
-      }
-   }
-}
-
-ossimRefPtr<ossimProperty> ossimIndexToRgbLutFilter::getProperty(const ossimString& name)const
-{
-   ossimRefPtr<ossimProperty> property = 0;
-   if(name == "LUT file")
-   {
-      ossimFilenameProperty* filenameProperty = new ossimFilenameProperty(name, theLutFile);
-      filenameProperty->setIoType(ossimFilenameProperty::ossimFilenamePropertyIoType_INPUT);
-      filenameProperty->clearChangeType();
-      filenameProperty->setCacheRefreshBit();
-      filenameProperty->setReadOnlyFlag(false);
-      property = filenameProperty;
-   }
-   else
-   {
-      property = ossimImageSourceFilter::getProperty(name);
-   }
-   return property;
-}
-
-void ossimIndexToRgbLutFilter::getPropertyNames(std::vector<ossimString>& propertyNames)const
-{
-   ossimImageSourceFilter::getPropertyNames(propertyNames);
-   propertyNames.push_back("LUT file");
-}
-
 bool ossimIndexToRgbLutFilter::saveState(ossimKeywordlist& kwl, const char* prefix)const
 {
    if (theMinValueOverride)
