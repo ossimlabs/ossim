@@ -80,7 +80,123 @@ public:
    /** @return NLAYERS_O field as a number. */
    ossim_uint32 getNumberOfLayersOriginal() const;
 
+   /**
+    * @brief Sets origin:
+    *
+    * Range is 0 to 9
+    *
+    * 0 - Original NPJE
+    * 1 – Parsed NPJE
+    * 2 – Original EPJE
+    * 3 – Parsed EPJE*
+    * 4 - Original TPJE
+    * 5 - Parsed TPJE
+    * 6 - Original LPJE
+    * 7 - Parsed LPJE
+    * 8 – Original other
+    * 9 – Parsed other
+    *
+    * @param origin 0 to 9
+    * @return true on success, false if out of range.
+    */
+   bool setOrigin( ossim_uint32 origin );
+
+   /**
+    * @brief Sets the number of wavelet levels in the original image.
+    *
+    * Range: 00 to 32
+
+    * @param levels
+    * @return true on success, false if out of range.
+    */
+   bool setLevelsO( ossim_uint32 levels );
+
+   /**
+    * @brief Sets the number of bands in the original image.
+    *
+    * Range: 00001 to 16384
+    *
+    * @param levels
+    * @return true on success, false if out of range.
+    */   
+   bool setBandsO( ossim_uint32 bands );
+
+  /**
+    * @brief Sets the number of layers in the original image.
+    *
+    * Range: 001 to 999
+    *
+    * @param levels
+    * @return true on success, false if out of range.
+    */   
+   bool setLayersO( ossim_uint32 layers );
+   
+   /**
+    * @brief Sets the number of wavelet levels in this image.
+    *
+    * Range: 00 to 32
+
+    * @param levels
+    * @return true on success, false if out of range.
+    */
+   bool setLevelsI( ossim_uint32 levels );
+
+   /**
+    * @brief Sets the number of bands in this image.
+    *
+    * Range: 00001 to 16384
+    *
+    * @param levels
+    * @return true on success, false if out of range.
+    */   
+   bool setBandsI( ossim_uint32 bands );
+
+  /**
+    * @brief Sets the number of layers in this image.
+    *
+    * Range: 001 to 999
+    *
+    * @param levels
+    * @return true on success, false if out of range.
+    */   
+   bool setLayersI( ossim_uint32 layers );
+
+
+   /**
+    * @brief Sets the layer id for index.
+    *
+    * Range: 001 to 999
+    *
+    * @note Requires call to "setLayersO" prior to this to size the container
+    * m_layer.
+    *
+    * @param index 
+    * @param id
+    * @return true on success, false if out of range.
+    */
+   bool setLayerId( ossim_uint32 index, ossim_uint32 id );
+   
+   /**
+    * @brief Sets the bitrate from index.
+    *
+    * Range: 00.000000 – 37.000000 
+    *
+    * @note Requires call to "setLayersO" prior to this to size the container
+    * m_layer.
+    *
+    * @param index 
+    * @param id
+    * @return true on success, false if out of range.
+    */
+   bool setLayerBitRate( ossim_uint32 index, ossim_float64 bitRate );
+   
+   
 protected:
+
+   /**
+    * @return true if origin byte is parsed; false if not.
+    */
+   bool isParsed() const;
 
    // Container for repeating fields.
    class ossimJ2klraLayer
@@ -107,11 +223,15 @@ protected:
     * FIELD: ORIG
     *
     * Required 1 byte.
-    *
+    * 
     * 0 - Original NPJE
     * 1 – Parsed NPJE
-    * 2 – Original EPJE*
+    * 2 – Original EPJE
     * 3 – Parsed EPJE*
+    * 4 - Original TPJE
+    * 5 - Parsed TPJE
+    * 6 - Original LPJE
+    * 7 - Parsed LPJE
     * 8 – Original other
     * 9 – Parsed other
     *

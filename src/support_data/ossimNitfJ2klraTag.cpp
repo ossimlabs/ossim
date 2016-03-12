@@ -17,6 +17,7 @@
 
 
 #include <ossim/support_data/ossimNitfJ2klraTag.h>
+#include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/base/ossimString.h>
 
 #include <cstring> /* for memcpy */
@@ -60,14 +61,13 @@ void ossimNitfJ2klraTag::parseStream(std::istream& in)
    }
 
    // Conditional:
-   ossim_uint32 orig = getOriginNumber();
-   if ( (orig == 1) || ( orig == 3 ) || ( orig == 9 ) )
+   if ( isParsed() )
    {
       in.read(m_nlevels_i, NLEVELS_I_SIZE);
-      in.read(m_nbands_i, NBANDS_I_SIZE);
+      in.read(m_nbands_i,  NBANDS_I_SIZE);
       in.read(m_nlayers_i, NLAYERS_I_SIZE);
    }
-
+   
    // Set the base tag length.
    setTagLength( getSizeInBytes() );
 }
@@ -87,8 +87,7 @@ void ossimNitfJ2klraTag::writeStream(std::ostream& out)
    }
 
    // Conditional:
-   ossim_uint32 orig = getOriginNumber();
-   if ( (orig == 1) || ( orig == 3 ) || ( orig == 9 ) )
+   if ( isParsed() )
    {
       out.write(m_nlevels_i, NLEVELS_I_SIZE);
       out.write(m_nbands_i, NBANDS_I_SIZE);
@@ -102,9 +101,12 @@ ossim_uint32 ossimNitfJ2klraTag::getSizeInBytes()const
 
    // Conditional:
    ossim_uint32 orig = getOriginNumber();
-   if ( (orig == 1) || ( orig == 3 ) || ( orig == 9 ) )
+   if ( orig )
    {
-      result += 10;
+      if ( orig % 2 ) // Odd origins are "parsed".
+      {   
+         result += 10;
+      }
    }
    return result;
 }
@@ -160,13 +162,13 @@ std::ostream& ossimNitfJ2klraTag::print(std::ostream& out,
    }
 
    // Conditional:
-   ossim_uint32 orig = getOriginNumber();
-   if ( (orig == 1) || ( orig == 3 ) || ( orig == 9 ) )
+   if ( isParsed() )
    {
       out << pfx << std::setw(24) << "NLEVELS_I:"     << m_nlevels_i << "\n"
           << pfx << std::setw(24) << "NBANDS_I_SIZE:" << m_nbands_i << "\n"
           << pfx << std::setw(24) << "NLAYERS_I:"     << m_nlayers_i << "\n";
    }
+   
    return out;
 }
    
@@ -178,4 +180,170 @@ ossim_uint32 ossimNitfJ2klraTag::getOriginNumber() const
 ossim_uint32 ossimNitfJ2klraTag::getNumberOfLayersOriginal() const
 {
    return ossimString(m_layers_o).toUInt32();
+}
+
+bool ossimNitfJ2klraTag::setOrigin( ossim_uint32 origin )
+{
+   bool result = true;
+   if ( origin <= 9 )
+   {
+      // Ascii 0 to 9
+      m_orig[0] = 0x30 + origin;
+   }
+   else
+   {
+      result = false;
+   }
+   return result;
+}
+
+bool ossimNitfJ2klraTag::setLevelsO( ossim_uint32 levels )
+{
+   bool result = false;
+   if ( levels <= 32 )
+   {
+      ossimString os = ossimNitfCommon::convertToUIntString( levels, NLEVELS_O_SIZE );
+      if ( os.size() == NLEVELS_O_SIZE )
+      {
+         strncpy( m_levels_o, os.string().c_str(), NLEVELS_O_SIZE );
+         result = true;
+      }
+   }
+   return result;
+}
+   
+bool ossimNitfJ2klraTag::setBandsO( ossim_uint32 bands )
+{
+   bool result = false;
+   if ( ( bands >= 1 ) && ( bands <= 16384 ) )
+   {
+      ossimString os = ossimNitfCommon::convertToUIntString( bands, NBANDS_O_SIZE );
+      if ( os.size() == NBANDS_O_SIZE )
+      {
+         strncpy( m_bands_o, os.string().c_str(), NBANDS_O_SIZE );
+         result = true;
+      }
+   }
+   return result;
+}
+
+bool ossimNitfJ2klraTag::setLayersO( ossim_uint32 layers )
+{
+   bool result = false;
+   if ( ( layers >= 1 ) && ( layers <= 999 ) )
+   {
+      ossimString os = ossimNitfCommon::convertToUIntString( layers, NLAYERS_O_SIZE );
+      if ( os.size() == NLAYERS_O_SIZE )
+      {
+         strncpy( m_layers_o, os.string().c_str(), NLAYERS_O_SIZE );
+
+         // Conditional repeating field:
+         m_layer.resize( layers );
+         
+         result = true;
+      }
+   }
+   return result;
+}
+
+bool ossimNitfJ2klraTag::setLevelsI( ossim_uint32 levels )
+{
+   bool result = false;
+   if ( levels <= 32 )
+   {
+      ossimString os = ossimNitfCommon::convertToUIntString( levels, NLEVELS_I_SIZE );
+      if ( os.size() == NLEVELS_I_SIZE )
+      {
+         strncpy( m_nlevels_i, os.string().c_str(), NLEVELS_I_SIZE );
+         result = true;
+      }
+   }
+   return result;
+}
+   
+bool ossimNitfJ2klraTag::setBandsI( ossim_uint32 bands )
+{
+   bool result = false;
+   if ( ( bands >= 1 ) && ( bands <= 16384 ) )
+   {
+      ossimString os = ossimNitfCommon::convertToUIntString( bands, NBANDS_I_SIZE );
+      if ( os.size() == NBANDS_I_SIZE )
+      {
+         strncpy( m_nbands_i, os.string().c_str(), NBANDS_I_SIZE );
+         result = true;
+      }
+   }
+   return result;
+}
+
+bool ossimNitfJ2klraTag::setLayersI( ossim_uint32 layers )
+{
+   bool result = false;
+   if ( ( layers >= 1 ) && ( layers <= 999 ) )
+   {
+      ossimString os = ossimNitfCommon::convertToUIntString( layers, NLAYERS_I_SIZE );
+      if ( os.size() == NLAYERS_I_SIZE )
+      {
+         strncpy( m_nlayers_i, os.string().c_str(), NLAYERS_I_SIZE );
+         result = true;
+      }
+   }
+   return result;
+}
+
+bool ossimNitfJ2klraTag::setLayerId( ossim_uint32 index, ossim_uint32 id )
+{
+   bool result = false;
+   if ( index < m_layer.size() && ( id <= 998 ) )
+   {
+      ossimString os = ossimNitfCommon::convertToUIntString( id, LAYER_ID_SIZE );
+      if ( os.size() ==  LAYER_ID_SIZE)
+      {
+         strncpy( m_layer[index].m_layer_id, os.string().c_str(), LAYER_ID_SIZE );
+         result = true;
+      }
+   }
+   return result;
+}
+
+bool ossimNitfJ2klraTag::setLayerBitRate( ossim_uint32 index, ossim_float64 bitRate )
+{
+   bool result = false;
+   if ( index < m_layer.size() && ( bitRate >= 0.0 ) && ( bitRate <= 37.0 ) )
+   {
+      // 00.000000 – 37.000000
+      ossimString os = ossimNitfCommon::convertToDoubleString( bitRate, 6, BITRATE_SIZE );
+      if ( os.size() == BITRATE_SIZE)
+      {
+         strncpy( m_layer[index].m_bitrate, os.string().c_str(), BITRATE_SIZE);
+         result = true;
+      }
+   }
+   return result;
+}
+
+bool ossimNitfJ2klraTag::isParsed() const
+{
+   bool result = false;
+   ossim_uint32 orig = getOriginNumber();
+   if ( orig )
+   {
+      /*  
+       * 0 - Original NPJE
+       * 1 – Parsed NPJE
+       * 2 – Original EPJE
+       * 3 – Parsed EPJE*
+       * 4 - Original TPJE
+       * 5 - Parsed TPJE
+       * 6 - Original LPJE
+       * 7 - Parsed LPJE
+       * 8 – Original other
+       * 9 – Parsed other
+       */
+      if ( orig % 2 ) // Odd origins are "parsed".
+      {
+         result = true;
+      }
+   }
+   return result;
 }
