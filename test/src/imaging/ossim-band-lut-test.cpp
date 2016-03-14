@@ -189,7 +189,6 @@ int main(int argc, char *argv[])
    ossimRefPtr<ossimImageSourceFilter> lutFilter2 = new ossimBandLutFilter();
    lutFilter2->connectMyInputTo(memSource2.get());
 
-   // Test 1: LITERAL mode
    cout << "\nTEST 3 -- Running threshold test...\n"<<endl;
    fname = "thresholded-lut.tif";
    fname.setPath(outputPath);

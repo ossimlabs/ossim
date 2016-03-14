@@ -67,6 +67,8 @@ ossimRefPtr<ossimImageData> ossimBandLutFilter::getTile(const ossimIrect& tileRe
 
    inputTile->write("tmp.ras"); // TODO REMOVE DEBUG
    double index, value;
+   double min_value=OSSIM_DEFAULT_MAX_PIX_DOUBLE;
+   double max_value=OSSIM_DEFAULT_MIN_PIX_DOUBLE;
 
    ossim_uint32 numBands = getNumberOfInputBands();
    for (ossim_uint32 band = 0; band < numBands; ++band)
@@ -118,16 +120,27 @@ ossimRefPtr<ossimImageData> ossimBandLutFilter::getTile(const ossimIrect& tileRe
             }
          }
 
+         if (value < min_value)
+            min_value = value;
+         if (value > max_value)
+            max_value = value;
+
          // Assign this output pixel according to desired scalar type:
          switch(theOutputScalarType)
          {
          case OSSIM_DOUBLE:
             theTile->getDoubleBuf(band)[pixel] = value;
+            theTile->setMinPix(min_value);
+            theTile->setMaxPix(max_value);
             break;
          case OSSIM_SSHORT16:
             theTile->getSshortBuf(band)[pixel] = value;
             break;
          case OSSIM_FLOAT:
+            theTile->setMinPix(min_value);
+            theTile->setMaxPix(max_value);
+            theTile->getFloatBuf(band)[pixel] = value;
+            break;
          case OSSIM_NORMALIZED_FLOAT:
             theTile->getFloatBuf(band)[pixel] = value;
             break;
@@ -135,6 +148,8 @@ ossimRefPtr<ossimImageData> ossimBandLutFilter::getTile(const ossimIrect& tileRe
             theTile->getUcharBuf(band)[pixel] = value;
             break;
          case OSSIM_USHORT16:
+            theTile->getUshortBuf(band)[pixel] = value;
+            break;
          case OSSIM_USHORT11:
             theTile->getUshortBuf(band)[pixel] = value;
             break;
@@ -143,7 +158,6 @@ ossimRefPtr<ossimImageData> ossimBandLutFilter::getTile(const ossimIrect& tileRe
          }
       } // end loop over band's pixels
    }  // end loop over tile's bands
-
 
    theTile->validate();
    return theTile;
@@ -155,10 +169,36 @@ void ossimBandLutFilter::allocate()
       return;
 
    theTile = ossimImageDataFactory::instance()->create(this, getNumberOfInputBands(), this);
-   if(theTile.valid())
+   if(!theTile.valid())
+      return;
+
+   switch(theOutputScalarType)
    {
-      theTile->initialize();
+   case OSSIM_SSHORT16:
+      theTile->setMinPix(-32768);
+      theTile->setMaxPix(32767);
+      break;
+   case OSSIM_NORMALIZED_FLOAT:
+      theTile->setMinPix(0.0);
+      theTile->setMaxPix(1.0);
+      break;
+   case OSSIM_UCHAR:
+      theTile->setMinPix(0);
+      theTile->setMaxPix(255);
+      break;
+   case OSSIM_USHORT16:
+      theTile->setMinPix(0);
+      theTile->setMaxPix(65535);
+      break;
+   case OSSIM_USHORT11:
+      theTile->setMinPix(0);
+      theTile->setMaxPix(4095);
+      break;
+   default:
+      break;
    }
+
+   theTile->initialize();
 }
 
 void ossimBandLutFilter::initialize()
@@ -358,6 +398,7 @@ void ossimBandLutFilter::setOutputScalarType(ossimScalarType scalarType)
    }
 
    theOutputScalarType = scalarType;
+   allocate();
 }
 
 void ossimBandLutFilter::setOutputScalarType(ossimString scalarType)

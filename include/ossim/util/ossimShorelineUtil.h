@@ -50,7 +50,8 @@ public:
 
 protected:
    virtual void initProcessingChain();
-   virtual void initLandsat8();
+   void initLandsat8();
+   void computeKMeans();
 
    /** @brief Hidden from use copy constructor. */
    ossimShorelineUtil( const ossimShorelineUtil& obj );
@@ -68,6 +69,7 @@ protected:
    ossimString m_sensor;
    double m_threshold;
    double m_tolerance;
+   //ossimRefPtr<ossimHistogramWriter> m_histoWriter;
 };
 
 #endif

@@ -27,6 +27,8 @@
 #include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
 #include <ossim/imaging/ossimEquationCombiner.h>
 #include <ossim/imaging/ossimBandLutFilter.h>
+#include <ossim/imaging/ossimEdgeFilter.h>
+#include <ossim/imaging/ossimIndexToRgbLutFilter.h>
 #include <ossim/util/ossimShorelineUtil.h>
 #include <fstream>
 
@@ -44,8 +46,8 @@ ossimShorelineUtil::ossimShorelineUtil()
      m_marginalValue (128),
      m_landValue (64),
      m_sensor ("ls8"),
-     m_threshold (0.5),
-     m_tolerance(0.05)
+     m_threshold (0.51),
+     m_tolerance(0.01)
 {
 }
 
@@ -140,7 +142,9 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
       }
    }
 
-   m_sensor = m_kwl.find(ossimKeywordNames::SENSOR_ID_KW);
+   value = m_kwl.find(ossimKeywordNames::SENSOR_ID_KW);
+   if (!value.empty())
+      m_sensor = value;
 
    value = m_kwl.findKey(THRESHOLD_KW);
    if (!value.empty())
@@ -184,6 +188,7 @@ void ossimShorelineUtil::initLandsat8()
       throw ossimException(xmsg.str());
    }
 
+   // Set up NDWI algorithm:
    ossimConnectableObject::ConnectableObjectList connectable_list;
    connectable_list.push_back(m_imgLayers[0].get());
    connectable_list.push_back(m_imgLayers[1].get());
@@ -193,7 +198,11 @@ void ossimShorelineUtil::initLandsat8()
    eqFilter->setEquation(equationSpec);
    m_procChain->add(eqFilter.get());
 
-   double del = OSSIM_DEFAULT_MIN_PIX_FLOAT;
+   // Tap the chain here for histogram:
+   //ossimRefPtr<ossimHistogramWriter>
+
+   // Set up threshold filter:
+   double del = FLT_EPSILON;
    ossimString landValue = ossimString::toString(m_landValue).chars();
    ossimString waterValue = ossimString::toString(m_waterValue).chars();
    ossimString marginalValue = ossimString::toString(m_marginalValue).chars();
@@ -218,10 +227,31 @@ void ossimShorelineUtil::initLandsat8()
    remapper_kwl.add("entry4.out", waterValue.chars());
    remapper_kwl.add("entry5.in", "1.0");
    remapper_kwl.add("entry5.out", waterValue.chars());
-
    ossimRefPtr<ossimBandLutFilter> remapper = new ossimBandLutFilter;
    remapper->loadState(remapper_kwl);
    m_procChain->add(remapper.get());
+
+   // Set up edge detector:
+   ossimRefPtr<ossimEdgeFilter> edge_filter = new ossimEdgeFilter;
+   edge_filter->setFilterType("roberts");
+   m_procChain->add(edge_filter.get());
+
+   ossimRefPtr<ossimIndexToRgbLutFilter> lut_filter = new ossimIndexToRgbLutFilter;
+   ossimKeywordlist lut_kwl;
+   lut_kwl.add("type", "ossimIndexToRgbLutFilter");
+   lut_kwl.add("enabled", "1");
+   lut_kwl.add("mode", "vertices");
+   lut_kwl.add("entry0.index", "0");
+   lut_kwl.add("entry0.color", "0 0 0");
+   lut_kwl.add("entry1.index", "127");
+   lut_kwl.add("entry1.color", "0 0 0");
+   lut_kwl.add("entry2.index", "128");
+   lut_kwl.add("entry2.color", "255 0 0");
+   lut_kwl.add("entry3.index", "255");
+   lut_kwl.add("entry3.color", "255 0 0");
+   lut_filter->loadState(lut_kwl);
+   m_procChain->add(lut_filter.get());
+
 }
 
 ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& bounding_irect)
@@ -237,3 +267,123 @@ ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& boundi
    return m_procChain->getTile( m_aoiViewRect, 0 );
 }
 
+/*
+void ossimShorelineUtil::computeKMeans()
+{
+   int numbers, k, kvals[25], prevKvals[25], steps = 1, addition[25][100], count = 0, groups[25][100], min, groupnum, value, sum, ok = 1, nums[100];
+   cout << "How many numbers you want to enter: ";
+   cin >> numbers;
+
+   cout << "Enter value of k: ";
+   cin >> k;
+
+   //get numbers
+   for(int i = 0; i < numbers; i++)
+   {
+      cout << "Enter Number " << i+1 << ": ";
+      cin >> nums[i];
+   }
+
+   // set values of C's
+   for(int i = 0; i < 3; i++)
+   {
+      kvals[i] = nums[i];
+   }
+   //show values of user
+   cout << "You have entered: ";
+   for(int i = 0; i < numbers; i++)
+   {
+      cout << nums[i] << ", ";
+   }
+
+   //while(steps < 10)
+   while(ok == 1)
+   {
+      cout << endl << "Itration Number: " << steps;
+      //make <span class="IL_AD" id="IL_AD8">calculations</span> (C - bla bla bla)
+      for(int i = 0; i < k; i++)
+      {
+         for(int j = 0; j < numbers; j++)
+         {
+            addition[i][j] = <span class="IL_AD" id="IL_AD12">abs</span>(kvals[i] - nums[j]);
+         }
+      }
+
+      //make groups of number(C)
+      for(int i = 0; i < numbers; i++)
+      {
+         min = 100000;
+         for(int j = 0; j < k; j++)
+         {
+            if(addition[j][i] < min)
+            {
+               min = addition[j][i];
+               value = nums[i];
+               groupnum = j;
+            }
+         }
+         groups[groupnum][i] = value;
+      }
+
+      //show results of calculations (C - bla bla bla)
+      cout << endl << "Calculations" << endl;
+      for(int i = 0; i < numbers; i++)
+      {
+         for(int j = 0; j < k; j++)
+         {
+            cout << addition[j][i] << "\t";
+         }
+         cout << endl;
+      }
+      // show groups and get new C's
+      cout << endl << "Gruops" << endl;
+      for(int i = 0; i < k; i++)
+      {
+         sum = 0;
+         count = 0;
+         cout << "Group " << i+1 << ": ";
+         for(int j = 0; j < numbers; j++)
+         {
+            if(groups[i][j] != NULL)
+            {
+               cout << groups[i][j] << "\t";
+               sum += groups[i][j];
+               count++;
+            }
+         }
+         prevKvals[i] = kvals[i];
+         kvals[i] = sum/count;
+         cout << "\t=\t" << kvals[i] << endl;
+      }
+
+      //make empty array of groups
+      for(int i = 0; i < 25; i++)
+      {
+         for(int j = 0; j < 100; j++)
+         {
+            groups[i][j] = NULL;
+         }
+      }
+
+      //check condition of termination
+      ok = 0;
+      for(int i = 0; i < k; i++)
+      {
+         if(prevKvals[i] != kvals[i])
+         {
+            ok = 1;
+         }
+      }
+
+      if(ok != 1)
+      {
+         getch();
+      }
+
+      steps++;
+   } // end while loop
+
+   getch();
+   return 0;
+}
+*/
