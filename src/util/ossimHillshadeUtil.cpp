@@ -92,8 +92,6 @@ ossimHillshadeUtil::~ossimHillshadeUtil()
 
 bool ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
 {
-   static const char MODULE[] = "ossimChipProcUtil::initialize(ossimArgumentParser)";
-
    // Permit base class to pull out common options first.
    if (!ossimChipProcUtil::initialize(ap))
       return false;

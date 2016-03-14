@@ -194,7 +194,7 @@ protected:
    void setReaderProps( ossimImageHandler* ih ) const;
    
    /** Hidden from use copy constructor. */
-   ossimChipProcUtil( const ossimChipProcUtil& /* obj */) : m_projIsIdentity(false) {}
+   ossimChipProcUtil( const ossimChipProcUtil& obj );
 
    /** Hidden from use assignment operator. */
    const ossimChipProcUtil& operator=( const ossimChipProcUtil& /*rhs*/ ) { return *this; }

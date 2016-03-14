@@ -19,8 +19,6 @@
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimNumericProperty.h>
 
-static const ossimTrace traceDebug("ossimIndexToRgbLutFilter:debug");
-
 RTTI_DEF1(ossimIndexToRgbLutFilter, "ossimIndexToRgbLutFilter", ossimImageSourceFilter);
 
 static const char* MIN_VALUE_KW = "min_value";

@@ -88,7 +88,8 @@ ossimImageData::ossimImageData(ossimSource* owner,
      m_maxPixelValue(0),
      m_alpha(0),
      m_origin(0, 0),
-     m_indexedFlag(false)
+     m_indexedFlag(false),
+     m_percentFull(0)
 {   
    m_spatialExtents[0] = width;
    m_spatialExtents[1] = height;
@@ -102,7 +103,8 @@ ossimImageData::ossimImageData(const ossimImageData &rhs)
      m_maxPixelValue(rhs.m_maxPixelValue),
      m_alpha(rhs.m_alpha),
      m_origin(rhs.m_origin),
-     m_indexedFlag(rhs.m_indexedFlag)
+     m_indexedFlag(rhs.m_indexedFlag),
+     m_percentFull(0)
 {
 }
 

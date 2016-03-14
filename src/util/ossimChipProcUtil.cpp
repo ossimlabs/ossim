@@ -61,6 +61,12 @@ static const std::string TRUE_KW                 = "true";
 static const std::string WRITER_KW               = "writer";
 static const std::string WRITER_PROPERTY_KW      = "writer_property";
 
+ossimChipProcUtil::ossimChipProcUtil( const ossimChipProcUtil& /* obj */)
+: m_projIsIdentity(false),
+  m_geoScaled (false),
+  m_productScalarType(OSSIM_SCALAR_UNKNOWN)
+{}
+
 ossimChipProcUtil::ossimChipProcUtil()
 :  m_projIsIdentity(false),
    m_geoScaled(false),
@@ -117,7 +123,6 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    ossimArgumentParser::ossimParameter doubleParam2(tempDouble2);
    vector<ossimString> paramList;
 
-   ossim_uint32 srcIdx        = 0;
    ossim_uint32 readerPropIdx = 0;
    ossim_uint32 writerPropIdx = 0;
    ossimString  key           = "";
@@ -673,7 +678,6 @@ void ossimChipProcUtil::createOutputProjection()
                            << "\nTaking " << srs << " over " << op << "\n";
    }
 
-   bool usingInput = false;
    ossimRefPtr<ossimMapProjection> proj = 0;
    m_geoScaled = false;
    op.downcase();
@@ -771,12 +775,10 @@ ossimRefPtr<ossimMapProjection> ossimChipProcUtil::newUtmProjection()
 
    // Set the hemisphere from keyword option:
    bool setHemisphere = false;
-   std::string hemisphere = m_kwl.findKey( std::string( ossimKeywordNames::HEMISPHERE_KW ) );
-   if ( hemisphere.size() )
+   ossimString h = m_kwl.findKey( std::string( ossimKeywordNames::HEMISPHERE_KW ) );
+   if ( h.size() )
    {
-      ossimString h (hemisphere);
       h.upcase();
-      char hemisphere = 'U';
       if ( ( h == "N" ) || ( h == "NORTH" ) || ( h == "S" ) || ( h == "SOUTH" ) )
       {
          utm->setHemisphere( h[0] );

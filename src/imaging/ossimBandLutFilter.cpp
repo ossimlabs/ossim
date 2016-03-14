@@ -256,7 +256,7 @@ bool ossimBandLutFilter::loadState(const ossimKeywordlist& orig_kwl, const char*
 bool ossimBandLutFilter::initializeLut(const ossimKeywordlist& kwl, const char* prefix)
 {
    theLut.clear();
-   int numBands = getNumberOfInputBands();
+   ossim_uint32 numBands = getNumberOfInputBands();
    bool usingBandPrefix = true;
    if (numBands <= 1)
    {

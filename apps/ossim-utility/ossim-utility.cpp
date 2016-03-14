@@ -41,8 +41,13 @@ int main(int argc, char *argv[])
       {
          cout << "\nUsage: "<<argv[0]<<" [ <job_kwl> ] \n"<<endl;
       }
-      if ((argc > 1) && kwl.addFile(argv[1]))
-         toolName = kwl.find("tool");
+      if (argc > 1)
+      {
+         if (kwl.addFile(argv[1]))
+            toolName = kwl.find("tool");
+         else
+            toolName = argv[1];
+      }
 
       do
       {

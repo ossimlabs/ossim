@@ -1413,11 +1413,12 @@ bool OurReader::readToken(Token& token) {
     ok = readString();
     break;
   case '\'':
-    if (features_.allowSingleQuotes_) {
+    if (features_.allowSingleQuotes_)
+    {
       token.type_ = tokenString;
       ok = readStringSingleQuote();
-      break;
     } // else continue
+    break;
   case '/':
     token.type_ = tokenComment;
     ok = readComment();
@@ -4595,7 +4596,7 @@ bool StyledWriter::hasCommentForValue(const Value& value) {
 // //////////////////////////////////////////////////////////////////
 
 StyledStreamWriter::StyledStreamWriter(std::string indentation)
-    : document_(NULL), rightMargin_(74), indentation_(indentation),
+    : document_(NULL), rightMargin_(74), indentation_(indentation), indented_(false),
       addChildValues_() {}
 
 void StyledStreamWriter::write(JSONCPP_OSTREAM& out, const Value& root) {

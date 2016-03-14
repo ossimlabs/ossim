@@ -20,7 +20,7 @@ using namespace std;
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/imaging/ossimTiffWriter.h>
 
-void initKwl(ossimKeywordlist& kwl)
+void initKwl1(ossimKeywordlist& kwl)
 {
    kwl.add("type", "ossimBandLutFilter");
    kwl.add("scalar_type", "F32");
@@ -50,6 +50,26 @@ void initKwl(ossimKeywordlist& kwl)
    kwl.add("band2.entry2.out", "1.0");
 }
 
+void initKwl2(ossimKeywordlist& kwl)
+{
+   kwl.add("type", "ossimBandLutFilter");
+   kwl.add("enabled", "1");
+   kwl.add("mode", "interpolated");
+   kwl.add("scalar_type", "U8");
+   kwl.add("entry0.in", "0.0");
+   kwl.add("entry0.out", "64");
+   kwl.add("entry1.in", "0.45");
+   kwl.add("entry1.out", "64");
+   kwl.add("entry2.in", "0.450001");
+   kwl.add("entry2.out", "128");
+   kwl.add("entry3.in", "0.55");
+   kwl.add("entry3.out", "128");
+   kwl.add("entry4.in", "0.550001");
+   kwl.add("entry4.out", "255");
+   kwl.add("entry5.in", "1.0");
+   kwl.add("entry5.out", "255");
+
+}
 bool writeTile(ossimFilename& fname, ossimImageSource* source)
 {
    ossimRefPtr<ossimTiffWriter> writer = new ossimTiffWriter;
@@ -63,17 +83,14 @@ bool writeTile(ossimFilename& fname, ossimImageSource* source)
    return true;
 }
 
-bool runTest(const ossimKeywordlist& kwl, ossimRefPtr<ossimImageSourceFilter>& lutFilter)
+bool runTest(const ossimKeywordlist& kwl, ossimFilename& fname, ossimRefPtr<ossimImageSourceFilter>& lutFilter)
 {
+   ossimFilename outputPath = kwl.find("output_dir");
+   if (!outputPath.empty())
+      outputPath += "/";
+
    lutFilter->loadState(kwl);
    lutFilter->initialize();
-
-   ossimFilename fname = kwl.find("output_dir");
-   if (!fname.empty())
-      fname += "/";
-   fname += "bandLutTest-";
-   fname += kwl.find("mode");
-   fname.setExtension("tif");
 
    return writeTile(fname, lutFilter.get());
 }
@@ -84,7 +101,7 @@ int main(int argc, char *argv[])
    ossimInit::instance()->initialize(argc, argv);
 
    ossimKeywordlist kwl;
-   initKwl(kwl);
+   initKwl1(kwl);
 
    // Accept test directory on command line:
    if (argc > 1)
@@ -121,13 +138,56 @@ int main(int argc, char *argv[])
    // Test 1: LITERAL mode
    cout << "\nTEST 1 -- Running LITERAL mode test...\n"<<endl;
    kwl.add("mode", "literal");
-   if (!runTest(kwl, lutFilter))
+   ossimFilename fname ("literal-lut.tif");
+   if (!runTest(kwl, fname, lutFilter))
       return -1;
 
    // Test 2: VERTICES mode
    cout << "\nTEST 2 -- Running INTERPOLATED mode test...\n"<<endl;
+   fname = "interpolated-lut.tif";
    kwl.add("mode", "interpolated");
-   if (!runTest(kwl, lutFilter))
+   if (!runTest(kwl, fname, lutFilter))
+      return -1;
+
+   //------------------------------------------------
+
+   kwl.clear();
+   initKwl2(kwl);
+
+   // Accept test directory on command line:
+   if (argc > 1)
+      kwl.add("output_dir", argv[1]);
+
+   // Initialize the input index buffer:
+   ossimRefPtr<ossimImageData> floatTile =
+         ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, 256, 256);
+   if(!floatTile.valid())
+      return -1;
+   floatTile->initialize();
+   float dp = 1.0/256.0;
+   float p = 0;
+   float* floatBuf = floatTile->getFloatBuf();
+   ossim_uint32 pixel = 0;
+   for (int y=0; y<256; ++y)
+   {
+      for (int x=0; x<256; ++x)
+         floatBuf[pixel++] = p;
+      p += dp;
+   }
+   floatTile->validate();
+
+   // Create output image chain:
+   ossimRefPtr<ossimMemoryImageSource> memSource2 = new ossimMemoryImageSource;
+   memSource2->setImage(floatTile);
+   memSource2->setRect(0, 0, 256, 256);
+
+   ossimRefPtr<ossimImageSourceFilter> lutFilter2 = new ossimBandLutFilter();
+   lutFilter2->connectMyInputTo(memSource2.get());
+
+   // Test 1: LITERAL mode
+   cout << "\nTEST 3 -- Running threshold test...\n"<<endl;
+   fname = "thresholded-lut.tif";
+   if (!runTest(kwl, fname, lutFilter))
       return -1;
 
    return 0;

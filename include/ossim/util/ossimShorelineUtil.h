@@ -66,6 +66,8 @@ protected:
    ossim_uint8 m_marginalValue;
    ossim_uint8 m_landValue;
    ossimString m_sensor;
+   double m_threshold;
+   double m_tolerance;
 };
 
 #endif

@@ -75,7 +75,6 @@ static ossimTrace traceDebug("ossimChipperUtil:debug");
 static ossimTrace traceLog("ossimChipperUtil:log");
 static ossimTrace traceOptions("ossimChipperUtil:options");
 
-static const std::string APPLICATION_NAME_KW     = "application_name";
 static const std::string BRIGHTNESS_KW           = "brightness";
 static const std::string COLOR_BLUE_KW           = "color_blue";
 static const std::string COLOR_GREEN_KW          = "color_green";

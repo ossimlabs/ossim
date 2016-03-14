@@ -50,7 +50,6 @@
 static ossimTrace traceDebug("ossimTiffWriter:debug");
 static const char* TIFF_WRITER_OUTPUT_TILE_SIZE_X_KW = "output_tile_size_x";
 static const char* TIFF_WRITER_OUTPUT_TILE_SIZE_Y_KW = "output_tile_size_y";
-static const int   PCS_BRITISH_NATIONAL_GRID = 27700;
 static const long  DEFAULT_JPEG_QUALITY = 75;
 
 RTTI_DEF1(ossimTiffWriter, "ossimTiffWriter", ossimImageFileWriter);
