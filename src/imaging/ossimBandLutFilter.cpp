@@ -64,6 +64,8 @@ ossimRefPtr<ossimImageData> ossimBandLutFilter::getTile(const ossimIrect& tileRe
    const double null_index = theInputConnection->getNullPixelValue();
    const double null_value = theTile->getNullPix(0); // assuming same null for all bands
    ossim_uint32 maxLength = inputTile->getWidth()*inputTile->getHeight();
+
+   inputTile->write("tmp.ras"); // TODO REMOVE DEBUG
    double index, value;
 
    ossim_uint32 numBands = getNumberOfInputBands();
@@ -301,13 +303,15 @@ bool ossimBandLutFilter::initializeLut(const ossimKeywordlist& kwl, const char* 
       if (bandMap.empty())
          break;
 
+      theLut.push_back(bandMap);
+
       ++band;
-      if (numBands == 1)
+      if ((numBands == 1) || !usingBandPrefix)
          break;
 
-      theLut.push_back(bandMap);
    }
 
+   // Band still 0 would indicate a failure reading the first band entry:
    if (band == 0)
       return false;
 
@@ -317,7 +321,7 @@ bool ossimBandLutFilter::initializeLut(const ossimKeywordlist& kwl, const char* 
       if (!usingBandPrefix)
       {
          // Use the same map for all bands
-         for (int i=1; i<numBands; ++i)
+         for (ossim_uint32 i=1; i<numBands; ++i)
             theLut.push_back(theLut[0]);
       }
       else

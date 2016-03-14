@@ -85,10 +85,6 @@ bool writeTile(ossimFilename& fname, ossimImageSource* source)
 
 bool runTest(const ossimKeywordlist& kwl, ossimFilename& fname, ossimRefPtr<ossimImageSourceFilter>& lutFilter)
 {
-   ossimFilename outputPath = kwl.find("output_dir");
-   if (!outputPath.empty())
-      outputPath += "/";
-
    lutFilter->loadState(kwl);
    lutFilter->initialize();
 
@@ -104,8 +100,17 @@ int main(int argc, char *argv[])
    initKwl1(kwl);
 
    // Accept test directory on command line:
+   ossimFilename outputPath;
    if (argc > 1)
-      kwl.add("output_dir", argv[1]);
+   {
+      ossimFilename outputPath = argv[1];
+      if (!outputPath.isDir())
+      {
+         cout << "Bad destination directory <"<<outputPath<<"> specified on command line. Ignoring,"
+               << endl;
+         outputPath = "";
+      }
+   }
 
    // Initialize the input index buffer:
    ossimRefPtr<ossimImageData> indexTile =
@@ -139,24 +144,21 @@ int main(int argc, char *argv[])
    cout << "\nTEST 1 -- Running LITERAL mode test...\n"<<endl;
    kwl.add("mode", "literal");
    ossimFilename fname ("literal-lut.tif");
+   fname.setPath(outputPath);
    if (!runTest(kwl, fname, lutFilter))
       return -1;
 
-   // Test 2: VERTICES mode
+   // Test 2: INTERPOLATED mode
    cout << "\nTEST 2 -- Running INTERPOLATED mode test...\n"<<endl;
    fname = "interpolated-lut.tif";
+   fname.setPath(outputPath);
    kwl.add("mode", "interpolated");
    if (!runTest(kwl, fname, lutFilter))
       return -1;
 
-   //------------------------------------------------
-
+   // Test 3: Thresholding test using interpolated mode
    kwl.clear();
    initKwl2(kwl);
-
-   // Accept test directory on command line:
-   if (argc > 1)
-      kwl.add("output_dir", argv[1]);
 
    // Initialize the input index buffer:
    ossimRefPtr<ossimImageData> floatTile =
@@ -181,13 +183,17 @@ int main(int argc, char *argv[])
    memSource2->setImage(floatTile);
    memSource2->setRect(0, 0, 256, 256);
 
+   ossimFilename tempFile ("float_tile.tif");
+   writeTile(tempFile, memSource2.get());
+
    ossimRefPtr<ossimImageSourceFilter> lutFilter2 = new ossimBandLutFilter();
    lutFilter2->connectMyInputTo(memSource2.get());
 
    // Test 1: LITERAL mode
    cout << "\nTEST 3 -- Running threshold test...\n"<<endl;
    fname = "thresholded-lut.tif";
-   if (!runTest(kwl, fname, lutFilter))
+   fname.setPath(outputPath);
+   if (!runTest(kwl, fname, lutFilter2))
       return -1;
 
    return 0;
