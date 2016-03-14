@@ -874,8 +874,6 @@ void ossimChipProcUtil::initializeProjectionGsd()
 
 void ossimChipProcUtil::initializeAOI()
 {
-   static const char MODULE[] = "ossimChipProcUtil::assignAoiViewRect()";
-
    // Nan rect for starters.
    m_aoiViewRect.makeNan();
    m_aoiGroundRect.makeNan();

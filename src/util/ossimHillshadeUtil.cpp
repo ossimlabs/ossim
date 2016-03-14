@@ -148,8 +148,6 @@ bool ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
 
 void ossimHillshadeUtil::initProcessingChain()
 {
-   static const char MODULE[] = "ossimHillshadeUtil::initializeChain";
-
    // Set up the normal source.
    ossimRefPtr<ossimImageToPlaneNormalFilter> normSource = new ossimImageToPlaneNormalFilter;
    normSource->setTrackScaleFlag(true);
