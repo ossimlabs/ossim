@@ -1,0 +1,17 @@
+//***************************************************************
+// Template KWL for Shoreline Utility.
+// See ossimChipProcUtil.kwl for common keywords also referenced
+//***************************************************************
+#include ossimChipProcUtil.kwl
+
+type: ossimShorelineUtil
+
+// Accepts pixel value coding as:  <land> <marginal> <water> (range 0-255) 
+color_coding: 255 128 1
+
+// Threshold for index cutoff between land and water:
+threshold: 0.55
+
+// tolerance +- deviation from threshold for marginal classifications
+tolerance: 0.05
+
