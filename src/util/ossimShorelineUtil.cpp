@@ -35,6 +35,8 @@
 static const string COLOR_CODING_KW = "color_coding";
 static const string THRESHOLD_KW = "threshold";
 static const string TOLERANCE_KW = "tolerance";
+static const string ALGORITHM_KW = "algorithm";
+static const string SKIP_EDGE_DETECT_KW = "skip_edge_detect";
 
 const char* ossimShorelineUtil::DESCRIPTION =
       "Computes bitmap of water versus land areas in an input image.";
@@ -47,7 +49,10 @@ ossimShorelineUtil::ossimShorelineUtil()
      m_landValue (64),
      m_sensor ("ls8"),
      m_threshold (0.51),
-     m_tolerance(0.01)
+     m_tolerance(0.01),
+     m_algorithm(NDWI),
+     m_skipThreshold(false),
+     m_skipEdgeDetect(false)
 {
 }
 
@@ -67,14 +72,20 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
+   au->addCommandLineOption("--algorithm <name>",
+         "Specifies detection algorithm to apply. Supported names are \"ndwi\" (requires 2 input "
+         "bands: 3 and 5|6), \"awei\" (requires 4 input bands: 3, 6, 5, and 7).");
    au->addCommandLineOption("--color-coding <water> <marginal> <land>",
          "Specifies the pixel values (0-255) for the output product corresponding to water, marginal, "
          "and land zones, respectively. Defaults to 255, 128, and 64, respectively.");
+   au->addCommandLineOption("--no-edge",
+         "Directs the processing to skip edge detection step.");
    au->addCommandLineOption("--sensor <string>",
          "Sensor used to compute Modified Normalized Difference Water Index. Currently only "
          "\"ls8\" supported.");
    au->addCommandLineOption("--threshold <0.0-1.0>",
-         "Normalized threshold for converting the image to bitmap. Defaults to 0.5.");
+         "Normalized threshold for converting the image to bitmap. Defaults to 0.5. Alternatively "
+         "can be set to 'X' to skip thresholding operation.");
    au->addCommandLineOption("--tolerance <float>",
          "tolerance +- deviation from threshold for marginal classifications. Defaults to 0.05.");
 }
@@ -91,12 +102,18 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
    string ts3;
    ossimArgumentParser::ossimParameter sp3(ts3);
 
+   if ( ap.read("--algorithm", sp1))
+      m_kwl.addPair(ALGORITHM_KW, ts1);
+
    if (ap.read("--color-coding", sp1, sp2, sp3))
    {
       ostringstream value;
       value<<ts1<<" "<<ts2<<" "<<ts3;
       m_kwl.addPair( COLOR_CODING_KW, value.str() );
    }
+
+   if ( ap.read("--no-edge"))
+      m_kwl.addPair(SKIP_EDGE_DETECT_KW, string("true"));
 
    if ( ap.read("--sensor", sp1))
       m_kwl.addPair(ossimKeywordNames::SENSOR_ID_KW, ts1);
@@ -124,6 +141,21 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
       m_kwl.addList( kwl, true );
    }
 
+   value = m_kwl.findKey(ALGORITHM_KW);
+   if (!value.empty())
+   {
+      if (value=="ndwi")
+         m_algorithm = NDWI;
+      else if (value=="awei")
+         m_algorithm = AWEI;
+      else
+      {
+         xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Bad value encountered for keyword <"
+               <<ALGORITHM_KW<<">.";
+         throw(xmsg.str());
+      }
+   }
+
    value = m_kwl.findKey(COLOR_CODING_KW);
    if (!value.empty())
    {
@@ -146,9 +178,16 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
    if (!value.empty())
       m_sensor = value;
 
+   m_kwl.getBoolKeywordValue(m_skipEdgeDetect, SKIP_EDGE_DETECT_KW.c_str());
+
    value = m_kwl.findKey(THRESHOLD_KW);
    if (!value.empty())
-      m_threshold = value.toDouble();
+   {
+      if (value=="X")
+         m_skipThreshold = true;
+      else
+         m_threshold = value.toDouble();
+   }
 
    value = m_kwl.findKey(TOLERANCE_KW);
    if (!value.empty())
@@ -180,78 +219,78 @@ void ossimShorelineUtil::initLandsat8()
 {
    ostringstream xmsg;
 
-   // Landsat 8 requires two inputs: Band 3 (green) and band 6 (SWIR-1):
-   if (m_imgLayers.size() != 2)
+   ossim_uint32 reqdNumInputs = 0;
+   ossimString equationSpec;
+   switch (m_algorithm)
    {
-      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Expected two input images representing "
-            "bands 3 and 6, respectively, but only found "<<m_imgLayers.size()<<"."<<ends;
+   case NDWI:
+      reqdNumInputs = 2;
+      equationSpec = "in[0]/(in[0]+in[1])";
+      break;
+   case AWEI:
+      reqdNumInputs = 4;
+      equationSpec = "4*(in[0]+in[1]) - 0.25*in[2] - 2.75*in[3]";
+      break;
+   default:
+      break;
+   }
+
+   if (m_imgLayers.size() < reqdNumInputs)
+   {
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Expected "<< reqdNumInputs << " input images"
+            " but only found "<<m_imgLayers.size()<<"."<<ends;
       throw ossimException(xmsg.str());
    }
 
-   // Set up NDWI algorithm:
+   // Set up equation combiner:
    ossimConnectableObject::ConnectableObjectList connectable_list;
-   connectable_list.push_back(m_imgLayers[0].get());
-   connectable_list.push_back(m_imgLayers[1].get());
+   for (ossim_uint32 i=0; i<reqdNumInputs; ++i)
+      connectable_list.push_back(m_imgLayers[i].get());
    ossimRefPtr<ossimEquationCombiner> eqFilter = new ossimEquationCombiner(connectable_list);
-   eqFilter->setOutputScalarType(OSSIM_NORMALIZED_FLOAT);
-   ossimString equationSpec ("in[0]/(in[0]+in[1])");
+   eqFilter->setOutputScalarType(OSSIM_FLOAT);
    eqFilter->setEquation(equationSpec);
    m_procChain->add(eqFilter.get());
 
-   // Tap the chain here for histogram:
-   //ossimRefPtr<ossimHistogramWriter>
+   if (!m_skipThreshold)
+   {
+      // Set up threshold filter:
+      double del = FLT_EPSILON;
+      ossimString landValue = ossimString::toString(m_landValue).chars();
+      ossimString waterValue = ossimString::toString(m_waterValue).chars();
+      ossimString marginalValue = ossimString::toString(m_marginalValue).chars();
+      ossimString thresholdValueLo1 = ossimString::toString(m_threshold-m_tolerance).chars();
+      ossimString thresholdValueLo2 = ossimString::toString(m_threshold-m_tolerance+del).chars();
+      ossimString thresholdValueHi1 = ossimString::toString(m_threshold+m_tolerance).chars();
+      ossimString thresholdValueHi2 = ossimString::toString(m_threshold+m_tolerance+del).chars();
+      ossimKeywordlist remapper_kwl;
+      remapper_kwl.add("type", "ossimBandLutFilter");
+      remapper_kwl.add("enabled", "1");
+      remapper_kwl.add("mode", "interpolated");
+      remapper_kwl.add("scalar_type", "U8");
+      remapper_kwl.add("entry0.in", "0.0");
+      remapper_kwl.add("entry0.out", landValue.chars());
+      remapper_kwl.add("entry1.in", thresholdValueLo1.chars());
+      remapper_kwl.add("entry1.out", landValue.chars());
+      remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
+      remapper_kwl.add("entry2.out", marginalValue.chars());
+      remapper_kwl.add("entry3.in", thresholdValueHi1.chars());
+      remapper_kwl.add("entry3.out", marginalValue.chars());
+      remapper_kwl.add("entry4.in", thresholdValueHi2.chars());
+      remapper_kwl.add("entry4.out", waterValue.chars());
+      remapper_kwl.add("entry5.in", "1.0");
+      remapper_kwl.add("entry5.out", waterValue.chars());
+      ossimRefPtr<ossimBandLutFilter> remapper = new ossimBandLutFilter;
+      remapper->loadState(remapper_kwl);
+      m_procChain->add(remapper.get());
+   }
 
-   // Set up threshold filter:
-   double del = FLT_EPSILON;
-   ossimString landValue = ossimString::toString(m_landValue).chars();
-   ossimString waterValue = ossimString::toString(m_waterValue).chars();
-   ossimString marginalValue = ossimString::toString(m_marginalValue).chars();
-   ossimString thresholdValueLo1 = ossimString::toString(m_threshold-m_tolerance).chars();
-   ossimString thresholdValueLo2 = ossimString::toString(m_threshold-m_tolerance+del).chars();
-   ossimString thresholdValueHi1 = ossimString::toString(m_threshold+m_tolerance).chars();
-   ossimString thresholdValueHi2 = ossimString::toString(m_threshold+m_tolerance+del).chars();
-   ossimKeywordlist remapper_kwl;
-   remapper_kwl.add("type", "ossimBandLutFilter");
-   remapper_kwl.add("enabled", "1");
-   remapper_kwl.add("mode", "interpolated");
-   remapper_kwl.add("scalar_type", "U8");
-   remapper_kwl.add("entry0.in", "0.0");
-   remapper_kwl.add("entry0.out", landValue.chars());
-   remapper_kwl.add("entry1.in", thresholdValueLo1.chars());
-   remapper_kwl.add("entry1.out", landValue.chars());
-   remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
-   remapper_kwl.add("entry2.out", marginalValue.chars());
-   remapper_kwl.add("entry3.in", thresholdValueHi1.chars());
-   remapper_kwl.add("entry3.out", marginalValue.chars());
-   remapper_kwl.add("entry4.in", thresholdValueHi2.chars());
-   remapper_kwl.add("entry4.out", waterValue.chars());
-   remapper_kwl.add("entry5.in", "1.0");
-   remapper_kwl.add("entry5.out", waterValue.chars());
-   ossimRefPtr<ossimBandLutFilter> remapper = new ossimBandLutFilter;
-   remapper->loadState(remapper_kwl);
-   m_procChain->add(remapper.get());
-
-   // Set up edge detector:
-   ossimRefPtr<ossimEdgeFilter> edge_filter = new ossimEdgeFilter;
-   edge_filter->setFilterType("roberts");
-   m_procChain->add(edge_filter.get());
-
-   ossimRefPtr<ossimIndexToRgbLutFilter> lut_filter = new ossimIndexToRgbLutFilter;
-   ossimKeywordlist lut_kwl;
-   lut_kwl.add("type", "ossimIndexToRgbLutFilter");
-   lut_kwl.add("enabled", "1");
-   lut_kwl.add("mode", "vertices");
-   lut_kwl.add("entry0.index", "0");
-   lut_kwl.add("entry0.color", "0 0 0");
-   lut_kwl.add("entry1.index", "127");
-   lut_kwl.add("entry1.color", "0 0 0");
-   lut_kwl.add("entry2.index", "128");
-   lut_kwl.add("entry2.color", "255 0 0");
-   lut_kwl.add("entry3.index", "255");
-   lut_kwl.add("entry3.color", "255 0 0");
-   lut_filter->loadState(lut_kwl);
-   m_procChain->add(lut_filter.get());
-
+   if (!m_skipEdgeDetect)
+   {
+      // Set up edge detector:
+      ossimRefPtr<ossimEdgeFilter> edge_filter = new ossimEdgeFilter;
+      edge_filter->setFilterType("roberts");
+      m_procChain->add(edge_filter.get());
+   }
 }
 
 ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& bounding_irect)

@@ -35,6 +35,8 @@
 class OSSIMDLLEXPORT ossimShorelineUtil : public ossimChipProcUtil
 {
 public:
+   enum AlgorithmId { UNKNOWN, NDWI, AWEI };
+
    ossimShorelineUtil();
    ~ossimShorelineUtil();
 
@@ -69,6 +71,10 @@ protected:
    ossimString m_sensor;
    double m_threshold;
    double m_tolerance;
+   AlgorithmId m_algorithm;
+   bool m_skipThreshold;
+   bool m_skipEdgeDetect;
+
    //ossimRefPtr<ossimHistogramWriter> m_histoWriter;
 };
 

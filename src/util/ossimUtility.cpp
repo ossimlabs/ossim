@@ -99,8 +99,8 @@ void ossimUtility::getKwlTemplate(ossimKeywordlist& kwl)
    kwl_path += "/ossim/util/" + getClassName() + ".kwl";
    if (!kwl.addFile(kwl_path))
    {
-      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::getKwlTemplate() -- Could not read <"
-            <<kwl_path<<">.";
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::getKwlTemplate() -- Could not find <"
+            <<kwl_path<<">. Ignoring"<<endl;
    }
 }
 
@@ -125,8 +125,8 @@ bool ossimUtility::readTextFile(const ossimFilename& filename, string& contents)
    std::ifstream is(filename.chars());
    if (!is)
    {
-      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::readTextFile() -- Could not read <"
-            <<filename<<">.";
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::readTextFile() -- Could not find <"
+            <<filename<<">. Ignoring."<<endl;
       return false;
    }
 
