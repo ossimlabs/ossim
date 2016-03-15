@@ -462,9 +462,9 @@ void ossimEdgeFilter::runRobertsFilter(T /* dummyVariable */,
             {
                if( (*inputBuf) != np)
                {
-                  v1 = (double)inputBuf[0] - (double)(inputBuf[rowIncrement+1]);
+                  v1 = (double)inputBuf[0] - (double)(inputBuf[1]);
 
-                  v2   = (double)inputBuf[1] - (double)inputBuf[rowIncrement];
+                  v2   = (double)inputBuf[0] - (double)inputBuf[rowIncrement];
                   
                   value = sqrt(v1*v1 +  v2*v2);
 
