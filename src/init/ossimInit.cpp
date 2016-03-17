@@ -714,6 +714,11 @@ ossimFilename ossimInit::appName()const
 }
 
 ossimInit::ossimInit(const ossimInit& /* obj */ )
+:  theInitializedFlag(false),
+   theAppName(),
+   thePreferences(ossimPreferences::instance()),
+   theElevEnabledFlag(true),
+   thePluginLoaderEnabledFlag(true)
 {}       
 
 void ossimInit::operator=(const ossimInit& /* rhs */) const

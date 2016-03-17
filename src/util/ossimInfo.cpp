@@ -63,8 +63,6 @@ static const char DUMP_KW[]                 = "dump";
 static const char DUMP_NO_OVERVIEWS_KW[]    = "dump_no_overviews";
 static const char FACTORIES_KW[]            = "factories";
 static const char FACTORY_KEYWORD_LIST_KW[] = "factory_keyword_list";
-static const char FACTORY_OBJECT_KW[]       = "factory_object";
-static const char FACTORY_TYPE_KW[]         = "factory_type";
 static const char FORMAT_KW[]               = "format"; 
 static const char FT2MTRS_KW[]              = "ft2mtrs";
 static const char FT2MTRS_US_SURVEY_KW[]    = "ft2mtrs_us_survey";
@@ -81,7 +79,6 @@ static const char MTRS2FT_US_SURVEY_KW[]    = "mtrs2ft_us_survey";
 static const char MTRSPERDEG_KW[]           = "mtrs_per_deg";
 static const char NORTH_UP_KW[]             = "north_up_angle";
 static const char OUTPUT_FILE_KW[]          = "output_file";
-static const char OSSIM_LOGFILE_KW[]        = "ossim_logfile";
 static const char OVERVIEW_TYPES_KW[]       = "overview_types";
 static const char OVERWRITE_KW[]            = "overwrite";
 static const char PALETTE_KW[]              = "palette";
@@ -98,11 +95,13 @@ static const char WRITERS_KW[]              = "writers_kw";
 static const char WRITER_PROPS_KW[]         = "writer_props";
 static const char ZOOM_LEVEL_GSDS_KW[]      = "zoom_level_gsds";
 
+const char* ossimInfo::DESCRIPTION =
+      "Dumps metadata information about input image and OSSIM in general.";
+
 // Static trace for debugging.  Use -T ossimInfo to turn on.
 static ossimTrace traceDebug = ossimTrace("ossimInfo:debug");
 
 ossimInfo::ossimInfo() :
-   m_kwl(new ossimKeywordlist()),
    m_img(0)
 {
 }
@@ -111,7 +110,7 @@ ossimInfo::~ossimInfo()
 {
 }
 
-void ossimInfo::addArguments(ossimArgumentParser& ap)
+void ossimInfo::setUsage(ossimArgumentParser& ap)
 {
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
@@ -226,7 +225,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       //---
       // Start with clean options keyword list.
       //---
-      m_kwl->clear();
+      m_kwl.clear();
 
       bool requiresInputImage = false;
       
@@ -241,7 +240,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          
          if( ap.read("--build-date") )
          {
-            m_kwl->add( BUILD_DATE_KW, TRUE_KW );
+            m_kwl.add( BUILD_DATE_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -250,7 +249,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("-c") )
          {
-            m_kwl->add( IMAGE_CENTER_KW, TRUE_KW );
+            m_kwl.add( IMAGE_CENTER_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -259,7 +258,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--cg") )
          {
-            m_kwl->add( CENTER_GROUND_KW, TRUE_KW );
+            m_kwl.add( CENTER_GROUND_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -268,7 +267,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--ci") )
          {
-            m_kwl->add( CENTER_IMAGE_KW, TRUE_KW );
+            m_kwl.add( CENTER_IMAGE_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -277,7 +276,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--config") || ap.read("--configuration") )
          {
-            m_kwl->add( CONFIGURATION_KW, TRUE_KW );
+            m_kwl.add( CONFIGURATION_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -286,7 +285,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--datums") )
          {
-            m_kwl->add( DATUMS_KW, TRUE_KW );
+            m_kwl.add( DATUMS_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -295,7 +294,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--deg2rad", sp1) )
          {
-            m_kwl->add( DEG2RAD_KW, ts1.c_str() );
+            m_kwl.add( DEG2RAD_KW, ts1.c_str() );
             if ( ap.argc() < 2 )
             {
                break;
@@ -303,7 +302,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          }
          if( ap.read("-d") )
          {
-            m_kwl->add( DUMP_KW, TRUE_KW );
+            m_kwl.add( DUMP_KW, TRUE_KW );
             requiresInputImage = true;
             if ( ap.argc() < 2 )
             {
@@ -313,8 +312,8 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--dno") )
          {
-            m_kwl->add( DUMP_KW, TRUE_KW );
-            m_kwl->add( DUMP_NO_OVERVIEWS_KW, TRUE_KW );
+            m_kwl.add( DUMP_KW, TRUE_KW );
+            m_kwl.add( DUMP_NO_OVERVIEWS_KW, TRUE_KW );
             requiresInputImage = true;
             if ( ap.argc() < 2 )
             {
@@ -324,7 +323,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("-f", sp1) )
          {
-            m_kwl->add( FORMAT_KW, ts1.c_str());
+            m_kwl.add( FORMAT_KW, ts1.c_str());
             if ( ap.argc() < 2 )
             {
                break;
@@ -333,8 +332,8 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--factories", sp1) )
          {
-            m_kwl->add( FACTORIES_KW, TRUE_KW);
-            m_kwl->add( FACTORY_KEYWORD_LIST_KW, ts1.c_str());
+            m_kwl.add( FACTORIES_KW, TRUE_KW);
+            m_kwl.add( FACTORY_KEYWORD_LIST_KW, ts1.c_str());
             if ( ap.argc() < 2 )
             {
                break;
@@ -343,7 +342,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--ft2mtrs", sp1) )
          {
-            m_kwl->add( FT2MTRS_KW, ts1.c_str());
+            m_kwl.add( FT2MTRS_KW, ts1.c_str());
             if ( ap.argc() < 2 )
             {
                break;
@@ -352,8 +351,8 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--ft2mtrs-us-survey", sp1) )
          {
-            m_kwl->add( FT2MTRS_KW, ts1.c_str());
-            m_kwl->add( FT2MTRS_US_SURVEY_KW, TRUE_KW);
+            m_kwl.add( FT2MTRS_KW, ts1.c_str());
+            m_kwl.add( FT2MTRS_US_SURVEY_KW, TRUE_KW);
             if ( ap.argc() < 2 )
             {
                break;
@@ -369,7 +368,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             ossimGpt gpt;
             gpt.lat = lat.toFloat64();
             gpt.lon = lon.toFloat64();
-            m_kwl->add( HEIGHT_KW, gpt.toString().c_str() );
+            m_kwl.add( HEIGHT_KW, gpt.toString().c_str() );
             if ( ap.argc() < 2 )
             {
                break;
@@ -378,7 +377,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          
          if( ap.read("-i") )
          {
-            m_kwl->add( IMAGE_INFO_KW, TRUE_KW );
+            m_kwl.add( IMAGE_INFO_KW, TRUE_KW );
             requiresInputImage = true;
             if ( ap.argc() < 2 )
             {
@@ -393,7 +392,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             ossimDpt dpt;
             dpt.x = x.toFloat64();
             dpt.y = y.toFloat64();
-            m_kwl->add( IMG2GRD_KW, dpt.toString().c_str() );
+            m_kwl.add( IMG2GRD_KW, dpt.toString().c_str() );
             if ( ap.argc() < 2 )
             {
                break;
@@ -402,7 +401,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          
          if( ap.read("-m") )
          {
-            m_kwl->add( METADATA_KW, TRUE_KW );
+            m_kwl.add( METADATA_KW, TRUE_KW );
             requiresInputImage = true;
             if ( ap.argc() < 2 )
             {
@@ -412,7 +411,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--mtrs2ft", sp1) )
          {
-            m_kwl->add( MTRS2FT_KW, ts1.c_str());
+            m_kwl.add( MTRS2FT_KW, ts1.c_str());
             if ( ap.argc() < 2 )
             {
                break;
@@ -421,8 +420,8 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--mtrs2ft-us-survey", sp1) )
          {
-            m_kwl->add( MTRS2FT_KW, ts1.c_str());
-            m_kwl->add( MTRS2FT_US_SURVEY_KW, TRUE_KW);
+            m_kwl.add( MTRS2FT_KW, ts1.c_str());
+            m_kwl.add( MTRS2FT_US_SURVEY_KW, TRUE_KW);
             if ( ap.argc() < 2 )
             {
                break;
@@ -431,7 +430,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          
          if( ap.read("--mtrsPerDeg", sp1) )
          {
-            m_kwl->add( MTRSPERDEG_KW, ts1.c_str());
+            m_kwl.add( MTRSPERDEG_KW, ts1.c_str());
             if ( ap.argc() < 2 )
             {
                break;
@@ -440,7 +439,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("-n") || ap.read("--north-up") )
          {
-            m_kwl->add( NORTH_UP_KW, TRUE_KW );
+            m_kwl.add( NORTH_UP_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -449,7 +448,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("-o", sp1) )
          {
-            m_kwl->add( OUTPUT_FILE_KW, ts1.c_str());
+            m_kwl.add( OUTPUT_FILE_KW, ts1.c_str());
             if ( ap.argc() < 2 )
             {
                break;
@@ -458,7 +457,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--overview-types") )
          {
-            m_kwl->add( OVERVIEW_TYPES_KW, TRUE_KW );
+            m_kwl.add( OVERVIEW_TYPES_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -467,7 +466,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("-p") )
          {
-            m_kwl->add( GEOM_INFO_KW, TRUE_KW );
+            m_kwl.add( GEOM_INFO_KW, TRUE_KW );
             requiresInputImage = true;
             if ( ap.argc() < 2 )
             {
@@ -477,7 +476,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          
          if( ap.read("--palette") )
          {
-            m_kwl->add( PALETTE_KW, TRUE_KW );
+            m_kwl.add( PALETTE_KW, TRUE_KW );
             requiresInputImage = true;
             if ( ap.argc() < 2 )
             {
@@ -487,7 +486,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--plugins") )
          {
-            m_kwl->add( PLUGINS_KW, TRUE_KW );
+            m_kwl.add( PLUGINS_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -496,7 +495,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--plugin-test", sp1) )
          {
-            m_kwl->add( PLUGIN_TEST_KW, ts1.c_str());
+            m_kwl.add( PLUGIN_TEST_KW, ts1.c_str());
             if ( ap.argc() < 2 )
             {
                break;
@@ -505,7 +504,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--projections") )
          {
-            m_kwl->add( PROJECTIONS_KW, TRUE_KW );
+            m_kwl.add( PROJECTIONS_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -514,7 +513,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("-r") )
          {
-            m_kwl->add( IMAGE_RECT_KW, TRUE_KW );
+            m_kwl.add( IMAGE_RECT_KW, TRUE_KW );
             requiresInputImage = true;
             if ( ap.argc() < 2 )
             {
@@ -524,7 +523,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--rad2deg", sp1) )
          {
-            m_kwl->add( RAD2DEG_KW, ts1.c_str());
+            m_kwl.add( RAD2DEG_KW, ts1.c_str());
             if ( ap.argc() < 2 )
             {
                break;
@@ -533,7 +532,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--reader-props") )
          {
-            m_kwl->add( READER_PROPS_KW, TRUE_KW );
+            m_kwl.add( READER_PROPS_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -542,7 +541,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          
          if( ap.read("--resampler-filters") )
          {
-            m_kwl->add( RESAMPLER_FILTERS_KW, TRUE_KW );
+            m_kwl.add( RESAMPLER_FILTERS_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -552,7 +551,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          if( ap.read("--revision") ||
              ap.read("--revision-number") ) // backwards compat
          {
-            m_kwl->add( REVISION_NUMBER_KW, TRUE_KW );
+            m_kwl.add( REVISION_NUMBER_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -561,7 +560,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          
          if( ap.read("-u") || ap.read("--up-is-up") )
          {
-            m_kwl->add( UP_IS_UP_KW, TRUE_KW );
+            m_kwl.add( UP_IS_UP_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -570,7 +569,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("-v") )
          {
-            m_kwl->add( OVERWRITE_KW, TRUE_KW );
+            m_kwl.add( OVERWRITE_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -579,7 +578,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--version") || ap.read("-V") )
          {
-            m_kwl->add( VERSION_KW, TRUE_KW );
+            m_kwl.add( VERSION_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -588,7 +587,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          
          if( ap.read("--writer-props") )
          {
-            m_kwl->add( WRITER_PROPS_KW, TRUE_KW );
+            m_kwl.add( WRITER_PROPS_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -597,7 +596,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
          if( ap.read("--writers") )
          {
-            m_kwl->add( WRITERS_KW, TRUE_KW );
+            m_kwl.add( WRITERS_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -606,7 +605,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          
          if( ap.read("--zoom-level-gsds") )
          {
-            m_kwl->add( ZOOM_LEVEL_GSDS_KW, TRUE_KW );
+            m_kwl.add( ZOOM_LEVEL_GSDS_KW, TRUE_KW );
             if ( ap.argc() < 2 )
             {
                break;
@@ -628,7 +627,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
       if ( ap.argc() == 2 )
       {
-         m_kwl->add( IMAGE_FILE_KW, ap[1]  );
+         m_kwl.add( IMAGE_FILE_KW, ap[1]  );
       }
 
       if ( requiresInputImage && ( ap.argc() == 1 ) )
@@ -644,7 +643,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "m_kwl:\n" << *(m_kwl.get()) << "\n"
+         << "m_kwl:\n" << m_kwl << "\n"
          << M << " exit result = " << (result?"true":"false")
          << "\n";
    }
@@ -652,11 +651,11 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
    return result;
 }
 
-void ossimInfo::execute()
+bool ossimInfo::execute()
 {
    static const char M[] = "ossimInfo::execute()";
    
-   const ossim_uint32 KEY_COUNT = m_kwl->getSize();
+   const ossim_uint32 KEY_COUNT = m_kwl.getSize();
 
    if ( traceDebug() )
    {
@@ -671,7 +670,7 @@ void ossimInfo::execute()
    
       const char* lookup;
 
-      lookup = m_kwl->find(IMAGE_FILE_KW);
+      lookup = m_kwl.find(IMAGE_FILE_KW);
       if ( lookup )
       {
          ++consumedKeys;
@@ -691,7 +690,7 @@ void ossimInfo::execute()
                << BUILD_DATE_KW << ": " << value << "\n";
          }
          
-         lookup = m_kwl->find(CONFIGURATION_KW);
+         lookup = m_kwl.find(CONFIGURATION_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -702,7 +701,7 @@ void ossimInfo::execute()
             }
          }
    
-         lookup = m_kwl->find(DATUMS_KW);
+         lookup = m_kwl.find(DATUMS_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -713,7 +712,7 @@ void ossimInfo::execute()
             }
          }
 
-         lookup = m_kwl->find(DEG2RAD_KW);
+         lookup = m_kwl.find(DEG2RAD_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -721,13 +720,13 @@ void ossimInfo::execute()
             deg2rad( value.toFloat64() );
          }
 
-         lookup = m_kwl->find(FACTORIES_KW);
+         lookup = m_kwl.find(FACTORIES_KW);
          if ( lookup )
          {
             ++consumedKeys;
             ossimString factories = lookup;
             bool keywordListFlag = false;
-            lookup = m_kwl->find(FACTORY_KEYWORD_LIST_KW);
+            lookup = m_kwl.find(FACTORY_KEYWORD_LIST_KW);
             if ( lookup )
             {
                ++consumedKeys;
@@ -736,13 +735,13 @@ void ossimInfo::execute()
             printFactories(keywordListFlag);
          }
 
-         lookup = m_kwl->find(FT2MTRS_KW);
+         lookup = m_kwl.find(FT2MTRS_KW);
          if ( lookup )
          {
             ++consumedKeys;
             value = lookup;
             bool us_survey = false;
-            lookup = m_kwl->find(FT2MTRS_US_SURVEY_KW);
+            lookup = m_kwl.find(FT2MTRS_US_SURVEY_KW);
             if ( lookup )
             {
                ++consumedKeys;
@@ -751,7 +750,7 @@ void ossimInfo::execute()
             ft2mtrs( value.toFloat64(), us_survey);
          }
 
-         lookup = m_kwl->find(HEIGHT_KW);
+         lookup = m_kwl.find(HEIGHT_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -761,13 +760,13 @@ void ossimInfo::execute()
             outputHeight(gpt);
          }
 
-         lookup = m_kwl->find(MTRS2FT_KW);
+         lookup = m_kwl.find(MTRS2FT_KW);
          if ( lookup )
          {
             ++consumedKeys;
             value = lookup;
             bool us_survey = false;
-            lookup = m_kwl->find(MTRS2FT_US_SURVEY_KW);
+            lookup = m_kwl.find(MTRS2FT_US_SURVEY_KW);
             if ( lookup )
             {
                ++consumedKeys;
@@ -776,7 +775,7 @@ void ossimInfo::execute()
             mtrs2ft( value.toFloat64(), us_survey);
          }
 
-         lookup = m_kwl->find(MTRSPERDEG_KW);
+         lookup = m_kwl.find(MTRSPERDEG_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -784,7 +783,7 @@ void ossimInfo::execute()
             mtrsPerDeg( value.toFloat64() );
          }
 
-         lookup = m_kwl->find(OVERVIEW_TYPES_KW);
+         lookup = m_kwl.find(OVERVIEW_TYPES_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -795,7 +794,7 @@ void ossimInfo::execute()
             }
          }
 
-         lookup = m_kwl->find(PLUGINS_KW);
+         lookup = m_kwl.find(PLUGINS_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -806,7 +805,7 @@ void ossimInfo::execute()
             }
          }
 
-         lookup = m_kwl->find(PLUGIN_TEST_KW);
+         lookup = m_kwl.find(PLUGIN_TEST_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -814,7 +813,7 @@ void ossimInfo::execute()
             testPlugin(value);
          }
 
-         lookup = m_kwl->find(PROJECTIONS_KW);
+         lookup = m_kwl.find(PROJECTIONS_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -825,7 +824,7 @@ void ossimInfo::execute()
             }
          }
 
-         lookup = m_kwl->find(RAD2DEG_KW);
+         lookup = m_kwl.find(RAD2DEG_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -833,7 +832,7 @@ void ossimInfo::execute()
             rad2deg( value.toFloat64() );
          }
 
-         lookup = m_kwl->find(READER_PROPS_KW);
+         lookup = m_kwl.find(READER_PROPS_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -844,7 +843,7 @@ void ossimInfo::execute()
             }
          }
    
-         lookup = m_kwl->find(RESAMPLER_FILTERS_KW);
+         lookup = m_kwl.find(RESAMPLER_FILTERS_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -869,7 +868,7 @@ void ossimInfo::execute()
                << VERSION_KW << ": " << value << "\n";
          }
 
-         lookup = m_kwl->find(WRITERS_KW);
+         lookup = m_kwl.find(WRITERS_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -880,7 +879,7 @@ void ossimInfo::execute()
             }
          }
 
-         lookup = m_kwl->find(WRITER_PROPS_KW);
+         lookup = m_kwl.find(WRITER_PROPS_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -891,7 +890,7 @@ void ossimInfo::execute()
             }
          }
 
-         lookup = m_kwl->find(ZOOM_LEVEL_GSDS_KW);
+         lookup = m_kwl.find(ZOOM_LEVEL_GSDS_KW);
          if ( lookup )
          {
             ++consumedKeys;
@@ -917,6 +916,7 @@ void ossimInfo::execute()
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << M << " exited...\n";
    }
+   return true;
 }
 
 ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
@@ -938,7 +938,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    bool overwriteFlag = false;   
    bool xmlOutFlag    = false;
 
-   lookup = m_kwl->find( OVERWRITE_KW );
+   lookup = m_kwl.find( OVERWRITE_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -947,7 +947,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }
    
    // Check for xml format option.
-   lookup = m_kwl->find( FORMAT_KW );
+   lookup = m_kwl.find( FORMAT_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -958,7 +958,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       }
    }
 
-   lookup = m_kwl->find( OUTPUT_FILE_KW );
+   lookup = m_kwl.find( OUTPUT_FILE_KW );
    ossimFilename outputFile;
    if ( lookup )
    {
@@ -967,11 +967,11 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }
    
    // Check for dump.  Does not require image to be opened.
-   lookup = m_kwl->find( DUMP_KW );
+   lookup = m_kwl.find( DUMP_KW );
    if ( lookup )
    {
       ++consumedKeys;
-      lookup = m_kwl->find( DUMP_NO_OVERVIEWS_KW );
+      lookup = m_kwl.find( DUMP_NO_OVERVIEWS_KW );
       if ( lookup )
       {
          ++consumedKeys;
@@ -1008,7 +1008,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    bool upIsUpFlag       = false;
    
    // Center Ground:
-   lookup = m_kwl->find( CENTER_GROUND_KW );
+   lookup = m_kwl.find( CENTER_GROUND_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1017,7 +1017,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }
 
    // Center Image:
-   lookup = m_kwl->find( CENTER_IMAGE_KW );
+   lookup = m_kwl.find( CENTER_IMAGE_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1026,7 +1026,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }
 
    // Metadata:
-   lookup = m_kwl->find( METADATA_KW );
+   lookup = m_kwl.find( METADATA_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1035,7 +1035,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }
    
    // Palette:
-   lookup = m_kwl->find( PALETTE_KW );
+   lookup = m_kwl.find( PALETTE_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1044,7 +1044,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }
 
    // Image center:
-   lookup = m_kwl->find( IMAGE_CENTER_KW );
+   lookup = m_kwl.find( IMAGE_CENTER_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1053,7 +1053,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }
 
    // Image rect:
-   lookup = m_kwl->find( IMAGE_RECT_KW );
+   lookup = m_kwl.find( IMAGE_RECT_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1065,7 +1065,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    // General image info:
    // Defaulted ON if no image options set.
    //---
-   lookup = m_kwl->find( IMAGE_INFO_KW ); 
+   lookup = m_kwl.find( IMAGE_INFO_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1073,7 +1073,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       imageInfoFlag = value.toBool();
    }
 
-   lookup = m_kwl->find( IMG2GRD_KW ); 
+   lookup = m_kwl.find( IMG2GRD_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1084,7 +1084,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    // Image geometry info:
    // Defaulted on if no image options set.
    //---
-   lookup = m_kwl->find( GEOM_INFO_KW );
+   lookup = m_kwl.find( GEOM_INFO_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1093,7 +1093,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }      
 
    // North up:
-   lookup = m_kwl->find( NORTH_UP_KW );
+   lookup = m_kwl.find( NORTH_UP_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1102,7 +1102,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }
 
    // Up is up:
-   lookup = m_kwl->find( UP_IS_UP_KW );
+   lookup = m_kwl.find( UP_IS_UP_KW );
    if ( lookup )
    {
       ++consumedKeys;
@@ -1914,7 +1914,7 @@ void ossimInfo::getImg2grd( ossimImageHandler* ih,
             
             if( !bounds.hasNans() )
             {
-               std::string value = m_kwl->findKey( IMG2GRD_KW );
+               std::string value = m_kwl.findKey( IMG2GRD_KW );
                if ( value.size() )
                {
                   ossimDpt ipt;
@@ -2798,7 +2798,7 @@ void ossimInfo::usage(ossimArgumentParser& ap)
    ap.getApplicationUsage()->setApplicationName(ap.getApplicationName());
 
    // Add options.
-   addArguments(ap);
+   setUsage(ap);
    
    // Write usage.
    ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
@@ -2851,13 +2851,10 @@ void ossimInfo::outputXml( const ossimKeywordlist& kwl, const ossimFilename& fil
 bool ossimInfo::keyIsTrue( const std::string& key ) const
 {
    bool result = false;
-   if ( m_kwl.valid() )
+   std::string value = m_kwl.findKey( key );
+   if ( value.size() )
    {
-      std::string value = m_kwl->findKey( key );
-      if ( value.size() )
-      {
-         result = ossimString(value).toBool();
-      }
+      result = ossimString(value).toBool();
    }
    return result;
 }

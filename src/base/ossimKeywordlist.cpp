@@ -21,10 +21,6 @@
 #include <utility>
 
 static ossimTrace traceDebug("ossimKeywordlist:debug");
-static const ossim_int32 MAX_LINE_LENGTH = 256;
-static const char NULL_KEY_NOTICE[]
-= "ossimKeywordlist Notice:  Null key passed to method.";
-
 
 #ifdef OSSIM_ID_ENABLED
 static const bool TRACE = false;

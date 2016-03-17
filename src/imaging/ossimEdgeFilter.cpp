@@ -309,9 +309,9 @@ void ossimEdgeFilter::runSobelFilter(T /* dummyVariable */,
    {
       T* inputBuf  = static_cast<T*>(inputData->getBuf(bandIdx));
       T* outputBuf = static_cast<T*>(theTile->getBuf(bandIdx));
-      T np         = static_cast<T>(theTile->getNullPix(bandIdx));
-      T minP       = static_cast<T>(theTile->getMinPix(bandIdx));
-      T maxP       = static_cast<T>(theTile->getMaxPix(bandIdx));
+      T np         = static_cast<T>(inputData->getNullPix(bandIdx));
+      T minP       = static_cast<T>(inputData->getMinPix(bandIdx));
+      T maxP       = static_cast<T>(inputData->getMaxPix(bandIdx));
 
       if(inputBuf&&outputBuf)
       {
@@ -380,9 +380,9 @@ void ossimEdgeFilter::runPrewittFilter(T /* dummyVariable */,
    {
       T* inputBuf  = static_cast<T*>(inputData->getBuf(bandIdx));
       T* outputBuf = static_cast<T*>(theTile->getBuf(bandIdx));
-      T np         = static_cast<T>(theTile->getNullPix(bandIdx));
-      T minP       = static_cast<T>(theTile->getMinPix(bandIdx));
-      T maxP       = static_cast<T>(theTile->getMaxPix(bandIdx));
+      T np         = static_cast<T>(inputData->getNullPix(bandIdx));
+      T minP       = static_cast<T>(inputData->getMinPix(bandIdx));
+      T maxP       = static_cast<T>(inputData->getMaxPix(bandIdx));
 
       if(inputBuf&&outputBuf)
       {
@@ -450,9 +450,9 @@ void ossimEdgeFilter::runRobertsFilter(T /* dummyVariable */,
    {
       T* inputBuf  = static_cast<T*>(inputData->getBuf(bandIdx));
       T* outputBuf = static_cast<T*>(theTile->getBuf(bandIdx));
-      T np         = static_cast<T>(theTile->getNullPix(bandIdx));
-      T minP       = static_cast<T>(theTile->getMinPix(bandIdx));
-      T maxP       = static_cast<T>(theTile->getMaxPix(bandIdx));
+      T np         = static_cast<T>(inputData->getNullPix(bandIdx));
+      T minP       = static_cast<T>(inputData->getMinPix(bandIdx));
+      T maxP       = static_cast<T>(inputData->getMaxPix(bandIdx));
 
       if(inputBuf&&outputBuf)
       {
@@ -462,9 +462,9 @@ void ossimEdgeFilter::runRobertsFilter(T /* dummyVariable */,
             {
                if( (*inputBuf) != np)
                {
-                  v1 = (double)inputBuf[0] - (double)(inputBuf[rowIncrement+1]);
+                  v1 = (double)inputBuf[0] - (double)(inputBuf[1]);
 
-                  v2   = (double)inputBuf[1] - (double)inputBuf[rowIncrement];
+                  v2   = (double)inputBuf[0] - (double)inputBuf[rowIncrement];
                   
                   value = sqrt(v1*v1 +  v2*v2);
 
@@ -518,9 +518,9 @@ void ossimEdgeFilter::runLaplacianFilter(T /* dummyVariable */,
    {
       T* inputBuf  = static_cast<T*>(inputData->getBuf(bandIdx));
       T* outputBuf = static_cast<T*>(theTile->getBuf(bandIdx));
-      T np         = static_cast<T>(theTile->getNullPix(bandIdx));
-      T minP       = static_cast<T>(theTile->getMinPix(bandIdx));
-      T maxP       = static_cast<T>(theTile->getMaxPix(bandIdx));
+      T np         = static_cast<T>(inputData->getNullPix(bandIdx));
+      T minP       = static_cast<T>(inputData->getMinPix(bandIdx));
+      T maxP       = static_cast<T>(inputData->getMaxPix(bandIdx));
 
       if(inputBuf&&outputBuf)
       {

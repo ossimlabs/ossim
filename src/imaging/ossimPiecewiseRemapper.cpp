@@ -913,6 +913,8 @@ void ossimPiecewiseRemapper::setupTable()
 
 // Private to disallow use...
 ossimPiecewiseRemapper::ossimPiecewiseRemapper(const ossimPiecewiseRemapper&)
+:  m_dirty(true),
+   m_remapType(UNKNOWN)
 {
 }
 

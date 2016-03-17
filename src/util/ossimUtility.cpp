@@ -16,11 +16,25 @@
 using namespace std;
 
 ossimUtility::ossimUtility()
+   : m_kwl()
 {
 }
 
 ossimUtility::~ossimUtility()
 {
+}
+
+void ossimUtility::clear()
+{
+}
+
+void ossimUtility::abort()
+{
+}
+
+ossimString ossimUtility::getClassName() const
+{
+   return "ossimUtility";
 }
 
 void ossimUtility::setUsage(ossimArgumentParser& ap)
@@ -74,14 +88,19 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
    return true;
 }
 
+void ossimUtility::initialize(const ossimKeywordlist& kwl)
+{
+   m_kwl = kwl;
+}
+
 void ossimUtility::getKwlTemplate(ossimKeywordlist& kwl)
 {
    ossimFilename kwl_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
    kwl_path += "/ossim/util/" + getClassName() + ".kwl";
    if (!kwl.addFile(kwl_path))
    {
-      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::getKwlTemplate() -- Could not read <"
-            <<kwl_path<<">.";
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::getKwlTemplate() -- Could not find <"
+            <<kwl_path<<">. Ignoring"<<endl;
    }
 }
 
@@ -106,8 +125,8 @@ bool ossimUtility::readTextFile(const ossimFilename& filename, string& contents)
    std::ifstream is(filename.chars());
    if (!is)
    {
-      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::readTextFile() -- Could not read <"
-            <<filename<<">.";
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::readTextFile() -- Could not find <"
+            <<filename<<">. Ignoring."<<endl;
       return false;
    }
 

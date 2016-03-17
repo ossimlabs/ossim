@@ -4,28 +4,5 @@
 //***************************************************************
 type: ossimSlopeUtil
 
-<<<<<<< HEAD
-// The center position of the output product. Required if no input DEM is specified.
-center_lat_lon: <dec_lat> <dec_lon>
-
-// Specifies the input DEM filename. If none provided, the elevation database is referenced 
-// as specified in prefs file for the center and ROI specified.
-elevation_cell: <dem_file>
-
-// The range of slope angle (0.0 to 90.0) is remapped to 0-255 (one byte/pixel)
-remap_to_8bit: true|false
-
-// Specifies the optional lookup table filename for mapping the single-band output 
-// image to an RGB. The LUT provided must be in the ossimIndexToRgbLutFilter format 
-// and should accommodate the output pixel range. This option forces remap to 8-bit, 
-// 0-255 where 255 = 90 deg slope.
-lut_file: <lut_file>
-
-// Radius of interest surrounding the center point. If absent, the product defaults to
-// 1024 x 1024 pixels, with a radius of 512 * GSD. Alternatively, if a DEM file is
-// specified, the product ROI defaults to the full DEM coverage.
-roi_radius: <meters>
-
-=======
 #include ossimChipProcUtil.kwl
->>>>>>> dev
+

@@ -10,32 +10,17 @@
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimObject.h>
-#include <ossim/base/ossimProcessInterface.h>
-#include <ossim/base/ossimListenerManager.h>
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimKeywordlist.h>
 
 /*!
  *  Base class for all OSSIM utility applications.
  */
-class OSSIM_DLL ossimUtility : public ossimObject,
-                               public ossimProcessInterface,
-                               public ossimListenerManager
+class OSSIM_DLL ossimUtility : public ossimObject
 {
 public:
    ossimUtility();
-   ~ossimUtility();
-
-   /**
-    * Initializes the aurgument parser with expected parameters and options. It does not output
-    * anything. To see the usage, the caller will need to do something like:
-    *
-    *   ap.getApplicationUsage()->write(<ostream>);
-    *
-    * This base class has some common arguments to add. The derived class should call this
-    * implementation in addition to setting its own arguments.
-    */
-   virtual void setUsage(ossimArgumentParser& ap);
+   virtual ~ossimUtility();
 
    /**
     * Initializes from command line arguments.
@@ -51,7 +36,7 @@ public:
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
     * @note Throws ossimException on error.
     */
-   virtual void initialize(const ossimKeywordlist& /*kwl*/) { }
+   virtual void initialize(const ossimKeywordlist& kwl);
 
    /**
     * Writes product to output file. Always returns true since using exception on error.
@@ -62,12 +47,12 @@ public:
    /**
     * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
     */
-   virtual void clear() {}
+   virtual void clear();
 
    /**
     * Kills current (asynchronous) process. Defaults to do nothing.
     */
-   virtual void abort() {}
+   virtual void abort();
 
    /**
     * Assigns a template keywordlist to string for initializing derived classes.
@@ -80,10 +65,7 @@ public:
    void getAPI(std::string& out) const;
    std::string getAPI() const;
 
-   virtual ossimObject* getObject() { return this; }
-   virtual const ossimObject* getObject() const  { return this; }
-   virtual ossimListenerManager* getManager()  { return this; };
-   virtual ossimString getClassName() const { return "ossimUtility"; }
+   virtual ossimString getClassName() const;
 
    /**
     * @brief Gets build date.
@@ -106,7 +88,26 @@ public:
    // NOTE: The ossimUtilityFactory::getCapabilities() needs to access a brief description of each
    // utility. For convenience, the ossimUtility-derived (final) classes should declare a public
    // static member to hold the description string. See ossimViewshedUtility for an example.
-   // static const char* DESCRIPTION;
+   //static const char* DESCRIPTION;
+
+   /** Overrides base class implementation to indicate this class supports getChip() calls.
+    * Can be done with dunamic cast and pointer test, but not sure how that is supported in SWIG
+    * (OLK 11/2015). */
+   virtual bool isChipProcessor() const { return false; }
+
+protected:
+   /**
+    * Initializes the aurgument parser with expected parameters and options. It does not output
+    * anything. To see the usage, the caller will need to do something like:
+    *
+    *   ap.getApplicationUsage()->write(<ostream>);
+    *
+    * This base class has some common arguments to add. The derived class should call this
+    * implementation in addition to setting its own arguments.
+    */
+   virtual void setUsage(ossimArgumentParser& ap);
+
+   ossimKeywordlist m_kwl;
 
 private:
    /**

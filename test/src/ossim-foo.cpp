@@ -4,8 +4,6 @@
 //
 // File: ossim-foo.cpp
 //
-// Author:  David Burken
-//
 // Description: Contains application definition "ossim-foo" app.
 //
 // NOTE:  This is supplied for simple quick test. DO NOT checkin your test to
@@ -13,7 +11,7 @@
 //        After completion you can do a "svn revert foo.cpp" if you want to
 //        keep your working repository up to snuff.
 //
-// $Id: ossim-foo.cpp 23002 2014-11-24 17:11:17Z dburken $
+// $Id$
 //----------------------------------------------------------------------------
 
 // ossim includes:  These are here just to save time/typing...

@@ -567,6 +567,12 @@ ostream& operator<<(ostream& os, const ossimTableRemapper& tr)
 
 // Private to disallow use...
 ossimTableRemapper::ossimTableRemapper(const ossimTableRemapper&)
+: theNormBuf(0),
+  theTableBinCount(0),
+  theTableBandCount(0),
+  theTableType(UKNOWN),
+  theInputScalarType(OSSIM_SCALAR_UNKNOWN),
+  theOutputScalarType(OSSIM_SCALAR_UNKNOWN)
 {
 }
 

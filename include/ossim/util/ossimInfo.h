@@ -22,10 +22,10 @@
 #include <ossim/base/ossimReferenced.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimImageHandler.h>
+#include <ossim/util/ossimUtility.h>
 
 #include <ostream>
 
-class ossimArgumentParser;
 class ossimGpt;
 
 /**
@@ -36,9 +36,11 @@ class ossimGpt;
  * loaded plugins, and just general stuff like height for point, conversions
  * and so on that are easily obtained through the library.
  */
-class OSSIM_DLL ossimInfo : public ossimReferenced
+class OSSIM_DLL ossimInfo : public ossimUtility
 {
 public:
+   /** Used by ossimUtilityFactory */
+   static const char* DESCRIPTION;
 
    /** default constructor */
    ossimInfo();
@@ -50,7 +52,7 @@ public:
     * @brief Adds application arguments to the argument parser.
     * @param ap Parser to add to.
     */
-   void addArguments(ossimArgumentParser& ap);
+   virtual void setUsage(ossimArgumentParser& ap);
 
    /**
     * @brief Initial method.
@@ -62,7 +64,7 @@ public:
     *
     * @return true, indicating process should continue with execute.
     */
-   bool initialize(ossimArgumentParser& ap);
+   virtual bool initialize(ossimArgumentParser& ap);
 
    /**
     * @brief execute method.
@@ -72,7 +74,9 @@ public:
     * 
     * @note Throws ossimException on error.
     */
-   void execute();
+   virtual bool execute();
+
+   virtual ossimString getClassName() const { return "ossimInfo"; }
 
    /**
     * @brief handles image options.
@@ -705,9 +709,6 @@ private:
 
    /** @return true if key is set to true; false, if not. */
    bool keyIsTrue( const std::string& key ) const;
-
-   /** Hold all options passed into intialize except writer props. */
-   ossimRefPtr<ossimKeywordlist> m_kwl;
 
    /** Holds the open image. */
    ossimRefPtr<ossimImageHandler> m_img;

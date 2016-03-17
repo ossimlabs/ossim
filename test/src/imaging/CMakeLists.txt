@@ -1,6 +1,7 @@
 # $Id: CMakeLists.txt 23496 2015-08-28 15:26:18Z okramer $
 
 # Remainder to be built but not installed
+OSSIM_SETUP_APPLICATION(ossim-band-lut-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-band-lut-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-get-pixel-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-get-pixel-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-gpkg-writer-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-gpkg-writer-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-gsd-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-gsd-test.cpp)
