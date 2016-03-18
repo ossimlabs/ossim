@@ -26,10 +26,10 @@
 test1.description: Test of potrace plugin
 
 // Commands to generate expected results.
-test1.expected_results_command0: ossim-potrace-plugin-test $(OSSIM_BATCH_TEST_DATA)/public/potrace/simulated.tif > $(OBT_EXP_DIR)/potrace-plugin-test.txt
+test1.expected_results_command0: ossim-potrace $(OSSIM_BATCH_TEST_DATA)/public/potrace/simulated.tif > $(OBT_EXP_DIR)/potrace-plugin-test.txt
 
 // The actual commands to test.
-test1.test_command0: ossim-index-to-rgb-lut-test $(OSSIM_BATCH_TEST_DATA)/public/potrace/simulated.tif > $(OBT_OUT_DIR)/potrace-plugin-test.txt
+test1.test_command0: ossim-potrace $(OSSIM_BATCH_TEST_DATA)/public/potrace/simulated.tif > $(OBT_OUT_DIR)/potrace-plugin-test.txt
 
 // The post-processing (comparison) commands. Typically these involve a file 
 // comparison of last run command against expected results.
