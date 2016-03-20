@@ -44,6 +44,7 @@ public:
    virtual bool initialize(ossimArgumentParser& ap);
    virtual void initialize(const ossimKeywordlist& kwl);
    virtual ossimRefPtr<ossimImageData> getChip(const ossimIrect& img_rect);
+   virtual bool execute();
 
    virtual ossimString getClassName() const { return "ossimShorelineUtil"; }
 
@@ -73,7 +74,9 @@ protected:
    double m_tolerance;
    AlgorithmId m_algorithm;
    bool m_skipThreshold;
-   bool m_skipEdgeDetect;
+   double m_smoothing;
+   bool m_doEdgeDetect;
+   ossimFilename m_vectorFilename;
 
    //ossimRefPtr<ossimHistogramWriter> m_histoWriter;
 };
