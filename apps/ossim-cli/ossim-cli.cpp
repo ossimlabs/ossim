@@ -36,17 +36,26 @@ int main(int argc, char *argv[])
       ossimString toolName;
       ossimKeywordlist kwl;
       char input[256];
+      bool usingCmdLineMode = false;
 
-      if ((argc > 1) && (ossimString(argv[1]) == "--help"))
+      if ((argc > 1) && (ossimString(argv[1]).contains("help")))
       {
          cout << "\nUsage: "<<argv[0]<<" [ <job_kwl> ] \n"<<endl;
+         cout << "\n       "<<argv[0]<<" <command> [<command options and required parameters>]\n"<<endl;
+         exit (0);
       }
+
       if (argc > 1)
       {
-         if (kwl.addFile(argv[1]))
+         ossimString argv1 (ap[1]);
+         if (kwl.addFile(ossimFilename(argv1)))
             toolName = kwl.find("tool");
          else
-            toolName = argv[1];
+         {
+            toolName = argv1;
+            usingCmdLineMode = true;
+         }
+         ap.remove(0);
       }
 
       do
@@ -71,7 +80,17 @@ int main(int argc, char *argv[])
          if (!utility.valid())
          {
             cout << "\nCould not create utility <"<<toolName<<">"<<endl;
-            continue;
+            break;
+         }
+
+         if (usingCmdLineMode)
+         {
+            // Check if user provided options along with tool name:
+            // Init utility with command line
+            if (!utility->initialize(ap))
+               break;
+            utility->execute();
+            break;
          }
 
          if (kwl.getSize() == 0)
@@ -81,9 +100,13 @@ int main(int argc, char *argv[])
             cout << "\nEnter config file name or <return> for template: " << ends;
             cin.getline(input, 256);
             if (input[0] && !kwl.addFile(input))
+            {
                cout<<"\nCould not load config file at <"<<input<<">"<<endl;
+               break;
+            }
          }
 
+         // Init utility with KWL if available:
          if (kwl.getSize())
          {
             utility->initialize(kwl);
@@ -100,11 +123,14 @@ int main(int argc, char *argv[])
          // Accept inputs:
          do
          {
-            cout << "Enter keyword: value (or 'x' to finish): ";
+            cout << "Enter \"<keyword>: <value>\" with colon separator (or 'x' to finish): ";
             cin.getline(input, 256);
             if (input[0] == 'x' || (!kwl.parseString(string(input))))
                break;
          } while (1);
+
+         if (kwl.getSize() == 0)
+            break;
 
          // Display final KWL:
          cout << "\nUtility final specification: "<<endl;
