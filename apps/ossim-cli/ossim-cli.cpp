@@ -47,12 +47,31 @@ int main(int argc, char *argv[])
          exit (0);
       }
 
-      if  ((argc > 1) && (ossimString(argv[1]).contains("--")))
+      if  (argc > 1)
       {
-         toolName = "info";
-         usingCmdLineMode = true;
+         if (ossimString(argv[1]).contains("--"))
+         {
+            // Support ossim-info style system queries by interpreting any options as options to
+            // info tool:
+            toolName = "info";
+            usingCmdLineMode = true;
+         }
+         else if (kwl.addFile(argv[1]))
+         {
+            // KWL filename provided, get tool name from it:
+            toolName = kwl.find("tool");
+            ap.remove(0);
+         }
+         else
+         {
+            // The tool name was explicitely provided on command line:
+            toolName = argv[1];
+            usingCmdLineMode = true;
+            ap.remove(0);
+         }
       }
 
+      // Using one-time do-loop for breaking out when finished processing:
       do
       {
          if (toolName.empty())
