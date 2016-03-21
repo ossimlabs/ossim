@@ -19,7 +19,7 @@ Quick links:
 * [What to Get](#relationship-between-repositories)
 * [How to Build](#how-to-build)
 * [How to Test](#how-to-test)
-* [How to Package and Install](#how-to-package-and-install)
+* [OSSIM Command Line Utility](#ossim-command-line-utility)
 
 # Relationship between Repositories (What to Get)
 
