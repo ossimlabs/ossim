@@ -40,22 +40,17 @@ int main(int argc, char *argv[])
 
       if ((argc > 1) && (ossimString(argv[1]).contains("help")))
       {
-         cout << "\nUsage: "<<argv[0]<<" [ <job_kwl> ] \n"<<endl;
-         cout << "\n       "<<argv[0]<<" <command> [<command options and required parameters>]\n"<<endl;
+         cout << "\nUsages: "<<endl;
+         cout << "    "<<argv[0]<<" <command> [command options and parameters]"<<endl;
+         cout << "    "<<argv[0]<<" --version"<<endl;
+         cout << "    "<<argv[0]<<"  (with no args, displays capabilities)\n"<<endl;
          exit (0);
       }
 
-      if (argc > 1)
+      if  ((argc > 1) && (ossimString(argv[1]).contains("--")))
       {
-         ossimString argv1 (ap[1]);
-         if (kwl.addFile(ossimFilename(argv1)))
-            toolName = kwl.find("tool");
-         else
-         {
-            toolName = argv1;
-            usingCmdLineMode = true;
-         }
-         ap.remove(0);
+         toolName = "info";
+         usingCmdLineMode = true;
       }
 
       do
