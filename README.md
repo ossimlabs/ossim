@@ -105,6 +105,8 @@ For convenience, you can specify "eclipse" as the build-type to the script at `o
 
 # How to Test
 
+The first check of a successful build is to run the ossim command line utility `ossim-cli --version`. You should get the current version output to the console. More on the `ossim-cli` command below.
+
 Testing is generally divided into unit, functional, and integration tests. At the moment, true unit testing in OSSIM is very limited, and likely to stay that way. There is however a _de facto_ scheme in place that has been used for implementing integration and functional testing using the `ossim-batch-test` command line executable. Much of the functional testing supplied through `ossim-batch-test` configuration files is fairly fine-grained, almost to the unit-test level of granularity. This testing platform lets the developer create any level of test, from top-level integration test to individual class method test. This application spawns other OSSIM utility applications to generate results, including dedicated test utilities, which are then compared against an expected-results dataset. This command-line app reads a configuration file that specifies a test or series of tests to run and possibly compare against expected results. There is an option to accept current results as the new expected results. While not explicitely required, the majority of testing done with `ossim-batch-test` will involve input source data, typically imagery, that the tester must preinstall on the target machine. The expected results will also need to be generated and its location specified on the command line. See the usage for `ossim-batch-test` for more detail.
 
 A rudimentary test suite is encapsulated in this [test script (linux version)](/scripts/test.sh). It defines the locations of the input source data and expected results, and runs the command-line test applications. 
@@ -121,8 +123,24 @@ This subdirectory contains, primarily, configuration files for existing `ossim-b
 
 The input data referenced in the `ossim-batch-test` configuration files are presently hosted on an Amazon S3 storage. Contact the [OSSIM developer list](mailto:ossim-developer@lists.sourceforge.net) if you want access to this public data for your own testing.
 
-# How to Package and Install
+# OSSIM Command Line Utility
 
-Coming soon. NOTE: We expect this will be a script in `test\scripts` that will run all unit and functional tests.
+The executable `ossim-cli` will eventually consolidate the plethora of ossim utility applications currently existing. For now it supports a small subset of utilities though among them is `info` that reproduces the functionality of the ubiquitous `ossim-info`.
 
+The usage is:   `ossim-cli <command> [options and parameters]`
 
+With no arguments, the app will give a list of capabilities. Currently those are
+
+* hillshade -- Computes shaded representation of input elevation surface with specified lighting parameters.
+* hlz -- Computes bitmap of helicopter landing zones given ROI and DEM.
+* info -- Dumps metadata information about input image and OSSIM in general.
+* potrace -- Computes vector representation of input raster image.
+* shoreline -- Computes bitmap of water versus land areas in an input image.
+* slope -- Utility for computing the slope at each elevation post and generating a corresponding slope image.
+* viewshed -- Computes bitmap image representing the viewshed from specified location using only DEM information.
+
+For example, to get projection and image information for an image file, use
+
+ `ossim-cli info -p -i <image-filename>`
+
+You can also give a keyword list file as the only arg. The KWL must contain the keyword "tool" with one of the supported commands above, along with the keywords expected by that utility. You can even get KWL templates or enter the keyword/values interactively.
