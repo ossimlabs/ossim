@@ -11,12 +11,12 @@
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/init/ossimInit.h>
-#include <iostream>
 
 using namespace std;
 
 ossimUtility::ossimUtility()
-   : m_kwl()
+   : m_kwl(),
+     m_consoleStream (cout)
 {
 }
 

@@ -483,7 +483,7 @@ bool ossimHlzUtil::computeHLZ()
             new ossimJobMultiThreadQueue(0, m_numThreads);
       ossimJobQueue* jobQueue = jobMtQueue->getJobQueue();
 
-      cout << "\nPreparing " << numPatches << " jobs..." << endl; // TODO: DEBUG
+      ossimNotify(ossimNotifyLevel_INFO) << "\nPreparing " << numPatches << " jobs..." << endl; // TODO: DEBUG
       setPercentComplete(0);
       ossim_int32 qsize = 0;
       ossimIpt chip_origin;
@@ -492,7 +492,7 @@ bool ossimHlzUtil::computeHLZ()
       {
          for (chip_origin.x = min_x; chip_origin.x <= max_x; ++chip_origin.x)
          {
-            //cout << "Submitting " << chipId << endl;
+            //ossimNotify(ossimNotifyLevel_INFO) << "Submitting " << chipId << endl;
             ossimHlzUtil::PatchProcessorJob* job = 0;
             if (m_useLsFitMethod)
                job = new ossimHlzUtil::LsFitPatchProcessorJob(this, chip_origin, chipId++);
@@ -505,7 +505,7 @@ bool ossimHlzUtil::computeHLZ()
       }
 
       // Wait until all chips have been processed before proceeding:
-      cout << "All jobs queued. Waiting for job threads to finish..." << endl;
+      ossimNotify(ossimNotifyLevel_INFO) << "All jobs queued. Waiting for job threads to finish..." << endl;
       while (jobMtQueue->hasJobsToProcess() || jobMtQueue->numberOfBusyThreads())
       {
          qsize = jobMtQueue->getJobQueue()->size();
@@ -515,7 +515,7 @@ bool ossimHlzUtil::computeHLZ()
       jobMtQueue = 0;
    }
 
-   cout << "Finished processing chips." << endl;
+   ossimNotify(ossimNotifyLevel_INFO) << "Finished processing chips." << endl;
    return true;
 }
 
@@ -530,11 +530,11 @@ void ossimHlzUtil::writeSlopeImage()
    writer->connectMyInputTo(0, m_combinedElevSource.get());
    writer->setAreaOfInterest(m_aoiViewRect);
    if (writer->execute())
-      cout<<"Wrote slope image to <"<<m_slopeFile<<">."<<endl;
+      ossimNotify(ossimNotifyLevel_INFO)<<"Wrote slope image to <"<<m_slopeFile<<">."<<endl;
    else
    {
-      cout<<"ossimHLZUtil::writeSlopeImage() Error encountered writing slope image to <"
-            <<m_slopeFile<<">."<<endl;
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimHLZUtil::writeSlopeImage() Error encountered "
+            "writing slope image to <"<<m_slopeFile<<">."<<endl;
    }
 }
 

@@ -317,7 +317,7 @@ void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
          xmsg<<"ossimChipProcUtil:"<<__LINE__<<" Error encountered writing options file to <"<<f<<">";
          throw ossimException(xmsg.str());
       }
-      cout<<"\nWrote options file to <"<<f<<">"<<endl;
+      ossimNotify(ossimNotifyLevel_NOTICE)<<"\nWrote options file to <"<<f<<">"<<endl;
    }
 
    initialize(m_kwl);
@@ -333,8 +333,6 @@ void ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
       m_kwl.clear();
       m_kwl.addList( kwl, true );
    }
-
-   cout<<"ossimChipProcUtil::initialize(kwl) -- m_kwl:\n"<<m_kwl<<endl;//TODO:REMOVE
 
    // Assign some members from KWL:
    m_productScalarType = ossimScalarTypeLut::instance()->
@@ -445,22 +443,14 @@ void ossimChipProcUtil::abort()
 ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimDrect& map_bounding_rect,
                                                        const ossimDpt& gsd)
 {
-   cerr<<"\nossimChipProcUtil:"<<__LINE__<<endl;//TODO:remove debug
-   cerr<<"map_bounding_rect:"<<map_bounding_rect<<endl;//TODO:remove debug
-   cerr<<"gsd:"<<gsd<<endl;//TODO:remove debug
    ostringstream xmsg;
    if (!m_geom.valid())
       return 0;
 
-   cerr<<"ossimChipProcUtil:"<<__LINE__<<endl;//TODO:remove debug
    ossimMapProjection* proj = m_geom->getAsMapProjection();
    if (proj == 0)
-   {
-      cerr<<"ossimChipProcUtil: NULL PROJ"<<endl;//TODO:remove debug
       return 0;
-   }
 
-   cerr<<"ossimChipProcUtil:"<<__LINE__<<endl;//TODO:remove debug
    proj->setMetersPerPixel(gsd);
    ossimGpt ulGpt = proj->inverse(map_bounding_rect.ul());
    ossimGpt lrGpt = proj->inverse(map_bounding_rect.lr());
@@ -470,7 +460,6 @@ ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimDrect& map_bou
    m_aoiViewRect = view_rect;
    m_geom->setImageSize( m_aoiViewRect.size() );
 
-   cerr<<"ossimChipProcUtil:"<<__LINE__<<endl;//TODO:remove debug
    return getChip(m_aoiViewRect);
 }
 
@@ -483,7 +472,8 @@ ossimRefPtr<ossimImageData> ossimChipProcUtil::getChip(const ossimGrect& geo_bou
    // Set the new cut rectangle. Note that a NaN rect passed in implies the full AOI:
    if (!geo_bounding_grect.hasNans())
    {
-      cout <<"\nossimChipProcUtil::getChip(grect) -- NaN rect provided. Using full AOI."<<endl;
+      ossimNotify(ossimNotifyLevel_INFO) <<"\nossimChipProcUtil::getChip(grect) -- NaN rect "
+            "provided. Using full AOI."<<endl;
       m_aoiGroundRect = geo_bounding_grect;
       computeAdjustedViewFromGrect();
    }

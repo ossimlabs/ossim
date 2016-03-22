@@ -63,8 +63,11 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " [options] <output-vector-filename>";
+   usageString += " [options] [<output-vector-filename>]";
    au->setCommandLineUsage(usageString);
+   au->setDescription("Computes vector shoreline from raster imagery. The vectors are output "
+         "in GeoJSON format. If an output filename is specified, the JSON is written to it. "
+         "Otherwise it is written to the console.");
 
    // Set the command line options:
    au->addCommandLineOption("--algorithm <name>",
