@@ -32,7 +32,7 @@
 
 using namespace std;
 
-const char* ossimOrthoUtil::DESCRIPTION  = "Utility for orthorectifying and reprojecting orthoimage data.";
+const char* ossimOrthoUtil::DESCRIPTION  = "Utility for orthorectifying and reprojecting image data.";
 
 ossimOrthoUtil::ossimOrthoUtil()
 {
