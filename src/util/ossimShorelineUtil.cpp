@@ -31,6 +31,8 @@ static const string THRESHOLD_KW = "threshold";
 static const string TOLERANCE_KW = "tolerance";
 static const string ALGORITHM_KW = "algorithm";
 static const string DO_EDGE_DETECT_KW = "do_edge_detect";
+static const ossimFilename DUMMY_OUTPUT_FILENAME = "@@NEVER_USE_THIS@@";
+static const ossimFilename TEMP_RASTER_PRODUCT_FILENAME = "temp_shoreline.tif";
 
 const char* ossimShorelineUtil::DESCRIPTION =
       "Computes bitmap of water versus land areas in an input image.";
@@ -129,7 +131,10 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
    if ( ap.read("--tolerance", sp1))
       m_kwl.addPair(TOLERANCE_KW, ts1);
 
-   processRemainingArgs(ap);
+   // Fake the base class into thinking there is a default output filename to avoid it complaining,
+   // since this utility will stream vector output to console if no output file name provided:
+   m_kwl.add( ossimKeywordNames::OUTPUT_FILE_KW, DUMMY_OUTPUT_FILENAME.c_str());
+
    return true;
 }
 
@@ -206,18 +211,19 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
    // Output filename specifies the vector output, while base class interprets as raster, correct:
    if (!m_doEdgeDetect)
    {
-      if (m_productFilename.empty())
-         m_vectorFilename = m_kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
-      else
-         m_vectorFilename = m_productFilename;
-      if (m_vectorFilename.empty())
+      m_vectorFilename = m_kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
+      if (m_vectorFilename == DUMMY_OUTPUT_FILENAME)
       {
-         xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  No output vector filename was provided.";
-         throw(xmsg.str());
+         m_vectorFilename = "";
+         m_productFilename = TEMP_RASTER_PRODUCT_FILENAME;
+         m_productFilename.appendTimestamp();
       }
-      ossimFilename thresholdFile (m_vectorFilename);
-      thresholdFile.setExtension(".tif");
-      m_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, thresholdFile.chars());
+      else
+      {
+         m_productFilename = m_vectorFilename;
+         m_productFilename.setExtension("tif");
+      }
+      m_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_productFilename.chars());
    }
 
    ossimChipProcUtil::initialize(kwl);
@@ -359,7 +365,8 @@ ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& boundi
 
 bool ossimShorelineUtil::execute()
 {
-   // Base class handles the thresholded image generation. May throw exception.
+   // Base class handles the thresholded image generation. May throw exception. Output written to
+   // m_productFilename:
    bool status = ossimChipProcUtil::execute();
 
    if (!m_doEdgeDetect)
@@ -370,11 +377,13 @@ bool ossimShorelineUtil::execute()
       if (!potrace.valid())
       {
          ossimNotify(ossimNotifyLevel_WARN)<<"ossimShorelineUtil:"<<__LINE__<<"  Need the "
-               "ossim-potrace plugin to perform "
-               "vectorization. Only the thresholded image is available at <"<<m_productFilename<<
-               ">."<<endl;
+               "ossim-potrace plugin to perform vectorization. Only the thresholded image is "
+               "available at <"<<m_productFilename<<">."<<endl;
          return false;
       }
+
+      // Convey possible redirection of console out:
+      potrace->setOutputStream(m_consoleStream);
 
       ossimKeywordlist potrace_kwl;
       potrace_kwl.add(ossimKeywordNames::IMAGE_FILE_KW, m_productFilename.chars());

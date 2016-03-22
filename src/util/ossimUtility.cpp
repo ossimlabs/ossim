@@ -16,7 +16,7 @@ using namespace std;
 
 ossimUtility::ossimUtility()
    : m_kwl(),
-     m_consoleStream (cout)
+     m_consoleStream (&cout)
 {
 }
 

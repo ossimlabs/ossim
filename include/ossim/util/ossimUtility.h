@@ -98,7 +98,7 @@ public:
    /**
     * Redirects any console output to the supplied stream for logging or JNI application.
     */
-   void setOutputStream(std::ostream& os);
+   void setOutputStream(std::ostream* os) { m_consoleStream = os; }
 
 protected:
    /**
@@ -113,13 +113,13 @@ protected:
    virtual void setUsage(ossimArgumentParser& ap);
 
    ossimKeywordlist m_kwl;
+   std::ostream* m_consoleStream;
 
 private:
    /**
     * Used for reading text files of template and JSON API from disk ONLY.
     */
    bool readTextFile(const ossimFilename& filename, std::string& contents) const;
-   std::ostream& m_consoleStream;
 };
 
 #endif
