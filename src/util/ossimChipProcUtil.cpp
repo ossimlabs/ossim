@@ -1289,6 +1289,50 @@ void ossimChipProcUtil::getBandList(ossim_uint32 image_idx,
    }
 } // End: ossimChipProcUtil::getBandList
 
+ossimRefPtr<ossimImageSource> ossimChipProcUtil::mosaicDemSources()
+{
+   ostringstream xmsg;
+   ossimRefPtr<ossimImageSource> demMosaic = 0;
+
+   if (m_demSources.empty())
+   {
+      // Establish connection to DEM posts directly as raster "images" versus using the OSSIM elev
+      // manager that performs interpolation of DEM posts for arbitrary locations. These elev images
+      // feed into a combiner in order to have a common tap for elev pixels:
+      ossimElevManager* elevMgr = ossimElevManager::instance();
+      elevMgr->getCellsForBounds(m_aoiGroundRect, m_demSources);
+   }
+
+   // Open a raster image for each elevation source being considered:
+   ossimConnectableObject::ConnectableObjectList elevChains;
+   vector<ossimFilename>::iterator fname_iter = m_demSources.begin();
+   while (fname_iter != m_demSources.end())
+   {
+      ossimRefPtr<ossimSingleImageChain> chain = createInputChain(*fname_iter).get();
+      if (!chain.valid() || !chain->getImageRenderer().valid() )
+      {
+         xmsg<<"ossimChipProcUtil:"<<__LINE__<<"  Cannot open DEM file at <"<<*fname_iter<<">";
+         throw(xmsg.str());
+      }
+
+      // Set up the input chain with proper renderer IVT:
+      ossimRefPtr<ossimImageViewProjectionTransform> ivt = new ossimImageViewProjectionTransform
+            (chain->getImageHandler()->getImageGeometry().get(), m_geom.get());
+      chain->getImageRenderer()->setImageViewTransform(ivt.get());
+      ossimRefPtr<ossimConnectableObject> connectable = chain.get();
+      elevChains.push_back(connectable);
+      ++fname_iter;
+   }
+
+   if (elevChains.size() == 1)
+      demMosaic = (ossimImageSource*) elevChains[0].get();
+   else
+      demMosaic = new ossimImageMosaic(elevChains);
+
+   return demMosaic;
+}
+
+
 ossimRefPtr<ossimImageSource>
 ossimChipProcUtil::combineLayers(std::vector< ossimRefPtr<ossimSingleImageChain> >& layers) const
 {

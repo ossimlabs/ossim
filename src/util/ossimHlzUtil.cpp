@@ -251,7 +251,7 @@ void ossimHlzUtil::initProcessingChain()
 
    // In order to use the slope filter to establish terrain quality, the elevation data needs to
    // be loaded as images, not elevation cells. Need to transfer relevant cells to image chains:
-   mosaicDemSources();
+   m_combinedElevSource = mosaicDemSources();
 
    // The "chain" for this utility is just the memory source containing the output buffer:
    m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
@@ -383,46 +383,6 @@ void ossimHlzUtil::loadMaskFiles()
       if (mask_image.image.valid())
          m_maskSources.push_back(mask_image);
    }
-}
-
-void ossimHlzUtil::mosaicDemSources()
-{
-   ostringstream xmsg;
-
-   if (m_demSources.empty())
-   {
-      // Establish connection to DEM posts directly as raster "images" versus using the OSSIM elev
-      // manager that performs interpolation of DEM posts for arbitrary locations. These elev images
-      // feed into a combiner in order to have a common tap for elev pixels:
-      ossimElevManager* elevMgr = ossimElevManager::instance();
-      elevMgr->getCellsForBounds(m_aoiGroundRect, m_demSources);
-   }
-
-   // Open a raster image for each elevation source being considered:
-   ossimConnectableObject::ConnectableObjectList elevChains;
-   vector<ossimFilename>::iterator fname_iter = m_demSources.begin();
-   while (fname_iter != m_demSources.end())
-   {
-      ossimRefPtr<ossimSingleImageChain> chain = createInputChain(*fname_iter).get();
-      if (!chain.valid() || !chain->getImageRenderer().valid() )
-      {
-         xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Cannot open DEM file at <"<<*fname_iter<<">";
-         throw(xmsg.str());
-      }
-
-      // Set up the input chain with proper renderer IVT:
-      ossimRefPtr<ossimImageViewProjectionTransform> ivt = new ossimImageViewProjectionTransform
-            (chain->getImageHandler()->getImageGeometry().get(), m_geom.get());
-      chain->getImageRenderer()->setImageViewTransform(ivt.get());
-      ossimRefPtr<ossimConnectableObject> connectable = chain.get();
-      elevChains.push_back(connectable);
-      ++fname_iter;
-   }
-
-   if (elevChains.size() == 1)
-      m_combinedElevSource = (ossimImageSource*) elevChains[0].get();
-   else
-      m_combinedElevSource = new ossimImageMosaic(elevChains);
 }
 
 ossimRefPtr<ossimImageData> ossimHlzUtil::getChip(const ossimIrect& bounding_irect)
