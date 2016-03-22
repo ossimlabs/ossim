@@ -1,0 +1,8 @@
+//***************************************************************
+// Template KWL for Ortho Utility.
+// See ossimChipProcUtil.kwl for common keywords also referenced
+//***************************************************************
+type: ossimOrthoUtil
+
+#include ossimChipProcUtil.kwl
+
