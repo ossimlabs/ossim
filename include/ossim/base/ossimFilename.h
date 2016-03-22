@@ -244,6 +244,12 @@ public:
    /** @return The path separator. */
    char getPathSeparator() const;
    
+   /**
+    * Convenience method to append a generic timestamp to the base-name portion of the filename.
+    * This is useful for establishing rolling names for temporary files and logs
+    */
+   ossimFilename& appendTimestamp();
+
 protected:
 
    void convertToNative();

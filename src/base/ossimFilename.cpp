@@ -48,6 +48,7 @@ using namespace std;
 
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimRegExp.h>
+#include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimNotifyContext.h>
 
@@ -1324,6 +1325,24 @@ bool ossimFilename::needsExpansion() const
 char ossimFilename::getPathSeparator() const
 {
    return thePathSeparator;
+}
+
+ossimFilename& ossimFilename::appendTimestamp()
+{
+   const std::string format = "%Y%m%d-%H%Mh%Ss";
+   std::string timestamp;
+   ossim::getFormattedTime(format, true, timestamp);
+
+   ossimString drivePart;
+   ossimString pathPart;
+   ossimString filePart;
+   ossimString extPart;
+
+   split(drivePart, pathPart, filePart, extPart);
+   filePart += timestamp;
+   merge(drivePart, pathPart, filePart, extPart);
+
+   return *this;
 }
 
 void ossimFilename::convertToNative()
