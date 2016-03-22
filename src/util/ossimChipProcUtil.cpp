@@ -398,11 +398,19 @@ void ossimChipProcUtil::finalizeChain()
 
 bool ossimChipProcUtil::execute()
 {
+   ostringstream xmsg;
+
    if ( !m_procChain.valid() )
-      throw ossimException("Null pointer encountered for m_procChain!");
+   {
+      xmsg << "ossimChipProcUtil:"<<__LINE__<<"Null pointer encountered for m_procChain!";
+      throw ossimException(xmsg.str());
+   }
 
    if (m_geom->getImageSize().hasNans())
-      throw ossimException("Image size is NaN!");
+   {
+      xmsg << "ossimChipProcUtil:"<<__LINE__<<"Image size is NaN!";
+      throw ossimException(xmsg.str());
+   }
 
    // Set up the writer.
    m_writer = newWriter();
@@ -425,7 +433,10 @@ bool ossimChipProcUtil::execute()
    m_writer->execute();
    m_writer->removeListener(&prog);
    if(m_writer->isAborted())
-      throw ossimException( "Writer Process aborted!" );
+   {
+      xmsg << "ossimChipProcUtil:"<<__LINE__<<"Writer Process aborted!";
+      throw ossimException(xmsg.str());
+   }
 
    ossimNotify(ossimNotifyLevel_INFO)<<"Wrote product image to <"<<m_productFilename<<">"<<endl;
 

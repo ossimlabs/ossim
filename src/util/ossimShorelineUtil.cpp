@@ -135,6 +135,7 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
    // since this utility will stream vector output to console if no output file name provided:
    m_kwl.add( ossimKeywordNames::OUTPUT_FILE_KW, DUMMY_OUTPUT_FILENAME.c_str());
 
+   processRemainingArgs(ap);
    return true;
 }
 
@@ -162,7 +163,7 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
       {
          xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Bad value encountered for keyword <"
                <<ALGORITHM_KW<<">.";
-         throw(xmsg.str());
+         throw ossimException(xmsg.str());
       }
    }
 
@@ -180,7 +181,7 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
       {
          xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Unexpected number of values encountered for keyword <"
                <<COLOR_CODING_KW<<">.";
-         throw(xmsg.str());
+         throw ossimException(xmsg.str());
       }
    }
 
@@ -305,7 +306,6 @@ void ossimShorelineUtil::initProcessingChain()
       edge_filter->setFilterType("roberts");
       m_procChain->add(edge_filter.get());
    }
-
 }
 
 void ossimShorelineUtil::initLandsat8()
@@ -388,6 +388,7 @@ bool ossimShorelineUtil::execute()
       ossimKeywordlist potrace_kwl;
       potrace_kwl.add(ossimKeywordNames::IMAGE_FILE_KW, m_productFilename.chars());
       potrace_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_vectorFilename.chars());
+      potrace_kwl.add("mode", "polygon");
       potrace->initialize(potrace_kwl);
 
       bool status =  potrace->execute();
