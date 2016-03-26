@@ -1,6 +1,6 @@
 //---
 //
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -14,6 +14,7 @@
 #include <ossim/support_data/ossimGmlSupportData.h>
 #include <ossim/base/ossimDrect.h>
 #include <ossim/base/ossimGrect.h>
+#include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
@@ -38,13 +39,17 @@ static ossimTrace traceDebug("ossimGmlSupportData:debug");
 
 ossimGmlSupportData::ossimGmlSupportData()
    :
-   m_xmlDocument(0), m_mapProj(0), m_use_gmljp2_version2(true), 
-   m_pcsCodeMap(UNKNOWN_PCSCODE), m_pcsCodeGeo(UNKNOWN_PCSCODE),
+   m_xmlDocument(0),
+   // m_use_gmljp2_version2(true), 
+   m_pcsCodeMap(UNKNOWN_PCSCODE),
+   m_pcsCodeGeo(UNKNOWN_PCSCODE),
    m_srsNameStringMap("http://www.opengis.net/def/crs/EPSG/0/32767"),
    m_srsNameStringGeo("http://www.opengis.net/def/crs/EPSG/0/32767"),
    m_srsDimensionString("2"),
-   m_axisLabelsStringMap("X Y"), m_axisLabelsStringGeo("Lat Long"),
-   m_uomLabelsStringMap("m m"), m_uomLabelsStringGeo("deg deg")
+   m_axisLabelsStringMap("X Y"),
+   m_axisLabelsStringGeo("Lat Long"),
+   m_uomLabelsStringMap("m m"),
+   m_uomLabelsStringGeo("deg deg")
 {
 }
 
@@ -60,9 +65,6 @@ bool ossimGmlSupportData::initialize( std::istream& in )
    {
       m_xmlDocument = new ossimXmlDocument();
       m_xmlDocument->read( in );
-      
-      // TODO: Check for correct gml block.
-      
       status = true;
    }
    else
@@ -73,7 +75,8 @@ bool ossimGmlSupportData::initialize( std::istream& in )
    return status;
 }
 
-bool ossimGmlSupportData::initialize( const ossimImageGeometry* geom )
+bool ossimGmlSupportData::initialize( const ossimImageGeometry* geom,
+                                      const ossimIrect& rect )
 {
    static const char MODULE[] = "ossimGmlSupportData::initialize(geom)";
    
@@ -83,63 +86,62 @@ bool ossimGmlSupportData::initialize( const ossimImageGeometry* geom )
    {
       // ossim_uint32 code = UNKNOWN_PCSCODE; // unknown code
        
-      ossimRefPtr<const ossimProjection> proj = geom->getProjection();
-      if ( proj.valid() )
+      ossimRefPtr<const ossimMapProjection> mapProj = geom->getAsMapProjection();
+      if ( mapProj.valid() )
       {
-         ossimRefPtr<const ossimMapProjection> mapProj =
-            dynamic_cast<const ossimMapProjection*>(proj.get());
-         if ( mapProj.valid() )
-         {
-            // Get the PCS code:
-            m_pcsCodeMap = mapProj->getPcsCode();
-            m_pcsCodeGeo = mapProj->getPcsCode();
-            m_mapProj    = mapProj;
-
-            // Create an SRS Name for the map projection
-            std::ostringstream os;
-            os << "http://www.opengis.net/def/crs/EPSG/0/" << m_pcsCodeMap;
-            m_srsNameStringMap = os.str();
-
-            // Create an SRS Name for the projection datum
-            std::ostringstream os2;
-            os2 << "http://www.opengis.net/def/crs/EPSG/0/" << m_pcsCodeGeo;
-            m_srsNameStringGeo = os2.str();
-
-            m_xmlDocument = new ossimXmlDocument(ossimFilename::NIL);
-
-            if ( m_use_gmljp2_version2 == true )
-            {
-               ossimRefPtr<ossimXmlNode> rootNode = getGmljp2V2RootNode();
-               m_xmlDocument->initRoot( rootNode );
-               status = configureGmljp2V2( rootNode, geom );
-            }
-            else
-            {
-               ossimRefPtr<ossimXmlNode> rootNode = getGmljp2V1RootNode();
-               m_xmlDocument->initRoot( rootNode );
-               status = configureGmljp2V1( rootNode, geom );
-            }
-
-            // cout << "gmljp2Node: " << *(gmljp2Node.get()) << endl;
-
-            // cout << "xmlDoc: " << *(m_xmlDocument.get()) << endl;
-         }
-      }
-
-      if ( status == false )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << MODULE << " DEBUG Entered...\n";
+         // Get the PCS code:
+         m_pcsCodeMap = mapProj->getPcsCode();
+         m_pcsCodeGeo = mapProj->getPcsCode();
          
+         // Create an SRS Name for the map projection
+         std::ostringstream os;
+         os << "http://www.opengis.net/def/crs/EPSG/0/" << m_pcsCodeMap;
+         m_srsNameStringMap = os.str();
+         
+         // Create an SRS Name for the projection datum
+         std::ostringstream os2;
+         os2 << "http://www.opengis.net/def/crs/EPSG/0/" << m_pcsCodeGeo;
+         m_srsNameStringGeo = os2.str();
+         
+         m_xmlDocument = new ossimXmlDocument(ossimFilename::NIL);
+         
+         // if ( m_use_gmljp2_version2 == true )
+         // {
+
+         ossimRefPtr<ossimXmlNode> rootNode = getGmljp2V2RootNode();
+         m_xmlDocument->initRoot( rootNode );
+         status = configureGmljp2V2( rootNode, geom, rect );
+         // }
+         
+#if 0
+         else
+         {
+            ossimRefPtr<ossimXmlNode> rootNode = getGmljp2V1RootNode();
+            m_xmlDocument->initRoot( rootNode );
+            status = configureGmljp2V1( rootNode, geom, rect );
+         }
+#endif
+         
+         // cout << "gmljp2Node: " << *(gmljp2Node.get()) << endl;
+         
+         // cout << "xmlDoc: " << *(m_xmlDocument.get()) << endl;
       }
+   }
+
+   if ( status == false )
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " DEBUG Entered...\n";
+      
    }
 
    return status;
    
 } // End: ossimGmlSupportData::initialize( geom, mapProj )
 
-bool ossimGmlSupportData::configureGmljp2V1( 
-   ossimRefPtr<ossimXmlNode> node0, const ossimImageGeometry* geom )
+#if 0 
+bool ossimGmlSupportData::configureGmljp2V1( ossimRefPtr<ossimXmlNode> node0,
+                                             const ossimImageGeometry* geom )
 {
    bool success = true;
    const ossimString BLANK = "";
@@ -176,196 +178,213 @@ bool ossimGmlSupportData::configureGmljp2V1(
 
    return success;
 }
+#endif
 
-bool ossimGmlSupportData::configureGmljp2V2( 
-   ossimRefPtr<ossimXmlNode> node0, const ossimImageGeometry* geom )
+bool ossimGmlSupportData::configureGmljp2V2( ossimRefPtr<ossimXmlNode> node0,
+                                             const ossimImageGeometry* geom,
+                                             const ossimIrect& rect )
 {
-   bool success = true;
-   const ossimString BLANK = "";
+   bool success = false;
 
-   ossimRefPtr<ossimXmlAttribute> attr(0);
-   ossimString name;
-   ossimString value;
+   ossimRefPtr<const ossimMapProjection> mapProj = geom->getAsMapProjection();
+   if ( mapProj.valid() )
+   {
+      bool isGeographic = mapProj->isGeographic();
+      
+      const ossimString BLANK = "";
+      
+      ossimRefPtr<ossimXmlAttribute> attr(0);
+      ossimString name;
+      ossimString value;
+      
+      ossimString gridHighString;
+      ossimString gridLowString;
+      getLimits( rect, gridHighString, gridLowString );
+      
+      configureBounds( node0, geom, rect );
+      
+      ossimString path = "domainSet";
+      ossimRefPtr<ossimXmlNode> node2 =
+         node0->addChildNode( path, BLANK );
+      
+      path = "rangeSet";
+      ossimRefPtr<ossimXmlNode> node3 =
+         node0->addChildNode( path, BLANK );
+      
+      path = "File";
+      ossimRefPtr<ossimXmlNode> node3a =
+         node3->addChildNode( path, BLANK );
+      
+      path = "rangeParameters";
+      ossimRefPtr<ossimXmlNode> node3a1 =
+         node3a->addChildNode( path, BLANK );
+      
+      path = "fileName";
+      ossimRefPtr<ossimXmlNode> node3a2 =
+         node3a->addChildNode( path, "gmljp2://codestream" );
+      
+      path = "fileStructure";
+      ossimRefPtr<ossimXmlNode> node3a3 =
+         node3a->addChildNode( path, "inapplicable" );
+      
+      path = "gmlcov:rangeType";
+      ossimRefPtr<ossimXmlNode> node4 =
+         node0->addChildNode( path, BLANK );
+      
+      path = "gmljp2:featureMember";
+      ossimRefPtr<ossimXmlNode> node5 =
+         node0->addChildNode( path, BLANK );
+      
+      path = "gmljp2:GMLJP2RectifiedGridCoverage";
+      ossimRefPtr<ossimXmlNode> node5a =
+         node5->addChildNode( path, BLANK );
 
-   ossimString gridHighString;
-   ossimString gridLowString;
-   getLimits( geom, gridHighString, gridLowString );
+      attr  = new ossimXmlAttribute();
+      name  = "gml:id";
+      value = "CodeStream_0";
+      attr->setNameValue( name, value );
+      node5a->addAttribute( attr );
 
-   configureBounds( node0, geom );
+      path = "domainSet";
+      ossimRefPtr<ossimXmlNode> node5a1 =
+         node5a->addChildNode( path, BLANK );
 
-   ossimString path = "domainSet";
-   ossimRefPtr<ossimXmlNode> node2 =
-      node0->addChildNode( path, BLANK );
+      path = "RectifiedGrid";
+      ossimRefPtr<ossimXmlNode> node5a1a =
+         node5a1->addChildNode( path, BLANK );
 
-   path = "rangeSet";
-   ossimRefPtr<ossimXmlNode> node3 =
-      node0->addChildNode( path, BLANK );
+      attr  = new ossimXmlAttribute();
+      name  = "gml:id";
+      value = "RG0001";
+      attr->setNameValue( name, value );
+      node5a1a->addAttribute( attr );
 
-   path = "File";
-   ossimRefPtr<ossimXmlNode> node3a =
-      node3->addChildNode( path, BLANK );
+      attr  = new ossimXmlAttribute();
+      name  = "dimension";
+      value = "2";
+      attr->setNameValue( name, value );
+      node5a1a->addAttribute( attr );
 
-   path = "rangeParameters";
-   ossimRefPtr<ossimXmlNode> node3a1 =
-      node3a->addChildNode( path, BLANK );
+      attr  = new ossimXmlAttribute();
+      name  = "srsName";
+      attr->setNameValue( name, m_srsNameStringMap );
+      node5a1a->addAttribute( attr );
 
-   path = "fileName";
-   ossimRefPtr<ossimXmlNode> node3a2 =
-      node3a->addChildNode( path, "gmljp2://codestream" );
+      path = "limits";
+      ossimRefPtr<ossimXmlNode> node5a1a1 =
+         node5a1a->addChildNode( path, BLANK );
 
-   path = "fileStructure";
-   ossimRefPtr<ossimXmlNode> node3a3 =
-      node3a->addChildNode( path, "inapplicable" );
+      path = "GridEnvelope";
+      ossimRefPtr<ossimXmlNode> node5a1a1a =
+         node5a1a1->addChildNode( path, BLANK );
 
-   path = "gmlcov:rangeType";
-   ossimRefPtr<ossimXmlNode> node4 =
-      node0->addChildNode( path, BLANK );
+      path = "low";
+      ossimRefPtr<ossimXmlNode> node5a1a1a1 =
+         node5a1a1a->addChildNode( path, gridLowString );
 
-   path = "gmljp2:featureMember";
-   ossimRefPtr<ossimXmlNode> node5 =
-      node0->addChildNode( path, BLANK );
+      path = "high";
+      ossimRefPtr<ossimXmlNode> node5a1a1a2 =
+         node5a1a1a->addChildNode( path, gridHighString );
 
-   path = "gmljp2:GMLJP2RectifiedGridCoverage";
-   ossimRefPtr<ossimXmlNode> node5a =
-      node5->addChildNode( path, BLANK );
+      path = "axisLabels";
+      ossimRefPtr<ossimXmlNode> node5a1a2 =
+         node5a1a->addChildNode( path, 
+                                 mapProj->isGeographic() ? 
+                                 m_axisLabelsStringGeo : m_axisLabelsStringMap );
 
-   attr  = new ossimXmlAttribute();
-   name  = "gml:id";
-   value = "CodeStream_0";
-   attr->setNameValue( name, value );
-   node5a->addAttribute( attr );
+      path = "origin";
+      ossimRefPtr<ossimXmlNode> node5a1a3 =
+         node5a1a->addChildNode( path, BLANK );
 
-   path = "domainSet";
-   ossimRefPtr<ossimXmlNode> node5a1 =
-      node5a->addChildNode( path, BLANK );
+      path = "Point";
+      ossimRefPtr<ossimXmlNode> node5a1a3a =
+         node5a1a3->addChildNode( path, BLANK );
 
-   path = "RectifiedGrid";
-   ossimRefPtr<ossimXmlNode> node5a1a =
-      node5a1->addChildNode( path, BLANK );
+      attr  = new ossimXmlAttribute();
+      name  = "gml:id";
+      value = "P0001";
+      attr->setNameValue( name, value );
+      node5a1a3a->addAttribute( attr );
 
-   attr  = new ossimXmlAttribute();
-   name  = "gml:id";
-   value = "RG0001";
-   attr->setNameValue( name, value );
-   node5a1a->addAttribute( attr );
+      attr  = new ossimXmlAttribute();
+      name  = "srsName";
+      attr->setNameValue( name, m_srsNameStringMap );
+      node5a1a3a->addAttribute( attr );
 
-   attr  = new ossimXmlAttribute();
-   name  = "dimension";
-   value = "2";
-   attr->setNameValue( name, value );
-   node5a1a->addAttribute( attr );
+      ossimString originString;
+      ossimString offsetVector1String;
+      ossimString offsetVector2String;
+      if ( isGeographic )
+      {
+         getGeoOrigin( geom, rect.ul(), originString,
+                       offsetVector1String, offsetVector2String );
+      }
+      else
+      {
+         getMapOrigin( geom, rect.ul(), originString,
+                       offsetVector1String, offsetVector2String );
+      }
 
-   attr  = new ossimXmlAttribute();
-   name  = "srsName";
-   attr->setNameValue( name, m_srsNameStringMap );
-   node5a1a->addAttribute( attr );
+      path = "pos";
+      ossimRefPtr<ossimXmlNode> node5a1a3a1 =
+         node5a1a3a->addChildNode( path, originString );
 
-   path = "limits";
-   ossimRefPtr<ossimXmlNode> node5a1a1 =
-      node5a1a->addChildNode( path, BLANK );
+      path = "offsetVector";
+      ossimRefPtr<ossimXmlNode> node5a1a4 =
+         node5a1a->addChildNode( path, offsetVector1String );
 
-   path = "GridEnvelope";
-   ossimRefPtr<ossimXmlNode> node5a1a1a =
-      node5a1a1->addChildNode( path, BLANK );
+      attr  = new ossimXmlAttribute();
+      name  = "srsName";
+      attr->setNameValue( name, 
+                          (isGeographic ? m_srsNameStringGeo : m_srsNameStringMap ) );
+      node5a1a4->addAttribute( attr );
 
-   path = "low";
-   ossimRefPtr<ossimXmlNode> node5a1a1a1 =
-      node5a1a1a->addChildNode( path, gridLowString );
+      path = "offsetVector";
+      ossimRefPtr<ossimXmlNode> node5a1a5 =
+         node5a1a->addChildNode( path, offsetVector2String );
 
-   path = "high";
-   ossimRefPtr<ossimXmlNode> node5a1a1a2 =
-      node5a1a1a->addChildNode( path, gridHighString );
+      attr  = new ossimXmlAttribute();
+      name  = "srsName";
+      attr->setNameValue( name, (isGeographic ? m_srsNameStringGeo : m_srsNameStringMap) );
+      node5a1a5->addAttribute( attr );
 
-   path = "axisLabels";
-   ossimRefPtr<ossimXmlNode> node5a1a2 =
-      node5a1a->addChildNode( path, 
-                              m_mapProj->isGeographic() ? 
-                              m_axisLabelsStringGeo : m_axisLabelsStringMap );
+      path = "rangeSet";
+      ossimRefPtr<ossimXmlNode> node5a2 =
+         node5a->addChildNode( path, BLANK );
 
-   path = "origin";
-   ossimRefPtr<ossimXmlNode> node5a1a3 =
-      node5a1a->addChildNode( path, BLANK );
+      path = "File";
+      ossimRefPtr<ossimXmlNode> node5a2a =
+         node5a2->addChildNode( path, BLANK );
 
-   path = "Point";
-   ossimRefPtr<ossimXmlNode> node5a1a3a =
-      node5a1a3->addChildNode( path, BLANK );
+      path = "rangeParameters";
+      ossimRefPtr<ossimXmlNode> node5a2a1 =
+         node5a2a->addChildNode( path, BLANK );
 
-   attr  = new ossimXmlAttribute();
-   name  = "gml:id";
-   value = "P0001";
-   attr->setNameValue( name, value );
-   node5a1a3a->addAttribute( attr );
+      path = "fileName";
+      ossimRefPtr<ossimXmlNode> node5a2a2 =
+         node5a2a->addChildNode( path, "gmljp2://codestream" );
 
-   attr  = new ossimXmlAttribute();
-   name  = "srsName";
-   attr->setNameValue( name, m_srsNameStringMap );
-   node5a1a3a->addAttribute( attr );
+      path = "fileStructure";
+      ossimRefPtr<ossimXmlNode> node5a2a3 =
+         node5a2a->addChildNode( path, "inapplicable" );
 
-   ossimString originString;
-   ossimString offsetVector1String;
-   ossimString offsetVector2String;
-   getOrigin( geom, originString, 
-              offsetVector1String, 
-              offsetVector2String );
-
-   path = "pos";
-   ossimRefPtr<ossimXmlNode> node5a1a3a1 =
-      node5a1a3a->addChildNode( path, originString );
-
-   path = "offsetVector";
-   ossimRefPtr<ossimXmlNode> node5a1a4 =
-      node5a1a->addChildNode( path, offsetVector1String );
-
-   attr  = new ossimXmlAttribute();
-   name  = "srsName";
-   attr->setNameValue( name, 
-                       m_mapProj->isGeographic() ? 
-                       m_srsNameStringGeo : m_srsNameStringMap );
-   node5a1a4->addAttribute( attr );
-
-   path = "offsetVector";
-   ossimRefPtr<ossimXmlNode> node5a1a5 =
-      node5a1a->addChildNode( path, offsetVector2String );
-
-   attr  = new ossimXmlAttribute();
-   name  = "srsName";
-   attr->setNameValue( name, 
-                       m_mapProj->isGeographic() ? 
-                       m_srsNameStringGeo : m_srsNameStringMap );
-   node5a1a5->addAttribute( attr );
-
-   path = "rangeSet";
-   ossimRefPtr<ossimXmlNode> node5a2 =
-      node5a->addChildNode( path, BLANK );
-
-   path = "File";
-   ossimRefPtr<ossimXmlNode> node5a2a =
-      node5a2->addChildNode( path, BLANK );
-
-   path = "rangeParameters";
-   ossimRefPtr<ossimXmlNode> node5a2a1 =
-      node5a2a->addChildNode( path, BLANK );
-
-   path = "fileName";
-   ossimRefPtr<ossimXmlNode> node5a2a2 =
-      node5a2a->addChildNode( path, "gmljp2://codestream" );
-
-   path = "fileStructure";
-   ossimRefPtr<ossimXmlNode> node5a2a3 =
-      node5a2a->addChildNode( path, "inapplicable" );
-
+      success = true;
+   }
+   
    return success;
 }
 
 bool ossimGmlSupportData::configureBounds(
-   ossimRefPtr<ossimXmlNode> node0, const ossimImageGeometry* geom )
+   ossimRefPtr<ossimXmlNode> node0,
+   const ossimImageGeometry* geom,
+   const ossimIrect& rect)
 {
    bool success = true;
    const ossimString BLANK = "";
 
    ossimString upperCornerString;         
    ossimString lowerCornerString;
-   getGeoBounds( geom, upperCornerString, lowerCornerString );
+   getGeoBounds( geom, rect, upperCornerString, lowerCornerString );
 
    ossimString path = "boundedBy";
    ossimRefPtr<ossimXmlNode> node1 = node0->addChildNode( path, BLANK );
@@ -524,8 +543,21 @@ ossimRefPtr<ossimXmlDocument> ossimGmlSupportData::getXmlDoc() const
 
 bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
 {
-   bool success = true;
-   
+   // Try for map projected geometry first...
+   bool success = getImageGeometryFromRectifiedGrid( geomKwl );
+   if ( !success )
+   {
+      // Look for sensor model block.
+      getImageGeometryFromSeonsorModel( geomKwl );
+   }
+
+   return success;
+}
+
+#if 0 /* Please leave.  (drb) */
+
+bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
+{   
    if ( m_xmlDocument.valid() )
    {
       vector< ossimRefPtr<ossimXmlNode> > xml_nodes;
@@ -540,9 +572,9 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
       m_xmlDocument->findNodes( xpath_root, xml_nodes );
       if ( xml_nodes.size() == 0 ) 
       {
-          // check if the default namespace is gmljp2
-          xpath_root = "/GMLJP2CoverageCollection";
-          m_xmlDocument->findNodes( xpath_root, xml_nodes );
+         // check if the default namespace is gmljp2
+         xpath_root = "/GMLJP2CoverageCollection";
+         m_xmlDocument->findNodes( xpath_root, xml_nodes );
       }
       if ( xml_nodes.size() >= 1 )
       {
@@ -565,8 +597,8 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
             if ( attribute_name  != defaultNamespaceIdentifierStr && 
                  attribute_value == defaultNamespaceSettingStr )
             {
-                defaultNamespaceStr = attribute_name.after( defaultNamespacePrependStr );
-                defaultNamespaceStr += ":";
+               defaultNamespaceStr = attribute_name.after( defaultNamespacePrependStr );
+               defaultNamespaceStr += ":";
             }
          }
       }
@@ -621,7 +653,7 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
          }
       }
 
-      /* Number of lines & samples, for either sensor or rectified imagery */
+      // Number of lines & samples, for either sensor or rectified imagery
 
       ossimString xpath_limits_low  = "/gml:limits/gml:GridEnvelope/gml:low";
       ossimString xpath_limits_high = "/gml:limits/gml:GridEnvelope/gml:high";
@@ -697,7 +729,7 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
             sensorInstanceHref = hrefAttribute->getValue();
          }
 
-         ossimSensorModel* sensor_model = 0;
+         ossimRefPtr<ossimSensorModel> sensor_model = 0;
          ossimString xpath_sensor_name = "/gmlcov:sensorInstance/sml:SimpleProcess/gml:name";
          xpath_sensor_name = xpath_sensor_name.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
          xpath = xpath0 + xpath_sensor_name;
@@ -713,13 +745,14 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
 
             // Is it a sensor model ?
             sensor_model = dynamic_cast<ossimSensorModel*>( proj );
-            if ( sensor_model != 0 )
+            if ( sensor_model.valid() )
             {
                geomKwl.add( ossimKeywordNames::TYPE_KW, sensorName.c_str() );
                break;
             }
          }
-         if ( sensor_model == 0 )
+         
+         if ( !sensor_model.valid() )
          {
             // Add debug message
             return false;
@@ -730,7 +763,7 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
          {
             const ossimString refStr( "ref" );
 
-            /* sml:setValue */
+            // sml:setValue
             ossimString xpath_setValue = "/gmlcov:sensorInstance/sml:SimpleProcess/sml:configuration/sml:Settings/sml:setValue";
             xpath_setValue = xpath_setValue.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
             xpath = xpath0 + xpath_setValue;
@@ -786,235 +819,175 @@ bool ossimGmlSupportData::getImageGeometry( ossimKeywordlist& geomKwl ) const
             }
          }
       }
-      else
-         if ( gotRectifiedImage )
+      else if ( gotRectifiedImage )
+      {
+         const ossimString srsNameStr( "srsName" );
+         ossimString pcsCodeDefinitionStr( "http://www.opengis.net/def/crs/EPSG/0/" );
+
+         /* axis labels for rectified imagery */
+
+         ossimString xpath_axisLabels = "/gml:axisLabels";
+         xpath_axisLabels = xpath_axisLabels.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
+         ossimString firstAxisLabelString( "" );
+         ossimString secondAxisLabelString( "" );
+         ossimString xpath = xpath0 + xpath_axisLabels;
+         xml_nodes.clear();
+         m_xmlDocument->findNodes( xpath, xml_nodes );
+         if ( xml_nodes.size() == 1 )
          {
-            const ossimString srsNameStr( "srsName" );
-            ossimString pcsCodeDefinitionStr( "http://www.opengis.net/def/crs/EPSG/0/" );
+            ossimString axisLabelsString = xml_nodes[0]->getText();
+            size_t spacePos = axisLabelsString.find( ' ' );
+            firstAxisLabelString  = axisLabelsString.beforePos( spacePos );
+            secondAxisLabelString = axisLabelsString.afterPos ( spacePos );
+         }
 
-            /* axis labels for rectified imagery */
+         success = addTieAndScale( geomKwl );
+         
+         //---
+         // origin:
+         // Note: In GML the origin is the tie point, NOT the projection origin.
+         //---
 
-            ossimString xpath_axisLabels = "/gml:axisLabels";
-            xpath_axisLabels = xpath_axisLabels.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
-            ossimString firstAxisLabelString( "" );
-            ossimString secondAxisLabelString( "" );
-            ossimString xpath = xpath0 + xpath_axisLabels;
-            xml_nodes.clear();
-            m_xmlDocument->findNodes( xpath, xml_nodes );
-            if ( xml_nodes.size() == 1 )
+         ossim_uint32 pcsCodeOrigin = 32767;
+         ossimString xpath_originPoint = "/gml:origin/gml:Point";
+         xpath_originPoint = xpath_originPoint.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
+         xpath = xpath0 + xpath_originPoint;
+         xml_nodes.clear();
+         m_xmlDocument->findNodes( xpath, xml_nodes );
+         if ( xml_nodes.size() == 1 )
+         {
+            const ossimString& originString = xml_nodes[0]->getChildTextValue( ossimString( "pos" ) );
+            size_t spacePos = originString.find( ' ' );
+            ossimString firstOriginString  = originString.beforePos( spacePos );
+            ossimString secondOriginString = originString.afterPos ( spacePos );
+            const ossimRefPtr<ossimXmlAttribute> hrefAttribute = xml_nodes[0]->findAttribute( srsNameStr );
+            const ossimString& originSrsName = hrefAttribute->getValue();
+            ossimString pcsCodeOriginStr = originSrsName.after( pcsCodeDefinitionStr.string() );
+            pcsCodeOrigin = pcsCodeOriginStr.toUInt32();
+
+            if ( pcsCodeOrigin != 32767 )
             {
-               const ossimString& axisLabelsString = xml_nodes[0]->getText();
-               size_t spacePos = axisLabelsString.find( ' ' );
-               firstAxisLabelString  = axisLabelsString.beforePos( spacePos );
-               secondAxisLabelString = axisLabelsString.afterPos ( spacePos );
-            }
+               std::string tie_point_xy;
+               std::string tie_point_units;
 
-            /* origin */
-
-            ossim_uint32 pcsCodeOrigin = 32767;
-            ossimString xpath_originPoint = "/gml:origin/gml:Point";
-            xpath_originPoint = xpath_originPoint.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
-            xpath = xpath0 + xpath_originPoint;
-            xml_nodes.clear();
-            m_xmlDocument->findNodes( xpath, xml_nodes );
-            if ( xml_nodes.size() == 1 )
-            {
-               const ossimString& originString = xml_nodes[0]->getChildTextValue( ossimString( "pos" ) );
-               size_t spacePos = originString.find( ' ' );
-               ossimString firstOriginString  = originString.beforePos( spacePos );
-               ossimString secondOriginString = originString.afterPos ( spacePos );
-
-               const ossimRefPtr<ossimXmlAttribute> hrefAttribute = xml_nodes[0]->findAttribute( srsNameStr );
-               const ossimString& originSrsName = hrefAttribute->getValue();
-               ossimString pcsCodeOriginStr = originSrsName.after( pcsCodeDefinitionStr.string() );
-               pcsCodeOrigin = pcsCodeOriginStr.toUInt32();
-               if ( pcsCodeOrigin != 32767 )
+               if ( pcsCodeOrigin == 4326 ) // map projection
                {
-                  if ( pcsCodeOrigin != 4326 ) // map projection
-                  {
-                     /* Convert to geographic */
-                  }
-
-                  if ( firstAxisLabelString == ossimString( "Lat" ) )
-                  {
-                     geomKwl.add( ossimKeywordNames::ORIGIN_LATITUDE_KW, 
-                                  firstOriginString.c_str() );
-                     geomKwl.add( ossimKeywordNames::CENTRAL_MERIDIAN_KW, 
-                                  secondOriginString.c_str() );
-                  }
-                  else
-                  {
-                     geomKwl.add( ossimKeywordNames::ORIGIN_LATITUDE_KW, 
-                                  secondOriginString.c_str() );
-                     geomKwl.add( ossimKeywordNames::CENTRAL_MERIDIAN_KW, 
-                                  firstOriginString.c_str() );
-                  }
+                  // Longitude first, e.g. (lon,lat)
+                  tie_point_units = "degrees";
                }
-            }
-
-            /* offset vector */
-
-            ossimString xpath_offsetVector = "/gml:offsetVector";
-            xpath_offsetVector = xpath_offsetVector.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
-            xpath = xpath0 + xpath_offsetVector;
-            xml_nodes.clear();
-            m_xmlDocument->findNodes( xpath, xml_nodes );
-            size_t nNodes = xml_nodes.size();
-            for ( size_t i=0; i<nNodes; ++i )
-            {
-               const ossimString& offsetVectorString = xml_nodes[i]->getText();
-               size_t spacePos = offsetVectorString.find( ' ' );
-               ossimString firstOffsetVectorString  = offsetVectorString.beforePos( spacePos );
-               ossimString secondOffsetVectorString = offsetVectorString.afterPos ( spacePos );
-
-               const ossimRefPtr<ossimXmlAttribute> hrefAttribute = xml_nodes[i]->findAttribute( srsNameStr );
-               const ossimString& offsetVectorSrsName = hrefAttribute->getValue();
-               ossimString pcsCodeOffsetVectorStr = offsetVectorSrsName.after( pcsCodeDefinitionStr.string() );
-               ossim_uint32 pcsCodeOffsetVector = pcsCodeOffsetVectorStr.toUInt32();
-               if ( pcsCodeOffsetVector == 4326 )
+               else
                {
-                  if ( firstAxisLabelString == ossimString( "Lat" ) )
-                  {
-                     if ( firstOffsetVectorString.toDouble() != 0.0 )
-                     {    
-                        geomKwl.add( ossimKeywordNames::DECIMAL_DEGREES_PER_PIXEL_LAT, 
-                                     firstOffsetVectorString.c_str() );
-                     }
-                     else
-                     {
-                        geomKwl.add( ossimKeywordNames::DECIMAL_DEGREES_PER_PIXEL_LON, 
-                                     secondOffsetVectorString.c_str() );
-                     }
-                  }
-                  else
-                  {
-                     if ( firstOffsetVectorString.toDouble() != 0.0 )
-                     { 
-                        geomKwl.add( ossimKeywordNames::DECIMAL_DEGREES_PER_PIXEL_LON, 
-                                     firstOffsetVectorString.c_str() );
-                     }
-                     else
-                     {
-                        geomKwl.add( ossimKeywordNames::DECIMAL_DEGREES_PER_PIXEL_LAT, 
-                                     secondOffsetVectorString.c_str() );
-                     }
-                  }
+                  tie_point_units = "meters";
                }
-               else // map projection
-                  if ( pcsCodeOffsetVector == pcsCodeGrid )
-                  {
-                     if ( firstAxisLabelString == ossimString( "X" ) )
-                     {
-                        if ( firstOffsetVectorString.toDouble() != 0.0 )
-                        {    
-                           geomKwl.add( ossimKeywordNames::METERS_PER_PIXEL_X_KW, 
-                                        firstOffsetVectorString.c_str() );
-                        }
-                        else
-                        {
-                           geomKwl.add( ossimKeywordNames::METERS_PER_PIXEL_Y_KW, 
-                                        secondOffsetVectorString.c_str() );
-                        }
-                     }
-                     else
-                     {
-                        if ( firstOffsetVectorString.toDouble() != 0.0 )
-                        { 
-                           geomKwl.add( ossimKeywordNames::METERS_PER_PIXEL_Y_KW, 
-                                        firstOffsetVectorString.c_str() );
-                        }
-                        else
-                        {
-                           geomKwl.add( ossimKeywordNames::METERS_PER_PIXEL_X_KW, 
-                                        secondOffsetVectorString.c_str() );
-                        }
-                     }
-                  }
-                  else
-                  {
-                     /*
-                       Need to perform a coordinate conversion on the 
-                       offset vector to the pcs code of the grid
-                     */
-                  }
+               
+               if ( ( tie_point_units == "degrees" ) &&
+                    ( firstAxisLabelString == "Lat" ) )
+               {
+                  tie_point_xy = "(";
+                  tie_point_xy += secondOriginString.string();
+                  tie_point_xy += ",";
+                  tie_point_xy += firstOriginString.string();
+                  tie_point_xy += ")";
+               }
+               else
+               {
+                  tie_point_xy = "(";
+                  tie_point_xy += firstOriginString.string();
+                  tie_point_xy += ",";
+                  tie_point_xy += secondOriginString.string();
+                  tie_point_xy += ")";
+               }
+                  
+               geomKwl.add( ossimKeywordNames::TIE_POINT_XY_KW, tie_point_xy.c_str() );
+               geomKwl.add( ossimKeywordNames::TIE_POINT_UNITS_KW, tie_point_units.c_str() );
             }
          }
+
+         //---
+         // offset vector
+         // Note this is the scale:
+         
+         ossimString xpath_offsetVector = "/gml:offsetVector";
+         xpath_offsetVector = xpath_offsetVector.replaceAllThatMatch( defaultNamespaceStr.c_str(), "" );
+         xpath = xpath0 + xpath_offsetVector;
+         xml_nodes.clear();
+         m_xmlDocument->findNodes( xpath, xml_nodes );
+
+         if ( xml_nodes.size() )
+         {
+            const ossimString& offsetVectorString = xml_nodes[0]->getText();
+            size_t spacePos = offsetVectorString.find( ' ' );
+            ossimString firstOffsetVectorString  = offsetVectorString.beforePos( spacePos );
+            ossimString secondOffsetVectorString = offsetVectorString.afterPos ( spacePos );
+            
+
+            const ossimRefPtr<ossimXmlAttribute> hrefAttribute = xml_nodes[0]->findAttribute( srsNameStr );
+            const ossimString& offsetVectorSrsName = hrefAttribute->getValue();
+            ossimString pcsCodeOffsetVectorStr = offsetVectorSrsName.after( pcsCodeDefinitionStr.string() );
+            ossim_uint32 pcsCodeOffsetVector = pcsCodeOffsetVectorStr.toUInt32();
+
+            if ( pcsCodeOffsetVector != 32767 )
+            {
+               std::string scale_xy;
+               std::string scale_units;
+               if ( pcsCodeOffsetVector == 4326 )
+               {
+                  scale_units = "degrees";
+               }
+               else
+               {
+                  scale_units = "meters";
+               }
+               
+               if ( ( scale_units == "degrees" ) && ( firstAxisLabelString == "Lat" ) )
+               {
+                  scale_xy = "(";
+                  scale_xy += secondOffsetVectorString.c_str();
+                  scale_xy += ",";
+                  scale_xy += firstOffsetVectorString.c_str();
+                  scale_xy += ")";
+               }
+               else
+               {
+                  scale_xy = "(";
+                  scale_xy += firstOffsetVectorString.c_str();
+                  scale_xy += ",";
+                  scale_xy += secondOffsetVectorString.c_str();
+                  scale_xy += ")";
+               }
+               
+               geomKwl.add( ossimKeywordNames::PIXEL_SCALE_XY_KW, scale_xy.c_str() );
+               geomKwl.add( ossimKeywordNames::PIXEL_SCALE_UNITS_KW, scale_units.c_str() ); 
+            }
+         }
+      }
    }
 
    return success;
    
-} // End: ossimGmlSupportData::getImageGeometry( geoKwl )
-
-
-void ossimGmlSupportData::getOrigin( 
-   const ossimImageGeometry* geom,
-   ossimString& originString,
-   ossimString& offsetVector1String, 
-   ossimString& offsetVector2String ) const
-{
-   if ( m_mapProj != 0 )
-   {
-      // In meters or decimal degrees.
-      if ( m_mapProj->isGeographic() )
-      {
-         getGeoOrigin( geom, originString, 
-                       offsetVector1String, offsetVector2String );
-      }
-      else
-      {
-         getMapOrigin( geom, originString, 
-                       offsetVector1String, offsetVector2String );
-      }
-   }
-} // End: ossimGmlSupportData::getOrigin
-
-
-void ossimGmlSupportData::getGeoBounds( const ossimImageGeometry* geom,
-                                        ossimString& upperCornerString,
-                                        ossimString& lowerCornerString ) const
-{
-   if ( geom != 0 && m_mapProj != 0 )
-   {
-      // Get the bounding rect:
-      ossimGrect rect;
-      geom->getBoundingGroundRect( rect );
-      
-      ossimDpt upperEdge( rect.ul().lon, rect.ul().lat );
-      ossimDpt lowerEdge( rect.lr().lon, rect.lr().lat );
-
-      std::ostringstream os;
-      os.precision(5);
-      os << upperEdge.lat << " " << upperEdge.lon;
-      upperCornerString = os.str();
-      
-      std::ostringstream os2;
-      os2.precision(5);
-      os2 << lowerEdge.lat << " " << lowerEdge.lon;
-      lowerCornerString = os2.str();
-   }
-   
-} // End: ossimGmlSupportData::getGeoBounds
+} // End: ossimGmlSupportData::getImageGeometry( geomKwl )
+#endif
 
 void ossimGmlSupportData::getGeoOrigin( 
    const ossimImageGeometry* geom,
+   const ossimIpt& ul,
    ossimString& originString,
    ossimString& offsetVector1String, 
    ossimString& offsetVector2String ) const
 {
    if ( geom )
    {
-      // Get the gsd and bounding rect:
+      // Get the gsd:
       ossimDpt gsd;
-      ossimGrect rect;
       geom->getDegreesPerPixel( gsd );
-      geom->getBoundingGroundRect( rect );
 
-      ossimDpt halfGsd = gsd/2.0;
-      ossimDpt upperEdge( rect.ul().lon + halfGsd.x, rect.ul().lat + halfGsd.y );
+      // Get tie point:
+      ossimGpt tie;
+      geom->localToWorld( ul, tie );
 
       std::ostringstream os;
       os.precision(15);
-      os << upperEdge.lat << " " << upperEdge.lon;
+      os << tie.lat << " " << tie.lon;
       originString = os.str();
 
       std::ostringstream os2;
@@ -1033,19 +1006,25 @@ void ossimGmlSupportData::getGeoOrigin(
 
 void ossimGmlSupportData::getMapOrigin( 
    const ossimImageGeometry* geom,
+   const ossimIpt& ul,
    ossimString& originString,
    ossimString& offsetVector1String, 
    ossimString& offsetVector2String ) const
 {
    if ( geom )
    {
-      if ( m_mapProj != 0 )
+      ossimRefPtr<const ossimMapProjection> mapProj = geom->getAsMapProjection();
+      if ( mapProj.valid() != 0 )
       {
-         ossimDpt originMap = m_mapProj->getUlEastingNorthing();
+         // Get the tie point:
+         ossimGpt gpt;
+         geom->localToWorld( ul, gpt );
+
+         ossimDpt tie = mapProj->forward( gpt );
 
          std::ostringstream os;
          os.precision(15);
-         os << originMap.x << " " << originMap.y;
+         os << tie.x << " " << tie.y;
          originString = os.str();   
       }
 
@@ -1066,26 +1045,401 @@ void ossimGmlSupportData::getMapOrigin(
 
 } // End: ossimGmlSupportData::getMapBounds
 
-void ossimGmlSupportData::getLimits( const ossimImageGeometry* geom,
-                                     ossimString& gridHighString,
-                                     ossimString& gridLowString ) const
+void ossimGmlSupportData::getGeoBounds( const ossimImageGeometry* geom,
+                                        const ossimIrect& rect,
+                                        ossimString& upperCornerString,
+                                        ossimString& lowerCornerString ) const
 {
    if ( geom )
    {
-      // Get the image bounding rect:
-      ossimIrect rect;
-      geom->getBoundingRect( rect );
-      
-      if ( rect.hasNans() == false )
+      ossimRefPtr<const ossimMapProjection> mapProj = geom->getAsMapProjection();
+      if ( mapProj.valid() )
       {
+         // Get the bounding rect.  This assumes North up.
+         ossimGpt ulGpt;
+         ossimGpt lrGpt;
+         geom->localToWorld( rect.ul(), ulGpt );
+         geom->localToWorld( rect.lr(), lrGpt );
+         
          std::ostringstream os;
-         os << rect.ul().x << " " << rect.ul().y;
-         gridLowString = os.str();
+         os.precision(15);
+         os << ulGpt.lat << " " << ulGpt.lon;
+         upperCornerString = os.str();
          
          std::ostringstream os2;
-         os2 << rect.lr().x << " " << rect.lr().y;
-         gridHighString = os2.str();
+         os2.precision(15);
+         os2 << lrGpt.lat << " " << lrGpt.lon;
+         lowerCornerString = os2.str();
       }
    }
    
+} // End: ossimGmlSupportData::getGeoBounds
+
+void ossimGmlSupportData::getLimits( const ossimIrect& rect,
+                                     ossimString& gridHighString,
+                                     ossimString& gridLowString ) const
+{
+   if ( rect.hasNans() == false )
+   {
+      // Zero based image rect.
+      gridLowString = "0 0";
+         
+      ossim_uint32 w = rect.width();
+      ossim_uint32 h = rect.height();
+      
+      std::ostringstream os;
+      os << (w-1) << " " << (h-1);
+      gridHighString = os.str();
+   }
 }
+
+bool ossimGmlSupportData::getImageGeometryFromSeonsorModel( ossimKeywordlist& /* geomKwl */) const
+{
+   bool status = false;
+
+   if ( m_xmlDocument.valid() )
+   {
+      vector< ossimRefPtr<ossimXmlNode> > xml_nodes;
+      ossimString xpath0 =  "/gmljp2:GMLJP2CoverageCollection/gmljp2:featureMember/gmljp2:GMLJP2ReferenceableGridCoverage/gml:domainSet/gmlcov:ReferenceableGridBySensorModel";
+
+      m_xmlDocument->findNodes( xpath0, xml_nodes );
+      if ( xml_nodes.size() >= 1 )
+      {
+         // Put sensor model code here...
+
+         status = true;
+      }
+   }
+
+   return status;
+}
+
+bool ossimGmlSupportData::getImageGeometryFromRectifiedGrid( ossimKeywordlist& geomKwl ) const
+{
+   bool status = false;
+
+   if ( m_xmlDocument.valid() )
+   {
+      bool useGmlPrefix = false;
+      
+      vector< ossimRefPtr<ossimXmlNode> > xml_nodes;
+      
+      ossimString xpath0 = "/gmljp2:GMLJP2CoverageCollection/gmljp2:featureMember/gmljp2:GMLJP2RectifiedGridCoverage/domainSet/RectifiedGrid";
+      m_xmlDocument->findNodes( xpath0, xml_nodes );
+      if ( !xml_nodes.size() )
+      {
+         xpath0 = "/gmljp2:GMLJP2CoverageCollection/gmljp2:featureMember/gmljp2:GMLJP2RectifiedGridCoverage/gml:domainSet/gml:RectifiedGrid";
+        m_xmlDocument->findNodes( xpath0, xml_nodes );
+        if (  xml_nodes.size() )
+        {
+           useGmlPrefix = true;
+        }
+      }
+         
+      if ( xml_nodes.size() )
+      {
+         const ossimString SRS_NAME( "srsName" );
+         const ossimString PCS_CODE_DEFINITION_STR( "http://www.opengis.net/def/crs/EPSG/0/" );
+         
+         const ossimRefPtr<ossimXmlAttribute> hrefAttribute =
+            xml_nodes[0]->findAttribute( SRS_NAME );
+         const ossimString& originSrsName = hrefAttribute->getValue();
+
+         ossimString pcsCodeStr = originSrsName.after( PCS_CODE_DEFINITION_STR.string() );
+         ossim_uint32 pcsCode = pcsCodeStr.toUInt32();
+
+         if ( pcsCode != 32767 )
+         {
+            // Add the pcs code.
+            geomKwl.add( ossimKeywordNames::PCS_CODE_KW, pcsCodeStr.c_str() );
+            if ( pcsCode == 4326 )
+            {
+               ossimString srsName = "EPSG:";
+               srsName += pcsCodeStr;
+               geomKwl.add( ossimKeywordNames::SRS_NAME_KW, srsName.c_str() );
+               geomKwl.add( ossimKeywordNames::TYPE_KW, "ossimEquDistCylProjection");
+            }
+
+            if ( addLineSamps( xpath0, useGmlPrefix, geomKwl ) )
+            {
+               if ( addTie( xpath0, useGmlPrefix, pcsCode, geomKwl ) )
+               {
+                  status = addScale( xpath0, useGmlPrefix, pcsCode, geomKwl );
+               }
+            }
+         }
+      }
+   }
+
+   return status;  
+}
+
+bool ossimGmlSupportData::addLineSamps( const ossimString& xpath0,
+                                        bool useGmlPrefix,
+                                        ossimKeywordlist& geomKwl ) const
+{
+   bool status = false;
+   
+   if ( m_xmlDocument.valid() )
+   {
+      vector< ossimRefPtr<ossimXmlNode> > xml_nodes;
+
+      // Number of lines & samples, for either sensor or rectified imagery:
+      ossimString xpath_limits_low;
+      if (useGmlPrefix)
+      {
+         xpath_limits_low = "/gml:limits/gml:GridEnvelope/gml:low";
+      }
+      else
+      {
+         xpath_limits_low = "/limits/GridEnvelope/low";
+      }
+      ossimString xpath = xpath0 + xpath_limits_low;
+       m_xmlDocument->findNodes( xpath, xml_nodes );
+      if ( xml_nodes.size() == 1 )
+      {
+         const ossimString& lowerCorner = xml_nodes[0]->getText();
+         size_t spacePos = lowerCorner.find( ' ' );
+         ossimString lowerXString = lowerCorner.beforePos( spacePos );
+         ossimString lowerYString = lowerCorner.afterPos ( spacePos );
+         ossim_uint32 lowX = lowerXString.toInt32();
+         ossim_uint32 lowY = lowerYString.toInt32();
+
+         ossimString xpath_limits_high;
+         if ( useGmlPrefix )
+         {
+            xpath_limits_high = "/gml:limits/gml:GridEnvelope/gml:high";
+         }
+         else
+         {
+            xpath_limits_high = "/limits/GridEnvelope/high";
+         }
+
+         xpath = xpath0 + xpath_limits_high;
+         xml_nodes.clear();
+         m_xmlDocument->findNodes( xpath, xml_nodes );
+         if ( xml_nodes.size() == 1 )
+         {
+            const ossimString& higherCorner = xml_nodes[0]->getText();
+            size_t spacePos = higherCorner.find( ' ' );
+            ossimString higherXString = higherCorner.beforePos( spacePos );
+            ossimString higherYString = higherCorner.afterPos ( spacePos );
+            ossim_uint32 highX = higherXString.toInt32();
+            ossim_uint32 highY = higherYString.toInt32();
+            
+            geomKwl.add( ossimKeywordNames::NUMBER_LINES_KW,   highY - lowY + 1 );
+            geomKwl.add( ossimKeywordNames::NUMBER_SAMPLES_KW, highX - lowX + 1 );
+            
+            status = true;
+         }
+      }
+   }
+
+   return status;
+   
+} // ossimGmlSupportData::addLineSamps
+
+bool ossimGmlSupportData::addTie( const ossimString& xpath0,
+                                  bool useGmlPrefix,
+                                  ossim_uint32 pcsCode,
+                                  ossimKeywordlist& geomKwl ) const
+{
+   bool status = false;
+
+   if ( m_xmlDocument.valid() && (pcsCode != 32767 ) )
+   {
+      vector< ossimRefPtr<ossimXmlNode> > xml_nodes;
+
+      //---
+      // origin:
+      // Note: In GML the origin is the tie point, NOT the projection origin.
+      //---
+
+      // axis labels for rectified imagery:
+      ossimString xpath_axisLabels;
+      if ( useGmlPrefix )
+      {
+          xpath_axisLabels = "/gml:axisLabels";
+      }
+      else
+      {
+         xpath_axisLabels = "/axisLabels";
+      }
+
+      ossimString xpath = xpath0 + xpath_axisLabels;
+      m_xmlDocument->findNodes( xpath, xml_nodes );
+      if ( xml_nodes.size() == 1 )
+      {
+         ossimString axisLabelsString = xml_nodes[0]->getText();
+
+         ossimString xpath_originPoint;
+
+         if ( useGmlPrefix )
+         {
+            xpath_originPoint = "/gml:origin/gml:Point";
+         }
+         else
+         {
+            xpath_originPoint = "/origin/Point";
+         }
+
+         xpath = xpath0 + xpath_originPoint;
+         xml_nodes.clear();
+         m_xmlDocument->findNodes( xpath, xml_nodes );
+         if ( xml_nodes.size() == 1 )
+         {
+            const ossimString& originString = xml_nodes[0]->getChildTextValue( ossimString( "pos" ) );
+            size_t spacePos = originString.find( ' ' );
+            ossimString firstOriginString  = originString.beforePos( spacePos );
+            ossimString secondOriginString = originString.afterPos ( spacePos );
+            
+            std::string tie_point_xy;
+            std::string tie_point_units;
+            
+            if ( pcsCode == 4326 ) // map projection
+            {
+               // Longitude first, e.g. (lon,lat)
+               tie_point_units = "degrees";
+            }
+            else
+            {
+               tie_point_units = "meters";
+            }
+            
+            if ( ( tie_point_units == "degrees" ) &&
+                 ( axisLabelsString == "Lat Long" ) )
+            {
+               tie_point_xy = "(";
+               tie_point_xy += secondOriginString.string();
+               tie_point_xy += ",";
+               tie_point_xy += firstOriginString.string();
+               tie_point_xy += ")";
+            }
+            else
+            {
+               tie_point_xy = "(";
+               tie_point_xy += firstOriginString.string();
+               tie_point_xy += ",";
+               tie_point_xy += secondOriginString.string();
+               tie_point_xy += ")";
+            }
+            geomKwl.add( ossimKeywordNames::TIE_POINT_XY_KW, tie_point_xy.c_str() );
+            geomKwl.add( ossimKeywordNames::TIE_POINT_UNITS_KW, tie_point_units.c_str() );
+            status = true;
+         }
+      }
+      
+   } // Matches: if ( m_xmlDocument.valid() && (pscCode != 32767 ) )
+
+   return status;
+   
+} // End: ossimGmlSupportData::addTie( ... )
+
+bool ossimGmlSupportData::addScale( const ossimString& xpath0,
+                                    bool useGmlPrefix,
+                                    ossim_uint32 pcsCode,
+                                    ossimKeywordlist& geomKwl ) const
+{
+   bool status = false;
+
+   if ( m_xmlDocument.valid() && (pcsCode != 32767 ) )
+   {
+      vector< ossimRefPtr<ossimXmlNode> > xml_nodes;
+
+      //---
+      // origin:
+      // Note: In GML the origin is the tie point, NOT the projection origin.
+      //---
+
+      // axis labels for rectified imagery:
+      ossimString xpath_axisLabels;
+      if ( useGmlPrefix )
+      {
+          xpath_axisLabels = "/gml:axisLabels";
+      }
+      else
+      {
+         xpath_axisLabels = "/axisLabels";
+      }
+
+      ossimString xpath = xpath0 + xpath_axisLabels;
+      m_xmlDocument->findNodes( xpath, xml_nodes );
+      if ( xml_nodes.size() == 1 )
+      {
+         ossimString axisLabelsString = xml_nodes[0]->getText();
+
+         ossimString xpath_offsetVector;
+         if ( useGmlPrefix )
+         {
+            xpath_offsetVector = "/gml:offsetVector";
+         }
+         else
+         {
+            xpath_offsetVector =  "/offsetVector";
+         }
+         
+         xpath = xpath0 + xpath_offsetVector;
+         xml_nodes.clear();
+         m_xmlDocument->findNodes( xpath, xml_nodes );
+         if ( xml_nodes.size() == 2 )
+         {
+            const ossimString& offsetVectorString0 = xml_nodes[0]->getText();
+            const ossimString& offsetVectorString1 = xml_nodes[1]->getText();
+            
+            size_t spacePos0 = offsetVectorString0.find( ' ' );
+            size_t spacePos1 = offsetVectorString1.find( ' ' );            
+            
+            ossimString firstOffsetVectorString0  = offsetVectorString0.beforePos( spacePos0 );
+            ossimString secondOffsetVectorString0 = offsetVectorString0.afterPos ( spacePos0 );
+            ossimString firstOffsetVectorString1  = offsetVectorString1.beforePos( spacePos1 );
+            ossimString secondOffsetVectorString1 = offsetVectorString1.afterPos ( spacePos1 );
+            
+            // TODO: Add for rotational matrix:
+            
+            std::string scale_xy;
+            std::string scale_units;
+            if ( pcsCode == 4326 )
+            {
+               scale_units = "degrees";
+            }
+            else
+            {
+               scale_units = "meters";
+            }
+
+            ossimDpt scale;
+            if ( ( scale_units == "degrees" ) &&
+                 ( axisLabelsString == "Lat Long" ) )
+            {
+               scale.x = secondOffsetVectorString1.toFloat64();
+               scale.y = firstOffsetVectorString0.toFloat64();
+            }
+            else
+            {
+               scale.x = firstOffsetVectorString0.toFloat64();
+               scale.y = secondOffsetVectorString1.toFloat64();
+            }
+            if ( scale.y < 0.0 )
+            {
+               scale.y *= -1.0; // make positive
+            }
+
+            if ( ( scale_units == "degrees" ) && ( scale.x != scale.y ) )
+            {
+               // Compute/add the origin latitude of true scale.
+               ossim_float64 origin_lat = ossim::acosd(scale.y/scale.x);
+
+               geomKwl.add(  ossimKeywordNames::ORIGIN_LATITUDE_KW, origin_lat );
+            }
+            
+            geomKwl.add( ossimKeywordNames::PIXEL_SCALE_XY_KW, scale.toString().c_str() );
+            geomKwl.add( ossimKeywordNames::PIXEL_SCALE_UNITS_KW, scale_units.c_str() );                
+            status = true;
+         }
+      }
+
+   } // Matches: if ( m_xmlDocument.valid() && (pscCode != 32767 ) )
+
+   return status;
+   
+} // End: ossimGmlSupportData::addScale( ... )
