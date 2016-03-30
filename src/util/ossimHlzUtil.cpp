@@ -251,7 +251,7 @@ void ossimHlzUtil::initProcessingChain()
 
    // In order to use the slope filter to establish terrain quality, the elevation data needs to
    // be loaded as images, not elevation cells. Need to transfer relevant cells to image chains:
-   mosaicDemSources();
+   m_combinedElevSource = mosaicDemSources();
 
    // The "chain" for this utility is just the memory source containing the output buffer:
    m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
@@ -385,46 +385,6 @@ void ossimHlzUtil::loadMaskFiles()
    }
 }
 
-void ossimHlzUtil::mosaicDemSources()
-{
-   ostringstream xmsg;
-
-   if (m_demSources.empty())
-   {
-      // Establish connection to DEM posts directly as raster "images" versus using the OSSIM elev
-      // manager that performs interpolation of DEM posts for arbitrary locations. These elev images
-      // feed into a combiner in order to have a common tap for elev pixels:
-      ossimElevManager* elevMgr = ossimElevManager::instance();
-      elevMgr->getCellsForBounds(m_aoiGroundRect, m_demSources);
-   }
-
-   // Open a raster image for each elevation source being considered:
-   ossimConnectableObject::ConnectableObjectList elevChains;
-   vector<ossimFilename>::iterator fname_iter = m_demSources.begin();
-   while (fname_iter != m_demSources.end())
-   {
-      ossimRefPtr<ossimSingleImageChain> chain = createInputChain(*fname_iter).get();
-      if (!chain.valid() || !chain->getImageRenderer().valid() )
-      {
-         xmsg<<"ossimHlzUtil:"<<__LINE__<<"  Cannot open DEM file at <"<<*fname_iter<<">";
-         throw(xmsg.str());
-      }
-
-      // Set up the input chain with proper renderer IVT:
-      ossimRefPtr<ossimImageViewProjectionTransform> ivt = new ossimImageViewProjectionTransform
-            (chain->getImageHandler()->getImageGeometry().get(), m_geom.get());
-      chain->getImageRenderer()->setImageViewTransform(ivt.get());
-      ossimRefPtr<ossimConnectableObject> connectable = chain.get();
-      elevChains.push_back(connectable);
-      ++fname_iter;
-   }
-
-   if (elevChains.size() == 1)
-      m_combinedElevSource = (ossimImageSource*) elevChains[0].get();
-   else
-      m_combinedElevSource = new ossimImageMosaic(elevChains);
-}
-
 ossimRefPtr<ossimImageData> ossimHlzUtil::getChip(const ossimIrect& bounding_irect)
 {
    ostringstream xmsg;
@@ -523,7 +483,7 @@ bool ossimHlzUtil::computeHLZ()
             new ossimJobMultiThreadQueue(0, m_numThreads);
       ossimJobQueue* jobQueue = jobMtQueue->getJobQueue();
 
-      cout << "\nPreparing " << numPatches << " jobs..." << endl; // TODO: DEBUG
+      ossimNotify(ossimNotifyLevel_INFO) << "\nPreparing " << numPatches << " jobs..." << endl; // TODO: DEBUG
       setPercentComplete(0);
       ossim_int32 qsize = 0;
       ossimIpt chip_origin;
@@ -532,7 +492,7 @@ bool ossimHlzUtil::computeHLZ()
       {
          for (chip_origin.x = min_x; chip_origin.x <= max_x; ++chip_origin.x)
          {
-            //cout << "Submitting " << chipId << endl;
+            //ossimNotify(ossimNotifyLevel_INFO) << "Submitting " << chipId << endl;
             ossimHlzUtil::PatchProcessorJob* job = 0;
             if (m_useLsFitMethod)
                job = new ossimHlzUtil::LsFitPatchProcessorJob(this, chip_origin, chipId++);
@@ -545,7 +505,7 @@ bool ossimHlzUtil::computeHLZ()
       }
 
       // Wait until all chips have been processed before proceeding:
-      cout << "All jobs queued. Waiting for job threads to finish..." << endl;
+      ossimNotify(ossimNotifyLevel_INFO) << "All jobs queued. Waiting for job threads to finish..." << endl;
       while (jobMtQueue->hasJobsToProcess() || jobMtQueue->numberOfBusyThreads())
       {
          qsize = jobMtQueue->getJobQueue()->size();
@@ -555,7 +515,7 @@ bool ossimHlzUtil::computeHLZ()
       jobMtQueue = 0;
    }
 
-   cout << "Finished processing chips." << endl;
+   ossimNotify(ossimNotifyLevel_INFO) << "Finished processing chips." << endl;
    return true;
 }
 
@@ -570,11 +530,11 @@ void ossimHlzUtil::writeSlopeImage()
    writer->connectMyInputTo(0, m_combinedElevSource.get());
    writer->setAreaOfInterest(m_aoiViewRect);
    if (writer->execute())
-      cout<<"Wrote slope image to <"<<m_slopeFile<<">."<<endl;
+      ossimNotify(ossimNotifyLevel_INFO)<<"Wrote slope image to <"<<m_slopeFile<<">."<<endl;
    else
    {
-      cout<<"ossimHLZUtil::writeSlopeImage() Error encountered writing slope image to <"
-            <<m_slopeFile<<">."<<endl;
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimHLZUtil::writeSlopeImage() Error encountered "
+            "writing slope image to <"<<m_slopeFile<<">."<<endl;
    }
 }
 

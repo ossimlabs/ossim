@@ -151,8 +151,8 @@ std::ostream& ossimJp2Info::print(std::ostream& out) const
                      break;
                   }
                }
-#endif          
-
+#endif
+               
                if( memcmp( (char*)geotiffUuid, GEOTIFF_UUID, GEOTIFF_UUID_SIZE) == 0)
                {
                   //---
@@ -563,6 +563,8 @@ void ossimJp2Info::printTboxType( ossim_uint32 tbox, std::ostream& out ) const
 {
    std::string boxType;
 
+   const ossim_uint32 JP2_ASSOC_TYPE = 0x61736f63;
+   const ossim_uint32 JP2_LABEL_TYPE = 0x6c626c20;
    const ossim_uint32 JP2_SIG_TYPE   = 0x6A502020;
    const ossim_uint32 FILE_TYPE      = 0x66747970;
    const ossim_uint32 JP2_HDR_TYPE   = 0x6A703268;
@@ -580,73 +582,103 @@ void ossimJp2Info::printTboxType( ossim_uint32 tbox, std::ostream& out ) const
    const ossim_uint32 XML_TYPE       = 0x786D6C20;
    const ossim_uint32 UUID_TYPE      = 0x75756964;
 
-   if ( tbox == JP2_SIG_TYPE )
+   switch( tbox )
    {
-      boxType = "jp2_sig";
-   }
-   else if ( tbox == FILE_TYPE )
-   {
-      boxType = "ftyp";
-   }
-   else if ( tbox == JP2_HDR_TYPE )
-   {
-      boxType = "jp2h";
-   }
-   else if ( tbox == IMG_HDR_TYPE )
-   {
-      boxType = "ihdr";
-   }
-   else if ( tbox == BPCC_TYPE )
-   {
-      boxType = "bpcc";
-   }
-   else if ( tbox == COLR_TYPE )
-   {
-      boxType = "colr";
-   }
-   else if ( tbox == PCLR_TYPE )
-   {
-      boxType = "pclr";
-   }
-   else if ( tbox == CMAP_TYPE )
-   {
-      boxType = "cmap";
-   }
-   else if ( tbox == CDEF_TYPE )
-   {
-      boxType = "cdef";
-   }
-   else if ( tbox == RES_TYPE )
-   {
-      boxType = "res";
-   }
-   else if ( tbox == RESC_TYPE )
-   {
-      boxType = "resc";
-   }
-   else if ( tbox == RESD_TYPE )
-   {
-      boxType = "resd";
-   }
-   else if ( tbox == JP2C_TYPE )
-   {
-      boxType = "jp2c";
-   }
-   else if ( tbox == JP2I_TYPE )
-   {
-      boxType = "jp2i";
-   }
-   else if ( tbox == XML_TYPE )
-   {
-      boxType = "xml";
-   }
-   else if ( tbox == UUID_TYPE )
-   {
-      boxType = "uuid";
-   }
-   else
-   {
-      boxType = "unhandled";
+      case JP2_ASSOC_TYPE:
+      {
+         boxType = "jp2_assoc";
+         break;
+      }
+      case JP2_LABEL_TYPE:
+      {
+         boxType = "jp2_label";
+         break;
+      }
+      case JP2_SIG_TYPE:
+      {
+         boxType = "jp2_sig";
+         break;
+      }
+      case FILE_TYPE:
+      {
+         boxType = "ftyp";
+         break;
+      }
+      case JP2_HDR_TYPE:
+      {
+         boxType = "jp2h";
+         break;
+      }
+      case IMG_HDR_TYPE:
+      {
+         boxType = "ihdr";
+         break;
+      }
+      case BPCC_TYPE:
+      {
+         boxType = "bpcc";
+         break;
+      }
+      case COLR_TYPE:
+      {
+         boxType = "colr";
+         break;
+      }
+      case PCLR_TYPE:
+      {
+         boxType = "pclr";
+         break;
+      }
+      case CMAP_TYPE:
+      {
+         boxType = "cmap";
+         break;
+      }
+      case CDEF_TYPE:
+      {
+         boxType = "cdef";
+         break;
+      }
+      case RES_TYPE:
+      {
+         boxType = "res";
+         break;
+      }
+      case RESC_TYPE:
+      {
+         boxType = "resc";
+         break;
+      }
+      case RESD_TYPE:
+      {
+         boxType = "resd";
+         break;
+      }
+      case JP2C_TYPE:
+      {
+         boxType = "jp2c";
+         break;
+      }
+      case JP2I_TYPE:
+      {
+         boxType = "jp2i";
+         break;
+      }
+      case XML_TYPE:
+      {
+         boxType = "xml";
+         break;
+      }
+      case UUID_TYPE:
+      {
+         boxType = "uuid";
+         break;
+      }
+      default:
+      {
+         boxType = "unhandled";
+         break;
+      }
    }
 
    out << "jp2.box_type: " << boxType << "\n";

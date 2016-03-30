@@ -457,7 +457,7 @@ bool ossimViewshedUtil::execute()
       return false;
 
    if (!m_horizonFile.empty() && writeHorizonProfile())
-      cout << "Wrote horizon profile to <"<<m_horizonFile<<">" <<endl;
+      ossimNotify(ossimNotifyLevel_INFO) << "Wrote horizon profile to <"<<m_horizonFile<<">" <<endl;
 
    return ossimChipProcUtil::execute();
 }
@@ -519,18 +519,18 @@ bool ossimViewshedUtil::computeViewshed()
             return 0;
       }
 
-      cout << "\nSubmitting "<<jobQueue->size()<<" jobs..."<<endl;
+      ossimNotify(ossimNotifyLevel_INFO) << "\nSubmitting "<<jobQueue->size()<<" jobs..."<<endl;
       m_jobMtQueue = new ossimJobMultiThreadQueue(jobQueue.get(), m_numThreads);
 
       // Wait until all radials have been processed before proceeding:
-      cout << "Waiting for job threads to finish..."<<endl;
+      ossimNotify(ossimNotifyLevel_INFO) << "Waiting for job threads to finish..."<<endl;
       while (m_jobMtQueue->hasJobsToProcess() || m_jobMtQueue->numberOfBusyThreads())
          OpenThreads::Thread::microSleep(250);
    }
    else
    {
       // Unthreaded processing:
-      cout << "\nProcessing radials (non-threaded)..."<<endl;
+      ossimNotify(ossimNotifyLevel_INFO) << "\nProcessing radials (non-threaded)..."<<endl;
 
       // Loop over pixels in layer for each sector:
       for (int sector=0; sector<8; ++sector)
@@ -547,7 +547,7 @@ bool ossimViewshedUtil::computeViewshed()
       } // end loop over sectors
    }
 
-   cout << "Finished processing radials."<<endl;
+   ossimNotify(ossimNotifyLevel_INFO) << "Finished processing radials."<<endl;
    paintReticle();
 
    return true;

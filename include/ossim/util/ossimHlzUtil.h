@@ -71,7 +71,6 @@ protected:
    void addArguments(ossimArgumentParser& ap);
    void loadPcFiles(); // throws exception
    void loadMaskFiles(); // throws exception
-   virtual void mosaicDemSources(); // throws exception
    void writeSlopeImage();
    void setProductGSD(const double& meters_per_pixel);
    bool computeHLZ();

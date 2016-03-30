@@ -205,6 +205,12 @@ protected:
     * Needed for bootstrapping the GSD computation when information in KWL is sparse */
    void findCenterGpt(ossimGpt& gpt);
 
+   /**
+    * Some utilities need to work on DEMs as images. This method determines which DEMs cover the AOI
+    * and creates an image mosaic with the DEMS serving as pixel sources. Throws exceptions.
+    */
+   ossimRefPtr<ossimImageSource>  mosaicDemSources();
+
    ossimRefPtr<ossimImageGeometry> m_geom; //> Product chip/image geometry
    ossimIrect m_aoiViewRect;
    ossimGrect m_aoiGroundRect;

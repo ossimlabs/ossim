@@ -148,6 +148,10 @@ bool ossimHillshadeUtil::initialize(ossimArgumentParser& ap)
 
 void ossimHillshadeUtil::initProcessingChain()
 {
+   // Need a mosaic of DEM over the AOI as an image mosaic:
+   ossimRefPtr<ossimImageSource> demMosaic = mosaicDemSources();
+   m_procChain->add(demMosaic.get());
+
    // Set up the normal source.
    ossimRefPtr<ossimImageToPlaneNormalFilter> normSource = new ossimImageToPlaneNormalFilter;
    normSource->setTrackScaleFlag(true);

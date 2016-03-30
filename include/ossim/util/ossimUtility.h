@@ -12,7 +12,7 @@
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimKeywordlist.h>
-
+#include <iostream>
 /*!
  *  Base class for all OSSIM utility applications.
  */
@@ -95,6 +95,11 @@ public:
     * (OLK 11/2015). */
    virtual bool isChipProcessor() const { return false; }
 
+   /**
+    * Redirects any console output to the supplied stream for logging or JNI application.
+    */
+   void setOutputStream(std::ostream* os) { m_consoleStream = os; }
+
 protected:
    /**
     * Initializes the aurgument parser with expected parameters and options. It does not output
@@ -108,6 +113,7 @@ protected:
    virtual void setUsage(ossimArgumentParser& ap);
 
    ossimKeywordlist m_kwl;
+   std::ostream* m_consoleStream;
 
 private:
    /**
