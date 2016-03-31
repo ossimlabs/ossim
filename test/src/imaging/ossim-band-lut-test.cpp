@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
    ossimFilename outputPath;
    if (argc > 1)
    {
-      ossimFilename outputPath = argv[1];
+      outputPath = argv[1];
       if (!outputPath.isDir())
       {
          cout << "Bad destination directory <"<<outputPath<<"> specified on command line. Ignoring,"
