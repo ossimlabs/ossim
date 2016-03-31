@@ -205,25 +205,25 @@ elevation_manager.threads: yes
 // Location of other shared files can be accessed using this preference to permit 
 // specifying paths relative to it.
 //---
-ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/ossim/share
+ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/share/ossim
 
 //---
 // Look-up tables for European Petroleum Survey Group (EPSG) coded 
-// projections and datums (located in <ossim_share_directory>/ossim/projection)
+// projections and datums (located in <ossim_share_directory>/projection)
 // These are expected to be delimiter-separated value (*.csv|tsv) files.
 // NOTE: ESRI codes are NOT EPSG codes, however, they do not conflict with 
 // EPSG so ingesting them as if they were EPSG. Eventually, separate 
 // databases or a multi-Db solution may need to be 
 // implemented. OLK 05/2010
 // --- 
-epsg_database_file0: ossim_epsg_projections-v7_4.csv
-epsg_database_file1: ossim_harn_state_plane_epsg.csv
-epsg_database_file2: ossim_state_plane_spcs.csv
-epsg_database_file3: ossim_harn_state_plane_esri.csv
+epsg_database_file0: projection/ossim_epsg_projections-v7_4.csv
+epsg_database_file1: projection/ossim_harn_state_plane_epsg.csv
+epsg_database_file2: projection/ossim_state_plane_spcs.csv
+epsg_database_file3: projection/ossim_harn_state_plane_esri.csv
 
 // Database file for WKT-based projection factory 
 // (located in <ossim_share_directory>/ossim/projection):
-wkt_database_file: ossim_wkt_pcs.csv
+wkt_database_file: projection/ossim_wkt_pcs.csv
 
 //---
 // Geoid support:
