@@ -644,12 +644,19 @@ void ossimInit::initializeElevation()
 	   }
    }
    ossimGeoidManager::instance()->loadState(KWL);
-   
+
+   //---
+   // Auto load removed to avoid un-wanted directory scanning.
+   // Use ossim preferences.  drb - 28 March 2016.
+   //---
+#if 0
    ossimFilename elevation = appPath.dirCat("elevation");
    if(elevation.exists())
    {
       ossimElevManager::instance()->loadElevationPath(elevation);
    }
+#endif
+
    // lets do backward compatability here
    //
    ossimString regExpression =  ossimString("^(") + "elevation_source[0-9]+.)";

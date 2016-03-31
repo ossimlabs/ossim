@@ -1,6 +1,6 @@
 //---
 //
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -19,8 +19,9 @@
 #include <iosfwd>
 
 class ossimImageGeometry;
+class ossimIpt;
+class ossimIrect;
 class ossimKeywordlist;
-class ossimMapProjection;
 class ossimXmlDocument;
 class ossimXmlNode;
 
@@ -38,8 +39,10 @@ public:
    /**
     * @brief Initializes gml block from geometry file.
     * @param geom
+    * @param rect Output rectangle (view rect).
     */
-   bool initialize( const ossimImageGeometry* geom );
+   bool initialize( const ossimImageGeometry* geom,
+                    const ossimIrect& rect );
 
    /**
     * @brief Initializes from stream assumed to be a gml block.
@@ -71,37 +74,87 @@ private:
    ossimRefPtr<ossimXmlNode> getGmljp2V1RootNode() const;
    ossimRefPtr<ossimXmlNode> getGmljp2V2RootNode() const;
 
-   void getOrigin( const ossimImageGeometry* geom,
-                   ossimString& originString,
-                   ossimString& offsetVector1String, 
-                   ossimString& offsetVector2String ) const;
-
-   void getLimits( const ossimImageGeometry* geom,
-                   ossimString& gridHighString,
-                   ossimString& gridLowString ) const;
-
-   void getGeoBounds( const ossimImageGeometry* geom,
-                      ossimString& upperCornerString,
-                      ossimString& lowerCornerString ) const;
-
    void getGeoOrigin( const ossimImageGeometry* geom,
+                      const ossimIpt& ul,
                       ossimString& originString,
                       ossimString& offsetVector1String, 
                       ossimString& offsetVector2String ) const;
 
    void getMapOrigin( const ossimImageGeometry* geom,
+                      const ossimIpt& ul,
                       ossimString& originString,
                       ossimString& offsetVector1String, 
                       ossimString& offsetVector2String ) const;
 
-   bool configureGmljp2V1( ossimRefPtr<ossimXmlNode> node, const ossimImageGeometry* geom );
-   bool configureGmljp2V2( ossimRefPtr<ossimXmlNode> node, const ossimImageGeometry* geom );
-   bool configureBounds  ( ossimRefPtr<ossimXmlNode> node, const ossimImageGeometry* geom );
-                  
-   ossimRefPtr<ossimXmlDocument>         m_xmlDocument;
-   ossimRefPtr<const ossimMapProjection> m_mapProj;
+   void getLimits( const ossimIrect& rect,
+                   ossimString& gridHighString,
+                   ossimString& gridLowString ) const;
 
-   bool         m_use_gmljp2_version2;
+   void getGeoBounds( const ossimImageGeometry* geom,
+                      const ossimIrect& rect,
+                      ossimString& upperCornerString,
+                      ossimString& lowerCornerString ) const;
+#if 0
+   bool configureGmljp2V1( ossimRefPtr<ossimXmlNode> node,
+                           const ossimImageGeometry* geom,
+                           const ossimIrect& rect );
+#endif
+   
+   bool configureGmljp2V2( ossimRefPtr<ossimXmlNode> node,
+                           const ossimImageGeometry* geom,
+                           const ossimIrect& rect );
+   
+   bool configureBounds  ( ossimRefPtr<ossimXmlNode> node,
+                           const ossimImageGeometry* geom,
+                           const ossimIrect& rect );
+
+   /**
+    * @brief For sensor model data:
+    * @param geomKwl Initialized by this.
+    */   
+   bool getImageGeometryFromSeonsorModel( ossimKeywordlist& geomKwl ) const;
+
+   /**
+    * @brief For map projected data:
+    * @param geomKwl Initialized by this.
+    */   
+   bool getImageGeometryFromRectifiedGrid( ossimKeywordlist& geomKwl ) const;
+   
+   /**
+    * @brief Adds line and sample to keyword list.
+    * @param xpath0
+    * @param useGmlPrefix If true tack on "gml:" to paths.
+    * @param geomKwl Initialized by this.
+    */
+   bool addLineSamps( const ossimString& xpath0,
+                      bool useGmlPrefix,
+                      ossimKeywordlist& geomKwl ) const;
+
+   /**
+    * @brief Adds tie point to keyword list.
+    * @param xpath0
+    * @param useGmlPrefix If true tack on "gml:" to paths.
+    * @param geomKwl Initialized by this.
+    */
+   bool addTie( const ossimString& xpath0,
+                bool useGmlPrefix,
+                ossim_uint32 pcsCode,
+                ossimKeywordlist& geomKwl ) const;
+
+   /**
+    * @brief Adds tie and scale to keyword list.
+    * @param xpath0
+    * @param useGmlPrefix If true tack on "gml:" to paths.
+    * @param geomKwl Initialized by this.
+    */
+   bool addScale( const ossimString& xpath0,
+                  bool useGmlPrefix,
+                  ossim_uint32 pcsCode,
+                  ossimKeywordlist& geomKwl ) const;
+                  
+   ossimRefPtr<ossimXmlDocument> m_xmlDocument;
+
+   // bool         m_use_gmljp2_version2;
    ossim_uint32 m_pcsCodeMap;
    ossim_uint32 m_pcsCodeGeo;
    ossimString  m_srsNameStringMap;

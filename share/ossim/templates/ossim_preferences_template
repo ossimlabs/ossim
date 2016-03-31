@@ -72,17 +72,29 @@
 // 5) Examples below are defaulted to some value.  To change enabled key to
 //    true, e.g.:
 //    elevation_manager.elevation_source0.enabled: true
-//    
+// 
+// 6) Key "extension" is currently for dted only.  If set this disables the scanning for
+//    the extension at start up.  e.g.:
+//    elevation_manager.elevation_source0.extension: .dt2
+// 
+// 7) Key "upcase" is currently for dted only. If true looks for upcased files.
+//    If this is set to true, note that the "extension" should also be upcase.
+//    elevation_manager.elevation_source0.upcase: false
+//    looks for (example): e045/n34.dt2
+//    else:
+//    looks for (example): E045/N34.DT2
 //---
 
 // One arc second post spacing dted, ~30 meters, default enabled:
 elevation_manager.elevation_source0.connection_string: $(OSSIM_DATA)/elevation/dted/level2
 elevation_manager.elevation_source0.enabled: true
+elevation_manager.elevation_source0.extension: .dt2
 elevation_manager.elevation_source0.type: dted_directory
 elevation_manager.elevation_source0.min_open_cells: 25
 elevation_manager.elevation_source0.max_open_cells: 50
 elevation_manager.elevation_source0.memory_map_cells: false
 elevation_manager.elevation_source0.geoid.type: geoid1996
+elevation_manager.elevation_source0.upcase: false
 
 // One arc second post spacing srtm, ~30 meters, default disabled:
 elevation_manager.elevation_source1.connection_string: $(OSSIM_DATA)/elevation/srtm/1arc
@@ -96,11 +108,13 @@ elevation_manager.elevation_source1.geoid.type: geoid1996
 // Three arc seconds post spacing dted, ~90 meters, default enabled:
 elevation_manager.elevation_source2.connection_string: $(OSSIM_DATA)/elevation/dted/level1
 elevation_manager.elevation_source2.enabled: true
+elevation_manager.elevation_source2.extension: .dt1
 elevation_manager.elevation_source2.type: dted_directory
 elevation_manager.elevation_source2.min_open_cells: 25
 elevation_manager.elevation_source2.max_open_cells: 50
 elevation_manager.elevation_source2.memory_map_cells: false
 elevation_manager.elevation_source2.geoid.type: geoid1996
+elevation_manager.elevation_source2.upcase: false
 
 // Three arc seconds post spacing srtm, ~90 meters, default disabled:
 elevation_manager.elevation_source3.connection_string: $(OSSIM_DATA)/elevation/srtm/3arc
