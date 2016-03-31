@@ -239,6 +239,13 @@ void ossimEpsgProjectionDatabase::initialize() const
             {
                db_name = share_dir.dirCat( ossimFilename("projection") );
                db_name = db_name.dirCat( epsg_path);
+
+               // Lastly: Try tacking "ossim/projection" onto share dir.
+               if ( !db_name.isReadable() )
+               {
+                  db_name = share_dir.dirCat( ossimFilename("ossim/projection") );
+                  db_name = db_name.dirCat( epsg_path);
+               }
             }
          }
       }

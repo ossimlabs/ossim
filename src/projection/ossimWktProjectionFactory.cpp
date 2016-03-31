@@ -122,6 +122,13 @@ void ossimWktProjectionFactory::loadRecords() const
          {
             db_name = share_dir.dirCat( ossimFilename("projection") );
             db_name = db_name.dirCat( wkt_path);
+
+            // Lastly: Try tacking "ossim/projection" onto share dir.
+            if ( !db_name.isReadable() )
+            {
+               db_name = share_dir.dirCat( ossimFilename("ossim/projection") );
+               db_name = db_name.dirCat( wkt_path);
+            }
          }
       }
    }
