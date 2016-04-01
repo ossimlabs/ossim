@@ -87,21 +87,10 @@ void ossimChipProcUtil::clear()
 {
    m_gsd.makeNan();
 
-   // Must disonnect chains so that they destroy.
-   std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator i = m_imgLayers.begin();
-   while ( i != m_imgLayers.end() )
-   {
-      (*i)->disconnect();
-      (*i) = 0;
-      ++i;
-   }
+   m_procChain = 0;
    m_imgLayers.clear();
-
-   if(m_writer.valid())
-   {
-      m_writer->disconnect();
-      m_writer = 0;
-   }
+   m_writer = 0;
+   m_geom = 0;
 }
 
 bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
@@ -740,7 +729,8 @@ ossimRefPtr<ossimMapProjection> ossimChipProcUtil::newIdentityProjection()
             if (geom.valid())
             {
                proj = dynamic_cast<ossimMapProjection*>( geom->getProjection() );
-               m_projIsIdentity = true;
+               if (proj.valid())
+                  m_projIsIdentity = true;
             }
          }
       }
@@ -812,6 +802,9 @@ void ossimChipProcUtil::initializeProjectionGsd()
    ossimString lookup = m_kwl.findKey( GSD_KW );
    if ( lookup.size() )
       m_gsd.y = m_gsd.x = lookup.toFloat64();
+
+   if (m_gsd.hasNans() && m_projIsIdentity && m_geom.valid())
+         m_geom->getMetersPerPixel(m_gsd);
 
    if (m_gsd.hasNans())
    {
@@ -1201,23 +1194,6 @@ void ossimChipProcUtil::propagateGeometryToChains()
    ossimViewInterfaceVisitor viewVisitor(m_geom.get());
 
    std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx = m_imgLayers.begin();
-   if (m_projIsIdentity)
-   {
-      // Identity rojection applies only top the first image in the input list:
-      ossimDpt scale(1,1);
-      ossimRefPtr<ossimImageGeometry> geom =  (*chainIdx)->getImageGeometry();
-      if (geom.valid())
-      {
-         ossimDpt input_gsd;
-         geom->getMetersPerPixel(input_gsd);
-         scale = ossimDpt(m_gsd.x/input_gsd.x, m_gsd.y/input_gsd.y);
-      }
-      ossimDpt midPt = m_aoiViewRect.midPoint();
-      (*chainIdx)->getImageRenderer()->setImageViewTransform(
-            new ossimImageViewAffineTransform(0.0, scale.x, scale.y, 1, 1, 0, 0, midPt.x, midPt.y));
-      ++chainIdx;
-   }
-
    while ( chainIdx != m_imgLayers.end() )
    {
       viewVisitor.reset();

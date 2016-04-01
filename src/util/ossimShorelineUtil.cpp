@@ -84,8 +84,8 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--sensor <string>",
          "Sensor used to compute Modified Normalized Difference Water Index. Currently only "
          "\"ls8\" supported (default).");
-   au->addCommandLineOption("--smooth [S]",
-         "Applies gaussian filter to index raster file. S is filter sigma (defaults to 0.2). S=0 "
+   au->addCommandLineOption("--smooth <sigma>",
+         "Applies gaussian filter to index raster file. The filter sigma must be specified (0.2 is good). Sigma=0 "
          "indicates no smoothing.");
    au->addCommandLineOption("--threshold <0.0-1.0>",
          "Normalized threshold for converting the image to bitmap. Defaults to 0.55. Alternatively "
@@ -226,6 +226,9 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
       }
       m_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_productFilename.chars());
    }
+
+   // Unless an output projection was specifically requested, use the input:
+   //m_kwl.add(ossimKeywordNames::PROJECTION_KW, "identity", false);
 
    ossimChipProcUtil::initialize(kwl);
 }
@@ -392,6 +395,8 @@ bool ossimShorelineUtil::execute()
       potrace->initialize(potrace_kwl);
 
       bool status =  potrace->execute();
+
+      ossimNotify(ossimNotifyLevel_INFO)<<"Wrote vector product to <"<<m_vectorFilename<<">"<<endl;
    }
 
    return status;
