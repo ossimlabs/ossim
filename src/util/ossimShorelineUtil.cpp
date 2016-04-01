@@ -40,9 +40,9 @@ const char* ossimShorelineUtil::DESCRIPTION =
 using namespace std;
 
 ossimShorelineUtil::ossimShorelineUtil()
-:    m_waterValue (255),
+:    m_waterValue (0),
      m_marginalValue (128),
-     m_landValue (0),
+     m_landValue (255),
      m_sensor ("ls8"),
      m_threshold (0.55),
      m_tolerance(0.01),
