@@ -68,9 +68,6 @@ bool ossimOrthoUtil::initialize(ossimArgumentParser& ap)
 
 void ossimOrthoUtil::initialize(const ossimKeywordlist& kwl)
 {
-   // This method
-   clear();
-
    // Base class does the heavy work:
    ossimChipProcUtil::initialize(kwl);
 }

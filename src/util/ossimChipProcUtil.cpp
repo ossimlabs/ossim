@@ -48,8 +48,6 @@ static const std::string AOI_GEO_CENTER_KW       = "aoi_geo_center";
 static const std::string AOI_SIZE_METERS_KW      = "aoi_size_meters";
 static const std::string AOI_SIZE_PIXELS_KW      = "aoi_size_pixels";
 static const std::string CLIP_POLY_LAT_LON_KW    = "clip_poly_lat_lon";
-static const std::string ELEV_SOURCES_KW         = "elev_sources";
-static const std::string IMAGE_SOURCE_KW         = "image_source";
 static const std::string LUT_FILE_KW             = "lut_file";
 static const std::string GSD_KW                  = "gsd";
 static const std::string OUTPUT_RADIOMETRY_KW    = "output_radiometry";
@@ -114,7 +112,6 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 
    ossim_uint32 readerPropIdx = 0;
    ossim_uint32 writerPropIdx = 0;
-   ossimString  key           = "";
    ostringstream keys;
 
    if ( ap.read("--load-options", stringParam1))
@@ -177,8 +174,11 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    {
       ostringstream value;
       for(ossim_uint32 idx=0; idx<paramList.size(); ++idx)
-         value<<paramList[idx]<<",";
-      m_kwl.addPair(ELEV_SOURCES_KW, value.str() );
+      {
+         ostringstream key;
+         key<<ossimKeywordNames::ELEVATION_SOURCE_KW<<idx;
+         m_kwl.addPair(key.str(), paramList[idx] );
+      }
    }
 
    if( ap.read("--gsd", stringParam1) )
@@ -192,7 +192,7 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    for(ossim_uint32 idx=0; idx<imageFnames.size(); ++idx)
    {
       ostringstream key;
-      key<<IMAGE_SOURCE_KW<<idx<<"."<<ossimKeywordNames::FILE_KW;
+      key<<ossimKeywordNames::IMAGE_FILE_KW<<idx;
       m_kwl.addPair(key.str(), imageFnames[idx] );
    }
 
@@ -235,9 +235,9 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 
    while (ap.read("--writer-prop", stringParam1))
    {
-      key = WRITER_PROPERTY_KW;
-      key += ossimString::toString(writerPropIdx);
-      m_kwl.addPair(key.string(), tempString1 );
+      ostringstream key;
+      key << WRITER_PROPERTY_KW << writerPropIdx;
+      m_kwl.addPair(key.str(), tempString1 );
       ++writerPropIdx;
    }
 
@@ -249,7 +249,6 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 
 void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
 {
-   ossimString  key    = "";
    ossim_uint32 inputIdx = 0;
 
    bool dumpKwl = false;
@@ -273,14 +272,12 @@ void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
    if ( ap.argc() > 2 ) // User passed inputs in front of output file.
    {
       int pos = 1; // ap.argv[0] is application name. 
+      int idx = 0;
       while ( pos < (ap.argc()-1) )
       {
-         ossimFilename file = ap[pos];
-         key = IMAGE_SOURCE_KW;
-         key += ossimString::toString(inputIdx++);
-         key += ".";
-         key += ossimKeywordNames::FILE_KW;
-         m_kwl.addPair( key, file.string() );
+         ostringstream key;
+         key<<ossimKeywordNames::IMAGE_FILE_KW<<idx;
+         m_kwl.add( key.str().c_str(), ap[pos] );
 
          ++pos; // Go to next arg...
 
@@ -314,7 +311,6 @@ void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
 
 void ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
 {
-
    // Don't copy KWL if member KWL passed in:
    if (&kwl != &m_kwl)
    {
@@ -520,28 +516,37 @@ const ossimObject* ossimChipProcUtil::getObject() const
 
 void ossimChipProcUtil::loadImageFiles()
 {
-   ossim_uint32 imgCount = m_kwl.numberOf( IMAGE_SOURCE_KW.c_str() );
-   ossim_uint32 maxIndex = imgCount + 100; // Allow for skippage in numbering.
-   ossim_uint32 foundRecords = 0;
-   ossim_uint32 i = 0;
+   ossim_uint32 numImages = m_kwl.numberOf( ossimKeywordNames::IMAGE_FILE_KW );
+   ossim_uint32 count = numImages;
    ossim_uint32 entryIndex = 0;
 
    // Returns 0 if no entry found. This is default anyway.
    ossim_uint32 globalEntryValue = ossimString(m_kwl.find(ossimKeywordNames::ENTRY_KW)).toUInt32();
 
-   while ( foundRecords < imgCount )
+   for (ossim_uint32 i=0; count > 0; ++i)
    {
-      ostringstream key;
-      key <<  IMAGE_SOURCE_KW << i << "." << ossimKeywordNames::FILE_KW;
-      ossimFilename f = m_kwl.findKey( key.str() );
-      if ( f.size() )
+      ossimFilename f;
+      if (numImages == 1)
       {
-         // Look for the entry key, e.g. image_source0.entry: 10
-         ostringstream entryKey;
-         entryKey <<  IMAGE_SOURCE_KW << i << "." << ossimKeywordNames::ENTRY_KW;
-         ossimString os = m_kwl.findKey(entryKey.str());
-         if (!os.empty())
-            entryIndex = os.toUInt32();
+         ostringstream key;
+         key <<  ossimKeywordNames::IMAGE_FILE_KW; // Try non-indexed first
+         f = m_kwl.findKey( key.str() );
+      }
+      if (f.empty())
+      {
+         ostringstream key;
+         key <<  ossimKeywordNames::IMAGE_FILE_KW << i ;
+         f = m_kwl.findKey( key.str() );
+      }
+      if ( f.empty() )
+         continue;
+
+      // Look for the entry key, e.g. image_source0.entry: 10
+      ostringstream entryKey;
+      entryKey <<  ossimKeywordNames::IMAGE_FILE_KW << i << "." << ossimKeywordNames::ENTRY_KW;
+      ossimString os = m_kwl.findKey(entryKey.str());
+      if (!os.empty())
+         entryIndex = os.toUInt32();
       else
          entryIndex = globalEntryValue;
 
@@ -561,11 +566,7 @@ void ossimChipProcUtil::loadImageFiles()
          ic->setBandSelection( bandList );
 
       m_imgLayers.push_back(ic);
-         ++foundRecords;
-      }
-      ++i;
-      if ( i >= maxIndex )
-         break;
+      --count;
    }
 }
 
@@ -623,20 +624,30 @@ ossimChipProcUtil::createInputChain(const ossimFilename& fname, ossim_uint32 ent
 
 void ossimChipProcUtil::loadDemFiles()
 {
-   ossimString value = m_kwl.findKey(ELEV_SOURCES_KW);
-   if (value.empty())
+   ossim_uint32 numDems = m_kwl.numberOf( ossimKeywordNames::ELEVATION_SOURCE_KW );
+   if (numDems == 0)
       return;
 
-   vector<ossimString> input_files = value.split(", ");
-   ossim_uint32 i = 0;
-   while ( i < input_files.size() )
+   cout<<m_kwl<<endl;//TODO:REMOVE
+   ossim_uint32 count = numDems;
+   for (ossim_uint32 i=0; count > 0; ++i)
    {
-      ossimFilename f = input_files[i].trim();
-      if ( f.empty() )
+      ossimFilename f;
+      if (numDems == 1)
       {
-         ++i;
-         continue;
+         ostringstream key;
+         key <<  ossimKeywordNames::ELEVATION_SOURCE_KW; // Try non-indexed first
+         f = m_kwl.findKey( key.str() );
       }
+      if (f.empty())
+      {
+         ostringstream key;
+         key <<  ossimKeywordNames::ELEVATION_SOURCE_KW << i ;
+         cout<<key.str()<<endl;//TODO:REMOVE
+         f = m_kwl.findKey( key.str() );
+      }
+      if ( f.empty() )
+         continue;
 
       if (!f.isReadable())
       {
@@ -647,7 +658,7 @@ void ossimChipProcUtil::loadDemFiles()
 
       m_demSources.push_back(f);
       ossimElevManager::instance()->loadElevationPath(f, true);
-      ++i;
+      --count;
    }
 }
 
@@ -1238,7 +1249,7 @@ void ossimChipProcUtil::getBandList(ossim_uint32 image_idx,
 {
    bandList.clear();
    ostringstream key;
-   key <<  IMAGE_SOURCE_KW << image_idx << "." << ossimKeywordNames::BANDS_KW;
+   key <<  ossimKeywordNames::IMAGE_FILE_KW << image_idx << "." << ossimKeywordNames::BANDS_KW;
    ossimString os = m_kwl.findKey(key.str());
    if (os.empty())
    {

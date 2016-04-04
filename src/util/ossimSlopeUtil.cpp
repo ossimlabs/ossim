@@ -32,8 +32,6 @@
 
 using namespace std;
 
-static const std::string IMAGE_SOURCE_KW = "image_source";
-static const std::string ELEV_SOURCE_KW  = "elev_source";
 const char* ossimSlopeUtil::DESCRIPTION  =
       "Utility for computing the slope at each elevation post and generating "
       "a corresponding slope image.";
@@ -73,9 +71,6 @@ bool ossimSlopeUtil::initialize(ossimArgumentParser& ap)
 
 void ossimSlopeUtil::initialize(const ossimKeywordlist& kwl)
 {
-   // This method
-   clear();
-
    // Base class does the heavy work:
    ossimChipProcUtil::initialize(kwl);
 }
@@ -101,7 +96,7 @@ void ossimSlopeUtil::initProcessingChain()
       {
          // Add the DEM as an image source to the KWL:
          ostringstream key;
-         key<<IMAGE_SOURCE_KW<<ossimString::toString(idx)<<"."<<ossimKeywordNames::FILE_KW;
+         key<<ossimKeywordNames::IMAGE_FILE_KW<<idx;
          m_kwl.addPair(key.str(), cells[idx].string() );
       }
    }
@@ -112,13 +107,14 @@ void ossimSlopeUtil::initProcessingChain()
       {
          // Add the DEM as an image source to the KWL:
          ostringstream key;
-         key<<IMAGE_SOURCE_KW<<ossimString::toString(idx)<<"."<<ossimKeywordNames::FILE_KW;
+         key<<ossimKeywordNames::IMAGE_FILE_KW<<idx;
          m_kwl.addPair(key.str(), m_demSources[idx].string() );
       }
    }
 
    // Remove any occurence of elev_source in the KWL:
-   ossimString regex = ELEV_SOURCE_KW + ".*";
+   ossimString regex = ossimKeywordNames::ELEVATION_SOURCE_KW;
+   regex += "*";
    m_kwl.removeKeysThatMatch(regex);
 
    // Reinitialize the object with the DEMs listed as input images and create a mosaic of them:

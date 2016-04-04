@@ -44,11 +44,11 @@ ossimShorelineUtil::ossimShorelineUtil()
      m_marginalValue (128),
      m_landValue (255),
      m_sensor ("ls8"),
-     m_threshold (0.55),
-     m_tolerance(0.01),
+     m_threshold (0.5),
+     m_tolerance(0.0),
      m_algorithm(NDWI),
      m_skipThreshold(false),
-     m_smoothing(0.2),
+     m_smoothing(0),
      m_doEdgeDetect(false)
 {
 }
@@ -228,7 +228,7 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
    }
 
    // Unless an output projection was specifically requested, use the input:
-   //m_kwl.add(ossimKeywordNames::PROJECTION_KW, "identity", false);
+   m_kwl.add(ossimKeywordNames::PROJECTION_KW, "identity", false);
 
    ossimChipProcUtil::initialize(kwl);
 }
@@ -389,9 +389,12 @@ bool ossimShorelineUtil::execute()
       potrace->setOutputStream(m_consoleStream);
 
       ossimKeywordlist potrace_kwl;
-      potrace_kwl.add(ossimKeywordNames::IMAGE_FILE_KW, m_productFilename.chars());
+      potrace_kwl.add("image_file0", m_productFilename.chars());
+      potrace_kwl.add("image_file1", m_imgLayers[0]->getFilename().chars());
       potrace_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_vectorFilename.chars());
       potrace_kwl.add("mode", "polygon");
+      potrace_kwl.add("alphamax", "1.0");
+      potrace_kwl.add("turdsize", "4");
       potrace->initialize(potrace_kwl);
 
       bool status =  potrace->execute();
