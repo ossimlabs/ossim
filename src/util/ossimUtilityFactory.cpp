@@ -12,6 +12,7 @@
 #include <ossim/util/ossimViewshedUtil.h>
 #include <ossim/util/ossimSlopeUtil.h>
 #include <ossim/util/ossimOrthoUtil.h>
+#include <ossim/util/ossimVerticesFinderUtil.h>
 #include <ossim/util/ossimInfo.h>
 #include <ossim/util/ossimUtilityRegistry.h>
 
@@ -59,6 +60,9 @@ ossimUtility* ossimUtilityFactory::createUtility(const std::string& argName) con
    if ((utilName == "ortho") || (argName == "ossimOrthoUtil"))
       return new ossimOrthoUtil;
 
+   if ((utilName == "vertices") || (argName == "ossimVerticesFinderUtil"))
+      return new ossimVerticesFinderUtil;
+
    return 0;
 }
 
@@ -71,6 +75,7 @@ void ossimUtilityFactory::getCapabilities(std::map<std::string, std::string>& ca
    capabilities.insert(pair<string, string>("hlz", ossimHlzUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("shoreline", ossimShorelineUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("ortho", ossimOrthoUtil::DESCRIPTION));
+   capabilities.insert(pair<string, string>("vertices", ossimVerticesFinderUtil::DESCRIPTION));
 }
 
 std::map<std::string, std::string> ossimUtilityFactory::getCapabilities() const
@@ -89,5 +94,6 @@ void ossimUtilityFactory::getTypeNameList(vector<ossimString>& typeList) const
    typeList.push_back("ossimHLZUtil");
    typeList.push_back("ossimShorelineUtil");
    typeList.push_back("ossimOrthoUtil");
+   typeList.push_back("ossimVerticesFinderUtil");
 }
 
