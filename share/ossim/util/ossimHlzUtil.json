@@ -8,12 +8,12 @@
      "inputs": {
         "exclude_regions": {         
             "datatype": "list:string:csv_file",
-            "description": List of raster image(s) representing mask files that defines regions to be excluded from HLZ solutions",
+            "description": "List of raster image(s) representing mask files that defines regions to be excluded from HLZ solutions",
             "required": false    
         },
         "include_regions": {         
             "datatype": "list:file:csv_file",
-            "description": List of raster image(s) representing mask files that defines regions that must be included in HLZ solutions",
+            "description": "List of raster image(s) representing mask files that defines regions that must be included in HLZ solutions",
             "required": false    
         },
         "max_roughness": {         

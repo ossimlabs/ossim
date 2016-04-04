@@ -7,11 +7,11 @@
 type: ossimShorelineUtil
 
 // Accepts pixel value coding as:  <land> <marginal> <water> (range 0-255) 
-color_coding: 255 128 1
+color_coding: 255 128 0
 
 // Threshold for index cutoff between land and water:
 threshold: 0.55
 
 // tolerance +- deviation from threshold for marginal classifications
-tolerance: 0.05
+tolerance: 0
 

@@ -26,16 +26,16 @@ zone: <utm_zone>
 
 // Specifies any number of input image filenames. Also can optionally specify band selection for 
 // multispectral and entry index for multi-image files:
-image_source<n>.file: <image_file>
-image_source<n>.bands: <R> <G> <B>
-image_source<n>.entry: <int>
+image_file<n>: <image_file>
+image_file<n>.bands: <R> <G> <B>
+image_file<n>.entry: <int>
 
 // Reader properties (applies to all input images):
 reader_property<n>: <key=value>
 
 // Specifies any number of input DEM filenames. If none provided, the elevation database is referenced 
 // as specified in prefs file for the center and ROI specified.
-elevation_source<n>.file: <dem_file>
+elevation_source<n>: <dem_file>
 
 // Specify product resolution in meters per pixel:
 gsd: <meters>
