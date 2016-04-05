@@ -17,7 +17,7 @@ ossimDtedElevationDatabase::ossimDtedElevationDatabase()
    : ossimElevationCellDatabase(),
      m_extension(""),
      m_upcase(false),
-     m_lastHandler(),
+     m_lastHandler(0),
      m_mutex()
 {
 }
@@ -26,7 +26,7 @@ ossimDtedElevationDatabase::ossimDtedElevationDatabase(const ossimDtedElevationD
    : ossimElevationCellDatabase(rhs),
      m_extension(rhs.m_extension),
      m_upcase(rhs.m_upcase),
-     m_lastHandler(rhs.m_lastHandler),
+     m_lastHandler(0), // Do not copy this to get a unique handler for thread.
      m_mutex()
 {
 }
@@ -37,8 +37,7 @@ ossimDtedElevationDatabase::~ossimDtedElevationDatabase()
 
 ossimObject* ossimDtedElevationDatabase::dup() const
 {
-   ossimDtedElevationDatabase* duped = new ossimDtedElevationDatabase;
-   duped->open(m_connectionString);
+   ossimDtedElevationDatabase* duped = new ossimDtedElevationDatabase(*this);
    return duped;
 }
 
@@ -98,13 +97,15 @@ bool ossimDtedElevationDatabase::openDtedDirectory(const ossimFilename& dir)
 {
    if(traceDebug())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG) << "ossimDtedElevationDatabase::open entered ...\n";
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimDtedElevationDatabase::open entered ...\n"
+         << "dir: " << dir << "\n";
    }
-
+   
    bool result = dir.isDir();
    if(result)
    {
-      if ( !m_extension.size() )
+      if ( m_extension.size() == 0 )
       {
          //---
          // This sets extension by doing a directory scan and is now depricated.
@@ -230,12 +231,27 @@ bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
          ossimString val = ossimPreferences::instance()->preferencesKWL().findKey( pref, key );
          if ( val.size() )
          {
-            m_extension = val;
+            if ( val[0] != '.' )
+            {
+               m_extension = ".";
+               m_extension += val;
+               
+               ossimNotify(ossimNotifyLevel_WARN)
+                  << "ossimDtedElevationDatabase::loadState: WARNING\n"
+                  << "Key value for \"extension\" does not start with a dot!\n"
+                  << "   Changing: " << val
+                  << "\n   To:       " << m_extension
+                  << std::endl;   
+            }
+            else
+            {
+               m_extension = val;
+            }
          }
          else if ( traceDebug() )
          {
             ossimNotify(ossimNotifyLevel_DEBUG)
-               << "ossimDtedElevationDatabase::loadState: NOTICE"
+               << "ossimDtedElevationDatabase::loadState: NOTICE\n"
                << "Key lookup for \"extension\" failed!\n"
                << "Can be set in ossim preferences.  Example:\n"
                << "elevation_manager.elevation_source0.extension: .dt2";
@@ -250,7 +266,7 @@ bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
          else if ( traceDebug() )
          {
             ossimNotify(ossimNotifyLevel_DEBUG)
-               << "ossimDtedElevationDatabase::loadState: NOTICE"
+               << "ossimDtedElevationDatabase::loadState: NOTICE\n"
                << "Key lookup for \"upcase\" failed!\n"
                << "Can be set in ossim preferences.  Example:\n"
                << "elevation_manager.elevation_source0.upcase: false";
