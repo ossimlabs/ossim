@@ -216,7 +216,12 @@ public:
 
    /** @brief Adds a resampler (a.k.a. "renderer") to the end of the chain. */
    void addResampler();
-   void addRenderer() { addResampler(); }
+
+   /**
+    * @brief Adds a resampler (a.k.a. "renderer") to the end of the chain.
+    * This method in turn calls "addResampler()".
+    */
+   void addRenderer();
 
    /**
     * @brief Adds scalar remapper either to the left of the resampler cache
