@@ -1333,13 +1333,18 @@ ossimFilename& ossimFilename::appendTimestamp()
    std::string timestamp;
    ossim::getFormattedTime(format, true, timestamp);
 
+   return append(timestamp);
+}
+
+ossimFilename& ossimFilename::append(const ossimString& append_this)
+{
    ossimString drivePart;
    ossimString pathPart;
    ossimString filePart;
    ossimString extPart;
 
    split(drivePart, pathPart, filePart, extPart);
-   filePart += timestamp;
+   filePart += append_this;
    merge(drivePart, pathPart, filePart, extPart);
 
    return *this;
