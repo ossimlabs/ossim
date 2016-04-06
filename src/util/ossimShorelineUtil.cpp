@@ -398,8 +398,8 @@ bool ossimShorelineUtil::execute()
       potrace->initialize(potrace_kwl);
 
       bool status =  potrace->execute();
-
-      ossimNotify(ossimNotifyLevel_INFO)<<"Wrote vector product to <"<<m_vectorFilename<<">"<<endl;
+      if (status)
+         ossimNotify(ossimNotifyLevel_INFO)<<"Wrote vector product to <"<<m_vectorFilename<<">"<<endl;
    }
 
    return status;
