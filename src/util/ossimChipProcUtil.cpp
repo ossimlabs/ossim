@@ -683,7 +683,10 @@ void ossimChipProcUtil::createOutputProjection()
    m_geoScaled = false;
    op.downcase();
 
-   if ( (op == "geo") || (srs == "4326"))
+   if (op.contains("epsg"))
+      srs = op;
+
+   if ( (op == "geo") || (srs.contains("4326")))
       proj = new ossimEquDistCylProjection();
 
    else if (srs.size())
@@ -741,7 +744,12 @@ ossimRefPtr<ossimMapProjection> ossimChipProcUtil::newIdentityProjection()
             {
                proj = dynamic_cast<ossimMapProjection*>( geom->getProjection() );
                if (proj.valid())
-                  m_projIsIdentity = true;
+               {
+                  if ( dynamic_cast<ossimUtmProjection*>( proj.get()) )
+                     proj = newUtmProjection();
+                  else
+                     m_projIsIdentity = true;
+               }
             }
          }
       }
