@@ -728,7 +728,8 @@ void ossimChipProcUtil::createOutputProjection()
 ossimRefPtr<ossimMapProjection> ossimChipProcUtil::newIdentityProjection()
 {
    ossimRefPtr<ossimSingleImageChain> sic = 0;
-   ossimRefPtr<ossimMapProjection> proj = 0;
+   ossimProjection* input_proj = 0;
+   ossimRefPtr<ossimMapProjection> output_proj = 0;
    ossimRefPtr<ossimImageRenderer> resampler = 0;
 
    if ( m_imgLayers.size() )
@@ -742,13 +743,25 @@ ossimRefPtr<ossimMapProjection> ossimChipProcUtil::newIdentityProjection()
             ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
             if (geom.valid())
             {
-               proj = dynamic_cast<ossimMapProjection*>( geom->getProjection() );
-               if (proj.valid())
+               input_proj = geom->getProjection();
+
+               // Check if input is UTM, need to copy zone and hemisphere if so:
+               ossimUtmProjection* input_utm = dynamic_cast<ossimUtmProjection*>(input_proj);
+               if ( input_utm )
                {
-                  if ( dynamic_cast<ossimUtmProjection*>( proj.get()) )
-                     proj = newUtmProjection();
-                  else
+                  ossimRefPtr<ossimUtmProjection> output_utm = new ossimUtmProjection;
+                  output_utm->setZone(input_utm->getZone());
+                  output_utm->setHemisphere(input_utm->getHemisphere());
+                  output_proj = output_utm.get();
+               }
+               else
+               {
+                  input_proj = dynamic_cast<ossimMapProjection*>( geom->getProjection() );
+                  if (input_proj)
+                  {
+                     output_proj = (ossimMapProjection*) input_proj->dup();
                      m_projIsIdentity = true;
+                  }
                }
             }
          }
@@ -756,14 +769,21 @@ ossimRefPtr<ossimMapProjection> ossimChipProcUtil::newIdentityProjection()
    }
 
    // try input dem "image" if specified:
-   if (!proj.valid() && (m_demSources.size()))
+   if (!output_proj.valid() && (m_demSources.size()))
    {
       ossimImageGeometry geom;
       if (geom.open(m_demSources[0]))
-         proj = dynamic_cast<ossimMapProjection*>(geom.getProjection());
+      {
+         input_proj = dynamic_cast<ossimMapProjection*>(geom.getProjection());
+         if (input_proj)
+         {
+            output_proj = (ossimMapProjection*) input_proj->dup();
+            m_projIsIdentity = true;
+         }
+      }
    }
 
-   return proj;
+   return output_proj;
 }
 
 ossimRefPtr<ossimMapProjection> ossimChipProcUtil::newUtmProjection()
