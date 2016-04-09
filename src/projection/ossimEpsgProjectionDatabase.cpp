@@ -190,13 +190,10 @@ void ossimEpsgProjectionDatabase::initialize() const
 {
    // Fetch filenames of all projection DB files from the share directory specified in
    // ossim_preferences:
-   ossimFilename epsg_path;
-   const char* lookup = ossimPreferences::instance()->findPreference("ossim_share_directory");
-   if ( lookup )
-   {
-      epsg_path = lookup;
-      epsg_path += "/ossim/projection/";
-   }
+
+   // Optional ossim share dir:
+   ossimFilename share_dir = ossimPreferences::instance()->
+      preferencesKWL().findKey( std::string( "ossim_share_directory" ) );
    
    ossimString regEx =  ossimString("^epsg_database_file[0-9]+");
    vector<ossimString> keys = 
@@ -204,6 +201,7 @@ void ossimEpsgProjectionDatabase::initialize() const
    vector<ossimString>::const_iterator i = keys.begin();
 
    // Create only once outside the loop:
+   ossimFilename epsg_path;
    ossimFilename db_name;
    ossimString group_id;
    ossimString format_id;
@@ -213,23 +211,50 @@ void ossimEpsgProjectionDatabase::initialize() const
    while ( i != keys.end() )
    {
       db_name.clear();
-      lookup = ossimPreferences::instance()->preferencesKWL().find( (*i).c_str() );
-      if ( lookup )
+      epsg_path = ossimPreferences::instance()->preferencesKWL().findKey( (*i).string() );
+      if ( epsg_path.size() )
       {
-         if ( epsg_path.size() )
+         if ( !epsg_path.isRelative() )
          {
+            //---
+            // example:
+            // epsg_database_file0:/usr/share/ossim/projection/ossim_epsg_projections-v7_4.csv
+            //---
             db_name = epsg_path;
-            db_name += lookup;
          }
-         else
+         else if ( share_dir.size() )
          {
-            db_name = lookup;
+            //---
+            // example:
+            // ossim_share_dir: /usr/share/ossim
+            // epsg_database_file0: projection/ossim_epsg_projections-v7_4.csv
+            //---
+            db_name = share_dir.dirCat( epsg_path );
+
+            //---
+            // This block is for backwards compatibility.
+            // Try tacking "projection" onto share dir.
+            //---
+            if ( !db_name.isReadable() )
+            {
+               db_name = share_dir.dirCat( ossimFilename("projection") );
+               db_name = db_name.dirCat( epsg_path);
+
+               // Lastly: Try tacking "ossim/projection" onto share dir.
+               if ( !db_name.isReadable() )
+               {
+                  db_name = share_dir.dirCat( ossimFilename("ossim/projection") );
+                  db_name = db_name.dirCat( epsg_path);
+               }
+            }
          }
       }
       ++i;
       
       if (!db_name.isReadable())
+      {
          continue;
+      }
 
       // Open the DB file:
       std::ifstream db_stream (db_name.chars());

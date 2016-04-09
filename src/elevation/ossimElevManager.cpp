@@ -86,7 +86,11 @@ ossimElevManager::ossimElevManager()
     m_currentDatabaseIdx(0),
     m_mutex()
 {
-   loadStandardElevationPaths();
+   //---
+   // Auto load removed to avoid un-wanted directory scanning.
+   // Use ossim preferences.  drb - 28 March 2016.
+   //---
+   // loadStandardElevationPaths();
 }
 
 ossimElevManager::~ossimElevManager()

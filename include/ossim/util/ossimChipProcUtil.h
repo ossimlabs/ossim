@@ -122,9 +122,8 @@ protected:
    /** Loads all DEM files specified in master KWL into the elev manager's database */
    virtual void loadDemFiles();
 
-   /** Creates the ossimSingleImageChain from file and populates the chain with the reader
-    * handler ONLY. Derived classes must finish constructing the chain according to their
-    * processing needs.
+   /** Creates the ossimSingleImageChain from image filename and populates the chain with resampler
+    * and product output projection on view-side of resampler's IVT.
     * @param file File to open.
     * @param entryIndex Entry to open.
     * @return Ref pointer to ossimSingleImageChain.

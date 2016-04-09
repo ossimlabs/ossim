@@ -21,6 +21,7 @@
 #include <ossim/imaging/ossimBandLutFilter.h>
 #include <ossim/imaging/ossimEdgeFilter.h>
 #include <ossim/imaging/ossimImageGaussianFilter.h>
+#include <ossim/imaging/ossimErosionFilter.h>
 #include <ossim/util/ossimShorelineUtil.h>
 #include <ossim/util/ossimUtilityRegistry.h>
 #include <fstream>
@@ -40,15 +41,15 @@ const char* ossimShorelineUtil::DESCRIPTION =
 using namespace std;
 
 ossimShorelineUtil::ossimShorelineUtil()
-:    m_waterValue (255),
+:    m_waterValue (0),
      m_marginalValue (128),
-     m_landValue (0),
+     m_landValue (255),
      m_sensor ("ls8"),
-     m_threshold (0.55),
-     m_tolerance(0.01),
+     m_threshold (0.5),
+     m_tolerance(0.0),
      m_algorithm(NDWI),
      m_skipThreshold(false),
-     m_smoothing(0.2),
+     m_smoothing(0),
      m_doEdgeDetect(false)
 {
 }
@@ -84,8 +85,8 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--sensor <string>",
          "Sensor used to compute Modified Normalized Difference Water Index. Currently only "
          "\"ls8\" supported (default).");
-   au->addCommandLineOption("--smooth [S]",
-         "Applies gaussian filter to index raster file. S is filter sigma (defaults to 0.2). S=0 "
+   au->addCommandLineOption("--smooth <sigma>",
+         "Applies gaussian filter to index raster file. The filter sigma must be specified (0.2 is good). Sigma=0 "
          "indicates no smoothing.");
    au->addCommandLineOption("--threshold <0.0-1.0>",
          "Normalized threshold for converting the image to bitmap. Defaults to 0.55. Alternatively "
@@ -226,6 +227,9 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
       }
       m_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_productFilename.chars());
    }
+
+   // Unless an output projection was specifically requested, use the input:
+   m_kwl.add(ossimKeywordNames::PROJECTION_KW, "identity", false);
 
    ossimChipProcUtil::initialize(kwl);
 }
@@ -369,30 +373,55 @@ bool ossimShorelineUtil::execute()
    // m_productFilename:
    bool status = ossimChipProcUtil::execute();
 
-   if (!m_doEdgeDetect)
+   if (m_doEdgeDetect)
+      return status;
+
+   // Now for vector product, need services of a plugin utility. Check if available:
+   ossimRefPtr<ossimUtility> potrace =
+         ossimUtilityRegistry::instance()->createUtility(string("potrace"));
+   if (!potrace.valid())
    {
-      // Now for vector product, need services of a plugin utility. Check if available:
-      ossimRefPtr<ossimUtility> potrace =
-            ossimUtilityRegistry::instance()->createUtility(string("potrace"));
-      if (!potrace.valid())
-      {
-         ossimNotify(ossimNotifyLevel_WARN)<<"ossimShorelineUtil:"<<__LINE__<<"  Need the "
-               "ossim-potrace plugin to perform vectorization. Only the thresholded image is "
-               "available at <"<<m_productFilename<<">."<<endl;
-         return false;
-      }
-
-      // Convey possible redirection of console out:
-      potrace->setOutputStream(m_consoleStream);
-
-      ossimKeywordlist potrace_kwl;
-      potrace_kwl.add(ossimKeywordNames::IMAGE_FILE_KW, m_productFilename.chars());
-      potrace_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_vectorFilename.chars());
-      potrace_kwl.add("mode", "polygon");
-      potrace->initialize(potrace_kwl);
-
-      bool status =  potrace->execute();
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimShorelineUtil:"<<__LINE__<<"  Need the "
+            "ossim-potrace plugin to perform vectorization. Only the thresholded image is "
+            "available at <"<<m_productFilename<<">."<<endl;
+      return false;
    }
+
+   // Need a mask image representing an eroded version of the input image:
+   m_procChain = new ossimImageChain;
+   m_procChain->add(m_imgLayers[0].get());
+   if (m_smoothing > 0)
+   {
+      // Set up gaussian filter:
+      ossimRefPtr<ossimImageGaussianFilter> smoother = new ossimImageGaussianFilter;
+      smoother->setGaussStd(m_smoothing);
+      m_procChain->add(smoother.get());
+   }
+   ossimRefPtr<ossimErosionFilter> eroder = new ossimErosionFilter;
+   eroder->setWindowSize(10);
+   m_procChain->add(eroder.get());
+   m_procChain->initialize();
+   ossimFilename savedProductFilename = m_productFilename;
+   m_productFilename.append("_mask");
+   ossimFilename maskFilename = m_productFilename;
+   status = ossimChipProcUtil::execute(); // generates mask
+   m_productFilename = savedProductFilename;
+
+   // Convey possible redirection of console out:
+   potrace->setOutputStream(m_consoleStream);
+
+   ossimKeywordlist potrace_kwl;
+   potrace_kwl.add("image_file0", m_productFilename.chars());
+   potrace_kwl.add("image_file1", maskFilename.chars());
+   potrace_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_vectorFilename.chars());
+   potrace_kwl.add("mode", "linestring");
+   potrace_kwl.add("alphamax", "1.0");
+   potrace_kwl.add("turdsize", "4");
+   potrace->initialize(potrace_kwl);
+
+   status =  potrace->execute();
+   if (status)
+      ossimNotify(ossimNotifyLevel_INFO)<<"Wrote vector product to <"<<m_vectorFilename<<">"<<endl;
 
    return status;
 }

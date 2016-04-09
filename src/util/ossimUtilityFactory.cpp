@@ -12,7 +12,9 @@
 #include <ossim/util/ossimViewshedUtil.h>
 #include <ossim/util/ossimSlopeUtil.h>
 #include <ossim/util/ossimOrthoUtil.h>
+#include <ossim/util/ossimVerticesFinderUtil.h>
 #include <ossim/util/ossimInfo.h>
+#include <ossim/util/ossimBandMergeUtil.h>
 #include <ossim/util/ossimUtilityRegistry.h>
 
 ossimUtilityFactory* ossimUtilityFactory::s_Instance = 0;
@@ -59,6 +61,12 @@ ossimUtility* ossimUtilityFactory::createUtility(const std::string& argName) con
    if ((utilName == "ortho") || (argName == "ossimOrthoUtil"))
       return new ossimOrthoUtil;
 
+   if ((utilName == "vertices") || (argName == "ossimVerticesFinderUtil"))
+      return new ossimVerticesFinderUtil;
+
+   if ((utilName == "bandmerge") || (argName == "ossimBandMergeUtil"))
+      return new ossimBandMergeUtil;
+
    return 0;
 }
 
@@ -71,6 +79,8 @@ void ossimUtilityFactory::getCapabilities(std::map<std::string, std::string>& ca
    capabilities.insert(pair<string, string>("hlz", ossimHlzUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("shoreline", ossimShorelineUtil::DESCRIPTION));
    capabilities.insert(pair<string, string>("ortho", ossimOrthoUtil::DESCRIPTION));
+   capabilities.insert(pair<string, string>("vertices", ossimVerticesFinderUtil::DESCRIPTION));
+   capabilities.insert(pair<string, string>("bandmerge", ossimBandMergeUtil::DESCRIPTION));
 }
 
 std::map<std::string, std::string> ossimUtilityFactory::getCapabilities() const
@@ -89,5 +99,7 @@ void ossimUtilityFactory::getTypeNameList(vector<ossimString>& typeList) const
    typeList.push_back("ossimHLZUtil");
    typeList.push_back("ossimShorelineUtil");
    typeList.push_back("ossimOrthoUtil");
+   typeList.push_back("ossimVerticesFinderUtil");
+   typeList.push_back("ossimBandMergeUtil");
 }
 

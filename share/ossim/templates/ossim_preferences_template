@@ -72,17 +72,29 @@
 // 5) Examples below are defaulted to some value.  To change enabled key to
 //    true, e.g.:
 //    elevation_manager.elevation_source0.enabled: true
-//    
+// 
+// 6) Key "extension" is currently for dted only.  If set this disables the scanning for
+//    the extension at start up.  e.g.:
+//    elevation_manager.elevation_source0.extension: .dt2
+// 
+// 7) Key "upcase" is currently for dted only. If true looks for upcased files.
+//    If this is set to true, note that the "extension" should also be upcase.
+//    elevation_manager.elevation_source0.upcase: false
+//    looks for (example): e045/n34.dt2
+//    else:
+//    looks for (example): E045/N34.DT2
 //---
 
 // One arc second post spacing dted, ~30 meters, default enabled:
 elevation_manager.elevation_source0.connection_string: $(OSSIM_DATA)/elevation/dted/level2
 elevation_manager.elevation_source0.enabled: true
+elevation_manager.elevation_source0.extension: .dt2
 elevation_manager.elevation_source0.type: dted_directory
 elevation_manager.elevation_source0.min_open_cells: 25
 elevation_manager.elevation_source0.max_open_cells: 50
 elevation_manager.elevation_source0.memory_map_cells: false
 elevation_manager.elevation_source0.geoid.type: geoid1996
+elevation_manager.elevation_source0.upcase: false
 
 // One arc second post spacing srtm, ~30 meters, default disabled:
 elevation_manager.elevation_source1.connection_string: $(OSSIM_DATA)/elevation/srtm/1arc
@@ -96,11 +108,13 @@ elevation_manager.elevation_source1.geoid.type: geoid1996
 // Three arc seconds post spacing dted, ~90 meters, default enabled:
 elevation_manager.elevation_source2.connection_string: $(OSSIM_DATA)/elevation/dted/level1
 elevation_manager.elevation_source2.enabled: true
+elevation_manager.elevation_source2.extension: .dt1
 elevation_manager.elevation_source2.type: dted_directory
 elevation_manager.elevation_source2.min_open_cells: 25
 elevation_manager.elevation_source2.max_open_cells: 50
 elevation_manager.elevation_source2.memory_map_cells: false
 elevation_manager.elevation_source2.geoid.type: geoid1996
+elevation_manager.elevation_source2.upcase: false
 
 // Three arc seconds post spacing srtm, ~90 meters, default disabled:
 elevation_manager.elevation_source3.connection_string: $(OSSIM_DATA)/elevation/srtm/3arc
@@ -191,25 +205,25 @@ elevation_manager.threads: yes
 // Location of other shared files can be accessed using this preference to permit 
 // specifying paths relative to it.
 //---
-ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/ossim/share
+ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/share/ossim
 
 //---
 // Look-up tables for European Petroleum Survey Group (EPSG) coded 
-// projections and datums (located in <ossim_share_directory>/ossim/projection)
+// projections and datums (located in <ossim_share_directory>/projection)
 // These are expected to be delimiter-separated value (*.csv|tsv) files.
 // NOTE: ESRI codes are NOT EPSG codes, however, they do not conflict with 
 // EPSG so ingesting them as if they were EPSG. Eventually, separate 
 // databases or a multi-Db solution may need to be 
 // implemented. OLK 05/2010
 // --- 
-epsg_database_file0: ossim_epsg_projections-v7_4.csv
-epsg_database_file1: ossim_harn_state_plane_epsg.csv
-epsg_database_file2: ossim_state_plane_spcs.csv
-epsg_database_file3: ossim_harn_state_plane_esri.csv
+epsg_database_file0: projection/ossim_epsg_projections-v7_4.csv
+epsg_database_file1: projection/ossim_harn_state_plane_epsg.csv
+epsg_database_file2: projection/ossim_state_plane_spcs.csv
+epsg_database_file3: projection/ossim_harn_state_plane_esri.csv
 
 // Database file for WKT-based projection factory 
 // (located in <ossim_share_directory>/ossim/projection):
-wkt_database_file: ossim_wkt_pcs.csv
+wkt_database_file: projection/ossim_wkt_pcs.csv
 
 //---
 // Geoid support:

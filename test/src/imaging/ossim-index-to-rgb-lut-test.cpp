@@ -84,10 +84,6 @@ bool runTest(const std::string& kwlString, ossimRefPtr<ossimImageSourceFilter>& 
       return false;
    }
 
-   ossimKeywordlist savedKwl;
-   lutFilter->saveState(savedKwl);
-   cout << savedKwl << endl;
-
    lutFilter->initialize();
    ossimIrect rect (lutFilter->getBoundingRect());
    ossimRefPtr<ossimImageData> rgbBuffer = lutFilter->getTile(rect);

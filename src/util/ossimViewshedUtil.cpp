@@ -213,7 +213,6 @@ bool ossimViewshedUtil::initialize(ossimArgumentParser& ap)
 
 void ossimViewshedUtil::initialize(const ossimKeywordlist& kwl)
 {
-   clear();
    ossimString value;
 
    value = kwl.findKey(FOV_KW);

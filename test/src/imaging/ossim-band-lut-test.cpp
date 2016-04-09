@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
    ossimFilename outputPath;
    if (argc > 1)
    {
-      ossimFilename outputPath = argv[1];
+      outputPath = argv[1];
       if (!outputPath.isDir())
       {
          cout << "Bad destination directory <"<<outputPath<<"> specified on command line. Ignoring,"
@@ -183,8 +183,8 @@ int main(int argc, char *argv[])
    memSource2->setImage(floatTile);
    memSource2->setRect(0, 0, 256, 256);
 
-   ossimFilename tempFile ("float_tile.tif");
-   writeTile(tempFile, memSource2.get());
+//   ossimFilename tempFile ("float_tile.tif");
+//   writeTile(tempFile, memSource2.get());
 
    ossimRefPtr<ossimImageSourceFilter> lutFilter2 = new ossimBandLutFilter();
    lutFilter2->connectMyInputTo(memSource2.get());

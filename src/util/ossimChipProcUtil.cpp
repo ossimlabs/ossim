@@ -48,8 +48,6 @@ static const std::string AOI_GEO_CENTER_KW       = "aoi_geo_center";
 static const std::string AOI_SIZE_METERS_KW      = "aoi_size_meters";
 static const std::string AOI_SIZE_PIXELS_KW      = "aoi_size_pixels";
 static const std::string CLIP_POLY_LAT_LON_KW    = "clip_poly_lat_lon";
-static const std::string ELEV_SOURCES_KW         = "elev_sources";
-static const std::string IMAGE_SOURCE_KW         = "image_source";
 static const std::string LUT_FILE_KW             = "lut_file";
 static const std::string GSD_KW                  = "gsd";
 static const std::string OUTPUT_RADIOMETRY_KW    = "output_radiometry";
@@ -87,21 +85,10 @@ void ossimChipProcUtil::clear()
 {
    m_gsd.makeNan();
 
-   // Must disonnect chains so that they destroy.
-   std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator i = m_imgLayers.begin();
-   while ( i != m_imgLayers.end() )
-   {
-      (*i)->disconnect();
-      (*i) = 0;
-      ++i;
-   }
+   m_procChain = 0;
    m_imgLayers.clear();
-
-   if(m_writer.valid())
-   {
-      m_writer->disconnect();
-      m_writer = 0;
-   }
+   m_writer = 0;
+   m_geom = 0;
 }
 
 bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
@@ -125,7 +112,6 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 
    ossim_uint32 readerPropIdx = 0;
    ossim_uint32 writerPropIdx = 0;
-   ossimString  key           = "";
    ostringstream keys;
 
    if ( ap.read("--load-options", stringParam1))
@@ -188,8 +174,11 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    {
       ostringstream value;
       for(ossim_uint32 idx=0; idx<paramList.size(); ++idx)
-         value<<paramList[idx]<<",";
-      m_kwl.addPair(ELEV_SOURCES_KW, value.str() );
+      {
+         ostringstream key;
+         key<<ossimKeywordNames::ELEVATION_SOURCE_KW<<idx;
+         m_kwl.addPair(key.str(), paramList[idx] );
+      }
    }
 
    if( ap.read("--gsd", stringParam1) )
@@ -203,7 +192,7 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
    for(ossim_uint32 idx=0; idx<imageFnames.size(); ++idx)
    {
       ostringstream key;
-      key<<IMAGE_SOURCE_KW<<idx<<"."<<ossimKeywordNames::FILE_KW;
+      key<<ossimKeywordNames::IMAGE_FILE_KW<<idx;
       m_kwl.addPair(key.str(), imageFnames[idx] );
    }
 
@@ -246,9 +235,9 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 
    while (ap.read("--writer-prop", stringParam1))
    {
-      key = WRITER_PROPERTY_KW;
-      key += ossimString::toString(writerPropIdx);
-      m_kwl.addPair(key.string(), tempString1 );
+      ostringstream key;
+      key << WRITER_PROPERTY_KW << writerPropIdx;
+      m_kwl.addPair(key.str(), tempString1 );
       ++writerPropIdx;
    }
 
@@ -260,7 +249,6 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
 
 void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
 {
-   ossimString  key    = "";
    ossim_uint32 inputIdx = 0;
 
    bool dumpKwl = false;
@@ -284,14 +272,12 @@ void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
    if ( ap.argc() > 2 ) // User passed inputs in front of output file.
    {
       int pos = 1; // ap.argv[0] is application name. 
+      int idx = 0;
       while ( pos < (ap.argc()-1) )
       {
-         ossimFilename file = ap[pos];
-         key = IMAGE_SOURCE_KW;
-         key += ossimString::toString(inputIdx++);
-         key += ".";
-         key += ossimKeywordNames::FILE_KW;
-         m_kwl.addPair( key, file.string() );
+         ostringstream key;
+         key<<ossimKeywordNames::IMAGE_FILE_KW<<idx;
+         m_kwl.add( key.str().c_str(), ap[pos] );
 
          ++pos; // Go to next arg...
 
@@ -325,7 +311,6 @@ void ossimChipProcUtil::processRemainingArgs(ossimArgumentParser& ap)
 
 void ossimChipProcUtil::initialize( const ossimKeywordlist& kwl )
 {
-
    // Don't copy KWL if member KWL passed in:
    if (&kwl != &m_kwl)
    {
@@ -531,28 +516,37 @@ const ossimObject* ossimChipProcUtil::getObject() const
 
 void ossimChipProcUtil::loadImageFiles()
 {
-   ossim_uint32 imgCount = m_kwl.numberOf( IMAGE_SOURCE_KW.c_str() );
-   ossim_uint32 maxIndex = imgCount + 100; // Allow for skippage in numbering.
-   ossim_uint32 foundRecords = 0;
-   ossim_uint32 i = 0;
+   ossim_uint32 numImages = m_kwl.numberOf( ossimKeywordNames::IMAGE_FILE_KW );
+   ossim_uint32 count = numImages;
    ossim_uint32 entryIndex = 0;
 
    // Returns 0 if no entry found. This is default anyway.
    ossim_uint32 globalEntryValue = ossimString(m_kwl.find(ossimKeywordNames::ENTRY_KW)).toUInt32();
 
-   while ( foundRecords < imgCount )
+   for (ossim_uint32 i=0; count > 0; ++i)
    {
-      ostringstream key;
-      key <<  IMAGE_SOURCE_KW << i << "." << ossimKeywordNames::FILE_KW;
-      ossimFilename f = m_kwl.findKey( key.str() );
-      if ( f.size() )
+      ossimFilename f;
+      if (numImages == 1)
       {
-         // Look for the entry key, e.g. image_source0.entry: 10
-         ostringstream entryKey;
-         entryKey <<  IMAGE_SOURCE_KW << i << "." << ossimKeywordNames::ENTRY_KW;
-         ossimString os = m_kwl.findKey(entryKey.str());
-         if (!os.empty())
-            entryIndex = os.toUInt32();
+         ostringstream key;
+         key <<  ossimKeywordNames::IMAGE_FILE_KW; // Try non-indexed first
+         f = m_kwl.findKey( key.str() );
+      }
+      if (f.empty())
+      {
+         ostringstream key;
+         key <<  ossimKeywordNames::IMAGE_FILE_KW << i ;
+         f = m_kwl.findKey( key.str() );
+      }
+      if ( f.empty() )
+         continue;
+
+      // Look for the entry key, e.g. image_source0.entry: 10
+      ostringstream entryKey;
+      entryKey <<  ossimKeywordNames::IMAGE_FILE_KW << i << "." << ossimKeywordNames::ENTRY_KW;
+      ossimString os = m_kwl.findKey(entryKey.str());
+      if (!os.empty())
+         entryIndex = os.toUInt32();
       else
          entryIndex = globalEntryValue;
 
@@ -572,11 +566,7 @@ void ossimChipProcUtil::loadImageFiles()
          ic->setBandSelection( bandList );
 
       m_imgLayers.push_back(ic);
-         ++foundRecords;
-      }
-      ++i;
-      if ( i >= maxIndex )
-         break;
+      --count;
    }
 }
 
@@ -634,20 +624,30 @@ ossimChipProcUtil::createInputChain(const ossimFilename& fname, ossim_uint32 ent
 
 void ossimChipProcUtil::loadDemFiles()
 {
-   ossimString value = m_kwl.findKey(ELEV_SOURCES_KW);
-   if (value.empty())
+   ossim_uint32 numDems = m_kwl.numberOf( ossimKeywordNames::ELEVATION_SOURCE_KW );
+   if (numDems == 0)
       return;
 
-   vector<ossimString> input_files = value.split(", ");
-   ossim_uint32 i = 0;
-   while ( i < input_files.size() )
+   cout<<m_kwl<<endl;//TODO:REMOVE
+   ossim_uint32 count = numDems;
+   for (ossim_uint32 i=0; count > 0; ++i)
    {
-      ossimFilename f = input_files[i].trim();
-      if ( f.empty() )
+      ossimFilename f;
+      if (numDems == 1)
       {
-         ++i;
-         continue;
+         ostringstream key;
+         key <<  ossimKeywordNames::ELEVATION_SOURCE_KW; // Try non-indexed first
+         f = m_kwl.findKey( key.str() );
       }
+      if (f.empty())
+      {
+         ostringstream key;
+         key <<  ossimKeywordNames::ELEVATION_SOURCE_KW << i ;
+         cout<<key.str()<<endl;//TODO:REMOVE
+         f = m_kwl.findKey( key.str() );
+      }
+      if ( f.empty() )
+         continue;
 
       if (!f.isReadable())
       {
@@ -658,7 +658,7 @@ void ossimChipProcUtil::loadDemFiles()
 
       m_demSources.push_back(f);
       ossimElevManager::instance()->loadElevationPath(f, true);
-      ++i;
+      --count;
    }
 }
 
@@ -683,7 +683,10 @@ void ossimChipProcUtil::createOutputProjection()
    m_geoScaled = false;
    op.downcase();
 
-   if ( (op == "geo") || (srs == "4326"))
+   if (op.contains("epsg"))
+      srs = op;
+
+   if ( (op == "geo") || (srs.contains("4326")))
       proj = new ossimEquDistCylProjection();
 
    else if (srs.size())
@@ -725,7 +728,8 @@ void ossimChipProcUtil::createOutputProjection()
 ossimRefPtr<ossimMapProjection> ossimChipProcUtil::newIdentityProjection()
 {
    ossimRefPtr<ossimSingleImageChain> sic = 0;
-   ossimRefPtr<ossimMapProjection> proj = 0;
+   ossimProjection* input_proj = 0;
+   ossimRefPtr<ossimMapProjection> output_proj = 0;
    ossimRefPtr<ossimImageRenderer> resampler = 0;
 
    if ( m_imgLayers.size() )
@@ -739,22 +743,47 @@ ossimRefPtr<ossimMapProjection> ossimChipProcUtil::newIdentityProjection()
             ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
             if (geom.valid())
             {
-               proj = dynamic_cast<ossimMapProjection*>( geom->getProjection() );
-               m_projIsIdentity = true;
+               input_proj = geom->getProjection();
+
+               // Check if input is UTM, need to copy zone and hemisphere if so:
+               ossimUtmProjection* input_utm = dynamic_cast<ossimUtmProjection*>(input_proj);
+               if ( input_utm )
+               {
+                  ossimRefPtr<ossimUtmProjection> output_utm = new ossimUtmProjection;
+                  output_utm->setZone(input_utm->getZone());
+                  output_utm->setHemisphere(input_utm->getHemisphere());
+                  output_proj = output_utm.get();
+               }
+               else
+               {
+                  input_proj = dynamic_cast<ossimMapProjection*>( geom->getProjection() );
+                  if (input_proj)
+                  {
+                     output_proj = (ossimMapProjection*) input_proj->dup();
+                     m_projIsIdentity = true;
+                  }
+               }
             }
          }
       }
    }
 
    // try input dem "image" if specified:
-   if (!proj.valid() && (m_demSources.size()))
+   if (!output_proj.valid() && (m_demSources.size()))
    {
       ossimImageGeometry geom;
       if (geom.open(m_demSources[0]))
-         proj = dynamic_cast<ossimMapProjection*>(geom.getProjection());
+      {
+         input_proj = dynamic_cast<ossimMapProjection*>(geom.getProjection());
+         if (input_proj)
+         {
+            output_proj = (ossimMapProjection*) input_proj->dup();
+            m_projIsIdentity = true;
+         }
+      }
    }
 
-   return proj;
+   return output_proj;
 }
 
 ossimRefPtr<ossimMapProjection> ossimChipProcUtil::newUtmProjection()
@@ -812,6 +841,9 @@ void ossimChipProcUtil::initializeProjectionGsd()
    ossimString lookup = m_kwl.findKey( GSD_KW );
    if ( lookup.size() )
       m_gsd.y = m_gsd.x = lookup.toFloat64();
+
+   if (m_gsd.hasNans() && m_projIsIdentity && m_geom.valid())
+         m_geom->getMetersPerPixel(m_gsd);
 
    if (m_gsd.hasNans())
    {
@@ -1201,23 +1233,6 @@ void ossimChipProcUtil::propagateGeometryToChains()
    ossimViewInterfaceVisitor viewVisitor(m_geom.get());
 
    std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx = m_imgLayers.begin();
-   if (m_projIsIdentity)
-   {
-      // Identity rojection applies only top the first image in the input list:
-      ossimDpt scale(1,1);
-      ossimRefPtr<ossimImageGeometry> geom =  (*chainIdx)->getImageGeometry();
-      if (geom.valid())
-      {
-         ossimDpt input_gsd;
-         geom->getMetersPerPixel(input_gsd);
-         scale = ossimDpt(m_gsd.x/input_gsd.x, m_gsd.y/input_gsd.y);
-      }
-      ossimDpt midPt = m_aoiViewRect.midPoint();
-      (*chainIdx)->getImageRenderer()->setImageViewTransform(
-            new ossimImageViewAffineTransform(0.0, scale.x, scale.y, 1, 1, 0, 0, midPt.x, midPt.y));
-      ++chainIdx;
-   }
-
    while ( chainIdx != m_imgLayers.end() )
    {
       viewVisitor.reset();
@@ -1262,7 +1277,7 @@ void ossimChipProcUtil::getBandList(ossim_uint32 image_idx,
 {
    bandList.clear();
    ostringstream key;
-   key <<  IMAGE_SOURCE_KW << image_idx << "." << ossimKeywordNames::BANDS_KW;
+   key <<  ossimKeywordNames::IMAGE_FILE_KW << image_idx << "." << ossimKeywordNames::BANDS_KW;
    ossimString os = m_kwl.findKey(key.str());
    if (os.empty())
    {

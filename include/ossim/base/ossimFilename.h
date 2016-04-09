@@ -253,9 +253,14 @@ public:
    
    /**
     * Convenience method to append a generic timestamp to the base-name portion of the filename.
-    * This is useful for establishing rolling names for temporary files and logs
+    * This is useful for establishing rolling names for temporary files and logs. Returns this.
     */
    ossimFilename& appendTimestamp();
+
+   /**
+    * Convenience method to append a string to the base-name portion of the filename. Returns this.
+    */
+   ossimFilename& append(const ossimString& append_this_to_filename);
 
 protected:
 

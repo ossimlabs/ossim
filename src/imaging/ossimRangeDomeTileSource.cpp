@@ -84,12 +84,14 @@ ossimRangeDomeTileSource::~ossimRangeDomeTileSource()
 
 bool ossimRangeDomeTileSource::open()
 {
+#if 0 /* Please wrap with traceDebug().  drb */
    if (!theImageFile.isReadable())
    {
       ossimNotify(ossimNotifyLevel_WARN)<<"ossimRangeDomeTileSource::open() -- Error. Coould not"
             " open CSV file at <"<<theImageFile<<">" << endl;
       return false;
    }
+#endif
 
    ossimString dome_spec;
    vector<ossimString> tokens;
