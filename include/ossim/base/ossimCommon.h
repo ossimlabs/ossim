@@ -648,6 +648,19 @@ namespace ossim
                                     std::string& result );
 
    /**
+    * @brief Gets the current time.
+    *
+    * Wrapper around time.h time_t time(time_t *t) with a mutex lock.
+    *
+    * Note that time_t is a long int.  Returning ossim_int64 to avoid include
+    * of time.h.
+    *
+    * @return The time  as  the  number of seconds since the Epoch,
+    * 1970-01-01 00:00:00 +0000 (UTC).  
+    */
+   OSSIM_DLL ossim_int64 getTime();
+
+   /**
     * @brief Computes the number of decimation levels to get to the overview
     * stop dimension.
     *

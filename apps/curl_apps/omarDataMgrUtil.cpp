@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 
+static std::string ACCESS_TIME_THRESHOLD_KW    = "access_time_threshold";
 static std::string CLEAN_KW                    = "clean";
 static std::string DUMP_FILTERED_IMAGES_KW     = "dump_filtered_images";
 static std::string FALSE_KW                    = "false";
@@ -79,6 +80,9 @@ void omarDataMgrUtil::addArguments(ossimArgumentParser& ap)
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
+
+   au->addCommandLineOption("--access-time-threshold", "<days> For \"remove\" action. Only remove if last access is greater than days.");
+   
    au->addCommandLineOption("--clean", "Cleans/removes image file and associated files from file system if present.\n\"remove\" option only.\nLooks for associated files of image, e.g. .ovr, .his, .omd, .geom\nCAUTION: This command is irreversible once envoked!");
    
    au->addCommandLineOption("--dump-filtered-image-list", "Outputs list of filtered images.");
@@ -126,6 +130,15 @@ bool omarDataMgrUtil::initialize(ossimArgumentParser& ap)
          // Used throughout below:
          std::string ts1;
          ossimArgumentParser::ossimParameter sp1(ts1);
+
+         if( ap.read("--access-time-threshold", sp1) )
+         {
+            m_kwl->addPair( ACCESS_TIME_THRESHOLD_KW, ts1 );
+            if ( ap.argc() < 3 )
+            {
+               break;
+            }
+         }
 
          if( ap.read("--clean") )
          {
@@ -455,6 +468,10 @@ void omarDataMgrUtil::usage(ossimArgumentParser& ap)
       << ap.getApplicationName()
       << " --clean --threads 32 remove /data1/imagery/2015/09/28/0000\n"
 
+      << "Removing all images in a directory using 4 threads that have not been accessed in 30 days:\n"
+      << ap.getApplicationName()
+      << " --access-time-threshold  30 --clean --threads 32 remove /data1/imagery/2015/09/28/0000\n"
+
       << std::endl;
 }
 
@@ -472,6 +489,42 @@ bool omarDataMgrUtil::isDirectoryBasedImage(const ossimImageHandler* ih) const
          result = true;
       }
    }
+   return result;
+}
+
+bool omarDataMgrUtil::isPastLastAccessedThreshold( const ossimFilename& file ) const
+{
+   // Default to true.
+   bool result = true;
+
+   std::string value = m_kwl->findKey( ACCESS_TIME_THRESHOLD_KW );
+   if ( value.size() )
+   {
+      const ossim_int64 SECONDS_PER_DAY = 86400; // 60 * 60 * 24
+      ossim_int64 thresholdInDays = ossimString(value).toInt64();
+      if ( thresholdInDays )
+      {
+         // Returns -1 if does not exist.
+         ossim_int64 secondsSinceAccessed = file.lastAccessed();
+
+         if(traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << ACCESS_TIME_THRESHOLD_KW << ": " << thresholdInDays
+               << "\nfile_last_accessed: " << secondsSinceAccessed/SECONDS_PER_DAY
+               << "\n";
+         }
+
+         if ( secondsSinceAccessed > 0 )
+         {
+            if ( secondsSinceAccessed/SECONDS_PER_DAY <= thresholdInDays )
+            {
+               result = false;
+            }
+         }
+      }
+   }
+   
    return result;
 }
 
@@ -720,76 +773,80 @@ bool omarDataMgrUtil::callRemoveRasterService( const ossimFilename& file )
    }
    
    bool result = false;
-   
-   std::string service;
-   getService( service );
-   
-   std::string url;
-   getUrl( url );
-   
-   if ( service.size() && url.size() )
+
+   if ( isPastLastAccessedThreshold( file ) )
    {
-      CURL* curl = curl_easy_init();
-      if ( curl )
+      std::string service;
+      getService( service );
+   
+      std::string url;
+      getUrl( url );
+   
+      if ( service.size() && url.size() )
       {
-         // Data for POST:
-         std::string data = std::string("filename=") + file.string();
-         curl_easy_setopt( curl, CURLOPT_POSTFIELDS, data.c_str() );
-         
-         // Create the URL string:
-         std::string urlString = url + service;
-         curl_easy_setopt( curl, CURLOPT_URL, urlString.c_str() );
-         
-         ossimNotify(ossimNotifyLevel_INFO)
-            << "data: " << data 
-            << "\nurl: " << urlString.c_str()
-            << std::endl;
-         
-         // Tell libcurl to follow redirection
-         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-         
-         // Run it:
-         CURLcode res = curl_easy_perform(curl);
-         
-         // Check for errors:
-         if ( res == CURLE_OK )
+         CURL* curl = curl_easy_init();
+         if ( curl )
          {
-            // Response code of the http transaction:
-            long respcode; 
-            res = curl_easy_getinfo(curl,CURLINFO_RESPONSE_CODE, &respcode);
+            // Data for POST:
+            std::string data = std::string("filename=") + file.string();
+            curl_easy_setopt( curl, CURLOPT_POSTFIELDS, data.c_str() );
+         
+            // Create the URL string:
+            std::string urlString = url + service;
+            curl_easy_setopt( curl, CURLOPT_URL, urlString.c_str() );
+         
+            ossimNotify(ossimNotifyLevel_INFO)
+               << "data: " << data 
+               << "\nurl: " << urlString.c_str()
+               << std::endl;
+         
+            // Tell libcurl to follow redirection
+            curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+         
+            // Run it:
+            CURLcode res = curl_easy_perform(curl);
+         
+            // Check for errors:
             if ( res == CURLE_OK )
             {
-               if ( respcode == 200 ) //  OK 200 "The request was fulfilled."
+               // Response code of the http transaction:
+               long respcode; 
+               res = curl_easy_getinfo(curl,CURLINFO_RESPONSE_CODE, &respcode);
+               if ( res == CURLE_OK )
                {
-                  result = true; // Set return status for caller.
-
-                  // Check for clean flag:
-                  if ( getCleanFlag() )
+                  if ( respcode == 200 ) //  OK 200 "The request was fulfilled."
                   {
-                     clean( file );
+                     result = true; // Set return status for caller.
+
+                     // Check for clean flag:
+                     if ( getCleanFlag() )
+                     {
+                        clean( file );
+                     }
                   }
                }
             }
-         }
-         else
-         {
-            ossimNotify(ossimNotifyLevel_WARN)
-               << "curl_easy_perform() failed: \n"
-               << curl_easy_strerror(res)
-               << std::endl;
-            setErrorStatus( (ossim_int32)res );
-         }
+            else
+            {
+               ossimNotify(ossimNotifyLevel_WARN)
+                  << "curl_easy_perform() failed: \n"
+                  << curl_easy_strerror(res)
+                  << std::endl;
+               setErrorStatus( (ossim_int32)res );
+            }
          
-         ossimNotify(ossimNotifyLevel_WARN) << std::endl;
+            ossimNotify(ossimNotifyLevel_WARN) << std::endl;
          
-         // Always cleanup:
-         curl_easy_cleanup(curl);
-      }
+            // Always cleanup:
+            curl_easy_cleanup(curl);
+         }
       
-      // Cleanup curl:
-      curl_global_cleanup();
+         // Cleanup curl:
+         curl_global_cleanup();
       
-   } // Matches: if ( service.size() )
+      } // Matches: if ( service.size() )
+      
+   } // Matches: if ( isPastLastAccessedThreshold( file ) )
    
    if(traceDebug())
    {
