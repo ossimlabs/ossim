@@ -448,7 +448,7 @@ void omarDataMgrUtil::usage(ossimArgumentParser& ap)
       << " --preproc --ot ossim_kakadu_nitf_j2k --ch add "
       << "5V090205M0001912264B220000100072M_001508507.ntf\n\n"
 
-     << "Passing in url:\n"
+      << "Passing in url:\n"
       << ap.getApplicationName()
       << " -u http://your_url/omar add 5V090205M0001912264B220000100072M_001508507.ntf\n\n"
 
@@ -466,11 +466,11 @@ void omarDataMgrUtil::usage(ossimArgumentParser& ap)
 
       << "Removing all images in a directory using 32 threads:\n"
       << ap.getApplicationName()
-      << " --clean --threads 32 remove /data1/imagery/2015/09/28/0000\n"
+      << " --clean --threads 32 remove /data1/imagery/2015/09/28/0000\n\n"
 
       << "Removing all images in a directory using 4 threads that have not been accessed in 30 days:\n"
       << ap.getApplicationName()
-      << " --access-time-threshold  30 --clean --threads 32 remove /data1/imagery/2015/09/28/0000\n"
+      << " --access-time-threshold  30 --clean --threads 4 remove /data1/imagery/2015/09/28/0000\n"
 
       << std::endl;
 }
