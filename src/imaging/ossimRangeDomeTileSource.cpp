@@ -23,7 +23,7 @@ using namespace std;
 
 RTTI_DEF1(ossimRangeDomeTileSource, "ossimRangeDomeTileSource", ossimImageHandler);
 
-const char* OSSIM_RANGE_DOME_SPEC_MAGIC_NUMBER = "OSSIM_RANGE_DOMES";
+const ossimString ossimRangeDomeTileSource::OSSIM_RANGE_DOME_SPEC_MAGIC_NUMBER ("OSSIM_RANGE_DOMES");
 
 ossimRangeDome::ossimRangeDome(vector<ossimString>& tokens)
 : valid (false),
@@ -94,16 +94,20 @@ bool ossimRangeDomeTileSource::open()
 #endif
 
    ossimString dome_spec;
-   vector<ossimString> tokens;
+   ossim_uint32 sizeOfMagic = OSSIM_RANGE_DOME_SPEC_MAGIC_NUMBER.size();
+   char* magic_number = new char [ sizeOfMagic ];
 
    // Open the CSV and check proper file type:
    ifstream indata (theImageFile.chars());
-   getline(indata, dome_spec);
-   dome_spec.split(tokens, " ", false);
-   if ((tokens.size() < 2) || !tokens[0].contains(OSSIM_RANGE_DOME_SPEC_MAGIC_NUMBER))
+   if (indata.fail())
+      return false;
+   indata.read(magic_number, sizeOfMagic);
+
+   if (!OSSIM_RANGE_DOME_SPEC_MAGIC_NUMBER.contains(magic_number))
       return false;
 
    // loop over each record/dome spec:
+   vector<ossimString> tokens;
    while (indata.good())
    {
       tokens.clear();
