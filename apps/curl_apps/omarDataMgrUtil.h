@@ -250,6 +250,17 @@ private:
     */
    bool isDirectoryBasedImage(const ossimImageHandler* ih) const;
 
+   /**
+    * @brief Checks file last access time against threshold.
+    *
+    * This check for option key "access_time_threshold", value in days.  If
+    * found will return true if files last access time is greater than the
+    * threshold days.  If key is not set the default return is true.
+    * 
+    * @return true if file is past last accessed threshold.
+    */
+   bool isPastLastAccessedThreshold( const ossimFilename& file ) const;
+
    /** @return true if key is set to true; false, if not. */
    bool keyIsTrue( const std::string& key ) const;
    

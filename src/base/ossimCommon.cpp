@@ -1137,6 +1137,17 @@ void ossim::getFormattedTime(
    timeMutex.unlock();
 }
 
+ossim_int64 ossim::getTime()
+{
+   time_t rawTime;
+   
+   timeMutex.lock();
+   time(&rawTime);
+   timeMutex.unlock();
+   
+   return (ossim_int64)rawTime;
+}
+
 ossim_uint32 ossim::computeLevels(const ossimIrect& rect)
 {
    ossim_uint32 result = 0;

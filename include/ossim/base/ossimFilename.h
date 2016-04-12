@@ -58,6 +58,13 @@ public:
    bool getTimes(ossimLocalTm* accessTime,
                  ossimLocalTm* modTime,
                  ossimLocalTm* createTime)const;
+   /**
+    * @brief Time in seconds since last accessed.
+    * 
+    * @return The number of seconds since last accessed or -1 if file does not
+    * exist.
+    */
+   ossim_int64 lastAccessed() const;
    
    bool touch()const;
    
