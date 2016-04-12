@@ -62,13 +62,15 @@ static const std::string WRITER_PROPERTY_KW      = "writer_property";
 ossimChipProcUtil::ossimChipProcUtil( const ossimChipProcUtil& /* obj */)
 : m_projIsIdentity(false),
   m_geoScaled (false),
-  m_productScalarType(OSSIM_SCALAR_UNKNOWN)
+  m_productScalarType(OSSIM_SCALAR_UNKNOWN),
+  m_needCutRect(false)
 {}
 
 ossimChipProcUtil::ossimChipProcUtil()
 :  m_projIsIdentity(false),
    m_geoScaled(false),
-   m_productScalarType(OSSIM_SCALAR_UNKNOWN)
+   m_productScalarType(OSSIM_SCALAR_UNKNOWN),
+   m_needCutRect(false)
 {
    m_kwl.setExpandEnvVarsFlag(true);
    m_gsd.makeNan();
@@ -89,6 +91,7 @@ void ossimChipProcUtil::clear()
    m_imgLayers.clear();
    m_writer = 0;
    m_geom = 0;
+   m_needCutRect = false;
 }
 
 bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
@@ -359,18 +362,17 @@ void ossimChipProcUtil::finalizeChain()
       m_procChain->add(lut.get());
    }
 
-   // Add a cut filter. This will:
-   // 1) Null out/clip any data pulled in.
-   // 2) Speed up by not propagating get tile request outside the cut or "aoi"
-   //    to the left hand side(input).
-   m_cutRectFilter = new ossimRectangleCutFilter();
-   m_cutRectFilter->setRectangle( m_aoiViewRect );
-
-   // Null outside.
-   m_cutRectFilter->setCutType( ossimRectangleCutFilter::OSSIM_RECTANGLE_NULL_OUTSIDE );
-
-   // Connect chipper input to source chain.
-   m_procChain->add(m_cutRectFilter.get());
+   if (m_needCutRect)
+   {
+      // Add a cut filter. This will:
+      // 1) Null out/clip any data pulled in.
+      // 2) Speed up by not propagating get tile request outside the cut or "aoi"
+      //    to the left hand side(input).
+      m_cutRectFilter = new ossimRectangleCutFilter();
+      m_cutRectFilter->setRectangle( m_aoiViewRect );
+      m_cutRectFilter->setCutType( ossimRectangleCutFilter::OSSIM_RECTANGLE_NULL_OUTSIDE );
+      m_procChain->add(m_cutRectFilter.get());
+   }
 
    // Set the image size here.  Note must be set after combineLayers.  This is needed for
    // the ossimImageGeometry::worldToLocal call for a geographic projection to handle wrapping
@@ -945,6 +947,7 @@ void ossimChipProcUtil::initializeAOI()
          ossimGpt ulgpt (centerGpt.lat + dlat, centerGpt.lon - dlon);
          ossimGpt lrgpt (centerGpt.lat - dlat, centerGpt.lon + dlon);
          m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
+         m_needCutRect = true;
       }
    }
 
@@ -980,6 +983,7 @@ void ossimChipProcUtil::initializeAOI()
       ossimGpt ulgpt (maxLatF, minLonF);
       ossimGpt lrgpt (minLatF , maxLonF);
       m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
+      m_needCutRect = true;
    }
 
    else if ( m_kwl.hasKey( AOI_MAP_RECT_KW ) )
@@ -1023,6 +1027,7 @@ void ossimChipProcUtil::initializeAOI()
          ossimGpt ulGeo = mapProj->inverse(ulMap);
          ossimGpt lrGeo = mapProj->inverse(lrMap);
          m_aoiGroundRect = ossimGrect(ulGeo, lrGeo);
+         m_needCutRect = true;
       }
    }
 

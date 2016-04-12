@@ -223,6 +223,7 @@ protected:
    bool m_geoScaled;
    ossimFilename m_productFilename;
    ossimScalarType m_productScalarType;
+   bool m_needCutRect; // True when a specific AOI, different from the input, was requested
 };
 
 #endif /* #ifndef ossimChipProcUtil_HEADER */
