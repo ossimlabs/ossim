@@ -193,6 +193,16 @@ Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 This sub-package contains the Hierarchical Data Format(hdf) ossim plugin for
 reading hdf5 images via the hdf5 libraries
 
+%package  	jpip-server
+Summary:        ossim kakadu jpip server
+Group:          System Environment/Libraries
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
+Requires:       kakadu-plugin%{?_isa} = %{version}-%{release}
+
+%description    jpip-server
+This sub-package contains the ossim kakadu jpip server for streaming
+J2K compressed data to via the Kakadu library.
+
 %package  	kml-plugin
 Summary:        kml ossim plugin
 Group:          System Environment/Libraries
@@ -292,6 +302,7 @@ export OSSIM_VERSION=%{RPM_OSSIM_VERSION}
 mkdir -p build
 pushd build
 %cmake \
+-DOSSIM_BUILD_ADDITIONAL_DIRECTORIES=$OSSIM_DEV_HOME/ossim-private/ossim-kakadu-jpip-server \
 -DBUILD_CSMAPI=OFF \
 -DBUILD_OMS=ON \
 -DBUILD_OSSIM=ON \
@@ -453,6 +464,9 @@ rm -f %{_javadir}/joms.jar
 %exclude %{_bindir}/ossim-geocell
 %exclude %{_bindir}/ossimplanetviewer
 
+# In jpip-server package:
+%exclude %{_bindir}/ossim-jpip-server
+
 %files devel
 %{_includedir}/ossim
 
@@ -513,11 +527,16 @@ rm -f %{_javadir}/joms.jar
 %files hdf5-plugin
 %{_libdir}/ossim/plugins/libossim_hdf5_plugin.so
 
+%files jpip-server
+%{_bindir}/ossim-jpip-server
+
 %files kml-plugin
 %{_libdir}/ossim/plugins/libossim_kml_plugin.so
 
 %files kakadu-plugin
 %{_libdir}/ossim/plugins/libossim_kakadu_plugin.so
+%{_libdir}/libkdu_a75R.so
+%{_libdir}/libkdu_v75R.so
 
 %files mrsid-plugin
 %{_libdir}/ossim/plugins/libossim_mrsid_plugin.so
