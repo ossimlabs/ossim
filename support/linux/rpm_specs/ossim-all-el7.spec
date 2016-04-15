@@ -298,6 +298,11 @@ export OSSIM_BUILD_TYPE=RelWithDebInfo
 export OSSIM_INSTALL_PREFIX=/usr
 export OSSIM_VERSION=%{RPM_OSSIM_VERSION}
 
+# Need to ensure ossim-private branch on kak_v7_7
+pushd $OSSIM_DEV_HOME/ossim-private
+git checkout kak_v7_7
+popd
+
 mkdir -p build
 pushd build
 %cmake \
