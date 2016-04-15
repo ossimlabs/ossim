@@ -65,7 +65,6 @@ ossimRefPtr<ossimImageData> ossimBandLutFilter::getTile(const ossimIrect& tileRe
    const double null_value = theTile->getNullPix(0); // assuming same null for all bands
    ossim_uint32 maxLength = inputTile->getWidth()*inputTile->getHeight();
 
-   inputTile->write("tmp.ras"); // TODO REMOVE DEBUG
    double index, value;
    double min_value=OSSIM_DEFAULT_MAX_PIX_DOUBLE;
    double max_value=OSSIM_DEFAULT_MIN_PIX_DOUBLE;
