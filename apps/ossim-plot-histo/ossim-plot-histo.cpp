@@ -43,11 +43,14 @@ void usage()
 	     << "            it foo.his, then will plot the histogram.\n\n"
         << " ossim-plot-histo foo.his\n"
         << "            Simply plots existing histogram.\n\n"
+        << " ossim-plot-histo --with dots foo.his\n"
+        << "            Uses specified symbol for data point. See \"gnuplot plot with\" "
+        << "            documentation.\n\n"
         << "Note: gnuplot must be installed before using this utility."
         << endl;
 }
 
-void plotHistogram(const ossimFilename& histoFile)
+void plotHistogram(const ossimFilename& histoFile, const ossimString& plotWith)
 {
    // Open the histogram file:
    ossimRefPtr<ossimMultiResLevelHistogram> h = new ossimMultiResLevelHistogram();
@@ -66,7 +69,10 @@ void plotHistogram(const ossimFilename& histoFile)
    }
 
    // Output histogram data to temporary x, y file:
-   fprintf(gnuplotPipe, "plot '-' with dots\n");
+   ossimString command ("plot '-' with ");
+   command.append(plotWith);
+   command.append("\n");
+   fprintf(gnuplotPipe, command.chars());
    ossim_uint32 band = 0;
    ossimRefPtr<ossimHistogram> histogram = h->getHistogram(band);
    int numBins = histogram->GetRes();
@@ -94,6 +100,7 @@ int main(int argc, char *argv[])
    argumentParser.getApplicationUsage()->setCommandLineUsage(argumentParser.getApplicationName()+" <input_file>");
    
    argumentParser.getApplicationUsage()->addCommandLineOption("-h or --help", "Display this information");
+   argumentParser.getApplicationUsage()->addCommandLineOption("--with <symbol>", "See \"gnuplot plot with\" documentation");
    
    ossim_uint32 maxLevels = 1;
    ossim_int32 entry = -1;
@@ -104,14 +111,19 @@ int main(int argc, char *argv[])
    ossim_int32   numberOfBinsOverride = -1;
 
    bool fastMode = false;
+   ossimString plotWith = "dots";
    
    if ( (argumentParser.read("-h")) || (argumentParser.read("--help")) )
    {
       argumentParser.getApplicationUsage()->write(std::cout);
       usage();
       exit(0);
-    }
+   }
    
+   if(argumentParser.read("--with", stringParam))
+   {
+      plotWith = tempString;
+   }
    if (argumentParser.argc() == 2)
    {
       ossimFilename inputFile = argv[1];
@@ -128,7 +140,7 @@ int main(int argc, char *argv[])
          system(cmd.str().c_str());
          inputFile.setExtension("his");
       }
-      plotHistogram(inputFile);
+      plotHistogram(inputFile, plotWith);
    }
    else
    {
