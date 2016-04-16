@@ -36,7 +36,7 @@ If you want to contribute code, you'll need to:
  * test your modification, 
  * then create a pull request. 
 
-The moderators will review the request and merge your changes to "dev". At that point, the automated continuous integration system (GoCD) will get triggered to perform a build and test. If there are any failures, your merge commit will be backed out and you'll be publicly ridiculed.
+The moderators will review the request and merge your changes to "dev". At that point, the automated continuous integration system (GoCD) will get triggered to perform a build and test. If there are any failures, your merge commit will be backed out.
 
 #How to Build
 The easy way is to just run the script in `ossim/scripts/build.sh`.  This approach should work for the default build configuration. This currently works for both linux and Mac. We hope to soon have a Windows `build.bat` file and world peace. Assuming all dependencies were met and no compile/link errors occured, this script will generate all build binaries under a sibling directory to the ossim repo directory, namely, `ossim/../build`. See the section on environment variables below for options on customizing the build location.
@@ -48,7 +48,7 @@ The following 3rd-party SDKs are needed in order to build the core ossim library
     libtiff-devel (preferably version 4.x for BigTIFF support)
     OpenThreads-devel
     libjpeg-devel
-    libgeos-devel
+    libgeos-devel (on later Debian / Ubuntu versions, libgeos++-dev)
 
 Plugins will require additional 3rd-party packages.
 
@@ -107,7 +107,7 @@ For convenience, you can specify "eclipse" as the build-type to the script at `o
 
 The first check of a successful build is to run the ossim command line utility `ossim-cli --version`. You should get the current version output to the console. More on the `ossim-cli` command below.
 
-Testing is generally divided into unit, functional, and integration tests. At the moment, true unit testing in OSSIM is very limited, and likely to stay that way. There is however a _de facto_ scheme in place that has been used for implementing integration and functional testing using the `ossim-batch-test` command line executable. Much of the functional testing supplied through `ossim-batch-test` configuration files is fairly fine-grained, almost to the unit-test level of granularity. This testing platform lets the developer create any level of test, from top-level integration test to individual class method test. This application spawns other OSSIM utility applications to generate results, including dedicated test utilities, which are then compared against an expected-results dataset. This command-line app reads a configuration file that specifies a test or series of tests to run and possibly compare against expected results. There is an option to accept current results as the new expected results. While not explicitely required, the majority of testing done with `ossim-batch-test` will involve input source data, typically imagery, that the tester must preinstall on the target machine. The expected results will also need to be generated and its location specified on the command line. See the usage for `ossim-batch-test` for more detail.
+Testing is generally divided into unit, functional, and integration tests. At the moment, true unit testing in OSSIM is very limited, and likely to stay that way. There is however a _de facto_ scheme in place that has been used for implementing integration and functional testing using the `ossim-batch-test` command line executable. Much of the functional testing supplied through `ossim-batch-test` configuration files is fairly fine-grained, almost to the unit-test level of granularity. This testing platform lets the developer create any level of test, from top-level integration test to individual class method test. This application spawns other OSSIM utility applications to generate results, including dedicated test utilities, which are then compared against an expected-results dataset. This command-line app reads a configuration file that specifies a test or series of tests to run and possibly compare against expected results. There is an option to accept current results as the new expected results. While not explicitly required, the majority of testing done with `ossim-batch-test` will involve input source data, typically imagery, that the tester must preinstall on the target machine. The expected results will also need to be generated and its location specified on the command line. See the usage for `ossim-batch-test` for more detail.
 
 A rudimentary test suite is encapsulated in this [test script (linux version)](/scripts/test.sh). It defines the locations of the input source data and expected results, and runs the command-line test applications. 
 
@@ -143,4 +143,4 @@ For example, to get projection and image information for an image file, use
 
  `ossim-cli info -p -i <image-filename>`
 
-You can also give a keyword list file as the only arg. The KWL must contain the keyword "tool" with one of the supported commands above, along with the keywords expected by that utility. You can even get KWL templates or enter the keyword/values interactively.
+You can also give a keyword list (KWL) file as the only arg. The KWL must contain the keyword "tool" with one of the supported commands above, along with the keywords expected by that utility. You can even get KWL templates or enter the keyword/values interactively.
