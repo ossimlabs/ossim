@@ -22,6 +22,7 @@
 #include <ossim/imaging/ossimEdgeFilter.h>
 #include <ossim/imaging/ossimImageGaussianFilter.h>
 #include <ossim/imaging/ossimErosionFilter.h>
+#include <ossim/imaging/ossimKMeansFilter.h>
 #include <ossim/util/ossimShorelineUtil.h>
 #include <ossim/util/ossimUtilityRegistry.h>
 #include <fstream>
@@ -45,7 +46,7 @@ ossimShorelineUtil::ossimShorelineUtil()
      m_marginalValue (128),
      m_landValue (255),
      m_sensor ("ls8"),
-     m_threshold (0.5),
+     m_threshold (-1.0), // Flags auto-thresholding
      m_tolerance(0.0),
      m_algorithm(NDWI),
      m_skipThreshold(false),
@@ -90,7 +91,8 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
          "indicates no smoothing.");
    au->addCommandLineOption("--threshold <0.0-1.0>",
          "Normalized threshold for converting the image to bitmap. Defaults to 0.55. Alternatively "
-         "can be set to 'X' to skip thresholding operation.");
+         "can be set to 'X' to skip thresholding operation. If none specified, an optimized threshold"
+         " is computed.");
    au->addCommandLineOption("--tolerance <float>",
          "tolerance +- deviation from threshold for marginal classifications. Defaults to 0.01.");
 }
@@ -252,55 +254,74 @@ void ossimShorelineUtil::initProcessingChain()
       throw ossimException(xmsg.str());
    }
 
-   if (!m_skipThreshold)
-   {
-      // Set up threshold filter:
-      double del = FLT_EPSILON;
-      ossimString landValue = ossimString::toString(m_landValue).chars();
-      ossimString waterValue = ossimString::toString(m_waterValue).chars();
-      ossimString marginalValue = ossimString::toString(m_marginalValue).chars();
-      ossimString thresholdValueLo1 = ossimString::toString(m_threshold-m_tolerance).chars();
-      ossimString thresholdValueLo2 = ossimString::toString(m_threshold-m_tolerance+del).chars();
-      ossimString thresholdValueHi1 = ossimString::toString(m_threshold+m_tolerance).chars();
-      ossimString thresholdValueHi2 = ossimString::toString(m_threshold+m_tolerance+del).chars();
-      ossimKeywordlist remapper_kwl;
-      remapper_kwl.add("type", "ossimBandLutFilter");
-      remapper_kwl.add("enabled", "1");
-      remapper_kwl.add("mode", "interpolated");
-      remapper_kwl.add("scalar_type", "U8");
-      remapper_kwl.add("entry0.in", "0.0");
-      remapper_kwl.add("entry0.out", landValue.chars());
-      remapper_kwl.add("entry1.in", thresholdValueLo1.chars());
-      remapper_kwl.add("entry1.out", landValue.chars());
-      if (m_tolerance == 0)
-      {
-         remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
-         remapper_kwl.add("entry2.out", waterValue.chars());
-         remapper_kwl.add("entry3.in", "1.0");
-         remapper_kwl.add("entry3.out", waterValue.chars());
-      }
-      else
-      {
-         remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
-         remapper_kwl.add("entry2.out", marginalValue.chars());
-         remapper_kwl.add("entry3.in", thresholdValueHi1.chars());
-         remapper_kwl.add("entry3.out", marginalValue.chars());
-         remapper_kwl.add("entry4.in", thresholdValueHi2.chars());
-         remapper_kwl.add("entry4.out", waterValue.chars());
-         remapper_kwl.add("entry5.in", "1.0");
-         remapper_kwl.add("entry5.out", waterValue.chars());
-      }
-      ossimRefPtr<ossimBandLutFilter> remapper = new ossimBandLutFilter;
-      remapper->loadState(remapper_kwl);
-      m_procChain->add(remapper.get());
-   }
-
    if (m_smoothing > 0)
    {
       // Set up gaussian filter:
       ossimRefPtr<ossimImageGaussianFilter> smoother = new ossimImageGaussianFilter;
       smoother->setGaussStd(m_smoothing);
       m_procChain->add(smoother.get());
+   }
+
+   //bool status = ossimChipProcUtil::execute(); // TODO: REMOVE
+
+   if (!m_skipThreshold)
+   {
+      // Can be either user specified threshold or autothreshold:
+      if (m_threshold > 0)
+      {
+         // Set up threshold filter using a simple LUT remapper:
+         double del = FLT_EPSILON;
+         ossimString landValue = ossimString::toString(m_landValue).chars();
+         ossimString waterValue = ossimString::toString(m_waterValue).chars();
+         ossimString marginalValue = ossimString::toString(m_marginalValue).chars();
+         ossimString thresholdValueLo1 = ossimString::toString(m_threshold-m_tolerance).chars();
+         ossimString thresholdValueLo2 = ossimString::toString(m_threshold-m_tolerance+del).chars();
+         ossimString thresholdValueHi1 = ossimString::toString(m_threshold+m_tolerance).chars();
+         ossimString thresholdValueHi2 = ossimString::toString(m_threshold+m_tolerance+del).chars();
+         ossimKeywordlist remapper_kwl;
+         remapper_kwl.add("type", "ossimBandLutFilter");
+         remapper_kwl.add("enabled", "1");
+         remapper_kwl.add("mode", "interpolated");
+         remapper_kwl.add("scalar_type", "U8");
+         remapper_kwl.add("entry0.in", "0.0");
+         remapper_kwl.add("entry0.out", landValue.chars());
+         remapper_kwl.add("entry1.in", thresholdValueLo1.chars());
+         remapper_kwl.add("entry1.out", landValue.chars());
+         if (m_tolerance == 0)
+         {
+            remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
+            remapper_kwl.add("entry2.out", waterValue.chars());
+            remapper_kwl.add("entry3.in", "1.0");
+            remapper_kwl.add("entry3.out", waterValue.chars());
+         }
+         else
+         {
+            remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
+            remapper_kwl.add("entry2.out", marginalValue.chars());
+            remapper_kwl.add("entry3.in", thresholdValueHi1.chars());
+            remapper_kwl.add("entry3.out", marginalValue.chars());
+            remapper_kwl.add("entry4.in", thresholdValueHi2.chars());
+            remapper_kwl.add("entry4.out", waterValue.chars());
+            remapper_kwl.add("entry5.in", "1.0");
+            remapper_kwl.add("entry5.out", waterValue.chars());
+         }
+         ossimRefPtr<ossimBandLutFilter> remapper = new ossimBandLutFilter;
+         remapper->loadState(remapper_kwl);
+         m_procChain->add(remapper.get());
+      }
+      else
+      {
+         // No threshold specified so do auto-thresholding:
+         ossimRefPtr<ossimKMeansFilter> kmeansFilter =
+               new ossimKMeansFilter(m_procChain->getFirstSource());
+         ossim_uint32* dns = new ossim_uint32 [2];
+         dns[0] = m_landValue;
+         dns[1] = m_waterValue;
+         kmeansFilter->setGroupPixelValues(dns, 2);
+         delete dns;
+         kmeansFilter->setVerbose();
+         m_procChain->add(kmeansFilter.get());
+      }
    }
 
    if (m_doEdgeDetect)
@@ -344,7 +365,7 @@ void ossimShorelineUtil::initLandsat8()
    for (ossim_uint32 i=0; i<reqdNumInputs; ++i)
       connectable_list.push_back(m_imgLayers[i].get());
    ossimRefPtr<ossimEquationCombiner> eqFilter = new ossimEquationCombiner(connectable_list);
-   eqFilter->setOutputScalarType(OSSIM_FLOAT);
+   eqFilter->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
    eqFilter->setEquation(equationSpec);
    m_procChain->add(eqFilter.get());
 

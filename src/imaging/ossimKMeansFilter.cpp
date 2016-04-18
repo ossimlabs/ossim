@@ -77,8 +77,8 @@ ossimRefPtr<ossimImageData> ossimKMeansFilter::getTile(const ossimIrect& tileRec
          return 0;
    }
 
-   ossimRefPtr<ossimImageData> tile = theInputConnection->getTile(tileRect, resLevel);
-   if (!tile || !tile->getBuf())
+   ossimRefPtr<ossimImageData> inTile = theInputConnection->getTile(tileRect, resLevel);
+   if (!inTile || !inTile->getBuf())
       return 0;
    if(!m_tile)
    {
@@ -91,7 +91,7 @@ ossimRefPtr<ossimImageData> ossimKMeansFilter::getTile(const ossimIrect& tileRec
    m_tile->makeBlank();
 
    // Quick handling special case of empty input tile:
-   if (tile->getDataObjectStatus() == OSSIM_EMPTY)
+   if (inTile->getDataObjectStatus() == OSSIM_EMPTY)
       return m_tile;
 
    ossim_uint8* outBuf; // TODO: Only K < 256 is currently supported
@@ -104,11 +104,11 @@ ossimRefPtr<ossimImageData> ossimKMeansFilter::getTile(const ossimIrect& tileRec
       outBuf = (ossim_uint8*)(m_tile->getBuf(band));
 
       ClassificationGroup* group = m_classGroups[band]; // for shorthand referencing of groups
-      for (ipt.y=tileRect.ul().y; ipt.y<tileRect.lr().y; ++ipt.y)
+      for (ipt.y=tileRect.ul().y; ipt.y<=tileRect.lr().y; ++ipt.y)
       {
-         for (ipt.x=tileRect.ul().x; ipt.x<tileRect.lr().x; ++ipt.x)
+         for (ipt.x=tileRect.ul().x; ipt.x<=tileRect.lr().x; ++ipt.x)
          {
-            pixel = tile->getPix(ipt, band);
+            pixel = inTile->getPix(ipt, band);
             if (pixel != null_pixel)
             {
                // Determine its group and remap it using the group's DN:
@@ -132,8 +132,32 @@ ossimRefPtr<ossimImageData> ossimKMeansFilter::getTile(const ossimIrect& tileRec
 
 void ossimKMeansFilter::allocate()
 {
-   if(!theInputConnection) return;
+   if(!theInputConnection)
+      return;
 
+   m_tile = ossimImageDataFactory::instance()->create(this, getNumberOfInputBands(), this);
+   if(!m_tile.valid())
+      return;
+
+   if (m_numGroups && m_classGroups)
+   {
+      for (ossim_uint32 band=0; band<m_numBands; band++)
+      {
+         double min = m_classGroups[band][0].min;
+         double max = m_classGroups[band][0].max;
+
+         for (ossim_uint32 group=1; group<m_numGroups; group++)
+         {
+            if (m_classGroups[band][group].min < min)
+               min = m_classGroups[band][group].min;
+            if (m_classGroups[band][group].max > max)
+               max = m_classGroups[band][group].max;
+         }
+         m_tile->setMinPix(min, band);
+         m_tile->setMaxPix(max, band);
+      }
+   }
+   m_tile->initialize();
 }
 
 void ossimKMeansFilter::initialize()
@@ -145,28 +169,15 @@ void ossimKMeansFilter::initialize()
    if ( !theInputConnection || (m_numGroups == 0))
       return;
 
-   // Initialize the chain on the left hand side of us.
-   theInputConnection->initialize();
-
    // If an input histogram was provided, use it. Otherwise compute one:
    if (!m_histogram.valid())
    {
-      double min = theInputConnection->getMinPixelValue();
-      double max = theInputConnection->getMaxPixelValue();
       ossimRefPtr<ossimImageHistogramSource> histoSource = new ossimImageHistogramSource;
       histoSource->connectMyInputTo(theInputConnection);
       histoSource->setComputationMode(OSSIM_HISTO_MODE_FAST);
       histoSource->setMaxNumberOfRLevels(1);
-      histoSource->enableSource();
-      histoSource->initialize();
-      if (histoSource->execute())
-      {
-         m_histogram = histoSource->getHistogram()->getMultiBandHistogram(0);
-         ossimRefPtr<ossimHistogramWriter> writer = new ossimHistogramWriter;
-         writer->connectMyInputTo(0, histoSource.get());
-         writer->setFilename("debugXXX.his");
-         writer->execute();
-      }
+      histoSource->execute();
+      m_histogram = histoSource->getHistogram()->getMultiBandHistogram(0);
    }
 
    if (m_histogram.valid())
@@ -176,9 +187,6 @@ void ossimKMeansFilter::initialize()
          ossimRefPtr<ossimHistogram> h = m_histogram->getHistogram(band);
          m_minPixelValue.push_back(h->GetMinVal());
          m_maxPixelValue.push_back(h->GetMaxVal());
-         ostringstream fname;
-         fname<<"band"<<band<<".dat"<<ends;
-         h->WritePlot(fname.str().c_str());
       }
    }
 
@@ -427,21 +435,19 @@ bool ossimKMeansFilter::computeKMeans(ossimHistogram* histogram, ossim_uint32 ba
          else if (val[i] > group[best_gid].max)
             group[best_gid].max = val[i];
 
-         // Determined best group given current means. Update the running mean for this group
-         // to reflect sample:
-         n = group[best_gid].n;
-         np = n + (ossim_uint32) pop[i];
-         if (n == 0)
-            group[best_gid].new_mean = val[i];
-         else
-            group[best_gid].new_mean = (group[best_gid].new_mean*n + pop[i]*val[i])/np;
-         group[best_gid].n = np;
+         // Accumulate sample for the new mean for this group:
+         group[best_gid].n += pop[i];
+         group[best_gid].new_mean += pop[i]*val[i];
 
       } // End loop over bins
 
       // Finished processing all input pixels for this iteration. Update the means:
       for (ossim_uint32 gid=0; gid<m_numGroups; ++gid)
       {
+         // Compute new mean from accumulation:
+         if (group[gid].n)
+            group[gid].new_mean /= group[gid].n;
+
          if (fabs(group[gid].mean - group[gid].new_mean) > 0.01 )
             converged = false;
 
@@ -456,8 +462,9 @@ bool ossimKMeansFilter::computeKMeans(ossimHistogram* histogram, ossim_uint32 ba
          group[gid].n = 0;
          group[gid].new_mean = 0;
       }
-
    } // End overall loop for convergence:
+
+   return true;
 }
 
 void ossimKMeansFilter::clear()
