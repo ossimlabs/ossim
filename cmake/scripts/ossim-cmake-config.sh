@@ -169,6 +169,7 @@ if [ -z $BUILD_WEB_PLUGIN ]; then
   BUILD_WEB_PLUGIN=OFF
 fi
 
+echo "******************BUILD_WEB_PLUGIN=======${BUILD_WEB_PLUGIN}"
 echo "Generating Makefiles in" $OSSIM_BUILD_DIR
 
 # CMAKE command 
