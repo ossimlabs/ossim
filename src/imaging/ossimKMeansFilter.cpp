@@ -170,6 +170,7 @@ void ossimKMeansFilter::initialize()
       return;
 
    // If an input histogram was provided, use it. Otherwise compute one:
+   m_numBands = getNumberOfInputBands();
    if (!m_histogram.valid())
    {
       ossimRefPtr<ossimImageHistogramSource> histoSource = new ossimImageHistogramSource;
@@ -263,7 +264,7 @@ bool ossimKMeansFilter::computeKMeans()
       }
       else
       {
-         cout<<"No K-Means clustering available."<<endl;
+         cout<<"ossimKMeansFilter:"<<__LINE__<<" No K-means clustering data available."<<endl;
       }
    }
 
@@ -359,9 +360,12 @@ bool ossimKMeansFilter::computeKMeans(ossimImageSourceSequencer* sequencer, ossi
          if (fabs(group[gid].mean - group[gid].new_mean) > 0.1 )
             converged = false;
 
-         cout<<"group["<<gid<<"].mean     = "<<group[gid].mean<<endl;
-         cout<<"group["<<gid<<"].new_mean = "<<group[gid].new_mean<<endl;
-         cout<<"group["<<gid<<"].n        = "<<group[gid].n<<endl;
+         if (m_verbose)
+         {
+            cout<<"group["<<gid<<"].mean     = "<<group[gid].mean<<endl;
+            cout<<"group["<<gid<<"].new_mean = "<<group[gid].new_mean<<endl;
+            cout<<"group["<<gid<<"].n        = "<<group[gid].n<<endl;
+         }
          if (group[gid].n)
             group[gid].mean = group[gid].new_mean;
          group[gid].n = 0;
@@ -378,6 +382,7 @@ bool ossimKMeansFilter::computeKMeans(ossimHistogram* histogram, ossim_uint32 ba
    int numBins = histogram->GetRes();
    const float* val = histogram->GetVals();
    const float* pop = histogram->GetCounts();
+   const double half_bucket = 0.5 * histogram->GetBucketSize();
 
    //Initialize groups with even spread and initial means:
    ClassificationGroup* group = m_classGroups[band]; // for shorthand referencing of groups
@@ -436,9 +441,9 @@ bool ossimKMeansFilter::computeKMeans(ossimHistogram* histogram, ossim_uint32 ba
 
          // Possible update of min/max for current group:
          if (val[i] < group[best_gid].min)
-            group[best_gid].min = val[i];
+            group[best_gid].min = val[i] - half_bucket;
          else if (val[i] > group[best_gid].max)
-            group[best_gid].max = val[i];
+            group[best_gid].max = val[i] + half_bucket;
 
          // Accumulate sample for the new mean for this group:
          group[best_gid].n += pop[i];
@@ -504,7 +509,6 @@ void ossimKMeansFilter::setNumGroups(ossim_uint32 K)
 
    // Allocate the group array and run classifier on each band:
    m_numGroups = K;
-   m_numBands = getNumberOfInputBands();
    if (m_numBands == 0)
       return;
 
@@ -517,7 +521,7 @@ void ossimKMeansFilter::setNumGroups(ossim_uint32 K)
          m_classGroups[band][gid].dn = gid + 1; // Initialize to default remap values
    }
 
-   m_initLevel = 2;
+   m_initLevel = 1;
 }
 
 void ossimKMeansFilter::setGroupPixelValues(const ossim_uint32* dns, ossim_uint32 K)
