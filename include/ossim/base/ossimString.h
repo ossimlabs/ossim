@@ -55,6 +55,9 @@ public:
    /** @brief destructor */
    ~ossimString(){}
 
+   bool contains(char aChar) const
+   { return m_str.find(aChar)!=std::string::npos; }
+
    bool contains(const ossimString& aString) const
    { return m_str.find(aString.m_str)!=std::string::npos; }
 
