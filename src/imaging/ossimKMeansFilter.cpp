@@ -166,7 +166,7 @@ void ossimKMeansFilter::initialize()
    ossimImageSourceFilter::initialize();
    m_tile = 0;
 
-   if ( !theInputConnection || (m_numGroups == 0))
+   if ( !theInputConnection )
       return;
 
    // If an input histogram was provided, use it. Otherwise compute one:
@@ -196,6 +196,11 @@ void ossimKMeansFilter::initialize()
 bool ossimKMeansFilter::computeKMeans()
 {
    ostringstream xmsg;
+   if (m_numGroups == 0)
+   {
+      xmsg<<"ossimKMeansFilter:"<<__LINE__<<"  Number of groups has not been initialized!";
+      throw ossimException(xmsg.str());
+   }
 
    if (m_initLevel < 1)
       initialize();
@@ -451,12 +456,15 @@ bool ossimKMeansFilter::computeKMeans(ossimHistogram* histogram, ossim_uint32 ba
          if (fabs(group[gid].mean - group[gid].new_mean) > 0.01 )
             converged = false;
 
-         cout<<"group["<<gid<<"].mean     = "<<group[gid].mean<<endl;
-         cout<<"group["<<gid<<"].new_mean = "<<group[gid].new_mean<<endl;
-         cout<<"group["<<gid<<"].n        = "<<group[gid].n<<endl;
-         cout<<"group["<<gid<<"].min      = "<<group[gid].min<<endl;
-         cout<<"group["<<gid<<"].max      = "<<group[gid].max<<endl;
-         cout << endl;
+         if (m_verbose)
+         {
+            cout<<"group["<<gid<<"].mean     = "<<group[gid].mean<<endl;
+            cout<<"group["<<gid<<"].new_mean = "<<group[gid].new_mean<<endl;
+            cout<<"group["<<gid<<"].n        = "<<group[gid].n<<endl;
+            cout<<"group["<<gid<<"].min      = "<<group[gid].min<<endl;
+            cout<<"group["<<gid<<"].max      = "<<group[gid].max<<endl;
+            cout << endl;
+         }
          if (group[gid].n)
             group[gid].mean = group[gid].new_mean;
          group[gid].n = 0;
@@ -491,13 +499,15 @@ void ossimKMeansFilter::setNumGroups(ossim_uint32 K)
    }
    clear();
 
+   if (m_initLevel < 1)
+      initialize();
+
    // Allocate the group array and run classifier on each band:
-   ossimImageSourceFilter::initialize();
+   m_numGroups = K;
    m_numBands = getNumberOfInputBands();
    if (m_numBands == 0)
       return;
 
-   m_numGroups = K;
    m_classGroups = new ClassificationGroup* [m_numBands];
    bool kosher = true;
    for (ossim_uint32 band=0; (band<m_numBands) && kosher; band++)
@@ -507,7 +517,7 @@ void ossimKMeansFilter::setNumGroups(ossim_uint32 K)
          m_classGroups[band][gid].dn = gid + 1; // Initialize to default remap values
    }
 
-   m_initLevel = 1;
+   m_initLevel = 2;
 }
 
 void ossimKMeansFilter::setGroupPixelValues(const ossim_uint32* dns, ossim_uint32 K)
