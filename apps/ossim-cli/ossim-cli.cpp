@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
       ossimRefPtr<ossimUtility> utility = 0;
       ossimString toolName;
       ossimKeywordlist kwl;
-      char input[256];
+      char input[4096];
       bool usingCmdLineMode = false;
 
       if ((argc > 1) && (ossimString(argv[1]).contains("help")))
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
          cout << "\nUsages: "<<endl;
          cout << "    "<<argv[0]<<" <command> [command options and parameters]"<<endl;
          cout << "    "<<argv[0]<<" --version"<<endl;
-         cout << "    "<<argv[0]<<"  (with no args, displays capabilities)\n"<<endl;
+         cout << "    "<<argv[0]<<"  (with no args, displays command descriptions)\n"<<endl;
          exit (0);
       }
 
@@ -66,7 +66,8 @@ int main(int argc, char *argv[])
          {
             // The tool name was explicitely provided on command line:
             toolName = argv[1];
-            usingCmdLineMode = true;
+            if (argc > 2)
+               usingCmdLineMode = true;
             ap.remove(0);
          }
       }
@@ -77,14 +78,14 @@ int main(int argc, char *argv[])
          if (toolName.empty())
          {
             map<string, string>::iterator iter = capabilities.begin();
-            cout<<"\nCapabilities:"<<endl;
+            cout<<"\n\nAvailable commands:"<<endl;
             for (;iter != capabilities.end(); ++iter)
                cout<<"  "<<iter->first<<" -- "<<iter->second<<endl;
 
             // Query for operation:
-            cout << "\nEnter utility class ('x' to exit): ";
+            cout << "\nossim> ";
             cin.getline(input, 256);
-            if (input[0] == 'x')
+            if (input[0] == 'q')
                break;
             toolName = input;
          }
@@ -93,8 +94,8 @@ int main(int argc, char *argv[])
          ossimRefPtr<ossimUtility> utility = factory->createUtility(toolName);
          if (!utility.valid())
          {
-            cout << "\nCould not create utility <"<<toolName<<">"<<endl;
-            break;
+            cout << "\nDid not understand <"<<toolName<<">"<<endl;
+            continue;
          }
 
          if (usingCmdLineMode)
@@ -102,17 +103,48 @@ int main(int argc, char *argv[])
             // Check if user provided options along with tool name:
             // Init utility with command line
             if (!utility->initialize(ap))
+            {
+               cout << "\nCould not execute command with options provided."<<endl;
+            }
+            if (!utility->execute())
+            {
+               cout << "\nAn error was encountered executing the command. Check options."<<endl;
+            }
+            continue;
+         }
+
+         if (utility.valid() && !toolName.empty())
+         {
+            // Have toolname but no command line options:
+            cout << "\nEnter command arguments/options or return for usage. "<<endl;
+            cout << "\nossim> ";
+            cin.getline(input, 4096);
+            if (input[0] == 'q')
                break;
+
+            // Create the command line with either "help" or inputs:
+            ossimString cmdLine (toolName);
+            cmdLine += " ";
+            if (input[0] == '\0')
+               cmdLine += "--help";
+            else
+               cmdLine += input;
+
+            // Run command:
+            ossimArgumentParser tap (cmdLine);
+            utility->initialize(tap);
+            if (cmdLine.contains("--help"))
+               continue;
             utility->execute();
             break;
          }
-
          if (kwl.getSize() == 0)
          {
+            //
             // Query for config filename:
             ossimKeywordlist kwl;
             cout << "\nEnter config file name or <return> for template: " << ends;
-            cin.getline(input, 256);
+            cin.getline(input, 4096);
             if (input[0] && !kwl.addFile(input))
             {
                cout<<"\nCould not load config file at <"<<input<<">"<<endl;
@@ -138,7 +170,7 @@ int main(int argc, char *argv[])
          do
          {
             cout << "Enter \"<keyword>: <value>\" with colon separator (or 'x' to finish): ";
-            cin.getline(input, 256);
+            cin.getline(input, 4096);
             if (input[0] == 'x' || (!kwl.parseString(string(input))))
                break;
          } while (1);
@@ -150,11 +182,11 @@ int main(int argc, char *argv[])
          cout << "\nUtility final specification: "<<endl;
          cout << kwl << endl;
 
-         // Query go-aheadPerform operation:
+         // Query go-ahead. Perform operation:
          while (1)
          {
             cout << "Perform operation? [y|n]: ";
-            cin.getline(input, 256);
+            cin.getline(input, 4096);
             if (input[0] == 'n')
                break;
             else if (input[0] == 'y')
@@ -165,7 +197,7 @@ int main(int argc, char *argv[])
             }
          }
 
-      } while (false);
+      } while (true);
    }
    catch  (const ossimException& e)
    {

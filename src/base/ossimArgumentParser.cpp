@@ -169,14 +169,44 @@ bool ossimArgumentParser::ossimParameter::assign(const char* str)
 ossimArgumentParser::ossimArgumentParser(int* argc,char **argv):
    theArgc(argc),
    theArgv(argv),
-   theUsage(ossimApplicationUsage::instance())
+   theUsage(ossimApplicationUsage::instance()),
+   theMemAllocated(false)
 {
    if (theArgc)
       theUsage->setApplicationName(argv[0]);
 }
 
+ossimArgumentParser::ossimArgumentParser(const ossimString& commandLine):
+   theArgc(new int),
+   theArgv(0),
+   theUsage(ossimApplicationUsage::instance()),
+   theMemAllocated(true)
+{
+   vector<ossimString> args = commandLine.split(" ", true);
+   *theArgc = args.size();
+   if (theArgc > 0)
+   {
+      theArgv = new char* [*theArgc];
+      for (size_t i=0; i<args.size(); i++)
+      {
+         size_t n = args[i].size();
+         theArgv[i] = new char [n+1];
+         strncpy(theArgv[i], args[i].chars(), n);
+         theArgv[i][n] = '\0';
+      }
+      theUsage->setApplicationName(theArgv[0]);
+   }
+}
+
 ossimArgumentParser::~ossimArgumentParser()
 {
+   if (theMemAllocated)
+   {
+      for (int i=0; i<*theArgc; ++i)
+         delete theArgv[i];
+      delete [] theArgv;
+      delete theArgc;
+   }
 }
 
 void ossimArgumentParser::initialize(int* argc, const char **argv)
