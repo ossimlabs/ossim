@@ -34,7 +34,8 @@ public:
 
    ossimDpt(double anX, double aY) : x(anX), y(aY) {}
          
-   ossimDpt(const ossimDpt& pt) : x(pt.x), y(pt.y) {}
+   // trust the default generated copy-constructor
+   // ossimDpt(const ossimDpt& pt) : x(pt.x), y(pt.y) {}
 
    ossimDpt(const ossimFpt& pt);
    
@@ -44,7 +45,8 @@ public:
 
    ossimDpt(const ossimGpt &pt); // assigns lat, lon only
 
-   const ossimDpt& operator=(const ossimDpt&);
+   // trust the default generated copy-constructor
+   // const ossimDpt& operator=(const ossimDpt&);
 
    const ossimDpt& operator=(const ossimFpt&);
    
@@ -158,6 +160,8 @@ public:
 
 };
 
+#if 0
+// trust the default generated copy assignment operator
 inline const ossimDpt& ossimDpt::operator=(const ossimDpt& pt)
 {
    if (this != &pt)
@@ -165,8 +169,9 @@ inline const ossimDpt& ossimDpt::operator=(const ossimDpt& pt)
       x = pt.x;
       y = pt.y;
    }
-   
+
    return *this;
 }
+#endif
 
 #endif /* #ifndef ossimDpt_HEADER */
