@@ -20,7 +20,7 @@
 #include <ossim/base/ossimTrace.h>
 
 static ossimTrace traceDebug("ossimXmlNode:debug");
-static const ossimString XPATH_DELIM ("/");
+static const char XPATH_DELIM ('/');
 
 RTTI_DEF2(ossimXmlNode, "ossimXmlNode", ossimObject, ossimErrorStatusInterface);
 
@@ -123,7 +123,7 @@ bool ossimXmlNode::read(std::istream& in)
    if(traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "ossimXmlNode::read: entered ......" << std::endl;
+         << "ossimXmlNode::read: entered ......\n";
    }
    char c;
    xmlskipws(in);
@@ -368,85 +368,79 @@ void ossimXmlNode::findChildNodes(const ossimString& xpath,
    if (theChildNodes.size() == 0)
       return;
    
-   //***
-   // Make a copy to manipulate:
-   //***
-   ossimString rel_xpath (xpath);
-   if (rel_xpath.empty())
+   if (xpath.empty())
       return;
    
    //---
    // First verify that this is not an absolute path:
    //---
-   if (rel_xpath[static_cast<std::string::size_type>(0)] ==
-       XPATH_DELIM[static_cast<std::string::size_type>(0)])
+   if (xpath[static_cast<std::string::size_type>(0)] == XPATH_DELIM)
    {
       if(traceDebug())
       {
          ossimNotify(ossimNotifyLevel_WARN)
             << "WARNING: ossimXmlNode::findChildNodes\n"
             << "Only relative XPaths can be searched from a node. "
-             << "Returning null list...\n";
-         }
+            << "Returning null list...\n";
+      }
       return;
    }
    
    //***
    // Read the desired tag from the relative xpath
    //***
-   ossimString desired_tag (rel_xpath);
-   if (rel_xpath.contains(XPATH_DELIM))
-      desired_tag = rel_xpath.before(XPATH_DELIM);
-   ossimString sub_xpath (rel_xpath.after(XPATH_DELIM));
-   
+   const std::string::size_type delim_pos = xpath.find(XPATH_DELIM);
+   // TODO: need string_view
+   const ossimString desired_tag = xpath.substr(0,delim_pos);
+
    //***
    // Loop over all child nodes for match:
    //***
    ossimXmlNode::ChildListType::const_iterator child_iter = theChildNodes.begin();
-   while(child_iter != theChildNodes.end())
+   ossimXmlNode::ChildListType::const_iterator child_end  = theChildNodes.end();
+   
+   if (delim_pos==std::string::npos) // No XPATH_DELIM character found
    {
-      if ((*child_iter)->getTag() == desired_tag)
-      {
-         if (sub_xpath.empty())
-         {
-            //***
-            // This was the final target node, simply append to the result:
-            //***
-            result.push_back(*child_iter);
-         }
-         else
-         {
-            //***
-            // This match identifies a possible tree to search given the
-            // remaining xpath (sub_xpath). Query this child node to search
-            // its tree for the remaining xpath:
-            //***
-            (*child_iter)->findChildNodes(sub_xpath, result);
-         }
-      }
-      
-      //***
-      // Proceed to next child:
-      //***
-      child_iter++;
+       for ( ; child_iter != child_end ; ++ child_iter)
+       {
+           if ((*child_iter)->getTag() == desired_tag)
+               //***
+               // This was the final target node, simply append to the result:
+               //***
+               result.push_back(*child_iter);
+       }
+   }
+   else
+   {
+       const ossimString sub_xpath   = xpath.substr(delim_pos+1, std::string::npos);
+       for ( ; child_iter != child_end ; ++ child_iter)
+       {
+           if ((*child_iter)->getTag() == desired_tag)
+               //***
+               // This match identifies a possible tree to search given the
+               // remaining xpath (sub_xpath). Query this child node to search
+               // its tree for the remaining xpath:
+               //***
+               (*child_iter)->findChildNodes(sub_xpath, result);
+       }
    }
 }
 
-const ossimRefPtr<ossimXmlNode> ossimXmlNode::findFirstNode(const ossimString& xpath)const
+namespace {// Anonymous namespace
+   ossimRefPtr<ossimXmlNode> const nullNode(0);
+}// Anonymous namespace
+
+
+const ossimRefPtr<ossimXmlNode>& ossimXmlNode::findFirstNode(const ossimString& xpath)const
 {
-   if(theChildNodes.size() < 1) return 0;
-   //
-   // Make a copy to manipulate:
-   //
-   ossimString rel_xpath (xpath);
-   if (rel_xpath.empty())
-      return 0;
+   if(theChildNodes.size() < 1) return nullNode;
+   if (xpath.empty())
+      return nullNode;
    
    //
    // First verify that this is not an absolute path:
    //
-   if (rel_xpath[static_cast<std::string::size_type>(0)] ==
-       XPATH_DELIM[static_cast<std::string::size_type>(0)])
+   if (xpath[static_cast<std::string::size_type>(0)] == XPATH_DELIM)
    {
       if(traceDebug())
       {
@@ -454,7 +448,6 @@ const ossimRefPtr<ossimXmlNode> ossimXmlNode::findFirstNode(const ossimString& x
          << "WARNING: ossimXmlNode::findChildNodes\n"
          << "Only relative XPaths can be searched from a node. "
          << "Returning null list...\n";
-
       }
       return 0;
    }
@@ -462,113 +455,106 @@ const ossimRefPtr<ossimXmlNode> ossimXmlNode::findFirstNode(const ossimString& x
    //
    // Read the desired tag from the relative xpath
    //
-   ossimString desired_tag (rel_xpath);
-   if (rel_xpath.contains(XPATH_DELIM))
-      desired_tag = rel_xpath.before(XPATH_DELIM);
-   ossimString sub_xpath (rel_xpath.after(XPATH_DELIM));
-   
-   ossimRefPtr<ossimXmlNode> result = 0;
-   
+   const std::string::size_type delim_pos = xpath.find(XPATH_DELIM);
+   // TODO: need string_view
+   const ossimString desired_tag = xpath.substr(0,delim_pos);
+
    //
    // Loop over all child nodes for match:
    //
    ossimXmlNode::ChildListType::const_iterator child_iter = theChildNodes.begin();
-   while((child_iter != theChildNodes.end())&&
-         (!result.valid()))
+   ossimXmlNode::ChildListType::const_iterator child_end  = theChildNodes.end();
+   
+   if (delim_pos==std::string::npos) // No XPATH_DELIM character found
    {
-      if ((*child_iter)->getTag() == desired_tag)
-      {
-         if (sub_xpath.empty())
-         {
-            return *child_iter;
-         }
-         else
-         {
-            //
-            // This match identifies a possible tree to search given the
-            // remaining xpath (sub_xpath). Query this child node to search
-            // its tree for the remaining xpath:
-            //
-            result = (*child_iter)->findFirstNode(sub_xpath);
-         }
-      }
-      
-      //
-      // Proceed to next child:
-      //
-      ++child_iter;
+       for ( ; child_iter != child_end ; ++ child_iter)
+       {
+           if ((*child_iter)->getTag() == desired_tag)
+               return *child_iter;
+       }
+   }
+   else
+   {
+       const ossimString sub_xpath   = xpath.substr(delim_pos+1, std::string::npos);
+       for ( ; child_iter != child_end ; ++ child_iter)
+       {
+           if ((*child_iter)->getTag() == desired_tag)
+	   {
+	       //
+	       // This match identifies a possible tree to search given the
+	       // remaining xpath (sub_xpath). Query this child node to search
+	       // its tree for the remaining xpath:
+	       //
+               return (*child_iter)->findFirstNode(sub_xpath);
+	   }
+       }
    }
    
-   return result;
+   return nullNode;
 }
 
 ossimRefPtr<ossimXmlNode> ossimXmlNode::findFirstNode(const ossimString& xpath)
 {
-   if(theChildNodes.size() < 1) return 0;
-   //
-   // Make a copy to manipulate:
-   //
-   ossimString rel_xpath (xpath);
-   if (rel_xpath.empty())
-      return 0;
+    if(theChildNodes.size() < 1) return 0;
+    if (xpath.empty())
+	return 0;
+
+    //
+    // First verify that this is not an absolute path:
+    //
+    if (xpath[static_cast<std::string::size_type>(0)] == XPATH_DELIM)
+    {
+	if(traceDebug())
+	{
+	    ossimNotify(ossimNotifyLevel_WARN)
+		<< "WARNING: ossimXmlNode::findChildNodes\n"
+		<< "Only relative XPaths can be searched from a node. "
+		<< "Returning null list...\n";
+	}
+	return 0;
+    }
+
+    //
+    // Read the desired tag from the relative xpath
+    //
+    const std::string::size_type delim_pos = xpath.find(XPATH_DELIM);
+    // TODO: need string_view
+    const ossimString desired_tag = xpath.substr(0,delim_pos);
+
+    ossimRefPtr<ossimXmlNode> result = 0;
+
+    //
+    // Loop over all child nodes for match:
+    //
+   ossimXmlNode::ChildListType::const_iterator child_iter = theChildNodes.begin();
+   ossimXmlNode::ChildListType::const_iterator child_end  = theChildNodes.end();
    
-   //
-   // First verify that this is not an absolute path:
-   //
-   if (rel_xpath[static_cast<std::string::size_type>(0)] ==
-       XPATH_DELIM[static_cast<std::string::size_type>(0)])
+   if (delim_pos==std::string::npos) // No XPATH_DELIM character found
    {
-      if(traceDebug())
-      {
-         ossimNotify(ossimNotifyLevel_WARN)
-         << "WARNING: ossimXmlNode::findChildNodes\n"
-         << "Only relative XPaths can be searched from a node. "
-         << "Returning null list...\n";
-      }
-      return 0;
+       for ( ; child_iter != child_end ; ++ child_iter)
+       {
+           if ((*child_iter)->getTag() == desired_tag)
+               return *child_iter;
+       }
    }
-   
-   //
-   // Read the desired tag from the relative xpath
-   //
-   ossimString desired_tag (rel_xpath);
-   if (rel_xpath.contains(XPATH_DELIM))
-      desired_tag = rel_xpath.before(XPATH_DELIM);
-   ossimString sub_xpath (rel_xpath.after(XPATH_DELIM));
-   
-   ossimRefPtr<ossimXmlNode> result = 0;
-   
-   //
-   // Loop over all child nodes for match:
-   //
-   ossimXmlNode::ChildListType::iterator child_iter = theChildNodes.begin();
-   while((child_iter != theChildNodes.end())&&
-         (!result.valid()))
+   else
    {
-      if ((*child_iter)->getTag() == desired_tag)
-      {
-         if (sub_xpath.empty())
-         {
-            return *child_iter;
-         }
-         else
-         {
-            //
-            // This match identifies a possible tree to search given the
-            // remaining xpath (sub_xpath). Query this child node to search
-            // its tree for the remaining xpath:
-            //
-            result = (*child_iter)->findFirstNode(sub_xpath);
-         }
-      }
-      
-      //
-      // Proceed to next child:
-      //
-      ++child_iter;
+       const ossimString sub_xpath   = xpath.substr(delim_pos+1, std::string::npos);
+       for ( ; child_iter != child_end ; ++ child_iter)
+       {
+           if ((*child_iter)->getTag() == desired_tag)
+	   {
+	       //
+	       // This match identifies a possible tree to search given the
+	       // remaining xpath (sub_xpath). Query this child node to search
+	       // its tree for the remaining xpath:
+	       //
+               return (*child_iter)->findFirstNode(sub_xpath);
+	   }
+       }
    }
-   
-   return result;
+
+    return result;
 }
 
 ossimRefPtr<ossimXmlAttribute> ossimXmlNode::findAttribute(const ossimString& name)
@@ -604,11 +590,6 @@ const ossimRefPtr<ossimXmlAttribute> ossimXmlNode::findAttribute(const ossimStri
 void ossimXmlNode::setTag(const ossimString& tag)
 {
    theTag = tag;
-}
-
-ossimString ossimXmlNode::getTag() const
-{
-   return theTag;
 }
 
 const ossimXmlNode* ossimXmlNode::getParentNode() const
@@ -664,11 +645,6 @@ bool ossimXmlNode::getChildTextValue(ossimString& value,
 void ossimXmlNode::setText(const ossimString& text)
 {
    theText = text;
-}
-
-const ossimString& ossimXmlNode::getText() const
-{
-   return theText;
 }
 
 bool ossimXmlNode::cdataFlag()const
@@ -801,25 +777,19 @@ bool  ossimXmlNode::setAttribute(const ossimString& name,
 ossimRefPtr<ossimXmlNode> ossimXmlNode::addNode(const ossimString& relPath,
                                                 const ossimString& text)
 {
-   //
-   // Make a copy to manipulate:
-   //
-   ossimString relXpath (relPath);
-   if (relXpath.empty())
+   if (relPath.empty())
       return 0;
    
    //
    // First verify that this is not an absolute path:
    //
-   if (relXpath[static_cast<std::string::size_type>(0)] ==
-       XPATH_DELIM[static_cast<std::string::size_type>(0)])
+   if (relPath[static_cast<std::string::size_type>(0)] == XPATH_DELIM)
    {
       if(traceDebug())
       {
          ossimNotify(ossimNotifyLevel_WARN) << "WARNING: ossimXmlNode::findChildNodes\n"
          << "Only relative XPaths can be searched from a node. "
          << "Returning null list...\n";
-         
       }
       return 0;
    }
@@ -827,18 +797,14 @@ ossimRefPtr<ossimXmlNode> ossimXmlNode::addNode(const ossimString& relPath,
    //
    // Read the desired tag from the relative xpath
    //
-   ossimString desiredTag (relXpath);
-   if (relXpath.contains(XPATH_DELIM))
-   {
-      desiredTag = relXpath.before(XPATH_DELIM);
-   }
-   ossimString subPath (relXpath.after(XPATH_DELIM));
+   const std::string::size_type delim_pos = relPath.find(XPATH_DELIM);
+   const ossimString desiredTag = relPath.substr(0,delim_pos);
    
    ossimRefPtr<ossimXmlNode> node = findFirstNode(desiredTag);
    
    if(!node.valid())
    {
-      if(subPath.empty())
+      if (delim_pos==std::string::npos) // No XPATH_DELIM character found
       {
          node = addChildNode(desiredTag, text);
       }
@@ -847,8 +813,9 @@ ossimRefPtr<ossimXmlNode> ossimXmlNode::addNode(const ossimString& relPath,
          node = addChildNode(desiredTag, "");
       }
    }
-   if(!subPath.empty())
+   if (delim_pos != std::string::npos) // XPATH_DELIM character found!
    {
+      const ossimString subPath   = relPath.substr(delim_pos+1, std::string::npos);
       return node->addNode(subPath, text);
    }
    
@@ -1010,7 +977,6 @@ void ossimXmlNode::toKwl(ossimKeywordlist& kwl,
       theChildNodes[idx]->toKwl(kwl,
                                 copyPrefix);
    }
-   
 }
 
 bool ossimXmlNode::readTag(std::istream& in,
@@ -1023,7 +989,7 @@ bool ossimXmlNode::readTag(std::istream& in,
    }
    xmlskipws(in);
    
-   tag = "";
+   tag.clear();
    int c = in.peek();
    
    // bool validTag = false;
@@ -1055,7 +1021,7 @@ bool ossimXmlNode::readTag(std::istream& in,
          << "ossimXmlNode::readTag: leaving ......\n";
    }
   
-   return ((tag != "")&&(!in.fail()));
+   return (!tag.empty())&&(!in.fail());
 }
 
 bool ossimXmlNode::readCDataContent(std::istream& in)
@@ -1063,7 +1029,7 @@ bool ossimXmlNode::readCDataContent(std::istream& in)
    if(traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "ossimXmlNode::readCDataContent: entered ..." << std::endl;
+         << "ossimXmlNode::readCDataContent: entered ...\n";
    }   
    
    // Ignore up to "]]>"
@@ -1100,7 +1066,7 @@ bool ossimXmlNode::readCDataContent(std::istream& in)
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "theText: " << theText
          << "\nexit status: " << (result?"true":"false")
-         << "\nossimXmlNode::readCDataContent: leaving ..." << std::endl;
+         << "\nossimXmlNode::readCDataContent: leaving ...\n";
    }
    
    return result;
@@ -1263,7 +1229,7 @@ bool ossimXmlNode::readTextContent(std::istream& in)
    if(traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "ossimXmlNode::readTextContent: entered ..." << std::endl;
+         << "ossimXmlNode::readTextContent: entered ...\n";
    }
    
    //---
@@ -1375,7 +1341,7 @@ bool ossimXmlNode::readTextContent(std::istream& in)
          << "theText: " << theText
          << "\ntheCDataFlag: " << (theCDataFlag?"true":"false")
          << "\nexit status: " << (result?"true":"false")
-         << "\nossimXmlNode::readTextContent: leaving ..." << std::endl;
+         << "\nossimXmlNode::readTextContent: leaving ...\n";
    }
    
    return result;
