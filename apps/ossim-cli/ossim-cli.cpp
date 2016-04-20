@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
             {
                cout << "\nAn error was encountered executing the command. Check options."<<endl;
             }
-            continue;
+            break;
          }
 
          if (utility.valid() && !toolName.empty())
@@ -134,7 +134,10 @@ int main(int argc, char *argv[])
             ossimArgumentParser tap (cmdLine);
             utility->initialize(tap);
             if (cmdLine.contains("--help"))
+            {
+               toolName = "";
                continue;
+            }
             utility->execute();
             break;
          }
