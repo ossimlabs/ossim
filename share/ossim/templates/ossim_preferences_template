@@ -332,18 +332,21 @@ plugin.file10: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin
 plugin.file15: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_cnes_plugin.so
 plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_hdf5_plugin.so
 plugin.file25: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_sqlite_plugin.so
+plugin.file30: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_potrace_plugin.so
 plugin.file40: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_web_plugin.so
 plugin.file45: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kml_plugin.so
 plugin.file50: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ndf_plugin.so
 plugin.file55: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_geopdf_plugin.so
 plugin.file60: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_opencv_plugin.so
-plugin.file61: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_pdal_plugin.so
+plugin.file70: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_openjpeg_plugin.so
+
+plugin.file80: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_pdal_plugin.so
 
 //---
 // Always put gdal last as it has duplicate readers and need to pick ours up
 // first.
 //---
-plugin.file65: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
+//plugin.file65: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
 
 // plugin.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_reg_plugin.so
 // plugin.file2: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_contrib_plugin.so
