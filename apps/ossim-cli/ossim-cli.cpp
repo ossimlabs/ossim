@@ -105,12 +105,13 @@ int main(int argc, char *argv[])
             if (!utility->initialize(ap))
             {
                cout << "\nCould not execute command with options provided."<<endl;
+               continue;
             }
             if (!utility->execute())
             {
                cout << "\nAn error was encountered executing the command. Check options."<<endl;
             }
-            continue;
+            break;
          }
 
          if (utility.valid() && !toolName.empty())
