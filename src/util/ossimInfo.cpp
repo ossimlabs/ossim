@@ -218,7 +218,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       usage(ap);
 
       // continue_after_init to false
-      result = false;
+      result = true;
    }
    else
    {

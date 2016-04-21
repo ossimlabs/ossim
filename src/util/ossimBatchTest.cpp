@@ -46,6 +46,12 @@ ossimBatchTest::ossimBatchTest()
    m_expDir(),
    m_logStr()
 {
+   typedef std::map<ossim_uint32, std::string>::value_type map_item;
+   m_statusLabels.insert(map_item(TEST_TBD,      "UNKNOWN"));
+   m_statusLabels.insert(map_item(TEST_PASSED,   "PASSED"));
+   m_statusLabels.insert(map_item(TEST_FAILED,   "FAILED"));
+   m_statusLabels.insert(map_item(TEST_ERROR,    "ERROR"));
+   m_statusLabels.insert(map_item(TEST_DISABLED, "DISABLED"));
 }
 
 //**************************************************************************************************
@@ -414,10 +420,11 @@ ossim_uint8 ossimBatchTest::execute()
 
    ossim_uint8 status = TEST_TBD;
 
+   ossimString configName (m_configFileName.fileNoExtension());
+   cout << "\nExecuting batch test for config: <" << configName << ">" << endl;
+
    try
    {
-      ossimString configName (m_configFileName.fileNoExtension());
-      cout << "\nExecuting batch test for config: <" << configName << ">" << endl;
       ossimEnvironmentUtility* ossimEnv = ossimEnvironmentUtility::instance();
 
       // Fetch possible existing env vars for the expected and output directories:
@@ -455,7 +462,6 @@ ossim_uint8 ossimBatchTest::execute()
       kwl.setExpandEnvVarsFlag(true);
       if (!kwl.addFile(m_configFileName))
       {
-         status = TEST_ERROR;
          ostringstream errmsg;
          errmsg << "Error encountered reading test config at <"<<m_configFileName<<">."<<endl;
          throw ossimException(errmsg.str());
@@ -466,8 +472,8 @@ ossim_uint8 ossimBatchTest::execute()
       status = processConfigList(kwl);
       if (status != TEST_TBD)
       {
-         cout<<"\nossimBatchTest::execute() exiting <"<<configName<<"> with overall status = "
-               <<(int)status<<"\n"<<endl;
+         cout<<"\nossimBatchTest: Exiting <"<<configName<<"> with overall status = "
+               <<m_statusLabels[status]<<"\n"<<endl;
          return status;
       }
 
@@ -570,6 +576,7 @@ ossim_uint8 ossimBatchTest::execute()
    }
    catch (ossimException& e)
    {
+      status = TEST_ERROR;
       cerr << "\nossimBatchTest::execute() caught exception: " << e.what() << endl;
    }
    catch ( ... )
@@ -577,7 +584,8 @@ ossim_uint8 ossimBatchTest::execute()
       cerr << "\nossimBatchTest::execute() caught unhandled exception: " << endl;
    }
 
-   cout <<"\nossimBatchTest::execute() exiting with status = "<< (int) status << endl;
+   cout<<"ossimBatchTest: Exiting <"<<configName<<"> with status = "
+         <<m_statusLabels[status]<<endl;
 
    return status;
 }
@@ -1156,17 +1164,6 @@ bool ossimBatchTest::getDefaultTempFileDir( ossimFilename& tempFile ) const
 void ossimBatchTest::usage(ossimArgumentParser& ap)
 {
    ossimApplicationUsage* au = ap.getApplicationUsage();
-
-   au->setApplicationName(ap.getApplicationName());
-   au->setDescription(ap.getApplicationName()+" batch test application.");
-   
-   au->setCommandLineUsage(ap.getApplicationName()+" <test-configuration-file.kwl>\n\n"
-      "This will run all test within the configuration file.  For individual test control edit "
-      "flags of the configuration file or use individual test options below. The following status "
-      "is returned on exit:"
-      "\n   -1 if any error occurred during test"
-      "\n    1 if any test failed"
-      "\n    0 if all tests passed\n");
 
    au->addCommandLineOption("-a or --accept-test", 
       "<testX> Runs \"run_expected_results_commands\" portion from test configuration file for "
