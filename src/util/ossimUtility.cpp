@@ -61,7 +61,7 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
       // Write usage.
       setUsage(ap);
       ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
-      return true;
+      return false;
    }
 
    std::string ts1;
