@@ -235,6 +235,11 @@ ENDIF()
 FILE(GLOB ossim_cmake_modules ${OSSIM_DEV_HOME}/ossim/cmake/CMakeModules/*.cmake* )
 INSTALL(FILES ${ossim_cmake_modules} DESTINATION share/ossim/${OSSIM_VERSION}/CMakeModules COMPONENT ossim)
 
+FILE(GLOB projection_files "${OSSIM_HOME}/share/ossim/projection/*.csv"  "${OSSIM_HOME}/share/ossim/projection/*.txt")
+INSTALL(FILES ${projection_files} DESTINATION share/ossim/projection COMPONENT ossim)
+
+INSTALL(FILES ${OSSIM_HOME}/share/ossim/templates/ossim_preferences_template DESTINATION "share/ossim" COMPONENT ossim RENAME ossim-preferences-template)
+
 ############################## Setup the packages ##############################
 # present the packaging option only if we have the cpack command defined (effectively >= 2.6.0)
 IF(CMAKE_CPACK_COMMAND)
