@@ -61,7 +61,7 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
       // Write usage.
       setUsage(ap);
       ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
-      return false;
+      return true;
    }
 
    std::string ts1;
@@ -73,7 +73,7 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
       ossimString json_str;
       getAPI(json_str);
       ofs << json_str <<endl;
-      return false;
+      return true;
    }
 
    if ( ap.read("--write-template", sp1))
@@ -82,7 +82,7 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
       ossimKeywordlist kwl;
       getKwlTemplate(kwl);
       ofs << kwl <<endl;
-      return false;
+      return true;
    }
 
    return true;
