@@ -20,7 +20,7 @@ Quick links:
 * [How to Build](#how-to-build)
 * [How to Test](#how-to-test)
 * [OSSIM Command Line Utility](#ossim-command-line-utility)
-* [Doxygen source documentation](https://trac.osgeo.org/ossim/doxygen)
+* [Doxygen Source Code Documentation](https://trac.osgeo.org/ossim/doxygen)
 
 # Relationship between Repositories (What to Get)
 
