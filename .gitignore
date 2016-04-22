@@ -6,5 +6,5 @@ doc/html
 *Makefile
 cmake_install*
 *.swp
-CmakeCache.txt
+CMakeCache.txt
 

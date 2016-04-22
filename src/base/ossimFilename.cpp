@@ -430,6 +430,31 @@ bool ossimFilename::getTimes(ossimLocalTm *accessTime,
    return false;
 }
 
+// Time in seconds since last accessed.
+ossim_int64 ossimFilename::lastAccessed() const
+{
+   ossim_int64 result = -1;
+
+   if( expand().exists() )
+   {
+      ossim_int64 currentTime = ossim::getTime();
+      
+#if defined(_WIN32)
+      cerr << "ossimFilename::lastAccessed() not implemented for windows!" << endl;
+#else
+      struct stat sbuf;
+      stat(c_str(), &sbuf);
+      if ( stat( expand().c_str(), &sbuf) == 0 )
+      {
+         time_t atime = sbuf.st_atime; // This cast to seconds(time_t).
+         result = currentTime - (ossim_int64)atime;
+      }
+#endif // platforms
+   }
+
+   return result;
+}
+
 bool ossimFilename::touch()const
 {
 #if defined( _WIN32 )
@@ -1333,13 +1358,18 @@ ossimFilename& ossimFilename::appendTimestamp()
    std::string timestamp;
    ossim::getFormattedTime(format, true, timestamp);
 
+   return append(timestamp);
+}
+
+ossimFilename& ossimFilename::append(const ossimString& append_this)
+{
    ossimString drivePart;
    ossimString pathPart;
    ossimString filePart;
    ossimString extPart;
 
    split(drivePart, pathPart, filePart, extPart);
-   filePart += timestamp;
+   filePart += append_this;
    merge(drivePart, pathPart, filePart, extPart);
 
    return *this;

@@ -73,7 +73,7 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
       ossimString json_str;
       getAPI(json_str);
       ofs << json_str <<endl;
-      return false;
+      return true;
    }
 
    if ( ap.read("--write-template", sp1))
@@ -82,7 +82,7 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
       ossimKeywordlist kwl;
       getKwlTemplate(kwl);
       ofs << kwl <<endl;
-      return false;
+      return true;
    }
 
    return true;
@@ -95,8 +95,11 @@ void ossimUtility::initialize(const ossimKeywordlist& kwl)
 
 void ossimUtility::getKwlTemplate(ossimKeywordlist& kwl)
 {
-   ossimFilename kwl_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
-   kwl_path += "/ossim/util/" + getClassName() + ".kwl";
+   ossimFilename share_dir = ossimPreferences::instance()->
+      preferencesKWL().findKey( std::string( "ossim_share_directory" ) );
+   ossimFilename classTemplate = "util/" + getClassName() + ".kwl";
+   ossimFilename kwl_path = share_dir.dirCat( classTemplate );
+
    if (!kwl.addFile(kwl_path))
    {
       ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::getKwlTemplate() -- Could not find <"
@@ -106,8 +109,11 @@ void ossimUtility::getKwlTemplate(ossimKeywordlist& kwl)
 
 void ossimUtility::getAPI(string& json) const
 {
-   ossimFilename json_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
-   json_path += "/ossim/util/" + getClassName() + ".json";
+   ossimFilename share_dir = ossimPreferences::instance()->
+      preferencesKWL().findKey( std::string( "ossim_share_directory" ) );
+   ossimFilename classJson = "util/" + getClassName() + ".json";
+   ossimFilename json_path = share_dir.dirCat( classJson );
+
    readTextFile(json_path, json);
 }
 

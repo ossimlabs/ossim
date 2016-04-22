@@ -8,3 +8,7 @@ popd >/dev/null
 pushd $OSSIM_BUILD_DIR >/dev/null
 make install
 popd >/dev/null
+
+pushd $OSSIM_DEV_HOME/ossim
+  
+popd

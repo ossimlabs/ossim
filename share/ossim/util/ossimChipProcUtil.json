@@ -1,5 +1,5 @@
 {
-    "name": "ossim-hlz",
+    "name": "ossimChipProcUtil",
     "description": {
         "version" : "1.00",
         "short_description": "OSSIM HLZ Utility",

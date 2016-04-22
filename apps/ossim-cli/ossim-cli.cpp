@@ -19,6 +19,15 @@ using namespace std;
 #include <ossim/util/ossimUtilityRegistry.h>
 #include <ossim/base/ossimException.h>
 
+void usage(char* appName)
+{
+   cout << "\nUsages: "<<endl;
+   cout << "    "<<appName<<" <command> [command options and parameters]"<<endl;
+   cout << "    "<<appName<<" --spec <keyword-file>"<<endl;
+   cout << "    "<<appName<<" --version"<<endl;
+   cout << "    "<<appName<<"  (with no args, displays command descriptions)\n"<<endl;
+}
+
 int main(int argc, char *argv[])
 {
    ossimArgumentParser ap(&argc, argv);
@@ -33,140 +42,133 @@ int main(int argc, char *argv[])
       map<string, string> capabilities;
       factory->getCapabilities(capabilities);
       ossimRefPtr<ossimUtility> utility = 0;
-      ossimString toolName;
       ossimKeywordlist kwl;
-      char input[256];
+      char input[4096];
       bool usingCmdLineMode = false;
-
-      if ((argc > 1) && (ossimString(argv[1]).contains("help")))
-      {
-         cout << "\nUsages: "<<endl;
-         cout << "    "<<argv[0]<<" <command> [command options and parameters]"<<endl;
-         cout << "    "<<argv[0]<<" --version"<<endl;
-         cout << "    "<<argv[0]<<"  (with no args, displays capabilities)\n"<<endl;
-         exit (0);
-      }
+      ossimString cmdLine;
+      vector<ossimString> cmdComponents;
 
       if  (argc > 1)
       {
-         if (ossimString(argv[1]).contains("--"))
-         {
-            // Support ossim-info style system queries by interpreting any options as options to
-            // info tool:
-            toolName = "info";
-            usingCmdLineMode = true;
-         }
-         else if (kwl.addFile(argv[1]))
+         // Pile everything into a command line:
+         for (int i=1; i<argc; ++i)
+            cmdComponents.push_back(argv[i]);
+
+         // Check for KWL command spec:
+         if (  cmdComponents[0].contains("--spec") && (cmdComponents.size() >= 2) &&
+               kwl.addFile(cmdComponents[1].chars()))
          {
             // KWL filename provided, get tool name from it:
-            toolName = kwl.find("tool");
-            ap.remove(0);
+            ossimString toolName = kwl.find("tool");
+            if (!toolName.empty())
+            {
+               cout<<"\nCould not find the \"tool\" keyword in the configuration file."<<endl;
+               exit(1);
+            }
+            cmdComponents.clear();
+            cmdComponents.push_back(toolName);
          }
-         else
+         else if (cmdComponents[0].contains("--") && !cmdComponents[0].contains("--help"))
          {
-            // The tool name was explicitely provided on command line:
-            toolName = argv[1];
-            usingCmdLineMode = true;
-            ap.remove(0);
+            // Support ossim-info style system queries by interpreting any options as options to
+            // info tool (e.g., --plugins, --version, etc):
+            cmdComponents.insert(cmdComponents.begin(), "info");
          }
       }
 
       // Using one-time do-loop for breaking out when finished processing:
       do
       {
-         if (toolName.empty())
+         if (cmdComponents.empty() && (kwl.getSize() == 0))
          {
+            // Need to get a command from console:
             map<string, string>::iterator iter = capabilities.begin();
-            cout<<"\nCapabilities:"<<endl;
+            cout<<"\nAvailable commands:\n"<<endl;
             for (;iter != capabilities.end(); ++iter)
                cout<<"  "<<iter->first<<" -- "<<iter->second<<endl;
+            cout<<"  "<<"help <command> -- To get help on specific command. Same as \"<command> --help\""<<endl;
 
             // Query for operation:
-            cout << "\nEnter utility class ('x' to exit): ";
+            cout << "\nossim> ";
             cin.getline(input, 256);
-            if (input[0] == 'x')
+            if (input[0] == 'q')
                break;
-            toolName = input;
+            cmdLine = input;
+            cmdComponents = cmdLine.split(" ");
+            if (cmdComponents.empty())
+               continue;
          }
 
-         // Fetch the utility object:
-         ossimRefPtr<ossimUtility> utility = factory->createUtility(toolName);
+         // Should have a tool name and possibly a command line. Check if help requested first:
+         if (cmdComponents[0] == "help")
+         {
+            vector<ossimString>::iterator iter = cmdComponents.begin();
+            iter = cmdComponents.erase(iter); // remove help;
+            if (iter == cmdComponents.end())
+            {
+               usage(argv[0]);
+               cmdComponents.clear();
+               continue;
+            }
+            cmdComponents.push_back(" --help");
+         }
+
+         // Fetch the utility object based on tool name:
+         ossimRefPtr<ossimUtility> utility = factory->createUtility(cmdComponents[0]);
          if (!utility.valid())
          {
-            cout << "\nCould not create utility <"<<toolName<<">"<<endl;
-            break;
+            cout << "\nDid not understand <"<<cmdComponents[0]<<">"<<endl;
+            cmdComponents.clear();
+            continue;
          }
 
-         if (usingCmdLineMode)
-         {
-            // Check if user provided options along with tool name:
-            // Init utility with command line
-            if (!utility->initialize(ap))
-               break;
-            utility->execute();
-            break;
-         }
-
-         if (kwl.getSize() == 0)
-         {
-            // Query for config filename:
-            ossimKeywordlist kwl;
-            cout << "\nEnter config file name or <return> for template: " << ends;
-            cin.getline(input, 256);
-            if (input[0] && !kwl.addFile(input))
-            {
-               cout<<"\nCould not load config file at <"<<input<<">"<<endl;
-               break;
-            }
-         }
-
-         // Init utility with KWL if available:
+         // Check first for existence of KWL config:
          if (kwl.getSize())
          {
+            // Init utility with KWL if available:
             utility->initialize(kwl);
             utility->execute();
             break;
          }
 
-         // Display API:
-         ossimKeywordlist kwl_template;
-         utility->getKwlTemplate(kwl_template);
-         cout << "\nUtility template specification: "<<endl;
-         cout << kwl_template << endl;
-
-         // Accept inputs:
-         do
+         if (cmdComponents.size() == 1)
          {
-            cout << "Enter \"<keyword>: <value>\" with colon separator (or 'x' to finish): ";
-            cin.getline(input, 256);
-            if (input[0] == 'x' || (!kwl.parseString(string(input))))
+            // Have toolname but no command line options:
+            cout << "\nEnter command arguments/options or return for usage. "<<endl;
+            cout << "\nossim> ";
+            cin.getline(input, 4096);
+            if (input[0] == 'q')
                break;
-         } while (1);
 
-         if (kwl.getSize() == 0)
-            break;
-
-         // Display final KWL:
-         cout << "\nUtility final specification: "<<endl;
-         cout << kwl << endl;
-
-         // Query go-aheadPerform operation:
-         while (1)
-         {
-            cout << "Perform operation? [y|n]: ";
-            cin.getline(input, 256);
-            if (input[0] == 'n')
-               break;
-            else if (input[0] == 'y')
-            {
-               utility->initialize(kwl);
-               utility->execute();
-               break;
-            }
+            // Create the command line with either "help" or inputs:
+            if (input[0] == '\0')
+               cmdComponents.push_back("--help");
+            else
+               cmdComponents.push_back(input);
          }
 
-      } while (false);
+         // Run command:
+         cmdLine.join(cmdComponents, " ");
+         ossimArgumentParser tap (cmdLine);
+         if (cmdLine.contains("--help"))
+         {
+            utility->initialize(tap);
+            cmdComponents.clear();
+            continue;
+         }
+         if (!utility->initialize(tap))
+         {
+            cout << "\nCould not execute command <"<<cmdComponents[0]<<"> with options provided."<<endl;
+            cmdComponents.clear();
+            continue;
+         }
+         if (!utility->execute())
+            cout << "\nAn error was encountered executing the command. Check options."<<endl;
+         break;
+
+      } while (true);
    }
+
    catch  (const ossimException& e)
    {
       ossimNotify(ossimNotifyLevel_FATAL)<<e.what()<<endl;

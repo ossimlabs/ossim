@@ -192,6 +192,16 @@ Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 This sub-package contains the Hierarchical Data Format(hdf) ossim plugin for
 reading hdf5 images via the hdf5 libraries
 
+%package  	jpip-server
+Summary:        ossim kakadu jpip server
+Group:          System Environment/Libraries
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
+Requires:       kakadu-plugin%{?_isa} = %{version}-%{release}
+
+%description    jpip-server
+This sub-package contains the ossim kakadu jpip server for streaming
+J2K compressed data to via the Kakadu library.
+
 %package  	kml-plugin
 Summary:        kml ossim plugin
 Group:          System Environment/Libraries
@@ -288,9 +298,15 @@ export OSSIM_BUILD_TYPE=RelWithDebInfo
 export OSSIM_INSTALL_PREFIX=/usr
 export OSSIM_VERSION=%{RPM_OSSIM_VERSION}
 
+# Need to ensure ossim-private branch on kak_v7_7
+pushd $OSSIM_DEV_HOME/ossim-private
+git checkout kak_v7_7
+popd
+
 mkdir -p build
 pushd build
 %cmake \
+-DOSSIM_BUILD_ADDITIONAL_DIRECTORIES=$OSSIM_DEV_HOME/ossim-private/ossim-kakadu-jpip-server \
 -DBUILD_CSMAPI=OFF \
 -DBUILD_OMS=ON \
 -DBUILD_OSSIM=ON \
@@ -334,8 +350,8 @@ pushd build
 -DCMAKE_PREFIX_PATH=/usr \
 \
 -DKAKADU_ROOT_SRC=/opt/kakadu/latest \
--DKAKADU_AUX_LIBRARY=/opt/kakadu/latest/lib/Linux-x86-64-gcc/libkdu_aux.a \
--DKAKADU_LIBRARY=/opt/kakadu/latest/lib/Linux-x86-64-gcc/libkdu.a  \
+-DKAKADU_AUX_LIBRARY=/opt/kakadu/latest/lib/Linux-x86-64-gcc/libkdu_a77R.so \
+-DKAKADU_LIBRARY=/opt/kakadu/latest/lib/Linux-x86-64-gcc/libkdu_v77R.so  \
 \
 -DMRSID_DIR=/opt/mrsid/latest \
 \
@@ -369,6 +385,10 @@ popd
 install -p -m644 -D ossim/support/linux/etc/profile.d/ossim.sh %{buildroot}%{_sysconfdir}/profile.d/ossim.sh
 install -p -m644 -D ossim/support/linux/etc/profile.d/ossim.csh %{buildroot}%{_sysconfdir}/profile.d/ossim.csh
 install -p -m644 -D ossim/share/ossim/templates/ossim_preferences_template %{buildroot}%{_datadir}/ossim/ossim-preferences-template
+
+# Shared Kakadu libs.
+install -p -m775 /opt/kakadu/latest/lib/Linux-x86-64-gcc/libkdu_a77R.so %{buildroot}%{_libdir}/.
+install -p -m775 /opt/kakadu/latest/lib/Linux-x86-64-gcc/libkdu_v77R.so %{buildroot}%{_libdir}/.
 
 # Exports for java builds:
 export JAVA_HOME=/usr/lib/jvm/java
@@ -447,6 +467,9 @@ rm -f %{_javadir}/joms.jar
 %exclude %{_bindir}/ossim-geocell
 %exclude %{_bindir}/ossimplanetviewer
 
+# In jpip-server package:
+%exclude %{_bindir}/ossim-jpip-server
+
 %files devel
 %{_includedir}/ossim
 
@@ -507,11 +530,16 @@ rm -f %{_javadir}/joms.jar
 %files hdf5-plugin
 %{_libdir}/ossim/plugins/libossim_hdf5_plugin.so
 
+%files jpip-server
+%{_bindir}/ossim-jpip-server
+
 %files kml-plugin
 %{_libdir}/ossim/plugins/libossim_kml_plugin.so
 
 %files kakadu-plugin
 %{_libdir}/ossim/plugins/libossim_kakadu_plugin.so
+%{_libdir}/libkdu_a77R.so
+%{_libdir}/libkdu_v77R.so
 
 %files mrsid-plugin
 %{_libdir}/ossim/plugins/libossim_mrsid_plugin.so
@@ -530,7 +558,6 @@ rm -f %{_javadir}/joms.jar
 
 %files web-plugin
 %{_libdir}/ossim/plugins/libossim_web_plugin.so
-
 
 
 %changelog

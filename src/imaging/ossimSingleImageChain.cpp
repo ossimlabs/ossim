@@ -585,6 +585,10 @@ void ossimSingleImageChain::addResampler()
       addFirst(m_resampler.get());
    }
 }
+void ossimSingleImageChain::addRenderer()
+{
+   addResampler();
+}
 
 void ossimSingleImageChain::addScalarRemapper()
 {

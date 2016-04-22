@@ -94,6 +94,7 @@ public:
 public:
    
    ossimArgumentParser(int* argc,char **argv);
+   ossimArgumentParser(const ossimString& commandLine);
 
    ~ossimArgumentParser();
 
@@ -237,6 +238,7 @@ protected:
    char**                   theArgv;
    ossimErrorMessageMap     theErrorMessageMap;
    ossimApplicationUsage*   theUsage;
+   bool                     theMemAllocated;
         
 };
 

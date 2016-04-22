@@ -214,8 +214,14 @@ public:
     */
    ossimRefPtr<ossimCacheTileSource> addCache();
 
-   /** @brief Adds a resampler to the end of the chain. */ 
+   /** @brief Adds a resampler (a.k.a. "renderer") to the end of the chain. */
    void addResampler();
+
+   /**
+    * @brief Adds a resampler (a.k.a. "renderer") to the end of the chain.
+    * This method in turn calls "addResampler()".
+    */
+   void addRenderer();
 
    /**
     * @brief Adds scalar remapper either to the left of the resampler cache
@@ -295,13 +301,13 @@ public:
    ossimRefPtr<ossimCacheTileSource> getResamplerCache();
 
    /**
-    * @return ossimRefPtr containing the resampler.
+    * @return ossimRefPtr containing the resampler (a.k.a. "renderer").
     * @note Can contain a null pointer so callers should validate.
     */
    ossimRefPtr<const ossimImageRenderer> getImageRenderer() const;
 
    /**
-    * @return ossimRefPtr containing the resampler.
+    * @return ossimRefPtr containing the resampler (a.k.a. "renderer").
     * @note Can contain a null pointer so callers should validate.
     */
    ossimRefPtr<ossimImageRenderer> getImageRenderer();

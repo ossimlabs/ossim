@@ -205,25 +205,25 @@ elevation_manager.threads: yes
 // Location of other shared files can be accessed using this preference to permit 
 // specifying paths relative to it.
 //---
-ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/ossim/share
+ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/share/ossim
 
 //---
 // Look-up tables for European Petroleum Survey Group (EPSG) coded 
-// projections and datums (located in <ossim_share_directory>/ossim/projection)
+// projections and datums (located in <ossim_share_directory>/projection)
 // These are expected to be delimiter-separated value (*.csv|tsv) files.
 // NOTE: ESRI codes are NOT EPSG codes, however, they do not conflict with 
 // EPSG so ingesting them as if they were EPSG. Eventually, separate 
 // databases or a multi-Db solution may need to be 
 // implemented. OLK 05/2010
 // --- 
-epsg_database_file0: ossim_epsg_projections-v7_4.csv
-epsg_database_file1: ossim_harn_state_plane_epsg.csv
-epsg_database_file2: ossim_state_plane_spcs.csv
-epsg_database_file3: ossim_harn_state_plane_esri.csv
+epsg_database_file0: projection/ossim_epsg_projections-v7_4.csv
+epsg_database_file1: projection/ossim_harn_state_plane_epsg.csv
+epsg_database_file2: projection/ossim_state_plane_spcs.csv
+epsg_database_file3: projection/ossim_harn_state_plane_esri.csv
 
 // Database file for WKT-based projection factory 
 // (located in <ossim_share_directory>/ossim/projection):
-wkt_database_file: ossim_wkt_pcs.csv
+wkt_database_file: projection/ossim_wkt_pcs.csv
 
 //---
 // Geoid support:
@@ -332,18 +332,21 @@ plugin.file10: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin
 plugin.file15: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_cnes_plugin.so
 plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_hdf5_plugin.so
 plugin.file25: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_sqlite_plugin.so
+plugin.file30: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_potrace_plugin.so
 plugin.file40: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_web_plugin.so
 plugin.file45: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kml_plugin.so
 plugin.file50: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ndf_plugin.so
 plugin.file55: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_geopdf_plugin.so
 plugin.file60: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_opencv_plugin.so
-plugin.file61: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_pdal_plugin.so
+plugin.file70: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_openjpeg_plugin.so
+
+plugin.file80: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_pdal_plugin.so
 
 //---
 // Always put gdal last as it has duplicate readers and need to pick ours up
 // first.
 //---
-plugin.file65: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
+//plugin.file65: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
 
 // plugin.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_reg_plugin.so
 // plugin.file2: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_contrib_plugin.so

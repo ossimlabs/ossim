@@ -58,6 +58,13 @@ public:
    bool getTimes(ossimLocalTm* accessTime,
                  ossimLocalTm* modTime,
                  ossimLocalTm* createTime)const;
+   /**
+    * @brief Time in seconds since last accessed.
+    * 
+    * @return The number of seconds since last accessed or -1 if file does not
+    * exist.
+    */
+   ossim_int64 lastAccessed() const;
    
    bool touch()const;
    
@@ -246,9 +253,14 @@ public:
    
    /**
     * Convenience method to append a generic timestamp to the base-name portion of the filename.
-    * This is useful for establishing rolling names for temporary files and logs
+    * This is useful for establishing rolling names for temporary files and logs. Returns this.
     */
    ossimFilename& appendTimestamp();
+
+   /**
+    * Convenience method to append a string to the base-name portion of the filename. Returns this.
+    */
+   ossimFilename& append(const ossimString& append_this_to_filename);
 
 protected:
 

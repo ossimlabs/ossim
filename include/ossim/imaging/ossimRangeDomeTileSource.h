@@ -115,6 +115,8 @@ protected:
    std::vector<ossimRangeDome>       m_rangeDomes;
    ossimDpt                     m_gsd;
 
+   static const ossimString OSSIM_RANGE_DOME_SPEC_MAGIC_NUMBER;
+
    TYPE_DATA
 };
 
