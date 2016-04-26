@@ -30,6 +30,7 @@
 static const string COLOR_CODING_KW = "color_coding";
 static const string SMOOTHING_KW = "smoothing";
 static const string THRESHOLD_KW = "threshold";
+static const string RASTER_KW = "raster";
 static const string TOLERANCE_KW = "tolerance";
 static const string ALGORITHM_KW = "algorithm";
 static const string DO_EDGE_DETECT_KW = "do_edge_detect";
@@ -51,7 +52,8 @@ ossimShorelineUtil::ossimShorelineUtil()
      m_algorithm(NDWI),
      m_skipThreshold(false),
      m_smoothing(0),
-     m_doEdgeDetect(false)
+     m_doEdgeDetect(false),
+     m_doRaster(false)
 {
 }
 
@@ -79,11 +81,13 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
          "bands: 3 and 5|6) (default), \"awei\" (requires 4 input bands: 3, 6, 5, and 7).");
    au->addCommandLineOption("--color-coding <water> <marginal> <land>",
          "Specifies the pixel values (0-255) for the output product corresponding to water, marginal, "
-         "and land zones, respectively. Defaults to 255, 128, and 0, respectively.");
+         "and land zones. Defaults to 0, 128, and 255, respectively.");
    au->addCommandLineOption("--edge",
          "Directs the processing to perform an edge detection instead of outputing a vector product."
          " Defaults to FALSE.");
-   au->addCommandLineOption("--sensor <string>",
+    au->addCommandLineOption("--raster",
+         "Outputs the raster result of indexed image instead of a vector product. For engineering purposes.");
+  au->addCommandLineOption("--sensor <string>",
          "Sensor used to compute Modified Normalized Difference Water Index. Currently only "
          "\"ls8\" supported (default).");
    au->addCommandLineOption("--smooth <sigma>",
@@ -121,6 +125,9 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
 
    if ( ap.read("--edge"))
       m_kwl.addPair(DO_EDGE_DETECT_KW, string("true"));
+
+   if ( ap.read("--raster"))
+      m_kwl.addPair(RASTER_KW, string("true"));
 
    if ( ap.read("--sensor", sp1))
       m_kwl.addPair(ossimKeywordNames::SENSOR_ID_KW, ts1);
@@ -188,10 +195,11 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
       }
    }
 
+   m_kwl.getBoolKeywordValue(m_doRaster, RASTER_KW.c_str());
+
    value = m_kwl.find(ossimKeywordNames::SENSOR_ID_KW);
    if (!value.empty())
       m_sensor = value;
-
 
    m_kwl.getBoolKeywordValue(m_doEdgeDetect, DO_EDGE_DETECT_KW.c_str());
 
@@ -262,7 +270,9 @@ void ossimShorelineUtil::initProcessingChain()
       m_procChain->add(smoother.get());
    }
 
-   //bool status = ossimChipProcUtil::execute(); // TODO: REMOVE
+   // If raster product requested, then the chain is complete.
+   if (m_doRaster)
+      return;
 
    if (!m_skipThreshold)
    {
@@ -274,10 +284,10 @@ void ossimShorelineUtil::initProcessingChain()
          ossimString landValue = ossimString::toString(m_landValue).chars();
          ossimString waterValue = ossimString::toString(m_waterValue).chars();
          ossimString marginalValue = ossimString::toString(m_marginalValue).chars();
-         ossimString thresholdValueLo1 = ossimString::toString(m_threshold-m_tolerance).chars();
-         ossimString thresholdValueLo2 = ossimString::toString(m_threshold-m_tolerance+del).chars();
-         ossimString thresholdValueHi1 = ossimString::toString(m_threshold+m_tolerance).chars();
-         ossimString thresholdValueHi2 = ossimString::toString(m_threshold+m_tolerance+del).chars();
+         ossimString thresholdValueLo1 = ossimString::toString(m_threshold-m_tolerance, 9).chars();
+         ossimString thresholdValueLo2 = ossimString::toString(m_threshold-m_tolerance+del, 9).chars();
+         ossimString thresholdValueHi1 = ossimString::toString(m_threshold+m_tolerance, 9).chars();
+         ossimString thresholdValueHi2 = ossimString::toString(m_threshold+m_tolerance+del, 9).chars();
          ossimKeywordlist remapper_kwl;
          remapper_kwl.add("type", "ossimBandLutFilter");
          remapper_kwl.add("enabled", "1");
@@ -317,9 +327,8 @@ void ossimShorelineUtil::initProcessingChain()
          ossim_uint32* dns = new ossim_uint32 [2];
          dns[0] = m_landValue;
          dns[1] = m_waterValue;
-         kmeansFilter->setGroupPixelValues(dns, 2);
+         kmeansFilter->setClusterPixelValues(dns, 2);
          delete dns;
-         kmeansFilter->setVerbose();
          m_procChain->add(kmeansFilter.get());
       }
    }
@@ -368,7 +377,6 @@ void ossimShorelineUtil::initLandsat8()
    eqFilter->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
    eqFilter->setEquation(equationSpec);
    m_procChain->add(eqFilter.get());
-
 }
 
 ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& bounding_irect)
@@ -393,6 +401,8 @@ bool ossimShorelineUtil::execute()
    // Base class handles the thresholded image generation. May throw exception. Output written to
    // m_productFilename:
    bool status = ossimChipProcUtil::execute();
+   if (m_doRaster)
+      return status;
 
    if (m_doEdgeDetect)
       return status;

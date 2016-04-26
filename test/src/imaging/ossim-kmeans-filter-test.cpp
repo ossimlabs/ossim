@@ -161,8 +161,7 @@ int main(int argc, char *argv[])
    ossimRefPtr<ossimKMeansFilter> kmeans = new ossimKMeansFilter;
    kmeans->connectMyInputTo(inputImage.get());
    ossim_uint32 lut [3] = { 32, 128, 255 };
-   kmeans->setGroupPixelValues(lut, 3);
-   kmeans->setVerbose();
+   kmeans->setClusterPixelValues(lut, 3);
    ossimRefPtr<ossimImageSource> lastSource = kmeans.get();
 
    if (doRemap)
@@ -191,7 +190,6 @@ int main(int argc, char *argv[])
    writer->setFilename(outputFilename);
    writer->setGeotiffFlag(true);
    bool success = writer->execute();
-
 
    return 0;
 }

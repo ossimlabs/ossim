@@ -77,6 +77,7 @@ protected:
    double m_smoothing;
    bool m_doEdgeDetect;
    ossimFilename m_vectorFilename;
+   bool m_doRaster;
 
    //ossimRefPtr<ossimHistogramWriter> m_histoWriter;
 };
