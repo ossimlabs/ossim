@@ -33,7 +33,11 @@
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
-
+#ifdef WIN32
+#define MY_POPEN(arg1, arg2) _popen(arg1, arg2)
+#else
+#define MY_POPEN(arg1, arg2) popen(arg1, arg2)
+#endif
 
 void usage()
 {
@@ -61,7 +65,7 @@ void plotHistogram(const ossimFilename& histoFile, const ossimString& plotWith)
    }
 
    // Create temporary data file stream:
-   FILE * gnuplotPipe = popen ("gnuplot -persistent", "w");
+   FILE * gnuplotPipe = MY_POPEN ("gnuplot -persistent", "w");
    if (!gnuplotPipe)
    {
       cout << "Could not create temporary gnuplot pipe. "<< endl;

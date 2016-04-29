@@ -87,7 +87,10 @@ int main( int argc, char* argv[] )
       if ( h.valid() )
       {
          float count;
-         for( ossim_uint32 i = 0; i < LINES; ++i )
+
+         // Skipping NULL pixel (i=0) since those are no longer being counted in the histogram
+         // (OLK 04/2016)
+         for( ossim_uint32 i = 1; i < LINES; ++i )
          {
             count = h->GetCount( static_cast<float>(i) );
             if ( count != 256.0 )

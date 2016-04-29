@@ -72,11 +72,13 @@ protected:
    ossimString m_sensor;
    double m_threshold;
    double m_tolerance;
+   double m_sigma;
    AlgorithmId m_algorithm;
    bool m_skipThreshold;
    double m_smoothing;
    bool m_doEdgeDetect;
    ossimFilename m_vectorFilename;
+   bool m_doRaster;
 
    //ossimRefPtr<ossimHistogramWriter> m_histoWriter;
 };

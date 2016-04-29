@@ -191,12 +191,14 @@ bool ossimChipProcUtil::initialize(ossimArgumentParser& ap)
       m_kwl.addPair( std::string(ossimKeywordNames::HEMISPHERE_KW), tempString1 );
 
    vector<ossimString> imageFnames;
-   ap.read("--image", imageFnames);
-   for(ossim_uint32 idx=0; idx<imageFnames.size(); ++idx)
+   if (ap.read("--image", imageFnames) || ap.read("-i", imageFnames))
    {
-      ostringstream key;
-      key<<ossimKeywordNames::IMAGE_FILE_KW<<idx;
-      m_kwl.addPair(key.str(), imageFnames[idx] );
+      for(ossim_uint32 idx=0; idx<imageFnames.size(); ++idx)
+      {
+         ostringstream key;
+         key<<ossimKeywordNames::IMAGE_FILE_KW<<idx;
+         m_kwl.addPair(key.str(), imageFnames[idx] );
+      }
    }
 
    if( ap.read("--origin-latitude", stringParam1) )
@@ -1475,7 +1477,7 @@ void ossimChipProcUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--gsd", "<meters>\nSpecifies an override for the meters per pixel");
    au->addCommandLineOption("-h or --help", "Display this help and exit.");
    au->addCommandLineOption("--hemisphere", "<hemisphere>\nSpecify a projection hemisphere if supported. E.g. UTM projection. This will lock the hemisphere even if input scene center is the other hemisphere. Valid values for UTM are \"N\" and \"S\"");
-   au->addCommandLineOption("--image", "<file1>[, <file2>...] Input image file(s) (comma-separated) to process.");
+   au->addCommandLineOption("--image | -i", "<file1>[, <file2>...] Input image file(s) (comma-separated) to process.");
    au->addCommandLineOption("--load-options","[<filename>]\nThe contents of <filename> (keyword-value pairs) are loaded as command options. The command-line options take precedence.  See \"--load-options\" and \"--write-template\" options.");
    au->addCommandLineOption("--origin-latitude","<latidude_in_decimal_degrees>\nNote if set this will be used for the origin latitude of the projection.  Setting this to something other than 0.0 with a geographic projection creates a scaled geographic projection.");
    au->addCommandLineOption("--output-radiometry", "<R>\nSpecifies the desired product's pixel radiometry type. Possible values for <R> are: U8, U11, U16, S16, F32. Note this overrides the deprecated option \"scale-to-8-bit\".");

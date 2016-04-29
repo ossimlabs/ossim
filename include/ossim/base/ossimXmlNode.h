@@ -43,13 +43,14 @@ public:
    // Appends any matching nodes to the list supplied
    void findChildNodes(const ossimString& rel_xpath,
                        ossimXmlNode::ChildListType& nodelist)const;
-   const ossimRefPtr<ossimXmlNode> findFirstNode(const ossimString& rel_xpath)const;
+   // Prefer this version when possible
+   const ossimRefPtr<ossimXmlNode> & findFirstNode(const ossimString& rel_xpath)const;
    ossimRefPtr<ossimXmlNode> findFirstNode(const ossimString& rel_xpath);
 
    ossimRefPtr<ossimXmlAttribute> findAttribute(const ossimString& name);
    const ossimRefPtr<ossimXmlAttribute> findAttribute(const ossimString& name)const;
    void setTag(const ossimString& tag);
-   ossimString                      getTag()        const;
+   ossimString const&               getTag()        const { return theTag; }
    const ossimXmlNode*              getParentNode() const;
    ossimXmlNode*              getParentNode();
    void setParent(ossimXmlNode* parent);
@@ -88,7 +89,7 @@ public:
    void addAttributes(ossimXmlNode::AttributeListType& children);
    void setAttributes(ossimXmlNode::AttributeListType& children);
    void setText(const ossimString& text);
-   const ossimString&                      getText()       const;
+   const ossimString&                      getText()       const { return theText; }
    bool cdataFlag()const;
    void setCDataFlag(bool value);
    OSSIMDLLEXPORT friend ostream& operator << (ostream& os, const ossimXmlNode* xml_node);

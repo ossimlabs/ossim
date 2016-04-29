@@ -17,6 +17,7 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimFilename.h>
 #include <vector>
+#include <map>
 #include <fstream>
 
 // Forward class declarations:
@@ -135,6 +136,7 @@ private:
    std::vector<std::string> m_cleanTestList;
    std::vector<std::string> m_preprocessTestList;
    std::vector<std::string> m_runTestList;
+   std::map<ossim_uint32, std::string> m_statusLabels;
 
    bool          m_templateModeActive;
    ossimFilename m_configFileName;
