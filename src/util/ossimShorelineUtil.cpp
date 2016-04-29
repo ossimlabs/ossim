@@ -30,6 +30,7 @@
 static const string COLOR_CODING_KW = "color_coding";
 static const string SMOOTHING_KW = "smoothing";
 static const string THRESHOLD_KW = "threshold";
+static const string SIGMA_KW = "sigma";
 static const string RASTER_KW = "raster";
 static const string TOLERANCE_KW = "tolerance";
 static const string ALGORITHM_KW = "algorithm";
@@ -49,6 +50,7 @@ ossimShorelineUtil::ossimShorelineUtil()
      m_sensor ("ls8"),
      m_threshold (-1.0), // Flags auto-thresholding
      m_tolerance(0.0),
+     m_sigma(1.5),
      m_algorithm(NDWI),
      m_skipThreshold(false),
      m_smoothing(0),
@@ -87,9 +89,12 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
          " Defaults to FALSE.");
     au->addCommandLineOption("--raster",
          "Outputs the raster result of indexed image instead of a vector product. For engineering purposes.");
-  au->addCommandLineOption("--sensor <string>",
-         "Sensor used to compute Modified Normalized Difference Water Index. Currently only "
-         "\"ls8\" supported (default).");
+    au->addCommandLineOption("--sensor <string>",
+           "Sensor used to compute Modified Normalized Difference Water Index. Currently only "
+           "\"ls8\" supported (default).");
+    au->addCommandLineOption("--sigma <float>",
+           "The multiple of standard deviations below the NDWI water mean to use for threshold. "
+           "Defaults to 1.5");
    au->addCommandLineOption("--smooth <sigma>",
          "Applies gaussian filter to index raster file. The filter sigma must be specified (0.2 is good). Sigma=0 "
          "indicates no smoothing.");
@@ -131,6 +136,9 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
 
    if ( ap.read("--sensor", sp1))
       m_kwl.addPair(ossimKeywordNames::SENSOR_ID_KW, ts1);
+
+   if ( ap.read("--sigma", sp1))
+      m_kwl.addPair(SIGMA_KW, ts1);
 
    if ( ap.read("--smooth", sp1))
       m_kwl.addPair(SMOOTHING_KW, ts1);
@@ -202,6 +210,10 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
       m_sensor = value;
 
    m_kwl.getBoolKeywordValue(m_doEdgeDetect, DO_EDGE_DETECT_KW.c_str());
+
+   value = m_kwl.findKey(SIGMA_KW);
+   if (!value.empty())
+      m_sigma = value.toDouble();
 
    value = m_kwl.findKey(SMOOTHING_KW);
    if (!value.empty())
@@ -329,6 +341,7 @@ void ossimShorelineUtil::initProcessingChain()
          dns[1] = m_waterValue;
          kmeansFilter->setClusterPixelValues(dns, 2);
          delete dns;
+         kmeansFilter->setThreshold(1, -m_sigma);
          m_procChain->add(kmeansFilter.get());
       }
    }

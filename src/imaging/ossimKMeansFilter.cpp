@@ -20,14 +20,14 @@
 
 RTTI_DEF1(ossimKMeansFilter, "ossimKMeansFilter", ossimImageSourceFilter);
 
-static const char* NUM_GROUPINGS_KW = "num_groupings";
-
 ossimKMeansFilter::ossimKMeansFilter()
 :   ossimImageSourceFilter(),
     m_numClusters(0),
     m_tile(0),
     m_outputScalarType(OSSIM_SCALAR_UNKNOWN),
-    m_initialized(false)
+    m_initialized(false),
+    m_thresholdClusterID(-1),
+    m_thresholdStdDev(0.0)
 {
    setDescription("K-Means pixel classification filter.");
 }
@@ -39,7 +39,9 @@ ossimKMeansFilter::ossimKMeansFilter(ossimImageSource* input_source,
     m_numClusters(0),
     m_tile(0),
     m_outputScalarType(OSSIM_SCALAR_UNKNOWN),
-    m_initialized(false)
+    m_initialized(false),
+    m_thresholdClusterID(-1),
+    m_thresholdStdDev(0.0)
 {
    setDescription("K-Means pixel classification filter.");
 }
@@ -52,6 +54,7 @@ void ossimKMeansFilter::setInputHistogram(ossimMultiBandHistogram* histo)
 {
    m_histogram = histo;
    m_initialized = 0;
+   m_thresholds.clear();
 }
 
 ossimRefPtr<ossimImageData> ossimKMeansFilter::getTile(const ossimIrect& tileRect,
@@ -109,16 +112,27 @@ ossimRefPtr<ossimImageData> ossimKMeansFilter::getTile(const ossimIrect& tileRec
             pixel = inTile->getPix(ipt, band);
             if (pixel != null_pixel)
             {
-               // Determine its group and remap it using the group's DN:
-               for (ossim_uint32 gid=0; gid<m_numClusters; ++gid)
+               // if thresholding, only interested in the threshold point, not the cluster:
+               if (m_thresholds.size() > band)
                {
-                  cluster = bandClusters->getCluster(gid);
-                  if (!cluster)
-                     continue;
-                  if ((pixel >= (cluster->min-delta)) && (pixel <= (cluster->max+delta)))
+                  if (pixel <= m_thresholds[band])
+                     outBuf[offset] = (ossim_uint8) m_pixelValues[0];
+                  else
+                     outBuf[offset] = (ossim_uint8) m_pixelValues[1];
+               }
+               else
+               {
+                  // Determine its group and remap it using the group's DN:
+                  for (ossim_uint32 gid=0; gid<m_numClusters; ++gid)
                   {
-                     outBuf[offset] = (ossim_uint8) m_pixelValues[gid];
-                     break;
+                     cluster = bandClusters->getCluster(gid);
+                     if (!cluster)
+                        continue;
+                     if ((pixel >= (cluster->min-delta)) && (pixel <= (cluster->max+delta)))
+                     {
+                        outBuf[offset] = (ossim_uint8) m_pixelValues[gid];
+                        break;
+                     }
                   }
                }
             }
@@ -207,6 +221,9 @@ void ossimKMeansFilter::initialize()
 
 bool ossimKMeansFilter::computeKMeans()
 {
+   m_classifiers.clear();
+   m_thresholds.clear();
+
    ostringstream xmsg;
    if (m_numClusters == 0)
    {
@@ -238,17 +255,42 @@ bool ossimKMeansFilter::computeKMeans()
          break;
       }
       m_classifiers.push_back(classifier);
+
+      // If thresholding, compute threshold point:
+      if ((m_thresholdClusterID >= 0) && (m_thresholdClusterID < classifier->getNumClusters()))
+      {
+         double mean = classifier->getMean((ossim_uint32) m_thresholdClusterID);
+         double sigma = classifier->getSigma((ossim_uint32) m_thresholdClusterID);
+         double threshold = mean + m_thresholdStdDev*sigma;
+
+         // Cap the manual (sigma) threshold if it passes the cluster boundary:
+         if ((m_thresholdStdDev>0)&&(threshold>classifier->getMaxValue(m_thresholdClusterID)))
+            threshold = classifier->getMaxValue(m_thresholdClusterID);
+         else if ((m_thresholdStdDev<0)&&(threshold<classifier->getMinValue(m_thresholdClusterID)))
+            threshold = classifier->getMinValue(m_thresholdClusterID);
+         m_thresholds.push_back(threshold);
+
+         cout<<"### mean = "<<mean<<endl; //TODO REMOVE
+         cout<<"### sigma = "<<sigma<<endl;//TODO REMOVE
+         cout<<"### threshold = "<<threshold<<endl;//TODO REMOVE
+      }
    }
+
 
    return (m_classifiers.size() == numBands);
 }
-
 
 void ossimKMeansFilter::clear()
 {
    m_classifiers.clear();
    m_numClusters = 0;
    m_initialized = false;
+}
+
+void ossimKMeansFilter::setThreshold(ossim_uint32 clusterID, const double& sigma_deviation)
+{
+   m_thresholdClusterID = clusterID;
+   m_thresholdStdDev = sigma_deviation;
 }
 
 void ossimKMeansFilter::setNumClusters(ossim_uint32 K)
