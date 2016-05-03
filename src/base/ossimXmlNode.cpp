@@ -403,8 +403,10 @@ void ossimXmlNode::findChildNodes(const ossimString& xpath,
    //***
    ossimXmlNode::ChildListType::const_iterator child_iter = theChildNodes.begin();
    ossimXmlNode::ChildListType::const_iterator child_end  = theChildNodes.end();
-   
-   if (delim_pos==std::string::npos) // No XPATH_DELIM character found
+
+
+   // No XPATH_DELIM character found, or XPATH_DELIM at the end of xpath
+   if (delim_pos==std::string::npos || delim_pos == xpath.size()-1) 
    {
       for ( ; child_iter != child_end ; ++ child_iter)
       {
