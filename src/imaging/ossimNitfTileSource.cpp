@@ -798,21 +798,59 @@ bool ossimNitfTileSource::initializeBlockSize()
    }
    else
    {
-      bytesRowCol = (hdr->getNumberOfPixelsPerBlockHoriz()*
-                     hdr->getNumberOfPixelsPerBlockVert()*
-                     hdr->getBitsPerPixelPerBand()) / 8;
+      //---
+      // Busting int32 limit on single block data.
+      // Need a new read method to handle this. (drb - 09 May 2016)
+      //---
+      ossim_uint64 x     = hdr->getNumberOfPixelsPerBlockHoriz();
+      ossim_uint64 y     = hdr->getNumberOfPixelsPerBlockVert();
+      ossim_uint64 bpp   = hdr->getBitsPerPixelPerBand();
+      ossim_uint64 bytes = x * y * bpp / 8;
+      if ( bytes > 2147483647 )
+      {
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << "ossimNitfTileSource::initializeBlockSize WARNING!"
+               << "\nBusting 2 GIG block size: " << bytes
+               << std::endl;
+         }
+         return false;
+      }
+      bytesRowCol = (ossim_uint32)bytes;
    }
-   
-   bytesRowColCacheTile = (theCacheSize.x*
-                           theCacheSize.y*
-                           hdr->getBitsPerPixelPerBand())/8;
+
+   if ( !bytesRowColCacheTile )
+   {
+      //---
+      // Busting int32 limit on single block data.
+      // Need a new read method to handle this. (drb - 09 May 2016)
+      //---
+      ossim_uint64 x = theCacheSize.x;
+      ossim_uint64 y = theCacheSize.y;
+      ossim_uint64 bpp = hdr->getBitsPerPixelPerBand();
+      ossim_uint64 bytes = x * y * bpp / 8;
+      if ( bytes > 2147483647 )
+      {
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << "ossimNitfTileSource::initializeBlockSize WARNING!"
+               << "\nBusting 2 GIG cache bytes: " << bytes
+               << std::endl;
+         }
+         return false;
+      }
+      
+      bytesRowColCacheTile = bytes;
+   }
 
 #if 0
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "DEBUG:"
-         << "\ncompressionHeader:  " << compressionHeader
+         // << "\ncompressionHeader:  " << compressionHeader
          << "\ngetNumberOfPixelsPerBlockHoriz():  "
          << hdr->getNumberOfPixelsPerBlockHoriz()
          << "\ngetNumberOfPixelsPerBlockVert():  "
@@ -870,7 +908,7 @@ bool ossimNitfTileSource::initializeBlockSize()
       }
    }
 
-//#if 0
+#if 0
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
@@ -881,7 +919,7 @@ bool ossimNitfTileSource::initializeBlockSize()
          << "\nRead block size in bytes: " << theReadBlockSizeInBytes
          << endl;
    }
-//#endif
+#endif
 
    return true;
 }
