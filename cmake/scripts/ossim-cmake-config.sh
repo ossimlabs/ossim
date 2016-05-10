@@ -128,7 +128,7 @@ if [ -z $BUILD_OSSIM_APPS ] ; then
    export BUILD_OSSIM_APPS=ON
 fi
 if [ -z $BUILD_OSSIM_CURL_APPS ] ; then
-   export BUILD_OSSIM_CURL_APP=OFF
+   export BUILD_OSSIM_CURL_APPS=OFF
 fi
 
 # Plugins:
