@@ -403,8 +403,10 @@ void ossimXmlNode::findChildNodes(const ossimString& xpath,
    //***
    ossimXmlNode::ChildListType::const_iterator child_iter = theChildNodes.begin();
    ossimXmlNode::ChildListType::const_iterator child_end  = theChildNodes.end();
-   
-   if (delim_pos==std::string::npos) // No XPATH_DELIM character found
+
+
+   // No XPATH_DELIM character found, or XPATH_DELIM at the end of xpath
+   if (delim_pos==std::string::npos || delim_pos == xpath.size()-1) 
    {
       for ( ; child_iter != child_end ; ++ child_iter)
       {
@@ -465,7 +467,8 @@ const ossimRefPtr<ossimXmlNode>& ossimXmlNode::findFirstNode(const ossimString& 
    ossimXmlNode::ChildListType::const_iterator child_iter = theChildNodes.begin();
    ossimXmlNode::ChildListType::const_iterator child_end  = theChildNodes.end();
 
-   if (delim_pos==std::string::npos) // No XPATH_DELIM character found
+   // No XPATH_DELIM character found, or XPATH_DELIM at the end of xpath
+   if (delim_pos==std::string::npos || delim_pos == xpath.size()-1) 
    {
       for ( ; child_iter != child_end ; ++ child_iter)
       {
@@ -533,7 +536,8 @@ ossimRefPtr<ossimXmlNode> ossimXmlNode::findFirstNode(const ossimString& xpath)
    ossimXmlNode::ChildListType::iterator child_iter = theChildNodes.begin();
    ossimXmlNode::ChildListType::iterator child_end  = theChildNodes.end();
 
-   if (delim_pos==std::string::npos) // No XPATH_DELIM character found
+   // No XPATH_DELIM character found, or XPATH_DELIM at the end of xpath
+   if (delim_pos==std::string::npos || delim_pos == xpath.size()-1) 
    {
       for ( ; child_iter != child_end ; ++ child_iter)
       {
@@ -812,7 +816,8 @@ ossimRefPtr<ossimXmlNode> ossimXmlNode::addNode(const ossimString& relPath,
    
    if(!node.valid())
    {
-      if (delim_pos==std::string::npos) // No XPATH_DELIM character found
+      // No XPATH_DELIM character found, or XPATH_DELIM at the end of xpath
+      if (delim_pos==std::string::npos || delim_pos == relPath.size()-1) 
       {
          node = addChildNode(desiredTag, text);
       }
@@ -821,7 +826,7 @@ ossimRefPtr<ossimXmlNode> ossimXmlNode::addNode(const ossimString& relPath,
          node = addChildNode(desiredTag, "");
       }
    }
-   if (delim_pos != std::string::npos) // XPATH_DELIM character found!
+   if (delim_pos != std::string::npos && delim_pos != relPath.size()-1) // XPATH_DELIM character found!
    {
       const ossimString subPath   = relPath.substr(delim_pos+1, std::string::npos);
       return node->addNode(subPath, text);
