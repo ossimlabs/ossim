@@ -60,12 +60,13 @@ bool ossimKMeansClustering::computeKmeans()
       else if (m_samples[i] > overall_max)
          overall_max = m_samples[i];
    }
+
    double max_delta = overall_max - overall_min;
    double convergenceThreshold = 0.1*(max_delta)/m_numEntries;
    ossim_uint32 numClusters = m_clusters.size();
    double* variances = new double [numClusters];
    ossim_uint32* priorCounts = new ossim_uint32 [numClusters];
-  double interm_samples = (overall_max - overall_min) / numClusters;
+   double interm_samples = (overall_max - overall_min) / numClusters;
    double mean_i = overall_min + interm_samples / 2.0;  // initial mean for cluster 0;
    double bound = overall_min;
    for (ossim_uint32 gid=0; gid<numClusters; ++gid)
@@ -175,11 +176,13 @@ bool ossimKMeansClustering::computeKmeans()
    {
       for (ossim_uint32 gid=0; gid<numClusters; gid++)
       {
-         cout<<"cluster["<<gid<<"] n        = "<<m_clusters[gid].n<<endl;
-         cout<<"           mean     = "<<m_clusters[gid].mean<<endl;
-         cout<<"           sigma    = "<<m_clusters[gid].sigma<<endl;
-         cout<<"           min      = "<<m_clusters[gid].min<<endl;
-         cout<<"           max      = "<<m_clusters[gid].max<<endl;
+         cout<<"\nossimKMeansClustering Summary:"<<endl;
+         cout <<"  Number of iterations = "<<iters<<endl;
+         cout<<"  cluster["<<gid<<"] n        = "<<m_clusters[gid].n<<endl;
+         cout<<"             mean     = "<<m_clusters[gid].mean<<endl;
+         cout<<"             sigma    = "<<m_clusters[gid].sigma<<endl;
+         cout<<"             min      = "<<m_clusters[gid].min<<endl;
+         cout<<"             max      = "<<m_clusters[gid].max<<endl;
          cout << endl;
       }
    }

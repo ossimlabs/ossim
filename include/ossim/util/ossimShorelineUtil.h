@@ -35,7 +35,7 @@
 class OSSIMDLLEXPORT ossimShorelineUtil : public ossimChipProcUtil
 {
 public:
-   enum AlgorithmId { UNKNOWN, NDWI, AWEI };
+   enum AlgorithmId { UNKNOWN, NDWI, AWEI, PAN_THRESHOLD };
 
    ossimShorelineUtil();
    ~ossimShorelineUtil();
@@ -53,7 +53,6 @@ public:
 
 protected:
    virtual void initProcessingChain();
-   void initLandsat8();
    void computeKMeans();
 
    /** @brief Hidden from use copy constructor. */
@@ -79,6 +78,7 @@ protected:
    bool m_doEdgeDetect;
    ossimFilename m_vectorFilename;
    bool m_doRaster;
+   bool m_noVector;
 
    //ossimRefPtr<ossimHistogramWriter> m_histoWriter;
 };

@@ -31,7 +31,6 @@ static const string COLOR_CODING_KW = "color_coding";
 static const string SMOOTHING_KW = "smoothing";
 static const string THRESHOLD_KW = "threshold";
 static const string SIGMA_KW = "sigma";
-static const string RASTER_KW = "raster";
 static const string TOLERANCE_KW = "tolerance";
 static const string ALGORITHM_KW = "algorithm";
 static const string DO_EDGE_DETECT_KW = "do_edge_detect";
@@ -55,7 +54,8 @@ ossimShorelineUtil::ossimShorelineUtil()
      m_skipThreshold(false),
      m_smoothing(0),
      m_doEdgeDetect(false),
-     m_doRaster(false)
+     m_doRaster(false),
+     m_noVector(false)
 {
 }
 
@@ -75,20 +75,25 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
    au->setCommandLineUsage(usageString);
    au->setDescription("Computes vector shoreline from raster imagery. The vectors are output "
          "in GeoJSON format. If an output filename is specified, the JSON is written to it. "
-         "Otherwise it is written to the console.");
+         "Otherwise it is written to the console. The supported algorithms are (where A, B, etc are ordered input band files): \n"
+         "   NDWI = (A - B) / (A + B) \n"
+         "   AWEI = 4*(A + B) - 0.25*C - 2.75*D \n"
+         "   PAN-THRESHOLD = A (no equation applied). The input single-band image is thresholded directly. \n");
 
    // Set the command line options:
    au->addCommandLineOption("--algorithm <name>",
-         "Specifies detection algorithm to apply. Supported names are \"ndwi\" (requires 2 input "
-         "bands: 3 and 5|6) (default), \"awei\" (requires 4 input bands: 3, 6, 5, and 7).");
+         "Specifies detection algorithm to apply. Supported names are: "
+         "\"ndwi\", \"aewi\", \"pan-threshold\"");
    au->addCommandLineOption("--color-coding <water> <marginal> <land>",
          "Specifies the pixel values (0-255) for the output product corresponding to water, marginal, "
          "and land zones. Defaults to 0, 128, and 255, respectively.");
    au->addCommandLineOption("--edge",
          "Directs the processing to perform an edge detection instead of outputing a vector product."
          " Defaults to FALSE.");
-    au->addCommandLineOption("--raster",
-         "Outputs the raster result of indexed image instead of a vector product. For engineering purposes.");
+   au->addCommandLineOption("--no-vector",
+        "Outputs the raster, thresholded indexed image instead of a vector product. For engineering purposes.");
+   au->addCommandLineOption("--raster",
+        "Outputs the raster result of indexed image instead of a vector product. For engineering purposes.");
     au->addCommandLineOption("--sensor <string>",
            "Sensor used to compute Modified Normalized Difference Water Index. Currently only "
            "\"ls8\" supported (default).");
@@ -131,8 +136,11 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
    if ( ap.read("--edge"))
       m_kwl.addPair(DO_EDGE_DETECT_KW, string("true"));
 
+   if ( ap.read("--no-vector"))
+      m_noVector = true;
+
    if ( ap.read("--raster"))
-      m_kwl.addPair(RASTER_KW, string("true"));
+      m_doRaster = true;
 
    if ( ap.read("--sensor", sp1))
       m_kwl.addPair(ossimKeywordNames::SENSOR_ID_KW, ts1);
@@ -177,6 +185,8 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
          m_algorithm = NDWI;
       else if (value=="awei")
          m_algorithm = AWEI;
+      else if (value=="pan-threshold")
+         m_algorithm = PAN_THRESHOLD;
       else
       {
          xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Bad value encountered for keyword <"
@@ -202,8 +212,6 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
          throw ossimException(xmsg.str());
       }
    }
-
-   m_kwl.getBoolKeywordValue(m_doRaster, RASTER_KW.c_str());
 
    value = m_kwl.find(ossimKeywordNames::SENSOR_ID_KW);
    if (!value.empty())
@@ -266,12 +274,47 @@ void ossimShorelineUtil::initProcessingChain()
       throw ossimException(xmsg.str());
    }
 
-   if (m_sensor == "ls8")
-      initLandsat8();
+   ossim_uint32 reqdNumInputs = 0;
+   ossimString equationSpec;
+   switch (m_algorithm)
+   {
+   case NDWI:
+      reqdNumInputs = 2;
+      equationSpec = "in[0]/(in[0]+in[1])";
+      break;
+   case AWEI:
+      reqdNumInputs = 4;
+      equationSpec = "4*(in[0]+in[1]) - 0.25*in[2] - 2.75*in[3]";
+      break;
+   case PAN_THRESHOLD:
+      reqdNumInputs = 1;
+      break;
+   default:
+      break;
+   }
+
+   if (m_imgLayers.size() < reqdNumInputs)
+   {
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Expected "<< reqdNumInputs << " input images"
+            " but only found "<<m_imgLayers.size()<<"."<<ends;
+      throw ossimException(xmsg.str());
+   }
+
+   if ((m_algorithm==NDWI) || (m_algorithm==AWEI))
+   {
+      // Set up equation combiner:
+      ossimConnectableObject::ConnectableObjectList connectable_list;
+      for (ossim_uint32 i=0; i<reqdNumInputs; ++i)
+         connectable_list.push_back(m_imgLayers[i].get());
+      ossimRefPtr<ossimEquationCombiner> eqFilter = new ossimEquationCombiner(connectable_list);
+      eqFilter->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
+      eqFilter->setEquation(equationSpec);
+      m_procChain->add(eqFilter.get());
+   }
    else
    {
-      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Sensor <"<<m_sensor<<"> not supported"<<ends;
-      throw ossimException(xmsg.str());
+      // Just add input connection for pan thresholding:
+      m_procChain->add(m_imgLayers[0].get());
    }
 
    if (m_smoothing > 0)
@@ -341,7 +384,7 @@ void ossimShorelineUtil::initProcessingChain()
          dns[1] = m_waterValue;
          kmeansFilter->setClusterPixelValues(dns, 2);
          delete dns;
-         kmeansFilter->setThreshold(1, -m_sigma);
+         //kmeansFilter->setThreshold(1, -m_sigma);
          m_procChain->add(kmeansFilter.get());
       }
    }
@@ -353,43 +396,6 @@ void ossimShorelineUtil::initProcessingChain()
       edge_filter->setFilterType("roberts");
       m_procChain->add(edge_filter.get());
    }
-}
-
-void ossimShorelineUtil::initLandsat8()
-{
-   ostringstream xmsg;
-
-   ossim_uint32 reqdNumInputs = 0;
-   ossimString equationSpec;
-   switch (m_algorithm)
-   {
-   case NDWI:
-      reqdNumInputs = 2;
-      equationSpec = "in[0]/(in[0]+in[1])";
-      break;
-   case AWEI:
-      reqdNumInputs = 4;
-      equationSpec = "4*(in[0]+in[1]) - 0.25*in[2] - 2.75*in[3]";
-      break;
-   default:
-      break;
-   }
-
-   if (m_imgLayers.size() < reqdNumInputs)
-   {
-      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Expected "<< reqdNumInputs << " input images"
-            " but only found "<<m_imgLayers.size()<<"."<<ends;
-      throw ossimException(xmsg.str());
-   }
-
-   // Set up equation combiner:
-   ossimConnectableObject::ConnectableObjectList connectable_list;
-   for (ossim_uint32 i=0; i<reqdNumInputs; ++i)
-      connectable_list.push_back(m_imgLayers[i].get());
-   ossimRefPtr<ossimEquationCombiner> eqFilter = new ossimEquationCombiner(connectable_list);
-   eqFilter->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
-   eqFilter->setEquation(equationSpec);
-   m_procChain->add(eqFilter.get());
 }
 
 ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& bounding_irect)
@@ -414,7 +420,7 @@ bool ossimShorelineUtil::execute()
    // Base class handles the thresholded image generation. May throw exception. Output written to
    // m_productFilename:
    bool status = ossimChipProcUtil::execute();
-   if (m_doRaster)
+   if (m_doRaster || m_noVector)
       return status;
 
    if (m_doEdgeDetect)
