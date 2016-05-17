@@ -1,0 +1,9 @@
+[Service]
+PermissionsStartOnly=true
+Type=forking
+PIDFile=/var/run/{{program_name}}/{{program_name}}.pid
+ExecStart=/bin/bash -c "/usr/share/ossim/{{program_name}}/{{program_name}}.sh /var/run/{{program_name}}/{{program_name}}.pid >> /var/log/{{program_name}}/{{program_name}}.log 2>&1" &
+User={{program_user}}
+Group={{program_group}}
+WorkingDirectory=/usr/share/ossim/{{program_name}}
+Restart=on-abort

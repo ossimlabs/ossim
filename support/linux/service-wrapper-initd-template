@@ -1,0 +1,213 @@
+#!/bin/bash
+#
+### BEGIN INIT INFO
+# chkconfig: 3 80 20
+# Provides: General service wrapper for {{program_name}} services
+# Required-Start: $network $syslog
+# Required-Stop: $network $syslog
+# Default-Start: 3
+# Default-Stop: 0 1 2 6
+# Should-Start: $network $syslog
+# Should-Stop: $network $syslog
+# Description: start, stop and restart script
+# Short-Description: start, stop and restart ingestListener
+### END INIT INFO
+RETVAL=$?
+PROG={{program_name}}
+PROG_USER={{program_user}}
+PROG_GROUP={{program_group}}
+PID_DIR="/var/run/${PROG}"
+PROG_PID_DIR="${PID_DIR}"
+PROG_PID="$PID_DIR/${PROG}.pid"
+PROG_LOG_DIR="/var/log/${PROG}"
+PROG_ERROR_LOG="${PROG_LOG_DIR}/error_log"
+export WORKING_DIR="/usr/share/ossim/${PROG}"
+RUN_PROG_TEST="/usr/share/ossim/${PROG}/${PROG}.sh"
+RUN_PROGRAM="${RUN_PROG_TEST} ${PROG_PID}"
+
+# Must be exported in order for catatlina to generate pid file
+export PROG_PID
+start() {
+   if [ -f "$RUN_PROG_TEST" ]; then
+      # Make omar lock file dir and change ownership to omar user
+      if [ ! -d "$PID_DIR" ]; then
+            mkdir -p $PID_DIR
+            chown $PROG_USER:$PROG_GROUP $PID_DIR
+      fi
+      # Make omar log directory and change ownership to omar user
+      if [ ! -d "$PROG_LOG_DIR" ]; then
+            mkdir -p $PROG_LOG_DIR
+            chown $PROG_USER:$PROG_GROUP $PROG_LOG_DIR
+      fi
+      # Check for running instance
+      if [ -e "$PROG_PID" ]; then
+              read PID < $PROG_PID
+                   if checkpid $PID 2>&1; then
+                       echo $"$PROG process is already running..."
+                           return 1
+                           echo_failure
+                       else
+                           echo "Lock file found but no $PROG process running for (pid $PID)"
+                           echo "Removing old lock file..."
+                     rm -rf $PROG_PID
+                   fi
+        fi
+         echo -ne $"Starting $PROG: "
+         echo $RUN_PROGRAM
+            /bin/su - $PROG_USER $RUN_PROGRAM >> $PROG_ERROR_LOG 2>&1
+            RETVAL="$?"
+          if [ "$RETVAL" -eq 0 ]; then
+               echo_success
+                  echo -en "\n"
+            else
+                  echo_failure
+                  echo -en "\n"
+               exit 1
+          fi
+   else
+      echo "$RUN_PROGRAM does not exist..."
+      echo_failure
+      echo -en "\n"
+      exit 1
+   fi
+}
+
+stop() {
+    COUNT=0
+    WAIT=10
+    if [ -e "$PROG_PID" ]; then
+      read PID < $PROG_PID
+#echo ${PID}
+        if checkpid $PID 2>&1; then
+            echo -ne $"Stopping $PROG: "
+         kill $PID >> $PROG_ERROR_LOG 2>&1
+         RETVAL="$?"
+         sleep 2
+#        if [ "$RETVAL" -eq 0 ]; then
+#           echo_successss
+#           echo -en "\n"
+#        else
+            while [ "$(ps -p $PID | grep -c $PID)" -eq "1"  -a  "$COUNT" -lt "$WAIT" ]; do
+            echo -ne "\nWaiting on $PROG process to exit..."
+            COUNT=`expr $COUNT + 1`
+            sleep .3
+#           echo $COUNT
+            done
+
+#              if [ "$COUNT" -gt "$WAIT" ]; then
+               if [ "$(ps -p $PID | grep -c $PID)" == "1" ] ; then
+                  echo -ne "\nCouldn't shutdown, forcing shutdown of $PROG process"
+                  kill -9 $PID
+               fi
+               echo_success
+               echo -en "\n"
+#        fi
+      fi
+   else
+      echo -ne $"Stopping $PROG: "
+      echo_failure
+      echo -en "\n"
+   fi
+}
+
+status() {
+  RETVAL="1"
+    if [ -e "$PROG_PID" ]; then
+        read PID < $PROG_PID
+        if checkpid $PID 2>&1; then
+            echo "$PROG (pid $PID) is running..."
+            RETVAL="0"
+        else
+            echo "Lock file found but no process running for (pid $PID)"
+        fi
+    else
+        PID="$(pgrep -u $PROG_USER java)"
+        if [ -n "$PID" ]; then
+            echo "$PROG running (pid $PID) but no PID file exists"
+            RETVAL="0"
+        else
+            echo "$PROG is stopped"
+            RETVAL="1"
+        fi
+    fi
+    return $RETVAL
+}
+
+# Check if pid is running
+checkpid() {
+   local PID
+   for PID in $* ; do
+      [ -d "/proc/$PID" ] && return 0
+   done
+   return 1
+}
+
+echo_success() {
+   if [ -e "/etc/redhat-release" ]; then
+      echo -en "\\033[60G"
+      echo -n "[  "
+      echo -en "\\033[0;32m"
+      echo -n $"OK"
+      echo -en "\\033[0;39m"
+      echo -n "  ]"
+      echo -en "\r"
+   elif [ -e "/etc/SuSE-release" ]; then
+      echo -en "\\033[60G"
+      echo -en "\\033[1;32m"
+      echo -n $"done"
+      echo -en "\\033[0;39m"
+      echo -en "\r"
+   else
+      echo -en "\\033[60G"
+      echo "OK"
+      echo -en "\r"
+   fi
+   return 0
+}
+
+echo_failure() {
+   if [ -e "/etc/redhat-release" ]; then
+      echo -en "\\033[60G"
+      echo -n "["
+      echo -en "\\033[0;31m"
+      echo -n $"FAILED"
+      echo -en "\\033[0;39m"
+      echo -n "]"
+      echo -en "\r"
+   elif [ -e "/etc/SuSE-release" ]; then
+      echo -en "\\033[60G"
+      echo -en "\\033[0;31m"
+      echo -n $"failed"
+      echo -en "\\033[0;39m"
+      echo -en "\r"
+   else
+      echo -en "\\033[60G"
+      echo "FAILED"
+      echo -en "\r"
+   fi
+    return 1
+}
+
+# See how we were called.
+case "$1" in
+ start)
+   start
+   ;;
+ stop)
+   stop
+   ;;
+restart)
+   stop
+    sleep 2
+    start
+    ;;
+status)
+   status
+   ;;
+ *)
+   echo $"Usage: $PROG {start|stop|restart|status}"
+   exit 1
+   ;;
+esac
+
+exit $RETVAL
