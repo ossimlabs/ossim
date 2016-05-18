@@ -21,8 +21,8 @@ PROG_PID_DIR="${PID_DIR}"
 PROG_PID="$PID_DIR/${PROG}.pid"
 PROG_LOG_DIR="/var/log/${PROG}"
 PROG_ERROR_LOG="${PROG_LOG_DIR}/error_log"
-export WORKING_DIR="/usr/share/ossim/${PROG}"
-RUN_PROG_TEST="/usr/share/ossim/${PROG}/${PROG}.sh"
+export WORKING_DIR="/usr/share/omar/${PROG}"
+RUN_PROG_TEST="/usr/share/omar/${PROG}/${PROG}.sh"
 RUN_PROGRAM="${RUN_PROG_TEST} ${PROG_PID}"
 
 # Must be exported in order for catatlina to generate pid file
