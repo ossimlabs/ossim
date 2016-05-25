@@ -42,7 +42,7 @@ ENDIF(NOT APPLE)
 
 
 if(NOT OSSIM_DEV_HOME)
-   MESSAGE(FATAL_ERROR "Please pass in or define the OSSIM_DEV_HOME root path where all modules are located. This includes ossim, ossim-planet, ossim-wms, ams, � etc.")
+   MESSAGE(FATAL_ERROR "Please pass in or define the OSSIM_DEV_HOME root path where all modules are located. This includes ossim, ossim-planet, ... etc.")
 ENDIF(NOT OSSIM_DEV_HOME)
 
 #IF(NOT APPLE)
