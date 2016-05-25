@@ -149,17 +149,17 @@ bool ossimKMeansClustering::computeKmeans()
          if (m_clusters[gid].n != priorCounts[gid])
             converged = false;
 
-         if (m_verbose)
-         {
-            cout<<"iteration: "<<iters<<endl;
-            cout<<"cluster["<<gid<<"].mean     = "<<m_clusters[gid].mean<<endl;
-            cout<<"cluster["<<gid<<"].new_mean = "<<m_clusters[gid].new_mean<<endl;
-            cout<<"cluster["<<gid<<"].sigma    = "<<m_clusters[gid].sigma<<endl;
-            cout<<"cluster["<<gid<<"].n        = "<<m_clusters[gid].n<<"  prior: "<<priorCounts[gid]<<endl;
-            cout<<"cluster["<<gid<<"].min      = "<<m_clusters[gid].min<<endl;
-            cout<<"cluster["<<gid<<"].max      = "<<m_clusters[gid].max<<endl;
-            cout << endl;
-         }
+//         if (m_verbose)
+//         {
+//            cout<<"iteration: "<<iters<<endl;
+//            cout<<"cluster["<<gid<<"].mean     = "<<m_clusters[gid].mean<<endl;
+//            cout<<"cluster["<<gid<<"].new_mean = "<<m_clusters[gid].new_mean<<endl;
+//            cout<<"cluster["<<gid<<"].sigma    = "<<m_clusters[gid].sigma<<endl;
+//            cout<<"cluster["<<gid<<"].n        = "<<m_clusters[gid].n<<"  prior: "<<priorCounts[gid]<<endl;
+//            cout<<"cluster["<<gid<<"].min      = "<<m_clusters[gid].min<<endl;
+//            cout<<"cluster["<<gid<<"].max      = "<<m_clusters[gid].max<<endl;
+//            cout << endl;
+//         }
          if (m_clusters[gid].n)
             m_clusters[gid].mean = m_clusters[gid].new_mean;
 
@@ -174,17 +174,16 @@ bool ossimKMeansClustering::computeKmeans()
 
    if (m_verbose)
    {
+      cout<<"\nossimKMeansClustering Summary ("<<iters<<" iterations):"<<endl;
       for (ossim_uint32 gid=0; gid<numClusters; gid++)
       {
-         cout<<"\nossimKMeansClustering Summary:"<<endl;
-         cout <<"  Number of iterations = "<<iters<<endl;
-         cout<<"  cluster["<<gid<<"] n        = "<<m_clusters[gid].n<<endl;
+         cout<<"\n  cluster["<<gid<<"] n        = "<<m_clusters[gid].n<<endl;
          cout<<"             mean     = "<<m_clusters[gid].mean<<endl;
          cout<<"             sigma    = "<<m_clusters[gid].sigma<<endl;
          cout<<"             min      = "<<m_clusters[gid].min<<endl;
          cout<<"             max      = "<<m_clusters[gid].max<<endl;
-         cout << endl;
       }
+      cout << endl;
    }
 
    delete variances;

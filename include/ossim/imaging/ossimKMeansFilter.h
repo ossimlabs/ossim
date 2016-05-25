@@ -50,6 +50,8 @@ class ossimHistogram;
 class OSSIM_DLL ossimKMeansFilter : public ossimImageSourceFilter
 {
 public:
+   enum ThresholdMode { NONE=0, MEAN=1, SIGMA_WEIGHTED=2, VARIANCE_WEIGHTED=3 };
+
    ossimKMeansFilter();
 
    /**
@@ -86,14 +88,15 @@ public:
    /**
     * Special use case is to use K-means for thresholding an image into two values based on
     * the histogram's clustering. The threshold point can be left at the default boundary between
-    * clusters, or alternatively, can be set to some standard deviation departure from a particular
-    * cluster's mean. For example, to place the threshold point at 3*sigma "below" the second
-    * cluster's mean, use setThreshold(1, -3.0). Note minus sign to denote "below" mean.
-    * @param clusterID Index (0-based) identifying cluster
-    * @param sigma_deviation Threshold point expressed as multiple of cluster's standard deviation.
-    * Can be negative.
+    * clusters, or alternatively, can be computed according to predefined modes. Currently support
+    * the following modes (where mn and sn is the mean and sigma of nth cluster, respectively):
+    *
+    *    NONE              Implies MEAN for multiple clusters.
+    *    MEAN              (m0 + m1)/2
+    *    SIGMA_WEIGHTED    (s1*m0 + s0*m1)/(s0 + s1)
+    *    VARIANCE_WEIGHTED (s1*s1*m0 + s0*s0*m1)/(s0*s0 + s1*s1)
     */
-   void setThreshold(ossim_uint32 clusterID, const double& sigma_deviation);
+   void setThresholdMode(ThresholdMode mode);
 
    /**
     * Callers may be interested in reporting the cluster statistics computed by this class. Returns
@@ -127,8 +130,7 @@ protected:
    ossimRefPtr<ossimImageData> m_tile;
    ossimScalarType m_outputScalarType;
    bool m_initialized;
-   int m_thresholdClusterID;
-   double m_thresholdStdDev;
+   ThresholdMode m_thresholdMode;
    std::vector<double> m_thresholds;
 
 TYPE_DATA

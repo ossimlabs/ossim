@@ -26,8 +26,7 @@ ossimKMeansFilter::ossimKMeansFilter()
     m_tile(0),
     m_outputScalarType(OSSIM_SCALAR_UNKNOWN),
     m_initialized(false),
-    m_thresholdClusterID(-1),
-    m_thresholdStdDev(0.0)
+    m_thresholdMode(NONE)
 {
    setDescription("K-Means pixel classification filter.");
 }
@@ -40,8 +39,7 @@ ossimKMeansFilter::ossimKMeansFilter(ossimImageSource* input_source,
     m_tile(0),
     m_outputScalarType(OSSIM_SCALAR_UNKNOWN),
     m_initialized(false),
-    m_thresholdClusterID(-1),
-    m_thresholdStdDev(0.0)
+    m_thresholdMode(NONE)
 {
    setDescription("K-Means pixel classification filter.");
 }
@@ -256,26 +254,31 @@ bool ossimKMeansFilter::computeKMeans()
       }
       m_classifiers.push_back(classifier);
 
-      // If thresholding, compute threshold point:
-      if ((m_thresholdClusterID >= 0) && (m_thresholdClusterID < classifier->getNumClusters()))
+      if ((m_thresholdMode != NONE) && (classifier->getNumClusters() == 2))
       {
-         double mean = classifier->getMean((ossim_uint32) m_thresholdClusterID);
-         double sigma = classifier->getSigma((ossim_uint32) m_thresholdClusterID);
-         double threshold = mean + m_thresholdStdDev*sigma;
-
-         // Cap the manual (sigma) threshold if it passes the cluster boundary:
-         if ((m_thresholdStdDev>0)&&(threshold>classifier->getMaxValue(m_thresholdClusterID)))
-            threshold = classifier->getMaxValue(m_thresholdClusterID);
-         else if ((m_thresholdStdDev<0)&&(threshold<classifier->getMinValue(m_thresholdClusterID)))
-            threshold = classifier->getMinValue(m_thresholdClusterID);
+         double mean0 = classifier->getMean(0);
+         double mean1 = classifier->getMean(1);
+         double sigma0 = classifier->getSigma(0);
+         double sigma1 = classifier->getSigma(1);
+         double threshold = 0;
+         switch (m_thresholdMode)
+         {
+         case MEAN:
+            threshold = (mean0 + mean1)/2.0;
+            break;
+         case SIGMA_WEIGHTED:
+            threshold = (sigma1*mean0 + sigma0*mean1)/(sigma0 + sigma1);
+            break;
+         case VARIANCE_WEIGHTED:
+            threshold = (sigma1*sigma1*mean0 + sigma0*sigma0*mean1)/(sigma0*sigma0 + sigma1*sigma1);
+            break;
+         default:
+            break;
+         }
          m_thresholds.push_back(threshold);
-
-         cout<<"### mean = "<<mean<<endl; //TODO REMOVE
-         cout<<"### sigma = "<<sigma<<endl;//TODO REMOVE
-         cout<<"### threshold = "<<threshold<<endl;//TODO REMOVE
+         cout<<"ossimKMeansFilter:"<<__LINE__<<" Using threshold = "<<threshold<<endl;
       }
    }
-
 
    return (m_classifiers.size() == numBands);
 }
@@ -287,10 +290,9 @@ void ossimKMeansFilter::clear()
    m_initialized = false;
 }
 
-void ossimKMeansFilter::setThreshold(ossim_uint32 clusterID, const double& sigma_deviation)
+void ossimKMeansFilter::setThresholdMode(ThresholdMode mode)
 {
-   m_thresholdClusterID = clusterID;
-   m_thresholdStdDev = sigma_deviation;
+   m_thresholdMode = mode;
 }
 
 void ossimKMeansFilter::setNumClusters(ossim_uint32 K)
@@ -338,7 +340,41 @@ bool ossimKMeansFilter::saveState(ossimKeywordlist& kwl, const char* prefix)cons
    if (m_numClusters == 0)
       return true;
 
-   // TODO: Need to implement
+   ossim_uint32 numBands = getNumberOfInputBands();
+   kwl.add(prefix, "num_bands", numBands);
+   kwl.add(prefix, "num_clusters", m_numClusters);
+
+   ossimString key;
+   ossimString keybase1;
+   ossimString keybase2;
+   const ossimKMeansClustering* bandClusters = 0;
+   const ossimKMeansClustering::Cluster* cluster = 0;
+   for (ossim_uint32 band=0; band<numBands; band++)
+   {
+      if (numBands > 1)
+      {
+         keybase1 = "band";
+         keybase1 += ossimString::toString(band) + ".";
+      }
+
+      // Need bin size of histogram since only center values were used in clustering:
+      bandClusters = m_classifiers[band].get();
+      for (ossim_uint32 gid=0; gid < m_numClusters; ++gid)
+      {
+         keybase2 = keybase1;
+         keybase2 += "cluster";
+         keybase2 += ossimString::toString(gid);
+         cluster = bandClusters->getCluster(gid);
+         key = keybase2 + ".mean";
+         kwl.add(prefix, key.chars(), cluster->mean);
+         key = keybase2 + ".sigma";
+         kwl.add(prefix, key.chars(), cluster->sigma);
+         key = keybase2 + ".min";
+         kwl.add(prefix, key.chars(), cluster->min);
+         key = keybase2 + ".max";
+         kwl.add(prefix, key.chars(), cluster->max);
+      }
+   }
 
    bool rtn_stat = ossimImageSourceFilter::saveState(kwl, prefix);
    return rtn_stat;

@@ -36,6 +36,7 @@ class OSSIMDLLEXPORT ossimShorelineUtil : public ossimChipProcUtil
 {
 public:
    enum AlgorithmId { UNKNOWN, NDWI, AWEI, PAN_THRESHOLD };
+   enum ThresholdMode { NONE=0, MEAN=1, SIGMA=2, VARIANCE=3, VALUE=4 };
 
    ossimShorelineUtil();
    ~ossimShorelineUtil();
@@ -50,6 +51,9 @@ public:
 
    /** Used by ossimUtilityFactory */
    static const char* DESCRIPTION;
+
+   /** Used for obtaining important quantities used by the shoreline extraction algorithm.
+    * For engineering purposes. */
 
 protected:
    virtual void initProcessingChain();
@@ -71,16 +75,13 @@ protected:
    ossimString m_sensor;
    double m_threshold;
    double m_tolerance;
-   double m_sigma;
    AlgorithmId m_algorithm;
-   bool m_skipThreshold;
+   ThresholdMode m_thresholdMode;
    double m_smoothing;
    bool m_doEdgeDetect;
    ossimFilename m_vectorFilename;
    bool m_doRaster;
    bool m_noVector;
-
-   //ossimRefPtr<ossimHistogramWriter> m_histoWriter;
 };
 
 #endif
