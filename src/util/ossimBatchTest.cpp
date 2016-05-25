@@ -52,6 +52,10 @@ ossimBatchTest::ossimBatchTest()
    m_statusLabels.insert(map_item(TEST_FAILED,   "FAILED"));
    m_statusLabels.insert(map_item(TEST_ERROR,    "ERROR"));
    m_statusLabels.insert(map_item(TEST_DISABLED, "DISABLED"));
+   m_statusLabels.insert(map_item(TEST_PASSED|TEST_FAILED,   "FAILURE ENCOUNTERED"));
+   m_statusLabels.insert(map_item(TEST_PASSED|TEST_ERROR,   "ERROR ENCOUNTERED"));
+   m_statusLabels.insert(map_item(TEST_FAILED|TEST_ERROR,   "FAILURE AND ERROR ENCOUNTERED"));
+   m_statusLabels.insert(map_item(TEST_PASSED|TEST_FAILED|TEST_ERROR,   "FAILURE AND ERROR ENCOUNTERED"));
 }
 
 //**************************************************************************************************
