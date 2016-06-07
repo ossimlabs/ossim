@@ -103,7 +103,7 @@ bool ossimRangeDomeTileSource::open()
       return false;
    indata.read(magic_number, sizeOfMagic);
 
-   if (!OSSIM_RANGE_DOME_SPEC_MAGIC_NUMBER.contains(magic_number))
+   if (indata.eof() || indata.fail() || (OSSIM_RANGE_DOME_SPEC_MAGIC_NUMBER != magic_number))
       return false;
 
    // loop over each record/dome spec:
