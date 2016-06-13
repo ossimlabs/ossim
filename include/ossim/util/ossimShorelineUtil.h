@@ -52,12 +52,10 @@ public:
    /** Used by ossimUtilityFactory */
    static const char* DESCRIPTION;
 
-   /** Used for obtaining important quantities used by the shoreline extraction algorithm.
-    * For engineering purposes. */
 
 protected:
    virtual void initProcessingChain();
-   void computeKMeans();
+   void initLandsat8();
 
    /** @brief Hidden from use copy constructor. */
    ossimShorelineUtil( const ossimShorelineUtil& obj );
@@ -68,6 +66,7 @@ protected:
    /** @brief Initializes arg parser and outputs usage. */
    void usage(ossimArgumentParser& ap);
    void addArguments(ossimArgumentParser& ap);
+   bool addPropsToJSON();
 
    ossim_uint8 m_waterValue;
    ossim_uint8 m_marginalValue;
@@ -81,6 +80,7 @@ protected:
    bool m_doEdgeDetect;
    ossimFilename m_vectorFilename;
    bool m_doRaster;
+   std::map<ossimString, ossimString> m_geoJsonProps;
    bool m_noVector;
 };
 

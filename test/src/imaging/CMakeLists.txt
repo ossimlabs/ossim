@@ -21,3 +21,4 @@ OSSIM_SETUP_APPLICATION(ossim-single-image-chain-test INSTALL COMMAND_LINE COMPO
 OSSIM_SETUP_APPLICATION(ossim-single-image-chain-threaded-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-single-image-chain-threaded-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-threaded-chain-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-threaded-chain-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-kmeans-filter-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-kmeans-filter-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-fft-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-fft-test.cpp)

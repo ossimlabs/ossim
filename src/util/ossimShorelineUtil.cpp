@@ -5,6 +5,7 @@
 //
 //**************************************************************************************************
 
+#include <ossim/base/jsoncpp.h>
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimCommon.h>
@@ -25,6 +26,7 @@
 #include <ossim/imaging/ossimKMeansFilter.h>
 #include <ossim/util/ossimShorelineUtil.h>
 #include <ossim/util/ossimUtilityRegistry.h>
+#include <ossim/ossimVersion.h>
 #include <fstream>
 
 static const string COLOR_CODING_KW = "color_coding";
@@ -118,11 +120,11 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
    if (!ossimChipProcUtil::initialize(ap))
       return false;
 
-   string ts1;
+   ossimString ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
-   string ts2;
+   ossimString ts2;
    ossimArgumentParser::ossimParameter sp2(ts2);
-   string ts3;
+   ossimString ts3;
    ossimArgumentParser::ossimParameter sp3(ts3);
 
    if ( ap.read("--algorithm", sp1))
@@ -158,6 +160,13 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
 
    if ( ap.read("--tolerance", sp1))
       m_kwl.addPair(TOLERANCE_KW, ts1);
+
+   // Added for "beachfront" to allow passing properties (keyword:value pairs) through to the
+   // GeoJSON vector output
+   while (ap.read("--prop", sp1))
+   {
+      m_geoJsonProps.insert(pair<ossimString, ossimString>(ts1.before(":"), ts1.after(":")));
+   }
 
    // Fake the base class into thinking there is a default output filename to avoid it complaining,
    // since this utility will stream vector output to console if no output file name provided:
@@ -467,132 +476,86 @@ bool ossimShorelineUtil::execute()
    potrace_kwl.add("mode", "linestring");
    potrace_kwl.add("alphamax", "1.0");
    potrace_kwl.add("turdsize", "4");
+
    potrace->initialize(potrace_kwl);
 
    status =  potrace->execute();
    if (status)
+      status =  addPropsToJSON();
+
+   if (status)
       ossimNotify(ossimNotifyLevel_INFO)<<"Wrote vector product to <"<<m_vectorFilename<<">"<<endl;
+   else
+      ossimNotify(ossimNotifyLevel_WARN)<<"Error encountered writing vector product to <"<<m_vectorFilename<<">"<<endl;
 
    return status;
 }
 
-/*
-void ossimShorelineUtil::computeKMeans()
+bool ossimShorelineUtil::addPropsToJSON()
 {
-   int numbers, k, kvals[25], prevKvals[25], steps = 1, addition[25][100], count = 0, groups[25][100], min, groupnum, value, sum, ok = 1, nums[100];
-   cout << "How many numbers you want to enter: ";
-   cin >> numbers;
+   // Read existing JSON file as output by potrace:
+   Json::Value root;
+   std::ifstream jsonFile (m_vectorFilename.chars(), std::ifstream::binary);
+   if (jsonFile.fail() || jsonFile.eof())
+      return false;
+   jsonFile >> root;
+   jsonFile.close();
 
-   cout << "Enter value of k: ";
-   cin >> k;
+   // Add OSSIM-specific properties:
+   //Json::Value properties(Json::objectValue);
+   Json::Value property(Json::objectValue);
+   property["ossim-version"] = OSSIM_VERSION;
+   //properties.append(property);
 
-   //get numbers
-   for(int i = 0; i < numbers; i++)
+   property["commit"] = OSSIM_REVISION;
+   //properties.append(property);
+
+   property["build_date"] = OSSIM_BUILD_DATE;
+   //properties.append(property);
+
+   switch (m_algorithm)
    {
-      cout << "Enter Number " << i+1 << ": ";
-      cin >> nums[i];
+   case NDWI:
+      property["algorithm"] = "NDWI";
+      break;
+   case AWEI:
+      property["algorithm"] = "AWEI";
+      break;
+   default:
+      property["algorithm"] = "UNKNOWN";
+   }
+   //properties.append(property);
+
+   Json::Value  fnames(Json::arrayValue);
+   for (ossim_uint32 f=0; f<m_imgLayers.size(); f++)
+   {
+      Json::Value fname (m_imgLayers[f]->getFilename().chars());
+      fnames.append(fname);
+   }
+   property["input_files"] = fnames;
+   //properties.append(property);
+
+   // Add additional properties provided in the command line:
+   map<ossimString, ossimString>::iterator prop = m_geoJsonProps.begin();
+   while (prop != m_geoJsonProps.end())
+   {
+      property[prop->first.chars()] = prop->second.chars();
+      //properties.append(property);
+      ++prop;
    }
 
-   // set values of C's
-   for(int i = 0; i < 3; i++)
-   {
-      kvals[i] = nums[i];
-   }
-   //show values of user
-   cout << "You have entered: ";
-   for(int i = 0; i < numbers; i++)
-   {
-      cout << nums[i] << ", ";
-   }
+   root["properties"] = property;
 
-   //while(steps < 10)
-   while(ok == 1)
-   {
-      cout << endl << "Itration Number: " << steps;
-      //make <span class="IL_AD" id="IL_AD8">calculations</span> (C - bla bla bla)
-      for(int i = 0; i < k; i++)
-      {
-         for(int j = 0; j < numbers; j++)
-         {
-            addition[i][j] = <span class="IL_AD" id="IL_AD12">abs</span>(kvals[i] - nums[j]);
-         }
-      }
+   // Output the updated JSON to the file:
+   ofstream outFile;
+   outFile.open (m_vectorFilename.chars(), ofstream::out | ofstream::trunc);
+   if (outFile.fail())
+      return false;
 
-      //make groups of number(C)
-      for(int i = 0; i < numbers; i++)
-      {
-         min = 100000;
-         for(int j = 0; j < k; j++)
-         {
-            if(addition[j][i] < min)
-            {
-               min = addition[j][i];
-               value = nums[i];
-               groupnum = j;
-            }
-         }
-         groups[groupnum][i] = value;
-      }
+   outFile << root;
+   outFile.close();
 
-      //show results of calculations (C - bla bla bla)
-      cout << endl << "Calculations" << endl;
-      for(int i = 0; i < numbers; i++)
-      {
-         for(int j = 0; j < k; j++)
-         {
-            cout << addition[j][i] << "\t";
-         }
-         cout << endl;
-      }
-      // show groups and get new C's
-      cout << endl << "Gruops" << endl;
-      for(int i = 0; i < k; i++)
-      {
-         sum = 0;
-         count = 0;
-         cout << "Group " << i+1 << ": ";
-         for(int j = 0; j < numbers; j++)
-         {
-            if(groups[i][j] != NULL)
-            {
-               cout << groups[i][j] << "\t";
-               sum += groups[i][j];
-               count++;
-            }
-         }
-         prevKvals[i] = kvals[i];
-         kvals[i] = sum/count;
-         cout << "\t=\t" << kvals[i] << endl;
-      }
-
-      //make empty array of groups
-      for(int i = 0; i < 25; i++)
-      {
-         for(int j = 0; j < 100; j++)
-         {
-            groups[i][j] = NULL;
-         }
-      }
-
-      //check condition of termination
-      ok = 0;
-      for(int i = 0; i < k; i++)
-      {
-         if(prevKvals[i] != kvals[i])
-         {
-            ok = 1;
-         }
-      }
-
-      if(ok != 1)
-      {
-         getch();
-      }
-
-      steps++;
-   } // end while loop
-
-   getch();
-   return 0;
+   return true;
 }
-*/
+
+

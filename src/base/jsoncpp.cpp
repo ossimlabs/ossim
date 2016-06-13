@@ -6,28 +6,28 @@
 // //////////////////////////////////////////////////////////////////////
 
 /*
-The JsonCpp library's source code, including accompanying documentation, 
+The JsonCpp library's source code, including accompanying documentation,
 tests and demonstration applications, are licensed under the following
 conditions...
 
-The author (Baptiste Lepilleur) explicitly disclaims copyright in all 
-jurisdictions which recognize such a disclaimer. In such jurisdictions, 
+The author (Baptiste Lepilleur) explicitly disclaims copyright in all
+jurisdictions which recognize such a disclaimer. In such jurisdictions,
 this software is released into the Public Domain.
 
 In jurisdictions which do not recognize Public Domain property (e.g. Germany as of
 2010), this software is Copyright (c) 2007-2010 by Baptiste Lepilleur, and is
 released under the terms of the MIT License (see below).
 
-In jurisdictions which recognize Public Domain property, the user of this 
-software may choose to accept it either as 1) Public Domain, 2) under the 
-conditions of the MIT License (see below), or 3) under the terms of dual 
+In jurisdictions which recognize Public Domain property, the user of this
+software may choose to accept it either as 1) Public Domain, 2) under the
+conditions of the MIT License (see below), or 3) under the terms of dual
 Public Domain/MIT License conditions described here, as they choose.
 
 The MIT License is about as close to Public Domain as a license can get, and is
 described in clear, concise terms at:
 
    http://en.wikipedia.org/wiki/MIT_License
-   
+
 The full text of the MIT License follows:
 
 ========================================================================
@@ -73,7 +73,7 @@ license you like.
 
 
 
-#include "json.h"
+#include <ossim/base/jsoncpp.h>
 
 #ifndef JSON_IS_AMALGAMATION
 #error "Compile with -I PATH_TO_JSON_DIRECTORY"
@@ -207,7 +207,7 @@ static inline void fixNumericLocale(char* begin, char* end) {
 #include <limits>
 
 #if defined(_MSC_VER)
-#if !defined(WINCE) && defined(__STDC_SECURE_LIB__) && _MSC_VER >= 1500 // VC++ 9.0 and above 
+#if !defined(WINCE) && defined(__STDC_SECURE_LIB__) && _MSC_VER >= 1500 // VC++ 9.0 and above
 #define snprintf sprintf_s
 #elif _MSC_VER >= 1900 // VC++ 14.0 and above
 #define snprintf std::snprintf
@@ -1413,12 +1413,11 @@ bool OurReader::readToken(Token& token) {
     ok = readString();
     break;
   case '\'':
-    if (features_.allowSingleQuotes_)
-    {
-      token.type_ = tokenString;
-      ok = readStringSingleQuote();
-    } // else continue
+    if (features_.allowSingleQuotes_) {
+    token.type_ = tokenString;
+    ok = readStringSingleQuote();
     break;
+    } // else continue
   case '/':
     token.type_ = tokenComment;
     ok = readComment();
@@ -2094,7 +2093,7 @@ public:
   {}
   bool parse(
       char const* beginDoc, char const* endDoc,
-      Value* root, std::string* errs) {
+      Value* root, std::string* errs) override {
     bool ok = reader_.parse(beginDoc, endDoc, *root, collectComments_);
     if (errs) {
       *errs = reader_.getFormattedErrorMessages();
@@ -3061,7 +3060,6 @@ JSONCPP_STRING Value::asString() const {
   default:
     JSON_FAIL_MESSAGE("Type is not convertible to string");
   }
-  return "";
 }
 
 #ifdef JSON_USE_CPPTL
@@ -3094,7 +3092,6 @@ Value::Int Value::asInt() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to Int.");
-  return nullValue;
 }
 
 Value::UInt Value::asUInt() const {
@@ -3117,7 +3114,6 @@ Value::UInt Value::asUInt() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to UInt.");
-  return nullValue;
 }
 
 #if defined(JSON_HAS_INT64)
@@ -3141,7 +3137,6 @@ Value::Int64 Value::asInt64() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to Int64.");
-  return nullValue;
 }
 
 Value::UInt64 Value::asUInt64() const {
@@ -3163,7 +3158,6 @@ Value::UInt64 Value::asUInt64() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to UInt64.");
-  return nullValue;
 }
 #endif // if defined(JSON_HAS_INT64)
 
@@ -3203,7 +3197,6 @@ double Value::asDouble() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to double.");
-  return nullValue;
 }
 
 float Value::asFloat() const {
@@ -3227,7 +3220,6 @@ float Value::asFloat() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to float.");
-  return nullValue;
 }
 
 bool Value::asBool() const {
@@ -3247,7 +3239,6 @@ bool Value::asBool() const {
     break;
   }
   JSON_FAIL_MESSAGE("Value is not convertible to bool.");
-  return nullValue;
 }
 
 bool Value::isConvertibleTo(ValueType other) const {
@@ -4053,7 +4044,7 @@ Value& Path::make(Value& root) const {
 #endif
 #endif
 
-#if defined(__BORLANDC__)  
+#if defined(__BORLANDC__)
 #include <float.h>
 #define isfinite _finite
 #define snprintf _snprintf
@@ -4596,8 +4587,8 @@ bool StyledWriter::hasCommentForValue(const Value& value) {
 // //////////////////////////////////////////////////////////////////
 
 StyledStreamWriter::StyledStreamWriter(std::string indentation)
-    : document_(NULL), rightMargin_(74), indentation_(indentation), addChildValues_(),
-      indented_(false) {}
+    : document_(NULL), rightMargin_(74), indentation_(indentation),
+      addChildValues_() {}
 
 void StyledStreamWriter::write(JSONCPP_OSTREAM& out, const Value& root) {
   document_ = &out;
@@ -4830,7 +4821,7 @@ struct BuiltStyledStreamWriter : public StreamWriter
       std::string const& endingLineFeedSymbol,
       bool useSpecialFloats,
       unsigned int precision);
-  int write(Value const& root, JSONCPP_OSTREAM* sout);
+  int write(Value const& root, JSONCPP_OSTREAM* sout) override;
 private:
   void writeValue(Value const& value);
   void writeArrayValue(Value const& value);
@@ -5120,7 +5111,7 @@ StreamWriter* StreamWriterBuilder::newStreamWriter() const
   std::string cs_str = settings_["commentStyle"].asString();
   bool eyc = settings_["enableYAMLCompatibility"].asBool();
   bool dnp = settings_["dropNullPlaceholders"].asBool();
-  bool usf = settings_["useSpecialFloats"].asBool(); 
+  bool usf = settings_["useSpecialFloats"].asBool();
   unsigned int pre = settings_["precision"].asUInt();
   CommentStyle::Enum cs = CommentStyle::All;
   if (cs_str == "All") {
@@ -5209,7 +5200,6 @@ JSONCPP_OSTREAM& operator<<(JSONCPP_OSTREAM& sout, Value const& root) {
 // //////////////////////////////////////////////////////////////////////
 // End of content of file: src/lib_json/json_writer.cpp
 // //////////////////////////////////////////////////////////////////////
-
 
 
 
