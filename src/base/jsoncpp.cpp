@@ -5172,12 +5172,12 @@ Value& StreamWriterBuilder::operator[](std::string key)
 void StreamWriterBuilder::setDefaults(Json::Value* settings)
 {
   //! [StreamWriterBuilderDefaults]
-  (*settings)["commentStyle"] = "All";
-  (*settings)["indentation"] = "\t";
+  (*settings)["commentStyle"] = "None";
+  (*settings)["indentation"] = "  ";
   (*settings)["enableYAMLCompatibility"] = false;
   (*settings)["dropNullPlaceholders"] = false;
   (*settings)["useSpecialFloats"] = false;
-  (*settings)["precision"] = 17;
+  (*settings)["precision"] = 11;
   //! [StreamWriterBuilderDefaults]
 }
 
