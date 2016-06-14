@@ -96,7 +96,7 @@ void ossimMpi::initialize(int* argc, char*** argv)
    }
 }
 #else
-void ossimMpi::initialize(int* argc, char*** /* argv */)
+void ossimMpi::initialize(int* /* argc */, char*** /* argv */)
 {
    if(traceDebug())
    {

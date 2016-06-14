@@ -54,7 +54,8 @@ void usage()
         << endl;
 }
 
-void plotHistogram(const ossimFilename& histoFile, const ossimString& plotWith)
+void plotHistogram(const ossimFilename& histoFile, const ossimString& plotWith,
+                   const ossimString& xticstr)
 {
    // Open the histogram file:
    ossimRefPtr<ossimMultiResLevelHistogram> h = new ossimMultiResLevelHistogram();
@@ -66,17 +67,25 @@ void plotHistogram(const ossimFilename& histoFile, const ossimString& plotWith)
 
    // Create temporary data file stream:
    FILE * gnuplotPipe = MY_POPEN ("gnuplot -persistent", "w");
+   //FILE * gnuplotPipe = fopen("gnuplot.dat", "w");
    if (!gnuplotPipe)
    {
       cout << "Could not create temporary gnuplot pipe. "<< endl;
       exit(1);
    }
 
+   if (!xticstr.empty())
+   {
+      ostringstream xticsCmd;
+      xticsCmd<<"set xtics ("<<xticstr<<")";
+      cout << "xticsCmd = "<<xticsCmd.str()<< endl;
+      fprintf(gnuplotPipe, "%s \n",xticsCmd.str().c_str());
+   }
+
    // Output histogram data to temporary x, y file:
    ossimString command ("plot '-' with ");
    command.append(plotWith);
-   command.append("\n");
-   fprintf(gnuplotPipe, command.chars());
+   fprintf(gnuplotPipe, "%s \n", command.chars());
    ossim_uint32 band = 0;
    ossimRefPtr<ossimHistogram> histogram = h->getHistogram(band);
    int numBins = histogram->GetRes();
@@ -105,6 +114,7 @@ int main(int argc, char *argv[])
    
    argumentParser.getApplicationUsage()->addCommandLineOption("-h or --help", "Display this information");
    argumentParser.getApplicationUsage()->addCommandLineOption("--with <symbol>", "See \"gnuplot plot with\" documentation");
+   argumentParser.getApplicationUsage()->addCommandLineOption("--xtics (<string>)", "See \"gnuplot plot xtics\" documentation");
    
    ossim_uint32 maxLevels = 1;
    ossim_int32 entry = -1;
@@ -116,6 +126,7 @@ int main(int argc, char *argv[])
 
    bool fastMode = false;
    ossimString plotWith = "dots";
+   ossimString xtics;
    
    if ( (argumentParser.read("-h")) || (argumentParser.read("--help")) )
    {
@@ -127,6 +138,11 @@ int main(int argc, char *argv[])
    if(argumentParser.read("--with", stringParam))
    {
       plotWith = tempString;
+   }
+   if(argumentParser.read("--xtics", stringParam))
+   {
+      xtics = tempString;
+      cout << "xtics = "<<xtics<< endl;
    }
    if (argumentParser.argc() == 2)
    {
@@ -144,7 +160,7 @@ int main(int argc, char *argv[])
          system(cmd.str().c_str());
          inputFile.setExtension("his");
       }
-      plotHistogram(inputFile, plotWith);
+      plotHistogram(inputFile, plotWith, xtics);
    }
    else
    {
