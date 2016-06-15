@@ -436,8 +436,8 @@ namespace Json {
 class JSON_API Exception : public std::exception {
 public:
    Exception(JSONCPP_STRING const& msg);
-   ~Exception() throw() override;
-   char const* what() const throw() override;
+   ~Exception() throw(); 
+   char const* what() const throw();
 protected:
    JSONCPP_STRING msg_;
 };
@@ -1592,9 +1592,9 @@ public:
    Json::Value settings_;
 
    CharReaderBuilder();
-   ~CharReaderBuilder() override;
+   ~CharReaderBuilder();
 
-   CharReader* newCharReader() const override;
+   CharReader* newCharReader() const;
 
    /** \return true if 'settings' are legal and consistent;
     *   otherwise, indicate bad settings via 'invalid'.
@@ -1789,12 +1789,12 @@ public:
    Json::Value settings_;
 
    StreamWriterBuilder();
-   ~StreamWriterBuilder() override;
+   ~StreamWriterBuilder();
 
    /**
     * \throw std::exception if something goes wrong (e.g. invalid settings)
     */
-   StreamWriter* newStreamWriter() const override;
+   StreamWriter* newStreamWriter() const;
 
    /** \return true if 'settings' are legal and consistent;
     *   otherwise, indicate bad settings via 'invalid'.
@@ -1835,7 +1835,7 @@ class JSON_API FastWriter : public Writer {
 
 public:
    FastWriter();
-   ~FastWriter() override {}
+   ~FastWriter() {}
 
    void enableYAMLCompatibility();
 
@@ -1849,7 +1849,7 @@ public:
    void omitEndingLineFeed();
 
 public: // overridden from Writer
-   std::string write(const Value& root) override;
+   std::string write(const Value& root);
 
 private:
    void writeValue(const Value& value);
@@ -1887,14 +1887,14 @@ private:
 class JSON_API StyledWriter : public Writer {
 public:
    StyledWriter();
-   ~StyledWriter() override {}
+   ~StyledWriter() {}
 
 public: // overridden from Writer
    /** \brief Serialize a Value in <a HREF="http://www.json.org">JSON</a> format.
     * \param root Value to serialize.
     * \return String containing the JSON document that represents the root value.
     */
-   std::string write(const Value& root) override;
+   std::string write(const Value& root);
 
 private:
    void writeValue(const Value& value);
