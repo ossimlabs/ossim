@@ -15,7 +15,7 @@
 
 class ossimScalarRemapper;
 
-class ossimFftFilter : public ossimImageSourceFilter
+class OSSIM_DLL ossimFftFilter : public ossimImageSourceFilter
 {
 public:
    enum ossimFftFilterDirectionType
