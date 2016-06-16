@@ -13,10 +13,7 @@
 //*******************************************************************
 //  $Id$
 
-#if defined(JPEG_DUAL_MODE_8_12)
-
-#include <fstream>
-#include <jpeg12/jpeglib.h>
+#if defined(OSSIM_WITH_12BIT_JPEG)
 
 //ossim includes
 #include <ossim/imaging/ossimImageData.h>
@@ -24,6 +21,9 @@
 #include <ossim/imaging/ossimNitfTileSource_12.h>
 #include <ossim/imaging/ossimJpegDefaultTable.h>
 #include <ossim/support_data/ossimNitfImageHeader.h>
+
+#include <jpeg12/jpeglib.h>
+#include <fstream>
 
 bool ossimNitfTileSource_12::uncompressJpeg12Block(ossim_uint32 x, ossim_uint32 y,
                                                    ossimRefPtr<ossimImageData> cacheTile,
@@ -253,4 +253,4 @@ bool ossimNitfTileSource_12::loadJpegHuffmanTables(jpeg_decompress_struct& cinfo
    return true;
 }
 
-#endif /* defined(JPEG_DUAL_MODE_8_12) */
+#endif /* defined(OSSIM_WITH_12BIT_JPEG) */
