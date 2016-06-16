@@ -40,7 +40,7 @@
 #include <ossim/support_data/ossimNitfStdidcTag.h>
 #include <ossim/support_data/ossimNitfVqCompressionHeader.h>
 
-#if defined(JPEG_DUAL_MODE_8_12)
+#if defined(OSSIM_WITH_12BIT_JPEG)
 #include <ossim/imaging/ossimNitfTileSource_12.h>
 #endif
 
@@ -3156,7 +3156,7 @@ bool ossimNitfTileSource::uncompressJpegBlock(ossim_uint32 x, ossim_uint32 y)
    
    if (m_isJpeg12Bit)
    {
-#if defined(JPEG_DUAL_MODE_8_12)
+#if defined(OSSIM_WITH_12BIT_JPEG)
       return ossimNitfTileSource_12::uncompressJpeg12Block(x,y,theCacheTile, 
        getCurrentImageHeader(), theCacheSize, compressedBuf, theReadBlockSizeInBytes, 
        theNumberOfOutputBands);

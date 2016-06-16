@@ -15,12 +15,11 @@
 #ifndef ossimNitfTileSource_12_HEADER
 #define ossimNitfTileSource_12_HEADER 1
 
-#if defined(JPEG_DUAL_MODE_8_12)
+#if defined(OSSIM_WITH_12BIT_JPEG)
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimRefPtr.h>
-#include <jpeg12/jpeglib.h>
 #include <vector>
 
 class ossimImageData;
@@ -33,7 +32,7 @@ public:
                                      ossim_uint32 y,
                                      ossimRefPtr<ossimImageData> cacheTile,
                                      ossimNitfImageHeader* hdr,
-                                     ossimIpt cacheSize,
+                                     const ossimIpt& cacheSize,
                                      std::vector<ossim_uint8> compressedBuf,
                                      ossim_uint32 readBlockSizeInBytes,
                                      ossim_uint32 bands);
@@ -45,6 +44,6 @@ public:
    static bool loadJpegHuffmanTables(jpeg_decompress_struct& cinfo);
 };
 
-#endif /* #if defined(JPEG_DUAL_MODE_8_12) */
+#endif /* #if defined(OSSIM_WITH_12BIT_JPEG) */
 
 #endif /* #ifndef ossimNitfTileSource_12_HEADER */
