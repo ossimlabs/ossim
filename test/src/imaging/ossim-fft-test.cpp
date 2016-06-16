@@ -2,8 +2,10 @@
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/base/ossimNotify.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
+#include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
 #include <ossim/imaging/ossimTiffWriter.h>
 #include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/imaging/ossimImageGeometry.h>
@@ -100,8 +102,20 @@ ossimRefPtr<ossimImageSource> doFFT(ossimImageSource* inImage, int n)
    outImage->initialize();
    ossim_uint8* buffer = (ossim_uint8*) outImage->getBuf();
 
-   // Set up FFT filter:
-   ossimRefPtr<ossimFftFilter> fft = new ossimFftFilter;
+   // Set up FFT filter. Will first try to use the FFTW3 library if plugin was loaded, otherwise
+   // will fallback to use the core newmat implementation:
+   ossimImageSourceFactoryRegistry* factory = ossimImageSourceFactoryRegistry::instance();
+   ossimString name ("ossimFftw3Filter");
+   ossimRefPtr<ossimImageSource> fft = factory->createImageSource(name);
+   if (!fft.valid())
+   {
+      ossimNotify(ossimNotifyLevel_INFO)<<"FFTW3 plugin was not available. Using core ossimFftFilter."<<endl;
+      fft = new ossimFftFilter;
+   }
+   else
+   {
+      ossimNotify(ossimNotifyLevel_INFO)<<"Using FFTW3 plugin."<<endl;
+   }
    fft->connectMyInputTo(inImage);
 
    // Loop over input data chips (n x n):
