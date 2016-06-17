@@ -132,12 +132,16 @@ The usage is:   `ossim-cli <command> [options and parameters]`
 
 With no arguments, the app will give a list of capabilities. Currently those are
 
+* help <command> -- To get help on specific command. Same as "<command> --help"
+* bandmerge -- Merges multiple band files into a single RGB image.
 * hillshade -- Computes shaded representation of input elevation surface with specified lighting parameters.
 * hlz -- Computes bitmap of helicopter landing zones given ROI and DEM.
 * info -- Dumps metadata information about input image and OSSIM in general.
+* ortho -- Utility for orthorectifying and reprojecting image data.
 * potrace -- Computes vector representation of input raster image.
 * shoreline -- Computes bitmap of water versus land areas in an input image.
 * slope -- Utility for computing the slope at each elevation post and generating a corresponding slope image.
+* vertices -- Utility for determining the active image corner vertices inside larger null-filled image rectangle.
 * viewshed -- Computes bitmap image representing the viewshed from specified location using only DEM information.
 
 For example, to get projection and image information for an image file, use

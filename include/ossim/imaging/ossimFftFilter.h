@@ -18,11 +18,8 @@ class ossimScalarRemapper;
 class OSSIM_DLL ossimFftFilter : public ossimImageSourceFilter
 {
 public:
-   enum ossimFftFilterDirectionType
-      {
-         ossimFftFilterDirectionType_FORWARD = 0,
-         ossimFftFilterDirectionType_INVERSE
-      };
+   enum ossimFftFilterDirectionType { FORWARD = 0, INVERSE  };
+
    ossimFftFilter(ossimObject* owner=NULL);
    ossimFftFilter(ossimImageSource* inputSource);
    ossimFftFilter(ossimObject* owner,
