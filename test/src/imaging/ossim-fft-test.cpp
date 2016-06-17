@@ -21,7 +21,7 @@ using namespace std;
 
 void usage(char* appName)
 {
-   cout << "\nUsage: "<<appName<<" [-i <input-image-name>] [-n <int>] [-g <gen-out-name] [<output_filename>]\n"<<endl;
+   cout << "\nUsage: "<<appName<<" [-i <input-image-name>] [-n <int>]\n"<<endl;
 }
 
 ossimRefPtr<ossimImageSource> synthesizeInput(int n)
@@ -46,8 +46,8 @@ ossimRefPtr<ossimImageSource> synthesizeInput(int n)
    ossimRefPtr<ossimImageData> outImage =
          ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, image_size.x, image_size.y);
    outImage->initialize();
+   outImage->fill(128);
    ossim_uint8* buffer = (ossim_uint8*) outImage->getBuf();
-
    int lambda = n; // wavelength in pixels per cycle
    ossim_uint8 A = 127; // amplitude
    ossimIpt chip_origin;
@@ -91,42 +91,56 @@ ossimRefPtr<ossimImageSource> synthesizeInput(int n)
    return pointer;
 }
 
-ossimRefPtr<ossimImageSource> doFFT(ossimImageSource* inImage, int n)
+ossimRefPtr<ossimImageSource> doFFT(ossimImageSource* inImage, int n, bool forward)
 {
-   // Allocate output image buffer:
    ossimRefPtr<ossimImageGeometry> geom = inImage->getImageGeometry();
    ossimIpt image_size = geom->getImageSize();
-   ossimRefPtr<ossimImageData> outImage =
-         ossimImageDataFactory::instance()->create(0, inImage->getOutputScalarType(),
-                                                   1, image_size.x, image_size.y);
-   outImage->initialize();
-   ossim_uint8* buffer = (ossim_uint8*) outImage->getBuf();
 
    // Set up FFT filter. Will first try to use the FFTW3 library if plugin was loaded, otherwise
    // will fallback to use the core newmat implementation:
-   ossimImageSourceFactoryRegistry* factory = ossimImageSourceFactoryRegistry::instance();
+   ossimImageSourceFactoryRegistry* isf = ossimImageSourceFactoryRegistry::instance();
    ossimString name ("ossimFftw3Filter");
-   ossimRefPtr<ossimImageSource> fft = factory->createImageSource(name);
-   if (!fft.valid())
+   ossimRefPtr<ossimFftFilter> fft = (ossimFftFilter*) isf->createImageSource(name);
+   if (fft.valid())
+      ossimNotify(ossimNotifyLevel_INFO)<<"Using FFTW3 plugin."<<endl;
+   else
    {
       ossimNotify(ossimNotifyLevel_INFO)<<"FFTW3 plugin was not available. Using core ossimFftFilter."<<endl;
       fft = new ossimFftFilter;
    }
+
+   // Allocate output image buffer:
+   ossimRefPtr<ossimImageData> outImage;
+   ossimImageDataFactory* idf = ossimImageDataFactory::instance();
+   if (forward)
+   {
+      fft->setDirectionType(ossimFftFilter::FORWARD);
+      outImage = idf->create(0, inImage->getOutputScalarType(), 3, image_size.x, image_size.y);
+   }
    else
    {
-      ossimNotify(ossimNotifyLevel_INFO)<<"Using FFTW3 plugin."<<endl;
+      fft->setDirectionType(ossimFftFilter::INVERSE);
+      outImage = idf->create(0, inImage->getOutputScalarType(), 1, image_size.x, image_size.y);
    }
+   outImage->initialize();
    fft->connectMyInputTo(inImage);
 
    // Loop over input data chips (n x n):
-
    for (int y=0; y<image_size.y; y+=n)
    {
       for (int x=0; x<image_size.x; x+=n)
       {
          ossimIrect chipRect (x, y, x+n-1, y+n-1);
          ossimRefPtr<ossimImageData> fft_chip = fft->getTile(chipRect);
-         outImage->loadBand(fft_chip->getBuf(), chipRect, 0);
+         if (forward)
+         {
+            outImage->loadBand(fft_chip->getBuf(0), chipRect, 0);
+            outImage->loadBand(fft_chip->getBuf(1), chipRect, 1);
+         }
+         else
+         {
+            outImage->loadTile(fft_chip.get());
+         }
       }
    }
 
@@ -163,9 +177,20 @@ int main(int argc, char *argv[])
    if ( ap.read("-n", stringParam))
       n = tempString.toInt();
 
-   ossimFilename genFilename;
-   if ( ap.read("-g", stringParam))
-      genFilename = tempString;
+   ostringstream gfile;
+   gfile<<"gen-"<<n<<".tif";
+   ossimFilename genFilename (gfile.str());
+   genFilename.setPath(inputFilename.path());
+
+   ostringstream fftfile;
+   fftfile<<"fft-"<<n<<".tif";
+   ossimFilename fftFilename (fftfile.str());
+   fftFilename.setPath(inputFilename.path());
+
+   ostringstream invfile;
+   invfile<<"inv-"<<n<<".tif";
+   ossimFilename invFilename (invfile.str());
+   invFilename.setPath(inputFilename.path());
 
    ap.reportRemainingOptionsAsUnrecognized();
    if ( ap.errors() )
@@ -173,11 +198,6 @@ int main(int argc, char *argv[])
       ap.writeErrorMessages(ossimNotify(ossimNotifyLevel_NOTICE));
       return -1;
    }
-
-   ossimFilename outputFilename ("fft-out.tif");
-   outputFilename.setPath(inputFilename.path());
-   if (ap.argc() > 1 )
-      outputFilename = ap.argv()[1];
 
    ossimRefPtr<ossimImageSource> inputImage = 0;
    if (inputFilename.empty())
@@ -202,14 +222,25 @@ int main(int argc, char *argv[])
       }
    }
 
-   ossimRefPtr<ossimImageSource> outImage = doFFT(inputImage.get(), n);
-
-   // Output the clustered image to disk:
+   // Do forward FFT:
+   ossimRefPtr<ossimImageSource> fwdImage = doFFT(inputImage.get(), n, true);
    ossimRefPtr<ossimTiffWriter> writer = new ossimTiffWriter();
-   writer->connectMyInputTo(0, outImage.get());
-   writer->setFilename(outputFilename);
+   writer->connectMyInputTo(0, fwdImage.get());
+   writer->setFilename(fftFilename);
    writer->setGeotiffFlag(true);
    bool success = writer->execute();
+   if (success)
+      cout<<"Wrote Forward FFT output to <"<<fftFilename<<">"<<endl;
+
+   // Do inverse FFT:
+   ossimRefPtr<ossimImageSource> invImage = doFFT(fwdImage.get(), n, false);
+   writer = new ossimTiffWriter();
+   writer->connectMyInputTo(0, invImage.get());
+   writer->setFilename(invFilename);
+   writer->setGeotiffFlag(true);
+   success = writer->execute();
+   if (success)
+      cout<<"Wrote Inverse FFT output to <"<<invFilename<<">"<<endl;
 
    return 0;
 }

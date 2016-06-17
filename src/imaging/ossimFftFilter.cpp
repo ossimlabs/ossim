@@ -22,7 +22,7 @@ RTTI_DEF1(ossimFftFilter, "ossimFftFilter", ossimImageSourceFilter);
 ossimFftFilter::ossimFftFilter(ossimObject* owner)
    :ossimImageSourceFilter(owner),
     theTile(0),
-    theDirectionType(ossimFftFilterDirectionType_FORWARD),
+    theDirectionType(FORWARD),
     theScalarRemapper(new ossimScalarRemapper())
 {
    theScalarRemapper->setOutputScalarType(OSSIM_DOUBLE);
@@ -31,7 +31,7 @@ ossimFftFilter::ossimFftFilter(ossimObject* owner)
 ossimFftFilter::ossimFftFilter(ossimImageSource* inputSource)
    :ossimImageSourceFilter(inputSource),
     theTile(0),
-    theDirectionType(ossimFftFilterDirectionType_FORWARD),
+    theDirectionType(FORWARD),
     theScalarRemapper(new ossimScalarRemapper())
 {
    theScalarRemapper->setOutputScalarType(OSSIM_DOUBLE);
@@ -41,7 +41,7 @@ ossimFftFilter::ossimFftFilter(ossimObject* owner,
                                ossimImageSource* inputSource)
    :ossimImageSourceFilter(owner, inputSource),
     theTile(0),
-    theDirectionType(ossimFftFilterDirectionType_FORWARD),
+    theDirectionType(FORWARD),
     theScalarRemapper(new ossimScalarRemapper())
 {
    theScalarRemapper->setOutputScalarType(OSSIM_DOUBLE);
@@ -127,7 +127,7 @@ void ossimFftFilter::initialize()
    {
       theTile->initialize();
    }
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       theScalarRemapper->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
    }
@@ -145,7 +145,7 @@ ossimScalarType ossimFftFilter::getOutputScalarType() const
       return ossimImageSourceFilter::getOutputScalarType();
    }
    
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       return OSSIM_DOUBLE;
    }
@@ -159,7 +159,7 @@ double ossimFftFilter::getNullPixelValue(ossim_uint32 band)const
    {
       return ossimImageSourceFilter::getNullPixelValue(band);
    }
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       return ossim::nan();
    }
@@ -174,7 +174,7 @@ double ossimFftFilter::getMinPixelValue(ossim_uint32 band)const
    {
       return ossimImageSourceFilter::getMinPixelValue(band);
    }
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       return OSSIM_DEFAULT_MIN_PIX_DOUBLE;
    }
@@ -187,7 +187,7 @@ double ossimFftFilter::getMaxPixelValue(ossim_uint32 band)const
    {
       return ossimImageSourceFilter::getMaxPixelValue(band);
    }
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       return OSSIM_DEFAULT_MAX_PIX_DOUBLE;
    }
@@ -202,7 +202,7 @@ ossim_uint32 ossimFftFilter::getNumberOfOutputBands() const
    }
    ossim_uint32 bands = ossimImageSourceFilter::getNumberOfOutputBands();
    
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       bands *=2;
    }
@@ -216,17 +216,17 @@ ossim_uint32 ossimFftFilter::getNumberOfOutputBands() const
 
 void ossimFftFilter::setForward()
 {
-   theDirectionType = ossimFftFilterDirectionType_FORWARD;
+   theDirectionType = FORWARD;
 }
 
 void ossimFftFilter::setInverse()
 {
-   theDirectionType = ossimFftFilterDirectionType_INVERSE;
+   theDirectionType = INVERSE;
 }
 
 ossimString ossimFftFilter::getDirectionTypeAsString()const
 {
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       return "Forward";
    }
@@ -241,11 +241,11 @@ void ossimFftFilter::setDirectionType(const ossimString& directionType)
    
    if(tempDirectionType.contains("forward"))
    {
-      setDirectionType(ossimFftFilterDirectionType_FORWARD);
+      setDirectionType(FORWARD);
    }
    else
    {
-      setDirectionType(ossimFftFilterDirectionType_INVERSE);
+      setDirectionType(INVERSE);
    }
 }
 
@@ -322,7 +322,7 @@ void ossimFftFilter::runFft(T /* dummy */,
    ossim_uint32 h = input->getHeight();
    ossim_uint32 x = 0;
    ossim_uint32 y = 0;
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       ossim_uint32 bands = input->getNumberOfBands();
       for(bandIdx = 0; bandIdx < bands; ++bandIdx)
