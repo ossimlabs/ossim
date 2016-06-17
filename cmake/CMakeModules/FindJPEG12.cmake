@@ -29,11 +29,11 @@
 # (To distributed this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-find_path( JPEG12_INCLUDE_DIR jpeglib.h
+find_path( JPEG12_INCLUDE_DIR jpeg12/jpeglib.h
            PATHS
-           ${CMAKE_INSTALL_PREFIX}/include/jpeg12
-           /usr/include/jpeg12
-           /usr/local/include/jpeg12 )
+           ${CMAKE_INSTALL_PREFIX}/include
+           /usr/include
+           /usr/local/include )
 
 set( JPEG12_NAMES ${JPEG12_NAMES} jpeg12 libjpeg12 )
 

@@ -3157,9 +3157,9 @@ bool ossimNitfTileSource::uncompressJpegBlock(ossim_uint32 x, ossim_uint32 y)
    if (m_isJpeg12Bit)
    {
 #if defined(OSSIM_WITH_12BIT_JPEG)
-      return ossimNitfTileSource_12::uncompressJpeg12Block(x,y,theCacheTile, 
-       getCurrentImageHeader(), theCacheSize, compressedBuf, theReadBlockSizeInBytes, 
-       theNumberOfOutputBands);
+      return ossimNitfTileSource_12::uncompressJpeg12Block( /* x,y, */
+         theCacheTile, getCurrentImageHeader(), theCacheSize, compressedBuf,
+         theReadBlockSizeInBytes, theNumberOfOutputBands);
 #endif  
    }
 

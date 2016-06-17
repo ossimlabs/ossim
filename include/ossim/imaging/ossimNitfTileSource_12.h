@@ -24,12 +24,12 @@
 
 class ossimImageData;
 class ossimNitfImageHeader;
+struct jpeg12_decompress_struct;
 
 class OSSIM_DLL ossimNitfTileSource_12 
 {
 public:
-   static bool uncompressJpeg12Block(ossim_uint32 x, 
-                                     ossim_uint32 y,
+   static bool uncompressJpeg12Block( /* ossim_uint32 x, ossim_uint32 y, */
                                      ossimRefPtr<ossimImageData> cacheTile,
                                      ossimNitfImageHeader* hdr,
                                      const ossimIpt& cacheSize,
@@ -39,9 +39,9 @@ public:
    
    
    static bool loadJpegQuantizationTables(ossimNitfImageHeader* hdr,
-                                          jpeg_decompress_struct& cinfo);
+                                          jpeg12_decompress_struct& cinfo);
    
-   static bool loadJpegHuffmanTables(jpeg_decompress_struct& cinfo);
+   static bool loadJpegHuffmanTables(jpeg12_decompress_struct& cinfo);
 };
 
 #endif /* #if defined(OSSIM_WITH_12BIT_JPEG) */
