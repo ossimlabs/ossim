@@ -40,6 +40,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <jpeglib.h>
 
 RTTI_DEF1(ossimPdfWriter,
 	  "ossimPdfWriter",

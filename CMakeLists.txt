@@ -76,17 +76,6 @@ endif( GEOTIFF_FOUND )
 #   message( FATAL_ERROR "Could not find required geotrans package!" )
 # endif( GEOTRANS_FOUND )
 
-# JPEG12 support this is optional:
-if ( OSSIM_WITH_12BIT_JPEG )
-   find_package( JPEG12 )
-   if( JPEG12_FOUND )
-      include_directories( ${JPEG12_INCLUDE_DIR} )
-      set( ossimDependentLibs ${ossimDependentLibs} ${JPEG12_LIBRARY} )
-      # This will turn on compiling of ossimNitfTileSource_12 class:
-      add_definitions("-DOSSIM_WITH_12BIT_JPEG")
-   endif( JPEG12_FOUND )
-endif( OSSIM_WITH_12BIT_JPEG )
-
 # JPEG - Required package:
 find_package( JPEG )
 if( JPEG_FOUND )

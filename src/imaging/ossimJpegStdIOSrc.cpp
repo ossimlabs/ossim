@@ -34,6 +34,9 @@
 /* this is not a core library module, so it doesn't define JPEG_INTERNALS */
 
 #include <ossim/imaging/ossimJpegStdIOSrc.h>
+
+#include <csetjmp>                     /** for jmp_buf */
+#include <jpeglib.h>                   /** for jpeg stuff */
 #include <jerror.h>
 
 
@@ -74,8 +77,7 @@ extern "C"
     * before any data is actually read.
     */
    
-   void
-   ossimJpegStdIOSrc_init_source (j_decompress_ptr cinfo)
+   void ossimJpegStdIOSrc_init_source (j_decompress_ptr cinfo)
    {
       ossimJpegStdIOSourceMgrPtr src = (ossimJpegStdIOSourceMgrPtr) cinfo->src;
       
@@ -213,8 +215,8 @@ extern "C"
     * for closing it after finishing decompression.
     */
    
-   void
-   ossimJpegStdIOSrc (j_decompress_ptr cinfo, FILE * infile)
+   /* void ossimJpegStdIOSrc (j_decompress_ptr cinfo, FILE * infile) */
+   void ossimJpegStdIOSrc (jpeg_decompress_struct* cinfo, FILE * infile)      
    {
       ossimJpegStdIOSourceMgrPtr src;
       
