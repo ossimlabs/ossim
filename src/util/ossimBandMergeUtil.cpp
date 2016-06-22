@@ -13,6 +13,10 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/imaging/ossimBandMergeSource.h>
+#include <ossim/imaging/ossimHistogramRemapper.h>
+#include <ossim/base/ossimMultiResLevelHistogram.h>
+#include <ossim/base/ossimMultiBandHistogram.h>
+#include <ossim/imaging/ossimImageHistogramSource.h>
 #include <iostream>
 
 using namespace std;
@@ -20,7 +24,10 @@ using namespace std;
 const char* ossimBandMergeUtil::DESCRIPTION  =
       "Merges multiple band files into a single RGB image.";
 
+static const std::string HISTO_STRETCH_KW = "histo_stretch";
+
 ossimBandMergeUtil::ossimBandMergeUtil()
+:  m_stretchProduct(false)
 {
 }
 
@@ -33,7 +40,7 @@ void ossimBandMergeUtil::setUsage(ossimArgumentParser& ap)
    // Add options.
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " -r <red_band> -g <green_band> -b <blue_band> <output-rgb-image>";
+   usageString += " --red <red_band> --green <green_band> --blue <blue_band> [--stretch] <output-rgb-image>";
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
@@ -45,6 +52,7 @@ void ossimBandMergeUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--red", "<filename> Filename of red band. ");
    au->addCommandLineOption("--green", "<filename> Filename of green band. ");
    au->addCommandLineOption("--blue", "<filename> Filename of blue band. ");
+   au->addCommandLineOption("--stretch", "Optionally histogram-stretch the product image. ");
 }
 
 bool ossimBandMergeUtil::initialize(ossimArgumentParser& ap)
@@ -86,12 +94,19 @@ bool ossimBandMergeUtil::initialize(ossimArgumentParser& ap)
       return false;
    }
 
+   if ( ap.read("--stretch"))
+   {
+      m_kwl.addPair(HISTO_STRETCH_KW, string("true") );
+   }
+
    processRemainingArgs(ap);
    return true;
 }
 
 void ossimBandMergeUtil::initialize(const ossimKeywordlist& kwl)
 {
+   kwl.getBoolKeywordValue(m_stretchProduct, HISTO_STRETCH_KW.c_str());
+
    m_kwl.add( ossimKeywordNames::PROJECTION_KW, "input", false );
    ossimChipProcUtil::initialize(kwl);
 }
@@ -108,9 +123,47 @@ void ossimBandMergeUtil::initProcessingChain()
 
    ossimConnectableObject::ConnectableObjectList bandList;
    for (int band=0; band<3; band++)
-      bandList.push_back(m_imgLayers[band].get());
+   {
+      ossimSingleImageChain* band_image = m_imgLayers[band].get();
+      bandList.push_back(band_image);
+
+      // If performing histo stretch, try using existing histogram files before creating new ones:
+      if (m_stretchProduct)
+         initHistogramStretch(band_image);
+   }
    ossimRefPtr<ossimBandMergeSource> combiner = new ossimBandMergeSource(bandList);
    m_procChain->add(combiner.get());
+}
+
+void ossimBandMergeUtil::initHistogramStretch(ossimSingleImageChain* image)
+{
+   ostringstream errMsg;
+
+   // Check if this image already has a histogram file associated with it:
+   ossimRefPtr<ossimImageHandler> handler = image->getImageHandler();
+   if (!handler.valid())
+   {
+      errMsg<<"ERROR ossimBandMergeUtil:"<<__LINE__<<"  Bad handler returned for image chain.";
+      throw ossimException(errMsg.str());
+   }
+
+   ossimRefPtr<ossimMultiResLevelHistogram> histogram = handler->getImageHistogram();
+   if (!histogram.valid())
+   {
+      errMsg<<"ERROR ossimBandMergeUtil:"<<__LINE__<<"  Bad histogram returned from image handler.";
+      throw ossimException(errMsg.str());
+   }
+
+   ossimRefPtr<ossimHistogramRemapper> histogramRemapper = new ossimHistogramRemapper();
+   histogramRemapper->setEnableFlag(true);
+   histogramRemapper->setStretchMode( ossimHistogramRemapper::LINEAR_AUTO_MIN_MAX );
+   histogramRemapper->setHistogram(histogram);
+   image->add(histogramRemapper.get());
+}
+
+bool ossimBandMergeUtil::execute()
+{
+   return ossimChipProcUtil::execute();
 }
 
 void ossimBandMergeUtil::getKwlTemplate(ossimKeywordlist& kwl)
@@ -124,5 +177,7 @@ void ossimBandMergeUtil::getKwlTemplate(ossimKeywordlist& kwl)
    kwl.add(key.chars(), "<green-band>", true);
    key = keybase + "2";
    kwl.add(key.chars(), "<blue-band>", true);
+
+   kwl.add(HISTO_STRETCH_KW.c_str(), "true|false", true);
 }
 

@@ -24,8 +24,7 @@
 #include <map>
 #include <vector>
 
-/**
- **************************************************************************************************
+/**************************************************************************************************
  * Base class for all utilities that process chips of image (or DEM) pixels.
  *
  * Many utilities share parameters in common, especially ROI (bounding box), input imagery,

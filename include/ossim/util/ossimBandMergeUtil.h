@@ -31,11 +31,16 @@ public:
 
    virtual void getKwlTemplate(ossimKeywordlist& kwl);
 
+   virtual bool execute();
+
    /** Used by ossimUtilityFactory */
    static const char* DESCRIPTION;
 
 protected:
    virtual void initProcessingChain();
+   virtual void initHistogramStretch(ossimSingleImageChain* image);
+
+   bool m_stretchProduct;
 };
 
 #endif
