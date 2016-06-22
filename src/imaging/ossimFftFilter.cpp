@@ -129,7 +129,7 @@ void ossimFftFilter::initialize()
    }
    if(theDirectionType == FORWARD)
    {
-      theScalarRemapper->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
+      theScalarRemapper->setOutputScalarType(OSSIM_DOUBLE);
    }
    else
    {
@@ -150,7 +150,7 @@ ossimScalarType ossimFftFilter::getOutputScalarType() const
       return OSSIM_DOUBLE;
    }
    
-   return OSSIM_NORMALIZED_DOUBLE;
+   return OSSIM_DOUBLE;
 }
 
 double ossimFftFilter::getNullPixelValue(ossim_uint32 band)const
@@ -178,7 +178,7 @@ double ossimFftFilter::getMinPixelValue(ossim_uint32 band)const
    {
       return OSSIM_DEFAULT_MIN_PIX_DOUBLE;
    }
-   return OSSIM_DEFAULT_MIN_PIX_NORM_DOUBLE;
+   return OSSIM_DEFAULT_MIN_PIX_DOUBLE;
 }
 
 double ossimFftFilter::getMaxPixelValue(ossim_uint32 band)const
@@ -191,7 +191,7 @@ double ossimFftFilter::getMaxPixelValue(ossim_uint32 band)const
    {
       return OSSIM_DEFAULT_MAX_PIX_DOUBLE;
    }
-   return OSSIM_DEFAULT_MAX_PIX_NORM_DOUBLE;
+   return OSSIM_DEFAULT_MAX_PIX_DOUBLE;
 }
 
 ossim_uint32 ossimFftFilter::getNumberOfOutputBands() const
@@ -371,14 +371,14 @@ void ossimFftFilter::runFft(T /* dummy */,
                for(x = 0; x < w; ++x)
                {
                   *bandReal = (ossim_float64)((*realOut)[y][x]);
-                  if(*bandReal > 1.0)
-                  {
-                     *bandReal = 1.0;
-               }
-                  if(*bandReal < 0.0)
-                  {
-                     *bandReal = 0.0;
-                  }
+//                  if(*bandReal > 1.0)
+//                  {
+//                     *bandReal = 1.0;
+//                  }
+//                  if(*bandReal < 0.0)
+//                  {
+//                     *bandReal = 0.0;
+//                  }
                   ++bandReal;
                }
             }

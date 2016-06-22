@@ -10,6 +10,7 @@
 #include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimFftFilter.h>
+#include <ossim/imaging/ossimCastTileSourceFilter.h>
 #include <ossim/init/ossimInit.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/projection/ossimMapProjection.h>
@@ -21,10 +22,10 @@ using namespace std;
 
 void usage(char* appName)
 {
-   cout << "\nUsage: "<<appName<<" [-i <input-image-name>] [-n <int>]\n"<<endl;
+   cout << "\nUsage: "<<appName<<" [-i <input-image-name>] [-x <int> -y <int>]\n"<<endl;
 }
 
-ossimRefPtr<ossimImageSource> synthesizeInput(int n)
+ossimRefPtr<ossimImageSource> synthesizeInput(int dx, int dy)
 {
    // Create geometry:
    ossimGpt observerGpt (0, 0, 0);
@@ -44,43 +45,57 @@ ossimRefPtr<ossimImageSource> synthesizeInput(int n)
 
    // Allocate image buffer:
    ossimRefPtr<ossimImageData> outImage =
-         ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, image_size.x, image_size.y);
+         ossimImageDataFactory::instance()->create(0, OSSIM_DOUBLE, 3, image_size.x, image_size.y);
    outImage->initialize();
-   outImage->fill(128);
-   ossim_uint8* buffer = (ossim_uint8*) outImage->getBuf();
-   int lambda = n; // wavelength in pixels per cycle
-   ossim_uint8 A = 127; // amplitude
+   outImage->fill(0);
+   double* buffer = (double*) outImage->getBuf(0);
+   buffer[0] = OSSIM_DEFAULT_MAX_PIX_DOUBLE;
+#if 0
+   ossim_uint8 A = 255; // amplitude
    ossimIpt chip_origin;
    ossim_uint32 i = 0;
 
    // Generate data chips (n x n) at varying frequencies:
-   for (chip_origin.y=0; chip_origin.y<image_size.y; chip_origin.y+=n)
+
+   if ((dx != 0) || (dy != 0))
    {
-      for (chip_origin.x=0; chip_origin.x<image_size.x; chip_origin.x+=n)
+      for (chip_origin.y=0; chip_origin.y<image_size.y; chip_origin.y+=dy)
       {
          double phase = 0; // Chip always starts at 0 phase angle
-         double dp = 2*M_PI/lambda; // phase rate (radians per pixel)
+         double dpy = 0;
+         if (dy != 0)
+            dpy = 2*M_PI/dy; // phase rate (radians per pixel)
 
-         // Loops to fill one n x n chip with a single freq (1/lambda) component:
-         for (int y=0; y<n; y++)
+         for (chip_origin.x=0; chip_origin.x<image_size.x; chip_origin.x+=dx)
          {
-            //phase = y*dp;
-            phase = 0;
-            i = (y+chip_origin.y)*image_size.x + chip_origin.x;
-            for (int x=0; x<n; x++)
-            {
-               buffer[i++] = (ossim_uint8) A*cos(phase) + A;
-               phase += dp;
-            }
-         }
+            double phaseX = 0; // Chip always starts at 0 phase angle
+            double dpx = 0;
+            if (dx != 0)
+               dpx = 2*M_PI/dx; // phase rate (radians per pixel)
 
-         // Double the freq for the next chip until max freq reached (nyquist) then reset to start
-         // at nearly DC:
-         lambda /= 2;
-         if (lambda == 0)
-            lambda = 4*n;
+            // Loops to fill one n x n chip with a single freq (1/lambda) component:
+            for (int y=0; y<dy; y++)
+            {
+               phase = y*dpy;
+               phase = 0;
+               i = (y+chip_origin.y)*image_size.x + chip_origin.x;
+               for (int x=0; x<dx; x++)
+               {
+                  buffer[i++] = (ossim_uint8) A*cos(phase) + A;
+                  phase += dpx;
+               }
+
+            }
+
+            // Double the freq for the next chip until max freq reached (nyquist) then reset to start
+            // at nearly DC:
+//            lambda /= 2;
+//            if (lambda == 0)
+//               lambda = 4*n;
+         }
       }
    }
+#endif
 
    // Create output image chain:
    ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
@@ -91,7 +106,7 @@ ossimRefPtr<ossimImageSource> synthesizeInput(int n)
    return pointer;
 }
 
-ossimRefPtr<ossimImageSource> doFFT(ossimImageSource* inImage, int n, bool forward)
+ossimRefPtr<ossimImageSource> doFFT(ossimImageSource* inImage, int dx, int dy, bool forward)
 {
    ossimRefPtr<ossimImageGeometry> geom = inImage->getImageGeometry();
    ossimIpt image_size = geom->getImageSize();
@@ -126,11 +141,16 @@ ossimRefPtr<ossimImageSource> doFFT(ossimImageSource* inImage, int n, bool forwa
    fft->connectMyInputTo(inImage);
 
    // Loop over input data chips (n x n):
-   for (int y=0; y<image_size.y; y+=n)
+   if (dy == 0)
+      dy = 256;
+   if (dx == 0)
+      dx = 256;
+
+   for (int y=0; y<image_size.y; y+=dy)
    {
-      for (int x=0; x<image_size.x; x+=n)
+      for (int x=0; x<image_size.x; x+=dx)
       {
-         ossimIrect chipRect (x, y, x+n-1, y+n-1);
+         ossimIrect chipRect (x, y, x+dx-1, y+dy-1);
          ossimRefPtr<ossimImageData> fft_chip = fft->getTile(chipRect);
          if (forward)
          {
@@ -173,22 +193,26 @@ int main(int argc, char *argv[])
    if ( ap.read("-i", stringParam))
       inputFilename = tempString;
 
-   int n = 256;
-   if ( ap.read("-n", stringParam))
-      n = tempString.toInt();
+   int dx = 256;
+   if ( ap.read("-x", stringParam))
+      dx = tempString.toInt();
 
-   ostringstream gfile;
-   gfile<<"gen-"<<n<<".tif";
-   ossimFilename genFilename (gfile.str());
+   int dy = 256;
+   if ( ap.read("-y", stringParam))
+      dy = tempString.toInt();
+
+   ostringstream genfile;
+   genfile<<"gen-"<<dx<<"-"<<dy<<".tif";
+   ossimFilename genFilename (genfile.str());
    genFilename.setPath(inputFilename.path());
 
    ostringstream fftfile;
-   fftfile<<"fft-"<<n<<".tif";
+   fftfile<<"fft-"<<dx<<"-"<<dy<<".tif";
    ossimFilename fftFilename (fftfile.str());
    fftFilename.setPath(inputFilename.path());
 
    ostringstream invfile;
-   invfile<<"inv-"<<n<<".tif";
+   invfile<<"inv-"<<dx<<"-"<<dy<<".tif";
    ossimFilename invFilename (invfile.str());
    invFilename.setPath(inputFilename.path());
 
@@ -202,14 +226,16 @@ int main(int argc, char *argv[])
    ossimRefPtr<ossimImageSource> inputImage = 0;
    if (inputFilename.empty())
    {
-      inputImage = synthesizeInput(n);
+      inputImage = synthesizeInput(dx, dy);
       if (!genFilename.empty())
       {
          ossimRefPtr<ossimTiffWriter> writer = new ossimTiffWriter();
          writer->connectMyInputTo(0, inputImage.get());
          writer->setFilename(genFilename);
          writer->setGeotiffFlag(true);
-         writer->execute();
+         bool success = writer->execute();
+         if (success)
+            cout<<"Wrote synthesized image to <"<<genFilename<<">"<<endl;
       }
    }
    else
@@ -223,23 +249,23 @@ int main(int argc, char *argv[])
    }
 
    // Do forward FFT:
-   ossimRefPtr<ossimImageSource> fwdImage = doFFT(inputImage.get(), n, true);
-   ossimRefPtr<ossimTiffWriter> writer = new ossimTiffWriter();
-   writer->connectMyInputTo(0, fwdImage.get());
-   writer->setFilename(fftFilename);
-   writer->setGeotiffFlag(true);
-   bool success = writer->execute();
-   if (success)
-      cout<<"Wrote Forward FFT output to <"<<fftFilename<<">"<<endl;
+//   ossimRefPtr<ossimImageSource> fwdImage = doFFT(inputImage.get(), dx, dy, true);
+//   ossimRefPtr<ossimTiffWriter> writer = new ossimTiffWriter();
+//   writer->connectMyInputTo(0, fwdImage.get());
+//   writer->setFilename(fftFilename);
+//   writer->setGeotiffFlag(true);
+//   bool success = writer->execute();
+//   if (success)
+//      cout<<"Wrote Forward FFT output to <"<<fftFilename<<">"<<endl;
 
    // Do inverse FFT:
-   ossimRefPtr<ossimImageSource> invImage = doFFT(fwdImage.get(), n, false);
-   writer = new ossimTiffWriter();
-   writer->connectMyInputTo(0, invImage.get());
-   writer->setFilename(invFilename);
-   writer->setGeotiffFlag(true);
-   success = writer->execute();
-   if (success)
+   //ossimRefPtr<ossimImageSource> invImage = doFFT(fwdImage.get(), dx, dy, false);
+   ossimRefPtr<ossimImageSource> invImage = doFFT(inputImage.get(), dx, dy, false);
+   ossimRefPtr<ossimTiffWriter> writer2 = new ossimTiffWriter();
+   writer2->connectMyInputTo(0, invImage.get());
+   writer2->setFilename(invFilename);
+   writer2->setGeotiffFlag(true);
+   if (writer2->execute())
       cout<<"Wrote Inverse FFT output to <"<<invFilename<<">"<<endl;
 
    return 0;

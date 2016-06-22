@@ -24,6 +24,7 @@
 #include <ossim/imaging/ossimImageGaussianFilter.h>
 #include <ossim/imaging/ossimErosionFilter.h>
 #include <ossim/imaging/ossimKMeansFilter.h>
+#include <ossim/imaging/ossimImageHistogramSource.h>
 #include <ossim/util/ossimShorelineUtil.h>
 #include <ossim/util/ossimUtilityRegistry.h>
 #include <ossim/ossimVersion.h>
@@ -35,7 +36,6 @@ static const string THRESHOLD_KW = "threshold";
 static const string TMODE_KW = "tmode";
 static const string TOLERANCE_KW = "tolerance";
 static const string ALGORITHM_KW = "algorithm";
-static const string DO_EDGE_DETECT_KW = "do_edge_detect";
 static const ossimFilename DUMMY_OUTPUT_FILENAME = "@@NEVER_USE_THIS@@";
 static const ossimFilename TEMP_RASTER_PRODUCT_FILENAME = "temp_shoreline.tif";
 
@@ -54,7 +54,6 @@ ossimShorelineUtil::ossimShorelineUtil()
      m_algorithm(NDWI),
      m_thresholdMode(SIGMA),
      m_smoothing(0),
-     m_doEdgeDetect(false),
      m_doRaster(false),
      m_noVector(false)
 {
@@ -88,9 +87,6 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--color-coding <water> <marginal> <land>",
          "Specifies the pixel values (0-255) for the output product corresponding to water, marginal, "
          "and land zones. Defaults to 0, 128, and 255, respectively.");
-   au->addCommandLineOption("--edge",
-         "Directs the processing to perform an edge detection instead of outputing a vector product."
-         " Defaults to FALSE.");
    au->addCommandLineOption("--no-vector",
         "Outputs the raster, thresholded indexed image instead of a vector product. For engineering purposes.");
    au->addCommandLineOption("--raster",
@@ -136,9 +132,6 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
       value<<ts1<<" "<<ts2<<" "<<ts3;
       m_kwl.addPair( COLOR_CODING_KW, value.str() );
    }
-
-   if ( ap.read("--edge"))
-      m_kwl.addPair(DO_EDGE_DETECT_KW, string("true"));
 
    if ( ap.read("--no-vector"))
       m_noVector = true;
@@ -228,8 +221,6 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
    if (!value.empty())
       m_sensor = value;
 
-   m_kwl.getBoolKeywordValue(m_doEdgeDetect, DO_EDGE_DETECT_KW.c_str());
-
    value = m_kwl.findKey(SMOOTHING_KW);
    if (!value.empty())
       m_smoothing = value.toDouble();
@@ -254,22 +245,19 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
       m_tolerance = value.toDouble();
 
    // Output filename specifies the vector output, while base class interprets as raster, correct:
-   if (!m_doEdgeDetect)
+   m_vectorFilename = m_kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
+   if (m_vectorFilename == DUMMY_OUTPUT_FILENAME)
    {
-      m_vectorFilename = m_kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
-      if (m_vectorFilename == DUMMY_OUTPUT_FILENAME)
-      {
-         m_vectorFilename = "";
-         m_productFilename = TEMP_RASTER_PRODUCT_FILENAME;
-         m_productFilename.appendTimestamp();
-      }
-      else
-      {
-         m_productFilename = m_vectorFilename;
-         m_productFilename.setExtension("tif");
-      }
-      m_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_productFilename.chars());
+      m_vectorFilename = "";
+      m_productFilename = TEMP_RASTER_PRODUCT_FILENAME;
+      m_productFilename.appendTimestamp();
    }
+   else
+   {
+      m_productFilename = m_vectorFilename;
+      m_productFilename.setExtension("tif");
+   }
+   m_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_productFilename.chars());
 
    // Unless an output projection was specifically requested, use the input:
    m_kwl.add(ossimKeywordNames::PROJECTION_KW, "identity", false);
@@ -342,69 +330,52 @@ void ossimShorelineUtil::initProcessingChain()
    if (m_doRaster)
       return;
 
-   if (m_thresholdMode == VALUE)
-   {
-      // Set up threshold filter using a simple LUT remapper:
-      double del = FLT_EPSILON;
-      ossimString landValue = ossimString::toString(m_landValue).chars();
-      ossimString waterValue = ossimString::toString(m_waterValue).chars();
-      ossimString marginalValue = ossimString::toString(m_marginalValue).chars();
-      ossimString thresholdValueLo1 = ossimString::toString(m_threshold-m_tolerance, 9).chars();
-      ossimString thresholdValueLo2 = ossimString::toString(m_threshold-m_tolerance+del, 9).chars();
-      ossimString thresholdValueHi1 = ossimString::toString(m_threshold+m_tolerance, 9).chars();
-      ossimString thresholdValueHi2 = ossimString::toString(m_threshold+m_tolerance+del, 9).chars();
-      ossimKeywordlist remapper_kwl;
-      remapper_kwl.add("type", "ossimBandLutFilter");
-      remapper_kwl.add("enabled", "1");
-      remapper_kwl.add("mode", "interpolated");
-      remapper_kwl.add("scalar_type", "U8");
-      remapper_kwl.add("entry0.in", "0.0");
-      remapper_kwl.add("entry0.out", landValue.chars());
-      remapper_kwl.add("entry1.in", thresholdValueLo1.chars());
-      remapper_kwl.add("entry1.out", landValue.chars());
-      if (m_tolerance == 0)
-      {
-         remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
-         remapper_kwl.add("entry2.out", waterValue.chars());
-         remapper_kwl.add("entry3.in", "1.0");
-         remapper_kwl.add("entry3.out", waterValue.chars());
-      }
-      else
-      {
-         remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
-         remapper_kwl.add("entry2.out", marginalValue.chars());
-         remapper_kwl.add("entry3.in", thresholdValueHi1.chars());
-         remapper_kwl.add("entry3.out", marginalValue.chars());
-         remapper_kwl.add("entry4.in", thresholdValueHi2.chars());
-         remapper_kwl.add("entry4.out", waterValue.chars());
-         remapper_kwl.add("entry5.in", "1.0");
-         remapper_kwl.add("entry5.out", waterValue.chars());
-      }
-      ossimRefPtr<ossimBandLutFilter> remapper = new ossimBandLutFilter;
-      remapper->loadState(remapper_kwl);
-      m_procChain->add(remapper.get());
-   }
-   else if (m_thresholdMode != NONE)
-   {
-      // Some form of auto-thresholding was specified:
-      ossimRefPtr<ossimKMeansFilter> kmeansFilter =
-            new ossimKMeansFilter(m_procChain->getFirstSource());
-      ossim_uint32* dns = new ossim_uint32 [2];
-      dns[0] = m_landValue;
-      dns[1] = m_waterValue;
-      kmeansFilter->setClusterPixelValues(dns, 2);
-      delete dns;
-      kmeansFilter->setThresholdMode( (ossimKMeansFilter::ThresholdMode) m_thresholdMode );
-      m_procChain->add(kmeansFilter.get());
-   }
+   if (m_thresholdMode == NONE)
+      return;
 
-   if (m_doEdgeDetect)
+   // Some form of auto-thresholding was specified:
+   if (m_thresholdMode != VALUE)
+      autoComputeThreshold();
+
+   // Set up threshold filter using a simple LUT remapper:
+   double del = FLT_EPSILON;
+   ossimString landValue = ossimString::toString(m_landValue).chars();
+   ossimString waterValue = ossimString::toString(m_waterValue).chars();
+   ossimString marginalValue = ossimString::toString(m_marginalValue).chars();
+   ossimString thresholdValueLo1 = ossimString::toString(m_threshold-m_tolerance, 9).chars();
+   ossimString thresholdValueLo2 = ossimString::toString(m_threshold-m_tolerance+del, 9).chars();
+   ossimString thresholdValueHi1 = ossimString::toString(m_threshold+m_tolerance, 9).chars();
+   ossimString thresholdValueHi2 = ossimString::toString(m_threshold+m_tolerance+del, 9).chars();
+   ossimKeywordlist remapper_kwl;
+   remapper_kwl.add("type", "ossimBandLutFilter");
+   remapper_kwl.add("enabled", "1");
+   remapper_kwl.add("mode", "interpolated");
+   remapper_kwl.add("scalar_type", "U8");
+   remapper_kwl.add("entry0.in", "0.0");
+   remapper_kwl.add("entry0.out", landValue.chars());
+   remapper_kwl.add("entry1.in", thresholdValueLo1.chars());
+   remapper_kwl.add("entry1.out", landValue.chars());
+   if (m_tolerance == 0)
    {
-      // Set up edge detector:
-      ossimRefPtr<ossimEdgeFilter> edge_filter = new ossimEdgeFilter;
-      edge_filter->setFilterType("roberts");
-      m_procChain->add(edge_filter.get());
+      remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
+      remapper_kwl.add("entry2.out", waterValue.chars());
+      remapper_kwl.add("entry3.in", "1.0");
+      remapper_kwl.add("entry3.out", waterValue.chars());
    }
+   else
+   {
+      remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
+      remapper_kwl.add("entry2.out", marginalValue.chars());
+      remapper_kwl.add("entry3.in", thresholdValueHi1.chars());
+      remapper_kwl.add("entry3.out", marginalValue.chars());
+      remapper_kwl.add("entry4.in", thresholdValueHi2.chars());
+      remapper_kwl.add("entry4.out", waterValue.chars());
+      remapper_kwl.add("entry5.in", "1.0");
+      remapper_kwl.add("entry5.out", waterValue.chars());
+   }
+   ossimRefPtr<ossimBandLutFilter> remapper = new ossimBandLutFilter;
+   remapper->loadState(remapper_kwl);
+   m_procChain->add(remapper.get());
 }
 
 ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& bounding_irect)
@@ -430,9 +401,6 @@ bool ossimShorelineUtil::execute()
    // m_productFilename:
    bool status = ossimChipProcUtil::execute();
    if (m_doRaster || m_noVector)
-      return status;
-
-   if (m_doEdgeDetect)
       return status;
 
    // Now for vector product, need services of a plugin utility. Check if available:
@@ -557,5 +525,84 @@ bool ossimShorelineUtil::addPropsToJSON()
 
    return true;
 }
+
+bool ossimShorelineUtil::autoComputeThreshold()
+{
+   return true;
+#if 0 // TODO: IMPLEMENT
+   std::vector<ossimRefPtr<ossimKMeansClustering> > m_classifiers; //! Have num_bands entries
+
+   ostringstream xmsg;
+
+   // If an input histogram was provided, use it. Otherwise compute one:
+   ossimRefPtr<ossimMultiBandHistogram> m_histogram;
+   ossimRefPtr<ossimImageHistogramSource> histoSource = new ossimImageHistogramSource;
+   histoSource->connectMyInputTo(m_procChain.get());
+   histoSource->setComputationMode(OSSIM_HISTO_MODE_FAST);
+   histoSource->setMaxNumberOfRLevels(1);
+   histoSource->execute();
+   m_histogram = histoSource->getHistogram()->getMultiBandHistogram(0);
+
+
+   if (!m_histogram.valid())
+   {
+      ostringstream xmsg;
+      xmsg<<"ossimKMeansFilter:"<<__LINE__<<"  Could not establish a histogram. Cannot "
+            "initialize filter";
+      throw ossimException(xmsg.str());
+   }
+
+   ossim_uint32 numBands = getNumberOfInputBands();
+   for (ossim_uint32 band=0; band<numBands; band++)
+   {
+      ossimRefPtr<ossimHistogram> band_histo = m_histogram->getHistogram(band);
+      if (!band_histo.valid())
+      {
+         xmsg<<"ossimKMeansFilter:"<<__LINE__<<"  Null band histogram returned!";
+         throw ossimException(xmsg.str());
+      }
+
+      ossimRefPtr<ossimKMeansClustering> classifier = new ossimKMeansClustering;
+      classifier->setVerbose();
+      classifier->setNumClusters(m_numClusters);
+      classifier->setSamples(band_histo->GetVals(), band_histo->GetRes());
+      classifier->setPopulations(band_histo->GetCounts(), band_histo->GetRes());
+      if (!classifier->computeKmeans())
+      {
+         cout<<"ossimKMeansFilter:"<<__LINE__<<" No K-means clustering data available."<<endl;
+         break;
+      }
+      m_classifiers.push_back(classifier);
+
+      if ((m_thresholdMode != NONE) && (classifier->getNumClusters() == 2))
+      {
+         double mean0 = classifier->getMean(0);
+         double mean1 = classifier->getMean(1);
+         double sigma0 = classifier->getSigma(0);
+         double sigma1 = classifier->getSigma(1);
+         double threshold = 0;
+         switch (m_thresholdMode)
+         {
+         case MEAN:
+            threshold = (mean0 + mean1)/2.0;
+            break;
+         case SIGMA_WEIGHTED:
+            threshold = (sigma1*mean0 + sigma0*mean1)/(sigma0 + sigma1);
+            break;
+         case VARIANCE_WEIGHTED:
+            threshold = (sigma1*sigma1*mean0 + sigma0*sigma0*mean1)/(sigma0*sigma0 + sigma1*sigma1);
+            break;
+         default:
+            break;
+         }
+         m_thresholds.push_back(threshold);
+         cout<<"ossimKMeansFilter:"<<__LINE__<<" Using threshold = "<<threshold<<endl;
+      }
+   }
+
+   return (m_classifiers.size() == numBands);
+#endif
+}
+
 
 
