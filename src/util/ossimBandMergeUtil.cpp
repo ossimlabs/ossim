@@ -40,7 +40,7 @@ void ossimBandMergeUtil::setUsage(ossimArgumentParser& ap)
    // Add options.
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " --red <red_band> --green <green_band> --blue <blue_band> [--stretch] <output-rgb-image>";
+   usageString += " bandmerge --red <red_band> --green <green_band> --blue <blue_band> [--stretch] <output-rgb-image>";
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:

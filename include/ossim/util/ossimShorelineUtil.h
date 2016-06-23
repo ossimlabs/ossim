@@ -67,7 +67,8 @@ protected:
    void usage(ossimArgumentParser& ap);
    void addArguments(ossimArgumentParser& ap);
    bool addPropsToJSON();
-   bool autoComputeThreshold();
+   void doThreshold();
+   void autoComputeThreshold();
 
    ossim_uint8 m_waterValue;
    ossim_uint8 m_marginalValue;
@@ -79,7 +80,9 @@ protected:
    ThresholdMode m_thresholdMode;
    double m_smoothing;
    ossimFilename m_vectorFilename;
-   bool m_doRaster;
+   ossimFilename m_indexFilename;
+   ossimFilename m_threshFilename;
+   ossimFilename m_maskFilename;
    std::map<ossimString, ossimString> m_geoJsonProps;
    bool m_noVector;
 };

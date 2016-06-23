@@ -138,6 +138,10 @@ public:
    /** remove one or more arguments from the argv argument list, and decrement the argc respectively.*/
    void remove(int pos,int num=1);
    
+   /** Inserts string into the argv argument list, and increment the argc respectively.
+    * If string contains spaces, it will be split up into component simple strings. */
+   void insert(int pos, const ossimString& arg);
+
    /** return true if specified argument matches string.*/        
    bool match(int pos, const std::string& str) const;
    

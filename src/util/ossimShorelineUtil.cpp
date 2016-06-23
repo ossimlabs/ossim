@@ -13,17 +13,18 @@
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
+#include <ossim/base/ossimKMeansClustering.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/imaging/ossimEquationCombiner.h>
 #include <ossim/imaging/ossimBandLutFilter.h>
 #include <ossim/imaging/ossimEdgeFilter.h>
 #include <ossim/imaging/ossimImageGaussianFilter.h>
 #include <ossim/imaging/ossimErosionFilter.h>
-#include <ossim/imaging/ossimKMeansFilter.h>
 #include <ossim/imaging/ossimImageHistogramSource.h>
 #include <ossim/util/ossimShorelineUtil.h>
 #include <ossim/util/ossimUtilityRegistry.h>
@@ -37,7 +38,9 @@ static const string TMODE_KW = "tmode";
 static const string TOLERANCE_KW = "tolerance";
 static const string ALGORITHM_KW = "algorithm";
 static const ossimFilename DUMMY_OUTPUT_FILENAME = "@@NEVER_USE_THIS@@";
-static const ossimFilename TEMP_RASTER_PRODUCT_FILENAME = "temp_shoreline.tif";
+static const ossimFilename TEMP_INDEX_FILENAME = "temp_shoreline_index.tif";
+static const ossimFilename TEMP_THRESHOLD_FILENAME = "temp_shoreline_threshold.tif";
+static const ossimFilename TEMP_MASK_FILENAME = "temp_shoreline_mask.tif";
 
 const char* ossimShorelineUtil::DESCRIPTION =
       "Computes bitmap of water versus land areas in an input image.";
@@ -54,7 +57,6 @@ ossimShorelineUtil::ossimShorelineUtil()
      m_algorithm(NDWI),
      m_thresholdMode(SIGMA),
      m_smoothing(0),
-     m_doRaster(false),
      m_noVector(false)
 {
 }
@@ -71,7 +73,7 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " [options] [<output-vector-filename>]";
+   usageString += " shoreline [options] [<output-vector-filename>]";
    au->setCommandLineUsage(usageString);
    au->setDescription("Computes vector shoreline from raster imagery. The vectors are output "
          "in GeoJSON format. If an output filename is specified, the JSON is written to it. "
@@ -89,8 +91,6 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
          "and land zones. Defaults to 0, 128, and 255, respectively.");
    au->addCommandLineOption("--no-vector",
         "Outputs the raster, thresholded indexed image instead of a vector product. For engineering purposes.");
-   au->addCommandLineOption("--raster",
-        "Outputs the raster result of indexed image instead of a vector product. For engineering purposes.");
     au->addCommandLineOption("--sensor <string>",
            "Sensor used to compute Modified Normalized Difference Water Index. Currently only "
            "\"ls8\" supported (default).");
@@ -135,9 +135,6 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
 
    if ( ap.read("--no-vector"))
       m_noVector = true;
-
-   if ( ap.read("--raster"))
-      m_doRaster = true;
 
    if ( ap.read("--sensor", sp1))
       m_kwl.addPair(ossimKeywordNames::SENSOR_ID_KW, ts1);
@@ -249,15 +246,17 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
    if (m_vectorFilename == DUMMY_OUTPUT_FILENAME)
    {
       m_vectorFilename = "";
-      m_productFilename = TEMP_RASTER_PRODUCT_FILENAME;
-      m_productFilename.appendTimestamp();
+      m_indexFilename = TEMP_INDEX_FILENAME;
+      m_threshFilename = TEMP_THRESHOLD_FILENAME;
+      m_maskFilename = TEMP_MASK_FILENAME;
    }
    else
    {
-      m_productFilename = m_vectorFilename;
-      m_productFilename.setExtension("tif");
+      m_indexFilename = m_vectorFilename.fileNoExtension() + "_index.tif";
+      m_threshFilename = m_vectorFilename.fileNoExtension() + "_thresh.tif";
+      m_maskFilename = m_vectorFilename.fileNoExtension() + "_mask.tif";
    }
-   m_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_productFilename.chars());
+   m_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_indexFilename.chars());
 
    // Unless an output projection was specifically requested, use the input:
    m_kwl.add(ossimKeywordNames::PROJECTION_KW, "identity", false);
@@ -267,6 +266,8 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
 
 void ossimShorelineUtil::initProcessingChain()
 {
+   // The processing chain to produce the index image is assembled here. The thresholding part is
+   // done during execute().
    ostringstream xmsg;
 
    if (m_aoiGroundRect.hasNans() || m_aoiViewRect.hasNans())
@@ -326,12 +327,115 @@ void ossimShorelineUtil::initProcessingChain()
       m_procChain->add(smoother.get());
    }
 
-   // If raster product requested, then the chain is complete.
-   if (m_doRaster)
-      return;
+   return;
+}
 
-   if (m_thresholdMode == NONE)
-      return;
+ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& bounding_irect)
+{
+   // NOTE:
+   // getChip only performs the index and thresholding (and possibly edge). For vector output,
+   // execute must be called.
+
+   ostringstream xmsg;
+   if (!m_geom.valid())
+      return 0;
+
+   m_aoiViewRect = bounding_irect;
+   m_geom->setImageSize( m_aoiViewRect.size() );
+   m_geom->localToWorld(m_aoiViewRect, m_aoiGroundRect);
+
+   return m_procChain->getTile( m_aoiViewRect, 0 );
+}
+
+bool ossimShorelineUtil::execute()
+{
+   bool status = true;
+
+   // Base class handles the thresholded image generation. May throw exception. Output written to
+   // m_productFilename. Note that if PAN mode selected, there is no intermediate index file:
+   m_productFilename = m_indexFilename;
+   if ((m_algorithm != PAN_THRESHOLD) && !ossimChipProcUtil::execute())
+      return false;
+
+   if (m_thresholdMode != NONE)
+      doThreshold();
+   else
+      return true;
+
+   if (m_noVector)
+      return status;
+
+   // Now for vector product, need services of a plugin utility. Check if available:
+   ossimRefPtr<ossimUtility> potrace =
+         ossimUtilityRegistry::instance()->createUtility(string("potrace"));
+   if (!potrace.valid())
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimShorelineUtil:"<<__LINE__<<"  Need the "
+            "ossim-potrace plugin to perform vectorization. Only the thresholded image is "
+            "available at <"<<m_productFilename<<">."<<endl;
+      return false;
+   }
+
+   // Need a mask image representing an eroded version of the input image:
+   m_procChain = new ossimImageChain;
+   m_procChain->add(m_imgLayers[0].get());
+   if (m_smoothing > 0)
+   {
+      // Set up gaussian filter:
+      ossimRefPtr<ossimImageGaussianFilter> smoother = new ossimImageGaussianFilter;
+      smoother->setGaussStd(m_smoothing);
+      m_procChain->add(smoother.get());
+   }
+   ossimRefPtr<ossimErosionFilter> eroder = new ossimErosionFilter;
+   eroder->setWindowSize(10);
+   m_procChain->add(eroder.get());
+   m_procChain->initialize();
+   m_productFilename = m_maskFilename;
+   status = ossimChipProcUtil::execute(); // generates mask
+
+   // Convey possible redirection of console out:
+   potrace->setOutputStream(m_consoleStream);
+
+   ossimKeywordlist potrace_kwl;
+   potrace_kwl.add("image_file0", m_threshFilename.chars());
+   potrace_kwl.add("image_file1", m_maskFilename.chars());
+   potrace_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_vectorFilename.chars());
+   potrace_kwl.add("mode", "linestring");
+   potrace_kwl.add("alphamax", "1.0");
+   potrace_kwl.add("turdsize", "4");
+
+   potrace->initialize(potrace_kwl);
+
+   status =  potrace->execute();
+   if (status)
+      status =  addPropsToJSON();
+
+   if (status)
+      ossimNotify(ossimNotifyLevel_INFO)<<"Wrote vector product to <"<<m_vectorFilename<<">"<<endl;
+   else
+      ossimNotify(ossimNotifyLevel_WARN)<<"Error encountered writing vector product to <"<<m_vectorFilename<<">"<<endl;
+
+   return status;
+}
+
+void ossimShorelineUtil::doThreshold()
+{
+   ostringstream xmsg;
+
+   // Open the index file (unless doing pan thresholding) to use as the input:
+   if (m_algorithm != PAN_THRESHOLD)
+   {
+      m_procChain = new ossimImageChain();
+      ossimRefPtr<ossimImageHandler> indexImage =
+            ossimImageHandlerRegistry::instance()->open(m_indexFilename);
+      if (!indexImage.valid())
+      {
+         xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Error encountered reading index image at <"
+               <<m_indexFilename<<">.";
+         throw ossimException(xmsg.str());
+      }
+      m_procChain->add(indexImage.get());
+   }
 
    // Some form of auto-thresholding was specified:
    if (m_thresholdMode != VALUE)
@@ -373,90 +477,80 @@ void ossimShorelineUtil::initProcessingChain()
       remapper_kwl.add("entry5.in", "1.0");
       remapper_kwl.add("entry5.out", waterValue.chars());
    }
+
    ossimRefPtr<ossimBandLutFilter> remapper = new ossimBandLutFilter;
    remapper->loadState(remapper_kwl);
    m_procChain->add(remapper.get());
+
+   m_productFilename = m_threshFilename;
+   if (!ossimChipProcUtil::execute())
+   {
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Error encountered creating threshold image at <"
+            <<m_threshFilename<<">.";
+      throw ossimException(xmsg.str());
+   }
 }
 
-ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& bounding_irect)
+void ossimShorelineUtil::autoComputeThreshold()
 {
-   // NOTE:
-   // getChip only performs the index and thresholding (and possibly edge). For vector output,
-   // execute must be called.
+   // Use the K-means classifier to determine the threshold point based on the histogram clustering
+   // into two groups: land and water.
 
+   // If an input histogram was provided, use it. Otherwise compute one:
+   ossimImageHandler* handler = dynamic_cast<ossimImageHandler*>(m_procChain->getFirstSource());
    ostringstream xmsg;
-   if (!m_geom.valid())
-      return 0;
-
-   m_aoiViewRect = bounding_irect;
-   m_geom->setImageSize( m_aoiViewRect.size() );
-   m_geom->localToWorld(m_aoiViewRect, m_aoiGroundRect);
-
-   return m_procChain->getTile( m_aoiViewRect, 0 );
-}
-
-bool ossimShorelineUtil::execute()
-{
-   // Base class handles the thresholded image generation. May throw exception. Output written to
-   // m_productFilename:
-   bool status = ossimChipProcUtil::execute();
-   if (m_doRaster || m_noVector)
-      return status;
-
-   // Now for vector product, need services of a plugin utility. Check if available:
-   ossimRefPtr<ossimUtility> potrace =
-         ossimUtilityRegistry::instance()->createUtility(string("potrace"));
-   if (!potrace.valid())
+   if (!handler)
    {
-      ossimNotify(ossimNotifyLevel_WARN)<<"ossimShorelineUtil:"<<__LINE__<<"  Need the "
-            "ossim-potrace plugin to perform vectorization. Only the thresholded image is "
-            "available at <"<<m_productFilename<<">."<<endl;
-      return false;
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  No input handler in procession chain.";
+      throw ossimException(xmsg.str());
+   }
+   ossimRefPtr<ossimMultiResLevelHistogram> multi_histo = handler->getImageHistogram();
+   if (!multi_histo.valid())
+   {
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Could not establish an index histogram.";
+      throw ossimException(xmsg.str());
    }
 
-   // Need a mask image representing an eroded version of the input image:
-   m_procChain = new ossimImageChain;
-   m_procChain->add(m_imgLayers[0].get());
-   if (m_smoothing > 0)
+   ossimRefPtr<ossimHistogram> band_histo = multi_histo->getHistogram(0);
+   if (!band_histo.valid())
    {
-      // Set up gaussian filter:
-      ossimRefPtr<ossimImageGaussianFilter> smoother = new ossimImageGaussianFilter;
-      smoother->setGaussStd(m_smoothing);
-      m_procChain->add(smoother.get());
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Null band histogram returned!";
+      throw ossimException(xmsg.str());
    }
-   ossimRefPtr<ossimErosionFilter> eroder = new ossimErosionFilter;
-   eroder->setWindowSize(10);
-   m_procChain->add(eroder.get());
-   m_procChain->initialize();
-   ossimFilename savedProductFilename = m_productFilename;
-   m_productFilename.append("_mask");
-   ossimFilename maskFilename = m_productFilename;
-   status = ossimChipProcUtil::execute(); // generates mask
-   m_productFilename = savedProductFilename;
 
-   // Convey possible redirection of console out:
-   potrace->setOutputStream(m_consoleStream);
+   ossimRefPtr<ossimKMeansClustering> classifier = new ossimKMeansClustering;
+   //classifier->setVerbose(); // TODO: Remove verbose mode
+   classifier->setNumClusters(2);
+   classifier->setSamples(band_histo->GetVals(), band_histo->GetRes());
+   classifier->setPopulations(band_histo->GetCounts(), band_histo->GetRes());
+   if (!classifier->computeKmeans())
+   {
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  K-means clustering of histogram failed. Cannot "
+            "auto-compute threshold point.";
+      throw ossimException(xmsg.str());
+   }
 
-   ossimKeywordlist potrace_kwl;
-   potrace_kwl.add("image_file0", m_productFilename.chars());
-   potrace_kwl.add("image_file1", maskFilename.chars());
-   potrace_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_vectorFilename.chars());
-   potrace_kwl.add("mode", "linestring");
-   potrace_kwl.add("alphamax", "1.0");
-   potrace_kwl.add("turdsize", "4");
+   double mean0 = classifier->getMean(0);
+   double mean1 = classifier->getMean(1);
+   double sigma0 = classifier->getSigma(0);
+   double sigma1 = classifier->getSigma(1);
+   switch (m_thresholdMode)
+   {
+   case MEAN:
+      m_threshold = (mean0 + mean1)/2.0;
+      break;
+   case SIGMA:
+      m_threshold = (sigma1*mean0 + sigma0*mean1)/(sigma0 + sigma1);
+      break;
+   case VARIANCE:
+      m_threshold = (sigma1*sigma1*mean0 + sigma0*sigma0*mean1)/(sigma0*sigma0 + sigma1*sigma1);
+      break;
+   default:
+      break;
+   }
 
-   potrace->initialize(potrace_kwl);
-
-   status =  potrace->execute();
-   if (status)
-      status =  addPropsToJSON();
-
-   if (status)
-      ossimNotify(ossimNotifyLevel_INFO)<<"Wrote vector product to <"<<m_vectorFilename<<">"<<endl;
-   else
-      ossimNotify(ossimNotifyLevel_WARN)<<"Error encountered writing vector product to <"<<m_vectorFilename<<">"<<endl;
-
-   return status;
+   cout.precision(8);
+   cout<<"ossimShorelineUtil::autoComputeThreshold(): Using threshold = "<<m_threshold<<endl;
 }
 
 bool ossimShorelineUtil::addPropsToJSON()
@@ -524,84 +618,6 @@ bool ossimShorelineUtil::addPropsToJSON()
    outFile.close();
 
    return true;
-}
-
-bool ossimShorelineUtil::autoComputeThreshold()
-{
-   return true;
-#if 0 // TODO: IMPLEMENT
-   std::vector<ossimRefPtr<ossimKMeansClustering> > m_classifiers; //! Have num_bands entries
-
-   ostringstream xmsg;
-
-   // If an input histogram was provided, use it. Otherwise compute one:
-   ossimRefPtr<ossimMultiBandHistogram> m_histogram;
-   ossimRefPtr<ossimImageHistogramSource> histoSource = new ossimImageHistogramSource;
-   histoSource->connectMyInputTo(m_procChain.get());
-   histoSource->setComputationMode(OSSIM_HISTO_MODE_FAST);
-   histoSource->setMaxNumberOfRLevels(1);
-   histoSource->execute();
-   m_histogram = histoSource->getHistogram()->getMultiBandHistogram(0);
-
-
-   if (!m_histogram.valid())
-   {
-      ostringstream xmsg;
-      xmsg<<"ossimKMeansFilter:"<<__LINE__<<"  Could not establish a histogram. Cannot "
-            "initialize filter";
-      throw ossimException(xmsg.str());
-   }
-
-   ossim_uint32 numBands = getNumberOfInputBands();
-   for (ossim_uint32 band=0; band<numBands; band++)
-   {
-      ossimRefPtr<ossimHistogram> band_histo = m_histogram->getHistogram(band);
-      if (!band_histo.valid())
-      {
-         xmsg<<"ossimKMeansFilter:"<<__LINE__<<"  Null band histogram returned!";
-         throw ossimException(xmsg.str());
-      }
-
-      ossimRefPtr<ossimKMeansClustering> classifier = new ossimKMeansClustering;
-      classifier->setVerbose();
-      classifier->setNumClusters(m_numClusters);
-      classifier->setSamples(band_histo->GetVals(), band_histo->GetRes());
-      classifier->setPopulations(band_histo->GetCounts(), band_histo->GetRes());
-      if (!classifier->computeKmeans())
-      {
-         cout<<"ossimKMeansFilter:"<<__LINE__<<" No K-means clustering data available."<<endl;
-         break;
-      }
-      m_classifiers.push_back(classifier);
-
-      if ((m_thresholdMode != NONE) && (classifier->getNumClusters() == 2))
-      {
-         double mean0 = classifier->getMean(0);
-         double mean1 = classifier->getMean(1);
-         double sigma0 = classifier->getSigma(0);
-         double sigma1 = classifier->getSigma(1);
-         double threshold = 0;
-         switch (m_thresholdMode)
-         {
-         case MEAN:
-            threshold = (mean0 + mean1)/2.0;
-            break;
-         case SIGMA_WEIGHTED:
-            threshold = (sigma1*mean0 + sigma0*mean1)/(sigma0 + sigma1);
-            break;
-         case VARIANCE_WEIGHTED:
-            threshold = (sigma1*sigma1*mean0 + sigma0*sigma0*mean1)/(sigma0*sigma0 + sigma1*sigma1);
-            break;
-         default:
-            break;
-         }
-         m_thresholds.push_back(threshold);
-         cout<<"ossimKMeansFilter:"<<__LINE__<<" Using threshold = "<<threshold<<endl;
-      }
-   }
-
-   return (m_classifiers.size() == numBands);
-#endif
 }
 
 

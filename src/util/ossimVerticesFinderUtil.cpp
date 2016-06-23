@@ -38,7 +38,7 @@ void ossimVerticesFinderUtil::setUsage(ossimArgumentParser& ap)
    // Add options.
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " [options] <input-image> [<output-vertices.kwl>]";
+   usageString += " vertices [options] <input-image> [<output-vertices.kwl>]";
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:

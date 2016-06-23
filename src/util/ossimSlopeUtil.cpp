@@ -50,7 +50,7 @@ void ossimSlopeUtil::setUsage(ossimArgumentParser& ap)
    // Add options.
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " [options] <output-image>";
+   usageString += " slope [options] <output-image>";
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
