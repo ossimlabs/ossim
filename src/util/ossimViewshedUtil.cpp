@@ -79,7 +79,7 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString appName = ap.getApplicationName();
    ossimString usageString = appName;
-   usageString += " [options] <obs_lat> <obs_lon> <output-image>";
+   usageString += " viewshed [options] <obs_lat> <obs_lon> <output-image>";
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
@@ -121,9 +121,9 @@ void ossimViewshedUtil::setUsage(ossimArgumentParser& ap)
 
    ostringstream description;
    description << DESCRIPTION << "\n\nExamples:\n\n"
-         "    "<<appName<<" --radius 50  28.0 -80.5 output-hlz.tif\n"
-         "An alternate command line provides switch for observer lat and lon:\n\n"
-         "    "<<appName<<" --rlz 25 --observer 28.0 -80.5  output-hlz.tif \n";
+         "    "<<appName<<" viewshed --radius 50  28.0 -80.5 output-hlz.tif\n"
+         "\nAn alternate command line provides switch for observer lat and lon:\n\n"
+         "    "<<appName<<" viewshed --rlz 25 --observer 28.0 -80.5  output-hlz.tif \n";
    au->setDescription(description.str());
 }
 

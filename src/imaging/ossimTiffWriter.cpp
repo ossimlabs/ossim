@@ -59,23 +59,23 @@ static const char OSSIM_ID[] = "$Id: ossimTiffWriter.cpp 22942 2014-11-02 20:39:
 #endif
 
 ossimTiffWriter::ossimTiffWriter()
-   :
-      ossimImageFileWriter(),
-      theTif(NULL),
-      theCompressionType("none"),
-      theJpegQuality(DEFAULT_JPEG_QUALITY),
-      theOutputGeotiffTagsFlag(true),
-      theColorLutFlag(false),
-      theProjectionInfo(NULL),
-      theOutputTileSize(OSSIM_DEFAULT_TILE_WIDTH, OSSIM_DEFAULT_TILE_HEIGHT),
-      theForceBigTiffFlag(false),
-      theBigTiffFlag(false)
+:
+            ossimImageFileWriter(),
+            theTif(NULL),
+            theCompressionType("none"),
+            theJpegQuality(DEFAULT_JPEG_QUALITY),
+            theOutputGeotiffTagsFlag(true),
+            theColorLutFlag(false),
+            theProjectionInfo(NULL),
+            theOutputTileSize(OSSIM_DEFAULT_TILE_WIDTH, OSSIM_DEFAULT_TILE_HEIGHT),
+            theForceBigTiffFlag(false),
+            theBigTiffFlag(false)
 {
    theColorLut = new ossimNBandLutDataObject();
    ossim::defaultTileSize(theOutputTileSize);
    theOutputImageType = "tiff_tiled_band_separate";
 
-   
+
 #ifdef OSSIM_ID_ENABLED /* to quell unused variable warning. */
    if (traceDebug())
    {
@@ -97,7 +97,7 @@ bool ossimTiffWriter::openTiff()
    static const char* MODULE = "ossimTiffWriter::openTiff()";
 
    bool status = false;
-   
+
    // Close the existing file pointer.
    closeTiff();
 
@@ -111,22 +111,22 @@ bool ossimTiffWriter::openTiff()
       const ossim_uint64 BIGTIFF_THRESHOLD = 2000000000;
       ossimIrect bounds = theInputConnection->getBoundingRect();
       ossim_uint64 byteCheck =
-         (static_cast<ossim_uint64>(bounds.width())*
-          static_cast<ossim_uint64>(bounds.height())*
-          static_cast<ossim_uint64>(theInputConnection->getNumberOfOutputBands())*
-          static_cast<ossim_uint64>(ossim::scalarSizeInBytes(theInputConnection->getOutputScalarType())));
-      
+            (static_cast<ossim_uint64>(bounds.width())*
+                  static_cast<ossim_uint64>(bounds.height())*
+                  static_cast<ossim_uint64>(theInputConnection->getNumberOfOutputBands())*
+                  static_cast<ossim_uint64>(ossim::scalarSizeInBytes(theInputConnection->getOutputScalarType())));
+
       if( byteCheck > BIGTIFF_THRESHOLD )
       {
          theBigTiffFlag = true;
       }
-      
+
       ossimString openMode = "w";
       if(theBigTiffFlag||theForceBigTiffFlag)
       {
          openMode += "8";
       }
-      
+
       // Open the new file.
       theTif = XTIFFOpen( theFilename.c_str(), openMode.c_str() );
       if ( theTif )
@@ -140,10 +140,10 @@ bool ossimTiffWriter::openTiff()
                        ossimErrorCodes::OSSIM_ERROR,
                        "File %s line %d Module %s Error:\n\
 Error opening file:  %s\n",
-                       __FILE__,
-                       __LINE__,
-                       MODULE,
-                       theFilename.c_str());
+__FILE__,
+__LINE__,
+MODULE,
+theFilename.c_str());
       }
    }
    return status;
@@ -170,9 +170,9 @@ bool ossimTiffWriter::writeTiffTags()
                     ossimErrorCodes::OSSIM_ERROR,
                     "File %s line %d %s\nError:  Tiff pointer is null!\n\
 Call setFilename method.\n",
-                    __FILE__,
-                    __LINE__,
-                    MODULE);
+__FILE__,
+__LINE__,
+MODULE);
       return false;
    }
 
@@ -250,16 +250,16 @@ Call setFilename method.\n",
       maxBand[idx] = theInputConnection->getMaxPixelValue(idx);
       minBand[idx] = theInputConnection->getMinPixelValue(idx);
    }
-   
+
    writeMinMaxTags(minBand, maxBand);
-   
+
    // Set the planar configuration.
-   if ( (theOutputImageType == "tiff_strip") ||
-        (theOutputImageType == "tiff_tiled") ||
-        (theOutputImageType == "image/tiff") ||
-        (theOutputImageType == "image/tif") ||
-        (theOutputImageType == "image/gtif") ||
-        (theOutputImageType == "image/gtiff") )
+   if (  (theOutputImageType == "tiff_strip") ||
+         (theOutputImageType == "tiff_tiled") ||
+         (theOutputImageType == "image/tiff") ||
+         (theOutputImageType == "image/tif") ||
+         (theOutputImageType == "image/gtif") ||
+         (theOutputImageType == "image/gtiff") )
    {
       TIFFSetField( tiffPtr, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
    }
@@ -276,8 +276,13 @@ Call setFilename method.\n",
       tiffCompressType  = COMPRESSION_JPEG;
       // Set the jpeg quality.
       // note the compression type must be set before the quality or you will get an error
-    TIFFSetField( tiffPtr, TIFFTAG_COMPRESSION, tiffCompressType);
-    TIFFSetField( tiffPtr, TIFFTAG_JPEGQUALITY,  theJpegQuality);
+      TIFFSetField( tiffPtr, TIFFTAG_COMPRESSION, tiffCompressType);
+      TIFFSetField( tiffPtr, TIFFTAG_JPEGQUALITY,  theJpegQuality);
+   }
+   else if( theCompressionType == "lzw")
+   {
+      tiffCompressType  = COMPRESSION_LZW;
+      TIFFSetField( tiffPtr, TIFFTAG_COMPRESSION, tiffCompressType);
    }
    else if(theCompressionType == "packbits")
    {
@@ -285,7 +290,7 @@ Call setFilename method.\n",
       TIFFSetField( tiffPtr, TIFFTAG_COMPRESSION, tiffCompressType);
    }
    else if((theCompressionType == "deflate") ||
-           (theCompressionType == "zip"))
+         (theCompressionType == "zip"))
    {
       tiffCompressType  = COMPRESSION_DEFLATE;
       TIFFSetField( tiffPtr, TIFFTAG_COMPRESSION, tiffCompressType);
@@ -294,11 +299,11 @@ Call setFilename method.\n",
 
    ossimScalarType scalarType = theInputConnection->getOutputScalarType();
    bool lutEnabled = (theColorLutFlag&&
-                      ((scalarType == OSSIM_UINT8)||
-                       (scalarType == OSSIM_UINT16)||
-                       (scalarType == OSSIM_USHORT11))&&
-                      (theColorLut->getNumberOfEntries() > 0)&&
-                      (theInputConnection->getNumberOfOutputBands() == 1));
+         ((scalarType == OSSIM_UINT8)||
+               (scalarType == OSSIM_UINT16)||
+               (scalarType == OSSIM_USHORT11))&&
+               (theColorLut->getNumberOfEntries() > 0)&&
+               (theInputConnection->getNumberOfOutputBands() == 1));
    if(lutEnabled)
    {
       TIFFSetField( tiffPtr, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_PALETTE );
@@ -307,11 +312,11 @@ Call setFilename method.\n",
       if(scalarType == OSSIM_UINT8)
       {
          ossim_uint16 r[256], g[256], b[256];
-         
+
          memset(r, '\0', sizeof(ossim_uint16)*256);
          memset(g, '\0', sizeof(ossim_uint16)*256);
          memset(b, '\0', sizeof(ossim_uint16)*256);
-         
+
          for(ossim_uint32 i = 0; i < theColorLut->getNumberOfEntries(); i++)
          {
             r[i] = (ossim_uint16) (((*theColorLut)[i][0]/255.0)*65535);
@@ -326,7 +331,7 @@ Call setFilename method.\n",
          memset(r, '\0', sizeof(ossim_uint16)*65536);
          memset(g, '\0', sizeof(ossim_uint16)*65536);
          memset(b, '\0', sizeof(ossim_uint16)*65536);
-         
+
          for(ossim_uint32 i = 0; i < theColorLut->getNumberOfEntries(); i++)
          {
             r[i] = (ossim_uint16) ((*theColorLut)[i][0]);
@@ -337,9 +342,9 @@ Call setFilename method.\n",
       }
    }
    else if( (theInputConnection->getNumberOfOutputBands() == 3 ||
-             theInputConnection->getNumberOfOutputBands() == 4 ||
-             (thePhotoMetric == "rgb"))&&
-            (scalarType == OSSIM_UCHAR))
+         theInputConnection->getNumberOfOutputBands() == 4 ||
+         (thePhotoMetric == "rgb"))&&
+         (scalarType == OSSIM_UCHAR))
    {
       TIFFSetField( tiffPtr, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB );
    }
@@ -367,7 +372,7 @@ bool ossimTiffWriter::writeGeotiffTags(ossimRefPtr<ossimMapProjectionInfo> proje
 
 void ossimTiffWriter::checkColorLut()
 {
-   
+
    // this code appears to be wrong.  We can only do an outo lut if the immediate input to the sequencer is 
    // a handler with a lut or some kind of lut source.
    // 
@@ -376,8 +381,8 @@ void ossimTiffWriter::checkColorLut()
    //
    // I currenlty have to disable
    //
-   
-   
+
+
 #if 0
    bool needColorLut = false;
    bool needLoop = true;
@@ -405,12 +410,12 @@ void ossimTiffWriter::checkColorLut()
                if (imageChain)
                {
                   ossimConnectableObject::ConnectableObjectList imageHandlers =
-                     imageChain->findAllObjectsOfType(STATIC_TYPE_INFO(ossimImageHandler), false);
-                  
+                        imageChain->findAllObjectsOfType(STATIC_TYPE_INFO(ossimImageHandler), false);
+
                   for (ossim_uint32 h= 0; h < imageHandlers.size(); h++)
                   {
                      ossimImageHandler* handler =
-                        PTR_CAST(ossimImageHandler, imageHandlers[h].get());
+                           PTR_CAST(ossimImageHandler, imageHandlers[h].get());
                      if (handler)
                      {
                         if (handler->getLut() != 0) //
@@ -431,7 +436,7 @@ void ossimTiffWriter::checkColorLut()
          }
       }
    }
-   
+
    if (needColorLut && colorLut != 0)
    {
       setLut(*colorLut.get());
@@ -462,28 +467,28 @@ bool ossimTiffWriter::writeFile()
    {
       theNBandToIndexFilter = 0;
    }
-   
+
    if (traceDebug() && theInputConnection.get())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << MODULE << "DEBUG:"
-         << "\nnull:  " << theInputConnection->getNullPixelValue()
-         << "\nmin:   " << theInputConnection->getMinPixelValue()
-         << "\nmax:   " << theInputConnection->getMaxPixelValue()
-         << std::endl;
+               << MODULE << "DEBUG:"
+               << "\nnull:  " << theInputConnection->getNullPixelValue()
+               << "\nmin:   " << theInputConnection->getMinPixelValue()
+               << "\nmax:   " << theInputConnection->getMaxPixelValue()
+               << std::endl;
    }
-   
+
    if (isTiled())
    {
       if ( (theInputConnection->getTileWidth()  !=
             static_cast<ossim_uint32>(theOutputTileSize.x)) ||
-           (theInputConnection->getTileHeight() !=
-            static_cast<ossim_uint32>(theOutputTileSize.y)) )
+            (theInputConnection->getTileHeight() !=
+                  static_cast<ossim_uint32>(theOutputTileSize.y)) )
       {
          theInputConnection->setTileSize(theOutputTileSize);
       }
    }
-   
+
    if(!theInputConnection->isMaster())
    {
       theInputConnection->slaveProcessTiles();
@@ -493,7 +498,7 @@ bool ossimTiffWriter::writeFile()
          theInputConnection->connectMyInputTo(0, theNBandToIndexFilter->getInput());
          theNBandToIndexFilter = 0;
       }
-      
+
       return true;
    }
 
@@ -525,8 +530,8 @@ bool ossimTiffWriter::writeFile()
       if(traceDebug())
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
-            << MODULE << " ERROR:"
-            << "\nError detected writing tiff tags.  Returning..." << std::endl;
+                  << MODULE << " ERROR:"
+                  << "\nError detected writing tiff tags.  Returning..." << std::endl;
          return false;
       }
    }
@@ -541,7 +546,7 @@ bool ossimTiffWriter::writeFile()
          if(proj)
          {
             ossimRefPtr<ossimMapProjectionInfo> projectionInfo
-               = new ossimMapProjectionInfo(proj, theAreaOfInterest);
+            = new ossimMapProjectionInfo(proj, theAreaOfInterest);
             projectionInfo->setPixelType(thePixelType);
 
             if (writeGeotiffTags(projectionInfo) == false)
@@ -549,9 +554,9 @@ bool ossimTiffWriter::writeFile()
                if(traceDebug())
                {
                   ossimNotify(ossimNotifyLevel_DEBUG)
-                     << MODULE << " ERROR:"
-                     << "\nError detected writing geotiff tags.  Returning..."
-                     << std::endl;
+                           << MODULE << " ERROR:"
+                           << "\nError detected writing geotiff tags.  Returning..."
+                           << std::endl;
                }
                return false;
             }
@@ -565,9 +570,9 @@ bool ossimTiffWriter::writeFile()
             if(traceDebug())
             {
                ossimNotify(ossimNotifyLevel_DEBUG)
-                  << MODULE << " ERROR:"
-                  << "\nError detected writing geotiff tags.  Returning..."
-                  << std::endl;
+                        << MODULE << " ERROR:"
+                        << "\nError detected writing geotiff tags.  Returning..."
+                        << std::endl;
             }
             return false;
          }
@@ -585,7 +590,7 @@ bool ossimTiffWriter::writeFile()
          if(mapProj)
          {
             ossimRefPtr<ossimMapProjectionInfo> projectionInfo
-               = new ossimMapProjectionInfo(mapProj, theAreaOfInterest);
+            = new ossimMapProjectionInfo(mapProj, theAreaOfInterest);
 
             projectionInfo->setPixelType(thePixelType);
             if (writeGeotiffTags(projectionInfo) == false)
@@ -593,9 +598,9 @@ bool ossimTiffWriter::writeFile()
                if(traceDebug())
                {
                   ossimNotify(ossimNotifyLevel_DEBUG)
-                     << MODULE << " ERROR:"
-                     << "\nError detected writing geotiff tags.  Returning..."
-                     << std::endl;
+                           << MODULE << " ERROR:"
+                           << "\nError detected writing geotiff tags.  Returning..."
+                           << std::endl;
                }
                return false;
             }
@@ -615,10 +620,10 @@ bool ossimTiffWriter::writeFile()
       status = writeToStripsBandSep();
    }
    else if((theOutputImageType == "tiff_tiled")||
-           (ossimString::downcase(theOutputImageType) == "image/tiff")||
-           (ossimString::downcase(theOutputImageType) == "image/tif")||
-           (ossimString::downcase(theOutputImageType) == "image/gtif")||
-           (ossimString::downcase(theOutputImageType) == "image/gtiff"))
+         (ossimString::downcase(theOutputImageType) == "image/tiff")||
+         (ossimString::downcase(theOutputImageType) == "image/tif")||
+         (ossimString::downcase(theOutputImageType) == "image/gtif")||
+         (ossimString::downcase(theOutputImageType) == "image/gtiff"))
    {
       status = writeToTiles();
    }
@@ -631,9 +636,9 @@ bool ossimTiffWriter::writeFile()
       if(traceDebug())
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
-            << MODULE << " ERROR:"
-            << "\nUnsupported output type:  " << theOutputImageType
-            << std::endl;
+                  << MODULE << " ERROR:"
+                  << "\nUnsupported output type:  " << theOutputImageType
+                  << std::endl;
       }
    }
 
@@ -646,7 +651,7 @@ bool ossimTiffWriter::writeFile()
       theInputConnection->connectMyInputTo(0, theNBandToIndexFilter->getInput());
       theNBandToIndexFilter = 0;
    }
-   
+
    return status;
 }
 
@@ -802,13 +807,13 @@ bool ossimTiffWriter::loadState(const ossimKeywordlist& kwl,
                                       prefix))
    {
       if((theOutputImageType!="tiff_tiled") &&
-         (theOutputImageType!="tiff_tiled_band_separate") &&
-         (theOutputImageType!="tiff_strip") &&
-         (theOutputImageType!="tiff_strip_band_separate")&&
-         (theOutputImageType!="image/tiff")&&
-         (theOutputImageType!="image/tif")&&
-         (theOutputImageType!="image/gtif")&&
-         (theOutputImageType!="image/gtiff"))
+            (theOutputImageType!="tiff_tiled_band_separate") &&
+            (theOutputImageType!="tiff_strip") &&
+            (theOutputImageType!="tiff_strip_band_separate")&&
+            (theOutputImageType!="image/tiff")&&
+            (theOutputImageType!="image/tif")&&
+            (theOutputImageType!="image/gtif")&&
+            (theOutputImageType!="image/gtiff"))
       {
 
          theOutputImageType = "tiff_tiled_band_separate";;
@@ -825,11 +830,11 @@ bool ossimTiffWriter::loadState(const ossimKeywordlist& kwl,
 bool ossimTiffWriter::isTiled() const
 {
    return ( theOutputImageType == "tiff_tiled" ||
-            theOutputImageType == "image/tiff" ||
-            theOutputImageType == "image/tif" ||
-            theOutputImageType == "image/gtif" ||
-            theOutputImageType == "image/gtiff" ||
-            theOutputImageType == "tiff_tiled_band_separate" );
+         theOutputImageType == "image/tiff" ||
+         theOutputImageType == "image/tif" ||
+         theOutputImageType == "image/gtif" ||
+         theOutputImageType == "image/gtiff" ||
+         theOutputImageType == "tiff_tiled_band_separate" );
 }
 
 bool ossimTiffWriter::writeToTiles()
@@ -881,10 +886,10 @@ bool ossimTiffWriter::writeToTiles()
          if (!id)
          {
             ossimNotify(ossimNotifyLevel_WARN)
-               << MODULE << " ERROR:"
-               << "Error returned writing tiff tile:  " << tileNumber
-               << "\nNULL Tile encountered"
-               << std::endl;
+                     << MODULE << " ERROR:"
+                     << "Error returned writing tiff tile:  " << tileNumber
+                     << "\nNULL Tile encountered"
+                     << std::endl;
             return false;
          }
 
@@ -926,11 +931,11 @@ bool ossimTiffWriter::writeToTiles()
             if(traceDebug())
             {
                ossimNotify(ossimNotifyLevel_DEBUG)
-                  << MODULE << " ERROR:"
-                  << "Error returned writing tiff tile:  " << i
-                  << "\nExpected bytes written:  " << tileSizeInBytes
-                  << "\nBytes written:  " << bytesWritten
-                  << std::endl;
+                        << MODULE << " ERROR:"
+                        << "Error returned writing tiff tile:  " << i
+                        << "\nExpected bytes written:  " << tileSizeInBytes
+                        << "\nBytes written:  " << bytesWritten
+                        << std::endl;
             }
             setErrorStatus();
             return false;
@@ -977,12 +982,12 @@ bool ossimTiffWriter::writeToTilesBandSep()
    {
       ossimIrect   boundingRect  = theInputConnection->getBoundingRect();
       ossimNotify(ossimNotifyLevel_NOTICE)
-         << "Bounding rect = " << boundingRect
-         << "\nBands         = " << bands
-         << "\ntilesWide     = " << tilesWide
-         << "\ntilesHigh     = " << tilesHigh
-         << "\ntileWidth     = " << tileWidth
-         << "\ntileHeight    = " << tileHeight << std::endl;
+      << "Bounding rect = " << boundingRect
+      << "\nBands         = " << bands
+      << "\ntilesWide     = " << tilesWide
+      << "\ntilesHigh     = " << tilesHigh
+      << "\ntileWidth     = " << tileWidth
+      << "\ntileHeight    = " << tileHeight << std::endl;
    }
 #endif
 
@@ -1002,16 +1007,16 @@ bool ossimTiffWriter::writeToTilesBandSep()
          origin.x = j * tileWidth;
 
          ossimRefPtr<ossimImageData> id = theInputConnection->getNextTile();
-	 if(!id)
+         if(!id)
          {
             ossimNotify(ossimNotifyLevel_WARN)
-               << MODULE << " ERROR:"
-               << "Error returned writing tiff tile:  " << i
-               << "\nNULL Tile encountered"
-               << std::endl;
+                     << MODULE << " ERROR:"
+                     << "Error returned writing tiff tile:  " << i
+                     << "\nNULL Tile encountered"
+                     << std::endl;
             return false;
          }
-	 ossim_int32 tileSizeInBytes = id->getSizePerBandInBytes();
+         ossim_int32 tileSizeInBytes = id->getSizePerBandInBytes();
 
          if(!theColorLutFlag)
          {
@@ -1041,16 +1046,16 @@ bool ossimTiffWriter::writeToTilesBandSep()
                if(traceDebug())
                {
                   ossimNotify(ossimNotifyLevel_DEBUG)
-                     << MODULE << " ERROR:"
-                     << "Error returned writing tiff tile:  " << i
-                     << "\nExpected bytes written:  " << tileSizeInBytes
-                     << "\nBytes written:  " << bytesWritten
-                     << std::endl;
+                           << MODULE << " ERROR:"
+                           << "Error returned writing tiff tile:  " << i
+                           << "\nExpected bytes written:  " << tileSizeInBytes
+                           << "\nBytes written:  " << bytesWritten
+                           << std::endl;
                }
                setErrorStatus();
                return false;
             }
-            
+
          } // End of band loop.
 
          ++tileNumber;
@@ -1071,7 +1076,7 @@ bool ossimTiffWriter::writeToTilesBandSep()
    {
       writeMinMaxTags(minBands, maxBands);
    }
-    
+
    if (traceDebug()) CLOG << " Exited." << std::endl;
 
    return true;
@@ -1094,8 +1099,8 @@ bool ossimTiffWriter::writeToStrips()
    ossim_uint32 numberOfTiles = theInputConnection->getNumberOfTiles();
    ossim_uint32 width = theAreaOfInterest.width();
    ossim_uint32 bytesInLine =
-      ossim::scalarSizeInBytes(theInputConnection->getOutputScalarType()) *
-      width * bands;
+         ossim::scalarSizeInBytes(theInputConnection->getOutputScalarType()) *
+         width * bands;
 
    //---
    // Buffer to hold one line x tileHeight
@@ -1126,10 +1131,10 @@ bool ossimTiffWriter::writeToStrips()
          if (!id)
          {
             ossimNotify(ossimNotifyLevel_WARN)
-               << MODULE << " ERROR:"
-               << "Error returned writing tiff tile:  " << tileNumber
-               << "\nNULL Tile encountered"
-               << std::endl;
+                     << MODULE << " ERROR:"
+                     << "Error returned writing tiff tile:  " << tileNumber
+                     << "\nNULL Tile encountered"
+                     << std::endl;
             delete [] buffer;
             return false;
          }
@@ -1157,9 +1162,9 @@ bool ossimTiffWriter::writeToStrips()
          if (status == -1)
          {
             ossimNotify(ossimNotifyLevel_WARN)
-               << MODULE << " ERROR:"
-               << "Error returned writing tiff scanline:  " << row
-               << std::endl;
+                     << MODULE << " ERROR:"
+                     << "Error returned writing tiff scanline:  " << row
+                     << std::endl;
             setErrorStatus();
             delete [] buffer;
             return false;
@@ -1184,7 +1189,7 @@ bool ossimTiffWriter::writeToStrips()
    {
       writeMinMaxTags(minBands, maxBands);
    }
-   
+
    // Free the memory.
    delete [] buffer;
 
@@ -1210,8 +1215,8 @@ bool ossimTiffWriter::writeToStripsBandSep()
    ossim_uint32 numberOfTiles   = theInputConnection->getNumberOfTiles();
    ossim_uint32 width           = theAreaOfInterest.width();
    ossim_uint32 bytesInLine     =
-      ossim::scalarSizeInBytes(theInputConnection->getOutputScalarType()) *
-      width;
+         ossim::scalarSizeInBytes(theInputConnection->getOutputScalarType()) *
+         width;
 
    //---
    // Buffer to hold one line x tileHeight
@@ -1244,10 +1249,10 @@ bool ossimTiffWriter::writeToStripsBandSep()
          if (!id)
          {
             ossimNotify(ossimNotifyLevel_WARN)
-               << MODULE << " ERROR:"
-               << "Error returned writing tiff tile:  " << tileNumber
-               << "\nNULL Tile encountered"
-               << std::endl;
+                     << MODULE << " ERROR:"
+                     << "Error returned writing tiff tile:  " << tileNumber
+                     << "\nNULL Tile encountered"
+                     << std::endl;
             delete [] buffer;
             return false;
          }
@@ -1264,7 +1269,7 @@ bool ossimTiffWriter::writeToStripsBandSep()
 
       // Write the buffer out to disk.
       ossim_uint32 row = static_cast<ossim_uint32>(bufferRect.ul().y -
-                                       theAreaOfInterest.ul().y);
+                                                   theAreaOfInterest.ul().y);
       ossim_uint8* buf = buffer;
       for (ossim_uint32 ii=0; ((ii<linesToWrite)&&(!needsAborting())); ++ii)
       {
@@ -1277,9 +1282,9 @@ bool ossimTiffWriter::writeToStripsBandSep()
             if (status == -1)
             {
                ossimNotify(ossimNotifyLevel_WARN)
-                  << MODULE << " ERROR:"
-                  << "Error returned writing tiff scanline:  " << row
-                  << std::endl;
+                        << MODULE << " ERROR:"
+                        << "Error returned writing tiff scanline:  " << row
+                        << std::endl;
                delete [] buffer;
                return false;
             }
@@ -1319,10 +1324,10 @@ void ossimTiffWriter::setTileSize(const ossimIpt& tileSize)
       if(traceDebug())
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimTiffWriter::changeTileSize ERROR:"
-            << "\nTile size must be a multiple of 32!"
-            << "\nSize remains:  " << theOutputTileSize
-            << std::endl;
+                  << "ossimTiffWriter::changeTileSize ERROR:"
+                  << "\nTile size must be a multiple of 32!"
+                  << "\nSize remains:  " << theOutputTileSize
+                  << std::endl;
       }
       return;
    }
@@ -1337,56 +1342,56 @@ void ossimTiffWriter::writeMinMaxTags(const vector<ossim_float64>& minBand,
    if(minBand.size() && maxBand.size())
    {
       ossim_float64 minValue =
-         *std::min_element(minBand.begin(), minBand.end());
+            *std::min_element(minBand.begin(), minBand.end());
       ossim_float64 maxValue =
-         *std::max_element(maxBand.begin(), maxBand.end());
+            *std::max_element(maxBand.begin(), maxBand.end());
 
       if (traceDebug())
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimTiffWriter::writeMinMaxTags DEBUG:"
-            << "\nminValue:  " << minValue
-            << "\nmaxValue:  " << maxValue
-            << std::endl;
+                  << "ossimTiffWriter::writeMinMaxTags DEBUG:"
+                  << "\nminValue:  " << minValue
+                  << "\nmaxValue:  " << maxValue
+                  << std::endl;
       }
 
       switch( theInputConnection->getOutputScalarType() )
       {
-         case OSSIM_USHORT11:
-         {
-            TIFFSetField( tiffPtr, TIFFTAG_MINSAMPLEVALUE,
-                          static_cast<ossim_sint16>(0) );
-            TIFFSetField( tiffPtr, TIFFTAG_MAXSAMPLEVALUE,
-                          static_cast<ossim_sint16>(2047) );
-            break;
-         }
-         case OSSIM_UINT8:
-         case OSSIM_UINT16:
-         {
-            TIFFSetField( tiffPtr, TIFFTAG_MINSAMPLEVALUE,
-                          static_cast<ossim_sint16>(minValue) );
-            TIFFSetField( tiffPtr, TIFFTAG_MAXSAMPLEVALUE,
-                          static_cast<ossim_sint16>(maxValue) );
-            break;
-         }
-         
-         case OSSIM_SINT16: 
-         case OSSIM_UINT32:
-         case OSSIM_FLOAT32:
-         case OSSIM_FLOAT64:
-         case OSSIM_NORMALIZED_FLOAT:
-         case OSSIM_NORMALIZED_DOUBLE:
-         {
-            TIFFSetField( tiffPtr, TIFFTAG_SMINSAMPLEVALUE,
-                          static_cast<ossim_float32>(minValue) );
-            TIFFSetField( tiffPtr, TIFFTAG_SMAXSAMPLEVALUE,
-                          static_cast<ossim_float32>(maxValue) );
-            break;
-         }
-         default:
-         {
-            break;
-         }
+      case OSSIM_USHORT11:
+      {
+         TIFFSetField( tiffPtr, TIFFTAG_MINSAMPLEVALUE,
+                       static_cast<ossim_sint16>(0) );
+         TIFFSetField( tiffPtr, TIFFTAG_MAXSAMPLEVALUE,
+                       static_cast<ossim_sint16>(2047) );
+         break;
+      }
+      case OSSIM_UINT8:
+      case OSSIM_UINT16:
+      {
+         TIFFSetField( tiffPtr, TIFFTAG_MINSAMPLEVALUE,
+                       static_cast<ossim_sint16>(minValue) );
+         TIFFSetField( tiffPtr, TIFFTAG_MAXSAMPLEVALUE,
+                       static_cast<ossim_sint16>(maxValue) );
+         break;
+      }
+
+      case OSSIM_SINT16:
+      case OSSIM_UINT32:
+      case OSSIM_FLOAT32:
+      case OSSIM_FLOAT64:
+      case OSSIM_NORMALIZED_FLOAT:
+      case OSSIM_NORMALIZED_DOUBLE:
+      {
+         TIFFSetField( tiffPtr, TIFFTAG_SMINSAMPLEVALUE,
+                       static_cast<ossim_float32>(minValue) );
+         TIFFSetField( tiffPtr, TIFFTAG_SMAXSAMPLEVALUE,
+                       static_cast<ossim_float32>(maxValue) );
+         break;
+      }
+      default:
+      {
+         break;
+      }
       }
    }
 }
@@ -1400,12 +1405,12 @@ void ossimTiffWriter::setProperty(ossimRefPtr<ossimProperty> property)
 
    if(property->getName() == ossimKeywordNames::COMPRESSION_QUALITY_KW)
    {
-//       ossimNumericProperty* numericProperty = PTR_CAST(ossimNumericProperty,
-//                                                        property.get());
-//       if (numericProperty)
-//       {
+      //       ossimNumericProperty* numericProperty = PTR_CAST(ossimNumericProperty,
+      //                                                        property.get());
+      //       if (numericProperty)
+      //       {
       setJpegQuality( property->valueToString().toInt32() );
-//       }
+      //       }
    }
    else if (property->getName() == ossimKeywordNames::COMPRESSION_TYPE_KW)
    {
@@ -1445,7 +1450,7 @@ void ossimTiffWriter::setProperty(ossimRefPtr<ossimProperty> property)
 ossimRefPtr<ossimProperty> ossimTiffWriter::getProperty(const ossimString& name)const
 {
    ossimRefPtr<ossimProperty> prop = 0;
-   
+
    if (name == "Filename")
    {
       prop = ossimImageFileWriter::getProperty(name);
@@ -1463,19 +1468,19 @@ ossimRefPtr<ossimProperty> ossimTiffWriter::getProperty(const ossimString& name)
    else if (name == ossimKeywordNames::COMPRESSION_QUALITY_KW)
    {
       ossimRefPtr<ossimNumericProperty> numericProp =
-         new ossimNumericProperty(name,
-                                  ossimString::toString(theJpegQuality),
-                                  1.0,
-                                  100.0);
+            new ossimNumericProperty(name,
+                                     ossimString::toString(theJpegQuality),
+                                     1.0,
+                                     100.0);
       numericProp->setNumericType(ossimNumericProperty::ossimNumericPropertyType_INT);
       prop = numericProp.get();
    }
    else if (name == ossimKeywordNames::COMPRESSION_TYPE_KW)
    {
       ossimRefPtr<ossimStringProperty> stringProp =
-         new ossimStringProperty(name,
-                                 getCompressionType(),
-                                 false); // editable flag
+            new ossimStringProperty(name,
+                                    getCompressionType(),
+                                    false); // editable flag
       stringProp->addConstraint(ossimString("none"));
       stringProp->addConstraint(ossimString("jpeg"));
       stringProp->addConstraint(ossimString("packbits"));
@@ -1486,9 +1491,9 @@ ossimRefPtr<ossimProperty> ossimTiffWriter::getProperty(const ossimString& name)
    else if (name == "lut_file")
    {
       ossimRefPtr<ossimFilenameProperty> property =
-         new ossimFilenameProperty(name, theLutFilename);
+            new ossimFilenameProperty(name, theLutFilename);
       property->setIoType(ossimFilenameProperty::ossimFilenamePropertyIoType_INPUT);
-      
+
       prop = property.get();
    }
    else if (name == "color_lut_flag")
@@ -1497,14 +1502,14 @@ ossimRefPtr<ossimProperty> ossimTiffWriter::getProperty(const ossimString& name)
    }
    else if(name == "big_tiff_flag")
    {
-       prop = new ossimBooleanProperty(name, theForceBigTiffFlag);
+      prop = new ossimBooleanProperty(name, theForceBigTiffFlag);
    }
    else if( name == ossimKeywordNames::OUTPUT_TILE_SIZE_KW )
    {
       ossimRefPtr<ossimStringProperty> stringProp =
-         new ossimStringProperty(name,
-                                 ossimString::toString(theOutputTileSize.x),
-                                 false); // editable flag
+            new ossimStringProperty(name,
+                                    ossimString::toString(theOutputTileSize.x),
+                                    false); // editable flag
       stringProp->addConstraint(ossimString("16"));
       stringProp->addConstraint(ossimString("32"));
       stringProp->addConstraint(ossimString("64"));
@@ -1525,14 +1530,14 @@ ossimRefPtr<ossimProperty> ossimTiffWriter::getProperty(const ossimString& name)
 void ossimTiffWriter::getPropertyNames(std::vector<ossimString>& propertyNames)const
 {
    propertyNames.push_back(ossimString(
-                              ossimKeywordNames::COMPRESSION_QUALITY_KW));
+         ossimKeywordNames::COMPRESSION_QUALITY_KW));
    propertyNames.push_back(ossimString(
-                              ossimKeywordNames::COMPRESSION_TYPE_KW));
+         ossimKeywordNames::COMPRESSION_TYPE_KW));
    propertyNames.push_back(ossimString("lut_file"));
    propertyNames.push_back(ossimString("color_lut_flag"));
    propertyNames.push_back(ossimString("big_tiff_flag"));
    propertyNames.push_back(ossimString(ossimKeywordNames::OUTPUT_TILE_SIZE_KW));
-  
+
    ossimImageFileWriter::getPropertyNames(propertyNames);
 }
 
@@ -1567,21 +1572,21 @@ void ossimTiffWriter::setJpegQuality(ossim_int32 quality)
       if (traceDebug())
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimTiffWriter::setJpegQuality DEBUG:"
-            << "\nquality out of range:  " << quality
-            << "\nquality has been set to default:  " 
-            << DEFAULT_JPEG_QUALITY
-            << "\nvalid range:  1 to 100 with 100 being best."
-            << std::endl;
+                  << "ossimTiffWriter::setJpegQuality DEBUG:"
+                  << "\nquality out of range:  " << quality
+                  << "\nquality has been set to default:  "
+                  << DEFAULT_JPEG_QUALITY
+                  << "\nvalid range:  1 to 100 with 100 being best."
+                  << std::endl;
       }
-      
+
       theJpegQuality = DEFAULT_JPEG_QUALITY;
    }
 }
 
 ossim_int32 ossimTiffWriter::getJpegQuality()const
 {
-   
+
    return theJpegQuality;
 }
 
@@ -1637,9 +1642,9 @@ bool ossimTiffWriter::hasImageType(const ossimString& imageType) const
    // We will support mime type
    //
    if((imageType == "image/tiff")||
-      (imageType == "image/gtiff")||
-      (imageType == "image/tif")||
-      (imageType == "image/gtif"))
+         (imageType == "image/gtiff")||
+         (imageType == "image/tif")||
+         (imageType == "image/gtif"))
    {
       return true;
    }
@@ -1653,14 +1658,14 @@ bool ossimTiffWriter::isLutEnabled()const
 }
 
 ossimTiffWriter::UnitType ossimTiffWriter::getUnitType(
-   ossim_int32 pcsCode,
-   const ossimString& projName) const
+      ossim_int32 pcsCode,
+      const ossimString& projName) const
 {
 
 
    if ( ( projName == "ossimCylEquAreaProjection" ) ||
-        ( projName == "ossimEquDistCylProjection" ) ||
-        ( projName == "ossimLlxyProjection" ) )
+         ( projName == "ossimEquDistCylProjection" ) ||
+         ( projName == "ossimLlxyProjection" ) )
    {
       return ANGULAR_DEGREES;
    } 
@@ -1668,30 +1673,30 @@ ossimTiffWriter::UnitType ossimTiffWriter::getUnitType(
    UnitType pcsUnits = getPcsUnitType(pcsCode);
 
    UnitType type = UNDEFINED;
-   
+
    switch (theLinearUnits)
    {
-      case OSSIM_METERS:
-      {
-         type = LINEAR_METER;
-         break;
-      }
-      
-      case OSSIM_FEET:
-      {
-         type = LINEAR_FOOT;
-         break;
-      }
-      
-      case OSSIM_US_SURVEY_FEET:
-      {
-         type = LINEAR_FOOT_US_SURVEY;
-         break;
-      }
-      default:
-      {
-         break;
-      }
+   case OSSIM_METERS:
+   {
+      type = LINEAR_METER;
+      break;
+   }
+
+   case OSSIM_FEET:
+   {
+      type = LINEAR_FOOT;
+      break;
+   }
+
+   case OSSIM_US_SURVEY_FEET:
+   {
+      type = LINEAR_FOOT_US_SURVEY;
+      break;
+   }
+   default:
+   {
+      break;
+   }
    }
    if (type == UNDEFINED)
    {
@@ -1703,10 +1708,10 @@ ossimTiffWriter::UnitType ossimTiffWriter::getUnitType(
 ossimTiffWriter::UnitType ossimTiffWriter::getPcsUnitType(ossim_int32 pcsCode) const
 {
    UnitType pcsUnits = UNDEFINED;
-   
+
    ossimRefPtr<ossimMapProjection> proj = PTR_CAST(ossimMapProjection, 
-      ossimEpsgProjectionDatabase::instance()->findProjection((ossim_uint32) pcsCode));
-   
+                                                   ossimEpsgProjectionDatabase::instance()->findProjection((ossim_uint32) pcsCode));
+
    if (proj.valid())
    {
       ossimUnitType type = proj->getProjectionUnits();

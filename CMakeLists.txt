@@ -85,17 +85,6 @@ else( JPEG_FOUND )
    message( FATAL_ERROR "Could not find required jpeg package!" )
 endif( JPEG_FOUND )
 
-# JPEG12 support this is optional:
-if ( OSSIM_WITH_12BIT_JPEG )
-   find_package( JPEG12 )
-   if( JPEG12_FOUND )
-      include_directories( ${JPEG12_INCLUDE_DIR} )
-      set( ossimDependentLibs ${ossimDependentLibs} ${JPEG12_LIBRARY} )
-      # This will turn on compiling of ossimNitfTileSource_12 class:
-      add_definitions("-DJPEG_DUAL_MODE_8_12")
-   endif( JPEG12_FOUND )
-endif( OSSIM_WITH_12BIT_JPEG )
-
 # OpenThreads - Required:
 find_package( OpenThreads )
 if( OPENTHREADS_FOUND )

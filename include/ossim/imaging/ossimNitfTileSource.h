@@ -465,6 +465,8 @@ protected:
 
    /**
     * @brief Uncompresses a jpeg block using the jpeg-6b library.
+    * This method does eight bit jpeg compressed blocks. Note there is
+    * specialized jpeg12 plugin for 12 bit.
     * @param x sample location in image space.
     * @param y line location in image space.
     * @return true on success, false on error.
@@ -529,8 +531,6 @@ protected:
    std::vector<std::streamoff>   theNitfBlockOffset;
    std::vector<ossim_uint32>     theNitfBlockSize;
    
-   bool m_isJpeg12Bit;
-
    //---
    // If set to true indicates scanForJpegBlockOffsets() needs to be called
    // prior to grabbing a block.

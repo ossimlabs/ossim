@@ -39,6 +39,9 @@ bool ossimKMeansClustering::computeKmeans()
    if ((m_numEntries == 0) || (m_samples == 0))
          return false;
 
+   if (m_verbose)
+      std::cout.precision(6);
+
    // If populations aren't provided, assume only 1 of each sample:
    if (m_populations == 0)
    {
@@ -155,7 +158,7 @@ bool ossimKMeansClustering::computeKmeans()
 //            cout<<"cluster["<<gid<<"].mean     = "<<m_clusters[gid].mean<<endl;
 //            cout<<"cluster["<<gid<<"].new_mean = "<<m_clusters[gid].new_mean<<endl;
 //            cout<<"cluster["<<gid<<"].sigma    = "<<m_clusters[gid].sigma<<endl;
-//            cout<<"cluster["<<gid<<"].n        = "<<m_clusters[gid].n<<"  prior: "<<priorCounts[gid]<<endl;
+//            cout<<"cluster["<<gid<<"].n        = "<<(int)m_clusters[gid].n<<"  prior: "<<priorCounts[gid]<<endl;
 //            cout<<"cluster["<<gid<<"].min      = "<<m_clusters[gid].min<<endl;
 //            cout<<"cluster["<<gid<<"].max      = "<<m_clusters[gid].max<<endl;
 //            cout << endl;
@@ -177,7 +180,7 @@ bool ossimKMeansClustering::computeKmeans()
       cout<<"\nossimKMeansClustering Summary ("<<iters<<" iterations):"<<endl;
       for (ossim_uint32 gid=0; gid<numClusters; gid++)
       {
-         cout<<"\n  cluster["<<gid<<"] n        = "<<m_clusters[gid].n<<endl;
+         cout<<"\n  cluster["<<gid<<"] n        = "<<(int)m_clusters[gid].n<<endl;
          cout<<"             mean     = "<<m_clusters[gid].mean<<endl;
          cout<<"             sigma    = "<<m_clusters[gid].sigma<<endl;
          cout<<"             min      = "<<m_clusters[gid].min<<endl;

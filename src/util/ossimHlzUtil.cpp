@@ -70,7 +70,7 @@ void ossimHlzUtil::setUsage(ossimArgumentParser& ap)
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " [options] <output-image>";
+   usageString += " hlz [options] <output-image>";
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:

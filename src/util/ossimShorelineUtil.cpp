@@ -13,17 +13,19 @@
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
+#include <ossim/base/ossimKMeansClustering.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/imaging/ossimEquationCombiner.h>
 #include <ossim/imaging/ossimBandLutFilter.h>
 #include <ossim/imaging/ossimEdgeFilter.h>
 #include <ossim/imaging/ossimImageGaussianFilter.h>
 #include <ossim/imaging/ossimErosionFilter.h>
-#include <ossim/imaging/ossimKMeansFilter.h>
+#include <ossim/imaging/ossimImageHistogramSource.h>
 #include <ossim/util/ossimShorelineUtil.h>
 #include <ossim/util/ossimUtilityRegistry.h>
 #include <ossim/ossimVersion.h>
@@ -35,9 +37,10 @@ static const string THRESHOLD_KW = "threshold";
 static const string TMODE_KW = "tmode";
 static const string TOLERANCE_KW = "tolerance";
 static const string ALGORITHM_KW = "algorithm";
-static const string DO_EDGE_DETECT_KW = "do_edge_detect";
 static const ossimFilename DUMMY_OUTPUT_FILENAME = "@@NEVER_USE_THIS@@";
-static const ossimFilename TEMP_RASTER_PRODUCT_FILENAME = "temp_shoreline.tif";
+static const ossimFilename TEMP_INDEX_FILENAME = "temp_shoreline_index.tif";
+static const ossimFilename TEMP_THRESHOLD_FILENAME = "temp_shoreline_threshold.tif";
+static const ossimFilename TEMP_MASK_FILENAME = "temp_shoreline_mask.tif";
 
 const char* ossimShorelineUtil::DESCRIPTION =
       "Computes bitmap of water versus land areas in an input image.";
@@ -54,8 +57,6 @@ ossimShorelineUtil::ossimShorelineUtil()
      m_algorithm(NDWI),
      m_thresholdMode(SIGMA),
      m_smoothing(0),
-     m_doEdgeDetect(false),
-     m_doRaster(false),
      m_noVector(false)
 {
 }
@@ -72,7 +73,7 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " [options] [<output-vector-filename>]";
+   usageString += " shoreline [options] [<output-vector-filename>]";
    au->setCommandLineUsage(usageString);
    au->setDescription("Computes vector shoreline from raster imagery. The vectors are output "
          "in GeoJSON format. If an output filename is specified, the JSON is written to it. "
@@ -88,13 +89,8 @@ void ossimShorelineUtil::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--color-coding <water> <marginal> <land>",
          "Specifies the pixel values (0-255) for the output product corresponding to water, marginal, "
          "and land zones. Defaults to 0, 128, and 255, respectively.");
-   au->addCommandLineOption("--edge",
-         "Directs the processing to perform an edge detection instead of outputing a vector product."
-         " Defaults to FALSE.");
    au->addCommandLineOption("--no-vector",
         "Outputs the raster, thresholded indexed image instead of a vector product. For engineering purposes.");
-   au->addCommandLineOption("--raster",
-        "Outputs the raster result of indexed image instead of a vector product. For engineering purposes.");
     au->addCommandLineOption("--sensor <string>",
            "Sensor used to compute Modified Normalized Difference Water Index. Currently only "
            "\"ls8\" supported (default).");
@@ -137,14 +133,8 @@ bool ossimShorelineUtil::initialize(ossimArgumentParser& ap)
       m_kwl.addPair( COLOR_CODING_KW, value.str() );
    }
 
-   if ( ap.read("--edge"))
-      m_kwl.addPair(DO_EDGE_DETECT_KW, string("true"));
-
    if ( ap.read("--no-vector"))
       m_noVector = true;
-
-   if ( ap.read("--raster"))
-      m_doRaster = true;
 
    if ( ap.read("--sensor", sp1))
       m_kwl.addPair(ossimKeywordNames::SENSOR_ID_KW, ts1);
@@ -228,8 +218,6 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
    if (!value.empty())
       m_sensor = value;
 
-   m_kwl.getBoolKeywordValue(m_doEdgeDetect, DO_EDGE_DETECT_KW.c_str());
-
    value = m_kwl.findKey(SMOOTHING_KW);
    if (!value.empty())
       m_smoothing = value.toDouble();
@@ -254,22 +242,21 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
       m_tolerance = value.toDouble();
 
    // Output filename specifies the vector output, while base class interprets as raster, correct:
-   if (!m_doEdgeDetect)
+   m_vectorFilename = m_kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
+   if (m_vectorFilename == DUMMY_OUTPUT_FILENAME)
    {
-      m_vectorFilename = m_kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
-      if (m_vectorFilename == DUMMY_OUTPUT_FILENAME)
-      {
-         m_vectorFilename = "";
-         m_productFilename = TEMP_RASTER_PRODUCT_FILENAME;
-         m_productFilename.appendTimestamp();
-      }
-      else
-      {
-         m_productFilename = m_vectorFilename;
-         m_productFilename.setExtension("tif");
-      }
-      m_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_productFilename.chars());
+      m_vectorFilename = "";
+      m_indexFilename = TEMP_INDEX_FILENAME;
+      m_threshFilename = TEMP_THRESHOLD_FILENAME;
+      m_maskFilename = TEMP_MASK_FILENAME;
    }
+   else
+   {
+      m_indexFilename = m_vectorFilename.fileNoExtension() + "_index.tif";
+      m_threshFilename = m_vectorFilename.fileNoExtension() + "_thresh.tif";
+      m_maskFilename = m_vectorFilename.fileNoExtension() + "_mask.tif";
+   }
+   m_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_indexFilename.chars());
 
    // Unless an output projection was specifically requested, use the input:
    m_kwl.add(ossimKeywordNames::PROJECTION_KW, "identity", false);
@@ -279,6 +266,8 @@ void ossimShorelineUtil::initialize(const ossimKeywordlist& kwl)
 
 void ossimShorelineUtil::initProcessingChain()
 {
+   // The processing chain to produce the index image is assembled here. The thresholding part is
+   // done during execute().
    ostringstream xmsg;
 
    if (m_aoiGroundRect.hasNans() || m_aoiViewRect.hasNans())
@@ -338,73 +327,7 @@ void ossimShorelineUtil::initProcessingChain()
       m_procChain->add(smoother.get());
    }
 
-   // If raster product requested, then the chain is complete.
-   if (m_doRaster)
-      return;
-
-   if (m_thresholdMode == VALUE)
-   {
-      // Set up threshold filter using a simple LUT remapper:
-      double del = FLT_EPSILON;
-      ossimString landValue = ossimString::toString(m_landValue).chars();
-      ossimString waterValue = ossimString::toString(m_waterValue).chars();
-      ossimString marginalValue = ossimString::toString(m_marginalValue).chars();
-      ossimString thresholdValueLo1 = ossimString::toString(m_threshold-m_tolerance, 9).chars();
-      ossimString thresholdValueLo2 = ossimString::toString(m_threshold-m_tolerance+del, 9).chars();
-      ossimString thresholdValueHi1 = ossimString::toString(m_threshold+m_tolerance, 9).chars();
-      ossimString thresholdValueHi2 = ossimString::toString(m_threshold+m_tolerance+del, 9).chars();
-      ossimKeywordlist remapper_kwl;
-      remapper_kwl.add("type", "ossimBandLutFilter");
-      remapper_kwl.add("enabled", "1");
-      remapper_kwl.add("mode", "interpolated");
-      remapper_kwl.add("scalar_type", "U8");
-      remapper_kwl.add("entry0.in", "0.0");
-      remapper_kwl.add("entry0.out", landValue.chars());
-      remapper_kwl.add("entry1.in", thresholdValueLo1.chars());
-      remapper_kwl.add("entry1.out", landValue.chars());
-      if (m_tolerance == 0)
-      {
-         remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
-         remapper_kwl.add("entry2.out", waterValue.chars());
-         remapper_kwl.add("entry3.in", "1.0");
-         remapper_kwl.add("entry3.out", waterValue.chars());
-      }
-      else
-      {
-         remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
-         remapper_kwl.add("entry2.out", marginalValue.chars());
-         remapper_kwl.add("entry3.in", thresholdValueHi1.chars());
-         remapper_kwl.add("entry3.out", marginalValue.chars());
-         remapper_kwl.add("entry4.in", thresholdValueHi2.chars());
-         remapper_kwl.add("entry4.out", waterValue.chars());
-         remapper_kwl.add("entry5.in", "1.0");
-         remapper_kwl.add("entry5.out", waterValue.chars());
-      }
-      ossimRefPtr<ossimBandLutFilter> remapper = new ossimBandLutFilter;
-      remapper->loadState(remapper_kwl);
-      m_procChain->add(remapper.get());
-   }
-   else if (m_thresholdMode != NONE)
-   {
-      // Some form of auto-thresholding was specified:
-      ossimRefPtr<ossimKMeansFilter> kmeansFilter =
-            new ossimKMeansFilter(m_procChain->getFirstSource());
-      ossim_uint32* dns = new ossim_uint32 [2];
-      dns[0] = m_landValue;
-      dns[1] = m_waterValue;
-      kmeansFilter->setClusterPixelValues(dns, 2);
-      delete dns;
-      kmeansFilter->setThresholdMode( (ossimKMeansFilter::ThresholdMode) m_thresholdMode );
-      m_procChain->add(kmeansFilter.get());
-   }
-
-   if (m_doEdgeDetect)
-   {
-      // Set up edge detector:
-      ossimRefPtr<ossimEdgeFilter> edge_filter = new ossimEdgeFilter;
-      edge_filter->setFilterType("roberts");
-      m_procChain->add(edge_filter.get());
-   }
+   return;
 }
 
 ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& bounding_irect)
@@ -426,13 +349,20 @@ ossimRefPtr<ossimImageData> ossimShorelineUtil::getChip(const ossimIrect& boundi
 
 bool ossimShorelineUtil::execute()
 {
-   // Base class handles the thresholded image generation. May throw exception. Output written to
-   // m_productFilename:
-   bool status = ossimChipProcUtil::execute();
-   if (m_doRaster || m_noVector)
-      return status;
+   bool status = true;
 
-   if (m_doEdgeDetect)
+   // Base class handles the thresholded image generation. May throw exception. Output written to
+   // m_productFilename. Note that if PAN mode selected, there is no intermediate index file:
+   m_productFilename = m_indexFilename;
+   if ((m_algorithm != PAN_THRESHOLD) && !ossimChipProcUtil::execute())
+      return false;
+
+   if (m_thresholdMode != NONE)
+      doThreshold();
+   else
+      return true;
+
+   if (m_noVector)
       return status;
 
    // Now for vector product, need services of a plugin utility. Check if available:
@@ -460,18 +390,15 @@ bool ossimShorelineUtil::execute()
    eroder->setWindowSize(10);
    m_procChain->add(eroder.get());
    m_procChain->initialize();
-   ossimFilename savedProductFilename = m_productFilename;
-   m_productFilename.append("_mask");
-   ossimFilename maskFilename = m_productFilename;
+   m_productFilename = m_maskFilename;
    status = ossimChipProcUtil::execute(); // generates mask
-   m_productFilename = savedProductFilename;
 
    // Convey possible redirection of console out:
    potrace->setOutputStream(m_consoleStream);
 
    ossimKeywordlist potrace_kwl;
-   potrace_kwl.add("image_file0", m_productFilename.chars());
-   potrace_kwl.add("image_file1", maskFilename.chars());
+   potrace_kwl.add("image_file0", m_threshFilename.chars());
+   potrace_kwl.add("image_file1", m_maskFilename.chars());
    potrace_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_vectorFilename.chars());
    potrace_kwl.add("mode", "linestring");
    potrace_kwl.add("alphamax", "1.0");
@@ -489,6 +416,141 @@ bool ossimShorelineUtil::execute()
       ossimNotify(ossimNotifyLevel_WARN)<<"Error encountered writing vector product to <"<<m_vectorFilename<<">"<<endl;
 
    return status;
+}
+
+void ossimShorelineUtil::doThreshold()
+{
+   ostringstream xmsg;
+
+   // Open the index file (unless doing pan thresholding) to use as the input:
+   if (m_algorithm != PAN_THRESHOLD)
+   {
+      m_procChain = new ossimImageChain();
+      ossimRefPtr<ossimImageHandler> indexImage =
+            ossimImageHandlerRegistry::instance()->open(m_indexFilename);
+      if (!indexImage.valid())
+      {
+         xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Error encountered reading index image at <"
+               <<m_indexFilename<<">.";
+         throw ossimException(xmsg.str());
+      }
+      m_procChain->add(indexImage.get());
+   }
+
+   // Some form of auto-thresholding was specified:
+   if (m_thresholdMode != VALUE)
+      autoComputeThreshold();
+
+   // Set up threshold filter using a simple LUT remapper:
+   double del = FLT_EPSILON;
+   ossimString landValue = ossimString::toString(m_landValue).chars();
+   ossimString waterValue = ossimString::toString(m_waterValue).chars();
+   ossimString marginalValue = ossimString::toString(m_marginalValue).chars();
+   ossimString thresholdValueLo1 = ossimString::toString(m_threshold-m_tolerance, 9).chars();
+   ossimString thresholdValueLo2 = ossimString::toString(m_threshold-m_tolerance+del, 9).chars();
+   ossimString thresholdValueHi1 = ossimString::toString(m_threshold+m_tolerance, 9).chars();
+   ossimString thresholdValueHi2 = ossimString::toString(m_threshold+m_tolerance+del, 9).chars();
+   ossimKeywordlist remapper_kwl;
+   remapper_kwl.add("type", "ossimBandLutFilter");
+   remapper_kwl.add("enabled", "1");
+   remapper_kwl.add("mode", "interpolated");
+   remapper_kwl.add("scalar_type", "U8");
+   remapper_kwl.add("entry0.in", "0.0");
+   remapper_kwl.add("entry0.out", landValue.chars());
+   remapper_kwl.add("entry1.in", thresholdValueLo1.chars());
+   remapper_kwl.add("entry1.out", landValue.chars());
+   if (m_tolerance == 0)
+   {
+      remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
+      remapper_kwl.add("entry2.out", waterValue.chars());
+      remapper_kwl.add("entry3.in", "1.0");
+      remapper_kwl.add("entry3.out", waterValue.chars());
+   }
+   else
+   {
+      remapper_kwl.add("entry2.in", thresholdValueLo2.chars());
+      remapper_kwl.add("entry2.out", marginalValue.chars());
+      remapper_kwl.add("entry3.in", thresholdValueHi1.chars());
+      remapper_kwl.add("entry3.out", marginalValue.chars());
+      remapper_kwl.add("entry4.in", thresholdValueHi2.chars());
+      remapper_kwl.add("entry4.out", waterValue.chars());
+      remapper_kwl.add("entry5.in", "1.0");
+      remapper_kwl.add("entry5.out", waterValue.chars());
+   }
+
+   ossimRefPtr<ossimBandLutFilter> remapper = new ossimBandLutFilter;
+   remapper->loadState(remapper_kwl);
+   m_procChain->add(remapper.get());
+
+   m_productFilename = m_threshFilename;
+   if (!ossimChipProcUtil::execute())
+   {
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Error encountered creating threshold image at <"
+            <<m_threshFilename<<">.";
+      throw ossimException(xmsg.str());
+   }
+}
+
+void ossimShorelineUtil::autoComputeThreshold()
+{
+   // Use the K-means classifier to determine the threshold point based on the histogram clustering
+   // into two groups: land and water.
+
+   // If an input histogram was provided, use it. Otherwise compute one:
+   ossimImageHandler* handler = dynamic_cast<ossimImageHandler*>(m_procChain->getFirstSource());
+   ostringstream xmsg;
+   if (!handler)
+   {
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  No input handler in procession chain.";
+      throw ossimException(xmsg.str());
+   }
+   ossimRefPtr<ossimMultiResLevelHistogram> multi_histo = handler->getImageHistogram();
+   if (!multi_histo.valid())
+   {
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Could not establish an index histogram.";
+      throw ossimException(xmsg.str());
+   }
+
+   ossimRefPtr<ossimHistogram> band_histo = multi_histo->getHistogram(0);
+   if (!band_histo.valid())
+   {
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  Null band histogram returned!";
+      throw ossimException(xmsg.str());
+   }
+
+   ossimRefPtr<ossimKMeansClustering> classifier = new ossimKMeansClustering;
+   //classifier->setVerbose(); // TODO: Remove verbose mode
+   classifier->setNumClusters(2);
+   classifier->setSamples(band_histo->GetVals(), band_histo->GetRes());
+   classifier->setPopulations(band_histo->GetCounts(), band_histo->GetRes());
+   if (!classifier->computeKmeans())
+   {
+      xmsg<<"ossimShorelineUtil:"<<__LINE__<<"  K-means clustering of histogram failed. Cannot "
+            "auto-compute threshold point.";
+      throw ossimException(xmsg.str());
+   }
+
+   double mean0 = classifier->getMean(0);
+   double mean1 = classifier->getMean(1);
+   double sigma0 = classifier->getSigma(0);
+   double sigma1 = classifier->getSigma(1);
+   switch (m_thresholdMode)
+   {
+   case MEAN:
+      m_threshold = (mean0 + mean1)/2.0;
+      break;
+   case SIGMA:
+      m_threshold = (sigma1*mean0 + sigma0*mean1)/(sigma0 + sigma1);
+      break;
+   case VARIANCE:
+      m_threshold = (sigma1*sigma1*mean0 + sigma0*sigma0*mean1)/(sigma0*sigma0 + sigma1*sigma1);
+      break;
+   default:
+      break;
+   }
+
+   cout.precision(8);
+   cout<<"ossimShorelineUtil::autoComputeThreshold(): Using threshold = "<<m_threshold<<endl;
 }
 
 bool ossimShorelineUtil::addPropsToJSON()
@@ -557,5 +619,6 @@ bool ossimShorelineUtil::addPropsToJSON()
 
    return true;
 }
+
 
 

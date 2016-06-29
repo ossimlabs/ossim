@@ -47,7 +47,7 @@ void ossimOrthoUtil::setUsage(ossimArgumentParser& ap)
    // Add options.
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " [options] [<input-image>] <output-image>";
+   usageString += " ortho [options] [<input-image>] <output-image>";
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:

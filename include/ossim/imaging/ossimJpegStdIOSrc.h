@@ -12,18 +12,28 @@
 #define ossimJpegStdIOSrc_HEADER
 
 #include <ossim/base/ossimConstants.h> /** for OSSIM_DLL export macro */
+#include <cstdio> /* For FILE* */
+
+struct jpeg_decompress_struct;
+
 extern "C"
 {
-#include <cstdio>                      /** for size_t  */
-#include <csetjmp>                     /** for jmp_buf */
-#include <jpeglib.h>                   /** for jpeg stuff */
+// #include <cstdio>                      /** for size_t  */
+// #include <csetjmp>                     /** for jmp_buf */
+// #include <jpeglib.h>                   /** for jpeg stuff */
    //#include <jinclude.h>
    //#include <jerror.h>
    /**
     * @brief Method which uses memory instead of a FILE* to read from.
     * @note Used in place of "jpeg_stdio_src(&cinfo, infile)".
     */
+   /*
    OSSIM_DLL void ossimJpegStdIOSrc ( j_decompress_ptr cinfo,
                                      FILE* infile);
+   */
+
+   OSSIM_DLL void ossimJpegStdIOSrc ( jpeg_decompress_struct* cinfo,
+                                      FILE* infile);
+   
 }
 #endif /* #ifndef ossimJpegMemSrc_HEADER */
