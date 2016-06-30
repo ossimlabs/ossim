@@ -564,29 +564,24 @@ bool ossimShorelineUtil::addPropsToJSON()
    jsonFile.close();
 
    // Add OSSIM-specific properties:
-   //Json::Value properties(Json::objectValue);
-   Json::Value property(Json::objectValue);
-   property["ossim-version"] = OSSIM_VERSION;
-   //properties.append(property);
+   Json::Value properties(Json::objectValue);
+   properties["ossim-version"] = OSSIM_VERSION;
 
-   property["commit"] = OSSIM_REVISION;
-   //properties.append(property);
+   properties["commit"] = OSSIM_REVISION;
 
-   property["build_date"] = OSSIM_BUILD_DATE;
-   //properties.append(property);
+   properties["build_date"] = OSSIM_BUILD_DATE;
 
    switch (m_algorithm)
    {
    case NDWI:
-      property["algorithm"] = "NDWI";
+      properties["algorithm"] = "NDWI";
       break;
    case AWEI:
-      property["algorithm"] = "AWEI";
+      properties["algorithm"] = "AWEI";
       break;
    default:
-      property["algorithm"] = "UNKNOWN";
+      properties["algorithm"] = "UNKNOWN";
    }
-   //properties.append(property);
 
    Json::Value  fnames(Json::arrayValue);
    for (ossim_uint32 f=0; f<m_imgLayers.size(); f++)
@@ -594,19 +589,24 @@ bool ossimShorelineUtil::addPropsToJSON()
       Json::Value fname (m_imgLayers[f]->getFilename().chars());
       fnames.append(fname);
    }
-   property["input_files"] = fnames;
-   //properties.append(property);
+   properties["input_files"] = fnames;
 
    // Add additional properties provided in the command line:
    map<ossimString, ossimString>::iterator prop = m_geoJsonProps.begin();
    while (prop != m_geoJsonProps.end())
    {
-      property[prop->first.chars()] = prop->second.chars();
-      //properties.append(property);
+      properties[prop->first.chars()] = prop->second.chars();
       ++prop;
    }
 
-   root["properties"] = property;
+   Json::Value& features = root["features"];
+   int n = features.size();
+   for (int i=0; i<n; ++i)
+   {
+      Json::Value& feature = features[i];
+      Json::Value& feature_props = feature["properties"];
+      feature_props = properties;
+   }
 
    // Output the updated JSON to the file:
    ofstream outFile;
