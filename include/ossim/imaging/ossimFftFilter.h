@@ -60,10 +60,8 @@ protected:
    ossimRefPtr<ossimImageData> theTile;
    ossimFftFilterDirectionType theDirectionType;
    ossimRefPtr<ossimScalarRemapper>        theScalarRemapper;
-   template <class T>
-   void runFft(T dummy,
-               ossimRefPtr<ossimImageData>& input,
-               ossimRefPtr<ossimImageData>& output);
+   virtual void runFft(ossimRefPtr<ossimImageData>& input,
+                       ossimRefPtr<ossimImageData>& output);
 
    template <class T>
    void fillMatrixForward(T *realPart,
