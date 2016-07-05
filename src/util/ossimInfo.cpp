@@ -2748,12 +2748,22 @@ void ossimInfo::getRadiometry(ossimScalarType scalar, std::string& s) const
       }
       case OSSIM_FLOAT32:
       {
-         s = "float";
+         s = "32-bit float";
+         break;
+      }
+      case OSSIM_DOUBLE:
+      {
+         s = "64-bit double float";
          break;
       }
       case OSSIM_NORMALIZED_FLOAT:
       {
-         s = "normalized float";
+         s = "normalized 32-bit float";
+         break;
+      }
+      case OSSIM_NORMALIZED_DOUBLE:
+      {
+         s = "normalized 64-bit double float";
          break;
       }
       default:
