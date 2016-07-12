@@ -5,7 +5,8 @@
 //---
 
 #include <ossim/base/ossimPolyArea2d.h>
-
+#include <ossim/base/ossimDrect.h>
+#include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimRefPtr.h>
