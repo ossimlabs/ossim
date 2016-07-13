@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -13,15 +13,20 @@
 // ossimTiffTileSource  is derived from ImageHandler which is derived from
 // TileSource.
 //*******************************************************************
-//  $Id: ossimTiffTileSource.h 22243 2013-04-20 15:27:22Z dburken $
+// $Id$
 
 #ifndef ossimTiffTileSource_HEADER
 #define ossimTiffTileSource_HEADER 1
 
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/base/ossimIrect.h>
-#include <tiffio.h>
 #include <vector>
+
+/*
+ * TIFF is defined as an incomplete type to hide the tiff library's internal
+ * data structures from clients.
+ */
+typedef struct tiff TIFF;  
 
 class ossimImageData;
 class ossimTiffOverviewTileSource;
