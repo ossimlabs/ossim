@@ -15,7 +15,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <sys/sendfile.h>
 #include <errno.h>
 #include <arpa/inet.h>
 #include <sys/wait.h>
@@ -185,7 +184,11 @@ int main(int argc, char *argv[])
    hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
    hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
    struct addrinfo *res;
-   int failed = getaddrinfo(NULL, "ossimd", &hints, &res);
+   char* portid = "ossimd";
+   if (argc > 1)
+      portid = argv[1];
+
+   int failed = getaddrinfo(NULL, portid, &hints, &res);
    if (failed)
       error(gai_strerror(failed));
 
@@ -213,7 +216,7 @@ int main(int argc, char *argv[])
 
    struct sockaddr_in *server_addr = (sockaddr_in*) &(server_info->ai_addr);
 
-   OINFO<<"ossimd daemon started. Process ID: "<<getpid()<<"\n"<<endl;
+   OINFO<<"ossimd daemon started. Listening on port "<<portid<<". Process ID: "<<getpid()<<"\n"<<endl;
    freeaddrinfo(server_info);
 
    // Start listening:
