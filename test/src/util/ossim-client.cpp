@@ -139,17 +139,24 @@ int main(int argc, char *argv[])
    if (n < 0)
       error("ERROR reading from socket");
 
-   Json::Value json = buffer;
-   const string hdr_type = json["type"].asCString();
-   if (hdr_type.compare("text") == 0)
-      receiveText(svrsockfd);
-   else if (hdr_type.compare("file") == 0)
+   try
    {
-      const string fname = json["name"].asCString();
-      receiveFile(svrsockfd, fname);
+      Json::Value json = buffer;
+      const string hdr_type = json["type"].asCString();
+      if (hdr_type.compare("text") == 0)
+         receiveText(svrsockfd);
+      else if (hdr_type.compare("file") == 0)
+      {
+         const string fname = json["name"].asCString();
+         receiveFile(svrsockfd, fname);
+      }
+      else
+         error("Unknown type in response header.");
    }
-   else
-      error("Unknown type in response header.");
+   catch (exception& e)
+   {
+      cout << "ossim-client EXCEPTION: "<<e.what()<<endl;
+   }
 
    printf("%s\n",buffer);
    close(svrsockfd);
