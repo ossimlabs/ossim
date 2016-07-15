@@ -601,3 +601,16 @@ orthoigen.flip_null_pixels: none
 // TFRD support files(ntm plugin):
 tfrd_fq_file: $(OSSIM_INSTALL_PREFIX)/share/ossim/tfrd-tables/fq.dat
 tfrd_iamp_file: $(OSSIM_INSTALL_PREFIX)/share/ossim/tfrd-tables/oamt.dat
+
+//----
+// HDF5 READER
+//----
+// allows on to specify configuration options and parsing for the hdf5 plugin
+// In this example we have only the Radiance file supported for VIIRS data
+// to get a listing of dataset use the ossim-info -d on any hdf5 dataset file
+// and look at the top for the dataset comma seperated list of dataset paths.
+// You can add a comma seperated list for renderable_datasets and only those will show
+// up in an ossim-info
+// 
+hdf5.options.max_recursion_level: 8
+hdf5.options.renderable_datasets: /All_Data/VIIRS-DNB-SDR_All/Radiance
