@@ -637,12 +637,23 @@ bool ossimImageHandler::buildOverview(const ossimFilename& filename,
    return true;
 }
 
-//*****************************************************************************
-//! Returns the image geometry object associated with this tile source or
-//! NULL if non defined.
-//! The geometry contains full-to-local image transform as well as projection
-//! (image-to-world).
-//*****************************************************************************
+ossimRefPtr<ossimMultiResLevelHistogram> ossimImageHandler::getImageHistogram()
+{
+   ossimRefPtr<ossimMultiResLevelHistogram> histogram = 0;
+   if (!isOpen())
+      return histogram;
+
+   ossimFilename histoFile = getFilenameWithThisExtension(ossimString(".his"));
+   if (!histoFile.isReadable() && !buildHistogram())
+      return histogram;
+
+   histogram = new ossimMultiResLevelHistogram;
+   if (!histogram->importHistogram(histoFile))
+      histogram = 0;
+
+   return histogram;
+}
+
 ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
 {
    if ( !theGeometry )
@@ -1102,10 +1113,10 @@ bool ossimImageHandler::setOutputBandList(const std::vector<ossim_uint32>& /* ba
    return false;
 }
 
-bool ossimImageHandler::getRgbBandList(
-   std::vector<ossim_uint32>& /* bandList */) const
+bool ossimImageHandler::getRgbBandList( std::vector<ossim_uint32>& bandList ) const
 {
-   return false;
+   // Looks for "rgb_bands" key in dot omd file.  E.g. "rgb_bands: (2,1,0)"
+   return theMetaData.getRgbBands( bandList );
 }
 
 bool ossimImageHandler::setOutputToInputBandList()

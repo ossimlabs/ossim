@@ -73,6 +73,9 @@ protected:
    void runRobertsFilter(T dummyVariable,
                            ossimRefPtr<ossimImageData> inputData);
    template <class T>
+   void runSimpleFilter(T dummyVariable,
+                           ossimRefPtr<ossimImageData> inputData);
+   template <class T>
    void runLocalMax8Filter(T dummyVariable,
                           ossimRefPtr<ossimImageData> inputData);
    

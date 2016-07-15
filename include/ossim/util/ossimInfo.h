@@ -22,10 +22,10 @@
 #include <ossim/base/ossimReferenced.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimImageHandler.h>
+#include <ossim/util/ossimUtility.h>
 
 #include <ostream>
 
-class ossimArgumentParser;
 class ossimGpt;
 
 /**
@@ -36,9 +36,11 @@ class ossimGpt;
  * loaded plugins, and just general stuff like height for point, conversions
  * and so on that are easily obtained through the library.
  */
-class OSSIM_DLL ossimInfo : public ossimReferenced
+class OSSIM_DLL ossimInfo : public ossimUtility
 {
 public:
+   /** Used by ossimUtilityFactory */
+   static const char* DESCRIPTION;
 
    /** default constructor */
    ossimInfo();
@@ -50,7 +52,7 @@ public:
     * @brief Adds application arguments to the argument parser.
     * @param ap Parser to add to.
     */
-   void addArguments(ossimArgumentParser& ap);
+   virtual void setUsage(ossimArgumentParser& ap);
 
    /**
     * @brief Initial method.
@@ -62,7 +64,7 @@ public:
     *
     * @return true, indicating process should continue with execute.
     */
-   bool initialize(ossimArgumentParser& ap);
+   virtual bool initialize(ossimArgumentParser& ap);
 
    /**
     * @brief execute method.
@@ -72,7 +74,9 @@ public:
     * 
     * @note Throws ossimException on error.
     */
-   void execute();
+   virtual bool execute();
+
+   virtual ossimString getClassName() const { return "ossimInfo"; }
 
    /**
     * @brief handles image options.
@@ -239,26 +243,20 @@ public:
    void getCenterImage(ossimKeywordlist& kwl);
 
    /**
-    * @brief Populates keyword list with image center point..
-    * @param entry Entry number to select.  Note this is the entry number
-    * from the getEntryList call not a simple zero based entry index.
-    * @param kwl Keyword list to populate.
-    */
-   void getCenterImage(ossim_uint32 entry, ossimKeywordlist& kwl);
-
-   /**
     * @brief Populates keyword list with image center ground point..
     * @param kwl Keyword list to populate.
     */  
    void getCenterGround(ossimKeywordlist& kwl);
 
    /**
-    * @brief Populates keyword list with image center ground point..
-    * @param entry Entry number to select.  Note this is the entry number
-    * from the getEntryList call not a simple zero based entry index.
+    * @brief Populates keyword list with ground point for image point.
+    *
+    * Associated input key values: "img2grd: <x> <y>"
+    * Output key: image0.ground_point:  (lat,lon,hgt,datum)
+    * 
     * @param kwl Keyword list to populate.
     */
-   void getCenterGround(ossim_uint32 entry, ossimKeywordlist& kwl);
+   void getImg2grd(ossimKeywordlist& kwl);
 
    /**
     * @brief Populates keyword list with up_is_up_angle.
@@ -509,9 +507,9 @@ public:
     * @param s String to initialize.
     */
    void getVersion(std::string& s) const;
-   
+
 private:
- 
+
    /**
     * @brief Populates keyword list with metadata.
     * @param ih Pointer to an image handler.
@@ -581,12 +579,37 @@ private:
    void getCenterImage( ossimImageHandler* ih,
                         ossim_uint32 entry, 
                         ossimKeywordlist& kwl ) const;
+
    void getCenterGround( ossimImageHandler* ih,
                          ossimKeywordlist& kwl ) const;
    void getCenterGround( ossimImageHandler* ih,
                          ossim_uint32 entry, 
                          ossimKeywordlist& kwl ) const;
 
+   /**
+    * @brief Gets gound point from image point.
+    *
+    * Input key:value "img2grd: <x> <y>"
+    *
+    * @param Pointer to an image handler.
+    * @param kwl Keyword list to populate.
+    */
+   void getImg2grd( ossimImageHandler* ih,
+                    ossimKeywordlist& kwl ) const;
+   /**
+    * @brief Gets gound point from image point.
+    *
+    * Input key:value "img2grd: <x> <y>"
+    *
+    * @param Pointer to an image handler.
+    * @param entry Entry number to select. Note this is the entry number
+    * from the getEntryList call not a simple zero based entry index.
+    * @param kwl Keyword list to populate.
+    */
+   void getImg2grd( ossimImageHandler* ih,
+                    ossim_uint32 entry, 
+                    ossimKeywordlist& kwl ) const;
+   
    /**
     * @brief Populates keyword list with up_is_up_angle.
     * @param kwl Keyword list to populate.
@@ -686,9 +709,6 @@ private:
 
    /** @return true if key is set to true; false, if not. */
    bool keyIsTrue( const std::string& key ) const;
-
-   /** Hold all options passed into intialize except writer props. */
-   ossimRefPtr<ossimKeywordlist> m_kwl;
 
    /** Holds the open image. */
    ossimRefPtr<ossimImageHandler> m_img;

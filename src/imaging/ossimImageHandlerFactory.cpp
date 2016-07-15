@@ -17,6 +17,7 @@
 #include <ossim/imaging/ossimDoqqTileSource.h>
 #include <ossim/imaging/ossimDtedTileSource.h>
 #include <ossim/imaging/ossimEnviTileSource.h>
+#include <ossim/imaging/ossimLasReader.h>
 #include <ossim/imaging/ossimNitfTileSource.h>
 // #include <ossim/imaging/ossimPdfReader.h>
 #include <ossim/imaging/ossimQuickbirdNitfTileSource.h>
@@ -41,6 +42,8 @@
 #ifdef ENABLE_POINT_CLOUD_HANDLER
 #include <ossim/point_cloud/ossimPointCloudImageHandler.h>
 #endif
+
+#include <tiffio.h>
 
 static const ossimTrace traceDebug("ossimImageHandlerFactory:debug");
 
@@ -105,6 +108,22 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimFilename& fileName,
       // If here do it the brute force way by going down the list of available
       // readers...
       //---
+
+      //---
+      // NITF at top of list.
+      // 
+      // This must be checked first before the NITF raw handler.
+      //---
+      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying Quickbird Nitf...\n";
+      result = new ossimQuickbirdNitfTileSource;
+      result->setOpenOverviewFlag(openOverview);      
+      if (result->open(copyFilename))  break;
+
+      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying NITF...\n";
+      result = new ossimNitfTileSource;
+      result->setOpenOverviewFlag(openOverview);      
+      if (result->open(copyFilename))  break;
+      
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying RPF Cache Image...\n";
       result = new ossimRpfCacheTileSource;
       result->setOpenOverviewFlag(openOverview);
@@ -143,17 +162,6 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimFilename& fileName,
 
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying DTED...\n";
       result = new ossimDtedTileSource;
-      result->setOpenOverviewFlag(openOverview);      
-      if (result->open(copyFilename))  break;
-
-      // this must be checked first before the NITF raw handler
-      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying Quickbird Nitf...\n";
-      result = new ossimQuickbirdNitfTileSource;
-      result->setOpenOverviewFlag(openOverview);      
-      if (result->open(copyFilename))  break;
-
-      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying NITF...\n";
-      result = new ossimNitfTileSource;
       result->setOpenOverviewFlag(openOverview);      
       if (result->open(copyFilename))  break;
 
@@ -238,6 +246,11 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimFilename& fileName,
       result = new ossimPointCloudImageHandler();
       if (result->open(copyFilename))  break;
 #endif
+
+      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying LAS Reader...\n";
+      result->setOpenOverviewFlag(openOverview);
+      result = new ossimLasReader();
+      if (result->open(copyFilename))  break;
       result = 0;
       break;
    }

@@ -137,9 +137,63 @@ ossimHistogram::ossimHistogram(float* uvals, float* ucounts, int xres)
       standard_dev = GetStandardDev();
    }   
 }
+ossimHistogram::ossimHistogram(const double* data, ossim_uint32 size, ossim_uint32 xres)
+   :
+   stats_consistent(0),
+   vals(0),
+   counts(0),
+   num((int)xres),
+   delta(0.0),
+   vmin(0),
+   vmax(0),
+   mean(0.0),
+   standard_dev(0.0)
+{
+   if ((size == 0) || (xres == 0))
+      return;
+
+   // scan the dataset for min/max:
+   vmin=(float)(data[0]);
+   vmax=(float)(data[0]);
+   for (ossim_uint32 i=1; i<size; ++i)
+   {
+      if ((float)(data[i]) < vmin)
+         vmin = (float)(data[i]);
+      else if ((float)(data[i]) > vmax)
+         vmax = (float)(data[i]);
+   }
+
+   // Allocate histogram:
+   delta = (vmax - vmin) / num;
+   vals = new float [num];
+   counts = new float [num];
+   for (ossim_uint32 i=0; i<num; i++)
+   {
+      vals[i] = vmin + delta * (i + 0.5);
+      counts[i] = 0.0;
+   }
+
+   // compute histogram:
+   for (ossim_uint32 i=0; i<size; i++)
+      UpCount((float)(data[i]));
+
+   GetMean();
+   GetStandardDev();
+}
+
 //-----------------------------------------------------------
 // -- Copy constructor
 ossimHistogram::ossimHistogram(const ossimHistogram& his)
+:
+stats_consistent(0),
+vals(0),
+counts(0),
+num(0),
+delta(0.0),
+vmin(0),
+vmax(0),
+mean(0.0),
+standard_dev(0.0)
 {
 
    int i = 0;
@@ -185,6 +239,16 @@ ossimHistogram::ossimHistogram(const ossimHistogram& his)
 // -- Resample a histogram
 
 ossimHistogram::ossimHistogram(const ossimHistogram* his, float width)
+:
+stats_consistent(0),
+vals(0),
+counts(0),
+num(0),
+delta(0.0),
+vmin(0),
+vmax(0),
+mean(0.0),
+standard_dev(0.0)
 {
 
    stats_consistent =0;
@@ -579,7 +643,7 @@ inline void RemoveFlatPeaks(int nbins, float* cnts, bool cyclic)
 
    //Here we define a small state machine - parsing for runs of peaks
    //init is the state corresponding to an initial run (starting at i ==0)
-   bool init=GetExtendedCount(0, nbins, cnts, cyclic);
+   bool init=(GetExtendedCount(0, nbins, cnts, cyclic) !=0 ) ? true : false;
    int init_end =0;
 
    //start is the state corresponding to any other run of peaks
@@ -798,7 +862,7 @@ float ossimHistogram::GetStandardDev()const
 int ossimHistogram::GetIndex(float pixelval)const
 {
 #if 1
-   if ((pixelval > vmax) || (pixelval < vmin)||(num==0))
+   if ((pixelval > vmax) || (pixelval < vmin) || (num==0) )
    {
       return -1;
    }
@@ -1125,8 +1189,7 @@ void ossimHistogram::Print()const
          width = 0;
          out << "\n";
       }
-      out << VALS[i] << " "
-          << COUNTS[i] << " | " ;
+      out << VALS[i] << " " << COUNTS[i] << " | " ;
    }
    out << "\n MaxVal " << this->GetMaxVal() << "\n";
    out << " MinVal " << this->GetMinVal() << "\n";
@@ -1171,29 +1234,8 @@ int ossimHistogram::WritePlot(const char *fname)const
       return 0;
    }
 
-   int stat_res = this->GetRes();
-
-   float * x = new float[2*stat_res];
-   float * y = new float[2*stat_res];
-
-   const float * temp_x = this->GetVals();
-   const float * temp_y = this->GetCounts();
-   float     delt = this->GetBucketSize();
-
-   for (register int i=0; i < stat_res ;i++)
-   {
-      x[2*i] = temp_x[i] - 0.5f * delt;
-      x[2*i+1] = temp_x[i] + 0.5f * delt;
-      y[2*i] = temp_y[i];
-      y[2*i+1] = temp_y[i];
-   }
-
-
-   for(register int j = 0; j < 2*stat_res; j++)
-      fprintf(fp, "%f %f\n", x[j], y[j]);
-
-   delete [] x;
-   delete [] y;
+   for(int j = 0; j < num; j++)
+      fprintf(fp, "%f %f\n", vals[j], counts[j]);
 
    fclose(fp);
    return 1;

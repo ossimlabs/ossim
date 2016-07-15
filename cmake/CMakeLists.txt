@@ -1,5 +1,8 @@
 PROJECT(ossimlabs)
 
+# Allows developer to customize compiler with their own flags (e.g., "-std=c++11")
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} $ENV{OSSIM_CXX_FLAGS}" )
+
 IF ("${OSSIM_DEV_HOME}"  STREQUAL "")
   IF ("$ENV{OSSIM_DEV_HOME}"  STREQUAL "")
     SET(OSSIM_DEV_HOME "${CMAKE_CURRENT_SOURCE_DIR}/../.." CACHE STRING "Cache the OSSIM dev home" FORCE)
@@ -39,7 +42,7 @@ ENDIF(NOT APPLE)
 
 
 if(NOT OSSIM_DEV_HOME)
-   MESSAGE(FATAL_ERROR "Please pass in or define the OSSIM_DEV_HOME root path where all modules are located. This includes ossim, ossim-planet, ossim-wms, ams, � etc.")
+   MESSAGE(FATAL_ERROR "Please pass in or define the OSSIM_DEV_HOME root path where all modules are located. This includes ossim, ossim-planet, ... etc.")
 ENDIF(NOT OSSIM_DEV_HOME)
 
 #IF(NOT APPLE)
@@ -232,7 +235,12 @@ ENDIF()
 FILE(GLOB ossim_cmake_modules ${OSSIM_DEV_HOME}/ossim/cmake/CMakeModules/*.cmake* )
 INSTALL(FILES ${ossim_cmake_modules} DESTINATION share/ossim/${OSSIM_VERSION}/CMakeModules COMPONENT ossim)
 
-############################## Setup the packages ###############################################################
+FILE(GLOB projection_files "${OSSIM_HOME}/share/ossim/projection/*.csv"  "${OSSIM_HOME}/share/ossim/projection/*.txt")
+INSTALL(FILES ${projection_files} DESTINATION share/ossim/projection COMPONENT ossim)
+
+INSTALL(FILES ${OSSIM_HOME}/share/ossim/templates/ossim_preferences_template DESTINATION "share/ossim" COMPONENT ossim RENAME ossim-preferences-template)
+
+############################## Setup the packages ##############################
 # present the packaging option only if we have the cpack command defined (effectively >= 2.6.0)
 IF(CMAKE_CPACK_COMMAND)
     OPTION(BUILD_OSSIM_PACKAGES "Set to ON to generate CPack configuration files and packaging targets" OFF)
@@ -240,6 +248,17 @@ IF(CMAKE_CPACK_COMMAND)
       INCLUDE(OssimCPack)
     ENDIF()
 ENDIF()
+
+set(PKGCONFIG_FILES ossim)
+
+foreach(PKGCONFIG_FILE ${PKGCONFIG_FILES})
+  configure_file(${OSSIM_DEV_HOME}/ossim/cmake/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
+    ${${PROJECT_NAME}_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc
+    @ONLY
+    )
+  INSTALL(FILES ${${PROJECT_NAME}_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc DESTINATION lib${LIBSUFFIX}/pkgconfig COMPONENT ossim)
+ENDFOREACH(PKGCONFIG_FILE)
+
 
 #####################################################################################################
 # We may want to add this as a build step instead so it can capture different output directories

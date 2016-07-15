@@ -1,14 +1,9 @@
-//*******************************************************************
-// Copyright (C) 2000 ImageLinks Inc.
+//**************************************************************************************************
 //
-// License:  LGPL
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  Oscar Kramer
-//
-//*******************************************************************
-//  $Id: ossimSlopeUtil.cpp 23450 2015-07-27 13:58:00Z okramer $
+//**************************************************************************************************
 
 #include <ossim/util/ossimUtility.h>
 #include <ossim/base/ossimApplicationUsage.h>
@@ -16,11 +11,12 @@
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/init/ossimInit.h>
-#include <iostream>
 
 using namespace std;
 
 ossimUtility::ossimUtility()
+   : m_kwl(),
+     m_consoleStream (&cout)
 {
 }
 
@@ -28,12 +24,28 @@ ossimUtility::~ossimUtility()
 {
 }
 
+void ossimUtility::clear()
+{
+}
+
+void ossimUtility::abort()
+{
+}
+
+ossimString ossimUtility::getClassName() const
+{
+   return "ossimUtility";
+}
+
 void ossimUtility::setUsage(ossimArgumentParser& ap)
 {
    // Add global usage options.
    ossimInit::instance()->addOptions(ap);
 
+   std::string appName = ap.getApplicationName();
    ossimApplicationUsage* au = ap.getApplicationUsage();
+   au->setApplicationName( ossimString( appName ) );
+
    au->addCommandLineOption(
          "--write-api <filename>",
          "Writes a JSON API specification to the specified filename.");
@@ -59,44 +71,70 @@ bool ossimUtility::initialize(ossimArgumentParser& ap)
    {
       ofstream ofs ( ts1.c_str() );
       ossimString json_str;
-      getUtilityApi(json_str);
+      getAPI(json_str);
       ofs << json_str <<endl;
-      return false;
+      return true;
    }
 
    if ( ap.read("--write-template", sp1))
    {
       ofstream ofs ( ts1.c_str() );
-      ossimString kwl_str;
-      getKwlTemplate(kwl_str);
-      ofs << kwl_str <<endl;
-      return false;
+      ossimKeywordlist kwl;
+      getKwlTemplate(kwl);
+      ofs << kwl <<endl;
+      return true;
    }
 
    return true;
 }
 
-void ossimUtility::getKwlTemplate(ossimString& kwl)
+void ossimUtility::initialize(const ossimKeywordlist& kwl)
 {
-   ossimFilename kwl_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
-   kwl_path += "/ossim/util/" + getClassName() + ".kwl";
-   readFile(kwl_path, kwl);
+   m_kwl = kwl;
 }
 
-void ossimUtility::getUtilityApi(ossimString& json) const
+void ossimUtility::getKwlTemplate(ossimKeywordlist& kwl)
 {
-   ossimFilename json_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
-   json_path += "/ossim/util/" + getClassName() + ".json";
-   readFile(json_path, json);
+   ossimFilename share_dir = ossimPreferences::instance()->
+      preferencesKWL().findKey( std::string( "ossim_share_directory" ) );
+   ossimFilename classTemplate = "util/" + getClassName() + ".kwl";
+   ossimFilename kwl_path = share_dir.dirCat( classTemplate );
+
+   if (!kwl.addFile(kwl_path))
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::getKwlTemplate() -- Could not find <"
+            <<kwl_path<<">. Ignoring"<<endl;
+   }
 }
 
-bool ossimUtility::readFile(const ossimFilename& filename, ossimString& contents) const
+void ossimUtility::getAPI(string& json) const
+{
+   ossimFilename share_dir = ossimPreferences::instance()->
+      preferencesKWL().findKey( std::string( "ossim_share_directory" ) );
+   ossimFilename classJson = "util/" + getClassName() + ".json";
+   ossimFilename json_path = share_dir.dirCat( classJson );
+
+   readTextFile(json_path, json);
+}
+
+string ossimUtility::getAPI() const
+{
+   string result;
+   getAPI(result);
+   return result;
+}
+
+bool ossimUtility::readTextFile(const ossimFilename& filename, string& contents) const
 {
    contents.clear();
 
    std::ifstream is(filename.chars());
    if (!is)
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::readTextFile() -- Could not find <"
+            <<filename<<">. Ignoring."<<endl;
       return false;
+   }
 
    // get length of file:
    is.seekg (0, is.end);
@@ -114,5 +152,32 @@ bool ossimUtility::readFile(const ossimFilename& filename, ossimString& contents
    delete [] buffer;
 
    return true;
+}
+
+void ossimUtility::getBuildDate(std::string& s) const
+{
+#ifdef OSSIM_BUILD_DATE
+   s = OSSIM_BUILD_DATE;
+#else
+   s = "unknown";
+#endif
+}
+
+void ossimUtility::getRevision(std::string& s) const
+{
+#ifdef OSSIM_REVISION
+   s = OSSIM_REVISION;
+#else
+   s = "unknown";
+#endif
+}
+
+void ossimUtility::getVersion(std::string& s) const
+{
+#ifdef OSSIM_VERSION
+   s = OSSIM_VERSION;
+#else
+   s = "unknown";
+#endif
 }
 

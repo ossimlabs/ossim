@@ -21,7 +21,8 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandler.h>
-#include <OpenThreads/Mutex>
+#include <ossim/imaging/ossimTileCache.h>
+#include <OpenThreads/ReadWriteMutex>
 
 /**
  * @class ossimImageElevationHandler
@@ -90,21 +91,40 @@ protected:
    
 private:
 
+   class TileCacheEntry
+   {
+   public:
+      TileCacheEntry() : id(99999) {}
+      TileCacheEntry(ossim_uint32 xid, ossimImageData* xdata) : id(xid), data(xdata) {}
+      TileCacheEntry(const TileCacheEntry& copy) : id(copy.id), data(copy.data) {}
+
+      const TileCacheEntry& operator=(const TileCacheEntry& copy)
+      {  id = copy.id; data = copy.data; return *this;  }
+
+      ossim_uint32 id;
+      ossimRefPtr<ossimImageData> data;
+   };
+
    /** Hidden from use copy constructor */
    ossimImageElevationHandler(const ossimImageElevationHandler&);
    
    /** Hidden from use assignment operator */
    const ossimImageElevationHandler& operator= (const ossimImageElevationHandler& rhs);
 
+   /** Looks for an elevation tile in the cache first before reading the tile from the input handler */
+   ossimImageData* getTile(ossim_uint32 x, ossim_uint32 y) const;
 
    /** Pointers to links in chain. */
-   ossimRefPtr<ossimImageHandler>      m_ih;
+   mutable ossimRefPtr<ossimImageHandler> m_ih;
    ossimRefPtr<ossimImageGeometry>     m_geom;
+   mutable std::vector<TileCacheEntry> m_tileCache;
 
    /** Image space rect stored as drect for inlined pointHasCoverage method. */
    ossimDrect                          m_rect;
-   
-   mutable OpenThreads::Mutex          m_mutex; 
+   ossimIpt                            m_tileSize;
+   ossim_uint32                        m_numTilesPerRow;
+
+   mutable OpenThreads::ReadWriteMutex  m_mutex;
 
    TYPE_DATA
 };

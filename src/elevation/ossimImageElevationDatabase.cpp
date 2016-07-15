@@ -96,6 +96,9 @@ double ossimImageElevationDatabase::getHeightAboveMSL(const ossimGpt& gpt)
       if(handler.valid())
       {
          h = handler->getHeightAboveMSL(gpt); // still need to shift
+
+         // Save the elev source's post spacing as the database's mean spacing:
+         m_meanSpacing = handler->getMeanSpacingMeters();
       }
    }
 
@@ -117,6 +120,9 @@ ossimRefPtr<ossimElevCellHandler> ossimImageElevationDatabase::createCell(
 {
    ossimRefPtr<ossimElevCellHandler> result = 0;
    
+   // Need to disable elevation while loading the DEM image to prevent recursion:
+   disableSource();
+
    std::map<ossim_uint64, ossimImageElevationFileEntry>::iterator i = m_entryMap.begin();
    while ( i != m_entryMap.end() )
    {
@@ -188,6 +194,7 @@ ossimRefPtr<ossimElevCellHandler> ossimImageElevationDatabase::createCell(
       ++i;
    }
    
+   enableSource();
    return result;
 }
 

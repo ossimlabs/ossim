@@ -2,14 +2,11 @@
 //
 // License:  See top level LICENSE.txt file.
 //
-// Author:  Matt Revelle
-//          David Burken
-//
 // Description:
 //
 // Contains class definition for ossimNitfProjectionFactory.
 //
-// $Id: ossimNitfProjectionFactory.cpp 22848 2014-07-31 18:29:02Z dburken $
+// $Id: ossimNitfProjectionFactory.cpp 23671 2015-12-19 01:07:26Z gpotts $
 //----------------------------------------------------------------------------
 
 #include <ossim/projection/ossimNitfProjectionFactory.h>
@@ -304,6 +301,7 @@ ossimProjection* ossimNitfProjectionFactory::makeUtm(
    const ossimString& coordinateSystem) const
 {
    ossimProjection* proj = 0;
+   bool isBilinear = false;
    if (hdr)
    {
       ossimString geographicLocation = hdr->getGeographicLocation();
@@ -376,7 +374,8 @@ ossimProjection* ossimNitfProjectionFactory::makeUtm(
                // tag.
                //---
                proj = makeBilinear(hdr, gpts);
-               
+               if(proj) scale = proj->getMetersPerPixel();
+               isBilinear = true;
                uproj = 0; // Done with utm projeciton
                
             }
@@ -392,7 +391,7 @@ ossimProjection* ossimNitfProjectionFactory::makeUtm(
                proj = uproj.release(); 
             }
             
-            if( scale.hasNans() == false )
+            if( (scale.hasNans() == false)&&(!isBilinear) )
             {
                //---
                // Get the tie point.
@@ -449,6 +448,10 @@ ossimProjection* ossimNitfProjectionFactory::makeUtm(
                   }
                }
             }
+            else if(isBilinear)
+            {
+               // blank
+            }
             else // Scale has nans
             {
                if ( proj )
@@ -495,6 +498,7 @@ bool ossimNitfProjectionFactory::parseMgrsString(const ossimString& mgrsLocation
       
       result = true; // Set to true.
 
+
       //---
       // Convert each string to Easting Northing.  This also sets zone hemisphere.
       // Method takes long for zone.
@@ -514,6 +518,7 @@ bool ossimNitfProjectionFactory::parseMgrsString(const ossimString& mgrsLocation
       }
       if (result) zone = static_cast<ossim_uint32>(z); // Set the zone.
    }
+
    return result;
 }
 

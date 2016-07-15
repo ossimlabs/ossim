@@ -169,14 +169,44 @@ bool ossimArgumentParser::ossimParameter::assign(const char* str)
 ossimArgumentParser::ossimArgumentParser(int* argc,char **argv):
    theArgc(argc),
    theArgv(argv),
-   theUsage(ossimApplicationUsage::instance())
+   theUsage(ossimApplicationUsage::instance()),
+   theMemAllocated(false)
 {
    if (theArgc)
       theUsage->setApplicationName(argv[0]);
 }
 
+ossimArgumentParser::ossimArgumentParser(const ossimString& commandLine):
+   theArgc(new int),
+   theArgv(0),
+   theUsage(ossimApplicationUsage::instance()),
+   theMemAllocated(true)
+{
+   vector<ossimString> args = commandLine.split(" ", true);
+   *theArgc = args.size();
+   if (theArgc > 0)
+   {
+      theArgv = new char* [*theArgc];
+      for (size_t i=0; i<args.size(); i++)
+      {
+         size_t n = args[i].size();
+         theArgv[i] = new char [n+1];
+         strncpy(theArgv[i], args[i].chars(), n);
+         theArgv[i][n] = '\0';
+      }
+      theUsage->setApplicationName(theArgv[0]);
+   }
+}
+
 ossimArgumentParser::~ossimArgumentParser()
 {
+   if (theMemAllocated)
+   {
+      for (int i=0; i<*theArgc; ++i)
+         delete theArgv[i];
+      delete [] theArgv;
+      delete theArgc;
+   }
 }
 
 void ossimArgumentParser::initialize(int* argc, const char **argv)
@@ -264,6 +294,38 @@ void ossimArgumentParser::remove(int pos,int num)
       theArgv[pos]=0;
    }
    *theArgc-=num;
+}
+
+void ossimArgumentParser::insert(int pos, const ossimString& argstr)
+{
+   if (argstr.size()==0)
+      return;
+
+   // Split arg into components (separated by spaces). Need to reallocate args array to new size:
+   vector<ossimString> components = argstr.split(" ");
+   int new_argc = *theArgc + components.size();
+   char** new_argv = new char*[new_argc];
+
+   // First copy the original list, leaving space for the new components:
+   int j = 0;
+   for (int i=0; i<*theArgc; ++i)
+   {
+      if (j == pos)
+         j += components.size();
+      new_argv[j] = theArgv[i];
+      ++j;
+   }
+
+   // Insert new components:
+   for(int i=0; i<components.size(); ++i)
+      new_argv[pos+i]=components[i].stringDup();
+
+   // Need to deallocate old arg storage?
+   if (theMemAllocated)
+      delete [] theArgv;
+   theArgv = new_argv;
+   *theArgc = new_argc;
+   theMemAllocated = true;
 }
 
 bool ossimArgumentParser::read(const std::string& str)
@@ -399,6 +461,7 @@ bool ossimArgumentParser::read(const std::string& str, ossimParameter value1,
 
 bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>& param_list)
 {
+   // This method reads a comma-separated list.
    param_list.clear();
 
    int pos=find(str);
@@ -407,28 +470,34 @@ bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>&
 
    // Option is removed even if no values found:
    remove(pos, 1);
-   bool done = false;
-   while ((pos < *theArgc) && (theArgv[pos][0] != '-') && !done)
+   bool includeNextItem = true;
+   while (pos < (*theArgc - 1))
    {
+      // Check for occurence of next option:
+      if ((theArgv[pos][0] == '-') && (theArgv[pos][1] == '-'))
+         break;
+
+      // Skip a comma surrounded by spaces:
+      ossimString arg = theArgv[pos];
+      if (arg == ",")
+      {
+         remove(pos, 1);
+         includeNextItem = true;
+         continue;
+      }
+
+      if (!includeNextItem && (arg[0] != ','))
+         break;
 
       // Handle comma separated with no spaces (i.e., multiple args reflected as one in theArgv):
-      ossimString arg = theArgv[pos];
-      if (arg.contains(","))
-      {
-         vector<ossimString> sub_args = arg.split(",", true);
-         for (ossim_uint32 i=0; i<sub_args.size(); ++i)
-            param_list.push_back(sub_args[i]);
+      vector<ossimString> sub_args = arg.split(",", true);
+      for (ossim_uint32 i=0; i<sub_args.size(); ++i)
+         param_list.push_back(sub_args[i]);
 
-         // Possible space after last comma, so check if comma present:
-         if (arg[arg.length()-1] != ',')
-            done = true;
-      }
-      else
-      {
-         // This is the last entry of comma and space separated list:
-         param_list.push_back(arg);
-         done = true;
-      }
+      // If current item ends with comma, the list continues:
+      if (arg[arg.length()-1] != ',')
+         includeNextItem = false;
+
       remove(pos, 1);
    }
 

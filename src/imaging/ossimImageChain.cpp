@@ -1809,6 +1809,7 @@ void ossimImageChain::accept(ossimVisitor& visitor)
 // children will be, with correct input and output connections to external objects).
 // Returns TRUE if successful.
 //**************************************************************************************************
+#if 0
 bool ossimImageChain::fillContainer(ossimConnectableContainer& container)
 {
    // Grab the first source in the chain and let it fill the container with itself and inputs. This
@@ -1831,3 +1832,4 @@ bool ossimImageChain::fillContainer(ossimConnectableContainer& container)
    }
    return true;
 }
+#endif

@@ -1,7 +1,8 @@
 #include <ossim/elevation/ossimDtedElevationDatabase.h>
-#include <ossim/base/ossimGeoidManager.h>
-#include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimDirectory.h>
+#include <ossim/base/ossimGeoidManager.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimTrace.h>
 #include <sstream>
 #include <iomanip>
@@ -11,6 +12,34 @@
 static ossimTrace traceDebug("ossimDtedElevationDatabase:debug");
 static OpenThreads::Mutex d_mutex; // for debug
 RTTI_DEF1(ossimDtedElevationDatabase, "ossimDtedElevationDatabase", ossimElevationCellDatabase);
+
+ossimDtedElevationDatabase::ossimDtedElevationDatabase()
+   : ossimElevationCellDatabase(),
+     m_extension(""),
+     m_upcase(false),
+     m_lastHandler(0),
+     m_mutex()
+{
+}
+
+ossimDtedElevationDatabase::ossimDtedElevationDatabase(const ossimDtedElevationDatabase& rhs)
+   : ossimElevationCellDatabase(rhs),
+     m_extension(rhs.m_extension),
+     m_upcase(rhs.m_upcase),
+     m_lastHandler(0), // Do not copy this to get a unique handler for thread.
+     m_mutex()
+{
+}
+
+ossimDtedElevationDatabase::~ossimDtedElevationDatabase()
+{
+}
+
+ossimObject* ossimDtedElevationDatabase::dup() const
+{
+   ossimDtedElevationDatabase* duped = new ossimDtedElevationDatabase(*this);
+   return duped;
+}
 
 double ossimDtedElevationDatabase::getHeightAboveMSL(const ossimGpt& gpt)
 {
@@ -68,85 +97,50 @@ bool ossimDtedElevationDatabase::openDtedDirectory(const ossimFilename& dir)
 {
    if(traceDebug())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG) << "ossimDtedElevationDatabase::open entered ...\n";
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimDtedElevationDatabase::open entered ...\n"
+         << "dir: " << dir << "\n";
    }
+   
    bool result = dir.isDir();
    if(result)
    {
-      ossim_uint32 count = 0;
-      ossim_uint32 maxCount = 10;
-      ossimDirectory od;
-      result = od.open(dir);
-      if(result)
+      if ( m_extension.size() == 0 )
       {
-         result = false;
-         ossimFilename f;
-         // Get the first directory.
-         od.getFirst(f, ossimDirectory::OSSIM_DIR_DIRS);
-         
-         do
+         //---
+         // This sets extension by doing a directory scan and is now depricated.
+         // Use "extension" key in preferences to avoid this.  Example:
+         // elevation_manager.elevation_source0.extension: dt2
+         //---
+         result = inititializeExtension( dir );
+         if ( !result && traceDebug() )
          {
-            ++count;
-            // Must be a directory.
-            if (f.isDir())
-            {
-               // Discard any full path.
-               ossimFilename fileOnly = f.file();
-               
-               // Downcase it.
-              fileOnly.downcase();
-               // Must start with 'e' or 'w'.
-               bool foundCell = ( ((fileOnly.c_str()[0] == 'e') || ( fileOnly.c_str()[0] == 'w')) &&
-                         (fileOnly.size() == 4));
-               if(foundCell)
-               {
-                  ossim_uint32 maxCount2 = 10;
-                  ossim_uint32 count2 = 0;
-                  ossimDirectory d2;
-                  if(d2.open(f))
-                  {
-                     d2.getFirst(f, ossimDirectory::OSSIM_DIR_FILES);
-                     do
-                     {
-                        ossimRefPtr<ossimDtedHandler> dtedHandler = new ossimDtedHandler();
-                        if(dtedHandler->open(f, false))
-                        {
-                           if(traceDebug())
-                           {
-                              ossimNotify(ossimNotifyLevel_DEBUG) << "ossimDtedElevationDatabase::open: Found dted file " << f << "\n";
-                           }
-                           result = true;
-                           m_extension = "."+f.ext();
-                           m_connectionString = dir;
-                           m_meanSpacing = dtedHandler->getMeanSpacingMeters();
-                       }
-                        dtedHandler->close();
-                        dtedHandler = 0;
-                        ++count2;
-                     }while(!result&&d2.getNext(f)&&(count2 < maxCount2));
-                  }
-               }
-            }
-         }while(!result&&(od.getNext(f))&&(count < maxCount));
-      }
-   }
-   
-   if(result)
-   {
-      if(!m_geoid.valid())
-      {
-         m_geoid = ossimGeoidManager::instance()->findGeoidByShortName("geoid1996", false);
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "ossimDtedElevationDatabase::open: WARNING "
+               << "Scan for dted extension failed!\n"
+               << "Can be set in ossim preferences.  Example:\n"
+               << "elevation_manager.elevation_source0.extension: .dt2";
+         }
       }
       
-      if(!m_geoid.valid()&&traceDebug())
+      // Set the geoid:
+      if( !m_geoid.valid() )
       {
-         ossimNotify(ossimNotifyLevel_DEBUG) << "ossimDtedElevationDatabase::open: Unable to load goeid grid 1996 for DTED database\n";
+         m_geoid = ossimGeoidManager::instance()->findGeoidByShortName("geoid1996", false);
+         if(!m_geoid.valid()&&traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "ossimDtedElevationDatabase::open: WARNING "
+               << "Unable to load goeid grid 1996 for DTED database\n";
+         }
       }
+
    }
-   
+
    if(traceDebug())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG) << "ossimDtedElevationDatabase::open leaving ...\n";
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimDtedElevationDatabase::open result:" << (result?"true":"false") << "\n";
    }
    return result;
 }
@@ -174,11 +168,11 @@ void ossimDtedElevationDatabase::createRelativePath(ossimFilename& file, const o
    
    if (ilon < 0)
    {
-      lon = "w";
+      lon = m_upcase?"W":"w";
    }
    else
    {
-      lon = "e";
+      lon = m_upcase?"E":"e";
    }
    
    ilon = abs(ilon);
@@ -190,11 +184,11 @@ void ossimDtedElevationDatabase::createRelativePath(ossimFilename& file, const o
    int ilat =  static_cast<int>(floor(gpt.latd()));
    if (ilat < 0)
    {
-      lat += "s";
+      lat += m_upcase?"S":"s";
    }
    else
    {
-      lat += "n";
+      lat += m_upcase?"N":"n";
    }
    
    ilat = abs(ilat);
@@ -206,6 +200,7 @@ void ossimDtedElevationDatabase::createRelativePath(ossimFilename& file, const o
    
    file = lon.dirCat(lat+m_extension);
 }
+
 ossimRefPtr<ossimElevCellHandler> ossimDtedElevationDatabase::createCell(const ossimGpt& gpt)
 {
   ossimRefPtr<ossimElevCellHandler> result = 0;
@@ -230,6 +225,54 @@ bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
    {
       if(!m_connectionString.empty()&&ossimFilename(m_connectionString).exists())
       {
+         // Look for "extension" keyword.
+         std::string pref = (prefix?prefix:"");
+         std::string key = "extension";
+         ossimString val = ossimPreferences::instance()->preferencesKWL().findKey( pref, key );
+         if ( val.size() )
+         {
+            if ( val[0] != '.' )
+            {
+               m_extension = ".";
+               m_extension += val;
+               
+               ossimNotify(ossimNotifyLevel_WARN)
+                  << "ossimDtedElevationDatabase::loadState: WARNING\n"
+                  << "Key value for \"extension\" does not start with a dot!\n"
+                  << "   Changing: " << val
+                  << "\n   To:       " << m_extension
+                  << std::endl;   
+            }
+            else
+            {
+               m_extension = val;
+            }
+         }
+         else if ( traceDebug() )
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "ossimDtedElevationDatabase::loadState: NOTICE\n"
+               << "Key lookup for \"extension\" failed!\n"
+               << "Can be set in ossim preferences.  Example:\n"
+               << "elevation_manager.elevation_source0.extension: .dt2";
+         }
+
+         key = "upcase";
+         val = ossimPreferences::instance()->preferencesKWL().findKey( pref, key );
+         if ( val.size() )
+         {
+            m_upcase = val.toBool();
+         }
+         else if ( traceDebug() )
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "ossimDtedElevationDatabase::loadState: NOTICE\n"
+               << "Key lookup for \"upcase\" failed!\n"
+               << "Can be set in ossim preferences.  Example:\n"
+               << "elevation_manager.elevation_source0.upcase: false";
+         }
+         
+
          result = open(m_connectionString);
       }
       else
@@ -244,6 +287,9 @@ bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
 
 bool ossimDtedElevationDatabase::saveState(ossimKeywordlist& kwl, const char* prefix)const
 {
+   kwl.add(prefix, "extension", m_extension, true);
+   kwl.add(prefix, "upcase", m_upcase, true);
+   
    bool result = ossimElevationCellDatabase::saveState(kwl, prefix);
    
    return result;
@@ -258,3 +304,75 @@ std::ostream& ossimDtedElevationDatabase::print(ostream& out) const
    return out;
 }
 
+bool ossimDtedElevationDatabase::inititializeExtension( const ossimFilename& dir )
+{
+   ossim_uint32 count = 0;
+   ossim_uint32 maxCount = 10;
+   ossimDirectory od;
+   bool result = od.open(dir);
+   if(result)
+   {
+      result = false;
+      ossimFilename f;
+      // Get the first directory.
+      od.getFirst(f, ossimDirectory::OSSIM_DIR_DIRS);
+      
+      do
+      {
+         ++count;
+         // Must be a directory.
+         if (f.isDir())
+         {
+            // Discard any full path.
+            ossimFilename fileOnly = f.file();
+            
+            // Downcase it. Note have sites with upper case. (drb)
+            // fileOnly.downcase();
+
+            //---
+            // Longitude subdir check:
+            // Must start with 'e', 'E', 'w' or 'W'.
+            //---
+            bool foundCell = ( ( (fileOnly.c_str()[0] == 'e') ||
+                                 (fileOnly.c_str()[0] == 'w') ||
+                                 (fileOnly.c_str()[0] == 'E') ||
+                                 (fileOnly.c_str()[0] == 'W') ) &&
+                               (fileOnly.size() == 4));
+            if(foundCell)
+            {
+               ossim_uint32 maxCount2 = 10;
+               ossim_uint32 count2 = 0;
+               ossimDirectory d2;
+
+               // Open the longitude subdir:
+               if(d2.open(f))
+               {
+                  d2.getFirst(f, ossimDirectory::OSSIM_DIR_FILES);
+                  do
+                  {
+                     ossimRefPtr<ossimDtedHandler> dtedHandler = new ossimDtedHandler();
+                     if(dtedHandler->open(f, false))
+                     {
+                        if(traceDebug())
+                        {
+                           ossimNotify(ossimNotifyLevel_DEBUG)
+                              << "ossimDtedElevationDatabase::open: Found dted file " << f << "\n";
+                        }
+                        result = true;
+                        m_extension = "."+f.ext();
+                        m_connectionString = dir;
+                        m_meanSpacing = dtedHandler->getMeanSpacingMeters();
+                     }
+                     dtedHandler->close();
+                     dtedHandler = 0;
+                     ++count2;
+                  } while(!result&&d2.getNext(f)&&(count2 < maxCount2));
+               }
+            }
+         }
+      } while(!result&&(od.getNext(f))&&(count < maxCount));
+   }
+
+   return result;
+   
+} // End: ossimDtedElevationDatabase::inititializeExtension( dir )

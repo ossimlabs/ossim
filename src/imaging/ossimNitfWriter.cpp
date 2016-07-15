@@ -26,12 +26,8 @@
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimRectangleCutFilter.h>
 #include <ossim/support_data/ossimNitfCommon.h>
-#include <ossim/support_data/ossimNitfGeoPositioningTag.h>
-#include <ossim/support_data/ossimNitfLocalGeographicTag.h>
-#include <ossim/support_data/ossimNitfLocalCartographicTag.h>
 #include <ossim/support_data/ossimNitfProjectionParameterTag.h>
 #include <ossim/support_data/ossimNitfNameConversionTables.h>
-#include <ossim/support_data/ossimNitfBlockaTag.h>
 #include <ossim/support_data/ossimNitfImageDataMaskV2_1.h>
 #include <tiffio.h>
 #include <fstream>

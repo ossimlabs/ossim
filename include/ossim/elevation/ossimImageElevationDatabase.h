@@ -168,7 +168,7 @@ protected:
 
 private:
 
-   // Private container to hold bounding rect and image handler.
+   // Private container to hold bounding rect, nominal GSD, and image handler.
    struct ossimImageElevationFileEntry
    {
       /** @brief default constructor */
@@ -184,6 +184,7 @@ private:
 
       /** Bounding rectangle in decimal degrees. */
       ossimGrect m_rect;
+      ossimDpt m_nominalGSD; // post spacing at center
 
       /** True if in ossimElevationCellDatabase::m_cacheMap. */
       bool m_loadedFlag;

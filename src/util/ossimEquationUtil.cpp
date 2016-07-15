@@ -1,12 +1,10 @@
-//*******************************************************************
-// Copyright (C) 2000 ImageLinks Inc.
+//**************************************************************************************************
 //
-// License:  See top level LICENSE.txt file.
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-// Author:  Garrett Potts
-//
-//*******************************************************************
-//  $Id: ossimEquationUtil.cpp 23434 2015-07-15 17:01:59Z gpotts $
+//**************************************************************************************************
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -170,7 +168,7 @@ ossimEquationUtil::ossimEquationUtil(ossimArgumentParser& ap)
    m_usage.addCommandLineOption("-k <filename>", "keyword list to load from");
    m_usage.addCommandLineOption("-w <type>", "Writer type (tiff_strip, jpeg, etc... see ossim-info --writers) (default=tiff_strip)");
    m_usage.addCommandLineOption("--writer-prop <string>", "Adds a property to send to the writer. format is name=value");
-   m_usage.addCommandLineOption("-t <filename>", "ouput a keyword list template");
+   m_usage.addCommandLineOption("-t <filename>", "output a keyword list template");
 }
 
 bool ossimEquationUtil::execute()

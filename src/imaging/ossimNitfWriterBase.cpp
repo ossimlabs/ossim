@@ -222,7 +222,7 @@ void ossimNitfWriterBase::addBlockaTag(ossimMapProjectionInfo& mapInfo,
       mapInfo.setPixelType(OSSIM_PIXEL_IS_AREA);
       
       // Stuff the blocka tag which has six digit precision.
-      ossimNitfBlockaTag* blockaTag = new ossimNitfBlockaTag();
+      ossimRefPtr<ossimNitfBlockaTag> blockaTag = new ossimNitfBlockaTag();
       
       // Set the block number.
       blockaTag->setBlockInstance(1);
@@ -246,12 +246,12 @@ void ossimNitfWriterBase::addBlockaTag(ossimMapProjectionInfo& mapInfo,
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
             << "ossimNitfWriterBase::addBlockaTag DEBUG:"
-            << "\nBLOCKA Tag:" << *((ossimObject*)(blockaTag))
+            << "\nBLOCKA Tag:" << *((ossimObject*)(blockaTag.get()))
             << std::endl;
       }
       
       // Add the tag to the header.
-      ossimRefPtr<ossimNitfRegisteredTag> blockaTagRp = blockaTag;
+      ossimRefPtr<ossimNitfRegisteredTag> blockaTagRp = blockaTag.get();
       ossimNitfTagInformation blockaTagInfo(blockaTagRp);
       hdr->addTag(blockaTagInfo);
       

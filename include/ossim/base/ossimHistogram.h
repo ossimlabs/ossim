@@ -88,6 +88,11 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
     ossimHistogram(const ossimHistogram& his); // Copy constructor
     ossimHistogram(const ossimHistogram*, float width); // Resampling constructor
 
+    /**
+     * Uses samples array to establish a histogram with numBins:
+     */
+    ossimHistogram(const double* samples, ossim_uint32 size, ossim_uint32 numBins);
+
     virtual int GetIndex(float)const;
 // Other histogram formation operations    
    ossimHistogram* fillInteriorEmptyBins(int type=HISTOGRAM_FILL_THIN_PLATE)const;

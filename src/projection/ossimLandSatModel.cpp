@@ -40,7 +40,6 @@ RTTI_DEF1(ossimLandSatModel, "ossimLandSatModel", ossimSensorModel);
 static ossimTrace traceExec  ("ossimLandSatModel:exec");
 static ossimTrace traceDebug ("ossimLandSatModel:debug");
 
-static const int    MODEL_VERSION_NUMBER   = 2;
 static const char*  PROJECTION_TYPE_KW     = "theProjectionType";
 static const char*  MAP_ZONE_KW            = "theMapZone";
 static const char*  MAP_OFFSET_X_KW        = "theMapOffset.x";

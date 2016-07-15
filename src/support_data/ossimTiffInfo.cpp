@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,7 +9,7 @@
 // Description: TIFF Info object.
 // 
 //----------------------------------------------------------------------------
-// $Id: ossimTiffInfo.cpp 2673 2011-06-06 14:57:24Z david.burken $
+// $Id$
 
 #include <ossim/support_data/ossimTiffInfo.h>
 
@@ -21,8 +21,10 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTieGptSet.h>
+#include <ossim/base/ossimTiffConstants.h>
 #include <ossim/base/ossimTrace.h>
-
+#include <ossim/base/ossimXmlDocument.h>
+#include <ossim/base/ossimXmlNode.h>
 #include <ossim/projection/ossimBilinearProjection.h>
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimEpsgProjectionFactory.h>
@@ -451,7 +453,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
                << "\n";
 	 }
 
-         if (tag == OGEO_KEY_DIRECTORY_TAG)
+         if (tag == ossim::OGEO_KEY_DIRECTORY_TAG)
          {
             // tag 34735 save for printGeoKeys
             if ( geoKeyBlock )
@@ -461,7 +463,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
             geoKeyBlock = reinterpret_cast<ossim_uint16*>(valueArray);
             geoKeyLength = count;
          }
-         else if (tag == OGEO_DOUBLE_PARAMS_TAG)
+         else if (tag == ossim::OGEO_DOUBLE_PARAMS_TAG)
          {
             // tag 34736 save for printGeoKeys
             if ( geoDoubleBlock )
@@ -471,7 +473,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
             geoDoubleBlock  = reinterpret_cast<ossim_float64*>(valueArray);
             geoDoubleLength = count;
          }
-         else if (tag == OGEO_ASCII_PARAMS_TAG)
+         else if (tag == ossim::OGEO_ASCII_PARAMS_TAG)
          {
             // tag 34737 save for printGeoKeys
             if ( geoAsciiBlock )
@@ -875,19 +877,19 @@ std::ostream& ossimTiffInfo::print(std::istream& inStr,
                << "\n";
          }
 
-         if (tag == OGEO_KEY_DIRECTORY_TAG)
+         if (tag == ossim::OGEO_KEY_DIRECTORY_TAG)
          {
             // tag 34735 save for printGeoKeys
             geoKeyBlock = reinterpret_cast<ossim_uint16*>(valueArray);
             geoKeyLength = count;
          }
-         else if (tag == OGEO_DOUBLE_PARAMS_TAG)
+         else if (tag == ossim::OGEO_DOUBLE_PARAMS_TAG)
          {
             // tag 34736 save for printGeoKeys
             geoDoubleBlock  = reinterpret_cast<ossim_float64*>(valueArray);
             geoDoubleLength = count;
          }
-         else if (tag == OGEO_ASCII_PARAMS_TAG)
+         else if (tag == ossim::OGEO_ASCII_PARAMS_TAG)
          {
             // tag 34737 save for printGeoKeys
             geoAsciiBlock   = reinterpret_cast<ossim_int8*>(valueArray);
@@ -1507,34 +1509,34 @@ ossim_uint16 ossimTiffInfo::getTypeByteSize(ossim_uint16 type) const
    
    switch (type)
    {
-      case OTIFF_BYTE:
-      case OTIFF_ASCII:
-      case OTIFF_SBYTE:
-      case OTIFF_UNDEFINED:
+      case ossim::OTIFF_BYTE:
+      case ossim::OTIFF_ASCII:
+      case ossim::OTIFF_SBYTE:
+      case ossim::OTIFF_UNDEFINED:
       {
          result = 1;
          break;
       }
          
-      case OTIFF_SHORT:
-      case OTIFF_SSHORT:
+      case ossim::OTIFF_SHORT:
+      case ossim::OTIFF_SSHORT:
       {
          result = 2;
          break;
       }
          
-      case OTIFF_LONG:
-      case OTIFF_SLONG:
-      case OTIFF_IFD:
-      case OTIFF_FLOAT:
+      case ossim::OTIFF_LONG:
+      case ossim::OTIFF_SLONG:
+      case ossim::OTIFF_IFD:
+      case ossim::OTIFF_FLOAT:
       {
          result = 4;
          break;
       }
          
-      case OTIFF_RATIONAL:
-      case OTIFF_SRATIONAL:
-      case OTIFF_DOUBLE:
+      case ossim::OTIFF_RATIONAL:
+      case ossim::OTIFF_SRATIONAL:
+      case ossim::OTIFF_DOUBLE:
       case 16:             // TIFF_LONG8 defined in big tiff only.
       case 17:             // TIFF_SLONG8 defined in big tiff only.
       case 18:             // TIFF_IFD8 defined in big tiff only.
@@ -1615,27 +1617,27 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
 {
    switch(tag)
    {
-      case OTIFFTAG_SUBFILETYPE: // tag 254
+      case ossim::OTIFFTAG_SUBFILETYPE: // tag 254
       {
          out << prefix << "sub_file_type: ";
          printValue(out, type, valueArray);
          break;
       }
-      case OTIFFTAG_IMAGEWIDTH: // tag 256
+      case ossim::OTIFFTAG_IMAGEWIDTH: // tag 256
       {
          out << prefix << IMAGE_WIDTH_KW << ": ";
          printValue(out, type, valueArray);
          break;
       }
       
-      case OTIFFTAG_IMAGELENGTH: // tag 257
+      case ossim::OTIFFTAG_IMAGELENGTH: // tag 257
       {
          out << prefix << IMAGE_LENGTH_KW << ": ";
          printValue(out, type, valueArray);
          break;
       }
 
-      case OTIFFTAG_BITSPERSAMPLE: // tag 258
+      case ossim::OTIFFTAG_BITSPERSAMPLE: // tag 258
       {
          out << prefix << "bits_per_sample: ";
          if (count == 1)
@@ -1649,9 +1651,9 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          break;
       }
          
-      case OTIFFTAG_COMPRESSION: // tag 259
+      case ossim::OTIFFTAG_COMPRESSION: // tag 259
       {
-         if ( (count == 1) && (type == OTIFF_SHORT) )
+         if ( (count == 1) && (type == ossim::OTIFF_SHORT) )
          {
             out << prefix << "compression: ";
             
@@ -1669,15 +1671,15 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          break;
       }
 
-      case OTIFFTAG_PHOTOMETRIC: // tag 262
+      case ossim::OTIFFTAG_PHOTOMETRIC: // tag 262
       {
          out << prefix << "photo_interpretation: ";
 
-         if ( (count == 1) && (type == OTIFF_SHORT) )
+         if ( (count == 1) && (type == ossim::OTIFF_SHORT) )
          {
             ossim_uint16 s;
             getArrayValue(s, valueArray, 0);
-            if (s <= OPHOTO_CIELAB)
+            if (s <= ossim::OPHOTO_CIELAB)
             {
                out << PHOTO_INTERP[s] << "\n";
             }
@@ -1689,9 +1691,9 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          break;
       }
 
-      case OTIFFTAG_FILLORDER: // tag 266
+      case ossim::OTIFFTAG_FILLORDER: // tag 266
       {
-         if ( (count == 1) && (type == OTIFF_SHORT) )
+         if ( (count == 1) && (type == ossim::OTIFF_SHORT) )
          {
             out << prefix << "fill_order: ";
             ossim_uint16 s;
@@ -1702,14 +1704,28 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          break;
       }
 
-      case OTIFFTAG_IMAGEDESCRIPTION: // tag 270
+      case ossim::OTIFFTAG_IMAGEDESCRIPTION: // tag 270
       {
          out << prefix << "image_description: ";
          printArray(out, type, count, valueArray);
          break;
       }
 
-      case OTIFFTAG_STRIPOFFSETS: // tag 273
+      case ossim::OTIFFTAG_MAKE: // tag 271
+      {
+         out << prefix << "make: ";
+         printArray(out, type, count, valueArray);
+         break;
+      }
+      
+      case ossim::OTIFFTAG_MODEL: // tag 272
+      {
+         out << prefix << "model: ";
+         printArray(out, type, count, valueArray);
+         break;
+      }
+
+      case ossim::OTIFFTAG_STRIPOFFSETS: // tag 273
       {
          if (traceDump())
          {
@@ -1726,7 +1742,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          }
          break;
       }
-      case OTIFFTAG_ORIENTATION: // tag 274
+      case ossim::OTIFFTAG_ORIENTATION: // tag 274
       {
          ossim_uint16 code;
          getArrayValue(code, valueArray, 0);
@@ -1734,21 +1750,21 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          break;
       }
       
-      case OTIFFTAG_SAMPLESPERPIXEL: // tag 277
+      case ossim::OTIFFTAG_SAMPLESPERPIXEL: // tag 277
       {
          out << prefix << "samples_per_pixel: ";
          printValue(out, type, valueArray);
          break;
       }
 
-      case OTIFFTAG_ROWSPERSTRIP: // tag 278
+      case ossim::OTIFFTAG_ROWSPERSTRIP: // tag 278
       {
          out << prefix << "rows_per_strip: ";
          printValue(out, type, valueArray);
          break;
       }
 
-      case OTIFFTAG_STRIPBYTECOUNTS: // tag 279
+      case ossim::OTIFFTAG_STRIPBYTECOUNTS: // tag 279
       {
          if (traceDump())
          {
@@ -1766,35 +1782,35 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          break;
       }
       
-      case OTIFFTAG_MINSAMPLEVALUE: // tag 280
+      case ossim::OTIFFTAG_MINSAMPLEVALUE: // tag 280
       {
          out << prefix << "min_sample_value: ";
          printValue(out, type, valueArray);
          break;
       }
-      case OTIFFTAG_MAXSAMPLEVALUE: // tag 281
+      case ossim::OTIFFTAG_MAXSAMPLEVALUE: // tag 281
       {
          out << prefix << "max_sample_value: ";
          printValue(out, type, valueArray);
          break;
       }
       
-      case OTIFFTAG_XRESOLUTION: // tag 282
+      case ossim::OTIFFTAG_XRESOLUTION: // tag 282
       {
          out << prefix << "xresolution: ";
          printValue(out, type, valueArray);
          break;
       }
-      case OTIFFTAG_YRESOLUTION: // tag 283
+      case ossim::OTIFFTAG_YRESOLUTION: // tag 283
       {
          out << prefix << "yresolution: ";
          printValue(out, type, valueArray);
          break;
       }
       
-      case OTIFFTAG_PLANARCONFIG: // tag 284
+      case ossim::OTIFFTAG_PLANARCONFIG: // tag 284
       {
-         if ( (count == 1) && (type == OTIFF_SHORT) )
+         if ( (count == 1) && (type == ossim::OTIFF_SHORT) )
          {
             out << prefix << "planar_configuration: ";
             ossim_uint16 v;
@@ -1815,7 +1831,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          break;
       }
 
-      case OTIFFTAG_RESOLUTIONUNIT: // tag 296
+      case ossim::OTIFFTAG_RESOLUTIONUNIT: // tag 296
       {
          out << prefix << "resolution_units: ";
          ossim_uint16 v;
@@ -1835,9 +1851,9 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          break;
       }
 
-      case OTIFFTAG_PAGENUMBER: // tag 297
+      case ossim::OTIFFTAG_PAGENUMBER: // tag 297
       {
-         if ( (count == 2) && (type == OTIFF_SHORT) )
+         if ( (count == 2) && (type == ossim::OTIFF_SHORT) )
          {
             out << prefix << "page_number: ";
             ossim_uint16 s;
@@ -1850,40 +1866,40 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          break;
       }
       
-      case OTIFFTAG_SOFTWARE: // tag 305
+      case ossim::OTIFFTAG_SOFTWARE: // tag 305
       {
          out << prefix << "software: ";
          printArray(out, type, count, valueArray);
          break;
       }
 
-      case OTIFFTAG_DATETIME: // tag 306
+      case ossim::OTIFFTAG_DATETIME: // tag 306
       {
          out << prefix << "date_time: ";
          printArray(out, type, count, valueArray);
          break;
       }
 
-      case OTIFFTAG_ARTIST: // tag 315
+      case ossim::OTIFFTAG_ARTIST: // tag 315
       {
          out << prefix << "artist: ";
          printArray(out, type, count, valueArray);
          break;
       }
       
-      case OTIFFTAG_TILEWIDTH: // tag 322
+      case ossim::OTIFFTAG_TILEWIDTH: // tag 322
       {
          out << prefix << "tile_width: ";
          printValue(out, type, valueArray);
          break;
       }
-      case OTIFFTAG_TILELENGTH: // tag 323
+      case ossim::OTIFFTAG_TILELENGTH: // tag 323
       {
          out << prefix << "tile_length: ";
          printValue(out, type, valueArray);
          break;
       }
-      case OTIFFTAG_TILEOFFSETS: // tag 324
+      case ossim::OTIFFTAG_TILEOFFSETS: // tag 324
       {
          if (traceDump())
          {
@@ -1899,7 +1915,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          }
          break;
       }
-      case OTIFFTAG_TILEBYTECOUNTS: // tag 325
+      case ossim::OTIFFTAG_TILEBYTECOUNTS: // tag 325
       {
          if (traceDump())
          {
@@ -1915,9 +1931,9 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          }
          break;
       }
-      case OTIFFTAG_SUBIFD: // tag 330
+      case ossim::OTIFFTAG_SUBIFD: // tag 330
       {
-         if ( (count == 1) && (type == OTIFF_IFD8) )
+         if ( (count == 1) && (type == ossim::OTIFF_IFD8) )
          {
             out << prefix << "subimage_descriptor: ";
             ossim_uint64 v;
@@ -1930,7 +1946,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          }
          break;
       }
-      case OTIFFTAG_EXTRASAMPLES: // tag 338
+      case ossim::OTIFFTAG_EXTRASAMPLES: // tag 338
       {
          out << prefix << "extra_samples: ";
          ossim_uint16 v;
@@ -1955,7 +1971,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          }
          break;
       }
-      case OTIFFTAG_SAMPLEFORMAT: // tag 339
+      case ossim::OTIFFTAG_SAMPLEFORMAT: // tag 339
       {
          out << prefix << "sample_format: ";
          
@@ -1981,22 +1997,22 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
             getArrayValue(v, valueArray, i);
             switch (v)
             {
-               case OSAMPLEFORMAT_UINT:
+               case ossim::OSAMPLEFORMAT_UINT:
                   out << "unsigned integer data\n";
                   break;
-               case OSAMPLEFORMAT_INT:
+               case ossim::OSAMPLEFORMAT_INT:
                   out << "signed integer data\n";
                   break;
-               case OSAMPLEFORMAT_IEEEFP:
+               case ossim::OSAMPLEFORMAT_IEEEFP:
                   out << "IEEE floating point data\n";
                   break;
-               case OSAMPLEFORMAT_COMPLEXINT:
+               case ossim::OSAMPLEFORMAT_COMPLEXINT:
                   out << "complex signed int\n";
                   break;
-               case OSAMPLEFORMAT_COMPLEXIEEEFP:
+               case ossim::OSAMPLEFORMAT_COMPLEXIEEEFP:
                   out << "complex ieee floating\n";
                   break;
-               case OSAMPLEFORMAT_VOID:
+               case ossim::OSAMPLEFORMAT_VOID:
                default:
                   out << "untyped data\n";
                   break;
@@ -2004,65 +2020,79 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          }
          break;
       }
-      case OTIFFTAG_SMINSAMPLEVALUE: // tag 340
+      case ossim::OTIFFTAG_SMINSAMPLEVALUE: // tag 340
       {
          out << prefix << "smin_sample_value: ";
          printValue(out, type, valueArray);
          break;
       }
-      case OTIFFTAG_SMAXSAMPLEVALUE: // tag 341
+      case ossim::OTIFFTAG_SMAXSAMPLEVALUE: // tag 341
       {
          out << prefix << "smax_sample_value: ";
          printValue(out, type, valueArray);
          break;
       }
-      case OTIFFTAG_COPYRIGHT: // tag 33432
+
+      case ossim::OTIFFTAG_XMLPACKET: // tag 700
+      {
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << prefix << "xml: ";
+            printArray(ossimNotify(ossimNotifyLevel_DEBUG),
+                       ossim::OTIFF_BYTE, count, valueArray);
+         }
+         printXmpMetadata(out, prefix, count, valueArray);
+         break;
+      }
+      
+      case ossim::OTIFFTAG_COPYRIGHT: // tag 33432
       {
          out << prefix << "copyright: ";
          printArray(out, type, count, valueArray);
          break;
       }
-      case OMODEL_PIXEL_SCALE_TAG: // tag 33550
+      case ossim::OMODEL_PIXEL_SCALE_TAG: // tag 33550
       {
          out << prefix << MODEL_PIXEL_SCALE_KW << ": ";
          printArray(out, type, count, valueArray);
          break;
       }
-      case OMODEL_TIE_POINT_TAG: // tag 33992
+      case ossim::OMODEL_TIE_POINT_TAG: // tag 33992
       {
          out << prefix << MODEL_TIE_POINT_KW << ": ";
          printArray(out, type, count, valueArray);
          break;
       }
-      case OMODEL_TRANSFORM_TAG: // tag 34264
+      case ossim::OMODEL_TRANSFORM_TAG: // tag 34264
       {
          out << prefix << MODEL_TRANSFORM_KW << ": ";
          printArray(out, type, count, valueArray);
          break;
       }
-      case OTIFFTAG_PHOTOSHOP:  // tag 34377
+      case ossim::OTIFFTAG_PHOTOSHOP:  // tag 34377
       {
          out << prefix << "photoshop_image_resource_blocks: found\n";
          break;
       }
-      case OGEO_DOUBLE_PARAMS_TAG: // tag 34736
+      case ossim::OGEO_DOUBLE_PARAMS_TAG: // tag 34736
       {
          out << prefix << "double_params: ";
          printArray(out, type, count, valueArray);
          break;
       }
-      case OGEO_ASCII_PARAMS_TAG: // tag 34737
+      case ossim::OGEO_ASCII_PARAMS_TAG: // tag 34737
       {
          out << prefix << "ascii_params: ";
          printArray(out, type, count, valueArray);
          break;
       }
-      case OGDAL_METADATA_TAG: // tag  42112
+      case ossim::OGDAL_METADATA_TAG: // tag  42112
       {
          printGdalMetadata(out, prefix, count, valueArray);
          break;
       }
-      case OGDAL_NODATA: // tag 42113
+      case ossim::OGDAL_NODATA: // tag 42113
       {
          out << prefix << "gdal_nodata: ";
          printArray(out, type, count, valueArray);
@@ -2097,35 +2127,35 @@ std::ostream& ossimTiffInfo::printValue(std::ostream& out,
 {
    switch (type)
    {
-      case OTIFF_BYTE:
+      case ossim::OTIFF_BYTE:
       {
          ossim_uint8 v;
          getArrayValue(v, valueArray, 0);
          out << (ossim_uint16)v << "\n";
          break;
       }
-      case OTIFF_SHORT:
+      case ossim::OTIFF_SHORT:
       {
          ossim_uint16 v;
          getArrayValue(v, valueArray, 0);
          out << v << "\n";
          break;
       }
-      case OTIFF_SSHORT:
+      case ossim::OTIFF_SSHORT:
       {
          ossim_sint16 v;
          getArrayValue(v, valueArray, 0);
          out << v << "\n";
          break;
       }
-      case OTIFF_LONG:
+      case ossim::OTIFF_LONG:
       {
          ossim_uint32 v;
          getArrayValue(v, valueArray, 0);
          out << v << "\n";
          break;
       }
-      case OTIFF_RATIONAL: // two longs first=numerator, second=denominator
+      case ossim::OTIFF_RATIONAL: // two longs first=numerator, second=denominator
       {
          ossim_uint32 num;
          ossim_uint32 den;
@@ -2145,21 +2175,21 @@ std::ostream& ossimTiffInfo::printValue(std::ostream& out,
          break;
          
       }
-      case OTIFF_SLONG:
+      case ossim::OTIFF_SLONG:
       {
          ossim_sint32 v;
          getArrayValue(v, valueArray, 0);
          out << v << "\n";
          break;
       }
-      case OTIFF_FLOAT:
+      case ossim::OTIFF_FLOAT:
       {
          ossim_float32 v;
          getArrayValue(v, valueArray, 0);
          out << v << "\n";
          break;
       }
-      case OTIFF_DOUBLE:
+      case ossim::OTIFF_DOUBLE:
       {
          ossim_float64 v;
          getArrayValue(v, valueArray, 0);
@@ -2184,7 +2214,7 @@ std::ostream& ossimTiffInfo::printArray(std::ostream& out,
    {
       switch (type)
       {
-         case OTIFF_BYTE:
+         case ossim::OTIFF_BYTE:
          {
             for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
             {
@@ -2193,7 +2223,7 @@ std::ostream& ossimTiffInfo::printArray(std::ostream& out,
             out << "\n";
             break;
          }
-         case OTIFF_ASCII:
+         case ossim::OTIFF_ASCII:
          {
             //---
             // Add tripple quotes front and back for ossimKeywordlist to handle multi-line
@@ -2216,7 +2246,7 @@ std::ostream& ossimTiffInfo::printArray(std::ostream& out,
             out << "\"\"\"\n";
             break;
          }
-         case OTIFF_SHORT:
+         case ossim::OTIFF_SHORT:
          {
             ossim_uint16* p = (ossim_uint16*)valueArray;
             for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
@@ -2226,7 +2256,7 @@ std::ostream& ossimTiffInfo::printArray(std::ostream& out,
             out << "\n";
             break;
          }
-         case OTIFF_LONG:
+         case ossim::OTIFF_LONG:
          {
             ossim_uint32* p = (ossim_uint32*)valueArray;
             for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
@@ -2236,7 +2266,7 @@ std::ostream& ossimTiffInfo::printArray(std::ostream& out,
             out << "\n";
             break;
          }
-         case OTIFF_DOUBLE:
+         case ossim::OTIFF_DOUBLE:
          {
             ossim_float64* p = (ossim_float64*)valueArray;
             for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
@@ -2280,6 +2310,147 @@ std::ostream& ossimTiffInfo::printGdalMetadata(std::ostream& out,
              << ":" << children[idx]->getText() << std::endl;
       }
    }
+   return out;
+}
+
+std::ostream& ossimTiffInfo::printXmpMetadata(std::ostream& out,
+                                              const std::string& prefix,
+                                              ossim_uint64 count,
+                                              ossim_uint8* valueArray) const
+{
+   ossimString xmlString(valueArray, valueArray+count);
+   ossimRefPtr<ossimXmlNode> xmlNode = new ossimXmlNode();
+   std::istringstream in(xmlString);
+
+   ossimRefPtr<ossimXmlDocument> xdoc = new ossimXmlDocument();
+
+   // Read the xml document:
+   if ( xdoc->read( in ) )
+   {
+      std::vector<ossimRefPtr<ossimXmlNode> > xnodes;
+
+      // Wavelength:
+      ossimString path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:CentralWavelength";
+      ossimString result;
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.central_wavelength: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:BandName";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.band_name: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:WavelengthFWHM";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.wavelength_fwhm: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:BandSensitivity";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.band_sensitivity: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:RigCameraIndex";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.rig_camera_index: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:Yaw";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.yaw: " << result << "\n";
+            }
+         }
+      }     
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:Pitch";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.pitch: " << result << "\n";
+            }
+         }
+      }
+
+      xnodes.clear();
+      path = "/x:xmpmeta/rdf:RDF/rdf:Description/Camera:Roll";
+      xdoc->findNodes(path, xnodes);
+      if ( xnodes.size() == 1 ) // Error if more than one.
+      {
+         if ( xnodes[0].valid() )
+         {
+            result = xnodes[0]->getText();
+            if ( result.size() )
+            {
+               out << prefix << "xmp.camera.roll: " << result << "\n";
+            }
+         }
+      }
+   }
+   
    return out;
 }
 
@@ -2334,18 +2505,18 @@ std::ostream& ossimTiffInfo::printGeoKeys(
          
          switch (key)
          {
-            case OGT_MODEL_TYPE_GEO_KEY:  // key 1024 Section 6.3.1.1 Codes
+            case ossim::OGT_MODEL_TYPE_GEO_KEY:  // key 1024 Section 6.3.1.1 Codes
             {
                printModelType(out, prefix, code);
                break;
             }               
-            case OGT_RASTER_TYPE_GEO_KEY:  // key 1025 Section 6.3.1.2 Code
+            case ossim::OGT_RASTER_TYPE_GEO_KEY:  // key 1025 Section 6.3.1.2 Code
             {
                printRasterType(out, prefix, code);
                break;
             }
 
-            case OGT_CITATION_GEO_KEY: // key 1026
+            case ossim::OGT_CITATION_GEO_KEY: // key 1026
             {
                if (tag == 34737) // using ascii array
                {
@@ -2364,14 +2535,14 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OGEOGRAPHIC_TYPE_GEO_KEY:  // key 2048  Section 6.3.2.1 Codes
+            case ossim::OGEOGRAPHIC_TYPE_GEO_KEY:  // key 2048  Section 6.3.2.1 Codes
             {
                out << prefix << ossimKeywordNames::GCS_CODE_KW << ": "
                    << code << "\n";
                break;
             }
 
-            case OGEOG_CITATION_GEO_KEY: // key 2049
+            case ossim::OGEOG_CITATION_GEO_KEY: // key 2049
             {
                if (tag == 34737) // using ascii array
                {
@@ -2390,33 +2561,33 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OGEOG_GEODETIC_DATUM_GEO_KEY:// key 2050 Section 6.3.2.2 Codes
+            case ossim::OGEOG_GEODETIC_DATUM_GEO_KEY:// key 2050 Section 6.3.2.2 Codes
             {
                out << prefix << GEODETIC_DATUM_KW << ": " << code << "\n";
                break;
             }
 
-            case OGEOG_PRIME_MERIDIAN_GEOKEY:// key 2051 Section 6.3.2.4 Codes
+            case ossim::OGEOG_PRIME_MERIDIAN_GEOKEY:// key 2051 Section 6.3.2.4 Codes
             {
                out << prefix << "prime_meridian_code: " << code << "\n";
                break;
             }
             
-            case OGEOG_LINEAR_UNITS_GEO_KEY:// key 2052  Section 6.3.1.3 Codes
+            case ossim::OGEOG_LINEAR_UNITS_GEO_KEY:// key 2052  Section 6.3.1.3 Codes
             {
                out << prefix << "linear_units_code: " << code << "\n";
                printLinearUnits(out, prefix, LINEAR_UNITS_KW, code);
                break;
             }
             
-            case OGEOG_ANGULAR_UNITS_GEO_KEY:// key 2054  Section 6.3.1.4 Codes
+            case ossim::OGEOG_ANGULAR_UNITS_GEO_KEY:// key 2054  Section 6.3.1.4 Codes
             {
                out << prefix << "angular_units_code: " << code << "\n";
                printAngularUnits(out, prefix, code);
                break;
             }
 
-            case OGEOG_ANGULAR_UNIT_SIZE_GEO_KEY:// key 2055 Size in radians Section 6.2.2
+            case ossim::OGEOG_ANGULAR_UNIT_SIZE_GEO_KEY:// key 2055 Size in radians Section 6.2.2
             {
                if (tag == 34736) // using double array
                {
@@ -2431,13 +2602,13 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
             
-            case OGEOG_ELLIPSOID_GEO_KEY:// key 2056  Section 6.3.23 Codes
+            case ossim::OGEOG_ELLIPSOID_GEO_KEY:// key 2056  Section 6.3.23 Codes
             {
                out << prefix << "ellipsoid_code: " << code << "\n";
                break;
             }
             
-            case OGEOG_SEMI_MAJOR_AXIS: // key 2057
+            case ossim::OGEOG_SEMI_MAJOR_AXIS: // key 2057
             {
                if (tag == 34736) // using double array
                {
@@ -2451,7 +2622,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
             
-            case OGEOG_SEMI_MINOR_AXIS: // key 2058
+            case ossim::OGEOG_SEMI_MINOR_AXIS: // key 2058
             {
                if (tag == 34736) // using double array
                {
@@ -2465,7 +2636,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OGEOG_INV_FLATTENING_GEO_KEY: // key 2059 ratio Section 6.2.2
+            case ossim::OGEOG_INV_FLATTENING_GEO_KEY: // key 2059 ratio Section 6.2.2
             {
                if (tag == 34736) // using double array
                {  
@@ -2479,7 +2650,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OGEOG_PRIME_MERIDIAN_LONG_GEO_KEY: // key 2061 GeogAngularUnit Section 6.2.2
+            case ossim::OGEOG_PRIME_MERIDIAN_LONG_GEO_KEY: // key 2061 GeogAngularUnit Section 6.2.2
             {
                if (tag == 34736) // using double array
                {
@@ -2493,13 +2664,13 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OPROJECTED_CS_TYPE_GEO_KEY: // key 3072 Section 6.3.3.1 codes
+            case ossim::OPROJECTED_CS_TYPE_GEO_KEY: // key 3072 Section 6.3.3.1 codes
             {
                out << prefix << "pcs_code: " << code << "\n";
                break;
             }
 
-            case OPCS_CITATION_GEO_KEY: // key 3073 ascii
+            case ossim::OPCS_CITATION_GEO_KEY: // key 3073 ascii
             {
                if (tag == 34737) // using ascii array
                {
@@ -2519,27 +2690,27 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
       
-            case OPROJECTION_GEO_KEY: // key 3074 Section 6.3.3.2 codes
+            case ossim::OPROJECTION_GEO_KEY: // key 3074 Section 6.3.3.2 codes
             {
                out << prefix << "proj_code: " << code << "\n";
                break;
             }
             
-            case OPROJ_COORD_TRANS_GEO_KEY:  // key 3075 Section 6.3.3.3 codes
+            case ossim::OPROJ_COORD_TRANS_GEO_KEY:  // key 3075 Section 6.3.3.3 codes
             {
                out << prefix << COORD_TRANS_CODE_KW << ": " << code << "\n";
                printCoordTrans(out, prefix, code);
                break;
             }
          
-            case OPROJ_LINEAR_UNITS_GEO_KEY:  // key 3076 Section 6.3.1.3 codes
+            case ossim::OPROJ_LINEAR_UNITS_GEO_KEY:  // key 3076 Section 6.3.1.3 codes
             {
                out << prefix << "linear_units_code: " << code << "\n";
                printLinearUnits(out, prefix, std::string("linear_units"), code);
                break;
             }
 
-            case OPROJ_LINEAR_UNIT_SIZE_GEO_KEY:  // key 3077 meters Section 6.2.3
+            case ossim::OPROJ_LINEAR_UNIT_SIZE_GEO_KEY:  // key 3077 meters Section 6.2.3
             {
                if (tag == 34736) // using double array
                {
@@ -2553,7 +2724,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OPROJ_STD_PARALLEL1_GEO_KEY:  // key 3078
+            case ossim::OPROJ_STD_PARALLEL1_GEO_KEY:  // key 3078
             {
                if (tag == 34736) // using double array
                {
@@ -2569,7 +2740,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
          
-            case OPROJ_STD_PARALLEL2_GEO_KEY:  // key 3079
+            case ossim::OPROJ_STD_PARALLEL2_GEO_KEY:  // key 3079
             {
                if (tag == 34736) // using double array
                {
@@ -2585,7 +2756,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
          
-            case OPROJ_NAT_ORIGIN_LONG_GEO_KEY:  // key 3080
+            case ossim::OPROJ_NAT_ORIGIN_LONG_GEO_KEY:  // key 3080
             {
                if (tag == 34736) // using double array
                {
@@ -2600,7 +2771,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
                
-            case OPROJ_NAT_ORIGIN_LAT_GEO_KEY:  // key 3081
+            case ossim::OPROJ_NAT_ORIGIN_LAT_GEO_KEY:  // key 3081
             {
                if (tag == 34736) // using double array
                {
@@ -2615,7 +2786,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OPROJ_FALSE_EASTING_GEO_KEY:  // key 3082
+            case ossim::OPROJ_FALSE_EASTING_GEO_KEY:  // key 3082
             {
                if (tag == 34736) // using double array
                {
@@ -2631,7 +2802,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OPROJ_FALSE_NORTHING_GEO_KEY:  // key 3083
+            case ossim::OPROJ_FALSE_NORTHING_GEO_KEY:  // key 3083
             {
                if (tag == 34736) // using double array
                {
@@ -2648,7 +2819,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
             
-            case OPROJ_FALSE_ORIGIN_LONG_GEO_KEY:  // key 3084
+            case ossim::OPROJ_FALSE_ORIGIN_LONG_GEO_KEY:  // key 3084
             {
                if (tag == 34736) // using double array
                {
@@ -2664,7 +2835,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
             
-            case OPROJ_FALSE_ORIGIN_LAT_GEO_KEY:  // key 3085
+            case ossim::OPROJ_FALSE_ORIGIN_LAT_GEO_KEY:  // key 3085
             {
                if (tag == 34736) // using double array
                {
@@ -2680,7 +2851,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
             
-            case OPROJ_FALSE_ORIGIN_EASTING_GEO_KEY:  // key 3086
+            case ossim::OPROJ_FALSE_ORIGIN_EASTING_GEO_KEY:  // key 3086
             {
                if (tag == 34736) // using double array
                {
@@ -2696,7 +2867,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
             
-            case OPROJ_FALSE_ORIGIN_NORTHING_GEO_KEY:  // key 3087
+            case ossim::OPROJ_FALSE_ORIGIN_NORTHING_GEO_KEY:  // key 3087
             {
                if (tag == 34736) // using double array
                {
@@ -2712,7 +2883,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
            
-            case OPROJ_CENTER_LONG_GEO_KEY:  // key 3088
+            case ossim::OPROJ_CENTER_LONG_GEO_KEY:  // key 3088
             {
                if (tag == 34736) // using double array
                {
@@ -2727,7 +2898,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OPROJ_CENTER_LAT_GEO_KEY:  // key 3089
+            case ossim::OPROJ_CENTER_LAT_GEO_KEY:  // key 3089
             {
                if (tag == 34736) // using double array
                {
@@ -2742,7 +2913,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OPROJ_SCALE_AT_NAT_ORIGIN_GEO_KEY:  // key 3092
+            case ossim::OPROJ_SCALE_AT_NAT_ORIGIN_GEO_KEY:  // key 3092
             {
                if (tag == 34736) // using double array
                {
@@ -2757,7 +2928,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                }
                break;
             }
-            case OPROJ_SCALE_AT_CENTER_GEO_KEY:  // key 3093
+            case ossim::OPROJ_SCALE_AT_CENTER_GEO_KEY:  // key 3093
             {
                if (tag == 34736) // using double array
                {
@@ -2773,7 +2944,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OVERTICAL_CITATION_GEO_KEY: // key 4097
+            case ossim::OVERTICAL_CITATION_GEO_KEY: // key 4097
             {               
                if (tag == 34737) // using ascii array
                {
@@ -2792,7 +2963,7 @@ std::ostream& ossimTiffInfo::printGeoKeys(
                break;
             }
 
-            case OVERTICAL_UNITS_GEO_KEY: // key 4099  Section 6.3.1.3 Codes
+            case ossim::OVERTICAL_UNITS_GEO_KEY: // key 4099  Section 6.3.1.3 Codes
             {
                out << prefix << "vertical_units_code: " << code << "\n";
                printLinearUnits(out, prefix, VERTICAL_UNITS_KW, code);

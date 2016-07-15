@@ -82,10 +82,15 @@ ossimElevManager::ossimElevManager()
     m_defaultHeightAboveEllipsoid(ossim::nan()),
     m_elevationOffset(ossim::nan()),
     m_useGeoidIfNullFlag(false),
+    m_useStandardPaths(false),
     m_currentDatabaseIdx(0),
     m_mutex()
 {
-   loadStandardElevationPaths();
+   //---
+   // Auto load removed to avoid un-wanted directory scanning.
+   // Use ossim preferences.  drb - 28 March 2016.
+   //---
+   // loadStandardElevationPaths();
 }
 
 ossimElevManager::~ossimElevManager()
@@ -165,6 +170,9 @@ double ossimElevManager::getHeightAboveMSL(const ossimGpt& gpt)
 
 void ossimElevManager::loadStandardElevationPaths()
 {
+   if (!m_useStandardPaths)
+      return;
+
    ossimFilename userDir    = ossimEnvironmentUtility::instance()->getUserOssimSupportDir();
    ossimFilename installDir = ossimEnvironmentUtility::instance()->getInstalledOssimSupportDir();
    
@@ -200,12 +208,12 @@ void ossimElevManager::loadStandardElevationPaths()
    }
 }
 
-bool ossimElevManager::loadElevationPath(const ossimFilename& path)
+bool ossimElevManager::loadElevationPath(const ossimFilename& path, bool set_as_first)
 {
    bool result = false;
    ossimElevationDatabase* database = ossimElevationDatabaseRegistry::instance()->open(path);
    
-   if(!database&&path.isDir())
+   if(!database && path.isDir())
    {
       ossimDirectory dir;
       
@@ -219,7 +227,7 @@ bool ossimElevManager::loadElevationPath(const ossimFilename& path)
             if(database)
             {
                result = true;
-               addDatabase(database);
+               addDatabase(database, set_as_first);
             }
          }while(dir.getNext(file));
       }
@@ -227,7 +235,7 @@ bool ossimElevManager::loadElevationPath(const ossimFilename& path)
    else if(database)
    {
       result = true;
-      addDatabase(database);
+      addDatabase(database, set_as_first);
    }
    
    return result;
@@ -256,7 +264,7 @@ void ossimElevManager::getCellsForBounds( const std::string& connectionString,
                                           const ossim_float64& minLon,
                                           const ossim_float64& maxLat,
                                           const ossim_float64& maxLon,
-                                          std::vector<std::string>& cells, 
+                                          std::vector<ossimFilename>& cells,
                                           ossim_uint32 maxNumberOfCells)
 {
    ossimRefPtr<ossimElevationCellDatabase> cellDatabase = 0;
@@ -295,7 +303,7 @@ void ossimElevManager::getCellsForBounds( const ossim_float64& minLat,
                                           const ossim_float64& minLon,
                                           const ossim_float64& maxLat,
                                           const ossim_float64& maxLon,
-                                          std::vector<std::string>& cells, 
+                                          std::vector<ossimFilename>& cells,
                                           ossim_uint32 maxNumberOfCells )
 {
    //TODO: Presently incrementing by 0.1 deg. If an elev cell
@@ -325,14 +333,14 @@ void ossimElevManager::getCellsForBounds( const ossim_float64& minLat,
    std::vector<ossimFilename>::iterator iter = open_cells.begin();
    while ((iter != open_cells.end()) && (cells.size() < limitCells))
    {
-      cells.push_back(iter->string());
+      cells.push_back(*iter);
       ++iter;
    }
 }
 
 
 void ossimElevManager::getCellsForBounds( const ossimGrect& bbox,
-                                          std::vector<std::string>& cells,
+                                          std::vector<ossimFilename>& cells,
                                           ossim_uint32 maxCells)
 {
    getCellsForBounds(bbox.lr().lat, bbox.ul().lon, bbox.ul().lat, bbox.lr().lon, cells, maxCells);
@@ -408,6 +416,7 @@ bool ossimElevManager::saveState(ossimKeywordlist& kwl, const char* prefix) cons
    kwl.add(prefix, "elevation_offset", m_elevationOffset, true);
    kwl.add(prefix, "default_height_above_ellipsoid", m_defaultHeightAboveEllipsoid, true);
    kwl.add(prefix, "use_geoid_if_null", m_useGeoidIfNullFlag, true);
+   kwl.add(prefix, "use_standard_elev_paths", m_useStandardPaths, true);
    kwl.add(prefix, "threads", ossimString::toString(m_maxRoundRobinSize), true);
 
    return ossimElevSource::saveState(kwl, prefix);
@@ -432,21 +441,16 @@ bool ossimElevManager::loadState(const ossimKeywordlist& kwl, const char* prefix
    ossimString copyPrefix(prefix);
    ossimString elevationOffset = kwl.find(copyPrefix, "elevation_offset");
    ossimString defaultHeightAboveEllipsoid = kwl.find(copyPrefix, "default_height_above_ellipsoid");
-   ossimString useGeoidIfNull = kwl.find(copyPrefix, "use_geoid_if_null");
    ossimString elevRndRbnSize = kwl.find(copyPrefix, "threads");
 
+   kwl.getBoolKeywordValue(m_useGeoidIfNullFlag, "use_geoid_if_null", copyPrefix.chars());
+   kwl.getBoolKeywordValue(m_useStandardPaths, "use_standard_elev_paths", copyPrefix.chars());
+
    if(!elevationOffset.empty())
-   {
       m_elevationOffset = elevationOffset.toDouble();
-   }
+
    if(!defaultHeightAboveEllipsoid.empty())
-   {
       m_defaultHeightAboveEllipsoid = defaultHeightAboveEllipsoid.toDouble();
-   }
-   if(!useGeoidIfNull.empty())
-   {
-      m_useGeoidIfNullFlag = useGeoidIfNull.toBool();
-   }
 
    ossim_uint32 numThreads = 1;
    if(!elevRndRbnSize.empty())
@@ -593,7 +597,7 @@ inline ossimElevManager::ElevationDatabaseListType& ossimElevManager::getNextEle
    return m_dbRoundRobin[index];
 }
 
-void ossimElevManager::addDatabase(ossimElevationDatabase* database)
+void ossimElevManager::addDatabase(ossimElevationDatabase* database, bool set_as_first)
 {
    if(!database)
       return;
@@ -604,14 +608,20 @@ void ossimElevManager::addDatabase(ossimElevationDatabase* database)
    std::vector<ElevationDatabaseListType>::iterator rri = m_dbRoundRobin.begin();
    if (std::find(rri->begin(), rri->end(), database) == rri->end())
    {
-      (*rri).push_back(database);
-      ++rri;
+      if (set_as_first)
+         rri->insert(rri->begin(), database);
+      else
+         rri->push_back(database);
 
       // Populate the parallel lists in the round-robin with duplicates:
+      ++rri;
       while ( rri != m_dbRoundRobin.end() )
       {
          ossimRefPtr<ossimElevationDatabase> dupDb = (ossimElevationDatabase*) database->dup();
-         (*rri).push_back(dupDb);
+         if (set_as_first)
+            rri->insert(rri->begin(), dupDb);
+         else
+            rri->push_back(dupDb);
          ++rri;
       }
    }
@@ -647,9 +657,17 @@ std::ostream& ossimElevManager::print(ostream& out) const
    {
       out<<"\nm_dbRoundRobin["<<i<<"].size = "<<m_dbRoundRobin[i].size()<<endl;
       for (ossim_uint32 j=0; j<m_dbRoundRobin[i].size(); ++j)
-         out<<"m_dbRoundRobin["<<i<<"]["<<j<<"] = "<<m_dbRoundRobin[i][j]->print(out)<<endl;
+      {
+         out<<"m_dbRoundRobin["<<i<<"]["<<j<<"] = ";
+         // GP: We have to separate this line.  On MS it will not compile
+         // otherwise
+         m_dbRoundRobin[i][j]->print(out);
+
+      }
+         out<<endl;
    }
-   cout<<"\n"<<ossimElevSource::print(cout);
+   out<<"\n";
+   ossimElevSource::print(out);
    return out;
 }
 

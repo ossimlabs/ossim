@@ -950,6 +950,48 @@ void ossim::toSimpleStringList(ossimString& result,
    result = "("+out.str()+")";
 }
 
+template <>
+void ossim::toSimpleStringList(ossimString& result,
+                               const std::vector<ossim_float64>& valuesList)
+
+{
+   std::ostringstream out;
+   out << std::setiosflags(std::ios::fixed) << std::setprecision(20);
+   if(!valuesList.empty())
+   {
+      ossim_uint32 idx = 0;
+      ossim_uint32 size = (ossim_uint32) (valuesList.size()-1);
+      for(idx = 0; idx < size; ++idx)
+      {
+         out << valuesList[idx] << ",";
+      }
+      out << valuesList[size];
+   }
+   
+   result = "("+out.str()+")";
+}
+
+template <>
+void ossim::toSimpleStringList(ossimString& result,
+                               const std::vector<ossim_float32>& valuesList)
+
+{
+   std::ostringstream out;
+   out << std::setiosflags(std::ios::fixed) << std::setprecision(20);
+   if(!valuesList.empty())
+   {
+      ossim_uint32 idx = 0;
+      ossim_uint32 size = (ossim_uint32) (valuesList.size()-1);
+      for(idx = 0; idx < size; ++idx)
+      {
+         out << valuesList[idx] << ",";
+      }
+      out << valuesList[size];
+   }
+   
+   result = "("+out.str()+")";
+}
+
 bool ossim::toSimpleVector(std::vector<ossim_int32>& result,
                            const ossimString& stringOfPoints)
 {
@@ -1093,6 +1135,17 @@ void ossim::getFormattedTime(
    }
 
    timeMutex.unlock();
+}
+
+ossim_int64 ossim::getTime()
+{
+   time_t rawTime;
+   
+   timeMutex.lock();
+   time(&rawTime);
+   timeMutex.unlock();
+   
+   return (ossim_int64)rawTime;
 }
 
 ossim_uint32 ossim::computeLevels(const ossimIrect& rect)

@@ -12,7 +12,7 @@
 // models(dems).
 // 
 //----------------------------------------------------------------------------
-// $Id: ossimChipperUtil.cpp 23616 2015-11-11 19:50:29Z dburken $
+// $Id: ossimChipperUtil.cpp 23675 2015-12-22 18:16:28Z dburken $
 
 #include <ossim/util/ossimChipperUtil.h>
 
@@ -43,6 +43,7 @@
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandler.h>
+#include <ossim/imaging/ossimImageHistogramSource.h>
 #include <ossim/imaging/ossimImageMosaic.h>
 #include <ossim/imaging/ossimImageRenderer.h>
 #include <ossim/imaging/ossimImageSource.h>
@@ -74,7 +75,6 @@ static ossimTrace traceDebug("ossimChipperUtil:debug");
 static ossimTrace traceLog("ossimChipperUtil:log");
 static ossimTrace traceOptions("ossimChipperUtil:options");
 
-static const std::string APPLICATION_NAME_KW     = "application_name";
 static const std::string BRIGHTNESS_KW           = "brightness";
 static const std::string COLOR_BLUE_KW           = "color_blue";
 static const std::string COLOR_GREEN_KW          = "color_green";
@@ -82,6 +82,7 @@ static const std::string COLOR_RED_KW            = "color_red";
 static const std::string CONTRAST_KW             = "contrast";
 static const std::string CLIP_WMS_BBOX_LL_KW     = "clip_wms_bbox_ll";
 static const std::string CLIP_POLY_LAT_LON_KW    = "clip_poly_lat_lon";
+static const std::string CUT_BBOX_XYWH_KW        = "cut_bbox_xywh";
 static const std::string CUT_WMS_BBOX_KW         = "cut_wms_bbox";
 static const std::string CUT_WMS_BBOX_LL_KW      = "cut_wms_bbox_ll";
 static const std::string CUT_CENTER_LAT_KW       = "cut_center_lat";
@@ -96,7 +97,10 @@ static const std::string CUT_WIDTH_KW            = "cut_width";   // pixels
 static const std::string DEM_KW                  = "dem";
 static const std::string GAIN_KW                 = "gain";
 static const std::string FILE_KW                 = "file";
-static const std::string HISTO_OP_KW             = "hist_op";
+static const std::string HIST_AOI_KW             = "hist_aoi";
+static const std::string HIST_CENTER_KW          = "hist_center";
+static const std::string HIST_LLWH_KW            = "hist_llwh";
+static const std::string HIST_OP_KW              = "hist_op";
 static const std::string IMAGE_SPACE_SCALE_X_KW  = "image_space_scale_x";
 static const std::string IMAGE_SPACE_SCALE_Y_KW  = "image_space_scale_y";
 static const std::string IMG_KW                  = "image";
@@ -111,6 +115,7 @@ static const std::string PAD_THUMBNAIL_KW        = "pad_thumbnail"; // bool
 static const std::string READER_PROPERTY_KW      = "reader_property";
 static const std::string RESAMPLER_FILTER_KW     = "resampler_filter";
 static const std::string ROTATION_KW             = "rotation";
+static const std::string RRDS_KW                 = "rrds";
 static const std::string SCALE_2_8_BIT_KW        = "scale_2_8_bit";
 static const std::string SHARPEN_MODE_KW         = "sharpen_mode";
 static const std::string SNAP_TIE_TO_ORIGIN_KW   = "snap_tie_to_origin";
@@ -148,6 +153,7 @@ ossimChipperUtil::ossimChipperUtil()
 
 // Private/hidden from use.
 ossimChipperUtil::ossimChipperUtil( const ossimChipperUtil& /* obj */ )
+:  m_operation(OSSIM_CHIPPER_OP_UNKNOWN)
 {
 }
 
@@ -205,9 +211,14 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
 
    au->addCommandLineOption( "--contrast", "<constrast>\nApply constrast to input image(s). Valid range: -1.0 to 1.0" );
 
+   au->addCommandLineOption("--cut-bbox-xywh", "<x>,<y>,<width>,<height>\nSpecify a comma separated bounding box.");
+   
    au->addCommandLineOption("--cut-wms-bbox", "<minx>,<miny>,<maxx>,<maxy>\nSpecify a comma separated list in the format of a WMS BBOX.\nThe units are in the units of the projector defined by the --srs key");
+
    au->addCommandLineOption("--cut-wms-bbox-ll", "<minx>,<miny>,<maxx>,<maxy>\nSpecify a comma separated list in the format of a WMS BBOX.\nThe units are always decimal degrees");
+
    au->addCommandLineOption("--cut-width", "<width>\nSpecify the cut width in pixel");
+
    au->addCommandLineOption("--cut-height", "<height>\nSpecify the cut height in pixel");
 
    au->addCommandLineOption("--clip-wms-bbox-ll", "<minx>,<miny>,<maxx>,<maxy>\nSpecify a comma separated list in the format of a WMS BBOX.\nThe units are always decimal degrees");
@@ -233,7 +244,13 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption("-h or --help", "Display this help and exit.");
 
    au->addCommandLineOption("--hemisphere", "<hemisphere>\nSpecify a projection hemisphere if supported. E.g. UTM projection. This will lock the hemisphere even if input scene center is the other hemisphere. Valid values for UTM are \"N\" and \"S\""); 
-   
+
+   au->addCommandLineOption("--histogram-aoi", "<x>,<y>,<width>,<height>\nSets single image region of interest(roi) to compute histogram from. Coordinates are zero based image space.  Single image operation only. Comma separated, no spaces.");
+
+   au->addCommandLineOption("--histogram-center-tile", "Will compute histogram from center tile of image.");
+
+   au->addCommandLineOption("--histogram-llwh", "<latitude>,<longitude>,<width>,<height>\nSpecify the region of interest(roi) to compute histogram from. Latitude and longitude will be roi center space with width and height in pixels. Comma separated, no spaces.");
+
    au->addCommandLineOption("--histogram-op", "<operation>\nHistogram operation to perform. Valid operations are \"auto-minmax\", \"std-stretch-1\", \"std-stretch-2\" and \"std-stretch-3\".");
 
    au->addCommandLineOption("--image-space-scale","<x> <y>\nSpecifies an image space scale for x and y direction. \"chip\" operation only.");
@@ -265,6 +282,8 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption("-r or --rotate", "<degrees>\nRotate image by degrees. \"chip\" operation only.");
 
    au->addCommandLineOption("--reader-prop", "<string>Adds a property to send to the reader. format is name=value");
+
+   au->addCommandLineOption("--rrds", "<rrds> Reduced resolution data set where 0 is full resolution. \"chip\" operation only.");
    
    au->addCommandLineOption("--scale-to-8-bit", "Scales the output to unsigned eight bits per band. This option has been deprecated by the newer \"--output-radiometry\" option.");
 
@@ -418,6 +437,10 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    {
       m_kwl->addPair( CUT_HEIGHT_KW,  tempString1 );
    }
+   if( ap.read("--cut-bbox-xywh", stringParam1) )
+   {
+      m_kwl->addPair(CUT_BBOX_XYWH_KW, tempString1);
+   }
    if( ap.read("--cut-wms-bbox", stringParam1) )
    {
       m_kwl->addPair(CUT_WMS_BBOX_KW, tempString1);
@@ -510,9 +533,24 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
       m_kwl->addPair( std::string(ossimKeywordNames::HEMISPHERE_KW), tempString1 );
    }
 
+   if ( ap.read("--histogram-aoi", stringParam1) )
+   {
+      m_kwl->addPair( HIST_AOI_KW, tempString1 );
+   }
+
+   if ( ap.read( "--histogram-center-tile" ) )
+   {
+      m_kwl->addPair( HIST_CENTER_KW, TRUE_KW );
+   }
+
+   if ( ap.read("--histogram-llwh", stringParam1) )
+   {
+      m_kwl->addPair( HIST_LLWH_KW, tempString1 );
+   }
+
    if ( ap.read("--histogram-op", stringParam1) )
    {
-      m_kwl->addPair( HISTO_OP_KW, tempString1 );
+      m_kwl->addPair( HIST_OP_KW, tempString1 );
    }
 
    if ( ap.read("--image-space-scale", doubleParam1, doubleParam2) )
@@ -620,6 +658,11 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
       key += ossimString::toString(readerPropIdx);
       m_kwl->addPair(key.string(), tempString1 );
       ++readerPropIdx;
+   }
+
+   if ( ap.read("--rrds", stringParam1) )
+   {
+      m_kwl->addPair( RRDS_KW, tempString1);
    }
 
    if ( ap.read("--scale-to-8-bit") )
@@ -1418,9 +1461,9 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist& op
 
   ossimIrect aoi;
   
-  if(optionsKwl.getSize() > 0)
+  if( optionsKwl.getSize() > 0 )
   {
-    m_kwl->addList(optionsKwl, true);
+     m_kwl->addList(optionsKwl, true);
   }
 
   // (GP)
@@ -1428,14 +1471,26 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist& op
   // as well as moving windows we will just always initialize
   // the output projection
   //
+
   initializeOutputProjection();
   if(!m_source.valid())
   {
     m_source = initializeChain( aoi );
   }
-  getAreaOfInterest(m_source.get(), aoi);
 
-  m_geom->setImageSize( aoi.size() );
+  if ( optionsKwl.getSize() > 0 )
+  {
+     //---
+     // Only do this if new options were passed in. This was causing an off by
+     // one error when now options were passed in using thumbnail option.
+     // The m_source->getBoundingRect(...) was returning 257 instead of 256.
+     // Need to hunt that down but for right now this fixes problem.
+     // (drb 20151222)
+     //---
+     getAreaOfInterest(m_source.get(), aoi);
+     
+     m_geom->setImageSize( aoi.size() );
+  }
 
   if ( m_source.valid() )
   {    
@@ -2172,7 +2227,9 @@ void ossimChipperUtil::createIdentityProjection()
                                                          0.0, 0.0, // translate x,y
                                                          midPt.x, midPt.y); // pivot point
 
-               if ( m_kwl->find( METERS_KW.c_str() ) || m_kwl->find( DEGREES_X_KW.c_str() ) )
+               if ( m_kwl->hasKey( METERS_KW )    ||
+                    m_kwl->hasKey( DEGREES_X_KW ) ||
+                    m_kwl->hasKey( RRDS_KW ) )
                {
                   // Set the image view transform scale.
                   initializeIvtScale();
@@ -2191,11 +2248,11 @@ void ossimChipperUtil::createIdentityProjection()
 
 void ossimChipperUtil::initializeIvtScale()
 {
-   ossimDpt scale;
-   scale.makeNan();
-   
    if ( isIdentity() && m_ivt.valid() && m_geom.valid() )
    {
+      ossimDpt scale;
+      scale.makeNan();
+      
       // Check for GSD spec. Degrees/pixel takes priority over meters/pixel:
       ossimString lookup;
       lookup.string() = m_kwl->findKey( DEGREES_X_KW );
@@ -2225,7 +2282,8 @@ void ossimChipperUtil::initializeIvtScale()
             }
          }
       }
-      else
+
+      if ( scale.hasNans() )
       {
          lookup = m_kwl->findKey( METERS_KW );
          if ( lookup.size() )
@@ -2240,7 +2298,7 @@ void ossimChipperUtil::initializeIvtScale()
                // Input meters per pixel.  Consider this a scale of 1.0.
                ossimDpt inputMpp;
                m_geom->getMetersPerPixel( inputMpp );
-
+               
                if ( !inputMpp.hasNans() )
                {
                   scale.x = inputMpp.x/outputMpp.x;
@@ -2249,18 +2307,36 @@ void ossimChipperUtil::initializeIvtScale()
             }
          }
       }
+
+      if ( scale.hasNans() )
+      {
+         lookup = m_kwl->findKey( RRDS_KW );
+         if ( lookup.size() )
+         {
+            ossim_float64 d = lookup.toInt32();
+            if ( d == 0.0 )
+            {
+               scale.x = 1.0;
+            }
+            else
+            {
+               scale.x = 1.0 / std::pow(2.0, d);
+            }
+            scale.y = scale.x;
+         }
+      }
+
+      if ( !scale.hasNans() )
+      {
+         m_ivt->scale( scale.x, scale.y );
+      }
+      else
+      {
+         std::string errMsg = "ossimChipperUtil::initializeIvtScale failed!";
+         throw ossimException(errMsg);
+      }
       
    } // Matches: if ( isIdentity() && ... )
-
-   if ( !scale.hasNans() )
-   {
-      m_ivt->scale( scale.x, scale.y );
-   }
-   else
-   {
-      std::string errMsg = "ossimChipperUtil::initializeIvtScale failed!";
-      throw ossimException(errMsg);
-   }
    
 } // End: ossimChipperUtil::initializeIvtScale()
 
@@ -3143,8 +3219,12 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getNewProjectionFromSrsCode(
 {
    ossimRefPtr<ossimMapProjection> result = 0;
 
-   if (code == "4326")  // Avoid factory call for this.
+   ossimString os = code;
+   os.downcase();
+   
+   if ( ( os == "epsg:4326" ) || ( code == "4326" ) )
    {
+      // Avoid factory call for this.
       result = new ossimEquDistCylProjection();
    }
    else
@@ -3779,79 +3859,117 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
    
    bool result = false;
 
+   ossimHistogramRemapper::StretchMode mode =
+      (ossimHistogramRemapper::StretchMode)getHistoMode();
+            
    if ( chain.valid() )
    {
+      ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
       ossimRefPtr<ossimHistogramRemapper> remapper = chain->getHistogramRemapper();
 
-      if ( remapper.valid() )
-      {
-         if ( remapper->getHistogramFile() == ossimFilename::NIL )
-         {
-            ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
-            if ( ih.valid() )
-            {
-               ossimFilename f = ih->getFilenameWithThisExtension( ossimString("his") );
+      if ( ih.valid() && remapper.valid() &&
+           ( mode != ossimHistogramRemapper::STRETCH_UNKNOWN ) )
+      {         
+         result = true;
 
+         bool roiStretch = ( m_kwl->hasKey( HIST_AOI_KW ) || m_kwl->hasKey( HIST_LLWH_KW ) ||
+                             m_kwl->hasKey( HIST_CENTER_KW ) );
+         
+         if ( !roiStretch )
+         {
+            bool openedHistogram = false;
+            if ( remapper->getHistogramFile() == ossimFilename::NIL )
+            {
+               // Open histogram file.
+               ossimFilename f = ih->getFilenameWithThisExtension( ossimString("his") );
                if ( f.empty() || (f.exists() == false) )
                {
                   // For backward compatibility check if single entry and _e0.his
                   f = ih->getFilenameWithThisExtension( ossimString("his"), true );
                }
-
-               if ( remapper->openHistogram( f ) == false )
+               
+               if ( f.exists() )
                {
-                  if(traceDebug())
+                  openedHistogram = remapper->openHistogram( f );
+                  
+                  if ( !openedHistogram && traceDebug() )
                   {
                      ossimNotify(ossimNotifyLevel_WARN)
                         << MODULE << " WARNING:"
                         << "\nCould not open:  " << f << "\n";
                   }
                }
+               
+               if ( !openedHistogram )
+               {
+                  //---
+                  // User requested a histogram operation but does not have
+                  // external histogram file. This will cause downstream code
+                  // to computer from center tile of image.
+                  //---
+                  roiStretch = true;
+               }
             }
          }
 
-         if ( remapper->getHistogramFile() != ossimFilename::NIL )
+         // Enable and set mode:
+         remapper->setEnableFlag(true);
+         remapper->setStretchMode( mode );
+ 
+         if ( roiStretch )
          {
-            ossimString op = m_kwl->findKey( HISTO_OP_KW );
-            if ( op.size() )
+            ossimIrect aoi;
+            
+            std::string value =  m_kwl->findKey( HIST_AOI_KW );
+            if ( value.size() )
             {
-               result = true;
-               
-               // Enable.
-               remapper->setEnableFlag(true);
-               
-               // Set the histo mode:
-               op.downcase();
-               if ( op == "auto-minmax" )
+               result = getIrect( value, aoi );
+            }
+            else
+            {
+               value =  m_kwl->findKey( HIST_LLWH_KW );
+               if ( value.size() )
                {
-                  remapper->setStretchMode( ossimHistogramRemapper::LINEAR_AUTO_MIN_MAX );
+                  result = getIrect( chain, value, aoi );
                }
-               else if ( (op == "std-stretch-1") || (op == "std-stretch 1") )
+               else //  Use center of image.
                {
-                  remapper->setStretchMode( ossimHistogramRemapper::LINEAR_1STD_FROM_MEAN );
-               } 
-               else if ( (op == "std-stretch-2") || (op == "std-stretch 2") )
-               {
-                  remapper->setStretchMode( ossimHistogramRemapper::LINEAR_2STD_FROM_MEAN );
-               } 
-               else if ( (op == "std-stretch-3") || (op == "std-stretch 3") )
-               {
-                  remapper->setStretchMode( ossimHistogramRemapper::LINEAR_3STD_FROM_MEAN );
-               }
-               else
-               {
-                  result = false;
-                  remapper->setEnableFlag(false);
-                  if(traceDebug())
-                  {
-                     ossimNotify(ossimNotifyLevel_WARN)
-                        << MODULE << "\nUnhandled operation: " << op << "\n";
-                  }
+                  result = getIrect( chain, aoi );
                }
             }
+
+            if ( traceDebug() )
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "ROI of histogram: " << aoi << std::endl;
+            }
+
+            if ( result )
+            {
+               //---
+               // Note: both of these sections work.
+               // Going with separate connection for now. drb - 20 Feb. 2016
+               //---
+#if 1
+               ossimRefPtr<ossimImageHistogramSource> ihist =
+                  new ossimImageHistogramSource();
+               ihist->setAreaOfInterest( aoi );
+               ihist->connectMyInputTo( ih.get() );
+               remapper->connectMyInputTo( ihist.get() );
+#else
+               remapper->computeHistogram( aoi );
+#endif
+            }
          }
-      }
-   }
+
+         if ( !result )
+         {
+            remapper->setEnableFlag(false);
+         }
+         
+      } // Matches: if ( ih.valid() && remapper.valid() && mode... )
+      
+   } // Matches: if ( chain.valid() )
 
    if ( traceDebug() )
    {
@@ -3894,279 +4012,289 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
    
    if ( source )
    {
-      if ( m_geom.valid() )
+      if (  m_kwl->hasKey( CUT_BBOX_XYWH_KW ) )
       {
-         if ( m_kwl->find( CUT_CENTER_LAT_KW.c_str() ) ) 
+         // <x>,<y>,<w>,<h>
+         std::string cutBbox = m_kwl->findKey( CUT_BBOX_XYWH_KW );
+         getIrect( cutBbox, rect );
+      }
+      
+      if ( rect.hasNans() )
+      {
+         if ( m_geom.valid() )
          {
-            // "Cut Center" with: --cut-center-llwh or --cut-center-llr:
-
-            ossimString latStr = m_kwl->findKey( CUT_CENTER_LAT_KW );
-            ossimString lonStr = m_kwl->findKey( CUT_CENTER_LON_KW );
-            if ( latStr.size() && lonStr.size() )
+            if ( m_kwl->find( CUT_CENTER_LAT_KW.c_str() ) ) 
             {
-               ossimGpt centerGpt;
-
-               //---
-               // Want the height nan going into worldToLocal call so it gets picked
-               // up by the elevation manager.
-               //---
-               centerGpt.makeNan(); 
-
-               centerGpt.lat = latStr.toFloat64();
-               centerGpt.lon = lonStr.toFloat64();
-
-               if ( !centerGpt.isLatNan() && !centerGpt.isLonNan() )
+               // "Cut Center" with: --cut-center-llwh or --cut-center-llr:
+               
+               ossimString latStr = m_kwl->findKey( CUT_CENTER_LAT_KW );
+               ossimString lonStr = m_kwl->findKey( CUT_CENTER_LON_KW );
+               if ( latStr.size() && lonStr.size() )
                {
-                  // Ground "cut center" to view:
-                  ossimDpt centerDpt(0.0, 0.0);
-                  m_geom->worldToLocal(centerGpt, centerDpt);
+                  ossimGpt centerGpt;
 
-                  if ( !centerDpt.hasNans() )
+                  //---
+                  // Want the height nan going into worldToLocal call so it gets picked
+                  // up by the elevation manager.
+                  //---
+                  centerGpt.makeNan(); 
+
+                  centerGpt.lat = latStr.toFloat64();
+                  centerGpt.lon = lonStr.toFloat64();
+
+                  if ( !centerGpt.isLatNan() && !centerGpt.isLonNan() )
                   {
-                     if ( isIdentity() && m_ivt.valid() ) // Chipping in image space.
-                     {
-                        // Tranform image center point to view:
-                        ossimDpt ipt = centerDpt;
-                        m_ivt->imageToView( ipt, centerDpt );
-                     }
-                     
-                     // --cut-center-llwh:
-                     ossimString widthStr  = m_kwl->findKey( CUT_WIDTH_KW );
-                     ossimString heightStr = m_kwl->findKey( CUT_HEIGHT_KW );
-                     if ( widthStr.size() && heightStr.size() )
-                     {
-                        ossim_int32 width  = widthStr.toInt32();
-                        ossim_int32 height = heightStr.toInt32();
-                        if ( width && height )
-                        {
-                           ossimIpt ul( ossim::round<int>(centerDpt.x - (width/2)),
-                                        ossim::round<int>(centerDpt.y - (height/2)) );
-                           ossimIpt lr( (ul.x + width - 1), ul.y + height - 1);
-                           rect = ossimIrect(ul, lr);
-                        }
-                     }
-                     else // --cut-center-llr: 
-                     {
-                        ossimString radiusStr = m_kwl->findKey( CUT_RADIUS_KW );
-                        if ( radiusStr.size() )
-                        {
-                           ossim_float64 radius = radiusStr.toFloat64();
-                           if ( radius )
-                           {
-                              ossimDpt mpp;
-                              m_geom->getMetersPerPixel( mpp );
+                     // Ground "cut center" to view:
+                     ossimDpt centerDpt(0.0, 0.0);
+                     m_geom->worldToLocal(centerGpt, centerDpt);
 
-                              if ( !mpp.hasNans() )
+                     if ( !centerDpt.hasNans() )
+                     {
+                        if ( isIdentity() && m_ivt.valid() ) // Chipping in image space.
+                        {
+                           // Tranform image center point to view:
+                           ossimDpt ipt = centerDpt;
+                           m_ivt->imageToView( ipt, centerDpt );
+                        }
+                     
+                        // --cut-center-llwh:
+                        ossimString widthStr  = m_kwl->findKey( CUT_WIDTH_KW );
+                        ossimString heightStr = m_kwl->findKey( CUT_HEIGHT_KW );
+                        if ( widthStr.size() && heightStr.size() )
+                        {
+                           ossim_int32 width  = widthStr.toInt32();
+                           ossim_int32 height = heightStr.toInt32();
+                           if ( width && height )
+                           {
+                              ossimIpt ul( ossim::round<int>(centerDpt.x - (width/2)),
+                                           ossim::round<int>(centerDpt.y - (height/2)) );
+                              ossimIpt lr( (ul.x + width - 1), ul.y + height - 1);
+                              rect = ossimIrect(ul, lr);
+                           }
+                        }
+                        else // --cut-center-llr: 
+                        {
+                           ossimString radiusStr = m_kwl->findKey( CUT_RADIUS_KW );
+                           if ( radiusStr.size() )
+                           {
+                              ossim_float64 radius = radiusStr.toFloat64();
+                              if ( radius )
                               {
-                                 ossim_float64 rx = radius/mpp.x;
-                                 ossim_float64 ry = radius/mpp.y;
+                                 ossimDpt mpp;
+                                 m_geom->getMetersPerPixel( mpp );
+
+                                 if ( !mpp.hasNans() )
+                                 {
+                                    ossim_float64 rx = radius/mpp.x;
+                                    ossim_float64 ry = radius/mpp.y;
                                  
-                                 ossimIpt ul( ossim::round<int>( centerDpt.x - rx ),
-                                              ossim::round<int>( centerDpt.y - ry ) );
-                                 ossimIpt lr( ossim::round<int>( centerDpt.x + rx ),
-                                              ossim::round<int>( centerDpt.y + ry ) );
-                                 rect = ossimIrect(ul, lr);
+                                    ossimIpt ul( ossim::round<int>( centerDpt.x - rx ),
+                                                 ossim::round<int>( centerDpt.y - ry ) );
+                                    ossimIpt lr( ossim::round<int>( centerDpt.x + rx ),
+                                                 ossim::round<int>( centerDpt.y + ry ) );
+                                    rect = ossimIrect(ul, lr);
+                                 }
                               }
                            }
                         }
                      }
-                  }
                   
-               } // Matches: if ( !centerGpt.hasNans() )
+                  } // Matches: if ( !centerGpt.hasNans() )
                
-            } // Matches: if ( latStr && lonStr )
+               } // Matches: if ( latStr && lonStr )
             
-         } // Matches: if ( m_kwl->find( CUT_CENTER_LAT_KW ) )
+            } // Matches: if ( m_kwl->find( CUT_CENTER_LAT_KW ) )
          
-         else if ( (m_kwl->find( CUT_MAX_LAT_KW.c_str() ) ||
-                   (m_kwl->find( CUT_WMS_BBOX_LL_KW.c_str() )))) 
-         {
-            ossimString maxLat;
-            ossimString maxLon;
-            ossimString minLat;
-            ossimString minLon;
-
-            // --cut-bbox-ll or --cut-bbox-llwh
-            if(m_kwl->find( CUT_MAX_LAT_KW.c_str() ))
+            else if ( (m_kwl->find( CUT_MAX_LAT_KW.c_str() ) ||
+                       (m_kwl->find( CUT_WMS_BBOX_LL_KW.c_str() )))) 
             {
-              maxLat = m_kwl->findKey( CUT_MAX_LAT_KW );
-              maxLon = m_kwl->findKey( CUT_MAX_LON_KW );
-              minLat = m_kwl->findKey( CUT_MIN_LAT_KW );
-              minLon = m_kwl->findKey( CUT_MIN_LON_KW );               
+               ossimString maxLat;
+               ossimString maxLon;
+               ossimString minLat;
+               ossimString minLon;
+
+               // --cut-bbox-ll or --cut-bbox-llwh
+               if(m_kwl->find( CUT_MAX_LAT_KW.c_str() ))
+               {
+                  maxLat = m_kwl->findKey( CUT_MAX_LAT_KW );
+                  maxLon = m_kwl->findKey( CUT_MAX_LON_KW );
+                  minLat = m_kwl->findKey( CUT_MIN_LAT_KW );
+                  minLon = m_kwl->findKey( CUT_MIN_LON_KW );               
+               }
+               else
+               {
+                  ossimString cutBbox = m_kwl->findKey( CUT_WMS_BBOX_LL_KW );
+
+                  cutBbox = cutBbox.upcase().replaceAllThatMatch("BBOX:");
+                  std::vector<ossimString> cutBox = cutBbox.split(",");
+                  if(cutBox.size() >3)
+                  {
+                     minLon = cutBox[0];
+                     minLat = cutBox[1];
+                     maxLon = cutBox[2];
+                     maxLat = cutBox[3];
+                  }
+               }
+        
+               if ( maxLat.size() && maxLon.size() && minLat.size() && minLon.size() )
+               {
+                  ossim_float64 minLatF = minLat.toFloat64();
+                  ossim_float64 maxLatF = maxLat.toFloat64();
+                  ossim_float64 minLonF = minLon.toFloat64();
+                  ossim_float64 maxLonF = maxLon.toFloat64();
+
+                  //---
+                  // Check for swap so we don't get a negative height.
+                  // Note no swap check for longitude as box could cross date line.
+                  //---
+                  if ( minLatF > maxLatF )
+                  {
+                     ossim_float64 tmpF = minLatF;
+                     minLatF = maxLatF;
+                     maxLatF = tmpF;
+                  }
+
+                  //---
+                  // Assume cut box is edge to edge or "Pixel Is Area". Our
+                  // AOI(area of interest) uses center of pixel or "Pixel Is Point"
+                  // so get the degrees per pixel and shift AOI to center.
+                  //---
+                  ossimDpt halfDpp;
+                  m_geom->getDegreesPerPixel( halfDpp );
+                  halfDpp = halfDpp/2.0;
+            
+                  ossimGpt gpt(0.0, 0.0, 0.0);
+                  ossimDpt ulPt;
+                  ossimDpt lrPt;
+            
+                  // Upper left:
+                  gpt.lat = maxLatF - halfDpp.y;
+                  gpt.lon = minLonF + halfDpp.x;
+                  m_geom->worldToLocal(gpt, ulPt);
+            
+                  // Lower right:
+                  gpt.lat = minLatF + halfDpp.y;
+                  gpt.lon = maxLonF - halfDpp.x;
+                  m_geom->worldToLocal(gpt, lrPt);
+
+                  if ( isIdentity() && m_ivt.valid() )
+                  {
+                     // Chipping in image space:
+                  
+                     // Tranform image ul point to view:
+                     ossimDpt ipt = ulPt;
+                     m_ivt->imageToView( ipt, ulPt );
+                  
+                     // Tranform image lr point to view:
+                     ipt = lrPt;
+                     m_ivt->imageToView( ipt, lrPt );
+                  }
+            
+                  rect = ossimIrect( ossimIpt(ulPt), ossimIpt(lrPt) );
+               }
+            }
+            else if ( m_kwl->find( CUT_WMS_BBOX_KW.c_str() ) ) 
+            {
+               ossimString cutBbox = m_kwl->findKey( CUT_WMS_BBOX_KW );
+
+               cutBbox = cutBbox.upcase().replaceAllThatMatch("BBOX:");
+               std::vector<ossimString> cutBox = cutBbox.split(",");
+               if(cutBox.size()==4)
+               {
+
+                  ossim_float64 minx=cutBox[0].toFloat64();
+                  ossim_float64 miny=cutBox[1].toFloat64();
+                  ossim_float64 maxx=cutBox[2].toFloat64();
+                  ossim_float64 maxy=cutBox[3].toFloat64();
+
+                  const ossimMapProjection* mapProj = m_geom->getAsMapProjection();
+                  if(mapProj)
+                  {
+                     std::vector<ossimDpt> pts(4);
+                     ossimDpt* ptsArray = &pts.front();
+                     if(mapProj->isGeographic())
+                     {
+                        ossimDpt halfDpp;
+                        m_geom->getDegreesPerPixel( halfDpp );
+                        halfDpp = halfDpp/2.0;
+                  
+                        ossimGpt gpt(0.0, 0.0, 0.0);
+                        ossimDpt ulPt;
+                        ossimDpt lrPt;
+                  
+                        // Upper left:
+                        gpt.lat = maxy - halfDpp.y;
+                        gpt.lon = minx + halfDpp.x;
+                        m_geom->worldToLocal(gpt, ptsArray[0]);
+                        // Upper right:
+                        gpt.lat = maxy - halfDpp.y;
+                        gpt.lon = maxx - halfDpp.x;
+                        m_geom->worldToLocal(gpt, ptsArray[1]);
+                  
+                        // Lower right:
+                        gpt.lat = miny + halfDpp.y;
+                        gpt.lon = maxx - halfDpp.x;
+                        m_geom->worldToLocal(gpt, ptsArray[2]);
+
+                        //Lower left
+                        gpt.lat = miny + halfDpp.y;
+                        gpt.lon = minx + halfDpp.x;
+                        m_geom->worldToLocal(gpt, ptsArray[3]);
+                        //m_geom->worldToLocal(ossimGpt(miny,minx), ptsArray[0]);
+                        //m_geom->worldToLocal(ossimGpt(maxy,minx), ptsArray[1]);
+                        //m_geom->worldToLocal(ossimGpt(maxy,maxx), ptsArray[2]);
+                        //m_geom->worldToLocal(ossimGpt(miny,maxx), ptsArray[3]);
+
+                     }
+                     else
+                     {
+                        ossimDpt halfMpp;
+                        ossimDpt eastingNorthing;
+                        m_geom->getMetersPerPixel( halfMpp );
+                        halfMpp = halfMpp/2.0;
+
+                        eastingNorthing.x = minx+halfMpp.x;
+                        eastingNorthing.y = miny+halfMpp.y;
+                        mapProj->eastingNorthingToLineSample(eastingNorthing, ptsArray[0]);
+                        eastingNorthing.x = minx+halfMpp.x;
+                        eastingNorthing.y = maxy-halfMpp.y;
+                        mapProj->eastingNorthingToLineSample(eastingNorthing, ptsArray[1]);
+                        eastingNorthing.x = maxx-halfMpp.x;
+                        eastingNorthing.y = maxy-halfMpp.y;
+                        mapProj->eastingNorthingToLineSample(eastingNorthing, ptsArray[2]);
+                        eastingNorthing.x = maxx-halfMpp.x;
+                        eastingNorthing.y = miny+halfMpp.y;
+                        mapProj->eastingNorthingToLineSample(eastingNorthing, ptsArray[3]);
+                     }
+                     rect = ossimIrect(pts);
+                  }
+               }
+            }
+
+            // If no user defined rect set to scene bounding rect.
+            if ( rect.hasNans() ) 
+            {
+               // Get the rectangle from the input chain:
+               rect = source->getBoundingRect(0);
+            }
+      
+         } // if ( m_getOutputGeometry.valid() )
+         else
+         {
+            // Should never happer...
+            std::string errMsg = MODULE;
+            if ( !source )
+            {
+               errMsg += " image source null!";
             }
             else
             {
-              ossimString cutBbox = m_kwl->findKey( CUT_WMS_BBOX_LL_KW );
-
-              cutBbox = cutBbox.upcase().replaceAllThatMatch("BBOX:");
-              std::vector<ossimString> cutBox = cutBbox.split(",");
-              if(cutBox.size() >3)
-              {
-                minLon = cutBox[0];
-                minLat = cutBox[1];
-                maxLon = cutBox[2];
-                maxLat = cutBox[3];
-              }
+               errMsg += " output projection null!";
             }
-        
-            if ( maxLat.size() && maxLon.size() && minLat.size() && minLon.size() )
-            {
-               ossim_float64 minLatF = minLat.toFloat64();
-               ossim_float64 maxLatF = maxLat.toFloat64();
-               ossim_float64 minLonF = minLon.toFloat64();
-               ossim_float64 maxLonF = maxLon.toFloat64();
-
-               //---
-               // Check for swap so we don't get a negative height.
-               // Note no swap check for longitude as box could cross date line.
-               //---
-               if ( minLatF > maxLatF )
-               {
-                  ossim_float64 tmpF = minLatF;
-                  minLatF = maxLatF;
-                  maxLatF = tmpF;
-               }
-
-               //---
-               // Assume cut box is edge to edge or "Pixel Is Area". Our
-               // AOI(area of interest) uses center of pixel or "Pixel Is Point"
-               // so get the degrees per pixel and shift AOI to center.
-               //---
-               ossimDpt halfDpp;
-               m_geom->getDegreesPerPixel( halfDpp );
-               halfDpp = halfDpp/2.0;
-            
-               ossimGpt gpt(0.0, 0.0, 0.0);
-               ossimDpt ulPt;
-               ossimDpt lrPt;
-            
-               // Upper left:
-               gpt.lat = maxLatF - halfDpp.y;
-               gpt.lon = minLonF + halfDpp.x;
-               m_geom->worldToLocal(gpt, ulPt);
-            
-               // Lower right:
-               gpt.lat = minLatF + halfDpp.y;
-               gpt.lon = maxLonF - halfDpp.x;
-               m_geom->worldToLocal(gpt, lrPt);
-
-               if ( isIdentity() && m_ivt.valid() )
-               {
-                  // Chipping in image space:
-                  
-                  // Tranform image ul point to view:
-                  ossimDpt ipt = ulPt;
-                  m_ivt->imageToView( ipt, ulPt );
-                  
-                  // Tranform image lr point to view:
-                  ipt = lrPt;
-                  m_ivt->imageToView( ipt, lrPt );
-               }
-            
-               rect = ossimIrect( ossimIpt(ulPt), ossimIpt(lrPt) );
-            }
+            throw( ossimException(errMsg) );
          }
-         else if ( m_kwl->find( CUT_WMS_BBOX_KW.c_str() ) ) 
-         {
-            ossimString cutBbox = m_kwl->findKey( CUT_WMS_BBOX_KW );
-
-            cutBbox = cutBbox.upcase().replaceAllThatMatch("BBOX:");
-            std::vector<ossimString> cutBox = cutBbox.split(",");
-            if(cutBox.size()==4)
-            {
-
-               ossim_float64 minx=cutBox[0].toFloat64();
-               ossim_float64 miny=cutBox[1].toFloat64();
-               ossim_float64 maxx=cutBox[2].toFloat64();
-               ossim_float64 maxy=cutBox[3].toFloat64();
-
-               const ossimMapProjection* mapProj = m_geom->getAsMapProjection();
-               if(mapProj)
-               {
-                 std::vector<ossimDpt> pts(4);
-                 ossimDpt* ptsArray = &pts.front();
-                 if(mapProj->isGeographic())
-                  {
-                     ossimDpt halfDpp;
-                     m_geom->getDegreesPerPixel( halfDpp );
-                     halfDpp = halfDpp/2.0;
-                  
-                     ossimGpt gpt(0.0, 0.0, 0.0);
-                     ossimDpt ulPt;
-                     ossimDpt lrPt;
-                  
-                     // Upper left:
-                     gpt.lat = maxy - halfDpp.y;
-                     gpt.lon = minx + halfDpp.x;
-                     m_geom->worldToLocal(gpt, ptsArray[0]);
-                     // Upper right:
-                     gpt.lat = maxy - halfDpp.y;
-                     gpt.lon = maxx - halfDpp.x;
-                     m_geom->worldToLocal(gpt, ptsArray[1]);
-                  
-                     // Lower right:
-                     gpt.lat = miny + halfDpp.y;
-                     gpt.lon = maxx - halfDpp.x;
-                     m_geom->worldToLocal(gpt, ptsArray[2]);
-
-                     //Lower left
-                     gpt.lat = miny + halfDpp.y;
-                     gpt.lon = minx + halfDpp.x;
-                     m_geom->worldToLocal(gpt, ptsArray[3]);
-                     //m_geom->worldToLocal(ossimGpt(miny,minx), ptsArray[0]);
-                     //m_geom->worldToLocal(ossimGpt(maxy,minx), ptsArray[1]);
-                     //m_geom->worldToLocal(ossimGpt(maxy,maxx), ptsArray[2]);
-                     //m_geom->worldToLocal(ossimGpt(miny,maxx), ptsArray[3]);
-
-                  }
-                  else
-                  {
-                     ossimDpt halfMpp;
-                     ossimDpt eastingNorthing;
-                     m_geom->getMetersPerPixel( halfMpp );
-                     halfMpp = halfMpp/2.0;
-
-                     eastingNorthing.x = minx+halfMpp.x;
-                     eastingNorthing.y = miny+halfMpp.y;
-                     mapProj->eastingNorthingToLineSample(eastingNorthing, ptsArray[0]);
-                     eastingNorthing.x = minx+halfMpp.x;
-                     eastingNorthing.y = maxy-halfMpp.y;
-                     mapProj->eastingNorthingToLineSample(eastingNorthing, ptsArray[1]);
-                     eastingNorthing.x = maxx-halfMpp.x;
-                     eastingNorthing.y = maxy-halfMpp.y;
-                     mapProj->eastingNorthingToLineSample(eastingNorthing, ptsArray[2]);
-                     eastingNorthing.x = maxx-halfMpp.x;
-                     eastingNorthing.y = miny+halfMpp.y;
-                     mapProj->eastingNorthingToLineSample(eastingNorthing, ptsArray[3]);
-                  }
-                  rect = ossimIrect(pts);
-               }
-            }
-         }
-
-         // If no user defined rect set to scene bounding rect.
-         if ( rect.hasNans() ) 
-         {
-            // Get the rectangle from the input chain:
-            rect = source->getBoundingRect(0);
-         }
-      
-      } // if ( m_getOuputGeometry.valid() )
-      else
-
-      {
-         // Should never happer...
-         std::string errMsg = MODULE;
-         if ( !source )
-         {
-            errMsg += " image source null!";
-         }
-         else
-         {
-            errMsg += " output projection null!";
-         }
-         throw( ossimException(errMsg) );
-      }
+         
+      } // if ( rect.hasNans() )
 
    } // if ( source )
    
@@ -4179,6 +4307,97 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
    
 } // End: ossimChipperUtil::getAreaOfInterest
 
+bool ossimChipperUtil::getIrect( const std::string& s, ossimIrect& rect ) const
+{
+   bool result = false;
+   if ( s.size() )
+   {
+      // <x>,<y>,<w>,<h>
+      ossimString cutBbox = s;
+      std::vector<ossimString> keys;
+      cutBbox.split(keys, ",");
+      if( keys.size() > 3 )
+      {
+         ossimIpt ul;
+         ossimIpt lr;
+         ul.x = keys[0].toInt32();
+         ul.y = keys[1].toInt32();
+         lr.x = ul.x + keys[2].toInt32() - 1;
+         lr.y = ul.y + keys[3].toInt32() - 1;
+         rect = ossimIrect(ul, lr);
+         result = true;
+      }
+   }
+   return result;
+}
+
+bool ossimChipperUtil::getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
+                                 const std::string& s,
+                                 ossimIrect& rect ) const
+{
+   bool result = false;
+
+   if ( chain.valid() )
+   {
+      ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
+      if ( ih.valid() )
+      {
+         // Get the geometry from the image handler.      
+         ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
+         if ( geom.valid() )
+         {
+            // <lat>,<lon>,<w>,<h>
+            ossimString cutBbox = s;
+            std::vector<ossimString> keys;
+            cutBbox.split(keys, ",");
+            if( keys.size() > 3 )
+            {
+               ossimGpt gpt;
+               gpt.lat = keys[0].toFloat64();
+               gpt.lon = keys[1].toFloat64();
+               ossim_int32 w = keys[2].toInt32();
+               ossim_int32 h = keys[3].toInt32();
+               ossimDpt dpt;
+               geom->worldToLocal( gpt, dpt );
+               ossimIpt ul = dpt;
+               ul.x -= w/2;
+               ul.y -= h/2;
+               ossimIpt lr( ul.x + w - 1, ul.y + h - 1);
+               rect = ossimIrect(ul, lr);
+               result = true;
+            }
+         }
+      }
+   }
+   
+   return result;
+}
+
+bool ossimChipperUtil::getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
+                                 ossimIrect& rect ) const
+{
+   bool result = false;
+   if ( chain.valid() )
+   {
+      ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
+      if ( ih.valid() )
+      {
+         const ossim_int32 MAX = 512;
+         ossimIrect r = ih->getImageRectangle();
+         ossimIpt size = r.size();
+         ossim_int32 w = ossim::min( MAX, size.x );
+         ossim_int32 h = ossim::min( MAX, size.y );
+         ossimIpt ul = r.midPoint();
+         ul.x -= w/2;
+         ul.y -= h/2;
+         ossimIpt lr( ul.x + w - 1, ul.y + h -1 );
+         rect = ossimIrect(ul, lr);
+         result = true;
+      }
+   }
+   return result;
+}
+   
 void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalRect,
                                                      ossimIrect& adjustedRect)
 {
@@ -4505,12 +4724,10 @@ bool ossimChipperUtil::hasThumbnailResolution() const
 bool ossimChipperUtil::hasHistogramOperation() const
 {
    bool result = false;
-   
    if ( m_kwl.valid() )
    {
-      result = ( m_kwl->find( HISTO_OP_KW.c_str() ) != 0 );
+      result = m_kwl->hasKey( HIST_OP_KW );
    }
-   // No option for this right now.  Only through src file.
    return result;
 }
 
@@ -4521,9 +4738,8 @@ bool ossimChipperUtil::isDemFile(const ossimFilename& file) const
    if ( ext.size() >= 2 )
    {
       ext.downcase();
-      if ( ( ext == "hgt" ) ||
-           ( ext == "dem" ) ||
-          ( ( (*ext.begin()) == 'd' ) && ( (*(ext.begin()+1)) == 't' ) ) )
+      if ( ( ext == "hgt" ) || ( ext == "dem" ) ||
+           ( ( (*ext.begin()) == 'd' ) && ( (*(ext.begin()+1)) == 't' ) ) )
       {
          result = true;
       }
@@ -4951,6 +5167,38 @@ std::string ossimChipperUtil::getSharpenMode() const
       }
    }
    return mode.string();
+}
+
+int ossimChipperUtil::getHistoMode() const
+{
+   int result = ossimHistogramRemapper::STRETCH_UNKNOWN;
+
+   ossimString op = m_kwl->findKey( HIST_OP_KW );
+   op.downcase();
+   
+   if ( ( op.string() == "auto-minmax" ) )
+   {
+      result = ossimHistogramRemapper::LINEAR_AUTO_MIN_MAX;
+   }
+   else if ( (op == "std-stretch-1") || (op == "std-stretch 1") )
+   {
+      result = ossimHistogramRemapper::LINEAR_1STD_FROM_MEAN;
+   } 
+   else if ( (op == "std-stretch-2") || (op == "std-stretch 2") )
+   {
+      result = ossimHistogramRemapper::LINEAR_2STD_FROM_MEAN;
+   } 
+   else if ( (op == "std-stretch-3") || (op == "std-stretch 3") )
+   {
+      result = ossimHistogramRemapper::LINEAR_3STD_FROM_MEAN;
+   }
+   else if( traceDebug() )
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+         << "ossimChipperUtil::getHistoMode: Unhandled operation: " << op << "\n";
+   }
+
+   return result;
 }
 
 void ossimChipperUtil::usage(ossimArgumentParser& ap)

@@ -11,13 +11,13 @@
 
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimGpt.h>
-#include <ossim/base/ossimDrect.h>
-#include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimPolygon.h>
 #include <ossim/base/ossimReferenced.h>
 #include <vector>
 
+class ossimDrect;
+class ossimIrect;
 class OssimPolyArea2dPrivate;
 
 namespace geos

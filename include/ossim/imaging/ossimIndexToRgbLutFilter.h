@@ -142,10 +142,6 @@ public:
 
    virtual void initialize();
 
-   virtual void setProperty(ossimRefPtr<ossimProperty> property);
-   virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;
-   virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
-   
    virtual bool saveState(ossimKeywordlist& kwl, const char* prefix=NULL)const;
 
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=NULL);

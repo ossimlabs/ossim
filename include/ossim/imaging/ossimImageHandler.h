@@ -25,6 +25,8 @@
 #include <ossim/imaging/ossimFilterResampler.h>
 #include <ossim/imaging/ossimImageMetaData.h>
 
+class ossimMultiResLevelHistogram;
+
 /**
  *  This class defines an abstract Handler which all image handlers(loaders)
  *  should derive from.
@@ -197,7 +199,6 @@ public:
     */
    virtual bool buildHistogram(int numberOfRLevels=0);
    
-   
    /**
     *  Build a histograms for all image entries.
     *
@@ -243,6 +244,11 @@ public:
                               ossimFilterResampler::ossimFilterResamplerType resampleType = ossimFilterResampler::ossimFilterResampler_BOX,
                               bool includeFullResFlag=false);
    
+   /**
+    * Fetches the current entry image's histogram. If none exists, it will be created.
+    */
+   ossimRefPtr<ossimMultiResLevelHistogram> getImageHistogram();
+
    /**
     * Returns the image geometry object associated with this tile source or
     * NULL if non defined.  The geometry contains full-to-local image

@@ -1,0 +1,58 @@
+#!/bin/bash
+###############################################################################
+#
+# got = git for OSSIM
+#
+# Convenience script for performing git operations on multiple OSSIMLABS repos.
+# Up to four git parameters are handled, for example:
+#
+#    got commit -a
+#    got log --oneline --graph
+#
+# Obviously, only commands that make sense to run on all repos will work. You
+# can't commit a specific file for example.
+#
+# Run this script from ossimlabs parent directory (a.k.a. OSSIM_DEV_HOME) 
+#
+###############################################################################
+
+
+# FUNCTION: do_git <repo_name> <cmd_line_arg_1> <cmd_line_arg_2> <cmd_line_arg_3> <cmd_line_arg_4>
+function do_git {
+  if [ -d $1 ]; then
+    echo; 
+    echo "*************************** $(basename $1) ***************************"
+
+    pushd $1 > /dev/null
+    git $2 $3 $4 $5
+    popd > /dev/null
+    echo; 
+  fi
+}
+export -f do_git
+
+# FUNCTION: usage <script_basename> 
+function usage {
+  echo; echo "Runs specified git command across all ossimlabs repositories. Usage:"
+  echo; echo "  $1 <git-arg1> [<git-arg2> [<git-arg3>]]"
+  echo; echo "This script must be run from the ossimlabs parent directory."
+  echo; echo "Examples:"; echo 
+  echo "  $1 status"
+  echo "  $1 log --oneline --graph"; echo  
+  exit 0
+}
+
+# Check for incorrect usage:
+if [ -z $1 ]; then
+  usage `basename "$0"`
+fi
+
+# Loop over all ossim repos in working dir:
+find . -maxdepth 1 -type d -name "ossim*" -exec bash -c "do_git {} $1 $2 $3 $4 $5" \;
+
+# Check OMAR as well...
+if [ -d omar ]; then
+  bash -c "do_git omar $1 $2 $3 $4 $5"
+fi
+
+

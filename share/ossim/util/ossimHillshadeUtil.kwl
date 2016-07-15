@@ -1,0 +1,20 @@
+//***********************************
+// Template KWL for Hillshade Utility.
+//***********************************
+type: ossimHillshadeUtil
+
+#include ossimChipProcUtil.kwl
+
+// Sun elevation and azimuth angle:
+elevation_angle: <degrees>
+azimuth_angle: <degrees>
+
+// Color of shadow instead of grayscale
+color_red: <0-255> 
+color_green: <0-255> 
+color_blue: <0-255> 
+
+// List of raster image(s) to use as a color source
+color_source: <file1>
+
+

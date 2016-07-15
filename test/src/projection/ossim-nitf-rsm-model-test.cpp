@@ -76,6 +76,9 @@ int main(int argc, char *argv[])
            << "\nmodel->lineSampleHeightToWorld(...), model->worldToLineSample(...)"
            << "\noptions.kwl format example:\n"
 
+           << "\n// Input line, sample type: area=upper left corner, point = center of pixel."
+           << "\n// pixel_type: area"
+
            << "\ngtest_id0: E123456\n"
            << "gtest_gpt0: ( lat, lon, hgt )\n"
 
@@ -182,117 +185,24 @@ ossimRefPtr<ossimNitfRsmModel> getModelFromExtFile( const ossimFilename& file )
 {
    ossimRefPtr<ossimNitfRsmModel> result = 0;
 
-   // Test file with newline separated nitf tags only.
-   ifstream is( file.c_str() );
-   if ( is.good() )
+   if ( file.exists() )
    {
-      const std::string RSMECA_TAG = "RSMECA";
-      const std::string RSMIDA_TAG = "RSMIDA";
-      const std::string RSMPCA_TAG = "RSMPCA";
-      const std::string RSMPIA_TAG = "RSMPIA";
-      
-      ossimRefPtr<ossimNitfRsmecaTag> rsmecaTag = 0;
-      ossimRefPtr<ossimNitfRsmidaTag> rsmidaTag = 0;
-      ossimRefPtr<ossimNitfRsmpcaTag> rsmpcaTag = 0; 
-      ossimRefPtr<ossimNitfRsmpiaTag> rsmpiaTag = 0;        
-      std::vector< ossimRefPtr<ossimNitfRegisteredTag> > tags;
-      
-      while ( is.good() )
+      result = new ossimNitfRsmModel();
+      if ( result->parseFile( file, 0 ) ) // Hard coded entry index of 0 for now.
       {
-         string tagLine;
-         std::getline( is, tagLine );
-         
-         ossimRefPtr<ossimNitfRegisteredTag> tag = getTag( tagLine );
-         if ( tag.valid() )
-         {
-            tags.push_back( tag );
-            if ( tag->getTagName() ==  RSMECA_TAG )
-            {
-               rsmecaTag = dynamic_cast<ossimNitfRsmecaTag*>( tag.get() );
-            }
-            else if ( tag->getTagName() == RSMIDA_TAG )
-            {
-               rsmidaTag = dynamic_cast<ossimNitfRsmidaTag*>( tag.get() );
-            }
-            else if ( tag->getTagName() == RSMPCA_TAG )
-            {
-               rsmpcaTag = dynamic_cast<ossimNitfRsmpcaTag*>( tag.get() );
-            }
-            else if ( tag->getTagName() == RSMPIA_TAG )
-            {
-               rsmpiaTag = dynamic_cast<ossimNitfRsmpiaTag*>( tag.get() );
-            }
-         }
-      }
-      
-      if ( rsmecaTag.valid() && rsmidaTag.valid() &&
-           rsmpcaTag.valid() && rsmpiaTag.valid() )
-      {
-         result = new ossimNitfRsmModel();
-         if ( result->initializeModel( rsmecaTag.get() ) )
-         {
-            if ( result->initializeModel( rsmidaTag.get() ) )
-            {
-               if ( result->initializeModel( rsmpcaTag.get() ) )
-               {
-                  if ( result->initializeModel( rsmpiaTag.get() ) )
-                  {
-                     cout << "Initialize from ext file success!" << endl;
-                  }
-                  else
-                  {
-                     result = 0;
-                     cerr << "ossimNitfRsmModel::initializeModel(" << RSMPIA_TAG
-                          << ") failed!" << endl;
-                  }
-               }
-               else
-               {
-                  result = 0;
-                  cerr << "ossimNitfRsmModel::initializeModel(" << RSMPCA_TAG
-                       << ") failed!" << endl;
-               }
-            }
-            else
-            {
-               result = 0;
-               cerr << "ossimNitfRsmModel::initializeModel(" << RSMIDA_TAG
-                    << ") failed!" << endl;
-            }
-         }
-         else
-         {
-            result = 0;
-            cerr << "ossimNitfRsmModel::initializeModel(" << RSMECA_TAG
-                 << ") failed!" << endl;
-         }
+         cout << "Initialize from ext file success!" << endl;
       }
       else
       {
-         // At least one RSM tag was not found.
-         if ( rsmecaTag.valid() == false )
-         {
-            cerr << RSMECA_TAG << " not found!" << endl;
-         }
-         if ( rsmidaTag.valid() == false )
-         {
-            cerr << RSMIDA_TAG << " not found!" << endl;
-         }
-         if ( rsmpcaTag.valid() == false )
-         {
-            cerr << RSMPCA_TAG << " not found!" << endl;
-         }
-         if ( rsmpiaTag.valid() == false )
-         {
-            cerr << RSMPIA_TAG << " not found!" << endl;
-         }
+         result = 0;
+         cerr << "Could not open: " << file << endl;
       }
    }
    else
    {
-      cerr << "Could not open: " << file << endl;
+     cerr << "File does not exists: " << file << endl;
    }
-         
+
    return result;
    
 } // End: getModelFromExtFile(...)
@@ -409,6 +319,7 @@ void testIpts( ossimRefPtr<ossimNitfRsmModel>& model, const ossimKeywordlist& kw
 
       const std::string  ID_KW      = "itest_id";
       const std::string  IPT_KW     = "itest_ipt";
+      const std::string  IPT_GT_KW  = "itest_gt"; // ground truth      
       const std::string  IPT_HGT_KW = "itest_hgt";
       const ossim_uint32 POINTS     = kwl.numberOf( ID_KW.c_str() );
    
@@ -424,6 +335,21 @@ void testIpts( ossimRefPtr<ossimNitfRsmModel>& model, const ossimKeywordlist& kw
             heightUnits = OSSIM_FEET;
          }
       }
+
+      // Test the pixel type.
+      ossim_float64 iptShift = 0.0;
+      key = "pixel_type";
+      value = kwl.findKey( key );
+      if ( value.size() )
+      {
+         if ( value == "area" )
+         {
+            iptShift = -0.5;
+            cout << key << ": " << value << "\n";
+            cout << "input_line_sample_shift: " << iptShift << "\n";
+         }
+      }     
+      
       cout << "\nitest begin ********************************\n\n"
            << "number_of_line_sample_points: " << POINTS << "\n";
       
@@ -437,7 +363,7 @@ void testIpts( ossimRefPtr<ossimNitfRsmModel>& model, const ossimKeywordlist& kw
          value = kwl.findKey( key );
          if ( value.size() )
          {
-            cout << "itest_id" << std::setw(6) << i << ":  " << value << "\n";
+            cout << "itest_id" << std::setw(9) << i << ":  " << value << "\n";
          }
       
          // Image point, sample, line:
@@ -448,12 +374,16 @@ void testIpts( ossimRefPtr<ossimNitfRsmModel>& model, const ossimKeywordlist& kw
          {
             ossimDpt ipt; // image point
             ossimGpt wpt; // world point
+            ossimGpt gt;  // ground truth
+            ossimDpt gtd; // wpt to gt delta
             ossimDpt rtp; // round trip point
             ossimDpt rtd; // round trip delta;
          
             ipt.toPoint( value );
+            ipt.x += iptShift;
+            ipt.y += iptShift;
          
-            cout << "itest_ipt" << std::setw(5) << i << ":  " << value << "\n";
+            cout << "itest_ipt" << std::setw(8) << i << ":  " << value << "\n";
          
             // Get the height above ellipsoid:
             ossim_float64 hgt = 0.0;
@@ -475,18 +405,44 @@ void testIpts( ossimRefPtr<ossimNitfRsmModel>& model, const ossimKeywordlist& kw
                     << endl;
             }
          
-            cout << "itest_hgt" << std::setw(5) << i << ":  " << value << "\n";
+            cout << "itest_hgt" << std::setw(8) << i << ":  " << value << "\n";
          
             model->lineSampleHeightToWorld( ipt, hgt, wpt );
+
+            cout << "itest_wpt" << std::setw(8) << i << ":  " << wpt << "\n";
+            
             if ( wpt.hasNans() == false )
             {
                model->worldToLineSample( wpt, rtp );
+               
+               // Get the ground truth;
+               key = IPT_GT_KW + ossimString::toString( i ).string();
+               value = kwl.findKey( key );
+               if ( value.size() )
+               {
+                  gt.toPoint( value );
+                  cout << "itest_gt" << std::setw(9) << i << ":  " << gt << "\n";
+                  if ( gt.isNan() == false )
+                  {
+                     gtd.x = wpt.lon - gt.lon;
+                     gtd.y = wpt.lat - gt.lat;
+                     ossimDpt mpd = wpt.metersPerDegree();
+                     ossimDpt gtm;
+                     gtm.x = gtd.x * mpd.x;
+                     gtm.y = gtd.y * mpd.y;
+                     cout << "itest_gtd_dd" << std::setw(5) << i << ":  " << gtd << "\n";
+                     cout << "itest_gtd_mtrs" << std::setw(3) << i << ":  " << gtm << "\n";                     
+                  }
+               }
+               else
+               {
+                  gt.makeNan();
+               }
             
                rtd = ipt - rtp;
-            
-               cout << "itest_wpt" << std::setw(5) << i << ":  " << wpt << "\n"
-                    << "itest_rtp" << std::setw(5) << i << ":  " << rtp << "\n"
-                    << "itest_rtd" << std::setw(5) << i << ":  " << rtd << "\n\n";
+               
+               cout << "itest_rtp" << std::setw(8) << i << ":  " << rtp << "\n"
+                    << "itest_rtd" << std::setw(8) << i << ":  " << rtd << "\n\n";
             }
             else
             {

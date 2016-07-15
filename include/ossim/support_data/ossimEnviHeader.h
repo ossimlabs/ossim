@@ -363,7 +363,7 @@ public:
     * (little_endian or big_endian)
     * byte_order: little_endian
     * 
-    * map_info: Unkown
+    * map_info: Unknown
     *
     * wavelength_units: 
     *

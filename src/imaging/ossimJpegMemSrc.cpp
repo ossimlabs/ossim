@@ -32,22 +32,13 @@
 /* #include <jinclude.h> */
 
 #include <ossim/imaging/ossimJpegMemSrc.h>
+#include <cstdio>  /* FILE* */
+#include <csetjmp> /** for jmp_buf */
+#include <jpeglib.h> /** for jpeg stuff */
 #include <jerror.h>
+
 extern "C"
 {
-void ossimJpegErrorExit (j_common_ptr cinfo)
-{
-   /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
-   ossimJpegErrorPtr myerr = (ossimJpegErrorPtr) cinfo->err;
-   
-   /* Always display the message. */
-   /* We could postpone this until after returning, if we chose. */
-   (*cinfo->err->output_message) (cinfo);
-   
-   /* Return control to the setjmp point */
-   longjmp(myerr->setjmp_buffer, 1);
-}
-
 
 /* Expanded data source object for memory input */
 
@@ -56,7 +47,6 @@ struct ossimJpegSourceMgr
    struct jpeg_source_mgr pub;	/* public fields */
    JOCTET eoi_buffer[2];	/* a place to put a dummy EOI */
 };
-
 typedef ossimJpegSourceMgr* ossimJpegSourceMgrPtr;
 
 
@@ -155,8 +145,8 @@ void term_source (j_decompress_ptr /* cinfo */)
 /*
  * Prepare for input from a memory buffer.
  */
-void ossimJpegMemorySrc (j_decompress_ptr cinfo,
-                         const JOCTET * buffer,
+void ossimJpegMemorySrc (jpeg_decompress_struct* cinfo,
+                         const ossim_uint8* buffer,
                          std::size_t bufsize)
 {
   ossimJpegSourceMgrPtr src;

@@ -1,4 +1,10 @@
 *~
 include/ossim/ossimConfig.h
 include/ossim/ossimVersion.h
+doc/html
+*CMakeFiles*
+*Makefile
+cmake_install*
+*.swp
+CMakeCache.txt
 

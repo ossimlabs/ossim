@@ -28,16 +28,21 @@ void RTTITypeinfo::add_subtype(const RTTITypeinfo* t)		//Adds t as last RTTIType
    */
 }
 
-void RTTITypeinfo::del_subtype(const RTTITypeinfo* t) 		//Searches for t in the subtypes list
-{	
+void RTTITypeinfo::del_subtype(const RTTITypeinfo* t) //Searches for t in the subtypes list
+{
+   if ( subtypes.size() > 0 )
+   {
+      SubtypesConstVector::iterator iter = std::find(subtypes.begin(), subtypes.end(), t);
+      if(iter != subtypes.end())
+      {
+         subtypes.erase(iter);
 
-  SubtypesConstVector::iterator iter = std::find(subtypes.begin(), subtypes.end(), t);
-  if(iter != subtypes.end())
-  {
-    subtypes.erase(iter);
-    ns = subtypes.size();
-  }
-								//of this and removes it, if found.
+         // "ns" is private member of RTTITypeinfo
+         ns = subtypes.size();
+      }
+   }
+
+ //of this and removes it, if found.
 
 //   int i; for(i=0;i<ns && subtypes[i]!=t;i++);
 //   if (i<ns)

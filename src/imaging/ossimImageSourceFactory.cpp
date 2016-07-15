@@ -91,6 +91,7 @@
 #include <ossim/imaging/ossimAtCorrGridRemapper.h>
 #include <ossim/imaging/ossimAtCorrRemapper.h>
 #include <ossim/imaging/ossimDilationFilter.h>
+#include <ossim/imaging/ossimErosionFilter.h>
 
 // Not sure if we want to keep this here
 #include <ossim/imaging/ossimAtbController.h>
@@ -439,6 +440,10 @@ ossimObject* ossimImageSourceFactory::createObject(const ossimString& name)const
    {
       return new ossimDilationFilter();
    }
+   else if(name == STATIC_TYPE_NAME(ossimErosionFilter))
+   {
+      return new ossimErosionFilter();
+   }
    return NULL;
 }
 
@@ -573,6 +578,7 @@ void ossimImageSourceFactory::getTypeNameList(std::vector<ossimString>& typeList
    typeList.push_back(STATIC_TYPE_NAME(ossimImageSourceFilter));
    typeList.push_back(STATIC_TYPE_NAME(ossimMemoryImageSource));
    typeList.push_back(STATIC_TYPE_NAME(ossimDilationFilter));
+   typeList.push_back(STATIC_TYPE_NAME(ossimErosionFilter));
 }
 
 // Hide from use...

@@ -13,6 +13,16 @@
 #include <iomanip>
 #include <ossim/base/ossimStdOutProgress.h>
 
+#if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
+   #include <io.h>
+   #define ISATTY _isatty
+   #define FILENO _fileno
+#else
+   #include <unistd.h>
+   #define ISATTY isatty
+   #define FILENO fileno
+#endif
+
 RTTI_DEF1(ossimStdOutProgress, "ossimStdOutProgress", ossimProcessListener);
 
 ossimStdOutProgress theStdOutProgress;
@@ -22,12 +32,20 @@ ossimStdOutProgress::ossimStdOutProgress(ossim_uint32 precision,
    :
       ossimProcessListener(),
       thePrecision(precision),
-      theFlushStreamFlag(flushStream)
+      theFlushStreamFlag(flushStream),
+      theRunningInConsoleFlag(true)
 {
+   // Determine if running in a terminal window. Progress reports are only written to console if
+   // running in one.
+   if (!ISATTY(FILENO(stdout)))
+      theRunningInConsoleFlag = false;
 }
 
 void ossimStdOutProgress::processProgressEvent(ossimProcessProgressEvent& event)
 {
+   if (!theRunningInConsoleFlag)
+      return;
+
    if (event.getOutputMessageFlag())
    {
       ossimString s;

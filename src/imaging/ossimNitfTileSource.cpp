@@ -40,11 +40,11 @@
 #include <ossim/support_data/ossimNitfStdidcTag.h>
 #include <ossim/support_data/ossimNitfVqCompressionHeader.h>
 
-#if defined(JPEG_DUAL_MODE_8_12)
-#include <ossim/imaging/ossimNitfTileSource_12.h>
-#endif
-
+#include <cstdlib> /* free, malloc, size_t (jpeglib.h) */
+#include <cstdio>  /* FILE* (jpeglib.h) */
+#include <csetjmp> /** for jmp_buf (jpeglib.h) */
 #include <jerror.h>
+#include <jpeglib.h>
 #include <fstream>
 #include <algorithm> /* for std::fill */
 
@@ -76,6 +76,14 @@ static ossimTrace traceDebug("ossimNitfTileSource:debug");
 // divide by 8 bits to get bytes gives you 6144 bytes
 static const ossim_uint32   OSSIM_NITF_VQ_BLOCKSIZE = 6144;
 
+/** @brief Extended error handler struct for jpeg code. */
+struct ossimJpegErrorMgr
+{
+   struct jpeg_error_mgr pub;	/* "public" fields */
+   jmp_buf setjmp_buffer;	/* for return to caller */
+};
+
+
 ossimNitfTileSource::ossimNitfTileSource()
    :
       ossimImageHandler(),
@@ -103,7 +111,6 @@ ossimNitfTileSource::ossimNitfTileSource()
       theCompressedBuf(0),
       theNitfBlockOffset(0),
       theNitfBlockSize(0),
-      m_isJpeg12Bit(false),
       m_jpegOffsetsDirty(false)
 {
    if (traceDebug())
@@ -287,15 +294,6 @@ bool ossimNitfTileSource::parseFile()
          theEntryList.push_back(i);
          theCacheEnabledFlag = true;
          theNitfImageHeader.push_back(hdr);
-
-         if (hdr->getBitsPerPixelPerBand() == 8)
-         {
-            m_isJpeg12Bit = false;
-         }
-         else if (hdr->getBitsPerPixelPerBand() == 12)
-         {
-           m_isJpeg12Bit = true;
-         }
       }
       else
       {
@@ -499,10 +497,6 @@ bool ossimNitfTileSource::canUncompress(const ossimNitfImageHeader* hdr) const
          if (hdr->getBitsPerPixelPerBand() == 8)
          {
             result = true;
-         }
-         else if (hdr->getBitsPerPixelPerBand() == 12)
-         {
-           result = true;
          }
          else
          {
@@ -798,21 +792,59 @@ bool ossimNitfTileSource::initializeBlockSize()
    }
    else
    {
-      bytesRowCol = (hdr->getNumberOfPixelsPerBlockHoriz()*
-                     hdr->getNumberOfPixelsPerBlockVert()*
-                     hdr->getBitsPerPixelPerBand()) / 8;
+      //---
+      // Busting int32 limit on single block data.
+      // Need a new read method to handle this. (drb - 09 May 2016)
+      //---
+      ossim_uint64 x     = hdr->getNumberOfPixelsPerBlockHoriz();
+      ossim_uint64 y     = hdr->getNumberOfPixelsPerBlockVert();
+      ossim_uint64 bpp   = hdr->getBitsPerPixelPerBand();
+      ossim_uint64 bytes = x * y * bpp / 8;
+      if ( bytes > 2147483647 )
+      {
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << "ossimNitfTileSource::initializeBlockSize WARNING!"
+               << "\nBusting 2 GIG block size: " << bytes
+               << std::endl;
+         }
+         return false;
+      }
+      bytesRowCol = (ossim_uint32)bytes;
    }
-   
-   bytesRowColCacheTile = (theCacheSize.x*
-                           theCacheSize.y*
-                           hdr->getBitsPerPixelPerBand())/8;
+
+   if ( !bytesRowColCacheTile )
+   {
+      //---
+      // Busting int32 limit on single block data.
+      // Need a new read method to handle this. (drb - 09 May 2016)
+      //---
+      ossim_uint64 x = theCacheSize.x;
+      ossim_uint64 y = theCacheSize.y;
+      ossim_uint64 bpp = hdr->getBitsPerPixelPerBand();
+      ossim_uint64 bytes = x * y * bpp / 8;
+      if ( bytes > 2147483647 )
+      {
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << "ossimNitfTileSource::initializeBlockSize WARNING!"
+               << "\nBusting 2 GIG cache bytes: " << bytes
+               << std::endl;
+         }
+         return false;
+      }
+      
+      bytesRowColCacheTile = bytes;
+   }
 
 #if 0
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "DEBUG:"
-         << "\ncompressionHeader:  " << compressionHeader
+         // << "\ncompressionHeader:  " << compressionHeader
          << "\ngetNumberOfPixelsPerBlockHoriz():  "
          << hdr->getNumberOfPixelsPerBlockHoriz()
          << "\ngetNumberOfPixelsPerBlockVert():  "
@@ -870,7 +902,7 @@ bool ossimNitfTileSource::initializeBlockSize()
       }
    }
 
-//#if 0
+#if 0
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
@@ -881,7 +913,7 @@ bool ossimNitfTileSource::initializeBlockSize()
          << "\nRead block size in bytes: " << theReadBlockSizeInBytes
          << endl;
    }
-//#endif
+#endif
 
    return true;
 }
@@ -2165,8 +2197,7 @@ ossim_uint32 ossimNitfTileSource::getBlockNumber(const ossimIpt& block_origin) c
       case READ_BSQ_BLOCK:
       case READ_JPEG_BLOCK:
       {
-         blockNumber = ((blockY*hdr->getNumberOfBlocksPerRow()) +
-                        blockX);
+         blockNumber = ((blockY*hdr->getNumberOfBlocksPerRow()) + blockX);
          break;
       }
       case READ_BIB:
@@ -3062,6 +3093,8 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
 
 bool ossimNitfTileSource::uncompressJpegBlock(ossim_uint32 x, ossim_uint32 y)
 {
+   cout << "ossimNitfTileSource::uncompressJpegBlock entered..." << endl;
+   
    ossim_uint32 blockNumber = getBlockNumber( ossimIpt(x,y) );
 
    if (traceDebug())
@@ -3114,15 +3147,6 @@ bool ossimNitfTileSource::uncompressJpegBlock(ossim_uint32 x, ossim_uint32 y)
          << "ossimNitfTileSource::uncompressJpegBlock Read Error!"
          << "\nReturning error..." << endl;
       return false;
-   }
-   
-   if (m_isJpeg12Bit)
-   {
-#if defined(JPEG_DUAL_MODE_8_12)
-      return ossimNitfTileSource_12::uncompressJpeg12Block(x,y,theCacheTile, 
-       getCurrentImageHeader(), theCacheSize, compressedBuf, theReadBlockSizeInBytes, 
-       theNumberOfOutputBands);
-#endif  
    }
 
    //---
@@ -3244,7 +3268,7 @@ bool ossimNitfTileSource::uncompressJpegBlock(ossim_uint32 x, ossim_uint32 y)
      jpeg_destroy_decompress(&cinfo);
      return false;
    }
-
+   
    // Get pointers to the cache tile buffers.
    std::vector<ossim_uint8*> destinationBuffer(theNumberOfInputBands);
    for (ossim_uint32 band = 0; band < theNumberOfInputBands; ++band)

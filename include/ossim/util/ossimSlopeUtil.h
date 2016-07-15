@@ -1,16 +1,14 @@
-//*******************************************************************
+//**************************************************************************************************
 //
-// License:  See top level LICENSE.txt file.
-// 
-// Author: Oscar Kramer
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-//*************************************************************************
-// $Id: ossimSlopeUtil.h 23443 2015-07-17 15:57:00Z okramer $
+//**************************************************************************************************
 
 #ifndef ossimSlopeUtil_HEADER
 #define ossimSlopeUtil_HEADER
 
-#include <ossim/util/ossimUtility.h>
+#include <ossim/util/ossimChipProcUtil.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimGpt.h>
@@ -20,7 +18,7 @@
  *  Class for computing the slope on each elevation post and generatinga corresponding slope image.
  *  The output scalar type is a normalized float unless unsigned 8-bit is selected via the options.
  */
-class OSSIMDLLEXPORT ossimSlopeUtil : public ossimUtility
+class OSSIMDLLEXPORT ossimSlopeUtil : public ossimChipProcUtil
 {
 public:
    ossimSlopeUtil();
@@ -36,6 +34,7 @@ public:
 
    /**
     * Initializes from command line arguments.
+    * @return FALSE if --help option requested or no params provided, so that derived classes can
     * @note Throws ossimException on error.
     */
    virtual bool initialize(ossimArgumentParser& ap);
@@ -44,38 +43,16 @@ public:
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
     * @note Throws ossimException on error.
     */
-   virtual bool initialize(const ossimKeywordlist& kwl);
-
-   /**
-    * Writes product to output file. Returns true if successful.
-    * @note Throws ossimException on error.
-    */
-   virtual bool execute();
-
-   /**
-    * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
-    */
-   virtual void clear();
-
-   /**
-    * Kills current (asynchronous) process. Defaults to do nothing.
-    */
-   virtual void abort() {}
+   virtual void initialize(const ossimKeywordlist& kwl);
 
    virtual ossimString getClassName() const { return "ossimSlopeUtil"; }
 
-protected:
-   bool initializeChain();
-   bool loadDemFile();
-   bool loadElevDb();
+   /** Used by ossimUtilityFactory */
+   static const char* DESCRIPTION;
 
-   ossimFilename m_demFile;
-   ossimFilename m_slopeFile;
-   ossimFilename m_lutFile;
-   ossimGpt m_centerGpt;
-   double m_aoiRadius; // meters
-   bool m_remapToByte;
-   ossimRefPtr<ossimImageSource> m_procChain;
+protected:
+   virtual void initProcessingChain();
+   bool m_recursiveCall;
 };
 
 #endif

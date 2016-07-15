@@ -22,29 +22,29 @@ RTTI_DEF1(ossimFftFilter, "ossimFftFilter", ossimImageSourceFilter);
 ossimFftFilter::ossimFftFilter(ossimObject* owner)
    :ossimImageSourceFilter(owner),
     theTile(0),
-    theDirectionType(ossimFftFilterDirectionType_FORWARD),
+    theDirectionType(FORWARD),
     theScalarRemapper(new ossimScalarRemapper())
 {
-   theScalarRemapper->setOutputScalarType(OSSIM_DOUBLE);
+   theScalarRemapper->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
 }
 
 ossimFftFilter::ossimFftFilter(ossimImageSource* inputSource)
    :ossimImageSourceFilter(inputSource),
     theTile(0),
-    theDirectionType(ossimFftFilterDirectionType_FORWARD),
+    theDirectionType(FORWARD),
     theScalarRemapper(new ossimScalarRemapper())
 {
-   theScalarRemapper->setOutputScalarType(OSSIM_DOUBLE);
+   theScalarRemapper->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
 }
 
 ossimFftFilter::ossimFftFilter(ossimObject* owner,
                                ossimImageSource* inputSource)
    :ossimImageSourceFilter(owner, inputSource),
     theTile(0),
-    theDirectionType(ossimFftFilterDirectionType_FORWARD),
+    theDirectionType(FORWARD),
     theScalarRemapper(new ossimScalarRemapper())
 {
-   theScalarRemapper->setOutputScalarType(OSSIM_DOUBLE);
+   theScalarRemapper->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
 }
 
 ossimFftFilter::~ossimFftFilter()
@@ -60,9 +60,7 @@ ossimRefPtr<ossimImageData> ossimFftFilter::getTile(const ossimIrect& rect,
                                                     ossim_uint32 resLevel)
 {
    if(!isSourceEnabled())
-   {
       return ossimImageSourceFilter::getTile(rect, resLevel);
-   }
    
    ossimIrect tempRequest = rect;
 
@@ -70,42 +68,31 @@ ossimRefPtr<ossimImageData> ossimFftFilter::getTile(const ossimIrect& rect,
    ossim_uint32 h = rect.height();
    
    if(w & 1)
-   {
       ++w;
-   }
    if(h&1)
-   {
       ++h;
-   }
 
-   tempRequest = ossimIrect(rect.ul().x,
-                            rect.ul().y,
-                            rect.ul().x + (w-1),
-                            rect.ul().y + (h-1));
+   tempRequest = ossimIrect(rect.ul().x,         rect.ul().y,
+                            rect.ul().x + (w-1), rect.ul().y + (h-1));
    
-   ossimRefPtr<ossimImageData> input;
-   input  = theScalarRemapper->getTile(tempRequest, resLevel);
-
-   if(!input.valid()) return input;
-   
-   if(!theTile.valid()) initialize();
-   if(!theTile.valid()) return theTile;
+   ossimRefPtr<ossimImageData> inTile = theScalarRemapper->getTile(tempRequest, resLevel);
+   if(!inTile.valid())
+      return inTile;
+   if(!theTile.valid())
+      initialize();
+   if(!theTile.valid() || !inTile->getBuf())
+      return theTile;
    
    theTile->setImageRectangle(rect);
    ossimRefPtr<ossimImageData> tempTile = theTile;
    
-   if(!input->getBuf())
-   {
-      return theTile;
-   }
-
    if(rect != tempRequest)
    {
       tempTile = (ossimImageData*)theTile->dup();
       tempTile->setImageRectangle(tempRequest);
    }
 
-   runFft((ossim_float64)0, input, tempTile);
+   runFft(inTile, tempTile);
           
    if(tempTile != theTile)
    {
@@ -113,7 +100,6 @@ ossimRefPtr<ossimImageData> ossimFftFilter::getTile(const ossimIrect& rect,
    }
    
    theTile->validate();
-
    return theTile;
 }
 
@@ -127,13 +113,13 @@ void ossimFftFilter::initialize()
    {
       theTile->initialize();
    }
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       theScalarRemapper->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
    }
    else
    {
-      theScalarRemapper->setOutputScalarType(OSSIM_DOUBLE);
+      theScalarRemapper->setOutputScalarType(OSSIM_NORMALIZED_DOUBLE);
    }
    theScalarRemapper->connectMyInputTo(0, getInput());
 }
@@ -145,9 +131,9 @@ ossimScalarType ossimFftFilter::getOutputScalarType() const
       return ossimImageSourceFilter::getOutputScalarType();
    }
    
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
-      return OSSIM_DOUBLE;
+      return OSSIM_NORMALIZED_DOUBLE;
    }
    
    return OSSIM_NORMALIZED_DOUBLE;
@@ -159,7 +145,7 @@ double ossimFftFilter::getNullPixelValue(ossim_uint32 band)const
    {
       return ossimImageSourceFilter::getNullPixelValue(band);
    }
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       return ossim::nan();
    }
@@ -174,11 +160,7 @@ double ossimFftFilter::getMinPixelValue(ossim_uint32 band)const
    {
       return ossimImageSourceFilter::getMinPixelValue(band);
    }
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
-   {
-      return OSSIM_DEFAULT_MIN_PIX_DOUBLE;
-   }
-   return OSSIM_DEFAULT_MIN_PIX_NORM_DOUBLE;
+      return 0.0;
 }
 
 double ossimFftFilter::getMaxPixelValue(ossim_uint32 band)const
@@ -187,11 +169,7 @@ double ossimFftFilter::getMaxPixelValue(ossim_uint32 band)const
    {
       return ossimImageSourceFilter::getMaxPixelValue(band);
    }
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
-   {
-      return OSSIM_DEFAULT_MAX_PIX_DOUBLE;
-   }
-   return OSSIM_DEFAULT_MAX_PIX_NORM_DOUBLE;
+   return 1.0;
 }
 
 ossim_uint32 ossimFftFilter::getNumberOfOutputBands() const
@@ -202,7 +180,7 @@ ossim_uint32 ossimFftFilter::getNumberOfOutputBands() const
    }
    ossim_uint32 bands = ossimImageSourceFilter::getNumberOfOutputBands();
    
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       bands *=2;
    }
@@ -216,17 +194,17 @@ ossim_uint32 ossimFftFilter::getNumberOfOutputBands() const
 
 void ossimFftFilter::setForward()
 {
-   theDirectionType = ossimFftFilterDirectionType_FORWARD;
+   theDirectionType = FORWARD;
 }
 
 void ossimFftFilter::setInverse()
 {
-   theDirectionType = ossimFftFilterDirectionType_INVERSE;
+   theDirectionType = INVERSE;
 }
 
 ossimString ossimFftFilter::getDirectionTypeAsString()const
 {
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       return "Forward";
    }
@@ -241,11 +219,11 @@ void ossimFftFilter::setDirectionType(const ossimString& directionType)
    
    if(tempDirectionType.contains("forward"))
    {
-      setDirectionType(ossimFftFilterDirectionType_FORWARD);
+      setDirectionType(FORWARD);
    }
    else
    {
-      setDirectionType(ossimFftFilterDirectionType_INVERSE);
+      setDirectionType(INVERSE);
    }
 }
 
@@ -302,12 +280,9 @@ void ossimFftFilter::getPropertyNames(std::vector<ossimString>& propertyNames)co
 }
 
 
-template <class T>
-void ossimFftFilter::runFft(T /* dummy */,
-                            ossimRefPtr<ossimImageData>& input,
+void ossimFftFilter::runFft(ossimRefPtr<ossimImageData>& input,
                             ossimRefPtr<ossimImageData>& output)
 {
-   // T*             inputBand  = 0;
 
    NEWMAT::Matrix* realIn = new NEWMAT::Matrix(input->getHeight(),
                                                input->getWidth());
@@ -322,15 +297,15 @@ void ossimFftFilter::runFft(T /* dummy */,
    ossim_uint32 h = input->getHeight();
    ossim_uint32 x = 0;
    ossim_uint32 y = 0;
-   if(theDirectionType == ossimFftFilterDirectionType_FORWARD)
+   if(theDirectionType == FORWARD)
    {
       ossim_uint32 bands = input->getNumberOfBands();
       for(bandIdx = 0; bandIdx < bands; ++bandIdx)
       {
          ossim_float64* bandReal = 0;
          ossim_float64* bandImg  = 0;
-         fillMatrixForward((T*)input->getBuf(bandIdx),
-                           (T)input->getNullPix(bandIdx),
+         fillMatrixForward((ossim_float64*)input->getBuf(bandIdx),
+                           (ossim_float64)input->getNullPix(bandIdx),
                            *realIn,
                            *imgIn);
          NEWMAT::FFT2(*realIn, *imgIn, *realOut, *imgOut);
@@ -361,8 +336,8 @@ void ossimFftFilter::runFft(T /* dummy */,
          if(input->getBuf(bandIdx)&&
             input->getBuf(bandIdx+1))
          {
-            fillMatrixInverse((T*)input->getBuf(bandIdx),
-                              (T*)input->getBuf(bandIdx+1),
+            fillMatrixInverse((double*)input->getBuf(bandIdx),
+                              (double*)input->getBuf(bandIdx+1),
                               *realIn,
                               *imgIn);
             NEWMAT::FFT2I(*realIn, *imgIn, *realOut, *imgOut);
@@ -371,14 +346,14 @@ void ossimFftFilter::runFft(T /* dummy */,
                for(x = 0; x < w; ++x)
                {
                   *bandReal = (ossim_float64)((*realOut)[y][x]);
-                  if(*bandReal > 1.0)
-                  {
-                     *bandReal = 1.0;
-               }
-                  if(*bandReal < 0.0)
-                  {
-                     *bandReal = 0.0;
-                  }
+//                  if(*bandReal > 1.0)
+//                  {
+//                     *bandReal = 1.0;
+//                  }
+//                  if(*bandReal < 0.0)
+//                  {
+//                     *bandReal = 0.0;
+//                  }
                   ++bandReal;
                }
             }

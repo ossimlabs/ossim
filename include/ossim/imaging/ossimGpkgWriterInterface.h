@@ -28,7 +28,11 @@ class ossimKeywordlist;
 class OSSIM_DLL ossimGpkgWriterInterface
 {
 public:
-
+  /**
+  * GP:  I had to add this or windows would not link with the latest 
+  * compiler
+  */
+    ossimGpkgWriterInterface(){}
    /**
     * @brief Opens file for writing, appending, merging without an input
     * connection. I.e. opening, then calling writeTile directly.

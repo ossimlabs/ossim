@@ -8,7 +8,7 @@
 //
 // Description: ENGRDA - Engineering Data tag class declaration.
 //
-// See document STDI-0002 (version 3), Appendix N for more info.
+// See document STDI-0002 (version 4), Appendix N for more info.
 // 
 //----------------------------------------------------------------------------
 // $Id
@@ -69,26 +69,95 @@ protected:
    class ossimEngDataElement
    {
    public:
-      /** ENGLBL - label */
-      std::string theEngLbl;
+      
+      /**
+       * FIELD: ENGLN
+       *
+       * TYPE: BCS-N
+       * 
+       * 2 byte field
+       *
+       * Engineering Data Label Length 01 - 99
+       */
+      char m_engLn[ENGLN_SIZE+1];
+      
+      /**
+       * FIELD: ENGLBL
+       *
+       * TYPE: BCS-A
+       * 
+       * Engineering Label - variable length
+       */
+      std::string m_engLbl;
 
-      /** ENGMTXC - column count */
-      ossim_uint16 theEngMtxC;
+      /**
+       * FIELD: ENGMTXC
+       *
+       * TYPE: BCS-N
+       * 
+       * 4 byte field
+       *
+       * Engineering Matrix Data Column Count 0001 - 9999
+       */
+      char m_engMtxC[ENGMTXC_SIZE+1];
 
-      /** ENGMTXR - row count */
-      ossim_uint16 theEngMtxR;
+      /**
+       * FIELD: ENGMTXR
+       *
+       * TYPE: BCS-N
+       * 
+       * 4 byte field
+       *
+       * Engineering Matrix Data Row Count 0001 - 9999
+       */
+      char m_engMtxR[ENGMTXR_SIZE+1];
 
-      /** ENGTYP - data type */
-      ossim_int8  theEngTyp;
+      /**
+       * FIELD: ENGTYP
+       *
+       * TYPE: BCS
+       * 
+       * 1 byte field
+       *
+       * Value Type of Engineering Data Element
+       */
+      char m_engTyp;
 
-      /** ENGDTS - data size in bytes */
-      ossim_uint8 theEngDts;
+      /**
+       * FIELD: ENGDTS
+       *
+       * TYPE: BCS-N
+       * 
+       * 1 byte field
+       *
+       * Engineering Data Element Size
+       */
+      char m_engDts;
 
-      /** ENGDATU - units */
-      std::string theEngDatU;
+      /**
+       * FIELD: ENGDATU
+       *
+       * TYPE: BCS-A
+       * 
+       * 2 byte field
+       *
+       * Engineering Data Units
+       */
+      char m_engDatU[ENGDATU_SIZE+1];
+
+      /**
+       * FIELD: ENGDATC
+       *
+       * TYPE: BCS-N
+       * 
+       * 8 byte field
+       *
+       * Engineering Data Count
+       */
+      char m_engDatC[ENGDATC_SIZE+1];
 
       /** ENGDATA - data */
-      std::vector<ossim_uint8> theEngDat;
+      std::vector<ossim_uint8> m_engDat;
    };
 
    /**
@@ -119,28 +188,26 @@ protected:
    /**
     * FIELD: RESRC
     *
-    * TYPE: R
+    * TYPE: BCS-A
     * 
     * 20 byte field
     *
     * Unique Source System Name.
     */
-   char theReSrc[RESRC_SIZE+1];
+   char m_reSrc[RESRC_SIZE+1];
    
    /**
     * FIELD: RECNT
     *
-    * TYPE: R
+    * TYPE: BCS-N
     * 
-    * 20 byte field
+    * 3 byte field
     *
-    * Unique Source System Name.
+    * Record Entry Count 001 - 999
     */
-   char theReCnt[RECNT_SIZE+1];
+   char m_reCnt[RECNT_SIZE+1];
 
-   std::vector<ossimEngDataElement> theData;
-
-   ossim_uint32 theTreLength;
+   std::vector<ossimEngDataElement> m_data;
    
 TYPE_DATA   
 };
