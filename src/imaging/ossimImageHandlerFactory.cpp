@@ -43,6 +43,8 @@
 #include <ossim/point_cloud/ossimPointCloudImageHandler.h>
 #endif
 
+#include <tiffio.h>
+
 static const ossimTrace traceDebug("ossimImageHandlerFactory:debug");
 
 RTTI_DEF1(ossimImageHandlerFactory, "ossimImageHandlerFactory", ossimImageHandlerFactoryBase);

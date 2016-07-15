@@ -98,6 +98,8 @@ public:
    virtual ossimRefPtr<ossimImageData> getChip(const ossimGrect& gnd_rect);
    ossimRefPtr<ossimImageData> getChip(const ossimDrect& map_bounding_rect, const ossimDpt& gsd);
 
+   const ossimFilename& getProductFilename() const { return m_productFilename; }
+
 protected:
    /** Intended to be called after derived class has picked off its own options from the parser, and
     * arguments remain (such as input and output filenames).
