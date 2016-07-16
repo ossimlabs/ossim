@@ -129,9 +129,7 @@ void OssimPolyArea2dPrivate::setGeometry( const ossimPolygon& exteriorRing, cons
 	      GEOSCoordSeq_setX( interiorCas, vertexIndex, (vertexPts[0].x) );
 	    }
 	  
-	  GEOSGeometry* hole_;
-	  hole = GEOSGeom_createLinearRing( interiorCas );
-	  holes[interiorRingIdx] = hole;
+	  holes[interiorRingIdx] = GEOSGeom_createLinearRing( interiorCas );
 	}
 
       GEOSGeometry* shell = GEOSGeom_createLinearRing( csExteriorRing );
