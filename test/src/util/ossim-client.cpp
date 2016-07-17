@@ -8,7 +8,7 @@
 #include <netdb.h>
 #include <iostream>
 #include <fstream>
-#include <ossim/base/jsoncpp.h>
+#include <ossim/base/ossimString.h>
 
 using namespace std;
 
@@ -29,7 +29,7 @@ void connectToServer(char* hostname, char* portname, int& svrsockfd)
    // Establish full server address including port:
    struct addrinfo hints;
    memset(&hints, 0, sizeof hints); // make sure the struct is empty
-   hints.ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
+   hints.ai_family = AF_INET;     // don't care IPv4 or IPv6
    hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
    hints.ai_canonname = hostname;     // fill in my IP for me
    struct addrinfo *res;
@@ -60,9 +60,8 @@ void connectToServer(char* hostname, char* portname, int& svrsockfd)
 void requestOp(int svrsockfd)
 {
    // Fetch message from console:
-   printf("Enter OSSIM command: ");
-   memset(buffer, 0, 256);
-   fgets(buffer,MAX_BUF_LEN,stdin);
+   cout<<"\nEnter OSSIM command: "<<ends;
+   cin.getline(buffer, MAX_BUF_LEN);
 
    // Write to the socket:
    int n = send(svrsockfd, buffer, strlen(buffer), 0);
@@ -81,39 +80,59 @@ void requestOp(int svrsockfd)
 
 void receiveText(int svrsockfd)
 {
-   // Read JSON response header from the socket. Can be either:
-   // { type : "text" } OR { type : "file", name : "<filename>" }
+   int n = MAX_BUF_LEN;
+   string result;
+   while (n == MAX_BUF_LEN)
+   {
+      memset(buffer, 0, MAX_BUF_LEN);
+      n = recv(svrsockfd, buffer, MAX_BUF_LEN, 0);
+      if (n < 0)
+         error("ERROR reading from socket");
+      result.append(buffer);
+   }
+
+   printf("Received text:\n-----------------\n%s\n-----------------\n",result.c_str());
+}
+
+
+void receiveError(int svrsockfd)
+{
    memset(buffer, 0, MAX_BUF_LEN);
    int n = recv(svrsockfd, buffer, MAX_BUF_LEN, 0);
    if (n < 0)
       error("ERROR reading from socket");
 
-   printf("Received text:\n-----------------\n%s\n-----------------\n",buffer);
+   printf("Received ERROR message:\n-----------------\n%s\n-----------------\n",buffer);
 }
 
 
-void receiveFile(int svrsockfd, const string& fname)
+void receiveFile(int svrsockfd)
 {
+   string fname;
+   cout << "Save product file to: " <<ends;
+   cin.getline(buffer, MAX_BUF_LEN);
+   fname = buffer;
+
    // Open file for writing:
    ofstream fout (fname.c_str());
    if (fout.fail())
       error("ERROR opening output file.");
 
-   // Read JSON response header from the socket. Can be either:
-   // { type : "text" } OR { type : "file", name : "<filename>" }
    memset(buffer, 0, MAX_BUF_LEN);
-   int n = 1;
-   while (n > 0)
+   int n = MAX_BUF_LEN;
+   int numBytes = 0;
+   while (n == MAX_BUF_LEN)
    {
       n = recv(svrsockfd, buffer, MAX_BUF_LEN, 0);
       if (n < 0)
          error("ERROR reading from socket");
       fout.write(buffer, n);
+      numBytes += n;
       if (fout.fail())
          error("ERROR on file write().");
    }
 
-   printf("\nReceived and wrote <%s> to disk.",fname.c_str());
+   cout<<"\nossim-client: Received and wrote "<<numBytes<<" bytes to file: <"<<fname<<">."<<endl;;
    fout.close();
 }
 
@@ -123,42 +142,55 @@ int main(int argc, char *argv[])
 
    if (argc < 3)
    {
-      fprintf(stderr,"Usage %s hostname port\n", argv[0]);
+      cout<<"Usage "<<argv[0]<<" hostname port\n"<<endl;;
       exit(0);
    }
 
    int svrsockfd = 0;
+   int n;
    connectToServer(argv[1], argv[2], svrsockfd);
 
-   requestOp(svrsockfd);
-
-   // Read JSON response header from the socket. Can be either:
-   // { type : "text" } OR { type : "file", name : "<filename>" }
-   memset(buffer, 0, MAX_BUF_LEN);
-   int n = recv(svrsockfd, buffer, MAX_BUF_LEN, 0);
-   if (n < 0)
-      error("ERROR reading from socket");
-
-   try
+   while (1)
    {
-      Json::Value json = buffer;
-      const string hdr_type = json["type"].asCString();
-      if (hdr_type.compare("text") == 0)
+      requestOp(svrsockfd);
+
+#if 1
+      // Read response header from the socket. Can be either:
+      // "response_type: text" OR "response_type: file"
+      memset(buffer, 0, MAX_BUF_LEN);
+      int n = recv(svrsockfd, buffer, 5, 0);
+      if (n < 0)
+         error("ERROR reading from socket");
+      ossimString response (string(buffer, n));
+
+      if (response.contains("TEXT"))
          receiveText(svrsockfd);
-      else if (hdr_type.compare("file") == 0)
-      {
-         const string fname = json["name"].asCString();
-         receiveFile(svrsockfd, fname);
-      }
+      else if (response.contains("FILE"))
+         receiveFile(svrsockfd);
+      else if (response.contains("ERROR"))
+         receiveError(svrsockfd);
+      else if (response.contains("ADIOS"))
+         break;
       else
-         error("Unknown type in response header.");
-   }
-   catch (exception& e)
-   {
-      cout << "ossim-client EXCEPTION: "<<e.what()<<endl;
+      {
+         error("Unknown type in response header");
+         break;
+      }
+#else
+      n = MAX_BUF_LEN;
+      while (n == MAX_BUF_LEN)
+      {
+         memset(buffer, 0, MAX_BUF_LEN);
+         n = recv(svrsockfd, buffer, MAX_BUF_LEN, 0);
+         if (n < 0)
+            error("ERROR reading from socket");
+         printf("%s\n",buffer);
+      }
+#endif
    }
 
-   printf("%s\n",buffer);
+   cout << "\nossim-client: Closing connection to OSSIM server."<<endl;
    close(svrsockfd);
+
    return 0;
 }
