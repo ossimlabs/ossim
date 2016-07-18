@@ -224,29 +224,54 @@ bool ossimDaemon::sendFile(int clientfd, const ossimFilename& fname)
    ostringstream xmsg;
 
    // Open the server-side image file:
-   ifstream svrfile (fname.chars());
+   ifstream svrfile (fname.chars(), ios::binary|ios::in);
    if (svrfile.fail())
    {
       xmsg<<"ossimd.sendFile() -- Error opening file <"<<fname<<">."<<endl;
-      throw (ossimException(xmsg.str()));
+      error(xmsg.str().c_str());
    }
+
+   // Determine file size:
+   std::streampos fsize = svrfile.tellg();
+   svrfile.seekg( 0, std::ios::end );
+   fsize = svrfile.tellg() -fsize;
+   svrfile.seekg( 0, std::ios::beg );
+
+   // Send file size to the client:
+   char response[19];
+   sprintf(response, "SIZE: %012d", (int) fsize);
+   writeSocket(clientfd, response, strlen(response));
+   cout << "Sent to client "<< strlen(response) <<" bytes: \""<<response<<"\""<<endl;
+
+   // Client should acknowledge with "ok_to_send":
+   memset(buffer, 0, MAX_BUF_LEN);
+   int n = recv(clientfd, buffer, 11, 0);
+   if (n < 0)
+      error("ossimd: EOF encountered reading from port");
+   if (strcmp(buffer, "ok_to_send"))
+      return false;
+   cout << "Send acknowledged by client."<<endl;
 
    memset(buffer, 0, MAX_BUF_LEN);
 
    // Send image in MAX_BUF_LEN byte packets
+   n = 0;
+   int r = 0;
    while (!svrfile.eof())
    {
       // Read server-side file block:
       svrfile.read(buffer, MAX_BUF_LEN);
-      if (svrfile.fail())
+      if (svrfile.bad())
          error("ossimd.sendFile() -- Error during file read()");
 
-      int n = svrfile.gcount();
+      n = svrfile.gcount();
+      r += n;
 
       // transmit the block to the client:
       writeSocket(clientfd, buffer, n);
    }
 
+   cout << "Send complete."<<endl;
    svrfile.close();
    return true;
 }
@@ -256,9 +281,19 @@ bool ossimDaemon::runCommand(int client_fd, ossimString& command)
    ostringstream xmsg;
    bool status_ok = false;
    static const char* msg = "\nossimd.runCommand(): ";
-   memset(buffer, 0, MAX_BUF_LEN);
+
+   // Intercept test mode:
+   if (command.contains("sendfile"))
+   {
+      ossimFilename fname = command.after("sendfile").trim();
+      const char* response = "FILE ";
+      writeSocket(client_fd, response, strlen(response));
+      sendFile(client_fd, fname);
+      return true;
+   }
 
    // Redirect stdout:
+   memset(buffer, 0, MAX_BUF_LEN);
    int pipeDesc[2] = {0,0};
    int savedStdout = dup( fileno(stdout) );
    if( pipe( pipeDesc ) == -1 )

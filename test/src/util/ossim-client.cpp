@@ -108,6 +108,16 @@ void receiveError(int svrsockfd)
 
 void receiveFile(int svrsockfd)
 {
+   cout << "Server requesting file send. " <<endl;
+
+   // Fetch the file size in bytes as the next message "SIZE: GGGMMMKKKBBB", (18 bytes)
+   int n = recv(svrsockfd, buffer, 18, 0);
+   buffer[18] = '\0';
+   cout << "Server: \""<<buffer<<"\"" <<endl;
+   ossimString fileSizeStr (&(buffer[6]));
+   int filesize = fileSizeStr.toInt();
+   cout << "File size = " <<filesize<<endl;
+
    string fname;
    cout << "Save product file to: " <<ends;
    cin.getline(buffer, MAX_BUF_LEN);
@@ -118,18 +128,23 @@ void receiveFile(int svrsockfd)
    if (fout.fail())
       error("ERROR opening output file.");
 
+   // Acknowledge send request to server:
+   int r = send(svrsockfd, "ok_to_send", 11, 0);
+   if (r < 0)
+      error("ERROR writing to socket");
+
    memset(buffer, 0, MAX_BUF_LEN);
-   int n = MAX_BUF_LEN;
+   n = MAX_BUF_LEN;
    int numBytes = 0;
-   while (n == MAX_BUF_LEN)
+   while ((n == MAX_BUF_LEN) && (numBytes < filesize))
    {
       n = recv(svrsockfd, buffer, MAX_BUF_LEN, 0);
       if (n < 0)
          error("ERROR reading from socket");
       fout.write(buffer, n);
-      numBytes += n;
       if (fout.fail())
          error("ERROR on file write().");
+      numBytes += n;
    }
 
    cout<<"\nossim-client: Received and wrote "<<numBytes<<" bytes to file: <"<<fname<<">."<<endl;;
