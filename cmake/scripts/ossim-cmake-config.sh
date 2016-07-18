@@ -181,6 +181,22 @@ if [ -z $BUILD_WEB_PLUGIN ]; then
   BUILD_WEB_PLUGIN=OFF
 fi
 
+if [ "${BUILD_OSSIM_GUI}" == "ON" ]; then
+export QT_LIB_DIR=/usr/lib64
+
+  if [ -z $Qt5Core_DIR ]; then
+    export Qt5Core_DIR=${QT_LIB_DIR}/cmake/Qt5Core
+  fi
+
+  if [ -z $Qt5Widgets_DIR ]; then
+    export Qt5Widgets_DIR=${QT_LIB_DIR}/cmake/Qt5/Qt5Widgets
+  fi
+
+  if [ -z $Qt5OpenGL_DIR ]; then
+    export Qt5OpenGL_DIR=${QT_LIB_DIR}/cmake/Qt5OpenGL
+  fi
+fi
+
 echo "Generating Makefiles in" $OSSIM_BUILD_DIR
 
 # CMAKE command 
