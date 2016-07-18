@@ -22,8 +22,7 @@
 #include <ossim/base/ossimReferenced.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimImageHandler.h>
-#include <ossim/util/ossimUtility.h>
-
+#include <ossim/util/ossimTool.h>
 #include <ostream>
 
 class ossimGpt;
@@ -36,7 +35,7 @@ class ossimGpt;
  * loaded plugins, and just general stuff like height for point, conversions
  * and so on that are easily obtained through the library.
  */
-class OSSIM_DLL ossimInfo : public ossimUtility
+class OSSIM_DLL ossimInfo : public ossimTool
 {
 public:
    /** Used by ossimUtilityFactory */

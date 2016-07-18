@@ -17,12 +17,12 @@ using namespace std;
 #include <ossim/base/ossimTimer.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimString.h>
-#include <ossim/util/ossimUtilityRegistry.h>
+#include <ossim/util/ossimToolRegistry.h>
 #include <ossim/base/ossimException.h>
 
 void showAvailableCommands()
 {
-   ossimUtilityFactoryBase* factory = ossimUtilityRegistry::instance();
+   ossimToolFactoryBase* factory = ossimToolRegistry::instance();
    map<string, string> capabilities;
    factory->getCapabilities(capabilities);
    map<string, string>::iterator iter = capabilities.begin();
@@ -49,8 +49,8 @@ bool runCommand(ossimArgumentParser& ap)
    bool status_ok = true;
    ossimString command = ap[1];
    ap.remove(1);
-   ossimUtilityFactoryBase* factory = ossimUtilityRegistry::instance();
-   ossimRefPtr<ossimUtility> utility = factory->createUtility(command);
+   ossimToolFactoryBase* factory = ossimToolRegistry::instance();
+   ossimRefPtr<ossimTool> utility = factory->createUtility(command);
 
    if (!utility.valid())
    {

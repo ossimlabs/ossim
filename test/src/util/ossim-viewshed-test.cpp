@@ -16,8 +16,7 @@
 #include <ossim/base/ossimTimer.h>
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/init/ossimInit.h>
-#include <ossim/util/ossimViewshedUtil.h>
-
+#include <ossim/util/ossimViewshedTool.h>
 #include <iostream>
 using namespace std;
 
@@ -46,7 +45,7 @@ int main(int argc, char* argv[])
       kwl.add("height_of_eye", "5");
       kwl.add("lut_file", "/data/TEST/HLZ/N48W114/vs.lut");
 
-      ossimRefPtr<ossimChipProcUtil> viewshed = new ossimViewshedUtil;
+      ossimRefPtr<ossimChipProcTool> viewshed = new ossimViewshedTool;
       viewshed->initialize(kwl);
 
       ossimDrect map_bbox (-12684715.289296463, 6168162.4345005825, -12649344.0544575, 6205998.763501747);
