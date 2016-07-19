@@ -13,8 +13,10 @@
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <iostream>
+
 /*!
- *  Base class for all OSSIM utility applications.
+ *  Base class for all OSSIM tool applications. These are utilities providing high-level
+ *  functionality via the OSSIM library.
  */
 class OSSIM_DLL ossimTool : public ossimObject
 {
