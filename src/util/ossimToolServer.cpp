@@ -5,6 +5,7 @@
 //
 //**************************************************************************************************
 
+#include <ossim/util/ossimToolServer.h>
 #include <iostream>
 #include <sstream>
 #include <map>
@@ -31,44 +32,26 @@
 #include <ossim/util/ossimChipProcTool.h>
 #include <ossim/util/ossimToolRegistry.h>
 
+
 using namespace std;
 
 #define OWARN ossimNotify(ossimNotifyLevel_WARN)
 #define OINFO ossimNotify(ossimNotifyLevel_INFO)
 #define MAX_BUF_LEN 4096
+#define FORK_PROCESS false
 
-class ossimDaemon
-{
-public:
-   ossimDaemon();
-   ~ossimDaemon();
-   void startListening(const char* portid);
-
-private:
-   void initSocket(const char* portid);
-   bool processOssimRequest(int client_fd, struct sockaddr_in& cli_addr);
-   bool runCommand(int client_fd, ossimString& command);
-   void writeSocket(int clientfd, const char* buf, int bufsize);
-   bool sendFile(int clientfd, const ossimFilename& fname);
-   void error(const char* msg);
-
-   static void sigchld_handler(int s);
-
-   int svrsockfd;
-   char buffer[MAX_BUF_LEN];
-};
-
-ossimDaemon::ossimDaemon()
-:  svrsockfd(-1)
+ossimToolServer::ossimToolServer()
+:  m_svrsockfd(-1),
+   m_buffer(new char[MAX_BUF_LEN])
 {}
 
-ossimDaemon::~ossimDaemon()
+ossimToolServer::~ossimToolServer()
 {
-   close(svrsockfd);
+   close(m_svrsockfd);
 }
 
 
-void ossimDaemon::startListening(const char* portid)
+void ossimToolServer::startListening(const char* portid)
 {
    initSocket(portid);
 
@@ -83,7 +66,7 @@ void ossimDaemon::startListening(const char* portid)
       // Message received at server socket, establish connection to client's socket:
       struct sockaddr_in cli_addr;
       clilen = sizeof(cli_addr);
-      int clisockfd = accept(svrsockfd, (struct sockaddr *) &cli_addr, &clilen);
+      int clisockfd = accept(m_svrsockfd, (struct sockaddr *) &cli_addr, &clilen);
       if (clisockfd < 0)
          error("Error accepting message on port.");
 
@@ -97,34 +80,43 @@ void ossimDaemon::startListening(const char* portid)
 
 #if 1
       // Fork process to handle client request:
-      //if (!fork())
+      if (FORK_PROCESS)
       {
-         // this is the child process
-         //close(svrsockfd); // child doesn't need the listener
+         if (!fork())
+         {
+            // this is the child process
+            close(m_svrsockfd); // child doesn't need the listener
 
-         // Receive request from client:
+            // Receive request from client:
+            bool connected = true;
+            while (connected)
+               connected = processOssimRequest(clisockfd, cli_addr);
+
+            exit(0); // exit forked process
+         }
+      }
+      else
+      {
          bool connected = true;
          while (connected)
             connected = processOssimRequest(clisockfd, cli_addr);
-
-         //exit(0); // exit forked process
       }
 #else
       int n=0;
       while (1)
       {
-         // Clear the input buffer and read the message sent:
-         memset(buffer, 0, 256);
-         n = recv(clisockfd,buffer,256,0);
+         // Clear the input m_buffer and read the message sent:
+         memset(m_buffer, 0, 256);
+         n = recv(clisockfd,m_buffer,256,0);
          if (n < 0)
          {
             printf("recv returned -1 from port %d.\n", clisockfd);
          }
 
          // Send acknowledgement back to client:
-         printf("Received: %s\n",buffer);
+         printf("Received: %s\n",m_buffer);
          string msg ="server received message: ";
-         msg.append(buffer, strlen(buffer));
+         msg.append(m_buffer, strlen(m_buffer));
          n = send(clisockfd, msg.c_str(), msg.size(), 0);
          if (n < 0)
             error("ERROR writing to socket");
@@ -135,7 +127,7 @@ void ossimDaemon::startListening(const char* portid)
    }
 }
 
-void ossimDaemon::initSocket(const char* portid)
+void ossimToolServer::initSocket(const char* portid)
 {
    // Establish full server address including port:
    struct addrinfo hints;
@@ -153,21 +145,21 @@ void ossimDaemon::initSocket(const char* portid)
    struct addrinfo *server_info = res;
    while (server_info)
    {
-      svrsockfd = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
-      if (svrsockfd >= 0)
+      m_svrsockfd = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
+      if (m_svrsockfd >= 0)
          break;
       server_info = server_info->ai_next;
    }
-   if ((svrsockfd < 0) || (server_info == NULL))
+   if ((m_svrsockfd < 0) || (server_info == NULL))
       error("Error opening socket");
 
    // lose the pesky "Address already in use" error message when requently restarting the daemon:
    int yes=1;
-   if (setsockopt(svrsockfd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes) == -1)
+   if (setsockopt(m_svrsockfd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes) == -1)
       error("Error on setsockopt() call");
 
    // Bind the server's socket to the specified port number:
-   if (bind(svrsockfd, server_info->ai_addr, server_info->ai_addrlen) < 0)
+   if (bind(m_svrsockfd, server_info->ai_addr, server_info->ai_addrlen) < 0)
       error("Error on binding to socket:port.");
 
    struct sockaddr_in *server_addr = (sockaddr_in*) &(server_info->ai_addr);
@@ -176,19 +168,19 @@ void ossimDaemon::initSocket(const char* portid)
    freeaddrinfo(server_info);
 
    // Start listening:
-   if (listen(svrsockfd, 5) == -1)
+   if (listen(m_svrsockfd, 5) == -1)
       error("Error on listen()");
 
    // Reap all dead processes:
    struct sigaction sa;
-   sa.sa_handler = ossimDaemon::sigchld_handler;
+   sa.sa_handler = ossimToolServer::sigchld_handler;
    sigemptyset(&sa.sa_mask);
    sa.sa_flags = SA_RESTART;
    if (sigaction(SIGCHLD, &sa, NULL) == -1)
       error("Error on sigaction()");
 }
 
-void ossimDaemon::sigchld_handler(int s)
+void ossimToolServer::sigchld_handler(int s)
 {
    // waitpid() might overwrite errno, so we save and restore it:
    int saved_errno = errno;
@@ -196,13 +188,13 @@ void ossimDaemon::sigchld_handler(int s)
    errno = saved_errno;
 }
 
-void ossimDaemon::error(const char* msg)
+void ossimToolServer::error(const char* msg)
 {
    perror(msg);
    exit (1);
 }
 
-void ossimDaemon::writeSocket(int clientfd, const char* buf, int bufsize)
+void ossimToolServer::writeSocket(int clientfd, const char* buf, int bufsize)
 {
    int remaining = bufsize;
    int n;
@@ -219,7 +211,7 @@ void ossimDaemon::writeSocket(int clientfd, const char* buf, int bufsize)
    }
 }
 
-bool ossimDaemon::sendFile(int clientfd, const ossimFilename& fname)
+bool ossimToolServer::sendFile(int clientfd, const ossimFilename& fname)
 {
    ostringstream xmsg;
 
@@ -238,21 +230,28 @@ bool ossimDaemon::sendFile(int clientfd, const ossimFilename& fname)
    svrfile.seekg( 0, std::ios::beg );
 
    // Send file size to the client:
-   char response[19];
-   sprintf(response, "SIZE: %012d", (int) fsize);
-   writeSocket(clientfd, response, strlen(response));
-   cout << "Sent to client "<< strlen(response) <<" bytes: \""<<response<<"\""<<endl;
+   char size_response[19];
+   sprintf(size_response, "SIZE: %012d", (int) fsize);
+   writeSocket(clientfd, size_response, strlen(size_response));
+   cout << "Sent to client "<< strlen(size_response) <<" bytes: \""<<size_response<<"\""<<endl;
+
+   // Send file name to the client:
+   char name_response[256];
+   memset(name_response, 0, sizeof(name_response));
+   sprintf(name_response, "NAME: %s", fname.file().chars());
+   writeSocket(clientfd, name_response, sizeof(name_response));
+   cout << "Sent to client: \""<<name_response<<"\""<<endl;
 
    // Client should acknowledge with "ok_to_send":
-   memset(buffer, 0, MAX_BUF_LEN);
-   int n = recv(clientfd, buffer, 11, 0);
+   memset(m_buffer, 0, MAX_BUF_LEN);
+   int n = recv(clientfd, m_buffer, 11, 0);
    if (n < 0)
       error("ossimd: EOF encountered reading from port");
-   if (strcmp(buffer, "ok_to_send"))
+   if (strcmp(m_buffer, "ok_to_send"))
       return false;
    cout << "Send acknowledged by client."<<endl;
 
-   memset(buffer, 0, MAX_BUF_LEN);
+   memset(m_buffer, 0, MAX_BUF_LEN);
 
    // Send image in MAX_BUF_LEN byte packets
    n = 0;
@@ -260,7 +259,7 @@ bool ossimDaemon::sendFile(int clientfd, const ossimFilename& fname)
    while (!svrfile.eof())
    {
       // Read server-side file block:
-      svrfile.read(buffer, MAX_BUF_LEN);
+      svrfile.read(m_buffer, MAX_BUF_LEN);
       if (svrfile.bad())
          error("ossimd.sendFile() -- Error during file read()");
 
@@ -268,7 +267,7 @@ bool ossimDaemon::sendFile(int clientfd, const ossimFilename& fname)
       r += n;
 
       // transmit the block to the client:
-      writeSocket(clientfd, buffer, n);
+      writeSocket(clientfd, m_buffer, n);
    }
 
    cout << "Send complete."<<endl;
@@ -276,14 +275,14 @@ bool ossimDaemon::sendFile(int clientfd, const ossimFilename& fname)
    return true;
 }
 
-bool ossimDaemon::runCommand(int client_fd, ossimString& command)
+bool ossimToolServer::runCommand(int client_fd, ossimString& command)
 {
    ostringstream xmsg;
    bool status_ok = false;
    static const char* msg = "\nossimd.runCommand(): ";
 
    // Intercept test mode:
-   if (command.contains("sendfile"))
+   if (command == "sendfile")
    {
       ossimFilename fname = command.after("sendfile").trim();
       const char* response = "FILE ";
@@ -293,7 +292,7 @@ bool ossimDaemon::runCommand(int client_fd, ossimString& command)
    }
 
    // Redirect stdout:
-   memset(buffer, 0, MAX_BUF_LEN);
+   memset(m_buffer, 0, MAX_BUF_LEN);
    int pipeDesc[2] = {0,0};
    int savedStdout = dup( fileno(stdout) );
    if( pipe( pipeDesc ) == -1 )
@@ -302,48 +301,64 @@ bool ossimDaemon::runCommand(int client_fd, ossimString& command)
    dup2( pipeDesc[1], fileno(stdout) );
    fcntl( pipeDesc[0], F_SETFL, O_NONBLOCK );
 
-   // Fetch OSSIM utility for requested operation:
-   ossimArgumentParser ap (command);
-   ossimString util_name = ap[0];
    ossimToolFactoryBase* factory = ossimToolRegistry::instance();
-   ossimRefPtr<ossimTool> utility = factory->createUtility(util_name);
+   ossimRefPtr<ossimTool> utility = 0;
 
-   try
+   // Intercept help request:
+   if (command == "help")
    {
-      // Perform OSSIM command execution:
-      if (!utility.valid())
-         cout<<msg<<"Did not understand command <"<<util_name<<">"<<endl;
-      else if (!utility->initialize(ap))
-         cout<<msg<<"Could not execute command sequence <"<<command<<">."<<endl;
-      else if (!utility->execute())
-         cout<<msg<<"Error encountered executing\n    <"<<command <<">\nCheck options."<<endl;
-      else
-         status_ok = true;
+      map<string, string> capabilities;
+      factory->getCapabilities(capabilities);
+      map<string, string>::iterator iter = capabilities.begin();
+      cout<<"\nAvailable commands:\n"<<endl;
+      for (;iter != capabilities.end(); ++iter)
+         cout<<"  "<<iter->first<<" -- "<<iter->second<<endl;
+      cout<<"\nUse option \"--help\" with above commands to get detailed tool command."<<endl;
+      status_ok = true;
    }
-   catch (ossimException& x)
+   else
    {
-      cout << msg << "Caught OSSIM exception: "<<x.what()<<endl;
-   }
-   catch (exception& x)
-   {
-      cout << msg << "Caught unknown exception: "<<x.what()<<endl;
+      // Fetch OSSIM utility for requested operation:
+      ossimArgumentParser ap (command);
+      ossimString util_name = ap[0];
+      ossimRefPtr<ossimTool> utility = factory->createUtility(util_name);
+
+      try
+      {
+         // Perform OSSIM command execution:
+         if (!utility.valid())
+            cout<<msg<<"Did not understand command <"<<util_name<<">"<<endl;
+         else if (!utility->initialize(ap))
+            cout<<msg<<"Could not execute command sequence <"<<command<<">."<<endl;
+         else if (!utility->execute())
+            cout<<msg<<"Error encountered executing\n    <"<<command <<">\nCheck options."<<endl;
+         else
+            status_ok = true;
+      }
+      catch (ossimException& x)
+      {
+         cout << msg << "Caught OSSIM exception: "<<x.what()<<endl;
+      }
+      catch (exception& x)
+      {
+         cout << msg << "Caught unknown exception: "<<x.what()<<endl;
+      }
    }
 
-   // Stop redirecting stdout:
+   // Stop redirecting stdout and copy the output stream buffer to local memory:
    dup2( savedStdout, fileno(stdout) );
-
    int n = MAX_BUF_LEN;
    string full_output;
    while (n == MAX_BUF_LEN)
    {
-       n = read(pipeDesc[0], buffer, MAX_BUF_LEN);
+       n = read(pipeDesc[0], m_buffer, MAX_BUF_LEN);
        if (n > 0)
-          full_output.append(buffer, n);
+          full_output.append(m_buffer, n);
    }
 
    if (status_ok)
    {
-      if (utility->isChipProcessor())
+      if (utility.valid() && utility->isChipProcessor())
       {
          const char* response = "FILE ";
          writeSocket(client_fd, response, strlen(response));
@@ -371,7 +386,7 @@ bool ossimDaemon::runCommand(int client_fd, ossimString& command)
    return status_ok;
 }
 
-bool ossimDaemon::processOssimRequest(int client_fd, struct sockaddr_in& cli_addr)
+bool ossimToolServer::processOssimRequest(int client_fd, struct sockaddr_in& cli_addr)
 {
    char dst[INET6_ADDRSTRLEN];
 
@@ -379,9 +394,9 @@ bool ossimDaemon::processOssimRequest(int client_fd, struct sockaddr_in& cli_add
    cout << "\nprocessOssimRequest() -- Process ID: "<<getpid()<<endl;
    cout <<   "                  Parent process ID: "<<getppid()<<endl;
 
-   // Clear the input buffer and read the message sent:
-   memset(buffer, 0, MAX_BUF_LEN);
-   int n = recv(client_fd, buffer, MAX_BUF_LEN, 0);
+   // Clear the input m_buffer and read the message sent:
+   memset(m_buffer, 0, MAX_BUF_LEN);
+   int n = recv(client_fd, m_buffer, MAX_BUF_LEN, 0);
    if (n < 0)
       error("ossimd: EOF encountered reading from port");
 
@@ -392,39 +407,21 @@ bool ossimDaemon::processOssimRequest(int client_fd, struct sockaddr_in& cli_add
       void* addr = &(cli_addr.sin_addr);
       if (!inet_ntop(AF_INET, addr, dst, INET6_ADDRSTRLEN))
          error("ossimd: Error returned from inet_ntop(). ");
-      cout << "\nossimd received message from: "<<dst<<"\n---------------\n"<<buffer
+      cout << "\nossimd received message from: "<<dst<<"\n---------------\n"<<m_buffer
             <<"\n---------------\n"<< endl;
 
       // process request:
-      ossimString command (std::string(buffer, strnlen(buffer, sizeof(buffer))));
+      ossimString command (m_buffer);
       command.trim();
 
       if (command == "goodbye")
       {
-         const char* response = "ADIOS";
-         writeSocket(client_fd, response, strlen(response));
-         return false;
+         close(client_fd);
+         return true;
       }
 
       runCommand(client_fd, command);
       return true;
    }
    return false;
-}
-
-int main(int argc, char *argv[])
-{
-
-   // Initialize ossim stuff, factories, plugin, etc.
-   ossimInit::instance()->initialize(argc, argv);
-
-   const char* DEFAULT_PORT = "ossimd";
-   const char* portid = DEFAULT_PORT;
-   if (argc > 1)
-      portid = argv[1];
-
-   ossimDaemon od;
-   od.startListening(portid);
-
-   return 0;
 }
