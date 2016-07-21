@@ -128,6 +128,7 @@ elevation_manager.elevation_source3.geoid.type: geoid1996
 // One Kilometer post spacing, can memory map, default enabled, always last:
 elevation_manager.elevation_source4.connection_string: $(OSSIM_DATA)/elevation/dted/level0
 elevation_manager.elevation_source4.enabled: true
+elevation_manager.elevation_source2.extension: .dt0
 elevation_manager.elevation_source4.type: dted_directory
 elevation_manager.elevation_source4.min_open_cells: 25
 elevation_manager.elevation_source4.max_open_cells: 50
