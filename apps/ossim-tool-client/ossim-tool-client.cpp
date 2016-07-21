@@ -41,21 +41,22 @@ int main(int argc, char *argv[])
       cout<<"\nEnter OSSIM command: "<<ends;
       cin.getline(buffer, MAX_BUF_LEN);
       command = buffer;
-      if (command.empty() || (command == "q") || (command == "quit"))
-      {
-         otc.disconnect();
+      if (command.empty())
+         continue;
+
+      if ((command == "q") || (command == "quit"))
          break;
-      }
 
       // Send command to the OSSIM tool server:
-      if (otc.execute(command.chars()))
-         cout << "\nossim-client: Execute call successful."<<endl;
-      else
+      if (!otc.execute(command.chars()))
+      {
          cout << "\nossim-client: Error encountred on execute."<<endl;
+         break;
+      }
    }
 
    cout << "\nossim-client: Closing connection to OSSIM server."<<endl;
-   close(svrsockfd);
+   otc.disconnect();
 
    return 0;
 }

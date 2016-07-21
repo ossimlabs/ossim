@@ -397,7 +397,8 @@ bool ossimShorelineTool::execute()
    m_procChain->initialize();
    m_productFilename = m_maskFilename;
    status = ossimChipProcTool::execute(); // generates mask
-   m_productFilename = m_vectorFilename;
+   if (m_productFilename.ext() != "JSON")
+      m_productFilename = m_vectorFilename.setExtension("json");
 
    // Convey possible redirection of console out:
    potrace->setOutputStream(m_consoleStream);
@@ -405,7 +406,7 @@ bool ossimShorelineTool::execute()
    ossimKeywordlist potrace_kwl;
    potrace_kwl.add("image_file0", m_threshFilename.chars());
    potrace_kwl.add("image_file1", m_maskFilename.chars());
-   potrace_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_vectorFilename.chars());
+   potrace_kwl.add(ossimKeywordNames::OUTPUT_FILE_KW, m_productFilename.chars());
    potrace_kwl.add("mode", "linestring");
    potrace_kwl.add("alphamax", "1.0");
    potrace_kwl.add("turdsize", "4");
@@ -417,9 +418,9 @@ bool ossimShorelineTool::execute()
       status =  addPropsToJSON();
 
    if (status)
-      ossimNotify(ossimNotifyLevel_INFO)<<"Wrote vector product to <"<<m_vectorFilename<<">"<<endl;
+      ossimNotify(ossimNotifyLevel_INFO)<<"Wrote vector product to <"<<m_productFilename<<">"<<endl;
    else
-      ossimNotify(ossimNotifyLevel_WARN)<<"Error encountered writing vector product to <"<<m_vectorFilename<<">"<<endl;
+      ossimNotify(ossimNotifyLevel_WARN)<<"Error encountered writing vector product to <"<<m_productFilename<<">"<<endl;
 
    return status;
 }
