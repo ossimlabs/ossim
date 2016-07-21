@@ -12,13 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <fcntl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/tcp.h>
 #include <errno.h>
-#include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <ossim/init/ossimInit.h>
@@ -32,12 +27,19 @@
 #include <ossim/util/ossimToolRegistry.h>
 
 #ifdef _MSC_VER
+#include <winsock2.h>
 #include <process.h> /* for getpid() and the exec..() family */
 #include <io.h>
 #define dup2 _dup2
+#define close closesocket
 #define pipe(phandles)  _pipe(phandles, 4096, _O_BINARY)
 #else
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/tcp.h>
 #endif
 
 using namespace std;
@@ -46,6 +48,7 @@ using namespace std;
 #define OINFO ossimNotify(ossimNotifyLevel_INFO)
 #define MAX_BUF_LEN 4096
 #define FORK_PROCESS false
+#define _DEBUG_ false
 
 ossimToolServer::ossimToolServer()
 :  m_svrsockfd(-1),
@@ -212,6 +215,7 @@ void ossimToolServer::writeSocket(const char* buf, int bufsize)
 
    while (remaining)
    {
+      if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" sending <"<<buf<<">"<<endl; //TODO REMOVE DEBUG
       n = send(m_clisockfd, buf, remaining, 0);
       if (n < 0)
          error("ERROR writing to socket");
@@ -241,7 +245,6 @@ bool ossimToolServer::sendFile(const ossimFilename& fname)
    char size_response[19];
    sprintf(size_response, "SIZE: %012d", (int) fsize);
    writeSocket(size_response, strlen(size_response));
-   cout << "Sent to client "<< strlen(size_response) <<" bytes: \""<<size_response<<"\""<<endl;
    if (!acknowledgeRcvd())
       return false;
 
@@ -250,7 +253,6 @@ bool ossimToolServer::sendFile(const ossimFilename& fname)
    memset(name_response, 0, 256);
    sprintf(name_response, "NAME: %s", fname.file().chars());
    writeSocket(name_response, strlen(size_response));
-   cout << "Sent to client: \""<<name_response<<"\""<<endl;
    if (!acknowledgeRcvd())
       return false;
 
@@ -281,7 +283,9 @@ bool ossimToolServer::sendFile(const ossimFilename& fname)
 }
 bool ossimToolServer::acknowledgeRcvd()
 {
+   if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" Waiting to recv"<<endl; //TODO REMOVE DEBUG
    int n = recv(m_clisockfd, m_buffer, 11, 0);
+   if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" Received <"<<m_buffer<<">"<<endl; //TODO REMOVE DEBUG
    if (n < 0)
       error("ossimToolServer: EOF encountered reading from port");
    if (strcmp(m_buffer, "ok_to_send"))
@@ -314,7 +318,13 @@ bool ossimToolServer::runCommand(ossimString& command)
       error("Could not redirect stdout (1).");
    setbuf( stdout, NULL );
    dup2( pipeDesc[1], fileno(stdout) );
+
+#ifdef _MSC_VER
+   u_long iMode = 1;
+   ioctlsocket(pipeDesc[0], FIONBIO, &iMode);
+#else
    fcntl( pipeDesc[0], F_SETFL, O_NONBLOCK );
+#endif
 
    ossimToolFactoryBase* factory = ossimToolRegistry::instance();
    ossimRefPtr<ossimTool> utility = 0;
@@ -388,8 +398,6 @@ bool ossimToolServer::runCommand(ossimString& command)
          writeSocket(full_output.c_str(), full_output.size());
          if (!acknowledgeRcvd())
             error("ERROR receiving acknowledge from client.");
-         cout << "Sent to client "<< full_output.size() <<" bytes:\n------------------\n"
-               <<full_output<<"\n------------------\n"<<endl;
       }
    }
    else
@@ -413,7 +421,9 @@ bool ossimToolServer::processOssimRequest(struct sockaddr_in& cli_addr)
 
    // Clear the input m_buffer and read the message sent:
    memset(m_buffer, 0, MAX_BUF_LEN);
+   if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" Waiting to recv"<<endl; //TODO REMOVE DEBUG
    int n = recv(m_clisockfd, m_buffer, MAX_BUF_LEN, 0);
+   if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" Received <"<<m_buffer<<">"<<endl; //TODO REMOVE DEBUG
    if (n < 0)
       error("ossimToolServer: EOF encountered reading from port");
 

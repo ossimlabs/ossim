@@ -26,6 +26,7 @@
 using namespace std;
 
 #define MAX_BUF_LEN 4096
+#define _DEBUG_ false
 
 ossimToolClient::ossimToolClient()
 :  m_svrsockfd(-1),
@@ -140,6 +141,7 @@ bool ossimToolClient::execute(const char* command_spec)
       return false;
 
    // Write command to the OSSIM tool server socket:
+   if (_DEBUG_) cout<<"ossimToolClient:"<<__LINE__<<" sending <"<<command_spec<<">..."<<endl; //TODO REMOVE DEBUG
    int n = send(m_svrsockfd, command_spec, strlen(command_spec), 0);
    if (n < 0)
    {
@@ -149,6 +151,7 @@ bool ossimToolClient::execute(const char* command_spec)
    while (n < (int) strlen(command_spec))
    {
       // Partial send, try remainder of buffer:
+      if (_DEBUG_) cout<<"ossimToolClient:"<<__LINE__<<" sending <"<<&(command_spec[n])<<">..."<<endl; //TODO REMOVE DEBUG
       int r = send(m_svrsockfd, &(command_spec[n]), strlen(command_spec)-n, 0);
       if (r < 0)
       {
@@ -166,7 +169,9 @@ bool ossimToolClient::execute(const char* command_spec)
    //     "ADIOS" -- Server acknowledges disconnect
    bool success = false;
    memset(m_buffer, 0, MAX_BUF_LEN);
+   if (_DEBUG_) cout<<"ossimToolClient:"<<__LINE__<<" Waiting to recv"<<endl; //TODO REMOVE DEBUG
    n = recv(m_svrsockfd, m_buffer, 5, 0);
+   if (_DEBUG_) cout<<"ossimToolClient:"<<__LINE__<<" Received <"<<m_buffer<<">"<<endl; //TODO REMOVE DEBUG
    if (n < 0)
    {
       error("ERROR reading from socket");
@@ -197,7 +202,9 @@ bool ossimToolClient::receiveText()
    while (n == MAX_BUF_LEN)
    {
       memset(m_buffer, 0, MAX_BUF_LEN);
+      if (_DEBUG_) cout<<"ossimToolClient:"<<__LINE__<<" Waiting to recv"<<endl; //TODO REMOVE DEBUG
       n = recv(m_svrsockfd, m_buffer, MAX_BUF_LEN, 0);
+      if (_DEBUG_) cout<<"ossimToolClient:"<<__LINE__<<" Received <"<<m_buffer<<">"<<endl; //TODO REMOVE DEBUG
       if (n < 0)
       {
          error("ERROR reading from socket");
@@ -272,13 +279,14 @@ bool ossimToolClient::receiveFile()
 
 bool ossimToolClient::acknowledgeRcv()
 {
+   if (_DEBUG_) cout<<"ossimToolClient:"<<__LINE__<<" sending \"ok_to_send\"..."<<endl; //TODO REMOVE DEBUG
    int r = send(m_svrsockfd, "ok_to_send", 11, 0);
    if (r < 0)
    {
       error("ERROR writing to socket");
       return false;
    }
-   cout << "Receive acknowledged."<<endl;
+   if (_DEBUG_) cout << "Receive acknowledged."<<endl;
    return true;
 }
 
