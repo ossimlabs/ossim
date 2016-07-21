@@ -215,7 +215,6 @@ void ossimToolServer::writeSocket(const char* buf, int bufsize)
 
    while (remaining)
    {
-      if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" sending <"<<buf<<">"<<endl; //TODO REMOVE DEBUG
       n = send(m_clisockfd, buf, remaining, 0);
       if (n < 0)
          error("ERROR writing to socket");
@@ -244,6 +243,7 @@ bool ossimToolServer::sendFile(const ossimFilename& fname)
    // Send file size to the client:
    char size_response[19];
    sprintf(size_response, "SIZE: %012d", (int) fsize);
+   if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" sending <"<<size_response<<">"<<endl; //TODO REMOVE DEBUG
    writeSocket(size_response, strlen(size_response));
    if (!acknowledgeRcvd())
       return false;
@@ -252,7 +252,8 @@ bool ossimToolServer::sendFile(const ossimFilename& fname)
    char name_response[256];
    memset(name_response, 0, 256);
    sprintf(name_response, "NAME: %s", fname.file().chars());
-   writeSocket(name_response, strlen(size_response));
+   if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" sending <"<<name_response<<">"<<endl; //TODO REMOVE DEBUG
+   writeSocket(name_response, strlen(name_response));
    if (!acknowledgeRcvd())
       return false;
 
@@ -261,6 +262,7 @@ bool ossimToolServer::sendFile(const ossimFilename& fname)
    // Send image in MAX_BUF_LEN byte packets
    int n = 0;
    int r = 0;
+   if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" sending binary data..."<<endl; //TODO REMOVE DEBUG
    while (!svrfile.eof())
    {
       // Read server-side file block:
@@ -290,7 +292,7 @@ bool ossimToolServer::acknowledgeRcvd()
       error("ossimToolServer: EOF encountered reading from port");
    if (strcmp(m_buffer, "ok_to_send"))
       return false;
-   cout << "Send acknowledged by client."<<endl;
+   if (_DEBUG_) cout << "Send acknowledged by client."<<endl;
    return true;
 }
 
@@ -330,19 +332,29 @@ bool ossimToolServer::runCommand(ossimString& command)
    ossimRefPtr<ossimTool> utility = 0;
 
    // Intercept help request:
-   if (command == "help")
+   ossimString c1 = command.before(" ");
+   ossimString c2 = command.after(" ");
+   while (1)
    {
-      map<string, string> capabilities;
-      factory->getCapabilities(capabilities);
-      map<string, string>::iterator iter = capabilities.begin();
-      cout<<"\nAvailable commands:\n"<<endl;
-      for (;iter != capabilities.end(); ++iter)
-         cout<<"  "<<iter->first<<" -- "<<iter->second<<endl;
-      cout<<"\nUse option \"--help\" with above commands to get detailed tool command."<<endl;
-      status_ok = true;
-   }
-   else
-   {
+      if (c1 == "help")
+      {
+         if (!c2.empty())
+         {
+            command = c2 + " --help";
+         }
+         else
+         {
+            map<string, string> capabilities;
+            factory->getCapabilities(capabilities);
+            map<string, string>::iterator iter = capabilities.begin();
+            cout<<"\nAvailable commands:\n"<<endl;
+            for (;iter != capabilities.end(); ++iter)
+               cout<<"  "<<iter->first<<" -- "<<iter->second<<endl;
+            cout<<"\nUse option \"--help\" with above commands to get detailed tool command."<<endl;
+            status_ok = true;
+            break;
+         }
+      }
       // Fetch OSSIM utility for requested operation:
       ossimArgumentParser ap (command);
       ossimString util_name = ap[0];
@@ -355,7 +367,7 @@ bool ossimToolServer::runCommand(ossimString& command)
             cout<<msg<<"Did not understand command <"<<util_name<<">"<<endl;
          else if (!utility->initialize(ap))
             cout<<msg<<"Could not execute command sequence <"<<command<<">."<<endl;
-         else if (!utility->execute())
+         else if (!utility->helpRequested() && !utility->execute())
             cout<<msg<<"Error encountered executing\n    <"<<command <<">\nCheck options."<<endl;
          else
             status_ok = true;
@@ -368,6 +380,8 @@ bool ossimToolServer::runCommand(ossimString& command)
       {
          cout << msg << "Caught unknown exception: "<<x.what()<<endl;
       }
+
+      break;
    }
 
    // Stop redirecting stdout and copy the output stream buffer to local memory:
@@ -383,7 +397,7 @@ bool ossimToolServer::runCommand(ossimString& command)
 
    if (status_ok)
    {
-      if (utility.valid() && utility->isChipProcessor())
+      if (utility.valid() && !utility->helpRequested() && utility->isChipProcessor())
       {
          const char* response = "FILE ";
          writeSocket(response, strlen(response));
@@ -405,7 +419,8 @@ bool ossimToolServer::runCommand(ossimString& command)
       const char* response = "ERROR";
       writeSocket(response, strlen(response));
       writeSocket(full_output.c_str(), full_output.size());
-      cout << "Sending ERROR to client: <"<<full_output<<">"<<endl;
+      cout << "Sending ERROR to client and closing connection: <"<<full_output<<">"<<endl;
+      close(m_clisockfd);
    }
 
    return status_ok;
