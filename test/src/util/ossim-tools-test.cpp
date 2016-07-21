@@ -16,9 +16,8 @@
 #include <ossim/base/ossimTimer.h>
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/init/ossimInit.h>
-#include <ossim/util/ossimChipProcUtil.h>
-#include <ossim/util/ossimUtilityRegistry.h>
-
+#include <ossim/util/ossimChipProcTool.h>
+#include <ossim/util/ossimToolRegistry.h>
 #include <iostream>
 using namespace std;
 
@@ -58,8 +57,8 @@ int main(int argc, char* argv[])
          return 0;
       }
       string toolName = argv[1];
-      ossimRefPtr<ossimChipProcUtil> chipProcUtil =
-            (ossimChipProcUtil*) ossimUtilityRegistry::instance()->createUtility(toolName);
+      ossimRefPtr<ossimChipProcTool> chipProcUtil =
+            (ossimChipProcTool*) ossimToolRegistry::instance()->createUtility(toolName);
       if (chipProcUtil == 0)
          cerr<<"OssimTools() Bad opeation requested: <"<<toolName<<">. Ignoring."<<endl;
 
