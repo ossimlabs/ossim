@@ -18,16 +18,16 @@ using namespace std;
 int main(int argc, char *argv[])
 {
    char buffer [MAX_BUF_LEN];
-   if (argc < 3)
+   if (argc < 2)
    {
-      cout<<"Usage "<<argv[0]<<" hostname port\n"<<endl;;
+      cout<<"Usage "<<argv[0]<<" host:port\n"<<endl;;
       exit(0);
    }
 
    int n;
 
    ossimToolClient otc;
-   int svrsockfd = otc.connectToServer(argv[1], argv[2]);
+   int svrsockfd = otc.connectToServer(argv[1]);
    if (svrsockfd < 0)
    {
       cout << "\nossim-client: Bad socket file descriptor returned."<<endl;

@@ -98,6 +98,8 @@ bool ossimChipProcTool::initialize(ossimArgumentParser& ap)
 {
    if (!ossimTool::initialize(ap))
       return false;
+   if (m_helpRequested)
+      return true;
 
    std::string tempString1;
    ossimArgumentParser::ossimParameter stringParam1(tempString1);
@@ -316,6 +318,8 @@ void ossimChipProcTool::processRemainingArgs(ossimArgumentParser& ap)
 
 void ossimChipProcTool::initialize( const ossimKeywordlist& kwl )
 {
+   m_helpRequested = false;
+
    // Don't copy KWL if member KWL passed in:
    if (&kwl != &m_kwl)
    {
@@ -387,6 +391,9 @@ void ossimChipProcTool::finalizeChain()
 
 bool ossimChipProcTool::execute()
 {
+   if (m_helpRequested)
+      return true;
+
    ostringstream xmsg;
 
    if ( !m_procChain.valid() )

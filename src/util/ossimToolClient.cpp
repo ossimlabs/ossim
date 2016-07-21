@@ -8,7 +8,6 @@
 #include <ossim/util/ossimToolClient.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -18,7 +17,10 @@
 #include <fstream>
 #include <sstream>
 #ifdef _MSC_VER
-#include <FileAPI.h>
+#include <Windows.h>
+#include <io.h>
+#else
+#include <unistd.h>
 #endif
 
 using namespace std;
@@ -29,12 +31,12 @@ ossimToolClient::ossimToolClient()
 :  m_svrsockfd(-1),
    m_buffer(new char[MAX_BUF_LEN])
 {
+   ossimFilename tmpdir = "/tmp";
 #ifdef _MSC_VER
    if (GetTempPath(MAX_BUF_LEN, m_buffer))
-      m_tempDir = m_buffer;
-#else
-   m_tempDir = "/tmp";
+      tmpdir = m_buffer;
 #endif
+   setProductFilePath(tmpdir);
 }
 
 ossimToolClient::~ossimToolClient()
@@ -72,14 +74,25 @@ int ossimToolClient::connectToServer(char* hostname, char* portname)
    m_svrsockfd = -1;
    while (1)
    {
+      // Consider port number in host URL:
+      ossimString host (hostname);
+      ossimString port;
+      if (portname)
+         port = portname;
+      else if (host.contains(":"))
+      {
+         port = host.after(":");
+         host = host.before(":");
+      }
+
       // Establish full server address including port:
       struct addrinfo hints;
       memset(&hints, 0, sizeof hints); // make sure the struct is empty
       hints.ai_family = AF_INET;     // don't care IPv4 or IPv6
       hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
-      hints.ai_canonname = hostname;     // fill in my IP for me
+      hints.ai_canonname = host.stringDup();     // fill in my IP for me
       struct addrinfo *res;
-      int failed = getaddrinfo(hostname, portname, &hints, &res);
+      int failed = getaddrinfo(host.stringDup(), port.stringDup(), &hints, &res);
       if (failed)
       {
          error(gai_strerror(failed));
@@ -119,6 +132,10 @@ int ossimToolClient::connectToServer(char* hostname, char* portname)
 
 bool ossimToolClient::execute(const char* command_spec)
 {
+   // Clear previous file path of product filename:
+   if (!m_prodFilePath.isDir())
+      m_prodFilePath =m_prodFilePath.path();
+
    if (command_spec == NULL)
       return false;
 
@@ -161,7 +178,7 @@ bool ossimToolClient::execute(const char* command_spec)
    else if (response.contains("FILE"))
       success = receiveFile();
    else if (response.contains("MIXED"))
-      success = receiveMixed();
+      success = receiveText() && receiveFile();
    else if (response.contains("ERROR"))
       receiveText(); // success = false;
    else if (response.contains("ADIOS"))
@@ -188,8 +205,11 @@ bool ossimToolClient::receiveText()
       }
       m_textResponse.append(m_buffer);
    }
+   if (!acknowledgeRcv())
+      return false;
 
    printf("Text response:\n-----------------\n%s\n-----------------\n",m_textResponse.c_str());
+   return true;
 }
 
 
@@ -199,54 +219,29 @@ bool ossimToolClient::receiveFile()
    cout << "Server requesting file send. " <<endl;
 
    // Fetch the file size in bytes as the next message "SIZE: GGGMMMKKKBBB", (18 bytes)
-   int n = recv(m_svrsockfd, m_buffer, 18, 0);
-   if (n < 0)
-   {
-      error("ERROR reading from socket");
+   if (!receiveText())
       return false;
-   }
-   m_buffer[18] = '\0';
-   cout << "Server: \""<<m_buffer<<"\"" <<endl;
-   ossimString fileSizeStr (&(m_buffer[6]));
-   int filesize = fileSizeStr.toInt();
+   int filesize = m_textResponse.after("SIZE: ").toInt();
    cout << "File size = " <<filesize<<endl;
 
    // Fetch the filename as next message "NAME: AAAAA...", (256 bytes)
-   n = recv(m_svrsockfd, m_buffer, 256, 0);
-   {
-      error("ERROR reading from socket");
+   if (!receiveText())
       return false;
-   }
-   m_buffer[18] = '\0';
-   cout << "Server: \""<<m_buffer<<"\"" <<endl;
-   ossimString fileName (&(m_buffer[6]));
-
-   // Determine product destination on client:
-   if (m_prodFilename.empty())
-      m_prodFilename = m_tempDir;
-   if (m_prodFilename.isDir() || m_prodFilename.empty())
-      m_prodFilename.setFile(fileName);
-   cout << "m_prodFilename = " <<m_prodFilename<<endl;
+   ossimFilename fileName (m_textResponse.after("NAME: "));
+   m_prodFilePath = m_prodFilePath.dirCat(fileName);
+   cout << "File name = " <<m_prodFilePath<<endl;
 
    // Open file for writing:
-   ofstream fout (m_prodFilename.chars());
+   ofstream fout (m_prodFilePath.chars());
    if (fout.fail())
    {
-      xmsg <<"ERROR opening output file: <"<<m_prodFilename<<">"<<ends;
+      xmsg <<"ERROR opening output file: <"<<m_prodFilePath<<">"<<ends;
       error(xmsg.str().c_str());
       return false;
    }
 
-   // Acknowledge send request to server:
-   int r = send(m_svrsockfd, "ok_to_send", 11, 0);
-   if (r < 0)
-   {
-      error("ERROR writing to socket");
-      return false;
-   }
-
    memset(m_buffer, 0, MAX_BUF_LEN);
-   n = MAX_BUF_LEN;
+   int n = MAX_BUF_LEN;
    int numBytes = 0;
    while ((n == MAX_BUF_LEN) && (numBytes < filesize))
    {
@@ -265,32 +260,46 @@ bool ossimToolClient::receiveFile()
       numBytes += n;
    }
 
-   cout<<"\nossim-client: Received and wrote "<<numBytes<<" bytes to: <"<<m_prodFilename<<">."<<endl;;
+   if (!acknowledgeRcv())
+      return false;
+
+   cout<<"\nossim-client: Received and wrote "<<numBytes<<" bytes to: <"<<m_prodFilePath<<">."<<endl;;
    fout.close();
 
    return true;
 }
 
 
-bool ossimToolClient::receiveMixed()
+bool ossimToolClient::acknowledgeRcv()
 {
-   // First receive text response:
-   if (!receiveText())
-      return false;
-
-   // Acknowledge send request to server:
    int r = send(m_svrsockfd, "ok_to_send", 11, 0);
    if (r < 0)
    {
       error("ERROR writing to socket");
       return false;
    }
-
-   // Receive file:
-   if (!receiveFile())
-      return false;
-
+   cout << "Receive acknowledged."<<endl;
    return true;
 }
 
 
+bool ossimToolClient::setProductFilePath(const char* filepath)
+{
+   if (filepath == NULL)
+      m_prodFilePath = "./";
+   else
+      m_prodFilePath = filepath;
+
+   ostringstream xmsg;
+   if (!m_prodFilePath.exists() && !m_prodFilePath.createDirectory())
+   {
+      xmsg <<"ERROR creating output directory: <"<<m_prodFilePath<<">"<<ends;
+      error(xmsg.str().c_str());
+   }
+   else if (!m_prodFilePath.isWriteable())
+   {
+      xmsg <<"ERROR output directory: <"<<m_prodFilePath<<"> is not writable."<<ends;
+      error(xmsg.str().c_str());
+   }
+   return true;
+}

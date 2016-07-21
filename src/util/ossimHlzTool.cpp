@@ -109,6 +109,8 @@ bool ossimHlzTool::initialize(ossimArgumentParser& ap)
 {
    if (!ossimChipProcTool::initialize(ap))
       return false;
+   if (m_helpRequested)
+      return true;
 
    string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
@@ -407,6 +409,9 @@ ossimRefPtr<ossimImageData> ossimHlzTool::getChip(const ossimIrect& bounding_ire
 
 bool ossimHlzTool::execute()
 {
+   if (m_helpRequested)
+      return true;
+
    getChip(m_aoiViewRect);
    return ossimChipProcTool::execute();
 }

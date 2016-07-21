@@ -93,7 +93,7 @@ public:
    //static const char* DESCRIPTION;
 
    /** Overrides base class implementation to indicate this class supports getChip() calls.
-    * Can be done with dunamic cast and pointer test, but not sure how that is supported in SWIG
+    * Can be done with dynamic cast and pointer test, but not sure how that is supported in SWIG
     * (OLK 11/2015). */
    virtual bool isChipProcessor() const { return false; }
 
@@ -101,6 +101,12 @@ public:
     * Redirects any console output to the supplied stream for logging or JNI application.
     */
    void setOutputStream(std::ostream* os) { m_consoleStream = os; }
+
+   /**
+    * Returns true when the initialization detects a "--help" option, so caller can avoid
+    * subsequent execute() call. If execute() is called, it will return true after trivial execute.
+    */
+   bool helpRequested() const { return m_helpRequested; }
 
 protected:
    /**
@@ -116,12 +122,14 @@ protected:
 
    ossimKeywordlist m_kwl;
    std::ostream* m_consoleStream;
+   bool m_helpRequested;
 
 private:
    /**
     * Used for reading text files of template and JSON API from disk ONLY.
     */
    bool readTextFile(const ossimFilename& filename, std::string& contents) const;
+
 };
 
 #endif

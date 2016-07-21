@@ -94,6 +94,8 @@ bool ossimHillshadeTool::initialize(ossimArgumentParser& ap)
    // Permit base class to pull out common options first.
    if (!ossimChipProcTool::initialize(ap))
       return false;
+   if (m_helpRequested)
+      return true;
 
    std::string tempString1;
    ossimArgumentParser::ossimParameter stringParam1(tempString1);

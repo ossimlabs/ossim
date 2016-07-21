@@ -703,9 +703,6 @@ private:
    */
    ossimRefPtr<ossimImageHandler> openImageHandler(const ossimFilename& file) const;
    
-   /** @brief Initializes arg parser and outputs usage. */
-   void usage(ossimArgumentParser& ap);
-
    /** @return true if key is set to true; false, if not. */
    bool keyIsTrue( const std::string& key ) const;
 

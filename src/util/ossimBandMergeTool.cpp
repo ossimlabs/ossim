@@ -59,6 +59,8 @@ bool ossimBandMergeTool::initialize(ossimArgumentParser& ap)
 {
    if (!ossimChipProcTool::initialize(ap))
       return false;
+   if (m_helpRequested)
+      return true;
 
    ostringstream xmsg;
 
