@@ -1,0 +1,16 @@
+# Dependencies for the OSSIM baseline
+
+* [curl-7.46.0](https://s3.amazonaws.com/ossimlabs/dependencies/source/curl-7.46.0.zip)
+* [expat-2.1.0](https://s3.amazonaws.com/ossimlabs/dependencies/source/expat-2.1.0.zip)
+* [gdal-2.0.1](https://s3.amazonaws.com/ossimlabs/dependencies/source/gdal-2.0.1.zip)
+* [geos-3.4.2](https://s3.amazonaws.com/ossimlabs/dependencies/source/geos-3.4.2.zip)
+* [gpstk-2.5](https://s3.amazonaws.com/ossimlabs/dependencies/source/gpstk-2.5.zip)
+* [hdf5-1.8.16](https://s3.amazonaws.com/ossimlabs/dependencies/source/hdf5-1.8.16.zip)
+* [libgeotiff-1.4.1.](https://s3.amazonaws.com/ossimlabs/dependencies/source/libgeotiff-1.4.1.zip)
+* [libjpeg-turbo-1.4.2](https://s3.amazonaws.com/ossimlabs/dependencies/source/libjpeg-turbo-1.4.2.zip)
+* [libpng-1.2.43](https://s3.amazonaws.com/ossimlabs/dependencies/source/libpng-1.2.43.zip)
+* [opencv-3.1.0](https://s3.amazonaws.com/ossimlabs/dependencies/source/opencv-3.1.0.zip)
+* [proj-4.9.2](https://s3.amazonaws.com/ossimlabs/dependencies/source/proj-4.9.2.zip)
+* [sqlite-3100100](https://s3.amazonaws.com/ossimlabs/dependencies/source/sqlite-3100100.zip)
+* [tiff-4.0.6](https://s3.amazonaws.com/ossimlabs/dependencies/source/tiff-4.0.6.zip)
+* [zlib-1.2.5](https://s3.amazonaws.com/ossimlabs/dependencies/source/zlib-1.2.5.zip)
