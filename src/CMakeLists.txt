@@ -1,7 +1,6 @@
 SET(LIB_NAME ossim)
 
 ########################################### BEGIN: GRAB SOURCE FILES ##########################################
-FILE(GLOB ossim_dll_main_SRCS RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/dll_main/*.cpp")
 FILE(GLOB ossim_SRCS  RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} 
         "${CMAKE_CURRENT_SOURCE_DIR}/ossimConfig*.cpp" 
         "${CMAKE_CURRENT_SOURCE_DIR}/ossimVer*.cpp" 
@@ -20,11 +19,14 @@ FILE(GLOB ossim_SRCS  RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}
         "${CMAKE_CURRENT_SOURCE_DIR}/video/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/video/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/vpfutil/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/vpfutil/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/plugin/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/plugin/*.c")
-
-IF(WIN32)
+IF(UNIX)
+   FILE(GLOB ossim_sockets_SRCS RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/sockets/*.cpp")
+   LIST(APPEND ossim_SRCS "${ossim_sockets_SRCS}")
+ELSEIF(WIN32)
+   FILE(GLOB ossim_dll_main_SRCS RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/dll_main/*.cpp")
 	LIST(APPEND ossim_SRCS "${ossim_dll_main_SRCS}")
-ENDIF(WIN32)
-
+ENDIF(UNIX)
+   
 ADD_DEFINITIONS("-DOSSIMMAKINGDLL")
 ############################### GRAB HEADERS #####################################
 FILE(GLOB ossim_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/*.h")
@@ -44,11 +46,17 @@ FILE(GLOB ossim_vec_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT
 FILE(GLOB ossim_video_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/video/*.h")
 FILE(GLOB ossim_vpfutil_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/vpfutil/*.h")
 
+IF(UNIX)
+  FILE(GLOB ossim_sockets_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/sockets/*.h")
+ENDIF(UNIX)
+
 MESSAGE( "${ossim_HDRS}" )
 SET(OSSIM_HEADER_FILES 
 	${ossim_HDRS}
- 	${ossim_base_HDRS} ${ossim_elevation_HDRS} ${ossim_font_HDRS}  ${ossim_imaging_HDRS} ${ossim_init_HDRS}
-	${ossim_matrix_HDRS} ${ossim_parallel_HDRS} ${ossim_plugin_HDRS} ${ossim_point_cloud_HDRS} ${ossim_projection_HDRS} ${ossim_support_data_HDRS} ${ossim_util_HDRS} ${ossim_vec_HDRS} ${ossim_video_HDRS} ${ossim_vpfutil_HDRS} )
+ 	${ossim_base_HDRS} ${ossim_elevation_HDRS} ${ossim_font_HDRS}  ${ossim_imaging_HDRS} 
+ 	${ossim_init_HDRS} ${ossim_matrix_HDRS} ${ossim_parallel_HDRS} ${ossim_plugin_HDRS} 
+ 	${ossim_point_cloud_HDRS} ${ossim_projection_HDRS} ${ossim_support_data_HDRS} ${ossim_util_HDRS} 
+ 	${ossim_vec_HDRS} ${ossim_video_HDRS} ${ossim_vpfutil_HDRS} ${ossim_sockets_HDRS})
 
 
 ################################## APPLE Framework support deep header mapping ###################################
@@ -136,6 +144,9 @@ IF(NOT OSSIM_BUILD_FRAMEWORKS OR NOT APPLE)
    install(FILES ${ossim_vec_HDRS} DESTINATION include/ossim/vec COMPONENT ossim) 
    install(FILES ${ossim_video_HDRS} DESTINATION include/ossim/video COMPONENT ossim) 
    install(FILES ${ossim_vpfutil_HDRS} DESTINATION include/ossim/vpfutil COMPONENT ossim) 
+   IF(UNIX)
+     install(FILES ${ossim_sockets_HDRS} DESTINATION include/ossim/sockets COMPONENT ossim) 
+   ENDIF(UNIX)
 ENDIF(NOT OSSIM_BUILD_FRAMEWORKS OR NOT APPLE)
 # ENDIF(NOT OSSIM_FRAMEWORK_GENERATION OR NOT APPLE)
 

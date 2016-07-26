@@ -5,7 +5,7 @@
 //
 //**************************************************************************************************
 
-#include <ossim/util/ossimToolClient.h>
+#include <ossim/sockets/ossimToolClient.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

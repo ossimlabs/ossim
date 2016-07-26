@@ -5,7 +5,7 @@
 //
 //**************************************************************************************************
 
-#include <ossim/util/ossimToolServer.h>
+#include <ossim/sockets/ossimToolServer.h>
 #include <iostream>
 #include <sstream>
 #include <map>
