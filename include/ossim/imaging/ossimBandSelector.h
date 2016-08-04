@@ -157,11 +157,12 @@ protected:
     */
    bool getRgbBandList(std::vector<ossim_uint32>& bandList) const;
    
-   ossimRefPtr<ossimImageData>           theTile;
-   std::vector<ossim_uint32>             theOutputBandList;
-   ossimBandSelectorWithinRangeFlagState theWithinRangeFlag;
-   bool                                  thePassThroughFlag;
-   bool                                  theDelayLoadRgbFlag;
+   ossimRefPtr<ossimImageData>           m_tile;
+   std::vector<ossim_uint32>             m_outputBandList;
+   ossimBandSelectorWithinRangeFlagState m_withinRangeFlag;
+   bool                                  m_passThroughFlag;
+//   bool                                  theDelayLoadRgbFlag;
+   bool                                  m_inputIsSelectable;
 
 TYPE_DATA
 };
