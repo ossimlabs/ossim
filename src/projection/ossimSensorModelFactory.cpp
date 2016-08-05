@@ -364,11 +364,10 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    }
    
    ifstream input(geomFile.c_str());
-   char ecgTest[4];
-   input.read((char*)ecgTest, 3);
-   ecgTest[3] = '\0';
+   char ecgTest[4] = { 0 };
+   input.read(ecgTest, 3); // even if `read()` fails, it will be initialized thanks to `= { 0 };`
    input.close();
-   if(ossimString(ecgTest) == "eCG")
+   if(std::string(ecgTest) == "eCG")
    {
       ossimKeywordlist kwlTemp;
       kwlTemp.add("type",
