@@ -699,40 +699,47 @@ ossimRefPtr<ossimImageHandler> ossimBandSelector::getBandSelectableImageHandler(
 
    if ( theInputConnection )
    {
-      ih = dynamic_cast<ossimImageHandler*>(theInputConnection);
+//      ih = dynamic_cast<ossimImageHandler*>(theInputConnection);
       
-      if(ih.valid())
-      {
-         if(!ih->isBandSelector())
-         {
-            ih = 0;
-         }
-      }
+//      if(ih.valid())
+//      {
+//         if(!ih->isBandSelector())
+//         {
+//            ih = 0;
+//         }
+//      }
       /**
       * GP: commenting out for there could be two band selectors in the chain
       * we will only allow the immediate input check for an image handler
       * and if one is present then check if selectable
       */
-      /*
       ossimTypeNameVisitor visitor(ossimString("ossimImageHandler"),
+                                   true,
+                                   ossimVisitor::VISIT_CHILDREN|ossimVisitor::VISIT_INPUTS);
+      ossimTypeNameVisitor bandSelectorVisitor(ossimString("ossimBandSelector"),
                                    true,
                                    ossimVisitor::VISIT_CHILDREN|ossimVisitor::VISIT_INPUTS);
       
       theInputConnection->accept(visitor);
-
-      // If there are multiple image handlers, e.g. a mosaic do not uses.
-      if ( visitor.getObjects().size() == 1 )
+      theInputConnection->accept(bandSelectorVisitor);
+      // if there is a band selector before us then do not 
+      // set the image handler
+      if(bandSelectorVisitor.getObjects().size() < 1)
       {
-         ih = visitor.getObjectAs<ossimImageHandler>( 0 );
-         if ( ih.valid() )
+         // If there are multiple image handlers, e.g. a mosaic do not uses.
+         if ( visitor.getObjects().size() == 1 )
          {
-            if ( ih->isBandSelector() == false )
+            ih = visitor.getObjectAs<ossimImageHandler>( 0 );
+            if ( ih.valid() )
             {
-               ih = 0;
+               if ( ih->isBandSelector() == false )
+               {
+                  ih = 0;
+               }
             }
          }
+
       }
-      */
       
    } // Matches: if ( theInputConnection )
    return ih;
