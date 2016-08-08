@@ -39,12 +39,8 @@ public:
          data[2]=z;
       }
 
-   ossimColumnVector3d(const ossimColumnVector3d &rhs)
-   {
-      data[0] = rhs.data[0];
-      data[1] = rhs.data[1];
-      data[2] = rhs.data[2];
-   }
+   // Default copy-constructor is perfect
+   // ossimColumnVector3d(const ossimColumnVector3d &rhs) = default;
    
    explicit ossimColumnVector3d(const NEWMAT::ColumnVector& rhs)
    {
