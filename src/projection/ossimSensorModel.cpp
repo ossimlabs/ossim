@@ -513,7 +513,6 @@ std::ostream& ossimSensorModel::print(std::ostream& out) const
        << "\n theBoundGndPolygon: \n" << theBoundGndPolygon
        << "\n   theImageClipRect: " << theImageClipRect
        << "\n theNominalPosError: " << theNominalPosError
-       << "\n     theNominalPosError: " << theNominalPosError
        << "\n     theRelPosError: " << theRelPosError
        << endl;
 
