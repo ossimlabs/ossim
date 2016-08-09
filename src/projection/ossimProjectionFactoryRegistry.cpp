@@ -20,6 +20,10 @@
 #include <algorithm>
 #include <vector>
 
+#if OSSIM_HAS_HDF5
+#include <ossim/hdf5/ossimHdf5ProjectionFactory.h>
+#endif
+
 //ossimProjectionFactoryRegistry* ossimProjectionFactoryRegistry::m_instance = 0;
 
 
@@ -154,6 +158,10 @@ void ossimProjectionFactoryRegistry::initializeDefaults()
    registerFactory(ossimMapProjectionFactory::instance());
    registerFactory(ossimMiscProjectionFactory::instance());
    registerFactory(ossimNgaProjectionFactory::instance());
+
+#if OSSIM_HAS_HDF5
+   registerFactory(ossimHdf5ProjectionFactory::instance());
+#endif
 
    // KEEP THIS LAST PLEASE!
    // This factory constructs map projections from EPSG codes. An infinite loop will occur if this

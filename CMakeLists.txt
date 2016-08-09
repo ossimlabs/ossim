@@ -151,6 +151,20 @@ else ( ZLIB_FOUND )
    message( WARNING "Could not find optional zlib package!" )
 endif ( ZLIB_FOUND )
 
+# HDF5 - Optional
+set( OSSIM_HAS_HDF5 0 )
+if (BUILD_OSSIM_HDF5_SUPPORT)
+  message( STATUS "Native HDF5 support requested. Searching for HDF5 library..." )
+  find_package( HDF5 )
+  if ( HDF5_FOUND )
+     include_directories( ${HDF5_INCLUDE_DIR} )
+     set( ossimDependentLibs ${ossimDependentLibs} ${HDF5_LIBRARIES} )
+     set( OSSIM_HAS_HDF5 1 )
+  else ( HDF5_FOUND )
+     message( WARNING "Could not find optional HDF5 package. Excluding native support." )
+  endif ( HDF5_FOUND )
+endif (BUILD_OSSIM_HDF5_SUPPORT)
+
 #---
 # Call the OSSIM macros in OssimUtilities.cmake
 #---

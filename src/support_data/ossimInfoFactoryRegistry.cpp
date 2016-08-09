@@ -13,6 +13,7 @@
 #include <ossim/support_data/ossimInfoFactoryRegistry.h>
 #include <ossim/support_data/ossimInfoFactoryInterface.h>
 #include <ossim/support_data/ossimInfoFactory.h>
+#include <ossim/support_data/ossimInfoBase.h>
 
 #include <algorithm> /* for std::find */
 

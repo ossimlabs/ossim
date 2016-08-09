@@ -14,6 +14,9 @@
 /* Define to "1" if you have GEOTIFF, "0" if not. */
 #define OSSIM_HAS_GEOTIFF @OSSIM_HAS_GEOTIFF@
 
+/* Define to "1" if you have HDF5 installed, "0" if not. */
+#define OSSIM_HAS_HDF5 @OSSIM_HAS_HDF5@
+
 /* Enable cvs id strings for use with "ident" application. */
 #define OSSIM_ID_ENABLED @OSSIM_ID_ENABLED@
 
