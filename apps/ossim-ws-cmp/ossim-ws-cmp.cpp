@@ -166,7 +166,8 @@ bool isIgnoredFile(const ossimFilename& file)
       ossimFilename f = file.file();
       ossimFilename e = file.ext();
       
-      if ( ( f == ".moc" )                  ||
+      if ( ( f == ".git" )                  ||
+           ( f == ".moc" )                  ||
            ( f == ".svn" )                  ||
            ( f == "CMakeCache.txt" )        ||
            ( f == "CMakeFiles" )            ||
