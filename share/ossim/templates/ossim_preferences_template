@@ -47,6 +47,7 @@
 // elevation_source.type: dted_directory
 // elevation_source.type: srtm_directory
 // elevation_source.type: general_raster_directory
+// elevation_source.type: image_directory
 // 
 // The elevation_source.connection_string is a connection for your database.
 // Typically this is a directory location.
@@ -54,30 +55,24 @@
 // NOTES:
 // 
 // 1) Order dependent, i.e. ALWAYS put your highest resolution first.
-// 
-// 2) The elevation_source keyword replaces the deprecated keywords:
-// dted_directory
-// image_directory
-// srtm_directory
-// dted_cell 
 //
-// 3) We support bringing cells into memory for dted and srtm datasets.  You can also control the
+// 2) We support bringing cells into memory for dted and srtm datasets.  You can also control the
 // number of open cells by specifying a min and max open cells.  If the number of cells opened
 // exceeds the maximum then it will shrink the active opened cells to the minumum.  We currently
 // use a least recently used algorithm.
 // 
-// 4) A good elevation source is the Shuttle Radar Topographic Mission(SRTM):
+// 3) A good elevation source is the Shuttle Radar Topographic Mission(SRTM):
 //    http://srtm.usgs.gov/index.php
-
-// 5) Examples below are defaulted to some value.  To change enabled key to
+//
+// 4) Examples below are defaulted to some value.  To change enabled key to
 //    true, e.g.:
 //    elevation_manager.elevation_source0.enabled: true
 // 
-// 6) Key "extension" is currently for dted only.  If set this disables the scanning for
+// 5) Key "extension" is currently for dted only.  If set this disables the scanning for
 //    the extension at start up.  e.g.:
 //    elevation_manager.elevation_source0.extension: .dt2
 // 
-// 7) Key "upcase" is currently for dted only. If true looks for upcased files.
+// 6) Key "upcase" is currently for dted only. If true looks for upcased files.
 //    If this is set to true, note that the "extension" should also be upcase.
 //    elevation_manager.elevation_source0.upcase: false
 //    looks for (example): e045/n34.dt2
@@ -134,6 +129,7 @@ elevation_manager.elevation_source4.min_open_cells: 25
 elevation_manager.elevation_source4.max_open_cells: 50
 elevation_manager.elevation_source4.memory_map_cells: true
 elevation_manager.elevation_source4.geoid.type: geoid1996
+elevation_manager.elevation_source4.upcase: false
 
 //---
 // Identity geoid is 0 everywhere, so MSL = Ellipsoid. Useful when DEM
@@ -379,9 +375,9 @@ statusUpdateOnClick: true
 // Keyword: cache_size
 // The cache size is in megabytes.
 // ---
-cache_size: 256
+// cache_size: 256
 // cache_size: 512
-// cache_size: 1024
+cache_size: 1024
 // cache_size: 2048
 
 

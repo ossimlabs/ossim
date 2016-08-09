@@ -41,8 +41,8 @@ public:
    ossimEcefPoint()
       : theData(0,0,0) {}
 
-   ossimEcefPoint(const ossimEcefPoint& copy_this)
-      : theData (copy_this.theData) {}
+   // Default definition is perfect
+   // ossimEcefPoint(const ossimEcefPoint& copy_this) = default;
 
    ossimEcefPoint(const ossimGpt& convert_this);
 
@@ -87,7 +87,7 @@ public:
    ossimEcefVector       operator- (const ossimEcefPoint&)  const;
    ossimEcefPoint        operator+ (const ossimEcefVector&) const;
    ossimEcefPoint        operator- (const ossimEcefVector&) const;
-   const ossimEcefPoint& operator= (const ossimEcefPoint&);        // inline
+   // ossimEcefPoint&       operator= (const ossimEcefPoint&) = default;
    bool                  operator==(const ossimEcefPoint&)  const; // inline
    bool                  operator!=(const ossimEcefPoint&)  const; // inline
    
@@ -190,16 +190,6 @@ protected:
 };
 
 //================== BEGIN DEFINITIONS FOR INLINE METHODS =====================
-
-//*****************************************************************************
-//  INLINE METHOD: ossimEcefPoint::operator=(ossimEcefPoint)
-//*****************************************************************************
-inline const ossimEcefPoint&
-ossimEcefPoint::operator=(const ossimEcefPoint& p)
-{
-   theData = p.theData;
-   return *this;
-}
 
 //*****************************************************************************
 //  INLINE METHOD: ossimEcefPoint::operator==(ossimEcefPoint)

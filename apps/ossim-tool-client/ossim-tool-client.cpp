@@ -9,7 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <ossim/base/ossimString.h>
-#include <ossim/util/ossimToolClient.h>
+#include <ossim/sockets/ossimToolClient.h>
 
 using namespace std;
 
@@ -18,16 +18,16 @@ using namespace std;
 int main(int argc, char *argv[])
 {
    char buffer [MAX_BUF_LEN];
-   if (argc < 3)
+   if (argc < 2)
    {
-      cout<<"Usage "<<argv[0]<<" hostname port\n"<<endl;;
+      cout<<"Usage "<<argv[0]<<" host:port\n"<<endl;;
       exit(0);
    }
 
    int n;
 
    ossimToolClient otc;
-   int svrsockfd = otc.connectToServer(argv[1], argv[2]);
+   int svrsockfd = otc.connectToServer(argv[1]);
    if (svrsockfd < 0)
    {
       cout << "\nossim-client: Bad socket file descriptor returned."<<endl;
@@ -41,21 +41,22 @@ int main(int argc, char *argv[])
       cout<<"\nEnter OSSIM command: "<<ends;
       cin.getline(buffer, MAX_BUF_LEN);
       command = buffer;
-      if (command.empty() || (command == "q") || (command == "quit"))
-      {
-         otc.disconnect();
+      if (command.empty())
+         continue;
+
+      if ((command == "q") || (command == "quit"))
          break;
-      }
 
       // Send command to the OSSIM tool server:
-      if (otc.execute(command.chars()))
-         cout << "\nossim-client: Execute call successful."<<endl;
-      else
+      if (!otc.execute(command.chars()))
+      {
          cout << "\nossim-client: Error encountred on execute."<<endl;
+         break;
+      }
    }
 
    cout << "\nossim-client: Closing connection to OSSIM server."<<endl;
-   close(svrsockfd);
+   otc.disconnect();
 
    return 0;
 }

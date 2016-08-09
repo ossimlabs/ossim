@@ -56,6 +56,8 @@ bool ossimVerticesFinderTool::initialize(ossimArgumentParser& ap)
 {
    if (!ossimTool::initialize(ap))
       return false;
+   if (m_helpRequested)
+      return true;
 
    std::string tempString1;
    ossimArgumentParser::ossimParameter stringParam1(tempString1);
@@ -123,6 +125,9 @@ void ossimVerticesFinderTool::initialize(const ossimKeywordlist& kwl)
 
 bool ossimVerticesFinderTool::execute()
 {
+   if (m_helpRequested)
+      return true;
+
    ostringstream errMsg;
 
    // Get an image handler for the input file.

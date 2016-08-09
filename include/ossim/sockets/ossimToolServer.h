@@ -27,15 +27,17 @@ public:
 
 private:
    void initSocket(const char* portid);
-   bool processOssimRequest(int client_fd, struct sockaddr_in& cli_addr);
-   bool runCommand(int client_fd, ossimString& command);
-   void writeSocket(int clientfd, const char* buf, int bufsize);
-   bool sendFile(int clientfd, const ossimFilename& fname);
+   bool processOssimRequest(struct sockaddr_in& cli_addr);
+   bool runCommand(ossimString& command);
+   void writeSocket(const char* buf, int bufsize);
+   bool sendFile(const ossimFilename& fname);
    void error(const char* msg);
+   bool acknowledgeRcvd();
 
    static void sigchld_handler(int s);
 
    int m_svrsockfd;
+   int m_clisockfd;
    char* m_buffer;
 };
 

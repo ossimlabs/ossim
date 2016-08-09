@@ -137,6 +137,8 @@ bool ossimViewshedTool::initialize(ossimArgumentParser& ap)
    // Base class first:
    if (!ossimChipProcTool::initialize(ap))
       return false;
+   if (m_helpRequested)
+      return true;
 
    string ts1;
    ossimArgumentParser::ossimParameter sp1(ts1);
@@ -452,6 +454,9 @@ ossimRefPtr<ossimImageData> ossimViewshedTool::getChip(const ossimIrect& boundin
 
 bool ossimViewshedTool::execute()
 {
+   if (m_helpRequested)
+      return true;
+
    if (!computeViewshed())
       return false;
 

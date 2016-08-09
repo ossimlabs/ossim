@@ -16,7 +16,8 @@ using namespace std;
 
 ossimTool::ossimTool()
    : m_kwl(),
-     m_consoleStream (&cout)
+     m_consoleStream (&cout),
+     m_helpRequested (false)
 {
 }
 
@@ -56,11 +57,13 @@ void ossimTool::setUsage(ossimArgumentParser& ap)
 
 bool ossimTool::initialize(ossimArgumentParser& ap)
 {
+   m_helpRequested = false;
    if ( (ap.argc() == 1) || ap.read("-h") || ap.read("--help") )
    {
       // Write usage.
       setUsage(ap);
       ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
+      m_helpRequested = true;
       return true;
    }
 
@@ -90,6 +93,7 @@ bool ossimTool::initialize(ossimArgumentParser& ap)
 
 void ossimTool::initialize(const ossimKeywordlist& kwl)
 {
+   m_helpRequested = false;
    m_kwl = kwl;
 }
 
