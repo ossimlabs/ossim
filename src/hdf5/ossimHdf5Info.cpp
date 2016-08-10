@@ -151,7 +151,6 @@ ostream& ossimHdf5Info::print(ostream& out, const H5::DataSet& dataset, const os
 
    // Dump its components:
    int set_size = dataset.getSpace().getSimpleExtentNpoints();
-   out<<lm<<"  number of elements: "<<set_size<<endl;
    ossimString lm2 (lm + "  ");
    print(out, dataset.getDataType(), lm2);
    print(out, dataset.getSpace(), lm2);
@@ -277,17 +276,28 @@ ostream& ossimHdf5Info::print(ostream& out, const H5::Attribute& attr, const oss
 {
    out<<lm<<"ATTRIBUTE: "<<attr.getName();
 
+   string str_value;
+   int int_value = 0;
+   float float_value = 0;
+   ossimString lm2 (lm + "  ");
+
    H5T_class_t class_type = attr.getDataType().getClass();
-   if (class_type == H5T_STRING)
+   switch (class_type)
    {
-      string value;
-      attr.read(attr.getDataType(), value);
-      out <<" = "<<value<<endl;
-   }
-   else
-   {
-      out <<" (value not a string) "<<endl;
-      ossimString lm2 (lm + "  ");
+   case H5T_STRING:
+      attr.read(attr.getDataType(), str_value);
+      out <<" = "<<str_value<<endl;
+      break;
+   case H5T_INTEGER:
+      attr.read(attr.getDataType(), &int_value);
+      out <<" = "<<int_value<<endl;
+      break;
+   case H5T_FLOAT:
+      attr.read(attr.getDataType(), &float_value);
+      out <<" = "<<float_value<<endl;
+      break;
+   default:
+      out <<" (value not handled type) "<<endl;
       print(out, attr.getDataType(), lm2);
       print(out, attr.getSpace(), lm2);
    }
