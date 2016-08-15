@@ -37,6 +37,12 @@ ossimHdf5Info::ossimHdf5Info()
 {
 }
 
+ossimHdf5Info::ossimHdf5Info(ossimHdf5* hdf5)
+   : ossimInfoBase(),
+     m_hdf5 (hdf5)
+{
+}
+
 ossimHdf5Info::~ossimHdf5Info()
 {
    m_hdf5 = 0;
@@ -98,7 +104,7 @@ ostream& ossimHdf5Info::printAttributes(std::ostream& out, const H5::H5Object& o
                                         const ossimString& lm) const
 {
    vector<Attribute> attributes;
-   if (!m_hdf5->getAttributes(obj, attributes))
+   if (!m_hdf5->getAttributes(&obj, attributes))
       return out;
 
    if (!attributes.empty())

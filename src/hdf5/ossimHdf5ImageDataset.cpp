@@ -129,23 +129,28 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
    hsize_t offset[2] = { 0, 0 };
 
    // Allocate space for read buffer:
-   void * rowBuf;
+   void *rowBuf=0;
+   void *fill_value=0;
    switch (m_scalar)
    {
    case OSSIM_UINT8:
    case OSSIM_SINT8:
       rowBuf = new ossim_int8[m_samples];
+      fill_value = new ossim_int8;
       break;
    case OSSIM_UINT16:
    case OSSIM_SINT16:
       rowBuf = new ossim_int16[m_samples];
+      fill_value = new ossim_int16;
       break;
    case OSSIM_UINT32:
    case OSSIM_SINT32:
       rowBuf = new ossim_int32[m_samples];
+      fill_value = new ossim_int32;
       break;
    case OSSIM_FLOAT32:
       rowBuf = new ossim_float32[m_samples];
+      fill_value = new ossim_float32;
       break;
    default:
       ossimNotify(ossimNotifyLevel_WARN) << "ossimHdf5ImageDataset:"<<__LINE__
@@ -158,7 +163,6 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
    bufferDataSpace.selectHyperslab( H5S_SELECT_SET, rowSize, offset ); // offset = (0,0) here
 
    // Figure out the null pixel value:
-   void *fill_value;
    H5:H5Pget_fill_value(m_dataset.getId(), dataType.getId(), fill_value);
 
    // Find the ul pixel. Loop over rows:
@@ -199,6 +203,9 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
    m_validRect.set_lr(lrIpt);
 
    imageDataspace.close();
+   delete rowBuf;
+   delete fill_value;
+   return true;
 }
 
 void ossimHdf5ImageDataset::close()

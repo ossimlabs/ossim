@@ -107,9 +107,11 @@ bool ossimHdf5::getRoot(Group& root) const
 
 }
 
-bool ossimHdf5::getChildGroups(const H5::Group& group, vector<Group>& groupList,
+bool ossimHdf5::getChildGroups(H5::Group group, vector<Group>& groupList,
                                bool recursive) const
 {
+   // TODO *** NOTE: This is failing when recursive = true ***
+
    if (!m_h5File)
       return false;
 
@@ -123,6 +125,7 @@ bool ossimHdf5::getChildGroups(const H5::Group& group, vector<Group>& groupList,
          if (h5type == H5G_GROUP)
          {
             string name = group.getObjnameByIdx(i);
+            cout<<"name = <"<<name<<">"<<endl; //TODO: REMOVE
             groupList.push_back(group.openGroup(name));
 
             if (recursive)
@@ -138,7 +141,7 @@ bool ossimHdf5::getChildGroups(const H5::Group& group, vector<Group>& groupList,
    return success;
 }
 
-bool ossimHdf5::getDatasets(const H5::Group& group, vector<DataSet>& datasetList,
+bool ossimHdf5::getDatasets(H5::Group group, vector<DataSet>& datasetList,
                             bool recursive) const
 {
    datasetList.clear();
@@ -177,7 +180,7 @@ bool ossimHdf5::getDatasets(const H5::Group& group, vector<DataSet>& datasetList
    return success;
 }
 
-bool ossimHdf5::getNdimDatasets(const H5::Group& group, vector<DataSet>& datasetList,
+bool ossimHdf5::getNdimDatasets(H5::Group group, vector<DataSet>& datasetList,
                                 bool recursive) const
 {
    datasetList.clear();
@@ -190,13 +193,13 @@ bool ossimHdf5::getNdimDatasets(const H5::Group& group, vector<DataSet>& dataset
    groupList.insert(groupList.begin(), group);
 
    bool success = true;
-   vector<Group>::iterator group_iter = groupList.begin();
-   while (group_iter != groupList.end())
+   try
    {
-      int numObjs = group_iter->getNumObjs();
-      for (int i=0; i<numObjs; ++i)
+      vector<Group>::iterator group_iter = groupList.begin();
+      while (group_iter != groupList.end())
       {
-         try
+         int numObjs = group_iter->getNumObjs();
+         for (int i=0; i<numObjs; ++i)
          {
             H5G_obj_t h5type = group_iter->getObjTypeByIdx(i);
             if (h5type == H5G_DATASET)
@@ -208,30 +211,31 @@ bool ossimHdf5::getNdimDatasets(const H5::Group& group, vector<DataSet>& dataset
                   datasetList.push_back(dataset);
             }
          }
-         catch( const H5::Exception& e )
-         {
-            e.getDetailMsg();
-            success = false;
-         }
+         ++group_iter;
       }
+   }
+   catch( const H5::Exception& e )
+   {
+      e.getDetailMsg();
+      success = false;
    }
    return success;
 }
 
-bool ossimHdf5::getAttributes(const H5Object& obj, vector<Attribute>& attrList) const
+bool ossimHdf5::getAttributes(const H5Object* obj, vector<Attribute>& attrList) const
 {
    attrList.clear();
-   if (!m_h5File)
+   if (!m_h5File || !obj)
       return false;
 
    // Find the object:
    bool success = true;
    try
    {
-      int numAttr = obj.getNumAttrs();
+      int numAttr = obj->getNumAttrs();
       for (int i=0; i<numAttr; ++i)
       {
-         attrList.push_back(obj.openAttribute(i));
+         attrList.push_back(obj->openAttribute(i));
       }
    }
    catch( const H5::Exception& e )

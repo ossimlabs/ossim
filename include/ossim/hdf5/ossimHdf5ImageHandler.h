@@ -1,15 +1,10 @@
-//----------------------------------------------------------------------------
-//
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  David Burken
-//
-// Description: OSSIM HDF5 Reader.
-//
-//----------------------------------------------------------------------------
-// $Id
+/*****************************************************************************
+ *                                                                            *
+ *                                 O S S I M                                  *
+ *            Open Source, Geospatial Image Processing Project                *
+ *          License: MIT, see LICENSE at the top-level directory              *
+ *                                                                            *
+ *****************************************************************************/
 
 #ifndef ossimHdf5ImageHandler_HEADER
 #define ossimHdf5ImageHandler_HEADER 1
@@ -24,6 +19,11 @@
 #include <vector>
 #include <string>
 
+/**
+ * This is the base class for all imagery using HDF5 as the file format. HDF5 is unique in that it
+ * represents a variety of subformats for raster and projection information. The derived classes
+ * will need to specify the group and dataset names where the needed data lives.
+ */
 class OSSIM_PLUGINS_DLL ossimHdf5ImageHandler : public ossimImageHandler
 {
    friend class ossimHdf5ImageDataset;
@@ -66,10 +66,10 @@ public:
     */
    virtual bool getTile(ossimImageData* result, ossim_uint32 resLevel=0);
 
-    /**
-     *  Returns the number of bands in the image.
-     *  Satisfies pure virtual from ImageHandler class.
-     */
+   /**
+    *  Returns the number of bands in the image.
+    *  Satisfies pure virtual from ImageHandler class.
+    */
    virtual ossim_uint32 getNumberOfInputBands() const;
 
    /**
@@ -80,9 +80,9 @@ public:
    virtual ossim_uint32 getNumberOfOutputBands()const;
 
    /**
-     *  Returns the number of lines in the image.
-     *  Satisfies pure virtual from ImageHandler class.
-     */
+    *  Returns the number of lines in the image.
+    *  Satisfies pure virtual from ImageHandler class.
+    */
    virtual ossim_uint32 getNumberOfLines(ossim_uint32 reduced_res_level = 0) const;
 
    /**
@@ -185,7 +185,7 @@ public:
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
 
    /**
-     * @brief Get propterty method. Overrides ossimImageHandler::getProperty.
+    * @brief Get propterty method. Overrides ossimImageHandler::getProperty.
     * @param name Property name to get.
     */
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name) const;
@@ -202,9 +202,20 @@ public:
     */
    void addRenderableSetName(const ossimString& name);
 
+   /** For use by factory to get listy of registered dataset names for raster data. */
+   const vector<ossimString>& getRenderableSetNames() const { return m_renderableNames; }
+
+   /**  The derived class needs to initialize the raster dataset names m_renderableNames in their
+    * constructor, for this method to work. This should be implemented by the derived HDF5-format
+    * readers defined in plugins.
+    * @return true on success, false on error. */
+   virtual bool open();
+
 protected:
 
-   /** @brief Method to get geometry from hdf file. */
+   /** @brief Method to get geometry from hdf file. This base class handles the coarse grid
+    * geometry found in VIIRS as the default scheme. Derived classes need to implement their
+    * own. */
    virtual ossimRefPtr<ossimImageGeometry> getInternalImageGeometry();
 
    /**
@@ -217,9 +228,9 @@ protected:
     *    e.g. /All_Data/VIIRS-DNB-GEO_All/Longitude
     */
    ossimRefPtr<ossimProjection> processCoarseGridProjection(
-      H5::DataSet& latDataSet,
-      H5::DataSet& lonDataSet,
-      const ossimIrect& validRect ) const;
+         H5::DataSet& latDataSet,
+         H5::DataSet& lonDataSet,
+         const ossimIrect& validRect ) const;
 
    /**
     * @brief Get dataset names for Latiitude and Longitude datasets.
@@ -240,14 +251,8 @@ protected:
    bool getLatLonDatasets( H5::H5File* h5File,
                            H5::DataSet& latDataSet,
                            H5::DataSet& lonDataSet ) const; 
-   
+
    bool getDataSetRect( std::string& name, std::string& lonName ) const;
-   
-  /**
-    *  @brief open method.
-    *  @return true on success, false on error.
-    */
-   virtual bool open();
 
    /** @brief Allocates the tile. */ 
    void allocate();
@@ -258,8 +263,8 @@ protected:
    ossim_uint32                     m_currentEntry;
    ossimRefPtr<ossimImageData>      m_tile;
    OpenThreads::Mutex               m_mutex;
-   
-TYPE_DATA
+
+   TYPE_DATA
 };
 
 #endif /* #ifndef ossimH5Reader_HEADER */

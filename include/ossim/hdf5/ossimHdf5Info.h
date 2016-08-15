@@ -36,6 +36,9 @@ public:
    /** default constructor */
    ossimHdf5Info();
 
+   /** Accepts already opened HDF5 file object. */
+   ossimHdf5Info(ossimHdf5* hdf5);
+
    /** virtual destructor */
    virtual ~ossimHdf5Info();
 
@@ -57,19 +60,19 @@ public:
     */
    virtual std::ostream& print(std::ostream& out) const;
 
-private:
    // Methods for printing collections:
-   std::ostream& printSubGroups(std::ostream& out, const H5::Group& obj, const ossimString& lm) const;
-   std::ostream& printAttributes(std::ostream& out, const H5::H5Object& obj, const ossimString& lm) const;
-   std::ostream& printDatasets(std::ostream& out, const H5::Group& obj, const ossimString& lm) const;
+   std::ostream& printSubGroups (std::ostream& out, const H5::Group& obj,    const ossimString& lm=ossimString()) const;
+   std::ostream& printAttributes(std::ostream& out, const H5::H5Object& obj, const ossimString& lm=ossimString()) const;
+   std::ostream& printDatasets  (std::ostream& out, const H5::Group& obj,    const ossimString& lm=ossimString()) const;
 
    // Methods for printing individual objects:
-   std::ostream& print(std::ostream& out, const H5::Group&     obj, const ossimString& lm) const;
-   std::ostream& print(std::ostream& out, const H5::DataSet&   obj, const ossimString& lm) const;
-   std::ostream& print(std::ostream& out, const H5::DataType&  obj, const ossimString& lm) const;
-   std::ostream& print(std::ostream& out, const H5::DataSpace& obj, const ossimString& lm) const;
-   std::ostream& print(std::ostream& out, const H5::Attribute& obj, const ossimString& lm) const;
+   std::ostream& print(std::ostream& out, const H5::Group&     obj, const ossimString& lm=ossimString()) const;
+   std::ostream& print(std::ostream& out, const H5::DataSet&   obj, const ossimString& lm=ossimString()) const;
+   std::ostream& print(std::ostream& out, const H5::DataType&  obj, const ossimString& lm=ossimString()) const;
+   std::ostream& print(std::ostream& out, const H5::DataSpace& obj, const ossimString& lm=ossimString()) const;
+   std::ostream& print(std::ostream& out, const H5::Attribute& obj, const ossimString& lm=ossimString()) const;
 
+private:
    ossimRefPtr<ossimHdf5>  m_hdf5;
 };
 

@@ -37,11 +37,7 @@
 #include <ossim/imaging/ossimBandSeparateHandler.h>
 #include <ossim/imaging/ossimRangeDomeTileSource.h>
 #include <ossim/parallel/ossimImageHandlerMtAdaptor.h>
-
-#define ENABLE_POINT_CLOUD_HANDLER
-#ifdef ENABLE_POINT_CLOUD_HANDLER
 #include <ossim/point_cloud/ossimPointCloudImageHandler.h>
-#endif
 
 #include <tiffio.h>
 
@@ -231,21 +227,19 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimFilename& fileName,
       if (result->open(copyFilename))  break;
 
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying CCF...\n";
-      result->setOpenOverviewFlag(openOverview);      
       result = new ossimCcfTileSource();
+      result->setOpenOverviewFlag(openOverview);      
       if (result->open(copyFilename))  break;
 
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying OSSIM Range Domes...\n";
-      result->setOpenOverviewFlag(openOverview);
       result = new ossimRangeDomeTileSource();
+      result->setOpenOverviewFlag(openOverview);
       if (result->open(copyFilename))  break;
 
-#ifdef ENABLE_POINT_CLOUD_HANDLER
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying Point Cloud...\n";
-      result->setOpenOverviewFlag(openOverview);
       result = new ossimPointCloudImageHandler();
+      result->setOpenOverviewFlag(openOverview);
       if (result->open(copyFilename))  break;
-#endif
 
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying LAS Reader...\n";
       result->setOpenOverviewFlag(openOverview);

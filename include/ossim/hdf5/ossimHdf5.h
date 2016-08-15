@@ -46,28 +46,28 @@ public:
    /** Assigns list of groups under specified group.
     * @param recursive If true, recursively visits all subgroups
     * @return True if result valid */
-   bool getChildGroups(const H5::Group& group,
+   bool getChildGroups(H5::Group group,
                        std::vector<H5::Group>& groupList,
                        bool recursive=false) const;
 
    /** Assigns list of datasets under current active group.
     * @param recursive If true, recursively visits all datasets for this group and subgroups
     * @return True if result valid */
-   bool getDatasets(const H5::Group& group,
+   bool getDatasets(H5::Group group,
                     std::vector<H5::DataSet>& datasetList,
                     bool recursive=false) const;
 
    /** Assigns list of all multi-dimensional datasets under current active group.
     * @param recursive If true, recursively visits all datasets for this group and subgroups
     * @return True if result valid */
-   bool getNdimDatasets(const H5::Group& group,
+   bool getNdimDatasets(H5::Group group,
                         std::vector<H5::DataSet>& datasetList,
                         bool recursive=false) const;
 
    /** Assigns map of attributes (key, value) for the specified object.
     * @param objPath Either relative or absolute path in file to object.
     * @return True if result valid */
-   bool getAttributes(const H5::H5Object& obj, std::vector<H5::Attribute>& attrList) const;
+   bool getAttributes(const H5::H5Object* obj, std::vector<H5::Attribute>& attrList) const;
 
    /** Finds a dataset by name. The first object with specified name (can be relative path -- a
     * naive string comparison is performed) under the specified group is returned.
