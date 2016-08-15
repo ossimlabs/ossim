@@ -556,7 +556,8 @@ ossim_uint32 ossimRsmModel::getPcaIndex( const ossimDpt& ipt, bool shiftPoint ) 
       csn = m_pia.m_cnis-1;
    }
 
-   return static_cast<ossim_uint32>(rsn) * m_pia.m_rnis + static_cast<ossim_uint32>(csn);
+   //return static_cast<ossim_uint32>(rsn) * m_pia.m_rnis + static_cast<ossim_uint32>(csn);
+   return static_cast<ossim_uint32>(rsn) * m_pia.m_cnis + static_cast<ossim_uint32>(csn);
 }
 
 void ossimRsmModel::lowOrderPolynomial(
