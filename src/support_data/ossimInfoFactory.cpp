@@ -12,6 +12,8 @@
 // $Id: ossimInfoFactory.cpp 22118 2013-01-18 21:05:14Z dburken $
 
 #include <ossim/support_data/ossimInfoFactory.h>
+#include <ossim/ossimConfig.h>
+#include <ossim/base/ossimFilename.h>
 #include <ossim/support_data/ossimInfoBase.h>
 #include <ossim/support_data/ossimCcfInfo.h>
 #include <ossim/support_data/ossimDemInfo.h>
@@ -26,7 +28,10 @@
 #include <ossim/support_data/ossimTiffInfo.h>
 #include <ossim/support_data/ossimXmpInfo.h>
 
-#include <ossim/base/ossimFilename.h>
+#if OSSIM_HAS_HDF5
+#include <ossim/hdf5/ossimHdf5Info.h>
+#endif
+
 
 ossimInfoFactory* ossimInfoFactory::theInstance = 0;
 
@@ -118,6 +123,14 @@ ossimInfoBase* ossimInfoFactory::create(const ossimFilename& file) const
       return result.release();
    }
    
+#if OSSIM_HAS_HDF5
+   result = new ossimHdf5Info();
+   if ( result->open(file) )
+   {
+      return result.release();
+   }
+#endif
+
    return 0;
 }
 
