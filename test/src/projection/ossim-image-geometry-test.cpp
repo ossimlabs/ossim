@@ -274,53 +274,67 @@ int main(int argc, char *argv[])
             }
          }
 
-      } // matches: if ( proj.valid() )
-
-      // Test the decimationFactors method.
-      ossim_uint32 level;
-      std::vector<ossimDpt> decimations;
-      geom->decimationFactors(decimations);
-      
-      for (level = 0; level < decimations.size(); ++level)
-      {
+         // Test the decimationFactors method.
+         ossim_uint32 level;
+         std::vector<ossimDpt> decimations;
+         geom->decimationFactors(decimations);
+         
+         for (level = 0; level < decimations.size(); ++level)
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "decimation[" << level << "]: " << decimations[level]
+               << std::endl;
+         }
+         
+         bool isAffectedByElevation = geom->isAffectedByElevation();
          ossimNotify(ossimNotifyLevel_DEBUG)
-            << "decimation[" << level << "]: " << decimations[level]
-            << std::endl;
-      }
-
-      bool isAffectedByElevation = geom->isAffectedByElevation();
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "\nImage projection " << ( isAffectedByElevation ? "is" : "isn't")
-         << " affected by elevation." << std::endl;
-      
-      // Test up is code:
-      if ( isAffectedByElevation )
-      {
-         ossim_float64 upIsUpAngle = geom->upIsUpAngle();
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "\nUp is up rotation angle: " << upIsUpAngle << "\n" << std::endl;
-      }
-      
+            << "\nImage projection " << ( isAffectedByElevation ? "is" : "isn't")
+            << " affected by elevation." << std::endl;
+         
+         // Test up is code:
+         if ( isAffectedByElevation )
+         {
+            ossim_float64 upIsUpAngle = geom->upIsUpAngle();
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "\nUp is up rotation angle: " << upIsUpAngle << "\n" << std::endl;
+         }
+         
 #if 0 /* commented out as one time test is good */
-      
-      // Test the decimationFactor method.
-      ossimDpt decimation;
-      geom->decimationFactors(decimations);
-      ossim_float64 r0_lines = ih->getNumberOfLines(0);
-      ossim_float64 r0_samps = ih->getNumberOfSamples(0);
-      
-      for (level = 0; level < geom->getNumberOfDecimations(); ++level)
-      {
-         geom->decimationFactor(level, decimation);
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "decimation[" << level << "]:          " << decimation
-            << "\nlines[" << level << "]:             " << ih->getNumberOfLines(level)
-            << "\nsamples[" << level << "]:           " << ih->getNumberOfSamples(level)
-            << "\ncomputed lines[" << level << "]:    " << (r0_lines * decimation.y)
-            << "\ncomputed samples[" << level << "]:  " << (r0_samps * decimation.x)
-            << std::endl;
-      }
+         
+         // Test the decimationFactor method.
+         ossimDpt decimation;
+         geom->decimationFactors(decimations);
+         ossim_float64 r0_lines = ih->getNumberOfLines(0);
+         ossim_float64 r0_samps = ih->getNumberOfSamples(0);
+         
+         for (level = 0; level < geom->getNumberOfDecimations(); ++level)
+         {
+            geom->decimationFactor(level, decimation);
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "decimation[" << level << "]:          " << decimation
+               << "\nlines[" << level << "]:             " << ih->getNumberOfLines(level)
+               << "\nsamples[" << level << "]:           " << ih->getNumberOfSamples(level)
+               << "\ncomputed lines[" << level << "]:    " << (r0_lines * decimation.y)
+               << "\ncomputed samples[" << level << "]:  " << (r0_samps * decimation.x)
+               << std::endl;
+         }
 #endif
+
+         // Print out transform, if any:
+         if ( geom->getTransform() != 0 )
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "Image geometry 2d To 2d transform:\n"
+               << *(geom->getTransform()) << "\n";
+         }
+         else
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "Image geometry has no 2d To 2d transform.\n";
+         }
+            
+         
+      }
       
       ++entry; // Go to next entry.
       
