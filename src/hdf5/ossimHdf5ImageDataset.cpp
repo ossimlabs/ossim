@@ -126,41 +126,42 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
 
    // Get the extents. Assuming dimensions are same for lat lon dataset.
    hsize_t rowSize[2]  = { 1, m_samples };
-   hsize_t offset[2] = { 0, 0 };
-
+   hsize_t imageOffset[2] = { 0, 0 };
    // Allocate space for read buffer:
-   void *rowBuf=0;
-   void *fill_value=0;
+   char *rowBuf=new char[elem_size*m_samples];
+   char *fill_value=new char[elem_size];
+
+#if 0
    switch (m_scalar)
    {
    case OSSIM_UINT8:
    case OSSIM_SINT8:
-      rowBuf = new ossim_int8[m_samples];
-      fill_value = new ossim_int8;
+      rowBuf = new char[sizeof(ossim_int8)*m_samples];
+      fill_value = new char[sizeof(ossim_int8)];
       break;
    case OSSIM_UINT16:
    case OSSIM_SINT16:
-      rowBuf = new ossim_int16[m_samples];
-      fill_value = new ossim_int16;
+      rowBuf = new char[sizeof(ossim_int16)*m_samples];
+      fill_value = new char[sizeof(ossim_int16)];
       break;
    case OSSIM_UINT32:
    case OSSIM_SINT32:
-      rowBuf = new ossim_int32[m_samples];
-      fill_value = new ossim_int32;
+      rowBuf = new char[sizeof(ossim_int32)*m_samples];
+      fill_value = new char[sizeof(ossim_int32)];
       break;
    case OSSIM_FLOAT32:
-      rowBuf = new ossim_float32[m_samples];
-      fill_value = new ossim_float32;
+      rowBuf = new char[sizeof(ossim_float32)*m_samples];
+      fill_value = new char[sizeof(ossim_float32)];
       break;
    default:
       ossimNotify(ossimNotifyLevel_WARN) << "ossimHdf5ImageDataset:"<<__LINE__
       << " -- WARNING: Unhandled scalar type encountered. " << std::endl;
       return false;
    }
-
+#endif
    // Output dataspace always the same one line.
    H5::DataSpace bufferDataSpace( 2, rowSize);
-   bufferDataSpace.selectHyperslab( H5S_SELECT_SET, rowSize, offset ); // offset = (0,0) here
+   bufferDataSpace.selectHyperslab( H5S_SELECT_SET, rowSize, imageOffset ); // offset = (0,0) here
 
    // Figure out the null pixel value:
    H5:H5Pget_fill_value(m_dataset.getId(), dataType.getId(), fill_value);
@@ -170,14 +171,14 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
    bool found_valid = false;
    for (; (ulIpt.y<m_lines) && !found_valid; ulIpt.y++)
    {
-      offset[0] = ulIpt.y;
-      imageDataspace.selectHyperslab( H5S_SELECT_SET, rowSize, offset);
+      imageOffset[0] = ulIpt.y;
+      imageDataspace.selectHyperslab( H5S_SELECT_SET, rowSize, imageOffset);
       m_dataset.read(rowBuf, dataType, bufferDataSpace, imageDataspace );
 
       // Scan row for valid pixel:
-      ossim_uint32 offset = 0;
+      ossim_int64 offset = 0;
       for (ulIpt.x=0; (ulIpt.x<m_samples) && !found_valid; ulIpt.x++, offset+=elem_size)
-         found_valid = (memcmp(&(((char*)rowBuf)[offset]), fill_value, elem_size) != 0);
+         found_valid = (memcmp(&rowBuf[offset], fill_value, elem_size) != 0);
    }
    if (!found_valid)
       ulIpt = ossimIpt(0,0);
@@ -187,14 +188,14 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
    found_valid = false;
    for (; (lrIpt.y>ulIpt.y) && !found_valid; lrIpt.y--)
    {
-      offset[0] = lrIpt.y;
-      imageDataspace.selectHyperslab( H5S_SELECT_SET, rowSize, offset);
+      imageOffset[0] = lrIpt.y;
+      imageDataspace.selectHyperslab( H5S_SELECT_SET, rowSize, imageOffset);
       m_dataset.read(rowBuf, dataType, bufferDataSpace, imageDataspace );
 
       // Scan row for valid pixel:
-      ossim_uint32 offset = m_samples*elem_size - 1;
+      ossim_int64 offset = m_samples*elem_size - 1;
       for (lrIpt.x=m_samples-1; (lrIpt.x>ulIpt.x) && !found_valid; lrIpt.x-- , offset-=elem_size)
-         found_valid = (memcmp(&(((char*)rowBuf)[offset]), fill_value, elem_size) != 0);
+         found_valid = (memcmp(&rowBuf[offset], fill_value, elem_size) != 0);
    }
    if (!found_valid)
       lrIpt = ossimIpt (m_samples-1, m_lines-1);
@@ -203,8 +204,9 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
    m_validRect.set_lr(lrIpt);
 
    imageDataspace.close();
-   delete rowBuf;
-   delete fill_value;
+
+   delete [] rowBuf;
+   delete [] fill_value;
    return true;
 }
 
