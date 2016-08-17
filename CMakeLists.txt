@@ -163,7 +163,11 @@ if (BUILD_OSSIM_HDF5_SUPPORT)
   else ( HDF5A_FOUND )
      message( WARNING "Could not find optional HDF5A package. Excluding native support." )
   endif ( HDF5A_FOUND )
-endif (BUILD_OSSIM_HDF5_SUPPORT)
+else (BUILD_OSSIM_HDF5_SUPPORT)
+  message( STATUS "Native HDF5 support was not requested. If you want HDF5 support, set the environment BUILD_OSSIM_HDF5_SUPPORT=ON..." )
+endif ( BUILD_OSSIM_HDF5_SUPPORT )
+  
+
 
 #---
 # Call the OSSIM macros in OssimUtilities.cmake

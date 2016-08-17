@@ -146,16 +146,16 @@ bool ossimHdf5ImageHandler::getTile(ossimImageData* result, ossim_uint32 resLeve
 
             // Create buffer to hold the clip rect for a single band.
             ossim_uint32 clipRectSizeInBytes = clipRect.area() *
-                  ossim::scalarSizeInBytes( m_entries[m_currentEntry].getScalarType() );
+                  ossim::scalarSizeInBytes( m_entries[m_currentEntry]->getScalarType() );
             vector<char> dataBuffer(clipRectSizeInBytes);
 
             // Get the data.
             for (ossim_uint32 band = 0; band < getNumberOfInputBands(); ++band)
             {
                // Hdf5 file to buffer:
-               m_entries[m_currentEntry].getTileBuf(&dataBuffer.front(), clipRect, band);
+               m_entries[m_currentEntry]->getTileBuf(&dataBuffer.front(), clipRect, band);
 
-               if ( m_entries[m_currentEntry].getScalarType() == OSSIM_FLOAT32 )
+               if ( m_entries[m_currentEntry]->getScalarType() == OSSIM_FLOAT32 )
                {
                   //---
                   // NPP VIIRS data has null of "-999.3".
@@ -215,11 +215,6 @@ bool ossimHdf5ImageHandler::loadState(const ossimKeywordlist& kwl,
    }
 
    return false;
-}
-
-void ossimHdf5ImageHandler::addRenderableSetName(const ossimString& name)
-{
-   m_renderableNames.push_back(name);
 }
 
 bool ossimHdf5ImageHandler::open()
@@ -297,21 +292,25 @@ bool ossimHdf5ImageHandler::open()
       return false;
    }
 
+   // Add the image dataset entries.
+   std::vector<H5::DataSet>::iterator dataset = datasetList.begin();
+   while (dataset != datasetList.end())
+   {
+      ossimRefPtr<ossimHdf5ImageDataset> oimgset = new ossimHdf5ImageDataset(this);
+      oimgset->initialize(*dataset);
+      m_entries.push_back(oimgset);
+      ++dataset;
+   }
+
+   // Initialize the current entry to be 0:
+   m_currentEntry = 999; // Forces init on change of index
+   setCurrentEntry(0);
+
    // Establish a common geometry for all entries. TODO: Need to verify if this is a kosher thing
    // to do. It may be that multiple entries have different geometries associated.
    getImageGeometry();
    if (!theGeometry.valid())
       return false;
-
-   // Add the image dataset entries.
-   std::vector<H5::DataSet>::iterator dataset = datasetList.begin();
-   while (dataset != datasetList.end())
-   {
-      ossimHdf5ImageDataset oimgset(this);
-      oimgset.initialize(*dataset);
-      m_entries.push_back(oimgset);
-      ++dataset;
-   }
 
 #if 0 /* Please leave for debug. (drb) */
    std::vector<ossimHdf5ImageDataset>::const_iterator i = m_entries.begin();
@@ -331,8 +330,8 @@ ossim_uint32 ossimHdf5ImageHandler::getNumberOfLines(ossim_uint32 reduced_res_le
    ossim_uint32 r = 0;
    if (reduced_res_level == 0)
    {
-      if (theGeometry.valid())
-         r = theGeometry->getImageSize().y;
+      if (m_currentEntry < m_entries.size())
+         r = m_entries[m_currentEntry]->getNumberOfLines();
    }
    else if ( theOverview.valid() )
    {
@@ -347,8 +346,8 @@ ossim_uint32 ossimHdf5ImageHandler::getNumberOfSamples(ossim_uint32 reduced_res_
    ossim_uint32 r = 0;
    if (reduced_res_level == 0)
    {
-      if (theGeometry.valid())
-         r = theGeometry->getImageSize().x;
+      if (m_currentEntry < m_entries.size())
+         r = m_entries[m_currentEntry]->getNumberOfSamples();
    }
    else if ( theOverview.valid() )
    {
@@ -388,9 +387,7 @@ ossim_uint32 ossimHdf5ImageHandler::getNumberOfInputBands() const
    ossim_uint32 result = 1;
 
    if ( m_currentEntry < m_entries.size() )
-   {
-      result = m_entries[m_currentEntry].getNumberOfBands();
-   }
+      result = m_entries[m_currentEntry]->getNumberOfBands();
 
    return result;
 }
@@ -407,7 +404,7 @@ ossimScalarType ossimHdf5ImageHandler::getOutputScalarType() const
 
    if ( m_currentEntry < m_entries.size() )
    {
-      result = m_entries[m_currentEntry].getScalarType();
+      result = m_entries[m_currentEntry]->getScalarType();
    }
 
    return result;
@@ -443,7 +440,7 @@ void ossimHdf5ImageHandler::getEntryNames(std::vector<ossimString>& entryNames) 
    entryNames.clear();
    for (ossim_uint32 i=0; i<m_entries.size(); ++i )
    {
-      entryNames.push_back(m_entries[i].getName());
+      entryNames.push_back(m_entries[i]->getName());
    }
 }
 
@@ -457,34 +454,30 @@ void ossimHdf5ImageHandler::getEntryList(std::vector<ossim_uint32>& entryList) c
    }
 }
 
-bool ossimHdf5ImageHandler::setCurrentEntry( ossim_uint32 entryIdx )
+bool ossimHdf5ImageHandler::setCurrentEntry( ossim_uint32 entryIdx)
 {
    bool result = true;
    if (m_currentEntry != entryIdx)
    {
-      if ( isOpen() )
+      // Entries always start at zero and increment sequentially..
+      if ( entryIdx < m_entries.size() )
       {
-         // Entries always start at zero and increment sequentially..
-         if ( entryIdx < m_entries.size() )
-         {
-            theOverviewFile.clear();
-            m_currentEntry = entryIdx;
-            m_tile = 0;
+         theOverviewFile.clear();
+         m_currentEntry = entryIdx;
+         m_tile = 0;
+         ossimIrect validRect = m_entries[entryIdx]->getValidImageRect();
+         theValidImageVertices.clear();
+         theValidImageVertices.push_back(validRect.ul());
+         theValidImageVertices.push_back(validRect.ur());
+         theValidImageVertices.push_back(validRect.lr());
+         theValidImageVertices.push_back(validRect.ll());
 
+         if ( isOpen() )
             completeOpen();
-         }
-         else
-         {
-            result = false; // Entry index out of range.
-         }
       }
       else
       {
-         //---
-         // Not open.
-         // Allow this knowing that open will check for out of range.
-         //---
-         m_currentEntry = entryIdx;
+         result = false; // Entry index out of range.
       }
    }
 
@@ -496,22 +489,12 @@ ossim_uint32 ossimHdf5ImageHandler::getCurrentEntry() const
    return m_currentEntry;
 }
 
-ossimRefPtr<ossimImageGeometry> ossimHdf5ImageHandler::getInternalImageGeometry()
+ossimRefPtr<ossimHdf5ImageDataset> ossimHdf5ImageHandler::getCurrentDataset()
 {
-   if (isOpen())
-   {
-      if (!theGeometry.valid())
-         theGeometry =  new ossimImageGeometry();
+   if ( m_currentEntry >= m_entries.size() )
+      return 0;
 
-      // Attempt to create an OSSIM coarse grid model from HDF5 lat lon grids:
-      ossimRefPtr<ossimHdf5GridModel> hdf5GridModel = new ossimHdf5GridModel;
-      if ( hdf5GridModel->initialize(m_hdf5) )
-         theGeometry->setProjection(hdf5GridModel.get());
-   }
-   else
-      theGeometry = 0;
-
-   return theGeometry;
+   return m_entries[m_currentEntry];
 }
 
 double ossimHdf5ImageHandler::getNullPixelValue( ossim_uint32 band ) const
@@ -544,7 +527,7 @@ void ossimHdf5ImageHandler::setProperty(ossimRefPtr<ossimProperty> property)
       ossim_uint32 SIZE = (ossim_uint32)m_entries.size();
       for ( ossim_uint32 i = 0; i < SIZE; ++i )
       {
-         if ( m_entries[i].getName() == s.string() )
+         if ( m_entries[i]->getName() == s.string() )
          {
             setCurrentEntry( i );
          }
@@ -563,7 +546,7 @@ ossimRefPtr<ossimProperty> ossimHdf5ImageHandler::getProperty(const ossimString&
    {
       if ( m_currentEntry < m_entries.size() )
       {
-         ossimString value = m_entries[m_currentEntry].getName();
+         ossimString value = m_entries[m_currentEntry]->getName();
          prop = new ossimStringProperty(name, value);
       }
    }

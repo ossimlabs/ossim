@@ -170,6 +170,8 @@ public:
     */
    virtual ossim_uint32 getCurrentEntry() const;
 
+   ossimRefPtr<ossimHdf5ImageDataset> getCurrentDataset();
+
    /** @return Null pixel value. */
    virtual double getNullPixelValue(ossim_uint32 band=0)const;
 
@@ -196,70 +198,21 @@ public:
     */
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames) const;
 
-   /** For this class only, add the specified name (can be full HDF path or pathless name only)
-    * for all renderable datasets to consider. If none are specified, then all multi-dimensional
-    * datasets (excluding geo sets) are considered renderable.
-    */
-   void addRenderableSetName(const ossimString& name);
-
-   /** For use by factory to get listy of registered dataset names for raster data. */
-   const vector<ossimString>& getRenderableSetNames() const { return m_renderableNames; }
-
    /**  The derived class needs to initialize the raster dataset names m_renderableNames in their
     * constructor, for this method to work. This should be implemented by the derived HDF5-format
     * readers defined in plugins.
     * @return true on success, false on error. */
    virtual bool open();
 
+   const std::vector<ossimString>& getRenderableSetNames() { return m_renderableNames; }
+
 protected:
-
-   /** @brief Method to get geometry from hdf file. This base class handles the coarse grid
-    * geometry found in VIIRS as the default scheme. Derived classes need to implement their
-    * own. */
-   virtual ossimRefPtr<ossimImageGeometry> getInternalImageGeometry();
-
-   /**
-    * @brief Gets projection from Latitude, Longitude, Height datasets if
-    * present.
-    *
-    * @param latDataSet H5::DataSet& to layer,
-    *    e.g. /All_Data/VIIRS-DNB-GEO_All/Latitude
-    * @param lonDataSet H5::DataSet& to layer,
-    *    e.g. /All_Data/VIIRS-DNB-GEO_All/Longitude
-    */
-   ossimRefPtr<ossimProjection> processCoarseGridProjection(
-         H5::DataSet& latDataSet,
-         H5::DataSet& lonDataSet,
-         const ossimIrect& validRect ) const;
-
-   /**
-    * @brief Get dataset names for Latiitude and Longitude datasets.
-    * @param h5File Pointer to file.
-    * @param latName Initializes by this.
-    * @param lonName Initializes by this.
-    * @return true on sucess, false on error.
-    */
-   bool getLatLonDatasetNames(  H5::H5File* h5File,
-                                std::string& latName,
-                                std::string& lonName ) const;
-   /**
-    * @param Initializes lat and lon data sets.
-    * @param h5File Pointer to file.
-    * @param latDataSet Initialized by this.
-    * @param lonDataSet Initialized by this.
-    */
-   bool getLatLonDatasets( H5::H5File* h5File,
-                           H5::DataSet& latDataSet,
-                           H5::DataSet& lonDataSet ) const; 
-
-   bool getDataSetRect( std::string& name, std::string& lonName ) const;
-
    /** @brief Allocates the tile. */ 
    void allocate();
 
    std::vector<ossimString>         m_renderableNames;
    ossimRefPtr<ossimHdf5>           m_hdf5;
-   std::vector<ossimHdf5ImageDataset> m_entries;
+   std::vector<ossimRefPtr<ossimHdf5ImageDataset>> m_entries;
    ossim_uint32                     m_currentEntry;
    ossimRefPtr<ossimImageData>      m_tile;
    OpenThreads::Mutex               m_mutex;

@@ -127,38 +127,11 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
    // Get the extents. Assuming dimensions are same for lat lon dataset.
    hsize_t rowSize[2]  = { 1, m_samples };
    hsize_t imageOffset[2] = { 0, 0 };
-   // Allocate space for read buffer:
-   char *rowBuf=new char[elem_size*m_samples];
-   char *fill_value=new char[elem_size];
 
-#if 0
-   switch (m_scalar)
-   {
-   case OSSIM_UINT8:
-   case OSSIM_SINT8:
-      rowBuf = new char[sizeof(ossim_int8)*m_samples];
-      fill_value = new char[sizeof(ossim_int8)];
-      break;
-   case OSSIM_UINT16:
-   case OSSIM_SINT16:
-      rowBuf = new char[sizeof(ossim_int16)*m_samples];
-      fill_value = new char[sizeof(ossim_int16)];
-      break;
-   case OSSIM_UINT32:
-   case OSSIM_SINT32:
-      rowBuf = new char[sizeof(ossim_int32)*m_samples];
-      fill_value = new char[sizeof(ossim_int32)];
-      break;
-   case OSSIM_FLOAT32:
-      rowBuf = new char[sizeof(ossim_float32)*m_samples];
-      fill_value = new char[sizeof(ossim_float32)];
-      break;
-   default:
-      ossimNotify(ossimNotifyLevel_WARN) << "ossimHdf5ImageDataset:"<<__LINE__
-      << " -- WARNING: Unhandled scalar type encountered. " << std::endl;
-      return false;
-   }
-#endif
+   // Allocate space for read buffer:
+   char *rowBuf = new char[elem_size*m_samples];
+   char *fill_value = new char[elem_size];
+
    // Output dataspace always the same one line.
    H5::DataSpace bufferDataSpace( 2, rowSize);
    bufferDataSpace.selectHyperslab( H5S_SELECT_SET, rowSize, imageOffset ); // offset = (0,0) here
@@ -176,9 +149,9 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
       m_dataset.read(rowBuf, dataType, bufferDataSpace, imageDataspace );
 
       // Scan row for valid pixel:
-      ossim_int64 offset = 0;
-      for (ulIpt.x=0; (ulIpt.x<m_samples) && !found_valid; ulIpt.x++, offset+=elem_size)
-         found_valid = (memcmp(&rowBuf[offset], fill_value, elem_size) != 0);
+      ossim_int64 rowOffset = 0;
+      for (ulIpt.x=0; (ulIpt.x<m_samples) && !found_valid; ulIpt.x++, rowOffset+=elem_size)
+         found_valid = (memcmp(&rowBuf[rowOffset], fill_value, elem_size) != 0);
    }
    if (!found_valid)
       ulIpt = ossimIpt(0,0);
@@ -193,9 +166,9 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
       m_dataset.read(rowBuf, dataType, bufferDataSpace, imageDataspace );
 
       // Scan row for valid pixel:
-      ossim_int64 offset = m_samples*elem_size - 1;
-      for (lrIpt.x=m_samples-1; (lrIpt.x>ulIpt.x) && !found_valid; lrIpt.x-- , offset-=elem_size)
-         found_valid = (memcmp(&rowBuf[offset], fill_value, elem_size) != 0);
+      ossim_int64 rowOffset = m_samples*elem_size - 1;
+      for (lrIpt.x=m_samples-1; (lrIpt.x>ulIpt.x) && !found_valid; lrIpt.x-- , rowOffset-=elem_size)
+         found_valid = (memcmp(&rowBuf[rowOffset], fill_value, elem_size) != 0);
    }
    if (!found_valid)
       lrIpt = ossimIpt (m_samples-1, m_lines-1);

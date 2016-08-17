@@ -12,6 +12,8 @@
 // $Id
 
 #include <ossim/hdf5/ossimHdf5.h>
+#include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimNotify.h>
 #include <string>
 
@@ -110,8 +112,6 @@ bool ossimHdf5::getRoot(Group& root) const
 bool ossimHdf5::getChildGroups(H5::Group group, vector<Group>& groupList,
                                bool recursive) const
 {
-   // TODO *** NOTE: This is failing when recursive = true ***
-
    if (!m_h5File)
       return false;
 
@@ -125,9 +125,7 @@ bool ossimHdf5::getChildGroups(H5::Group group, vector<Group>& groupList,
          if (h5type == H5G_GROUP)
          {
             string name = group.getObjnameByIdx(i);
-            cout<<"name = <"<<name<<">"<<endl; //TODO: REMOVE
             groupList.push_back(group.openGroup(name));
-
             if (recursive)
                success = getChildGroups(groupList.back(), groupList, true);
          }
@@ -283,4 +281,39 @@ H5::DataSet* ossimHdf5::findDatasetByName(const char* name, const H5::Group* gro
    }
    return named_dataset;
 }
+
+ossimByteOrder ossimHdf5::getByteOrder( const H5::AbstractDs* obj )
+{
+   ossimByteOrder byteOrder = ossim::byteOrder();
+   if ( obj )
+   {
+      // Get the class of the datatype that is used by the dataset.
+      H5T_class_t typeClass = obj->getTypeClass();
+
+      H5T_order_t order = H5T_ORDER_NONE;
+
+      if ( typeClass == H5T_INTEGER )
+      {
+         H5::IntType intype = obj->getIntType();
+         order = intype.getOrder();
+      }
+      else if ( typeClass == H5T_FLOAT )
+      {
+         H5::FloatType floatType = obj->getFloatType();
+         order = floatType.getOrder();
+      }
+
+      if ( order == H5T_ORDER_LE )
+      {
+         byteOrder = OSSIM_LITTLE_ENDIAN;
+      }
+      else if ( order == H5T_ORDER_BE )
+      {
+         byteOrder = OSSIM_BIG_ENDIAN;
+      }
+   }
+   return byteOrder;
+}
+
+
 
