@@ -417,10 +417,10 @@ void ossimCoarseGridModel::initializeModelParams(ossimIrect imageBounds)
    v[0].lon = theLonGrid.getNode(0,0);
    v[1].lat = theLatGrid.getNode(gridSize.x-1, 0);
    v[1].lon = theLonGrid.getNode(gridSize.x-1, 0);
-   v[2].lat = theLatGrid.getNode(gridSize.x-1, gridSize.y-1);
-   v[2].lon = theLonGrid.getNode(gridSize.x-1, gridSize.y-1);
-   v[3].lat = theLatGrid.getNode(0, gridSize.y-1);
-   v[3].lon = theLonGrid.getNode(0, gridSize.y-1);
+   v[2].lat = theLatGrid.getNode(gridSize.x-1, gridSize.y-2);
+   v[2].lon = theLonGrid.getNode(gridSize.x-1, gridSize.y-2);
+   v[3].lat = theLatGrid.getNode(0, gridSize.y-2);
+   v[3].lon = theLonGrid.getNode(0, gridSize.y-2);
 
    // Guaranty longitude values are -180 to 180
    for (int i=0; i<4; i++)

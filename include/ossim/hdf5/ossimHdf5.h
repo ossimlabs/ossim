@@ -78,6 +78,8 @@ public:
                                   const H5::Group* group=0,
                                   bool recursive=false);
 
+   ossimByteOrder getByteOrder( const H5::AbstractDs* obj );
+
 private:
    ossimFilename m_filename;
    H5::H5File* m_h5File;

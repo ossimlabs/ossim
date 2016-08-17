@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
       if (!geom.valid())
          throw ossimException("Could not create geometry object.");
 
-      geom->print(cout);
+      //geom->print(cout);
    }
    catch(const ossimException& e)
    {

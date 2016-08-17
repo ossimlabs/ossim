@@ -86,6 +86,14 @@ int ossimToolClient::connectToServer(char* hostname, char* portname)
          host = host.before(":");
       }
 
+      if (port.empty())
+      {
+         // Maybe implied port then '/':
+         port = host.after("/");
+         port = "/" + port;
+         host = host.before("/");
+      }
+
       // Establish full server address including port:
       struct addrinfo hints;
       memset(&hints, 0, sizeof hints); // make sure the struct is empty

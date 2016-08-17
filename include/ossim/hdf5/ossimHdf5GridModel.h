@@ -24,6 +24,7 @@
 #include <ossim/hdf5/ossimHdf5.h>
 #include <string>
 
+class ossimHdf5ImageHandler;
 
 /******************************************************************************
  *
@@ -41,20 +42,22 @@ public:
    virtual ~ossimHdf5GridModel();
 
    /** Initializes from an open HDF5 file */
-   bool initialize(ossimRefPtr<ossimHdf5>& hdf5);
+   bool initialize(ossimHdf5* hdf5, ossimHdf5ImageHandler* handler);
 
 protected:
 
-   bool initCoarseGrid(ossimHdf5* hdf5, const char* datasetName, ossimDblGrid& coarseGrid);
+   bool initCoarseGrid(const char* datasetName, const ossimIrect& validImageRect,
+                       ossimDblGrid& coarseGrid);
 
-   bool m_crossesDateline;
+   bool crossesDateline();
 
-   //---
    // This polygon differs from base "theBoundGndPolygon" in that if the
    // scene crosses the dateline the longitude values are stored between
    // 0 and 360 degress as opposed to -180 to 180.
-   //---
    ossimPolygon m_boundGndPolygon;
+
+   ossimRefPtr<ossimHdf5> m_hdf5;
+   ossimRefPtr<ossimHdf5ImageHandler> m_handler;
    
    TYPE_DATA
 };
