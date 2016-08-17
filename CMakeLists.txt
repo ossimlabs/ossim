@@ -234,6 +234,8 @@ MESSAGE( STATUS "GEOS_INCLUDE                    = ${GEOS_INCLUDE_DIR}" )
 MESSAGE( STATUS "JPEG_LIBRARY                    = ${JPEG_LIBRARIES}" )
 MESSAGE( STATUS "JPEG_INCLUDE                    = ${JPEG_INCLUDE_DIR}" )
 MESSAGE( STATUS "OSSIM DEPENDENT LIBRARIES       = ${ossimDependentLibs}" )
+MESSAGE( STATUS "OSSIM_HAS_HDF5                  = ${OSSIM_HAS_HDF5}" )
+
 
 #-----------------------------------------------------------------------------
 # uninstall target
