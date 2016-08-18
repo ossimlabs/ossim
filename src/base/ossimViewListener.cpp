@@ -13,7 +13,7 @@
 RTTI_DEF1(ossimViewListener, "ossimViewListener", ossimListener);
 void ossimViewListener::processEvent(ossimEvent& event)
 {
-   ossimViewEvent* evt = PTR_CAST(ossimViewEvent, &event);
+   ossimViewEvent* evt = dynamic_cast<ossimViewEvent*>(&event);
 
    if(evt)
    {

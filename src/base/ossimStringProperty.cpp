@@ -39,16 +39,15 @@ const ossimProperty& ossimStringProperty::assign(const ossimProperty& rhs)
 {
    ossimProperty::assign(rhs);
    
-   ossimStringProperty* rhsPtr = PTR_CAST(ossimStringProperty,
-					  &rhs);
+   const ossimStringProperty* rhsPtr = dynamic_cast<const ossimStringProperty*>(&rhs);
    
-   theValue        = rhs.valueToString();
+   theValue = rhs.valueToString();
    
    if(rhsPtr)
-     {
-       theEditableFlag = rhsPtr->theEditableFlag;
-       theConstraints  = rhsPtr->theConstraints;
-     }
+   {
+      theEditableFlag = rhsPtr->theEditableFlag;
+      theConstraints  = rhsPtr->theConstraints;
+   }
    
    return *this;
 }

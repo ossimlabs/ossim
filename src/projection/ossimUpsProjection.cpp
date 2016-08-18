@@ -335,7 +335,7 @@ bool ossimUpsProjection::operator==(const ossimProjection& proj) const
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimUpsProjection* p = PTR_CAST(ossimUpsProjection, &proj);
+   const ossimUpsProjection* p = dynamic_cast<const ossimUpsProjection*>(&proj);
    if (!p) return false;
 
    if (theHemisphere != p->theHemisphere) return false;

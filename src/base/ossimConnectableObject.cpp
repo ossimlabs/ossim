@@ -407,8 +407,8 @@ ossimConnectableObject* ossimConnectableObject::findObjectOfType(RTTItypeid type
    
    if(recurse)
    {
-      ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                           this);
+      ossimConnectableContainerInterface* inter =
+         dynamic_cast<ossimConnectableContainerInterface*>(this);
       if(inter)
       {
          ossimConnectableObject* tempObj = inter->findFirstObjectOfType(typeId);
@@ -420,8 +420,7 @@ ossimConnectableObject* ossimConnectableObject::findObjectOfType(RTTItypeid type
       
       for(ossim_uint32 index = 0; index < connectableList->size(); ++index)
       {
-         inter = PTR_CAST(ossimConnectableContainerInterface,
-                          (*connectableList)[index].get());
+         inter = dynamic_cast<ossimConnectableContainerInterface*>((*connectableList)[index].get());
          if(inter)
          {
             ossimConnectableObject* tempObj = inter->findFirstObjectOfType(typeId);
@@ -489,8 +488,8 @@ ossimConnectableObject* ossimConnectableObject::findObjectOfType(
    
    if(recurse)
    {
-      ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                           this);
+      ossimConnectableContainerInterface* inter =
+         dynamic_cast<ossimConnectableContainerInterface*>(this);
       if(inter)
       {
          ossimConnectableObject* tempObj = inter->findFirstObjectOfType(className);
@@ -501,7 +500,7 @@ ossimConnectableObject* ossimConnectableObject::findObjectOfType(
       }
       for(ossim_uint32 index = 0; index < connectableList->size(); ++index)
       {
-         inter = PTR_CAST(ossimConnectableContainerInterface,
+         inter = dynamic_cast<ossimConnectableContainerInterface*>(
                           (*connectableList)[index].get());
          if(inter)
          {
@@ -549,7 +548,7 @@ ossimConnectableObject* ossimConnectableObject::findInputObjectOfType(
    ossimConnectableObject* result = 0;
    // If we are a container, look inside for type.
    ossimConnectableContainerInterface* container =
-   PTR_CAST(ossimConnectableContainerInterface, this);
+      dynamic_cast<ossimConnectableContainerInterface*>(this);
    if (container)
    {
       const ossim_uint32 NUMBER_OF_OBJECTS =
@@ -1595,8 +1594,8 @@ void  ossimConnectableObject::findAllObjectsOfType(ConnectableObjectList& result
    int j;
    // go through children first
    //
-   ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                        this);
+   ossimConnectableContainerInterface* inter =
+      dynamic_cast<ossimConnectableContainerInterface*>(this);
    if(inter)
    {
       ConnectableObjectList tempList = inter->findAllObjectsOfType(typeInfo,
@@ -1621,8 +1620,8 @@ void ossimConnectableObject::findAllObjectsOfType(ConnectableObjectList& result,
    int j;
    // go through children first
    //
-   ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                        this);
+   ossimConnectableContainerInterface* inter =
+      dynamic_cast<ossimConnectableContainerInterface*>(this);
    if(inter)
    {
       ConnectableObjectList tempList = inter->findAllObjectsOfType(className,
@@ -1649,8 +1648,8 @@ void ossimConnectableObject::findAllInputsOfType(ConnectableObjectList& result,
    int j;
    // go through children first
    //
-   ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                        this);
+   ossimConnectableContainerInterface* inter =
+      dynamic_cast<ossimConnectableContainerInterface*>(this);
    if(inter&&recurseChildren)
    {
       ConnectableObjectList tempList = inter->findAllObjectsOfType(typeInfo,
@@ -1678,7 +1677,7 @@ void ossimConnectableObject::findAllInputsOfType(ConnectableObjectList& result,
             result.push_back(current);
          }
       }
-      inter = PTR_CAST(ossimConnectableContainerInterface, current);
+      inter = dynamic_cast<ossimConnectableContainerInterface*>(current);
       if(inter)
       {
          ConnectableObjectList tempList = inter->findAllObjectsOfType(typeInfo, true);
@@ -1710,8 +1709,8 @@ void ossimConnectableObject::findAllInputsOfType(ConnectableObjectList& result,
    int j;
    // go through children first
    //
-   ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                        this);
+   ossimConnectableContainerInterface* inter =
+      dynamic_cast<ossimConnectableContainerInterface*>(this);
    if(inter&&recurseChildren)
    {
       ConnectableObjectList tempList = inter->findAllObjectsOfType(className,
@@ -1737,8 +1736,8 @@ void ossimConnectableObject::findAllInputsOfType(ConnectableObjectList& result,
             result.push_back(current);
          }
       }
-      ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                           current);
+      ossimConnectableContainerInterface* inter =
+         dynamic_cast<ossimConnectableContainerInterface*>(current);
       if(inter)
       {
          ConnectableObjectList tempList = inter->findAllObjectsOfType(className, true);

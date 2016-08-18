@@ -14,8 +14,7 @@ RTTI_DEF1(ossimMouseListener,"ossimMouseListener",ossimListener);
 
 void ossimMouseListener::processEvent(ossimEvent& event)
 {
-   ossimMouseEvent* mEvent = PTR_CAST(ossimMouseEvent, &event);
-
+   ossimMouseEvent* mEvent = dynamic_cast<ossimMouseEvent*>(&event);
    if(mEvent)
    {
       mouseEvent(*mEvent);

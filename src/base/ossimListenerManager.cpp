@@ -35,7 +35,7 @@ ossimListenerManager::~ossimListenerManager()
 void ossimListenerManager::fireEvent(ossimEvent& event)
 {
    // only process the event if it has not been consumed.
-   event.setCurrentObject(PTR_CAST(ossimObject, this));
+   event.setCurrentObject( dynamic_cast<ossimObject*>(this) );
    if(event.isConsumed())
    {
       return;

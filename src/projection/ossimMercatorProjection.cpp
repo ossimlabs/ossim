@@ -483,9 +483,9 @@ bool ossimMercatorProjection::operator==(const ossimProjection& proj) const
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimMercatorProjection* p = PTR_CAST(ossimMercatorProjection, &proj);
+   const ossimMercatorProjection* p = dynamic_cast<const ossimMercatorProjection*>(&proj);
    if (!p) return false;
-
+   
    if (!ossim::almostEqual(Merc_Scale_Factor,p->Merc_Scale_Factor)) return false;
 
    return true;
