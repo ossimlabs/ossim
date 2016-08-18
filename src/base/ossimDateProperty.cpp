@@ -131,8 +131,7 @@ const ossimProperty& ossimDateProperty::assign(const ossimProperty& rhs)
 {
    ossimProperty::assign(rhs);
 
-   ossimDateProperty* rhsPtr = PTR_CAST(ossimDateProperty, &rhs);
-
+   const ossimDateProperty* rhsPtr = dynamic_cast<const ossimDateProperty*>(&rhs);
    if(rhsPtr)
    {
       theValue = rhsPtr->theValue;

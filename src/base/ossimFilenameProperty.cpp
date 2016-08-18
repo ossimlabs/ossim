@@ -61,9 +61,7 @@ const ossimProperty& ossimFilenameProperty::assign(const ossimProperty& rhs)
    ossimProperty::assign(rhs);
    theValue = rhs.valueToString();
 
-   ossimFilenameProperty* rhsPtr = PTR_CAST(ossimFilenameProperty,
-                                            &rhs);
-
+   const ossimFilenameProperty* rhsPtr = dynamic_cast<const ossimFilenameProperty*>(&rhs);
    if(rhsPtr)
    {
       theFilterList = rhsPtr->theFilterList;
