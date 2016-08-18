@@ -409,7 +409,7 @@ bool ossimCadrgProjection::operator==(const ossimProjection& proj) const
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimCadrgProjection* p = PTR_CAST(ossimCadrgProjection, &proj);
+   const ossimCadrgProjection* p = dynamic_cast<const ossimCadrgProjection*>(&proj);
    if (!p) return false;
 
    if (theUlGpt != p->theUlGpt) return false;
