@@ -46,14 +46,3 @@ std::ostream& ossimNitfInfo::print(std::ostream& out) const
    }
    return out;
 }
-
-bool ossimNitfInfo::getKeywordlist(ossimKeywordlist& kwl)const
-{
-   bool result = false;
-   if ( m_nitfFile.valid() )
-   {
-      m_nitfFile->saveState(kwl, "nitf.");
-   }
-   
-   return result;
-}
