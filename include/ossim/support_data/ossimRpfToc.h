@@ -9,10 +9,7 @@
 //*************************************************************************
 // $Id: ossimRpfToc.h 18044 2010-09-06 14:20:52Z dburken $
 #ifndef osimRpfToc_HEADER
-#define osimRpfToc_HEADER
-
-#include <vector>
-#include <iosfwd>
+#define osimRpfToc_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorCodes.h>
@@ -22,6 +19,9 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
 #include <ossim/support_data/ossimRpfHeader.h>
+
+#include <vector>
+#include <iosfwd>
 
 class ossimRpfFrameFileIndexSubsection;
 class ossimRpfTocEntry;
@@ -64,13 +64,46 @@ public:
     * to keys.
     * @param out String to output to.
     * @param prefix This will be prepended to key.
-    * e.g. Where prefix = "nitf." and key is "file_name" key becomes:
-    * "nitf.file_name:"
+    * e.g. Where prefix = "nitf.rpf." and key is "file_name" key becomes:
+    * "nitf.rpm.file_name:"
     * @return output stream.
     */
-   std::ostream& print(std::ostream& out,
-                       const std::string& prefix=std::string(),
-                       bool printOverviews=false) const;
+   std::ostream& print( std::ostream& out,
+                        const std::string& prefix=std::string(),
+                        bool printOverviews=false ) const;
+   
+   /**
+    * @brief print method that outputs a key/value type format adding prefix
+    * to keys.
+    *
+    * This prints the rpf header part only.
+    * 
+    * @param out String to output to.
+    * @param prefix This will be prepended to key.
+    * e.g. Where prefix = "nitf.rpf." and key is "file_name" key becomes:
+    * "nitf.rpf.file_name:"
+    * @return output stream.
+    */   
+   std::ostream& printHeader( std::ostream& out,
+                              const std::string& prefix=std::string() ) const;
+
+   /**
+    * @brief print method that outputs a key/value type format adding prefix
+    * to keys.
+    *
+    * This prints the specific rpf toc entry.
+    * 
+    * @param out String to output to.
+    * @param prefix This will be prepended to key.
+    * e.g. Where prefix = "nitf.rpf." and key is "file_name" key becomes:
+    * "nitf.rpf.file_name:"
+    * @return output stream.
+    */   
+   std::ostream& printTocEntry( std::ostream& out,
+                                ossim_uint32 entryIndex,
+                                const std::string& prefix=std::string(),
+                                bool printOverviews=false ) const;
+   
    
    ossim_uint32 getNumberOfEntries()const;
    

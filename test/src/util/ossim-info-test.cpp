@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
             info->setProcessOverviewFlag(false);
 
             ossimKeywordlist kwl;
+            // if ( info->getKeywordlist( kwl, 9 ) )
             if ( info->getKeywordlist( kwl ) )
             {
                cout << kwl << endl;
@@ -74,7 +75,7 @@ int main(int argc, char *argv[])
          {
             ossimNotify(ossimNotifyLevel_INFO)
                << "No dump available for:  " << file.c_str() << std::endl;
-         }
+         } 
       }
       catch (const ossimException& e)
       {

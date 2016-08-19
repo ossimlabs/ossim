@@ -11,7 +11,7 @@
 //********************************************************************
 // $Id: ossimNitfFile.h 19583 2011-05-13 10:58:10Z gpotts $
 #ifndef ossimNitfFile_HEADER
-#define ossimNitfFile_HEADER
+#define ossimNitfFile_HEADER 1
 
 #include <iosfwd>
 #include <vector>
@@ -50,6 +50,23 @@ public:
     * @return output stream.
     */
    std::ostream& print(std::ostream& out,
+                       const std::string& prefix=std::string(),
+                       bool printOverviews=false) const;
+
+   /**
+    * @brief print method that outputs a key/value type format adding prefix
+    * to keys.
+    * @param out Stream to output to.
+    * @param entryIndex Entry to print.  Not supported by all info objects
+    * @param prefix This will be prepended to key.
+    * e.g. Where prefix = "nitf." and key is "file_name" key becomes:
+    * "nitf.file_name:"
+    * @param printOverviews If true overview, if present(e.g. rpf's) will be 
+    * printed.
+    * @return output stream.
+    */
+   std::ostream& print(std::ostream& out,
+                       ossim_uint32 entryIndex, 
                        const std::string& prefix=std::string(),
                        bool printOverviews=false) const;
    

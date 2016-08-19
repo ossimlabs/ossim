@@ -9,9 +9,12 @@
 //----------------------------------------------------------------------------
 // $Id$
 
-#include <iostream>
+
 
 #include <ossim/support_data/ossimNitfInfo.h>
+#include <ossim/base/ossimKeywordlist.h>
+#include <ostream>
+#include <sstream>
 
 ossimNitfInfo::ossimNitfInfo()
    : m_nitfFile(0)
@@ -45,4 +48,18 @@ std::ostream& ossimNitfInfo::print(std::ostream& out) const
       m_nitfFile->print(out, prefix, getProcessOverviewFlag());
    }
    return out;
+}
+
+
+bool ossimNitfInfo::getKeywordlist(ossimKeywordlist& kwl,
+                                   ossim_uint32 entryIndex)const
+{
+   // Do a print to a memory stream.
+   std::ostringstream out;
+   m_nitfFile->print( out, entryIndex );
+
+   std::istringstream in( out.str() );
+
+   // Give the result to the keyword list.
+   return kwl.parseStream( in );
 }
