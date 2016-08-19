@@ -212,7 +212,7 @@ protected:
 
    std::vector<ossimString>         m_renderableNames;
    ossimRefPtr<ossimHdf5>           m_hdf5;
-   std::vector<ossimRefPtr<ossimHdf5ImageDataset>> m_entries;
+   std::vector<ossimRefPtr<ossimHdf5ImageDataset> > m_entries;
    ossim_uint32                     m_currentEntry;
    ossimRefPtr<ossimImageData>      m_tile;
    OpenThreads::Mutex               m_mutex;
