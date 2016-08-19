@@ -37,8 +37,7 @@ const ossimProperty& ossimColorProperty::assign(const ossimProperty& rhs)
 {
    ossimProperty::assign(rhs);
 
-   ossimColorProperty* rhsPtr = PTR_CAST(ossimColorProperty, &rhs);
-
+   const ossimColorProperty* rhsPtr = dynamic_cast<const ossimColorProperty*>(&rhs);
    if(rhsPtr)
    {
       theValue = rhsPtr->theValue;

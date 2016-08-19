@@ -64,8 +64,7 @@ ossimObject* ossimMatrixProperty::dup()const
 
 const ossimProperty& ossimMatrixProperty::assign(const ossimProperty& rhs)
 {
-   ossimMatrixProperty* rhsPtr = PTR_CAST(ossimMatrixProperty,
-                                          &rhs);
+   const ossimMatrixProperty* rhsPtr = dynamic_cast<const ossimMatrixProperty*>(&rhs);
    if(rhsPtr)
    {
       theValueArray      = rhsPtr->theValueArray;

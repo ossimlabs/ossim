@@ -515,7 +515,8 @@ bool ossimVanDerGrintenProjection::operator==(const ossimProjection& proj) const
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimVanDerGrintenProjection* p = PTR_CAST(ossimVanDerGrintenProjection, &proj);
+   const ossimVanDerGrintenProjection* p =
+      dynamic_cast<const ossimVanDerGrintenProjection*>(&proj);
    if (!p) return false;
 
    if (!ossim::almostEqual(Grin_Origin_Long,p->Grin_Origin_Long)) return false;

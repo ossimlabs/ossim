@@ -5,7 +5,7 @@
 //
 //**************************************************************************************************
 
-#include <ossim/util/ossimToolClient.h>
+#include <ossim/sockets/ossimToolClient.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -84,6 +84,14 @@ int ossimToolClient::connectToServer(char* hostname, char* portname)
       {
          port = host.after(":");
          host = host.before(":");
+      }
+
+      if (port.empty())
+      {
+         // Maybe implied port then '/':
+         port = host.after("/");
+         port = "/" + port;
+         host = host.before("/");
       }
 
       // Establish full server address including port:

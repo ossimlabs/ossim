@@ -7,7 +7,7 @@
 
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimArgumentParser.h>
-#include <ossim/util/ossimToolServer.h>
+#include <ossim/sockets/ossimToolServer.h>
 
 int main(int argc, char *argv[])
 {

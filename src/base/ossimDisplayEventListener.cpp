@@ -24,14 +24,14 @@ ossimDisplayEventListener::~ossimDisplayEventListener()
 
 void ossimDisplayEventListener::processEvent(ossimEvent& event)
 {
-   ossimDisplayListEvent* displayListEvtPtr = PTR_CAST(ossimDisplayListEvent, &event);
+   ossimDisplayListEvent* displayListEvtPtr = dynamic_cast<ossimDisplayListEvent*>(&event);
 
    if(displayListEvtPtr)
    {
       displayListEvent(*displayListEvtPtr);
    }
 
-   ossimDisplayRefreshEvent* displayRefreshEvt = PTR_CAST(ossimDisplayRefreshEvent, &event);
+   ossimDisplayRefreshEvent* displayRefreshEvt = dynamic_cast<ossimDisplayRefreshEvent*>(&event);
    if(displayRefreshEvt)
    {
       displayRefreshEvent(*displayRefreshEvt);

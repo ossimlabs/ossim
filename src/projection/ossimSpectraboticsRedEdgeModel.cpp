@@ -531,7 +531,7 @@ bool ossimSpectraboticsRedEdgeModel::loadState(const ossimKeywordlist& kwl,
 
       h = h+ossimGeoidManager::instance()->offsetFromEllipsoid(ossimGpt(lat,lon));
       m_ecefPlatformPosition = ossimGpt(lat,lon,h);
-      double height1 = ossimElevManager::instance()->getHeightAboveEllipsoid(ossimGpt(lat, lon));
+      // double height1 = ossimElevManager::instance()->getHeightAboveEllipsoid(ossimGpt(lat, lon));
      
 //std::cout << "PLATFORM HEIGHT: " << h << "\n" 
 //          << "ELEVATION: " << height1 << "\n";
@@ -586,7 +586,7 @@ bool ossimSpectraboticsRedEdgeModel::loadState(const ossimKeywordlist& kwl,
       const char* pixel_size        = kwl.find(prefix, "pixel_size");
       const char* ecef_platform_position = kwl.find(prefix, "ecef_platform_position");
       const char* latlonh_platform_position = kwl.find(prefix, "latlonh_platform_position");
-      const char* compute_gsd_flag  = kwl.find(prefix, "compute_gsd_flag");
+      // const char* compute_gsd_flag  = kwl.find(prefix, "compute_gsd_flag");
       roll              = kwl.find(prefix, "roll");
       pitch             = kwl.find(prefix, "pitch");
       heading           = kwl.find(prefix, "heading");

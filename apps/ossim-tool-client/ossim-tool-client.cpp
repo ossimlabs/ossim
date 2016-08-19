@@ -9,7 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <ossim/base/ossimString.h>
-#include <ossim/util/ossimToolClient.h>
+#include <ossim/sockets/ossimToolClient.h>
 
 using namespace std;
 

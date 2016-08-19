@@ -32,8 +32,7 @@ const ossimProperty& ossimBooleanProperty::assign(const ossimProperty& rhs)
 {
    ossimProperty::assign(rhs);
 
-   ossimBooleanProperty* property = PTR_CAST(ossimBooleanProperty,
-                                             &rhs);
+   const ossimBooleanProperty* property = dynamic_cast<const ossimBooleanProperty*>(&rhs);
    if(property)
    {
       theValue = property->theValue;

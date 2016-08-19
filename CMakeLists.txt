@@ -151,6 +151,24 @@ else ( ZLIB_FOUND )
    message( WARNING "Could not find optional zlib package!" )
 endif ( ZLIB_FOUND )
 
+# HDF5 - Optional
+set( OSSIM_HAS_HDF5 0 )
+if (BUILD_OSSIM_HDF5_SUPPORT)
+  message( STATUS "Native HDF5 support requested. Searching for HDF5 library..." )
+  find_package( HDF5A )
+  if ( HDF5A_FOUND)
+     include_directories( ${HDF5A_INCLUDE_DIR} )
+     set( ossimDependentLibs ${ossimDependentLibs} ${HDF5A_LIBRARIES} )
+     set( OSSIM_HAS_HDF5 1 )
+  else ( HDF5A_FOUND )
+     message( WARNING "Could not find optional HDF5A package. Excluding native support." )
+  endif ( HDF5A_FOUND )
+else (BUILD_OSSIM_HDF5_SUPPORT)
+  message( STATUS "Native HDF5 support was not requested. If you want HDF5 support, set the environment BUILD_OSSIM_HDF5_SUPPORT=ON..." )
+endif ( BUILD_OSSIM_HDF5_SUPPORT )
+  
+
+
 #---
 # Call the OSSIM macros in OssimUtilities.cmake
 #---
@@ -220,6 +238,8 @@ MESSAGE( STATUS "GEOS_INCLUDE                    = ${GEOS_INCLUDE_DIR}" )
 MESSAGE( STATUS "JPEG_LIBRARY                    = ${JPEG_LIBRARIES}" )
 MESSAGE( STATUS "JPEG_INCLUDE                    = ${JPEG_INCLUDE_DIR}" )
 MESSAGE( STATUS "OSSIM DEPENDENT LIBRARIES       = ${ossimDependentLibs}" )
+MESSAGE( STATUS "OSSIM_HAS_HDF5                  = ${OSSIM_HAS_HDF5}" )
+
 
 #-----------------------------------------------------------------------------
 # uninstall target

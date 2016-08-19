@@ -441,7 +441,7 @@ bool ossimSinusoidalProjection::operator==(const ossimProjection& proj) const
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimSinusoidalProjection* p = PTR_CAST(ossimSinusoidalProjection, &proj);
+   const ossimSinusoidalProjection* p = dynamic_cast<const ossimSinusoidalProjection*>(&proj);
    if (!p) return false;
 
    if (!ossim::almostEqual(Sinu_Origin_Long,p->Sinu_Origin_Long)) return false;

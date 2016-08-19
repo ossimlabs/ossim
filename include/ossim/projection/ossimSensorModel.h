@@ -378,9 +378,9 @@ TYPE_DATA
 //*****************************************************************************
 inline bool ossimSensorModel::operator==(const ossimProjection& proj) const
 {
-   const  ossimSensorModel* model
-      = PTR_CAST(ossimSensorModel, (const ossimProjection*) &proj);
-    
+   // const  ossimSensorModel* model
+   //    = PTR_CAST(ossimSensorModel, (const ossimProjection*) &proj);
+   const ossimSensorModel* model = dynamic_cast<const ossimSensorModel*>( &proj );
    if ( (!model) ||
 	(theSensorID != model->theSensorID) ||
 	(theImageID != model->theImageID) ||

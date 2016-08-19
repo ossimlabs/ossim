@@ -1541,13 +1541,13 @@ void ossimImageData::initializeNullDefault()
 bool ossimImageData::isEqualTo(const ossimDataObject& rhs,
                                bool deepTest)const
 {
-   ossimImageData* rhsPtr = PTR_CAST(ossimImageData, &rhs);
+   const ossimImageData* rhsPtr = dynamic_cast<const ossimImageData*>(&rhs);
    if(!rhsPtr) return false;
-   bool result = ( (m_scalarType         == rhsPtr->m_scalarType)&&
-         (m_numberOfDataComponents == rhsPtr->m_numberOfDataComponents)&&
-         (m_origin             == rhsPtr->m_origin)&&
-         (getWidth()            == rhsPtr->getWidth())&&
-         (getHeight()           == rhsPtr->getHeight()));
+   bool result = ( (m_scalarType == rhsPtr->m_scalarType)&&
+                   (m_numberOfDataComponents == rhsPtr->m_numberOfDataComponents)&&
+                   (m_origin    == rhsPtr->m_origin)&&
+                   (getWidth()  == rhsPtr->getWidth())&&
+                   (getHeight() == rhsPtr->getHeight()));
 
    if(result)
    {
@@ -2637,12 +2637,13 @@ void ossimImageData::setImageRectangle(const ossimIrect& rect)
 
 void ossimImageData::assign(const ossimDataObject* data)
 {
-   if(!data)
-      return;
-   ossimImageData* d = PTR_CAST(ossimImageData, data);
-   if(d)
+   if(data)
    {
-      assign(d);
+      const ossimImageData* d = dynamic_cast<const ossimImageData*>(data);
+      if(d)
+      {
+         assign(d);
+      }
    }
 }
 

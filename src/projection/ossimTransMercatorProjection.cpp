@@ -724,7 +724,8 @@ bool ossimTransMercatorProjection::operator==(const ossimProjection& proj) const
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimTransMercatorProjection* p = PTR_CAST(ossimTransMercatorProjection, &proj);
+   const ossimTransMercatorProjection* p =
+      dynamic_cast<const ossimTransMercatorProjection*>(&proj);
    if (!p) return false;
 
    if (!ossim::almostEqual(TranMerc_Scale_Factor,p->TranMerc_Scale_Factor)) return false;
