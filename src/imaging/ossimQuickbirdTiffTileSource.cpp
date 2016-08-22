@@ -102,24 +102,6 @@ ossimRefPtr<ossimImageGeometry> ossimQuickbirdTiffTileSource::getImageGeometry()
 
                if ( infoStatus )
                {
-                  // Establish sub-image offset (shift) for this tile:
-                  ossimDpt shift(0,0);
-                  if ((info.theUlXOffset != OSSIM_INT_NAN) && (info.theUlYOffset != OSSIM_INT_NAN))
-                     shift = ossimIpt(info.theUlXOffset, info.theUlYOffset);
-                  
-                  if(traceDebug())
-                  {
-                     ossimNotify(ossimNotifyLevel_DEBUG)
-                        << "ossimQuickbirdTiffTileSource::open() DEBUG:"
-                        << "\nSub image offset  = " << shift << std::endl;
-                  }
-
-                  // Create the transform and set it in the geometry object:
-                  ossimRefPtr<ossim2dTo2dTransform> transform =
-                     new ossim2dTo2dShiftTransform(shift);
-
-                  theGeometry->setTransform(transform.get());
-   
                   // Next is the projection part of the image geometry. This should be available
                   // as an external RPC file or internal RPC's in the tiff file. Otherwise use
                   // the map projection specified in the 
@@ -129,6 +111,27 @@ ossimRefPtr<ossimImageGeometry> ossimQuickbirdTiffTileSource::getImageGeometry()
                   ossimRefPtr<ossimQuickbirdRpcModel> model = new ossimQuickbirdRpcModel;
                   if (model->parseFile(theImageFile))
                   {
+                     //---
+                     // If RPC projection set the sub-image offset:
+                     // Establish sub-image offset (shift) for this tile:
+                     //---
+                     ossimDpt shift(0,0);
+                     if ((info.theUlXOffset != OSSIM_INT_NAN) &&
+                         (info.theUlYOffset != OSSIM_INT_NAN))
+                        shift = ossimIpt(info.theUlXOffset, info.theUlYOffset);
+                     
+                     if(traceDebug())
+                     {
+                        ossimNotify(ossimNotifyLevel_DEBUG)
+                           << "ossimQuickbirdTiffTileSource::open() DEBUG:"
+                           << "\nSub image offset  = " << shift << std::endl;
+                     }
+
+                     // Create the transform and set it in the geometry object:
+                     ossimRefPtr<ossim2dTo2dTransform> transform =
+                        new ossim2dTo2dShiftTransform(shift);
+                     
+                     theGeometry->setTransform(transform.get());
                      theGeometry->setProjection(model.get());
                   }
                   else
