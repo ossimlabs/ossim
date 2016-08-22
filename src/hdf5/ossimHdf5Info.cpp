@@ -315,7 +315,6 @@ bool ossimHdf5Info::getKeywordlist(ossimKeywordlist& kwl) const
    if (!m_hdf5.valid())
       return false;
 
-   ostringstream out;
    string groupName     = "/";
    string prefix        = "hdf5.";
 
@@ -339,10 +338,7 @@ bool ossimHdf5Info::getKeywordlist(ossimKeywordlist& kwl) const
       else
          value << ", "<< datasets[i].getObjName();
    }
-   out << endl;
-   m_kwl.addPair(prefix, "datasetnames", value.str());
-
-   m_kwl.print(cout);//TODO REMOVE
+   m_kwl.addPair(prefix, string("datasetnames"), value.str());
 
    kwl = m_kwl;
 }
@@ -353,28 +349,18 @@ void ossimHdf5Info::dumpGroup(const Group& group,
 {
    ++recursedCount;
 
-   ossimString groupName = group.getObjName();
-   m_kwl.addPair(prefix, "group", groupName.string());
-
-   ossimString objectName = getObjectName(groupName);
-   ostringstream groupPrefix;
-   groupPrefix << prefix << objectName<<".";
+   ossimString groupPrefix = getObjectPrefix(prefix, group.getObjName());
+   m_kwl.addPair(groupPrefix, string("type"), string("Group"));
 
    // Dump all attributes for this group:
-   vector<H5::Attribute> attrList;
-   m_hdf5->getAttributes(group, attrList);
-   for ( ossim_uint32 i = 0; i < attrList.size(); ++i )
-   {
-      dumpAttribute( attrList[i], groupPrefix.str());
-   }
-   m_kwl.print(cout);//TODO REMOVE
+   dumpAttributes(group, groupPrefix);
 
    // Dump all datasets under this group:
    vector<DataSet> datasets;
    m_hdf5->getDatasets(group, datasets);
    for (ossim_uint32 i=0; i<datasets.size(); ++i)
    {
-      dumpDataset(datasets[i], groupPrefix.str());
+      dumpDataset(datasets[i], groupPrefix);
    }
 
    // Dump child Groups:
@@ -382,20 +368,79 @@ void ossimHdf5Info::dumpGroup(const Group& group,
    m_hdf5->getChildGroups(group, childGroups, false);
    for (ossim_uint32 i=0; i<childGroups.size(); ++i)
    {
-      dumpGroup(childGroups[i], groupPrefix.str(), recursedCount);
+      dumpGroup(childGroups[i], groupPrefix, recursedCount);
    }
 
    --recursedCount;
 }
 
-ossimString ossimHdf5Info::getObjectName(const ossimString& fullPathName) const
+ossimString ossimHdf5Info::getObjectPrefix(const ossimString& prefix,
+                                           const ossimString& fullPathName) const
 {
    vector<ossimString> items;
    fullPathName.split(items, "/");
-   return items.back();
+   ossimString objectName (items.back());
+
+   ostringstream objectPrefix;
+   if (objectName.empty())
+      objectPrefix << prefix;
+   else
+      objectPrefix << prefix << objectName<<".";
+
+   return objectPrefix.str();
 }
 
-void ossimHdf5Info::dumpDataset(const H5::DataSet& dataset,
+void ossimHdf5Info::dumpAttributes(const H5Object& obj, const std::string& prefix) const
+{
+   vector<H5::Attribute> attrList;
+   m_hdf5->getAttributes(obj, attrList);
+   for ( ossim_uint32 i = 0; i < attrList.size(); ++i )
+   {
+      ostringstream attrPrefix;
+      attrPrefix << prefix;//<<"attribute"<<i<<".";
+      dumpAttribute( attrList[i], attrPrefix.str());
+   }
+}
+
+void ossimHdf5Info::dumpAttribute(const H5::Attribute& attr,
+                                  const std::string& prefix) const
+{
+   string str_value;
+   int int_value = 0;
+   float float_value = 0;
+
+   ossimByteOrder order = m_hdf5->getByteOrder(&attr);
+   ossimEndian endian;
+   bool swapOrder = (order!=ossim::byteOrder());
+
+   H5T_class_t class_type = attr.getDataType().getClass();
+   switch (class_type)
+   {
+   case H5T_STRING:
+      attr.read(attr.getDataType(), str_value);
+      break;
+   case H5T_INTEGER:
+      attr.read(attr.getDataType(), &int_value);
+      if (swapOrder)
+         endian.swap(int_value);
+      str_value = ossimString::toString(int_value).string();
+      break;
+   case H5T_FLOAT:
+      attr.read(attr.getDataType(), &float_value);
+      if (swapOrder)
+         endian.swap(float_value);
+      str_value = ossimString::toString(float_value).string();
+      break;
+   default:
+      str_value ="(value not handled type)";
+   }
+
+   ossimString attrKey (getObjectPrefix(prefix, attr.getName()));
+   m_kwl.addPair(prefix, attr.getName(), str_value);
+}
+
+
+void ossimHdf5Info::dumpDataset(const DataSet& dataset,
                                const std::string& prefix) const
 {
 #if 0
@@ -405,53 +450,44 @@ void ossimHdf5Info::dumpDataset(const H5::DataSet& dataset,
              << std::endl;
 #endif
 
-   string name = dataset.getObjName();
-   m_kwl.addPair(prefix, "dataset", name);
-
-   ostringstream datasetPrefix;
-   datasetPrefix << prefix <<"."<<name<<".";
+   string datasetPrefix = getObjectPrefix(prefix, dataset.getObjName());
+   m_kwl.addPair(datasetPrefix, string("type"), string("DataSet"));
 
    // Dump all attributes for this dataset:
-   vector<H5::Attribute> attrList;
-   m_hdf5->getAttributes(dataset, attrList);
-   for ( ossim_uint32 i = 0; i < attrList.size(); ++i )
-   {
-      ostringstream attrPrefix;
-      attrPrefix<<datasetPrefix.str()<< ".attribute"<<i<<".";
-      dumpAttribute( attrList[i], attrPrefix.str());
-   }
+   dumpAttributes(dataset, datasetPrefix);
 
    // Get the class of the datatype that is used by the dataset.
    H5T_class_t type_class = dataset.getTypeClass();
-   m_kwl.addPair(datasetPrefix.str(), "hdf_type", m_hdf5->getDatatypeClassType(type_class));
+   m_kwl.addPair(datasetPrefix, "class_type", m_hdf5->getDatatypeClassType(type_class));
 
    // Dump specific datatypes:
    switch(type_class)
    {
    case H5T_COMPOUND:
-      dumpCompoundTypeInfo(dataset, datasetPrefix.str());
+      dumpCompoundTypeInfo(dataset, datasetPrefix);
       break;
    case H5T_ENUM:
    {
       H5::EnumType enumType (dataset);
-      dumpEnumTypeInfo(enumType, datasetPrefix.str());
+      dumpEnumTypeInfo(enumType, datasetPrefix);
       break;
    }
    case H5T_ARRAY:
    {
       H5::ArrayType arrayType (dataset.getId());
-      dumpArrayTypeInfo(arrayType, datasetPrefix.str());
+      dumpArrayTypeInfo(arrayType, datasetPrefix);
       break;
    }
    case H5T_INTEGER:
    case H5T_FLOAT:
    {
       ossimByteOrder byteOrder = m_hdf5->getByteOrder( &dataset );
-      dumpNumericalTypeInfo(dataset.getDataType(), byteOrder, datasetPrefix.str());
+      dumpNumericalTypeInfo(dataset, byteOrder, datasetPrefix);
       break;
    }
    default:
-      m_kwl.addPair(datasetPrefix.str(), ossimKeywordNames::SCALAR_TYPE_KW, "OSSIM_SCALAR_UNKNOWN");
+      m_kwl.addPair(datasetPrefix, string(ossimKeywordNames::SCALAR_TYPE_KW),
+                    string("OSSIM_SCALAR_UNKNOWN"));
       break;
    }
 
@@ -464,7 +500,7 @@ void ossimHdf5Info::dumpDataset(const H5::DataSet& dataset,
    {
       value << ", " << extents[i];
    }
-   m_kwl.addPair(datasetPrefix.str(), "extents", value.str());
+   m_kwl.addPair(datasetPrefix, "extents", value.str());
 
 #if 0
    // Attributes:
@@ -488,7 +524,8 @@ void ossimHdf5Info::dumpCompoundTypeInfo(const H5::DataSet& dataset,
    ossim_uint64 size       = compound.getSize();
    ossim_int32 memberIdx   = 0;
    ostringstream typePrefix;
-   typePrefix << prefix << ".compound_type.";
+   typePrefix << prefix << "compound_type.";
+   m_kwl.addPair(prefix, string("type"), string("compound"));
 
    for(memberIdx=0;memberIdx < nMembers;++memberIdx)
    {
@@ -498,15 +535,13 @@ void ossimHdf5Info::dumpCompoundTypeInfo(const H5::DataSet& dataset,
       newPrefix<<typePrefix.str() << "."<<memberName<< ".";
 
       H5T_class_t class_type = dataType.getClass();
-      m_kwl.addPair(newPrefix.str(), "hdf_type", m_hdf5->getDatatypeClassType(class_type));
+      m_kwl.addPair(newPrefix.str(), string("class_type"), m_hdf5->getDatatypeClassType(class_type));
 
       switch(class_type)
       {
       case H5T_INTEGER:
       case H5T_FLOAT:
       {
-         ossimByteOrder byteOrder = m_hdf5->getByteOrder( &dataset );
-         dumpNumericalTypeInfo(dataType, byteOrder, prefix);
          break;
       }
       case H5T_ENUM:
@@ -547,7 +582,7 @@ void ossimHdf5Info::dumpEnumTypeInfo(H5::EnumType enumType,
       else
          kwl_value << ", " << name;
    }
-   m_kwl.addPair(prefix, "enumerations", kwl_value.str());
+   m_kwl.addPair(prefix, string("enumerations"), kwl_value.str());
    delete [] enum_value;
 }
 
@@ -571,22 +606,22 @@ void ossimHdf5Info::dumpArrayTypeInfo(H5::ArrayType arrayType,
          else
             kwl_value << ", " << dims[i];
       }
-      m_kwl.addPair(prefix, "dimensions", kwl_value.str());
+      m_kwl.addPair(prefix, string("dimensions"), kwl_value.str());
    }
 }
 
-void ossimHdf5Info::dumpNumericalTypeInfo(const H5::DataType& datatype,
+void ossimHdf5Info::dumpNumericalTypeInfo(const H5::DataSet& dataset,
                                           ossimByteOrder byteOrder,
                                           const std::string& prefix) const
 {
-   ossimScalarType stype = m_hdf5->getScalarType(datatype);
+   ossimScalarType stype = m_hdf5->getScalarType(dataset);
    ossimString sct = ossimScalarTypeLut::instance()->getEntryString(stype);
-   m_kwl.addPair(prefix, ossimKeywordNames::SCALAR_TYPE_KW, sct.string());
+   m_kwl.addPair(prefix, string(ossimKeywordNames::SCALAR_TYPE_KW), sct.string());
 
    std::string byteOrderString = "little_endian";
    if ( byteOrder == OSSIM_BIG_ENDIAN )
       byteOrderString = "big_endian";
-   m_kwl.addPair(prefix, ossimKeywordNames::BYTE_ORDER_KW, byteOrderString);
+   m_kwl.addPair(prefix, string(ossimKeywordNames::BYTE_ORDER_KW), byteOrderString);
 }
 
 void ossimHdf5Info::dumpNumerical(const H5::DataSet& dataset,
@@ -679,34 +714,7 @@ void ossimHdf5Info::dumpNumerical(const H5::DataSet& dataset,
       }
    }
 
-   m_kwl.addPair(prefix, "value", valueStr.string());
-}
-
-
-void ossimHdf5Info::dumpAttribute(const H5::Attribute& attr,
-                                  const std::string& prefix) const
-{
-   string str_value;
-   int int_value = 0;
-   float float_value = 0;
-
-   H5T_class_t class_type = attr.getDataType().getClass();
-   switch (class_type)
-   {
-   case H5T_STRING:
-      attr.read(attr.getDataType(), str_value);
-      break;
-   case H5T_INTEGER:
-      attr.read(attr.getDataType(), &int_value);
-      break;
-   case H5T_FLOAT:
-      attr.read(attr.getDataType(), &float_value);
-      break;
-   default:
-      str_value ="(value not handled type)";
-   }
-
-   m_kwl.addPair(prefix, "value", str_value);
+   m_kwl.addPair(prefix, string("value"), valueStr.string());
 }
 
 

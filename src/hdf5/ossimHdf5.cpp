@@ -379,45 +379,91 @@ void ossimHdf5::getExtents( const H5::DataSet& dataset, std::vector<ossim_uint32
 
 ossimScalarType ossimHdf5::getScalarType( const H5::DataSet& dataset )
 {
-    return getScalarType( dataset.getDataType() );
-}
-
-ossimScalarType ossimHdf5::getScalarType( const H5::DataType& datatype )
-{
-      ossimScalarType scalar = OSSIM_SCALAR_UNKNOWN;
-
+   H5::DataType datatype =  dataset.getDataType();
+   ossimScalarType scalar = OSSIM_SCALAR_UNKNOWN;
    ossim_int32 typeClass = datatype.getClass();
-   if ( ( typeClass == H5T_INTEGER ) || ( typeClass == H5T_FLOAT ) )
-   {
-      hid_t mem_type_id = H5Dget_type( datatype.getId() );
-      if( mem_type_id > -1 )
-      {
-         hid_t native_type = H5Tget_native_type(mem_type_id, H5T_DIR_DEFAULT);
+   if ( ( typeClass != H5T_INTEGER ) && ( typeClass != H5T_FLOAT ) )
+      return scalar;
 
-         if( H5Tequal(H5T_NATIVE_CHAR, native_type) )
+   size_t size = 0;
+   hid_t mem_type_id = H5Dget_type( datatype.getId() );
+   if( mem_type_id > -1 )
+   {
+      hid_t native_type = H5Tget_native_type(mem_type_id, H5T_DIR_DEFAULT);
+
+      if( H5Tequal(H5T_NATIVE_CHAR, native_type) )
+         scalar = OSSIM_SINT8;
+      else if ( H5Tequal( H5T_NATIVE_UCHAR, native_type) )
+         scalar = OSSIM_UINT8;
+      else if( H5Tequal( H5T_NATIVE_SHORT, native_type) )
+         scalar = OSSIM_SINT16;
+      else if(H5Tequal(H5T_NATIVE_USHORT, native_type))
+         scalar = OSSIM_UINT16;
+      else if(H5Tequal( H5T_NATIVE_INT, native_type))
+         scalar = OSSIM_SINT32;
+      else if(H5Tequal( H5T_NATIVE_UINT, native_type ) )
+         scalar = OSSIM_UINT32;
+      else if(H5Tequal( H5T_NATIVE_LONG, native_type))
+         scalar = OSSIM_SINT32;
+      else if(H5Tequal( H5T_NATIVE_ULONG, native_type))
+         scalar = OSSIM_UINT32;
+      else if(H5Tequal( H5T_NATIVE_LLONG, native_type))
+         scalar = OSSIM_SINT64;
+      else if(H5Tequal( H5T_NATIVE_ULLONG, native_type))
+         scalar = OSSIM_UINT64;
+      else if(H5Tequal( H5T_NATIVE_FLOAT, native_type))
+         scalar = OSSIM_FLOAT32;
+      else if(H5Tequal( H5T_NATIVE_DOUBLE, native_type))
+         scalar = OSSIM_FLOAT64;
+   }
+   else if ( typeClass == H5T_INTEGER )
+   {
+      H5::IntType intType (dataset);
+      bool isSigned = intType.getSign() == H5T_SGN_NONE ? false : true;
+      size = intType.getSize();
+      switch (size)
+      {
+      case 1:
+         if (isSigned)
             scalar = OSSIM_SINT8;
-         else if ( H5Tequal( H5T_NATIVE_UCHAR, native_type) )
+         else
             scalar = OSSIM_UINT8;
-         else if( H5Tequal( H5T_NATIVE_SHORT, native_type) )
+         break;
+      case 2:
+         if (isSigned)
             scalar = OSSIM_SINT16;
-         else if(H5Tequal(H5T_NATIVE_USHORT, native_type))
+         else
             scalar = OSSIM_UINT16;
-         else if(H5Tequal( H5T_NATIVE_INT, native_type))
+         break;
+      case 4:
+         if (isSigned)
             scalar = OSSIM_SINT32;
-         else if(H5Tequal( H5T_NATIVE_UINT, native_type ) )
+         else
             scalar = OSSIM_UINT32;
-         else if(H5Tequal( H5T_NATIVE_LONG, native_type))
-            scalar = OSSIM_SINT32;
-         else if(H5Tequal( H5T_NATIVE_ULONG, native_type))
-            scalar = OSSIM_UINT32;
-         else if(H5Tequal( H5T_NATIVE_LLONG, native_type))
+         break;
+      case 8:
+         if (isSigned)
             scalar = OSSIM_SINT64;
-         else if(H5Tequal( H5T_NATIVE_ULLONG, native_type))
+         else
             scalar = OSSIM_UINT64;
-         else if(H5Tequal( H5T_NATIVE_FLOAT, native_type))
-            scalar = OSSIM_FLOAT32;
-         else if(H5Tequal( H5T_NATIVE_DOUBLE, native_type))
-            scalar = OSSIM_FLOAT64;
+         break;
+      default:
+         break;
+      }
+   }
+   else // float
+   {
+      size = datatype.getSize();
+      switch (size)
+      {
+      case 4:
+         scalar = OSSIM_FLOAT32;
+         break;
+      case 8:
+         scalar = OSSIM_FLOAT64;
+         break;
+      default:
+         break;
       }
    }
 

@@ -80,7 +80,7 @@ private:
    void dumpCompoundTypeInfo(const H5::DataSet& dataset, const std::string& prefix) const;
    void dumpEnumTypeInfo(H5::EnumType datatype, const std::string& prefix) const;
    void dumpArrayTypeInfo(H5::ArrayType datatype, const std::string& prefix) const;
-   void dumpNumericalTypeInfo(const H5::DataType& datatype,
+   void dumpNumericalTypeInfo(const H5::DataSet& dataset,
                               ossimByteOrder order,
                               const std::string& prefix) const;
 
@@ -93,6 +93,7 @@ private:
                 const char* dataPtr,
                 const std::string& prefix) const;
 
+   void dumpAttributes(const H5::H5Object& container, const std::string& prefix) const;
    void dumpAttribute(const H5::Attribute& attr, const std::string& prefix) const;
 
    bool getGroupAttributeValue(const std::string& group,
@@ -103,7 +104,7 @@ private:
                                 const std::string& key,
                                 std::string& value ) const;
 
-   ossimString getObjectName(const ossimString& fullPathName) const;
+   ossimString getObjectPrefix(const ossimString& prefix, const ossimString& fullPathName) const;
 
    ossimRefPtr<ossimHdf5>  m_hdf5;
    mutable ossimKeywordlist m_kwl;
