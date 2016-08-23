@@ -235,6 +235,41 @@ bool ossimHdf5::getAttributes(const H5Object& obj, vector<Attribute>& attrList)
 }
 
 
+H5::Group* ossimHdf5::findGroupByName(const char* name, const H5::Group* parent, bool recursive)
+{
+   if (!name)
+      return NULL;
+
+   H5::Group baseGroup;
+   if (parent == NULL)
+   {
+      if (!getRoot(baseGroup))
+         return NULL;
+   }
+   else
+   {
+      baseGroup = *parent;
+   }
+
+   H5::Group* named_group = 0;
+   vector<Group> groupList;
+   getChildGroups(baseGroup, groupList, recursive);
+
+   std::vector<Group>::iterator group = groupList.begin();
+   while (group != groupList.end())
+   {
+      bool found;
+      ossimString dsName = group->getObjName();
+      if (dsName.contains(name))
+      {
+         named_group = new Group(*group);
+         break;
+      }
+      ++group;
+   }
+   return named_group;
+}
+
 H5::DataSet* ossimHdf5::findDatasetByName(const char* name, const H5::Group* group,
                                           bool recursive)
 {

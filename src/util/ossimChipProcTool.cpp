@@ -195,7 +195,9 @@ bool ossimChipProcTool::initialize(ossimArgumentParser& ap)
    vector<ossimString> imageFnames;
    if (ap.read("--image", imageFnames) || ap.read("-i", imageFnames))
    {
-      for(ossim_uint32 idx=0; idx<imageFnames.size(); ++idx)
+      if (imageFnames.size() == 1)
+         m_kwl.add(ossimKeywordNames::IMAGE_FILE_KW, imageFnames[0].chars() );
+      else for(ossim_uint32 idx=0; idx<imageFnames.size(); ++idx)
       {
          ostringstream key;
          key<<ossimKeywordNames::IMAGE_FILE_KW<<idx;
@@ -206,7 +208,7 @@ bool ossimChipProcTool::initialize(ossimArgumentParser& ap)
    if( ap.read("--origin-latitude", stringParam1) )
       m_kwl.addPair( std::string(ossimKeywordNames::ORIGIN_LATITUDE_KW), tempString1 );
 
-   if(ap.read("--output-file", stringParam1))
+   if(ap.read("--output-file", stringParam1) || ap.read("-o", stringParam1))
       m_kwl.addPair( ossimKeywordNames::OUTPUT_FILE_KW, tempString1 );
 
    if(ap.read("--output-radiometry", stringParam1))
@@ -1486,6 +1488,7 @@ void ossimChipProcTool::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--hemisphere", "<hemisphere>\nSpecify a projection hemisphere if supported. E.g. UTM projection. This will lock the hemisphere even if input scene center is the other hemisphere. Valid values for UTM are \"N\" and \"S\"");
    au->addCommandLineOption("--image | -i", "<file1>[, <file2>...] Input image file(s) (comma-separated) to process.");
    au->addCommandLineOption("--load-options","[<filename>]\nThe contents of <filename> (keyword-value pairs) are loaded as command options. The command-line options take precedence.  See \"--load-options\" and \"--write-template\" options.");
+   au->addCommandLineOption("--output-file | -o","<filename>\nThe product output file name. The format is dictated by the extension.");
    au->addCommandLineOption("--origin-latitude","<latidude_in_decimal_degrees>\nNote if set this will be used for the origin latitude of the projection.  Setting this to something other than 0.0 with a geographic projection creates a scaled geographic projection.");
    au->addCommandLineOption("--output-radiometry", "<R>\nSpecifies the desired product's pixel radiometry type. Possible values for <R> are: U8, U11, U16, S16, F32. Note this overrides the deprecated option \"scale-to-8-bit\".");
    au->addCommandLineOption("--projection", "<output_projection> Valid projections: geo, geo-scaled, input or utm\ngeo = Equidistant Cylindrical, origin latitude = 0.0\ngeo-scaled = Equidistant Cylindrical, origin latitude = image center\ninput Use first images projection. Must be a map projecion.\nutm = Universal Tranverse Mercator\nIf input and multiple sources the projection of the first image will be used.\nIf utm the zone will be set from the scene center of first image.\nNOTE: --srs takes precedence over this option.");

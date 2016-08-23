@@ -50,7 +50,7 @@ public:
                               std::vector<H5::Group>& groupList,
                               bool recursive=false);
 
-   /** Assigns list of datasets under current active group.
+   /** Assigns list of datasets under specified group.
     * @param recursive If true, recursively visits all datasets for this group and subgroups
     * @return True if result valid */
    static bool getDatasets(H5::Group group,
@@ -68,6 +68,15 @@ public:
     * @param objPath Either relative or absolute path in file to object.
     * @return True if result valid */
    static bool getAttributes(const H5::H5Object& obj, std::vector<H5::Attribute>& attrList);
+
+   /** Finds a group by name. The first object with specified name (can be relative path -- a
+    * naive string comparison is performed) under the specified parent group is returned.
+    * @param group If null, implies root group.
+    * @param recursive If true, recursively visits all subgroups.
+    * @return result Set to valid dataset object if found (caller assumes ownership), else NULL. */
+   H5::Group* findGroupByName(const char* group_name,
+                              const H5::Group* parent_group=0,
+                              bool recursive=false);
 
    /** Finds a dataset by name. The first object with specified name (can be relative path -- a
     * naive string comparison is performed) under the specified group is returned.

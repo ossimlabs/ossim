@@ -23,13 +23,21 @@ ossimHdf5ProjectionFactory* ossimHdf5ProjectionFactory::instance()
 ossimProjection* ossimHdf5ProjectionFactory::createProjection(const ossimFilename& filename,
                                                               ossim_uint32 entryIdx)const
 {
-   static const char MODULE[] = "ossimHdf5ProjectionFactory::createProjection(ossimFilename& filename)";
-
    // Try external geom file first:
    ossimRefPtr<ossimProjection> projection = createProjectionFromGeometryFile(filename, entryIdx);
    if (!projection.valid())
    {
-      // Try something else...
+      // Try internal grid model. This may be specific to VIIRS. In any case, it is not very
+      // robust as this model simply looks for "Latitude" and "Longitude" dataset names, ignoring
+      // multiple entries with potentially different geometries for each. Eventually should
+      // provide for the specification of specific dataset names or at least path to parent group.
+      // This is not trivial with only an entry index available. (OLK 08/16)
+      ossimRefPtr<ossimHdf5> hdf5 = new ossimHdf5;
+      if (hdf5->open(filename))
+      {
+         ossimRefPtr<ossimHdf5GridModel> hdf5_grid = new ossimHdf5GridModel;
+         hdf5_grid->initialize(hdf5.get());
+      }
    }
 
    // Must release or pointer will self destruct when it goes out of scope.
