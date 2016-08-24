@@ -897,10 +897,33 @@ bool ossimImageHandler::openOverview()
       {  
          // 3) For backward compatibility check if single entry and _e0.ovr
          overviewFilename = getFilenameWithThisExtension(ossimString(".ovr"), true);
+
          if (overviewFilename.empty() || (overviewFilename.exists() == false) )
          {
-            // 4) For overviews built with gdal look for foo.tif.ovr
-            overviewFilename = getFilename();
+            //---
+            // 4) For overviews built with gdal.
+            // Examples:
+            // Single entry: foo.tif.ovr
+            // Multi-entry: foo.tif.x.ovr where "x" == one based entry number.
+            // 
+            // Note: Take into account a supplementary dir if any.
+            //---
+            if ( theSupplementaryDirectory.empty() )
+            {
+               overviewFilename = getFilename();
+            }
+            else
+            {
+               overviewFilename = theSupplementaryDirectory;
+               overviewFilename = overviewFilename.dirCat( getFilename().file() );
+            }
+
+            if ( getNumberOfEntries() > 1 )
+            {
+               overviewFilename += ".";
+               // Sample multi-entry data "one" based; hence, the + 1.
+               overviewFilename += ossimString::toString( getCurrentEntry()+1 );
+            }
             overviewFilename += ".ovr";
          }
       }
