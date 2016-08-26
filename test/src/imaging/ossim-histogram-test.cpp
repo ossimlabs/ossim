@@ -55,10 +55,15 @@ int main(int argc, char *argv[])
                         ossimRefPtr<ossimHistogram> h = mbh->getHistogram(band);
                         if ( h.valid() )
                         {
+                           ossim_uint32 min_idx = std::floor(h->GetMinVal());
+                           ossim_uint32 max_idx = std::floor(h->GetMaxVal());
+                           
                            cout << "band:            " << band << "\n"
                                 << "min_val:         " << h->GetMinVal() << "\n"
                                 << "max_val:         " << h->GetMaxVal() << "\n"
                                 << "max_count:       " << h->GetMaxCount() << "\n"
+                                << "min_val_count:   " << h->GetCounts()[min_idx] << "\n"
+                                << "max_val_count:   " << h->GetCounts()[max_idx]  << "\n"
                                 << "vmin:            " << h->GetRangeMin() << "\n"
                                 << "vmax:            " << h->GetRangeMax() << "\n"
                                 << "low_clip(0%):    " << std::floor( h->LowClipVal(0.0) ) << "\n"
