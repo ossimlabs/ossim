@@ -55,11 +55,19 @@ int main(int argc, char *argv[])
                         ossimRefPtr<ossimHistogram> h = mbh->getHistogram(band);
                         if ( h.valid() )
                         {
-                           cout << "min[" << band << "]: "
-                                << std::floor( h->LowClipVal(0.0) ) << "\n";
-                           cout << "max[" << band << "]: "
-                                << std::floor(h->HighClipVal(0.0)) << "\n";
-                        }
+                           cout << "band:            " << band << "\n"
+                                << "min_val:         " << h->GetMinVal() << "\n"
+                                << "max_val:         " << h->GetMaxVal() << "\n"
+                                << "max_count:       " << h->GetMaxCount() << "\n"
+                                << "vmin:            " << h->GetRangeMin() << "\n"
+                                << "vmax:            " << h->GetRangeMax() << "\n"
+                                << "low_clip(0%):    " << std::floor( h->LowClipVal(0.0) ) << "\n"
+                                << "high_clip(0%):   " << std::floor( h->HighClipVal(0.0) ) << "\n"
+                                << "low_clip(0.1%):  " << std::floor( h->LowClipVal(0.001) ) << "\n"
+                                << "high_clip(0.1%): " << std::floor( h->HighClipVal(0.001) ) << "\n"
+                                << "low_clip(1%):    " << std::floor( h->LowClipVal(0.01) ) << "\n"
+                                << "high_clip(1%):   " << std::floor( h->HighClipVal(0.01) ) << "\n\n";
+                       }
                      }
                      cout << endl;
                   }
