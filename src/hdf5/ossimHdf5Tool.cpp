@@ -52,9 +52,9 @@ void ossimHdf5Tool::setUsage(ossimArgumentParser& ap)
 
    // Set the command line options:
    au->setDescription(DESCRIPTION);
-   au->addCommandLineOption("--gdata","<path_to_dataset>"
+   au->addCommandLineOption("--geom-dataset","<path_to_dataset>"
                             "Full HDF5-internal path to geometry dataset to use for image. ");
-   au->addCommandLineOption("--idata","<path_to_dataset>"
+   au->addCommandLineOption("--image-dataset","<path_to_dataset>"
                             "Full HDF5-internal path to pixel dataset to extract. ");
    au->addCommandLineOption("--list-datasets",
                             "Lists all datasets with extents. ");
@@ -82,13 +82,13 @@ bool ossimHdf5Tool::initialize(ossimArgumentParser& ap)
    ossimArgumentParser::ossimParameter stringParam1(tempString1);
    const string TRUE_STR ("true");
 
-   if ( ap.read("--gdata", stringParam1))
+   if ( ap.read("--geom-dataset", stringParam1) || ap.read("--gdata", stringParam1))
       m_kwl.addPair(GEOM_DATASET_KW, tempString1);
 
    if ( ap.read("--geom", stringParam1))
       m_kwl.addPair(ossimKeywordNames::GEOM_FILE_KW, tempString1);
 
-   if ( ap.read("--idata", stringParam1))
+   if ( ap.read("--image-dataset", stringParam1) || ap.read("--idata", stringParam1))
       m_kwl.addPair(IMAGE_DATASET_KW, tempString1);
 
    if ( ap.read("--list-datasets"))
@@ -250,20 +250,24 @@ void ossimHdf5Tool::initProcessingChain()
 
 bool ossimHdf5Tool::execute()
 {
-   //Need to fix output to tiff
+   // Need to fix output to tiff
 
    ostringstream errMsg;
    if (!m_hdf5.valid())
       return false;
 
-   if (m_listDatasets || m_listNdimDatasets || m_dumpInfo)
+   if (m_listDatasets || m_listNdimDatasets || m_dumpInfo || m_dumpKwl)
    {
       ossimHdf5Info info (m_hdf5.get());
-      if (m_dumpInfo)
+      if (m_dumpKwl)
       {
          ossimKeywordlist kwl;
          info.getKeywordlist(kwl);
          kwl.print(cout);
+      }
+      if (m_dumpInfo)
+      {
+         info.print(cout);
       }
 
       Group root;

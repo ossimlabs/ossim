@@ -173,7 +173,9 @@ public:
    ossimRefPtr<ossimHdf5ImageDataset> getCurrentDataset();
 
    /** @return Null pixel value. */
-   virtual double getNullPixelValue(ossim_uint32 band=0)const;
+   virtual double getNullPixelValue(ossim_uint32 band=0) const;
+   virtual double getMaxPixelValue(ossim_uint32 band=0) const;
+   virtual double getMinPixelValue(ossim_uint32 band=0) const;
 
    /**
     * @brief Set propterty method. Overrides ossimImageHandler::setProperty.

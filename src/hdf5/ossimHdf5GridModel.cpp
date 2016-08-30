@@ -59,6 +59,7 @@ bool ossimHdf5GridModel::initialize(ossimHdf5* hdf5, const ossimString& projData
 
    m_hdf5 = hdf5;
    m_projDataPath = projDataPath;
+   theHeightEnabledFlag = false;
 
    try
    {
