@@ -102,6 +102,9 @@ public:
 
    const ossimIpt& getImageSize() const;
 
+   bool getMapProjectionKwl( const ossimFilename& imd_file,
+                             ossimKeywordlist& kwl );
+
 /*****************************************
 *parseATTData EPH GEO IMD RPB TIL
 *

@@ -617,58 +617,70 @@ std::ostream& ossimRpfToc::print(std::ostream& out,
                                  const std::string& prefix,
                                  bool printOverviews) const
 {
+   printHeader( out, prefix );
+
+   //---
+   // Go through the entries...  We're going to skip overviews here.
+   //---
+   for ( ossim_uint32 entryIndex = 0; entryIndex < m_tocEntryList.size(); ++entryIndex )
+   {
+      printTocEntry( out, entryIndex, prefix, printOverviews );
+   }
+
+
+   return out;
+}
+
+std::ostream& ossimRpfToc::printHeader( std::ostream& out,
+                                        const std::string& prefix ) const
+{
    if( m_rpfHeader.valid() )
    {
       m_rpfHeader->print(out, prefix);
+   }
+   return out;
+}
 
-      //---
-      // Go through the entries...  We're going to skip overviews here.
-      //---
-      ossim_uint32 prefixIndex = 0;
-      std::vector< ossimRpfTocEntry*>::const_iterator tocEntry =
-         m_tocEntryList.begin();
-      while(tocEntry != m_tocEntryList.end())
+std::ostream& ossimRpfToc::printTocEntry( std::ostream& out,
+                                          ossim_uint32 entryIndex,
+                                          const std::string& prefix,
+                                          bool printOverviews ) const
+{
+   const ossimRpfTocEntry* tocEntry = getTocEntry( entryIndex );
+   if ( tocEntry )
+   {
+      if ( traceDebug() )
       {
-         if (*tocEntry)
+         tocEntry->print(out, prefix);
+      }
+      
+      const ossimRpfBoundaryRectRecord REC = tocEntry->getBoundaryInformation();
+         
+      ossimString scale = REC.getScale();
+      if ( (scale.contains("OVERVIEW") == false) || printOverviews )
+      {
+         ossimString entryPrefix = prefix;
+         entryPrefix += "image";
+         entryPrefix += ossimString::toString(entryIndex);
+         entryPrefix += ".";
+         REC.print(out, entryPrefix);
+         
+         //---
+         // Get the first frame that exists so we can get to
+         // the attributes.
+         //---
+         ossimRpfFrameEntry frameEntry;
+         getFirstEntry( tocEntry, frameEntry);
+         
+         if (frameEntry.exists())
          {
-            if ( traceDebug() )
+            ossimRpfFrame rpfFrame;
+            if ( rpfFrame.parseFile(frameEntry.getFullPath())
+                 == ossimErrorCodes::OSSIM_OK )
             {
-               (*tocEntry)->print(out, prefix);
-            }
-            
-            const ossimRpfBoundaryRectRecord REC =
-               (*tocEntry)->getBoundaryInformation();
-
-            ossimString scale = REC.getScale();
-            if ( (scale.contains("OVERVIEW")) == false ||
-                 printOverviews )
-            {
-               ossimString entryPrefix = prefix;
-               entryPrefix += "image";
-               entryPrefix += ossimString::toString(prefixIndex);
-               entryPrefix += ".";
-               REC.print(out, entryPrefix);
-
-               //---
-               // Get the first frame that exists so we can get to
-               // the attributes.
-               //---
-               ossimRpfFrameEntry frameEntry;
-               getFirstEntry((*tocEntry), frameEntry);
-
-               if (frameEntry.exists())
-               {
-                  ossimRpfFrame rpfFrame;
-                  if ( rpfFrame.parseFile(frameEntry.getFullPath())
-                       == ossimErrorCodes::OSSIM_OK )
-                  {
-                     rpfFrame.print(out, entryPrefix);
-                  }
-               }
+               rpfFrame.print(out, entryPrefix);
             }
          }
-         ++prefixIndex;
-         ++tocEntry;
       }
    }
    return out;

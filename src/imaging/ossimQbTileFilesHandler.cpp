@@ -24,8 +24,10 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/imaging/ossimTiffOverviewBuilder.h>
 #include <ossim/imaging/ossimTiffTileSource.h>
+#include <ossim/support_data/ossimQuickbirdMetaData.h>
 #include <ossim/support_data/ossimQuickbirdTile.h>
 #include <ossim/projection/ossimQuickbirdRpcModel.h>
 #include <algorithm>
@@ -182,24 +184,53 @@ bool ossimQbTileFilesHandler::open()
 //*************************************************************************************************
 ossimRefPtr<ossimImageGeometry> ossimQbTileFilesHandler::getImageGeometry()
 {
-   // Try external geom first:
-   theGeometry = getExternalImageGeometry();
-   if (theGeometry.valid())
-      return theGeometry;  // We should return here.
-   
-   // The dataset is expected to have an RPC model associated with it:
-   ossimRefPtr<ossimQuickbirdRpcModel> model = new ossimQuickbirdRpcModel(this);
-   if (!model->getErrorStatus())
+   if ( !theGeometry )
    {
-      theGeometry = new ossimImageGeometry;
-      theGeometry->setProjection(model.get());
+      // Try external geom first:
+      theGeometry = getExternalImageGeometry();
       
+      if ( !theGeometry )
+      {
+         theGeometry = new ossimImageGeometry;
+         
+         // The dataset is expected to have an RPC model associated with it:
+         ossimRefPtr<ossimQuickbirdRpcModel> model = new ossimQuickbirdRpcModel(this);
+         if (!model->getErrorStatus())
+         {
+            theGeometry->setProjection(model.get());
+         }
+         else
+         {
+            // Check for map projected data:
+            ossimFilename imd_file = theImageFile;
+            imd_file.setExtension("IMD");
+            if ( imd_file.exists() == false )
+            {
+               imd_file.setExtension("imd");
+            }
+
+            if ( imd_file.exists() )
+            {
+               ossimQuickbirdMetaData md;
+               ossimKeywordlist kwl;
+               if ( md.getMapProjectionKwl( imd_file, kwl ) == true )
+               {
+                  ossimRefPtr<ossimProjection> proj = ossimProjectionFactoryRegistry::instance()->
+                     createProjection( kwl, 0 );
+                  if ( proj.valid() == true )
+                  {
+                     theGeometry->setProjection( proj.get() );
+                  }
+               }
+            }
+         }
+      }
+            
       // Set image things the geometry object should know about.
       initImageParameters( theGeometry.get() );
-
-      return theGeometry;
    }
-   return ossimRefPtr<ossimImageGeometry>();
+   
+   return theGeometry;
 }
 
 //*************************************************************************************************
