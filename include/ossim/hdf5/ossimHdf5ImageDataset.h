@@ -95,6 +95,9 @@ public:
 
    const ossimIrect& getValidImageRect() const;
 
+   double getMaxPixelValue(ossim_uint32 band=0) const;
+   double getMinPixelValue(ossim_uint32 band=0) const;
+
    /**
     *  @brief Method to grab a tile(rectangle) from image.
     *
@@ -122,8 +125,9 @@ private:
    bool determineExtents();
    bool scanForValidImageRect();
    bool determineScalarType();
+   bool scanForMinMax();
 
-   ossimHdf5ImageHandler* m_handler;
+   ossimRefPtr<ossimHdf5ImageHandler> m_handler;
    ossimRefPtr<ossimHdf5> m_hdf5;
    H5::DataSet     m_dataset;
    H5::DataSpace   m_dataSpace;
@@ -132,6 +136,9 @@ private:
    ossim_uint32    m_lines;
    ossim_uint32    m_samples;
    ossimEndian*    m_endian; // For byte swapping if needed.
+   std::vector<ossim_float32> m_minValue;
+   std::vector<ossim_float32> m_maxValue;
+
 
    /** H5 data can have null rows on the front or end.  The valid rect is the scanned rectangle
     * disregarding leading or trailing nulls. This doesn't handle nulls in the middle of image. */

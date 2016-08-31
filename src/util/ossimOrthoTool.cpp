@@ -78,7 +78,5 @@ void ossimOrthoTool::initProcessingChain()
 {
    ossimRefPtr<ossimImageSource> input_mosaic = combineLayers(m_imgLayers);
    m_procChain->add(input_mosaic.get());
-
-   finalizeChain();
 }
 

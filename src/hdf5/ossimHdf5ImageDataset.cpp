@@ -86,7 +86,7 @@ bool ossimHdf5ImageDataset::initialize( const H5::DataSet& dataset)
 
    determineScalarType();
 
-   if (!determineExtents() || !scanForValidImageRect())
+   if (!determineExtents() || !scanForValidImageRect() || !scanForMinMax())
       return false;
 
    return true;
@@ -156,7 +156,7 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
    if (!found_valid)
       ulIpt = ossimIpt(0,0);
 
-   // Find the ul pixel. Loop over rows:
+   // Find the lr pixel. Loop over rows:
    ossimIpt lrIpt (m_samples-1, m_lines-1);
    found_valid = false;
    for (; (lrIpt.y>ulIpt.y) && !found_valid; lrIpt.y--)
@@ -180,6 +180,84 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
 
    delete [] rowBuf;
    delete [] fill_value;
+   return true;
+}
+
+bool ossimHdf5ImageDataset::scanForMinMax()
+{
+   // Create buffer to hold the clip rect for a single band.
+   ossimScalarType scalarType = getScalarType();
+   if ((scalarType != OSSIM_FLOAT32) && (scalarType != OSSIM_FLOAT64) &&
+       (scalarType != OSSIM_UINT32)  && (scalarType != OSSIM_SINT32)  &&
+       (scalarType != OSSIM_UINT8)   && (scalarType != OSSIM_SINT8)   &&
+       (scalarType != OSSIM_UINT16)  && (scalarType != OSSIM_SINT16))
+   {
+      return false;
+   }
+
+   ossim_uint32 bufSizeInBytes = m_validRect.width()*ossim::scalarSizeInBytes(scalarType);
+   vector<char> dataBuffer(bufSizeInBytes);
+
+   // Get the extents. Assuming dimensions are same for lat lon dataset.
+   ossimIpt ulIpt (m_validRect.ul());
+   ossimIpt lrIpt (m_validRect.lr());
+   const ossim_float32 nullpix = m_handler->getNullPixelValue();
+   ossim_float32 epsilon = 2*FLT_EPSILON;
+   if (nullpix == 0.0)
+      epsilon = 0;
+
+   m_minValue.clear();
+   m_maxValue.clear();
+
+   ossimIrect clipRect (m_validRect.ul(), m_validRect.ur());
+   for (int band=0; band<m_bands; ++band)
+   {
+      m_minValue.push_back(OSSIM_DEFAULT_MAX_PIX_FLOAT);
+      m_maxValue.push_back(OSSIM_DEFAULT_MIN_PIX_FLOAT);
+
+      for (int y=ulIpt.y; y<=lrIpt.y; y++)
+      {
+         clipRect.set_uly(y);
+         clipRect.set_lry(y);
+
+         getTileBuf(&dataBuffer.front(), clipRect, band);
+
+         // Scan and fix non-standard null value:
+         ossim_float32 value = 0;
+         for ( int x=ulIpt.x; x<=lrIpt.x; ++x )
+         {
+            switch (scalarType)
+            {
+            case OSSIM_FLOAT32:
+               value = ((ossim_float32*)&dataBuffer.front())[x];
+               break;
+            case OSSIM_FLOAT64:
+               value = (ossim_float32) ((ossim_float64*)&dataBuffer.front())[x];
+               break;
+            case OSSIM_UINT8:
+            case OSSIM_SINT8:
+               value = (ossim_float32) ((char*)&dataBuffer.front())[x];
+               break;
+            case OSSIM_UINT16:
+            case OSSIM_SINT16:
+               value = (ossim_float32) ((ossim_int16*)&dataBuffer.front())[x];
+               break;
+            case OSSIM_UINT32:
+            case OSSIM_SINT32:
+               value = (ossim_float32) ((ossim_int32*)&dataBuffer.front())[x];
+               break;
+            }
+
+            if (ossim::almostEqual<ossim_float32>(value, nullpix, epsilon))
+               continue;
+            if (value > m_maxValue[band])
+               m_maxValue[band] = value;
+            if (value < m_minValue[band])
+               m_minValue[band] = value;
+         }
+      }
+   }
+
    return true;
 }
 
@@ -248,17 +326,9 @@ bool ossimHdf5ImageDataset::determineScalarType()
       m_scalar = OSSIM_FLOAT64;
 
    // See if we need to swap bytes:
-   H5::DataType* dataType = new H5::DataType(m_dataset.getDataType());
-   H5::AtomType* atomType = dynamic_cast<H5::AtomType*>(dataType);
-   if (atomType)
-   {
-      ossimByteOrder ossimByteOrder = ossim::byteOrder();
-      H5T_order_t h5order = atomType->getOrder();
-      if( ((h5order == H5T_ORDER_LE) && (ossimByteOrder != OSSIM_LITTLE_ENDIAN)) ||
-            ((h5order == H5T_ORDER_BE) && (ossimByteOrder != OSSIM_BIG_ENDIAN)))
-         m_endian = new ossimEndian();
-   }
-   delete dataType;
+   if (m_hdf5->getByteOrder(&m_dataset) != ossim::byteOrder())
+      m_endian = new ossimEndian();
+
    return true;
 }
 
@@ -420,6 +490,20 @@ void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect, oss
 
 } // End: ossimH5ImageDataset::getTileBuf
 
+
+double ossimHdf5ImageDataset::getMaxPixelValue(ossim_uint32 band) const
+{
+   if (band < m_bands)
+      return m_maxValue[band];
+   return 0;
+}
+
+double ossimHdf5ImageDataset::getMinPixelValue(ossim_uint32 band) const
+{
+   if (band < m_bands)
+      return m_minValue[band];
+   return 0;
+}
 
 std::ostream& ossimHdf5ImageDataset::print( std::ostream& out ) const
 {

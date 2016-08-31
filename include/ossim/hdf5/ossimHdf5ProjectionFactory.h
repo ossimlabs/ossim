@@ -44,10 +44,20 @@ public:
    
    virtual void getTypeNameList(std::vector<ossimString>& typeList)const;
 
+   /**
+    * Specifies which HDF5 internal paths to search through to locate geometry information. This
+    * can be either explicit dataset names, or group names containing known datasets, such as
+    * "Latitude" and "longitude". The plugins depending on HDF5 should register their geometry
+    * groups here in the same order as image entries.
+    */
+   void addProjDataPath(const ossimString& projPath) { m_projDataPaths.push_back(projPath); }
+
 protected:
    
    ossimHdf5ProjectionFactory();
    
+   std::vector<ossimString> m_projDataPaths; // List of paths (groups or datasets) containing proj info
+
 }; // End: class ossimH5ProjectionFactory{ ... }
 
 #endif /* #ifndef ossimH5ProjectionFactory_HEADER */
