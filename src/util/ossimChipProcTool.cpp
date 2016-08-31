@@ -1256,8 +1256,11 @@ void ossimChipProcTool::propagateGeometryToChains()
       (*chainIdx)->accept(viewVisitor);
       (*chainIdx)->accept(eventVisitor);
       ossimRefPtr<ossimImageRenderer> resampler = (*chainIdx)->getImageRenderer();
-      resampler->setView( m_geom.get() );
-      resampler->propagateEventToOutputs(*refreshEvent);
+      if (resampler.valid())
+      {
+         resampler->setView( m_geom.get() );
+         resampler->propagateEventToOutputs(*refreshEvent);
+      }
       ++chainIdx;
    }
 }

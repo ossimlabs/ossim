@@ -49,10 +49,24 @@ ossimProjection* ossimHdf5ProjectionFactory::createProjection(const ossimString&
    return 0;
 }
 
-ossimProjection* ossimHdf5ProjectionFactory::createProjection(const ossimKeywordlist& /*kwl*/,
-                                                              const char* /*prefix*/) const
+ossimProjection* ossimHdf5ProjectionFactory::createProjection(const ossimKeywordlist& kwl,
+                                                              const char* prefix) const
 {
-   return 0;
+   ossimRefPtr<ossimProjection> result;
+   ossimString value = kwl.find(prefix, ossimKeywordNames::TYPE_KW);
+   if(value != "ossimHdf5GridModel")
+      return 0;
+
+   // The HDF5 grid model is just an implementation of the coarse grid model, but the geom file
+   // is purely the latter, so trick the KWL to properly load an OCG model:
+   ossimKeywordlist new_kwl (kwl);
+   new_kwl.add(prefix, ossimKeywordNames::TYPE_KW, "ossimCoarseGridModel", true);
+
+   result = new ossimHdf5GridModel;
+   if( !result->loadState(new_kwl, prefix) )
+      result = 0;
+
+   return result.release();
 }
 
 ossimObject* ossimHdf5ProjectionFactory::createObject(

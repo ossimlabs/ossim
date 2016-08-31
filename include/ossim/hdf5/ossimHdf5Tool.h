@@ -13,7 +13,8 @@
 #include <ossim/base/ossimGpt.h>
 #include <ossim/imaging/ossimImageSource.h>
 #include <ossim/util/ossimChipProcTool.h>
-#include <ossim/hdf5/ossimHdf5.h>
+
+class ossimHdf5;
 
 /*!
  *  Class for computing the slope on each elevation post and generatinga corresponding slope image.

@@ -14,8 +14,11 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimKeywordlist.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/hdf5/ossimHdf5.h>
 #include <ossim/hdf5/ossimHdf5ImageHandler.h>
 #include <ossim/hdf5/ossimHdf5Info.h>
+#include <ossim/hdf5/ossimHdf5GridModel.h>
 #include <iostream>
 
 using namespace std;
@@ -168,15 +171,20 @@ void ossimHdf5Tool::initialize(const ossimKeywordlist& kwl)
 
    // Only if an output file is specified, do we need the services of ossimChipProcTool:
    m_productFilename = m_kwl.findKey( std::string(ossimKeywordNames::OUTPUT_FILE_KW) );
-   if (!m_productFilename.empty())
+
+   ossimChipProcTool::initialize(kwl);
+   if (m_imgLayers.empty())
    {
-      ossimChipProcTool::initialize(kwl);
-      if (m_imgLayers.empty())
-      {
-         xmsg<<"ERROR: ossimHdf5Tool:"<<__LINE__<<" -- No input chain available. Make sure an HDF5"
-               " input file name is specified";
-         throw ossimException(xmsg.str());
-      }
+      xmsg<<"ERROR: ossimHdf5Tool:"<<__LINE__<<" -- No input chain available. Make sure an HDF5"
+            " input file name is specified";
+      throw ossimException(xmsg.str());
+   }
+
+   // If dataset specified, then expect product filename:
+   if (!m_imageDataPath.empty() && m_productFilename.empty())
+   {
+      m_productFilename = hdfFile;
+      m_productFilename.setExtension("tif");
    }
 }
 
@@ -191,22 +199,37 @@ void ossimHdf5Tool::loadImageFiles()
       errMsg<<"ERROR: ossimHdf5Tool:"<<__LINE__<<" -- No input HDF5 file name specified.";
       throw ossimException(errMsg.str());
    }
+   ossimFilename imageFilename (value);
 
+   // If explicit image data paths are specified, open the HDF5 handler directly, otherwise assume
+   // there is a plugin factory that will figure it out:
+   ossimRefPtr<ossimHdf5ImageHandler> handler;
    if (m_imageDataPath.empty())
    {
-      errMsg<<"ERROR: ossimHdf5Tool:"<<__LINE__<<" -- No HDF5 dataset paths were specified."
-            " Don't know what dataset to extract. Use \"--idata\" option to specify.";
-      throw ossimException(errMsg.str());
+      // Use the factory system to instantiate handler, then verify it is HDF5:
+      ossimRefPtr<ossimImageHandler> ih = ossimImageHandlerRegistry::instance()->open(imageFilename);
+      handler = dynamic_cast<ossimHdf5ImageHandler*>(ih.get());
+      if (!handler.valid())
+      {
+         errMsg<<"ERROR: ossimHdf5Tool:"<<__LINE__<<" -- No HDF5 dataset paths were specified"
+               " and no default HDF5-derived handlers were found. Don't know what dataset to "
+               "extract. Use \"--image-dataset\" option to specify.";
+         throw ossimException(errMsg.str());
+      }
+   }
+   else
+   {
+      // Use explicitely-provided dataset names:
+      handler = new ossimHdf5ImageHandler;
+      handler->addRenderable(m_imageDataPath);
+      handler->setFilename(ossimFilename(value));
+      if (!handler->open())
+      {
+         errMsg<<"ERROR: ossimHdf5Tool:"<<__LINE__<<" -- Could not open <"<<value<<"> as an HDF5 file.";
+         throw ossimException(errMsg.str());
+      }
    }
 
-   ossimRefPtr<ossimHdf5ImageHandler> handler = new ossimHdf5ImageHandler;
-   handler->addRenderable(m_imageDataPath);
-   handler->setFilename(ossimFilename(value));
-   if (!handler->open())
-   {
-      errMsg<<"ERROR: ossimHdf5Tool:"<<__LINE__<<" -- Could not open <"<<value<<"> as an HDF5 file.";
-      throw ossimException(errMsg.str());
-   }
 
    // Init chain with handler:
    ossimRefPtr<ossimSingleImageChain> chain = new ossimSingleImageChain;
@@ -220,10 +243,6 @@ void ossimHdf5Tool::loadImageFiles()
       remapper->setOutputScalarType(m_productScalarType);
       chain->add(remapper.get());
    }
-
-   // Set up the renderer with cache:
-   chain->addResampler();
-   chain->addCache();
 
    // Add geo polygon cutter if specifried:
    ossimString param = m_kwl.findKey(string("clip_poly_lat_lon"));
@@ -283,9 +302,41 @@ bool ossimHdf5Tool::execute()
       }
    }
 
-   bool status = true;
-   if (m_imgLayers.size())
-      status = ossimChipProcTool::execute();
+   if (m_imgLayers.empty())
+      return true;
 
-   return status;
+   if (!ossimChipProcTool::execute())
+      return false;
+
+   ossimRefPtr<ossimImageGeometry> geom = m_imgLayers[0]->getImageGeometry();
+   if (geom.valid())
+   {
+      ossimRefPtr<ossimProjection> proj = geom->getProjection();
+      if ( proj.valid() )
+      {
+         ossimFilename geomFile = m_productFilename.noExtension();
+         geomFile.string() += ".geom";
+
+         // Assume it is coarse grid (case for VIIRS):
+         ossimRefPtr<ossimHdf5GridModel> cg = dynamic_cast<ossimHdf5GridModel*>( proj.get() );
+         if ( cg.valid() )
+         {
+            // this saves geom file as well
+            cg->saveCoarseGrid( geomFile );
+            cout << "Wrote file: " << geomFile << endl;
+         }
+         else
+         {
+            // Save the state to keyword list.
+            ossimKeywordlist geomKwl;
+            geom->saveState(geomKwl);
+
+            // Write to file:
+            geomKwl.write( geomFile.c_str() );
+            cout << "Wrote file: " << geomFile << endl;
+         }
+      }
+   }
+
+   return true;
 }
