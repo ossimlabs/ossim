@@ -50,9 +50,9 @@ namespace ossim
 /*     inline bool almostEqual(T x, T y, T tolerence = std::numeric_limits<T>::epsilon()) */
 /*         // are x and y within tolerance distance of each other? */
 /*         { return std::abs(x - y) <= tolerence; } */
-    inline bool almostEqual(T x, T y, T tolerence = FLT_EPSILON)
+    inline bool almostEqual(T x, T y, T tolerance = FLT_EPSILON)
         // are x and y within tolerance distance of each other?
-        { return std::fabs(x - y) <= tolerence; }
+        { return std::fabs(x - y) <= tolerance; }
 
     template <class T>
     inline bool inInterval(T x, T a, T b)
