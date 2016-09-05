@@ -28,6 +28,7 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimDrect.h>
+#include <ossim/base/ossimKeywordNames.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/projection/ossimBilinearProjection.h>
 #include <ossim/hdf5/ossimHdf5ImageHandler.h>
@@ -37,7 +38,7 @@
 using namespace std;
 using namespace H5;
 
-static const int    GRID_SAMPLING_INTERVAL = 8;
+static const int    GRID_SAMPLING_INTERVAL = 32;
 
 RTTI_DEF1(ossimHdf5GridModel, "ossimHdf5GridModel", ossimCoarseGridModel);
 
@@ -71,6 +72,9 @@ bool ossimHdf5GridModel::initialize(ossimHdf5* hdf5, const ossimString& projData
       ossimNotify(ossimNotifyLevel_FATAL)<<x.what();
       return false;
    }
+
+   theDlatDhGrid.initialize(theLatGrid.size(), theLatGrid.origin(), theLatGrid.spacing(), 0.0);
+   theDlonDhGrid.initialize(theLonGrid.size(), theLonGrid.origin(), theLonGrid.spacing(), 0.0);
 
    // Check for dateline crossing among the longitude grid:
    crossesDateline();
@@ -368,14 +372,66 @@ bool ossimHdf5GridModel::crossesDateline()
    bool found181 = false;
 
    ossimIpt size (theLonGrid.size());
-   double left, right;
-   int xr = size.x-1;
+   //double left, right;
+   //int xr = size.x-1;
+
    for (ossim_uint32 y=0; (y<size.y) && !crossesDateline; ++y )
    {
+#if 0
       left  = theLonGrid.getNode(0,  y);
       right = theLonGrid.getNode(xr, y);
       if (left > right)
          crossesDateline = true;
+#endif
+
+      for ( ossim_uint32 x = 0; x < size.x; ++x)
+      {
+         longitude = (ossim_int32) theLonGrid.getNode(x,  y); // Cast to integer.
+
+         // look for 179 -> -179...
+         if ( !found179 )
+         {
+            if ( longitude == 179 )
+            {
+               found179 = true;
+               continue;
+            }
+         }
+         else // found179 == true
+         {
+            if ( longitude == 178 )
+            {
+               break; // Going West, 179 -> 178
+            }
+            else if ( longitude == -179 )
+            {
+               crossesDateline = true;
+               break;
+            }
+         }
+
+         // look for -179 -> 179...
+         if ( !found181 )
+         {
+            if ( longitude == -179 )
+            {
+               found181 = true;
+               continue;
+            }
+         }
+         else // found181 == true
+         {
+            if ( longitude == -178 )
+            {
+               break; // Going East -179 -> -178
+            }
+            else if ( longitude == 179 )
+            {
+               crossesDateline = true;
+               break;
+            }
+         }
+      }
    }
 
    if ( crossesDateline )
@@ -386,4 +442,12 @@ bool ossimHdf5GridModel::crossesDateline()
    return crossesDateline;
 }
 
+
+bool ossimHdf5GridModel::saveState(ossimKeywordlist& kwl, const char* prefix) const
+{
+   bool stat = ossimCoarseGridModel::saveState(kwl, prefix);
+   kwl.add(prefix, ossimKeywordNames::TYPE_KW, "ossimCoarseGridModel", true);
+
+   return stat;
+}
 
