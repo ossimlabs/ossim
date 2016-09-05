@@ -110,7 +110,7 @@ public:
     *
     *  @param band
     */
-   void getTileBuf(void* buffer, const ossimIrect& rect, ossim_uint32 band);   
+   void getTileBuf(void* buffer, const ossimIrect& rect, ossim_uint32 band, bool scale=true);
 
    /**
     * @brief print method.
