@@ -38,8 +38,11 @@
 #include <ossim/imaging/ossimRangeDomeTileSource.h>
 #include <ossim/parallel/ossimImageHandlerMtAdaptor.h>
 #include <ossim/point_cloud/ossimPointCloudImageHandler.h>
-
 #include <tiffio.h>
+
+#if OSSIM_HAS_HDF5
+#include <ossim/hdf5/ossimViirsHandler.h>
+#endif
 
 static const ossimTrace traceDebug("ossimImageHandlerFactory:debug");
 
@@ -245,6 +248,14 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimFilename& fileName,
       result->setOpenOverviewFlag(openOverview);
       result = new ossimLasReader();
       if (result->open(copyFilename))  break;
+
+#if OSSIM_HAS_HDF5
+      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying VIIRS...\n";
+      result = new ossimViirsHandler();
+      result->setOpenOverviewFlag(openOverview);
+      if (result->open(copyFilename))  break;
+#endif
+
       result = 0;
       break;
    }
@@ -363,6 +374,12 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimKeywordlist& kwl,
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying Range Domes CSV...\n";
       result = new ossimRangeDomeTileSource();
       if (result->loadState(kwl, prefix))  break;
+
+#if OSSIM_HAS_HDF5
+      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying VIIRS...\n";
+      result = new ossimViirsHandler();
+      if (result->loadState(kwl, prefix))  break;
+#endif
 
 #ifdef ENABLE_POINT_CLOUD_HANDLER
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying ossimPointCloudImageHandler...\n";
@@ -631,7 +648,14 @@ ossimObject* ossimImageHandlerFactory::createObject(const ossimString& typeName)
    {
       return new ossimRangeDomeTileSource();
    }
-#ifdef ENABLE_POINT_CLOUD_HANDLER
+#if OSSIM_HAS_HDF5
+   if(STATIC_TYPE_NAME(ossimViirsHandler) == typeName)
+   {
+      return new ossimViirsHandler();
+   }
+#endif
+
+   #ifdef ENABLE_POINT_CLOUD_HANDLER
    if(STATIC_TYPE_NAME(ossimPointCloudImageHandler) == typeName)
    {
       return new ossimPointCloudImageHandler();
@@ -672,6 +696,9 @@ void ossimImageHandlerFactory::getSupportedExtensions(ossimImageHandlerFactoryBa
    extensionList.push_back("mask");
    extensionList.push_back("txt");
    extensionList.push_back("csv");
+#if OSSIM_HAS_HDF5
+   extensionList.push_back("h5");
+#endif
 }
 
 void ossimImageHandlerFactory::getImageHandlersBySuffix(ossimImageHandlerFactoryBase::ImageHandlerList& result, const ossimString& ext)const
@@ -818,6 +845,16 @@ void ossimImageHandlerFactory::getImageHandlersBySuffix(ossimImageHandlerFactory
       result.push_back(new ossimRangeDomeTileSource);
       return;
    }
+
+#if OSSIM_HAS_HDF5
+   if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<<"Testing VIIRS...\n";
+   if (testExt == "h5")
+   {
+      result.push_back(new ossimViirsHandler);
+      return;
+   }
+#endif
+
 }
 
 void ossimImageHandlerFactory::getImageHandlersByMimeType(ossimImageHandlerFactoryBase::ImageHandlerList& result, const ossimString& mimeType)const
@@ -902,6 +939,10 @@ void ossimImageHandlerFactory::getTypeNameList(std::vector<ossimString>& typeLis
    typeList.push_back(STATIC_TYPE_NAME(ossimQbTileFilesHandler));
    typeList.push_back(STATIC_TYPE_NAME(ossimBitMaskTileSource));
    typeList.push_back(STATIC_TYPE_NAME(ossimRangeDomeTileSource));
+
+#if OSSIM_HAS_HDF5
+   typeList.push_back(STATIC_TYPE_NAME(ossimViirsHandler));
+#endif
 
 #ifdef ENABLE_POINT_CLOUD_HANDLER
    typeList.push_back(STATIC_TYPE_NAME(ossimPointCloudImageHandler));
