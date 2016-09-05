@@ -220,7 +220,7 @@ bool ossimHdf5ImageDataset::scanForMinMax()
          clipRect.set_uly(y);
          clipRect.set_lry(y);
 
-         getTileBuf(&dataBuffer.front(), clipRect, band);
+         getTileBuf(&dataBuffer.front(), clipRect, band, false);
 
          // Scan and fix non-standard null value:
          ossim_float32 value = 0;
@@ -257,6 +257,9 @@ bool ossimHdf5ImageDataset::scanForMinMax()
          }
       }
    }
+
+   cout<<"ossimHdf5ImageDataset:"<<__LINE__<<"\n\tminValue="<<m_minValue[0]<<
+         "\n\tmaxValue="<<m_maxValue[0]<<"\n\tnullValue="<<m_handler->getNullPixelValue()<<endl; // TODO REMOVE
 
    return true;
 }
@@ -362,22 +365,22 @@ const ossimIrect& ossimHdf5ImageDataset::getValidImageRect() const
    return m_validRect;
 }
 
-void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect, ossim_uint32 band)
+void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect,
+                                       ossim_uint32 band, bool scale)
 {
    static const char MODULE[] = "ossimH5ImageDataset::getTileBuf";
 
+   if (band >= m_bands)
+      return;
+
+   // Shift rectangle by the sub image offse (if any) from the m_validRect.
+   ossimIrect irect = rect + m_validRect.ul();
+
    try
    {
-      // Shift rectangle by the sub image offse (if any) from the m_validRect.
-      ossimIrect irect = rect + m_validRect.ul();
-
-      //--
       // Turn off the auto-printing when failure occurs so that we can
       // handle the errors appropriately
-      //---
       // H5::Exception::dontPrint();
-
-      // NOTE: rank == array dimensions in hdf5 documentation lingo.
 
       // Get dataspace of the dataset.
       H5::DataSpace imageDataSpace = m_dataset.getSpace();
@@ -443,49 +446,96 @@ void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect, oss
          m_endian->swap( m_scalar, buffer, irect.area() );
       }
 
+#define NEVER 1
+#ifdef NEVER
+      if (scale)
+      {
+         // Scale the data:
+#if 1
+         // Assumes float32 datatype:
+         double gain = 1.0/( m_maxValue[band] - m_minValue[band] );
+         ossim_float32 null_value = m_handler->getNullPixelValue(band);
+         ossim_float32 value;
+         for (ossim_uint32 i=0; i<irect.area(); ++i)
+         {
+            value = ((ossim_float32*)buffer)[i];
+
+            if (!ossim::almostEqual(value,null_value))
+            {
+               value = gain*(value - m_minValue[band]);
+               ((ossim_float32*)buffer)[i] =value;
+            }
+         }
+#else
+         // Does not assume float32:
+         ossimScalarType scalarType = getScalarType();
+         double null_value = m_handler->getNullPixelValue(band);
+         for (ossim_uint32 i=0; i<irect.area(); ++i)
+         {
+            switch (scalarType)
+            {
+            case OSSIM_FLOAT32:
+               if (!ossim::almostEqual(((ossim_float32*)buffer)[i], (ossim_float32)null_value))
+                  ((ossim_float32*)buffer)[i] =
+                        (ossim_float32)(gain*(((ossim_float32*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_FLOAT64:
+               if (!ossim::almostEqual(((ossim_float64*)buffer)[i], null_value))
+                  ((ossim_float64*)buffer)[i] =
+                        (ossim_float64)(gain*(((ossim_float64*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_UINT8:
+               if (((ossim_uint8*)buffer)[i] != (ossim_uint8)null_value)
+                  ((ossim_uint8*)buffer)[i] =
+                        (ossim_uint8)(gain*(((ossim_uint8*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_SINT8:
+               if (((ossim_sint8*)buffer)[i] != (ossim_sint8)null_value)
+                  ((ossim_sint8*)buffer)[i] =
+                        (ossim_sint8)(gain*(((ossim_sint8*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_UINT16:
+               if (((ossim_uint16*)buffer)[i] != (ossim_uint16)null_value)
+                  ((ossim_uint16*)buffer)[i] =
+                        (ossim_uint16)(gain*(((ossim_uint16*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_SINT16:
+               if (((ossim_sint16*)buffer)[i] != (ossim_sint16)null_value)
+                  ((ossim_sint16*)buffer)[i] =
+                        (ossim_sint16)(gain*(((ossim_sint16*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_UINT32:
+               if (((ossim_uint32*)buffer)[i] != (ossim_uint32)null_value)
+                  ((ossim_uint32*)buffer)[i] =
+                        (ossim_uint32)(gain*(((ossim_uint32*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_SINT32:
+               if (((ossim_sint32*)buffer)[i] != (ossim_sint32)null_value)
+                  ((ossim_sint32*)buffer)[i] =
+                        (ossim_sint32)(gain*(((ossim_sint32*)buffer)[i] - m_minValue[band]));
+               break;
+            default:
+               break;
+            }
+         }
+#endif
+      }
+#endif
+
       // Cleanup:
       bufferDataSpace.close();
       dataType.close();
       imageDataSpace.close();
-
-      // memSpace.close();
-      // dataType.close();
-      // dataSpace.close();
    }
-   catch( const H5::FileIException& error )
+   catch( const H5::Exception& error )
    {
-      ossimNotify(ossimNotifyLevel_WARN)
-                                                << MODULE << " caught H5::FileIException!" << std::endl;
+      ossimNotify(ossimNotifyLevel_WARN) << MODULE << " caught H5 Exception!" << std::endl;
       error.printError();
    }
 
-   // catch failure caused by the DataSet operations
-   catch( const H5::DataSetIException& error )
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-                                                << MODULE << " caught H5::DataSetIException!" << std::endl;
-      error.printError();
-   }
-
-   // catch failure caused by the DataSpace operations
-   catch( const H5::DataSpaceIException& error )
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-                                                << MODULE << " caught H5::DataSpaceIException!" << std::endl;
-      error.printError();
-   }
-
-   // catch failure caused by the DataSpace operations
-   catch( const H5::DataTypeIException& error )
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-                                                << MODULE << " caught H5::DataTypeIException!" << std::endl;
-      error.printError();
-   }
    catch( ... )
    {
-      ossimNotify(ossimNotifyLevel_WARN)
-                                                << MODULE << " caught unknown exception !" << std::endl;
+      ossimNotify(ossimNotifyLevel_WARN)<< MODULE << " caught unknown exception !" << std::endl;
    }
 
 } // End: ossimH5ImageDataset::getTileBuf
