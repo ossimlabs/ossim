@@ -29,6 +29,8 @@ RTTI_DEF1(ossimCoarseGridModel, "ossimCoarseGridModel", ossimSensorModel);
 #include <ossim/elevation/ossimElevManager.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/support_data/ossimSupportFilesList.h>
+#include <ossim/projection/ossimProjectionFactoryRegistry.h>
+#include <ossim/projection/ossimBilinearProjection.h>
 #include <cstdio>
 #include <fstream>
 
@@ -708,6 +710,18 @@ bool ossimCoarseGridModel::loadState(const ossimKeywordlist& kwl,
       theErrorStatus++;
       if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimCoarseGridModel::loadState: returning with error..." << std::endl;
       return false;
+   }
+
+   // theSeedFunction: This is in the base class ossimSensorModel but is not
+   // in the ossimSensorModel::loadState so do it here.
+   ossimString seedPrefix = prefix;
+   seedPrefix += "seed_projection.";
+   value = kwl.find( seedPrefix.chars(), ossimKeywordNames::TYPE_KW );
+   if ( value )
+   {
+      // Only do expensive factory call if key is found...
+      theSeedFunction = ossimProjectionFactoryRegistry::instance()->
+         createProjection(kwl, seedPrefix.chars());
    }
 
    //***

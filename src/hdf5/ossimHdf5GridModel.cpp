@@ -29,8 +29,6 @@
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimDrect.h>
 #include <ossim/base/ossimKeywordNames.h>
-#include <ossim/projection/ossimProjectionFactoryRegistry.h>
-#include <ossim/projection/ossimBilinearProjection.h>
 #include <ossim/hdf5/ossimHdf5ImageHandler.h>
 #include <sstream>
 #include <string>
@@ -84,10 +82,9 @@ bool ossimHdf5GridModel::initialize(ossimHdf5* hdf5, const ossimString& projData
    ossimGpt lrg (theLatGrid.minValue(), theLonGrid.maxValue());
    ossimGpt llg (theLatGrid.minValue(), theLonGrid.minValue());
    ossimDrect imageRect(0, 0, m_imageSize.x-1, m_imageSize.y-1);
-   ossimBilinearProjection* seedFunction =
-         new ossimBilinearProjection(imageRect.ul(), imageRect.ur(), imageRect.lr(), imageRect.ll(),
-                                     ulg, urg, lrg, llg);
-   theSeedFunction = seedFunction;
+   theSeedFunction = new ossimBilinearProjection(imageRect.ul(), imageRect.ur(),
+                                                 imageRect.lr(), imageRect.ll(),
+                                                 ulg, urg, lrg, llg);
 
    // Bileaner projection to handle
    initializeModelParams(imageRect);
