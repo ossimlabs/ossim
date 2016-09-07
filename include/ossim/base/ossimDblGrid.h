@@ -80,7 +80,7 @@ public:
    void         initialize(const ossimIpt&  size, 
                            const ossimDpt&  origin,
                            const ossimDpt&  spacing,
-                           double null_value = OSSIM_DEFAULT_NULL_PIX_DOUBLE);
+                           double null_value = OSSIM_DEFAULT_NULL_PIX_DOUBLE );
    void         initialize(const ossimDrect&  uv_rect, 
                            const ossimDpt&    spacing,
                            double null_value = OSSIM_DEFAULT_NULL_PIX_DOUBLE);

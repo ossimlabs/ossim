@@ -108,7 +108,7 @@ public:
     *  any sub image offset. E.g. A request for 0,0 is the upper left corner
     *  of the valid image rect.
     *
-    *  @param band
+    *  @param scale If true, uses min and max to stretch the data to a UINT16 range.
     */
    void getTileBuf(void* buffer, const ossimIrect& rect, ossim_uint32 band, bool scale=true);
 
