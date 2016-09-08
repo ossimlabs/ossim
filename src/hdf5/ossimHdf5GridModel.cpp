@@ -178,14 +178,13 @@ bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, ossimDblGrid& c
    vector<ossim_float32> values(m_imageSize.x);
    ossim_float32 val = 0;
    hsize_t y_img = 0;
-   const ossim_float64 NULL_VALUE = -999.0;
 
    // Line loop:
    for ( ossim_uint32 y = 0; y < gridRows; ++y )
    {
       // y_img = line in image space
       y_img = y*GRID_SAMPLING_INTERVAL;
-      if ( y_img < m_imageSize.y )
+      if ( y_img < (ossim_uint32) m_imageSize.y )
       {
          inputOffset[0] = y_img;
          dataSpace.selectHyperslab( H5S_SELECT_SET, &inputCount.front(), &inputOffset.front() );
@@ -201,7 +200,7 @@ bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, ossimDblGrid& c
          {
             // x_img = sample in image space
             x_img = x*GRID_SAMPLING_INTERVAL;
-            if ( x_img < m_imageSize.x )
+            if ( x_img < (ossim_uint32) m_imageSize.x )
             {
                val = values[x_img];
                if (ossim::isnan(val)) // Nulls in grid!
@@ -372,7 +371,7 @@ bool ossimHdf5GridModel::crossesDateline()
    //double left, right;
    //int xr = size.x-1;
 
-   for (ossim_uint32 y=0; (y<size.y) && !crossesDateline; ++y )
+   for (ossim_uint32 y=0; (y<(ossim_uint32)size.y) && !crossesDateline; ++y )
    {
 #if 0
       left  = theLonGrid.getNode(0,  y);
@@ -381,7 +380,7 @@ bool ossimHdf5GridModel::crossesDateline()
          crossesDateline = true;
 #endif
 
-      for ( ossim_uint32 x = 0; x < size.x; ++x)
+      for ( ossim_uint32 x = 0; x<(ossim_uint32)size.x; ++x)
       {
          longitude = (ossim_int32) theLonGrid.getNode(x,  y); // Cast to integer.
 

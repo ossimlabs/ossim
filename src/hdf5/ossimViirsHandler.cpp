@@ -42,7 +42,7 @@ ossimRefPtr<ossimImageGeometry> ossimViirsHandler::getImageGeometry()
 }
 
 
-double ossimViirsHandler::getNullPixelValue(ossim_uint32 band) const
+double ossimViirsHandler::getNullPixelValue(ossim_uint32 /*band*/) const
 {
    // NPP VIIRS data has null of "-999.3".
    return -999.3;

@@ -218,10 +218,6 @@ bool ossimHdf5ImageHandler::loadState(const ossimKeywordlist& kwl,
 
 bool ossimHdf5ImageHandler::open()
 {
-   static const char MODULE[] = "ossimHdf5ImageHandler::open";
-
-   bool status = false;
-
    // Start with a clean slate.
    if (isOpen())
    {
@@ -278,7 +274,7 @@ bool ossimHdf5ImageHandler::open()
    }
 
 #if 0
-   ossimNotify(ossimNotifyLevel_DEBUG)<< MODULE << " DEBUG\nDataset names:\n";
+   ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimHdf5ImageHandler:"<<__LINE__ << " DEBUG\nDataset names:\n";
    for ( ossim_uint32 i = 0; i < datasetList.size(); ++i )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)<< "dataset[" << i << "]: "

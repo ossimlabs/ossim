@@ -296,7 +296,7 @@ bool ossimHdf5Tool::execute()
          m_hdf5->getDatasets(root, datasets, true);
       else if (m_listNdimDatasets)
          m_hdf5->getNdimDatasets(root, datasets, true);
-      for (int i=0; i<datasets.size(); ++i)
+      for (ossim_uint32 i=0; i<datasets.size(); ++i)
       {
          info.print(cout, datasets[i]);
       }

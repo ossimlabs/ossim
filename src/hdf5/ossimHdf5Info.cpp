@@ -27,8 +27,6 @@
 using namespace std;
 using namespace H5;
 
-static const int MAX_RECURSION_LEVEL = 8;
-
 ossimHdf5Info::ossimHdf5Info()
    : ossimInfoBase()
 {
