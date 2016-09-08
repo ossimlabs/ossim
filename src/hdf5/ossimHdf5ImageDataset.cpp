@@ -260,8 +260,8 @@ bool ossimHdf5ImageDataset::scanForMinMax()
       }
    }
 
-//   cout<<"ossimHdf5ImageDataset:"<<__LINE__<<"\n\tminValue="<<m_minValue[0]<<
-//         "\n\tmaxValue="<<m_maxValue[0]<<"\n\tnullValue="<<m_handler->getNullPixelValue()<<endl; // TODO REMOVE
+   cout<<"ossimHdf5ImageDataset:"<<__LINE__<<"\n\tminValue="<<m_minValue[0]<<
+         "\n\tmaxValue="<<m_maxValue[0]<<"\n\tnullValue="<<m_handler->getNullPixelValue()<<endl; // TODO REMOVE
 
    return true;
 }

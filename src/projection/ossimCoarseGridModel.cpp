@@ -44,6 +44,8 @@ static ossimTrace traceDebug ("ossimCoarseGridModel:debug");
 
 static const char* MODEL_TYPE = "ossimCoarseGridModel";
 static const char* GRID_FILE_NAME_KW = "grid_file_name";
+static const char* CROSSES_DATELINE_KW = "crosses_dateline";
+
 const ossimFilename DEFAULT_GEOM_FILE_EXT ("geom");
 const ossimFilename DEFAULT_GRID_FILE_EXT ("ocg");
 double ossimCoarseGridModel::theInterpolationError = .1;
@@ -712,18 +714,6 @@ bool ossimCoarseGridModel::loadState(const ossimKeywordlist& kwl,
       return false;
    }
 
-   // theSeedFunction: This is in the base class ossimSensorModel but is not
-   // in the ossimSensorModel::loadState so do it here.
-   ossimString seedPrefix = prefix;
-   seedPrefix += "seed_projection.";
-   value = kwl.find( seedPrefix.chars(), ossimKeywordNames::TYPE_KW );
-   if ( value )
-   {
-      // Only do expensive factory call if key is found...
-      theSeedFunction = ossimProjectionFactoryRegistry::instance()->
-         createProjection(kwl, seedPrefix.chars());
-   }
-
    //***
    // Look for geom filename or explicit grid filename to establish path to grid:
    //***
@@ -761,6 +751,12 @@ bool ossimCoarseGridModel::loadState(const ossimKeywordlist& kwl,
       theErrorStatus++;
       return false;
    }
+
+   // crossesDateline legacy. No longer saved.
+   bool crossesDateline = false;
+   kwl.getBoolKeywordValue(crossesDateline, CROSSES_DATELINE_KW, prefix);
+   if (crossesDateline)
+      theLonGrid.setDomainType(ossimDblGrid::WRAP_360);
 
    // Add the coarse grid filename to list of support files being referenced for logging purposes:
    ossimSupportFilesList::instance()->add(theGridFilename.expand());
