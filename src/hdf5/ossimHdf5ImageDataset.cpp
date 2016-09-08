@@ -52,8 +52,8 @@ ossimHdf5ImageDataset::ossimHdf5ImageDataset( const ossimHdf5ImageDataset& obj )
    m_bands(obj.m_bands),
    m_lines(obj.m_lines),
    m_samples(obj.m_samples),
-   m_validRect(obj.m_validRect),
-   m_endian( obj.m_endian ? new ossimEndian() : 0 )
+   m_endian( obj.m_endian ? new ossimEndian() : 0 ),
+   m_validRect(obj.m_validRect)
 {
 }
 
@@ -142,7 +142,7 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
    // Find the ul pixel. Loop over rows:
    ossimIpt ulIpt (0,0);
    bool found_valid = false;
-   for (; (ulIpt.y<m_lines) && !found_valid; ulIpt.y++)
+   for (; (ulIpt.y<(int)m_lines) && !found_valid; ulIpt.y++)
    {
       imageOffset[0] = ulIpt.y;
       imageDataspace.selectHyperslab( H5S_SELECT_SET, rowSize, imageOffset);
@@ -150,7 +150,7 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
 
       // Scan row for valid pixel:
       ossim_int64 rowOffset = 0;
-      for (ulIpt.x=0; (ulIpt.x<m_samples) && !found_valid; ulIpt.x++, rowOffset+=elem_size)
+      for (ulIpt.x=0; (ulIpt.x<(int)m_samples) && !found_valid; ulIpt.x++, rowOffset+=elem_size)
          found_valid = (memcmp(&rowBuf[rowOffset], fill_value, elem_size) != 0);
    }
    if (!found_valid)
@@ -246,6 +246,8 @@ bool ossimHdf5ImageDataset::scanForMinMax()
             case OSSIM_SINT32:
                value = (ossim_float32) ((ossim_int32*)&dataBuffer.front())[x];
                break;
+            default:
+               break;
             }
 
             if (ossim::almostEqual<ossim_float32>(value, nullpix, epsilon))
@@ -258,8 +260,8 @@ bool ossimHdf5ImageDataset::scanForMinMax()
       }
    }
 
-   cout<<"ossimHdf5ImageDataset:"<<__LINE__<<"\n\tminValue="<<m_minValue[0]<<
-         "\n\tmaxValue="<<m_maxValue[0]<<"\n\tnullValue="<<m_handler->getNullPixelValue()<<endl; // TODO REMOVE
+//   cout<<"ossimHdf5ImageDataset:"<<__LINE__<<"\n\tminValue="<<m_minValue[0]<<
+//         "\n\tmaxValue="<<m_maxValue[0]<<"\n\tnullValue="<<m_handler->getNullPixelValue()<<endl; // TODO REMOVE
 
    return true;
 }
