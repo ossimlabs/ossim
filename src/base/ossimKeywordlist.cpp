@@ -835,7 +835,7 @@ ossimKeywordlist::readPreprocDirective(std::istream& in)
          includeFile.expandEnvironmentVariable();
 
          // The filename can be either relative to the current file being parsed or absolute:
-         if (includeFile[0] != '/')
+         if (includeFile.string()[0] != '/')
             includeFile = m_currentlyParsing.path() + "/" + includeFile;
 
          // Save the current path in case the new one contains it's own include directive!
@@ -1200,7 +1200,7 @@ ossim_uint32 ossimKeywordlist::getNumberOfSubstringKeys(const ossimString& regul
    KeywordMap::const_iterator i;
    std::vector<ossimString> currentList;
    getSubstringKeyList(currentList, regularExpression);
-   return currentList.size();
+   return (ossim_uint32)currentList.size();
 }
 
 void ossimKeywordlist::addPrefixToAll(const ossimString& prefix)

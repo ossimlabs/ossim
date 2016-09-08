@@ -183,7 +183,7 @@ ossimArgumentParser::ossimArgumentParser(const ossimString& commandLine):
    theMemAllocated(true)
 {
    vector<ossimString> args = commandLine.split(" ", true);
-   *theArgc = args.size();
+   *theArgc = (int)args.size();
    if (theArgc > 0)
    {
       theArgv = new char* [*theArgc];
@@ -303,7 +303,7 @@ void ossimArgumentParser::insert(int pos, const ossimString& argstr)
 
    // Split arg into components (separated by spaces). Need to reallocate args array to new size:
    vector<ossimString> components = argstr.split(" ");
-   int new_argc = *theArgc + components.size();
+   int new_argc = *theArgc + (int)components.size();
    char** new_argv = new char*[new_argc];
 
    // First copy the original list, leaving space for the new components:
@@ -311,13 +311,13 @@ void ossimArgumentParser::insert(int pos, const ossimString& argstr)
    for (int i=0; i<*theArgc; ++i)
    {
       if (j == pos)
-         j += components.size();
+         j += (int)components.size();
       new_argv[j] = theArgv[i];
       ++j;
    }
 
    // Insert new components:
-   for(int i=0; i<components.size(); ++i)
+   for(ossim_uint32 i=0; i<components.size(); ++i)
       new_argv[pos+i]=components[i].stringDup();
 
    // Need to deallocate old arg storage?
@@ -486,7 +486,7 @@ bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>&
          continue;
       }
 
-      if (!includeNextItem && (arg[0] != ','))
+      if (!includeNextItem && (arg.string()[0] != ','))
          break;
 
       // Handle comma separated with no spaces (i.e., multiple args reflected as one in theArgv):
