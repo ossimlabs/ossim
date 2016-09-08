@@ -84,6 +84,7 @@ static const char OVERWRITE_KW[]            = "overwrite";
 static const char PALETTE_KW[]              = "palette";
 static const char PLUGINS_KW[]              = "plugins";
 static const char PLUGIN_TEST_KW[]          = "plugin_test";
+static const char PRETTY_PRINT_KW[]         = "pretty_print";
 static const char PROJECTIONS_KW[]          = "projections";
 static const char RAD2DEG_KW[]              = "rad2deg";
 static const char READER_PROPS_KW[]         = "reader_props";
@@ -130,6 +131,8 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--ci", "Will print out image center.");
 
    au->addCommandLineOption("--config", "Displays configuration info.");
+
+   au->addCommandLineOption("-D", "A human-readable (i.e., not necessarily key:value pairs) dump of the image.");
 
    au->addCommandLineOption("-d", "A generic dump if one is available.");
 
@@ -329,6 +332,17 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             break;
          }
       }
+
+      if( ap.read("-D") )
+      {
+         m_kwl.add( PRETTY_PRINT_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
       if( ap.read("-d") )
       {
          m_kwl.add( DUMP_KW, TRUE_KW );
@@ -992,6 +1006,13 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       outputFile = lookup;
    }
 
+   lookup = m_kwl.find( PRETTY_PRINT_KW );
+   if ( lookup )
+   {
+      ++consumedKeys;
+      prettyPrint(file);
+   }
+
    // Check for dump.  Does not require image to be opened.
    lookup = m_kwl.find( DUMP_KW );
    if ( lookup )
@@ -1012,7 +1033,9 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
          // This dump will come out in order so is preferred over going to
          // okwl(output keyword list) which will come out alphabetical.
          //---
-         dumpImage(file, dnoFlag);
+         ossimKeywordlist kwl;
+         dumpImage(file, dnoFlag, kwl);
+         kwl.print(ossimNotify(ossimNotifyLevel_INFO));
       }
       else
       {
@@ -1365,22 +1388,19 @@ ossimRefPtr<ossimImageHandler> ossimInfo::getImageHandler()
    return m_img;
 }
 
-void ossimInfo::dumpImage(const ossimFilename& file, bool dnoFlag) const
+void ossimInfo::prettyPrint(const ossimFilename& file) const
 {
    ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
    if (info.valid())
    {
-      if (dnoFlag) // Default info processes overviews.
-      {
-         info->setProcessOverviewFlag(false);
-      }
+      info->setProcessOverviewFlag(false);
       info->print(ossimNotify(ossimNotifyLevel_INFO));
       info = 0;
    }
    else
    {
       ossimNotify(ossimNotifyLevel_INFO)
-               << "No dump available for:  " << file.c_str() << std::endl;
+               << "No print available for:  " << file.c_str() << std::endl;
    }
 }
 
