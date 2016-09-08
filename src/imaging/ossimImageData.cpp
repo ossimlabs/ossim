@@ -942,17 +942,20 @@ void ossimImageData::populateHistogram(ossimRefPtr<ossimMultiBandHistogram> hist
    case OSSIM_NORMALIZED_DOUBLE:
    case OSSIM_FLOAT64:
    {
+      ossim_float64 epsilon = 2*DBL_EPSILON;
       for(ossim_uint32 band = 0; band < numberOfBands; ++band)
       {
          ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
          if(currentHisto.valid())
          {
             ossim_float64 nullpix = (ossim_float64)getNullPix(band);
+            if (nullpix == 0.0)
+               epsilon = 0;
             ossim_float64* buffer = (ossim_float64*)getBuf(band);
             ossim_uint32 upperBound = getWidth()*getHeight();
             for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
             {
-               if (buffer[offset] != nullpix)
+               if (!ossim::almostEqual<ossim_float64>(buffer[offset], nullpix, epsilon))
                   currentHisto->UpCount((float)buffer[offset]);
             }
          }
@@ -962,17 +965,20 @@ void ossimImageData::populateHistogram(ossimRefPtr<ossimMultiBandHistogram> hist
    case OSSIM_NORMALIZED_FLOAT:
    case OSSIM_FLOAT32:
    {
+      ossim_float32 epsilon = 2*FLT_EPSILON;
       for(ossim_uint32 band = 0; band < numberOfBands; ++band)
       {
          ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
          if(currentHisto.valid())
          {
             ossim_float32 nullpix = (ossim_float32)getNullPix(band);
+            if (nullpix == 0.0)
+               epsilon = 0;
             ossim_float32* buffer = (ossim_float32*)getBuf(band);
             ossim_uint32 upperBound = getWidth()*getHeight();
             for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
             {
-               if (buffer[offset] != nullpix)
+               if (!ossim::almostEqual<ossim_float32>(buffer[offset], nullpix, epsilon))
                   currentHisto->UpCount((float)buffer[offset]);
             }
          }

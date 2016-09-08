@@ -9,6 +9,7 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimException.h>
+#include <ossim/base/ossimKeywordlist.h>
 #include <ossim/support_data/ossimInfoFactoryRegistry.h>
 #include <ossim/support_data/ossimInfoBase.h>
 #include <iostream>
@@ -23,7 +24,9 @@ int main(int argc, char *argv[])
       if (info.valid())
       {
          std::cout<<std::endl;
-         info->print(std::cout);
+         ossimKeywordlist kwl;
+         info->getKeywordlist(kwl);
+         kwl.print(std::cout);
       }
       else
       {

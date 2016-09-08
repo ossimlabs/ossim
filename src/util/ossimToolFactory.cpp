@@ -16,6 +16,9 @@
 #include <ossim/util/ossimToolRegistry.h>
 #include <ossim/util/ossimVerticesFinderTool.h>
 #include <ossim/util/ossimViewshedTool.h>
+#if OSSIM_HAS_HDF5
+#include <ossim/hdf5/ossimHdf5Tool.h>
+#endif
 
 ossimToolFactory* ossimToolFactory::s_Instance = 0;
 
@@ -43,29 +46,34 @@ ossimTool* ossimToolFactory::createUtility(const std::string& argName) const
    if ((utilName == "info") || (argName == "ossimInfo"))
       return new ossimInfo;
 
-   if ((utilName == "hillshade") || (argName == "ossimHillshadeUtil"))
+   if ((utilName == "hillshade") || (argName == "ossimHillshadeTool"))
       return new ossimHillshadeTool;
 
-   if ((utilName == "viewshed") || (argName == "ossimViewshedUtil"))
+   if ((utilName == "viewshed") || (argName == "ossimViewshedTool"))
       return new ossimViewshedTool;
 
-   if ((utilName == "slope") || (argName == "ossimSlopeUtil"))
+   if ((utilName == "slope") || (argName == "ossimSlopeTool"))
       return new ossimSlopeTool;
 
-   if ((utilName == "hlz") || (argName == "ossimHlzUtil"))
+   if ((utilName == "hlz") || (argName == "ossimHlzTool"))
       return new ossimHlzTool;
 
-   if ((utilName == "shoreline") || (argName == "ossimShorelineUtil"))
+   if ((utilName == "shoreline") || (argName == "ossimShorelineTool"))
       return new ossimShorelineTool;
 
-   if ((utilName == "ortho") || (argName == "ossimOrthoUtil"))
+   if ((utilName == "ortho") || (argName == "ossimOrthoTool"))
       return new ossimOrthoTool;
 
-   if ((utilName == "vertices") || (argName == "ossimVerticesFinderUtil"))
+   if ((utilName == "vertices") || (argName == "ossimVerticesFinderTool"))
       return new ossimVerticesFinderTool;
 
-   if ((utilName == "bandmerge") || (argName == "ossimBandMergeUtil"))
+   if ((utilName == "bandmerge") || (argName == "ossimBandMergeTool"))
       return new ossimBandMergeTool;
+
+#if OSSIM_HAS_HDF5
+   if ((utilName == "hdf5") || (argName == "ossimHdf5Tool"))
+      return new ossimHdf5Tool;
+#endif
 
    return 0;
 }
@@ -81,6 +89,9 @@ void ossimToolFactory::getCapabilities(std::map<std::string, std::string>& capab
    capabilities.insert(pair<string, string>("ortho", ossimOrthoTool::DESCRIPTION));
    capabilities.insert(pair<string, string>("vertices", ossimVerticesFinderTool::DESCRIPTION));
    capabilities.insert(pair<string, string>("bandmerge", ossimBandMergeTool::DESCRIPTION));
+#if OSSIM_HAS_HDF5
+   capabilities.insert(pair<string, string>("hdf5", ossimHdf5Tool::DESCRIPTION));
+#endif
 }
 
 std::map<std::string, std::string> ossimToolFactory::getCapabilities() const
@@ -101,5 +112,8 @@ void ossimToolFactory::getTypeNameList(vector<ossimString>& typeList) const
    typeList.push_back("ossimOrthoUtil");
    typeList.push_back("ossimVerticesFinderUtil");
    typeList.push_back("ossimBandMergeUtil");
+#if OSSIM_HAS_HDF5
+   typeList.push_back("ossimHdf5Tool");
+#endif
 }
 

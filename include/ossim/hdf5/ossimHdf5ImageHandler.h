@@ -173,7 +173,9 @@ public:
    ossimRefPtr<ossimHdf5ImageDataset> getCurrentDataset();
 
    /** @return Null pixel value. */
-   virtual double getNullPixelValue(ossim_uint32 band=0)const;
+   virtual double getNullPixelValue(ossim_uint32 band=0) const;
+   virtual double getMaxPixelValue(ossim_uint32 band=0) const;
+   virtual double getMinPixelValue(ossim_uint32 band=0) const;
 
    /**
     * @brief Set propterty method. Overrides ossimImageHandler::setProperty.
@@ -205,6 +207,10 @@ public:
    virtual bool open();
 
    const std::vector<ossimString>& getRenderableSetNames() { return m_renderableNames; }
+
+   /** Adds the dataset name, either the full HDF5 path or the simple object name, to the list of
+    * renderable datasets */
+   void addRenderable(const ossimString& datasetName) { m_renderableNames.push_back(datasetName); }
 
 protected:
    /** @brief Allocates the tile. */ 

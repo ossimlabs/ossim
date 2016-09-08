@@ -471,10 +471,10 @@ bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>&
    // Option is removed even if no values found:
    remove(pos, 1);
    bool includeNextItem = true;
-   while (pos < (*theArgc - 1))
+   while (pos < *theArgc)
    {
       // Check for occurence of next option:
-      if ((theArgv[pos][0] == '-') && (theArgv[pos][1] == '-'))
+      if ((theArgv[pos][0] == '-'))
          break;
 
       // Skip a comma surrounded by spaces:

@@ -24,7 +24,6 @@
 #include <ossim/hdf5/ossimHdf5.h>
 #include <string>
 
-class ossimHdf5ImageHandler;
 
 /******************************************************************************
  *
@@ -42,12 +41,14 @@ public:
    virtual ~ossimHdf5GridModel();
 
    /** Initializes from an open HDF5 file */
-   bool initialize(ossimHdf5* hdf5, ossimHdf5ImageHandler* handler);
+   bool initialize(ossimHdf5* hdf5, const ossimString& projDataPath="");
+
+   /** Makes sure that the "type" keyword entry reflects the base class, not this one. */
+   virtual bool saveState(ossimKeywordlist& kwl, const char* prefix) const;
 
 protected:
 
-   bool initCoarseGrid(const char* datasetName, const ossimIrect& validImageRect,
-                       ossimDblGrid& coarseGrid);
+   bool initCoarseGrid(const char* datasetName, ossimDblGrid& coarseGrid);
 
    bool crossesDateline();
 
@@ -57,7 +58,8 @@ protected:
    ossimPolygon m_boundGndPolygon;
 
    ossimRefPtr<ossimHdf5> m_hdf5;
-   ossimRefPtr<ossimHdf5ImageHandler> m_handler;
+   ossimIpt m_imageSize;
+   ossimString m_projDataPath;
    
    TYPE_DATA
 };
