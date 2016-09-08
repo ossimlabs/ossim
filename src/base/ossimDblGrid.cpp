@@ -32,7 +32,6 @@ static ossimTrace traceExec  ("ossimDblGrid:exec");
 static ossimTrace traceDebug ("ossimDblGrid:debug");
 
 static const ossimString MAGIC_NUMBER ("OSSIM_DBL_GRID");
-static const int   MAX_LENGTH_DESCR = 80;
 
 /*!****************************************************************************
 *  DEFAULT CONSTRUCTOR: ossimDblGrid
@@ -766,7 +765,6 @@ bool ossimDblGrid::load(istream& is)
    ossimIpt size;
    ossimDpt origin, spacing;
    double null_value;
-   bool isV2 = false;
    getline(is, strbuf);
    vector<ossimString> items =  strbuf.split(" ", true);
    if (items.size() < 7)
