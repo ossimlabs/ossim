@@ -54,7 +54,7 @@ ossimProjection* ossimHdf5ProjectionFactory::createProjection(const ossimKeyword
 {
    ossimRefPtr<ossimProjection> result;
    ossimString value = kwl.find(prefix, ossimKeywordNames::TYPE_KW);
-   if(value != "ossimHdf5GridModel")
+   if ((value != "ossimHdf5GridModel") && (value != "ossimH5GridModel"))
       return 0;
 
    // The HDF5 grid model is just an implementation of the coarse grid model, but the geom file

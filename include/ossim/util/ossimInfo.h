@@ -145,7 +145,7 @@ public:
    ossimRefPtr<ossimImageHandler> getImageHandler();
 
    /** @brief Dumps the image information from ossimInfoFactoryRegistry */
-   void dumpImage(const ossimFilename& file, bool dnoFlag) const;
+   void prettyPrint(const ossimFilename& file) const;
 
    /**
     * @brief Dumps the image information from ossimInfoFactoryRegistry to

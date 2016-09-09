@@ -71,6 +71,7 @@ ostream& ossimHdf5Info::print(ostream& out) const
       if (!m_hdf5->getRoot(root))
          return out;
       print(out, root, "");
+      out<<endl;
    }
    catch (H5::Exception& h5x)
    {
