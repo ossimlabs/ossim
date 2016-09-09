@@ -15,6 +15,8 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/imaging/ossimShiftFilter.h>
+#include <ossim/imaging/ossimCastTileSourceFilter.h>
 #include <ossim/hdf5/ossimHdf5.h>
 #include <ossim/hdf5/ossimHdf5ImageHandler.h>
 #include <ossim/hdf5/ossimHdf5Info.h>
@@ -265,6 +267,17 @@ void ossimHdf5Tool::initProcessingChain()
 {
    ossimRefPtr<ossimImageSource> input_mosaic = combineLayers(m_imgLayers);
    m_procChain->add(input_mosaic.get());
+
+   ossimRefPtr<ossimShiftFilter> sf = new ossimShiftFilter();
+   sf->setNullPixelValue( 0.0 );
+   sf->setMinPixelValue( 1.0 );
+   sf->setMaxPixelValue( 65535.0 );
+   m_procChain->add( sf.get() );
+
+   // Cast it to uint16:
+   ossimRefPtr<ossimCastTileSourceFilter> cf = new ossimCastTileSourceFilter(0, OSSIM_UINT16 );
+   m_procChain->add( cf.get() );
+
 }
 
 bool ossimHdf5Tool::execute()
