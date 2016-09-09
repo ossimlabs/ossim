@@ -448,14 +448,14 @@ void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect,
          m_endian->swap( m_scalar, buffer, irect.area() );
       }
 
-#define NEVER 1
+//#define NEVER
 #ifdef NEVER
       if (scale)
       {
          // Scale the data:
 #if 1
          // Assumes float32 datatype:
-         double gain = OSSIM_DEFAULT_MAX_PIX_UINT16/( m_maxValue[band] - m_minValue[band] );
+         double gain = 1.0/( m_maxValue[band] - m_minValue[band] );
          ossim_float32 null_value = m_handler->getNullPixelValue(band);
          ossim_float32 value;
          for (ossim_uint32 i=0; i<irect.area(); ++i)
