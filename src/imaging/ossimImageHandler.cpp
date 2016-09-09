@@ -482,8 +482,8 @@ void ossimImageHandler::establishDecimationFactors()
    }
 }
 
-
-bool ossimImageHandler::buildHistogram(int numberOfRLevels)
+bool ossimImageHandler::buildHistogram( int numberOfRLevels,
+                                        ossimHistogramMode mode )
 {
    if(isOpen())
    {
@@ -501,6 +501,13 @@ bool ossimImageHandler::buildHistogram(int numberOfRLevels)
       {
          histoSource->setMaxNumberOfRLevels(getNumberOfDecimationLevels());
       }
+      
+      //---
+      // Note if mode==OSSIM_HISTO_MODE_UNKNOWN the histoSource defaults to
+      // normal mode.
+      //---
+      histoSource->setComputationMode( mode );
+
       histoSource->connectMyInputTo(0, this);
       histoSource->enableSource();
       writer->connectMyInputTo(0, histoSource.get());
@@ -520,7 +527,8 @@ bool ossimImageHandler::buildHistogram(int numberOfRLevels)
    return true;
 }
 
-bool ossimImageHandler::buildAllHistograms(int numberOfRLevels)
+bool ossimImageHandler::buildAllHistograms( int numberOfRLevels,
+                                            ossimHistogramMode mode )
 {
    ossim_uint32 currentEntry = getCurrentEntry();
    std::vector<ossim_uint32> entryList;
@@ -529,7 +537,7 @@ bool ossimImageHandler::buildAllHistograms(int numberOfRLevels)
    for(idx = 0; idx < entryList.size(); ++idx)
    {
       setCurrentEntry(entryList[idx]);
-      if(!buildHistogram(numberOfRLevels))
+      if(!buildHistogram( numberOfRLevels, mode ))
       {
          setCurrentEntry(currentEntry);
          return false;
@@ -637,20 +645,18 @@ bool ossimImageHandler::buildOverview(const ossimFilename& filename,
    return true;
 }
 
-ossimRefPtr<ossimMultiResLevelHistogram> ossimImageHandler::getImageHistogram()
+ossimRefPtr<ossimMultiResLevelHistogram> ossimImageHandler::getImageHistogram() const
 {
    ossimRefPtr<ossimMultiResLevelHistogram> histogram = 0;
-   if (!isOpen())
-      return histogram;
-
-   ossimFilename histoFile = getFilenameWithThisExtension(ossimString(".his"));
-   if (!histoFile.isReadable() && !buildHistogram())
-      return histogram;
-
-   histogram = new ossimMultiResLevelHistogram;
-   if (!histogram->importHistogram(histoFile))
-      histogram = 0;
-
+   if ( isOpen() )
+   {
+      ossimFilename histoFile = getFilenameWithThisExtension(ossimString(".his"));
+      histogram = new ossimMultiResLevelHistogram();
+      if ( histogram->importHistogram(histoFile) == false )
+      {
+         histogram = 0;
+      }
+   }
    return histogram;
 }
 

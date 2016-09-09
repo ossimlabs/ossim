@@ -195,9 +195,12 @@ public:
     *  @param numberOfRLevels sets the maximum number of reduced resolution
     *  level to compute histogram for.
     *
+    *  @param mode OSSIM_HISTO_MODE_NORMAL or OSSIM_HISTO_MODE_FAST.
+    *
     *  @return true on success, false if not open.
     */
-   virtual bool buildHistogram(int numberOfRLevels=0);
+   virtual bool buildHistogram(
+      int numberOfRLevels=0, ossimHistogramMode mode=OSSIM_HISTO_MODE_NORMAL );
    
    /**
     *  Build a histograms for all image entries.
@@ -205,9 +208,12 @@ public:
     *  @param numberOfRLevels sets the maximum number of reduced resolution
     *  level to compute histogram for.
     *
+    *  @param mode OSSIM_HISTO_MODE_NORMAL or OSSIM_HISTO_MODE_FAST.
+    *
     *  @return true on success, false if not open.
     */
-   virtual bool buildAllHistograms(int numberOfRLevels=0);
+   virtual bool buildAllHistograms(
+      int numberOfRLevels=0, ossimHistogramMode mode=OSSIM_HISTO_MODE_NORMAL );
    
    /**
     *  Will build over file for theImageFile.
@@ -245,9 +251,24 @@ public:
                               bool includeFullResFlag=false);
    
    /**
-    * Fetches the current entry image's histogram. If none exists, it will be created.
+    * @brief Fetches the current entry image's histogram.
+    * 
+    * @return Ref pointer to histogram or null if histogram does not exist.
+    *
+    * @note Old behaviour: "If none exists, it will be created." taken out.
+    *
+    * Do:
+    * ossimRefPtr<ossimMultiResLevelHistogram> his = ih->getImageHistogram();
+    * if ( ih.valid() )
+    * {
+    * }
+    * else
+    * {
+    *    ih->buildHistogram();
+    * }
+    * 
     */
-   ossimRefPtr<ossimMultiResLevelHistogram> getImageHistogram();
+   ossimRefPtr<ossimMultiResLevelHistogram> getImageHistogram() const;
 
    /**
     * Returns the image geometry object associated with this tile source or
