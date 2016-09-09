@@ -824,7 +824,7 @@ ossimRefPtr<ossimMapProjection> ossimChipProcTool::newUtmProjection()
       h.upcase();
       if ( ( h == "N" ) || ( h == "NORTH" ) || ( h == "S" ) || ( h == "SOUTH" ) )
       {
-         utm->setHemisphere( h[0] );
+         utm->setHemisphere( h.string()[0] );
          setHemisphere = true;
       }
    }
