@@ -1163,7 +1163,7 @@ bool ossimImageHandler::setOutputToInputBandList()
 bool ossimImageHandler::isIdentityBandList( const std::vector<ossim_uint32>& bandList ) const
 {
    bool result = false;
-   const ossim_uint32 BANDS = bandList.size();
+   const ossim_uint32 BANDS = (ossim_uint32)bandList.size();
    if ( BANDS )
    {
       std::vector<ossim_uint32> inputList;
@@ -1196,7 +1196,7 @@ bool ossimImageHandler::setOutputBandList(const std::vector<ossim_uint32>& inBan
    bool result = false;
 
    const ossim_uint32 INPUT_BANDS  = getNumberOfInputBands();
-   const ossim_uint32 OUTPUT_BANDS = inBandList.size();
+   const ossim_uint32 OUTPUT_BANDS = (ossim_uint32)inBandList.size();
 
    if ( INPUT_BANDS && OUTPUT_BANDS )
    {
