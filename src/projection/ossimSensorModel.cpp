@@ -1684,10 +1684,10 @@ ossimSensorModel::getForwardDeriv(int parmIdx, const ossimGpt& gpos, double hdel
    double middle = getAdjustableParameter(parmIdx);
    //set parm to high value
    setAdjustableParameter(parmIdx, middle + hdelta, true);
-   res = inverse(gpos);
+   res = forward(gpos);
    //set parm to low value and gte difference
    setAdjustableParameter(parmIdx, middle - hdelta, true);
-   res -= inverse(gpos);
+   res -= forward(gpos);
    //get partial derivative
    res = res*den;
 
