@@ -57,8 +57,6 @@ bool ossimHdf5Info::open(const ossimFilename& file)
 // Top level print from root
 ostream& ossimHdf5Info::print(ostream& out) const
 {
-   static const char MODULE[] = "ossimH5Info::open";
-   
    if (!m_hdf5.valid())
    {
       out<<"ossimHdf5Info: No HDF5 file has been opened! Nothing to print."<<endl;
@@ -83,16 +81,17 @@ ostream& ossimHdf5Info::print(ostream& out) const
 
 // GROUP LIST
 ostream& ossimHdf5Info::printSubGroups(std::ostream& out, const H5::Group& group,
-                                        const ossimString& lm) const
+                                       const ossimString& lm) const
 {
    vector<Group> groups;
    if (!m_hdf5->getChildGroups(group, groups))
       return out;
    if (!groups.empty())
    {
-      for (int i=0; i<groups.size(); ++i)
+      for (ossim_uint32 i=0; i<groups.size(); ++i)
          print(out, groups[i], lm);
    }
+   return out;
 }
 
 // ATTRIBUTE LIST
@@ -105,7 +104,7 @@ ostream& ossimHdf5Info::printAttributes(std::ostream& out, const H5::H5Object& o
 
    if (!attributes.empty())
    {
-      for (int i=0; i<attributes.size(); ++i)
+      for (ossim_uint32 i=0; i<attributes.size(); ++i)
          print(out, attributes[i], lm);
    }
    return out;
@@ -121,9 +120,10 @@ ostream& ossimHdf5Info::printDatasets(std::ostream& out, const H5::Group& group,
 
    if (!datasets.empty())
    {
-      for (int i=0; i<datasets.size(); ++i)
+      for (ossim_uint32 i=0; i<datasets.size(); ++i)
          print(out, datasets[i], lm);
    }
+   return out;
 }
 
 // GROUP
@@ -340,6 +340,8 @@ bool ossimHdf5Info::getKeywordlist(ossimKeywordlist& kwl) const
    m_kwl.addPair(prefix, string("datasetnames"), value.str());
 
    kwl = m_kwl;
+
+   return true;
 }
 
 void ossimHdf5Info::dumpGroup(const Group& group,
@@ -404,8 +406,8 @@ void ossimHdf5Info::dumpAttributes(const H5Object& obj, const std::string& prefi
 void ossimHdf5Info::dumpAttribute(const H5::Attribute& attr,
                                   const std::string& prefix) const
 {
-   string str_value;
-   int int_value = 0;
+   std::string str_value;
+   ossim_int32 int_value = 0;
    float float_value = 0;
 
    ossimByteOrder order = m_hdf5->getByteOrder(&attr);
@@ -415,23 +417,31 @@ void ossimHdf5Info::dumpAttribute(const H5::Attribute& attr,
    H5T_class_t class_type = attr.getDataType().getClass();
    switch (class_type)
    {
-   case H5T_STRING:
-      attr.read(attr.getDataType(), str_value);
-      break;
-   case H5T_INTEGER:
-      attr.read(attr.getDataType(), &int_value);
-      if (swapOrder)
-         endian.swap(int_value);
-      str_value = ossimString::toString(int_value).string();
-      break;
-   case H5T_FLOAT:
-      attr.read(attr.getDataType(), &float_value);
-      if (swapOrder)
-         endian.swap(float_value);
-      str_value = ossimString::toString(float_value).string();
-      break;
-   default:
-      str_value ="(value not handled type)";
+      case H5T_STRING:
+      {
+         attr.read(attr.getDataType(), str_value);
+         break;
+      }
+      case H5T_INTEGER:
+      {
+         attr.read(attr.getDataType(), &int_value);
+         if (swapOrder)
+            endian.swap(int_value);
+         str_value = ossimString::toString(int_value).string();
+         break;
+      }
+      case H5T_FLOAT:
+      {
+         attr.read(attr.getDataType(), &float_value);
+         if (swapOrder)
+            endian.swap(float_value);
+         str_value = ossimString::toString(float_value).string();
+         break;
+      }
+      default:
+      {
+         str_value ="(value not handled type)";
+      }
    }
 
    ossimString attrKey (getObjectPrefix(prefix, attr.getName()));
@@ -520,7 +530,6 @@ void ossimHdf5Info::dumpCompoundTypeInfo(const H5::DataSet& dataset,
 {
    H5::CompType compound(dataset);
    ossim_int32 nMembers    = compound.getNmembers();
-   ossim_uint64 size       = compound.getSize();
    ossim_int32 memberIdx   = 0;
    ostringstream typePrefix;
    typePrefix << prefix << "compound_type.";
@@ -576,7 +585,7 @@ void ossimHdf5Info::dumpEnumTypeInfo(H5::EnumType enumType,
    {
       enumType.getMemberValue(i, &enum_value);
       H5std_string name = enumType.nameOf(&enum_value, enumTypeSize);
-      if (i=0)
+      if (i==0)
          kwl_value << name;
       else
          kwl_value << ", " << name;
@@ -598,9 +607,9 @@ void ossimHdf5Info::dumpArrayTypeInfo(H5::ArrayType arrayType,
       std::vector<hsize_t> dims(arrayNdims);
       arrayType.getArrayDims(&dims.front());
       ostringstream kwl_value;
-      for(ossim_int32 i=0;i<arrayNdims;++i)
+      for(ossim_uint32 i=0;i<arrayNdims;++i)
       {
-         if (i=0)
+         if (i==0)
             kwl_value << dims[i];
          else
             kwl_value << ", " << dims[i];
@@ -628,11 +637,9 @@ void ossimHdf5Info::dumpNumerical(const H5::DataSet& dataset,
                             const std::string& prefix) const
 {
    H5::IntType dataType = dataset.getIntType();
-   ossim_uint32 dataTypeSize = dataType.getSize();
    ossimByteOrder order = m_hdf5->getByteOrder(&dataset);
    ossimEndian endian;
    bool swapOrder = (order!=ossim::byteOrder());
-   bool isSigned = dataType.getSign() == H5T_SGN_NONE ? false : true;
 
    ossimString valueStr;
    ossimScalarType scalarType = m_hdf5->getScalarType(dataset);
