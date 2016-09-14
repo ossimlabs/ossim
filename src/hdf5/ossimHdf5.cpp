@@ -52,7 +52,7 @@ bool ossimHdf5::open(const ossimFilename& fullname)
    }
    catch( const H5::Exception& e )
    {
-      e.getDetailMsg();
+      ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
    }
    catch( ... )
    {
@@ -83,7 +83,7 @@ bool ossimHdf5::close()
       }
       catch( const H5::Exception& e )
       {
-         e.getDetailMsg();
+         ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
          success = false;
       }
    }
@@ -102,7 +102,7 @@ bool ossimHdf5::getRoot(Group& root) const
    }
    catch( const H5::Exception& e )
    {
-      e.getDetailMsg();
+      ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
       success = false;
    }
    return success;
@@ -129,7 +129,7 @@ bool ossimHdf5::getChildGroups(H5::Group group, vector<Group>& groupList,
       }
       catch( const H5::Exception& e )
       {
-         e.getDetailMsg();
+         ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
          success = false;
       }
    }
@@ -166,7 +166,7 @@ bool ossimHdf5::getDatasets(H5::Group group, vector<DataSet>& datasetList,
    }
    catch( const H5::Exception& e )
    {
-      e.getDetailMsg();
+      ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
       success = false;
    }
    return success;
@@ -205,7 +205,7 @@ bool ossimHdf5::getNdimDatasets(H5::Group group, vector<DataSet>& datasetList,
    }
    catch( const H5::Exception& e )
    {
-      e.getDetailMsg();
+      ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
       success = false;
    }
    return success;
@@ -227,7 +227,7 @@ bool ossimHdf5::getAttributes(const H5Object& obj, vector<Attribute>& attrList)
    }
    catch( const H5::Exception& e )
    {
-      e.getDetailMsg();
+      ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
       success = false;
    }
 
@@ -253,20 +253,29 @@ H5::Group* ossimHdf5::findGroupByName(const char* name, const H5::Group* parent,
 
    H5::Group* named_group = 0;
    vector<Group> groupList;
-   getChildGroups(baseGroup, groupList, recursive);
+   if (!getChildGroups(baseGroup, groupList, recursive))
+      return NULL;
 
-   std::vector<Group>::iterator group = groupList.begin();
-   while (group != groupList.end())
+   try
    {
-      bool found;
-      ossimString dsName = group->getObjName();
-      if (dsName.contains(name))
+      std::vector<Group>::iterator group = groupList.begin();
+      while (group != groupList.end())
       {
-         named_group = new Group(*group);
-         break;
+         bool found;
+         ossimString dsName = group->getObjName();
+         if (dsName.contains(name))
+         {
+            named_group = new Group(*group);
+            break;
+         }
+         ++group;
       }
-      ++group;
    }
+   catch( const H5::Exception& e )
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
+   }
+
    return named_group;
 }
 
@@ -289,19 +298,27 @@ H5::DataSet* ossimHdf5::findDatasetByName(const char* name, const H5::Group* gro
 
    H5::DataSet* named_dataset = 0;
    vector<DataSet> datasetList;
-   getDatasets(baseGroup, datasetList, recursive);
+   if (!getDatasets(baseGroup, datasetList, recursive))
+      return NULL;
 
-   std::vector<H5::DataSet>::iterator dataset = datasetList.begin();
-   while (dataset != datasetList.end())
+   try
    {
-      bool found;
-      ossimString dsName = dataset->getObjName();
-      if (dsName.contains(name))
+      std::vector<H5::DataSet>::iterator dataset = datasetList.begin();
+      while (dataset != datasetList.end())
       {
-         named_dataset = new H5::DataSet(*dataset);
-         break;
+         bool found;
+         ossimString dsName = dataset->getObjName();
+         if (dsName.contains(name))
+         {
+            named_dataset = new H5::DataSet(*dataset);
+            break;
+         }
+         ++dataset;
       }
-      ++dataset;
+   }
+   catch( const H5::Exception& e )
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
    }
    return named_dataset;
 }
@@ -311,29 +328,37 @@ ossimByteOrder ossimHdf5::getByteOrder( const H5::AbstractDs* obj )
    ossimByteOrder byteOrder = ossim::byteOrder();
    if ( obj )
    {
-      // Get the class of the datatype that is used by the dataset.
-      H5T_class_t typeClass = obj->getTypeClass();
+      try
+      {
 
-      H5T_order_t order = H5T_ORDER_NONE;
+         // Get the class of the datatype that is used by the dataset.
+         H5T_class_t typeClass = obj->getTypeClass();
 
-      if ( typeClass == H5T_INTEGER )
-      {
-         H5::IntType intype = obj->getIntType();
-         order = intype.getOrder();
-      }
-      else if ( typeClass == H5T_FLOAT )
-      {
-         H5::FloatType floatType = obj->getFloatType();
-         order = floatType.getOrder();
-      }
+         H5T_order_t order = H5T_ORDER_NONE;
 
-      if ( order == H5T_ORDER_LE )
-      {
-         byteOrder = OSSIM_LITTLE_ENDIAN;
+         if ( typeClass == H5T_INTEGER )
+         {
+            H5::IntType intype = obj->getIntType();
+            order = intype.getOrder();
+         }
+         else if ( typeClass == H5T_FLOAT )
+         {
+            H5::FloatType floatType = obj->getFloatType();
+            order = floatType.getOrder();
+         }
+
+         if ( order == H5T_ORDER_LE )
+         {
+            byteOrder = OSSIM_LITTLE_ENDIAN;
+         }
+         else if ( order == H5T_ORDER_BE )
+         {
+            byteOrder = OSSIM_BIG_ENDIAN;
+         }
       }
-      else if ( order == H5T_ORDER_BE )
+      catch( const H5::Exception& e )
       {
-         byteOrder = OSSIM_BIG_ENDIAN;
+         ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
       }
    }
    return byteOrder;
@@ -346,43 +371,43 @@ std::string ossimHdf5::getDatatypeClassType( ossim_int32 type )
    std::string result;
    switch ( classType )
    {
-      case H5T_INTEGER:
-         result = "H5T_INTEGER";
-         break;
-      case H5T_FLOAT:
-         result = "H5T_FLOAT";
-         break;
-      case H5T_TIME:
-         result = "H5T_TIME";
-         break;
-      case H5T_STRING:
-         result = "H5T_STRING";
-         break;
-      case H5T_BITFIELD:
-         result = "H5T_BITFIELD";
-         break;
-      case H5T_OPAQUE:
-         result = "H5T_OPAQUE";
-         break;
-      case H5T_COMPOUND:
-         result = "H5T_COMPOUND";
-         break;
-      case H5T_REFERENCE:
-         result = "H5T_REFERENCE";
-         break;
-      case H5T_ENUM:
-         result = "H5T_ENUM";
-         break;
-      case H5T_VLEN:
-         result = "H5T_VLEN";
-         break;
-      case H5T_ARRAY:
-         result = "H5T_ARRAY";
-         break;
-      case H5T_NO_CLASS:
-      default:
-         result = "H5T_NO_CLASS";
-         break;
+   case H5T_INTEGER:
+      result = "H5T_INTEGER";
+      break;
+   case H5T_FLOAT:
+      result = "H5T_FLOAT";
+      break;
+   case H5T_TIME:
+      result = "H5T_TIME";
+      break;
+   case H5T_STRING:
+      result = "H5T_STRING";
+      break;
+   case H5T_BITFIELD:
+      result = "H5T_BITFIELD";
+      break;
+   case H5T_OPAQUE:
+      result = "H5T_OPAQUE";
+      break;
+   case H5T_COMPOUND:
+      result = "H5T_COMPOUND";
+      break;
+   case H5T_REFERENCE:
+      result = "H5T_REFERENCE";
+      break;
+   case H5T_ENUM:
+      result = "H5T_ENUM";
+      break;
+   case H5T_VLEN:
+      result = "H5T_VLEN";
+      break;
+   case H5T_ARRAY:
+      result = "H5T_ARRAY";
+      break;
+   case H5T_NO_CLASS:
+   default:
+      result = "H5T_NO_CLASS";
+      break;
    }
    return result;
 }
@@ -392,114 +417,130 @@ void ossimHdf5::getExtents( const H5::DataSet& dataset, std::vector<ossim_uint32
 {
    extents.clear();
 
-   // Get dataspace of the dataset.
-   H5::DataSpace dataspace = dataset.getSpace();
-
-   // Number of dimensions:
-   int ndims = dataspace.getSimpleExtentNdims();
-   if ( ndims )
+   try
    {
-      //hsize_t dims_out[ndims];
-      std::vector<hsize_t> dims_out(ndims);
-      dataspace.getSimpleExtentDims( &dims_out.front(), 0 );
-      for ( ossim_int32 i = 0; i < ndims; ++i )
-      {
-         extents.push_back(static_cast<ossim_uint32>(dims_out[i]));
-      }
-   }
+      // Get dataspace of the dataset.
+      H5::DataSpace dataspace = dataset.getSpace();
 
-   dataspace.close();
+      // Number of dimensions:
+      int ndims = dataspace.getSimpleExtentNdims();
+      if ( ndims )
+      {
+         //hsize_t dims_out[ndims];
+         std::vector<hsize_t> dims_out(ndims);
+         dataspace.getSimpleExtentDims( &dims_out.front(), 0 );
+         for ( ossim_int32 i = 0; i < ndims; ++i )
+         {
+            extents.push_back(static_cast<ossim_uint32>(dims_out[i]));
+         }
+      }
+
+      dataspace.close();
+   }
+   catch( const H5::Exception& e )
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
+   }
 }
 
 
 ossimScalarType ossimHdf5::getScalarType( const H5::DataSet& dataset )
 {
-   H5::DataType datatype =  dataset.getDataType();
    ossimScalarType scalar = OSSIM_SCALAR_UNKNOWN;
-   ossim_int32 typeClass = datatype.getClass();
-   if ( ( typeClass != H5T_INTEGER ) && ( typeClass != H5T_FLOAT ) )
-      return scalar;
 
-   size_t size = 0;
-   hid_t mem_type_id = H5Dget_type( datatype.getId() );
-   if( mem_type_id > -1 )
+   try
    {
-      hid_t native_type = H5Tget_native_type(mem_type_id, H5T_DIR_DEFAULT);
 
-      if( H5Tequal(H5T_NATIVE_CHAR, native_type) )
-         scalar = OSSIM_SINT8;
-      else if ( H5Tequal( H5T_NATIVE_UCHAR, native_type) )
-         scalar = OSSIM_UINT8;
-      else if( H5Tequal( H5T_NATIVE_SHORT, native_type) )
-         scalar = OSSIM_SINT16;
-      else if(H5Tequal(H5T_NATIVE_USHORT, native_type))
-         scalar = OSSIM_UINT16;
-      else if(H5Tequal( H5T_NATIVE_INT, native_type))
-         scalar = OSSIM_SINT32;
-      else if(H5Tequal( H5T_NATIVE_UINT, native_type ) )
-         scalar = OSSIM_UINT32;
-      else if(H5Tequal( H5T_NATIVE_LONG, native_type))
-         scalar = OSSIM_SINT32;
-      else if(H5Tequal( H5T_NATIVE_ULONG, native_type))
-         scalar = OSSIM_UINT32;
-      else if(H5Tequal( H5T_NATIVE_LLONG, native_type))
-         scalar = OSSIM_SINT64;
-      else if(H5Tequal( H5T_NATIVE_ULLONG, native_type))
-         scalar = OSSIM_UINT64;
-      else if(H5Tequal( H5T_NATIVE_FLOAT, native_type))
-         scalar = OSSIM_FLOAT32;
-      else if(H5Tequal( H5T_NATIVE_DOUBLE, native_type))
-         scalar = OSSIM_FLOAT64;
-   }
-   else if ( typeClass == H5T_INTEGER )
-   {
-      H5::IntType intType (dataset);
-      bool isSigned = intType.getSign() == H5T_SGN_NONE ? false : true;
-      size = intType.getSize();
-      switch (size)
+      H5::DataType datatype =  dataset.getDataType();
+      ossim_int32 typeClass = datatype.getClass();
+      if ( ( typeClass != H5T_INTEGER ) && ( typeClass != H5T_FLOAT ) )
+         return scalar;
+
+      size_t size = 0;
+      hid_t mem_type_id = H5Dget_type( datatype.getId() );
+      if( mem_type_id > -1 )
       {
-      case 1:
-         if (isSigned)
+         hid_t native_type = H5Tget_native_type(mem_type_id, H5T_DIR_DEFAULT);
+
+         if( H5Tequal(H5T_NATIVE_CHAR, native_type) )
             scalar = OSSIM_SINT8;
-         else
+         else if ( H5Tequal( H5T_NATIVE_UCHAR, native_type) )
             scalar = OSSIM_UINT8;
-         break;
-      case 2:
-         if (isSigned)
+         else if( H5Tequal( H5T_NATIVE_SHORT, native_type) )
             scalar = OSSIM_SINT16;
-         else
+         else if(H5Tequal(H5T_NATIVE_USHORT, native_type))
             scalar = OSSIM_UINT16;
-         break;
-      case 4:
-         if (isSigned)
+         else if(H5Tequal( H5T_NATIVE_INT, native_type))
             scalar = OSSIM_SINT32;
-         else
+         else if(H5Tequal( H5T_NATIVE_UINT, native_type ) )
             scalar = OSSIM_UINT32;
-         break;
-      case 8:
-         if (isSigned)
+         else if(H5Tequal( H5T_NATIVE_LONG, native_type))
+            scalar = OSSIM_SINT32;
+         else if(H5Tequal( H5T_NATIVE_ULONG, native_type))
+            scalar = OSSIM_UINT32;
+         else if(H5Tequal( H5T_NATIVE_LLONG, native_type))
             scalar = OSSIM_SINT64;
-         else
+         else if(H5Tequal( H5T_NATIVE_ULLONG, native_type))
             scalar = OSSIM_UINT64;
-         break;
-      default:
-         break;
+         else if(H5Tequal( H5T_NATIVE_FLOAT, native_type))
+            scalar = OSSIM_FLOAT32;
+         else if(H5Tequal( H5T_NATIVE_DOUBLE, native_type))
+            scalar = OSSIM_FLOAT64;
+      }
+      else if ( typeClass == H5T_INTEGER )
+      {
+         H5::IntType intType (dataset);
+         bool isSigned = intType.getSign() == H5T_SGN_NONE ? false : true;
+         size = intType.getSize();
+         switch (size)
+         {
+         case 1:
+            if (isSigned)
+               scalar = OSSIM_SINT8;
+            else
+               scalar = OSSIM_UINT8;
+            break;
+         case 2:
+            if (isSigned)
+               scalar = OSSIM_SINT16;
+            else
+               scalar = OSSIM_UINT16;
+            break;
+         case 4:
+            if (isSigned)
+               scalar = OSSIM_SINT32;
+            else
+               scalar = OSSIM_UINT32;
+            break;
+         case 8:
+            if (isSigned)
+               scalar = OSSIM_SINT64;
+            else
+               scalar = OSSIM_UINT64;
+            break;
+         default:
+            break;
+         }
+      }
+      else // float
+      {
+         size = datatype.getSize();
+         switch (size)
+         {
+         case 4:
+            scalar = OSSIM_FLOAT32;
+            break;
+         case 8:
+            scalar = OSSIM_FLOAT64;
+            break;
+         default:
+            break;
+         }
       }
    }
-   else // float
+   catch( const H5::Exception& e )
    {
-      size = datatype.getSize();
-      switch (size)
-      {
-      case 4:
-         scalar = OSSIM_FLOAT32;
-         break;
-      case 8:
-         scalar = OSSIM_FLOAT64;
-         break;
-      default:
-         break;
-      }
+      ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
    }
 
    return scalar;
