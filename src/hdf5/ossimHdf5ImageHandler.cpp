@@ -15,6 +15,7 @@
 
 #include <ossim/hdf5/ossimHdf5ImageHandler.h>
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimEndian.h>
@@ -37,6 +38,7 @@
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/hdf5/ossimHdf5GridModel.h>
+static const ossimTrace traceDebug("ossimHdf5ImageHandler:debug");
 
 RTTI_DEF1(ossimHdf5ImageHandler, "ossimHdf5ImageHandler", ossimImageHandler)
 
@@ -218,6 +220,9 @@ bool ossimHdf5ImageHandler::loadState(const ossimKeywordlist& kwl,
 
 bool ossimHdf5ImageHandler::open()
 {
+   static const char* M = "ossimHdf5ImageHandler::open(filename) -- ";
+   if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG) << M <<" Entering..." << std::endl;
+
    // Start with a clean slate.
    if (isOpen())
    {
@@ -232,9 +237,12 @@ bool ossimHdf5ImageHandler::open()
    m_hdf5 = new ossimHdf5;
    if (!m_hdf5->open(theImageFile))
    {
+      if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG) << M <<" Unable to open image Leaving..." << std::endl;
       m_hdf5 = 0;
       return false;
    }
+
+   if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG) << M <<" Opened Image..." << std::endl;
 
    vector<H5::DataSet> datasetList;
    H5::Group root;
@@ -315,6 +323,7 @@ bool ossimHdf5ImageHandler::open()
       ++i;
    }
 #endif
+   if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG) << M <<" Leaving..." << std::endl;
 
    return true;
 }
