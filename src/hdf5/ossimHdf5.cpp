@@ -47,17 +47,21 @@ bool ossimHdf5::open(const ossimFilename& fullname)
       // Turn off the auto-printing when failure occurs so that we can handle the errors:
       H5::Exception::dontPrint();
       if ( H5File::isHdf5(m_filename.chars()) )
+      {
          m_h5File = new H5File(m_filename.chars(), H5F_ACC_RDONLY);
-      success = true;
+         success  = true;
+      }
    }
    catch( const H5::Exception& e )
    {
+      success = false;
       e.getDetailMsg();
    }
    catch( ... )
    {
       ossimNotify(ossimNotifyLevel_WARN)<< "ossimH5Info::open WARNING Caught unhandled exception "
             "for file <"<< fullname <<">"<< endl;
+      success = false;
    }
 
    if (!success)
@@ -113,7 +117,17 @@ bool ossimHdf5::getChildGroups(H5::Group group, vector<Group>& groupList,
                                bool recursive)
 {
    bool success = true;
-   int numObjs = group.getNumObjs();
+
+   int numObjs = 0;
+
+   try{
+      numObjs = group.getNumObjs();
+   }
+   catch( const H5::Exception& e )
+   {
+      e.getDetailMsg();
+      success = false;
+   }
    for (int i=0; (i<numObjs) && success; ++i)
    {
       try
