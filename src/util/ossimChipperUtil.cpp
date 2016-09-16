@@ -35,6 +35,9 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimVisitor.h>
 
+#include <ossim/imaging/ossimAnnotationFontObject.h>
+#include <ossim/imaging/ossimAnnotationLineObject.h>
+#include <ossim/imaging/ossimAnnotationSource.h>
 #include <ossim/imaging/ossimBrightnessContrastSource.h>
 #include <ossim/imaging/ossimBumpShadeTileSource.h>
 #include <ossim/imaging/ossimFilterResampler.h>
@@ -1098,6 +1101,39 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain( ossimIrect& aoi
          // Reset the source bounding rect if it changed.
          source->initialize();
       }
+
+      if ( source.valid() && !aoi.hasNans() )
+      {
+         //---
+         // Add a cut filter. This will:
+         // 1) Null out/clip any data pulled in.
+         // 2) Speed up by not propagating get tile request outside the cut or "aoi"
+         //    to the left hand side(input).
+         //---
+         ossimRefPtr<ossimRectangleCutFilter> cutter = new ossimRectangleCutFilter();
+         
+         // Set the cut rectangle:
+         cutter->setRectangle( aoi );
+         
+         // Null outside.
+         cutter->setCutType( ossimRectangleCutFilter::OSSIM_RECTANGLE_NULL_OUTSIDE );
+         
+         // Connect cutter input to source chain.
+         cutter->connectMyInputTo( 0, source.get() );
+
+         source = cutter.get();
+
+         // Dependent on correct aoi so place after the cutter.
+         if ( hasAnnotations() )
+         {
+            // Put annotations after scalar remapper.
+            ossimRefPtr<ossimImageSource> result = addAnnotations( source );
+            if ( result.valid() )
+            {
+               source = result.get();
+            }
+         }
+      }
    }
    
    if ( traceDebug() )
@@ -1349,7 +1385,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializePsmChain()
 
 void ossimChipperUtil::initializeOutputProjection()
 {
-   if ( isIdentity() )
+   if ( isChipMode() )
    {
       createIdentityProjection();
    }
@@ -1377,28 +1413,11 @@ void ossimChipperUtil::execute()
 
    if ( source.valid() && !aoi.hasNans() )
    {
-      //---
-      // Add a cut filter. This will:
-      // 1) Null out/clip any data pulled in.
-      // 2) Speed up by not propagating get tile request outside the cut or "aoi"
-      //    to the left hand side(input).
-      //---
-      ossimRefPtr<ossimRectangleCutFilter> cutter = new ossimRectangleCutFilter();
-
-      // Set the cut rectangle:
-      cutter->setRectangle( aoi );
-
-      // Null outside.
-      cutter->setCutType( ossimRectangleCutFilter::OSSIM_RECTANGLE_NULL_OUTSIDE );
-
-      // Connect cutter input to source chain.
-      cutter->connectMyInputTo( 0, source.get() );
-      
       // Set up the writer.
       m_writer = createNewWriter();
 
       // Connect the writer to the cutter.
-      m_writer->connectMyInputTo(0, cutter.get());
+      m_writer->connectMyInputTo(0, source.get());
 
       //---
       // Set the area of interest.
@@ -2248,7 +2267,7 @@ void ossimChipperUtil::createIdentityProjection()
 
 void ossimChipperUtil::initializeIvtScale()
 {
-   if ( isIdentity() && m_ivt.valid() && m_geom.valid() )
+   if ( isChipMode() && m_ivt.valid() && m_geom.valid() )
    {
       ossimDpt scale;
       scale.makeNan();
@@ -2336,7 +2355,7 @@ void ossimChipperUtil::initializeIvtScale()
          throw ossimException(errMsg);
       }
       
-   } // Matches: if ( isIdentity() && ... )
+   } // Matches: if ( isChipMode() && ... )
    
 } // End: ossimChipperUtil::initializeIvtScale()
 
@@ -3445,16 +3464,16 @@ void ossimChipperUtil::propagateOutputProjectionToChains()
    chainIdx = m_demLayer.begin();
    while ( chainIdx != m_demLayer.end() )
    {
-    viewVisitor.reset();
-    eventVisitor.reset();
-    (*chainIdx)->accept(viewVisitor);
-    (*chainIdx)->accept(eventVisitor);
-
-    ossimRefPtr<ossimImageRenderer> resampler = (*chainIdx)->getImageRenderer();
+      viewVisitor.reset();
+      eventVisitor.reset();
+      (*chainIdx)->accept(viewVisitor);
+      (*chainIdx)->accept(eventVisitor);
+      
+      ossimRefPtr<ossimImageRenderer> resampler = (*chainIdx)->getImageRenderer();
       if ( resampler.valid() )
       {
          //resampler->setView( m_geom.get() );
-        // resampler->propagateEventToOutputs(refreshEvent);
+         // resampler->propagateEventToOutputs(refreshEvent);
       }
       else
       {
@@ -3464,7 +3483,7 @@ void ossimChipperUtil::propagateOutputProjectionToChains()
       }
       ++chainIdx;
    }
-
+   
    // Loop through image layers.
    chainIdx = m_imgLayer.begin();
    while ( chainIdx != m_imgLayer.end() )
@@ -3477,8 +3496,8 @@ void ossimChipperUtil::propagateOutputProjectionToChains()
 
       if ( resampler.valid() )
       {
-//         resampler->setView( m_geom.get() );
-        // resampler->propagateEventToOutputs(refreshEvent);
+         //resampler->setView( m_geom.get() );
+         //resampler->propagateEventToOutputs(refreshEvent);
       }
       else
       {
@@ -3849,6 +3868,221 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::addScalarRemapper(
    return result;
 }
 
+ossimRefPtr<ossimImageSource> ossimChipperUtil::addAnnotations(
+   ossimRefPtr<ossimImageSource>& source ) const
+{
+   static const char MODULE[] = "ossimChipperUtil::addAnnotations(source)";
+   if ( traceDebug() )
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+   }
+
+   ossimRefPtr<ossimImageSource> result = 0;
+   
+   if ( source.valid() & m_geom.valid() )
+   {
+      ossimString regularExpression = "annotation[0-9]*\\.type";
+      const ossim_uint32 COUNT = m_kwl->getNumberOfKeysThatMatch( regularExpression );
+      if ( COUNT > 0 )
+      {
+         // Create annotator:
+         ossimRefPtr<ossimAnnotationSource> annotator = new ossimAnnotationSource();
+
+         // Connect it up:
+         annotator->connectMyInputTo( source.get() );
+
+         // Loop through keyword list and add all annotation objects.
+         ossim_uint32 i = 0;
+         ossim_uint32 found = 0;
+         std::string prefixBase = "annotation";
+         std::string prefix;
+         std::string key;
+         std::string value;
+         while ( (found < COUNT) && ( i < (COUNT+100) ) ) 
+         {
+            prefix = prefixBase + ossimString::toString( i ).string() + ".";
+            key = "type";
+            value = m_kwl->findKey( prefix, key );
+            if ( value.size() )
+            {
+               ++found;
+               
+               if ( value == "cross_hair" )
+               {
+                  addCrossHairAnnotation( annotator, prefix );  
+               }
+            }
+            ++i;
+         }
+
+         annotator->initialize();
+
+         // Assign return result:
+         result = annotator.get();
+      }
+   }
+   else
+   {
+      std::string errMsg = MODULE;
+      errMsg += " ERROR: Null source passed to method!";
+      throw ossimException(errMsg);
+   }
+   
+   if ( traceDebug() )
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
+   }
+   
+   return result;
+}
+
+void ossimChipperUtil::addCrossHairAnnotation(
+   ossimRefPtr<ossimAnnotationSource> annotator, const std::string& prefix ) const
+{
+   if ( annotator.valid() && prefix.size() )
+   {
+      std::string linePrefix = prefix + std::string("line.");
+      std::string textPrefix = prefix + std::string("text.");                  
+      ossimDpt centerPt;
+      centerPt.makeNan();
+      ossim_float64 lineSize = 8.0;
+      ossimDpt start;
+      ossimDpt end;
+      
+      // Cross hair line location:
+      std::string key = "location";
+      std::string value = m_kwl->findKey( linePrefix, key );
+      if ( value.size() )
+      {
+         if (value == "scene_center")
+         {
+            ossimIrect boundingRect = annotator->getBoundingRect( 0 );
+            centerPt = boundingRect.midPoint();
+         }
+      }
+      else
+      {
+         key = "location.gpt";
+         value = m_kwl->findKey( linePrefix, key );
+         if ( value.size() )
+         {
+            ossimGpt gpt;
+            gpt.toPoint( value );
+            if ( gpt.hasNans() == false )
+            {
+               // Convert to view coordinate.
+               ossimDpt imgPt;
+               m_geom->worldToLocal( gpt, imgPt );
+               if ( m_ivt.valid() )
+               {
+                  m_ivt->imageToView( imgPt, centerPt );
+               }
+               else
+               {
+                  centerPt = imgPt;
+               }
+            }
+         }
+      }
+      
+      if ( centerPt.hasNans() == false )
+      {
+         // Cross hair size:
+         key = "size";
+         value = m_kwl->findKey( linePrefix, key );
+         if ( value.size() )
+         {
+            lineSize = ossimString::toInt32( ossimString(value) );
+         }
+         ossim_float64 halfLine = lineSize/2.0;
+         
+         // Create lines.
+         ossimRefPtr<ossimAnnotationLineObject> line1 = new ossimAnnotationLineObject();
+         
+         // Pick up r,g,b,thickness.
+         line1->loadState( *(m_kwl.get()), linePrefix.c_str() );
+         
+         start.x = centerPt.x;
+         start.y = centerPt.y-halfLine;
+         end.x   = centerPt.x;
+         end.y   = centerPt.y+halfLine;
+         
+         // ossimAnnotationLineObject::setLine recomputes the bounding box.
+         line1->setLine( start, end );
+         
+         annotator->addObject( line1.get() );
+         
+         ossimRefPtr<ossimAnnotationLineObject> line2 = new ossimAnnotationLineObject();
+         
+         // This will pick up r,g,b,thickness.
+         line2->loadState( *(m_kwl.get()), linePrefix.c_str() );
+         
+         start.x = centerPt.x-halfLine;
+         start.y = centerPt.y;
+         end.x   = centerPt.x+halfLine;
+         end.y   = centerPt.y;
+         
+         // ossimAnnotationLineObject::setLine recomputes the bounding box.
+         line2->setLine( start, end );
+         
+         annotator->addObject( line2.get() );
+         
+         // Set text if any:
+         key = "string";
+         value = m_kwl->findKey( textPrefix, key );
+         if ( value.size() )
+         {
+            ossimRefPtr<ossimAnnotationFontObject> text = new ossimAnnotationFontObject();
+            text->loadState( *(m_kwl.get()), textPrefix.c_str() );
+            
+            text->setString( ossimString(value) );
+            
+            // text scale:
+            key = "scale";
+            value = m_kwl->findKey( textPrefix, key );
+            if ( value.size() )
+            {
+               ossimDpt scale;
+               scale.toPoint( value );
+               text->setScale( scale );
+            }
+            
+            // text point size:
+            key = "point_size";
+            value = m_kwl->findKey( textPrefix, key );
+            if ( value.size() )
+            {
+               ossimIpt ptSize;
+               ptSize.toPoint( value );
+               text->setPointSize( ptSize );
+            }
+            
+            // text location:
+            key = "location";
+            value = m_kwl->findKey( textPrefix, key );
+            if ( value.size() )
+            {
+               if ( value == "bottom" )
+               {
+                  ossimIpt ipt;
+                  ipt.x = (ossim_int32)centerPt.x;
+                  ipt.y = (ossim_int32)(centerPt.y+halfLine+10);
+                  text->setUpperLeftPosition( ipt );
+                  
+                  ossimDrect rect;
+                  text->getBoundingRect( rect );
+                  ipt.x = ipt.x - rect.width()/2;
+                  text->setUpperLeftPosition( ipt );
+               }
+            }
+            
+            annotator->addObject( text.get() );
+         }
+      }
+   }
+   
+} // End: ossimChipperUtil::addCrossHairAnnotations( ... )
+
 bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& chain) const
 {
    static const char MODULE[] = "ossimChipperUtil::setupChainHistogram(chain)";
@@ -4050,7 +4284,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
 
                      if ( !centerDpt.hasNans() )
                      {
-                        if ( isIdentity() && m_ivt.valid() ) // Chipping in image space.
+                        if ( isChipMode() && m_ivt.valid() ) // Chipping in image space.
                         {
                            // Tranform image center point to view:
                            ossimDpt ipt = centerDpt;
@@ -4177,7 +4411,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                   gpt.lon = maxLonF - halfDpp.x;
                   m_geom->worldToLocal(gpt, lrPt);
 
-                  if ( isIdentity() && m_ivt.valid() )
+                  if ( isChipMode() && m_ivt.valid() )
                   {
                      // Chipping in image space:
                   
@@ -4437,7 +4671,7 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
             m_geom->localToWorld(ossimDpt(originalRect.ul()), ulGpt);
             m_geom->localToWorld(ossimDpt(originalRect.lr()), lrGpt);         
             
-            if ( isIdentity()  && m_ivt.valid() ) // Chipping in image space.)
+            if ( isChipMode()  && m_ivt.valid() ) // Chipping in image space.)
             {
                ossim_float64 scale = thumbSize / maxRectDimension;
                if ( m_ivt->getScale().hasNans() )
@@ -4659,6 +4893,21 @@ void ossimChipperUtil::getBandList( std::vector<ossim_uint32>& bandList ) const
    
 } // End: ossimChipperUtil::getBandList
 
+bool ossimChipperUtil::hasAnnotations() const
+{
+   bool result = false;
+   if ( m_kwl.valid() )
+   {
+      ossimString regularExpression = "annotation[0-9]*\\.type";
+      ossim_uint32 count = m_kwl->getNumberOfKeysThatMatch( regularExpression );
+      if ( count > 0 )
+      {
+         result = true;
+      }
+   }
+   return result;
+}
+
 bool ossimChipperUtil::hasLutFile() const
 {
    bool result = false;
@@ -4864,7 +5113,7 @@ bool ossimChipperUtil::northUp() const
    return keyIsTrue( std::string(NORTH_UP_KW) );
 }
 
-bool ossimChipperUtil::isIdentity() const
+bool ossimChipperUtil::isChipMode() const
 {
    return (m_operation == OSSIM_CHIPPER_OP_CHIP);
 }

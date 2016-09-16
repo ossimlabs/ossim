@@ -148,14 +148,13 @@ void ossimAnnotationObject::applyScale(const ossimDpt& scale)
 
 std::ostream& ossimAnnotationObject::print(ostream& out) const
 {
-   
-   out << setw(15)<<setiosflags(ios::left)<<"Red:" << (long)theRed   << endl
-       <<  setw(15)<<setiosflags(ios::left)<<"Green:" << (long)theGreen << endl
-       <<  setw(15)<<setiosflags(ios::left)<<"Blue" << (long)theBlue << endl
-       <<  setw(15)<<setiosflags(ios::left)<<"Thickness:"<<theThickness
-       << "color_red:   " << (long)theRed       << endl
-       << "color_green: " << (long)theGreen     << endl
-       << "color_blue:  " << (long)theBlue      << endl
-       << "thickness:   " << theThickness << endl;
+   out << setw(15)<<setiosflags(ios::left)<<"Red:" << (long)theRed
+       << setw(15)<<setiosflags(ios::left)<<"\nGreen:" << (long)theGreen
+       << setw(15)<<setiosflags(ios::left)<<"\nBlue:" << (long)theBlue
+       << setw(15)<<setiosflags(ios::left)<<"\nThickness:"<< (long)theThickness
+       << "\ncolor_red:   " << (long)theRed
+       << "\ncolor_green: " << (long)theGreen
+       << "\ncolor_blue:  " << (long)theBlue
+       << "\nthickness:   " << (long)theThickness << std::endl;
    return out;
 }
