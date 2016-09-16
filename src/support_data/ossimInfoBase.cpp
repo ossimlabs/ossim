@@ -42,3 +42,10 @@ bool ossimInfoBase::getKeywordlist(ossimKeywordlist& kwl)const
    // Give the result to the keyword list.
    return kwl.parseStream(in);
 }
+
+bool ossimInfoBase::getKeywordlist(ossimKeywordlist& kwl,
+                                   ossim_uint32 /* entryIndex */ )const
+{
+   // If this gets hit the specific info object does not support entry indexes.
+   return getKeywordlist( kwl );
+}

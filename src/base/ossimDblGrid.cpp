@@ -32,7 +32,6 @@ static ossimTrace traceExec  ("ossimDblGrid:exec");
 static ossimTrace traceDebug ("ossimDblGrid:debug");
 
 static const ossimString MAGIC_NUMBER ("OSSIM_DBL_GRID");
-static const int   MAX_LENGTH_DESCR = 80;
 
 /*!****************************************************************************
 *  DEFAULT CONSTRUCTOR: ossimDblGrid
@@ -47,6 +46,8 @@ theSpacing        (0.0, 0.0),
 theMinValue       (OSSIM_DEFAULT_MIN_PIX_DOUBLE),
 theMaxValue       (OSSIM_DEFAULT_MAX_PIX_DOUBLE),
 theNullValue      (OSSIM_DEFAULT_NULL_PIX_DOUBLE),
+theMeanValue      (0.0),
+theDeviation      (0.0),
 theMeanIsComputed (false),
 theExtrapIsEnabled (true),
 theDomainType     (CONTINUOUS)
@@ -701,7 +702,8 @@ bool ossimDblGrid::save(ostream& os, const char* descr) const
       << theOrigin.v << "  "
       << theSpacing.u << "  "
       << theSpacing.v << "  "
-      << theNullValue << "\n";
+      << theNullValue << "  "
+      << (int) theDomainType << "\n";
 
    if(theGridData)
    {
@@ -736,19 +738,19 @@ bool ossimDblGrid::load(istream& is)
    static const char MODULE[] = "ossimDblGrid::load()";
    if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entering...\n";
 
-   char strbuf[128];
+   ossimString strbuf;
 
    //***
    // Read magic number tag to insure it is an ossimDblGrid record:
    //***
-   is >> strbuf;
-   if (std::strncmp(strbuf, MAGIC_NUMBER.c_str(), MAGIC_NUMBER.length()))
+   getline(is, strbuf);
+   if (!strbuf.contains(MAGIC_NUMBER))
    {
       ossimNotify(ossimNotifyLevel_FATAL) << MODULE << "Error reading OSSIM_DBL_GRID magic number from stream. "
          << "Aborting...\n";
       return false;
    }
-   is.getline(strbuf, 128, '\n');
+
    theSize           = ossimDpt(0,0);
    theOrigin         = ossimDpt(0,0);
    theSpacing        = ossimDpt(0,0);
@@ -757,20 +759,31 @@ bool ossimDblGrid::load(istream& is)
   // theNullValue      = theNullValue;
    theMeanIsComputed = false;
 
-
    //***
    // Read the grid size, origin, and spacing:
    //***
    ossimIpt size;
    ossimDpt origin, spacing;
    double null_value;
-   is >> size.x 
-      >> size.y 
-      >> origin.u 
-      >> origin.v 
-      >> spacing.u
-      >> spacing.v
-      >> null_value;
+   getline(is, strbuf);
+   vector<ossimString> items =  strbuf.split(" ", true);
+   if (items.size() < 7)
+   {
+      ossimNotify(ossimNotifyLevel_FATAL) << MODULE << "Error reading OSSIM_DBL_GRID parameters. "
+         << "Aborting...\n";
+      return false;
+   }
+   size.x = items[0].toInt();
+   size.y = items[1].toInt();
+   origin.u = items[2].toDouble();
+   origin.v = items[3].toDouble();
+   spacing.u = items[4].toDouble();
+   spacing.v = items[5].toDouble();
+   null_value = items[6].toDouble();
+
+   // Check for possible domain type 7th parameter (Added Sep 2016 OLK)
+   if ((items.size() > 7))
+      theDomainType = (DomainType) items[7].toInt();
 
    initialize(size, origin, spacing, null_value);
 
@@ -782,6 +795,7 @@ bool ossimDblGrid::load(istream& is)
    {
       is >> theGridData[i];
    }
+   getline(is, strbuf);
 
    if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " returning...\n";
 

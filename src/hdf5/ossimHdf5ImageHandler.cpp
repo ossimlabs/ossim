@@ -15,6 +15,7 @@
 
 #include <ossim/hdf5/ossimHdf5ImageHandler.h>
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimEndian.h>
@@ -37,6 +38,7 @@
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/hdf5/ossimHdf5GridModel.h>
+static const ossimTrace traceDebug("ossimHdf5ImageHandler:debug");
 
 RTTI_DEF1(ossimHdf5ImageHandler, "ossimHdf5ImageHandler", ossimImageHandler)
 
@@ -155,21 +157,20 @@ bool ossimHdf5ImageHandler::getTile(ossimImageData* result, ossim_uint32 resLeve
                // Hdf5 file to buffer:
                m_entries[m_currentEntry]->getTileBuf(&dataBuffer.front(), clipRect, band);
 
+#if 0
+               // Scan and fix non-standard null value:
                if ( m_entries[m_currentEntry]->getScalarType() == OSSIM_FLOAT32 )
                {
-                  //---
-                  // NPP VIIRS data has null of "-999.3".
-                  // Scan and fix non-standard null value.
-                  //---
                   const ossim_float32 NP = getNullPixelValue(band);
                   const ossim_uint32 COUNT = clipRect.area();
                   ossim_float32* float_buffer = (ossim_float32*)&dataBuffer.front();
                   for ( ossim_uint32 i = 0; i < COUNT; ++i )
                   {
-                     if ( float_buffer[i] <= -999.0 ) float_buffer[i] = NP;
+                     if ( float_buffer[i] < -999.0 )
+                        float_buffer[i] = NP;
                   }
                }
-
+#endif
                // Buffer to tile:
                result->loadBand((void*)&dataBuffer.front(), clipRect, band);
             }
@@ -219,9 +220,8 @@ bool ossimHdf5ImageHandler::loadState(const ossimKeywordlist& kwl,
 
 bool ossimHdf5ImageHandler::open()
 {
-   static const char MODULE[] = "ossimHdf5ImageHandler::open";
-
-   bool status = false;
+   static const char* M = "ossimHdf5ImageHandler::open(filename) -- ";
+   if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG) << M <<" Entering..." << std::endl;
 
    // Start with a clean slate.
    if (isOpen())
@@ -237,9 +237,12 @@ bool ossimHdf5ImageHandler::open()
    m_hdf5 = new ossimHdf5;
    if (!m_hdf5->open(theImageFile))
    {
+      if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG) << M <<" Unable to open image Leaving..." << std::endl;
       m_hdf5 = 0;
       return false;
    }
+
+   if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG) << M <<" Opened Image..." << std::endl;
 
    vector<H5::DataSet> datasetList;
    H5::Group root;
@@ -279,7 +282,7 @@ bool ossimHdf5ImageHandler::open()
    }
 
 #if 0
-   ossimNotify(ossimNotifyLevel_DEBUG)<< MODULE << " DEBUG\nDataset names:\n";
+   ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimHdf5ImageHandler:"<<__LINE__ << " DEBUG\nDataset names:\n";
    for ( ossim_uint32 i = 0; i < datasetList.size(); ++i )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)<< "dataset[" << i << "]: "
@@ -320,6 +323,7 @@ bool ossimHdf5ImageHandler::open()
       ++i;
    }
 #endif
+   if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG) << M <<" Leaving..." << std::endl;
 
    return true;
 }
@@ -500,19 +504,20 @@ ossimRefPtr<ossimHdf5ImageDataset> ossimHdf5ImageHandler::getCurrentDataset()
 double ossimHdf5ImageHandler::getNullPixelValue( ossim_uint32 band ) const
 {
    return ossimImageHandler::getNullPixelValue( band );
-#if 0
-   double result;
-   ossimScalarType scalar = getOutputScalarType();
-   if ( scalar == OSSIM_FLOAT32 )
-   {
-      result = -9999.0;
-   }
-   else
-   {
-      result = ossimImageHandler::getNullPixelValue( band );
-   }
-   return result;
-#endif
+}
+
+double ossimHdf5ImageHandler::getMaxPixelValue( ossim_uint32 band ) const
+{
+   if ( m_currentEntry >= m_entries.size() )
+      return 0;
+   return m_entries[m_currentEntry]->getMaxPixelValue(band);
+}
+
+double ossimHdf5ImageHandler::getMinPixelValue( ossim_uint32 band ) const
+{
+   if ( m_currentEntry >= m_entries.size() )
+      return 0;
+   return m_entries[m_currentEntry]->getMinPixelValue(band);
 }
 
 void ossimHdf5ImageHandler::setProperty(ossimRefPtr<ossimProperty> property)

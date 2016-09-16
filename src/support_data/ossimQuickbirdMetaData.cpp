@@ -14,13 +14,14 @@
 // $Id: ossimQuickbirdMetaData.cpp 14431 2009-04-30 21:58:33Z dburken $
 
 #include <ossim/support_data/ossimQuickbirdMetaData.h>
+#include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimKeywordNames.h>
+#include <ossim/base/ossimString.h>
 #include <ossim/base/ossimTrace.h>
 #include <cstdio>
 #include <iostream>
-
 
 RTTI_DEF1(ossimQuickbirdMetaData, "ossimQuickbirdMetaData", ossimObject);
  
@@ -118,7 +119,7 @@ std::ostream& ossimQuickbirdMetaData::print(std::ostream& out) const
       out<<theAbsCalFactors[i] << "   ";
    }
    out << "\n  Image Size:         " << theImageSize
-       << "n"
+       << "\n"
        << "\n---------------------------------------------------------"
        << "\n  " << std::endl;
    return out;
@@ -195,6 +196,7 @@ bool ossimQuickbirdMetaData::saveState(ossimKeywordlist& kwl,
                  bandNameList[i] + "_band_absCalFactor",
                  theAbsCalFactors[i],
                  true);
+
       }
    }
    else if(!theAbsCalFactors.empty())
@@ -774,6 +776,266 @@ bool ossimQuickbirdMetaData::parseATTData(const ossimFilename& /* data_file */)
 ossimString ossimQuickbirdMetaData::getSatID() const
 {
    return theSatID;
+}
+
+bool ossimQuickbirdMetaData::getMapProjectionKwl( const ossimFilename& imd_file,
+                                                  ossimKeywordlist& kwl )
+{
+   static const char MODULE[] = "ossimQuickbirdMetaData::getMapProjectionKwl";
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+   }
+   
+   bool result = false;
+   
+   if( imd_file.exists() )
+   {
+      FILE* fptr = fopen (imd_file.c_str(), "r");
+      if (fptr)
+      {
+
+         char* strptr(NULL);
+         
+         //---
+         // Read the file into a buffer:
+         //---
+         ossim_int32 fileSize = static_cast<ossim_int32>(imd_file.fileSize());
+         char* filebuf = new char[fileSize];
+         fread(filebuf, 1, fileSize, fptr);
+         strptr = filebuf;
+         fclose(fptr);
+         ossimString imd_key;
+         ossimString tempStr;
+         std::string key;
+         std::string value;
+
+
+         // Loop until we find all our keys or bust out with error.
+         while ( 1 )
+         {
+            // Verify map projected.
+            imd_key = "BEGIN_GROUP = MAP_PROJECTED_PRODUCT";
+            if ( strstr( filebuf, imd_key.c_str() ) == NULL )
+            {
+               break; // Not a map projected product.
+            }
+
+            // Get datum:
+            if( getEndOfLine( strptr, ossimString("\n\tdatumName = "), "%13c %s", tempStr) )
+            {
+               if ( tempStr.contains("WE") )
+               {
+                  key = "dataum";
+                  value   = "WGE";
+                  kwl.addPair(key, value);
+               }
+               else
+               {
+                  if(traceDebug())
+                  {
+                     ossimNotify(ossimNotifyLevel_WARN)
+                        << "Unhandled datum: " << tempStr << "\n";
+                  }
+               }
+            }
+
+            // Get projection:
+            if( getEndOfLine( strptr, ossimString("\n\tmapProjName = "), "%15c %s", tempStr) )
+            {
+               if ( tempStr.contains("UTM") )
+               {
+                  key = "type";
+                  value   = "ossimUtmProjection";
+                  kwl.addPair(key, value);
+               }
+               else
+               {
+                  if(traceDebug())
+                  {
+                     ossimNotify(ossimNotifyLevel_WARN)
+                        << "Unhandled projection name: " << tempStr << "\n";
+                  }
+               }
+            }
+
+             // Get projection:
+            if( getEndOfLine( strptr, ossimString("\n\tmapProjName = "), "%15c %s", tempStr) )
+            {
+               if ( tempStr.contains("UTM") )
+               {
+                  key = "type";
+                  value   = "ossimUtmProjection";
+                  kwl.addPair(key, value);
+
+                  // Get UTM zone:
+                  if( getEndOfLine( strptr, ossimString("\n\tmapZone = "), "%11c %s", tempStr) )
+                  {
+                     key = "zone";
+                     value = tempStr.trim(";").string();
+                     kwl.addPair(key, value);
+                  }
+                  else
+                  {
+                     break;
+                  }
+                  
+                  // Get UTM hemisphere:
+                  if( getEndOfLine( strptr, ossimString("\n\tmapHemi = "), "%11c %s", tempStr) )
+                  {
+                     key = "hemisphere";
+                     tempStr = tempStr.trim(";");
+                     tempStr = tempStr.trim("\"");
+                     value = tempStr.string();
+                     kwl.addPair(key, value);
+                  }
+                  else
+                  {
+                     break;
+                  }
+                  
+               } // End UTM:
+            }
+
+            // Get projection units:
+            std::string units;
+            if( getEndOfLine( strptr, ossimString("\n\tproductUnits = "), "%16c %s", tempStr) )
+            {
+               if ( tempStr == "\"M\";" )
+               {
+                  key = "units";
+                  units = "meters";
+                  kwl.addPair(key, units);
+               }
+               else
+               {
+                  if(traceDebug())
+                  {
+                     ossimNotify(ossimNotifyLevel_WARN)
+                        << "Unhandled units: " << tempStr << "\n";
+                  }
+               }
+            }
+
+            // Get projection tie point:
+            ossimDpt dpt;
+            dpt.makeNan();
+            if( getEndOfLine( strptr, ossimString("\n\toriginX = "), "%11c %s", tempStr) )
+            {
+               tempStr = tempStr.trim(";");
+               dpt.x = tempStr.toFloat64();
+            }
+            else
+            {
+               break;
+            }
+            if( getEndOfLine( strptr, ossimString("\n\toriginY = "), "%11c %s", tempStr) )
+            {
+               tempStr = tempStr.trim(";");
+               dpt.y = tempStr.toFloat64();
+            }
+            else
+            {
+               break;
+            }
+            if ( dpt.hasNans() == false )
+            {  
+               key = "tie_point_units";
+               kwl.addPair(key, units);
+
+               key = "tie_point_xy";
+               value = dpt.toString().string();
+               kwl.addPair( key, value );
+            }
+            else
+            {
+               if(traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_WARN)
+                     << "tie point has nans!";
+               }
+               break;
+            }
+
+            // Get projection scale:
+            dpt.makeNan();
+            if( getEndOfLine( strptr, ossimString("\n\tcolSpacing = "), "%14c %s", tempStr) )
+            {
+               tempStr = tempStr.trim(";");
+               dpt.x = tempStr.toFloat64();
+            }
+            else
+            {
+               break;
+            }
+            if( getEndOfLine( strptr, ossimString("\n\trowSpacing = "), "%14c %s", tempStr) )
+            {
+               tempStr = tempStr.trim(";");
+               dpt.y = tempStr.toFloat64();
+            }
+            else
+            {
+               break;
+            }
+
+            if ( dpt.hasNans() == false )
+            {  
+               key = "pixel_scale_units";
+               kwl.addPair(key, units);
+
+               key = "pixel_scale_xy";
+               value = dpt.toString().string();
+               kwl.addPair( key, value );
+            }
+            else
+            {
+               if(traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_WARN)
+                     << "scale has nans!";
+               }
+               break;
+            }
+            
+            //---
+            // End of key look up. If we get here set the status to true and
+            // bust out of loop.
+            //---
+            result = true;
+            break;
+         }
+
+         if ( result == false )
+         {
+            if(traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "ERROR: Missing or unhandled key in metadat: " << imd_key << "\n";
+            }
+         }
+
+         delete [] filebuf;
+         filebuf = 0;
+      }
+      else
+      {
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "ossimQuickbirdRpcModel::parseMetaData(imd_file) DEBUG:"
+               << "\nCould not open Meta data file:  " << imd_file
+	    << "\nreturning with error...\n";
+         }
+      }
+   }
+
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " exit status = " << (result?"true":"false") << "\n";
+   }
+
+   return result;
 }
 
 //*****************************************************************************

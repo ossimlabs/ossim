@@ -100,6 +100,21 @@ std::ostream& ossimRpfFrame::print(std::ostream& out, const std::string& prefix)
       }
    }
 
+   //---
+   // Derived series code from first two characters of file extension.
+   // Note ChartSeriesCode from RPF Frame attributes may or may not be
+   // present.
+   //---
+   if ( theFilename.size() )
+   {
+      ossimString ext = theFilename.ext();
+      if ( ext.size() > 1 )
+      {
+         ext.upcase();
+         out << prefix << "SeriesCode: " << ext.string().substr(0, 2) << "\n";
+      }
+   }
+
    if(theAttributes)
    {
       theAttributes->print(out, prefix);

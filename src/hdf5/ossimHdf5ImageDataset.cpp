@@ -52,8 +52,8 @@ ossimHdf5ImageDataset::ossimHdf5ImageDataset( const ossimHdf5ImageDataset& obj )
    m_bands(obj.m_bands),
    m_lines(obj.m_lines),
    m_samples(obj.m_samples),
-   m_validRect(obj.m_validRect),
-   m_endian( obj.m_endian ? new ossimEndian() : 0 )
+   m_endian( obj.m_endian ? new ossimEndian() : 0 ),
+   m_validRect(obj.m_validRect)
 {
 }
 
@@ -86,7 +86,7 @@ bool ossimHdf5ImageDataset::initialize( const H5::DataSet& dataset)
 
    determineScalarType();
 
-   if (!determineExtents() || !scanForValidImageRect())
+   if (!determineExtents() || !scanForValidImageRect() || !scanForMinMax())
       return false;
 
    return true;
@@ -119,6 +119,200 @@ bool ossimHdf5ImageDataset::determineExtents()
 
 bool ossimHdf5ImageDataset::scanForValidImageRect()
 {
+#if 0
+   // THIS IS ORIGINAL BURKEN CODE -- SEEMS TO SCAN TOO MUCH BUT MAYBE NEEDED IN POLAR PROJECTION
+   // CASES SO KEEPING AROUND (OLK 09/2016)
+   bool result = false;
+   H5::DataSpace imageDataspace = m_dataset.getSpace();
+   const ossim_int32 IN_DIM_COUNT = imageDataspace.getSimpleExtentNdims();
+
+   if ( IN_DIM_COUNT == 2 )
+   {
+      // Get the extents. Assuming dimensions are same for lat lon dataset.
+      std::vector<hsize_t> dimsOut(IN_DIM_COUNT);
+      imageDataspace.getSimpleExtentDims( &dimsOut.front(), 0 );
+
+      if ( dimsOut[0] && dimsOut[1] )
+      {
+
+         //---
+         // Capture the rectangle:
+         // dimsOut[0] is height, dimsOut[1] is width:
+         //---
+         m_validRect = ossimIrect( 0, 0,
+                            static_cast<ossim_int32>( dimsOut[1]-1 ),
+                            static_cast<ossim_int32>( dimsOut[0]-1 ) );
+
+         const ossim_int32 WIDTH  = m_validRect.width();
+
+         std::vector<hsize_t> inputCount(IN_DIM_COUNT);
+         std::vector<hsize_t> inputOffset(IN_DIM_COUNT);
+
+         inputOffset[0] = 0;
+         inputOffset[1] = 0;
+
+         inputCount[0] = 1;
+         inputCount[1] = WIDTH;
+
+         // Output dataspace dimensions.
+         const ossim_int32 OUT_DIM_COUNT = 3;
+         std::vector<hsize_t> outputCount(OUT_DIM_COUNT);
+         outputCount[0] = 1;     // single band
+         outputCount[1] = 1;     // single line
+         outputCount[2] = WIDTH; // whole line
+
+         // Output dataspace offset.
+         std::vector<hsize_t> outputOffset(OUT_DIM_COUNT);
+         outputOffset[0] = 0;
+         outputOffset[1] = 0;
+         outputOffset[2] = 0;
+
+         ossimScalarType scalar = getScalarType();
+         if ( scalar == OSSIM_FLOAT32 )
+         {
+            // Native type:
+            H5::DataType datatype = m_dataset.getDataType();
+
+            // Output dataspace always the same one line.
+            H5::DataSpace bufferDataSpace( OUT_DIM_COUNT, &outputCount.front());
+            bufferDataSpace.selectHyperslab( H5S_SELECT_SET,
+                                             &outputCount.front(),
+                                             &outputOffset.front() );
+
+            //---
+            // Dataset sample has NULL lines at the end so scan for valid rect.
+            // Use "<= -999" for test as per NOAA as it seems the NULL value is
+            // fuzzy.  e.g. -999.3.
+            //---
+            const ossim_float32 NULL_VALUE = -999.0;
+
+            //---
+            // VIIRS Radiance data has a -1.5e-9 in the first column.
+            // Treat this as a null.
+            //---
+            ossimString name = m_dataset.getObjName();
+            const ossim_float32 NULL_VALUE2 = ( name == "/All_Data/VIIRS-DNB-SDR_All/Radiance" )
+               ? -1.5e-9 : NULL_VALUE;
+            const ossim_float32 TOLERANCE = 0.1e-9; // For ossim::almostEqual()
+
+            // Hold one line:
+            std::vector<ossim_float32> values( WIDTH );
+
+            // Find the ul pixel:
+            ossimIpt ulIpt = m_validRect.ul();
+            bool found = false;
+
+            // Line loop to find upper left pixel:
+            while ( ulIpt.y <= m_validRect.lr().y )
+            {
+               inputOffset[0] = static_cast<hsize_t>(ulIpt.y);
+               imageDataspace.selectHyperslab( H5S_SELECT_SET,
+                                               &inputCount.front(),
+                                               &inputOffset.front() );
+
+               // Read data from file into the buffer.
+               m_dataset.read( (void*)&values.front(), datatype, bufferDataSpace, imageDataspace );
+
+               if ( m_endian )
+               {
+                  // If the endian pointer is initialized(not zero) swap the bytes.
+                  m_endian->swap( scalar, (void*)&values.front(), WIDTH );
+               }
+
+               // Sample loop:
+               ulIpt.x = m_validRect.ul().x;
+               ossim_int32 index = 0;
+               while ( ulIpt.x <= m_validRect.lr().x )
+               {
+                  if ( !ossim::almostEqual(values[index], NULL_VALUE2, TOLERANCE) &&
+                       ( values[index] > NULL_VALUE ) )
+                  {
+                     found = true; // Found valid pixel.
+                     break;
+                  }
+                  ++ulIpt.x;
+                  ++index;
+
+               } // End: sample loop
+
+               if ( found )
+               {
+                  break;
+               }
+
+               ++ulIpt.y;
+
+            } // End line loop to find ul pixel:
+
+            // Find the lower right pixel:
+            ossimIpt lrIpt = m_validRect.lr();
+            found = false;
+
+            // Line loop to find last pixel:
+            while ( lrIpt.y >= m_validRect.ul().y )
+            {
+               inputOffset[0] = static_cast<hsize_t>(lrIpt.y);
+               imageDataspace.selectHyperslab( H5S_SELECT_SET,
+                                               &inputCount.front(),
+                                               &inputOffset.front() );
+
+               // Read data from file into the buffer.
+               m_dataset.read( (void*)&values.front(), datatype, bufferDataSpace, imageDataspace );
+
+               if ( m_endian )
+               {
+                  // If the endian pointer is initialized(not zero) swap the bytes.
+                  m_endian->swap( scalar, (void*)&values.front(), WIDTH );
+               }
+
+               // Sample loop:
+               lrIpt.x = m_validRect.lr().x;
+               ossim_int32 index = WIDTH-1;
+
+               while ( lrIpt.x >= m_validRect.ul().x )
+               {
+                  if ( !ossim::almostEqual(values[index], NULL_VALUE2, TOLERANCE) &&
+                       ( values[index] > NULL_VALUE ) )
+                  {
+                     found = true; // Found valid pixel.
+                     break;
+                  }
+                  --lrIpt.x;
+                  --index;
+
+               } // End: sample loop
+
+               if ( found )
+               {
+                  break;
+               }
+
+               --lrIpt.y;
+
+            } // End line loop to find lower right pixel.
+
+            m_validRect = ossimIrect( ulIpt, lrIpt );
+            result = true;
+
+         }
+         else // Matches: if ( scalar == OSSIM_FLOAT32 ){...}
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << "ossimHdf5ImageDataset:"<<__LINE__<<" WARNING!"
+               << "\nUnhandled scalar type: "
+               << ossimScalarTypeLut::instance()->getEntryString( scalar )
+               << std::endl;
+         }
+
+      } // Matches: if ( dimsOut...
+
+   } // Matches: if ( IN_DIM_COUNT == 2 )
+
+   //cout << "ossimHdf5ImageDataset:"<<__LINE__<<" m_validRect = "<<m_validRect<<endl;
+   return true;
+
+#else
+   // REFACTORED
    // Find the valid image rect. dataset may have null padding:
    H5::DataSpace imageDataspace = m_dataset.getSpace();
    H5::DataType dataType = m_dataset.getDataType();
@@ -136,13 +330,13 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
    H5::DataSpace bufferDataSpace( 2, rowSize);
    bufferDataSpace.selectHyperslab( H5S_SELECT_SET, rowSize, imageOffset ); // offset = (0,0) here
 
-   // Figure out the null pixel value:
+   // Figure out the null pixel value (unswapped since doing byte compare below):
    H5:H5Pget_fill_value(m_dataset.getId(), dataType.getId(), fill_value);
 
    // Find the ul pixel. Loop over rows:
    ossimIpt ulIpt (0,0);
    bool found_valid = false;
-   for (; (ulIpt.y<m_lines) && !found_valid; ulIpt.y++)
+   for (; (ulIpt.y<(int)m_lines) && !found_valid; ulIpt.y++)
    {
       imageOffset[0] = ulIpt.y;
       imageDataspace.selectHyperslab( H5S_SELECT_SET, rowSize, imageOffset);
@@ -150,13 +344,13 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
 
       // Scan row for valid pixel:
       ossim_int64 rowOffset = 0;
-      for (ulIpt.x=0; (ulIpt.x<m_samples) && !found_valid; ulIpt.x++, rowOffset+=elem_size)
+      for (ulIpt.x=0; (ulIpt.x<(int)m_samples) && !found_valid; ulIpt.x++, rowOffset+=elem_size)
          found_valid = (memcmp(&rowBuf[rowOffset], fill_value, elem_size) != 0);
    }
    if (!found_valid)
       ulIpt = ossimIpt(0,0);
 
-   // Find the ul pixel. Loop over rows:
+   // Find the lr pixel. Loop over rows:
    ossimIpt lrIpt (m_samples-1, m_lines-1);
    found_valid = false;
    for (; (lrIpt.y>ulIpt.y) && !found_valid; lrIpt.y--)
@@ -180,6 +374,91 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
 
    delete [] rowBuf;
    delete [] fill_value;
+   return true;
+#endif
+}
+
+bool ossimHdf5ImageDataset::scanForMinMax()
+{
+   // Create buffer to hold the clip rect for a single band.
+   ossimScalarType scalarType = getScalarType();
+   if ((scalarType != OSSIM_FLOAT32) && (scalarType != OSSIM_FLOAT64) &&
+       (scalarType != OSSIM_UINT32)  && (scalarType != OSSIM_SINT32)  &&
+       (scalarType != OSSIM_UINT8)   && (scalarType != OSSIM_SINT8)   &&
+       (scalarType != OSSIM_UINT16)  && (scalarType != OSSIM_SINT16))
+   {
+      return false;
+   }
+
+   ossim_uint32 bufSizeInBytes = m_validRect.width()*ossim::scalarSizeInBytes(scalarType);
+   vector<char> dataBuffer(bufSizeInBytes);
+
+   // Get the extents. Assuming dimensions are same for lat lon dataset.
+   ossimIpt ulIpt (m_validRect.ul());
+   ossimIpt lrIpt (m_validRect.lr());
+   const ossim_float32 nullpix = m_handler->getNullPixelValue();
+   ossim_float32 epsilon = 0.1e-9; // For ossim::almostEqual()
+
+   if (nullpix == 0.0)
+      epsilon = 0;
+
+   m_minValue.clear();
+   m_maxValue.clear();
+
+   ossimIrect clipRect (m_validRect.ul(), m_validRect.ur());
+   for (int band=0; band<m_bands; ++band)
+   {
+      m_minValue.push_back(OSSIM_DEFAULT_MAX_PIX_FLOAT);
+      m_maxValue.push_back(OSSIM_DEFAULT_MIN_PIX_FLOAT);
+
+      for (int y=ulIpt.y; y<=lrIpt.y; y++)
+      {
+         clipRect.set_uly(y);
+         clipRect.set_lry(y);
+
+         getTileBuf(&dataBuffer.front(), clipRect, band, false);
+
+         // Scan and fix non-standard null value:
+         ossim_float32 value = 0;
+         for ( int x=0; x<m_validRect.width(); ++x )
+         {
+            switch (scalarType)
+            {
+            case OSSIM_FLOAT32:
+               value = ((ossim_float32*)&dataBuffer.front())[x];
+               break;
+            case OSSIM_FLOAT64:
+               value = (ossim_float32) ((ossim_float64*)&dataBuffer.front())[x];
+               break;
+            case OSSIM_UINT8:
+            case OSSIM_SINT8:
+               value = (ossim_float32) ((char*)&dataBuffer.front())[x];
+               break;
+            case OSSIM_UINT16:
+            case OSSIM_SINT16:
+               value = (ossim_float32) ((ossim_int16*)&dataBuffer.front())[x];
+               break;
+            case OSSIM_UINT32:
+            case OSSIM_SINT32:
+               value = (ossim_float32) ((ossim_int32*)&dataBuffer.front())[x];
+               break;
+            default:
+               break;
+            }
+
+            if (ossim::almostEqual<ossim_float32>(value, nullpix, epsilon))
+               continue;
+            if (value > m_maxValue[band])
+               m_maxValue[band] = value;
+            if (value < m_minValue[band])
+               m_minValue[band] = value;
+         }
+      }
+   }
+
+   cout<<"ossimHdf5ImageDataset:"<<__LINE__<<"\n\tminValue="<<m_minValue[0]<<
+         "\n\tmaxValue="<<m_maxValue[0]<<"\n\tnullValue="<<m_handler->getNullPixelValue()<<endl; // TODO REMOVE
+
    return true;
 }
 
@@ -248,17 +527,9 @@ bool ossimHdf5ImageDataset::determineScalarType()
       m_scalar = OSSIM_FLOAT64;
 
    // See if we need to swap bytes:
-   H5::DataType* dataType = new H5::DataType(m_dataset.getDataType());
-   H5::AtomType* atomType = dynamic_cast<H5::AtomType*>(dataType);
-   if (atomType)
-   {
-      ossimByteOrder ossimByteOrder = ossim::byteOrder();
-      H5T_order_t h5order = atomType->getOrder();
-      if( ((h5order == H5T_ORDER_LE) && (ossimByteOrder != OSSIM_LITTLE_ENDIAN)) ||
-            ((h5order == H5T_ORDER_BE) && (ossimByteOrder != OSSIM_BIG_ENDIAN)))
-         m_endian = new ossimEndian();
-   }
-   delete dataType;
+   if (m_hdf5->getByteOrder(&m_dataset) != ossim::byteOrder())
+      m_endian = new ossimEndian();
+
    return true;
 }
 
@@ -292,22 +563,23 @@ const ossimIrect& ossimHdf5ImageDataset::getValidImageRect() const
    return m_validRect;
 }
 
-void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect, ossim_uint32 band)
+void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect,
+                                       ossim_uint32 band, bool scale)
 {
-   static const char MODULE[] = "ossimH5ImageDataset::getTileBuf";
+   static const char MODULE[] = "ossimHdf5ImageDataset::getTileBuf";
+
+   if (band >= m_bands)
+      return;
+
+   // Shift rectangle by the sub image offse (if any) from the m_validRect.
+   // NOTE: The rect coming in seems to be alreadyt in image space so no need to offset (OLK 09/2016)
+   ossimIrect irect = rect;// + m_validRect.ul();
 
    try
    {
-      // Shift rectangle by the sub image offse (if any) from the m_validRect.
-      ossimIrect irect = rect + m_validRect.ul();
-
-      //--
       // Turn off the auto-printing when failure occurs so that we can
       // handle the errors appropriately
-      //---
       // H5::Exception::dontPrint();
-
-      // NOTE: rank == array dimensions in hdf5 documentation lingo.
 
       // Get dataspace of the dataset.
       H5::DataSpace imageDataSpace = m_dataset.getSpace();
@@ -354,7 +626,7 @@ void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect, oss
 
       // Output dataspace offset.
       std::vector<hsize_t> outputOffset(OUT_DIM_COUNT);
-      outputOffset[0] = 0;
+      outputOffset[0] = band;
       outputOffset[1] = 0;
       outputOffset[2] = 0;
 
@@ -373,53 +645,115 @@ void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect, oss
          m_endian->swap( m_scalar, buffer, irect.area() );
       }
 
+//#define NEVER
+#ifdef NEVER
+      if (scale)
+      {
+         const ossim_float32 TOLERANCE = 0.1e-9; // For ossim::almostEqual()
+         // Scale the data:
+#if 1
+         // Assumes float32 datatype:
+         double gain = 1.0/( m_maxValue[band] - m_minValue[band] );
+         ossim_float32 null_value = m_handler->getNullPixelValue(band);
+         ossim_float32 value;
+         for (ossim_uint32 i=0; i<irect.area(); ++i)
+         {
+            value = ((ossim_float32*)buffer)[i];
+
+            if (!ossim::almostEqual(value,null_value, TOLERANCE))
+            {
+               value = gain*(value - m_minValue[band]);
+               ((ossim_float32*)buffer)[i] =value;
+            }
+         }
+#else
+         // Does not assume float32:
+         ossimScalarType scalarType = getScalarType();
+         double null_value = m_handler->getNullPixelValue(band);
+         for (ossim_uint32 i=0; i<irect.area(); ++i)
+         {
+            switch (scalarType)
+            {
+            case OSSIM_FLOAT32:
+               if (!ossim::almostEqual(((ossim_float32*)buffer)[i], (ossim_float32)null_value))
+                  ((ossim_float32*)buffer)[i] =
+                        (ossim_float32)(gain*(((ossim_float32*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_FLOAT64:
+               if (!ossim::almostEqual(((ossim_float64*)buffer)[i], null_value))
+                  ((ossim_float64*)buffer)[i] =
+                        (ossim_float64)(gain*(((ossim_float64*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_UINT8:
+               if (((ossim_uint8*)buffer)[i] != (ossim_uint8)null_value)
+                  ((ossim_uint8*)buffer)[i] =
+                        (ossim_uint8)(gain*(((ossim_uint8*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_SINT8:
+               if (((ossim_sint8*)buffer)[i] != (ossim_sint8)null_value)
+                  ((ossim_sint8*)buffer)[i] =
+                        (ossim_sint8)(gain*(((ossim_sint8*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_UINT16:
+               if (((ossim_uint16*)buffer)[i] != (ossim_uint16)null_value)
+                  ((ossim_uint16*)buffer)[i] =
+                        (ossim_uint16)(gain*(((ossim_uint16*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_SINT16:
+               if (((ossim_sint16*)buffer)[i] != (ossim_sint16)null_value)
+                  ((ossim_sint16*)buffer)[i] =
+                        (ossim_sint16)(gain*(((ossim_sint16*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_UINT32:
+               if (((ossim_uint32*)buffer)[i] != (ossim_uint32)null_value)
+                  ((ossim_uint32*)buffer)[i] =
+                        (ossim_uint32)(gain*(((ossim_uint32*)buffer)[i] - m_minValue[band]));
+               break;
+            case OSSIM_SINT32:
+               if (((ossim_sint32*)buffer)[i] != (ossim_sint32)null_value)
+                  ((ossim_sint32*)buffer)[i] =
+                        (ossim_sint32)(gain*(((ossim_sint32*)buffer)[i] - m_minValue[band]));
+               break;
+            default:
+               break;
+            }
+         }
+#endif
+      }
+#endif
+
       // Cleanup:
       bufferDataSpace.close();
       dataType.close();
       imageDataSpace.close();
-
-      // memSpace.close();
-      // dataType.close();
-      // dataSpace.close();
    }
-   catch( const H5::FileIException& error )
+   catch( const H5::Exception& error )
    {
-      ossimNotify(ossimNotifyLevel_WARN)
-                                                << MODULE << " caught H5::FileIException!" << std::endl;
+      ossimNotify(ossimNotifyLevel_WARN) << MODULE << " caught H5 Exception!" << std::endl;
       error.printError();
    }
 
-   // catch failure caused by the DataSet operations
-   catch( const H5::DataSetIException& error )
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-                                                << MODULE << " caught H5::DataSetIException!" << std::endl;
-      error.printError();
-   }
-
-   // catch failure caused by the DataSpace operations
-   catch( const H5::DataSpaceIException& error )
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-                                                << MODULE << " caught H5::DataSpaceIException!" << std::endl;
-      error.printError();
-   }
-
-   // catch failure caused by the DataSpace operations
-   catch( const H5::DataTypeIException& error )
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-                                                << MODULE << " caught H5::DataTypeIException!" << std::endl;
-      error.printError();
-   }
    catch( ... )
    {
-      ossimNotify(ossimNotifyLevel_WARN)
-                                                << MODULE << " caught unknown exception !" << std::endl;
+      ossimNotify(ossimNotifyLevel_WARN)<< MODULE << " caught unknown exception !" << std::endl;
    }
 
 } // End: ossimH5ImageDataset::getTileBuf
 
+
+double ossimHdf5ImageDataset::getMaxPixelValue(ossim_uint32 band) const
+{
+   if (band < m_bands)
+      return m_maxValue[band];
+   return 0;
+}
+
+double ossimHdf5ImageDataset::getMinPixelValue(ossim_uint32 band) const
+{
+   if (band < m_bands)
+      return m_minValue[band];
+   return 0;
+}
 
 std::ostream& ossimHdf5ImageDataset::print( std::ostream& out ) const
 {

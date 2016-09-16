@@ -99,7 +99,7 @@ protected:
    ossim_float64      theMaxValueOverride;
    ossim_int32        theNumberOfBinsOverride;
    ossimHistogramMode theComputationMode;
-   ossim_uint32       theNumberOfTilesToUseInFastMode;
+   // ossim_uint32       theNumberOfTilesToUseInFastMode;
 TYPE_DATA
 };
 

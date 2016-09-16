@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
             }
          }
 
-         if (argv1[0] == '-')
+         if (argv1.string()[0] == '-')
          {
             // Treat as info call:
             ap.insert(1, "info");

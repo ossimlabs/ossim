@@ -28,15 +28,15 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimDrect.h>
-#include <ossim/projection/ossimProjectionFactoryRegistry.h>
-#include <ossim/projection/ossimBilinearProjection.h>
+#include <ossim/base/ossimKeywordNames.h>
 #include <ossim/hdf5/ossimHdf5ImageHandler.h>
 #include <sstream>
 #include <string>
 
 using namespace std;
+using namespace H5;
 
-static const int    GRID_SAMPLING_INTERVAL = 8;
+static const int    GRID_SAMPLING_INTERVAL = 32;
 
 RTTI_DEF1(ossimHdf5GridModel, "ossimHdf5GridModel", ossimCoarseGridModel);
 
@@ -51,28 +51,28 @@ ossimHdf5GridModel::~ossimHdf5GridModel()
 {
 }
 
-bool ossimHdf5GridModel::initialize(ossimHdf5* hdf5, ossimHdf5ImageHandler* handler)
+bool ossimHdf5GridModel::initialize(ossimHdf5* hdf5, const ossimString& projDataPath)
 {
-   if (!hdf5 || !handler)
+   if (!hdf5)
       return false;
 
    m_hdf5 = hdf5;
-   m_handler = handler;
-
-   vector<ossimIpt> validVertices;
-   handler->getValidImageVertices(validVertices);
-   ossimIrect validImageRect(validVertices);
+   m_projDataPath = projDataPath;
+   theHeightEnabledFlag = false;
 
    try
    {
-      initCoarseGrid("Latitude",  validImageRect, theLatGrid);
-      initCoarseGrid("Longitude", validImageRect, theLonGrid);
+      initCoarseGrid("Latitude",  theLatGrid);
+      initCoarseGrid("Longitude", theLonGrid);
    }
    catch (ossimException& x)
    {
       ossimNotify(ossimNotifyLevel_FATAL)<<x.what();
       return false;
    }
+
+   theDlatDhGrid.initialize(theLatGrid.size(), theLatGrid.origin(), theLatGrid.spacing(), 0.0);
+   theDlonDhGrid.initialize(theLonGrid.size(), theLonGrid.origin(), theLonGrid.spacing(), 0.0);
 
    // Check for dateline crossing among the longitude grid:
    crossesDateline();
@@ -81,11 +81,10 @@ bool ossimHdf5GridModel::initialize(ossimHdf5* hdf5, ossimHdf5ImageHandler* hand
    ossimGpt urg (theLatGrid.maxValue(), theLonGrid.maxValue());
    ossimGpt lrg (theLatGrid.minValue(), theLonGrid.maxValue());
    ossimGpt llg (theLatGrid.minValue(), theLonGrid.minValue());
-   ossimDrect imageRect(validImageRect);
-   ossimBilinearProjection* seedFunction =
-         new ossimBilinearProjection(imageRect.ul(), imageRect.ur(), imageRect.lr(), imageRect.ll(),
-                                     ulg, urg, lrg, llg);
-   theSeedFunction = seedFunction;
+   ossimDrect imageRect(0, 0, m_imageSize.x-1, m_imageSize.y-1);
+   theSeedFunction = new ossimBilinearProjection(imageRect.ul(), imageRect.ur(),
+                                                 imageRect.lr(), imageRect.ll(),
+                                                 ulg, urg, lrg, llg);
 
    // Bileaner projection to handle
    initializeModelParams(imageRect);
@@ -96,13 +95,13 @@ bool ossimHdf5GridModel::initialize(ossimHdf5* hdf5, ossimHdf5ImageHandler* hand
    return true;
 }
 
-bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, const ossimIrect& validRect,
-                                        ossimDblGrid& coarseGrid)
+bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, ossimDblGrid& coarseGrid)
 {
    ostringstream xmsg;
 
    // Convention used: (u,v) is file space, (x,y) is CG space
-   H5::DataSet* dataset  = m_hdf5->findDatasetByName(datasetName, 0, true);
+   Group* group = m_hdf5->findGroupByName(m_projDataPath.chars(), 0, true);
+   DataSet* dataset  = m_hdf5->findDatasetByName(datasetName, group, true);
    if (dataset == NULL)
    {
       xmsg  << "ossimHdf5GridModel:"<<__LINE__
@@ -110,38 +109,25 @@ bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, const ossimIrec
       throw ossimException(xmsg.str());
    }
 
-   ossimRefPtr<ossimHdf5ImageDataset> imageDataset = m_handler->getCurrentDataset();
-   if (!imageDataset.valid())
-      return false;
-
-   //****************************************************************************************
-
    // Get dataspace of the dataset.
-   H5::DataSpace dataSpace = dataset->getSpace();
+   DataSpace dataSpace = dataset->getSpace();
    const ossim_int32 DIM_COUNT = dataSpace.getSimpleExtentNdims();
    if ( DIM_COUNT != 2  )
       return false;
 
-   // Number of dimensions of the input dataspace:
-   const ossim_uint32 imageRows = validRect.height();
-   const ossim_uint32 imageCols = validRect.width();
-   const ossim_uint32 GRID_SPACING = 4; // Only grab every 4th value.
-
    // Get the extents. dimsOut[0] is height, dimsOut[1] is width:
    std::vector<hsize_t> dimsOut(DIM_COUNT);
    dataSpace.getSimpleExtentDims( &dimsOut.front(), 0 );
-
-   // Verify valid rect within our bounds:
-   if ( (imageRows > dimsOut[0] ) || (imageCols > dimsOut[1] ) )
-      return false;
+   m_imageSize.y = dimsOut[0];
+   m_imageSize.x = dimsOut[1];
 
    // Initialize the ossimDblGrid. Round up if size doesn't fall on end pixel.
-   ossimDpt dspacing (GRID_SPACING, GRID_SPACING);
-   ossim_uint32 gridRows = imageRows / GRID_SPACING + 1;
-   ossim_uint32 gridCols = imageCols / GRID_SPACING + 1;
-   if ( imageRows % GRID_SPACING)
+   ossimDpt dspacing (GRID_SAMPLING_INTERVAL, GRID_SAMPLING_INTERVAL);
+   ossim_uint32 gridRows = m_imageSize.y / GRID_SAMPLING_INTERVAL + 1;
+   ossim_uint32 gridCols = m_imageSize.x / GRID_SAMPLING_INTERVAL + 1;
+   if ( m_imageSize.y % GRID_SAMPLING_INTERVAL)
       ++gridRows;
-   if ( imageCols % GRID_SPACING)
+   if ( m_imageSize.x % GRID_SAMPLING_INTERVAL)
       ++gridCols;
    ossimIpt gridSize (gridCols, gridRows);
 
@@ -154,16 +140,16 @@ bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, const ossimIrec
    std::vector<hsize_t> inputOffset(DIM_COUNT);
 
    inputOffset[0] = 0; // y_img is set below.
-   inputOffset[1] = validRect.ul().x; // x_img
+   inputOffset[1] = 0;
    inputCount[0] = 1; // y_img
-   inputCount[1] = (hsize_t)imageCols; // x_img
+   inputCount[1] = (hsize_t)m_imageSize.x; // x_img
 
    // Output dataspace dimensions. Reading a line at a time.
    const ossim_int32 OUT_DIM_COUNT = 3;
    std::vector<hsize_t> outputCount(OUT_DIM_COUNT);
    outputCount[0] = 1;    // band
    outputCount[1] = 1;    // y_img
-   outputCount[2] = imageCols; // x_img
+   outputCount[2] = m_imageSize.x; // x_img
 
    // Output dataspace offset.
    std::vector<hsize_t> outputOffset(OUT_DIM_COUNT);
@@ -171,7 +157,7 @@ bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, const ossimIrec
    outputOffset[1] = 0;
    outputOffset[2] = 0;
 
-   ossimScalarType scalar = imageDataset->getScalarType( );
+   ossimScalarType scalar = m_hdf5->getScalarType( *dataset);
    if ( scalar != OSSIM_FLOAT32 )
       return false;
 
@@ -180,42 +166,41 @@ bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, const ossimIrec
    bool needSwap = false;
    if (m_hdf5->getByteOrder(dataset) != ossim::byteOrder())
       needSwap = true;
-   H5::DataType dataType = dataset->getDataType();
+   DataType dataType = dataset->getDataType();
 
    // Output dataspace always the same, width of one line.
-   H5::DataSpace bufferDataSpace( OUT_DIM_COUNT, &outputCount.front());
+   DataSpace bufferDataSpace( OUT_DIM_COUNT, &outputCount.front());
    bufferDataSpace.selectHyperslab( H5S_SELECT_SET,
                                     &outputCount.front(),
                                     &outputOffset.front() );
 
    //  Arrays to hold a single line of latitude longitude values.
-   vector<ossim_float32> values(imageCols);
+   vector<ossim_float32> values(m_imageSize.x);
    ossim_float32 val = 0;
    hsize_t y_img = 0;
-   const ossim_float64 NULL_VALUE = -999.0;
 
    // Line loop:
    for ( ossim_uint32 y = 0; y < gridRows; ++y )
    {
       // y_img = line in image space
-      y_img = y*GRID_SPACING;
-      if ( y_img < imageRows )
+      y_img = y*GRID_SAMPLING_INTERVAL;
+      if ( y_img < (ossim_uint32) m_imageSize.y )
       {
-         inputOffset[0] = y_img + validRect.ul().y;
+         inputOffset[0] = y_img;
          dataSpace.selectHyperslab( H5S_SELECT_SET, &inputCount.front(), &inputOffset.front() );
 
          // Read data from file into the buffer.
          dataset->read( &(values.front()), dataType, bufferDataSpace, dataSpace );
          if ( needSwap )
-            endian.swap( &(values.front()), imageCols );
+            endian.swap( &(values.front()), m_imageSize.x );
 
          // Sample loop:
          hsize_t x_img = 0;
          for ( ossim_uint32 x = 0; x < gridCols; ++x )
          {
             // x_img = sample in image space
-            x_img = x*GRID_SPACING;
-            if ( x_img < imageCols )
+            x_img = x*GRID_SAMPLING_INTERVAL;
+            if ( x_img < (ossim_uint32) m_imageSize.x )
             {
                val = values[x_img];
                if (ossim::isnan(val)) // Nulls in grid!
@@ -264,7 +249,7 @@ bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, const ossimIrec
                   << x_img << "," << y_img << "," << val << endl;
 #endif
          } // End sample loop.
-      } // Matches if ( y_img < imageRows ){...}else{
+      } // Matches if ( y_img < m_imageSize.y ){...}else{
    } // End line loop.
 
    dataSpace.close();
@@ -275,7 +260,7 @@ bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, const ossimIrec
    // Original refactor code ###############################################
 
    // Verify dimensions:
-   H5::DataSpace dataSpace = dataset->getSpace();
+   DataSpace dataSpace = dataset->getSpace();
    if (dataSpace.getSimpleExtentNdims() != 2)
    {
       xmsg << "ossimHdf5GridModel:"<<__LINE__<<" ERROR: lat/lon grid dataspace rank != 2.";
@@ -303,8 +288,8 @@ bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, const ossimIrec
 
    // Initialize dataspace for memory buffer needed by dataset read operation:
    hsize_t bufExtents[2] = { (hsize_t) theImageSize.u, 1 };
-   H5::DataSpace bufSpace(2, bufExtents);
-   H5::DataType dataType = dataset->getDataType();
+   DataSpace bufSpace(2, bufExtents);
+   DataType dataType = dataset->getDataType();
    string cname = dataType.fromClass();
    cout << cname<<endl;
    if (dataType.getClass() != H5T_FLOAT)
@@ -316,7 +301,7 @@ bool ossimHdf5GridModel::initCoarseGrid(const char* datasetName, const ossimIrec
 
    // See if we need to swap bytes:
    ossimEndian* endian = 0;
-   H5::AtomType* atomType = dynamic_cast<H5::AtomType*>(&dataType);
+   AtomType* atomType = dynamic_cast<AtomType*>(&dataType);
    if(atomType)
    {
       ossimByteOrder ossimByteOrder = ossim::byteOrder();
@@ -383,14 +368,66 @@ bool ossimHdf5GridModel::crossesDateline()
    bool found181 = false;
 
    ossimIpt size (theLonGrid.size());
-   double left, right;
-   int xr = size.x-1;
-   for (ossim_uint32 y=0; (y<size.y) && !crossesDateline; ++y )
+   //double left, right;
+   //int xr = size.x-1;
+
+   for (ossim_uint32 y=0; (y<(ossim_uint32)size.y) && !crossesDateline; ++y )
    {
+#if 0
       left  = theLonGrid.getNode(0,  y);
       right = theLonGrid.getNode(xr, y);
       if (left > right)
          crossesDateline = true;
+#endif
+
+      for ( ossim_uint32 x = 0; x<(ossim_uint32)size.x; ++x)
+      {
+         longitude = (ossim_int32) theLonGrid.getNode(x,  y); // Cast to integer.
+
+         // look for 179 -> -179...
+         if ( !found179 )
+         {
+            if ( longitude == 179 )
+            {
+               found179 = true;
+               continue;
+            }
+         }
+         else // found179 == true
+         {
+            if ( longitude == 178 )
+            {
+               break; // Going West, 179 -> 178
+            }
+            else if ( longitude == -179 )
+            {
+               crossesDateline = true;
+               break;
+            }
+         }
+
+         // look for -179 -> 179...
+         if ( !found181 )
+         {
+            if ( longitude == -179 )
+            {
+               found181 = true;
+               continue;
+            }
+         }
+         else // found181 == true
+         {
+            if ( longitude == -178 )
+            {
+               break; // Going East -179 -> -178
+            }
+            else if ( longitude == 179 )
+            {
+               crossesDateline = true;
+               break;
+            }
+         }
+      }
    }
 
    if ( crossesDateline )
@@ -401,4 +438,12 @@ bool ossimHdf5GridModel::crossesDateline()
    return crossesDateline;
 }
 
+
+bool ossimHdf5GridModel::saveState(ossimKeywordlist& kwl, const char* prefix) const
+{
+   bool stat = ossimCoarseGridModel::saveState(kwl, prefix);
+   kwl.add(prefix, ossimKeywordNames::TYPE_KW, "ossimCoarseGridModel", true);
+
+   return stat;
+}
 

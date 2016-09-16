@@ -30,6 +30,7 @@
 #include <ossim/base/ossimGeoidManager.h>
 #include <ossim/base/ossimGpt.h>
 #include <ossim/init/ossimInit.h>
+#include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimProperty.h>
@@ -432,8 +433,6 @@ bool ossimImageUtil::initialize(ossimArgumentParser& ap)
             break;
          }
  
- 
- 
          if( ap.read("-s", sp1) )
          {
             setOverviewStopDimension( ts1 );
@@ -443,7 +442,7 @@ bool ossimImageUtil::initialize(ossimArgumentParser& ap)
             }
          }
  
-         if ( ap.read("-tile-size", sp1))
+         if ( ap.read("--tile-size", sp1))
          {
             setTileSize( ossimString(ts1).toInt32() );
             if ( ap.argc() < 2 )
@@ -911,7 +910,20 @@ void ossimImageUtil::createOverview(ossimRefPtr<ossimImageHandler>& ih,
                   << "Creating overviews for file: " << ih->getFilename() << std::endl;
             }
          }
- 
+
+         //---
+         // Set properties, e.g. tile size.  Must be set before the call to
+         // ob->setInputSource(...)
+         //---
+         std::vector< ossimRefPtr<ossimProperty> > propertyList(0);
+         ossimIpt tileSize;
+         if ( getTileSize( tileSize ) == true )
+         {
+            propertyList.push_back(new ossimStringProperty(ossimKeywordNames::OUTPUT_TILE_SIZE_KW,
+            tileSize.toString()));
+            ob->setProperties(propertyList);
+         }
+
          ob->setOutputFile(outputFile);
          ob->setInputSource(ih.get());
 
@@ -1227,8 +1239,7 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
       // Note: getImageTileWidth/Height will return zero if the image is not
       // intenally tiles.
       //---
-      ossimIpt tileWidthHeight(ih->getImageTileWidth(), ih->getImageTileHeight());
- 
+      ossimIpt tileWidthHeight( ih->getImageTileWidth(), ih->getImageTileHeight() );
       if (!tileWidthHeight.x)
       {
          //---
@@ -1745,6 +1756,22 @@ void ossimImageUtil::setTileSize( ossim_uint32 tileSize )
    }
 }
 
+bool ossimImageUtil::getTileSize( ossimIpt& tileSize ) const
+{
+   bool result = false;
+   std::string lookup = m_kwl->findKey( TILE_SIZE_KW );
+   if ( lookup.size() )
+   {
+      ossim_int32 i = ossimString(lookup).toInt32();
+      if ( (i % 16) == 0 )
+      {
+         tileSize.x = i;
+         tileSize.y = i;
+         result = true;
+      }  
+   }
+   return result;
+}
 
 ossim_uint32 ossimImageUtil::getOverviewStopDimension() const
 {

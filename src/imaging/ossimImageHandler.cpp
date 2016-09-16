@@ -482,8 +482,8 @@ void ossimImageHandler::establishDecimationFactors()
    }
 }
 
-
-bool ossimImageHandler::buildHistogram(int numberOfRLevels)
+bool ossimImageHandler::buildHistogram( int numberOfRLevels,
+                                        ossimHistogramMode mode )
 {
    if(isOpen())
    {
@@ -501,6 +501,13 @@ bool ossimImageHandler::buildHistogram(int numberOfRLevels)
       {
          histoSource->setMaxNumberOfRLevels(getNumberOfDecimationLevels());
       }
+      
+      //---
+      // Note if mode==OSSIM_HISTO_MODE_UNKNOWN the histoSource defaults to
+      // normal mode.
+      //---
+      histoSource->setComputationMode( mode );
+
       histoSource->connectMyInputTo(0, this);
       histoSource->enableSource();
       writer->connectMyInputTo(0, histoSource.get());
@@ -520,7 +527,8 @@ bool ossimImageHandler::buildHistogram(int numberOfRLevels)
    return true;
 }
 
-bool ossimImageHandler::buildAllHistograms(int numberOfRLevels)
+bool ossimImageHandler::buildAllHistograms( int numberOfRLevels,
+                                            ossimHistogramMode mode )
 {
    ossim_uint32 currentEntry = getCurrentEntry();
    std::vector<ossim_uint32> entryList;
@@ -529,7 +537,7 @@ bool ossimImageHandler::buildAllHistograms(int numberOfRLevels)
    for(idx = 0; idx < entryList.size(); ++idx)
    {
       setCurrentEntry(entryList[idx]);
-      if(!buildHistogram(numberOfRLevels))
+      if(!buildHistogram( numberOfRLevels, mode ))
       {
          setCurrentEntry(currentEntry);
          return false;
@@ -637,20 +645,18 @@ bool ossimImageHandler::buildOverview(const ossimFilename& filename,
    return true;
 }
 
-ossimRefPtr<ossimMultiResLevelHistogram> ossimImageHandler::getImageHistogram()
+ossimRefPtr<ossimMultiResLevelHistogram> ossimImageHandler::getImageHistogram() const
 {
    ossimRefPtr<ossimMultiResLevelHistogram> histogram = 0;
-   if (!isOpen())
-      return histogram;
-
-   ossimFilename histoFile = getFilenameWithThisExtension(ossimString(".his"));
-   if (!histoFile.isReadable() && !buildHistogram())
-      return histogram;
-
-   histogram = new ossimMultiResLevelHistogram;
-   if (!histogram->importHistogram(histoFile))
-      histogram = 0;
-
+   if ( isOpen() )
+   {
+      ossimFilename histoFile = getFilenameWithThisExtension(ossimString(".his"));
+      histogram = new ossimMultiResLevelHistogram();
+      if ( histogram->importHistogram(histoFile) == false )
+      {
+         histogram = 0;
+      }
+   }
    return histogram;
 }
 
@@ -897,10 +903,33 @@ bool ossimImageHandler::openOverview()
       {  
          // 3) For backward compatibility check if single entry and _e0.ovr
          overviewFilename = getFilenameWithThisExtension(ossimString(".ovr"), true);
+
          if (overviewFilename.empty() || (overviewFilename.exists() == false) )
          {
-            // 4) For overviews built with gdal look for foo.tif.ovr
-            overviewFilename = getFilename();
+            //---
+            // 4) For overviews built with gdal.
+            // Examples:
+            // Single entry: foo.tif.ovr
+            // Multi-entry: foo.tif.x.ovr where "x" == one based entry number.
+            // 
+            // Note: Take into account a supplementary dir if any.
+            //---
+            if ( theSupplementaryDirectory.empty() )
+            {
+               overviewFilename = getFilename();
+            }
+            else
+            {
+               overviewFilename = theSupplementaryDirectory;
+               overviewFilename = overviewFilename.dirCat( getFilename().file() );
+            }
+
+            if ( getNumberOfEntries() > 1 )
+            {
+               overviewFilename += ".";
+               // Sample multi-entry data "one" based; hence, the + 1.
+               overviewFilename += ossimString::toString( getCurrentEntry()+1 );
+            }
             overviewFilename += ".ovr";
          }
       }
@@ -1134,7 +1163,7 @@ bool ossimImageHandler::setOutputToInputBandList()
 bool ossimImageHandler::isIdentityBandList( const std::vector<ossim_uint32>& bandList ) const
 {
    bool result = false;
-   const ossim_uint32 BANDS = bandList.size();
+   const ossim_uint32 BANDS = (ossim_uint32)bandList.size();
    if ( BANDS )
    {
       std::vector<ossim_uint32> inputList;
@@ -1167,7 +1196,7 @@ bool ossimImageHandler::setOutputBandList(const std::vector<ossim_uint32>& inBan
    bool result = false;
 
    const ossim_uint32 INPUT_BANDS  = getNumberOfInputBands();
-   const ossim_uint32 OUTPUT_BANDS = inBandList.size();
+   const ossim_uint32 OUTPUT_BANDS = (ossim_uint32)inBandList.size();
 
    if ( INPUT_BANDS && OUTPUT_BANDS )
    {

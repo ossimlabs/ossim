@@ -124,6 +124,91 @@ std::ostream& ossimNitfFile::print(std::ostream& out,
    
 }
 
+std::ostream& ossimNitfFile::print(std::ostream& out,
+                                   ossim_uint32 entryIndex,
+                                   const std::string& prefix,
+                                   bool printOverviews) const
+{
+   if(theNitfFileHeader.valid())
+   {
+      std::string pfx = prefix;
+      pfx += "nitf.";
+      theNitfFileHeader->print(out, pfx);
+      
+      if ( entryIndex < (ossim_uint32)theNitfFileHeader->getNumberOfImages() )
+      {
+         ossimRefPtr<ossimNitfImageHeader> ih = getNewImageHeader(entryIndex);
+         if ( ih.valid() == true )
+         {
+            bool printIt = true;
+            
+            if ( !printOverviews )
+            {
+               // Check the IMAG field.
+               ossim_float64 imag;
+               ih->getDecimationFactor(imag);
+               if ( !ossim::isnan(imag) )
+               {
+                  if ( imag < 1.0)
+                  {
+                     printIt = false;
+                  }
+               }
+               
+               //---
+               // Now see if it's a cloud mask image.  Do not print
+               // cloud mask images if the printOverviews is false.
+               //---
+               if ( printIt )
+               {
+                  if ( (ih->getCategory().trim(ossimString(" ")) ==
+                        "CLOUD") &&
+                       (ih->getRepresentation().trim(ossimString(" ")) ==
+                        "NODISPLY") )
+                  {
+                     printIt = false;
+                  }
+               }
+            }
+
+            if (printIt)
+            {
+               // Add our prefix onto prefix.
+               std::string s = pfx;
+               s += "image";
+               s += ossimString::toString(entryIndex).string();
+               s += ".";
+               
+               ih->print(out, s);
+            }
+            ih = 0;
+         }
+      }
+
+      //---
+      // Check for RPF stuff:
+      //---
+      ossimNitfTagInformation info; 
+      theNitfFileHeader->getTag(info, "RPFHDR");
+      if(info.getTagName() == "RPFHDR")
+      {
+         // Open of the a.toc.
+         ossimRefPtr<ossimRpfToc> toc = new ossimRpfToc;
+         if ( toc->parseFile(getFilename()) ==
+              ossimErrorCodes::OSSIM_OK )
+         {
+            pfx += "rpf.";
+            toc->printHeader(out, pfx);
+            toc->printTocEntry( out, entryIndex, pfx, printOverviews );
+         }
+      }
+      
+   } // matches:  if(theNitfFileHeader.valid())
+
+   return out;
+   
+}
+
 bool ossimNitfFile::saveState(ossimKeywordlist& kwl, const ossimString& prefix)const
 {
    bool result = theNitfFileHeader.valid(); 

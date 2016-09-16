@@ -130,7 +130,5 @@ void ossimSlopeTool::initProcessingChain()
    ossimRefPtr<ossimSlopeFilter> slope_filter = new ossimSlopeFilter;
    slope_filter->setSlopeType(ossimSlopeFilter::NORMALIZED);
    m_procChain->add(slope_filter.get());
-
-   finalizeChain();
 }
 
