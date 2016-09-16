@@ -16,7 +16,7 @@ cut_width:  1024
 hist_op:  auto-minmax
 image0.file:  5V090205P0001912264B220000100282M_001508507.ntf
 operation:  chip
-output_file:  outputs/tgt-004.png
+output_file:  outputs/chipper-annotation-test.png
 output_radiometry: U8
 three_band_out: true
 up_is_up:  true
