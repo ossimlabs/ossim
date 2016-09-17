@@ -345,6 +345,12 @@ public:
    /** @brief Dumps datum list to stream. */
    std::ostream& printDatums(std::ostream& out) const;
 
+   /** @brief Prints fonts list to stdout. */
+   void printFonts() const;
+
+   /** @brief Prints fonts list to stream. */
+   std::ostream& printFonts(std::ostream& out) const;
+
    /** @brief Converts degrees to radians and outputs to stdout. */
    void deg2rad(const ossim_float64& degrees) const;
 

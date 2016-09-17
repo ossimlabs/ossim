@@ -22,14 +22,13 @@
 #include <ossim/base/ossimDatum.h>
 #include <ossim/base/ossimDatumFactoryRegistry.h>
 #include <ossim/base/ossimDrect.h>
+#include <ossim/base/ossimFontInformation.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <ossim/base/ossimEllipsoid.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimFilename.h>
-#include <ossim/imaging/ossimFilterResampler.h>
 #include <ossim/base/ossimGeoidManager.h>
 #include <ossim/base/ossimGpt.h>
-#include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimProperty.h>
@@ -37,6 +36,8 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimXmlDocument.h>
 #include <ossim/elevation/ossimElevManager.h>
+#include <ossim/font/ossimFont.h>
+#include <ossim/font/ossimFontFactoryRegistry.h>
 #include <ossim/imaging/ossimFilterResampler.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
@@ -63,6 +64,7 @@ static const char DUMP_KW[]                 = "dump";
 static const char DUMP_NO_OVERVIEWS_KW[]    = "dump_no_overviews";
 static const char FACTORIES_KW[]            = "factories";
 static const char FACTORY_KEYWORD_LIST_KW[] = "factory_keyword_list";
+static const char FONTS_KW[]                = "fonts";
 static const char FORMAT_KW[]               = "format"; 
 static const char FT2MTRS_KW[]              = "ft2mtrs";
 static const char FT2MTRS_US_SURVEY_KW[]    = "ft2mtrs_us_survey";
@@ -146,6 +148,8 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--factories", "<keyword_list_flag> Prints factory list.  If keyword_list_flag is true, the result of a saveState will be output for each object.");
 
+   au->addCommandLineOption("--fonts", "Prints available fonts.");
+   
    au->addCommandLineOption("--ft2mtrs", "<feet> Gives meters from feet (0.3048 meters per foot).");
 
    au->addCommandLineOption("--ft2mtrs-us-survey", "<feet> Gives meters from feet (0.3048006096 meters per foot).");
@@ -383,6 +387,15 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          }
       }
 
+      if( ap.read("--fonts") )
+      {
+         m_kwl.add( FONTS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+      
       if( ap.read("--ft2mtrs", sp1) )
       {
          m_kwl.add( FT2MTRS_KW, ts1.c_str());
@@ -401,8 +414,6 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             break;
          }
       }
-
-
 
       if( ap.read("--height", sp1, sp2) )
       {
@@ -774,7 +785,18 @@ bool ossimInfo::execute()
             }
             printFactories(keywordListFlag);
          }
-
+         
+         lookup = m_kwl.find(FONTS_KW);
+         if ( lookup )
+         {
+            ++consumedKeys;
+            value = lookup;
+            if ( value.toBool() )
+            {
+               printFonts();
+            }
+         }
+         
          lookup = m_kwl.find(FT2MTRS_KW);
          if ( lookup )
          {
@@ -2322,6 +2344,34 @@ std::ostream& ossimInfo::printDatums(std::ostream& out) const
 
    // Reset flags.
    out.setf(f);
+
+   return out;
+}
+
+void ossimInfo::printFonts() const
+{
+   ossimInfo::printFonts( ossimNotify(ossimNotifyLevel_INFO) );
+}
+
+std::ostream& ossimInfo::printFonts(std::ostream& out) const
+{
+   std::vector<ossimFontInformation> fontInfoList;
+   ossimFontFactoryRegistry::instance()->getFontInformation( fontInfoList );
+
+   std::vector<ossimFontInformation>::const_iterator i = fontInfoList.begin();
+
+   while ( i != fontInfoList.end() )
+   {
+      out << *(i) << endl;
+      ++i;
+   }
+
+   // Get the default:
+   ossimRefPtr<ossimFont> defaultFont = ossimFontFactoryRegistry::instance()->getDefaultFont();
+   if ( defaultFont.valid() )
+   {
+      out << "default_font: " << defaultFont->getFamilyName() << std::endl;
+   }
 
    return out;
 }
