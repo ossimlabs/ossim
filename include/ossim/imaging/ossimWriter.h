@@ -59,11 +59,8 @@ public:
     * 
     * Appends the writers image types to the "imageTypeList".
     * 
-    * This is the actual image type name.  So for
-    * example, ossimTiffWriter has several image types.  Some of these
-    * include TIFF_TILED, TIFF_TILED_BAND_SEPARATE ... etc.
-    * The ossimGdalWriter
-    * may include GDAL_IMAGINE_HFA, GDAL_RGB_NITF, GDAL_JPEG20000, ... etc.
+    * Current write type:
+    * ossim_ttbs - tiled tiff band separate, big tiff format.
     *
     * @param imageTypeList list to append to.
     */
@@ -94,7 +91,11 @@ public:
    virtual bool writeStream();
 
    /**
-    * @brief Sets the output stream.
+    * @brief Sets the output stream to write to.
+    *
+    * This sets the stream and sets m_ownsStreamFlag to false. So destructor
+    * will not delete the stream if this method is used.
+    * 
     * @param stream The stream to write to.
     * @return true if object can write to stream, false if not.
     */
@@ -110,36 +111,95 @@ protected:
 
 private:
 
+   /**
+    * @brief Writes a tiled tiff band separate to stream.
+    * @return true on success, false on error.
+    */
    bool writeStreamTtbs();
 
+   /**
+    * @brief Writes tiff header to stream.
+    * @return true on success, false on error.
+    */
    bool writeTiffHdr();
+
+   /**
+    * @brief Writes tags to image file directory(IFD).
+    * @param tile_offsets
+    * @param tile_byte_counts
+    * @param minBands
+    * @param maxBands
+    * @return true on success, false on error.
+    */
    bool writeTiffTags( const std::vector<ossim_uint64>& tile_offsets,
                        const std::vector<ossim_uint64>& tile_byte_counts,
                        const std::vector<ossim_float64>& minBands,
                        const std::vector<ossim_float64>& maxBands );
 
+   /**
+    * @brief Writes tags TIFFTAG_MINSAMPLEVALUE(280) and
+    * TIFFTAG_MAXSAMPLEVALUE(281).  Only written if scalar type is an unsigned
+    * byte or short.
+    * @param minBands Array of min values from image write.
+    * @param maxBands Array of max values from image write.
+    * @return true on success, false on error.
+    */
    bool writeMinMaxTiffTags( const std::vector<ossim_float64>& minBands,
                              const std::vector<ossim_float64>& maxBands,
                              std::streamoff& arrayWritePos  );
-   
+
+
+   /**
+    * @brief Writes tags TIFFTAG_SMINSAMPLEVALUE(340) and
+    * TIFFTAG_SMAXSAMPLEVALUE(341).  Only written if scalar type is not an
+    * unsigned byte or short.
+    * @param minBands Array of min values from image write.
+    * @param maxBands Array of max values from image write.
+    * @return true on success, false on error.
+    */
    bool writeSMinSMaxTiffTags( const std::vector<ossim_float64>& minBands,
                              const std::vector<ossim_float64>& maxBands,
                              std::streamoff& arrayWritePos  );
 
-   // 
+   /**
+    * @brief Writes tiff tag to image file directory(IFD).
+    * @param tag
+    * @param type
+    * @param count
+    * @param value(s) or offset to array.
+    * @param arrayWritePos Position to write array to.  This will be updated
+    * if array is written with new offset.
+    */   
    template <class T> void writeTiffTag(ossim_uint16 tag, ossim_uint16 type,
                                         ossim_uint64 count,
                                         const T* value,
                                         std::streamoff& arrayWritePos );
-   
+
+   /**
+    * @brief Writes image data to stream.
+    *
+    * Data is in a band separate tile layout(PLANARCONFIG_SEPARATE), i.e. all
+    * the red tiles, all the green tiles, all the blue tiles.
+    * 
+    * @param tile_offsets Initialized by this with offset for each tile.
+    * @param tile_byte_counts Initialized by this with the byte count of each
+    * tile.
+    * @param minBands Initialized by this with the min values for each band.
+    * @param maxBands Initialized by this with the max values for each band.
+    * @return true on success, false on error.
+    */
    bool writeTiffTilesBandSeparate( std::vector<ossim_uint64>& tile_offsets,
                                     std::vector<ossim_uint64>& tile_byte_counts,
                                     std::vector<ossim_float64>& minBands,
                                     std::vector<ossim_float64>& maxBands );
 
+   /**
+    * @brief Gets the tiff sample format based on scalar type.
+    * E.g SAMPLEFORMAT_UINT, SAMPLEFORMAT_INT or SAMPLEFORMAT_IEEEFP.
+    * @return TIFF sample format or 0 if not mapped to a scalar type.
+    */
    ossim_uint16 getTiffSampleFormat() const;
   
-
    std::ostream* m_str;
    bool          m_ownsStreamFlag; 
    
