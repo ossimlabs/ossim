@@ -2266,6 +2266,16 @@ std::ostream& ossimTiffInfo::printArray(std::ostream& out,
             out << "\n";
             break;
          }
+         case ossim::OTIFF_LONG8:
+         {
+            ossim_uint64* p = (ossim_uint64*)valueArray;
+            for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
+            {
+               out << p[i] << " ";
+            }
+            out << "\n";
+            break;
+         }
          case ossim::OTIFF_DOUBLE:
          {
             ossim_float64* p = (ossim_float64*)valueArray;

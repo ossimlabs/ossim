@@ -40,7 +40,11 @@ namespace ossim
       OTIFFTAG_MAXSAMPLEVALUE             = 281,
       OTIFFTAG_XRESOLUTION                = 282,
       OTIFFTAG_YRESOLUTION                = 283,
+
       OTIFFTAG_PLANARCONFIG               = 284,
+      OTIFFTAG_PLANARCONFIG_CONTIG        = 1,
+      OTIFFTAG_PLANARCONFIG_SEPARATE      = 2,
+      
       OTIFFTAG_RESOLUTIONUNIT             = 296,
       OTIFFTAG_PAGENUMBER                 = 297,
       OTIFFTAG_SOFTWARE                   = 305,
@@ -131,8 +135,7 @@ namespace ossim
 
    enum CompressType
    {
-      NOT_COMPRESSED = 0,
-      COMPRESSED     = 1
+      COMPRESSION_NONE = 1
    };
  
    enum PhotoInterpretation
