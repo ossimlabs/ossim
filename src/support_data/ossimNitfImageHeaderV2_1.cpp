@@ -1115,9 +1115,10 @@ ossimIrect ossimNitfImageHeaderV2_1::getImageRect()const
 
 ossimIrect ossimNitfImageHeaderV2_1::getBlockImageRect()const
 {
-   ossimDpt ul(ossimString((char*)(&theImageLocation[5])).toDouble(),
-               ossimString((char*)theImageLocation,
-                           (char*)(&theImageLocation[5])).toDouble());
+//   ossimDpt ul(ossimString((char*)(&theImageLocation[5])).toDouble(),
+//               ossimString((char*)theImageLocation,
+//                           (char*)(&theImageLocation[5])).toDouble());
+   ossimDpt ul(0.0,0.0);   
    
    double rows = getNumberOfPixelsPerBlockVert()*getNumberOfBlocksPerCol();
    double cols = getNumberOfPixelsPerBlockHoriz()*getNumberOfBlocksPerRow();;
