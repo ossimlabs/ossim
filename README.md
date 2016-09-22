@@ -3,6 +3,8 @@ Resource | *dev* |
 ------------ | -------------
 ossim-dev | ![Status](http://jenkins.radiantbluecloud.com:8080/buildStatus/icon?job=ossim-dev&style=plastic)
 ossim-test-dev | ![Status](http://jenkins.radiantbluecloud.com:8080/buildStatus/icon?job=ossim-test-dev&style=plastic)
+rpm-dev | ![Status](http://jenkins.radiantbluecloud.com:8080/buildStatus/icon?job=rpm-dev-dev&style=plastic)
+rpm-publish-dev | ![Status](http://jenkins.radiantbluecloud.com:8080/buildStatus/icon?job=rpm-publish-dev&style=plastic)
 
 <a href="https://scan.coverity.com/projects/ossimlabs">
   <img alt="Coverity Scan Build Status"
