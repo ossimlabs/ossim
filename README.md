@@ -1,4 +1,4 @@
-### GoCD Status builds 
+### Build Status
 Resource | *dev* | 
 ------------ | -------------
 ossim-dev | ![Status](http://jenkins.radiantbluecloud.com:8080/buildStatus/icon?job=ossim-dev&style=plastic)
