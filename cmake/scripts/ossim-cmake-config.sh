@@ -210,6 +210,15 @@ if [ "${BUILD_OSSIM_GUI}" == "ON" ]; then
   fi
 fi
 
+CMAKE_OSX_SYSROOT=
+CMAKE_OSX_DEPLOYMENT_TARGET=
+if [ -d /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk ] ; then
+  CMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+
+elif [ -d /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk] ; then
+  CMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
+fi  
+
 echo "Generating Makefiles in" $OSSIM_BUILD_DIR
 
 # CMAKE command 
@@ -217,7 +226,8 @@ cmake -G "$CMAKE_G_ARG" \
 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
 -DOSSIM_DEV_HOME=$OSSIM_DEV_HOME \
 -DCMAKE_OSX_ARCHITECTURES="x86_64" \
--DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk \
+-DCMAKE_OSX_SYSROOT=$CMAKE_OSX_SYSROOT \
+-DCMAKE_OSX_DEPLOYMENT_TARGET=$CMAKE_OSX_DEPLOYMENT_TARGET \
 -DBUILD_OSSIM_FRAMEWORKS=ON \
 -DBUILD_OMS=$BUILD_OMS \
 -DBUILD_CNES_PLUGIN=$BUILD_CNES_PLUGIN \
