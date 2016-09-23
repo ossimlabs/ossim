@@ -58,8 +58,8 @@ ossimCibCadrgTileSource::ossimCibCadrgTileSource()
     theTableOfContents(0),
     theEntryToRender(0),
     theEntryNumberToRender(1),
-    theTileSize(128, 128),
     theProductType(OSSIM_PRODUCT_TYPE_UNKNOWN),
+    theWorkFrame(0),
     theSkipEmptyCheck(false)
 {
    if (traceDebug())
@@ -71,15 +71,18 @@ ossimCibCadrgTileSource::ossimCibCadrgTileSource()
          << "OSSIM_ID:  " << OSSIM_ID << "\n";
 #endif      
    }
-   theWorkFrame = new ossimRpfFrame;
+
+   // Moved memory allocation to happen in first get tile. drb
+   
+   // theWorkFrame = new ossimRpfFrame;
    
    // a CADRG and CIBis a 64*64*12 bit buffer and must divide by 8 to
    // convert to bytes
-   theCompressedBuffer   = new ossim_uint8[(64*64*12)/8];
+   // theCompressedBuffer   = new ossim_uint8[(64*64*12)/8];
 
    // whether CIB or CADRG we will alocate the buffer
    // to the larger of the 2 (CADRG is 3 bands)
-   theUncompressedBuffer = new ossim_uint8[256*256*3];
+   // theUncompressedBuffer = new ossim_uint8[256*256*3];
                            
 }
 
@@ -175,11 +178,13 @@ bool ossimCibCadrgTileSource::open()
                      theProductType = OSSIM_PRODUCT_TYPE_CIB;
                      result = true;
                   }
-                  if ( result )
-                  {
-                     // This initializes tiles and buffers.
-                     allocateForProduct();
-                  }
+
+                  // Moved this code to be called on first get tile. drb
+                  // if ( result )
+                  // {
+                  // This initializes tiles and buffers.
+                  // allocateForProduct();
+                  // }
                }
             }
          }
@@ -232,6 +237,12 @@ void ossimCibCadrgTileSource::setSkipEmptyCheck( bool bSkipEmptyCheck )
 ossimRefPtr<ossimImageData> ossimCibCadrgTileSource::getTile(
    const  ossimIrect& rect, ossim_uint32 resLevel)
 {
+   if ( theTile.valid() == false )
+   {
+      // First time through.
+      allocateForProduct();
+   }
+   
    if (theTile.valid())
    {
       // Image rectangle must be set prior to calling getTile.
@@ -274,37 +285,46 @@ bool ossimCibCadrgTileSource::getTile(ossimImageData* result,
 
       if (!status) // Did not get an overview tile.
       {
-         status = true;
-
-         ossimIrect rect = result->getImageRectangle();
-
-         ossimIrect imageRect = getImageRectangle();
-
-         if ( rect.intersects(imageRect) )
+         if ( !theCompressedBuffer )
          {
-            //---
-            // Start with a blank tile in case there is not total coverage
-            // for rect.
-            //---
-            result->makeBlank();
-   
-            vector<ossimFrameEntryData> frames = getIntersectingEntries(rect);
-            if(frames.size() > 0)
+            // First time through.
+            allocateForProduct(); 
+         }
+
+         if ( theCompressedBuffer )
+         {
+            status = true;
+            
+            ossimIrect rect = result->getImageRectangle();
+            
+            ossimIrect imageRect = getImageRectangle();
+            
+            if ( rect.intersects(imageRect) )
             {
                //---
-               // Now lets render each frame.  Note we will have to find
-               // subframes
-               // that intersect the rectangle of interest for each frame.
+               // Start with a blank tile in case there is not total coverage
+               // for rect.
                //---
-               fillTile(rect, frames, result);
+               result->makeBlank();
                
-               // Revalidate tile status.
-               result->validate();
+               vector<ossimFrameEntryData> frames = getIntersectingEntries(rect);
+               if(frames.size() > 0)
+               {
+                  //---
+                  // Now lets render each frame.  Note we will have to find
+                  // subframes
+                  // that intersect the rectangle of interest for each frame.
+                  //---
+                  fillTile(rect, frames, result);
+                  
+                  // Revalidate tile status.
+                  result->validate();
+               }
             }
-         }
-         else
-         {
-            result->makeBlank();
+            else
+            {
+               result->makeBlank();
+            }
          }
       }
    }
@@ -416,12 +436,12 @@ ossimScalarType ossimCibCadrgTileSource::getOutputScalarType() const
 
 ossim_uint32 ossimCibCadrgTileSource::getTileWidth() const
 {
-   return theTileSize.x;
+   return getImageTileWidth();
 }
    
 ossim_uint32 ossimCibCadrgTileSource::getTileHeight() const
 {
-   return theTileSize.y;
+   return getImageTileHeight();
 }
 
 ossim_uint32 ossimCibCadrgTileSource::getCurrentEntry()const
@@ -1019,20 +1039,28 @@ void ossimCibCadrgTileSource::allocateForProduct()
    {
       return;
    }
-   if(theUncompressedBuffer)
+
+   if ( theWorkFrame )
    {
-      delete [] theUncompressedBuffer;
-      theUncompressedBuffer = 0;
-   }
+      delete theWorkFrame;
+   }  
+   theWorkFrame = new ossimRpfFrame;
+
    if(theCompressedBuffer)
    {
       delete [] theCompressedBuffer;
-      theCompressedBuffer = 0;
    }
-   
-   // a CADRG and CIBis a 64*64*12 bit buffer and must divide by 8 to
-   // convert to bytes
+
+   //---
+   // A CADRG and CIBis a 64*64*12 bit buffer and must divide by 8 to convert
+   // to bytes.
+   //---
    theCompressedBuffer   = new ossim_uint8[(64*64*12)/8];
+   
+   if(theUncompressedBuffer)
+   {
+      delete [] theUncompressedBuffer;
+   }
    if(theProductType == OSSIM_PRODUCT_TYPE_CIB)
    {
       theUncompressedBuffer = new ossim_uint8[256*256];
@@ -1040,7 +1068,7 @@ void ossimCibCadrgTileSource::allocateForProduct()
    else
    {
       theUncompressedBuffer = new ossim_uint8[256*256*3];
-   }
+   }   
    
    theTile = ossimImageDataFactory::instance()->create(this, this);
    theTile->initialize();
@@ -1133,12 +1161,12 @@ bool ossimCibCadrgTileSource::loadState(const ossimKeywordlist& kwl,
 
 ossim_uint32 ossimCibCadrgTileSource::getImageTileWidth() const
 {
-   return 256;
+   return 256; // ??? drb
 }
 
 ossim_uint32 ossimCibCadrgTileSource::getImageTileHeight() const
 {
-   return 256;
+   return 256; // ??? drb
 }
 
 bool ossimCibCadrgTileSource::isCib() const
