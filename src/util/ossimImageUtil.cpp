@@ -556,7 +556,6 @@ ossim_int32 ossimImageUtil::execute()
 
    // Get the number of "file*" keywords.
    ossim_uint32 fileCount = m_kwl->numberOf("file");
-   cout << "fileCount: " << fileCount << endl;
  
    if ( fileCount )
    {
