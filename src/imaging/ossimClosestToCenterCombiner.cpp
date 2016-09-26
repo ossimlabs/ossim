@@ -88,7 +88,7 @@ ossimRefPtr<ossimImageData> ossimClosestToCenterCombiner::getTile(const ossimIre
             {
                for(band = 0; band < bands; ++band)
                {
-                  srcBandIdx = ossim::min(normTileList[idx].theTile->getNumberOfBands(), band);
+                  srcBandIdx = ossim::min( (normTileList[idx].theTile->getNumberOfBands()-1), band );
                   
                   bandList[band][offset] = *(((ossim_float32*)normTileList[idx].theTile->getBuf(srcBandIdx))+offset);
                }
