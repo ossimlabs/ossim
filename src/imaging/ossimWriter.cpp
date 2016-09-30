@@ -185,8 +185,13 @@ bool ossimWriter::writeStreamTtbs()
    {
       std::vector<ossim_uint64>  tile_offsets;
       std::vector<ossim_uint64>  tile_byte_counts;
-      std::vector<ossim_float64> minBands;
-      std::vector<ossim_float64> maxBands;
+
+      //---
+      // Min/max arraya must start off empty for
+      // ossimImageData::computeMinMaxPix code.
+      //---
+      std::vector<ossim_float64> minBands(0);
+      std::vector<ossim_float64> maxBands(0);
       
       if ( writeTiffTilesBandSeparate(
               tile_offsets, tile_byte_counts, minBands, maxBands   ) == true )
@@ -527,6 +532,11 @@ bool ossimWriter::writeTiffTags( const std::vector<ossim_uint64>& tile_offsets,
       vs.push_back(1);
       vs.push_back((ossim_uint16)(mapProj->getPcsCode()));
 
+      vs.push_back(ossim::OPROJECTION_GEO_KEY); // 3074
+      vs.push_back(0);
+      vs.push_back(1);
+      vs.push_back((ossim_uint16)(mapProj->getPcsCode()));
+
       if ( mapProj->isGeographic() == false )
       {
          vs.push_back(ossim::OPROJ_LINEAR_UNITS_GEO_KEY); // 3076
@@ -568,7 +578,7 @@ bool ossimWriter::writeMinMaxTiffTags( const vector<ossim_float64>& minBands,
    {
       ossim_float64 minValue = *std::min_element(minBands.begin(), minBands.end());
       ossim_float64 maxValue = *std::max_element(maxBands.begin(), maxBands.end());
-      
+
       switch( theInputConnection->getOutputScalarType() )
       {
          case OSSIM_USHORT11:
@@ -628,11 +638,11 @@ bool ossimWriter::writeSMinSMaxTiffTags( const vector<ossim_float64>& minBands,
          {
             ossim_float32 v = static_cast<ossim_float32>(minValue);
             writeTiffTag<ossim_float32>( ossim::OTIFFTAG_SMINSAMPLEVALUE,
-                                         ossim::OTIFF_SHORT,
+                                         ossim::OTIFF_FLOAT,
                                          1, &v, arrayWritePos );
             v = static_cast<ossim_float32>(maxValue);
             writeTiffTag<ossim_float32>( ossim::OTIFFTAG_SMAXSAMPLEVALUE,
-                                         ossim::OTIFF_SHORT,
+                                         ossim::OTIFF_FLOAT,
                                          1, &v, arrayWritePos );
             break;
          }
@@ -708,8 +718,6 @@ bool ossimWriter::writeTiffTilesBandSeparate( std::vector<ossim_uint64>& tile_of
 
    tile_offsets.resize( TILES_TOTAL*BANDS );
    tile_byte_counts.resize( TILES_TOTAL*BANDS );
-   minBands.resize( BANDS );
-   maxBands.resize( BANDS );
 
    ossim_int64 ossimTileIndex    = 0;
    ossim_int64 tiffTileIndex     = 0;
@@ -729,7 +737,7 @@ bool ossimWriter::writeTiffTilesBandSeparate( std::vector<ossim_uint64>& tile_of
             << std::endl;
          return false;
       }
-
+      
       if ( ossimTileIndex == 0 )
       {
          tileSizeInBytes = (ossim_int64)id->getSizePerBandInBytes();
@@ -738,7 +746,7 @@ bool ossimWriter::writeTiffTilesBandSeparate( std::vector<ossim_uint64>& tile_of
 
       // Compute running min, max.
       id->computeMinMaxPix(minBands, maxBands);
-
+      
       // Band loop.
       for (ossim_int32 band=0; band < BANDS; ++band)
       {
