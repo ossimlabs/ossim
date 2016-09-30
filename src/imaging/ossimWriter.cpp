@@ -187,7 +187,7 @@ bool ossimWriter::writeStreamTtbs()
       std::vector<ossim_uint64>  tile_byte_counts;
 
       //---
-      // Min/max arraya must start off empty for
+      // Min/max arrays must start off empty for
       // ossimImageData::computeMinMaxPix code.
       //---
       std::vector<ossim_float64> minBands(0);
