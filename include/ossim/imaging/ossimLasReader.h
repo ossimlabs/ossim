@@ -272,8 +272,8 @@ private:
    /** @brief Get the scale for resLevel. */
    void getScale(ossimDpt& scale, ossim_uint32 resLevel) const;
 
-   /** @brief Sets m_scale data member and projection if projection is set. */
-   void setScale( const ossim_float64& scale );
+   /** @brief Sets m_gsd data member and projection if projection is set. */
+   void setGsd( const ossim_float64& gsd );
 
    void convertToMeters(ossim_float64& value) const;
 
@@ -289,7 +289,7 @@ private:
    ossimDpt                     m_lr;
    ossim_float64                m_maxZ;
    ossim_float64                m_minZ;
-   ossimDpt                     m_scale;
+   ossimDpt                     m_gsd;
    ossimRefPtr<ossimImageData>  m_tile;
    ossim_uint8                  m_entry;
    OpenThreads::Mutex           m_mutex;
