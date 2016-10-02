@@ -46,8 +46,8 @@ RTTI_DEF1(ossimLasReader, "ossimLasReader", ossimImageHandler)
 
 static ossimTrace traceDebug("ossimLasReader:debug");
 
-static const char SCALE_KW[] = "scale";
-static const char SCAN_KW[]  = "scan"; // boolean
+static const char GSD_KW[]  = "gsd";
+static const char SCAN_KW[] = "scan"; // boolean
 
 ossimLasReader::ossimLasReader()
    : ossimImageHandler(),
@@ -58,7 +58,7 @@ ossimLasReader::ossimLasReader()
      m_lr(),
      m_maxZ(0.0),
      m_minZ(0.0),
-     m_scale(),
+     m_gsd(),
      m_tile(0),
      m_entry(0),
      m_mutex(),
@@ -70,7 +70,7 @@ ossimLasReader::ossimLasReader()
    // Nan out as can be set in several places, i.e. setProperty,
    // loadState and initProjection.
    //---
-   m_scale.makeNan();
+   m_gsd.makeNan();
 }
 
 ossimLasReader::~ossimLasReader()
@@ -192,7 +192,7 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
 
    if ( m_hdr && result && (result->getScalarType() == OSSIM_FLOAT32) &&
         (result->getDataObjectStatus() != OSSIM_NULL) &&
-        !m_ul.hasNans() && !m_scale.hasNans() )
+        !m_ul.hasNans() && !m_gsd.hasNans() )
    {
       status = true;
       
@@ -223,7 +223,7 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
 
 #if 0  /* Please leave for debug. (drb) */
       cout << "m_ul: " << m_ul
-           << "\nm_scale: " << m_scale
+           << "\nm_gsd: " << m_gsd
            << "\nscale:   " << scale
            << "\nresult->getScalarType(): " << result->getScalarType()
            << "\nresult->getDataObjectStatus(): " << result->getDataObjectStatus()
@@ -316,7 +316,7 @@ ossim_uint32 ossimLasReader::getNumberOfLines(ossim_uint32 resLevel) const
    ossim_uint32 result = 0;
    if ( isOpen() )
    {
-      result = static_cast<ossim_uint32>(ceil(m_ul.y - m_lr.y) / m_scale.y);
+      result = static_cast<ossim_uint32>(ceil(m_ul.y - m_lr.y) / m_gsd.y);
       if (resLevel) result = (result>>resLevel);
    }
    return result;
@@ -327,7 +327,7 @@ ossim_uint32 ossimLasReader::getNumberOfSamples(ossim_uint32 resLevel) const
    ossim_uint32 result = 0;
    if ( isOpen() )
    {
-      result = static_cast<ossim_uint32>(ceil(m_lr.x - m_ul.x) / m_scale.x);
+      result = static_cast<ossim_uint32>(ceil(m_lr.x - m_ul.x) / m_gsd.x);
       if (resLevel) result = (result>>resLevel);
    }
    return result;
@@ -419,7 +419,37 @@ ossimRefPtr<ossimImageGeometry> ossimLasReader::getImageGeometry()
    {
       // Check for external geom:
       theGeometry = getExternalImageGeometry();
-      
+      if ( theGeometry.valid() == true )
+      {
+         // Picked up an external geometry file(dot.geom).
+         m_proj = theGeometry->getProjection();
+
+         ossimRefPtr<ossimMapProjection> proj = dynamic_cast<ossimMapProjection*>( m_proj.get() );
+         if ( proj.valid() == true )
+         {
+            if ( proj->isGeographic() )
+            {
+               m_units = OSSIM_DEGREES;
+               ossimGpt gpt(m_ul.y, m_ul.x, 0.0, proj->getDatum() );
+               proj->setUlTiePoints( gpt );
+               theGeometry->getDegreesPerPixel( m_gsd );
+            }
+            else
+            {
+               // Currently hard coding to meters. May need to add property to override this.
+               m_units = OSSIM_METERS;
+               proj->setUlTiePoints(m_ul);
+               theGeometry->getMetersPerPixel( m_gsd );
+            }
+
+            ossimIpt imgSize;
+            imgSize.x = (ossim_int32)getNumberOfSamples(0);
+            imgSize.y = (ossim_int32)getNumberOfLines(0);
+
+            theGeometry->setImageSize( imgSize );
+         }
+      }
+
       if ( !theGeometry )
       {
          theGeometry = new ossimImageGeometry();
@@ -480,7 +510,7 @@ ossim_uint32 ossimLasReader::getNumberOfDecimationLevels() const
 
 bool ossimLasReader::saveState(ossimKeywordlist& kwl, const char* prefix)const
 {
-   kwl.add( prefix, SCALE_KW, m_scale.toString().c_str(), true );
+   kwl.add( prefix, GSD_KW, m_gsd.toString().c_str(), true );
    kwl.add( prefix, SCAN_KW,  ossimString::toString(m_scan).c_str(), true );
    return ossimImageHandler::saveState(kwl, prefix);
 }
@@ -494,10 +524,10 @@ bool ossimLasReader::loadState(const ossimKeywordlist& kwl, const char* prefix)
       if ( result )
       {
          // Get our keywords:
-         const char* lookup = kwl.find(prefix, SCALE_KW);
+         const char* lookup = kwl.find(prefix, GSD_KW);
          if ( lookup )
          {
-            m_scale.toPoint( ossimString(lookup) );
+            m_gsd.toPoint( ossimString(lookup) );
          }
          lookup = kwl.find(prefix, SCAN_KW);
          if ( lookup )
@@ -514,14 +544,14 @@ void ossimLasReader::setProperty(ossimRefPtr<ossimProperty> property)
 {
    if ( property.valid() )
    {
-      if ( property->getName() == SCALE_KW )
+      if ( property->getName() == GSD_KW )
       {
          ossimString s;
          property->valueToString(s);
          ossim_float64 d = s.toFloat64();
          if ( ossim::isnan(d) == false )
          {
-            setScale( d );
+            setGsd( d );
          }
       }
       else if ( property->getName() == SCAN_KW )
@@ -540,9 +570,9 @@ void ossimLasReader::setProperty(ossimRefPtr<ossimProperty> property)
 ossimRefPtr<ossimProperty> ossimLasReader::getProperty(const ossimString& name)const
 {
    ossimRefPtr<ossimProperty> prop = 0;
-   if ( name == SCALE_KW )
+   if ( name == GSD_KW )
    {
-      ossimString value = ossimString::toString(m_scale.x);
+      ossimString value = ossimString::toString(m_gsd.x);
       prop = new ossimStringProperty(name, value);
    }
    else if ( name == SCAN_KW )
@@ -558,7 +588,7 @@ ossimRefPtr<ossimProperty> ossimLasReader::getProperty(const ossimString& name)c
 
 void ossimLasReader::getPropertyNames(std::vector<ossimString>& propertyNames)const
 {
-   propertyNames.push_back( ossimString(SCALE_KW) );
+   propertyNames.push_back( ossimString(GSD_KW) );
    propertyNames.push_back( ossimString(SCAN_KW) );
    ossimImageHandler::getPropertyNames(propertyNames);
 }
@@ -603,15 +633,15 @@ bool ossimLasReader::initProjection()
          ossimGpt gpt(m_ul.y, m_ul.x, 0.0, proj->getDatum() );
          proj->setUlTiePoints( gpt );
 
-         if ( m_scale.hasNans() )
+         if ( m_gsd.hasNans() )
          {
-            m_scale = proj->getDecimalDegreesPerPixel();
-            if ( m_scale.hasNans() || !m_scale.x || !m_scale.y )
+            m_gsd = proj->getDecimalDegreesPerPixel();
+            if ( m_gsd.hasNans() || !m_gsd.x || !m_gsd.y )
             {
                // Set to some default:
-               m_scale.x = 0.000008983; // About 1 meter at the Equator.
-               m_scale.y = m_scale.x;
-               proj->setDecimalDegreesPerPixel( m_scale );
+               m_gsd.x = 0.000008983; // About 1 meter at the Equator.
+               m_gsd.y = m_gsd.x;
+               proj->setDecimalDegreesPerPixel( m_gsd );
             }
             
          }
@@ -620,15 +650,15 @@ bool ossimLasReader::initProjection()
       {
          proj->setUlTiePoints(m_ul);
 
-         if ( m_scale.hasNans() )
+         if ( m_gsd.hasNans() )
          {
-            m_scale = proj->getMetersPerPixel();
-            if ( m_scale.hasNans() || !m_scale.x || !m_scale.y )
+            m_gsd = proj->getMetersPerPixel();
+            if ( m_gsd.hasNans() || !m_gsd.x || !m_gsd.y )
             {
                // Set to some default:
-               m_scale.x = 1.0;
-               m_scale.y = 1.0;
-               proj->setMetersPerPixel( m_scale );
+               m_gsd.x = 1.0;
+               m_gsd.y = 1.0;
+               proj->setMetersPerPixel( m_gsd );
             }
          }
       }
@@ -638,7 +668,7 @@ bool ossimLasReader::initProjection()
       result = false;
       m_ul.makeNan();
       m_lr.makeNan();
-      m_scale.makeNan();
+      m_gsd.makeNan();
       
       ossimNotify(ossimNotifyLevel_WARN)
          << "ossimLasReader::initProjection WARN Could not cast to map projection!"
@@ -1113,27 +1143,27 @@ void ossimLasReader::getScale(ossimDpt& scale, ossim_uint32 resLevel) const
 {
    // std::pow(2.0, 0) returns 1.
    ossim_float64 d = std::pow(2.0, static_cast<double>(resLevel));
-   scale.x = m_scale.x * d;
-   scale.y = m_scale.y * d;
+   scale.x = m_gsd.x * d;
+   scale.y = m_gsd.y * d;
 }
 
-void ossimLasReader::setScale( const ossim_float64& scale )
+void ossimLasReader::setGsd( const ossim_float64& gsd )
 {
-   m_scale.x = scale;
-   m_scale.y = m_scale.x;
+   m_gsd.x = gsd;
+   m_gsd.y = m_gsd.x;
 
-   if ( m_proj.valid() && ( m_scale.hasNans() == false ) )
+   if ( m_proj.valid() && ( m_gsd.hasNans() == false ) )
    {
       ossimMapProjection* proj = dynamic_cast<ossimMapProjection*>( m_proj.get() );
-      if ( proj && ( m_scale.hasNans() == false ) )
+      if ( proj && ( m_gsd.hasNans() == false ) )
       {
          if ( proj->isGeographic() )
          {
-            proj->setDecimalDegreesPerPixel( m_scale );
+            proj->setDecimalDegreesPerPixel( m_gsd );
          }
          else
          {
-            proj->setMetersPerPixel( m_scale );
+            proj->setMetersPerPixel( m_gsd );
          }
       }
    }

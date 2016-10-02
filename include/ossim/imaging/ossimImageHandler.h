@@ -633,7 +633,11 @@ public:
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
    
    /**
-    * Returns the image file with extension set.
+    * @brief Returns the image file with extension set using supplentary
+    * directory for dirname if set.
+    *
+    * Default behaviour is to add the "_en.ext" only if the file is
+    * multi-entry. Use set_e0_prefix to override this.
     *
     * Examples:
     * 
@@ -654,11 +658,30 @@ public:
     * @param set_e0_prefix If true and the number of entries = 1 then
     * "foo.geom" would come out "foo_e0.geom" instead. Default = false.
     * 
-    * @return theImageFile with sent extension.
+    * @return theImageFile with the extension replaced with ext.
     */
    ossimFilename getFilenameWithThisExtension(const ossimString& ext,
                                               bool set_e0_prefix=false) const;
-   
+
+   /**
+    * Returns the image file with extension set using supplentary directory
+    * for dirname if set. This is like the getFilenameWithThisExtension(...)
+    * method except it does NOT add the "_en" if image is multi entry.
+    *
+    * Examples:
+    * 
+    * - theImageFile          = "foo.tif"
+    * - ext parameter         = "geom"
+    * - return of method will = "foo.geom"
+    *
+    * @param ext Extension to tack onto file.  Can have or have not ".", it
+    * will be added if "." is not the first character.
+    *
+    * @param f Initialized by this.
+    */
+   void getFilenameWithThisExt( const ossimString& ext,
+                                ossimFilename& f ) const;
+     
    ossim_uint32 getStartingResLevel() const;
    
    void setStartingResLevel(ossim_uint32 level);
@@ -783,6 +806,18 @@ protected:
     */
    virtual bool setOutputBandList(const std::vector<ossim_uint32>& inBandList,
                                   std::vector<ossim_uint32>& outBandList);
+
+   
+   /**
+    * @brief Get filename with no extension, using supplentary directory for
+    * dirname if set.
+    *
+    * Examples:
+    * 
+    * f = "foo.tif"
+    * f = "foo"
+    */
+   void getFilenameWithNoExtension( ossimFilename& f ) const;
 
    ossimFilename theImageFile;
    ossimFilename theOverviewFile;

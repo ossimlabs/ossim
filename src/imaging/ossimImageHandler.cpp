@@ -708,12 +708,16 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getExternalImageGeometry() co
 
    // No geometry object has been set up yet. Check for external geometry file.
    // Try "foo.geom" if image is "foo.tif":
-   ossimFilename filename = getFilenameWithThisExtension(ossimString(".geom"), false);
+   ossimFilename filename;
+   getFilenameWithThisExt( ossimString(".geom"), filename );
+
    if(!filename.exists())
    {
       // Try "foo_e0.tif" if image is "foo.tif" where "e0" is entry index.
       filename = getFilenameWithThisExtension(ossimString(".geom"), true);
    }
+
+#if 0 /* getgetFilenameWithThisExt... methods tack on sup dir if set. drb */
    if(!filename.exists())
    {
       // Try supplementary data directory for remote geometry:
@@ -726,6 +730,7 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getExternalImageGeometry() co
       filename = getFilenameWithThisExtension(ossimString(".geom"), true);
       filename = theSupplementaryDirectory.dirCat(filename.file());
    }
+#endif
 
    if(filename.exists())
    {
@@ -1581,11 +1586,51 @@ ossimFilename ossimImageHandler::getFilenameWithThisExtension(
    // Get the image file.
    ossimFilename f = getFilename();
 
-   // If the supplementary directory is set, find the extension
-   // at that location instead of at the default.
+   getFilenameWithNoExtension( f );
+
+   if (set_e0_prefix || (getNumberOfEntries() > 1))
+   {
+      f += "_e";
+      f += ossimString::toString(getCurrentEntry());
+   }
+   
+   if (ext.size())
+   {
+      if (ext[0] != '.')
+      {
+         f += ".";
+      }
+      f += ext;
+   }
+   return f;
+}
+
+void ossimImageHandler::getFilenameWithThisExt( const ossimString& ext,
+                                                ossimFilename& f ) const
+{
+   // Get the image file.
+   f = getFilename();
+
+   getFilenameWithNoExtension( f );
+
+   if (ext.size())
+   {
+      if (ext[0] != '.')
+      {
+         f += ".";
+      }
+      f += ext;
+   } 
+}
+
+void ossimImageHandler::getFilenameWithNoExtension( ossimFilename& f ) const
+{
+   //---
+   // If the supplementary directory is set, find the extension at that
+   // location instead of at the default.
+   //---
    if ( theSupplementaryDirectory.size() )
    {
-      
       ossimString drivePart;
       ossimString pathPart;
       ossimString filePart;
@@ -1604,21 +1649,6 @@ ossimFilename ossimImageHandler::getFilenameWithThisExtension(
 
    // Wipe out the extension.
    f.setExtension("");
-
-   if (set_e0_prefix || (getNumberOfEntries() > 1))
-   {
-      f += "_e";
-      f += ossimString::toString(getCurrentEntry());
-   }
-   if (ext.size())
-   {
-      if (ext[static_cast<std::string::size_type>(0)] != '.')
-      {
-         f += ".";
-      }
-      f += ext;
-   }
-   return f;
 }
 
 bool ossimImageHandler::getOverviewTile(ossim_uint32 resLevel,

@@ -167,7 +167,7 @@ ossimHistogram::ossimHistogram(const double* data, ossim_uint32 size, ossim_uint
    delta = (vmax - vmin) / num;
    vals = new float [num];
    counts = new float [num];
-   for (ossim_uint32 i=0; i<num; i++)
+   for (ossim_int32 i=0; i<num; ++i)
    {
       vals[i] = vmin + delta * (i + 0.5);
       counts[i] = 0.0;
