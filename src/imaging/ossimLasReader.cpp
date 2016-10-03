@@ -166,6 +166,11 @@ void ossimLasReader::close()
 ossimRefPtr<ossimImageData> ossimLasReader::getTile(
    const  ossimIrect& tile_rect, ossim_uint32 resLevel)
 {
+   if ( m_tile.valid() == false )
+   {
+      initTile(); // First time through.
+   }
+   
    if ( m_tile.valid() )
    {
       // Image rectangle must be set prior to calling getTile.
@@ -427,6 +432,21 @@ ossimRefPtr<ossimImageGeometry> ossimLasReader::getImageGeometry()
          ossimRefPtr<ossimMapProjection> proj = dynamic_cast<ossimMapProjection*>( m_proj.get() );
          if ( proj.valid() == true )
          {
+            // Set the units:
+            if ( proj->isGeographic() )
+            {
+               m_units = OSSIM_DEGREES;
+            }
+            else
+            {
+               // Currently hard coding to meters. May need to add property to override this.
+               m_units = OSSIM_METERS;
+            }
+
+            // Call initValues to set the tie point / bounds:
+            initValues();
+
+            // Set the tie and gsd:
             if ( proj->isGeographic() )
             {
                m_units = OSSIM_DEGREES;
@@ -599,17 +619,34 @@ bool ossimLasReader::init()
 
    if ( isOpen() )
    {
-      result = parseVarRecords();
-
-      if ( !result )
+      // Check for external geometry file for projection stuff.
+      ossimFilename geomFile;
+      getFilenameWithThisExt( ossimString(".geom" ), geomFile );
+      if ( geomFile.exists() == true )
       {
-         result = initFromExternalMetadata(); // Checks for external FGDC text file.
+         // Call get image geometry to initialize ourself.
+         ossimRefPtr<ossimImageGeometry> geom = getImageGeometry();
+         if ( geom.valid() == true )
+         {
+            // Check for map projection.
+            ossimRefPtr<ossimProjection> proj = geom->getProjection();
+            if ( proj.valid() == true )
+            {
+               if ( dynamic_cast<ossimMapProjection*>( proj.get() ) )
+               {
+                  result = true;
+               }
+            }
+         }
       }
 
-      // There is nothing we can do if parseVarRecords fails.
-      if ( result )
-      {
-         initTile();
+      if ( !result )
+      {     
+         result = parseVarRecords();
+         if ( !result )
+         {
+            result = initFromExternalMetadata(); // Checks for external FGDC text file.
+         }
       }
    }
    
