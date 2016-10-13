@@ -225,6 +225,9 @@ ossimProjection* ossimWktProjectionFactory::createProjection(const ossimKeywordl
    // Use EPSG if determined:
    if (!epsg_code.empty())
    {
+      // Strip quotes if any:
+      epsg_code.trim( ossimString("\"") );
+
       proj = ossimEpsgProjectionDatabase::instance()->findProjection(epsg_code.toUInt32());
       if (proj)
          return proj;

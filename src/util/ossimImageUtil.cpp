@@ -564,18 +564,6 @@ ossim_int32 ossimImageUtil::execute()
          m_fileWalker = new ossimFileWalker();
       }
  
-      if ( !getOverrideFilteredImagesFlag() )
-      {
-         if ( m_filteredImages.empty() )
-         {
-            initializeDefaultFilterList();
-         }
-         if ( m_fileWalker->getFilteredExtensions().empty() )
-         {
-            m_fileWalker->initializeDefaultFilterList();
-         }
-      }
- 
       m_fileWalker->setNumberOfThreads( getNumberOfThreads() );
  
       // Must set this so we can stop recursion on directory based images.
@@ -605,6 +593,24 @@ ossim_int32 ossimImageUtil::execute()
             ++i;
             if ( i > (fileCount + 100) ) break;
          }
+
+         //---
+         // If the file count is one and it is not a directory, we will assume
+         // the caller wanted to process that file. So leave the filter list
+         // blank.
+         //---
+         if ( (getOverrideFilteredImagesFlag() == false) && files.size() &&
+              ( (files.size() > 1) || (files[0].isDir() == true) ) )
+         {
+            if ( m_filteredImages.empty() )
+            {
+               initializeDefaultFilterList();
+            }
+            if ( m_fileWalker->getFilteredExtensions().empty() )
+            {
+               m_fileWalker->initializeDefaultFilterList();
+            }
+         }         
 
          // Process the files:
          m_fileWalker->walk( files ); 
