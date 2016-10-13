@@ -1,8 +1,11 @@
 ### GoCD Status builds 
 Resource | *master* | *dev* | 
 ------------ | ------------- | -------------
-centos6 | ![centos6 Status](http://omar.ossim.org/gocd/status/centos6_master_status.svg) | ![centos6 Status](http://omar.ossim.org/gocd/status/centos6_dev_status.svg)
-centos7 | ![centos7 Status](http://omar.ossim.org/gocd/status/centos7_master_status.svg) | ![centos7 Status](http://omar.ossim.org/gocd/status/centos7_dev_status.svg)
+OSSIM Dev Build Centos7 | | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-dev)
+Batch Test Dev| | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-test-dev)
+RPMS Dev Build Centos7 | | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=rpm-dev)
+RPMS Publish Centos7 | | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=rpm-publish-dev)
+
  
 <a href="https://scan.coverity.com/projects/ossimlabs">
   <img alt="Coverity Scan Build Status"
