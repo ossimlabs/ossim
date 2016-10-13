@@ -1,10 +1,10 @@
 ### GoCD Status builds 
 Resource | *master* | *dev* | 
 ------------ | ------------- | -------------
-OSSIM Dev Build Centos7 | | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-dev)
-Batch Test Dev| | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-test-dev)
-RPMS Dev Build Centos7 | | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=rpm-dev)
-RPMS Publish Centos7 | | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=rpm-publish-dev)
+OSSIM Dev Build Centos7 | | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-dev&style=plastic)
+Batch Test Dev| | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-test-dev&style=plastic)
+RPMS Dev Build Centos7 | | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=rpm-dev&style=plastic)
+RPMS Publish Centos7 | | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=rpm-publish-dev&style=plastic)
 
  
 <a href="https://scan.coverity.com/projects/ossimlabs">
