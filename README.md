@@ -40,7 +40,7 @@ If you want to contribute code, you'll need to:
  * test your modification, 
  * then create a pull request. 
 
-The moderators will review the request and merge your changes to "dev". At that point, the automated continuous integration system (GoCD) will get triggered to perform a build and test. If there are any failures, your merge commit will be backed out.
+The moderators will review the request and merge your changes to "dev". At that point, the automated continuous integration system (Jenkins) will get triggered to perform a build and test. If there are any failures, your merge commit will be backed out.
 
 #How to Build
 The easy way is to just run the script in `ossim/scripts/build.sh`.  This approach should work for the default build configuration. This currently works for both linux and Mac. We hope to soon have a Windows `build.bat` file and world peace. Assuming all dependencies were met and no compile/link errors occured, this script will generate all build binaries under a sibling directory to the ossim repo directory, namely, `ossim/../build`. See the section on environment variables below for options on customizing the build location.
