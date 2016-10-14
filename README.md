@@ -1,4 +1,4 @@
-### GoCD Status builds 
+### Jenkins Build Status 
 Resource | *master* | *dev* | 
 ------------ | ------------- | -------------
 OSSIM Dev Build Centos7 | | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-dev&style=plastic)
