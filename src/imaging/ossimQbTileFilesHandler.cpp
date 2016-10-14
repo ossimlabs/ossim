@@ -22,6 +22,7 @@
 #include <ossim/base/ossimPolygon.h>
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimTrace.h>
+#include <ossim/base/ossim2dTo2dShiftTransform.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
@@ -223,6 +224,14 @@ ossimRefPtr<ossimImageGeometry> ossimQbTileFilesHandler::getImageGeometry()
                   }
                }
             }
+         }
+
+         if ( (m_fullImgRect.ul().x != 0) || (m_fullImgRect.ul().y != 0) )
+         {
+            // Set sub image offset.
+            ossimRefPtr<ossim2dTo2dShiftTransform> xfrm =
+               new ossim2dTo2dShiftTransform( m_fullImgRect.ul() );
+            theGeometry->setTransform( xfrm.get() );
          }
       }
             

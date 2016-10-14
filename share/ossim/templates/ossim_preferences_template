@@ -285,6 +285,7 @@ geoid_egm_96_grid: $(OSSIM_INSTALL_PREFIX)/share/ossim/geoids/egm96.grd
 // ---
 // font.file1: /usr/share/fonts/default/Type1/b018032l.pfb
 // font.dir1: /usr/share/fonts/default/Type1
+font.dir0: $(OSSIM_INSTALL_PREFIX)/share/ossim/fonts
 
 
 //---

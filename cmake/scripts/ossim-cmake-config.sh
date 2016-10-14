@@ -219,6 +219,9 @@ elif [ -d /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/D
   CMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
 fi  
 
+if [ -d /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk ] ; then
+  export CMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+fi
 echo "Generating Makefiles in" $OSSIM_BUILD_DIR
 
 # CMAKE command 

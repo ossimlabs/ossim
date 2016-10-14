@@ -224,6 +224,10 @@ INSTALL(FILES ${ossim_projection_codes_csv} DESTINATION share/ossim/projection C
 FILE(GLOB ossim_util_api_json ${${PROJECT_NAME}_SOURCE_DIR}/share/ossim/util/*.json)
 INSTALL(FILES ${ossim_util_api_json} DESTINATION share/ossim/util COMPONENT ossim)
 
+# 3) Fonts
+FILE(GLOB ossim_fonts ${${PROJECT_NAME}_SOURCE_DIR}/share/ossim/fonts/*.ttf)
+INSTALL(FILES ${ossim_fonts} DESTINATION share/ossim/fonts COMPONENT ossim)
+
 ###################### OUTPUT GENERAL VARIABLE SETTINGS #######################
 
 MESSAGE( STATUS "OSSIM_REVISION                  = ${OSSIM_REVISION}" )

@@ -1100,30 +1100,35 @@ ossim_int32 ossimNitfImageHeaderV2_1::getNumberOfPixelsPerBlockVert()const
 
 ossimIrect ossimNitfImageHeaderV2_1::getImageRect()const
 {
-   ossimDpt ul(ossimString((char*)(&theImageLocation[5])).toDouble(),
-               ossimString((char*)theImageLocation,
-                           (char*)(&theImageLocation[5])).toDouble());
-   
+//   ossimDpt ul(ossimString((char*)(&theImageLocation[5])).toDouble(),
+//               ossimString((char*)theImageLocation,
+//                           (char*)(&theImageLocation[5])).toDouble());
+   ossimDpt ul(0.0,0.0);   
     double rows = ossimString(theSignificantRows).toDouble();
     double cols = ossimString(theSignificantCols).toDouble();
 
-    ossimDpt lr(ul.x + cols-1,
-                ul.y + rows-1);
+//    ossimDpt lr(ul.x + cols-1,
+//                ul.y + rows-1);
+    ossimDpt lr(cols-1,
+                rows-1);
    
     return ossimIrect(ul, lr);
 }
 
 ossimIrect ossimNitfImageHeaderV2_1::getBlockImageRect()const
 {
-   ossimDpt ul(ossimString((char*)(&theImageLocation[5])).toDouble(),
-               ossimString((char*)theImageLocation,
-                           (char*)(&theImageLocation[5])).toDouble());
+//   ossimDpt ul(ossimString((char*)(&theImageLocation[5])).toDouble(),
+//               ossimString((char*)theImageLocation,
+//g                           (char*)(&theImageLocation[5])).toDouble());
+   ossimDpt ul(0.0,0.0);   
    
    double rows = getNumberOfPixelsPerBlockVert()*getNumberOfBlocksPerCol();
    double cols = getNumberOfPixelsPerBlockHoriz()*getNumberOfBlocksPerRow();;
    
-   ossimDpt lr(ul.x + cols-1,
-               ul.y + rows-1);
+//   ossimDpt lr(ul.x + cols-1,
+//               ul.y + rows-1);
+   ossimDpt lr(cols-1,
+               rows-1);
    
     return ossimIrect(ul, lr);
 }
