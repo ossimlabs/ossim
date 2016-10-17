@@ -48,11 +48,15 @@ if [ -z $1 ]; then
 fi
 
 # Loop over all ossim repos in working dir:
-find . -maxdepth 1 -type d -name "ossim*" -exec bash -c "do_git {} $1 $2 $3 $4 $5" \;
+find . -maxdepth 1 -type d -name "ossim*" -exec bash -c "do_git {} $*" \;
 
 # Check OMAR as well...
 if [ -d omar ]; then
-  bash -c "do_git omar $1 $2 $3 $4 $5"
+  bash -c "do_git omar $*"
+fi
+
+if [ -d o2-paas ]; then
+  bash -c "do_git o2-paas $*"
 fi
 
 
