@@ -2293,12 +2293,12 @@ ossim_uint32 ossimNitfTileSource::getImageTileHeight() const
 
 ossimString ossimNitfTileSource::getShortName()const
 {
-   return ossimString("nitf");
+   return ossimString("ossim_nitf");
 }
 
 ossimString ossimNitfTileSource::getLongName()const
 {
-   return ossimString("nitf reader");
+   return ossimString("ossim nitf reader");
 }
 
 ossim_uint32 ossimNitfTileSource::getCurrentEntry() const
