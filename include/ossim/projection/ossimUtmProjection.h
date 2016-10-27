@@ -87,7 +87,18 @@ public:
    //! Returns TRUE if principal parameters are within epsilon tolerance.
    virtual bool operator==(const ossimProjection& projection) const;
 
+   /**
+    * @brief Returns the EPSG PCS code based on datum, zone, and hemisphere.
+    *
+    * This overrides ossimMapProjection::getPcsCode(). Sets
+    * ossimMapProjection::thePcsCode on success.
+    *
+    * @return code on success, 0 if datum is not set.
+    */
+   virtual ossim_uint32 getPcsCode() const;
+   
 private:
+   
    /*_____________GEOTRANS_______________*/
    
    /**
