@@ -17,6 +17,43 @@
 #include <memory>
 #include <vector>
 
+namespace ossim
+{
+   class OSSIM_DLL StreamFactoryRegistry : public StreamFactoryBase
+   {
+   public:
+      static StreamFactoryRegistry* instance();
+      virtual ~StreamFactoryRegistry();
+   
+      void registerFactory(StreamFactoryBase* factory);
+
+      virtual std::shared_ptr<ossim::istream>
+         createIstream(const ossimString& connectionString,
+                       std::ios_base::openmode openMode) const;
+      
+      virtual std::shared_ptr<ossim::ostream>
+         createOstream(const ossimString& connectionString,
+                       std::ios_base::openmode openMode) const;
+      
+      virtual std::shared_ptr<ossim::iostream>
+         createIOstream(const ossimString& connectionString,
+                        std::ios_base::openmode openMode) const;
+   
+   protected:
+      StreamFactoryRegistry();
+      
+   private:
+      
+      /** @brief copy constructor hidden from use */
+      StreamFactoryRegistry(const StreamFactoryRegistry&);
+      
+      std::vector<StreamFactoryBase*> m_factoryList;
+      static StreamFactoryRegistry*   m_instance;
+   };
+   
+} // End: namespace ossim
+
+// Deprecated code...
 class OSSIM_DLL ossimStreamFactoryRegistry : public ossimStreamFactoryBase
 {
 public:
