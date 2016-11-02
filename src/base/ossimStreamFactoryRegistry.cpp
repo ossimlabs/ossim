@@ -30,7 +30,9 @@ ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::instance()
    if(!m_instance)
    {
       m_instance = new ossim::StreamFactoryRegistry();
-      // m_instance->registerFactory(ossimStreamFactory::instance());
+
+      // Add factory from the core.
+      m_instance->registerFactory(ossim::StreamFactory::instance());
    }
 
    return m_instance;

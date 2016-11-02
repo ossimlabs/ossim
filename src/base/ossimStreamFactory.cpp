@@ -21,6 +21,60 @@
 
 #include <fstream>
 
+
+ossim::StreamFactory* ossim::StreamFactory::m_instance = 0;
+
+ossim::StreamFactory::~StreamFactory()
+{
+}
+
+ossim::StreamFactory* ossim::StreamFactory::instance()
+{
+   if(!m_instance)
+   {
+      m_instance = new ossim::StreamFactory();
+      // m_instance->registerFactory(ossimStreamFactory::instance());
+   }
+
+   return m_instance;
+}
+
+std::shared_ptr<ossim::istream> ossim::StreamFactory::createIstream(
+   const ossimString& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
+{
+   std::shared_ptr<ossim::istream> result(0);
+   return result;
+}
+      
+std::shared_ptr<ossim::ostream> ossim::StreamFactory::createOstream(
+   const ossimString& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
+{
+   std::shared_ptr<ossim::ostream> result(0);
+   return result;
+}
+
+std::shared_ptr<ossim::iostream> ossim::StreamFactory::createIOstream(
+   const ossimString& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
+{
+   std::shared_ptr<ossim::iostream> result(0);
+   return result;
+}
+
+// Hidden from use:
+ossim::StreamFactory::StreamFactory()
+{
+}
+
+// Hidden from use:
+ossim::StreamFactory::StreamFactory(const ossim::StreamFactory& )
+{
+}
+
+
+
+
+
+// Deprecated code...
 ossimStreamFactory* ossimStreamFactory::theInstance = 0;
 
 ossimStreamFactory::ossimStreamFactory()
