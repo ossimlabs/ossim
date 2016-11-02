@@ -5,8 +5,8 @@
 // Author: Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimStreamFactoryRegistry.cpp 22648 2014-02-28 14:34:29Z gpotts $
-//
+// $Id$
+
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimStreamFactory.h>
 #include <ossim/base/ossimIoStream.h>
@@ -57,6 +57,26 @@ std::shared_ptr<ossim::iostream> ossim::StreamFactoryRegistry::createIOstream(
    return result;
 }
 
+void ossim::StreamFactoryRegistry::registerFactory(ossim::StreamFactoryBase* factory)
+{
+   std::vector<ossim::StreamFactoryBase*>::iterator iter = std::find(
+      m_factoryList.begin(), m_factoryList.end(), factory);
+   if(iter == m_factoryList.end())
+   {
+      m_factoryList.push_back(factory);
+   }
+}
+
+void ossim::StreamFactoryRegistry::unregisterFactory(StreamFactoryBase* factory)
+{
+   // OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+   std::vector<ossim::StreamFactoryBase*>::iterator iter = std::find(
+      m_factoryList.begin(), m_factoryList.end(), factory);
+   if(iter != m_factoryList.end())
+   {
+      m_factoryList.erase( iter );
+   }
+}
 
 // Deprecated code:
 ossimStreamFactoryRegistry* ossimStreamFactoryRegistry::theInstance = 0;

@@ -10,6 +10,7 @@
 #ifndef ossimStreamFactoryRegistry_HEADER
 #define ossimStreamFactoryRegistry_HEADER 1
 
+#include <ossim/base/ossimFactoryListInterface.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimStreamFactoryBase.h>
@@ -26,6 +27,7 @@ namespace ossim
       virtual ~StreamFactoryRegistry();
    
       void registerFactory(StreamFactoryBase* factory);
+      void unregisterFactory(StreamFactoryBase* factory);
 
       virtual std::shared_ptr<ossim::istream>
          createIstream(const ossimString& connectionString,
@@ -48,6 +50,7 @@ namespace ossim
       StreamFactoryRegistry(const StreamFactoryRegistry&);
       
       std::vector<StreamFactoryBase*> m_factoryList;
+
       static StreamFactoryRegistry*   m_instance;
    };
    
