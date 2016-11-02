@@ -14,7 +14,6 @@
 #ifndef ossimStreamFactoryBase_HEADER
 #define ossimStreamFactoryBase_HEADER 1
 
-
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIoStream.h>
@@ -22,7 +21,28 @@
 #include <memory>
 
 class ossimFilename;
-class ossimIStream;
+class ossimString;
+
+namespace ossim
+{
+   class OSSIM_DLL StreamFactoryBase
+   {
+   public:
+      virtual ~StreamFactoryBase(){}
+      
+      virtual std::shared_ptr<ossim::istream>
+         createIstream(const ossimString& connectionString,
+                       std::ios_base::openmode openMode) const=0;
+
+      virtual std::shared_ptr<ossim::ostream>
+         createOstream(const ossimString& connectionString,
+                       std::ios_base::openmode openMode) const=0;
+
+      virtual std::shared_ptr<ossim::iostream>
+         createIOstream(const ossimString& connectionString,
+                        std::ios_base::openmode openMode) const=0;
+   };
+}
 
 class OSSIM_DLL ossimStreamFactoryBase
 {
