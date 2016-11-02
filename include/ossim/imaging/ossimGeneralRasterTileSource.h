@@ -21,8 +21,8 @@
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/imaging/ossimGeneralRasterInfo.h>
+#include <memory>
 #include <vector>
-  
 
 class  ossimImageData;
 

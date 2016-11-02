@@ -14,10 +14,12 @@
 #ifndef ossimStreamFactoryBase_HEADER
 #define ossimStreamFactoryBase_HEADER 1
 
-#include <iosfwd>
+
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIoStream.h>
+#include <iosfwd>
+#include <memory>
 
 class ossimFilename;
 class ossimIStream;

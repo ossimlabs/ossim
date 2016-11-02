@@ -25,6 +25,7 @@
 #include <ossim/support_data/ossimNitfTextHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfDataExtensionSegmentV2_1.h>
 #include <iosfwd>
+#include <memory>
 
 class ossimProjection;
 

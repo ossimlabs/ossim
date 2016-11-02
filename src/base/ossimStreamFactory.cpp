@@ -45,7 +45,17 @@ ossimStreamFactory* ossimStreamFactory::instance()
 std::shared_ptr<ossim::ifstream> ossimStreamFactory::createIFStream(
    const ossimFilename& file, std::ios_base::openmode openMode) const
 {
-   return std::make_shared<ossim::ifstream>(ossim::ifstream(file.c_str(), openMode));
+   std::shared_ptr<ossim::ifstream> result(0);
+
+   if ( file.exists() )
+   {
+      result = std::make_shared<ossim::ifstream>(ossim::ifstream(file.c_str(), openMode));
+      if ( result->is_open() == false )
+      {
+         result.reset();
+      }
+   }
+   return result;
 }
 
 ossimRefPtr<ossimIFStream> ossimStreamFactory::createNewIFStream(
