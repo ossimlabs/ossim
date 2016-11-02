@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2005 Garrett Potts
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,16 +9,17 @@
 //
 //
 //*******************************************************************
-//  $Id: ossimStreamFactory.cpp 22655 2014-02-28 17:44:39Z gpotts $
-//
-#include <ossim/base/ossimStreamFactory.h>
-#include <fstream>
+// $Id$
+
 #include <ossim/ossimConfig.h>
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimStreamFactory.h>
+
 #if OSSIM_HAS_LIBZ
 #include <ossim/base/ossimGzStream.h>
 #endif
 
+#include <fstream>
 
 ossimStreamFactory* ossimStreamFactory::theInstance = 0;
 
@@ -39,6 +40,12 @@ ossimStreamFactory* ossimStreamFactory::instance()
    }
 
    return theInstance;
+}
+
+std::shared_ptr<ossim::ifstream> ossimStreamFactory::createIFStream(
+   const ossimFilename& file, std::ios_base::openmode openMode) const
+{
+   return std::make_shared<ossim::ifstream>(ossim::ifstream(file.c_str(), openMode));
 }
 
 ossimRefPtr<ossimIFStream> ossimStreamFactory::createNewIFStream(

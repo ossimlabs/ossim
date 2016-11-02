@@ -1,29 +1,30 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimNitfWriter.h 22420 2013-09-26 16:42:56Z gpotts $
-#ifndef ossimNitfWriter_HEADER
-#define ossimNitfWriter_HEADER
+//  $Id$
 
-#include <iosfwd>
+#ifndef ossimNitfWriter_HEADER
+#define ossimNitfWriter_HEADER 1
+
 #include <ossim/imaging/ossimNitfWriterBase.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimKeywordlist.h>
-#include <ossim/projection/ossimMapProjectionInfo.h>
 #include <ossim/base/ossimRgbLutDataObject.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/projection/ossimMapProjectionInfo.h>
 #include <ossim/support_data/ossimNitfFileHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfTextHeaderV2_0.h>
 #include <ossim/support_data/ossimNitfTextHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfDataExtensionSegmentV2_1.h>
-#include <ossim/base/ossimIoStream.h>
+#include <iosfwd>
 
 class ossimProjection;
 
@@ -155,7 +156,7 @@ protected:
    /** Currently disabled... */
    // virtual void addStandardTags();
 
-   ossimOFStream64*                      m_outputStream;
+   std::shared_ptr<ossim::ofstream>      m_str;
    ossimRefPtr<ossimNitfFileHeaderV2_1>  m_fileHeader;
    ossimRefPtr<ossimNitfImageHeaderV2_1> m_imageHeader;
    std::vector<ossimNitfDataExtensionSegmentV2_1> m_dataExtensionSegments;

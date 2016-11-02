@@ -36,6 +36,25 @@ ossimStreamFactoryRegistry* ossimStreamFactoryRegistry::instance()
    return theInstance;
 }
 
+std::shared_ptr<ossim::ifstream> ossimStreamFactoryRegistry::createIFStream(
+   const ossimFilename& file, std::ios_base::openmode openMode) const
+{
+   std::shared_ptr<ossim::ifstream>result(0);
+   
+   for(ossim_uint32 idx = 0; ((idx < theFactoryList.size())&&(!result)); ++idx)
+   {
+      result = theFactoryList[idx]->createIFStream(file, openMode);
+   }
+
+   if(!result)
+   {
+      result = std::make_shared<ossim::ifstream>( ossim::ifstream(file.c_str(), openMode) );
+   }
+   
+   return result; 
+   
+}
+
 ossimRefPtr<ossimIFStream>
 ossimStreamFactoryRegistry::createNewIFStream(
    const ossimFilename& file,

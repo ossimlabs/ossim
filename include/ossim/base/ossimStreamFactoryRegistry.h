@@ -5,16 +5,17 @@
 // Author: Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimStreamFactoryRegistry.h 22648 2014-02-28 14:34:29Z gpotts $
-//
+// $Id$
+
 #ifndef ossimStreamFactoryRegistry_HEADER
-#define ossimStreamFactoryRegistry_HEADER
-#include <vector>
+#define ossimStreamFactoryRegistry_HEADER 1
 
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimStreamFactoryBase.h>
 
+#include <memory>
+#include <vector>
 
 class OSSIM_DLL ossimStreamFactoryRegistry : public ossimStreamFactoryBase
 {
@@ -23,6 +24,10 @@ public:
    virtual ~ossimStreamFactoryRegistry();
    
    void registerFactory(ossimStreamFactoryBase* factory);
+
+   virtual std::shared_ptr<ossim::ifstream>
+      createIFStream(const ossimFilename& file,
+                     std::ios_base::openmode openMode) const;
    
    virtual ossimRefPtr<ossimIFStream> createNewIFStream(
       const ossimFilename& file, std::ios_base::openmode openMode) const;

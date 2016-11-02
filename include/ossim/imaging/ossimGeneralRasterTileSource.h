@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -189,7 +189,7 @@ protected:
    ossim_uint8*                             m_buffer;
    ossim_uint8*                             m_lineBuffer;
    ossimInterleaveType                      m_bufferInterleave;
-   std::vector<ossimRefPtr<ossimIFStream> > m_fileStrList;
+   std::vector< std::shared_ptr<ossim::ifstream> > m_fileStrList;
    // std::vector< std::ifstream* >            m_fileStrList;   
    ossimGeneralRasterInfo                   m_rasterInfo;
    ossimIrect                               m_bufferRect;
