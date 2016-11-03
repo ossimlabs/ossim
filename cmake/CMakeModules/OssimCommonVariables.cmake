@@ -88,6 +88,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
         # when building, don't use the install RPATH already
         # (but later on when installing)
         SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+        SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11" )
 
         SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}")
 
