@@ -39,9 +39,14 @@ ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::instance()
 }
 
 std::shared_ptr<ossim::istream> ossim::StreamFactoryRegistry::createIstream(
-   const ossimString& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
+   const ossimString& connectionString, std::ios_base::openmode openMode) const
 {
    std::shared_ptr<ossim::istream> result(0);
+   ossim_uint32 i = 0;
+   for(i = 0; (i < (int)m_factoryList.size())&&(!result); ++i)
+   {
+      result = m_factoryList[i]->createIstream(connectionString, openMode);
+   }
    return result;
 }
       
