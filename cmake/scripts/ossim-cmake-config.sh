@@ -179,6 +179,7 @@ fi
 if [ -z $BUILD_POTRACE_PLUGIN ]; then
   BUILD_POTRACE_PLUGIN=OFF
 fi
+
 if [ -z $BUILD_JPEG12_PLUGIN ]; then
   BUILD_JPEG12_PLUGIN=OFF
 fi
@@ -209,10 +210,15 @@ if [ "${BUILD_OSSIM_GUI}" == "ON" ]; then
     export Qt5OpenGL_DIR=${QT_CMAKE_DIR}/Qt5OpenGL
   fi
 fi
+
 if [ -d /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk ] ; then
   export CMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+elif [ -d /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/ ] ; then
+  export CMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
 fi
+
 echo "Generating Makefiles in" $OSSIM_BUILD_DIR
+
 
 # CMAKE command 
 cmake -G "$CMAKE_G_ARG" \
