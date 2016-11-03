@@ -21,6 +21,7 @@
 
 #include <fstream>
 
+static bool trace = true; // tmp drb...
 
 ossim::StreamFactory* ossim::StreamFactory::m_instance = 0;
 
@@ -33,28 +34,41 @@ ossim::StreamFactory* ossim::StreamFactory::instance()
    if(!m_instance)
    {
       m_instance = new ossim::StreamFactory();
-      // m_instance->registerFactory(ossimStreamFactory::instance());
    }
 
    return m_instance;
 }
 
 std::shared_ptr<ossim::istream> ossim::StreamFactory::createIstream(
-   const ossimString& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
+   const ossimString& connectionString, std::ios_base::openmode mode ) const
 {
+   // tmp drb
+   if ( trace ) std::cout << "ossim::StreamFactory::createIstream entered..." << std::endl;
+
    std::shared_ptr<ossim::istream> result(0);
+
+   ossimFilename f =  connectionString;
+   if ( f.exists() )
+   {
+      result = std::make_shared<ossim::ifstream>(
+         ossim::ifstream( connectionString.c_str(), mode ) );
+   }
+
+   // tmp drb
+   if ( trace )std::cout << "ossim::StreamFactory::createIstream exited..." << std::endl;  
+
    return result;
 }
       
 std::shared_ptr<ossim::ostream> ossim::StreamFactory::createOstream(
-   const ossimString& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
+   const ossimString& /*connectionString*/, std::ios_base::openmode /*mode*/) const
 {
    std::shared_ptr<ossim::ostream> result(0);
    return result;
 }
 
 std::shared_ptr<ossim::iostream> ossim::StreamFactory::createIOstream(
-   const ossimString& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
+   const ossimString& /*connectionString*/, std::ios_base::openmode /*mode*/) const
 {
    std::shared_ptr<ossim::iostream> result(0);
    return result;
@@ -114,7 +128,7 @@ std::shared_ptr<ossim::ifstream> ossimStreamFactory::createIFStream(
 
 ossimRefPtr<ossimIFStream> ossimStreamFactory::createNewIFStream(
    const ossimFilename& file,
-   std::ios_base::openmode openMode) const
+   std::ios_base::openmode mode) const
 {
    ossimRefPtr<ossimIFStream> result = 0;
    
@@ -150,7 +164,7 @@ ossimRefPtr<ossimIFStream> ossimStreamFactory::createNewIFStream(
    if((buf[0] == 0x1F) &&
       (buf[1] == 0x8B))
    {
-      result = new ossimIgzStream(copyFile.c_str(), openMode);
+      result = new ossimIgzStream(copyFile.c_str(), mode);
    }
 #endif
    return result;

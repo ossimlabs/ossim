@@ -28,15 +28,16 @@ namespace ossim
 
       virtual std::shared_ptr<ossim::istream>
          createIstream(const ossimString& connectionString,
-                       std::ios_base::openmode openMode) const;
+                       std::ios_base::openmode mode=
+                       std::ios_base::in|std::ios_base::binary) const;
       
       virtual std::shared_ptr<ossim::ostream>
          createOstream(const ossimString& connectionString,
-                       std::ios_base::openmode openMode) const;
+                       std::ios_base::openmode mode) const;
       
       virtual std::shared_ptr<ossim::iostream>
          createIOstream(const ossimString& connectionString,
-                        std::ios_base::openmode openMode) const;
+                        std::ios_base::openmode mode) const;
    
    protected:
       StreamFactory();
@@ -55,11 +56,11 @@ public:
 
    virtual std::shared_ptr<ossim::ifstream>
       createIFStream(const ossimFilename& file,
-                     std::ios_base::openmode openMode) const;
+                     std::ios_base::openmode mode) const;
    
    virtual ossimRefPtr<ossimIFStream>
       createNewIFStream(const ossimFilename& file,
-                        std::ios_base::openmode openMode) const;
+                        std::ios_base::openmode mode) const;
    
 protected:
    ossimStreamFactory();

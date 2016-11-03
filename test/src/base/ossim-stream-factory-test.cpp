@@ -26,15 +26,9 @@ int main(int argc, char *argv[])
    int returnCode = 0;
    
    ossimArgumentParser ap(&argc, argv);
-
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
    usageString += " [options]";
-   cout << "usageString: " << usageString << endl;
-   
-   // if (usageString != "ossim-info")
-   //    usageString += " info";
-   // usageString += " [options] <file>";
    au->setCommandLineUsage(usageString);
    au->addCommandLineOption("--in",  "<file> open ossim::istream");
    au->addCommandLineOption("--out", "<file> open ossim::ostream");
@@ -58,7 +52,22 @@ int main(int argc, char *argv[])
             if ( str )
             {
                ossimNotify(ossimNotifyLevel_INFO)
-                  << "Opened ossim::istream for " << connnectionString << endl;
+                  << "Opened ossim::istream for " << connnectionString
+                  << "\nInitial use_count: " << str.use_count()  << endl;
+
+               shared_ptr<ossim::ifstream> str2 = std::dynamic_pointer_cast<ossim::ifstream>( str );
+
+               if ( str2 )
+               {
+                  ossimNotify(ossimNotifyLevel_INFO)
+                     << "cast to ossim::ifstream successful."
+                     << "\nuse_count: " << str2.use_count()  << endl;
+               }
+               else
+               {
+                   ossimNotify(ossimNotifyLevel_INFO)
+                      << "cast to ossim::ifstream failed!" << endl;
+               }
             }
             else
             {

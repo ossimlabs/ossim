@@ -31,15 +31,15 @@ namespace ossim
 
       virtual std::shared_ptr<ossim::istream>
          createIstream(const ossimString& connectionString,
-                       std::ios_base::openmode openMode) const;
+                       std::ios_base::openmode mode) const;
       
       virtual std::shared_ptr<ossim::ostream>
          createOstream(const ossimString& connectionString,
-                       std::ios_base::openmode openMode) const;
+                       std::ios_base::openmode mode) const;
       
       virtual std::shared_ptr<ossim::iostream>
          createIOstream(const ossimString& connectionString,
-                        std::ios_base::openmode openMode) const;
+                        std::ios_base::openmode mode) const;
    
    protected:
       StreamFactoryRegistry();
