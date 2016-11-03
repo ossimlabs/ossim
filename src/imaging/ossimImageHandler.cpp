@@ -1596,7 +1596,7 @@ ossimFilename ossimImageHandler::getFilenameWithThisExtension(
    
    if (ext.size())
    {
-      if (ext[0] != '.')
+      if (ext.string()[0] != '.')
       {
          f += ".";
       }
@@ -1615,7 +1615,7 @@ void ossimImageHandler::getFilenameWithThisExt( const ossimString& ext,
 
    if (ext.size())
    {
-      if (ext[0] != '.')
+      if (ext.string()[0] != '.')
       {
          f += ".";
       }

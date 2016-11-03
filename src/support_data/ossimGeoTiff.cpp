@@ -417,15 +417,17 @@ bool ossimGeoTiff::writeTags(TIFF* tifPtr,
          //---
          // Use a projection code that does not imply a datum.
          // See section "6.3.3.2 Projection Codes" for definition.
+         //
+         // NOTE: The ossim code does not use negative zones to discriminate between
+         // hemispheres. (drb 26 Oct. 2016)
          //---
-         if (mapZone > 0) // Northern hemisphere.
+         if ( hemisphere == "N" ) // Northern hemisphere.
          {
             projSysCode = 16000 + mapZone;
          }
-         else if (mapZone < 0) // Southern hemisphere.
+         else // Southern hemisphere.
          {
-            hemisphere = "S";
-            projSysCode = 16100 + abs(mapZone);
+            projSysCode = 16100 + mapZone;
          }
          
          // Set the Projected Coordinate System Type to be user defined.

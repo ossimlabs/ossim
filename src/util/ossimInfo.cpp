@@ -2320,14 +2320,16 @@ std::ostream& ossimInfo::printDatums(std::ostream& out) const
          if ( datum->ellipsoid() )
          {
             out << setiosflags(ios::left)
-                      << setw(7)
-                      << datum->code().c_str()
-                      << setw(48)
-                      << datum->name().c_str()
-                      << setw(10)
-                      << "Ellipse:"
-                      << datum->ellipsoid()->name()
-                      << std::endl;
+                << setw(7)
+                << datum->code().c_str()
+                << setw(7)
+                << datum->epsgCode()
+                << setw(48)
+                << datum->name().c_str()
+                << setw(10)
+                << "Ellipse:"
+                << datum->ellipsoid()->name()
+                << std::endl;
          }
          else
          {

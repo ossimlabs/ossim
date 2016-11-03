@@ -954,7 +954,20 @@ ossim_uint32 ossimEpsgProjectionDatabase::getCodeFromUtmProj(const ossimUtmProje
       epsg_code += 24800 + 60;
    
    else
-      epsg_code = 0;
+   {
+      //---
+      // Use a projection code that does not imply a datum.
+      // See section "6.3.3.2 Projection Codes" for definition.
+      //---
+      if  ( hemisphere == 'N' ) // Northern hemisphere.
+      {
+         epsg_code += 16000;
+      }
+      else // Southern hemisphere.
+      {
+         epsg_code += 16100;
+      }
+   }
 
    return epsg_code;
 }
