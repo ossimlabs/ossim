@@ -14,23 +14,20 @@
 #define ossimNitfFile_HEADER 1
 
 #include <ossim/base/ossimReferenced.h>
+#include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimString.h>
-#include <ossim/base/ossimFilename.h>
-#include <ossim/base/ossimIrect.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
 
 #include <iosfwd>
-#include <vector>
 
 class ossimNitfImageHeader;
 class ossimNitfSymbolHeader;
 class ossimNitfLabelHeader;
 class ossimNitfTextHeader;
 class ossimNitfDataExtensionSegment;
-class ossimFilename;
-class ossimNitfRegisteredTag;
-class ossimNitfTagInformation;
 
 class OSSIMDLLEXPORT ossimNitfFile : public ossimReferenced
 {
@@ -77,8 +74,17 @@ public:
     *  Opens the nitf file and attempts to parse.
     *  Returns true on success, false on error.
     */
-   bool parseFile(const ossimFilename &file);
+   bool parseFile(const ossimFilename& file);
 
+   /**
+    * @brief Parse stream method.
+    * @param file Filename from opened stream.
+    * @param in Stream to parse.
+    * @return true on success, false on error.
+    */
+   bool parseStream(const ossimFilename& file,
+                    ossim::istream& in);
+   
    /*!
     * Will return the header.
     */
