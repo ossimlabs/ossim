@@ -1,4 +1,4 @@
-//*******************************************************************
+//---
 //
 // License:  See top level LICENSE.txt file.
 //
@@ -18,11 +18,17 @@
 // ossimIFStream
 // ossimOFStream
 //
-//*******************************************************************
+//---
 // $Id$
 
 #ifndef ossimIoStream_HEADER
 #define ossimIoStream_HEADER 1
+
+#include <ossim/base/ossimIosFwd.h>
+
+// NOTE: All below includes will go away once deprecated code is replaced.
+// drb 04 Nov. 2016
+
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimStreamBase.h>

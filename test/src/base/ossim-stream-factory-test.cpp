@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
             if ( str )
             {
                ossimNotify(ossimNotifyLevel_INFO)
-                  << "Opened ossim::istream for " << connnectionString
+                  << "Opened ossim::istream (str) for " << connnectionString
                   << "\nInitial use_count: " << str.use_count()  << endl;
 
                shared_ptr<ossim::ifstream> str2 = std::dynamic_pointer_cast<ossim::ifstream>( str );
@@ -60,8 +60,9 @@ int main(int argc, char *argv[])
                if ( str2 )
                {
                   ossimNotify(ossimNotifyLevel_INFO)
-                     << "cast to ossim::ifstream successful."
-                     << "\nuse_count: " << str2.use_count()  << endl;
+                     << "cast to ossim::ifstream (srt2) successful."
+                     << "\nstr use_count:  " << str.use_count()
+                     << "\nstr2 use_count: " << str2.use_count()  << endl;
                }
                else
                {

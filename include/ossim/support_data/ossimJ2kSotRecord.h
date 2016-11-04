@@ -1,24 +1,16 @@
-//----------------------------------------------------------------------------
-//
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  David Burken
-//
+//---
+// License: MIT
 // Description: Container class for J2K "Start Of Tile" (SOT) record.
-//
 // See document BPJ2K01.00 Table 7-3 Image and tile size (15444-1 Annex A.4.2)
-// 
-//----------------------------------------------------------------------------
-// $Id: ossimJ2kSotRecord.h,v 1.5 2005/10/13 21:24:47 dburken Exp $
-#ifndef ossimJ2kSotRecord_HEADER
-#define ossimJ2kSotRecord_HEADER
+// $Id$
+//---
 
-#include <iosfwd>
-#include <string>
+#ifndef ossimJ2kSotRecord_HEADER
+#define ossimJ2kSotRecord_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <string>
 
 class OSSIM_DLL ossimJ2kSotRecord
 {
@@ -37,7 +29,7 @@ public:
     *
     * @note Marker is not read.
     */
-   void parseStream(std::istream& in);
+   void parseStream(ossim::istream& in);
 
    /**
     * @brief print method that outputs a key/value type format adding prefix

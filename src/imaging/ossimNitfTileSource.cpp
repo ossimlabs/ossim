@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -8,8 +8,8 @@
 //
 // Description:  Contains class definition for ossimNitfTileSource.
 // 
-//*******************************************************************
-//  $Id: ossimNitfTileSource.cpp 22925 2014-10-28 22:01:09Z dburken $
+//---
+// $Id$
 
 #include <ossim/imaging/ossimNitfTileSource.h>
 #include <ossim/base/ossimConstants.h>
@@ -26,6 +26,7 @@
 #include <ossim/base/ossimScalarTypeLut.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimBooleanProperty.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimJpegMemSrc.h>
@@ -101,7 +102,7 @@ ossimNitfTileSource::ossimNitfTileSource()
       theNumberOfImages(0),
       theCurrentEntry(0),
       theImageRect(0,0,0,0),
-      theFileStr(),
+      theFileStr(0),
       theOutputBandList(),
       theCacheSize(0, 0),
       theCacheTileInterLeaveType(OSSIM_INTERLEAVE_UNKNOWN),
@@ -140,9 +141,13 @@ void ossimNitfTileSource::destroy()
    // Delete the list of image headers.
    theNitfImageHeader.clear();
 
-   if(theFileStr.is_open())
+   shared_ptr<ossim::ifstream> str = std::dynamic_pointer_cast<ossim::ifstream>( theFileStr );
+   if ( str )
    {
-      theFileStr.close();
+      if(str->is_open())
+      {
+         str->close();
+      }
    }
 
    theCacheTile = 0;
@@ -152,6 +157,7 @@ void ossimNitfTileSource::destroy()
 
 bool ossimNitfTileSource::isOpen()const
 {
+   
    return (theNitfImageHeader.size() > 0);
 }
 
@@ -358,7 +364,8 @@ bool ossimNitfTileSource::parseFile()
 
 
    // Open up a stream to the file.
-   theFileStr.open(file.c_str(), ios::in | ios::binary);
+   theFileStr = ossim::StreamFactoryRegistry::instance()->createIstream(
+      file, ios::in | ios::binary);
    if (!theFileStr)
    {
       theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
@@ -1512,11 +1519,11 @@ bool ossimNitfTileSource::loadBlock(ossim_uint32 x, ossim_uint32 y)
          std::streamoff p;
          if(getPosition(p, x, y, 0))
          {
-            theFileStr.seekg(p, ios::beg);
+            theFileStr->seekg(p, ios::beg);
             char* buf = (char*)(theCacheTile->getBuf());
-            if (!theFileStr.read(buf, readSize))
+            if (!theFileStr->read(buf, readSize))
             {
-               theFileStr.clear();
+               theFileStr->clear();
                ossimNotify(ossimNotifyLevel_FATAL)
                   << "ossimNitfTileSource::loadBlock BIP Read Error!"
                   << "\nReturning error..." << endl;
@@ -1552,10 +1559,10 @@ bool ossimNitfTileSource::loadBlock(ossim_uint32 x, ossim_uint32 y)
             std::streamoff p;
             if(getPosition(p, x, y, band))
             {
-               theFileStr.seekg(p, ios::beg);
-               if (!theFileStr.read((char*)buf, readSize))
+               theFileStr->seekg(p, ios::beg);
+               if (!theFileStr->read((char*)buf, readSize))
                {
-                  theFileStr.clear();
+                  theFileStr->clear();
                   ossimNotify(ossimNotifyLevel_FATAL)
                      << "ossimNitfTileSource::loadBlock Read Error!"
                      << "\nReturning error..." << endl;
@@ -1587,7 +1594,7 @@ bool ossimNitfTileSource::loadBlock(ossim_uint32 x, ossim_uint32 y)
          if (uncompressJpegBlock(x, y) == false)
          {
             theCacheTile->makeBlank();
-            theFileStr.clear();
+            theFileStr->clear();
             ossimNotify(ossimNotifyLevel_FATAL)
                << "ossimNitfTileSource::loadBlock Read Error!"
                << "\nReturning error..." << endl;
@@ -2932,9 +2939,9 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
    //---
 
    // Seek to the first block.
-   theFileStr.seekg(hdr->getDataLocation(), ios::beg);
+   theFileStr->seekg(hdr->getDataLocation(), ios::beg);
 
-   if ( theFileStr.good() )
+   if ( theFileStr->good() )
    {
       const ossim_uint8 AP6 = 0xe6;
       const ossim_uint8 AP7 = 0xe7;
@@ -2962,12 +2969,12 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
       }
       
       // Find all the SOI markers.
-      while ( theFileStr.get( ct.c ) && !allBlocksFound ) 
+      while ( theFileStr->get( ct.c ) && !allBlocksFound ) 
       {
          if ( ct.uc == FF ) // Found FF byte.
          {
             // Loop to skip multiple 0xff's in cases like FF FF D8
-            while ( theFileStr.get( ct.c ) )
+            while ( theFileStr->get( ct.c ) )
             {
                if ( ct.uc != FF)
                {
@@ -2978,15 +2985,15 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
             if ( ct.uc == SOI ) 
             {
                // At SOI 0xFFD8 marker... SOI marker offset is two bytes back.
-               soiOffset = ((std::streamoff)theFileStr.tellg()) - 2;
+               soiOffset = ((std::streamoff)theFileStr->tellg()) - 2;
 
                // Now look for matching EOI.
-               while ( theFileStr.get( ct.c ) )
+               while ( theFileStr->get( ct.c ) )
                {
                   if ( ct.uc == FF ) // Found FF byte.
                   {
                      // Loop to skip multiple 0xff's in cases like FF FF D8
-                     while ( theFileStr.get( ct.c ) )
+                     while ( theFileStr->get( ct.c ) )
                      {
                         if ( ct.uc != FF )
                         {
@@ -2997,7 +3004,7 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
                      if ( ct.uc == EOI )
                      {
                         // At EOI 0xD9marker...
-                        eoiOffset = theFileStr.tellg();
+                        eoiOffset = theFileStr->tellg();
 
                         // Capture offset:
                         theNitfBlockOffset.push_back( soiOffset );
@@ -3028,7 +3035,7 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
                                )
                      {
                         // Length two byte big endian.
-                        theFileStr.read( (char*)&length, 2 );
+                        theFileStr->read( (char*)&length, 2 );
                         if ( swapper )
                         {
                            swapper->swap( length );
@@ -3036,18 +3043,18 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
                         // Length includes two length bytes.
 
                         // Seek to the end of the record.
-                        theFileStr.seekg( length - 2, std::ios_base::cur );
+                        theFileStr->seekg( length - 2, std::ios_base::cur );
                      }
 
                   } //  Matches: if ( ct.uc == FF )
                   
-               } // Matches: while ( theFileStr.get( ut.c ) ) "find EOI loop" 
+               } // Matches: while ( theFileStr->get( ut.c ) ) "find EOI loop" 
                
             } // Matches: if ( ut.uc == SOI ) "SOI marker found"
 
          } // Matches: if ( ut.uc == FF )
 
-      } // Matches: while ( theFileStr.get( ut.c ) && !allBlocksFound )
+      } // Matches: while ( theFileStr->get( ut.c ) && !allBlocksFound )
 
       if ( swapper )
       {
@@ -3055,10 +3062,10 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
          swapper = 0;
       }
 
-   } // Matches: if ( theFileStr.good() )
+   } // Matches: if ( theFileStr->good() )
 
-   theFileStr.seekg(0, ios::beg);
-   theFileStr.clear();
+   theFileStr->seekg(0, ios::beg);
+   theFileStr->clear();
 
 #if 0 /* Please leave for debug. (drb) */
    std::streamoff startOfData = hdr->getDataLocation();
@@ -3135,14 +3142,14 @@ bool ossimNitfTileSource::uncompressJpegBlock(ossim_uint32 x, ossim_uint32 y)
    }
    
    // Seek to the block.
-   theFileStr.seekg(theNitfBlockOffset[blockNumber], ios::beg);
+   theFileStr->seekg(theNitfBlockOffset[blockNumber], ios::beg);
    
    // Read the block into memory.
    std::vector<ossim_uint8> compressedBuf(theNitfBlockSize[blockNumber]);
-   if (!theFileStr.read((char*)&(compressedBuf.front()),
+   if (!theFileStr->read((char*)&(compressedBuf.front()),
                         theNitfBlockSize[blockNumber]))
    {
-      theFileStr.clear();
+      theFileStr->clear();
       ossimNotify(ossimNotifyLevel_FATAL)
          << "ossimNitfTileSource::uncompressJpegBlock Read Error!"
          << "\nReturning error..." << endl;

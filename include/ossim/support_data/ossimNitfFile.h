@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -8,13 +8,10 @@
 // 
 // Description: Nitf support class
 // 
-//********************************************************************
-// $Id: ossimNitfFile.h 19583 2011-05-13 10:58:10Z gpotts $
+//---
+// $Id$
 #ifndef ossimNitfFile_HEADER
 #define ossimNitfFile_HEADER 1
-
-#include <iosfwd>
-#include <vector>
 
 #include <ossim/base/ossimReferenced.h>
 #include <ossim/base/ossimRefPtr.h>
@@ -22,6 +19,9 @@
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
+
+#include <iosfwd>
+#include <vector>
 
 class ossimNitfImageHeader;
 class ossimNitfSymbolHeader;

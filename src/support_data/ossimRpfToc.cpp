@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,7 +9,7 @@
 // Description: Rpf support class
 // 
 //********************************************************************
-// $Id: ossimRpfToc.cpp 21214 2012-07-03 16:20:11Z dburken $
+// $Id$
 
 #include <ossim/support_data/ossimRpfToc.h>
 #include <ossim/base/ossimErrorCodes.h>
