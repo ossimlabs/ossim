@@ -72,6 +72,8 @@
 
 #include <ossim/support_data/ossimSrcRecord.h>
 #include <ossim/support_data/ossimWkt.h>
+#include <ossim/base/ossimUrl.h>
+//#include <ossim/base/ossimStreamFactoryRegistry.h>
 
 // Put your includes here:
 
@@ -81,6 +83,50 @@
 #include <iostream>
 using namespace std;
 
+#if 0
+class char_array_buffer : public std::streambuf {
+public:
+    char_array_buffer(const char *data, unsigned int len);
+ 
+private:
+    int_type underflow();
+    int_type uflow();
+    int_type pbackfail(int_type ch);
+    std::streamsize showmanyc();
+ 
+    const char * const begin_;
+    const char * const end_;
+    const char * current_;
+};
+ 
+char_array_buffer::char_array_buffer(const char *data, unsigned int len)
+: begin_(data), end_(data + len), current_(data) { }
+ 
+char_array_buffer::int_type char_array_buffer::underflow() {
+    if (current_ == end_) {
+        return traits_type::eof();
+    }
+    return traits_type::to_int_type(*current_);     // HERE!
+}
+ 
+char_array_buffer::int_type char_array_buffer::uflow() {
+    if (current_ == end_) {
+        return traits_type::eof();
+    }
+    return traits_type::to_int_type(*current_++);   // HERE!
+}
+ 
+char_array_buffer::int_type char_array_buffer::pbackfail(int_type ch) {
+    if (current_ == begin_ || (ch != traits_type::eof() && ch != current_[-1])) {
+        return traits_type::eof();
+    }
+    return traits_type::to_int_type(*--current_);   // HERE!
+}
+ 
+std::streamsize char_array_buffer::showmanyc() {
+    return end_ - current_;
+}
+#endif
 int main(int argc, char *argv[])
 {
    int returnCode = 0;
@@ -88,9 +134,26 @@ int main(int argc, char *argv[])
    ossimArgumentParser ap(&argc, argv);
    ossimInit::instance()->addOptions(ap);
    ossimInit::instance()->initialize(ap);
-   
-   try
+
+
+
+//   char* data="Hello!";
+//   int len = 7;
+//char_array_buffer buf((char*)data, len);     // no copy here!!!
+// std::istream is(&buf);  
+
+//     char * buffer = new char [len];
+//     is.read(buffer,len);
+
+// std::cout << "len == " << buffer << std::endl;
+    try
    {
+//    std::shared_ptr<ossim::istream> inStream = 
+//        ossim::StreamFactoryRegistry::instance()->createIstream("s3://ossimlabs/dependencies/jai/jai_codec-1.1.3.jar",
+//                std::ios::in);
+      // ossimUrl url("/data/test/test1.tif");
+
+      // std::cout << url.toString() << std::endl;
       // Put your code here.
    }
    catch(const ossimException& e)
