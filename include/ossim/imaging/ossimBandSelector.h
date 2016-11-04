@@ -43,6 +43,14 @@ public:
     */
    virtual void getOutputBandList(std::vector<ossim_uint32>& bandList) const;
 
+
+    /**
+    *
+    * Sets the output band list to a default settings.
+    * 
+    */
+    virtual void setDefaultBandList();
+    
    /**
     * Sets the output band list.
     *
