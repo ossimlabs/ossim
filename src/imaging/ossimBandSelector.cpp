@@ -116,6 +116,12 @@ ossimRefPtr<ossimImageData> ossimBandSelector::getTile(
    return m_tile;
 }
 
+void ossimBandSelector::setDefaultBandList()
+{
+   m_outputBandList.clear();
+   initialize();
+}
+
 void ossimBandSelector::setOutputBandList( const vector<ossim_uint32>& outputBandList,
                                            bool disablePassThru)
 {
