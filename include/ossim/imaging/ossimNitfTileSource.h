@@ -70,6 +70,9 @@ public:
     */
    virtual bool open();
 
+   bool open( std::shared_ptr<ossim::istream>& str,
+              const ossimString& connectionString );
+
    /** @brief Closes file and destroys all memory allocated. */
    virtual void close();
 

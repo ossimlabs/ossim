@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -10,16 +10,16 @@
 // Description: This class parses a DEM header.
 //
 //********************************************************************
-// $Id: ossimDemHeader.h 15309 2009-09-01 15:47:15Z dburken $
+// $Id$
 
 #ifndef ossimDemHeader_HEADER
-#define ossimDemHeader_HEADER
+#define ossimDemHeader_HEADER 1
 
-#include <string>
-#include <iosfwd>
 
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/support_data/ossimDemPoint.h>
+#include <string>
 
 class ossimFilename;
 class ossimString;
@@ -31,10 +31,10 @@ public:
    
    ossimDemHeader();
    
-   friend OSSIM_DLL std::ostream& operator<<(std::ostream& s,
+   friend OSSIM_DLL std::ostream& operator<<(ossim::ostream& s,
                                              const ossimDemHeader& header);
-   friend OSSIM_DLL std::istream& operator>>(std::istream& s,
-                                             ossimDemHeader& header);
+   friend OSSIM_DLL ossim::istream& operator>>(ossim::istream& s,
+                                               ossimDemHeader& header);
 
    /**
     * @brief open method that takes a file.
@@ -52,7 +52,7 @@ public:
     *
     * @return stream
     */
-   std::istream& open(std::istream& is);
+   ossim::istream& open(ossim::istream& is);
 
    /**
     * Print method.

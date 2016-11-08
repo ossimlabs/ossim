@@ -1,18 +1,20 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author: Garrett Potts (gpotts@imagelinks.com)
 // Description: Rpf support class
 // 
 //********************************************************************
-// $Id: ossimRpfAttributeSectionSubheader.cpp 9963 2006-11-28 21:11:01Z gpotts $
+// $Id$
+
 #include <ossim/support_data/ossimRpfAttributeSectionSubheader.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
 
-ostream& operator <<(ostream& out,
-                     const ossimRpfAttributeSectionSubheader& data)
+std::ostream& operator <<(
+   std::ostream& out, const ossimRpfAttributeSectionSubheader& data)
 {
    data.print(out);
    
@@ -24,7 +26,7 @@ ossimRpfAttributeSectionSubheader::ossimRpfAttributeSectionSubheader()
    clearFields();
 }
 
-ossimErrorCode ossimRpfAttributeSectionSubheader::parseStream(istream& in,
+ossimErrorCode ossimRpfAttributeSectionSubheader::parseStream(ossim::istream& in,
                                                               ossimByteOrder byteOrder)
 {
    theAttributeSectionSubheaderStart = 0;
@@ -55,12 +57,12 @@ ossimErrorCode ossimRpfAttributeSectionSubheader::parseStream(istream& in,
    return ossimErrorCodes::OSSIM_OK;
 }
 
-void ossimRpfAttributeSectionSubheader::print(ostream& out)const
+void ossimRpfAttributeSectionSubheader::print(std::ostream& out)const
 {
-   out << "theNumberOfAttributeOffsetRecords:         " << theNumberOfAttributeOffsetRecords << endl
-       << "theNumberOfExplicitArealCoverageRecords:   " << theNumberOfExplicitArealCoverageRecords << endl
-       << "theAttributeOffsetTableOffset:             " << theAttributeOffsetTableOffset << endl
-       << "theAttribteOffsetRecordLength:             " << theAttribteOffsetRecordLength;
+   out << "theNumberOfAttributeOffsetRecords:         " << theNumberOfAttributeOffsetRecords
+       << "\ntheNumberOfExplicitArealCoverageRecords:   " << theNumberOfExplicitArealCoverageRecords
+       << "\ntheAttributeOffsetTableOffset:             " << theAttributeOffsetTableOffset
+       << "\ntheAttribteOffsetRecordLength:             " << theAttribteOffsetRecordLength;
 }
 
 void ossimRpfAttributeSectionSubheader::clearFields()

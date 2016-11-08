@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author:  Garrett Potts
 //
@@ -9,11 +9,12 @@
 // Contains class definition for ImageHandlerRegistry.
 //
 //*******************************************************************
-//  $Id: ossimImageHandlerRegistry.cpp 22636 2014-02-23 17:55:50Z dburken $
+// $Id$
 
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimImageHandlerFactory.h>
@@ -139,6 +140,40 @@ void ossimImageHandlerRegistry::getSupportedExtensions(
    
 }
 
+ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openConnection(
+   const ossimString& connectionString, bool openOverview )const
+{
+   ossimRefPtr<ossimImageHandler> result(0);
+   
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( connectionString, std::ios_base::in|std::ios_base::binary);
+
+   if ( str )
+   {
+      std::vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+      while( factory != m_factoryList.end() )
+      {
+         result = (*factory)->open(str, connectionString, openOverview);
+         if ( result.valid() )
+         {
+            break;
+         }
+         ++factory;
+      }
+   }
+
+   if ( result.valid() == false )
+   {
+      ossimFilename f = connectionString;
+      if ( f.exists() )
+      {
+         result = this->open( f, true, openOverview );
+      }
+   }
+   
+   return result;
+}
+
 ossimImageHandler* ossimImageHandlerRegistry::open(const ossimFilename& fileName,
                                                    bool trySuffixFirst,
                                                    bool openOverview)const
@@ -183,7 +218,8 @@ ossimImageHandler* ossimImageHandlerRegistry::open(const ossimKeywordlist& kwl,
    return result;
 }
 
-ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open( std::istream* str,
+
+ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open( ossim::istream* str,
                                                                 std::streamoff restartPosition,
                                                                 bool youOwnIt ) const
 {

@@ -1,9 +1,10 @@
 #include <ossim/support_data/ossimRpfAttributeOffsetRecord.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
 
-ostream& operator <<(ostream& out,
-                     const ossimRpfAttributeOffsetRecord& data)
+std::ostream& operator <<(
+   std::ostream& out, const ossimRpfAttributeOffsetRecord& data)
 {
    data.print(out);
    
@@ -15,7 +16,7 @@ ossimRpfAttributeOffsetRecord::ossimRpfAttributeOffsetRecord()
    clearFields();
 }
 
-ossimErrorCode ossimRpfAttributeOffsetRecord::parseStream(istream& in,
+ossimErrorCode ossimRpfAttributeOffsetRecord::parseStream(ossim::istream& in,
                                                           ossimByteOrder byteOrder)
 {
    if(in)
@@ -41,12 +42,12 @@ ossimErrorCode ossimRpfAttributeOffsetRecord::parseStream(istream& in,
    return ossimErrorCodes::OSSIM_OK;
 }
 
-void ossimRpfAttributeOffsetRecord::print(ostream& out)const
+void ossimRpfAttributeOffsetRecord::print(std::ostream& out)const
 {
-   out << "theAttributeId:                  " << theAttributeId << endl
-       << "theParameterId:                  " << theParameterId << endl
-       << "theArealCoverageSequenceNumber:  " << theArealCoverageSequenceNumber << endl
-       << "theAttributeRecordOffset:        " << theAttributeRecordOffset;
+   out << "theAttributeId:                  " << theAttributeId
+       << "\ntheParameterId:                  " << theParameterId
+       << "\ntheArealCoverageSequenceNumber:  " << theArealCoverageSequenceNumber
+       << "\ntheAttributeRecordOffset:        " << theAttributeRecordOffset;
 }
 
 void ossimRpfAttributeOffsetRecord::clearFields()

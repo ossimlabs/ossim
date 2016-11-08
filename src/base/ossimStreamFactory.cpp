@@ -21,7 +21,7 @@
 
 #include <fstream>
 
-static bool trace = true; // tmp drb...
+static bool trace = false; // tmp drb...
 
 ossim::StreamFactory* ossim::StreamFactory::m_instance = 0;
 

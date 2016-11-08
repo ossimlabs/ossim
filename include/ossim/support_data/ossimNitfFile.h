@@ -21,8 +21,6 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
 
-#include <iosfwd>
-
 class ossimNitfImageHeader;
 class ossimNitfSymbolHeader;
 class ossimNitfLabelHeader;
@@ -93,11 +91,25 @@ public:
    ossimIrect getImageRect()const;
    
    ossimNitfImageHeader*  getNewImageHeader(ossim_uint32 imageNumber)const;
-   ossimNitfSymbolHeader* getNewSymbolHeader(ossim_uint32 symbolNumber)const;
-   ossimNitfLabelHeader*  getNewLabelHeader(ossim_uint32 labelNumber)const;
-   ossimNitfTextHeader*   getNewTextHeader(ossim_uint32 textNumber)const;
-   ossimNitfDataExtensionSegment* getNewDataExtensionSegment(ossim_uint32 dataExtNumber)const;
+   ossimNitfImageHeader*  getNewImageHeader(ossim::istream& in,
+                                            ossim_uint32 imageNumber)const;
    
+   ossimNitfSymbolHeader* getNewSymbolHeader(ossim_uint32 symbolNumber)const;
+   ossimNitfSymbolHeader* getNewSymbolHeader(ossim::istream& in,
+                                             ossim_uint32 symbolNumber)const;
+   
+   ossimNitfLabelHeader*  getNewLabelHeader(ossim_uint32 labelNumber)const;
+   ossimNitfLabelHeader*  getNewLabelHeader(ossim::istream& in,
+                                            ossim_uint32 labelNumber)const;
+   
+   ossimNitfTextHeader*   getNewTextHeader(ossim_uint32 textNumber)const;
+   ossimNitfTextHeader*   getNewTextHeader(ossim::istream& in,
+                                           ossim_uint32 textNumber)const;
+   
+   ossimNitfDataExtensionSegment* getNewDataExtensionSegment(ossim_uint32 dataExtNumber)const;   
+   ossimNitfDataExtensionSegment* getNewDataExtensionSegment(ossim::istream& in,
+                                                             ossim_uint32 dataExtNumber)const;
+
    ossimString getVersion()const;
 
    /** @return The filename parsed by this object. */

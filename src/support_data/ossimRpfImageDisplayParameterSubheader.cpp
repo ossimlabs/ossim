@@ -1,19 +1,20 @@
 //*******************************************************************
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author: Garrett Potts
 // 
 // Description: This class extends the stl's string class.
 //
 //********************************************************************
-// $Id: ossimRpfImageDisplayParameterSubheader.cpp 9963 2006-11-28 21:11:01Z gpotts $
-#include <ossim/support_data/ossimRpfImageDisplayParameterSubheader.h>
+// $Id$
 
+#include <ossim/support_data/ossimRpfImageDisplayParameterSubheader.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
 
-ostream& operator<<(ostream& out,
-                    const ossimRpfImageDisplayParameterSubheader& data)
+std::ostream& operator<<(std::ostream& out,
+                         const ossimRpfImageDisplayParameterSubheader& data)
 {
    data.print(out);
 
@@ -25,8 +26,8 @@ ossimRpfImageDisplayParameterSubheader::ossimRpfImageDisplayParameterSubheader()
    clearFields();
 }
 
-ossimErrorCode ossimRpfImageDisplayParameterSubheader::parseStream(istream& in,
-                                                         ossimByteOrder byteOrder)
+ossimErrorCode ossimRpfImageDisplayParameterSubheader::parseStream(ossim::istream& in,
+                                                                   ossimByteOrder byteOrder)
 {
    clearFields();
    if(in)
@@ -52,10 +53,10 @@ ossimErrorCode ossimRpfImageDisplayParameterSubheader::parseStream(istream& in,
    return ossimErrorCodes::OSSIM_OK;
 }
    
-void ossimRpfImageDisplayParameterSubheader::print(ostream& out)const
+void ossimRpfImageDisplayParameterSubheader::print(std::ostream& out)const
 {
-   out << "theNumberOfImageRows:          " << theNumberOfImageRows << endl
-       << "theNumberOfImageCodesPerRow:   " << theNumberOfImageCodesPerRow << endl
+   out << "theNumberOfImageRows:          " << theNumberOfImageRows << "\n"
+       << "theNumberOfImageCodesPerRow:   " << theNumberOfImageCodesPerRow << "\n"
        << "theImageCodeBitLength:         " << (unsigned long)theImageCodeBitLength;
 }
 

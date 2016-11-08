@@ -49,6 +49,7 @@ static const ossimTrace traceDebug("ossimImageHandlerFactory:debug");
 RTTI_DEF1(ossimImageHandlerFactory, "ossimImageHandlerFactory", ossimImageHandlerFactoryBase);
 
 ossimImageHandlerFactory* ossimImageHandlerFactory::theInstance = 0;
+
 ossimImageHandlerFactory::~ossimImageHandlerFactory()
 {
    theInstance = (ossimImageHandlerFactory*)0;
@@ -66,6 +67,39 @@ ossimImageHandlerFactory* ossimImageHandlerFactory::instance()
    }
 
    return theInstance;
+}
+
+ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(
+   std::shared_ptr<ossim::istream>& str,
+   const ossimString& connectionString,
+   bool openOverview ) const
+{
+   // cout << "ossimImageHandlerFactory::open( stream ) entered...\n";
+   
+   ossimRefPtr<ossimImageHandler> result(0);
+
+   while ( 1 )
+   {
+      // NITF:
+      ossimRefPtr<ossimNitfTileSource> ih = new ossimNitfTileSource();
+      ih->setOpenOverviewFlag(openOverview);
+      if ( ih->open( str, connectionString ) )
+      {
+         result = ih.get();
+         break;
+      }
+      else
+      {
+         // Reset the stream for downstream code.
+         str->seekg(0, std::ios_base::beg);
+         str->clear();
+      }
+      
+      result = 0;
+      break; 
+   }
+   
+   return result;
 }
 
 ossimImageHandler* ossimImageHandlerFactory::open(const ossimFilename& fileName,

@@ -1,23 +1,22 @@
 #ifndef ossimRpfColorGrayscaleOffsetRecord_HEADER
-#define ossimRpfColorGrayscaleOffsetRecord_HEADER
-#include <iostream>
-using namespace std;
+#define ossimRpfColorGrayscaleOffsetRecord_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIosFwd.h>
 
 class ossimRpfColorGrayscaleOffsetRecord
 {
 public:
-   friend ostream& operator <<(ostream& out,
-                               const ossimRpfColorGrayscaleOffsetRecord& data);
+   friend std::ostream& operator <<(
+      std::ostream& out, const ossimRpfColorGrayscaleOffsetRecord& data);
    
    ossimRpfColorGrayscaleOffsetRecord();
 
-   ossimErrorCode parseStream(istream& in,
+   ossimErrorCode parseStream(ossim::istream& in,
                               ossimByteOrder byteOrder);
    
-   void print(ostream& out)const;
+   void print(std::ostream& out)const;
 
    void clearFields();
    ossim_uint16 getColorGrayscaleTableId()const

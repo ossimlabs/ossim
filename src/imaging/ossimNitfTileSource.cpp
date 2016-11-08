@@ -90,7 +90,7 @@ ossimNitfTileSource::ossimNitfTileSource()
       ossimImageHandler(),
       theTile(0),
       theCacheTile(0),
-      theNitfFile(new ossimNitfFile()),
+      theNitfFile(0),
       theNitfImageHeader(0),
       theReadMode(READ_MODE_UNKNOWN),
       theScalarType(OSSIM_SCALAR_UNKNOWN),
@@ -107,6 +107,7 @@ ossimNitfTileSource::ossimNitfTileSource()
       theCacheSize(0, 0),
       theCacheTileInterLeaveType(OSSIM_INTERLEAVE_UNKNOWN),
       theCacheEnabledFlag(false),
+      theEntryList(0),
       theCacheId(-1),
       thePackedBitsFlag(false),
       theCompressedBuf(0),
@@ -141,6 +142,8 @@ void ossimNitfTileSource::destroy()
    // Delete the list of image headers.
    theNitfImageHeader.clear();
 
+   theNitfFile = 0;
+
    shared_ptr<ossim::ifstream> str = std::dynamic_pointer_cast<ossim::ifstream>( theFileStr );
    if ( str )
    {
@@ -149,7 +152,7 @@ void ossimNitfTileSource::destroy()
          str->close();
       }
    }
-
+   
    theCacheTile = 0;
    theTile      = 0;
    theOverview  = 0;
@@ -179,6 +182,164 @@ bool ossimNitfTileSource::open()
    if (result)
    {
       completeOpen();
+   }
+   
+   return result;
+}
+
+bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
+                                const ossimString& connectionString )
+{
+   static const char MODULE[] = "ossimNitfTileSource::open( stream, ...)";
+
+   bool result = false;
+
+   ossimFilename file = connectionString;
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " entered...\nFile =  " << file << "\n";
+   }
+
+   if( isOpen() )
+   {
+      close();
+   }
+   
+   theErrorStatus = ossimErrorCodes::OSSIM_OK;
+   
+
+   theNitfFile = new ossimNitfFile();
+
+   result = theNitfFile->parseStream( file, *str);
+
+   if ( result )
+   {
+      // Get the number of images within the file.
+      theNumberOfImages = theNitfFile->getHeader()->getNumberOfImages();
+
+      if(traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "DEBUG:\nNumber of images " << theNumberOfImages << "\n"; 
+      }
+
+      theEntryList.clear();
+      
+      //---
+      // Get image header pointers.  Note there can be multiple images in one
+      // image file.
+      //---
+      
+      for (ossim_uint32 i = 0; i < theNumberOfImages; ++i)
+      {
+         ossimRefPtr<ossimNitfImageHeader> hdr = theNitfFile->getNewImageHeader(*str, i);
+         if (!hdr)
+         {
+            result = false;
+            setErrorStatus();
+            if (traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << MODULE << " ERROR:\nNull image header!" << endl;
+            }
+            break;
+         }
+
+         if (traceDebug())
+         {
+            if(hdr.valid())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << MODULE << "DEBUG:"
+                  << "\nImage header[" << i << "]:\n" << *(hdr.get())
+                  << "\n";
+            }
+         }
+            
+         if( !hdr->isCompressed() )
+         {
+            // Skip entries tagged NODISPLAY, e.g. cloud mask entries.
+            if (hdr->getRepresentation() != "NODISPLY")
+            {
+               theEntryList.push_back(i);
+               theNitfImageHeader.push_back(hdr);
+            }
+            else 
+            {
+               ossimString cat = hdr->getCategory().trim().downcase();
+               // this is an NGA Highr Resoluion Digital Terrain Model NITF format
+               if(cat == "dtem")
+               {
+                  theEntryList.push_back(i);
+                  theNitfImageHeader.push_back(hdr);
+               }
+            }
+
+         }
+         else if ( canUncompress(hdr.get()) )
+         {
+            theEntryList.push_back(i);
+            theCacheEnabledFlag = true;
+            theNitfImageHeader.push_back(hdr);
+         }
+         else
+         {
+            if(traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "Entry " << i
+                  <<" has an unsupported compression code = "
+                  << hdr->getCompressionCode() << std::endl;
+            }
+         }
+         
+      } // End: image header loop
+
+      // Reset the number of images in case we skipped some, e.g. tagged "NODISPLAY"
+      if ( theNitfImageHeader.size() )
+      {
+         theNumberOfImages = (ossim_uint32)theNitfImageHeader.size();
+      }
+      else
+      {
+         result = false;
+      }
+
+      
+
+      if ( result )
+      {
+         // Save the stream and connection/file name.
+         theFileStr = str;
+         theImageFile = file;
+         
+         // Initialize the lut to the current entry if the current entry has a lut.
+         initializeLut();
+
+         result = allocate();
+         
+         if (result)
+         {
+            completeOpen();
+         }
+      }
+      else
+      {
+         setErrorStatus();
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << MODULE << "DEBUG:\nNo images in file!" << endl;
+         }         
+      }
+   }
+   
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " exit status: " << (result?"true":"false") << "\n";
    }
    
    return result;
@@ -3100,8 +3261,6 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
 
 bool ossimNitfTileSource::uncompressJpegBlock(ossim_uint32 x, ossim_uint32 y)
 {
-   cout << "ossimNitfTileSource::uncompressJpegBlock entered..." << endl;
-   
    ossim_uint32 blockNumber = getBlockNumber( ossimIpt(x,y) );
 
    if (traceDebug())

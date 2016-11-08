@@ -1,18 +1,17 @@
 #ifndef ossimRpfCompressionSection_HEADER
-#define ossimRpfCompressionSection_HEADER
-#include <iostream>
-#include <vector>
-#include <iterator>
-using namespace std;
-#include <ossim/base/ossimErrorContext.h>
+#define ossimRpfCompressionSection_HEADER 1
+
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <vector>
 
 class ossimRpfCompressionSectionSubheader;
 
 struct ossimRpfCompressionOffsetTableData
 {
-   friend ostream& operator<<(ostream& out,
-                              const ossimRpfCompressionOffsetTableData& data);
+   friend std::ostream& operator<<(
+      std::ostream& out, const ossimRpfCompressionOffsetTableData& data);
    ossimRpfCompressionOffsetTableData();
    ossimRpfCompressionOffsetTableData(const ossimRpfCompressionOffsetTableData& rhs);
    ~ossimRpfCompressionOffsetTableData();
@@ -28,14 +27,14 @@ struct ossimRpfCompressionOffsetTableData
 class ossimRpfCompressionSection
 {
 public:
-   friend ostream& operator << (ostream& out,
-                                const ossimRpfCompressionSection& data);
+   friend std::ostream& operator << (
+      std::ostream& out, const ossimRpfCompressionSection& data);
    ossimRpfCompressionSection();
    virtual ~ossimRpfCompressionSection();
-   ossimErrorCode parseStream(istream& in,
+   ossimErrorCode parseStream(ossim::istream& in,
                               ossimByteOrder byteOrder);
-   void print(ostream& out)const;
-   const vector<ossimRpfCompressionOffsetTableData>& getTable()const
+   void print(std::ostream& out)const;
+   const std::vector<ossimRpfCompressionOffsetTableData>& getTable()const
       {
          return theTable;
       }
@@ -51,7 +50,7 @@ private:
    ossim_uint32 theCompressionLookupOffsetTableOffset;
    ossim_uint16 theCompressionLookupTableOffsetRecordLength;
 
-   vector<ossimRpfCompressionOffsetTableData> theTable;
+   std::vector<ossimRpfCompressionOffsetTableData> theTable;
 };
 
 #endif

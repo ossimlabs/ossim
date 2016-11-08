@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt.
+// License: MIT
 //
 // Author: Ken Melero
 //         Orginally written by Jamie Moyers (jmoyers@geeks.com)
@@ -8,17 +8,16 @@
 // Description: This class defines a DEM grid.
 //
 //********************************************************************
-// $Id: ossimDemGrid.h 9305 2006-07-19 17:47:04Z dburken $
+// $Id$
 
 #ifndef ossimDemGrid_HEADER
-#define ossimDemGrid_HEADER
-
-#include <iostream>
-#include <vector>
+#define ossimDemGrid_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/support_data/ossimDemHeader.h>
 #include <ossim/support_data/ossimDemProfile.h>
+#include <vector>
 
 /*!
  *  class ossimDemGrid
@@ -49,7 +48,7 @@ public:
     *    ==0  --  Conversion was successful. No more calls to read required.
     *     -1  --  Error during conversion.
     */
-   long read(std::istream& dem, bool incrementalRead = false);
+   long read(ossim::istream& dem, bool incrementalRead = false);
 
    // Accessors
    ossimDemHeader const& getHeader() const;
@@ -95,8 +94,8 @@ private:
    double _northwest_x, _northwest_y;
 
    void setElevation(long x, long y, ossim_float32 val);
-   long fillGeographic(std::istream& dem, bool incrementalRead);
-   long fillUTM(std::istream& dem, bool incrementalRead);
+   long fillGeographic(ossim::istream& dem, bool incrementalRead);
+   long fillUTM(ossim::istream& dem, bool incrementalRead);
 };
 
 inline void ossimDemGrid::setElevation(long x, long y, ossim_float32 val)

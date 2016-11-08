@@ -27,7 +27,6 @@
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 #include <ossim/support_data/ossimRpfToc.h>
 
-#include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <memory>
@@ -264,7 +263,7 @@ bool ossimNitfFile::parseFile(const ossimFilename& file)
    {
       // Open up a stream to the file.
       std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
-         createIstream( file, ios::in | ios::binary );
+         createIstream( file, std::ios_base::in | std::ios_base::binary );
 
       if ( str )
       {
@@ -397,13 +396,31 @@ ossimNitfImageHeader* ossimNitfFile::getNewImageHeader(
    ossim_uint32 imageNumber)const
 {
    ossimNitfImageHeader* result = 0;
+
+   if(theNitfFileHeader.valid())
+   {
+      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+         createIstream(theFilename, std::ios::in|std::ios::binary);
+      
+      if ( in )
+      {
+         result = getNewImageHeader( *in, imageNumber );
+      }
+   }
+   
+   return result;
+}
+
+ossimNitfImageHeader* ossimNitfFile::getNewImageHeader(
+   ossim::istream& in, ossim_uint32 imageNumber)const
+{
+   ossimNitfImageHeader* result = 0;
+
    if(theNitfFileHeader.valid())
    {
       try // getNewImageHeader can throw exception on parse.
       {
-         std::ifstream in(theFilename.c_str(), std::ios::in|std::ios::binary);
          result = theNitfFileHeader->getNewImageHeader(imageNumber, in);
-         in.close();
       }
       catch( const ossimException& e )
       {
@@ -417,6 +434,7 @@ ossimNitfImageHeader* ossimNitfFile::getNewImageHeader(
          result = 0;
       }
    }
+
    return result;
 }
 
@@ -424,14 +442,29 @@ ossimNitfSymbolHeader* ossimNitfFile::getNewSymbolHeader(
    ossim_uint32 symbolNumber)const
 {
    ossimNitfSymbolHeader* result = 0;
+
    if(theNitfFileHeader.valid())
    {
-      std::ifstream in(theFilename.c_str(), std::ios::in|std::ios::binary);
+      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+         createIstream(theFilename, std::ios::in|std::ios::binary);
 
-      result = theNitfFileHeader->getNewSymbolHeader(symbolNumber, in);
-      in.close();
+      if ( in )
+      {
+         result = getNewSymbolHeader( *in, symbolNumber );
+      }
    }
    
+   return result;
+}
+
+ossimNitfSymbolHeader* ossimNitfFile::getNewSymbolHeader(
+   ossim::istream& in, ossim_uint32 symbolNumber)const
+{
+   ossimNitfSymbolHeader* result = 0;
+   if(theNitfFileHeader.valid())
+   {
+      result = theNitfFileHeader->getNewSymbolHeader(symbolNumber, in);
+   }
    return result;
 }
 
@@ -441,12 +474,26 @@ ossimNitfLabelHeader* ossimNitfFile::getNewLabelHeader(
    ossimNitfLabelHeader* result = 0;
    if(theNitfFileHeader.valid())
    {
-      std::ifstream in(theFilename.c_str(), std::ios::in|std::ios::binary);
-
-      result = theNitfFileHeader->getNewLabelHeader(labelNumber, in);
-      in.close();
+      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+         createIstream(theFilename, std::ios::in|std::ios::binary);
+      
+      if ( in )
+      {
+         result = getNewLabelHeader( *in, labelNumber );
+      }
    }
    
+   return result;
+}
+
+ossimNitfLabelHeader* ossimNitfFile::getNewLabelHeader(
+   ossim::istream& in, ossim_uint32 labelNumber)const
+{
+   ossimNitfLabelHeader* result = 0;
+   if(theNitfFileHeader.valid())
+   {
+      result = theNitfFileHeader->getNewLabelHeader(labelNumber, in);
+   }
    return result;
 }
 
@@ -456,12 +503,25 @@ ossimNitfTextHeader* ossimNitfFile::getNewTextHeader(
    ossimNitfTextHeader* result = 0;
    if(theNitfFileHeader.valid())
    {
-      std::ifstream in(theFilename.c_str(), std::ios::in|std::ios::binary);
+      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+         createIstream(theFilename, std::ios::in|std::ios::binary);
 
-      result = theNitfFileHeader->getNewTextHeader(textNumber, in);
-      in.close();
+      if ( in )
+      {
+         result = getNewTextHeader( *in, textNumber );
+      }
    }
-   
+   return result;
+}
+
+ossimNitfTextHeader* ossimNitfFile::getNewTextHeader(
+   ossim::istream& in, ossim_uint32 textNumber)const
+{
+   ossimNitfTextHeader* result = 0;
+   if(theNitfFileHeader.valid())
+   {
+      result = theNitfFileHeader->getNewTextHeader(textNumber, in);
+   }
    return result;
 }
 
@@ -471,12 +531,25 @@ ossimNitfDataExtensionSegment* ossimNitfFile::getNewDataExtensionSegment(
    ossimNitfDataExtensionSegment* result = 0;
    if(theNitfFileHeader.valid())
    {
-      std::ifstream in(theFilename.c_str(), std::ios::in|std::ios::binary);
+      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+         createIstream(theFilename, std::ios::in|std::ios::binary);
 
-      result = theNitfFileHeader->getNewDataExtensionSegment(dataExtNumber, in);
-      in.close();
+      if ( in )
+      {
+         result = getNewDataExtensionSegment( *in, dataExtNumber );
+      }
    }
-   
+   return result;
+}
+
+ossimNitfDataExtensionSegment* ossimNitfFile::getNewDataExtensionSegment(
+   ossim::istream& in, ossim_uint32 dataExtNumber)const
+{
+   ossimNitfDataExtensionSegment* result = 0;
+   if(theNitfFileHeader.valid())
+   {
+      result = theNitfFileHeader->getNewDataExtensionSegment(dataExtNumber, in);
+   }
    return result;
 }
 

@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -11,17 +11,17 @@
 // Description: This class provides some simple utilities for DEMs.
 //
 //********************************************************************
-// $Id: ossimDemUtil.cpp 17501 2010-06-02 11:14:55Z dburken $
-
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
+// $Id$
 
 #include <ossim/support_data/ossimDemUtil.h>
-
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimKeywordlist.h>
-using namespace std;
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+#include <cstring>
+#include <iostream>
+#include <memory>
 
 static const char DEM_TYPE_KW[] = "dem_type";
 static const char USGS_DEM_KW[] = "usgs_dem";
@@ -82,10 +82,12 @@ bool ossimDemUtil::isUsgsDem(const ossimFilename& file)
       
       if ( result )
       {
+         
          // Open up the file for reading.
-         std::ifstream is(file.c_str(),
-                          std::ios_base::in | std::ios_base::binary);
-         if ( is.good() )
+         std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+            createIstream(file, std::ios_base::in | std::ios_base::binary);
+
+         if ( is && is->good() )
          {
             //---
             // SPECIAL HACK (drb):
@@ -94,7 +96,7 @@ bool ossimDemUtil::isUsgsDem(const ossimFilename& file)
             // rasters.
             //---
             ossim_uint8* ubuf = new ossim_uint8[512];
-            is.read((char*)ubuf, 512);
+            is->read((char*)ubuf, 512);
             for (int i = 0; i < 512; ++i)
             {
                if (ubuf[i] > 0x7f)
@@ -105,7 +107,6 @@ bool ossimDemUtil::isUsgsDem(const ossimFilename& file)
             }
             delete [] ubuf;
             ubuf = 0;
-            is.close();
          }
          else
          {
@@ -118,8 +119,7 @@ bool ossimDemUtil::isUsgsDem(const ossimFilename& file)
    return result;
 }
 
-bool
-ossimDemUtil::getRecord(istream& s, string& strbuf, long reclength)
+bool ossimDemUtil::getRecord(ossim::istream& s, std::string& strbuf, long reclength)
 {
    char* buf = new char[reclength + 1];
 
@@ -132,8 +132,7 @@ ossimDemUtil::getRecord(istream& s, string& strbuf, long reclength)
    return flag;
 }
 
-bool
-ossimDemUtil::getRecord(istream& s, char* buf, long reclength)
+bool ossimDemUtil::getRecord(ossim::istream& s, char* buf, long reclength)
 {
    // buf is assumed to be at least reclength+1 in size.
 
@@ -159,20 +158,30 @@ ossimDemUtil::getRecord(istream& s, char* buf, long reclength)
 }
 
 bool
-ossimDemUtil::getDouble(string const& strbuf,
-                   long const startpos,
-                   long const width,
-                   double& val)
+ossimDemUtil::getDouble(std::string const& strbuf,
+                        long const startpos,
+                        long const width,
+                        double& val)
 {
    if ((startpos + width - 1) > (long)(strbuf.length()))
       return false;
 
    // Convert FORTRAN 'D' exponent indicator to 'E'.
-   string tempbuf(strbuf.substr(startpos,width));
+   std::string tempbuf(strbuf.substr(startpos,width));
    for (unsigned int i = 0; i < tempbuf.length(); i++)
       if (tempbuf[i] == 'D')
          tempbuf[i] = 'E';
 
    val = atof(tempbuf.c_str());
    return true;
+}
+
+long ossimDemUtil::getLong(char* const strbuf, // string to extract long from
+                           long const startpos,  // starting position of field
+                           long const width)     // width of field
+{
+   char temp[1024];
+   std::strncpy(temp,strbuf+startpos,width);
+   temp[width] = '\0';
+   return atol(temp);
 }

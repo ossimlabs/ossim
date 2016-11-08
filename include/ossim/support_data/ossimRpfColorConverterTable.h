@@ -1,23 +1,22 @@
 #ifndef ossimRpfColorConverterTable_HEADER
-#define ossimRpfColorConverterTable_HEADER
-#include <iostream>
-using namespace std;
+#define ossimRpfColorConverterTable_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIosFwd.h>
 
 class ossimRpfColorConverterTable
 {
 public:
-   friend ostream& operator <<(ostream& out,
-                               const ossimRpfColorConverterTable& data);
+   friend std::ostream& operator <<(
+      std::ostream& out, const ossimRpfColorConverterTable& data);
    
    ossimRpfColorConverterTable();
    virtual ~ossimRpfColorConverterTable();
 
-   ossimErrorCode parseStream(istream& in,
+   ossimErrorCode parseStream(ossim::istream& in,
                               ossimByteOrder byteOrder);
-   void print(ostream& out)const;
+   void print(std::ostream& out)const;
    ossim_uint32 getEntry(ossim_uint32 entry){return theColorGrayscaleTableEntryList[entry];}
    void setNumberOfEntries(ossim_uint32 entries);
    void setTableId(ossim_uint16 id);

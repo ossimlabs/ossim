@@ -1,21 +1,22 @@
 #include <ossim/support_data/ossimRpfCompressionSectionSubheader.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
 
 ossimRpfCompressionSectionSubheader::ossimRpfCompressionSectionSubheader()
 {
    clearFields();
 }
 
-ostream& operator<<(ostream& out,
-                    const ossimRpfCompressionSectionSubheader& data)
+std::ostream& operator<<(std::ostream& out,
+                         const ossimRpfCompressionSectionSubheader& data)
 {
    data.print(out);
    
    return out;
 }
 
-ossimErrorCode ossimRpfCompressionSectionSubheader::parseStream(istream& in,
+ossimErrorCode ossimRpfCompressionSectionSubheader::parseStream(ossim::istream& in,
                                                                 ossimByteOrder byteOrder)
 {
    if(in)
@@ -45,11 +46,11 @@ ossimErrorCode ossimRpfCompressionSectionSubheader::parseStream(istream& in,
    return ossimErrorCodes::OSSIM_OK;
 }
    
-void ossimRpfCompressionSectionSubheader::print(ostream& out)const
+void ossimRpfCompressionSectionSubheader::print(std::ostream& out)const
 {
-   out << "theCompressionAlgorithmId:                    " << theCompressionAlgorithmId << endl
-       << "theNumberOfCompressionLookupOffsetRecords:    " << theNumberOfCompressionLookupOffsetRecords << endl
-       << "theNumberOfCompressionParameterOffsetRecords: " << theNumberOfCompressionParameterOffsetRecords;
+   out << "theCompressionAlgorithmId:                    " << theCompressionAlgorithmId
+       << "\ntheNumberOfCompressionLookupOffsetRecords:    " << theNumberOfCompressionLookupOffsetRecords
+       << "\ntheNumberOfCompressionParameterOffsetRecords: " << theNumberOfCompressionParameterOffsetRecords;
 }
 
 void ossimRpfCompressionSectionSubheader::clearFields()

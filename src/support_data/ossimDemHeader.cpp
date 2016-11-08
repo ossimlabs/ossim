@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -10,20 +10,23 @@
 // Description: This class parses a DEM header.
 //
 //********************************************************************
-// $Id: ossimDemHeader.cpp 15327 2009-09-01 20:31:16Z dburken $
+// $Id$
+
+#include <ossim/support_data/ossimDemHeader.h>
+#include <ossim/support_data/ossimDemUtil.h>
+
+#include <ossim/base/ossimCommon.h>
+#include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimKeywordlist.h>
+#include <ossim/base/ossimKeywordNames.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+#include <ossim/base/ossimString.h>
 
 #include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <ossim/support_data/ossimDemHeader.h>
-#include <ossim/support_data/ossimDemUtil.h>
-
-#include <ossim/base/ossimFilename.h>
-#include <ossim/base/ossimString.h>
-#include <ossim/base/ossimKeywordlist.h>
-#include <ossim/base/ossimConstants.h>
-#include <ossim/base/ossimCommon.h>
-#include <ossim/base/ossimKeywordNames.h>
 
 static const char* PROCESS_CODE[]
 = { "Autocorrelation resample simple bilinear",
@@ -373,11 +376,12 @@ operator<<(std::ostream& s, const ossimDemHeader& header)
 bool ossimDemHeader::open(const ossimFilename& file)
 {
    bool result = ossimDemUtil::isUsgsDem(file);
-   std::ifstream is(file.c_str(), std::ios_base::in | std::ios_base::binary);
-   if ( is.good() )
+
+   std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+      createIstream(file, std::ios_base::in | std::ios_base::binary);
+   if ( is && is->good() )
    {
-      open(is);
-      is.close();
+      open( *is );
    }
    else
    {
@@ -386,7 +390,7 @@ bool ossimDemHeader::open(const ossimFilename& file)
    return result;
 }
 
-std::istream& ossimDemHeader::open(std::istream& is)
+ossim::istream& ossimDemHeader::open(ossim::istream& is)
 {
    if ( is.good() )
    {
@@ -627,7 +631,7 @@ std::ostream& ossimDemHeader::print(std::ostream& out) const
    return out;
 }
 
-std::istream& operator>>(std::istream& s, ossimDemHeader& header)
+ossim::istream& operator>>(ossim::istream& s, ossimDemHeader& header)
 {
    return header.open(s);
 }

@@ -1,18 +1,20 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author: Garrett Potts
 // 
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfTagInformation.h 22418 2013-09-26 15:01:12Z gpotts $
+// $Id$
+
 #ifndef ossimNitfTagInformation_HEADER
-#define ossimNitfTagInformation_HEADER
+#define ossimNitfTagInformation_HEADER 1
 
 #include <ossim/base/ossimObject.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 
 class ossimString;
@@ -23,8 +25,8 @@ public:
    ossimNitfTagInformation(ossimRefPtr<ossimNitfRegisteredTag> tagData = 0);
    virtual ~ossimNitfTagInformation();
    
-   virtual void parseStream(std::istream& in);
-   virtual void writeStream(std::ostream& out);
+   virtual void parseStream(ossim::istream& in);
+   virtual void writeStream(ossim::ostream& out);
 
    void setTagName(const ossimString& tagName);
    void setTagLength(ossim_uint32 tagLength);

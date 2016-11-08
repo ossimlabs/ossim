@@ -31,8 +31,10 @@ public:
    virtual ~ossimImageHandlerRegistry();
    
    static ossimImageHandlerRegistry* instance();
-   
 
+   ossimRefPtr<ossimImageHandler> openConnection(
+      const ossimString& connectionString, bool openOverview=true  )const;
+   
    /**
     * @brief open that takes a filename.
     * @param fileName File to open.
@@ -68,9 +70,10 @@ public:
     *  
     *  @return This implementation returns an ossimRefPtr with a null pointer.
     */
-   virtual ossimRefPtr<ossimImageHandler> open( std::istream* str,
-                                                std::streamoff restartPosition,
-                                                bool youOwnIt ) const;   
+   virtual ossimRefPtr<ossimImageHandler> open(
+      ossim::istream* str,
+      std::streamoff restartPosition,
+      bool youOwnIt ) const;   
    
    /**
     * @brief Open overview that takes a file name.

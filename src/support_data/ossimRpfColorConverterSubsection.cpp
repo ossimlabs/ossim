@@ -1,24 +1,25 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
 // Author: Garrett Potts
 //
 //********************************************************************
-// $Id: ossimRpfColorConverterSubsection.cpp 9094 2006-06-13 19:12:40Z dburken $
+// $Id$
 
 #include <ossim/support_data/ossimRpfColorConverterSubsection.h>
 #include <ossim/support_data/ossimRpfColorConverterOffsetRecord.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
+#include <iterator>
 
-ostream& operator <<(ostream& out,
-                     const ossimRpfColorConverterSubsection& data)
+std::ostream& operator <<(std::ostream& out,
+                          const ossimRpfColorConverterSubsection& data)
 {
    data.print(out);
-   
    return out;
 }
 
@@ -39,7 +40,7 @@ void ossimRpfColorConverterSubsection::clearFields()
 
 const ossimRpfColorConverterTable* ossimRpfColorConverterSubsection::getColorConversionTable(ossim_uint32 givenThisNumberOfEntires)const
 {
-   vector<ossimRpfColorConverterTable>::const_iterator listElement = theTableList.begin();
+   std::vector<ossimRpfColorConverterTable>::const_iterator listElement = theTableList.begin();
 
    while(listElement != theTableList.end())
    {
@@ -52,7 +53,7 @@ const ossimRpfColorConverterTable* ossimRpfColorConverterSubsection::getColorCon
    return NULL;
 }
 
-ossimErrorCode ossimRpfColorConverterSubsection::parseStream(istream& in,
+ossimErrorCode ossimRpfColorConverterSubsection::parseStream(ossim::istream& in,
                                                              ossimByteOrder byteOrder)
 {
    if(in)
@@ -91,10 +92,10 @@ ossimErrorCode ossimRpfColorConverterSubsection::parseStream(istream& in,
 
             theTableList[index].setNumberOfEntries(recordInfo.theNumberOfColorConverterRecords);
             theTableList[index].setTableId(recordInfo.theColorConverterTableId);
-            in.seekg(theStartOffset + recordInfo.theColorConverterTableOffset, ios::beg);
+            in.seekg(theStartOffset + recordInfo.theColorConverterTableOffset, std::ios_base::beg);
             theTableList[index].parseStream(in, byteOrder);
             
-            in.seekg(rememberGet, ios::beg);
+            in.seekg(rememberGet, std::ios_base::beg);
          }
          else
          {
@@ -115,16 +116,16 @@ void ossimRpfColorConverterSubsection::setNumberOfColorConverterOffsetRecords(os
    theNumberOfColorConverterOffsetRecords = numberOfRecords;
 }
 
-void ossimRpfColorConverterSubsection::print(ostream& out)const
+void ossimRpfColorConverterSubsection::print(std::ostream& out)const
 {
    out << "theColorConverterOffsetTableOffset:      "
-       << theColorConverterOffsetTableOffset << endl
-       << "theColorConverterOffsetRecordLength:     "
-       << theColorConverterOffsetRecordLength << endl
-       << "theConverterRecordLength:                "
-       << theConverterRecordLength << endl;
+       << theColorConverterOffsetTableOffset
+       << "\ntheColorConverterOffsetRecordLength:     "
+       << theColorConverterOffsetRecordLength
+       << "\ntheConverterRecordLength:                "
+       << theConverterRecordLength << "\n";
 
    copy(theTableList.begin(),
         theTableList.end(),
-        ostream_iterator<ossimRpfColorConverterTable>(out, "\n"));
+        std::ostream_iterator<ossimRpfColorConverterTable>(out, "\n"));
 }
