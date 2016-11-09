@@ -43,7 +43,7 @@ std::shared_ptr<ossim::istream> ossim::StreamFactoryRegistry::createIstream(
 {
    std::shared_ptr<ossim::istream> result(0);
    ossim_uint32 i = 0;
-   for(i = 0; (i < (int)m_factoryList.size())&&(!result); ++i)
+   for(i = 0; (i < m_factoryList.size())&&(!result); ++i)
    {
       result = m_factoryList[i]->createIstream(connectionString, openMode);
    }
