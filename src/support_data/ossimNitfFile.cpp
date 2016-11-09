@@ -259,7 +259,7 @@ bool ossimNitfFile::parseFile(const ossimFilename& file)
          << "DEBUG ossimNitfFile::parseFile: entered...\n";
    }
    
-   if( file.exists() )
+   //if( file.exists() )
    {
       // Open up a stream to the file.
       std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
