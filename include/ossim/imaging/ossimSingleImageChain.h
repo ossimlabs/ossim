@@ -491,6 +491,15 @@ public:
 
    /**
     * @brief method to set band selector.
+    * 
+    * This will set the band selection to a default setting.  If a band selector is
+    * not in the chain yet it will be added.
+    *
+   */
+   void setToDefaultBandSelection();
+
+   /**
+    * @brief method to set band selector.
     *
     * This will set the band selection to bandList.  If a band selector is
     * not in the chain yet it will be added.

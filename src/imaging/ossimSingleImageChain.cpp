@@ -907,6 +907,21 @@ void ossimSingleImageChain::setToThreeBandsReverse()
    }
 }
 
+
+void ossimSingleImageChain::setToDefaultBandSelection()
+{
+   if (!m_bandSelector)
+   {
+      addBandSelector();
+   }
+   m_bandSelector->setEnableFlag(true);
+   m_bandSelector->setDefaultBandList();
+   if ( m_histogramRemapper.valid() )
+   {
+      m_histogramRemapper->initialize();
+   }   
+}
+
 void ossimSingleImageChain::setBandSelection(
    const std::vector<ossim_uint32>& bandList)
 {
@@ -921,6 +936,8 @@ void ossimSingleImageChain::setBandSelection(
       m_histogramRemapper->initialize();
    }
 }
+
+
 ossimScalarType ossimSingleImageChain::getImageHandlerScalarType() const
 {
    ossimScalarType result = OSSIM_SCALAR_UNKNOWN;

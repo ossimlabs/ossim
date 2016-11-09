@@ -1827,6 +1827,10 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
                   {
                      ic->setBandSelection( bandList );
                   }
+                  else
+                  {
+                    ic->setToDefaultBandSelection();
+                  }
                }
             }
 
@@ -4871,7 +4875,7 @@ void ossimChipperUtil::getBandList( std::vector<ossim_uint32>& bandList ) const
    {
       ossimString os;
       os.string() = m_kwl->findKey( std::string( ossimKeywordNames::BANDS_KW ) );
-      if ( os.size() )
+      if ( os.size() &&(os!="default"))
       {
          std::vector<ossimString> band_list(0);
          os.split( band_list, ossimString(","), false );
