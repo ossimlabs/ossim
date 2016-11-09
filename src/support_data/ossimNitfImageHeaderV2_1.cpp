@@ -116,7 +116,12 @@ void ossimNitfImageHeaderV2_1::parseStream(ossim::istream& in, const ossimNitfFi
    // for now just ignore the comments
    if(numberOfComments > 0)
    {
-      in.ignore(numberOfComments*80);
+      //---
+      // NOTE: The ossim::S3IStream is not handling the "ignore" so changed out
+      // to a seekg for now.  (drb 09 Nov. 2016)
+      //---
+      // in.ignore(numberOfComments*80);
+      in.seekg( numberOfComments*80, std::ios_base::cur );
    }
    in.read(theCompression, 2);
    
