@@ -254,7 +254,7 @@ ossimString ossimFfRevc::pathRow(int sceneNbr) const
 //***************************************************************************
 void ossimFfRevc::print(std::ostream& os) const
 {
-   os << setiosflags(std::ios_base::left | std::ios_base::fixed)
+   os << std::setiosflags(std::ios_base::left | std::ios_base::fixed)
       << "Administrative Record:"
       << std::setw(30) << "\ntheProductOrderNumber:" 
       << theAdminRecord.theProductOrderNumber;
@@ -388,7 +388,7 @@ void ossimFfRevc::print(std::ostream& os) const
       << std::setw(30) << "\nSunElevationAngle:" 
       << std::setprecision(1) << theGeoRecord.theSunElevationAngle
       << std::setw(30) << "\nSunAzimuth:" <<  theGeoRecord.theSunAzimuth
-      << resetiosflags(std::ios_base::left)
+      << std::resetiosflags(std::ios_base::left)
       << "\n\n";
 
 }
@@ -527,7 +527,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
    // Start of administrative record.
    //<
 
-   os << setiosflags(std::ios_base::fixed)  // Disable scientific mode.
+   os << std::setiosflags(std::ios_base::fixed)  // Disable scientific mode.
 
       << PRODUCT_ID_DESC
 
@@ -573,10 +573,10 @@ void ossimFfRevc::write(ossim::ostream& os) const
          << LOOK_ANGLE_DESC
 
          << std::setw(OFF_NADIR_ANGLE_SIZE)
-         << setiosflags(std::ios_base::right)
+         << std::setiosflags(std::ios_base::right)
          << std::setprecision(2) 
          << theAdminRecord.theOffNadirAngle[i] // End of scene.
-         << resetiosflags(std::ios_base::right)
+         << std::resetiosflags(std::ios_base::right)
          << "\n" 
          << std::setw(23) << SPACE; // End of line.
    } // End of scene loop.
@@ -585,7 +585,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
 
    os << PRODUCT_TYPE_DESC
 
-      << setiosflags(std::ios_base::left)
+      << std::setiosflags(std::ios_base::left)
       
       << std::setw(PRODUCT_TYPE_SIZE)
       << theAdminRecord.theProductType
@@ -609,7 +609,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
       << std::setw(RESAMPLING_ALGO_SIZE)
       << theAdminRecord.theResampAlgorithm
 
-      << resetiosflags(std::ios_base::left)
+      << std::resetiosflags(std::ios_base::left)
 
       << std::setw(33) << SPACE << "\n"; // End of line.
 
@@ -617,7 +617,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
    
    os << TAPE_VOLUME_NUMBER_DESC
 
-      << setiosflags(std::ios_base::right)
+      << std::setiosflags(std::ios_base::right)
 
       << std::setw(TAPE_VOLUME_NUMBER_SIZE) 
       << theAdminRecord.theTapeVolumeNumber
@@ -643,7 +643,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
   
    os.seekp(880, std::ios_base::beg);  // Start of line.
 
-   os << setiosflags(std::ios_base::right)
+   os << std::setiosflags(std::ios_base::right)
 
       << FIRST_LINE_DESC
 
@@ -681,7 +681,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
       << std::setw(BITS_PER_PIXEL_SIZE)
       << theAdminRecord.theAcquiredBitsPerPixel
 
-      << resetiosflags(std::ios_base::right)
+      << std::resetiosflags(std::ios_base::right)
 
       << std::setw(26) << SPACE << "\n";  // End of line.
 
@@ -725,7 +725,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
    // band.
    //***
    
-   os << resetiosflags(std::ios_base::left) << setiosflags(std::ios_base::right);
+   os << std::resetiosflags(std::ios_base::left) << std::setiosflags(std::ios_base::right);
 
    for (i = 0; i < 8; i++)
    {
@@ -744,7 +744,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
          << std::setw(30) << SPACE << "\n";
    } // End of loop through the bands.
 
-   os << resetiosflags(std::ios_base::right);
+   os << std::resetiosflags(std::ios_base::right);
 
    os.seekp(2256, std::ios_base::beg);
 
@@ -774,7 +774,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
 
       << MAP_PROJECTION_NAME_DESC
 
-      << setiosflags(std::ios_base::left) // Alpha fields left justified.
+      << std::setiosflags(std::ios_base::left) // Alpha fields left justified.
 
       << std::setw(MAP_PROJECTION_NAME_SIZE)
       << theGeoRecord.theMapProjectionName
@@ -789,7 +789,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
       << std::setw(DATUM_SIZE)
       << theGeoRecord.theDatum
 
-      << resetiosflags(std::ios_base::left)
+      << std::resetiosflags(std::ios_base::left)
       
       << "\n" // End of line
 
@@ -798,7 +798,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
 
    os.seekp(PROJ_PARAM_OFFSET[0], std::ios_base::beg);
    os << std::setprecision(15)
-      << setiosflags(std::ios_base::right)
+      << std::setiosflags(std::ios_base::right)
       
       << std::setw(PROJECTION_PARAMETER_SIZE) 
       << theGeoRecord.theProjectionParams[0]
@@ -838,7 +838,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
    os.seekp(PROJ_PARAM_OFFSET[14], std::ios_base::beg);
    os << std::setw(PROJECTION_PARAMETER_SIZE) 
       << theGeoRecord.theProjectionParams[14]
-      << std::setw(55) << SPACE << "\n" << resetiosflags(std::ios_base::right);
+      << std::setw(55) << SPACE << "\n" << std::resetiosflags(std::ios_base::right);
 
 
    os.seekp(3632, std::ios_base::beg);
@@ -856,7 +856,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
 
       << std::setprecision(3)
       
-      << std::setw(EASTING_SIZE) << setiosflags(std::ios_base::right) 
+      << std::setw(EASTING_SIZE) << std::setiosflags(std::ios_base::right) 
       << theGeoRecord.theUlEasting
 
       << SPACE
@@ -864,7 +864,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
       << std::setw(NORTHING_SIZE) 
       << theGeoRecord.theUlNorthing
 
-      << std::setw(20) << SPACE << "\n" << resetiosflags(std::ios_base::right);
+      << std::setw(20) << SPACE << "\n" << std::resetiosflags(std::ios_base::right);
 
       
    os.seekp(3712, std::ios_base::beg);
@@ -880,7 +880,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
 
       << SPACE
 
-      << std::setw(EASTING_SIZE) << setiosflags(std::ios_base::right) 
+      << std::setw(EASTING_SIZE) << std::setiosflags(std::ios_base::right) 
       << theGeoRecord.theUrEasting
 
       << SPACE
@@ -888,7 +888,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
       << std::setw(NORTHING_SIZE) 
       << theGeoRecord.theUrNorthing
 
-      << std::setw(20) << SPACE << "\n" << resetiosflags(std::ios_base::right);
+      << std::setw(20) << SPACE << "\n" << std::resetiosflags(std::ios_base::right);
 
       
    os.seekp(3792, std::ios_base::beg);
@@ -904,7 +904,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
 
       << SPACE
 
-      << std::setw(EASTING_SIZE) << setiosflags(std::ios_base::right) 
+      << std::setw(EASTING_SIZE) << std::setiosflags(std::ios_base::right) 
       << theGeoRecord.theLrEasting
 
       << SPACE
@@ -912,7 +912,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
       << std::setw(NORTHING_SIZE) 
       << theGeoRecord.theLrNorthing
 
-      << std::setw(20) << SPACE << "\n" << resetiosflags(std::ios_base::right);
+      << std::setw(20) << SPACE << "\n" << std::resetiosflags(std::ios_base::right);
 
       
    os.seekp(3872, std::ios_base::beg);
@@ -928,7 +928,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
 
       << SPACE
 
-      << std::setw(EASTING_SIZE) << setiosflags(std::ios_base::right) 
+      << std::setw(EASTING_SIZE) << std::setiosflags(std::ios_base::right) 
       << theGeoRecord.theLlEasting
 
       << SPACE
@@ -936,7 +936,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
       << std::setw(NORTHING_SIZE) 
       << theGeoRecord.theLlNorthing
 
-      << std::setw(20) << SPACE << "\n" << resetiosflags(std::ios_base::right);
+      << std::setw(20) << SPACE << "\n" << std::resetiosflags(std::ios_base::right);
 
    os.seekp(3952, std::ios_base::beg);
    os << CENTER_DESC
@@ -953,7 +953,7 @@ void ossimFfRevc::write(ossim::ostream& os) const
 
       << SPACE
 
-      << std::setw(EASTING_SIZE) << setiosflags(std::ios_base::right) 
+      << std::setw(EASTING_SIZE) << std::setiosflags(std::ios_base::right) 
       << theGeoRecord.theCenterEasting
 
       << SPACE

@@ -266,7 +266,7 @@ double ossimFfRevb::projParam(int paramNumber) const
 //***************************************************************************
 void ossimFfRevb::print(std::ostream& os) const
 {
-   os << setiosflags(std::ios_base::left | std::ios_base::fixed)
+   os << std::setiosflags(std::ios_base::left | std::ios_base::fixed)
       << std::setw(30) << "\nimage_id:" 
       << theProductOrderNumber
       << std::setw(30) << "\npath_row_number:"
@@ -315,7 +315,7 @@ void ossimFfRevb::print(std::ostream& os) const
       os << "\nprojection_parameter_" << i+1 << std::setw(10) << ":"
          << std::setw(24) << theUsgsProjParam[i];
    }
-   os << resetiosflags(std::ios_base::right);
+   os << std::resetiosflags(std::ios_base::right);
    
 
    os << std::setw(30) << "\nellipsoid:" 
@@ -571,7 +571,7 @@ void ossimFfRevb::write(ossim::ostream& os) const
       << std::setw(VOLUME_NUMBER_SIZE) 
       << theVolumeNumber
 
-      << resetiosflags(std::ios_base::left)
+      << std::resetiosflags(std::ios_base::left)
       << std::setiosflags(std::ios_base::right)
 
       << FIRST_LINE_DESC
@@ -612,7 +612,7 @@ void ossimFfRevb::write(ossim::ostream& os) const
       << ELLIPSOID_DESC
       << std::setw(ELLIPSOID_SIZE)
       << theEllipsoid
-      << resetiosflags(std::ios_base::left)
+      << std::resetiosflags(std::ios_base::left)
       << std::setprecision(3)
 
       << std::setiosflags(std::ios_base::right)
@@ -693,7 +693,7 @@ void ossimFfRevb::write(ossim::ostream& os) const
       << std::setw(NORTHING_SIZE) 
       << theLlNorthing
 
-      << resetiosflags(std::ios_base::right);
+      << std::resetiosflags(std::ios_base::right);
 
    os << BANDS_PRESENT_DESC
       << std::setw(BANDS_PRESENT_SIZE) 
