@@ -1775,7 +1775,9 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
 
    if ( file.size() )
    {
-      if ( file.exists() )
+      // ossimFilename::exists() currently does not work with s3 url's.
+      // if ( file.exists() )
+      if ( 1 )
       {
          ic = new ossimSingleImageChain;
          if ( ic->open( file ) )
