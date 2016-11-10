@@ -1390,7 +1390,10 @@ void ossimInfo::openImage(const ossimFilename& file)
 
 ossimRefPtr<ossimImageHandler> ossimInfo::openImageHandler(const ossimFilename& file) const
 {
-   ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->open(file);
+   // Go through new interface that passes a stream around. (drb 10 Nov. 2016)
+   // ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->open(file);
+   ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->
+      openConnection(file);
    if ( result.valid() == false )
    {
       std::string errMsg = "ossimInfo::openImage ERROR:\nCould not open: ";

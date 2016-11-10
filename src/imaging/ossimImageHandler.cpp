@@ -894,16 +894,41 @@ bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
 
 bool ossimImageHandler::openOverview()
 {
+   static const char MODULE[] = "ossimImageHandler::openOverview()";
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+   }
+   
+   bool result = false;
+   
    closeOverview();
    
    // 1) ESH 03/2009 -- Use the overview file set e.g. using a .spec file.
    ossimFilename overviewFilename = getOverviewFile();
-   
-   if (overviewFilename.empty() || (overviewFilename.exists() == false) )
+
+   // ossimFilename::exists() currently does not work with s3 url's.
+   if ( overviewFilename.empty() ) // || (overviewFilename.exists() == false) )
    {
       // 2) Generate the name from image name.
       overviewFilename = createDefaultOverviewFilename();
-      
+   }
+
+   // ossimFilename::exists() currently does not work with s3 url's.
+   if ( overviewFilename.size() ) 
+   {
+      result = openOverview( overviewFilename );
+
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << (result?"Opened ":"Could not open ") << "overview: " << overviewFilename
+            << "\n";
+      }
+   }
+
+   if ( !result )
+   {
       if (overviewFilename.empty() || (overviewFilename.exists() == false) )
       {  
          // 3) For backward compatibility check if single entry and _e0.ovr
@@ -938,30 +963,27 @@ bool ossimImageHandler::openOverview()
             overviewFilename += ".ovr";
          }
       }
+   
+      if ( overviewFilename.exists() )
+      {
+         result = openOverview( overviewFilename );
+
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << (result?"Opened ":"Could not open ") << "overview: " << overviewFilename
+               << "\n";
+         }
+      }
    }
 
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "Looking for " << overviewFilename
-         << " overview file..." << std::endl;
+         << MODULE << " exit result: " << (result?"true":"false") << "\n";
    }
 
-   bool status = false;
-   
-   if ( overviewFilename.exists() )
-   {
-      status = openOverview( overviewFilename );
-   }
-
-   if ( !status  && traceDebug() )
-   {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "ossimImageHandler::openOverview NOTICE:"
-         << "\nCould not find an overview." << std::endl;
-   }
-
-   return status;
+   return result;
 }
 
 
