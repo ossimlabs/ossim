@@ -70,6 +70,7 @@ std::ostream& ossimNitfFile::print(std::ostream& out,
                   }
                }
 
+#if 0 /* Not sure why this was in there for a print. (drb 09 Nov. 2016) */
                //---
                // Now see if it's a cloud mask image.  Do not print
                // cloud mask images if the printOverviews is false.
@@ -84,6 +85,7 @@ std::ostream& ossimNitfFile::print(std::ostream& out,
                      printIt = false;
                   }
                }
+#endif
             }
 
             if (printIt)

@@ -46,7 +46,7 @@ public:
     */
    std::ostream& print(std::ostream& out,
                        const std::string& prefix=std::string(),
-                       bool printOverviews=false) const;
+                       bool printOverviews=true) const;
 
    /**
     * @brief print method that outputs a key/value type format adding prefix

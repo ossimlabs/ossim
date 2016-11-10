@@ -111,6 +111,20 @@ public:
    virtual ossimRefPtr<ossimImageHandler> openOverview(
       const ossimFilename& file ) const;
 
+   /**
+    * @brief Open method that takes a stream.
+    *
+    * This implementation returns an ossimRefPtr with a null pointer.
+    * 
+    * @param str Open stream to image.
+    * @param connectionString
+    * @return ossimImageHandler
+    */
+   virtual ossimRefPtr<ossimImageHandler> openOverview(
+      std::shared_ptr<ossim::istream>& str,
+      const ossimString& connectionString ) const;
+
+
    virtual void getImageHandlersBySuffix(ImageHandlerList& result,
                                          const ossimString& ext)const;
 

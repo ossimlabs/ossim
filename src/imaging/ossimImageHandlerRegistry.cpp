@@ -160,6 +160,8 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openConnection(
          }
          ++factory;
       }
+
+      str = 0; 
    }
 
    if ( result.valid() == false )
@@ -241,16 +243,40 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openOverview(
    const ossimFilename& file ) const
 {
    ossimRefPtr<ossimImageHandler> result = 0;
-   vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
-   while( factory != m_factoryList.end() )
+
+   // See if we can open via the stream interface:
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file, std::ios_base::in|std::ios_base::binary);
+   
+   if ( str )
    {
-      result = (*factory)->openOverview( file );
-      if ( result.valid() )
+      std::vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+      while( factory != m_factoryList.end() )
       {
-         break;
+         result = (*factory)->openOverview( str, file );
+         if ( result.valid() )
+         {
+            break;
+         }
+         ++factory;
       }
-      ++factory;
-   }  
+
+      str = 0;
+   }
+
+   if ( (result.valid() == false) && file.exists() )
+   {  
+      vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+      while( factory != m_factoryList.end() )
+      {
+         result = (*factory)->openOverview( file );
+         if ( result.valid() )
+         {
+            break;
+         }
+         ++factory;
+      }
+   }
    return result;
 }
 

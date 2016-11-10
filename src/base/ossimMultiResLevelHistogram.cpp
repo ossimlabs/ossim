@@ -13,6 +13,7 @@
 #include <ossim/base/ossimKeyword.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <fstream>
 using namespace std;
 
@@ -333,14 +334,24 @@ bool ossimMultiResLevelHistogram::importHistogram(std::istream& in)
 
 bool ossimMultiResLevelHistogram::importHistogram(const ossimFilename& file)
 {
-   if( file.fileSize() > 0 )
+   //---
+   // File size check removed for s3
+   // if( file.fileSize() > 0 )
+   // {
+   //    theHistogramFile = file;
+   
+   bool result = false;
+   std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file, std::ios_base::in );
+   if ( in )
    {
-      theHistogramFile = file;
-      
-      ifstream input(file.c_str());
-      return importHistogram(input);
+      result = importHistogram( *in );
+      if ( result )
+      {
+         theHistogramFile = file;
+      }
    }
-   return false;
+   return result;
 }
 
 bool ossimMultiResLevelHistogram::ossimProprietaryHeaderInformation::parseStream(std::istream& in)
