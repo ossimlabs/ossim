@@ -39,7 +39,7 @@ ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::instance()
 }
 
 std::shared_ptr<ossim::istream> ossim::StreamFactoryRegistry::createIstream(
-   const ossimString& connectionString, std::ios_base::openmode openMode) const
+   const std::string& connectionString, std::ios_base::openmode openMode) const
 {
    std::shared_ptr<ossim::istream> result(0);
    ossim_uint32 i = 0;
@@ -51,14 +51,14 @@ std::shared_ptr<ossim::istream> ossim::StreamFactoryRegistry::createIstream(
 }
       
 std::shared_ptr<ossim::ostream> ossim::StreamFactoryRegistry::createOstream(
-   const ossimString& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
+   const std::string& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
 {
    std::shared_ptr<ossim::ostream> result(0);
    return result;
 }
 
 std::shared_ptr<ossim::iostream> ossim::StreamFactoryRegistry::createIOstream(
-   const ossimString& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
+   const std::string& /*connectionString*/, std::ios_base::openmode /*openMode*/) const
 {
    std::shared_ptr<ossim::iostream> result(0);
    return result;

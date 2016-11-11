@@ -27,17 +27,17 @@ namespace ossim
       virtual ~StreamFactory();
 
       virtual std::shared_ptr<ossim::istream>
-         createIstream(const ossimString& connectionString,
+         createIstream(const std::string& connectionString,
                        std::ios_base::openmode mode=
                        std::ios_base::in|std::ios_base::binary) const;
       
       virtual std::shared_ptr<ossim::ostream>
-         createOstream(const ossimString& connectionString,
+         createOstream(const std::string& connectionString,
                        std::ios_base::openmode mode=
                        std::ios_base::out|std::ios_base::binary) const;
       
       virtual std::shared_ptr<ossim::iostream>
-         createIOstream(const ossimString& connectionString,
+         createIOstream(const std::string& connectionString,
                         std::ios_base::openmode mode=
                         std::ios_base::in|std::ios_base::out|std::ios_base::binary) const;
    

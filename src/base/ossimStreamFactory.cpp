@@ -21,8 +21,6 @@
 
 #include <fstream>
 
-static bool trace = false; // tmp drb...
-
 ossim::StreamFactory* ossim::StreamFactory::m_instance = 0;
 
 ossim::StreamFactory::~StreamFactory()
@@ -35,43 +33,32 @@ ossim::StreamFactory* ossim::StreamFactory::instance()
    {
       m_instance = new ossim::StreamFactory();
    }
-
    return m_instance;
 }
 
 std::shared_ptr<ossim::istream> ossim::StreamFactory::createIstream(
-   const ossimString& connectionString, std::ios_base::openmode mode ) const
+   const std::string& connectionString, std::ios_base::openmode mode ) const
 {
-   // tmp drb
-   if ( trace ) std::cout << "ossim::StreamFactory::createIstream entered..." << std::endl;
-
    std::shared_ptr<ossim::istream> result(0);
-
    ossimFilename f =  connectionString;
    if ( f.exists() )
    {
       result = std::make_shared<ossim::ifstream>(
          ossim::ifstream( connectionString.c_str(), mode ) );
    }
-
-   // tmp drb
-   if ( trace )std::cout << "ossim::StreamFactory::createIstream exited..." << std::endl;  
-
    return result;
 }
       
 std::shared_ptr<ossim::ostream> ossim::StreamFactory::createOstream(
-   const ossimString& /*connectionString*/, std::ios_base::openmode /*mode*/) const
+   const std::string& /*connectionString*/, std::ios_base::openmode /*mode*/) const
 {
-   std::shared_ptr<ossim::ostream> result(0);
-   return result;
+   return std::shared_ptr<ossim::ostream>(0);
 }
 
 std::shared_ptr<ossim::iostream> ossim::StreamFactory::createIOstream(
-   const ossimString& /*connectionString*/, std::ios_base::openmode /*mode*/) const
+   const std::string& /*connectionString*/, std::ios_base::openmode /*mode*/) const
 {
-   std::shared_ptr<ossim::iostream> result(0);
-   return result;
+   return std::shared_ptr<ossim::iostream>(0);
 }
 
 // Hidden from use:
@@ -83,10 +70,6 @@ ossim::StreamFactory::StreamFactory()
 ossim::StreamFactory::StreamFactory(const ossim::StreamFactory& )
 {
 }
-
-
-
-
 
 // Deprecated code...
 ossimStreamFactory* ossimStreamFactory::theInstance = 0;

@@ -18,9 +18,9 @@
 #include <ossim/base/ossimIoStream.h>
 #include <iosfwd>
 #include <memory>
+#include <string>
 
 class ossimFilename;
-class ossimString;
 
 namespace ossim
 {
@@ -30,15 +30,15 @@ namespace ossim
       virtual ~StreamFactoryBase(){}
       
       virtual std::shared_ptr<ossim::istream>
-         createIstream(const ossimString& connectionString,
+         createIstream(const std::string& connectionString,
                        std::ios_base::openmode mode) const=0;
 
       virtual std::shared_ptr<ossim::ostream>
-         createOstream(const ossimString& connectionString,
+         createOstream(const std::string& connectionString,
                        std::ios_base::openmode mode) const=0;
 
       virtual std::shared_ptr<ossim::iostream>
-         createIOstream(const ossimString& connectionString,
+         createIOstream(const std::string& connectionString,
                         std::ios_base::openmode mode) const=0;
    };
 }
