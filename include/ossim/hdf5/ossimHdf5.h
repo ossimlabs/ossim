@@ -24,7 +24,7 @@
  * Note, all methods return by value as that is the way HDF5 returns objects. This seems very
  * inefficient, particularly for large datasets. Hopefully they are shallow copies.
  */
-class OSSIMDLLEXPORT ossimHdf5 : public ossimReferenced
+class OSSIM_DLL ossimHdf5 : public ossimReferenced
 {
 public:
    ossimHdf5();
