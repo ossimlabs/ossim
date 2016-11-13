@@ -188,7 +188,7 @@ bool ossimNitfTileSource::open()
 }
 
 bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
-                                const ossimString& connectionString )
+                                const std::string& connectionString )
 {
    static const char MODULE[] = "ossimNitfTileSource::open( stream, ...)";
 

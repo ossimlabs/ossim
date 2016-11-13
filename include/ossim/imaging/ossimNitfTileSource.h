@@ -70,8 +70,15 @@ public:
     */
    virtual bool open();
 
+   /**
+    *  @brief This open takes a stream and stores/captures the shared pointer
+    *  on success.
+    *  @param str Open stream to image.
+    *  @param connectionString Stored on success as the file name.
+    *  @return true on success, false on error.
+    */
    bool open( std::shared_ptr<ossim::istream>& str,
-              const ossimString& connectionString );
+              const std::string& connectionString );
 
    /** @brief Closes file and destroys all memory allocated. */
    virtual void close();

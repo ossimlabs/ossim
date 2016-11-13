@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -71,32 +71,23 @@ ossimImageHandlerFactory* ossimImageHandlerFactory::instance()
 
 ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(
    std::shared_ptr<ossim::istream>& str,
-   const ossimString& connectionString,
+   const std::string& connectionString,
    bool openOverview ) const
 {
-   // cout << "ossimImageHandlerFactory::open( stream ) entered...\n";
-   
    ossimRefPtr<ossimImageHandler> result(0);
 
-   while ( 1 )
+   // NITF:
+   ossimRefPtr<ossimNitfTileSource> ih = new ossimNitfTileSource();
+   ih->setOpenOverviewFlag(openOverview);
+   if ( ih->open( str, connectionString ) )
    {
-      // NITF:
-      ossimRefPtr<ossimNitfTileSource> ih = new ossimNitfTileSource();
-      ih->setOpenOverviewFlag(openOverview);
-      if ( ih->open( str, connectionString ) )
-      {
-         result = ih.get();
-         break;
-      }
-      else
-      {
-         // Reset the stream for downstream code.
-         str->seekg(0, std::ios_base::beg);
-         str->clear();
-      }
-      
-      result = 0;
-      break; 
+      result = ih.get();
+   }
+   else
+   {
+      // Reset the stream for downstream code.
+      str->seekg(0, std::ios_base::beg);
+      str->clear();
    }
    
    return result;

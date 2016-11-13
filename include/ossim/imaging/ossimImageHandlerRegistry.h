@@ -54,7 +54,20 @@ public:
     */
    virtual ossimImageHandler* open(const ossimKeywordlist& kwl,
                                    const char* prefix=0)const;
-
+   
+   /**
+    * @brief Open method that takes a stream.
+    * @param str Open stream to image.
+    * @param connectionString
+    * @param openOverview If true attempt to open overview file. 
+    * @return ossimImageHandler
+    */
+   virtual ossimRefPtr<ossimImageHandler> open(
+      std::shared_ptr<ossim::istream>& str,
+      const std::string& connectionString,
+      bool openOverview ) const;
+   
+#if 0   
    /**
     *  @brief Open method.
     *
@@ -74,6 +87,7 @@ public:
       ossim::istream* str,
       std::streamoff restartPosition,
       bool youOwnIt ) const;   
+#endif
    
    /**
     * @brief Open overview that takes a file name.

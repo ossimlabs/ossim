@@ -27,6 +27,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::openOverview(
    return ossimRefPtr<ossimImageHandler>(0);
 }
 
+#if 0
 ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::open(
    ossim::istream* /* str */,
    std::streamoff /* restartPosition */,
@@ -34,7 +35,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::open(
 {
    return ossimRefPtr<ossimImageHandler>(0);
 }
-
+#endif
 
 ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::open(
    std::shared_ptr<ossim::istream>& /*str */,
@@ -43,6 +44,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::open(
 {
    return ossimRefPtr<ossimImageHandler>(0);
 }
+
 ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::openOverview(
    std::shared_ptr<ossim::istream>& /* str */,
    const ossimString& /* connectionString */ ) const

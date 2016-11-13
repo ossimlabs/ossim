@@ -589,7 +589,7 @@ const ossimIrect& ossimHdf5ImageDataset::getValidImageRect() const
 }
 
 void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect,
-                                       ossim_uint32 band, bool scale)
+                                       ossim_uint32 band, bool /* scale */)
 {
    static const char MODULE[] = "ossimHdf5ImageDataset::getTileBuf";
 

@@ -65,6 +65,7 @@ public:
                                    bool openOverview=true)const = 0;
    virtual ossimImageHandler* open(const ossimKeywordlist& kwl,
                                    const char* prefix=0)const = 0;
+#if 0
    /**
     *  @brief Open method.
     *
@@ -82,7 +83,9 @@ public:
     */
    virtual ossimRefPtr<ossimImageHandler> open( ossim::istream* str,
                                                 std::streamoff restartPosition,
-                                                bool youOwnIt ) const;   
+                                                bool youOwnIt ) const;
+#endif
+   
    /**
     * @brief Open method that takes a stream.
     *

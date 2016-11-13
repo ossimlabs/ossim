@@ -150,18 +150,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openConnection(
 
    if ( str )
    {
-      std::vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
-      while( factory != m_factoryList.end() )
-      {
-         result = (*factory)->open(str, connectionString, openOverview);
-         if ( result.valid() )
-         {
-            break;
-         }
-         ++factory;
-      }
-
-      str = 0; 
+      result = open( str, connectionString, openOverview );
    }
 
    if ( result.valid() == false )
@@ -192,9 +181,7 @@ ossimImageHandler* ossimImageHandlerRegistry::open(const ossimFilename& fileName
    // now try magic number opens
    //
    ossimImageHandler*                   result = NULL;
-   vector<ossimImageHandlerFactoryBase*>::const_iterator factory;
-
-   factory = m_factoryList.begin();
+   vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
    while((factory != m_factoryList.end()) && !result)
    {
       result = (*factory)->open(fileName, openOverview);
@@ -220,7 +207,29 @@ ossimImageHandler* ossimImageHandlerRegistry::open(const ossimKeywordlist& kwl,
    return result;
 }
 
+ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open(
+   std::shared_ptr<ossim::istream>& str,
+   const std::string& connectionString,
+   bool openOverview ) const
+{
+   ossimRefPtr<ossimImageHandler> result = 0;
+   if ( str )
+   {
+      vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+      while( factory != m_factoryList.end() )
+      {
+         result = (*factory)->open( str, connectionString, openOverview );
+         if ( result.valid() )
+         {
+            break;
+         }
+         ++factory;
+      }
+   }
+   return result; 
+}
 
+#if 0
 ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open( ossim::istream* str,
                                                                 std::streamoff restartPosition,
                                                                 bool youOwnIt ) const
@@ -238,6 +247,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open( ossim::istream* 
    }  
    return result; 
 }
+#endif
 
 ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openOverview(
    const ossimFilename& file ) const

@@ -276,7 +276,7 @@ H5::Group* ossimHdf5::findGroupByName(const char* name, const H5::Group* parent,
       std::vector<Group>::iterator group = groupList.begin();
       while (group != groupList.end())
       {
-         bool found;
+         // bool found;
          ossimString dsName = group->getObjName();
          if (dsName.contains(name))
          {
@@ -321,7 +321,7 @@ H5::DataSet* ossimHdf5::findDatasetByName(const char* name, const H5::Group* gro
       std::vector<H5::DataSet>::iterator dataset = datasetList.begin();
       while (dataset != datasetList.end())
       {
-         bool found;
+         // bool found;
          ossimString dsName = dataset->getObjName();
          if (dsName.contains(name))
          {
