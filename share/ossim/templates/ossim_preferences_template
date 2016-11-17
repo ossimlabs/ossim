@@ -612,3 +612,18 @@ tfrd_iamp_file: $(OSSIM_INSTALL_PREFIX)/share/ossim/tfrd-tables/oamt.dat
 // 
 hdf5.options.max_recursion_level: 8
 hdf5.options.renderable_datasets: /All_Data/VIIRS-DNB-SDR_All/Radiance
+
+
+//-------
+// AWS plugin settings
+//-------
+//
+// We can specify the S3 read block size.
+// You can give it a numerical value and end it with B, K, M, or G.
+// which stand for Bytes, Kilobytes, Megabytes or Gigabytes.
+//
+//  So a value of 1k means 1024 bytes
+//  A value of 1024k is equivalent to 1M or one megabyte
+//
+ossim.plugins.aws.s3.readBlocksize: 1024k
+
