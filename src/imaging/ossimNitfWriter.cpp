@@ -106,16 +106,27 @@ bool ossimNitfWriter::isOpen()const
 
 bool ossimNitfWriter::open()
 {
+   bool result = true;
    if(isOpen())
    {
       close();
    }
    
-   m_str = std::make_shared<ossim::ofstream>( ossim::ofstream(theFilename.c_str(), ios::out|ios::binary) );
+   // there is a bug in gcc < 5.0 and we can't use constructors in the 
+   // C++11 build.  Will refactor to do a new ifstream then use open
+   //
+   m_str = std::make_shared<ossim::ofstream>();
+   m_str->open(theFilename.c_str(), ios::out|ios::binary);
+   if(!m_str->is_open())
+   {
+      m_str.reset();
+      result = false;
+   }
+   
    //new std::ofstream;
    //m_str->open(theFilename.c_str(), ios::out|ios::binary);
    
-   return m_str->good();
+   return result;
 }
 
 void ossimNitfWriter::close()
