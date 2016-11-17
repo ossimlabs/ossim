@@ -119,7 +119,19 @@ std::shared_ptr<ossim::ifstream> ossimStreamFactoryRegistry::createIFStream(
 
    if(!result)
    {
-      result = std::make_shared<ossim::ifstream>( ossim::ifstream(file.c_str(), openMode) );
+      if(file.exists())
+      {
+         // there is a bug in gcc < 5.0 and we can't use constructors in the 
+         // C++11 build.  Will refactor to do a new ifstream then use open
+         //
+
+         result = std::make_shared<ossim::ifstream>();
+         result->open(file.c_str(), openMode);
+         if(!result->is_open())
+         {
+            result.reset();
+         }
+      }
    }
    
    return result; 
