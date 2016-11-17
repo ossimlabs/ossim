@@ -70,6 +70,18 @@ MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
    MARK_AS_ADVANCED(OSSIM_COMMON_COMPILER_FLAGS)
 ENDMACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
 
+MACRO(USE_CXX11)
+  if (CMAKE_VERSION VERSION_LESS "3.1")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
+    elseif (APPLE)
+      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
+    endif()
+  else ()
+    set (CMAKE_CXX_STANDARD 11)
+  endif ()
+ENDMACRO(USE_CXX11)
+
 MACRO(OSSIM_ADD_COMMON_SETTINGS)
    ###################################################################################
    # Set defaults for Universal Binaries. We want 32-bit Intel/PPC on 10.4
@@ -81,6 +93,9 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    # FORCE is used because the options are not reflected in the UI otherwise.
    # Seems like a good place to add version specific compiler flags too.
    ###################################################################################
+
+   USE_CXX11()
+
    IF(APPLE)
       # use, i.e. don't skip the full RPATH for the build tree
         SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
@@ -88,7 +103,6 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
         # when building, don't use the install RPATH already
         # (but later on when installing)
         SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
-        SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11" )
 
         SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}")
 
