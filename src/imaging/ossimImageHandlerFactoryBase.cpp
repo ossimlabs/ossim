@@ -39,7 +39,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::open(
 
 ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::open(
    std::shared_ptr<ossim::istream>& /*str */,
-   const ossimString& /* connectionString */,
+   const std::string& /* connectionString */,
    bool /* openOverview */ ) const
 {
    return ossimRefPtr<ossimImageHandler>(0);
