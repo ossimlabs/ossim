@@ -75,7 +75,6 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(
    bool openOverview ) const
 {
    ossimRefPtr<ossimImageHandler> result(0);
-
    // NITF:
    ossimRefPtr<ossimNitfTileSource> ih = new ossimNitfTileSource();
    ih->setOpenOverviewFlag(openOverview);
@@ -83,7 +82,18 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(
    {
       result = ih.get();
    }
-   else
+
+   if(!result)
+   {
+      ossimRefPtr<ossimTiffTileSource> ihTiff = new ossimTiffTileSource();
+      ihTiff->setOpenOverviewFlag(openOverview);
+      if ( ihTiff->open( str, connectionString ) )
+      {
+         result = ihTiff.get();
+      }
+   }
+
+   if(!result)
    {
       // Reset the stream for downstream code.
       str->seekg(0, std::ios_base::beg);
