@@ -1262,8 +1262,30 @@ bool ossimImageHandler::isImageTiled() const
 
 void ossimImageHandler::loadMetaData()
 {
-  theMetaData.clear();
+   ossimFilename filename = getFilenameWithThisExtension(ossimString(".omd"), false);
+   theMetaData.clear();
 
+   std::shared_ptr<ossim::istream> instream = ossim::StreamFactoryRegistry::instance()->createIstream(filename.c_str());
+
+   if(!instream)
+   {
+      filename = getFilenameWithThisExtension(ossimString(".omd"), true);
+      instream = ossim::StreamFactoryRegistry::instance()->createIstream(filename.c_str());
+   }
+
+   if(instream)
+   {
+     ossimKeywordlist kwl;
+     
+     kwl.parseStream(*instream);
+     
+     theMetaData.loadState(kwl);
+   }
+   else
+   {
+     theMetaData.setScalarType(getOutputScalarType());
+   }
+/*
   ossimFilename filename = getFilenameWithThisExtension(ossimString(".omd"), false);
   if ( filename.exists() == false )
   {
@@ -1281,6 +1303,7 @@ void ossimImageHandler::loadMetaData()
   {
      theMetaData.setScalarType(getOutputScalarType());
   }
+  */
 }
 
 double ossimImageHandler::getMinPixelValue(ossim_uint32 band)const
