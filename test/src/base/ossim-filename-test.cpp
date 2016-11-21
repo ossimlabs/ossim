@@ -56,6 +56,9 @@ int main(int argc, char *argv[])
    // Environment var WORK must be set.
    ossimFilename d7 = "$(WORK)/ossim";
    ossimFilename d8 = "~/tmp/$(WORK)/ossim";
+
+   // Test windows x$ 
+   ossimFilename d9 = "//kiosk/x$/SourceImagery/foo.ntf";
    
   ossimFilename e = "/foo/you.xxx";
    ossimString   ext1 = ".tif";
@@ -113,6 +116,10 @@ int main(int argc, char *argv[])
         << "\nd8:              " << d8
         << "\nd8.expand():     " << d8.expand()
         << "\nd8.isRelative(): " << d8.isRelative() << "\n"
+      
+        << "\nd9:              " << d9
+        << "\nd9.expand():     " << d9.expand()
+        << "\nd9.isRelative(): " << d9.isRelative() << "\n"
       
         << "\next1:        " << ext1
         << "\next2:        " << ext2
@@ -181,6 +188,8 @@ int main(int argc, char *argv[])
    std::string s = "abc";
    ossimFilename f = s; // Used to not compile.
    cout << "ossimFilename f = std::string(abc): " << f << "\n";
+
+   // Test a 
 
    if ( directoryToDelete.size() )
    {
