@@ -625,5 +625,14 @@ hdf5.options.renderable_datasets: /All_Data/VIIRS-DNB-SDR_All/Radiance
 //  So a value of 1k means 1024 bytes
 //  A value of 1024k is equivalent to 1M or one megabyte
 //
-ossim.plugins.aws.s3.readBlocksize: 1024k
+ossim.plugins.aws.s3.readBlocksize: 30k
+
+
+// We can specify the S3 open file for read entries to cache.
+//
+// here we say we can remember 10000 different files and cache their sizes so 
+// we do not have to query the content length
+// If it exceeds this limit then the cache will shrink down by 20%.
+//
+ossim.plugins.aws.s3.nReadCacheHeaders: 10000
 
