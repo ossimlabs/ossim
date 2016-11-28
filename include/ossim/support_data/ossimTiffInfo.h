@@ -17,7 +17,7 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/support_data/ossimInfoBase.h>
 #include <ossim/base/ossimFilename.h>
-
+#include <ossim/base/ossimIoStream.h>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -56,6 +56,8 @@ public:
     * @return true on success false on error.
     */
    virtual bool open(const ossimFilename& file);
+   virtual bool open( std::shared_ptr<ossim::istream>& str,
+                      const std::string& connectionString );
 
    /**
     * Print method.
@@ -613,8 +615,10 @@ private:
                              ossim_uint32 width,
                              ossim_uint32 height) const;
    
-   ossimFilename          theFile;
-   mutable ossimEndian*   theEndian;
+   std::string m_connectionString;
+   mutable std::shared_ptr<ossim::istream> m_inputStream;
+   //ossimFilename          theFile;
+   mutable std::shared_ptr<ossimEndian>   m_endian;
 };
 
 #endif /* End of "#ifndef ossimTiffInfo_HEADER" */

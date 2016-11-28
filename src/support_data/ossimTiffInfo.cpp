@@ -28,7 +28,7 @@
 #include <ossim/projection/ossimBilinearProjection.h>
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimEpsgProjectionFactory.h>
-
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -74,38 +74,43 @@ static const std::string VERTICAL_UNITS_KW = "vertical_units";
 
 ossimTiffInfo::ossimTiffInfo()
    : ossimInfoBase(),
-     theFile(),
-     theEndian(0)
+     m_connectionString(),
+     m_endian(0)
 {
 }
 
 ossimTiffInfo::~ossimTiffInfo()
 {
-   if (theEndian)
+   if (m_endian)
    {
-      delete theEndian;
-      theEndian = 0;
+      m_endian.reset();
    }
 }
 
 bool ossimTiffInfo::open(const ossimFilename& file)
+{
+   std::shared_ptr<ossim::istream> inStream = ossim::StreamFactoryRegistry::instance()->createIstream(file.c_str());
+   return open(inStream, file.c_str());
+}
+
+bool ossimTiffInfo::open( std::shared_ptr<ossim::istream>& str,
+                          const std::string& connectionString )
 {
    bool result = false;
 
    //---
    // Open the tif file.
    //---
-   std::ifstream str(file.c_str(), std::ios_base::binary|std::ios_base::in);
-   if (str.good()) 
+   //std::ifstream str(file.c_str(), std::ios_base::binary|std::ios_base::in);
+   if (str&&str->good()) 
    {
       //---
       // Get the byte order.  First two byte should be "II" or "MM".
       //---
       char byteOrder[2];
-      str.read(byteOrder, 2); // Read the byte order.
+      str->read(byteOrder, 2); // Read the byte order.
       ossimByteOrder sysByteOrder = ossim::byteOrder();
       ossimByteOrder tifByteOrder = OSSIM_LITTLE_ENDIAN;
-      
       if (byteOrder[0] == 'M')
       {
          tifByteOrder = OSSIM_BIG_ENDIAN;
@@ -113,23 +118,22 @@ bool ossimTiffInfo::open(const ossimFilename& file)
 
       if (sysByteOrder != tifByteOrder)
       {
-         if (!theEndian)
+         if(!m_endian)
          {
-            theEndian = new ossimEndian();
+            m_endian = std::make_shared<ossimEndian>();
          }
       }
-      else if (theEndian)
+      else if (m_endian)
       {
-         delete theEndian;
-         theEndian = 0;
+         m_endian.reset();
       }
       
       //--
-      // Get the version. Note theEndian must be set/unset before calling
+      // Get the version. Note m_endian must be set/unset before calling
       // "readShort".
       //---
       ossim_uint16 version;
-      readShort(version, str);
+      readShort(version, *str);
 
       if ( ( (byteOrder[0] == 'M') || (byteOrder[0] == 'I') ) &&
            ( (version == 42) || (version == 43) ) )
@@ -140,20 +144,20 @@ bool ossimTiffInfo::open(const ossimFilename& file)
 
    if (result)
    {
-      theFile = file;
+      m_connectionString = connectionString;
+      m_inputStream = str;
    }
    else
    {
-      theFile.clear();
-      if (theEndian)
+      m_connectionString.clear();
+      if (m_endian)
       {
-         delete theEndian;
-         theEndian = 0;
+         m_endian.reset();
       }
    }
-
-   return result;
+   return result;   
 }
+
 
 std::ostream& ossimTiffInfo::print(std::ostream& out) const
 {
@@ -164,17 +168,16 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
       ossimNotify(ossimNotifyLevel_DEBUG)
          << MODULE << " DEBUG Entered...\n";
    }
-
    //---
    // Open the tif file.
    //---
-   std::ifstream str(theFile.c_str(), std::ios_base::binary|std::ios_base::in);
-   if (!str) 
+  // std::ifstream str(theFile.c_str(), std::ios_base::binary|std::ios_base::in);
+   if (!m_inputStream) 
    {
       if (traceDebug())
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
-            << MODULE << " Cannot open file:  " << theFile << std::endl;
+            << MODULE << " Cannot open file:  " << m_connectionString << std::endl;
       }
       return out;
    }
@@ -183,7 +186,10 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
    // Get the byte order.  First two byte should be "II" or "MM".
    //---
    char byteOrder[2];
-   str.read(byteOrder, 2); // Read the byte order.
+   m_inputStream->seekg(0);
+   m_inputStream->clear();
+
+   m_inputStream->read(byteOrder, 2); // Read the byte order.
    ossimByteOrder sysByteOrder = ossim::byteOrder();
    ossimByteOrder tifByteOrder = OSSIM_LITTLE_ENDIAN;
    
@@ -191,26 +197,24 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
    {
       tifByteOrder = OSSIM_BIG_ENDIAN;
    }
-   
    if (sysByteOrder != tifByteOrder)
    {
-      if (!theEndian)
+      if(!m_endian)
       {
-         theEndian = new ossimEndian();
+         m_endian = std::make_shared<ossimEndian>();
       }
    }
-   else if (theEndian) // No swapping required.
+   else if (m_endian)
    {
-      delete theEndian;
-      theEndian = 0;
+      m_endian.reset();
    }
 
    //--
-   // Get the version. Note theEndian must be set/unset before calling
+   // Get the version. Note m_endian must be set/unset before calling
    // "readShort".
    //---
    ossim_uint16 version;
-   readShort(version, str);
+   readShort(version, *m_inputStream);
 
    // Set the tag value length.
    ossim_uint64 tagValueLength;
@@ -261,19 +265,18 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
    {
       // We must skip the first four bytes.
       ossim_uint32 offsetSize;
-      readLong(offsetSize, str);
+      readLong(offsetSize, *m_inputStream);
    }
 
    // Get the offset.
-   if (getOffset(seekOffset, str, version) == false)
+   if (getOffset(seekOffset, *m_inputStream, version) == false)
    {
-     ossimNotify(ossimNotifyLevel_WARN) 
+      ossimNotify(ossimNotifyLevel_WARN) 
         << MODULE << " FATAL ERROR - "
         << "No offset to an image file directory found.\n"
         << "Returning with error."
         << std::endl;
-     str.close();
-     return out;
+      return out;
    }
    
    if (traceDebug())
@@ -295,7 +298,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
       out << "tiff.directory_offset: " << seekOffset << "\n";
 
       // Seek to the image file directory.
-      str.seekg(seekOffset, std::ios_base::beg);  
+      m_inputStream->seekg(seekOffset, std::ios_base::beg);  
 
       // directory prefix for prints.
       std::string prefix = "tiff.";
@@ -315,7 +318,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
       // Get the number of directories within the IFD.
       //---
       ossim_uint64 nTags; // Number of tags in an IFD.
-      if (getValue(nTags, str, TWO_OR_EIGHT, version) == false)
+      if (getValue(nTags, *m_inputStream, TWO_OR_EIGHT, version) == false)
       {
          if(traceDebug())
          {
@@ -323,7 +326,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
                << MODULE << " FATAL error reading number of direcories."
                << std::endl;
          }
-         str.close();
+         m_inputStream.reset();
          return out;
       }
 
@@ -348,8 +351,8 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
          //---
          // Get the tag.
          //---
-         readShort(tag, str);
-         if (!str)
+         readShort(tag, *m_inputStream);
+         if (!m_inputStream->good())
          {
             if(traceDebug())
             {
@@ -357,15 +360,14 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
                   << MODULE << " FATAL error reading tag number."
                   << std::endl;
             }
-            str.close();
             return out;
          }
 
          //---
          // Get the type (byte, ascii, short...)
          //---
-         readShort(type, str);
-         if (!str)
+         readShort(type, *m_inputStream);
+         if (!m_inputStream->good())
          {
             if(traceDebug())
             {
@@ -373,7 +375,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
                   << MODULE << " FATAL error reading type number."
                   << std::endl;
             }
-            str.close();
+            m_inputStream.reset();
             return out;
          }
 
@@ -382,8 +384,8 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
          // type.  So if the type is a short and the count is one then
          // read "sizeof(short"(2) bytes.
          //---
-         getValue(count, str, FOUR_OR_EIGHT, version);
-         if (!str)
+         getValue(count, *m_inputStream, FOUR_OR_EIGHT, version);
+         if (!m_inputStream->good())
          {
             if(traceDebug())
             {
@@ -391,7 +393,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
                   << MODULE << " FATAL error reading count."
                   << std::endl;
             }
-            str.close();
+            m_inputStream.reset();
             return out;
          }
 
@@ -400,7 +402,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
          if (arraySizeInBytes == 0)
          {
             // Could be an unhandle type.  Gobble the value.
-            eatValue(str, version);
+            eatValue(*m_inputStream, version);
          }
          else
          {
@@ -411,31 +413,31 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
             if (arraySizeInBytes <= tagValueLength)
             {
                // Read in the value(s).
-               str.read((char*)valueArray, arraySizeInBytes);
+               m_inputStream->read((char*)valueArray, arraySizeInBytes);
 
                // Skip any byes left in the field.
                if (arraySizeInBytes < tagValueLength)
                {
                   // Skip these bytes.
-                  str.ignore(tagValueLength-arraySizeInBytes);
+                  m_inputStream->ignore(tagValueLength-arraySizeInBytes);
                }
             }
             else // Data to big for field.  Stored elsewhere...
             {
                // Get the offset to the data.
-               getOffset(seekOffset, str, version);
+               getOffset(seekOffset, *m_inputStream, version);
 
                // Capture the seek position to come back to.
-               streamPosition = str.tellg();
+               streamPosition = m_inputStream->tellg();
 
                // Seek to the data.
-               str.seekg(seekOffset, std::ios_base::beg);
+               m_inputStream->seekg(seekOffset, std::ios_base::beg);
 
                // Read in the value(s).
-               str.read((char*)valueArray, arraySizeInBytes);
+               m_inputStream->read((char*)valueArray, arraySizeInBytes);
 
                // Seek back.
-               str.seekg(streamPosition);
+               m_inputStream->seekg(streamPosition);
             }
 
             // Swap the bytes if needed.
@@ -538,7 +540,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
       // Get the next IFD offset.  Continue this loop until the offset is
       // zero.
       //---
-      if (getOffset(seekOffset, str, version) == false)
+      if (getOffset(seekOffset, *m_inputStream, version) == false)
       {
          if(traceDebug())
          {
@@ -547,7 +549,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
                << "Returning with error."
                << std::endl;
          }
-         str.close();
+         m_inputStream.reset();
          return out;
       }
       
@@ -574,7 +576,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
    
    out << std::endl;
     
-   str.close();
+   m_inputStream.reset();
 
    // Reset flags.
    out.setf(f);
@@ -606,7 +608,6 @@ std::ostream& ossimTiffInfo::print(std::istream& inStr,
    inStr.read(byteOrder, 2); // Read the byte order.
    ossimByteOrder sysByteOrder = ossim::byteOrder();
    ossimByteOrder tifByteOrder = OSSIM_LITTLE_ENDIAN;
-   
    if (byteOrder[0] == 'M')
    {
       tifByteOrder = OSSIM_BIG_ENDIAN;
@@ -614,19 +615,18 @@ std::ostream& ossimTiffInfo::print(std::istream& inStr,
    
    if (sysByteOrder != tifByteOrder)
    {
-      if (!theEndian)
+      if (!m_endian)
       {
-         theEndian = new ossimEndian();
+         m_endian = std::make_shared<ossimEndian>();
       }
    }
-   else if (theEndian) // No swapping required.
+   else if (m_endian) // No swapping required.
    {
-      delete theEndian;
-      theEndian = 0;
+      m_endian.reset();
    }
 
    //--
-   // Get the version. Note theEndian must be set/unset before calling
+   // Get the version. Note m_endian must be set/unset before calling
    // "readShort".
    //---
    ossim_uint16 version;
@@ -1009,14 +1009,14 @@ bool ossimTiffInfo::getImageGeometry(ossimKeywordlist& geomKwl,
    bool result = false;
 
    // Open the file.
-   std::ifstream str;
-   str.open(theFile.c_str(), ios::in | ios::binary);
+  // std::ifstream str;
+  // m_inputStream->open(theFile.c_str(), ios::in | ios::binary);
    
-   if ( str.is_open() )
+   if ( m_inputStream->good() )
    {
-      result = getImageGeometry(str, geomKwl, entryIndex);
-
-      str.close();
+      m_inputStream->seekg(0);
+      m_inputStream->clear();
+      result = getImageGeometry(*m_inputStream, geomKwl, entryIndex);
    }
 
    if (traceDebug())
@@ -1414,27 +1414,27 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist& gtiffKwl,
 void ossimTiffInfo::readShort(ossim_uint16& s, std::istream& str) const
 {
    str.read((char*)&s, sizeof(s));
-   if (theEndian)
+   if (m_endian)
    {
-      theEndian->swap(s);
+      m_endian->swap(s);
    }
 }
 
 void ossimTiffInfo::readLong(ossim_uint32& l, std::istream& str) const
 {
    str.read((char*)&l, sizeof(l));
-   if (theEndian)
+   if (m_endian)
    {
-      theEndian->swap(l);
+      m_endian->swap(l);
    }
 }
 
 void ossimTiffInfo::readLongLong(ossim_uint64& l, std::istream& str) const
 {
    str.read((char*)&l, sizeof(l));
-   if (theEndian)
+   if (m_endian)
    {
-      theEndian->swap(l);
+      m_endian->swap(l);
    }
 }
 
@@ -1577,19 +1577,19 @@ void ossimTiffInfo::swapBytes(ossim_uint8* v,
                               ossim_uint16 type,
                               ossim_uint64 count) const
 {
-   if (theEndian)
+   if (m_endian)
    {
       ossim_uint32 byteSize = getTypeByteSize(type);
       switch(byteSize)
       {
          case 2:
-            theEndian->swapTwoBytes(v, count);
+            m_endian->swapTwoBytes(v, count);
             break;
          case 4:
-            theEndian->swapFourBytes(v, count);
+            m_endian->swapFourBytes(v, count);
             break;
          case 8:
-            theEndian->swapEightBytes(v, count);
+            m_endian->swapEightBytes(v, count);
             break;
          default:
             break;
