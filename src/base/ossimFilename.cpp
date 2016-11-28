@@ -553,8 +553,17 @@ ossimFilename ossimFilename::expand() const
                {
                   if(tempPtr[scanIdx+1] == '(')
                   {
-                     scanIdx +=2;
+                     scanIdx += 2;
                      startIdx = scanIdx;
+                  }
+                  else
+                  {
+                     //---
+                     // Infinite loop fix with below file on window:
+                     // "\\kiosk\x$\SourceImagery\foo.ntf" (drb 21 Nov. 2016)
+                     //---
+                     finalResult += tempPtr[scanIdx];
+                     ++scanIdx;
                   }
                }
                // look for an end pattern and apply if we found a start pattern
