@@ -17,10 +17,11 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/support_data/ossimInfoBase.h>
 #include <ossim/base/ossimFilename.h>
-#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <iosfwd>
 #include <string>
 #include <vector>
+#include <memory>
 
 class ossimDpt;
 class ossimEndian;

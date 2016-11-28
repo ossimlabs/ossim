@@ -33,6 +33,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <ossim/base/ossimIoStream.h>
 
 // Static trace for debugging
 static ossimTrace traceDebug("ossimTiffInfo:debug");
