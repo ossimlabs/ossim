@@ -20,6 +20,7 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimEllipsoid.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimDatum.h>
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
@@ -42,7 +43,6 @@ ossimDtedTileSource::ossimDtedTileSource()
    :
       ossimImageHandler(),
       theTile(NULL),
-      theFileStr(),
       theTileWidth(0),
       theTileHeight(0),
       theNumberOfLines(0),
@@ -200,14 +200,14 @@ bool ossimDtedTileSource::fillBuffer(const ossimIrect& tile_rect,
                        TILE_WIDTH +
                        (samp - tile_rect.ul().x);
 
-      theFileStr.seekg(seek_position, ios::beg); // Seek to the first post.
+      m_fileStr->seekg(seek_position, ios::beg); // Seek to the first post.
 
       for (ossim_int32 line = clip_rect.lr().y; line >= clip_rect.ul().y; line--)
       {
          // Grab all the post needed from the column.
          ossim_uint16 temp;
          ossim_sint16 s;
-         theFileStr.read((char*)&temp, POST_SIZE);
+         m_fileStr->read((char*)&temp, POST_SIZE);
          s = convertSignedMagnitude(temp);
          d[d_offset] = s;
          d_offset -= TILE_WIDTH;
@@ -236,12 +236,12 @@ ossimDtedTileSource::getImageRectangle(ossim_uint32 reduced_res_level) const
 
 bool ossimDtedTileSource::isOpen()const
 {
-   return theFileStr.is_open();
+   return (m_fileStr!=0);
 }
 
 void ossimDtedTileSource::close()
 {
-   theFileStr.close();
+   m_fileStr.reset();
 }
 
 bool ossimDtedTileSource::open()
@@ -254,21 +254,11 @@ bool ossimDtedTileSource::open()
            << "\nAttempting to parse file:  " << theImageFile.c_str()
            << endl;
    }
-   
-   if (!theImageFile.exists()) // See if file exists.
-   {
-      if (traceDebug())
-      {
-         CLOG << "DEBUG:"
-              << "\nFile " << theImageFile.c_str() << " does not exist!"
-              << endl;
-      }
-      return false;
-   }
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( theImageFile.c_str(), std::ios_base::in|std::ios_base::binary);
 
    // Open up the file for reading.
-   theFileStr.open(theImageFile.c_str(), ios::in | ios::binary);
-   if (!theFileStr)
+   if (!str)
    {
       theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
       
@@ -282,7 +272,7 @@ bool ossimDtedTileSource::open()
       return false;
    }
                                    
-   if(!theFileStr)
+   if(!str)
    {
       if (traceDebug())
       {
@@ -290,14 +280,24 @@ bool ossimDtedTileSource::open()
               << "\nCannot open:  " << theImageFile.c_str()
               << endl;
       }
-      theFileStr.close();
+      str.reset();
       return false;
    }
-   m_vol.parse(theFileStr);
-   m_hdr.parse(theFileStr);
-   m_uhl.parse(theFileStr);
-   m_dsi.parse(theFileStr);
-   m_acc.parse(theFileStr);
+   std::string connectionString = theImageFile.c_str();
+   m_dtedInfo = std::make_shared<ossimDtedInfo>();
+   if(!m_dtedInfo->open(m_fileStr, connectionString))
+   {
+      close();
+      return false;
+   }
+   m_fileStr->clear();
+   m_fileStr->seekg(0);
+
+   m_vol.parse(*str);
+   m_hdr.parse(*str);
+   m_uhl.parse(*str);
+   m_dsi.parse(*str);
+   m_acc.parse(*str);
    
    //***
    // Check for errors.  Must have uhl, dsi and acc records.  vol and hdr
@@ -314,9 +314,10 @@ bool ossimDtedTileSource::open()
               << "\nPossibly not a dted file.\n";
       }
       
-      theFileStr.close();
+      str.reset();
       return false;
    }
+   m_fileStr = str;
 
    // Get the cell specific info needed for later.
    theNumberOfLines = m_uhl.numLatPoints();
@@ -546,7 +547,7 @@ void ossimDtedTileSource::gatherStatistics(bool writeStatsFile)
    theMaxHeight = -32767;
    
    // Put the file pointer at the start of the first elevation post.
-   theFileStr.seekg(theOffsetToFirstDataRecord, ios::beg);
+   m_fileStr->seekg(theOffsetToFirstDataRecord, ios::beg);
    
    //---
    // Loop through all records and scan for lowest min and highest max.
@@ -556,19 +557,19 @@ void ossimDtedTileSource::gatherStatistics(bool writeStatsFile)
    //---
    for (ossim_uint32 i=0; i<theNumberOfSamps; i++)  // longitude direction
    {
-      theFileStr.seekg(DATA_RECORD_OFFSET_TO_POST, ios::cur);
+      m_fileStr->seekg(DATA_RECORD_OFFSET_TO_POST, ios::cur);
       
       for (ossim_uint32 j=0; j<theNumberOfLines; j++) // latitude direction
       {
          ossim_uint16 temp;
          ossim_sint16 s;
-         theFileStr.read((char*)&temp, POST_SIZE);
+         m_fileStr->read((char*)&temp, POST_SIZE);
          s = convertSignedMagnitude(temp);
          if (s < theMinHeight && s != NULL_PIXEL) theMinHeight = s;
          if (s > theMaxHeight) theMaxHeight = s;
       }
       
-      theFileStr.seekg(DATA_RECORD_CHECKSUM_SIZE, ios::cur);
+      m_fileStr->seekg(DATA_RECORD_CHECKSUM_SIZE, ios::cur);
    }
    
    if ( writeStatsFile )
@@ -649,10 +650,11 @@ ossimRefPtr<ossimProperty> ossimDtedTileSource::getProperty(
 
    if (result.valid() == false)
    {
-      ossimDtedInfo info;
-      if (info.open(theImageFile))
+//      ossimDtedInfo info;
+//      std::string connectionString = theImageFile.c_str();
+      if (m_dtedInfo)
       {
-         result = info.getProperty(name);
+         result = m_dtedInfo->getProperty(name);
       }
    }
 
@@ -664,11 +666,15 @@ void ossimDtedTileSource::getPropertyNames(
 {
    ossimImageHandler::getPropertyNames(propertyNames);
 
-   ossimDtedInfo info;
-   if (info.open(theImageFile))
+   if (m_dtedInfo)
    {
-      info.getPropertyNames(propertyNames);
+      m_dtedInfo->getPropertyNames(propertyNames);
    }
+//   ossimDtedInfo info;
+//   if (info.open(theImageFile))
+//   {
+//      info.getPropertyNames(propertyNames);
+//   }
 }
 
 const ossimDtedTileSource& ossimDtedTileSource::operator=(const  ossimDtedTileSource& rhs)

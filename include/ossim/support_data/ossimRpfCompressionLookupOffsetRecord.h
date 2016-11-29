@@ -1,19 +1,20 @@
 #ifndef ossimRpfCompressionLookupOffsetRecord_HEADER
-#define ossimRpfCompressionLookupOffsetRecord_HEADER
-#include <iostream>
-using namespace std;
+#define ossimRpfCompressionLookupOffsetRecord_HEADER 1
+
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIosFwd.h>
 
 class ossimRpfCompressionLookupOffsetRecord
 {
 public:
-   friend ostream& operator <<(ostream &out,
-                               const ossimRpfCompressionLookupOffsetRecord& data);
+   friend std::ostream& operator <<(
+      std::ostream &out, const ossimRpfCompressionLookupOffsetRecord& data);
+   
    ossimRpfCompressionLookupOffsetRecord();
-   ossimErrorCode parseStream(istream& in,
+   ossimErrorCode parseStream(ossim::istream& in,
                               ossimByteOrder byteOrder);
-   void print(ostream& out)const;
+   void print(std::ostream& out)const;
    ossim_uint16 getCompressionLookupTableId()const
       {
          return theCompressionLookupTableId;

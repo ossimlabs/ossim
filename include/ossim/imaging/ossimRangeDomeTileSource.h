@@ -8,7 +8,7 @@
 // $Id: ossimRangeDomeTileSource.h 23464 2015-08-07 18:39:47Z okramer $
 
 #ifndef ossimRangeDomeTileSource_HEADER
-#define ossimRangeDomeTileSource_HEADER
+#define ossimRangeDomeTileSource_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimString.h>
@@ -109,7 +109,7 @@ public:
    virtual void getGSD(ossimDpt& gsd, ossim_uint32 resLevel) const;
    virtual void setGSD( const ossim_float64& gsd );
 
-   ossim_uint32 getNumRangeDomes() const { return m_rangeDomes.size(); }
+   ossim_uint32 getNumRangeDomes() const { return (ossim_uint32)m_rangeDomes.size(); }
 
 protected:
    std::vector<ossimRangeDome>       m_rangeDomes;

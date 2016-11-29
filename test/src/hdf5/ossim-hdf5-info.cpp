@@ -13,6 +13,7 @@
 #include <ossim/support_data/ossimInfoFactoryRegistry.h>
 #include <ossim/support_data/ossimInfoBase.h>
 #include <iostream>
+#include <memory>
 
 int main(int argc, char *argv[])
 {
@@ -20,8 +21,8 @@ int main(int argc, char *argv[])
    
    try
    {
-      ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(argv[1]);
-      if (info.valid())
+      std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(argv[1]);
+      if (info)
       {
          std::cout<<std::endl;
          ossimKeywordlist kwl;

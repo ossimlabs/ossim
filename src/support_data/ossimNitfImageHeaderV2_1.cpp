@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 // 
@@ -9,10 +9,7 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfImageHeaderV2_1.cpp 23318 2015-05-26 14:08:49Z dburken $
-#include <sstream>
-#include <iomanip>
-#include <cstring> // for memset
+// $Id$
 
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimString.h>
@@ -27,6 +24,10 @@
 #include <ossim/support_data/ossimNitfVqCompressionHeader.h>
 #include <ossim/support_data/ossimNitfFileHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfDataExtensionSegmentV2_1.h>
+
+#include <sstream>
+#include <iomanip>
+#include <cstring> // for memset
 
 RTTI_DEF1(ossimNitfImageHeaderV2_1,
           "ossimNitfImageHeaderV2_1",
@@ -60,12 +61,12 @@ ossimNitfImageHeaderV2_1::~ossimNitfImageHeaderV2_1()
 {
 }
 
-void ossimNitfImageHeaderV2_1::parseStream(std::istream &in)
+void ossimNitfImageHeaderV2_1::parseStream(ossim::istream& in)
 {
    parseStream(in, NULL);
 }
 
-void ossimNitfImageHeaderV2_1::parseStream(std::istream &in, const ossimNitfFileHeaderV2_1 *file)
+void ossimNitfImageHeaderV2_1::parseStream(ossim::istream& in, const ossimNitfFileHeaderV2_1 *file)
 {
    if (!in)
    {
@@ -115,7 +116,12 @@ void ossimNitfImageHeaderV2_1::parseStream(std::istream &in, const ossimNitfFile
    // for now just ignore the comments
    if(numberOfComments > 0)
    {
-      in.ignore(numberOfComments*80);
+      //---
+      // NOTE: The ossim::S3IStream is not handling the "ignore" so changed out
+      // to a seekg for now.  (drb 09 Nov. 2016)
+      //---
+      // in.ignore(numberOfComments*80);
+      in.seekg( numberOfComments*80, std::ios_base::cur );
    }
    in.read(theCompression, 2);
    
@@ -358,7 +364,7 @@ void ossimNitfImageHeaderV2_1::parseStream(std::istream &in, const ossimNitfFile
    theDataLocation = in.tellg();
 }
 
-void ossimNitfImageHeaderV2_1::writeStream(std::ostream &out)
+void ossimNitfImageHeaderV2_1::writeStream(ossim::ostream &out)
 {
    out.write(theType, 2);
    out.write(theImageId, 10);

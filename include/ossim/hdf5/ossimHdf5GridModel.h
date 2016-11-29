@@ -18,6 +18,8 @@
 
 #ifndef ossimHdf5GridModel_HEADER
 #define ossimHdf5GridModel_HEADER 1
+
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimPolygon.h>
 #include <ossim/projection/ossimCoarseGridModel.h>
 #include <ossim/plugin/ossimPluginConstants.h>
@@ -30,7 +32,7 @@
  * CLASS:  ossimHdf5GridModel
  *
  *****************************************************************************/
-class OSSIM_PLUGINS_DLL ossimHdf5GridModel : public ossimCoarseGridModel
+class OSSIM_DLL ossimHdf5GridModel : public ossimCoarseGridModel
 {
 public:
 

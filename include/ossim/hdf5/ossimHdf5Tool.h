@@ -6,21 +6,23 @@
 //**************************************************************************************************
 
 #ifndef ossimHdf5Tool_HEADER
-#define ossimHdf5Tool_HEADER
+#define ossimHdf5Tool_HEADER 1
 
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimGpt.h>
+#include <ossim/hdf5/ossimHdf5.h>
 #include <ossim/imaging/ossimImageSource.h>
 #include <ossim/util/ossimChipProcTool.h>
 
-class ossimHdf5;
+// class ossimHdf5;
 
 /*!
  *  Class for computing the slope on each elevation post and generatinga corresponding slope image.
  *  The output scalar type is a normalized float unless unsigned 8-bit is selected via the options.
  */
-class OSSIMDLLEXPORT ossimHdf5Tool : public ossimChipProcTool
+class OSSIM_DLL ossimHdf5Tool : public ossimChipProcTool
 {
 public:
    ossimHdf5Tool();

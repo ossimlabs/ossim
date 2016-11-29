@@ -1,20 +1,19 @@
 #ifndef ossimRpfCompressionSectionSubheader_HEADER
-#define ossimRpfCompressionSectionSubheader_HEADER
-#include <iostream>
-using namespace std;
+#define ossimRpfCompressionSectionSubheader_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIosFwd.h>
 
 class ossimRpfCompressionSectionSubheader
 {
 public:
-   friend ostream& operator<<(ostream& out,
-                              const ossimRpfCompressionSectionSubheader& data);
+   friend std::ostream& operator<<(
+      std::ostream& out, const ossimRpfCompressionSectionSubheader& data);
    ossimRpfCompressionSectionSubheader();
    virtual ~ossimRpfCompressionSectionSubheader(){}
 
-   ossimErrorCode parseStream(istream& in, ossimByteOrder byteOrder);
+   ossimErrorCode parseStream(ossim::istream& in, ossimByteOrder byteOrder);
 
    unsigned long getStartOffset()const{return theStartOffset;}
    unsigned long getEndOffset()const{return theEndOffset;}
@@ -30,7 +29,7 @@ public:
       {
          return theNumberOfCompressionParameterOffsetRecords;
       }
-   void print(ostream& out)const;
+   void print(std::ostream& out)const;
    
 private:
    void clearFields();

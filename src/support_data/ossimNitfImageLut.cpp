@@ -1,14 +1,14 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author: Garrett Potts
 // 
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfImageLut.cpp 9094 2006-06-13 19:12:40Z dburken $
+// $Id$
 
 #include <cstring> // memcpy
 #include <ostream>

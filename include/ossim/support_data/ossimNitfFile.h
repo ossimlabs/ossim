@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -8,19 +8,17 @@
 // 
 // Description: Nitf support class
 // 
-//********************************************************************
-// $Id: ossimNitfFile.h 19583 2011-05-13 10:58:10Z gpotts $
+//---
+// $Id$
 #ifndef ossimNitfFile_HEADER
 #define ossimNitfFile_HEADER 1
 
-#include <iosfwd>
-#include <vector>
-
 #include <ossim/base/ossimReferenced.h>
+#include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimString.h>
-#include <ossim/base/ossimFilename.h>
-#include <ossim/base/ossimIrect.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
 
 class ossimNitfImageHeader;
@@ -28,9 +26,6 @@ class ossimNitfSymbolHeader;
 class ossimNitfLabelHeader;
 class ossimNitfTextHeader;
 class ossimNitfDataExtensionSegment;
-class ossimFilename;
-class ossimNitfRegisteredTag;
-class ossimNitfTagInformation;
 
 class OSSIMDLLEXPORT ossimNitfFile : public ossimReferenced
 {
@@ -51,7 +46,7 @@ public:
     */
    std::ostream& print(std::ostream& out,
                        const std::string& prefix=std::string(),
-                       bool printOverviews=false) const;
+                       bool printOverviews=true) const;
 
    /**
     * @brief print method that outputs a key/value type format adding prefix
@@ -77,8 +72,17 @@ public:
     *  Opens the nitf file and attempts to parse.
     *  Returns true on success, false on error.
     */
-   bool parseFile(const ossimFilename &file);
+   bool parseFile(const ossimFilename& file);
 
+   /**
+    * @brief Parse stream method.
+    * @param file Filename from opened stream.
+    * @param in Stream to parse.
+    * @return true on success, false on error.
+    */
+   bool parseStream(const ossimFilename& file,
+                    ossim::istream& in);
+   
    /*!
     * Will return the header.
     */
@@ -87,11 +91,25 @@ public:
    ossimIrect getImageRect()const;
    
    ossimNitfImageHeader*  getNewImageHeader(ossim_uint32 imageNumber)const;
-   ossimNitfSymbolHeader* getNewSymbolHeader(ossim_uint32 symbolNumber)const;
-   ossimNitfLabelHeader*  getNewLabelHeader(ossim_uint32 labelNumber)const;
-   ossimNitfTextHeader*   getNewTextHeader(ossim_uint32 textNumber)const;
-   ossimNitfDataExtensionSegment* getNewDataExtensionSegment(ossim_uint32 dataExtNumber)const;
+   ossimNitfImageHeader*  getNewImageHeader(ossim::istream& in,
+                                            ossim_uint32 imageNumber)const;
    
+   ossimNitfSymbolHeader* getNewSymbolHeader(ossim_uint32 symbolNumber)const;
+   ossimNitfSymbolHeader* getNewSymbolHeader(ossim::istream& in,
+                                             ossim_uint32 symbolNumber)const;
+   
+   ossimNitfLabelHeader*  getNewLabelHeader(ossim_uint32 labelNumber)const;
+   ossimNitfLabelHeader*  getNewLabelHeader(ossim::istream& in,
+                                            ossim_uint32 labelNumber)const;
+   
+   ossimNitfTextHeader*   getNewTextHeader(ossim_uint32 textNumber)const;
+   ossimNitfTextHeader*   getNewTextHeader(ossim::istream& in,
+                                           ossim_uint32 textNumber)const;
+   
+   ossimNitfDataExtensionSegment* getNewDataExtensionSegment(ossim_uint32 dataExtNumber)const;   
+   ossimNitfDataExtensionSegment* getNewDataExtensionSegment(ossim::istream& in,
+                                                             ossim_uint32 dataExtNumber)const;
+
    ossimString getVersion()const;
 
    /** @return The filename parsed by this object. */

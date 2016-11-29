@@ -1,20 +1,22 @@
 //*******************************************************************
 // Copyright (C) 2005 Garrett Potts
 //
-// LGPL
+// License: MIT
 // 
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimApplanixEOFile.h 20483 2012-01-21 15:42:22Z dburken $
+//  $Id$
+
 #ifndef ossimApplanixEOFile_HEADER
 #define ossimApplanixEOFile_HEADER 1
 
 #include <ossim/base/ossimReferenced.h>
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimString.h>
-#include <iostream>
+
 #include <map>
 #include <vector>
 
@@ -67,7 +69,7 @@ public:
     * @param inThe input stream containing the Applanix format exterior orientation file
     * 
     */
-   bool parseStream(std::istream& in);
+   bool parseStream(ossim::istream& in);
    
 
    /**
@@ -81,7 +83,7 @@ public:
    /**
     * Utility method that just checks for an APPlanix exterior orientation header.
     */ 
-   bool isEOFile(std::istream& in)const;
+   bool isEOFile(ossim::istream& in)const;
 
    /**
     * Parses the header of the exterior orientation file.
@@ -100,7 +102,7 @@ public:
     * @param in The input stream That contains an exterior orientation 
     * @param header The resulting header that was parsed out.
     */
-   bool parseHeader(std::istream& in,
+   bool parseHeader(ossim::istream& in,
                     ossimString& header)const;
 
    /**

@@ -39,7 +39,11 @@ public:
     * @return ossimInfoBase* on success 0 on failure.  Caller is responsible
     * for memory.
     */
-   virtual ossimInfoBase* create(const ossimFilename& file) const;
+//  virtual ossimInfoBase* create(const ossimFilename& file) const;
+  virtual std::shared_ptr<ossimInfoBase> create(const ossimFilename& file) const;
+
+  virtual std::shared_ptr<ossimInfoBase> create(std::shared_ptr<ossim::istream>& str,
+                                                const std::string& connectionString)const;
    
 private:
    

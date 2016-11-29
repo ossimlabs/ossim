@@ -1,7 +1,7 @@
 //*****************************************************************************
 // FILE: ossimSensorModelFactory.cc
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -11,14 +11,19 @@
 //   Contains implementation of class ossimSensorModelFactory
 //
 //*****************************************************************************
-//  $Id: ossimSensorModelFactory.cpp 23313 2015-05-21 00:16:00Z gpotts $
-#include <fstream>
-#include <algorithm>
+// $Id$
+
 #include <ossim/projection/ossimSensorModelFactory.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDirectory.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotifyContext.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+
+#include <fstream>
+#include <algorithm>
+#include <memory>
 
 //***
 // Define Trace flags for use within this file:
@@ -293,7 +298,12 @@ ossimSensorModelFactory::getTypeNameList(std::vector<ossimString>& typeList)
 ossimProjection* ossimSensorModelFactory::createProjection(
    const ossimFilename& filename, ossim_uint32  entryIdx) const
 {
-   if(!filename.exists()) return 0;
+  std::cout << "ossimSensorModelFactory::createProjection: entered......\n";
+   // ossimFilename::exists() currently does not work with s3 url's.
+   // if(!filename.exists()) return 0;
+
+   if(filename.empty()) return 0;
+
    static const char MODULE[] = "ossimSensorModelFactory::createProjection";
    
    ossimKeywordlist kwl;
@@ -407,6 +417,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
       }
       model = qbModel.get();
       qbModel = 0;
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
       return model.release();
    }
    else
@@ -429,6 +440,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
       }
       model = ikModel.get();
       ikModel = 0;
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
       return model.release();
    }
    else
@@ -448,6 +460,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
      {
          model = rsmModel.get();
          rsmModel = 0;
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
          return model.release();
      }
      else
@@ -459,11 +472,13 @@ ossimProjection* ossimSensorModelFactory::createProjection(
         ossimNotify(ossimNotifyLevel_DEBUG)
            << MODULE << " DEBUG: testing ossimNitfRsmModel" << std::endl;
      }
+
      ossimRefPtr<ossimNitfRpcModel> rpcModel = new ossimNitfRpcModel();
      if ( rpcModel->parseFile(filename, entryIdx) ) // filename = NITF_file
      {
         model = rpcModel.get();
         rpcModel = 0;
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
         return model.release();
      }
      else
@@ -480,6 +495,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
      model = new ossimNitfMapModel(filename); // filename = NITF_file
      if(!model->getErrorStatus())
      {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
         return model.release();
      }
      model = 0;
@@ -489,6 +505,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
       model = new ossimLandSatModel(filename);
       if(!model->getErrorStatus())
       {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
          return model.release();
       }
       model = 0;
@@ -497,6 +514,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    model = new ossimRS1SarModel(filename);
    if(model->getErrorStatus()!= ossimErrorCodes::OSSIM_OK)
    {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
       return model.release();
    }
    model = 0;
@@ -531,6 +549,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
             model = new ossimSpot5Model(meta.get());
             if(!model->getErrorStatus())
             {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
                return model.release();
             }
          }
@@ -562,6 +581,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
          sensor->setRefImgPt(ossimDpt(imageSize.x*.5, imageSize.y*.5));
          sensor->setAveragePrjectedHeight(ppjFile->getAverageProjectedHeight());
          sensor->updateModel();
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
          return sensor.release();         
       }
       ppjFile = 0;
@@ -594,6 +614,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
             ossimRefPtr<ossimAlphaSensorHSI> sensor = new ossimAlphaSensorHSI();
             if ( sensor->initialize( *(supData.get()) ) )
             {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
                return (ossimProjection*)sensor.release();
             }
          }
@@ -607,6 +628,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
             ossimRefPtr<ossimAlphaSensorHRI> sensor = new ossimAlphaSensorHRI();
             if ( sensor->initialize( *(supData.get()) ) )
             {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
                return (ossimProjection*)sensor.release();
             }
          }
@@ -619,25 +641,27 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    {
       if(!model->getErrorStatus())
       {
-         return model.release();
+   std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
+        return model.release();
       }
       model = 0;
    }
 
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
    return model.release();
 }
    
 bool ossimSensorModelFactory::isNitf(const ossimFilename& filename)const
 {
-   std::ifstream in(filename.c_str(), ios::in|ios::binary);
+   std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+      createIstream( filename, std::ios_base::in | std::ios_base::binary );
    
-   if(in)
+   if( in )
    {
       char nitfFile[4];
-      in.read((char*)nitfFile, 4);
-
-      return (ossimString(nitfFile,
-                          nitfFile+4) == "NITF");
+      in->read((char*)nitfFile, 4);
+      
+      return (ossimString(nitfFile, nitfFile+4) == "NITF");
    }
 
    return false;

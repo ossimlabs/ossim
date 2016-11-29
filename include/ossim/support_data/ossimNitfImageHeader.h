@@ -9,11 +9,13 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfImageHeader.h 22417 2013-09-26 14:54:58Z gpotts $
+// $Id$
+
 #ifndef ossimNitfImageHeader_HEADER
 #define ossimNitfImageHeader_HEADER 1
 
 #include <ossim/base/ossimNBandLutDataObject.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimPropertyInterface.h>
 #include <ossim/support_data/ossimNitfTagInformation.h>
@@ -63,8 +65,8 @@ public:
    virtual void addTag(const ossimNitfTagInformation& tag, bool unique=true);
    virtual void removeTag(const ossimString& tagName);
    
-   virtual void parseStream(std::istream &in)= 0;
-   virtual void writeStream(std::ostream &out)= 0;
+   virtual void parseStream(ossim::istream& in)= 0;
+   virtual void writeStream(ossim::ostream& out)= 0;
 
    virtual bool isCompressed()const=0;
    virtual bool isEncrypted()const=0;

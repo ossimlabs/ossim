@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,11 +9,14 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfImageHeaderV2_0.h 18413 2010-11-11 19:56:22Z gpotts $
+// $Id$
+
 #ifndef ossimNitfImageHeaderV2_0_HEADER
-#define ossimNitfImageHeaderV2_0_HEADER
+#define ossimNitfImageHeaderV2_0_HEADER 1
+
 #include <ossim/support_data/ossimNitfImageHeaderV2_X.h>
 #include <ossim/support_data/ossimNitfImageBandV2_0.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <iterator>
 
 class OSSIMDLLEXPORT ossimNitfImageHeaderV2_0 : public ossimNitfImageHeaderV2_X
@@ -22,8 +25,8 @@ public:
    ossimNitfImageHeaderV2_0();
    virtual ~ossimNitfImageHeaderV2_0();
 
-   virtual void parseStream(std::istream &in);
-   virtual void writeStream(std::ostream &out);
+   virtual void parseStream(ossim::istream& in);
+   virtual void writeStream(ossim::ostream& out);
    
    /**
     * @brief print method that outputs a key/value type format adding prefix

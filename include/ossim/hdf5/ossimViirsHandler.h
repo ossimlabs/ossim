@@ -6,10 +6,10 @@
 *                                                                            *
 *****************************************************************************/
 
-#ifndef OSSIM_PLUGINS_HDF5_SRC_OSSIMVIIRSHANDLER_H_
-#define OSSIM_PLUGINS_HDF5_SRC_OSSIMVIIRSHANDLER_H_
+#ifndef ossimViirsHandler_HEADER
+#define ossimViirsHandler_HEADER 1
 
-#include <ossim/plugin/ossimPluginConstants.h>
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimImageData.h>
@@ -18,7 +18,7 @@
 /**
  * Concrete class for reading VIIRS data from HDF5 file
  */
-class OSSIM_PLUGINS_DLL ossimViirsHandler : public ossimHdf5ImageHandler
+class OSSIM_DLL ossimViirsHandler : public ossimHdf5ImageHandler
 {
 public:
    ossimViirsHandler();
@@ -29,4 +29,4 @@ public:
 
 
 
-#endif /* OSSIM_PLUGINS_HDF5_SRC_OSSIMVIIRSHANDLER_H_ */
+#endif /* #ifndef ossimViirsHandler_HEADER */

@@ -15,9 +15,10 @@
 
 #include <ossim/base/ossimConstants.h>
 // #include <ossim/base/ossimObjectFactory.h>
+#include <ossim/support_data/ossimInfoBase.h>
 
 class ossimFilename;
-class ossimInfoBase;
+//class ossimInfoBase;
 
 //---
 // Note: Deriving from ossimObjectFactory is being backed out as no
@@ -52,8 +53,10 @@ public:
     * @return ossimInfoBase* on success 0 on failure.  Caller is responsible
     * for memory.
     */
-   virtual ossimInfoBase* create(const ossimFilename& file) const = 0;
+    virtual std::shared_ptr<ossimInfoBase> create(const ossimFilename& file) const = 0;
 
+    virtual std::shared_ptr<ossimInfoBase> create(std::shared_ptr<ossim::istream>& str,
+                                                  const std::string& connectionString) const = 0;
 #if 0
    virtual ossimObject* createObject(const ossimString& typeName)const
    {

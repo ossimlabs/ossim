@@ -894,16 +894,41 @@ bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
 
 bool ossimImageHandler::openOverview()
 {
+   static const char MODULE[] = "ossimImageHandler::openOverview()";
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+   }
+   
+   bool result = false;
+   
    closeOverview();
    
    // 1) ESH 03/2009 -- Use the overview file set e.g. using a .spec file.
    ossimFilename overviewFilename = getOverviewFile();
-   
-   if (overviewFilename.empty() || (overviewFilename.exists() == false) )
+
+   // ossimFilename::exists() currently does not work with s3 url's.
+   if ( overviewFilename.empty() ) // || (overviewFilename.exists() == false) )
    {
       // 2) Generate the name from image name.
       overviewFilename = createDefaultOverviewFilename();
-      
+   }
+
+   // ossimFilename::exists() currently does not work with s3 url's.
+   if ( overviewFilename.size() ) 
+   {
+      result = openOverview( overviewFilename );
+
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << (result?"Opened ":"Could not open ") << "overview: " << overviewFilename
+            << "\n";
+      }
+   }
+
+   if ( !result )
+   {
       if (overviewFilename.empty() || (overviewFilename.exists() == false) )
       {  
          // 3) For backward compatibility check if single entry and _e0.ovr
@@ -938,30 +963,27 @@ bool ossimImageHandler::openOverview()
             overviewFilename += ".ovr";
          }
       }
+   
+      if ( overviewFilename.exists() )
+      {
+         result = openOverview( overviewFilename );
+
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << (result?"Opened ":"Could not open ") << "overview: " << overviewFilename
+               << "\n";
+         }
+      }
    }
 
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "Looking for " << overviewFilename
-         << " overview file..." << std::endl;
+         << MODULE << " exit result: " << (result?"true":"false") << "\n";
    }
 
-   bool status = false;
-   
-   if ( overviewFilename.exists() )
-   {
-      status = openOverview( overviewFilename );
-   }
-
-   if ( !status  && traceDebug() )
-   {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "ossimImageHandler::openOverview NOTICE:"
-         << "\nCould not find an overview." << std::endl;
-   }
-
-   return status;
+   return result;
 }
 
 
@@ -1240,8 +1262,30 @@ bool ossimImageHandler::isImageTiled() const
 
 void ossimImageHandler::loadMetaData()
 {
-  theMetaData.clear();
+   ossimFilename filename = getFilenameWithThisExtension(ossimString(".omd"), false);
+   theMetaData.clear();
 
+   std::shared_ptr<ossim::istream> instream = ossim::StreamFactoryRegistry::instance()->createIstream(filename.c_str());
+
+   if(!instream)
+   {
+      filename = getFilenameWithThisExtension(ossimString(".omd"), true);
+      instream = ossim::StreamFactoryRegistry::instance()->createIstream(filename.c_str());
+   }
+
+   if(instream)
+   {
+     ossimKeywordlist kwl;
+     
+     kwl.parseStream(*instream);
+     
+     theMetaData.loadState(kwl);
+   }
+   else
+   {
+     theMetaData.setScalarType(getOutputScalarType());
+   }
+/*
   ossimFilename filename = getFilenameWithThisExtension(ossimString(".omd"), false);
   if ( filename.exists() == false )
   {
@@ -1259,6 +1303,7 @@ void ossimImageHandler::loadMetaData()
   {
      theMetaData.setScalarType(getOutputScalarType());
   }
+  */
 }
 
 double ossimImageHandler::getMinPixelValue(ossim_uint32 band)const

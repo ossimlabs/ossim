@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -11,14 +11,15 @@
 // Description: This class defines a DEM profile.
 //
 //********************************************************************
-// $Id: ossimDemProfile.h 9094 2006-06-13 19:12:40Z dburken $
+// $Id$
 
 #ifndef ossimDemProfile_HEADER
-#define ossimDemProfile_HEADER
+#define ossimDemProfile_HEADER 1
 
-#include <vector>
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/support_data/ossimDemPoint.h>
+#include <vector>
 
 typedef std::vector<ossim_int32> ossimDemElevationVector;
 

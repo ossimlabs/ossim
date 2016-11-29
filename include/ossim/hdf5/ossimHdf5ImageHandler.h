@@ -9,7 +9,7 @@
 #ifndef ossimHdf5ImageHandler_HEADER
 #define ossimHdf5ImageHandler_HEADER 1
 
-#include <ossim/plugin/ossimPluginConstants.h>
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimImageHandler.h>
@@ -24,7 +24,7 @@
  * represents a variety of subformats for raster and projection information. The derived classes
  * will need to specify the group and dataset names where the needed data lives.
  */
-class OSSIM_PLUGINS_DLL ossimHdf5ImageHandler : public ossimImageHandler
+class OSSIM_DLL ossimHdf5ImageHandler : public ossimImageHandler
 {
    friend class ossimHdf5ImageDataset;
 

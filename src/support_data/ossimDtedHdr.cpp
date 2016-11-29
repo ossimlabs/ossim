@@ -20,57 +20,22 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimProperty.h>
 
-//**************************************************************************
-// CONSTRUCTOR
-//**************************************************************************
-ossimDtedHdr::ossimDtedHdr(const ossimFilename& dted_file, ossim_int32 offset)
-   :
-      theStartOffset(0),
-      theStopOffset(0)
+ossimDtedHdr::ossimDtedHdr()
+:
+  theStartOffset(0),
+  theStopOffset(0)
 {
-   if(!dted_file.empty())
-   {
-      // Check to see that dted file exists.
-      if(!dted_file.exists())
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimDtedHdr::ossimDtedHdr: The DTED file does not exist: " << dted_file << std::endl;
-         return;
-      }
-      
-      // Check to see that the dted file is readable.
-      if(!dted_file.isReadable())
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimDtedHdr::ossimDtedHdr: The DTED file is not readable: " << dted_file << std::endl;
-         return;
-      }
-      
-      std::ifstream in(dted_file.c_str());
-      // Open the dted file for reading.
-      if(!in)
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimDtedHdr::ossimDtedHdr: Error opening the DTED file: " << dted_file << std::endl;
-         return;
-      }
-      in.seekg(offset);
-      // Continue parsing all the record fields.
-      parse(in);
-      
-      in.close();
-   }
+
 }
 
-//**************************************************************************
-// CONSTRUCTOR
-//**************************************************************************
-ossimDtedHdr::ossimDtedHdr(std::istream& in)
-   :
-      theStartOffset(0),
-      theStopOffset(0)
+ossimDtedHdr::ossimDtedHdr(std::shared_ptr<ossim::istream>& str, ossim_int64 offset)
+:
+  theStartOffset(0),
+  theStopOffset(0)
 {
-   parse(in);
+  str->seekg(offset);
+  // Continue parsing all the record fields.
+  parse(*str);  
 }
 
 //**************************************************************************

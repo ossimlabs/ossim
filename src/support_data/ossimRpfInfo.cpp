@@ -82,7 +82,7 @@ bool ossimRpfInfo::isOpen()
 
 std::ostream& ossimRpfInfo::print(std::ostream& out) const
 {
-  ossimInfoBase* info = ossimInfoFactory::instance()->create(m_infoFile);
+  std::shared_ptr<ossimInfoBase> info = ossimInfoFactory::instance()->create(m_infoFile);
   if (info)
   {
     info->print(out);

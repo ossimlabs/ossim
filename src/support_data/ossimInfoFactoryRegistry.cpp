@@ -10,6 +10,7 @@
 // $Id$
 
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/support_data/ossimInfoFactoryRegistry.h>
 #include <ossim/support_data/ossimInfoFactoryInterface.h>
 #include <ossim/support_data/ossimInfoFactory.h>
@@ -69,26 +70,58 @@ void ossimInfoFactoryRegistry::unregisterFactory(
    m_mutex.unlock();
 }
 
-ossimInfoBase* ossimInfoFactoryRegistry::create(
+std::shared_ptr<ossimInfoBase> ossimInfoFactoryRegistry::create(
    const ossimFilename& file) const
 {
-   ossimInfoBase* result = 0;
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file.c_str(), std::ios_base::in|std::ios_base::binary);
+      std::string connectionString = file.c_str();
+   std::shared_ptr<ossimInfoBase> result = create(str, connectionString);
+   str.reset();
+   connectionString.clear();
+   
+   if(!result)
+   {
+      std::vector<ossimInfoFactoryInterface*>::const_iterator i =
+       m_factoryList.begin();
+
+      while ( i != m_factoryList.end() )
+      {
+         result = (*i)->create(file);
+         if ( result )
+         {
+            break;
+         }
+         ++i;
+      }
+   }
+   return result;
+} 
+
+std::shared_ptr<ossimInfoBase> ossimInfoFactoryRegistry::create(
+   std::shared_ptr<ossim::istream>& str,
+   const std::string& connectionString) const
+{
+   std::shared_ptr<ossimInfoBase> result;
    
    std::vector<ossimInfoFactoryInterface*>::const_iterator i =
       m_factoryList.begin();
 
    while ( i != m_factoryList.end() )
    {
-      result = (*i)->create(file);
+      result = (*i)->create(str, connectionString);
       if ( result )
       {
          break;
       }
+      str->clear();
+      str->seekg(0);
       ++i;
    }
 
    return result;
 }
+
 
 /** hidden from use default constructor */
 ossimInfoFactoryRegistry::ossimInfoFactoryRegistry()

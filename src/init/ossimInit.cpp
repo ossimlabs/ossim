@@ -144,16 +144,18 @@ void ossimInit::initialize(ossimArgumentParser& parser)
    theInstance->parseNotifyOption(parser);
    theInstance->thePreferences = ossimPreferences::instance();
    
+   //Parse the command line:
+   theInstance->parseOptions(parser);
+
    // we will also support defining a trace pattern from an Environment
    // variable.  This will make JNI code easier to enable tracing
    //
    ossimString traceVariable = ossimEnvironmentUtility::instance()->getEnvironmentVariable("OSSIM_TRACE");
+
    if(!traceVariable.empty())
    {
       ossimTraceManager::instance()->setTracePattern(traceVariable);
    }
-   //Parse the command line:
-   theInstance->parseOptions(parser);
 
    theInstance->initializeDefaultFactories();
    
@@ -183,6 +185,24 @@ void ossimInit::initialize(ossimArgumentParser& parser)
 
 void ossimInit::initialize()
 {
+   int argc = 1;
+   char* argv[1];
+
+   argv[0] = new char[1];
+   argv[0][0] = '\0';
+
+   if(theInitializedFlag)
+   {
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "DEBUG ossimInit::initialize(): Already initialized, returning......" << std::endl;
+      }
+      return;
+   }
+   initialize(argc, argv);
+   delete [] argv[0];
+#if 0   
     static OpenThreads::Mutex m;
    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
    if(theInitializedFlag)
@@ -228,6 +248,7 @@ void ossimInit::initialize()
    } 
    
    theInitializedFlag = true;
+#endif
 }
 
 void ossimInit::finalize()

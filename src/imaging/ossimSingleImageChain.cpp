@@ -363,7 +363,8 @@ bool ossimSingleImageChain::addImageHandler(const ossimFilename& file, bool open
 
    close();
    
-   m_handler = ossimImageHandlerRegistry::instance()->open(file, true, openOverview);
+   // m_handler = ossimImageHandlerRegistry::instance()->open(file, true, openOverview);
+   m_handler = ossimImageHandlerRegistry::instance()->openConnection(file, openOverview);
    
    if ( m_handler.valid() )
    {

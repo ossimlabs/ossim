@@ -1390,7 +1390,10 @@ void ossimInfo::openImage(const ossimFilename& file)
 
 ossimRefPtr<ossimImageHandler> ossimInfo::openImageHandler(const ossimFilename& file) const
 {
-   ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->open(file);
+   // Go through new interface that passes a stream around. (drb 10 Nov. 2016)
+   // ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->open(file);
+   ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->
+      openConnection(file);
    if ( result.valid() == false )
    {
       std::string errMsg = "ossimInfo::openImage ERROR:\nCould not open: ";
@@ -1412,12 +1415,12 @@ ossimRefPtr<ossimImageHandler> ossimInfo::getImageHandler()
 
 void ossimInfo::prettyPrint(const ossimFilename& file) const
 {
-   ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
-   if (info.valid())
+   std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
+   if (info)
    {
       info->setProcessOverviewFlag(false);
       info->print(ossimNotify(ossimNotifyLevel_INFO));
-      info = 0;
+      info.reset();
    }
    else
    {
@@ -1430,15 +1433,15 @@ void ossimInfo::dumpImage(const ossimFilename& file,
                           bool dnoFlag,
                           ossimKeywordlist& kwl) const
 {
-   ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
-   if (info.valid())
+   std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
+   if (info)
    {
       if (dnoFlag) // Default info processes overviews.
       {
          info->setProcessOverviewFlag(false);
       }
       info->getKeywordlist(kwl);
-      info = 0;
+      info.reset();
    }
    else
    {

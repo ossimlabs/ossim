@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -10,18 +10,19 @@
 //
 // Contains class declaration for NitfTileSource.
 //
-//*******************************************************************
-//  $Id: ossimNitfTileSource.h 22925 2014-10-28 22:01:09Z dburken $
+//---
+// $Id$
 
 #ifndef ossimNitfTileSource_HEADER
 #define ossimNitfTileSource_HEADER 1
 
 #include <ossim/imaging/ossimImageHandler.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/imaging/ossimAppFixedTileCache.h>
 #include <ossim/support_data/ossimNitfFile.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
 #include <ossim/support_data/ossimNitfImageHeader.h>
-#include <fstream>
+#include <memory>
 
 struct jpeg_decompress_struct;
 
@@ -70,8 +71,16 @@ public:
    virtual bool open();
 
    /**
-    * Closes file and destroys all memory allocated.
+    *  @brief This open takes a stream and stores/captures the shared pointer
+    *  on success.
+    *  @param str Open stream to image.
+    *  @param connectionString Stored on success as the file name.
+    *  @return true on success, false on error.
     */
+   bool open( std::shared_ptr<ossim::istream>& str,
+              const std::string& connectionString );
+
+   /** @brief Closes file and destroys all memory allocated. */
    virtual void close();
 
    /**
@@ -513,7 +522,9 @@ protected:
    ossim_uint32                  theNumberOfImages;
    ossim_uint32                  theCurrentEntry;
    ossimIrect                    theImageRect;
-   std::ifstream                 theFileStr;   
+   
+   std::shared_ptr<ossim::istream> theFileStr;   
+
    std::vector<ossim_uint32>     theOutputBandList;
    ossimIpt                      theCacheSize;
    ossimInterleaveType           theCacheTileInterLeaveType;

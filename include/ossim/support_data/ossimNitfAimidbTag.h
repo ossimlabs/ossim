@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -12,7 +12,7 @@
 // See document STDI-0002 (version 3), Appendix E, Table E-3 for more info.
 // 
 //----------------------------------------------------------------------------
-// $Id
+// $Id$
 
 #ifndef ossimNitfAimidbTag_HEADER
 #define ossimNitfAimidbTag_HEADER 1
@@ -53,10 +53,10 @@ public:
    virtual ~ossimNitfAimidbTag();
 
    /** @brief Method to parse data from stream. */
-   virtual void parseStream(std::istream& in);
+   virtual void parseStream(ossim::istream& in);
 
    /** @brief Method to write data to stream. */
-   virtual void writeStream(std::ostream& out);
+   virtual void writeStream(ossim::ostream& out);
 
    /** @brief Method to clear all fields including null terminating. */
    virtual void clearFields();

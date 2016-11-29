@@ -326,7 +326,7 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
       // Find the valid image rect. dataset may have null padding:
       H5::DataSpace imageDataspace = m_dataset.getSpace();
       H5::DataType dataType = m_dataset.getDataType();
-      ossim_uint32 elem_size = dataType.getSize();
+      ossim_uint32 elem_size = (ossim_uint32)dataType.getSize();
 
       // Get the extents. Assuming dimensions are same for lat lon dataset.
       hsize_t rowSize[2]  = { 1, m_samples };
@@ -341,7 +341,7 @@ bool ossimHdf5ImageDataset::scanForValidImageRect()
       bufferDataSpace.selectHyperslab( H5S_SELECT_SET, rowSize, imageOffset ); // offset = (0,0) here
 
       // Figure out the null pixel value (unswapped since doing byte compare below):
-      H5:H5Pget_fill_value(m_dataset.getId(), dataType.getId(), fill_value);
+      H5Pget_fill_value(m_dataset.getId(), dataType.getId(), fill_value);
 
       // Find the ul pixel. Loop over rows:
       ossimIpt ulIpt (0,0);
@@ -414,7 +414,7 @@ bool ossimHdf5ImageDataset::scanForMinMax()
    ossimIpt ulIpt (m_validRect.ul());
    ossimIpt lrIpt (m_validRect.lr());
    const ossim_float32 nullpix = m_handler->getNullPixelValue();
-   ossim_float32 epsilon = 0.1e-9; // For ossim::almostEqual()
+   ossim_float32 epsilon = (ossim_float32)0.1e-9; // For ossim::almostEqual()
 
    if (nullpix == 0.0)
       epsilon = 0;
@@ -423,7 +423,7 @@ bool ossimHdf5ImageDataset::scanForMinMax()
    m_maxValue.clear();
 
    ossimIrect clipRect (m_validRect.ul(), m_validRect.ur());
-   for (int band=0; band<m_bands; ++band)
+   for (ossim_uint32 band=0; band<m_bands; ++band)
    {
       m_minValue.push_back(OSSIM_DEFAULT_MAX_PIX_FLOAT);
       m_maxValue.push_back(OSSIM_DEFAULT_MIN_PIX_FLOAT);
@@ -437,7 +437,7 @@ bool ossimHdf5ImageDataset::scanForMinMax()
 
          // Scan and fix non-standard null value:
          ossim_float32 value = 0;
-         for ( int x=0; x<m_validRect.width(); ++x )
+         for ( ossim_uint32 x=0; x<m_validRect.width(); ++x )
          {
             switch (scalarType)
             {
@@ -589,7 +589,7 @@ const ossimIrect& ossimHdf5ImageDataset::getValidImageRect() const
 }
 
 void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect,
-                                       ossim_uint32 band, bool scale)
+                                       ossim_uint32 band, bool /* scale */)
 {
    static const char MODULE[] = "ossimHdf5ImageDataset::getTileBuf";
 

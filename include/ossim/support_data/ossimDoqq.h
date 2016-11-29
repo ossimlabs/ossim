@@ -70,8 +70,16 @@ public:
       GSD_SIZE              = 12
    };
 
-   //! Implementation of ossimInfoBase class pure virtual.
-   virtual bool open(const ossimFilename& file);
+   /**
+    * @brief open method.
+    *
+    * @param str stream to test.
+    * @param connectionString original string for the stream.
+    *
+    * @return true on success false on error.
+    */
+   virtual bool open(std::shared_ptr<ossim::istream>& str,
+                     const std::string& connectionString);
 
    //! Implementation of ossimInfoBase class pure virtual.
    virtual std::ostream& print(std::ostream& out) const;
@@ -114,7 +122,8 @@ public:
    
 private:
 
-   std::ifstream           theDoqFile;
+   mutable std::shared_ptr<ossim::istream> m_doqqFileStr;
+   std::string                     m_connectionString;
    ossimErrorStatus   theErrorStatus;
    
    ossim_float64 convertStr(const char* str) const;

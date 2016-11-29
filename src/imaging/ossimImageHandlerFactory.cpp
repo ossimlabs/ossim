@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -49,6 +49,7 @@ static const ossimTrace traceDebug("ossimImageHandlerFactory:debug");
 RTTI_DEF1(ossimImageHandlerFactory, "ossimImageHandlerFactory", ossimImageHandlerFactoryBase);
 
 ossimImageHandlerFactory* ossimImageHandlerFactory::theInstance = 0;
+
 ossimImageHandlerFactory::~ossimImageHandlerFactory()
 {
    theInstance = (ossimImageHandlerFactory*)0;
@@ -66,6 +67,40 @@ ossimImageHandlerFactory* ossimImageHandlerFactory::instance()
    }
 
    return theInstance;
+}
+
+ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(
+   std::shared_ptr<ossim::istream>& str,
+   const std::string& connectionString,
+   bool openOverview ) const
+{
+   ossimRefPtr<ossimImageHandler> result(0);
+   // NITF:
+   ossimRefPtr<ossimNitfTileSource> ih = new ossimNitfTileSource();
+   ih->setOpenOverviewFlag(openOverview);
+   if ( ih->open( str, connectionString ) )
+   {
+      result = ih.get();
+   }
+
+   if(!result)
+   {
+      ossimRefPtr<ossimTiffTileSource> ihTiff = new ossimTiffTileSource();
+      ihTiff->setOpenOverviewFlag(openOverview);
+      if ( ihTiff->open( str, connectionString ) )
+      {
+         result = ihTiff.get();
+      }
+   }
+
+   if(!result)
+   {
+      // Reset the stream for downstream code.
+      str->seekg(0, std::ios_base::beg);
+      str->clear();
+   }
+   
+   return result;
 }
 
 ossimImageHandler* ossimImageHandlerFactory::open(const ossimFilename& fileName,

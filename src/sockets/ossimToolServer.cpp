@@ -42,7 +42,6 @@
 #include <netinet/tcp.h>
 #endif
 
-using namespace std;
 
 #define OWARN ossimNotify(ossimNotifyLevel_WARN)
 #define OINFO ossimNotify(ossimNotifyLevel_INFO)
@@ -169,8 +168,13 @@ void ossimToolServer::initSocket(const char* portid)
    if (setsockopt(m_svrsockfd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes) == -1)
       error("Error on setsockopt() call");
 
+#ifdef __APPLE__
+   int bindResult = ::bind(m_svrsockfd, server_info->ai_addr, server_info->ai_addrlen);
+#else
+   int bindResult = bind(m_svrsockfd, server_info->ai_addr, server_info->ai_addrlen);
+#endif
    // Bind the server's socket to the specified port number:
-   if (bind(m_svrsockfd, server_info->ai_addr, server_info->ai_addrlen) < 0)
+   if ( bindResult < 0)
       error("Error on binding to socket:port.");
 
    struct sockaddr_in *server_addr = (sockaddr_in*) &(server_info->ai_addr);
