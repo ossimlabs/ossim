@@ -19,6 +19,7 @@
 #include <ossim/base/ossimFactoryListInterface.h>
 #include <iosfwd>
 #include <vector>
+#include <memory>
 
 class ossimImageHandler;
 class ossimFilename;
