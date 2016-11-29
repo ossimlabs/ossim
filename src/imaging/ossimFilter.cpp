@@ -126,7 +126,7 @@ static double J1(double x)
     p,
     q;
 
-  register int
+  int
     i;
 
   static const double
@@ -171,7 +171,7 @@ static double P1(double x)
     p,
     q;
 
-  register int
+  int
     i;
 
   static const double
@@ -206,12 +206,8 @@ static double P1(double x)
 
 static double Q1(double x)
 {
-   double
-      p,
-      q;
-   
-   register int
-      i;
+   double p, q;
+   int i;
    
    static const double
       Pone[] =
