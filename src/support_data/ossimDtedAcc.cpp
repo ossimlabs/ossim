@@ -21,6 +21,7 @@
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimStringProperty.h>
+#include <ossim/base/ossimIosStream.h>
 
 ossimDtedAcc::ossimDtedAcc()
 {

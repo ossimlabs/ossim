@@ -21,6 +21,8 @@
 #include <ossim/support_data/ossimDtedDsi.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimProperty.h>
+#include <ossim/base/ossimIosStream.h>
+
 ossimDtedDsi::ossimDtedDsi()
    :
       theRecSen(),
