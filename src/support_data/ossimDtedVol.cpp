@@ -17,7 +17,7 @@
 #include <ossim/support_data/ossimDtedVol.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimProperty.h>
-#include <ossim/base/ossimIosStream.h>
+#include <ossim/base/ossimIoStream.h>
 
 ossimDtedVol::ossimDtedVol()
 :theStartOffset(0),
