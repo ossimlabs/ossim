@@ -19,6 +19,8 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimIosFwd.h>
 #include <ossim/support_data/ossimDemPoint.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <memory>
 #include <string>
 
 class ossimFilename;
