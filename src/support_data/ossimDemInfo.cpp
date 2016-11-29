@@ -17,12 +17,12 @@
 
 #include <ossim/base/ossimErrorCodes.h>
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 
 #include <ossim/support_data/ossimDemHeader.h>
 #include <ossim/support_data/ossimDemUtil.h>
 
 ossimDemInfo::ossimDemInfo()
-   : theFile()
 {
 }
 
@@ -32,26 +32,54 @@ ossimDemInfo::~ossimDemInfo()
 
 bool ossimDemInfo::open(const ossimFilename& file)
 {
-   bool result = ossimDemUtil::isUsgsDem(file);
+   std::string connectionString = file.c_str();
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file.c_str(), std::ios_base::in|std::ios_base::binary);
+
+   return open(str, connectionString);
+
+   // bool result = ossimDemUtil::isUsgsDem(file);
+
+   // if ( result )
+   // {
+   //    theFile = file;
+   // }
+   // else
+   // {
+   //    theFile = ossimFilename::NIL;
+   // }
+   
+   // return result;
+}
+
+bool ossimDemInfo::open(std::shared_ptr<ossim::istream>& str,
+                        const std::string& connectionString)
+{
+
+   bool result = ossimDemUtil::isUsgsDem(str, connectionString);
 
    if ( result )
    {
-      theFile = file;
+      m_fileStr = str;
+      m_connectionString = connectionString;
    }
    else
    {
-      theFile = ossimFilename::NIL;
+      m_connectionString = "";
    }
    
    return result;
+  
 }
 
 std::ostream& ossimDemInfo::print(std::ostream& out) const
 {
-   if ( theFile.exists() )
+   if ( m_fileStr )
    {
       ossimDemHeader hdr;
-      if ( hdr.open(theFile) )
+      m_fileStr->clear();
+      m_fileStr->seekg(0);
+      if ( hdr.open(m_fileStr, m_connectionString) )
       {
          // std::string prefix;
          hdr.print(std::cout);

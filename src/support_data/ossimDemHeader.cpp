@@ -376,29 +376,38 @@ operator<<(std::ostream& s, const ossimDemHeader& header)
 bool ossimDemHeader::open(const ossimFilename& file)
 {
    bool result = ossimDemUtil::isUsgsDem(file);
-
+   std::string connectionString = file.c_str();
    std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
-      createIstream(file, std::ios_base::in | std::ios_base::binary);
-   if ( is && is->good() )
+      createIstream(connectionString, std::ios_base::in | std::ios_base::binary);
+   if(result)
    {
-      open( *is );
+      if ( is && is->good() )
+      {
+         open( is, connectionString );
+      }
+      else
+      {
+         result = false;
+      }    
    }
-   else
-   {
-      result = false;
-   }
+
    return result;
 }
 
-ossim::istream& ossimDemHeader::open(ossim::istream& is)
+
+
+bool ossimDemHeader::open(std::shared_ptr<ossim::istream>& str,  
+                          const std::string& connectionString)
 {
-   if ( is.good() )
+   bool result = ossimDemUtil::isUsgsDem(ossimFilename(connectionString));
+   if ( result&&str&& str->good() )
    {
+
       char* bufstr = new char[1024];
       char* temp   = new char[1024];
       ossim_int32 i;
       
-      ossimDemUtil::getRecord(is, bufstr);
+      ossimDemUtil::getRecord(*str, bufstr);
       
       strncpy(temp, bufstr, 40);
       temp[40] = '\0';
@@ -434,7 +443,7 @@ ossim::istream& ossimDemHeader::open(ossim::istream& is)
          ossim_int32 pos = 546 + (i * 48);
          ossimDemUtil::getDouble(bufstr, pos, 24, x);
          ossimDemUtil::getDouble(bufstr, pos + 24, 24, y);
-      _demCorners.push_back(ossimDemPoint(x,y));
+         _demCorners.push_back(ossimDemPoint(x,y));
       }
       
       ossimDemUtil::getDouble(bufstr, 738, 24, _minElevation);
@@ -477,7 +486,98 @@ ossim::istream& ossimDemHeader::open(ossim::istream& is)
       bufstr = 0;
       temp = 0;
    }
-   return is;
+   return result;
+}
+
+
+std::istream& ossimDemHeader::open(ossim::istream& in)
+{
+   if(in.good())
+   {
+      char* bufstr = new char[1024];
+      char* temp   = new char[1024];
+      ossim_int32 i;
+      
+      ossimDemUtil::getRecord(in, bufstr);
+      
+      strncpy(temp, bufstr, 40);
+      temp[40] = '\0';
+      _quadName = temp;
+      
+      strncpy(temp,bufstr+40,40);
+      temp[40] = '\0';
+      _processInfo = temp;
+      
+      ossimDemUtil::getDouble(bufstr, 109, 13, _seGeoCornerX);
+      ossimDemUtil::getDouble(bufstr, 122, 13, _seGeoCornerY);
+      _processCode = ossimDemUtil::getLong(bufstr, 135, 1);
+      
+      strncpy(temp,bufstr+137,3);
+      temp[3] = '\0';
+      _sectionIndicator = temp;
+      
+      strncpy(temp,bufstr+140,4);
+      temp[4] = '\0';
+      _mapCenterCode = temp;
+      
+      _levelCode = ossimDemUtil::getLong(bufstr, 144, 6);
+      _elevPattern = ossimDemUtil::getLong(bufstr, 150, 6);
+      _groundRefSysCode = ossimDemUtil::getLong(bufstr, 156, 6);
+      _groundRefSysZone = ossimDemUtil::getLong(bufstr, 162, 6);
+      _groundRefSysUnits = ossimDemUtil::getLong(bufstr, 528, 6);
+      _elevUnits = ossimDemUtil::getLong(bufstr, 534, 6);
+      _numPolySides = ossimDemUtil::getLong(bufstr, 540, 6);
+      
+      for (i = 0; i < 4; i++)
+      {
+         double x,y;
+         ossim_int32 pos = 546 + (i * 48);
+         ossimDemUtil::getDouble(bufstr, pos, 24, x);
+         ossimDemUtil::getDouble(bufstr, pos + 24, 24, y);
+         _demCorners.push_back(ossimDemPoint(x,y));
+      }
+      
+      ossimDemUtil::getDouble(bufstr, 738, 24, _minElevation);
+      ossimDemUtil::getDouble(bufstr, 762, 24, _maxElevation);
+      ossimDemUtil::getDouble(bufstr, 786, 24, _counterclockAngle );
+      _elevAccuracyCode = ossimDemUtil::getLong(bufstr, 810, 6);
+      ossimDemUtil::getDouble(bufstr, 816, 12, _spatialResX);
+      ossimDemUtil::getDouble(bufstr, 828, 12, _spatialResY);
+      ossimDemUtil::getDouble(bufstr, 840, 12, _spatialResZ);
+      _profileRows = ossimDemUtil::getLong(bufstr, 852, 6);
+      _profileColumns = ossimDemUtil::getLong(bufstr, 858, 6);
+      _largeContInt = ossimDemUtil::getLong(bufstr, 864, 5);
+      _maxSourceUnits = ossimDemUtil::getLong(bufstr, 869, 1);
+      _smallContInt = ossimDemUtil::getLong(bufstr, 870, 5);
+      _minSourceUnits = ossimDemUtil::getLong(bufstr, 875, 1);
+      _sourceDate = ossimDemUtil::getLong(bufstr, 876, 4);
+      _inspRevDate = ossimDemUtil::getLong(bufstr, 880, 4);
+      
+      strncpy(temp, bufstr+884,1);
+      temp[1]='\0';
+      _inspFlag = temp;
+      
+      _valFlag = ossimDemUtil::getLong(bufstr, 885, 1);
+      _suspectVoidFlg = ossimDemUtil::getLong(bufstr, 886, 2);
+      _vertDatum = ossimDemUtil::getLong(bufstr, 888, 2);
+      _horizDatum = ossimDemUtil::getLong(bufstr, 890, 2);
+      if (_horizDatum == 0)
+         _horizDatum = 1;   // Default to NAD27
+      
+      _dataEdition = ossimDemUtil::getLong(bufstr, 892, 4);
+      _perctVoid = ossimDemUtil::getLong(bufstr, 896, 4);
+      _westEdgeFlag = ossimDemUtil::getLong(bufstr, 900, 2);
+      _northEdgeFlag = ossimDemUtil::getLong(bufstr, 902, 2);
+      _eastEdgeFlag = ossimDemUtil::getLong(bufstr, 904, 2);
+      _southEdgeFlag = ossimDemUtil::getLong(bufstr, 906, 2);
+      ossimDemUtil::getDouble(bufstr, 908, 7, _vertDatumShift);
+
+      delete [] bufstr;
+      delete [] temp;
+      bufstr = 0;
+      temp = 0;
+   }
+   return in;
 }
 
 
@@ -633,7 +733,7 @@ std::ostream& ossimDemHeader::print(std::ostream& out) const
 
 ossim::istream& operator>>(ossim::istream& s, ossimDemHeader& header)
 {
-   return header.open(s);
+    return header.open(s);
 }
 
 bool ossimDemHeader::getImageGeometry(ossimKeywordlist& kwl,

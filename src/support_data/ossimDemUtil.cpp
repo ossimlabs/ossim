@@ -30,93 +30,119 @@ bool ossimDemUtil::isUsgsDem(const ossimFilename& file)
 {
    bool result = false;
 
-   if ( file.exists() )
+   ossimString ext = file.ext();
+   ext.downcase();
+   if (ext == "dem")
+   {
+      result = true;
+   }
+   else
+   {
+      // Look for file.omd
+      ossimFilename kwlFile = file;
+      kwlFile.setExtension("omd");
+      if (! kwlFile.exists() )
+      {
+         kwlFile.setExtension("OMD");
+      }
+      
+      if ( kwlFile.exists() )
+      {
+         ossimKeywordlist kwl(kwlFile);
+         if (kwl.getErrorStatus() == ossimErrorCodes::OSSIM_OK)
+         {
+            const char* lookup = kwl.find(DEM_TYPE_KW);
+            if (lookup)
+            {
+               ossimString s = lookup;
+               s.downcase();
+               if (s == USGS_DEM_KW)
+               {
+                  result = true;
+               }
+            }
+         }
+      }
+   }
+   
+   if ( result )
    {
       
-      //---
-      // Open checks:
-      // 1) Check extension for .dem
-      //
-      // 2) Look for file.omd (ossim meta data) file containing keyword
-      //    "dem_type" with value of "usgs_dem".
-      //
-      // NOTE:
-      // There is a keyword list template stored in the templates directory:
-      // "ossim/etc/templates/usgs_dem_template.kwl"
-      //---
-      
-      ossimString ext = file.ext();
-      ext.downcase();
-      if (ext == "dem")
-      {
-         result = true;
-      }
-      else
-      {
-         // Look for file.omd
-         ossimFilename kwlFile = file;
-         kwlFile.setExtension("omd");
-         if (! kwlFile.exists() )
-         {
-            kwlFile.setExtension("OMD");
-         }
-         
-         if ( kwlFile.exists() )
-         {
-            ossimKeywordlist kwl(kwlFile);
-            if (kwl.getErrorStatus() == ossimErrorCodes::OSSIM_OK)
-            {
-               const char* lookup = kwl.find(DEM_TYPE_KW);
-               if (lookup)
-               {
-                  ossimString s = lookup;
-                  s.downcase();
-                  if (s == USGS_DEM_KW)
-                  {
-                     result = true;
-                  }
-               }
-            }
-         }
-      }
-      
-      if ( result )
-      {
-         
-         // Open up the file for reading.
-         std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
-            createIstream(file, std::ios_base::in | std::ios_base::binary);
+      // Open up the file for reading.
+      std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+         createIstream(file, std::ios_base::in | std::ios_base::binary);
 
-         if ( is && is->good() )
+   }
+      
+   return result;
+}
+
+bool ossimDemUtil::isUsgsDem(std::shared_ptr<ossim::istream> str, 
+                             const std::string& connectionString)
+{
+   bool result = false;
+   ossimFilename tempFile = connectionString;
+   ossimString ext = tempFile.ext();
+   ext.downcase();
+   if (ext == "dem")
+   {
+      result = true;
+   }
+   else
+   {
+      // Look for file.omd
+      ossimFilename kwlFile = tempFile;
+      kwlFile.setExtension("omd");
+      if (! kwlFile.exists() )
+      {
+         kwlFile.setExtension("OMD");
+      }
+      
+      if ( kwlFile.exists() )
+      {
+         ossimKeywordlist kwl(kwlFile);
+         if (kwl.getErrorStatus() == ossimErrorCodes::OSSIM_OK)
          {
-            //---
-            // SPECIAL HACK (drb):
-            // Check some bytes and make sure there is no binary data.
-            // There are files out there with .dem extension that are binary
-            // rasters.
-            //---
-            ossim_uint8* ubuf = new ossim_uint8[512];
-            is->read((char*)ubuf, 512);
-            for (int i = 0; i < 512; ++i)
+            const char* lookup = kwl.find(DEM_TYPE_KW);
+            if (lookup)
             {
-               if (ubuf[i] > 0x7f)
+               ossimString s = lookup;
+               s.downcase();
+               if (s == USGS_DEM_KW)
                {
-                  result = false;
-                  break;
+                  result = true;
                }
             }
-            delete [] ubuf;
-            ubuf = 0;
          }
-         else
+      }
+   }
+   if(result&&str&&str->good())
+   {
+      //---
+      // SPECIAL HACK (drb):
+      // Check some bytes and make sure there is no binary data.
+      // There are files out there with .dem extension that are binary
+      // rasters.
+      //---
+      ossim_uint8* ubuf = new ossim_uint8[512];
+      str->read((char*)ubuf, 512);
+      for (int i = 0; i < 512; ++i)
+      {
+         if (ubuf[i] > 0x7f)
          {
             result = false;
+            break;
          }
       }
-      
-   } // matches:  if ( file.exists() )
+      delete [] ubuf;
+      ubuf = 0;
+   }
+   else
+   {
+      result = false;
+   }
 
-   return result;
+   return result;   
 }
 
 bool ossimDemUtil::getRecord(ossim::istream& s, std::string& strbuf, long reclength)

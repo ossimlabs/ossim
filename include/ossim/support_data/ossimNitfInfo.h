@@ -13,6 +13,7 @@
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/support_data/ossimInfoBase.h>
 #include <ossim/support_data/ossimNitfFile.h>
 #include <iosfwd>
@@ -40,6 +41,8 @@ public:
     * @return true on success false on error.
     */
    virtual bool open(const ossimFilename& file);
+   virtual bool open(std::shared_ptr<ossim::istream>& str,
+                     const std::string& connectionString);
    
    /**
     * Print method.
@@ -61,7 +64,7 @@ public:
                                 ossim_uint32 entryIndex )const;
    
 private:
-   ossimRefPtr<ossimNitfFile> m_nitfFile;
+  std::shared_ptr<ossimNitfFile> m_nitfFile;
 };
 
 #endif /* End of "#ifndef ossimNitfInfo_HEADER" */

@@ -18,14 +18,15 @@
 #include <ossim/base/ossimErrorStatusInterface.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/base/ossimIoStream.h>
 
 class ossimProperty;
 
 class OSSIM_DLL ossimDtedUhl : public ossimErrorStatusInterface
 {
 public:
-   ossimDtedUhl(const ossimFilename& dted_file="", ossim_int32 offset=0);
-   ossimDtedUhl(std::istream& in);
+  ossimDtedUhl();
+  ossimDtedUhl(std::shared_ptr<ossim::istream>& str, ossim_int64 offset=0);
 
    enum
    {

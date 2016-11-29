@@ -21,11 +21,7 @@
 #include <ossim/support_data/ossimDtedDsi.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimProperty.h>
-
-//**************************************************************************
-// CONSTRUCTOR
-//**************************************************************************
-ossimDtedDsi::ossimDtedDsi(const ossimFilename& dted_file, ossim_int32 offset)
+ossimDtedDsi::ossimDtedDsi()
    :
       theRecSen(),
       theSecurityCode(),
@@ -71,43 +67,10 @@ ossimDtedDsi::ossimDtedDsi(const ossimFilename& dted_file, ossim_int32 offset)
       theStartOffset(0),
       theStopOffset(0)
 {
-   if(!dted_file.empty())
-   {
-      // Check to see that dted file exists.
-      if(!dted_file.exists())
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimDtedDsi::ossimDtedDsi: \nThe DTED file does not exist: " << dted_file << std::endl;
-         return;
-      }
-      
-      // Check to see that the dted file is readable.
-      if(!dted_file.isReadable())
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimDtedDsi::ossimDtedDsi: The DTED file is not readable: " << dted_file << std::endl;
-         return;
-      }
-      
-      // Open the dted file for reading.
-      std::ifstream in(dted_file.c_str());
-      if(!in)
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimDtedDsi::ossimDtedDsi: Unable to open the DTED file: " << dted_file << std::endl;
-         return;
-      }
-      in.seekg(offset);
-      parse(in);
-      
-      in.close();
-   }
+
 }
 
-//**************************************************************************
-// CONSTRUCTOR
-//**************************************************************************
-ossimDtedDsi::ossimDtedDsi(std::istream&  in)
+ossimDtedDsi::ossimDtedDsi(std::shared_ptr<ossim::istream>& str, ossim_int64 offset)
    :
       theRecSen(),
       theSecurityCode(),
@@ -153,7 +116,8 @@ ossimDtedDsi::ossimDtedDsi(std::istream&  in)
       theStartOffset(0),
       theStopOffset(0)
 {
-   parse(in);
+  str->seekg(offset);
+  parse(*str);
 }
 
 void ossimDtedDsi::parse(std::istream& in)

@@ -45,6 +45,8 @@ public:
     */
    bool open(const ossimFilename& file);
 
+   bool open(std::shared_ptr<ossim::istream>& str,  const std::string& connectionString);
+
    /**
     * @brief open method that takes a stream.
     *

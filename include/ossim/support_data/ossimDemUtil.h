@@ -44,6 +44,8 @@ public:
     * @return true on success, false on error.
     */
    static bool isUsgsDem(const ossimFilename& file);
+   
+   static bool isUsgsDem(std::shared_ptr<ossim::istream> str, const std::string& connectionString);
 
    /**
     *  Reads a single record from a DEM.

@@ -1415,12 +1415,12 @@ ossimRefPtr<ossimImageHandler> ossimInfo::getImageHandler()
 
 void ossimInfo::prettyPrint(const ossimFilename& file) const
 {
-   ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
-   if (info.valid())
+   std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
+   if (info)
    {
       info->setProcessOverviewFlag(false);
       info->print(ossimNotify(ossimNotifyLevel_INFO));
-      info = 0;
+      info.reset();
    }
    else
    {
@@ -1433,15 +1433,15 @@ void ossimInfo::dumpImage(const ossimFilename& file,
                           bool dnoFlag,
                           ossimKeywordlist& kwl) const
 {
-   ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
-   if (info.valid())
+   std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
+   if (info)
    {
       if (dnoFlag) // Default info processes overviews.
       {
          info->setProcessOverviewFlag(false);
       }
       info->getKeywordlist(kwl);
-      info = 0;
+      info.reset();
    }
    else
    {

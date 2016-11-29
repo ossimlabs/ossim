@@ -298,6 +298,7 @@ ossimSensorModelFactory::getTypeNameList(std::vector<ossimString>& typeList)
 ossimProjection* ossimSensorModelFactory::createProjection(
    const ossimFilename& filename, ossim_uint32  entryIdx) const
 {
+  std::cout << "ossimSensorModelFactory::createProjection: entered......\n";
    // ossimFilename::exists() currently does not work with s3 url's.
    // if(!filename.exists()) return 0;
 
@@ -416,6 +417,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
       }
       model = qbModel.get();
       qbModel = 0;
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
       return model.release();
    }
    else
@@ -438,6 +440,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
       }
       model = ikModel.get();
       ikModel = 0;
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
       return model.release();
    }
    else
@@ -457,6 +460,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
      {
          model = rsmModel.get();
          rsmModel = 0;
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
          return model.release();
      }
      else
@@ -474,6 +478,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
      {
         model = rpcModel.get();
         rpcModel = 0;
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
         return model.release();
      }
      else
@@ -490,6 +495,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
      model = new ossimNitfMapModel(filename); // filename = NITF_file
      if(!model->getErrorStatus())
      {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
         return model.release();
      }
      model = 0;
@@ -499,6 +505,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
       model = new ossimLandSatModel(filename);
       if(!model->getErrorStatus())
       {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
          return model.release();
       }
       model = 0;
@@ -507,6 +514,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    model = new ossimRS1SarModel(filename);
    if(model->getErrorStatus()!= ossimErrorCodes::OSSIM_OK)
    {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
       return model.release();
    }
    model = 0;
@@ -541,6 +549,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
             model = new ossimSpot5Model(meta.get());
             if(!model->getErrorStatus())
             {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
                return model.release();
             }
          }
@@ -572,6 +581,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
          sensor->setRefImgPt(ossimDpt(imageSize.x*.5, imageSize.y*.5));
          sensor->setAveragePrjectedHeight(ppjFile->getAverageProjectedHeight());
          sensor->updateModel();
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
          return sensor.release();         
       }
       ppjFile = 0;
@@ -604,6 +614,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
             ossimRefPtr<ossimAlphaSensorHSI> sensor = new ossimAlphaSensorHSI();
             if ( sensor->initialize( *(supData.get()) ) )
             {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
                return (ossimProjection*)sensor.release();
             }
          }
@@ -617,6 +628,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
             ossimRefPtr<ossimAlphaSensorHRI> sensor = new ossimAlphaSensorHRI();
             if ( sensor->initialize( *(supData.get()) ) )
             {
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
                return (ossimProjection*)sensor.release();
             }
          }
@@ -629,11 +641,13 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    {
       if(!model->getErrorStatus())
       {
-         return model.release();
+   std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
+        return model.release();
       }
       model = 0;
    }
 
+  std::cout << "ossimSensorModelFactory::createProjection: leaving......\n";
    return model.release();
 }
    
