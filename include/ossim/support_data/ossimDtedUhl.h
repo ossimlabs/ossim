@@ -18,7 +18,8 @@
 #include <ossim/base/ossimErrorStatusInterface.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimRefPtr.h>
-#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <memory>
 
 class ossimProperty;
 
