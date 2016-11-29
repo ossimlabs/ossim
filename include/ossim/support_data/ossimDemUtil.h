@@ -18,6 +18,7 @@
 
 #include <ossim/base/ossimIosFwd.h>
 #include <string>
+#include <memory>
 
 class ossimFilename;
 
