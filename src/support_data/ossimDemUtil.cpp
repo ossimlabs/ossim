@@ -21,7 +21,6 @@
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <cstring>
 #include <iostream>
-#include <memory>
 
 static const char DEM_TYPE_KW[] = "dem_type";
 static const char USGS_DEM_KW[] = "usgs_dem";
