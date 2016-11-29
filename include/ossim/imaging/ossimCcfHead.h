@@ -25,7 +25,8 @@
 #include <ossim/base/ossimErrorStatusInterface.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimIpt.h>
-#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <memory>
 
 class ossimIrect;
 

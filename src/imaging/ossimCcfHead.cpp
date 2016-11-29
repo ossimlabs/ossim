@@ -23,6 +23,7 @@ using namespace std;
 #include <ossim/base/ossimScalarTypeLut.h>
 #include <ossim/base/ossimErrorCodes.h>
 #include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIoStream.h>
 
 static const bool TRACE = false; // Temp until trace code implemented.
 
