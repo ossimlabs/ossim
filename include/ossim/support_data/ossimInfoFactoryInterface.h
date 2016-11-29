@@ -1,24 +1,21 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
-// Author:  David Burken
+// Author: David Burken
 //
 // Description: Interface for info factories.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
+
 #ifndef ossimInfoFactoryInterface_HEADER
-#define ossimInfoFactoryInterface_HEADER
+#define ossimInfoFactoryInterface_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
-// #include <ossim/base/ossimObjectFactory.h>
 #include <ossim/support_data/ossimInfoBase.h>
 
 class ossimFilename;
-//class ossimInfoBase;
 
 //---
 // Note: Deriving from ossimObjectFactory is being backed out as no
@@ -34,7 +31,7 @@ class ossimFilename;
 /**
  * @brief Info factory.
  */
-class OSSIM_DLL ossimInfoFactoryInterface // : public ossimObjectFactory
+class OSSIM_DLL ossimInfoFactoryInterface
 {
 public:
 
@@ -57,27 +54,7 @@ public:
 
     virtual std::shared_ptr<ossimInfoBase> create(std::shared_ptr<ossim::istream>& str,
                                                   const std::string& connectionString) const = 0;
-#if 0
-   virtual ossimObject* createObject(const ossimString& typeName)const
-   {
-      return 0;
-   }
-   virtual ossimObject* createObject(const ossimKeywordlist& kwl,
-                                     const char* prefix=0)const
-   {
-      return 0;
-   }
-   /*!
-    * This should return the type name of all objects in all factories.
-    * This is the name used to construct the objects dynamially and this
-    * name must be unique.
-    */
-   virtual void getTypeNameList(std::vector<ossimString>& typeList)const
-   {
-      
-   }
-#endif
-   
+
 };
 
 #endif /* End of "#ifndef ossimInfoFactoryInterface_HEADER" */

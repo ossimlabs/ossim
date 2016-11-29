@@ -1,21 +1,22 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  See top level LICENSE.txt file
+// License: MIT
 //
-// Author:  David Burken
+// Author: David Burken
 //
 // Description: Class declaration of Registry (singleton) for info factories.
 //
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #ifndef ossimInfoFactoryRegistry_HEADER
 #define ossimInfoFactoryRegistry_HEADER 1
 
 #include <ossim/base/ossimConstants.h> /* for OSSIM_DLL macro */
-#include <ossim/base/ossimIoStream.h> 
+#include <ossim/base/ossimIosFwd.h> 
 #include <ossim/support_data/ossimInfoBase.h> 
 #include <OpenThreads/Mutex>
+#include <memory>
 #include <vector>
 
 // Forward class declarations.
@@ -77,8 +78,6 @@ public:
    std::shared_ptr<ossimInfoBase> create( std::shared_ptr<ossim::istream>& str,
                                           const std::string& connectionString) const;
 
- //const ossimFilename& file) const;
-   
 protected:
 
    /**

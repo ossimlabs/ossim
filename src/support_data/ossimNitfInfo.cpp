@@ -1,15 +1,11 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Description: NITF Info object.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
-
-
 
 #include <ossim/support_data/ossimNitfInfo.h>
 #include <ossim/base/ossimKeywordlist.h>
@@ -32,21 +28,28 @@ ossimNitfInfo::~ossimNitfInfo()
 
 bool ossimNitfInfo::open(const ossimFilename& file)
 {
+   bool result = false;
+   
    std::string connectionString = file.c_str();
    std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
       createIstream( file.c_str(), std::ios_base::in|std::ios_base::binary);
-
-   return open(str, connectionString);
-
+   
+   if ( str )
+   {
+      result = open(str, connectionString);
+   }
+   return result;
 }
 
 bool ossimNitfInfo::open(std::shared_ptr<ossim::istream>& str,
                          const std::string& connectionString)
 {
-   m_nitfFile = std::make_shared<ossimNitfFile>();
-   bool result = m_nitfFile->parseStream(ossimFilename(connectionString), *str);
-
-
+   bool result = false;
+   if ( str )
+   {
+      m_nitfFile = std::make_shared<ossimNitfFile>();
+      result = m_nitfFile->parseStream(ossimFilename(connectionString), *str);
+   }
    return result;
 }
 

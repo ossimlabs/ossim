@@ -1,13 +1,12 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Description: NITF Info object.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
+
 #ifndef ossimNitfInfo_HEADER
 #define ossimNitfInfo_HEADER 1
 
