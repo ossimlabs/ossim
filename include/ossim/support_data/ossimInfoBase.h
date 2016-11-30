@@ -18,6 +18,7 @@
 #include <iosfwd>
 #include <ossim/base/ossimIosFwd.h>
 #include <memory>
+#include <string>
 
 class ossimFilename;
 class ossimKeywordlist;
