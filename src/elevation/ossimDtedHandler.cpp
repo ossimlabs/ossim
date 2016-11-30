@@ -192,6 +192,8 @@ bool ossimDtedHandler::open(std::shared_ptr<ossim::istream>& fileStr,
     m_fileStr->clear();
     m_fileStr->seekg(0, std::ios::end);
     streamSize = m_fileStr->tellg();
+    m_fileStr->seekg(0, std::ios::beg);
+
     m_memoryMap.resize(streamSize);//theFilename.fileSize());
     m_fileStr->read((char*)(&m_memoryMap.front()), (std::streamsize)m_memoryMap.size());
     m_fileStr.reset();
@@ -560,7 +562,6 @@ double ossimDtedHandler::DtedHeight::calcHeight()
 {
   double sum_weights = 0;
   double sum_posts = 0;
-
   for ( int i = 0; i < TOTAL_POSTS; ++i )
   {
     if ( m_posts[i].m_height == NULL_POST || !m_posts[i].m_status )
