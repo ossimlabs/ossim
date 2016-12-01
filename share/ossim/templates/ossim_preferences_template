@@ -327,7 +327,6 @@ plugin.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
 
 plugin.file3:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
 plugin.file5:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kakadu_plugin.so
-plugin.file7:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
 plugin.file10:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_jpeg12_plugin.so
 plugin.file15: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin.so
 plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_cnes_plugin.so
