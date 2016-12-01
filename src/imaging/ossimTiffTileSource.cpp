@@ -91,6 +91,7 @@ public:
    void close()
    {
       m_tiffStream.reset();
+      m_tiffTileSource = 0;
    }
    ossimTiffTileSource* m_tiffTileSource;
    std::shared_ptr<ossim::istream> m_tiffStream;
@@ -138,11 +139,11 @@ toff_t tiff_Seek(thandle_t st,toff_t pos, int whence)
    }
    switch(whence)
    {
-      // case 0: // SEEK_SET
-      // {
-      //    seekDir = std::ios::beg;
-      //    break;
-      // }
+      case 0: // SEEK_SET
+      {
+       seekDir = std::ios::beg;
+       break;
+      }
       case 1: // SEEK_CUR
       {
          seekDir = std::ios::cur;
