@@ -144,18 +144,30 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openConnection(
    const ossimString& connectionString, bool openOverview )const
 {
    ossimRefPtr<ossimImageHandler> result(0);
+
+   std::string myConnectionString = connectionString.downcase().string();
+   std::string fileStr = "file://";
+   std::size_t found = myConnectionString.find( fileStr );
+   if ( found == 0 )
+   {
+      myConnectionString = connectionString.string().substr( fileStr.size() );
+   }
+   else
+   {
+      myConnectionString = connectionString.string();
+   }
    
    std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
-      createIstream( connectionString, std::ios_base::in|std::ios_base::binary);
+      createIstream( myConnectionString, std::ios_base::in|std::ios_base::binary);
 
    if ( str )
    {
-      result = open( str, connectionString, openOverview );
+      result = open( str, myConnectionString, openOverview );
    }
 
    if ( result.valid() == false )
    {
-      ossimFilename f = connectionString;
+      ossimFilename f = myConnectionString;
       if ( f.exists() )
       {
          result = this->open( f, true, openOverview );
