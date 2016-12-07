@@ -84,8 +84,10 @@ public:
    bool        isFile()       const;
    bool        isDir()        const;
    bool        isReadable()   const;
+   bool        isUrl()        const;
    bool        isWriteable()  const;
    bool        isExecutable() const;
+   
    ossim_int64 fileSize()     const;
    
    // Methods to access parts of the ossimFilename.

@@ -1,17 +1,15 @@
-//----------------------------------------------------------------------------
+//---
 //
 // File: ossimChipperUtil.cpp
 // 
 // License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: Utility class definition processing digital elevation
 // models(dems).
 //
-//----------------------------------------------------------------------------
+//---
 // $Id: ossimChipperUtil.cpp 23675 2015-12-22 18:16:28Z dburken $
 
 #include <ossim/util/ossimChipperUtil.h>
@@ -1814,8 +1812,10 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
                if ( isThreeBandOut() )
                {
                   //---
-                  // This will guarantee three bands out.  Will put band selector at
-                  // the end of the chain if input is one band.
+                  // This will guarantee three bands out.  Will put band
+                  // selector at the end of the chain if input is one band. If input image
+                  // handler has implemented a getRgbBandlist(...) it will also set the
+                  // rgb band order.
                   //---
                   ic->setThreeBandFlag( true );
                }
@@ -1828,10 +1828,6 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
                   if ( bandList.size() )
                   {
                      ic->setBandSelection( bandList );
-                  }
-                  else
-                  {
-                    ic->setToDefaultBandSelection();
                   }
                }
             }
