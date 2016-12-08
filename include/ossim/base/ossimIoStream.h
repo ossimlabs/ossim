@@ -1,6 +1,6 @@
 //---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author: Garrett Potts
 //

@@ -4127,7 +4127,6 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
                if ( f.exists() )
                {
                   openedHistogram = remapper->openHistogram( f );
-
                   if ( !openedHistogram && traceDebug() )
                   {
                      ossimNotify(ossimNotifyLevel_WARN)
@@ -4151,7 +4150,7 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
          // Enable and set mode:
          remapper->setEnableFlag(true);
          remapper->setStretchMode( mode );
-
+         
          if ( roiStretch )
          {
             ossimIrect aoi;
@@ -5280,21 +5279,28 @@ void  ossimChipperUtil::initializeSrcKwl()
 ossim_uint32 ossimChipperUtil::getNumberOfInputs() const
 {
    ossim_uint32 result = 0;
+   
+   ossimString demRegExpr = "dem[0-9]*\\.file";
+   ossimString imgRegExpr = "image[0-9]*\\.file";
+   
    if ( m_kwl.valid() )
    {
       // Look for dems, e.g. dem0.file: foo.tif
-      ossimString regularExpression = "dem[0-9]*\\.file";
-      result = m_kwl->getNumberOfKeysThatMatch( regularExpression );
+      result = m_kwl->getNumberOfKeysThatMatch( demRegExpr );
 
       // Look for images, e.g. image0.file: foo.tif
-      regularExpression = "image[0-9]*\\.file";
-      result += m_kwl->getNumberOfKeysThatMatch( regularExpression );
+      result += m_kwl->getNumberOfKeysThatMatch( imgRegExpr );
    }
+
    if ( m_srcKwl.valid() )
    {
-      result += m_srcKwl->numberOf( DEM_KW.c_str() );
-      result += m_srcKwl->numberOf( IMG_KW.c_str() );
+      // Look for dems, e.g. dem0.file: foo.tif
+      result += m_srcKwl->getNumberOfKeysThatMatch( demRegExpr );
+
+      // Look for images, e.g. image0.file: foo.tif
+      result += m_srcKwl->getNumberOfKeysThatMatch( imgRegExpr );     
    }
+
    return result;
 }
 

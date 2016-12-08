@@ -81,6 +81,30 @@ public:
 protected:
 
    /**
+    * @brief Open dot.src (ossimSrcRecord).
+    *
+    * Currently only opens a single image.  Can be used for split base image
+    * with overviews and histograms in a separate "support" directory.
+    *
+    * Input record example:
+    * 
+    * ossim_src_record_version: 1.0
+    * image0.entry: 0
+    * image0.file: s3://your_bucket/data1/test/data/public/tif/ls7-ff-fusion.tif
+    * image0.ovr: /data1/s3_test/ls7-ff-fusion.ovr
+    * image0.hist: /data1/s3_test/ls7-ff-fusion.his
+    * image0.support: /data1/s3_test
+    *
+    * @param str Open stream to src record.
+    * @param connectionString Path to src file.
+    * @param openOverview If true attempt to open overview file.
+    * @return ossimRefPtr to image handler on success or null on failure.
+    */
+   ossimRefPtr<ossimImageHandler> openSrcRecord(std::shared_ptr<ossim::istream>& str,
+                                                const std::string& connectionString,
+                                                bool openOverview ) const;
+
+   /**
     * @brief Open method that looks at extension e.g. "tif", "jpg" to select
     * class to open.
     *
