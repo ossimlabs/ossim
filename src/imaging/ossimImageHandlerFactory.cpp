@@ -77,8 +77,6 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(
    const std::string& connectionString,
    bool openOverview ) const
 {
-   cout << "a1..." << endl;
-   
    ossimRefPtr<ossimImageHandler> result(0);
 
    // NITF:
@@ -1012,7 +1010,6 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::openSrcRecord(
    const std::string& connectionString,
    bool openOverview ) const
 {
-   cout << "a2..." << endl;
    ossimRefPtr<ossimImageHandler> result = 0;
 
    // Check the extension for ".src" before going any further:
@@ -1037,10 +1034,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::openSrcRecord(
                   
                   if ( result.valid() )
                   {
-                     cout << "a2a..." << endl;
                      ossimFilename supportDir = src.getSupportDir();
-                     cout << "support dir: " << supportDir << endl;
-                     
                      if ( supportDir.empty() )
                      {
                         if ( src.getOverviewPath().size() )
@@ -1069,10 +1063,9 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::openSrcRecord(
                      
                      if ( supportDir.size() && (src.getFilename().path() != supportDir) )
                      {
-                        cout << "a2b..." << endl;
-                        
                         result->setSupplementaryDirectory( supportDir );
                      }
+
                      if ( src.getEntryIndex() > 0 ) // defaulted to -1.
                      {
                         result->setCurrentEntry(
@@ -1083,14 +1076,12 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::openSrcRecord(
                      {
                         if ( src.getOverviewPath().size() )
                         {
-                           cout << "src.getOverviewPath(): " << src.getOverviewPath() << endl;
                            result->openOverview( src.getOverviewPath() );
                         }
                         else
                         {
                            ossimFilename ovrFile = result->
                               getFilenameWithThisExtension(ossimString(".ovr"));
-                           cout << "ovrFile: " << ovrFile << endl;
                            result->openOverview( ovrFile ); 
                         }
                      }
