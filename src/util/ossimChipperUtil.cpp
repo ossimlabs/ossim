@@ -1,17 +1,15 @@
-//----------------------------------------------------------------------------
+//---
 //
 // File: ossimChipperUtil.cpp
 // 
 // License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: Utility class definition processing digital elevation
 // models(dems).
 //
-//----------------------------------------------------------------------------
+//---
 // $Id: ossimChipperUtil.cpp 23675 2015-12-22 18:16:28Z dburken $
 
 #include <ossim/util/ossimChipperUtil.h>
@@ -1814,8 +1812,10 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
                if ( isThreeBandOut() )
                {
                   //---
-                  // This will guarantee three bands out.  Will put band selector at
-                  // the end of the chain if input is one band.
+                  // This will guarantee three bands out.  Will put band
+                  // selector at the end of the chain if input is one band. If input image
+                  // handler has implemented a getRgbBandlist(...) it will also set the
+                  // rgb band order.
                   //---
                   ic->setThreeBandFlag( true );
                }
@@ -1828,10 +1828,6 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
                   if ( bandList.size() )
                   {
                      ic->setBandSelection( bandList );
-                  }
-                  else
-                  {
-                    ic->setToDefaultBandSelection();
                   }
                }
             }
@@ -4131,7 +4127,6 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
                if ( f.exists() )
                {
                   openedHistogram = remapper->openHistogram( f );
-
                   if ( !openedHistogram && traceDebug() )
                   {
                      ossimNotify(ossimNotifyLevel_WARN)
@@ -4155,7 +4150,7 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
          // Enable and set mode:
          remapper->setEnableFlag(true);
          remapper->setStretchMode( mode );
-
+         
          if ( roiStretch )
          {
             ossimIrect aoi;
@@ -5284,21 +5279,28 @@ void  ossimChipperUtil::initializeSrcKwl()
 ossim_uint32 ossimChipperUtil::getNumberOfInputs() const
 {
    ossim_uint32 result = 0;
+   
+   ossimString demRegExpr = "dem[0-9]*\\.file";
+   ossimString imgRegExpr = "image[0-9]*\\.file";
+   
    if ( m_kwl.valid() )
    {
       // Look for dems, e.g. dem0.file: foo.tif
-      ossimString regularExpression = "dem[0-9]*\\.file";
-      result = m_kwl->getNumberOfKeysThatMatch( regularExpression );
+      result = m_kwl->getNumberOfKeysThatMatch( demRegExpr );
 
       // Look for images, e.g. image0.file: foo.tif
-      regularExpression = "image[0-9]*\\.file";
-      result += m_kwl->getNumberOfKeysThatMatch( regularExpression );
+      result += m_kwl->getNumberOfKeysThatMatch( imgRegExpr );
    }
+
    if ( m_srcKwl.valid() )
    {
-      result += m_srcKwl->numberOf( DEM_KW.c_str() );
-      result += m_srcKwl->numberOf( IMG_KW.c_str() );
+      // Look for dems, e.g. dem0.file: foo.tif
+      result += m_srcKwl->getNumberOfKeysThatMatch( demRegExpr );
+
+      // Look for images, e.g. image0.file: foo.tif
+      result += m_srcKwl->getNumberOfKeysThatMatch( imgRegExpr );     
    }
+
    return result;
 }
 

@@ -1,14 +1,12 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
 // Description: Utility class declaration for a single image chain.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 #ifndef ossimSingleImageChain_HEADER
 #define ossimSingleImageChain_HEADER 1
@@ -488,15 +486,6 @@ public:
     * @note This will not work unless the image handler is initialized.
     */
    void setToThreeBandsReverse();
-
-   /**
-    * @brief method to set band selector.
-    * 
-    * This will set the band selection to a default setting.  If a band selector is
-    * not in the chain yet it will be added.
-    *
-   */
-   void setToDefaultBandSelection();
 
    /**
     * @brief method to set band selector.

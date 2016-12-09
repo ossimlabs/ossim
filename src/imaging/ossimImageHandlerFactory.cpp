@@ -1,13 +1,15 @@
-//----------------------------------------------------------------------------
+//---
 //
 // License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
-//----------------------------------------------------------------------------
-// $Id: ossimImageHandlerFactory.cpp 23464 2015-08-07 18:39:47Z okramer $
+//---
+// $Id$
 
 #include <ossim/imaging/ossimImageHandlerFactory.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimRegExp.h>
 #include <ossim/base/ossimTrace.h>
@@ -38,6 +40,7 @@
 #include <ossim/imaging/ossimRangeDomeTileSource.h>
 #include <ossim/parallel/ossimImageHandlerMtAdaptor.h>
 #include <ossim/point_cloud/ossimPointCloudImageHandler.h>
+#include <ossim/support_data/ossimSrcRecord.h>
 #include <tiffio.h>
 
 #if OSSIM_HAS_HDF5
@@ -75,6 +78,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(
    bool openOverview ) const
 {
    ossimRefPtr<ossimImageHandler> result(0);
+
    // NITF:
    ossimRefPtr<ossimNitfTileSource> ih = new ossimNitfTileSource();
    ih->setOpenOverviewFlag(openOverview);
@@ -82,22 +86,37 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(
    {
       result = ih.get();
    }
-
-   if(!result)
+      
+   if( !result )
    {
+      // Reset the stream for downstream code.
+      str->seekg(0, std::ios_base::beg);
+      str->clear();
+      
+      // TIFF:
       ossimRefPtr<ossimTiffTileSource> ihTiff = new ossimTiffTileSource();
       ihTiff->setOpenOverviewFlag(openOverview);
       if ( ihTiff->open( str, connectionString ) )
       {
          result = ihTiff.get();
       }
-   }
 
-   if(!result)
-   {
-      // Reset the stream for downstream code.
-      str->seekg(0, std::ios_base::beg);
-      str->clear();
+      if(!result)
+      {
+         // Reset the stream for downstream code.
+         str->seekg(0, std::ios_base::beg);
+         str->clear();
+
+         // ossim dot.src file:
+         result = openSrcRecord( str, connectionString, openOverview );  
+
+         if ( !result )
+         {
+            // Reset the stream for downstream code.
+            str->seekg(0, std::ios_base::beg);
+            str->clear();
+         }
+      }
    }
    
    return result;
@@ -984,4 +1003,101 @@ void ossimImageHandlerFactory::getTypeNameList(std::vector<ossimString>& typeLis
 #endif
 
    typeList.push_back(STATIC_TYPE_NAME(ossimImageHandlerMtAdaptor));
+}
+
+ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::openSrcRecord(
+   std::shared_ptr<ossim::istream>& str,
+   const std::string& connectionString,
+   bool openOverview ) const
+{
+   ossimRefPtr<ossimImageHandler> result = 0;
+
+   // Check the extension for ".src" before going any further:
+   std::size_t found = connectionString.find( std::string(".src") );
+   if ( found != std::string::npos && ( found == (connectionString.size() - 4) ) )
+   {
+      ossimKeywordlist kwl;
+      if ( kwl.parseStream( *str ) )
+      {
+         // Right now only concidering one image, i.e. "image0":
+         std::string prefix = "image0.";
+         ossimSrcRecord src;
+         if ( src.loadState(kwl, prefix.c_str() ) )
+         {
+            if ( src.getFilename().string().size() )
+            {
+               // Avoid recursive loop:
+               if (src.getFilename().string() != connectionString )
+               {
+                  result = ossimImageHandlerRegistry::instance()->
+                     openConnection( src.getFilename(), false );
+                  
+                  if ( result.valid() )
+                  {
+                     ossimFilename supportDir = src.getSupportDir();
+                     if ( supportDir.empty() )
+                     {
+                        if ( src.getOverviewPath().size() )
+                        {
+                           if ( src.getOverviewPath().isDir() )
+                           {
+                              supportDir = src.getOverviewPath();
+                           }
+                           else
+                           {
+                              supportDir = src.getOverviewPath().path();
+                           }
+                        }
+                        else if ( src.getHistogramPath().size() )
+                        {
+                           if ( src.getHistogramPath().isDir() )
+                           {
+                              supportDir = src.getHistogramPath();
+                           }
+                           else
+                           {
+                              supportDir = src.getHistogramPath().path();
+                           }
+                        }
+                     }
+                     
+                     if ( supportDir.size() && (src.getFilename().path() != supportDir) )
+                     {
+                        result->setSupplementaryDirectory( supportDir );
+                     }
+
+                     if ( src.getEntryIndex() > 0 ) // defaulted to -1.
+                     {
+                        result->setCurrentEntry(
+                           static_cast<ossim_uint32>( src.getEntryIndex() ) );
+                     }
+                     
+                     if ( openOverview && ( result->getOverview() == 0 ) )
+                     {
+                        if ( src.getOverviewPath().size() )
+                        {
+                           result->openOverview( src.getOverviewPath() );
+                        }
+                        else
+                        {
+                           ossimFilename ovrFile = result->
+                              getFilenameWithThisExtension(ossimString(".ovr"));
+                           result->openOverview( ovrFile ); 
+                        }
+                     }
+                  }
+               }
+            }
+         }
+         
+      } // Matches: if ( kwl.parseStream( str ) )
+
+      if ( !result )
+      {
+         // Reset the stream for downstream code.
+         str->seekg(0, std::ios_base::beg);
+         str->clear();
+      }
+   }
+   return result;
 }

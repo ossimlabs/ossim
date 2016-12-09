@@ -631,18 +631,24 @@ ossimFilename ossimFilename::expand() const
 bool ossimFilename::exists() const
 {
    bool result = false;
+   if ( isUrl() == false )
+   {
 #if defined(_WIN32)
-   result = (_access(c_str(), ossimFilename::OSSIM_EXIST) == 0);
+      result = (_access(c_str(), ossimFilename::OSSIM_EXIST) == 0);
 #else
-   result = ((access(c_str(), ossimFilename::OSSIM_EXIST)) == 0);
+      result = ((access(c_str(), ossimFilename::OSSIM_EXIST)) == 0);
 #endif
+   }
+   else
+   {
+      result = true; // No test for url at this point.
+   }
    return result;
 }
 
 bool ossimFilename::isFile() const
 {
 #if defined(_WIN32)
-
    struct _stat sbuf;
    if ( _stat(c_str(), &sbuf ) == -1)
       return false;
@@ -694,6 +700,24 @@ bool ossimFilename::isReadable() const
 #else
    return (access(c_str(), ossimFilename::OSSIM_READ) == 0);
 #endif
+}
+
+bool ossimFilename::isUrl() const
+{
+   bool result = false;
+   if ( m_str.size() )
+   {
+      //---
+      // Must have at least room for a protocol and "://", e.g.
+      // "s3://my_bucket/data1/foo.tif
+      //---
+      std::size_t found = m_str.find( std::string("://") );
+      if ( ( found != std::string::npos ) && ( found > 1 ) )
+      {
+         result = true;
+      }
+   }
+   return result;
 }
 
 bool ossimFilename::isWriteable() const
@@ -1337,21 +1361,26 @@ bool ossimFilename::isRelative() const
 bool ossimFilename::needsExpansion() const
 {
    bool result = false;
-   if ( size() )
+   if ( m_str.size() )
    {
-      result = isRelative();
-      if (result == false)
+      // Do not expand URLs.
+      if ( isUrl() == false )
       {
-         // Check for '$'
-         std::string::size_type pos = m_str.find('$', 0);
+         result = isRelative();
+         if (result == false)
          {
-            if (pos != std::string::npos)
+            // Check for '$'
+            std::string::size_type pos = m_str.find('$', 0);
             {
-               // found '$'
-               result = true;
+               if (pos != std::string::npos)
+               {
+                  // found '$'
+                  result = true;
+               }
             }
+            
          }
-      }    
+      }
    }
    return result;
 }

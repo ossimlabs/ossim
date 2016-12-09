@@ -1,14 +1,12 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
 // Description: Utility class definition for a single image chain.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #include <ossim/imaging/ossimSingleImageChain.h>
@@ -855,6 +853,20 @@ bool ossimSingleImageChain::getSharpenFlag() const
 
 void ossimSingleImageChain::setToThreeBands()
 {
+   if (!m_bandSelector)
+   {
+      addBandSelector();
+   }
+
+   m_bandSelector->setEnableFlag(true);
+   m_bandSelector->setThreeBandRgb();
+
+   if ( m_histogramRemapper.valid() )
+   {
+      m_histogramRemapper->initialize();
+   } 
+
+#if 0
    if ( m_handler.valid() )
    {
       // Only do if not three bands already so the band list order is not wiped out.
@@ -883,6 +895,7 @@ void ossimSingleImageChain::setToThreeBands()
          setBandSelection(bandList);
       }
    }
+#endif
 }
 
 void ossimSingleImageChain::setToThreeBandsReverse()
@@ -905,21 +918,6 @@ void ossimSingleImageChain::setToThreeBandsReverse()
       }
       setBandSelection(bandList);
    }
-}
-
-
-void ossimSingleImageChain::setToDefaultBandSelection()
-{
-   if (!m_bandSelector)
-   {
-      addBandSelector();
-   }
-   m_bandSelector->setEnableFlag(true);
-   m_bandSelector->setDefaultBandList();
-   if ( m_histogramRemapper.valid() )
-   {
-      m_histogramRemapper->initialize();
-   }   
 }
 
 void ossimSingleImageChain::setBandSelection(
