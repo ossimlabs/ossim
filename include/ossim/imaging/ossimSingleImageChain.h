@@ -497,6 +497,8 @@ public:
     */
    void setBandSelection(const std::vector<ossim_uint32>& bandList);
 
+   void setDefaultBandSelection();
+   
    /**
     * @brief Convenience method to return the scalar type of the image handler.
     * 

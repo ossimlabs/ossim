@@ -1829,6 +1829,10 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
                   {
                      ic->setBandSelection( bandList );
                   }
+                  else
+                  {
+                     ic->setDefaultBandSelection();     
+                  }
                }
             }
 
