@@ -935,6 +935,19 @@ void ossimSingleImageChain::setBandSelection(
    }
 }
 
+void ossimSingleImageChain::setDefaultBandSelection()
+{
+   if(!m_bandSelector)
+   {
+      addBandSelector();
+   }
+   m_bandSelector->setEnableFlag(true);
+
+   if(m_bandSelector.valid())
+   {
+      m_bandSelector->setThreeBandRgb();
+   }
+}
 
 ossimScalarType ossimSingleImageChain::getImageHandlerScalarType() const
 {
