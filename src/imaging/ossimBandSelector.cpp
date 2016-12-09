@@ -413,7 +413,7 @@ bool ossimBandSelector::loadState(const ossimKeywordlist& kwl,
    {
       ossimString bs = bands;
       bs.downcase();
-      if ( bs == "rgb" )
+      if ( (bs == "rgb" ) || (bs == "default"))
       {
          // Flag initialize() to set the band list on first connection.
          m_delayLoadRgbFlag = true;
