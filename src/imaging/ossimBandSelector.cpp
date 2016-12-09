@@ -228,18 +228,17 @@ void ossimBandSelector::initialize()
                // Call to checkPassThrough()->outputBandsWithinInputRange()
                // will check the range of output band list.
                //---
-               m_outputBandList.resize(3);
                if( theInputConnection->getNumberOfOutputBands() > 2 )
                {
+                  m_outputBandList.resize(3);
                   m_outputBandList[0] = 0;
                   m_outputBandList[1] = 1;
                   m_outputBandList[2] = 2;
                }
                else
                {
+                 m_outputBandList.resize(1);
                  m_outputBandList[0] = 0;
-                 m_outputBandList[1] = 0;
-                 m_outputBandList[2] = 0;                  
                }
             }
             

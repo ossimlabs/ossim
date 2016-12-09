@@ -47,14 +47,18 @@ public:
     * @brief Will set to three bands (rgb) out.
     *
     * This will attempt to auto detect the zero based rgb band order from the
-    * input image handler.  
+    * input image handler.  If the result is < 3 bands we will
+    * not increase the band output by adding more bands.  For example,  
+    * if the input is grey or thermal then it will just output one band for
+    * a default allocation.  Note,  this can be overriden by explicitly setting
+    * the output band list.  
     * 
     * If the image handler implemented getRgbBandList(...) it will use that:
     *    bands = 2,1,0 ( or whatever handler thinks rgb is )
     * else if 3 band or greater and can't determine rgb:
     *    bands = 0,1,2
     * else (less than three bands)
-    *    bands = 0,0,0
+    *    bands = 0
     */
    virtual void setThreeBandRgb();
     
