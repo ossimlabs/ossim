@@ -1963,11 +1963,57 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
    ossimRefPtr<ossimSingleImageChain> ic = new ossimSingleImageChain;
    if ( ic->open(rec) )
    {
+      // Set any reader props:
+      setReaderProps( ic->getImageHandler().get() );
+
+      // Entry is set in ossimSingleImageChain::open(src)
+
+      //---
+      // If PSM (pan sharpening) operation and this input is one band, don't
+      // mess with its bands.
+      //---
+      bool psmPanInput = false;
+      if ( ( m_operation == OSSIM_CHIPPER_OP_PSM ) && ( ic->getNumberOfOutputBands() == 1 ) )
+      {
+         psmPanInput = true;
+      }
+      
+      // Bands selection.  Note: Not performed on PSM pan band.
+      if ( !psmPanInput )
+      {
+         if ( isThreeBandOut() )
+         {
+            //---
+            // This will guarantee three bands out.  Will put band
+            // selector at the end of the chain if input is one band. If input image
+            // handler has implemented a getRgbBandlist(...) it will also set the
+            // rgb band order.
+            //---
+            ic->setThreeBandFlag( true );
+         }
+         
+         if ( hasBandSelection() )
+         {
+            // User entered band list.
+            std::vector<ossim_uint32> bandList(0);
+            getBandList( bandList );
+            if ( bandList.size() )
+            {
+               ic->setBandSelection( bandList );
+            }
+            else
+            {
+               ic->setDefaultBandSelection();     
+            }
+         }
+      }
+
       //---
       // If multiple inputs and scaleToEightBit do it at the end of the processing
-      // chain to alleviate un-even strectes between inputs.
+      // chain to alleviate un-even stretches between inputs.
       //---
-      bool scaleFlag = ( scaleToEightBit() && ( getNumberOfInputs() == 1) );
+      const ossim_uint32 INPUT_COUNT = getNumberOfInputs();
+      bool scaleFlag = ( scaleToEightBit() && (INPUT_COUNT == 1) );
       ic->setRemapToEightBitFlag( scaleFlag );
 
       // Always have resampler cache.
@@ -1979,13 +2025,32 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       //---
       ic->setAddChainCacheFlag(false);
 
-      // Histogram.
-      if ( isDemSource == false )
+      //---
+      // Histogram:
+      // Don't apply histogram stretch to dem sources for hill shade
+      // operation.
+      //---
+      if ( ( isDemSource == false ) ||
+           ( isDemSource && (m_operation != OSSIM_CHIPPER_OP_HILL_SHADE) ) )
       {
          ic->setAddHistogramFlag( hasHistogramOperation() );
       }
+      
+      // Brightness, contrast. Note in same filter.
+      if ( hasBrightnesContrastOperation() )
+      {
+         ic->setBrightnessContrastFlag(true);
+      }
+      
+      std::string sharpnessMode = getSharpenMode();
+      if ( sharpnessMode.size() )
+      {
+         ic->setSharpenFlag(true);
+      }
 
       //---
+      // Create the chain.
+      // 
       // NOTE: Histogram and band selector can be set in ic->createRenderedChain(rec)
       // if the right keywords are there.
       //---
@@ -1995,7 +2060,49 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       ossimString lookup = m_kwl->findKey( RESAMPLER_FILTER_KW );
       if ( lookup.size() )
       {
+         // Assumption image renderer is in chain:
          ic->getImageRenderer()->getResampler()->setFilterType( lookup );
+      }
+      
+      // Histogram setup.
+      if ( hasHistogramOperation() )
+      {
+         setupChainHistogram( ic );
+      }
+      
+      // Brightness constrast setup:
+      if ( hasBrightnesContrastOperation() )
+      {
+         // Assumption bright contrast filter in chain:
+         
+         ossim_float64 value = getBrightness();
+         ic->getBrightnessContrast()->setBrightness( value );
+         
+         value = getContrast();
+         ic->getBrightnessContrast()->setContrast( value );
+      }
+      
+      // Sharpness:
+      if ( sharpnessMode.size() )
+      {
+         if ( sharpnessMode == "light" )
+         {
+            ic->getSharpenFilter()->setWidthAndSigma( 3, 0.5 );
+         }
+         else if ( sharpnessMode == "heavy" )
+         {
+            ic->getSharpenFilter()->setWidthAndSigma( 5, 1.0 );
+         }
+      }
+      
+      if(hasGeoPolyCutterOption())
+      {
+         ossimGeoPolygon polygon;
+         getClipPolygon(polygon);
+         if(polygon.size()>0)
+         {
+            ic->addGeoPolyCutterPolygon(polygon);
+         }
       }
    }
    else // Open failed.
