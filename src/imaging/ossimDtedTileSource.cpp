@@ -1,8 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -10,8 +8,8 @@
 //
 // Contains class declaration for ossimDtedTileSource.
 //
-//********************************************************************
-// $Id: ossimDtedTileSource.cpp 21631 2012-09-06 18:10:55Z dburken $
+//---
+// $Id$
 
 #include <ossim/imaging/ossimDtedTileSource.h>
 #include <ossim/base/ossimConstants.h>
@@ -42,7 +40,9 @@ static ossimTrace traceDebug("ossimDtedTileSource:debug");
 ossimDtedTileSource::ossimDtedTileSource()
    :
       ossimImageHandler(),
-      theTile(NULL),
+      theTile(0),
+      m_fileStr(0),
+      m_dtedInfo(0),
       theTileWidth(0),
       theTileHeight(0),
       theNumberOfLines(0),
