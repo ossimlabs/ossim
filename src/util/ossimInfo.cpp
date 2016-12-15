@@ -1418,7 +1418,19 @@ void ossimInfo::prettyPrint(const ossimFilename& file) const
    std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
    if (info)
    {
-      info->setProcessOverviewFlag(false);
+      //---
+      // Old -d behavior was to dump all unless the dump no overview flag
+      // was set. Need to see tiff tags in file order for all image file
+      // directories(ifd's) so commenting out hard coded
+      // info->setProcessOverviewFlag(false) that used to be settable with -d
+      // + --dno options.  Note the old -d option used to do file order for
+      // tiffs but now dumps to a keyword list that prints alphabetical(not
+      // file order) so can't use that anymore.
+      // 
+      // drb - 15 Dec. 2016
+      //---
+      // info->setProcessOverviewFlag(false);
+      
       info->print(ossimNotify(ossimNotifyLevel_INFO));
       info.reset();
    }

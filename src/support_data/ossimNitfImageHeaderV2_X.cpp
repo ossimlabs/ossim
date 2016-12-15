@@ -65,7 +65,7 @@ RTTI_DEF1(ossimNitfImageHeaderV2_X,
           ossimNitfImageHeader);
 
 ossimNitfImageHeaderV2_X::ossimNitfImageHeaderV2_X()
-:theImageComments(0)
+:theImageComments()
 {
 }
 
