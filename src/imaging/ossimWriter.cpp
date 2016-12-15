@@ -341,7 +341,15 @@ bool ossimWriter::writeTiffTags( const std::vector<ossim_uint64>& tile_offsets,
    tag   = ossim::OTIFFTAG_PHOTOMETRIC;
    type  = ossim::OTIFF_SHORT;
    count = 1;
-   value_ui16 = ossim::OPHOTO_MINISBLACK;
+   if ( theInputConnection->getNumberOfOutputBands() == 3 )
+   {
+      value_ui16 = ossim::OPHOTO_RGB;
+   }
+   else
+   {
+      value_ui16 = ossim::OPHOTO_MINISBLACK;
+   }
+   
    writeTiffTag<ossim_uint16>( tag, type, count, &value_ui16, arrayWritePos );
 
    // samples per pixel tag 277:

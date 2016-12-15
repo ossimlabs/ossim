@@ -1,7 +1,8 @@
 #ifndef ossimNitfImageHeaderV2_X_HEADER
-#define ossimNitfImageHeaderV2_X_HEADER
+#define ossimNitfImageHeaderV2_X_HEADER 1
 #include <ossim/base/ossimConstants.h>
 #include <ossim/support_data/ossimNitfImageHeader.h>
+#include <string>
 
 class OSSIM_DLL ossimNitfImageHeaderV2_X : public ossimNitfImageHeader
 {
@@ -382,7 +383,7 @@ protected:
    * FIELD ICOMnn:
    * Dynamic buffer for the comments.  Each comment is 80 bytes
    */
-   char *theImageComments;
+   std::string theImageComments;
 
    /**
     * FIELD: IGEOLO

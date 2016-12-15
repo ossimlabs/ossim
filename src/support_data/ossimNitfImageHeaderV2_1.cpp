@@ -110,19 +110,17 @@ void ossimNitfImageHeaderV2_1::parseStream(ossim::istream& in, const ossimNitfFi
    {
       in.read(theGeographicLocation, 60);
    }
+
+   // Up to 3 80 character comments treated as a single comment.
    in.read(theNumberOfComments, 1);
    ossim_int32 numberOfComments = ossimString(theNumberOfComments).toInt32();
-   
-   // for now just ignore the comments
    if(numberOfComments > 0)
    {
-      //---
-      // NOTE: The ossim::S3IStream is not handling the "ignore" so changed out
-      // to a seekg for now.  (drb 09 Nov. 2016)
-      //---
-      // in.ignore(numberOfComments*80);
-      in.seekg( numberOfComments*80, std::ios_base::cur );
+      ossim_int32 bytes = numberOfComments*80;
+      theImageComments.resize( bytes );
+      in.read( (char*)&(theImageComments.front()), bytes );
    }
+   
    in.read(theCompression, 2);
    
    // only need the Rate code if its not
@@ -402,8 +400,12 @@ void ossimNitfImageHeaderV2_1::writeStream(ossim::ostream &out)
    {
       out.write(theGeographicLocation, 60);
    }
-   // for now force the number of comments to be 0
+   
    out.write(theNumberOfComments, 1);
+   if ( theImageComments.size() )
+   {
+      out.write( (char*)&(theImageComments.front()), theImageComments.size() );
+   }
    
    out.write(theCompression, 2);
    ossimString compressionTest = theCompression;
@@ -567,8 +569,26 @@ std::ostream& ossimNitfImageHeaderV2_1::print(std::ostream& out,
        << prefix << setw(24)
        << "IGEOLO:" << theGeographicLocation << "\n"
        << prefix << setw(24)
-       << "NICOM:"  << theNumberOfComments << "\n"
-       << prefix << setw(24)
+       << "NICOM:"  << theNumberOfComments << "\n";
+
+   ossim_int32 numberOfComments = ossimString(theNumberOfComments).toInt32();
+   if(numberOfComments > 0)
+   {
+      out << prefix << setw(24)
+          << "ICOM1:"  << theImageComments.substr(0,80) << "\n";
+      if ( numberOfComments > 1 )
+      {
+         out << prefix << setw(24)
+             << "ICOM2:"  << theImageComments.substr(80, 80) << "\n";
+      }
+      if ( numberOfComments > 2 )
+      {
+         out << prefix << setw(24)
+             << "ICOM3:"  << theImageComments.substr(160, 80) << "\n";
+      }
+   }
+
+   out << prefix << setw(24)
        << "IC:"     << theCompression << "\n"
        << prefix << setw(24)
        << "COMRAT:" << theCompressionRateCode << "\n"
@@ -984,6 +1004,7 @@ void ossimNitfImageHeaderV2_1::clearFields()
    memset(theCoordinateSystem, ' ',1);
    memset(theGeographicLocation, ' ',60);
    memset(theNumberOfComments, '0', 1);
+   theImageComments.clear();
    memcpy(theCompression, "NC",2);
    memset(theCompressionRateCode, ' ',4);
    memset(theNumberOfBands, '0',1);

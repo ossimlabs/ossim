@@ -60,9 +60,23 @@ std::shared_ptr<ossim::istream> ossim::StreamFactory::createIstream(
 }
       
 std::shared_ptr<ossim::ostream> ossim::StreamFactory::createOstream(
-   const std::string& /*connectionString*/, std::ios_base::openmode /*mode*/) const
+   const std::string& connectionString, std::ios_base::openmode mode) const
 {
-   return std::shared_ptr<ossim::ostream>(0);
+   std::shared_ptr<ossim::ostream> result(0);
+
+   std::shared_ptr<ossim::ofstream> testResult = 
+      std::make_shared<ossim::ofstream>();
+   testResult->open(connectionString.c_str(), mode);
+   if ( testResult->is_open() )
+   {
+      result = testResult;
+   }
+   else
+   {
+      testResult.reset();
+   }
+
+   return result;
 }
 
 std::shared_ptr<ossim::iostream> ossim::StreamFactory::createIOstream(
