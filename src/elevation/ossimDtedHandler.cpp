@@ -132,7 +132,7 @@ bool ossimDtedHandler::open(const ossimFilename& file, bool memoryMapFlag)
   std::string connectionString = file.c_str();
   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
     createIstream( file.c_str(), std::ios_base::in|std::ios_base::binary);
-  
+  if(!str) return false;
   return open(str, connectionString, memoryMapFlag);
 }
 
@@ -142,6 +142,7 @@ bool ossimDtedHandler::open(std::shared_ptr<ossim::istream>& fileStr,
 {
    static const char* MODULE = "ossimDtedHandler::open";
   close();
+  if(!fileStr) return false;
 
   m_vol = std::make_shared<ossimDtedVol>();
   m_hdr = std::make_shared<ossimDtedHdr>();
