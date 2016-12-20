@@ -112,7 +112,11 @@ ossimCcfHead::ossimCcfHead(std::shared_ptr<ossim::istream>& str,
                            const std::string& connectionString)
 {
    static const char MODULE[] = "ossimCcfHead::ossimCcfHead";
-   if (!parseCcfHeader(str, connectionString))
+   if(!str)
+   {
+      theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+   }
+   else if (!parseCcfHeader(str, connectionString))
    {
       theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
       

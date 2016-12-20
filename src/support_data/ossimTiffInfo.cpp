@@ -91,6 +91,7 @@ ossimTiffInfo::~ossimTiffInfo()
 bool ossimTiffInfo::open(const ossimFilename& file)
 {
    std::shared_ptr<ossim::istream> inStream = ossim::StreamFactoryRegistry::instance()->createIstream(file.c_str());
+   if(!inStream) return false;
    return open(inStream, file.c_str());
 }
 
@@ -98,7 +99,7 @@ bool ossimTiffInfo::open( std::shared_ptr<ossim::istream>& str,
                           const std::string& connectionString )
 {
    bool result = false;
-
+   
    //---
    // Open the tif file.
    //---

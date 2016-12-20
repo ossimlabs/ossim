@@ -1011,7 +1011,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::openSrcRecord(
    bool openOverview ) const
 {
    ossimRefPtr<ossimImageHandler> result = 0;
-
+   if(!str) return result;
    // Check the extension for ".src" before going any further:
    std::size_t found = connectionString.find( std::string(".src") );
    if ( found != std::string::npos && ( found == (connectionString.size() - 4) ) )

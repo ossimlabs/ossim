@@ -68,9 +68,8 @@ bool ossimDemUtil::isUsgsDem(const ossimFilename& file)
    {
       
       // Open up the file for reading.
-      std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
-         createIstream(file, std::ios_base::in | std::ios_base::binary);
-
+      // std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+      //    createIstream(file, std::ios_base::in | std::ios_base::binary);
    }
       
    return result;

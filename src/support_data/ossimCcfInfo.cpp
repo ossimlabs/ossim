@@ -31,6 +31,8 @@ bool ossimCcfInfo::open(const ossimFilename& file)
    std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
       createIstream( file.c_str(), std::ios_base::in|std::ios_base::binary);
 
+   if(!str) return false;
+   
    return open(str, connectionString);
 
 }

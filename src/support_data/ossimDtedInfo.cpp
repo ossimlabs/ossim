@@ -31,6 +31,7 @@ bool ossimDtedInfo::open(std::shared_ptr<ossim::istream>& str,
                          const std::string& connectionString)
 {
    bool result = false;
+   if(!str) return false;
    // Test for extension, like dt0, dt1...
    ossimString ext = ossimFilename(connectionString).ext();
    ossimRegExp regExp("^[d|D][t|T][0-9]");
