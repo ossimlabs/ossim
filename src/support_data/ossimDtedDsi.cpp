@@ -118,8 +118,15 @@ ossimDtedDsi::ossimDtedDsi(std::shared_ptr<ossim::istream>& str, ossim_int64 off
       theStartOffset(0),
       theStopOffset(0)
 {
-  str->seekg(offset);
-  parse(*str);
+  if(str)
+  {
+    str->seekg(offset);
+    parse(*str);
+  }
+  else
+  {
+      theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+  }
 }
 
 void ossimDtedDsi::parse(std::istream& in)

@@ -34,9 +34,17 @@ ossimDtedHdr::ossimDtedHdr(std::shared_ptr<ossim::istream>& str, ossim_int64 off
   theStartOffset(0),
   theStopOffset(0)
 {
-  str->seekg(offset);
-  // Continue parsing all the record fields.
-  parse(*str);  
+  if(str)
+  {
+    str->seekg(offset);
+    // Continue parsing all the record fields.
+    parse(*str);  
+
+  }
+  else
+  {
+    theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+  }
 }
 
 //**************************************************************************

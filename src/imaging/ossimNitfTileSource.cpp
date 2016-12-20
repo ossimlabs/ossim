@@ -193,7 +193,7 @@ bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
    static const char MODULE[] = "ossimNitfTileSource::open( stream, ...)";
 
    bool result = false;
-
+   if(!str) return result;
    ossimFilename file = connectionString;
 
    if (traceDebug())
