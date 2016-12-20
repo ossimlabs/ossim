@@ -1,13 +1,13 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 // 
 // Description: This class provides manipulation of filenames.
 //
-//*************************************************************************
-// $Id: ossimFilename.cpp 20192 2011-10-25 17:27:25Z dburken $
+//---
+// $Id$
 
 #include <ossim/ossimConfig.h>  /* to pick up platform defines */
 
@@ -1232,24 +1232,31 @@ bool ossimFilename::wildcardRemove(const ossimFilename& pathname)
 
 bool ossimFilename::rename(const ossimFilename& destFile, bool overwriteDestinationFlag)const
 {
-   if(!overwriteDestinationFlag)
+   bool result = true;
+   if ( this->string() != destFile.string() )
    {
-      if(destFile.exists())
+      if ( overwriteDestinationFlag && destFile.exists() )
+      {
+         destFile.remove();
+      }
+
+      if ( destFile.exists() == false )
+      {
+         // std::rename from cstdio returns 0 on success.
+         if ( std::rename(this->c_str(), destFile.c_str()) != 0 )
+         {
+            result = false;
+         }
+      }
+      else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "WARNING: "
-            << "ossimFilename::rename WARNING:"
+            << "ossimFilenam::rename WARNING:"
             << "\nDestination File Exists: " << destFile << std::endl;
-         return false;
+         result = false;
       }
    }
-   else if(destFile.exists())
-   {
-      destFile.remove();
-   }
-   ::rename(this->c_str(), destFile.c_str());
-   
-   return true;
+   return result;
 }
    
 bool ossimFilename::remove()const
