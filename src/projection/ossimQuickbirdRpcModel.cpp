@@ -99,11 +99,12 @@ ossimObject* ossimQuickbirdRpcModel::dup() const
 //*************************************************************************************************
 bool ossimQuickbirdRpcModel::parseFile(const ossimFilename& file)
 {
-   if (!parseNitfFile(file))
+   bool result = parseNitfFile(file);
+   if ( !result )
    {
-      return parseTiffFile(file);
+      result = parseTiffFile(file);
    }
-   return true;
+   return result;
 }
 
 //*************************************************************************************************
@@ -112,10 +113,20 @@ bool ossimQuickbirdRpcModel::parseFile(const ossimFilename& file)
 bool ossimQuickbirdRpcModel::parseNitfFile(const ossimFilename& file)
 {
    setErrorStatus();
-   ossimFilename nitfFile = file;
-   
+
+   //---
+   // ossimNitfFile::parseFile(...) checks the first eight byte so three calls
+   // to parseFile are not necessary. drb - 21 Dec. 2016  
+   //---
    ossimRefPtr<ossimNitfFile> nitfFilePtr = new ossimNitfFile;
+   if( nitfFilePtr->parseFile( file ) == false )
+   {
+      return false;
+   }
    
+#if 0   
+   ossimFilename nitfFile = file;
+   ossimRefPtr<ossimNitfFile> nitfFilePtr = new ossimNitfFile;
    if(!nitfFilePtr->parseFile(nitfFile))
    {
       nitfFile = nitfFile.setExtension("NTF");
@@ -126,6 +137,7 @@ bool ossimQuickbirdRpcModel::parseNitfFile(const ossimFilename& file)
             return false;
       }
    }
+#endif
    
    ossimRefPtr<ossimNitfImageHeader> ih = nitfFilePtr->getNewImageHeader(0);
    if (!ih)

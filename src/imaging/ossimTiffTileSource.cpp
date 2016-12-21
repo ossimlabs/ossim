@@ -64,17 +64,19 @@ class TiffStreamAdaptor
 {
 public:
    TiffStreamAdaptor(ossimTiffTileSource* tiffTileSource)
-   :m_tiffTileSource(tiffTileSource)
+      :m_tiffTileSource(tiffTileSource)
    {
       m_tiffStream = ossim::StreamFactoryRegistry::instance()->createIstream(m_tiffTileSource->getFilename());
    }
+
    TiffStreamAdaptor(ossimTiffTileSource* tiffTileSource, 
                      std::shared_ptr<ossim::istream>& tiffStream)
-   :m_tiffTileSource(tiffTileSource),
-   m_tiffStream(tiffStream)
+      :m_tiffTileSource(tiffTileSource),
+       m_tiffStream(tiffStream)
    {
 
    }
+   
    ~TiffStreamAdaptor()
    {
       close();
@@ -528,32 +530,33 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
    static const char MODULE[] = "ossimTiffTileSource::open";
    if(isOpen())
    {
-     close();
+      close();
    }
-      // std::cout << "NOW DOING THE STREAM OPEN!!!!!!!!!!!!!!!!" << (ossim_int64)this 
-      //           << " for file:" 
-      //           << connectionString << "\n";
 
-   theImageFile = ossimFilename(connectionString);
+   // std::cout << "NOW DOING THE STREAM OPEN!!!!!!!!!!!!!!!!" << (ossim_int64)this 
+   //           << " for file:" 
+   //           << connectionString << "\n";
+   
    // Check for empty file name.
-   if (theImageFile.empty())
+   if ( connectionString.empty() )
    {
       return false;
    }
-   
+
+   theImageFile = ossimFilename(connectionString);
    theImageDirectoryList.clear();
 
    //---
    // Note:  The 'm' in "rm" is to tell TIFFOpen to not memory map the file.
    //---
    //theTiffPtr = XTIFFOpen(theImageFile.c_str(), "rm");
-   //m_streamAdaptor = std::make_shared<TiffStreamAdaptor>(this, str);
-   m_streamAdaptor = std::make_shared<TiffStreamAdaptor>(this);
+   //m_streamAdaptor = std::make_shared<TiffStreamAdaptor>(this);
+   m_streamAdaptor = std::make_shared<TiffStreamAdaptor>(this, str);
 
-    theTiffPtr = XTIFFClientOpen(connectionString.c_str(), "rm", 
-     (thandle_t)m_streamAdaptor.get(),
-     tiff_Read, tiff_Write, tiff_Seek, tiff_Close, tiff_Size,
-     tiff_Map, tiff_Unmap);
+   theTiffPtr = XTIFFClientOpen(connectionString.c_str(), "rm", 
+                                (thandle_t)m_streamAdaptor.get(),
+                                tiff_Read, tiff_Write, tiff_Seek, tiff_Close, tiff_Size,
+                                tiff_Map, tiff_Unmap);
 
 // std::cout << "TIFF PTR ????????????" << theTiffPtr << std::endl;
    if (!theTiffPtr)
