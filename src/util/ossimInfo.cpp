@@ -115,11 +115,12 @@ ossimInfo::~ossimInfo()
 
 void ossimInfo::setUsage(ossimArgumentParser& ap)
 {
+   // Add global usage options.
+   ossimInit::instance()->addOptions(ap);
+   
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   if (usageString != "ossim-info")
-      usageString += " info";
    usageString += " [options] <optional-image>";
    au->setCommandLineUsage(usageString);
 
