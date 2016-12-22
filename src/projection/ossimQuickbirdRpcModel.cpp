@@ -339,8 +339,11 @@ bool ossimQuickbirdRpcModel::parseMetaData(const ossimFilename& base_name)
    if(!theSupportData->open(metadataFile))
    {
       theSupportData = 0; // ossimRefPtr
-      ossimNotify(ossimNotifyLevel_WARN) << "ossimQuickbirdRpcModel::parseNitfFile WARNING:"
+#if 0 /* This should be wrapped in trace. drb */
+      ossimNotify(ossimNotifyLevel_WARN)
+         << "ossimQuickbirdRpcModel::parseMetaData WARNING:"
          << "\nCould not open IMD file.  Sensor ID unknown." << std::endl;
+#endif
       return false;
    }
 
