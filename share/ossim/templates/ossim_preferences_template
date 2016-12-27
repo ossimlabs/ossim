@@ -19,8 +19,13 @@
 // 
 // windoze users:       I'll have to look this up...
 //
-// You can also use the "-P <preference_file>" option at application startup.
-// where <preference_file> is full path and filename.
+// Use the "-P <preference_file>" option at application startup to specify
+// a path to preferences file.  Where <preference_file> is full path and 
+// filename.
+//
+// Use the "-K key=value option at application startup to specify a key value
+// pair. e.g.:
+// ossim-chipper -K ossim.std.out.progress=1 --options tgt-008-options.kwl
 //
 // Note that system environment variables found in this ossim preferences
 // file in the format "$(env_var_name)" will be expanded in place.
@@ -636,3 +641,11 @@ ossim.plugins.aws.s3.readBlocksize: 1M
 //
 ossim.plugins.aws.s3.nReadCacheHeaders: 10000
 
+//---
+// Turn on/off progress output to console standard output. Code
+// auto detects if running in a console window; hence, typically this is not
+// needed.
+// values: 0, 1, true or false
+// default = commented out / auto-detected.
+//---
+// ossim.std.out.progress: 1
