@@ -44,10 +44,10 @@ ossimStdOutProgress::ossimStdOutProgress(ossim_uint32 precision,
 
    if ( stdOutConsole.size() )
    {
-      prefsFlag = stdOutConsole.toBool();
+      // Override auto detected console.
+      theRunningInConsoleFlag = stdOutConsole.toBool();
    }
-   
-   if ( !ISATTY(FILENO(stdout)) || !prefsFlag )
+   else if ( !ISATTY(FILENO(stdout) ) )
    {
       theRunningInConsoleFlag = false;
    }
