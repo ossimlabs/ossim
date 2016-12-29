@@ -20,3 +20,11 @@ set(TARGET_COMMON_LIBRARIES ${OSSIM_LIBRARY} ${OPENTHREADS_LIBRARY})
 FOREACH(f ${OSSIM_APP_DIRS})
 	ADD_SUBDIRECTORY(${f})
 ENDFOREACH(f)
+
+
+#---
+# Building curl dependant apps optional. default=OFF
+#---
+if(BUILD_OSSIM_CURL_APPS)
+  add_subdirectory(curl_apps)
+endif()

@@ -250,15 +250,9 @@ MESSAGE( STATUS "OSSIM_HAS_HDF5                  = ${OSSIM_HAS_HDF5}" )
 message("################## end of OSSIM core library setup #########################")
 
 IF(BUILD_OSSIM_APPS)
-   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/apps ${CMAKE_CURRENT_BINARY_DIR}/apps)
+   add_subdirectory(apps)
 ENDIF()
 
-#---
-# Building curl dependant apps optional. default=OFF
-#---
-if(BUILD_OSSIM_CURL_APPS)
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/apps/curl_apps)
-endif()
 
 IF(BUILD_OSSIM_TESTS)
    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test/src ${CMAKE_CURRENT_BINARY_DIR}/test/src)
