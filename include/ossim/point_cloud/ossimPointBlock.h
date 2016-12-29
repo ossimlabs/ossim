@@ -31,7 +31,7 @@ public:
    virtual ~ossimPointBlock();
 
    /** Returns allocated size. The pointList may contain only null points if not assigned */
-   virtual ossim_uint32 size() const { return m_pointList.size(); }
+   virtual ossim_uint32 size() const { return (ossim_uint32)m_pointList.size(); }
 
    bool empty() const { return (size() == 0); }
 

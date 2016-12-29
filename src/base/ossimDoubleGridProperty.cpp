@@ -38,21 +38,19 @@ ossimObject* ossimDoubleGridProperty::dup()const
 const ossimProperty& ossimDoubleGridProperty::assign(const ossimProperty& rhs)
 {
   ossimProperty::assign(rhs);
-  ossimDoubleGridProperty* rhsPtr = PTR_CAST(ossimDoubleGridProperty, &rhs);
-
+  const ossimDoubleGridProperty* rhsPtr = dynamic_cast<const ossimDoubleGridProperty*>(&rhs);
   if(rhsPtr)
-    {
-      theMinNumberOfCols = rhsPtr->theMinNumberOfCols;
-      theMaxNumberOfCols = rhsPtr->theMaxNumberOfCols;
-      theMinNumberOfRows = rhsPtr->theMinNumberOfRows;
-      theMaxNumberOfRows = rhsPtr->theMaxNumberOfRows;
-      theValues          = rhsPtr->theValues;
-    }
+  {
+     theMinNumberOfCols = rhsPtr->theMinNumberOfCols;
+     theMaxNumberOfCols = rhsPtr->theMaxNumberOfCols;
+     theMinNumberOfRows = rhsPtr->theMinNumberOfRows;
+     theMaxNumberOfRows = rhsPtr->theMaxNumberOfRows;
+     theValues          = rhsPtr->theValues;
+  }
   else
-    {
-      setValue(rhs.valueToString());
-      
-    }
+  {
+     setValue(rhs.valueToString());  
+  }
   
   return *this;
 }

@@ -11,7 +11,7 @@
 // all connectable objects.
 //
 //*************************************************************************
-// $Id: ossimConnectableObject.h 21852 2012-10-21 20:16:04Z dburken $
+// $Id$
 
 #ifndef ossimConnectableObject_HEADER
 #define ossimConnectableObject_HEADER 1
@@ -19,7 +19,6 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimId.h>
-#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimListenerManager.h>
 #include <ossim/base/ossimPropertyInterface.h>
 #include <ossim/base/ossimRefPtr.h>

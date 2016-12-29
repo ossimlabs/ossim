@@ -1,13 +1,13 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author: Ken Melero
 // 
 // Description: This class provides capabilities for keywordlists.
 //
-//********************************************************************
-// $Id: ossimKeywordlist.h 22516 2013-12-14 17:19:47Z dburken $
+//---
+// $Id$
 
 #ifndef ossimKeywordlist_HEADER
 #define ossimKeywordlist_HEADER 1
@@ -16,9 +16,9 @@
 #include <ossim/base/ossimReferenced.h>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimFilename.h>
-#include <iosfwd>
 #include <map>
 #include <vector>
 #include <algorithm>
@@ -413,10 +413,10 @@ public:
    void addList( const ossimKeywordlist &src, bool overwrite = true );
 
    /** deprecated method */
-   virtual bool parseStream(std::istream& is,
+   virtual bool parseStream(ossim::istream& is,
                             bool ignoreBinaryChars);
    
-   virtual bool parseStream(std::istream& is);
+   virtual bool parseStream(ossim::istream& is);
    virtual bool parseString(const std::string& inString);
 
    /*!
@@ -513,8 +513,12 @@ protected:
    enum KeywordlistParseState
    {
       KeywordlistParseState_OK         = 0,
-      KeywordlistParseState_FAIL       = 1, // just used to say this set of token has failed the rules
-      KeywordlistParseState_BAD_STREAM = 2, // Means an error occured that is a mal formed stream for Keywordlist
+      
+      // Used to say this set of token has failed the rules.
+      KeywordlistParseState_FAIL       = 1,
+
+      // Means an error occured that is a mal formed stream for Keywordlist.
+      KeywordlistParseState_BAD_STREAM = 2, 
    };
    /*!
     *  Method to parse files to initialize the list.  Method will error on
@@ -528,12 +532,13 @@ protected:
                   bool  ignoreBinaryChars = false);
 
    bool isValidKeywordlistCharacter(ossim_uint8 c)const;
-   void skipWhitespace(std::istream& in)const;
-   KeywordlistParseState readComments(ossimString& sequence, std::istream& in)const;
-   KeywordlistParseState readPreprocDirective(std::istream& in);
-   KeywordlistParseState readKey(ossimString& sequence, std::istream& in)const;
-   KeywordlistParseState readValue(ossimString& sequence, std::istream& in)const;
-   KeywordlistParseState readKeyAndValuePair(ossimString& key, ossimString& value, std::istream& in)const;
+   void skipWhitespace(ossim::istream& in)const;
+   KeywordlistParseState readComments(ossimString& sequence, ossim::istream& in)const;
+   KeywordlistParseState readPreprocDirective(ossim::istream& in);
+   KeywordlistParseState readKey(ossimString& sequence, ossim::istream& in)const;
+   KeywordlistParseState readValue(ossimString& sequence, ossim::istream& in)const;
+   KeywordlistParseState readKeyAndValuePair(ossimString& key,
+                                             ossimString& value, ossim::istream& in)const;
    
    // Method to see if keyword exists in list.
    KeywordMap::iterator getMapEntry(const std::string& key);
@@ -542,10 +547,14 @@ protected:
 
    KeywordMap               m_map;
    char                     m_delimiter;
-   bool                     m_preserveKeyValues; // enables preserving empty field values, multi lines, ... etc
+
+   // enables preserving empty field values, multi lines, ... etc
+   bool                     m_preserveKeyValues; 
+
    bool                     m_expandEnvVars;
-   ossimFilename            m_currentlyParsing; // enables relative paths in #include directive
+
+   // enables relative paths in #include directive
+   ossimFilename            m_currentlyParsing; 
 };
 
 #endif /* #ifndef ossimKeywordlist_HEADER */
-

@@ -588,7 +588,8 @@ bool ossimTransCylEquAreaProjection::operator==(const ossimProjection& proj) con
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimTransCylEquAreaProjection* p = PTR_CAST(ossimTransCylEquAreaProjection, &proj);
+   const ossimTransCylEquAreaProjection* p =
+      dynamic_cast<const ossimTransCylEquAreaProjection*>(&proj);
    if (!p) return false;
 
    if (!ossim::almostEqual(Tcea_Scale_Factor,p->Tcea_Scale_Factor)) return false;

@@ -942,17 +942,20 @@ void ossimImageData::populateHistogram(ossimRefPtr<ossimMultiBandHistogram> hist
    case OSSIM_NORMALIZED_DOUBLE:
    case OSSIM_FLOAT64:
    {
+      ossim_float64 epsilon = 2*DBL_EPSILON;
       for(ossim_uint32 band = 0; band < numberOfBands; ++band)
       {
          ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
          if(currentHisto.valid())
          {
             ossim_float64 nullpix = (ossim_float64)getNullPix(band);
+            if (nullpix == 0.0)
+               epsilon = 0;
             ossim_float64* buffer = (ossim_float64*)getBuf(band);
             ossim_uint32 upperBound = getWidth()*getHeight();
             for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
             {
-               if (buffer[offset] != nullpix)
+               if (!ossim::almostEqual<ossim_float64>(buffer[offset], nullpix, epsilon))
                   currentHisto->UpCount((float)buffer[offset]);
             }
          }
@@ -962,17 +965,20 @@ void ossimImageData::populateHistogram(ossimRefPtr<ossimMultiBandHistogram> hist
    case OSSIM_NORMALIZED_FLOAT:
    case OSSIM_FLOAT32:
    {
+      ossim_float32 epsilon = 2*FLT_EPSILON;
       for(ossim_uint32 band = 0; band < numberOfBands; ++band)
       {
          ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
          if(currentHisto.valid())
          {
             ossim_float32 nullpix = (ossim_float32)getNullPix(band);
+            if (nullpix == 0.0)
+               epsilon = 0;
             ossim_float32* buffer = (ossim_float32*)getBuf(band);
             ossim_uint32 upperBound = getWidth()*getHeight();
             for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
             {
-               if (buffer[offset] != nullpix)
+               if (!ossim::almostEqual<ossim_float32>(buffer[offset], nullpix, epsilon))
                   currentHisto->UpCount((float)buffer[offset]);
             }
          }
@@ -1541,13 +1547,13 @@ void ossimImageData::initializeNullDefault()
 bool ossimImageData::isEqualTo(const ossimDataObject& rhs,
                                bool deepTest)const
 {
-   ossimImageData* rhsPtr = PTR_CAST(ossimImageData, &rhs);
+   const ossimImageData* rhsPtr = dynamic_cast<const ossimImageData*>(&rhs);
    if(!rhsPtr) return false;
-   bool result = ( (m_scalarType         == rhsPtr->m_scalarType)&&
-         (m_numberOfDataComponents == rhsPtr->m_numberOfDataComponents)&&
-         (m_origin             == rhsPtr->m_origin)&&
-         (getWidth()            == rhsPtr->getWidth())&&
-         (getHeight()           == rhsPtr->getHeight()));
+   bool result = ( (m_scalarType == rhsPtr->m_scalarType)&&
+                   (m_numberOfDataComponents == rhsPtr->m_numberOfDataComponents)&&
+                   (m_origin    == rhsPtr->m_origin)&&
+                   (getWidth()  == rhsPtr->getWidth())&&
+                   (getHeight() == rhsPtr->getHeight()));
 
    if(result)
    {
@@ -2637,12 +2643,13 @@ void ossimImageData::setImageRectangle(const ossimIrect& rect)
 
 void ossimImageData::assign(const ossimDataObject* data)
 {
-   if(!data)
-      return;
-   ossimImageData* d = PTR_CAST(ossimImageData, data);
-   if(d)
+   if(data)
    {
-      assign(d);
+      const ossimImageData* d = dynamic_cast<const ossimImageData*>(data);
+      if(d)
+      {
+         assign(d);
+      }
    }
 }
 

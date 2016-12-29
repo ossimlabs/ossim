@@ -22,14 +22,13 @@
 #include <ossim/base/ossimDatum.h>
 #include <ossim/base/ossimDatumFactoryRegistry.h>
 #include <ossim/base/ossimDrect.h>
+#include <ossim/base/ossimFontInformation.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <ossim/base/ossimEllipsoid.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimFilename.h>
-#include <ossim/imaging/ossimFilterResampler.h>
 #include <ossim/base/ossimGeoidManager.h>
 #include <ossim/base/ossimGpt.h>
-#include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimProperty.h>
@@ -37,6 +36,8 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimXmlDocument.h>
 #include <ossim/elevation/ossimElevManager.h>
+#include <ossim/font/ossimFont.h>
+#include <ossim/font/ossimFontFactoryRegistry.h>
 #include <ossim/imaging/ossimFilterResampler.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
@@ -63,6 +64,7 @@ static const char DUMP_KW[]                 = "dump";
 static const char DUMP_NO_OVERVIEWS_KW[]    = "dump_no_overviews";
 static const char FACTORIES_KW[]            = "factories";
 static const char FACTORY_KEYWORD_LIST_KW[] = "factory_keyword_list";
+static const char FONTS_KW[]                = "fonts";
 static const char FORMAT_KW[]               = "format"; 
 static const char FT2MTRS_KW[]              = "ft2mtrs";
 static const char FT2MTRS_US_SURVEY_KW[]    = "ft2mtrs_us_survey";
@@ -84,6 +86,7 @@ static const char OVERWRITE_KW[]            = "overwrite";
 static const char PALETTE_KW[]              = "palette";
 static const char PLUGINS_KW[]              = "plugins";
 static const char PLUGIN_TEST_KW[]          = "plugin_test";
+static const char PRETTY_PRINT_KW[]         = "pretty_print";
 static const char PROJECTIONS_KW[]          = "projections";
 static const char RAD2DEG_KW[]              = "rad2deg";
 static const char READER_PROPS_KW[]         = "reader_props";
@@ -102,7 +105,7 @@ const char* ossimInfo::DESCRIPTION =
 static ossimTrace traceDebug = ossimTrace("ossimInfo:debug");
 
 ossimInfo::ossimInfo() :
-   m_img(0)
+         m_img(0)
 {
 }
 
@@ -112,17 +115,18 @@ ossimInfo::~ossimInfo()
 
 void ossimInfo::setUsage(ossimArgumentParser& ap)
 {
+   // Add global usage options.
+   ossimInit::instance()->addOptions(ap);
+   
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   if (usageString != "ossim-info")
-      usageString += " info";
    usageString += " [options] <optional-image>";
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
    au->addCommandLineOption("--build-date", "Build date of code.");
-   
+
    au->addCommandLineOption("-c", "Will print ground and image center.");
 
    au->addCommandLineOption("--cg", "Will print out ground center.");
@@ -131,20 +135,24 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--config", "Displays configuration info.");
 
+   au->addCommandLineOption("-D", "A human-readable (i.e., not necessarily key:value pairs) dump of the image.");
+
    au->addCommandLineOption("-d", "A generic dump if one is available.");
 
    au->addCommandLineOption("--datums", "Prints datum list.");   
 
    au->addCommandLineOption("--deg2rad", "<degrees> Gives radians from degrees.");
-   
+
    au->addCommandLineOption("--dno", "A generic dump if one is available.  This option ignores overviews.");
-   
+
    au->addCommandLineOption("-f", "<format> Will output the information specified format [KWL | XML].  Default is KWL.");   
 
    au->addCommandLineOption("--factories", "<keyword_list_flag> Prints factory list.  If keyword_list_flag is true, the result of a saveState will be output for each object.");
+
+   au->addCommandLineOption("--fonts", "Prints available fonts.");
    
    au->addCommandLineOption("--ft2mtrs", "<feet> Gives meters from feet (0.3048 meters per foot).");
-   
+
    au->addCommandLineOption("--ft2mtrs-us-survey", "<feet> Gives meters from feet (0.3048006096 meters per foot).");
 
    au->addCommandLineOption("-h", "Display this information");
@@ -154,31 +162,31 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("-i", "Will print out the general image information.");
 
    au->addCommandLineOption("--img2grd", "<x> <y> Gives ground point from zero based image point.  Returns \"nan\" if point is outside of image area.");
-   
+
    au->addCommandLineOption("-m", "Will print out meta data image information.");
 
    au->addCommandLineOption("--mtrsPerDeg", "<latitude> Gives meters per degree and meters per minute for a given latitude.");
-   
+
    au->addCommandLineOption("--mtrs2ft", "<meters> Gives feet from meters (0.3048 meters per foot).");
 
    au->addCommandLineOption("--mtrs2ft-us-survey", "<meters> Gives feet from meters (0.3048006096 meters per foot).");
 
    au->addCommandLineOption("-n or --north-up", "Rotation angle to North for an image.");
-   
+
    au->addCommandLineOption("-o", "<output-file> Will output the information to the file specified.  Default is to standard out.");
 
    au->addCommandLineOption("--overview-types", "Prints overview builder types.");
-   
+
    au->addCommandLineOption("-p", "Will print out the image projection information.");
-   
+
    au->addCommandLineOption("--palette", "Will print out the color palette if one exists.");
 
    au->addCommandLineOption("--plugins", "Prints plugin list.");
-   
+
    au->addCommandLineOption("--plugin-test", "Test plugin passed to option.");
-   
+
    au->addCommandLineOption("--projections", "Prints projections.");
-   
+
    au->addCommandLineOption("-r", "Will print image rectangle.");
 
    au->addCommandLineOption("--rad2deg", "<radians> Gives degrees from radians.");
@@ -188,21 +196,52 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--resampler-filters", "Prints resampler filter list.");
 
    au->addCommandLineOption("--revision", "Revision of code.");
-   
+
    au->addCommandLineOption("-s", "Force the ground rect to be the specified datum");
-   
+
    au->addCommandLineOption("-u or --up-is-up", "Rotation angle to \"up is up\" for an image.\nWill return 0 if image's projection is not affected by elevation.");
 
    au->addCommandLineOption("-v", "Overwrite existing geometry.");
 
    au->addCommandLineOption("-V or --vesion", "Version of code, e.g. 1.8.20");
-   
+
    au->addCommandLineOption("--writer-props", "Prints writers and properties.");
 
    au->addCommandLineOption("--writers", "Prints list of available writers.");
 
    au->addCommandLineOption("--zoom-level-gsds", "Prints zoom level gsds for projections EPSG:4326 and EPSG:3857.");
-   
+
+   ostringstream description;
+   description << DESCRIPTION << "\n\n Examples:\n\n"
+         << "    ossim-info --version\n"
+         << "    ossim-info -i ./myfile.tif\n"
+         << "      prints out only general image information\n\n"
+         << "    ossim-info -p ./myfile.tif\n"
+         << "      prints out only image projection information\n\n"
+         << "    ossim-info -p -s wge ./myfile.tif\n"
+         << "      prints out only image projection information and shifts to wgs84\n\n"
+         << "    ossim-info -p -i ./myfile.tif\n"
+         << "      prints out both image and projection information\n\n"
+         << "    ossim-info -p -i ./myfile.tif -o ./myfile.geom\n"
+         << "      writes geometry file with both image and projection information\n\n"
+         << "    ossim-info -p -i ./myfile.tif -v -o ./myfile.geom\n"
+         << "      writes geometry file with both image and projection information\n"
+         << "      while overwriting existing .geom file.\n\n"
+         << "    ossim-info -f XML ./myfile.tif\n"
+         << "      prints out image and projection information as an XML document\n\n"
+         << "    ossim-info -d myfile.ntf\n"
+         << "      Dumps all data available, in this case, all nitf tags, from file.\n\n"
+         << "    ossim-info -d a.toc\n"
+         << "      Dumps all data available, in this case, all nitf and rpf tags, from file.\n\n"
+         << "    ossim-info --dno a.toc\n"
+         << "      \"dno\" for \"dump no overviews\" Dumps all data available,\n"
+         << "       in this case, all nitf and rpf tags, from file ignoring overviews.\n\n"
+         << "    ossim-info -d -i -p myfile.ntf\n"
+         << "      Typical usage case, i.e. do a dump of tags and print out image and\n"
+         << "      projection information.\n\n"
+         << std::endl;
+   au->setDescription(description.str());
+
 } // void ossimInfo::addArguments(ossimArgumentParser& ap)
 
 bool ossimInfo::initialize(ossimArgumentParser& ap)
@@ -213,463 +252,474 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       ossimNotify(ossimNotifyLevel_DEBUG) << M << " entered...\n";
    }
 
+   if (!ossimTool::initialize(ap))
+      return false;
+   if (m_helpRequested)
+      return true;
+
    bool result = true;
 
-   if ( (ap.argc() == 1) || ap.read("-h") || ap.read("--help") )
-   {
-      usage(ap);
+   //---
+   // Start with clean options keyword list.
+   //---
+   m_kwl.clear();
 
-      // continue_after_init to false
-      result = true;
-   }
-   else
-   {
-      //---
-      // Start with clean options keyword list.
-      //---
-      m_kwl.clear();
+   bool requiresInputImage = false;
 
-      bool requiresInputImage = false;
+   while ( 1 ) //  While forever loop...
+   {
+      // Used throughout below:
+      std::string ts1;
+      ossimArgumentParser::ossimParameter sp1(ts1);
+      std::string ts2;
+      ossimArgumentParser::ossimParameter sp2(ts2);
+      const char TRUE_KW[] = "true";
+
+      if( ap.read("--build-date") )
+      {
+         m_kwl.add( BUILD_DATE_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-c") )
+      {
+         m_kwl.add( IMAGE_CENTER_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--cg") )
+      {
+         m_kwl.add( CENTER_GROUND_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--ci") )
+      {
+         m_kwl.add( CENTER_IMAGE_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--config") || ap.read("--configuration") )
+      {
+         m_kwl.add( CONFIGURATION_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--datums") )
+      {
+         m_kwl.add( DATUMS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--deg2rad", sp1) )
+      {
+         m_kwl.add( DEG2RAD_KW, ts1.c_str() );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-D") )
+      {
+         m_kwl.add( PRETTY_PRINT_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-d") )
+      {
+         m_kwl.add( DUMP_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--dno") )
+      {
+         m_kwl.add( DUMP_KW, TRUE_KW );
+         m_kwl.add( DUMP_NO_OVERVIEWS_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-f", sp1) )
+      {
+         m_kwl.add( FORMAT_KW, ts1.c_str());
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--factories", sp1) )
+      {
+         m_kwl.add( FACTORIES_KW, TRUE_KW);
+         m_kwl.add( FACTORY_KEYWORD_LIST_KW, ts1.c_str());
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--fonts") )
+      {
+         m_kwl.add( FONTS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
       
-      while ( 1 ) //  While forever loop...
+      if( ap.read("--ft2mtrs", sp1) )
       {
-         // Used throughout below:
-         std::string ts1;
-         ossimArgumentParser::ossimParameter sp1(ts1);
-         std::string ts2;
-         ossimArgumentParser::ossimParameter sp2(ts2);
-         const char TRUE_KW[] = "true";
-         
-         if( ap.read("--build-date") )
+         m_kwl.add( FT2MTRS_KW, ts1.c_str());
+         if ( ap.argc() < 2 )
          {
-            m_kwl.add( BUILD_DATE_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
+            break;
          }
-
-         if( ap.read("-c") )
-         {
-            m_kwl.add( IMAGE_CENTER_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--cg") )
-         {
-            m_kwl.add( CENTER_GROUND_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--ci") )
-         {
-            m_kwl.add( CENTER_IMAGE_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--config") || ap.read("--configuration") )
-         {
-            m_kwl.add( CONFIGURATION_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--datums") )
-         {
-            m_kwl.add( DATUMS_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--deg2rad", sp1) )
-         {
-            m_kwl.add( DEG2RAD_KW, ts1.c_str() );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-         if( ap.read("-d") )
-         {
-            m_kwl.add( DUMP_KW, TRUE_KW );
-            requiresInputImage = true;
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--dno") )
-         {
-            m_kwl.add( DUMP_KW, TRUE_KW );
-            m_kwl.add( DUMP_NO_OVERVIEWS_KW, TRUE_KW );
-            requiresInputImage = true;
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("-f", sp1) )
-         {
-            m_kwl.add( FORMAT_KW, ts1.c_str());
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--factories", sp1) )
-         {
-            m_kwl.add( FACTORIES_KW, TRUE_KW);
-            m_kwl.add( FACTORY_KEYWORD_LIST_KW, ts1.c_str());
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--ft2mtrs", sp1) )
-         {
-            m_kwl.add( FT2MTRS_KW, ts1.c_str());
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--ft2mtrs-us-survey", sp1) )
-         {
-            m_kwl.add( FT2MTRS_KW, ts1.c_str());
-            m_kwl.add( FT2MTRS_US_SURVEY_KW, TRUE_KW);
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-
-         
-         if( ap.read("--height", sp1, sp2) )
-         {
-            ossimString lat = ts1;
-            ossimString lon = ts2;
-            ossimGpt gpt;
-            gpt.lat = lat.toFloat64();
-            gpt.lon = lon.toFloat64();
-            m_kwl.add( HEIGHT_KW, gpt.toString().c_str() );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-         
-         if( ap.read("-i") )
-         {
-            m_kwl.add( IMAGE_INFO_KW, TRUE_KW );
-            requiresInputImage = true;
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-         
-         if( ap.read("--img2grd", sp1, sp2) )
-         {
-            ossimString x = ts1;
-            ossimString y = ts2;
-            ossimDpt dpt;
-            dpt.x = x.toFloat64();
-            dpt.y = y.toFloat64();
-            m_kwl.add( IMG2GRD_KW, dpt.toString().c_str() );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-         
-         if( ap.read("-m") )
-         {
-            m_kwl.add( METADATA_KW, TRUE_KW );
-            requiresInputImage = true;
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--mtrs2ft", sp1) )
-         {
-            m_kwl.add( MTRS2FT_KW, ts1.c_str());
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--mtrs2ft-us-survey", sp1) )
-         {
-            m_kwl.add( MTRS2FT_KW, ts1.c_str());
-            m_kwl.add( MTRS2FT_US_SURVEY_KW, TRUE_KW);
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-         
-         if( ap.read("--mtrsPerDeg", sp1) )
-         {
-            m_kwl.add( MTRSPERDEG_KW, ts1.c_str());
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("-n") || ap.read("--north-up") )
-         {
-            m_kwl.add( NORTH_UP_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("-o", sp1) )
-         {
-            m_kwl.add( OUTPUT_FILE_KW, ts1.c_str());
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--overview-types") )
-         {
-            m_kwl.add( OVERVIEW_TYPES_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("-p") )
-         {
-            m_kwl.add( GEOM_INFO_KW, TRUE_KW );
-            requiresInputImage = true;
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-         
-         if( ap.read("--palette") )
-         {
-            m_kwl.add( PALETTE_KW, TRUE_KW );
-            requiresInputImage = true;
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--plugins") )
-         {
-            m_kwl.add( PLUGINS_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--plugin-test", sp1) )
-         {
-            m_kwl.add( PLUGIN_TEST_KW, ts1.c_str());
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--projections") )
-         {
-            m_kwl.add( PROJECTIONS_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("-r") )
-         {
-            m_kwl.add( IMAGE_RECT_KW, TRUE_KW );
-            requiresInputImage = true;
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--rad2deg", sp1) )
-         {
-            m_kwl.add( RAD2DEG_KW, ts1.c_str());
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--reader-props") )
-         {
-            m_kwl.add( READER_PROPS_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-         
-         if( ap.read("--resampler-filters") )
-         {
-            m_kwl.add( RESAMPLER_FILTERS_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--revision") ||
-             ap.read("--revision-number") ) // backwards compat
-         {
-            m_kwl.add( REVISION_NUMBER_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-         
-         if( ap.read("-u") || ap.read("--up-is-up") )
-         {
-            m_kwl.add( UP_IS_UP_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("-v") )
-         {
-            m_kwl.add( OVERWRITE_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--version") || ap.read("-V") )
-         {
-            m_kwl.add( VERSION_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-         
-         if( ap.read("--writer-props") )
-         {
-            m_kwl.add( WRITER_PROPS_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-
-         if( ap.read("--writers") )
-         {
-            m_kwl.add( WRITERS_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-         
-         if( ap.read("--zoom-level-gsds") )
-         {
-            m_kwl.add( ZOOM_LEVEL_GSDS_KW, TRUE_KW );
-            if ( ap.argc() < 2 )
-            {
-               break;
-            }
-         }
-        
-         // End of arg parsing.
-         ap.reportRemainingOptionsAsUnrecognized();
-         if ( ap.errors() )
-         {
-            ap.writeErrorMessages(ossimNotify(ossimNotifyLevel_NOTICE));
-            std::string errMsg = "Unknown option...";
-            throw ossimException(errMsg);
-         }
-
-         break; // Break from while forever.
-         
-      } // End while (forever) loop.
-
-      if ( ap.argc() == 2 )
-      {
-         m_kwl.add( IMAGE_FILE_KW, ap[1]  );
       }
 
-      if ( requiresInputImage && ( ap.argc() == 1 ) )
+      if( ap.read("--ft2mtrs-us-survey", sp1) )
       {
-         usage(ap);
-         
-         // continue_after_init to false
-         result = false;
+         m_kwl.add( FT2MTRS_KW, ts1.c_str());
+         m_kwl.add( FT2MTRS_US_SURVEY_KW, TRUE_KW);
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
       }
 
-   } // not usage
-         
+      if( ap.read("--height", sp1, sp2) )
+      {
+         ossimString lat = ts1;
+         ossimString lon = ts2;
+         ossimGpt gpt;
+         gpt.lat = lat.toFloat64();
+         gpt.lon = lon.toFloat64();
+         m_kwl.add( HEIGHT_KW, gpt.toString().c_str() );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-i") )
+      {
+         m_kwl.add( IMAGE_INFO_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--img2grd", sp1, sp2) )
+      {
+         ossimString x = ts1;
+         ossimString y = ts2;
+         ossimDpt dpt;
+         dpt.x = x.toFloat64();
+         dpt.y = y.toFloat64();
+         m_kwl.add( IMG2GRD_KW, dpt.toString().c_str() );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-m") )
+      {
+         m_kwl.add( METADATA_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--mtrs2ft", sp1) )
+      {
+         m_kwl.add( MTRS2FT_KW, ts1.c_str());
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--mtrs2ft-us-survey", sp1) )
+      {
+         m_kwl.add( MTRS2FT_KW, ts1.c_str());
+         m_kwl.add( MTRS2FT_US_SURVEY_KW, TRUE_KW);
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--mtrsPerDeg", sp1) )
+      {
+         m_kwl.add( MTRSPERDEG_KW, ts1.c_str());
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-n") || ap.read("--north-up") )
+      {
+         m_kwl.add( NORTH_UP_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-o", sp1) )
+      {
+         m_kwl.add( OUTPUT_FILE_KW, ts1.c_str());
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--overview-types") )
+      {
+         m_kwl.add( OVERVIEW_TYPES_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-p") )
+      {
+         m_kwl.add( GEOM_INFO_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--palette") )
+      {
+         m_kwl.add( PALETTE_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--plugins") )
+      {
+         m_kwl.add( PLUGINS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--plugin-test", sp1) )
+      {
+         m_kwl.add( PLUGIN_TEST_KW, ts1.c_str());
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--projections") )
+      {
+         m_kwl.add( PROJECTIONS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-r") )
+      {
+         m_kwl.add( IMAGE_RECT_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--rad2deg", sp1) )
+      {
+         m_kwl.add( RAD2DEG_KW, ts1.c_str());
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--reader-props") )
+      {
+         m_kwl.add( READER_PROPS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--resampler-filters") )
+      {
+         m_kwl.add( RESAMPLER_FILTERS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--revision") ||
+            ap.read("--revision-number") ) // backwards compat
+      {
+         m_kwl.add( REVISION_NUMBER_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-u") || ap.read("--up-is-up") )
+      {
+         m_kwl.add( UP_IS_UP_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("-v") )
+      {
+         m_kwl.add( OVERWRITE_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--version") || ap.read("-V") )
+      {
+         m_kwl.add( VERSION_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--writer-props") )
+      {
+         m_kwl.add( WRITER_PROPS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--writers") )
+      {
+         m_kwl.add( WRITERS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--zoom-level-gsds") )
+      {
+         m_kwl.add( ZOOM_LEVEL_GSDS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      // End of arg parsing.
+      ap.reportRemainingOptionsAsUnrecognized();
+      if ( ap.errors() )
+      {
+         ap.writeErrorMessages(ossimNotify(ossimNotifyLevel_NOTICE));
+         std::string errMsg = "Unknown option...";
+         throw ossimException(errMsg);
+      }
+
+      break; // Break from while forever.
+
+   } // End while (forever) loop.
+
+   if ( ap.argc() == 2 )
+   {
+      m_kwl.add( IMAGE_FILE_KW, ap[1]  );
+   }
+
+   if ( requiresInputImage && ( ap.argc() == 1 ) )
+   {
+      setUsage(ap);
+      ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
+      result = false;
+   }
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "m_kwl:\n" << m_kwl << "\n"
-         << M << " exit result = " << (result?"true":"false")
-         << "\n";
+               << "m_kwl:\n" << m_kwl << "\n"
+               << M << " exit result = " << (result?"true":"false")
+               << "\n";
    }
-   
+
    return result;
 }
 
 bool ossimInfo::execute()
 {
    static const char M[] = "ossimInfo::execute()";
-   
+
    const ossim_uint32 KEY_COUNT = m_kwl.getSize();
 
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << M << " entered..."
-         << "\nMap size: " << KEY_COUNT << "\n";
+               << M << " entered..."
+               << "\nMap size: " << KEY_COUNT << "\n";
    }
 
    if ( KEY_COUNT )
    {
       ossim_uint32 consumedKeys = 0;
-   
+
       const char* lookup;
 
       lookup = m_kwl.find(IMAGE_FILE_KW);
@@ -689,9 +739,9 @@ bool ossimInfo::execute()
          {
             getBuildDate( value.string() );
             ossimNotify(ossimNotifyLevel_INFO)
-               << BUILD_DATE_KW << ": " << value << "\n";
+            << BUILD_DATE_KW << ": " << value << "\n";
          }
-         
+
          lookup = m_kwl.find(CONFIGURATION_KW);
          if ( lookup )
          {
@@ -702,7 +752,7 @@ bool ossimInfo::execute()
                printConfiguration();
             }
          }
-   
+
          lookup = m_kwl.find(DATUMS_KW);
          if ( lookup )
          {
@@ -736,7 +786,18 @@ bool ossimInfo::execute()
             }
             printFactories(keywordListFlag);
          }
-
+         
+         lookup = m_kwl.find(FONTS_KW);
+         if ( lookup )
+         {
+            ++consumedKeys;
+            value = lookup;
+            if ( value.toBool() )
+            {
+               printFonts();
+            }
+         }
+         
          lookup = m_kwl.find(FT2MTRS_KW);
          if ( lookup )
          {
@@ -844,7 +905,7 @@ bool ossimInfo::execute()
                printReaderProps();
             }
          }
-   
+
          lookup = m_kwl.find(RESAMPLER_FILTERS_KW);
          if ( lookup )
          {
@@ -860,14 +921,14 @@ bool ossimInfo::execute()
          {
             getRevisionNumber( value.string() );
             ossimNotify(ossimNotifyLevel_INFO)
-               << REVISION_NUMBER_KW << ": " << value << "\n";
+            << REVISION_NUMBER_KW << ": " << value << "\n";
          }
 
          if ( keyIsTrue( std::string(VERSION_KW) ) )
          {
             getVersion( value.string() );
             ossimNotify(ossimNotifyLevel_INFO)
-               << VERSION_KW << ": " << value << "\n";
+            << VERSION_KW << ": " << value << "\n";
          }
 
          lookup = m_kwl.find(WRITERS_KW);
@@ -902,18 +963,18 @@ bool ossimInfo::execute()
                printZoomLevelGsds();
             }
          }
-         
+
       } // if ( consumedKeys < KEY_COUNT )
 
       if ( traceDebug() )
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
-            << "KEY_COUNT:    " << KEY_COUNT
-            << "\nconsumedKeys: " << consumedKeys << "\n";
+                  << "KEY_COUNT:    " << KEY_COUNT
+                  << "\nconsumedKeys: " << consumedKeys << "\n";
       }
-         
+
    } // if ( KEY_COUNT )
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << M << " exited...\n";
@@ -935,7 +996,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    ossim_uint32 consumedKeys = 0;
    const char* lookup = 0;
    ossimString value  = "";
-   
+
    bool dnoFlag       = false;
    bool overwriteFlag = false;   
    bool xmlOutFlag    = false;
@@ -947,7 +1008,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       value = lookup;
       overwriteFlag = value.toBool();
    }
-   
+
    // Check for xml format option.
    lookup = m_kwl.find( FORMAT_KW );
    if ( lookup )
@@ -967,7 +1028,14 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       ++consumedKeys;
       outputFile = lookup;
    }
-   
+
+   lookup = m_kwl.find( PRETTY_PRINT_KW );
+   if ( lookup )
+   {
+      ++consumedKeys;
+      prettyPrint(file);
+   }
+
    // Check for dump.  Does not require image to be opened.
    lookup = m_kwl.find( DUMP_KW );
    if ( lookup )
@@ -988,7 +1056,9 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
          // This dump will come out in order so is preferred over going to
          // okwl(output keyword list) which will come out alphabetical.
          //---
-         dumpImage(file, dnoFlag);
+         ossimKeywordlist kwl;
+         dumpImage(file, dnoFlag, kwl);
+         kwl.print(ossimNotify(ossimNotifyLevel_INFO));
       }
       else
       {
@@ -996,7 +1066,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
          dumpImage(file, dnoFlag, okwl);
       }
    }
-   
+
    bool centerGroundFlag = false;
    bool centerImageFlag  = false;
    bool imageCenterFlag  = false;
@@ -1008,7 +1078,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    bool northUpFlag      = false;
    bool paletteFlag      = false;
    bool upIsUpFlag       = false;
-   
+
    // Center Ground:
    lookup = m_kwl.find( CENTER_GROUND_KW );
    if ( lookup )
@@ -1035,7 +1105,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       value = lookup;
       metaDataFlag = value.toBool();
    }
-   
+
    // Palette:
    lookup = m_kwl.find( PALETTE_KW );
    if ( lookup )
@@ -1062,7 +1132,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       value = lookup;
       imageRectFlag = value.toBool();
    }
-   
+
    //---
    // General image info:
    // Defaulted ON if no image options set.
@@ -1081,7 +1151,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       ++consumedKeys;
       img2grdFlag = true;
    }
-   
+
    //---
    // Image geometry info:
    // Defaulted on if no image options set.
@@ -1111,7 +1181,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       value = lookup;
       upIsUpFlag = value.toBool();
    }
-   
+
    // If no options consumed default is image info and geom info:
    if ( consumedKeys == 0 )
    {
@@ -1120,8 +1190,8 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }
 
    if ( centerGroundFlag || centerImageFlag || imageCenterFlag || imageRectFlag ||
-        img2grdFlag || metaDataFlag || paletteFlag || imageInfoFlag ||
-        imageGeomFlag || northUpFlag || upIsUpFlag )
+         img2grdFlag || metaDataFlag || paletteFlag || imageInfoFlag ||
+         imageGeomFlag || northUpFlag || upIsUpFlag )
    {
       // Requires open image.
       if ( m_img.valid() == false )
@@ -1155,22 +1225,22 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       {
          getImg2grd(okwl);
       }
-    
+
       if ( metaDataFlag )
       {
          getImageMetadata(okwl);
       }
-      
+
       if ( paletteFlag )
       {
          getImagePalette(okwl);
       }
-      
+
       if ( imageInfoFlag )
       {
          getImageInfo(okwl, dnoFlag);
       }
-      
+
       if ( imageGeomFlag )
       {
          getImageGeometryInfo(okwl, dnoFlag);
@@ -1185,14 +1255,14 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       {
          getNorthUpAngle( okwl );
       }
-      
+
       if ( upIsUpFlag )
       {
          getUpIsUpAngle( okwl );
       }
-      
+
    } // if ( metaDataFlag || paletteFlag || imageInfoFlag || imageGeomFlag )
-   
+
    if ( okwl.getSize() ) // Output section:
    {
       if ( outputFile == ossimFilename::NIL )
@@ -1210,13 +1280,13 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       else
       {
          // Write to file:
-         
+
          if ( !overwriteFlag && outputFile.exists() )
          {
             ossimNotify(ossimNotifyLevel_INFO)
-               << "ERROR: File already exists: "  << outputFile
-               << "\nUse -v option to overwrite."
-               << std::endl;
+                     << "ERROR: File already exists: "  << outputFile
+                     << "\nUse -v option to overwrite."
+                     << std::endl;
          }
          else
          {
@@ -1230,18 +1300,18 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
             }
          }
       }
-      
+
    } // if ( okwl )
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "consumedKeys: " << consumedKeys << "\n"
-         << M << " exited...\n";
+               << "consumedKeys: " << consumedKeys << "\n"
+               << M << " exited...\n";
    }
-   
+
    return consumedKeys;
-   
+
 } // ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
 
 void ossimInfo::getImageInfo( const ossimFilename& file,
@@ -1284,13 +1354,13 @@ void ossimInfo::getImageInfo( const ossimFilename& file,
       }
    }
 }
- 
+
 bool ossimInfo::getImageInfo( const ossimFilename& file,
                               ossim_uint32 entry,
                               ossimKeywordlist& kwl ) const
 {
    bool result = false;
-   
+
    // Note: openImageHandler throws ossimException if it can't open.
    ossimRefPtr<ossimImageHandler> ih = openImageHandler( file );
    if ( ih.valid() )
@@ -1306,7 +1376,7 @@ bool ossimInfo::getImageInfo( const ossimFilename& file,
       {
          std::ostringstream errMsg;
          errMsg << "ossimInfo::getImageInfo ERROR:\nInvalid entry: " << entry
-                << "\n";
+               << "\n";
          throw ossimException( errMsg.str() );
       }
    }
@@ -1321,7 +1391,10 @@ void ossimInfo::openImage(const ossimFilename& file)
 
 ossimRefPtr<ossimImageHandler> ossimInfo::openImageHandler(const ossimFilename& file) const
 {
-   ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->open(file);
+   // Go through new interface that passes a stream around. (drb 10 Nov. 2016)
+   // ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->open(file);
+   ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->
+      openConnection(file);
    if ( result.valid() == false )
    {
       std::string errMsg = "ossimInfo::openImage ERROR:\nCould not open: ";
@@ -1341,22 +1414,31 @@ ossimRefPtr<ossimImageHandler> ossimInfo::getImageHandler()
    return m_img;
 }
 
-void ossimInfo::dumpImage(const ossimFilename& file, bool dnoFlag) const
+void ossimInfo::prettyPrint(const ossimFilename& file) const
 {
-   ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
-   if (info.valid())
+   std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
+   if (info)
    {
-      if (dnoFlag) // Default info processes overviews.
-      {
-         info->setProcessOverviewFlag(false);
-      }
+      //---
+      // Old -d behavior was to dump all unless the dump no overview flag
+      // was set. Need to see tiff tags in file order for all image file
+      // directories(ifd's) so commenting out hard coded
+      // info->setProcessOverviewFlag(false) that used to be settable with -d
+      // + --dno options.  Note the old -d option used to do file order for
+      // tiffs but now dumps to a keyword list that prints alphabetical(not
+      // file order) so can't use that anymore.
+      // 
+      // drb - 15 Dec. 2016
+      //---
+      // info->setProcessOverviewFlag(false);
+      
       info->print(ossimNotify(ossimNotifyLevel_INFO));
-      info = 0;
+      info.reset();
    }
    else
    {
       ossimNotify(ossimNotifyLevel_INFO)
-         << "No dump available for:  " << file.c_str() << std::endl;
+               << "No print available for:  " << file.c_str() << std::endl;
    }
 }
 
@@ -1364,20 +1446,20 @@ void ossimInfo::dumpImage(const ossimFilename& file,
                           bool dnoFlag,
                           ossimKeywordlist& kwl) const
 {
-   ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
-   if (info.valid())
+   std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
+   if (info)
    {
       if (dnoFlag) // Default info processes overviews.
       {
          info->setProcessOverviewFlag(false);
       }
       info->getKeywordlist(kwl);
-      info = 0;
+      info.reset();
    }
    else
    {
       ossimNotify(ossimNotifyLevel_INFO)
-         << "No dump available for:  " << file.c_str() << std::endl;
+               << "No dump available for:  " << file.c_str() << std::endl;
    }
 }
 void ossimInfo::getImageMetadata(ossimKeywordlist& kwl) const
@@ -1401,7 +1483,7 @@ void ossimInfo::getImageMetadata(const ossimImageHandler* ih, ossimKeywordlist& 
          {
             ossimString key;
             ossimString value;
-            
+
             // Check for one level of nested container.
             if ((*i)->getClassName() == "ossimContainerProperty")
             {
@@ -1410,7 +1492,7 @@ void ossimInfo::getImageMetadata(const ossimImageHandler* ih, ossimKeywordlist& 
                {
                   std::vector< ossimRefPtr< ossimProperty > > list2;    
                   ptr->getPropertyList(list2);
-                  
+
                   std::vector< ossimRefPtr< ossimProperty > >::const_iterator i2 = list2.begin();
                   while (i2 != list2.end())
                   {
@@ -1430,7 +1512,7 @@ void ossimInfo::getImageMetadata(const ossimImageHandler* ih, ossimKeywordlist& 
          }
          ++i;
       }
-      
+
    } // if ( ih )
 
 } // End: getImageMetadata(ossimImageHandler* ih, ossimKeywordlist& kwl)
@@ -1463,7 +1545,7 @@ void ossimInfo::getImagePalette(ossimImageHandler* ih, ossimKeywordlist& kwl) co
             }
          }
       }
-      
+
    } // if ( ih )
 }
 
@@ -1493,12 +1575,12 @@ void ossimInfo::getImageInfo( ossimImageHandler* ih, ossimKeywordlist& kwl, bool
          }
          ++i;
       }
-      
+
       kwl.add(ossimKeywordNames::NUMBER_ENTRIES_KW, numEntries, true);
 
    } // if ( ih )
 }
-   
+
 bool ossimInfo::getImageInfo( ossim_uint32 entry, ossimKeywordlist& kwl, bool dnoFlag )
 {
    bool result = false;
@@ -1508,12 +1590,12 @@ bool ossimInfo::getImageInfo( ossim_uint32 entry, ossimKeywordlist& kwl, bool dn
    }
    return result;
 }
- 
+
 bool ossimInfo::getImageInfo( ossimImageHandler* ih, ossim_uint32 entry, 
                               ossimKeywordlist& kwl, bool dnoFlag ) const
 {
    bool result = false;
-   
+
    if ( ih )
    {
       if ( ih->setCurrentEntry(entry) )
@@ -1535,7 +1617,7 @@ bool ossimInfo::getImageInfo( ossimImageHandler* ih, ossim_uint32 entry,
             ossimString prefix = "image";
             prefix = prefix + ossimString::toString(entry) + ".";
             kwl.add(prefix.c_str(), ossimKeywordNames::ENTRY_KW, entry, true);
-            
+
             // Get the entry_name (specialized multi-entry readers only):
             std::string entryName;
             ih->getEntryName( entry, entryName );
@@ -1562,13 +1644,13 @@ bool ossimInfo::getImageInfo( ossimImageHandler* ih, ossim_uint32 entry,
                kwl.add(prefix, "overview.type",
                        ih->getOverview()->getClassName().c_str(), true);
             }
-            
+
             ossimDrect boundingRect = ih->getBoundingRect();
             kwl.add(prefix,ossimKeywordNames::UL_X_KW, boundingRect.ul().x, true);
             kwl.add(prefix,ossimKeywordNames::UL_Y_KW, boundingRect.ul().y, true);
             kwl.add(prefix,ossimKeywordNames::LR_X_KW, boundingRect.lr().x, true);
             kwl.add(prefix,ossimKeywordNames::LR_Y_KW, boundingRect.lr().y, true);
-            
+
             const ossim_uint32 BANDS = ih->getNumberOfInputBands();
             kwl.add(prefix,ossimKeywordNames::NUMBER_INPUT_BANDS_KW, BANDS, true);
             kwl.add(prefix,ossimKeywordNames::NUMBER_OUTPUT_BANDS_KW,
@@ -1577,30 +1659,30 @@ bool ossimInfo::getImageInfo( ossimImageHandler* ih, ossim_uint32 entry,
                     boundingRect.height(), true);
             kwl.add(prefix,ossimKeywordNames::NUMBER_SAMPLES_KW,
                     boundingRect.width(), true);
-            
+
             ossimScalarType scalar = ih->getOutputScalarType();
-            
+
             for(ossim_uint32 i = 0; i < BANDS; ++i)
             {
                ossimString band = ossimString("band") + ossimString::toString(i) + ".";
-               
+
                kwl.add(prefix, band+"null_value", ih->getNullPixelValue(i), true);
                kwl.add(prefix, band+"min_value", ih->getMinPixelValue(i), true);
                kwl.add(prefix, band+"max_value", ih->getMaxPixelValue(i), true);
             }
-            
+
             // Output Radiometry.
             std::string rad;
             getRadiometry(scalar, rad);
             kwl.add(prefix, "radiometry", rad.c_str(), true);
             kwl.add(prefix,"number_decimation_levels", ih->getNumberOfDecimationLevels(), true);
-            
+
          } // if ( outputEntry )
-         
+
       } // if ( ih->setCurrentEntry(entry) )
-      
+
    } // if ( ih )
-   
+
    return result;
 
 } // End: ossimInfo::getImageInfo( ih, entry...
@@ -1618,24 +1700,24 @@ void ossimInfo::getImageGeometryInfo( ossimImageHandler* ih, ossimKeywordlist& k
    if ( ih )
    {      ossim_uint32 numEntries = 0;
 
-      std::vector<ossim_uint32> entryList;
-      ih->getEntryList(entryList);
+   std::vector<ossim_uint32> entryList;
+   ih->getEntryList(entryList);
 
-      std::vector<ossim_uint32>::const_iterator i = entryList.begin();
-      while ( i != entryList.end() )
+   std::vector<ossim_uint32>::const_iterator i = entryList.begin();
+   while ( i != entryList.end() )
+   {
+      if ( getImageGeometryInfo( ih, (*i), kwl, dnoFlag ) )
       {
-         if ( getImageGeometryInfo( ih, (*i), kwl, dnoFlag ) )
-         {
-            ++numEntries;
-         }
-         ++i;
+         ++numEntries;
       }
-      
-      kwl.add(ossimKeywordNames::NUMBER_ENTRIES_KW, numEntries, true);
+      ++i;
+   }
+
+   kwl.add(ossimKeywordNames::NUMBER_ENTRIES_KW, numEntries, true);
 
    } // if ( ih )
 }
-   
+
 bool ossimInfo::getImageGeometryInfo(ossim_uint32 entry, ossimKeywordlist& kwl, bool dnoFlag)
 {
    bool result = false; 
@@ -1652,7 +1734,7 @@ bool ossimInfo::getImageGeometryInfo( ossimImageHandler* ih,
                                       bool dnoFlag) const
 {
    bool result = false;
-   
+
    if ( ih )
    {      
       if ( ih->setCurrentEntry(entry) )
@@ -1672,15 +1754,15 @@ bool ossimInfo::getImageGeometryInfo( ossimImageHandler* ih,
             if(geom.valid())
             {
                result = true;
-               
+
                ossimString prefix = "image";
                prefix = prefix + ossimString::toString(entry) + ossimString(".geometry.");
-               
+
                geom->saveState(kwl, prefix);
-               
+
                // Output support files list:
                ossimSupportFilesList::instance()->save(kwl, prefix);
-               
+
                ossimGpt ulg;
                ossimGpt llg;
                ossimGpt lrg;
@@ -1692,7 +1774,7 @@ bool ossimInfo::getImageGeometryInfo( ossimImageHandler* ih,
                geom->localToWorld(outputRect.ll(), llg);
                geom->localToWorld(outputRect.lr(), lrg);
                geom->localToWorld(outputRect.ur(), urg);
-               
+
                //---
                // *** HACK *** 
                // Encountered CADRG RPF imagery where the left edge was longitude -180 and
@@ -1719,29 +1801,29 @@ bool ossimInfo::getImageGeometryInfo( ossimImageHandler* ih,
                kwl.add(prefix, "lr_lon", lrg.lond(), true);
                kwl.add(prefix, "ur_lat", urg.latd(), true);
                kwl.add(prefix, "ur_lon", urg.lond(), true);
-               
+
                if(!kwl.find(ossimKeywordNames::TIE_POINT_LAT_KW))
                {
                   kwl.add(prefix, ossimKeywordNames::TIE_POINT_LAT_KW, ulg.latd(), true);
                   kwl.add(prefix, ossimKeywordNames::TIE_POINT_LON_KW, ulg.lond(), true);
-                  
+
                   if ( outputRect.height()-1.0 > DBL_EPSILON )
                   {
                      kwl.add(prefix, ossimKeywordNames::DECIMAL_DEGREES_PER_PIXEL_LAT,
                              fabs(ulg.latd()-llg.latd())/(outputRect.height()-1.0), true);
                   }
-                  
+
                   if ( outputRect.width()-1.0 > DBL_EPSILON )
                   {
                      kwl.add(prefix, ossimKeywordNames::DECIMAL_DEGREES_PER_PIXEL_LON,
                              fabs(ulg.lond()-urg.lond())/(outputRect.width()-1.0), true);
                   }
                }
-               
+
                ossimDpt gsd = geom->getMetersPerPixel();
                kwl.add(prefix, ossimKeywordNames::METERS_PER_PIXEL_X_KW, gsd.x, true);
                kwl.add(prefix, ossimKeywordNames::METERS_PER_PIXEL_Y_KW, gsd.y, true);
-               
+
             } // if(geom.valid())
 
          } // if ( outputEntry )
@@ -1751,11 +1833,11 @@ bool ossimInfo::getImageGeometryInfo( ossimImageHandler* ih,
       if ( !result )
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "No geometry for file " << ih->getFilename() << std::endl;
+                  << "No geometry for file " << ih->getFilename() << std::endl;
       }
-      
+
    } // if ( ih )
-   
+
    return result;
 
 } // End: ossimInfo::getImageGeometryInfo( ih, entry...
@@ -1774,7 +1856,7 @@ void ossimInfo::getCenterImage( ossimImageHandler* ih, ossimKeywordlist& kwl) co
    {  
       std::vector<ossim_uint32> entryList;
       ih->getEntryList(entryList);
-      
+
       std::vector<ossim_uint32>::const_iterator i = entryList.begin();
       while ( i != entryList.end() )
       {
@@ -1806,9 +1888,9 @@ void ossimInfo::getCenterImage( ossimImageHandler* ih,
       else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "Could not get image center for: " << ih->getFilename() << std::endl;
+                  << "Could not get image center for: " << ih->getFilename() << std::endl;
       }
-      
+
    } // if ( ih )
 }
 
@@ -1826,7 +1908,7 @@ void ossimInfo::getCenterGround( ossimImageHandler* ih, ossimKeywordlist& kwl) c
    {  
       std::vector<ossim_uint32> entryList;
       ih->getEntryList(entryList);
-      
+
       std::vector<ossim_uint32>::const_iterator i = entryList.begin();
       while ( i != entryList.end() )
       {
@@ -1852,7 +1934,7 @@ void ossimInfo::getCenterGround( ossimImageHandler* ih,
          {
             ossimDrect bounds;
             geom->getBoundingRect( bounds );
-            
+
             if( !bounds.hasNans() )
             {
                ossimDpt iPt = bounds.midPoint();
@@ -1866,9 +1948,9 @@ void ossimInfo::getCenterGround( ossimImageHandler* ih,
       else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "Could not get ground center for: " << ih->getFilename() << std::endl;
+                  << "Could not get ground center for: " << ih->getFilename() << std::endl;
       }
-      
+
    } // if ( ih )
 }
 
@@ -1886,7 +1968,7 @@ void ossimInfo::getImg2grd( ossimImageHandler* ih, ossimKeywordlist& kwl) const
    {  
       std::vector<ossim_uint32> entryList;
       ih->getEntryList(entryList);
-      
+
       std::vector<ossim_uint32>::const_iterator i = entryList.begin();
       while ( i != entryList.end() )
       {
@@ -1895,7 +1977,7 @@ void ossimInfo::getImg2grd( ossimImageHandler* ih, ossimKeywordlist& kwl) const
       }
    } 
 }
-   
+
 void ossimInfo::getImg2grd( ossimImageHandler* ih,
                             ossim_uint32 entry, 
                             ossimKeywordlist& kwl ) const
@@ -1906,14 +1988,14 @@ void ossimInfo::getImg2grd( ossimImageHandler* ih,
       {
          ossimString prefix = "image";
          prefix = prefix + ossimString::toString(entry) + ".";
-         
+
          ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
          if(geom.valid())
          {
-            
+
             ossimDrect bounds;
             geom->getBoundingRect( bounds );
-            
+
             if( !bounds.hasNans() )
             {
                std::string value = m_kwl.findKey( IMG2GRD_KW );
@@ -1930,19 +2012,19 @@ void ossimInfo::getImg2grd( ossimImageHandler* ih,
                   }
                   else
                   {
-                      kwl.add(prefix, "ground_point", "nan", true);
+                     kwl.add(prefix, "ground_point", "nan", true);
                   }
                }
             }
          }
-         
+
       } // if ( ih->setCurrentEntry(entry) )
       else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "Could not get ground center for: " << ih->getFilename() << std::endl;
+                  << "Could not get ground center for: " << ih->getFilename() << std::endl;
       }
-      
+
    } // if ( ih )
 }
 
@@ -1960,7 +2042,7 @@ void ossimInfo::getUpIsUpAngle( ossimImageHandler* ih, ossimKeywordlist& kwl) co
    {  
       std::vector<ossim_uint32> entryList;
       ih->getEntryList(entryList);
-      
+
       std::vector<ossim_uint32>::const_iterator i = entryList.begin();
       while ( i != entryList.end() )
       {
@@ -1990,7 +2072,7 @@ void ossimInfo::getUpIsUpAngle( ossimImageHandler* ih,
       {
          ossimString prefix = "image";
          prefix = prefix + ossimString::toString(entry) + ".";
-         
+
          ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
          if(geom.valid())
          {
@@ -2009,12 +2091,12 @@ void ossimInfo::getUpIsUpAngle( ossimImageHandler* ih,
       if ( !result )
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "Could not get up is up angle for: " << ih->getFilename() << std::endl;
+                  << "Could not get up is up angle for: " << ih->getFilename() << std::endl;
       }
-      
+
    } // if ( ih )
 }
-   
+
 void ossimInfo::getNorthUpAngle(ossimKeywordlist& kwl)
 {
    if ( m_img.valid() )
@@ -2029,7 +2111,7 @@ void ossimInfo::getNorthUpAngle( ossimImageHandler* ih, ossimKeywordlist& kwl) c
    {  
       std::vector<ossim_uint32> entryList;
       ih->getEntryList(entryList);
-      
+
       std::vector<ossim_uint32>::const_iterator i = entryList.begin();
       while ( i != entryList.end() )
       {
@@ -2059,7 +2141,7 @@ void ossimInfo::getNorthUpAngle( ossimImageHandler* ih,
       {
          ossimString prefix = "image";
          prefix = prefix + ossimString::toString(entry) + ".";
-         
+
          ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
          if(geom.valid())
          {
@@ -2074,9 +2156,9 @@ void ossimInfo::getNorthUpAngle( ossimImageHandler* ih,
       if ( !result )
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "Could not get north up angle for: " << ih->getFilename() << std::endl;
+                  << "Could not get north up angle for: " << ih->getFilename() << std::endl;
       }
-      
+
    } // if ( ih )
 }
 
@@ -2094,7 +2176,7 @@ void ossimInfo::getImageRect( ossimImageHandler* ih, ossimKeywordlist& kwl) cons
    {  
       std::vector<ossim_uint32> entryList;
       ih->getEntryList(entryList);
-      
+
       std::vector<ossim_uint32>::const_iterator i = entryList.begin();
       while ( i != entryList.end() )
       {
@@ -2105,7 +2187,7 @@ void ossimInfo::getImageRect( ossimImageHandler* ih, ossimKeywordlist& kwl) cons
 }
 
 bool ossimInfo::getRgbBands(
-   ossimImageHandler* ih, ossim_uint32 entry, ossimKeywordlist& kwl ) const
+      ossimImageHandler* ih, ossim_uint32 entry, ossimKeywordlist& kwl ) const
 {
    bool result = false;
    if ( ih )
@@ -2125,9 +2207,9 @@ bool ossimInfo::getRgbBands(
       }
    }
    return result;
-   
+
 } // End: ossimInfo::getRgbBands( ... )
-   
+
 void ossimInfo::getImageRect(ossim_uint32 entry, ossimKeywordlist& kwl)
 {
    if ( m_img.valid() )
@@ -2153,9 +2235,9 @@ void ossimInfo::getImageRect( ossimImageHandler* ih,
       else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "Could not get image rectangle for: " << ih->getFilename() << std::endl;
+                  << "Could not get image rectangle for: " << ih->getFilename() << std::endl;
       }
-      
+
    } // if ( ih )
 
 } // End: getImageRect( ih, entry...
@@ -2170,7 +2252,7 @@ bool ossimInfo::isImageEntryOverview() const
    }
    return result;
 }
- 
+
 bool ossimInfo::isImageEntryOverview( const ossimImageHandler* ih ) const
 {
    bool result = false; // Have to prove it.
@@ -2199,8 +2281,8 @@ void ossimInfo::printConfiguration() const
 std::ostream& ossimInfo::printConfiguration(std::ostream& out) const
 {
    out << "\npreferences_keyword_list:\n"
-       << ossimPreferences::instance()->preferencesKWL()
-       << std::endl;
+         << ossimPreferences::instance()->preferencesKWL()
+         << std::endl;
    return out;
 }
 
@@ -2243,9 +2325,9 @@ std::ostream& ossimInfo::printDatums(std::ostream& out) const
 
    std::vector<ossimString> datumList;
    ossimDatumFactoryRegistry::instance()->getList(datumList);
-   
+
    std::vector<ossimString>::const_iterator i = datumList.begin();
-   
+
    while ( i != datumList.end() )
    {
       const ossimDatum* datum = ossimDatumFactoryRegistry::instance()->create(*i);
@@ -2256,9 +2338,11 @@ std::ostream& ossimInfo::printDatums(std::ostream& out) const
             out << setiosflags(ios::left)
                 << setw(7)
                 << datum->code().c_str()
+                << setw(7)
+                << datum->epsgCode()
                 << setw(48)
                 << datum->name().c_str()
-                << setw(10) 
+                << setw(10)
                 << "Ellipse:"
                 << datum->ellipsoid()->name()
                 << std::endl;
@@ -2272,13 +2356,41 @@ std::ostream& ossimInfo::printDatums(std::ostream& out) const
       {
          out << "No datum for code: " << (*i) << std::endl;
       }
-      
+
       ++i;
    }
 
    // Reset flags.
    out.setf(f);
-   
+
+   return out;
+}
+
+void ossimInfo::printFonts() const
+{
+   ossimInfo::printFonts( ossimNotify(ossimNotifyLevel_INFO) );
+}
+
+std::ostream& ossimInfo::printFonts(std::ostream& out) const
+{
+   std::vector<ossimFontInformation> fontInfoList;
+   ossimFontFactoryRegistry::instance()->getFontInformation( fontInfoList );
+
+   std::vector<ossimFontInformation>::const_iterator i = fontInfoList.begin();
+
+   while ( i != fontInfoList.end() )
+   {
+      out << *(i) << endl;
+      ++i;
+   }
+
+   // Get the default:
+   ossimRefPtr<ossimFont> defaultFont = ossimFontFactoryRegistry::instance()->getDefaultFont();
+   if ( defaultFont.valid() )
+   {
+      out << "default_font: " << defaultFont->getFamilyName() << std::endl;
+   }
+
    return out;
 }
 
@@ -2293,10 +2405,10 @@ std::ostream& ossimInfo::deg2rad(const ossim_float64& degrees, std::ostream& out
 
    // Capture the original flags.
    std::ios_base::fmtflags f = out.flags();
-   
+
    out << std::setiosflags(std::ios::fixed) << std::setprecision(15)
-       << "\n" << degrees << " degrees = "
-       << radians << " radians.\n" << std::endl;
+   << "\n" << degrees << " degrees = "
+   << radians << " radians.\n" << std::endl;
 
    // Reset flags.
    out.setf(f);
@@ -2315,10 +2427,10 @@ std::ostream& ossimInfo::rad2deg(const ossim_float64& radians, std::ostream& out
 
    // Capture the original flags.
    std::ios_base::fmtflags f = out.flags();
-   
+
    out << std::setiosflags(std::ios::fixed) << std::setprecision(15)
-       << "\n" << radians << " radians = "
-       << degrees << " degrees.\n" << std::endl;
+   << "\n" << radians << " radians = "
+   << degrees << " degrees.\n" << std::endl;
 
    // Reset flags.
    out.setf(f);
@@ -2350,10 +2462,10 @@ std::ostream& ossimInfo::ft2mtrs(const ossim_float64& feet,
 
    // Capture the original flags.
    std::ios_base::fmtflags f = out.flags();
-   
+
    out << setiosflags(ios::fixed) << setprecision(15)
-       << feet << " * " << conversionString << " = "
-       << meters << " meters." << std::endl;
+             << feet << " * " << conversionString << " = "
+             << meters << " meters." << std::endl;
 
    // Reset flags.
    out.setf(f);
@@ -2388,12 +2500,12 @@ std::ostream& ossimInfo::mtrs2ft(const ossim_float64& meters,
    }
 
    out << setiosflags(ios::fixed) << setprecision(15)
-       << meters << " / " << conversionString << " = "
-       << feet << " feet." << std::endl;
+             << meters << " / " << conversionString << " = "
+             << feet << " feet." << std::endl;
 
    // Reset flags.
    out.setf(f);
-   
+
    return out;
 }
 
@@ -2410,18 +2522,18 @@ std::ostream& ossimInfo::mtrsPerDeg(const ossim_float64& latitude, std::ostream&
    ossim_float64 arcLengthLat = mpd.y/60.0;
    ossim_float64 arcLengthLon = mpd.x/60.0;
    out << setiosflags(ios::fixed) << setprecision(15)
-       << "Meters per degree and minute at latitude of " << latitude << ":\n"
-       << "Meters per degree latitude:   "
-       << setw(20) << mpd.y << "\n"
-       << "Meters per degree longitude:  "
-       << setw(20) << mpd.x << "\n"
-       << "Meters per minute latitude:   "
-       << setw(20) << arcLengthLat << "\n"
-       << "Meters per minute longitude:  "
-       << setw(20) << arcLengthLon << "\n"
-       << "Geodetic radius:              "
-       << setw(20) << radius << "\n"
-       << std::endl;
+             << "Meters per degree and minute at latitude of " << latitude << ":\n"
+             << "Meters per degree latitude:   "
+             << setw(20) << mpd.y << "\n"
+             << "Meters per degree longitude:  "
+             << setw(20) << mpd.x << "\n"
+             << "Meters per minute latitude:   "
+             << setw(20) << arcLengthLat << "\n"
+             << "Meters per minute longitude:  "
+             << setw(20) << arcLengthLon << "\n"
+             << "Geodetic radius:              "
+             << setw(20) << radius << "\n"
+             << std::endl;
    return out;
 }
 
@@ -2441,10 +2553,10 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
 
    ossim_float64 hgtAboveMsl = ossimElevManager::instance()->getHeightAboveMSL(copyGpt);
    ossim_float64 hgtAboveEllipsoid =
-      ossimElevManager::instance()->getHeightAboveEllipsoid(copyGpt);
+         ossimElevManager::instance()->getHeightAboveEllipsoid(copyGpt);
    ossim_float64 geoidOffset = ossimGeoidManager::instance()->offsetFromEllipsoid(copyGpt);
    ossim_float64 mslOffset = 0.0;
-   
+
    if(ossim::isnan(hgtAboveEllipsoid)||ossim::isnan(hgtAboveMsl))
    {
       mslOffset = ossim::nan();
@@ -2453,10 +2565,10 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
    {
       mslOffset = hgtAboveEllipsoid - hgtAboveMsl;
    }
-   
+
    std::vector<ossimFilename> cellList;
    ossimElevManager::instance()->getOpenCellList(cellList);
-   
+
    if (!cellList.empty())
    {
       out << "Opened cell:            " << cellList[0] << "\n";
@@ -2465,7 +2577,7 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
    {
       out << "Did not find cell for point: " << gpt << "\n";
    }
-   
+
    out << "MSL to ellipsoid delta: ";
    if (!ossim::isnan(mslOffset))
    {
@@ -2506,7 +2618,7 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
 
    // Reset flags.
    out.setf(f);
-   
+
    return out;
 }
 
@@ -2554,9 +2666,9 @@ void ossimInfo::printOverviewTypes() const
 std::ostream& ossimInfo::printOverviewTypes(std::ostream& out) const
 {
    out << "\nValid overview types: " << std::endl;
-   
+
    std::vector<ossimString> outputType;
-   
+
    ossimOverviewBuilderFactoryRegistry::instance()->getTypeNameList(outputType);
    std::copy(outputType.begin(),
              outputType.end(),
@@ -2572,11 +2684,11 @@ void ossimInfo::printProjections() const
 std::ostream& ossimInfo::printProjections(std::ostream& out) const
 {
    out << "Projections:\n";
-   
+
    std::vector<ossimString> list;
    ossimProjectionFactoryRegistry::instance()->
-      getAllTypeNamesFromRegistry(list);
-   
+         getAllTypeNamesFromRegistry(list);
+
    std::vector<ossimString>::const_iterator i = list.begin();
    while ( i != list.end() )
    {
@@ -2584,7 +2696,7 @@ std::ostream& ossimInfo::printProjections(std::ostream& out) const
       ++i;
    }
    out << std::endl;
-   
+
    return out;
 }
 
@@ -2637,68 +2749,68 @@ std::ostream& ossimInfo::printZoomLevelGsds(std::ostream& out) const
 {
    // Capture the original flags.
    std::ios_base::fmtflags f = out.flags();
-   
+
    out << setprecision(15)<< setiosflags(std::ios_base::fixed|std::ios_base::right);
-   
+
    const int MAX_LEVEL = 24;
    const double TILE_SIZE = 256.0;
    const double EPSG_4326_BOUNDS = 180.0;
    const double EPSG_3857_BOUNDS = 40075016.685578488;
-   
+
    // From: ossim-info --mtrsPerDeg 0.0
    const double MTRS_PER_DEGREE_AT_EQUATOR = 111319.490793273565941;
-   
+
    out << "Notes:\n"
-       << "tile size: 256\n"
-       << "dpp = \"degrees per pixel\"\n"
-       << "mpp = \"meters per pixel\"\n\n";
-   
+         << "tile size: 256\n"
+         << "dpp = \"degrees per pixel\"\n"
+         << "mpp = \"meters per pixel\"\n\n";
+
    // Assuming square pixels, level 0 having (2 x 1) tiles.
    double level_0_gsd = EPSG_4326_BOUNDS / TILE_SIZE;
    double level_gsd = 0.0;
    int i = 0;
-   
+
    out << "EPSG:4326 level info:\n"
-       << "Note: Assuming square pixels, level 0 having (2x1) tiles.\n"
-       << "bounds: 360.0 X 180.0\n"
-       << "level[" << std::setw(2) << std::setfill('0') << i << "] dpp:"
-       << std::setw(20) << std::setfill(' ') << level_0_gsd
-       << "  equivalent mpp:" << std::setw(23)
-       << (level_0_gsd * MTRS_PER_DEGREE_AT_EQUATOR) << "\n";
-   
+         << "Note: Assuming square pixels, level 0 having (2x1) tiles.\n"
+         << "bounds: 360.0 X 180.0\n"
+         << "level[" << std::setw(2) << std::setfill('0') << i << "] dpp:"
+         << std::setw(20) << std::setfill(' ') << level_0_gsd
+         << "  equivalent mpp:" << std::setw(23)
+   << (level_0_gsd * MTRS_PER_DEGREE_AT_EQUATOR) << "\n";
+
    for ( i = 1; i <= MAX_LEVEL; ++i )
    {
       level_gsd = level_0_gsd / std::pow( 2.0, i );
       out << "level[" << std::setw(2) << std::setfill('0') << i << "] dpp:"
-          << std::setw(20) << std::setfill(' ') << level_gsd
-          << "  equivalent mpp:" << std::setw(23)
-          << (level_gsd * MTRS_PER_DEGREE_AT_EQUATOR) << "\n";
-      
+            << std::setw(20) << std::setfill(' ') << level_gsd
+            << "  equivalent mpp:" << std::setw(23)
+      << (level_gsd * MTRS_PER_DEGREE_AT_EQUATOR) << "\n";
+
    }
-   
+
    // Assuming square pixels, level 0 having (1 x 1) tiles.
    level_0_gsd = EPSG_3857_BOUNDS / TILE_SIZE;
    level_gsd = 0.0;
    i = 0;
-   
+
    out << "\n\nEPSG:3857 level info:\n"
-       << "Note: Assuming square pixels, level 0 having (1x1) tile.\n"
-       << "bounds: 40075016.685578488 X 40075016.685578488\n"
-       << "level[" << std::setw(2) << std::setfill('0') << i << "] mpp:"
-       << std::setw(24) << std::setfill(' ') << level_0_gsd << "\n";
-   
+         << "Note: Assuming square pixels, level 0 having (1x1) tile.\n"
+         << "bounds: 40075016.685578488 X 40075016.685578488\n"
+         << "level[" << std::setw(2) << std::setfill('0') << i << "] mpp:"
+         << std::setw(24) << std::setfill(' ') << level_0_gsd << "\n";
+
    for ( i = 1; i <= MAX_LEVEL; ++i )
    {
       level_gsd = level_0_gsd / std::pow( 2.0, i );
       out << "level[" << std::setw(2) << std::setfill('0') << i << "] mpp:"
-          << std::setw(24) << std::setfill(' ') << level_gsd << "\n";
+            << std::setw(24) << std::setfill(' ') << level_gsd << "\n";
    }
 
    // Reset flags.
    out.setf(f);
 
    return out;
-   
+
 } // End: ossimInfo::printZoomLevelGsds(std::ostream& out)
 
 void ossimInfo::printWriterProps() const
@@ -2716,61 +2828,61 @@ void ossimInfo::getRadiometry(ossimScalarType scalar, std::string& s) const
    // Output Radiometry.
    switch(scalar)
    {
-      case OSSIM_UINT8:
-      {
-         s = "8-bit";
-         break;
-      }
-      case OSSIM_USHORT11:
-      {
-         s = "11-bit";
-         break;
-      }
-      case OSSIM_UINT16:
-      {
-         s = "16-bit unsigned";
-         break;
-      }
-      case OSSIM_SINT16:
-      {
-         s = "16-bit signed";
-         break;
-      }
-      case OSSIM_UINT32:
-      {
-         s = "32-bit unsigned";
-         break;
-      }
-      case OSSIM_SINT32:
-      {
-         s = "32-bit signed";
-         break;
-      }
-      case OSSIM_FLOAT32:
-      {
-         s = "32-bit float";
-         break;
-      }
-      case OSSIM_DOUBLE:
-      {
-         s = "64-bit double float";
-         break;
-      }
-      case OSSIM_NORMALIZED_FLOAT:
-      {
-         s = "normalized 32-bit float";
-         break;
-      }
-      case OSSIM_NORMALIZED_DOUBLE:
-      {
-         s = "normalized 64-bit double float";
-         break;
-      }
-      default:
-      {
-         s = "unknown";
-         break;
-      }
+   case OSSIM_UINT8:
+   {
+      s = "8-bit";
+      break;
+   }
+   case OSSIM_USHORT11:
+   {
+      s = "11-bit";
+      break;
+   }
+   case OSSIM_UINT16:
+   {
+      s = "16-bit unsigned";
+      break;
+   }
+   case OSSIM_SINT16:
+   {
+      s = "16-bit signed";
+      break;
+   }
+   case OSSIM_UINT32:
+   {
+      s = "32-bit unsigned";
+      break;
+   }
+   case OSSIM_SINT32:
+   {
+      s = "32-bit signed";
+      break;
+   }
+   case OSSIM_FLOAT32:
+   {
+      s = "32-bit float";
+      break;
+   }
+   case OSSIM_DOUBLE:
+   {
+      s = "64-bit double float";
+      break;
+   }
+   case OSSIM_NORMALIZED_FLOAT:
+   {
+      s = "normalized 32-bit float";
+      break;
+   }
+   case OSSIM_NORMALIZED_DOUBLE:
+   {
+      s = "normalized 64-bit double float";
+      break;
+   }
+   default:
+   {
+      s = "unknown";
+      break;
+   }
    }
 }
 
@@ -2799,51 +2911,6 @@ void ossimInfo::getVersion(std::string& s) const
 #else
    s = "unknown";
 #endif
-}
-
-void ossimInfo::usage(ossimArgumentParser& ap)
-{
-   // Add global usage options.
-   ossimInit::instance()->addOptions(ap);
-   
-   // Set app name.
-   ap.getApplicationUsage()->setApplicationName(ap.getApplicationName());
-
-   // Add options.
-   setUsage(ap);
-   
-   // Write usage.
-   ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
-   
-   ossimNotify(ossimNotifyLevel_INFO)
-      << " examples:\n\n" 
-      << "    ossim-info --version\n"
-      << "    ossim-info -i ./myfile.tif\n"
-      << "      prints out only general image information\n\n"
-      << "    ossim-info -p ./myfile.tif\n"
-      << "      prints out only image projection information\n\n"
-      << "    ossim-info -p -s wge ./myfile.tif\n"
-      << "      prints out only image projection information and shifts to wgs84\n\n"
-      << "    ossim-info -p -i ./myfile.tif\n"
-      << "      prints out both image and projection information\n\n"
-      << "    ossim-info -p -i ./myfile.tif -o ./myfile.geom\n"
-      << "      writes geometry file with both image and projection information\n\n"
-      << "    ossim-info -p -i ./myfile.tif -v -o ./myfile.geom\n"
-      << "      writes geometry file with both image and projection information\n"
-      << "      while overwriting existing .geom file.\n\n"
-      << "    ossim-info -f XML ./myfile.tif\n"
-      << "      prints out image and projection information as an XML document\n\n"
-      << "    ossim-info -d myfile.ntf\n"
-      << "      Dumps all data available, in this case, all nitf tags, from file.\n\n"
-      << "    ossim-info -d a.toc\n"
-      << "      Dumps all data available, in this case, all nitf and rpf tags, from file.\n\n"
-      << "    ossim-info --dno a.toc\n"
-      << "      \"dno\" for \"dump no overviews\" Dumps all data available,\n"
-      << "       in this case, all nitf and rpf tags, from file ignoring overviews.\n\n"
-      << "    ossim-info -d -i -p myfile.ntf\n"
-      << "      Typical usage case, i.e. do a dump of tags and print out image and\n"
-      << "      projection information.\n\n"
-      << std::endl;
 }
 
 void ossimInfo::outputXml( const ossimKeywordlist& kwl ) const

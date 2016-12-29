@@ -18,9 +18,12 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/init/ossimInit.h>
+#include <ossim/support_data/ossimInfoBase.h>
+#include <ossim/support_data/ossimInfoFactoryRegistry.h>
 #include <ossim/util/ossimInfo.h>
 
 #include <iostream>
+#include <memory>
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -43,6 +46,7 @@ int main(int argc, char *argv[])
          // Test the ossimInfo::getImageInfo method.
          ossimRefPtr<ossimInfo> oi = new ossimInfo;
          ossimFilename file(argv[1]);
+
          ossimKeywordlist kwl;
          oi->getImageInfo(file,
                           true,  // dump
@@ -53,6 +57,26 @@ int main(int argc, char *argv[])
                           true,  // palette
                           kwl);
          cout << kwl << endl;
+
+         cout << "\n\ntest info dump to a keyword list:\n";
+         std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
+         if (info)
+         {
+            info->setProcessOverviewFlag(false);
+
+            ossimKeywordlist kwl;
+            // if ( info->getKeywordlist( kwl, 9 ) )
+            if ( info->getKeywordlist( kwl ) )
+            {
+               cout << kwl << endl;
+            }
+            info = 0;
+         }
+         else
+         {
+            ossimNotify(ossimNotifyLevel_INFO)
+               << "No dump available for:  " << file.c_str() << std::endl;
+         } 
       }
       catch (const ossimException& e)
       {

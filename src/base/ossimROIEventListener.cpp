@@ -8,9 +8,7 @@ void ossimROIEventListener::processEvent(ossimEvent& event)
 {
    if(event.isConsumed()) return;
    
-   ossimROIEvent* roiEvent = PTR_CAST(ossimROIEvent,
-                                      &event);
-   
+   ossimROIEvent* roiEvent = dynamic_cast<ossimROIEvent*>(&event);
    if(roiEvent)
    {
       const int type = roiEvent->getEventType();

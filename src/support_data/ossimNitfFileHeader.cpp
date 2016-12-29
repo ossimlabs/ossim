@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,11 +9,11 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfFileHeader.cpp 22418 2013-09-26 15:01:12Z gpotts $
+// $Id$
+
 #include <ossim/support_data/ossimNitfFileHeader.h>
 #include <ossim/base/ossimContainerProperty.h>
 #include <iostream>
-#include <sstream>
 
 static const char* TAGS_KW = "tags";
 

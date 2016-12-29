@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-//  License:  LGPL
+//  License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,13 +9,14 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfFileHeaderV2_0.h 22418 2013-09-26 15:01:12Z gpotts $
-#ifndef ossimNitfFileHeaderV2_0_HEADER
-#define ossimNitfFileHeaderV2_0_HEADER
+// $Id$ 
 
-#include <iosfwd>
+#ifndef ossimNitfFileHeaderV2_0_HEADER
+#define ossimNitfFileHeaderV2_0_HEADER 1
+
 #include <ossim/support_data/ossimNitfFileHeaderV2_X.h>
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/support_data/ossimNitfTagInformation.h>
 
@@ -48,7 +49,7 @@ struct ossimNitfSymbolInfoRecordV2_0
 {
 public:
    friend std::ostream& operator <<(std::ostream& out,
-                               const ossimNitfSymbolInfoRecordV2_0 &data);
+                                    const ossimNitfSymbolInfoRecordV2_0 &data);
 
    ossim_int32 getHeaderLength()const;
    ossim_int32 getImageLength()const;
@@ -69,7 +70,7 @@ struct ossimNitfLabelInfoRecordV2_0
 {
 public:
    friend std::ostream& operator <<(std::ostream& out,
-                               const ossimNitfLabelInfoRecordV2_0 &data);
+                                    const ossimNitfLabelInfoRecordV2_0 &data);
 
    ossim_int32 getHeaderLength()const;
    ossim_int32 getImageLength()const;
@@ -90,7 +91,7 @@ struct ossimNitfTextInfoRecordV2_0
 {
 public:
    friend std::ostream& operator <<(std::ostream& out,
-                               const ossimNitfTextInfoRecordV2_0 &data);
+                                    const ossimNitfTextInfoRecordV2_0 &data);
 
    ossim_int32 getHeaderLength()const;
    ossim_int32 getImageLength()const;
@@ -110,7 +111,7 @@ struct ossimNitfDataExtSegInfoRecordV2_0
 {
 public:
    friend std::ostream& operator <<(std::ostream& out,
-                               const ossimNitfDataExtSegInfoRecordV2_0 &data);
+                                    const ossimNitfDataExtSegInfoRecordV2_0 &data);
 
    ossim_int32 getHeaderLength()const;
    ossim_int32 getImageLength()const;
@@ -130,7 +131,7 @@ struct ossimNitfResExtSegInfoRecordV2_0
 {
 public:
    friend std::ostream& operator <<(std::ostream& out,
-                               const ossimNitfResExtSegInfoRecordV2_0 &data);
+                                    const ossimNitfResExtSegInfoRecordV2_0 &data);
 
    /*!
     * Is a 4 byte numeric 0-9999
@@ -155,9 +156,9 @@ public:
     * @return This method returns void but will throw an std::exception in
     * certain instances if the stream goes bad on seeks.
     */
-   virtual void parseStream(std::istream &in);
+   virtual void parseStream(ossim::istream& in);
    
-   virtual void writeStream(std::ostream &out);
+   virtual void writeStream(ossim::ostream& out);
    
    /**
     * @brief print method that outputs a key/value type format adding prefix
@@ -187,15 +188,15 @@ public:
    virtual void replaceImageInfoRecord(ossim_uint32 i, const ossimNitfImageInfoRecordV2_0& recordInfo);
 
    virtual ossimNitfImageHeader*  getNewImageHeader(ossim_uint32 imageNumber,
-                                                    std::istream& in)const;
+                                                    ossim::istream& in)const;
    virtual ossimNitfSymbolHeader* getNewSymbolHeader(ossim_uint32 symbolNumber,
-                                                     std::istream& in)const;
+                                                     ossim::istream& in)const;
    virtual ossimNitfLabelHeader* getNewLabelHeader(ossim_uint32 labelNumber,
-                                                   std::istream& in)const;
+                                                   ossim::istream& in)const;
    virtual ossimNitfTextHeader*   getNewTextHeader(ossim_uint32 textNumber,
-                                                   std::istream& in)const;
+                                                   ossim::istream& in)const;
    virtual ossimNitfDataExtensionSegment* getNewDataExtensionSegment(
-      ossim_int32 dataExtNumber, std::istream& in)const;
+      ossim_int32 dataExtNumber, ossim::istream& in)const;
    
    virtual ossimNitfImageHeader*  allocateImageHeader()const;
    virtual ossimNitfSymbolHeader* allocateSymbolHeader()const;
@@ -307,12 +308,12 @@ private:
     */
    void precomputeValues();
    
-   void readImageInfoRecords(std::istream &in);
-   void readSymbolInfoRecords(std::istream &in);
-   void readLabelInfoRecords(std::istream &in);
-   void readTextFileInfoRecords(std::istream &in);
-   void readDataExtSegInfoRecords(std::istream &in);
-   void readResExtSegInfoRecords(std::istream &in);
+   void readImageInfoRecords(ossim::istream& in);
+   void readSymbolInfoRecords(ossim::istream& in);
+   void readLabelInfoRecords(ossim::istream& in);
+   void readTextFileInfoRecords(ossim::istream& in);
+   void readDataExtSegInfoRecords(ossim::istream& in);
+   void readResExtSegInfoRecords(ossim::istream& in);
    /*!
     * If the header was parsed this method will initialize the offsets
     * to whare all data resides within the file.  Example:  NITF files
@@ -326,7 +327,7 @@ private:
     * If the header was parsed and the offsets have been initialized, this method will
     * parse all overflow tags and put them into theTagList.
     */
-   void readOverflowTags(std::istream& in);
+   void readOverflowTags(ossim::istream& in);
 
    /*!
     * This method will be called after the header is read
@@ -334,7 +335,7 @@ private:
     * sort in order all renderable data based on their
     * display level.
     */
-   void initializeDisplayLevels(std::istream& in);
+   void initializeDisplayLevels(ossim::istream& in);
 
    void insertIntoDisplayInfoList(const ossimNitfDisplayInfo &displayInformation);
 

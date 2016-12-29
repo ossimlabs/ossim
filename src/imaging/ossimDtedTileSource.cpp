@@ -1,8 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -10,8 +8,8 @@
 //
 // Contains class declaration for ossimDtedTileSource.
 //
-//********************************************************************
-// $Id: ossimDtedTileSource.cpp 21631 2012-09-06 18:10:55Z dburken $
+//---
+// $Id$
 
 #include <ossim/imaging/ossimDtedTileSource.h>
 #include <ossim/base/ossimConstants.h>
@@ -20,6 +18,7 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimEllipsoid.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimDatum.h>
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
@@ -41,8 +40,9 @@ static ossimTrace traceDebug("ossimDtedTileSource:debug");
 ossimDtedTileSource::ossimDtedTileSource()
    :
       ossimImageHandler(),
-      theTile(NULL),
-      theFileStr(),
+      theTile(0),
+      m_fileStr(0),
+      m_dtedInfo(0),
       theTileWidth(0),
       theTileHeight(0),
       theNumberOfLines(0),
@@ -64,7 +64,7 @@ ossimDtedTileSource::ossimDtedTileSource()
    ossim::defaultTileSize(defaultTileSize);
    theTileWidth  = static_cast<ossim_uint32>(defaultTileSize.x);
    theTileHeight = static_cast<ossim_uint32>(defaultTileSize.y);
-   
+
    // Construction not complete.  Users should call "open" method.
 }
 
@@ -97,7 +97,7 @@ ossimRefPtr<ossimImageData> ossimDtedTileSource::getTile(
 
    // Image rectangle must be set prior to calling getTile.
    theTile->setImageRectangle(tile_rect);
-   
+
    if ( getTile( theTile.get(), resLevel ) == false )
    {
       if (theTile->getDataObjectStatus() != OSSIM_NULL)
@@ -113,7 +113,7 @@ bool ossimDtedTileSource::getTile(ossimImageData* result,
                                   ossim_uint32 resLevel)
 {
    bool status = false;
-   
+
    //---
    // Not open, this tile source bypassed, or invalid res level,
    // return a blank tile.
@@ -131,18 +131,18 @@ bool ossimDtedTileSource::getTile(ossimImageData* result,
       status = getOverviewTile(resLevel, result);
 
       if ( !status )  // Did not get an overview tile.
-      {  
+      {
          ossimIrect image_rect = getImageRectangle(resLevel);
 
          ossimIrect tile_rect = result->getImageRectangle();
-         
+
          //---
          // See if any point of the requested tile is in the image.
          //---
          if ( tile_rect.intersects(image_rect) )
          {
             ossimIrect clip_rect = tile_rect.clipToRect(image_rect);
-            
+
             if ( !tile_rect.completely_within(clip_rect) )
             {
                // Start with a blank tile.
@@ -151,13 +151,13 @@ bool ossimDtedTileSource::getTile(ossimImageData* result,
 
             // Load the tile buffer with data from the dted cell.
             status = fillBuffer(tile_rect, clip_rect, result);
-            
+
          } // End of if ( tile_rect.intersects(image_rect) )
       }
 
        result->unref(); // Decrement ref count.
    }
-   
+
    return status;
 }
 
@@ -175,7 +175,7 @@ bool ossimDtedTileSource::fillBuffer(const ossimIrect& tile_rect,
    //***
 
    const ossim_int32 TILE_WIDTH = tile->getWidth();
-   
+
    //***
    // Position the file pointer to the first record needed.
    // Posts are organized positive line up so we're going to start at
@@ -186,13 +186,13 @@ bool ossimDtedTileSource::fillBuffer(const ossimIrect& tile_rect,
                          (clip_rect.ul().x * theDataRecordSize);
    seek_position += DATA_RECORD_OFFSET_TO_POST +
                     (theNumberOfLines - 1 - clip_rect.lr().y) * 2;
-   
+
    //***
    // Get a pointer positioned at the first valid pixel in
    // the tile.  Tiles are organized positive line down.
    //***
    ossim_sint16* d = static_cast<ossim_sint16*>(tile->getBuf());
-   
+
    // Loop in the longitude or sample direction.
    for (ossim_int32 samp = clip_rect.ul().x; samp <= clip_rect.lr().x; samp++)
    {
@@ -200,14 +200,14 @@ bool ossimDtedTileSource::fillBuffer(const ossimIrect& tile_rect,
                        TILE_WIDTH +
                        (samp - tile_rect.ul().x);
 
-      theFileStr.seekg(seek_position, ios::beg); // Seek to the first post.
+      m_fileStr->seekg(seek_position, ios::beg); // Seek to the first post.
 
       for (ossim_int32 line = clip_rect.lr().y; line >= clip_rect.ul().y; line--)
       {
          // Grab all the post needed from the column.
          ossim_uint16 temp;
          ossim_sint16 s;
-         theFileStr.read((char*)&temp, POST_SIZE);
+         m_fileStr->read((char*)&temp, POST_SIZE);
          s = convertSignedMagnitude(temp);
          d[d_offset] = s;
          d_offset -= TILE_WIDTH;
@@ -216,7 +216,7 @@ bool ossimDtedTileSource::fillBuffer(const ossimIrect& tile_rect,
    }
 
    tile->validate();
-   
+
    return true;
 }
 
@@ -236,12 +236,12 @@ ossimDtedTileSource::getImageRectangle(ossim_uint32 reduced_res_level) const
 
 bool ossimDtedTileSource::isOpen()const
 {
-   return theFileStr.is_open();
+   return (m_fileStr!=0);
 }
 
 void ossimDtedTileSource::close()
 {
-   theFileStr.close();
+   m_fileStr.reset();
 }
 
 bool ossimDtedTileSource::open()
@@ -254,24 +254,14 @@ bool ossimDtedTileSource::open()
            << "\nAttempting to parse file:  " << theImageFile.c_str()
            << endl;
    }
-   
-   if (!theImageFile.exists()) // See if file exists.
-   {
-      if (traceDebug())
-      {
-         CLOG << "DEBUG:"
-              << "\nFile " << theImageFile.c_str() << " does not exist!"
-              << endl;
-      }
-      return false;
-   }
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( theImageFile.c_str(), std::ios_base::in|std::ios_base::binary);
 
    // Open up the file for reading.
-   theFileStr.open(theImageFile.c_str(), ios::in | ios::binary);
-   if (!theFileStr)
+   if (!str)
    {
       theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-      
+
 	  if(traceDebug())
 	  {
 		  ossimNotify(ossimNotifyLevel_WARN) << MODULE << " ERROR!"
@@ -281,8 +271,8 @@ bool ossimDtedTileSource::open()
 	  }
       return false;
    }
-                                   
-   if(!theFileStr)
+
+   if(!str)
    {
       if (traceDebug())
       {
@@ -290,15 +280,26 @@ bool ossimDtedTileSource::open()
               << "\nCannot open:  " << theImageFile.c_str()
               << endl;
       }
-      theFileStr.close();
+      str.reset();
       return false;
    }
-   m_vol.parse(theFileStr);
-   m_hdr.parse(theFileStr);
-   m_uhl.parse(theFileStr);
-   m_dsi.parse(theFileStr);
-   m_acc.parse(theFileStr);
-   
+   std::string connectionString = theImageFile.c_str();
+   m_dtedInfo = std::make_shared<ossimDtedInfo>();
+   if(!m_dtedInfo->open(str, connectionString))
+   {
+      close();
+      return false;
+   }
+   m_fileStr = str;
+   m_fileStr->clear();
+   m_fileStr->seekg(0);
+
+   m_vol.parse(*str);
+   m_hdr.parse(*str);
+   m_uhl.parse(*str);
+   m_dsi.parse(*str);
+   m_acc.parse(*str);
+
    //***
    // Check for errors.  Must have uhl, dsi and acc records.  vol and hdr
    // are for magnetic tape only; hence, may or may not be there.
@@ -313,10 +314,11 @@ bool ossimDtedTileSource::open()
               << "\nError parsing file:  " << theImageFile.c_str()
               << "\nPossibly not a dted file.\n";
       }
-      
-      theFileStr.close();
+
+      str.reset();
       return false;
    }
+   m_fileStr = str;
 
    // Get the cell specific info needed for later.
    theNumberOfLines = m_uhl.numLatPoints();
@@ -414,7 +416,7 @@ ossimRefPtr<ossimImageGeometry> ossimDtedTileSource::getImageGeometry()
    // E.g.: image0.ur_lon:  -88.999999999995
    // Should be -89.0
    // Used ossimImageGeometry::::getMetersPerPixel for a center of the image gsd. (drb)
-   // 
+   //
    // We also need to define an origin for the projection as the center of the cell for proper GSD
    // calculation (OLK 01/11: Used to set origin at 0,0 causing incorrect meters GSD to be
    // computed)
@@ -427,7 +429,7 @@ ossimRefPtr<ossimImageGeometry> ossimDtedTileSource::getImageGeometry()
    // Make an Equidistant Cylindrical projection.
    ossimRefPtr<ossimEquDistCylProjection> eq =
       new ossimEquDistCylProjection(*(datum->ellipsoid()));
-      
+
       // Set the scale:
    eq->setOrigin(origin);
    eq->setUlTiePoints(tie);
@@ -436,16 +438,16 @@ ossimRefPtr<ossimImageGeometry> ossimDtedTileSource::getImageGeometry()
 
    // Give it to the geometry object.
    ossimRefPtr<ossimProjection> proj = eq.get();
-   
+
    // Make the geometry:
    theGeometry = new ossimImageGeometry;
-   
+
    // Set the projection.
    theGeometry->setProjection( proj.get() );
 
    // Set image things the geometry object should know about.
    initImageParameters( theGeometry.get() );
-   
+
    return theGeometry;
 }
 
@@ -497,7 +499,7 @@ void ossimDtedTileSource::loadMetaData()
    ossimKeywordlist kwl;
    const char* min_str = 0;
    const char* max_str = 0;
-   
+
    ossimFilename f = theImageFile.fileNoExtension();
 
    // Check for omd file.
@@ -524,7 +526,7 @@ void ossimDtedTileSource::loadMetaData()
    {
       theMinHeight = atoi(min_str);
       theMaxHeight = atoi(max_str);
-   } 
+   }
    else
    {
       gatherStatistics(false);
@@ -540,14 +542,14 @@ void ossimDtedTileSource::gatherStatistics(bool writeStatsFile)
          << "ossimDtedTileSource::gatherStatistics() scanning for min/max"
          << "\nThis may take a while...\n";
    }
-   
+
    // Start off with the min and max pegged.
    theMinHeight =  32767;
    theMaxHeight = -32767;
-   
+
    // Put the file pointer at the start of the first elevation post.
-   theFileStr.seekg(theOffsetToFirstDataRecord, ios::beg);
-   
+   m_fileStr->seekg(theOffsetToFirstDataRecord, ios::beg);
+
    //---
    // Loop through all records and scan for lowest min and highest max.
    // Each record contains a row of latitude points for a given longitude.
@@ -556,28 +558,28 @@ void ossimDtedTileSource::gatherStatistics(bool writeStatsFile)
    //---
    for (ossim_uint32 i=0; i<theNumberOfSamps; i++)  // longitude direction
    {
-      theFileStr.seekg(DATA_RECORD_OFFSET_TO_POST, ios::cur);
-      
+      m_fileStr->seekg(DATA_RECORD_OFFSET_TO_POST, ios::cur);
+
       for (ossim_uint32 j=0; j<theNumberOfLines; j++) // latitude direction
       {
          ossim_uint16 temp;
          ossim_sint16 s;
-         theFileStr.read((char*)&temp, POST_SIZE);
+         m_fileStr->read((char*)&temp, POST_SIZE);
          s = convertSignedMagnitude(temp);
          if (s < theMinHeight && s != NULL_PIXEL) theMinHeight = s;
          if (s > theMaxHeight) theMaxHeight = s;
       }
-      
-      theFileStr.seekg(DATA_RECORD_CHECKSUM_SIZE, ios::cur);
+
+      m_fileStr->seekg(DATA_RECORD_CHECKSUM_SIZE, ios::cur);
    }
-   
+
    if ( writeStatsFile )
    {
       // Add the stats to the keyword list.
       ossimKeywordlist kwl;
       kwl.add(ossimKeywordNames::MIN_VALUE_KW, theMinHeight);
       kwl.add(ossimKeywordNames::MAX_VALUE_KW, theMaxHeight);
-      
+
       // Write out the statistics file.
       ossimFilename f = theImageFile.fileNoExtension();
       f.setExtension("statistics");
@@ -649,10 +651,11 @@ ossimRefPtr<ossimProperty> ossimDtedTileSource::getProperty(
 
    if (result.valid() == false)
    {
-      ossimDtedInfo info;
-      if (info.open(theImageFile))
+//      ossimDtedInfo info;
+//      std::string connectionString = theImageFile.c_str();
+      if (m_dtedInfo)
       {
-         result = info.getProperty(name);
+         result = m_dtedInfo->getProperty(name);
       }
    }
 
@@ -664,19 +667,22 @@ void ossimDtedTileSource::getPropertyNames(
 {
    ossimImageHandler::getPropertyNames(propertyNames);
 
-   ossimDtedInfo info;
-   if (info.open(theImageFile))
+   if (m_dtedInfo)
    {
-      info.getPropertyNames(propertyNames);
+      m_dtedInfo->getPropertyNames(propertyNames);
    }
+//   ossimDtedInfo info;
+//   if (info.open(theImageFile))
+//   {
+//      info.getPropertyNames(propertyNames);
+//   }
 }
 
 const ossimDtedTileSource& ossimDtedTileSource::operator=(const  ossimDtedTileSource& rhs)
 {
    return rhs;
-} 
+}
 
 ossimDtedTileSource::ossimDtedTileSource(const ossimDtedTileSource&)
 {
 }
-

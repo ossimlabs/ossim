@@ -17,65 +17,90 @@
 #include <ossim/support_data/ossimDtedVol.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimProperty.h>
+#include <ossim/base/ossimIoStream.h>
 
-//**************************************************************************
-// CONSTRUCTOR
-//**************************************************************************
-ossimDtedVol::ossimDtedVol(const ossimFilename& dted_file,
-                           ossim_int32 offset)
+ossimDtedVol::ossimDtedVol()
+:theStartOffset(0),
+theStopOffset(0)
+{
+
+}
+
+ossimDtedVol::ossimDtedVol(std::shared_ptr<ossim::istream>& str, ossim_int64 offset)
    :
       theStartOffset(0),
       theStopOffset(0)
 {
-   if(!dted_file.empty())
-   {
-      // Check to see that dted file exists.
-      if(!dted_file.exists())
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL)
-         << "FATAL ossimDtedVol::ossimDtedVol"
-         << "\nThe DTED file does not exist: " << dted_file << std::endl;
-         return;
-      }
-      
-      // Check to see that the dted file is readable.
-      if(!dted_file.isReadable())
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL)
-         << "FATAL ossimDtedVol::ossimDtedVol"
-         << "\nThe DTED file is not readable: " << dted_file << std::endl;
-         return;
-      }
-      
-      // Open the dted file for reading.
-      std::ifstream in(dted_file.c_str());
-      if(!in)
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL)
-         << "FATAL ossimDtedVol::ossimDtedVol"
-         << "\nUnable to open the DTED file: " << dted_file << std::endl;
-         return;
-      }
-      in.seekg(offset);
-      parse(in);
-      
-      in.close();
-   }
+  if(str)
+  {
+    str->seekg(offset);
+
+    parse(*str);
+  }
+  else
+  {
+    theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+  }
 }
 
 //**************************************************************************
 // CONSTRUCTOR
 //**************************************************************************
-ossimDtedVol::ossimDtedVol(std::istream& in)
-   :
-      theStartOffset(0),
-      theStopOffset(0)
-{
-   parse(in);
-}
+// ossimDtedVol::ossimDtedVol(const ossimFilename& dted_file,
+//                            ossim_int32 offset)
+//    :
+//       theStartOffset(0),
+//       theStopOffset(0)
+// {
+//    if(!dted_file.empty())
+//    {
+//       // Check to see that dted file exists.
+//       if(!dted_file.exists())
+//       {
+//          theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+//          ossimNotify(ossimNotifyLevel_FATAL)
+//          << "FATAL ossimDtedVol::ossimDtedVol"
+//          << "\nThe DTED file does not exist: " << dted_file << std::endl;
+//          return;
+//       }
+      
+//       // Check to see that the dted file is readable.
+//       if(!dted_file.isReadable())
+//       {
+//          theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+//          ossimNotify(ossimNotifyLevel_FATAL)
+//          << "FATAL ossimDtedVol::ossimDtedVol"
+//          << "\nThe DTED file is not readable: " << dted_file << std::endl;
+//          return;
+//       }
+      
+//       // Open the dted file for reading.
+//       std::ifstream in(dted_file.c_str());
+//       if(!in)
+//       {
+//          theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+//          ossimNotify(ossimNotifyLevel_FATAL)
+//          << "FATAL ossimDtedVol::ossimDtedVol"
+//          << "\nUnable to open the DTED file: " << dted_file << std::endl;
+//          return;
+//       }
+//       in.seekg(offset);
+//       parse(in);
+      
+//       in.close();
+//    }
+// }
+
+//**************************************************************************
+// CONSTRUCTOR
+//**************************************************************************
+// ossimDtedVol::ossimDtedVol(std::istream& in)
+//    :
+//       theStartOffset(0),
+//       theStopOffset(0)
+// {
+//    parse(in);
+// }
 
 void ossimDtedVol::parse(std::istream& in)
 {

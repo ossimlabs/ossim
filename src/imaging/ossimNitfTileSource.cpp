@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -8,8 +8,8 @@
 //
 // Description:  Contains class definition for ossimNitfTileSource.
 // 
-//*******************************************************************
-//  $Id: ossimNitfTileSource.cpp 22925 2014-10-28 22:01:09Z dburken $
+//---
+// $Id$
 
 #include <ossim/imaging/ossimNitfTileSource.h>
 #include <ossim/base/ossimConstants.h>
@@ -26,6 +26,7 @@
 #include <ossim/base/ossimScalarTypeLut.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimBooleanProperty.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimJpegMemSrc.h>
@@ -89,7 +90,7 @@ ossimNitfTileSource::ossimNitfTileSource()
       ossimImageHandler(),
       theTile(0),
       theCacheTile(0),
-      theNitfFile(new ossimNitfFile()),
+      theNitfFile(0),
       theNitfImageHeader(0),
       theReadMode(READ_MODE_UNKNOWN),
       theScalarType(OSSIM_SCALAR_UNKNOWN),
@@ -101,11 +102,12 @@ ossimNitfTileSource::ossimNitfTileSource()
       theNumberOfImages(0),
       theCurrentEntry(0),
       theImageRect(0,0,0,0),
-      theFileStr(),
+      theFileStr(0),
       theOutputBandList(),
       theCacheSize(0, 0),
       theCacheTileInterLeaveType(OSSIM_INTERLEAVE_UNKNOWN),
       theCacheEnabledFlag(false),
+      theEntryList(0),
       theCacheId(-1),
       thePackedBitsFlag(false),
       theCompressedBuf(0),
@@ -140,11 +142,17 @@ void ossimNitfTileSource::destroy()
    // Delete the list of image headers.
    theNitfImageHeader.clear();
 
-   if(theFileStr.is_open())
-   {
-      theFileStr.close();
-   }
+   theNitfFile = 0;
 
+   shared_ptr<ossim::ifstream> str = std::dynamic_pointer_cast<ossim::ifstream>( theFileStr );
+   if ( str )
+   {
+      if(str->is_open())
+      {
+         str->close();
+      }
+   }
+   
    theCacheTile = 0;
    theTile      = 0;
    theOverview  = 0;
@@ -152,6 +160,7 @@ void ossimNitfTileSource::destroy()
 
 bool ossimNitfTileSource::isOpen()const
 {
+   
    return (theNitfImageHeader.size() > 0);
 }
 
@@ -173,6 +182,164 @@ bool ossimNitfTileSource::open()
    if (result)
    {
       completeOpen();
+   }
+   
+   return result;
+}
+
+bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
+                                const std::string& connectionString )
+{
+   static const char MODULE[] = "ossimNitfTileSource::open( stream, ...)";
+
+   bool result = false;
+   if(!str) return result;
+   ossimFilename file = connectionString;
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " entered...\nFile =  " << file << "\n";
+   }
+
+   if( isOpen() )
+   {
+      close();
+   }
+   
+   theErrorStatus = ossimErrorCodes::OSSIM_OK;
+   
+
+   theNitfFile = new ossimNitfFile();
+
+   result = theNitfFile->parseStream( file, *str);
+
+   if ( result )
+   {
+      // Get the number of images within the file.
+      theNumberOfImages = theNitfFile->getHeader()->getNumberOfImages();
+
+      if(traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "DEBUG:\nNumber of images " << theNumberOfImages << "\n"; 
+      }
+
+      theEntryList.clear();
+      
+      //---
+      // Get image header pointers.  Note there can be multiple images in one
+      // image file.
+      //---
+      
+      for (ossim_uint32 i = 0; i < theNumberOfImages; ++i)
+      {
+         ossimRefPtr<ossimNitfImageHeader> hdr = theNitfFile->getNewImageHeader(*str, i);
+         if (!hdr)
+         {
+            result = false;
+            setErrorStatus();
+            if (traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << MODULE << " ERROR:\nNull image header!" << endl;
+            }
+            break;
+         }
+
+         if (traceDebug())
+         {
+            if(hdr.valid())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << MODULE << "DEBUG:"
+                  << "\nImage header[" << i << "]:\n" << *(hdr.get())
+                  << "\n";
+            }
+         }
+            
+         if( !hdr->isCompressed() )
+         {
+            // Skip entries tagged NODISPLAY, e.g. cloud mask entries.
+            if (hdr->getRepresentation() != "NODISPLY")
+            {
+               theEntryList.push_back(i);
+               theNitfImageHeader.push_back(hdr);
+            }
+            else 
+            {
+               ossimString cat = hdr->getCategory().trim().downcase();
+               // this is an NGA Highr Resoluion Digital Terrain Model NITF format
+               if(cat == "dtem")
+               {
+                  theEntryList.push_back(i);
+                  theNitfImageHeader.push_back(hdr);
+               }
+            }
+
+         }
+         else if ( canUncompress(hdr.get()) )
+         {
+            theEntryList.push_back(i);
+            theCacheEnabledFlag = true;
+            theNitfImageHeader.push_back(hdr);
+         }
+         else
+         {
+            if(traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "Entry " << i
+                  <<" has an unsupported compression code = "
+                  << hdr->getCompressionCode() << std::endl;
+            }
+         }
+         
+      } // End: image header loop
+
+      // Reset the number of images in case we skipped some, e.g. tagged "NODISPLAY"
+      if ( theNitfImageHeader.size() )
+      {
+         theNumberOfImages = (ossim_uint32)theNitfImageHeader.size();
+      }
+      else
+      {
+         result = false;
+      }
+
+      
+
+      if ( result )
+      {
+         // Save the stream and connection/file name.
+         theFileStr = str;
+         theImageFile = file;
+         
+         // Initialize the lut to the current entry if the current entry has a lut.
+         initializeLut();
+
+         result = allocate();
+         
+         if (result)
+         {
+            completeOpen();
+         }
+      }
+      else
+      {
+         setErrorStatus();
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << MODULE << "DEBUG:\nNo images in file!" << endl;
+         }         
+      }
+   }
+   
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " exit status: " << (result?"true":"false") << "\n";
    }
    
    return result;
@@ -358,7 +525,8 @@ bool ossimNitfTileSource::parseFile()
 
 
    // Open up a stream to the file.
-   theFileStr.open(file.c_str(), ios::in | ios::binary);
+   theFileStr = ossim::StreamFactoryRegistry::instance()->createIstream(
+      file, ios::in | ios::binary);
    if (!theFileStr)
    {
       theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
@@ -1512,11 +1680,11 @@ bool ossimNitfTileSource::loadBlock(ossim_uint32 x, ossim_uint32 y)
          std::streamoff p;
          if(getPosition(p, x, y, 0))
          {
-            theFileStr.seekg(p, ios::beg);
+            theFileStr->seekg(p, ios::beg);
             char* buf = (char*)(theCacheTile->getBuf());
-            if (!theFileStr.read(buf, readSize))
+            if (!theFileStr->read(buf, readSize))
             {
-               theFileStr.clear();
+               theFileStr->clear();
                ossimNotify(ossimNotifyLevel_FATAL)
                   << "ossimNitfTileSource::loadBlock BIP Read Error!"
                   << "\nReturning error..." << endl;
@@ -1552,10 +1720,10 @@ bool ossimNitfTileSource::loadBlock(ossim_uint32 x, ossim_uint32 y)
             std::streamoff p;
             if(getPosition(p, x, y, band))
             {
-               theFileStr.seekg(p, ios::beg);
-               if (!theFileStr.read((char*)buf, readSize))
+               theFileStr->seekg(p, ios::beg);
+               if (!theFileStr->read((char*)buf, readSize))
                {
-                  theFileStr.clear();
+                  theFileStr->clear();
                   ossimNotify(ossimNotifyLevel_FATAL)
                      << "ossimNitfTileSource::loadBlock Read Error!"
                      << "\nReturning error..." << endl;
@@ -1587,7 +1755,7 @@ bool ossimNitfTileSource::loadBlock(ossim_uint32 x, ossim_uint32 y)
          if (uncompressJpegBlock(x, y) == false)
          {
             theCacheTile->makeBlank();
-            theFileStr.clear();
+            theFileStr->clear();
             ossimNotify(ossimNotifyLevel_FATAL)
                << "ossimNitfTileSource::loadBlock Read Error!"
                << "\nReturning error..." << endl;
@@ -2293,12 +2461,12 @@ ossim_uint32 ossimNitfTileSource::getImageTileHeight() const
 
 ossimString ossimNitfTileSource::getShortName()const
 {
-   return ossimString("nitf");
+   return ossimString("ossim_nitf");
 }
 
 ossimString ossimNitfTileSource::getLongName()const
 {
-   return ossimString("nitf reader");
+   return ossimString("ossim nitf reader");
 }
 
 ossim_uint32 ossimNitfTileSource::getCurrentEntry() const
@@ -2932,9 +3100,9 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
    //---
 
    // Seek to the first block.
-   theFileStr.seekg(hdr->getDataLocation(), ios::beg);
+   theFileStr->seekg(hdr->getDataLocation(), ios::beg);
 
-   if ( theFileStr.good() )
+   if ( theFileStr->good() )
    {
       const ossim_uint8 AP6 = 0xe6;
       const ossim_uint8 AP7 = 0xe7;
@@ -2962,12 +3130,12 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
       }
       
       // Find all the SOI markers.
-      while ( theFileStr.get( ct.c ) && !allBlocksFound ) 
+      while ( theFileStr->get( ct.c ) && !allBlocksFound ) 
       {
          if ( ct.uc == FF ) // Found FF byte.
          {
             // Loop to skip multiple 0xff's in cases like FF FF D8
-            while ( theFileStr.get( ct.c ) )
+            while ( theFileStr->get( ct.c ) )
             {
                if ( ct.uc != FF)
                {
@@ -2978,15 +3146,15 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
             if ( ct.uc == SOI ) 
             {
                // At SOI 0xFFD8 marker... SOI marker offset is two bytes back.
-               soiOffset = ((std::streamoff)theFileStr.tellg()) - 2;
+               soiOffset = ((std::streamoff)theFileStr->tellg()) - 2;
 
                // Now look for matching EOI.
-               while ( theFileStr.get( ct.c ) )
+               while ( theFileStr->get( ct.c ) )
                {
                   if ( ct.uc == FF ) // Found FF byte.
                   {
                      // Loop to skip multiple 0xff's in cases like FF FF D8
-                     while ( theFileStr.get( ct.c ) )
+                     while ( theFileStr->get( ct.c ) )
                      {
                         if ( ct.uc != FF )
                         {
@@ -2997,7 +3165,7 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
                      if ( ct.uc == EOI )
                      {
                         // At EOI 0xD9marker...
-                        eoiOffset = theFileStr.tellg();
+                        eoiOffset = theFileStr->tellg();
 
                         // Capture offset:
                         theNitfBlockOffset.push_back( soiOffset );
@@ -3028,7 +3196,7 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
                                )
                      {
                         // Length two byte big endian.
-                        theFileStr.read( (char*)&length, 2 );
+                        theFileStr->read( (char*)&length, 2 );
                         if ( swapper )
                         {
                            swapper->swap( length );
@@ -3036,18 +3204,18 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
                         // Length includes two length bytes.
 
                         // Seek to the end of the record.
-                        theFileStr.seekg( length - 2, std::ios_base::cur );
+                        theFileStr->seekg( length - 2, std::ios_base::cur );
                      }
 
                   } //  Matches: if ( ct.uc == FF )
                   
-               } // Matches: while ( theFileStr.get( ut.c ) ) "find EOI loop" 
+               } // Matches: while ( theFileStr->get( ut.c ) ) "find EOI loop" 
                
             } // Matches: if ( ut.uc == SOI ) "SOI marker found"
 
          } // Matches: if ( ut.uc == FF )
 
-      } // Matches: while ( theFileStr.get( ut.c ) && !allBlocksFound )
+      } // Matches: while ( theFileStr->get( ut.c ) && !allBlocksFound )
 
       if ( swapper )
       {
@@ -3055,10 +3223,10 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
          swapper = 0;
       }
 
-   } // Matches: if ( theFileStr.good() )
+   } // Matches: if ( theFileStr->good() )
 
-   theFileStr.seekg(0, ios::beg);
-   theFileStr.clear();
+   theFileStr->seekg(0, ios::beg);
+   theFileStr->clear();
 
 #if 0 /* Please leave for debug. (drb) */
    std::streamoff startOfData = hdr->getDataLocation();
@@ -3093,8 +3261,6 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
 
 bool ossimNitfTileSource::uncompressJpegBlock(ossim_uint32 x, ossim_uint32 y)
 {
-   cout << "ossimNitfTileSource::uncompressJpegBlock entered..." << endl;
-   
    ossim_uint32 blockNumber = getBlockNumber( ossimIpt(x,y) );
 
    if (traceDebug())
@@ -3135,14 +3301,14 @@ bool ossimNitfTileSource::uncompressJpegBlock(ossim_uint32 x, ossim_uint32 y)
    }
    
    // Seek to the block.
-   theFileStr.seekg(theNitfBlockOffset[blockNumber], ios::beg);
+   theFileStr->seekg(theNitfBlockOffset[blockNumber], ios::beg);
    
    // Read the block into memory.
    std::vector<ossim_uint8> compressedBuf(theNitfBlockSize[blockNumber]);
-   if (!theFileStr.read((char*)&(compressedBuf.front()),
+   if (!theFileStr->read((char*)&(compressedBuf.front()),
                         theNitfBlockSize[blockNumber]))
    {
-      theFileStr.clear();
+      theFileStr->clear();
       ossimNotify(ossimNotifyLevel_FATAL)
          << "ossimNitfTileSource::uncompressJpegBlock Read Error!"
          << "\nReturning error..." << endl;

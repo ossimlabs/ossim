@@ -1,13 +1,15 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
-//----------------------------------------------------------------------------
-// $Id: ossimImageHandlerFactory.cpp 23464 2015-08-07 18:39:47Z okramer $
+//---
+// $Id$
 
 #include <ossim/imaging/ossimImageHandlerFactory.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimRegExp.h>
 #include <ossim/base/ossimTrace.h>
@@ -37,19 +39,20 @@
 #include <ossim/imaging/ossimBandSeparateHandler.h>
 #include <ossim/imaging/ossimRangeDomeTileSource.h>
 #include <ossim/parallel/ossimImageHandlerMtAdaptor.h>
-
-#define ENABLE_POINT_CLOUD_HANDLER
-#ifdef ENABLE_POINT_CLOUD_HANDLER
 #include <ossim/point_cloud/ossimPointCloudImageHandler.h>
-#endif
-
+#include <ossim/support_data/ossimSrcRecord.h>
 #include <tiffio.h>
+
+#if OSSIM_HAS_HDF5
+#include <ossim/hdf5/ossimViirsHandler.h>
+#endif
 
 static const ossimTrace traceDebug("ossimImageHandlerFactory:debug");
 
 RTTI_DEF1(ossimImageHandlerFactory, "ossimImageHandlerFactory", ossimImageHandlerFactoryBase);
 
 ossimImageHandlerFactory* ossimImageHandlerFactory::theInstance = 0;
+
 ossimImageHandlerFactory::~ossimImageHandlerFactory()
 {
    theInstance = (ossimImageHandlerFactory*)0;
@@ -67,6 +70,56 @@ ossimImageHandlerFactory* ossimImageHandlerFactory::instance()
    }
 
    return theInstance;
+}
+
+ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(
+   std::shared_ptr<ossim::istream>& str,
+   const std::string& connectionString,
+   bool openOverview ) const
+{
+   ossimRefPtr<ossimImageHandler> result(0);
+
+   // NITF:
+   ossimRefPtr<ossimNitfTileSource> ih = new ossimNitfTileSource();
+   ih->setOpenOverviewFlag(openOverview);
+   if ( ih->open( str, connectionString ) )
+   {
+      result = ih.get();
+   }
+      
+   if( !result )
+   {
+      // Reset the stream for downstream code.
+      str->seekg(0, std::ios_base::beg);
+      str->clear();
+      
+      // TIFF:
+      ossimRefPtr<ossimTiffTileSource> ihTiff = new ossimTiffTileSource();
+      ihTiff->setOpenOverviewFlag(openOverview);
+      if ( ihTiff->open( str, connectionString ) )
+      {
+         result = ihTiff.get();
+      }
+
+      if(!result)
+      {
+         // Reset the stream for downstream code.
+         str->seekg(0, std::ios_base::beg);
+         str->clear();
+
+         // ossim dot.src file:
+         result = openSrcRecord( str, connectionString, openOverview );  
+
+         if ( !result )
+         {
+            // Reset the stream for downstream code.
+            str->seekg(0, std::ios_base::beg);
+            str->clear();
+         }
+      }
+   }
+   
+   return result;
 }
 
 ossimImageHandler* ossimImageHandlerFactory::open(const ossimFilename& fileName,
@@ -231,26 +284,32 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimFilename& fileName,
       if (result->open(copyFilename))  break;
 
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying CCF...\n";
-      result->setOpenOverviewFlag(openOverview);      
       result = new ossimCcfTileSource();
+      result->setOpenOverviewFlag(openOverview);      
       if (result->open(copyFilename))  break;
 
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying OSSIM Range Domes...\n";
-      result->setOpenOverviewFlag(openOverview);
       result = new ossimRangeDomeTileSource();
+      result->setOpenOverviewFlag(openOverview);
       if (result->open(copyFilename))  break;
 
-#ifdef ENABLE_POINT_CLOUD_HANDLER
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying Point Cloud...\n";
-      result->setOpenOverviewFlag(openOverview);
       result = new ossimPointCloudImageHandler();
+      result->setOpenOverviewFlag(openOverview);
       if (result->open(copyFilename))  break;
-#endif
 
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying LAS Reader...\n";
       result->setOpenOverviewFlag(openOverview);
       result = new ossimLasReader();
       if (result->open(copyFilename))  break;
+
+#if OSSIM_HAS_HDF5
+      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying VIIRS...\n";
+      result = new ossimViirsHandler();
+      result->setOpenOverviewFlag(openOverview);
+      if (result->open(copyFilename))  break;
+#endif
+
       result = 0;
       break;
    }
@@ -369,6 +428,12 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimKeywordlist& kwl,
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying Range Domes CSV...\n";
       result = new ossimRangeDomeTileSource();
       if (result->loadState(kwl, prefix))  break;
+
+#if OSSIM_HAS_HDF5
+      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying VIIRS...\n";
+      result = new ossimViirsHandler();
+      if (result->loadState(kwl, prefix))  break;
+#endif
 
 #ifdef ENABLE_POINT_CLOUD_HANDLER
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying ossimPointCloudImageHandler...\n";
@@ -637,7 +702,14 @@ ossimObject* ossimImageHandlerFactory::createObject(const ossimString& typeName)
    {
       return new ossimRangeDomeTileSource();
    }
-#ifdef ENABLE_POINT_CLOUD_HANDLER
+#if OSSIM_HAS_HDF5
+   if(STATIC_TYPE_NAME(ossimViirsHandler) == typeName)
+   {
+      return new ossimViirsHandler();
+   }
+#endif
+
+   #ifdef ENABLE_POINT_CLOUD_HANDLER
    if(STATIC_TYPE_NAME(ossimPointCloudImageHandler) == typeName)
    {
       return new ossimPointCloudImageHandler();
@@ -678,6 +750,9 @@ void ossimImageHandlerFactory::getSupportedExtensions(ossimImageHandlerFactoryBa
    extensionList.push_back("mask");
    extensionList.push_back("txt");
    extensionList.push_back("csv");
+#if OSSIM_HAS_HDF5
+   extensionList.push_back("h5");
+#endif
 }
 
 void ossimImageHandlerFactory::getImageHandlersBySuffix(ossimImageHandlerFactoryBase::ImageHandlerList& result, const ossimString& ext)const
@@ -824,6 +899,16 @@ void ossimImageHandlerFactory::getImageHandlersBySuffix(ossimImageHandlerFactory
       result.push_back(new ossimRangeDomeTileSource);
       return;
    }
+
+#if OSSIM_HAS_HDF5
+   if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<<"Testing VIIRS...\n";
+   if (testExt == "h5")
+   {
+      result.push_back(new ossimViirsHandler);
+      return;
+   }
+#endif
+
 }
 
 void ossimImageHandlerFactory::getImageHandlersByMimeType(ossimImageHandlerFactoryBase::ImageHandlerList& result, const ossimString& mimeType)const
@@ -909,9 +994,110 @@ void ossimImageHandlerFactory::getTypeNameList(std::vector<ossimString>& typeLis
    typeList.push_back(STATIC_TYPE_NAME(ossimBitMaskTileSource));
    typeList.push_back(STATIC_TYPE_NAME(ossimRangeDomeTileSource));
 
+#if OSSIM_HAS_HDF5
+   typeList.push_back(STATIC_TYPE_NAME(ossimViirsHandler));
+#endif
+
 #ifdef ENABLE_POINT_CLOUD_HANDLER
    typeList.push_back(STATIC_TYPE_NAME(ossimPointCloudImageHandler));
 #endif
 
    typeList.push_back(STATIC_TYPE_NAME(ossimImageHandlerMtAdaptor));
+}
+
+ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::openSrcRecord(
+   std::shared_ptr<ossim::istream>& str,
+   const std::string& connectionString,
+   bool openOverview ) const
+{
+   ossimRefPtr<ossimImageHandler> result = 0;
+   if(!str) return result;
+   // Check the extension for ".src" before going any further:
+   std::size_t found = connectionString.find( std::string(".src") );
+   if ( found != std::string::npos && ( found == (connectionString.size() - 4) ) )
+   {
+      ossimKeywordlist kwl;
+      if ( kwl.parseStream( *str ) )
+      {
+         // Right now only concidering one image, i.e. "image0":
+         std::string prefix = "image0.";
+         ossimSrcRecord src;
+         if ( src.loadState(kwl, prefix.c_str() ) )
+         {
+            if ( src.getFilename().string().size() )
+            {
+               // Avoid recursive loop:
+               if (src.getFilename().string() != connectionString )
+               {
+                  result = ossimImageHandlerRegistry::instance()->
+                     openConnection( src.getFilename(), false );
+                  
+                  if ( result.valid() )
+                  {
+                     ossimFilename supportDir = src.getSupportDir();
+                     if ( supportDir.empty() )
+                     {
+                        if ( src.getOverviewPath().size() )
+                        {
+                           if ( src.getOverviewPath().isDir() )
+                           {
+                              supportDir = src.getOverviewPath();
+                           }
+                           else
+                           {
+                              supportDir = src.getOverviewPath().path();
+                           }
+                        }
+                        else if ( src.getHistogramPath().size() )
+                        {
+                           if ( src.getHistogramPath().isDir() )
+                           {
+                              supportDir = src.getHistogramPath();
+                           }
+                           else
+                           {
+                              supportDir = src.getHistogramPath().path();
+                           }
+                        }
+                     }
+                     
+                     if ( supportDir.size() && (src.getFilename().path() != supportDir) )
+                     {
+                        result->setSupplementaryDirectory( supportDir );
+                     }
+
+                     if ( src.getEntryIndex() > 0 ) // defaulted to -1.
+                     {
+                        result->setCurrentEntry(
+                           static_cast<ossim_uint32>( src.getEntryIndex() ) );
+                     }
+                     
+                     if ( openOverview && ( result->getOverview() == 0 ) )
+                     {
+                        if ( src.getOverviewPath().size() )
+                        {
+                           result->openOverview( src.getOverviewPath() );
+                        }
+                        else
+                        {
+                           ossimFilename ovrFile = result->
+                              getFilenameWithThisExtension(ossimString(".ovr"));
+                           result->openOverview( ovrFile ); 
+                        }
+                     }
+                  }
+               }
+            }
+         }
+         
+      } // Matches: if ( kwl.parseStream( str ) )
+
+      if ( !result )
+      {
+         // Reset the stream for downstream code.
+         str->seekg(0, std::ios_base::beg);
+         str->clear();
+      }
+   }
+   return result;
 }

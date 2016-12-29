@@ -1,13 +1,14 @@
 #include <ossim/support_data/ossimRpfColorGrayscaleTable.h>
 #include <string.h> // for memcpy
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
 
-ostream& operator <<(ostream& out,
-                     const ossimRpfColorGrayscaleTable& data)
+std::ostream& operator <<(std::ostream& out,
+                          const ossimRpfColorGrayscaleTable& data)
 {
-   out << "theNumberOfElements:                   " << data.theNumberOfElements << endl
-       << "theTotalNumberOfBytes:                 " << data.theTotalNumberOfBytes << endl
-       << "theTableId:                            " << data.theTableId;
+   out << "theNumberOfElements:                   " << data.theNumberOfElements
+       << "\ntheTotalNumberOfBytes:                 " << data.theTotalNumberOfBytes
+       << "\ntheTableId:                            " << data.theTableId;
 
    return out;
 }
@@ -39,7 +40,7 @@ ossimRpfColorGrayscaleTable::~ossimRpfColorGrayscaleTable()
    }
 }
 
-ossimErrorCode ossimRpfColorGrayscaleTable::parseStream(istream& in,
+ossimErrorCode ossimRpfColorGrayscaleTable::parseStream(ossim::istream& in,
                                                         ossimByteOrder /* byteOrder */)
 {
    if(in)

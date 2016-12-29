@@ -1,6 +1,6 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // File: ossim-foo.cpp
 //
@@ -8,11 +8,11 @@
 //
 // NOTE:  This is supplied for simple quick test. DO NOT checkin your test to
 //        the svn repository.  Simply edit ossim-foo.cpp and run your test.
-//        After completion you can do a "svn revert foo.cpp" if you want to
-//        keep your working repository up to snuff.
+//        After completion you can do a "git checkout -- ossimfoo.cpp" if
+//        you want to keep your working repository up to snuff.
 //
 // $Id$
-//----------------------------------------------------------------------------
+//---
 
 // ossim includes:  These are here just to save time/typing...
 #include <ossim/base/ossimApplicationUsage.h>
@@ -36,8 +36,10 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimScalarTypeLut.h>
 #include <ossim/base/ossimStdOutProgress.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimTrace.h>
+#include <ossim/base/ossimUrl.h>
 #include <ossim/base/ossimVisitor.h>
 
 #include <ossim/imaging/ossimBrightnessContrastSource.h>
@@ -77,6 +79,7 @@
 
 // System includes:
 #include <cmath>
+#include <memory>
 #include <sstream>
 #include <iostream>
 using namespace std;
@@ -88,7 +91,7 @@ int main(int argc, char *argv[])
    ossimArgumentParser ap(&argc, argv);
    ossimInit::instance()->addOptions(ap);
    ossimInit::instance()->initialize(ap);
-   
+
    try
    {
       // Put your code here.

@@ -1,12 +1,12 @@
 #include <ossim/support_data/ossimRpfColorConverterTable.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
 
-ostream& operator <<(ostream& out,
-                     const ossimRpfColorConverterTable& data)
+std::ostream& operator <<(
+   std::ostream& out, const ossimRpfColorConverterTable& data)
 {
    data.print(out);
-   
    return out;
 }
 
@@ -25,7 +25,7 @@ ossimRpfColorConverterTable::~ossimRpfColorConverterTable()
       theColorGrayscaleTableEntryList = NULL;
    }
 }
-ossimErrorCode ossimRpfColorConverterTable::parseStream(istream& in,
+ossimErrorCode ossimRpfColorConverterTable::parseStream(ossim::istream& in,
                                                         ossimByteOrder byteOrder)
 {
    if(in)
@@ -54,17 +54,17 @@ ossimErrorCode ossimRpfColorConverterTable::parseStream(istream& in,
    return ossimErrorCodes::OSSIM_OK;
 }
 
-void ossimRpfColorConverterTable::print(ostream& out)const
+void ossimRpfColorConverterTable::print(std::ostream& out)const
 {
-   out << "theTableId:                   " << theTableId << endl
-       << "theNumberOfEntries:           " << theNumberOfEntries << endl;
+   out << "theTableId:                   " << theTableId << "\n"
+       << "theNumberOfEntries:           " << theNumberOfEntries << "\n";
 
    if(theColorGrayscaleTableEntryList)
    {
-      out << "Values: " << endl;
+      out << "Values:\n";
       for(ossim_uint32 index=0; index < theNumberOfEntries; index++)
       {
-         out<< theColorGrayscaleTableEntryList[index] << endl;
+         out<< theColorGrayscaleTableEntryList[index] << "\n";
       }
    }
    

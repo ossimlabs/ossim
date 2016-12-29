@@ -42,7 +42,7 @@ RTTI_DEF1(ossimRpcModel, "ossimRpcModel", ossimSensorModel);
 static ossimTrace traceExec  ("ossimRpcModel:exec");
 static ossimTrace traceDebug ("ossimRpcModel:debug");
 
-static const int    MODEL_VERSION_NUMBER  = 1;
+//static const int    MODEL_VERSION_NUMBER  = 1;
 static const int    NUM_COEFFS        = 20;
 static const char*  MODEL_TYPE        = "ossimRpcModel";
 static const char*  POLY_TYPE_KW      = "polynomial_format";

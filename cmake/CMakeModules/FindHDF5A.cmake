@@ -29,7 +29,7 @@ find_path( HDF5A_INCLUDE_DIR hdf5.h
 # Find HDF5A library:
 find_library( HDF5A_LIB NAMES hdf5a hdf5
               PATHS
-              $ENV{HDF5_DIR}/lib
+              $ENV{HDF5_DIR}/lib64
               $ENV{HDF5_DIR}/lib
               ${CMAKE_INSTALL_PREFIX}/lib64
               /usr/lib64

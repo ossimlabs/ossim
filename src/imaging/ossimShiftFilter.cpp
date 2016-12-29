@@ -298,6 +298,7 @@ void ossimShiftFilter::allocate()
 
 // Private to disallow use...
 ossimShiftFilter::ossimShiftFilter(const ossimShiftFilter&)
+: m_min(0),m_max(0),m_null(0)
 {
 }
 

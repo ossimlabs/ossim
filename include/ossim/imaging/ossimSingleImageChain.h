@@ -1,14 +1,12 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
 // Description: Utility class declaration for a single image chain.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 #ifndef ossimSingleImageChain_HEADER
 #define ossimSingleImageChain_HEADER 1
@@ -499,6 +497,8 @@ public:
     */
    void setBandSelection(const std::vector<ossim_uint32>& bandList);
 
+   void setDefaultBandSelection();
+   
    /**
     * @brief Convenience method to return the scalar type of the image handler.
     * 

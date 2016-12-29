@@ -1,7 +1,6 @@
 //*******************************************************************
-// Copyright (C) 2000 ImageLinks Inc.
 //
-// License:  See top level LICENSE.txt.
+// License: MIT
 //
 // Author:  Garrett Potts
 //
@@ -10,7 +9,7 @@
 // Contains class declaration for ossimBandSelector.
 // 
 //*******************************************************************
-//  $Id: ossimBandSelector.cpp 23426 2015-07-15 14:51:23Z okramer $
+//  $Id$
 
 #include <ossim/imaging/ossimBandSelector.h>
 #include <ossim/base/ossimTrace.h>
@@ -31,13 +30,12 @@ RTTI_DEF1(ossimBandSelector,"ossimBandSelector", ossimImageSourceFilter)
 ossimBandSelector::ossimBandSelector()
    :
       ossimImageSourceFilter(),
-      theTile(0),
-      theOutputBandList(0),
-      theWithinRangeFlag(ossimBandSelectorWithinRangeFlagState_NOT_SET),
-      thePassThroughFlag(false),
-      theDelayLoadRgbFlag(false)
-   
-
+      m_tile(0),
+      m_outputBandList(0),
+      m_withinRangeFlag(ossimBandSelectorWithinRangeFlagState_NOT_SET),
+      m_passThroughFlag(false),
+      m_delayLoadRgbFlag(false),
+      m_inputIsSelectable(false)
 {
 //   theEnableFlag = false; // Start off disabled.
    theEnableFlag = true; 
@@ -45,7 +43,7 @@ ossimBandSelector::ossimBandSelector()
 
 ossimBandSelector::~ossimBandSelector()
 {
-   theTile = 0;
+   m_tile = 0;
 }
 
 ossimRefPtr<ossimImageData> ossimBandSelector::getTile(
@@ -60,37 +58,33 @@ ossimRefPtr<ossimImageData> ossimBandSelector::getTile(
    // Get the tile from the source.
    ossimRefPtr<ossimImageData> t = theInputConnection->getTile(tileRect, resLevel);
 
-   if (!isSourceEnabled())
+
+   if (!isSourceEnabled()||m_passThroughFlag)
    {
       return t;  // This tile source bypassed, return the input tile source.
    }
 
-//   if (theOrderedCorrectlyFlag)
-//   {
-//      return t; // Input band order same as output band order.
-//   }
-
-   if(!theTile.valid()) // First time through, might not be initialized...
+   if(!m_tile.valid()) // First time through, might not be initialized...
    {
       allocate();
-      if (!theTile.valid())
+      if (!m_tile.valid())
       {
          // Should never happen...
          return t; // initialize failed.
       }
    }
 
-   theTile->setImageRectangle(tileRect);
-   if(theWithinRangeFlag == ossimBandSelectorWithinRangeFlagState_NOT_SET)
+   m_tile->setImageRectangle(tileRect);
+   if(m_withinRangeFlag == ossimBandSelectorWithinRangeFlagState_NOT_SET)
    {
-      theWithinRangeFlag = ((outputBandsWithinInputRange() == true) ?
+      m_withinRangeFlag = ((outputBandsWithinInputRange() == true) ?
                             ossimBandSelectorWithinRangeFlagState_IN_RANGE:
                             ossimBandSelectorWithinRangeFlagState_OUT_OF_RANGE);
    }
-   if(theWithinRangeFlag == ossimBandSelectorWithinRangeFlagState_OUT_OF_RANGE)
+   if(m_withinRangeFlag == ossimBandSelectorWithinRangeFlagState_OUT_OF_RANGE)
    {
-      theTile->makeBlank();
-      return theTile;
+      m_tile->makeBlank();
+      return m_tile;
    }
 
    if ( !t.valid() ||
@@ -101,53 +95,65 @@ ossimRefPtr<ossimImageData> ossimBandSelector::getTile(
       // Since we're enabled, we must return our tile not "t" so the
       // correct number of bands goes through the chain.
       //---
-      theTile->makeBlank();
-      return theTile;
+      m_tile->makeBlank();
+      return m_tile;
    }
 
    // Copy selected bands to our tile.
-   for (ossim_uint32 i=0; i<theOutputBandList.size(); i++)
+   for ( ossim_uint32 i = 0; i < m_outputBandList.size(); ++i)
    {
-      theTile->assignBand(t.get(), theOutputBandList[i], i);
+      m_tile->assignBand(t.get(), m_outputBandList[i], i);
    }
    
-   theTile->validate();
+   m_tile->validate();
 
-   return theTile;
+   return m_tile;
+}
+
+void ossimBandSelector::setThreeBandRgb()
+{
+   m_outputBandList.clear();
+   m_delayLoadRgbFlag = true;
+   initialize();
 }
 
 void ossimBandSelector::setOutputBandList( const vector<ossim_uint32>& outputBandList,
                                            bool disablePassThru)
 {
-   if (outputBandList.size() == 0)
-      return;
-
-   theOutputBandList = outputBandList;  // Assign the new list.
-   if (disablePassThru)
-      return;
-
-   bool setBands = false;
-   ossimRefPtr<ossimImageHandler> ih = getBandSelectableImageHandler();
-   if ( ih.valid() )
+   if ( outputBandList.size() )
    {
-      // Our input is a single image chain that can do band selection.
-      if ( ih->setOutputBandList( outputBandList ) )
+      m_outputBandList = outputBandList;  // Assign the new list.
+      if ( !disablePassThru )
       {
-         thePassThroughFlag = true;
-         setBands = true;
-         theTile = 0; // Don't need.
-      }
-   }
+         bool setBands = false;
+         ossimRefPtr<ossimImageHandler> ih = getBandSelectableImageHandler();
+         if ( ih.valid() )
+         {
+            // Our input is a single image chain that can do band selection.
+            if ( ih->setOutputBandList( outputBandList ) )
+            {
+               m_passThroughFlag = true;
+               setBands = true;
+               m_tile = 0; // Don't need.
+            }
+         }
 
-   if ( setBands == false )
-   {
-      if ( theTile.valid() && ( theTile->getNumberOfBands() != outputBandList.size() ) )
-      {
-         theTile = 0;       // Force an allocate call next getTile.
+         if ( setBands == false )
+         {
+            if ( m_tile.valid() )
+            {
+               // Check the tile band size and scalar.
+               if ( ( m_tile->getNumberOfBands() != outputBandList.size() ) ||
+                    ( m_tile->getScalarType() != theInputConnection->getOutputScalarType() ) )
+               {
+                  m_tile = 0;       // Force an allocate call next getTile.
+               }
+            }
+            m_withinRangeFlag = ossimBandSelectorWithinRangeFlagState_NOT_SET;
+            checkPassThrough();
+            //theOrderedCorrectlyFlag = isOrderedCorrectly();
+         }
       }
-      theWithinRangeFlag = ossimBandSelectorWithinRangeFlagState_NOT_SET;
-      checkPassThrough();
-      //theOrderedCorrectlyFlag = isOrderedCorrectly();
    }
 }
 
@@ -157,7 +163,7 @@ ossim_uint32 ossimBandSelector::getNumberOfOutputBands() const
    
    if(isSourceEnabled())
    {
-      bands = static_cast<ossim_uint32>(theOutputBandList.size());
+      bands = static_cast<ossim_uint32>(m_outputBandList.size());
    }
    else
    {
@@ -191,91 +197,78 @@ ossim_uint32 ossimBandSelector::getNumberOfInputBands() const
    return bands;
 }
 
+
 void ossimBandSelector::initialize()
 {
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_WARN) << "ossimBandSelector::initialize() entered...\n";
+   }
+      
    // Base class will recapture "theInputConnection".
    ossimImageSourceFilter::initialize();
-   
-   theWithinRangeFlag = ossimBandSelectorWithinRangeFlagState_NOT_SET;
+
+   m_withinRangeFlag = ossimBandSelectorWithinRangeFlagState_NOT_SET;
 
    if(theInputConnection)
    {
-      if ( !theOutputBandList.size() ) 
+      if ( !m_outputBandList.size() ) 
       {
          // First time through...
-         if ( theDelayLoadRgbFlag )
+         if ( m_delayLoadRgbFlag )
          {
             //---
-            // "bands" key was set to "rgb" in loadState but there was not a
-            // connection to derive rgb bands from image handler.
+            // "bands" key was set to "rgb" or "default" in loadState but there
+            // was not a connection to derive rgb bands from image handler.
             //---
-            if ( getRgbBandList( theOutputBandList ) == false )
+            if ( getRgbBandList( m_outputBandList ) == false )
             {
                //---
                // Could not derive from input. Assuming caller wanted three bands.
                // Call to checkPassThrough()->outputBandsWithinInputRange()
                // will check the range of output band list.
                //---
-               theOutputBandList.resize(3);
-               theOutputBandList[0] = 0;
-               theOutputBandList[1] = 1;
-               theOutputBandList[2] = 2;
+               if( theInputConnection->getNumberOfOutputBands() > 2 )
+               {
+                  m_outputBandList.resize(3);
+                  m_outputBandList[0] = 0;
+                  m_outputBandList[1] = 1;
+                  m_outputBandList[2] = 2;
+               }
+               else
+               {
+                 m_outputBandList.resize(1);
+                 m_outputBandList[0] = 0;
+               }
             }
-            theDelayLoadRgbFlag = false; // clear flag.
+            
+            m_delayLoadRgbFlag = false; // clear flag.
          }
 
-         if ( !theOutputBandList.size() )
+         if ( !m_outputBandList.size() )
          {
             // Set the output band list to input if not set above.
-            theInputConnection->getOutputBandList(theOutputBandList);
+            theInputConnection->getOutputBandList( m_outputBandList );
          }
-      }
-
-      // NOTE: The following code was already being done in setOutputBandList(), so ignored here
-      // until someone complains. Need the ability to force this selector to be active even if
-      // the input handler is a band-selectable variety. (OLK Jul/2015)
-#if 0
-      // See if we have a single image chain with band selectable image handler.
-      ossimRefPtr<ossimImageHandler> ih = getBandSelectableImageHandler();
-      if ( ih.valid() )
-      {
-         if ( theOutputBandList.size() )
-         {
-            ih->setOutputBandList( theOutputBandList );
-         }
-         thePassThroughFlag = true;
-      }
-      else
-      {
-         checkPassThrough();
-      }
-#endif
-
-      if ( isSourceEnabled() )
-      {
-         // theOrderedCorrectlyFlag = isOrderedCorrectly();
          
-         if ( theTile.valid() )
+         if( m_outputBandList.size() )
          {
-            //---
-            // Check for:
-            // - ordered correctly
-            // - band change
-            // - scalar change
-            //---
-            if( ( theTile->getNumberOfBands() != theOutputBandList.size() ) ||
-                ( theTile->getScalarType() !=
-                  theInputConnection->getOutputScalarType() ) )
-            {
-               theTile = 0; // Don't need it.
-            }
-         }
-      }
-   }
+            // Call to setOutputBandList configures band selector.
+            setOutputBandList(m_outputBandList); 
+         } 
+         
+      } // if ( !m_outputBandList.size() )
+      
+   } // if(theInputConnection)
 
    if ( !isSourceEnabled() )
    {
-      theTile = 0;
+      m_tile = 0;
+   }
+
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_WARN) << "ossimBandSelector::initialize() exited...\n";
    }
 }
 
@@ -283,8 +276,8 @@ void ossimBandSelector::allocate()
 {
    //initialize(); // Update the connection.
    //theOrderedCorrectlyFlag = isOrderedCorrectly();
-   theTile = ossimImageDataFactory::instance()->create(this, this);
-   theTile->initialize();
+   m_tile = ossimImageDataFactory::instance()->create(this, this);
+   m_tile->initialize();
 }
 
 bool ossimBandSelector::isSourceEnabled()const
@@ -293,7 +286,7 @@ bool ossimBandSelector::isSourceEnabled()const
    if(result)
    {
       // if I am not marked to pass information on through then enable me
-      result = !thePassThroughFlag;
+      result = !m_passThroughFlag;
    }
    
    return result;
@@ -305,10 +298,10 @@ double ossimBandSelector::getMinPixelValue(ossim_uint32 band)const
    {
       if (isSourceEnabled())
       {
-         if(band < theOutputBandList.size())
+         if(band < m_outputBandList.size())
          {
             return theInputConnection->
-               getMinPixelValue(theOutputBandList[band]);
+               getMinPixelValue(m_outputBandList[band]);
          }
          else
          {
@@ -329,10 +322,10 @@ double ossimBandSelector::getNullPixelValue(ossim_uint32 band)const
    {
       if (isSourceEnabled())
       {
-         if(band < theOutputBandList.size())
+         if(band < m_outputBandList.size())
          {
             return theInputConnection->
-               getNullPixelValue(theOutputBandList[band]);
+               getNullPixelValue(m_outputBandList[band]);
          }
          else
          {
@@ -354,10 +347,10 @@ double ossimBandSelector::getMaxPixelValue(ossim_uint32 band)const
    {
       if (isSourceEnabled())
       {
-         if(band < theOutputBandList.size())
+         if(band < m_outputBandList.size())
          {
             return theInputConnection->
-               getMaxPixelValue(theOutputBandList[band]);
+               getMaxPixelValue(m_outputBandList[band]);
          }
          else
          {
@@ -379,25 +372,25 @@ bool ossimBandSelector::saveState(ossimKeywordlist& kwl,
 
    kwl.add(prefix,
            ossimKeywordNames::NUMBER_OUTPUT_BANDS_KW,
-           static_cast<int>(theOutputBandList.size()),
+           static_cast<int>(m_outputBandList.size()),
            true);
    
    ossimString bandsString;
    ossim::toSimpleStringList(bandsString,
-                             theOutputBandList);
+                             m_outputBandList);
    kwl.add(prefix,
            ossimKeywordNames::BANDS_KW,
            bandsString,
            true);
 /*   
-   for(ossim_uint32 counter = 0; counter < theOutputBandList.size();counter++)
+   for(ossim_uint32 counter = 0; counter < m_outputBandList.size();counter++)
    {
       temp  = ossimKeywordNames::BAND_KW;
       temp += ossimString::toString(counter+1);
       
       kwl.add(prefix,
               temp.c_str(),
-              ossimString::toString(theOutputBandList[counter]+1).c_str());
+              ossimString::toString(m_outputBandList[counter]+1).c_str());
    }
 */   
    return ossimImageSourceFilter::saveState(kwl, prefix);
@@ -410,7 +403,7 @@ bool ossimBandSelector::loadState(const ossimKeywordlist& kwl,
    
    ossimImageSourceFilter::loadState(kwl, prefix);
 
-   theOutputBandList.clear();
+   m_outputBandList.clear();
    
    ossimString copyPrefix = prefix;
    
@@ -419,15 +412,15 @@ bool ossimBandSelector::loadState(const ossimKeywordlist& kwl,
    {
       ossimString bs = bands;
       bs.downcase();
-      if ( bs == "rgb" )
+      if ( (bs == "rgb" ) || (bs == "default"))
       {
          // Flag initialize() to set the band list on first connection.
-         theDelayLoadRgbFlag = true;
+         m_delayLoadRgbFlag = true;
       }
       else
       {
          // Load from key:value, e.g. bands:(2,1,0)
-         ossim::toSimpleVector(theOutputBandList, bands);
+         ossim::toSimpleVector(m_outputBandList, bands);
          result = true;
       }
    }
@@ -452,7 +445,7 @@ bool ossimBandSelector::loadState(const ossimKeywordlist& kwl,
          const char* bandValue =
          kwl.find(copyPrefix,
                   ("band"+ossimString::toString(numberList[idx])).c_str());
-         theOutputBandList.push_back( ossimString(bandValue).toLong()-1);
+         m_outputBandList.push_back( ossimString(bandValue).toLong()-1);
       }
       result = true;
    }
@@ -464,25 +457,25 @@ bool ossimBandSelector::loadState(const ossimKeywordlist& kwl,
 
 void ossimBandSelector::checkPassThrough()
 {
-   thePassThroughFlag = ((theInputConnection == 0)||!outputBandsWithinInputRange());
+   m_passThroughFlag = ((theInputConnection == 0)||!outputBandsWithinInputRange());
    
    // check if marked with improper bands
-   if(thePassThroughFlag) return;
+   if(m_passThroughFlag) return;
    
    if(theInputConnection)
    {
       std::vector<ossim_uint32> inputList;
       theInputConnection->getOutputBandList(inputList);
 
-      if ( inputList.size() == theOutputBandList.size() )
+      if ( inputList.size() == m_outputBandList.size() )
       {
          const std::vector<ossim_uint32>::size_type SIZE =
-            theOutputBandList.size();
+            m_outputBandList.size();
       
          std::vector<ossim_uint32>::size_type i = 0;
          while (i < SIZE)
          {
-            if ( inputList[i] != theOutputBandList[i] )
+            if ( inputList[i] != m_outputBandList[i] )
             {
                break;
             }
@@ -490,7 +483,7 @@ void ossimBandSelector::checkPassThrough()
          }
          if (i == SIZE)
          {
-            thePassThroughFlag = true;
+            m_passThroughFlag = true;
          }
       }
    }
@@ -514,17 +507,17 @@ bool ossimBandSelector::outputBandsWithinInputRange() const
    {
       result = true;
       const ossim_uint32 HIGHEST_BAND = getNumberOfInputBands() - 1;
-      const ossim_uint32 OUTPUT_BANDS = (ossim_uint32)theOutputBandList.size();
+      const ossim_uint32 OUTPUT_BANDS = (ossim_uint32)m_outputBandList.size();
       for (ossim_uint32 i=0; i<OUTPUT_BANDS; ++i)
       {
-         if (theOutputBandList[i] > HIGHEST_BAND)
+         if (m_outputBandList[i] > HIGHEST_BAND)
          {
             if(traceDebug())
             {
                ossimNotify(ossimNotifyLevel_WARN)
                << "ossimBandSelector::outputBandsWithinInputRange() ERROR:"
                << "Output band greater than highest input band. "
-               << theOutputBandList[i] << " > " << HIGHEST_BAND << "."
+               << m_outputBandList[i] << " > " << HIGHEST_BAND << "."
                << std::endl;
             }
             result = false;
@@ -546,9 +539,9 @@ bool ossimBandSelector::outputBandsWithinInputRange() const
 
 void ossimBandSelector::getOutputBandList(std::vector<ossim_uint32>& bandList) const
 {
-   if ( isSourceEnabled()&&theOutputBandList.size() )
+   if ( isSourceEnabled()&&m_outputBandList.size() )
    {
-      bandList = theOutputBandList;
+      bandList = m_outputBandList;
    }
    else if (theInputConnection)
    {
@@ -572,71 +565,48 @@ ossimString ossimBandSelector::getShortName()const
 
 void ossimBandSelector::setProperty(ossimRefPtr<ossimProperty> property)
 {
-   if(!property) return;
-
-   if(property->getName() == "bandSelection")
+   if( property.valid() )
    {
-     ossimString str = property->valueToString();
-     std::vector<ossimString> str_vec;
-     std::vector<ossim_uint32> int_vec;
-     
-     str.split( str_vec, " " );
-     
-     for ( ossim_uint32 i = 0; i < str_vec.size(); ++i )
-     {
-        if(!str_vec[i].empty())
-        {
-           int_vec.push_back( str_vec[i].toUInt32() );
-        }
-     }
-     setOutputBandList( int_vec );
-   }
-   else if(property->getName() == "bands")
-   {
-      std::vector<ossim_uint32> selection;
-      if(ossim::toSimpleVector(selection, property->valueToString()))
+      if(property->getName() == "bands")
       {
-         theOutputBandList = selection;
+         std::vector<ossim_uint32> selection;
+         if(ossim::toSimpleVector(selection, property->valueToString()))
+         {
+            m_outputBandList = selection;
+            setOutputBandList( m_outputBandList );
+         }
       }
-   }
-   else
-   {
-      ossimImageSourceFilter::setProperty(property);
+      else if(property->getName() == "bandSelection")
+      {
+         ossimString str = property->valueToString();
+         std::vector<ossimString> str_vec;
+         std::vector<ossim_uint32> int_vec;
+         
+         str.split( str_vec, " " );
+         
+         for ( ossim_uint32 i = 0; i < str_vec.size(); ++i )
+         {
+            if(!str_vec[i].empty())
+            {
+               int_vec.push_back( str_vec[i].toUInt32() );
+            }
+         }
+         setOutputBandList( int_vec );
+      }
+      else
+      {
+         ossimImageSourceFilter::setProperty(property);
+      }
    }
 }
 
 ossimRefPtr<ossimProperty> ossimBandSelector::getProperty(const ossimString& name)const
 {
-   if(name == "bandSelection")
-   {
-      std::vector<ossim_uint32> bands;
-	  
-	  getOutputBandList( bands );
-	  	  
-      std::vector<ossimString> bandNames;
-
-      for(ossim_uint32 i = 0; i < bands.size(); i++)
-      {
-         bandNames.push_back( ossimString::toString( bands[i] ) );
-      }
-	  
-	  ossimString str;
-	  
-	  str.join( bandNames, " " );
-	  
-      ossimStringProperty* stringProp = new ossimStringProperty(name, str);
-									
-      stringProp->clearChangeType();
-      stringProp->setReadOnlyFlag(false);
-      stringProp->setCacheRefreshBit();
-      
-      return stringProp;
-   }
-   else if(name == "bands")
+   if( name == "bands" )
    {
       ossimString bandsString;
       ossim::toSimpleStringList(bandsString,
-                                theOutputBandList);
+                                m_outputBandList);
       ossimStringProperty* stringProp = new ossimStringProperty(name, bandsString);
       
       stringProp->clearChangeType();
@@ -645,6 +615,32 @@ ossimRefPtr<ossimProperty> ossimBandSelector::getProperty(const ossimString& nam
       
       return stringProp;
    }
+   else if( name == "bandSelection" )
+   {
+      std::vector<ossim_uint32> bands;
+	  
+      getOutputBandList( bands );
+      
+      std::vector<ossimString> bandNames;
+      
+      for(ossim_uint32 i = 0; i < bands.size(); i++)
+      {
+         bandNames.push_back( ossimString::toString( bands[i] ) );
+      }
+      
+      ossimString str;
+      
+      str.join( bandNames, " " );
+      
+      ossimStringProperty* stringProp = new ossimStringProperty(name, str);
+      
+      stringProp->clearChangeType();
+      stringProp->setReadOnlyFlag(false);
+      stringProp->setCacheRefreshBit();
+      
+      return stringProp;
+   }
+
    return ossimImageSourceFilter::getProperty(name);
 }
 
@@ -660,23 +656,36 @@ ossimRefPtr<ossimImageHandler> ossimBandSelector::getBandSelectableImageHandler(
 
    if ( theInputConnection )
    {
+      /**
+       * GP: We will only allow the immediate input check for an image handler
+       * and if one is present then check if selectable
+       */
       ossimTypeNameVisitor visitor(ossimString("ossimImageHandler"),
+                                   true,
+                                   ossimVisitor::VISIT_CHILDREN|ossimVisitor::VISIT_INPUTS);
+      ossimTypeNameVisitor bandSelectorVisitor(ossimString("ossimBandSelector"),
                                    true,
                                    ossimVisitor::VISIT_CHILDREN|ossimVisitor::VISIT_INPUTS);
       
       theInputConnection->accept(visitor);
-
-      // If there are multiple image handlers, e.g. a mosaic do not uses.
-      if ( visitor.getObjects().size() == 1 )
+      theInputConnection->accept(bandSelectorVisitor);
+      // if there is a band selector before us then do not 
+      // set the image handler
+      if(bandSelectorVisitor.getObjects().size() < 1)
       {
-         ih = visitor.getObjectAs<ossimImageHandler>( 0 );
-         if ( ih.valid() )
+         // If there are multiple image handlers, e.g. a mosaic do not uses.
+         if ( visitor.getObjects().size() == 1 )
          {
-            if ( ih->isBandSelector() == false )
+            ih = visitor.getObjectAs<ossimImageHandler>( 0 );
+            if ( ih.valid() )
             {
-               ih = 0;
+               if ( ih->isBandSelector() == false )
+               {
+                  ih = 0;
+               }
             }
          }
+
       }
       
    } // Matches: if ( theInputConnection )

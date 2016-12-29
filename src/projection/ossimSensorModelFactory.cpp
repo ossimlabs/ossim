@@ -1,7 +1,7 @@
 //*****************************************************************************
 // FILE: ossimSensorModelFactory.cc
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -11,14 +11,19 @@
 //   Contains implementation of class ossimSensorModelFactory
 //
 //*****************************************************************************
-//  $Id: ossimSensorModelFactory.cpp 23313 2015-05-21 00:16:00Z gpotts $
-#include <fstream>
-#include <algorithm>
+// $Id$
+
 #include <ossim/projection/ossimSensorModelFactory.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDirectory.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotifyContext.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+
+#include <fstream>
+#include <algorithm>
+#include <memory>
 
 //***
 // Define Trace flags for use within this file:
@@ -293,7 +298,11 @@ ossimSensorModelFactory::getTypeNameList(std::vector<ossimString>& typeList)
 ossimProjection* ossimSensorModelFactory::createProjection(
    const ossimFilename& filename, ossim_uint32  entryIdx) const
 {
-   if(!filename.exists()) return 0;
+   // ossimFilename::exists() currently does not work with s3 url's.
+   // if(!filename.exists()) return 0;
+
+   if(filename.empty()) return 0;
+
    static const char MODULE[] = "ossimSensorModelFactory::createProjection";
    
    ossimKeywordlist kwl;
@@ -364,11 +373,10 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    }
    
    ifstream input(geomFile.c_str());
-   char ecgTest[4];
-   input.read((char*)ecgTest, 3);
-   ecgTest[3] = '\0';
+   char ecgTest[4] = { 0 };
+   input.read(ecgTest, 3); // even if `read()` fails, it will be initialized thanks to `= { 0 };`
    input.close();
-   if(ossimString(ecgTest) == "eCG")
+   if(std::string(ecgTest) == "eCG")
    {
       ossimKeywordlist kwlTemp;
       kwlTemp.add("type",
@@ -460,6 +468,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
         ossimNotify(ossimNotifyLevel_DEBUG)
            << MODULE << " DEBUG: testing ossimNitfRsmModel" << std::endl;
      }
+
      ossimRefPtr<ossimNitfRpcModel> rpcModel = new ossimNitfRpcModel();
      if ( rpcModel->parseFile(filename, entryIdx) ) // filename = NITF_file
      {
@@ -620,7 +629,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    {
       if(!model->getErrorStatus())
       {
-         return model.release();
+        return model.release();
       }
       model = 0;
    }
@@ -630,15 +639,15 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    
 bool ossimSensorModelFactory::isNitf(const ossimFilename& filename)const
 {
-   std::ifstream in(filename.c_str(), ios::in|ios::binary);
+   std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+      createIstream( filename, std::ios_base::in | std::ios_base::binary );
    
-   if(in)
+   if( in )
    {
       char nitfFile[4];
-      in.read((char*)nitfFile, 4);
-
-      return (ossimString(nitfFile,
-                          nitfFile+4) == "NITF");
+      in->read((char*)nitfFile, 4);
+      
+      return (ossimString(nitfFile, nitfFile+4) == "NITF");
    }
 
    return false;

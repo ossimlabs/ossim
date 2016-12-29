@@ -1,17 +1,15 @@
-//----------------------------------------------------------------------------
+//---
 //
 // File: ossimChipperUtil.cpp
 // 
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: Utility class definition processing digital elevation
 // models(dems).
-// 
-//----------------------------------------------------------------------------
+//
+//---
 // $Id: ossimChipperUtil.cpp 23675 2015-12-22 18:16:28Z dburken $
 
 #include <ossim/util/ossimChipperUtil.h>
@@ -35,6 +33,9 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimVisitor.h>
 
+#include <ossim/imaging/ossimAnnotationFontObject.h>
+#include <ossim/imaging/ossimAnnotationLineObject.h>
+#include <ossim/imaging/ossimAnnotationSource.h>
 #include <ossim/imaging/ossimBrightnessContrastSource.h>
 #include <ossim/imaging/ossimBumpShadeTileSource.h>
 #include <ossim/imaging/ossimFilterResampler.h>
@@ -128,7 +129,7 @@ static const std::string TRUE_KW                 = "true";
 static const std::string UP_IS_UP_KW             = "up_is_up"; // bool
 static const std::string WRITER_KW               = "writer";
 static const std::string WRITER_PROPERTY_KW      = "writer_property";
-static const std::string COMBINER_TYPE_KW        = "combiner_type"; 
+static const std::string COMBINER_TYPE_KW        = "combiner_type";
 
 static const std::string TWOCMV_OLD_INPUT_BAND_KW      = "2cmv_old_input_band";
 static const std::string TWOCMV_NEW_INPUT_BAND_KW      = "2cmv_new_input_band";
@@ -147,7 +148,7 @@ ossimChipperUtil::ossimChipperUtil()
      m_imgLayer(0)
 {
    // traceDebug.setTraceFlag(true);
-   
+
    m_kwl->setExpandEnvVarsFlag(true);
 }
 
@@ -192,11 +193,11 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
    usageString += " [option]... [input-option]... <input-file(s)> <output-file>\nNote at least one input is required either from one of the input options, e.g. --input-dem <my-dem.hgt> or adding to command line in front of the output file in which case the code will try to ascertain what type of input it is.\n\nAvailable traces:\n-T \"ossimChipperUtil:debug\"   - General debug trace to standard out.\n-T \"ossimChipperUtil:log\"     - Writes a log file to output-file.log.\n-T \"ossimChipperUtil:options\" - Writes the options to output-file-options.kwl.";
 
    ossimApplicationUsage* au = ap.getApplicationUsage();
-   
+
    au->setCommandLineUsage(usageString);
-    
+
    au->setDescription(ap.getApplicationName()+" Utility application for generating elevation products from dem data.");
-   
+
    au->addCommandLineOption("--azimuth", "<azimuth>\nhillshade option - Light source azimuth angle for bump shade.\nRange: 0 to 360, Default = 180.0");
 
    au->addCommandLineOption( "-b or --bands <n,n...>", "Use the specified bands in given order: e.g. \"3,2,1\" will select bands 3, 2 and 1 of the input image.\nNote: it is 1 based" );
@@ -212,7 +213,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption( "--contrast", "<constrast>\nApply constrast to input image(s). Valid range: -1.0 to 1.0" );
 
    au->addCommandLineOption("--cut-bbox-xywh", "<x>,<y>,<width>,<height>\nSpecify a comma separated bounding box.");
-   
+
    au->addCommandLineOption("--cut-wms-bbox", "<minx>,<miny>,<maxx>,<maxy>\nSpecify a comma separated list in the format of a WMS BBOX.\nThe units are in the units of the projector defined by the --srs key");
 
    au->addCommandLineOption("--cut-wms-bbox-ll", "<minx>,<miny>,<maxx>,<maxy>\nSpecify a comma separated list in the format of a WMS BBOX.\nThe units are always decimal degrees");
@@ -222,13 +223,13 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption("--cut-height", "<height>\nSpecify the cut height in pixel");
 
    au->addCommandLineOption("--clip-wms-bbox-ll", "<minx>,<miny>,<maxx>,<maxy>\nSpecify a comma separated list in the format of a WMS BBOX.\nThe units are always decimal degrees");
-   
+
    au->addCommandLineOption("--clip-poly-lat-lon", "Polygon in the form of a string: (lat,lon),(lat,lon),...(lat,lon)");
 
    au->addCommandLineOption("--cut-bbox-ll", "<min_lat> <min_lon> <max_lat> <max_lon>\nSpecify a bounding box with the minimum latitude/longitude and max latitude/longitude in decimal degrees.\nNote coordinates are edge to edge.");
-   
+
    au->addCommandLineOption("--cut-bbox-llwh", "<min_lat> <min_lon> <max_lat> <max_lon> <width> <height>\nSpecify a bounding box with the minimum latitude/longitude, max latitude/longitude in decimal degrees and width/height in pixels.\nNote coordinates are edge to edge.");
-   
+
    au->addCommandLineOption("--cut-center-llwh","<latitude> <longitude> <width> <height>\nSpecify the center cut in latitude longitude space with width and height in pixels.");
 
    au->addCommandLineOption("--cut-center-llr","<latitude> <longitude> <radius_in_meters>\nSpecify the center cut in latitude longitude space with radius in meters.");
@@ -237,13 +238,13 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--elevation", "<elevation>\nhillshade option - Light source elevation angle for bumb shade.\nRange: 0 to 90, Default = 45.0");
 
-   au->addCommandLineOption("-e or --entry", "<entry> For multi image handlers which entry do you wish to extract. For list of entries use: \"ossim-info -i <your_image>\" ");  
+   au->addCommandLineOption("-e or --entry", "<entry> For multi image handlers which entry do you wish to extract. For list of entries use: \"ossim-info -i <your_image>\" ");
 
    au->addCommandLineOption("--exaggeration", "<factor>\nMultiplier for elevation values when computing surface normals. Has the effect of lengthening shadows for oblique lighting.\nRange: .0001 to 50000, Default = 1.0");
-   
+
    au->addCommandLineOption("-h or --help", "Display this help and exit.");
 
-   au->addCommandLineOption("--hemisphere", "<hemisphere>\nSpecify a projection hemisphere if supported. E.g. UTM projection. This will lock the hemisphere even if input scene center is the other hemisphere. Valid values for UTM are \"N\" and \"S\""); 
+   au->addCommandLineOption("--hemisphere", "<hemisphere>\nSpecify a projection hemisphere if supported. E.g. UTM projection. This will lock the hemisphere even if input scene center is the other hemisphere. Valid values for UTM are \"N\" and \"S\"");
 
    au->addCommandLineOption("--histogram-aoi", "<x>,<y>,<width>,<height>\nSets single image region of interest(roi) to compute histogram from. Coordinates are zero based image space.  Single image operation only. Comma separated, no spaces.");
 
@@ -258,13 +259,13 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption("--input-dem", "<dem> Input dem to process.");
 
    au->addCommandLineOption("--input-img", "<image> Input image to process.");
-   
+
    au->addCommandLineOption("--input-src","<file.src> Input source file list keyword list with list of dems or images or both to process.");
-   
+
    au->addCommandLineOption("--meters", "<meters>\nSpecifies an override for the meters per pixel");
 
    au->addCommandLineOption("-n or --north-up", "Rotates image North up. \"chip\" operation only.");
-   
+
    au->addCommandLineOption( "--op", "<operation>\nOperation to perform. Valid operations are \"chip\", \"color-relief\", \"hillshade\", \"psm\"(pan sharpened multispectral), \"2cmv\"(two color multi view) and \"ortho\".\nchip = input projection = output projection(image space), single image operation only." );
 
    au->addCommandLineOption("--options","<options.kwl>  This can be all or part of the application options.  To get a template you can turn on trace to the ossimChipperUtil class by adding \"-T ossimChipperUtil\" to your command.");
@@ -277,21 +278,21 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--projection", "<output_projection> Valid projections: geo, geo-scaled, input or utm\ngeo = Equidistant Cylindrical, origin latitude = 0.0\ngeo-scaled = Equidistant Cylindrical, origin latitude = image center\ninput Use first images projection. Must be a map projecion.\nutm = Universal Tranverse Mercator\nIf input and multiple sources the projection of the first image will be used.\nIf utm the zone will be set from the scene center of first image.\nNOTE: --srs takes precedence over this option.");
 
-   au->addCommandLineOption("--resample-filter","<type>\nSpecify what resampler filter to use, e.g. nearest neighbor, bilinear, cubic, sinc.\nSee ossim-info --resampler-filters"); 
+   au->addCommandLineOption("--resample-filter","<type>\nSpecify what resampler filter to use, e.g. nearest neighbor, bilinear, cubic, sinc.\nSee ossim-info --resampler-filters");
 
    au->addCommandLineOption("-r or --rotate", "<degrees>\nRotate image by degrees. \"chip\" operation only.");
 
    au->addCommandLineOption("--reader-prop", "<string>Adds a property to send to the reader. format is name=value");
 
    au->addCommandLineOption("--rrds", "<rrds> Reduced resolution data set where 0 is full resolution. \"chip\" operation only.");
-   
+
    au->addCommandLineOption("--scale-to-8-bit", "Scales the output to unsigned eight bits per band. This option has been deprecated by the newer \"--output-radiometry\" option.");
 
    au->addCommandLineOption("--sharpen-mode", "<mode> Applies sharpness to image chain(s). Valid modes: \"light\", \"heavy\"");
 
    au->addCommandLineOption("--snap-tie-to-origin",
-                                "Snaps tie point to projection origin so that (tie-origin)/gsd come out on an even integer boundary.");   
-   
+                                "Snaps tie point to projection origin so that (tie-origin)/gsd come out on an even integer boundary.");
+
    au->addCommandLineOption("--srs","<src_code>\nSpecify a spatial reference system(srs) code for the output projection. Example: --srs EPSG:4326");
 
    au->addCommandLineOption("-t or --thumbnail", "<max_dimension>\nSpecify a thumbnail resolution.\nScale will be adjusted so the maximum dimension = argument given.");
@@ -303,21 +304,21 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption("-u or --up-is-up", "Rotates image to up is up. \"chip\" operation only.");
 
    au->addCommandLineOption("-w or --writer","<writer>\nSpecifies the output writer.  Default uses output file extension to determine writer. For valid output writer types use: \"ossim-info --writers\"\n");
-   
+
    au->addCommandLineOption("--writer-prop", "<writer-property>\nPasses a name=value pair to the writer for setting it's property. Any number of these can appear on the line.");
 
-   au->addCommandLineOption("--zone", "<zone>\nSpecify a projection zone if supported.  E.g. UTM projection. This will lock the zone even if input scene center is in another zone. Valid values for UTM are \"1\" to \"60\"");  
+   au->addCommandLineOption("--zone", "<zone>\nSpecify a projection zone if supported.  E.g. UTM projection. This will lock the zone even if input scene center is in another zone. Valid values for UTM are \"1\" to \"60\"");
 
-   au->addCommandLineOption("--2cmv-old-input-band", "<band>\nBand to use for two color multi view old input.\n");   
+   au->addCommandLineOption("--2cmv-old-input-band", "<band>\nBand to use for two color multi view old input.\n");
    au->addCommandLineOption("--2cmv-new-input-band", "<band>\nBand to use for two color multi view new input.\n");
-   
+
    au->addCommandLineOption("--2cmv-red-output-source", "<source>\nTwo color multi view source input for red output.  Either, old, new, or mp(min pix).  Default=old.\n");
-   
+
    au->addCommandLineOption("--2cmv-green-output-source", "<source>\nTwo color multi view source input for green output.  Either, old, new, or mp(min pix).  Default=new.\n");
-   
+
    au->addCommandLineOption("--2cmv-blue-output-source", "<source>\nTwo color multi view source input for blue output.  Either, old, new, or mp(min pix).  Default=new.\n");
    au->addCommandLineOption("--combiner-type", "<type>\nossimBlendMosaic, ossimFeatherMosaic, ossimImageMosaic.  Default: ossimImageMosaic.  Example --combiner-type ossimImageMosaic\n");
-   
+
 } // End: ossimChipperUtil::addArguments
 
 void ossimChipperUtil::clear()
@@ -361,7 +362,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    if( ap.read("-h") || ap.read("--help") || (ap.argc() == 1) )
    {
       usage(ap);
-      
+
       return false; // Indicates process should be terminated to caller.
    }
 
@@ -390,7 +391,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    ossim_uint32 readerPropIdx = 0;
    ossim_uint32 writerPropIdx = 0;
    ossimString  key           = "";
-   
+
    // Extract optional arguments and stuff them in a keyword list.
    if( ap.read("--azimuth", stringParam1) )
    {
@@ -400,13 +401,13 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    if (ap.read("-b", stringParam1) || ap.read("--bands", stringParam1))
    {
       m_kwl->addPair( std::string(ossimKeywordNames::BANDS_KW), tempString1 );
-   }   
+   }
 
    if( ap.read("--brightness", stringParam1) )
    {
       m_kwl->addPair( BRIGHTNESS_KW, tempString1 );
    }
-   
+
    if( ap.read("--central-meridian", stringParam1) )
    {
       m_kwl->addPair( std::string(ossimKeywordNames::CENTRAL_MERIDIAN_KW), tempString1 );
@@ -449,12 +450,12 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    {
       m_kwl->addPair(CUT_WMS_BBOX_LL_KW, tempString1);
    }
-   
+
    if( ap.read("--clip-wms-bbox-ll", stringParam1) )
    {
       m_kwl->addPair(CLIP_WMS_BBOX_LL_KW, tempString1);
    }
-   
+
    if( ap.read("--clip-poly-lat-lon", stringParam1) )
    {
       //std::vector<ossimGpt> result;
@@ -483,7 +484,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
       m_kwl->addPair( CUT_WIDTH_KW,   tempString5 );
       m_kwl->addPair( CUT_HEIGHT_KW,  tempString6 );
    }
-   
+
    if( ap.read("--cut-center-llwh", stringParam1, stringParam2, stringParam3, stringParam4) )
    {
       m_kwl->addPair( CUT_CENTER_LAT_KW, tempString1 );
@@ -511,7 +512,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
       ap.read("--degrees", doubleParam1, doubleParam2);
       m_kwl->add( DEGREES_X_KW.c_str(), tempDouble1 );
       m_kwl->add( DEGREES_Y_KW.c_str(), tempDouble2 );
-   }   
+   }
 
    if ( ap.read("--elevation", stringParam1) )
    {
@@ -556,7 +557,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    if ( ap.read("--image-space-scale", doubleParam1, doubleParam2) )
    {
       m_kwl->add( IMAGE_SPACE_SCALE_X_KW.c_str(), tempDouble1 );
-      m_kwl->add( IMAGE_SPACE_SCALE_Y_KW.c_str(), tempDouble2 );      
+      m_kwl->add( IMAGE_SPACE_SCALE_Y_KW.c_str(), tempDouble2 );
    }
 
    while( ap.read("--input-dem", stringParam1) )
@@ -568,7 +569,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
       m_kwl->addPair( key.string(), tempString1 );
       ++demIdx;
    }
-   
+
    while( ap.read("--input-img", stringParam1) )
    {
       key = IMG_KW;
@@ -618,10 +619,10 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
       {
          std::string errMsg = "ERROR options keyword list file does not exists: ";
          errMsg += optionsKwl.string();
-         throw ossimException(errMsg); 
+         throw ossimException(errMsg);
       }
    }
-   
+
    if( ap.read("--origin-latitude", stringParam1) )
    {
       m_kwl->addPair( std::string(ossimKeywordNames::ORIGIN_LATITUDE_KW), tempString1 );
@@ -631,12 +632,12 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    {
       m_kwl->addPair( OUTPUT_RADIOMETRY_KW, tempString1 );
    }
-   
+
    if ( ap.read("--pad-thumbnail", stringParam1) )
    {
       m_kwl->addPair( PAD_THUMBNAIL_KW, tempString1 );
    }
-   
+
    if( ap.read("--projection", stringParam1) )
    {
       m_kwl->addPair( std::string(ossimKeywordNames::PROJECTION_KW), tempString1 );
@@ -679,7 +680,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    {
       m_kwl->addPair( SNAP_TIE_TO_ORIGIN_KW, TRUE_KW);
    }
-   
+
    if( ap.read("--srs", stringParam1) )
    {
       ossimString os = tempString1;
@@ -712,7 +713,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
 
    if( ap.read("-w", stringParam1) || ap.read("--writer", stringParam1) )
    {
-      m_kwl->addPair( WRITER_KW, tempString1); 
+      m_kwl->addPair( WRITER_KW, tempString1);
    }
 
    while (ap.read("--writer-prop", stringParam1))
@@ -725,9 +726,9 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
 
    if( ap.read("--zone", stringParam1) )
    {
-      m_kwl->addPair( std::string(ossimKeywordNames::ZONE_KW), tempString1); 
+      m_kwl->addPair( std::string(ossimKeywordNames::ZONE_KW), tempString1);
    }
-   
+
    if( ap.read("--2cmv-old-input-band", stringParam1) )
    {
       m_kwl->addPair( TWOCMV_OLD_INPUT_BAND_KW, tempString1 );
@@ -741,12 +742,12 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    {
       m_kwl->addPair( TWOCMV_RED_OUTPUT_SOURCE_KW, tempString1 );
    }
-   
+
    if( ap.read("--2cmv-green-output-source", stringParam1) )
    {
       m_kwl->addPair( TWOCMV_GREEN_OUTPUT_SOURCE_KW, tempString1 );
    }
-   
+
    if( ap.read("--2cmv-blue-output-source", stringParam1) )
    {
       m_kwl->addPair( TWOCMV_BLUE_OUTPUT_SOURCE_KW, tempString1 );
@@ -781,7 +782,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
 
    if ( ap.argc() > 2 ) // User passed inputs in front of output file.
    {
-      int pos = 1; // ap.argv[0] is application name. 
+      int pos = 1; // ap.argv[0] is application name.
       while ( pos < (ap.argc()-1) )
       {
          ossimFilename file = ap[pos];
@@ -790,7 +791,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
             ossimNotify(ossimNotifyLevel_DEBUG)
                << "argv[" << pos << "]: " << file << "\n";
          }
-         
+
          if ( isDemFile(file) )
          {
             key = DEM_KW;
@@ -800,7 +801,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
             m_kwl->addPair( key, file.string() );
             ++demIdx;
          }
-         else if ( isSrcFile(file) ) 
+         else if ( isSrcFile(file) )
          {
             if ( m_kwl->find( SRC_FILE_KW.c_str() ) ) // --input-src used also
             {
@@ -808,7 +809,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
                errMsg += "ERROR Multiple src files passed in.  Please combine into one.";
                throw ossimException(errMsg);
             }
-            
+
             m_kwl->addPair( SRC_FILE_KW, file.string() );
          }
          else // Add as an input image.
@@ -820,21 +821,21 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
             m_kwl->addPair(key.string(), file.string() );
             ++imgIdx;
          }
-         
+
          ++pos; // Go to next arg...
-         
+
       } // End: while ( pos < (ap.argc()-1) )
-       
+
    } // End: if ( ap.argc() > 2 )
 
    initialize();
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited..." << std::endl;
-   }  
+   }
    return true;
-   
+
 } // End: void ossimChipperUtil::initialize(ossimArgumentParser& ap)
 
 void ossimChipperUtil::initialize( const ossimKeywordlist& kwl )
@@ -857,7 +858,7 @@ void ossimChipperUtil::initialize()
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
-   
+
    if ( traceOptions() )
    {
       ossimFilename optionsFile;
@@ -874,7 +875,7 @@ void ossimChipperUtil::initialize()
    {
       ossimString s = op;
       s.downcase();
-      
+
       if ( s == "chip" )
       {
          m_operation = OSSIM_CHIPPER_OP_CHIP;
@@ -912,7 +913,7 @@ void ossimChipperUtil::initialize()
       std::string errMsg = "keyword not found: ";
       errMsg += OP_KW;
       errMsg += "\nUse --op option to specify operation.\n";
-      throw ossimException(errMsg);  
+      throw ossimException(errMsg);
    }
 
    //---
@@ -920,7 +921,7 @@ void ossimChipperUtil::initialize()
    // Note do this before creating chains.
    //---
    initializeSrcKwl();
-   
+
    // Check for required inputs. Do this after initializeSrcKwl.
    if ( m_operation == OSSIM_CHIPPER_OP_CHIP )
    {
@@ -931,7 +932,7 @@ void ossimChipperUtil::initialize()
          throw ossimException( errMsg.str() );
       }
    }
-   
+
    if ( ( m_operation == OSSIM_CHIPPER_OP_2CMV ) || ( m_operation == OSSIM_CHIPPER_OP_PSM ) )
    {
       if ( getNumberOfInputs() != 2 )
@@ -950,16 +951,16 @@ void ossimChipperUtil::initialize()
       if ( upIsUp() )
       {
          option = UP_IS_UP_KW;
-         ++rotationOptionCount; 
+         ++rotationOptionCount;
       }
       if ( northUp() )
       {
          option = NORTH_UP_KW;
-         ++rotationOptionCount; 
+         ++rotationOptionCount;
       }
       if ( hasRotation() )
       {
-         option = ROTATION_KW; 
+         option = ROTATION_KW;
          ++rotationOptionCount;
       }
 
@@ -982,7 +983,7 @@ void ossimChipperUtil::initialize()
          errMsg << "Multiple rotation options do not make sense!";
          throw ossimException( errMsg.str() );
       }
-         
+
       // One input, chip operation only.
       if ( getNumberOfInputs() != 1 )
       {
@@ -1007,23 +1008,23 @@ void ossimChipperUtil::initialize()
 
    // Initialize projection and propagate to chains.
    initializeOutputProjection();
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "options keyword list:\n"
          << *(m_kwl.get()) << "\n";
-      
+
       if ( m_srcKwl.valid() )
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
             << "support record keyword list:\n"
             << *(m_srcKwl.get()) << "\n";
       }
-      
+
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
    }
-   
+
 } // End: void ossimChipperUtil::initialize()
 
 ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain( ossimIrect& aoi )
@@ -1048,7 +1049,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain( ossimIrect& aoi
       source = initializeColorReliefChain();
    }
    else if ( ( m_operation == OSSIM_CHIPPER_OP_CHIP ) ||
-             ( m_operation == OSSIM_CHIPPER_OP_ORTHO ) )  
+             ( m_operation == OSSIM_CHIPPER_OP_ORTHO ) )
    {
       source = combineLayers();
    }
@@ -1072,7 +1073,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain( ossimIrect& aoi
       {
          source = addScalarRemapper( source, getOutputScalarType() );
       }
-      
+
       //---
       // Get the area of interest. This will be the scene bounding rect if not
       // explicitly set by user with one of the --cut options.
@@ -1098,8 +1099,41 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain( ossimIrect& aoi
          // Reset the source bounding rect if it changed.
          source->initialize();
       }
+
+      if ( source.valid() && !aoi.hasNans() )
+      {
+         //---
+         // Add a cut filter. This will:
+         // 1) Null out/clip any data pulled in.
+         // 2) Speed up by not propagating get tile request outside the cut or "aoi"
+         //    to the left hand side(input).
+         //---
+         ossimRefPtr<ossimRectangleCutFilter> cutter = new ossimRectangleCutFilter();
+
+         // Set the cut rectangle:
+         cutter->setRectangle( aoi );
+
+         // Null outside.
+         cutter->setCutType( ossimRectangleCutFilter::OSSIM_RECTANGLE_NULL_OUTSIDE );
+
+         // Connect cutter input to source chain.
+         cutter->connectMyInputTo( 0, source.get() );
+
+         source = cutter.get();
+
+         // Dependent on correct aoi so place after the cutter.
+         if ( hasAnnotations() )
+         {
+            // Put annotations after scalar remapper.
+            ossimRefPtr<ossimImageSource> result = addAnnotations( source );
+            if ( result.valid() )
+            {
+               source = result.get();
+            }
+         }
+      }
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
@@ -1111,7 +1145,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain( ossimIrect& aoi
 void ossimChipperUtil::setOptionsToChain(
    ossimIrect& aoi, const ossimKeywordlist& /* kwl */ )
 {
-   getAreaOfInterest(m_source.get(), aoi);  
+   getAreaOfInterest(m_source.get(), aoi);
 }
 
 ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeBumpShadeChain()
@@ -1127,7 +1161,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeBumpShadeChain()
 
    // Combine the dems.
    ossimRefPtr<ossimImageSource> demSource = combineLayers( m_demLayer );
-   
+
    // Set up the normal source.
    ossimRefPtr<ossimImageToPlaneNormalFilter> normSource = new ossimImageToPlaneNormalFilter;
 
@@ -1136,10 +1170,10 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeBumpShadeChain()
    // normals by the GSD in order to maintain terrain proportions.
    //---
    normSource->setTrackScaleFlag(true);
-   
+
    // Connect to dems.
    normSource->connectMyInputTo( demSource.get() );
-   
+
    // Set the smoothness factor.
    ossim_float64 gain = 1.0;
    lookup = m_kwl->findKey( GAIN_KW );
@@ -1224,7 +1258,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeBumpShadeChain()
    // Connect the two sources.
    bumpShade->connectMyInputTo(0, normSource.get());
    bumpShade->connectMyInputTo(1, colorSource.get());
-   
+
    if ( traceDebug() )
    {
       ossim_uint8 r = 0xff;
@@ -1240,12 +1274,12 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeBumpShadeChain()
          << "\nb:                 " << int(b)
          << "\n";
    }
-   
+
    // Capture the pointer to give to the writer.
    source = bumpShade.get();
 
    return source;
-   
+
 } // End: ossimChipperUtil::initializeBumpShadeChain()
 
 ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeColorReliefChain()
@@ -1263,18 +1297,18 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeColorReliefChain()
          result = addScalarRemapper( result, OSSIM_UINT8 );
       }
    }
-   return result;  
+   return result;
 }
 
 ossimRefPtr<ossimImageSource> ossimChipperUtil::initializePsmChain()
 {
    ossimRefPtr<ossimImageSource> result = 0;
-   
+
    ossim_uint32 layerCount = (ossim_uint32) (m_demLayer.size() + m_imgLayer.size());
 
    // Must have two and only two inputs.
    if ( layerCount == 2 )
-   {     
+   {
       ossimRefPtr<ossimSingleImageChain> input1 = 0; // First input should be color.
       ossimRefPtr<ossimSingleImageChain> input2 = 0; // Second input should be pan.
 
@@ -1282,7 +1316,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializePsmChain()
       if ( m_imgLayer.size() )
       {
          input1 = m_imgLayer[0].get();
-         
+
          if ( m_imgLayer.size() == 2 )
          {
             input2 = m_imgLayer[1].get();
@@ -1340,16 +1374,16 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializePsmChain()
          psm->initialize();
          result = dynamic_cast<ossimImageSource*>(psm.get());
       }
-      
-   } // Matches: if ( layerCount == 2 ) 
-   
+
+   } // Matches: if ( layerCount == 2 )
+
    return result;
-   
-} // End: ossimChipperUtil::initializePsmChain() 
+
+} // End: ossimChipperUtil::initializePsmChain()
 
 void ossimChipperUtil::initializeOutputProjection()
 {
-   if ( isIdentity() )
+   if ( isChipMode() )
    {
       createIdentityProjection();
    }
@@ -1357,7 +1391,7 @@ void ossimChipperUtil::initializeOutputProjection()
    {
       // Create the output projection.
       createOutputProjection();
-      
+
       // Setup the view in all the chains.
       propagateOutputProjectionToChains();
    }
@@ -1377,28 +1411,11 @@ void ossimChipperUtil::execute()
 
    if ( source.valid() && !aoi.hasNans() )
    {
-      //---
-      // Add a cut filter. This will:
-      // 1) Null out/clip any data pulled in.
-      // 2) Speed up by not propagating get tile request outside the cut or "aoi"
-      //    to the left hand side(input).
-      //---
-      ossimRefPtr<ossimRectangleCutFilter> cutter = new ossimRectangleCutFilter();
-
-      // Set the cut rectangle:
-      cutter->setRectangle( aoi );
-
-      // Null outside.
-      cutter->setCutType( ossimRectangleCutFilter::OSSIM_RECTANGLE_NULL_OUTSIDE );
-
-      // Connect cutter input to source chain.
-      cutter->connectMyInputTo( 0, source.get() );
-      
       // Set up the writer.
       m_writer = createNewWriter();
 
       // Connect the writer to the cutter.
-      m_writer->connectMyInputTo(0, cutter.get());
+      m_writer->connectMyInputTo(0, source.get());
 
       //---
       // Set the area of interest.
@@ -1418,14 +1435,14 @@ void ossimChipperUtil::execute()
          {
             ossimKeywordlist logKwl;
             m_writer->saveStateOfAllInputs(logKwl);
-            
+
             ossimFilename logFile;
             getOutputFilename(logFile);
             logFile.setExtension("log");
 
             logKwl.write( logFile.c_str() );
          }
-         
+
          // Write the file:
          m_writer->execute();
 
@@ -1441,11 +1458,11 @@ void ossimChipperUtil::execute()
          throw ossimException( "Unable to initialize writer for execution" );
       }
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
-   }   
+   }
 }
 void ossimChipperUtil::abort()
 {
@@ -1454,20 +1471,20 @@ void ossimChipperUtil::abort()
       m_writer->abort();
    }
 }
-  
+
 ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist& optionsKwl)
 {
   ossimRefPtr<ossimImageData> result = 0;
 
   ossimIrect aoi;
-  
+
   if( optionsKwl.getSize() > 0 )
   {
      m_kwl->addList(optionsKwl, true);
   }
 
   // (GP)
-  // Until we add more ellaborate code to check for scale changes 
+  // Until we add more ellaborate code to check for scale changes
   // as well as moving windows we will just always initialize
   // the output projection
   //
@@ -1488,12 +1505,12 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist& op
      // (drb 20151222)
      //---
      getAreaOfInterest(m_source.get(), aoi);
-     
+
      m_geom->setImageSize( aoi.size() );
   }
 
   if ( m_source.valid() )
-  {    
+  {
     result = m_source->getTile( aoi, 0 );
   }
 
@@ -1503,7 +1520,7 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist& op
 void ossimChipperUtil::addDemSources()
 {
    static const char MODULE[] = "ossimChipperUtil::addDemSources";
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
@@ -1539,7 +1556,7 @@ void ossimChipperUtil::addDemSources()
             // Get global entry.  Set by "-e" on command line apps.
             entryIndex = getEntryNumber();
          }
-         
+
          addDemSource( f, entryIndex );
          ++foundRecords;
       }
@@ -1569,11 +1586,11 @@ void ossimChipperUtil::addDemSources()
          if ( i >= maxIndex ) break;
       }
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
-   } 
+   }
 }
 
 void ossimChipperUtil::addDemSource(const ossimFilename& file, ossim_uint32 entryIndex)
@@ -1621,12 +1638,12 @@ void ossimChipperUtil::addDemSource(const ossimSrcRecord& rec)
 void ossimChipperUtil::addImgSources()
 {
    static const char MODULE[] = "ossimChipperUtil::addImgSources";
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
-   
+
    ossim_uint32 imgCount = m_kwl->numberOf( IMG_KW.c_str() );
    ossim_uint32 maxIndex = imgCount + 100; // Allow for skippage in numbering.
    ossim_uint32 foundRecords = 0;
@@ -1657,7 +1674,7 @@ void ossimChipperUtil::addImgSources()
             entryIndex = getEntryNumber();
          }
          // Add it:
-         addImgSource(f, entryIndex );         
+         addImgSource(f, entryIndex );
          ++foundRecords;
       }
       ++i;
@@ -1686,7 +1703,7 @@ void ossimChipperUtil::addImgSources()
          if ( i >= maxIndex ) break;
       }
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
@@ -1696,7 +1713,7 @@ void ossimChipperUtil::addImgSources()
 void ossimChipperUtil::addImgSource(const ossimFilename& file, ossim_uint32 entryIndex)
 {
    static const char MODULE[] = "ossimChipperUtil::addImgSource";
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
@@ -1750,20 +1767,22 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
          << "\nentry: " << entryIndex
          << "\nisDemSource: " << (isDemSource?"true":"false")
          << "\n";
-   }   
-   
+   }
+
    ossimRefPtr<ossimSingleImageChain> ic = 0;
 
    if ( file.size() )
    {
-      if ( file.exists() )
+      // ossimFilename::exists() currently does not work with s3 url's.
+      // if ( file.exists() )
+      if ( 1 )
       {
          ic = new ossimSingleImageChain;
          if ( ic->open( file ) )
          {
             // Set any reader props:
             setReaderProps( ic->getImageHandler().get() );
-            
+
             // we can't guarantee the state of the image handler at this point so
             // let's make sure that the entry is always set to the requested location
             //  On Cib/Cadrg we were having problems.  Removed the compare for entry 0
@@ -1786,20 +1805,22 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
             {
                psmPanInput = true;
             }
-            
+
             // Bands selection.  Note: Not performed on PSM pan band.
             if ( !psmPanInput )
             {
                if ( isThreeBandOut() )
                {
                   //---
-                  // This will guarantee three bands out.  Will put band selector at
-                  // the end of the chain if input is one band.
+                  // This will guarantee three bands out.  Will put band
+                  // selector at the end of the chain if input is one band. If input image
+                  // handler has implemented a getRgbBandlist(...) it will also set the
+                  // rgb band order.
                   //---
                   ic->setThreeBandFlag( true );
                }
 
-               if ( hasBandSelection() ) 
+               if ( hasBandSelection() )
                {
                   // User entered band list.
                   std::vector<ossim_uint32> bandList(0);
@@ -1808,9 +1829,13 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
                   {
                      ic->setBandSelection( bandList );
                   }
+                  else
+                  {
+                     ic->setDefaultBandSelection();     
+                  }
                }
             }
-            
+
             //---
             // If multiple inputs and scaleToEightBit do it at the end of the processing
             // chain to alleviate un-even stretches between inputs.
@@ -1818,7 +1843,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
             const ossim_uint32 INPUT_COUNT = getNumberOfInputs();
             bool scaleFlag = ( scaleToEightBit() && (INPUT_COUNT == 1) );
             ic->setRemapToEightBitFlag( scaleFlag );
-            
+
             // Always have resampler cache.
             ic->setAddResamplerCacheFlag(true);
 
@@ -1848,7 +1873,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
             std::string sharpnessMode = getSharpenMode();
             if ( sharpnessMode.size() )
             {
-               ic->setSharpenFlag(true);
+              ic->setSharpenFlag(true);
             }
 
             // Create the chain.
@@ -1872,10 +1897,10 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
             if ( hasBrightnesContrastOperation() )
             {
                // Assumption bright contrast filter in chain:
-               
+
                ossim_float64 value = getBrightness();
                ic->getBrightnessContrast()->setBrightness( value );
-               
+
                value = getContrast();
                ic->getBrightnessContrast()->setContrast( value );
             }
@@ -1910,7 +1935,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
    {
       std::string errMsg = "Could not open: ";
       errMsg += file.string();
-      throw ossimException(errMsg); 
+      throw ossimException(errMsg);
    }
 
    if ( traceDebug() )
@@ -1921,7 +1946,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "chain:\n" << kwl << "\n"
          << MODULE << " exiting...\n";
-   }   
+   }
 
    return ic;
 }
@@ -1933,34 +1958,99 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
-   }   
-   
+   }
+
    ossimRefPtr<ossimSingleImageChain> ic = new ossimSingleImageChain;
    if ( ic->open(rec) )
    {
+      // Set any reader props:
+      setReaderProps( ic->getImageHandler().get() );
+
+      // Entry is set in ossimSingleImageChain::open(src)
+
+      //---
+      // If PSM (pan sharpening) operation and this input is one band, don't
+      // mess with its bands.
+      //---
+      bool psmPanInput = false;
+      if ( ( m_operation == OSSIM_CHIPPER_OP_PSM ) && ( ic->getNumberOfOutputBands() == 1 ) )
+      {
+         psmPanInput = true;
+      }
+      
+      // Bands selection.  Note: Not performed on PSM pan band.
+      if ( !psmPanInput )
+      {
+         if ( isThreeBandOut() )
+         {
+            //---
+            // This will guarantee three bands out.  Will put band
+            // selector at the end of the chain if input is one band. If input image
+            // handler has implemented a getRgbBandlist(...) it will also set the
+            // rgb band order.
+            //---
+            ic->setThreeBandFlag( true );
+         }
+         
+         if ( hasBandSelection() )
+         {
+            // User entered band list.
+            std::vector<ossim_uint32> bandList(0);
+            getBandList( bandList );
+            if ( bandList.size() )
+            {
+               ic->setBandSelection( bandList );
+            }
+            else
+            {
+               ic->setDefaultBandSelection();     
+            }
+         }
+      }
+
       //---
       // If multiple inputs and scaleToEightBit do it at the end of the processing
-      // chain to alleviate un-even strectes between inputs.
+      // chain to alleviate un-even stretches between inputs.
       //---
-      bool scaleFlag = ( scaleToEightBit() && ( getNumberOfInputs() == 1) );
+      const ossim_uint32 INPUT_COUNT = getNumberOfInputs();
+      bool scaleFlag = ( scaleToEightBit() && (INPUT_COUNT == 1) );
       ic->setRemapToEightBitFlag( scaleFlag );
-      
+
       // Always have resampler cache.
       ic->setAddResamplerCacheFlag(true);
-      
+
       //---
       // Don't need a chain cache as we're doing a sequential write.  So the same tile
       // should never be visited more than once.
       //---
       ic->setAddChainCacheFlag(false);
 
-      // Histogram.
-      if ( isDemSource == false )
+      //---
+      // Histogram:
+      // Don't apply histogram stretch to dem sources for hill shade
+      // operation.
+      //---
+      if ( ( isDemSource == false ) ||
+           ( isDemSource && (m_operation != OSSIM_CHIPPER_OP_HILL_SHADE) ) )
       {
          ic->setAddHistogramFlag( hasHistogramOperation() );
       }
+      
+      // Brightness, contrast. Note in same filter.
+      if ( hasBrightnesContrastOperation() )
+      {
+         ic->setBrightnessContrastFlag(true);
+      }
+      
+      std::string sharpnessMode = getSharpenMode();
+      if ( sharpnessMode.size() )
+      {
+         ic->setSharpenFlag(true);
+      }
 
       //---
+      // Create the chain.
+      // 
       // NOTE: Histogram and band selector can be set in ic->createRenderedChain(rec)
       // if the right keywords are there.
       //---
@@ -1970,13 +2060,55 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       ossimString lookup = m_kwl->findKey( RESAMPLER_FILTER_KW );
       if ( lookup.size() )
       {
+         // Assumption image renderer is in chain:
          ic->getImageRenderer()->getResampler()->setFilterType( lookup );
+      }
+      
+      // Histogram setup.
+      if ( hasHistogramOperation() )
+      {
+         setupChainHistogram( ic );
+      }
+      
+      // Brightness constrast setup:
+      if ( hasBrightnesContrastOperation() )
+      {
+         // Assumption bright contrast filter in chain:
+         
+         ossim_float64 value = getBrightness();
+         ic->getBrightnessContrast()->setBrightness( value );
+         
+         value = getContrast();
+         ic->getBrightnessContrast()->setContrast( value );
+      }
+      
+      // Sharpness:
+      if ( sharpnessMode.size() )
+      {
+         if ( sharpnessMode == "light" )
+         {
+            ic->getSharpenFilter()->setWidthAndSigma( 3, 0.5 );
+         }
+         else if ( sharpnessMode == "heavy" )
+         {
+            ic->getSharpenFilter()->setWidthAndSigma( 5, 1.0 );
+         }
+      }
+      
+      if(hasGeoPolyCutterOption())
+      {
+         ossimGeoPolygon polygon;
+         getClipPolygon(polygon);
+         if(polygon.size()>0)
+         {
+            ic->addGeoPolyCutterPolygon(polygon);
+         }
       }
    }
    else // Open failed.
    {
       std::string errMsg = "Could not open from src record!";
-      throw ossimException(errMsg); 
+      throw ossimException(errMsg);
    }
 
    if ( traceDebug() )
@@ -1987,15 +2119,15 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "chain:\n" << kwl << "\n"
          << MODULE << " exiting...\n";
-   }   
+   }
 
    return ic;
 }
-   
+
 void ossimChipperUtil::createOutputProjection()
 {
    static const char MODULE[] = "ossimChipperUtil::createOutputProjection";
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
@@ -2003,7 +2135,7 @@ void ossimChipperUtil::createOutputProjection()
 
    std::string op  = m_kwl->findKey( std::string(ossimKeywordNames::PROJECTION_KW) );
    std::string srs = m_kwl->findKey( SRS_KW );
-   
+
    if ( op.size() && srs.size() )
    {
       ossimNotify(ossimNotifyLevel_WARN)
@@ -2014,11 +2146,11 @@ void ossimChipperUtil::createOutputProjection()
          << "\noutput_projection: " << op
          << "\nTaking " << srs << " over " << op << "\n";
    }
-   
+
    bool usingInput = false;
    ossimChipperOutputProjection projType = getOutputProjectionType();
    ossimRefPtr<ossimMapProjection> proj = 0;
-   
+
    // If an srs code use that first.
    if ( srs.size() )
    {
@@ -2055,16 +2187,16 @@ void ossimChipperUtil::createOutputProjection()
          }
       }
    }
-   
+
    // Check for identity projection:
-   ossimRefPtr<ossimMapProjection> inputProj = getFirstInputProjection();   
+   ossimRefPtr<ossimMapProjection> inputProj = getFirstInputProjection();
    if ( proj.valid() && inputProj.valid() )
    {
       if ( *(inputProj.get()) == *(proj.get()) )
       {
          if ( projType == OSSIM_CHIPPER_PROJ_GEO_SCALED )
          {
-            // Get the origin used for scaling. 
+            // Get the origin used for scaling.
             ossimGpt origin = proj->getOrigin();
 
             // Copy the input projection to our projection.  Has the tie and scale we need.
@@ -2080,7 +2212,7 @@ void ossimChipperUtil::createOutputProjection()
          usingInput = true;
       }
    }
-   
+
    if ( !proj.valid() )
    {
       // Try first input. If map projected use that.
@@ -2129,7 +2261,7 @@ void ossimChipperUtil::createOutputProjection()
       // Adjust the projection tie to the origin.
       proj->snapTiePointToOrigin();
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
@@ -2140,13 +2272,13 @@ void ossimChipperUtil::createOutputProjection()
 
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
    }
-   
+
 } // End: ossimChipperUtil::createOutputProjection()
 
 void ossimChipperUtil::createIdentityProjection()
 {
    static const char MODULE[] = "ossimChipperUtil::createIdentityProjection";
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
@@ -2206,11 +2338,11 @@ void ossimChipperUtil::createIdentityProjection()
 
                ossimDpt imageSpaceScale;
                getImageSpaceScale( imageSpaceScale );
-               
+
                ossimDrect rect;
                m_geom->getBoundingRect(rect);
                ossimDpt midPt = rect.midPoint();
-               
+
                if ( traceDebug() )
                {
                   ossimNotify(ossimNotifyLevel_DEBUG)
@@ -2219,7 +2351,7 @@ void ossimChipperUtil::createIdentityProjection()
                      << "\nrotation:  " << rotation
                      << "\nmid point: " << midPt << std::endl;
                }
-               
+
                m_ivt = new ossimImageViewAffineTransform(-rotation,
                                                          imageSpaceScale.x, // image space scale x
                                                          imageSpaceScale.y, // image space scale y
@@ -2234,25 +2366,25 @@ void ossimChipperUtil::createIdentityProjection()
                   // Set the image view transform scale.
                   initializeIvtScale();
                }
-               
+
                resampler->setImageViewTransform( m_ivt.get() );
             }
 
          } // Matches: if ( m_geom.valid() )
-         
+
       } // Matches: if ( ih.valid() )
-      
-   } // Matches: if ( sic.valid() 
-   
+
+   } // Matches: if ( sic.valid()
+
 } // End: createIdentityProjection()
 
 void ossimChipperUtil::initializeIvtScale()
 {
-   if ( isIdentity() && m_ivt.valid() && m_geom.valid() )
+   if ( isChipMode() && m_ivt.valid() && m_geom.valid() )
    {
       ossimDpt scale;
       scale.makeNan();
-      
+
       // Check for GSD spec. Degrees/pixel takes priority over meters/pixel:
       ossimString lookup;
       lookup.string() = m_kwl->findKey( DEGREES_X_KW );
@@ -2268,7 +2400,7 @@ void ossimChipperUtil::initializeIvtScale()
          {
             outputDpp.y = lookup.toFloat64();
          }
-         
+
          if ( !outputDpp.hasNans() )
          {
             // Input degress per pixel.  Consider this a scale of 1.0.
@@ -2298,7 +2430,7 @@ void ossimChipperUtil::initializeIvtScale()
                // Input meters per pixel.  Consider this a scale of 1.0.
                ossimDpt inputMpp;
                m_geom->getMetersPerPixel( inputMpp );
-               
+
                if ( !inputMpp.hasNans() )
                {
                   scale.x = inputMpp.x/outputMpp.x;
@@ -2335,9 +2467,9 @@ void ossimChipperUtil::initializeIvtScale()
          std::string errMsg = "ossimChipperUtil::initializeIvtScale failed!";
          throw ossimException(errMsg);
       }
-      
-   } // Matches: if ( isIdentity() && ... )
-   
+
+   } // Matches: if ( isChipMode() && ... )
+
 } // End: ossimChipperUtil::initializeIvtScale()
 
 void ossimChipperUtil::intiailizeProjectionTiePoint()
@@ -2362,7 +2494,7 @@ void ossimChipperUtil::intiailizeProjectionTiePoint()
          ossimGpt tiePoint;
          tiePoint.makeNan();
          getTiePoint(tiePoint);
-         
+
          if ( !tiePoint.hasNans() )
          {
             //---
@@ -2423,13 +2555,13 @@ void ossimChipperUtil::intiailizeProjectionTiePoint()
                << "projection tie point: " << tiePoint << "\n" << MODULE << " exited...\n";
          }
       }
-      
+
    } // Matches: if ( mapProj.valid() )
    else
    {
       std::string errMsg = MODULE;
       errMsg += "m_projection is null!";
-      throw( ossimException(errMsg) ); 
+      throw( ossimException(errMsg) );
    }
 }
 
@@ -2446,9 +2578,9 @@ void ossimChipperUtil::initializeProjectionGsd()
    {
       std::string errMsg = MODULE;
       errMsg += " projection is null!";
-      throw( ossimException(errMsg) ); 
+      throw( ossimException(errMsg) );
    }
-   
+
    ossimDpt gsd;
    gsd.makeNan();
 
@@ -2456,9 +2588,9 @@ void ossimChipperUtil::initializeProjectionGsd()
    ossimString degreesY;
    ossimString meters;
    degreesX.string() = m_kwl->findKey( DEGREES_X_KW );
-   degreesY.string() = m_kwl->findKey( DEGREES_Y_KW );      
+   degreesY.string() = m_kwl->findKey( DEGREES_Y_KW );
    meters.string()   = m_kwl->findKey( METERS_KW );
-   
+
    if ( hasCutBoxWidthHeight() )
    {
       // --cut-bbox-llwh Implies a scale...
@@ -2541,17 +2673,17 @@ void ossimChipperUtil::initializeProjectionGsd()
          errMsg << MODULE << " ERROR: cut box does not have 4 values!\n";
          throw( ossimException( errMsg.str() ) );
       }
-   } 
+   }
    else
    {
       if ( meters.size() && ( degreesX.size() || degreesY.size() ) )
-      {  
+      {
          std::ostringstream errMsg;
          errMsg << MODULE << " ERROR: Ambiguous scale keywords!\n"
                 << "Do not combine meters with degrees.\n";
          throw( ossimException( errMsg.str() ) );
       }
-      
+
       if ( degreesX.size() )
       {
          // --degrees
@@ -2615,7 +2747,7 @@ void ossimChipperUtil::getTiePoint(ossimGpt& tie)
    tie.lat = ossim::nan();
    tie.lon = ossim::nan();
    tie.hgt = 0.0;
-   
+
    // Loop through dem layers.
    ossimGpt chainTiePoint;
    chainIdx = m_demLayer.begin();
@@ -2676,7 +2808,7 @@ void ossimChipperUtil::getTiePoint(ossimSingleImageChain* chain, ossimGpt& tie)
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
-   }   
+   }
 
    if (chain && m_geom.valid() )
    {
@@ -2693,11 +2825,11 @@ void ossimChipperUtil::getTiePoint(ossimSingleImageChain* chain, ossimGpt& tie)
          {
             geom->getTiePoint( tie, true );
          }
-         
+
 
          // Set height to 0.0 even though it's not used so hasNans test works.
          tie.hgt = 0.0;
-         
+
          if ( tie.hasNans() )
          {
             std::string errMsg = MODULE;
@@ -2742,7 +2874,7 @@ void ossimChipperUtil::getTiePoint(ossimDpt& tie)
    std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx;
 
    tie.makeNan();
-   
+
    // Loop through dem layers.
    ossimDpt chainTiePoint;
    chainIdx = m_demLayer.begin();
@@ -2803,7 +2935,7 @@ void ossimChipperUtil::getTiePoint(ossimSingleImageChain* chain, ossimDpt& tie)
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
-   }   
+   }
 
    if (chain && m_geom.valid() )
    {
@@ -2820,7 +2952,7 @@ void ossimChipperUtil::getTiePoint(ossimSingleImageChain* chain, ossimDpt& tie)
          {
             geom->getTiePoint( tie, true );
          }
-         
+
          if ( tie.hasNans() )
          {
             std::string errMsg = MODULE;
@@ -2863,7 +2995,7 @@ void ossimChipperUtil::getMetersPerPixel(ossimDpt& gsd)
    }
 
    gsd.makeNan();
-   
+
    ossimDpt chainGsd;
    std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx;
 
@@ -2872,7 +3004,7 @@ void ossimChipperUtil::getMetersPerPixel(ossimDpt& gsd)
    while ( chainIdx != m_demLayer.end() )
    {
       getMetersPerPixel( (*chainIdx).get(), chainGsd);
-      if ( gsd.hasNans() || ( chainGsd.x < gsd.x ) ) 
+      if ( gsd.hasNans() || ( chainGsd.x < gsd.x ) )
       {
          gsd = chainGsd;
       }
@@ -2935,7 +3067,7 @@ void ossimChipperUtil::getMetersPerPixel(ossimSingleImageChain* chain, ossimDpt&
       errMsg += " ERROR: Null chain passed to method!";
       throw ossimException(errMsg);
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
@@ -2988,7 +3120,7 @@ void ossimChipperUtil::getSceneCenter(ossimGpt& gpt)
 
    std::vector<ossimGpt> centerGptArray;
    ossimGpt centerGpt;
-   
+
    std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx;
 
    // Loop through dem layers.
@@ -3017,7 +3149,7 @@ void ossimChipperUtil::getSceneCenter(ossimGpt& gpt)
 
    ossim_float64 lat = 0.0;
    ossim_float64 lon = 0.0;
-   
+
    std::vector<ossimGpt>::const_iterator pointIdx = centerGptArray.begin();
    while ( pointIdx != centerGptArray.end() )
    {
@@ -3059,8 +3191,8 @@ void ossimChipperUtil::getSceneCenter(ossimSingleImageChain* chain, ossimGpt& gp
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
-   }   
-   
+   }
+
    if (chain)
    {
       ossimRefPtr<ossimImageGeometry> geom = chain->getImageGeometry();
@@ -3070,7 +3202,7 @@ void ossimChipperUtil::getSceneCenter(ossimSingleImageChain* chain, ossimGpt& gp
          ossimDpt midPoint = boundingRect.midPoint();
          geom->localToWorld(midPoint, gpt);
          gpt.hgt = 0.0;
-         
+
          if ( gpt.hasNans() )
          {
             std::string errMsg = MODULE;
@@ -3124,10 +3256,10 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getFirstInputProjection()
    {
       ih = m_imgLayer[0]->getImageHandler();
    }
-   
+
    if ( ih.valid() )
    {
-      // Get the geometry from the first image handler.      
+      // Get the geometry from the first image handler.
       ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
       if ( geom.valid() )
       {
@@ -3157,7 +3289,7 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getFirstInputProjection()
    {
       ossimNotify(ossimNotifyLevel_WARN) << "No image handler in first chain...\n";
    }
-   
+
    if ( traceDebug() )
    {
       if ( result.valid() )
@@ -3166,7 +3298,7 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getFirstInputProjection()
       }
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
    }
-   
+
    return result;
 }
 
@@ -3181,13 +3313,13 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getNewGeoScaledProjection()
    ossimRefPtr<ossimMapProjection> result = getNewGeoProjection();
 
    // Set the origin for scaling:
-   
+
    // First check for user set "central_meridian" and "origin_latitude":
    ossimGpt origin;
    origin.lat = getOriginLatitude();
    origin.lon = getCentralMeridian();
    origin.hgt = 0.0;
-   
+
    if ( origin.hasNans() )
    {
       // Use the scene center from the input.
@@ -3210,7 +3342,7 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getNewGeoScaledProjection()
       errMsg += "\nOrigin has nans!";
       throw ossimException(errMsg);
    }
-   
+
    return result;
 }
 
@@ -3221,7 +3353,7 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getNewProjectionFromSrsCode(
 
    ossimString os = code;
    os.downcase();
-   
+
    if ( ( os == "epsg:4326" ) || ( code == "4326" ) )
    {
       // Avoid factory call for this.
@@ -3252,7 +3384,7 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getNewUtmProjection()
       utm->setZone( zone );
       setZone = true;
    }
-   
+
    // Set the hemisphere from keyword option:
    bool setHemisphere = false;
    std::string hemisphere = getHemisphere();
@@ -3281,13 +3413,13 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getNewUtmProjection()
       origin.lat = getOriginLatitude();
       origin.lon = getCentralMeridian();
       origin.hgt = 0.0;
-      
+
       if ( origin.hasNans() )
       {
          // Use the scene center from the input.
          getSceneCenter( origin );
       }
-      
+
       if ( !origin.hasNans() )
       {
          if ( !setZone )
@@ -3339,7 +3471,7 @@ ossimRefPtr<ossimImageFileWriter> ossimChipperUtil::createNewWriter() const
    }
 
    ossimRefPtr<ossimImageFileWriter> writer = 0;
-   
+
    ossimString lookup = m_kwl->findKey( WRITER_KW );
    if ( lookup.size() )
    {
@@ -3390,7 +3522,7 @@ ossimRefPtr<ossimImageFileWriter> ossimChipperUtil::createNewWriter() const
                ossimNotify(ossimNotifyLevel_DEBUG)
                   << "Setting writer prop: " << splitArray[0] << "=" << splitArray[1] << "\n";
             }
-            
+
             writer->setProperty( prop );
          }
       }
@@ -3415,7 +3547,7 @@ ossimRefPtr<ossimImageFileWriter> ossimChipperUtil::createNewWriter() const
             << std::endl;
       }
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
@@ -3435,7 +3567,7 @@ void ossimChipperUtil::propagateOutputProjectionToChains()
    }
 
    std::vector< ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx;
-   
+
    // we need to make sure the outputs are refreshed so they can reset themselves
    // Needed when we are doing interactive update to the GSD and clip window
    ossimRefPtr<ossimRefreshEvent> refreshEvent = new ossimRefreshEvent();
@@ -3445,16 +3577,16 @@ void ossimChipperUtil::propagateOutputProjectionToChains()
    chainIdx = m_demLayer.begin();
    while ( chainIdx != m_demLayer.end() )
    {
-    viewVisitor.reset();
-    eventVisitor.reset();
-    (*chainIdx)->accept(viewVisitor);
-    (*chainIdx)->accept(eventVisitor);
+      viewVisitor.reset();
+      eventVisitor.reset();
+      (*chainIdx)->accept(viewVisitor);
+      (*chainIdx)->accept(eventVisitor);
 
-    ossimRefPtr<ossimImageRenderer> resampler = (*chainIdx)->getImageRenderer();
+      ossimRefPtr<ossimImageRenderer> resampler = (*chainIdx)->getImageRenderer();
       if ( resampler.valid() )
       {
          //resampler->setView( m_geom.get() );
-        // resampler->propagateEventToOutputs(refreshEvent);
+         // resampler->propagateEventToOutputs(refreshEvent);
       }
       else
       {
@@ -3477,8 +3609,8 @@ void ossimChipperUtil::propagateOutputProjectionToChains()
 
       if ( resampler.valid() )
       {
-//         resampler->setView( m_geom.get() );
-        // resampler->propagateEventToOutputs(refreshEvent);
+         //resampler->setView( m_geom.get() );
+         //resampler->propagateEventToOutputs(refreshEvent);
       }
       else
       {
@@ -3488,7 +3620,7 @@ void ossimChipperUtil::propagateOutputProjectionToChains()
       }
       ++chainIdx;
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
@@ -3559,7 +3691,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::combineLayers()
       else
       {
          result = createCombiner();//new ossimImageMosaic;
-         
+
          // Combine the images.  Note we'll put the images on top of the dems.
          if ( m_imgLayer.size() )
          {
@@ -3583,14 +3715,14 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::combineLayers()
          }
       }
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
    }
-   
+
    return result;
-   
+
 } // End: ossimChipperUtil::combineLayers
 
 ossimRefPtr<ossimImageSource> ossimChipperUtil::initialize2CmvChain()
@@ -3601,7 +3733,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initialize2CmvChain()
 
    // Must have two and only two inputs.
    if ( layerCount == 2 )
-   {     
+   {
       ossimRefPtr<ossimConnectableObject> oldImg = 0;
       ossimRefPtr<ossimConnectableObject> newImg = 0;
 
@@ -3616,7 +3748,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initialize2CmvChain()
       if ( m_imgLayer.size() )
       {
          oldImg = m_imgLayer[0].get();
-         
+
          if ( m_imgLayer.size() == 2 )
          {
             newImg = m_imgLayer[1].get();
@@ -3663,13 +3795,13 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initialize2CmvChain()
          ossimString os;
          std::string key = TWOCMV_OLD_INPUT_BAND_KW;
          std::string val = m_kwl->findKey( key );
-         
+
          if ( val.size() )
          {
             os = val;
             oldInputBandIndex = os.toUInt32();
          }
-         
+
          key = TWOCMV_NEW_INPUT_BAND_KW;
          val = m_kwl->findKey( key );
          if ( val.size() )
@@ -3684,7 +3816,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initialize2CmvChain()
          {
             os = val;
             os.downcase();
-            
+
             if ( os == "new" )
             {
                redOutputSource = ossimTwoColorView::NEW;
@@ -3701,7 +3833,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initialize2CmvChain()
          {
             os = val;
             os.downcase();
-            
+
             if ( os == "old" )
             {
                grnOutputSource = ossimTwoColorView::OLD;
@@ -3718,7 +3850,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initialize2CmvChain()
          {
             os = val;
             os.downcase();
-            
+
             if ( os == "old" )
             {
                bluOutputSource = ossimTwoColorView::OLD;
@@ -3740,9 +3872,9 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initialize2CmvChain()
          result = tcmv.get();
       }
    }
-   
+
    return result;
-   
+
 } // ossimChipperUtil::initialize2CmvChain()
 
 ossimRefPtr<ossimImageSource> ossimChipperUtil::addIndexToRgbLutFilter(
@@ -3774,7 +3906,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::addIndexToRgbLutFilter(
          lut->setMode(ossimIndexToRgbLutFilter::REGULAR);
 
          lut->setLut(lutFile);
-         
+
          // Set as color source for bump shade.
          result = lut.get();
       }
@@ -3811,7 +3943,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::addScalarRemapper(
    }
 
    ossimRefPtr<ossimImageSource> result = 0;
-   
+
    if ( source.valid() )
    {
       if ( ( scalar != OSSIM_SCALAR_UNKNOWN ) && ( source->getOutputScalarType() != scalar ) )
@@ -3820,7 +3952,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::addScalarRemapper(
          remapper->setOutputScalarType(scalar);
          remapper->connectMyInputTo( source.get() );
          result = remapper.get();
-         
+
          if ( traceDebug() )
          {
             ossimNotify(ossimNotifyLevel_DEBUG)
@@ -3839,15 +3971,230 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::addScalarRemapper(
       errMsg += " ERROR: Null source passed to method!";
       throw ossimException(errMsg);
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
          << MODULE << " exited...\n";
    }
-   
+
    return result;
 }
+
+ossimRefPtr<ossimImageSource> ossimChipperUtil::addAnnotations(
+   ossimRefPtr<ossimImageSource>& source ) const
+{
+   static const char MODULE[] = "ossimChipperUtil::addAnnotations(source)";
+   if ( traceDebug() )
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+   }
+
+   ossimRefPtr<ossimImageSource> result = 0;
+
+   if ( source.valid() & m_geom.valid() )
+   {
+      ossimString regularExpression = "annotation[0-9]*\\.type";
+      const ossim_uint32 COUNT = m_kwl->getNumberOfKeysThatMatch( regularExpression );
+      if ( COUNT > 0 )
+      {
+         // Create annotator:
+         ossimRefPtr<ossimAnnotationSource> annotator = new ossimAnnotationSource();
+
+         // Connect it up:
+         annotator->connectMyInputTo( source.get() );
+
+         // Loop through keyword list and add all annotation objects.
+         ossim_uint32 i = 0;
+         ossim_uint32 found = 0;
+         std::string prefixBase = "annotation";
+         std::string prefix;
+         std::string key;
+         std::string value;
+         while ( (found < COUNT) && ( i < (COUNT+100) ) )
+         {
+            prefix = prefixBase + ossimString::toString( i ).string() + ".";
+            key = "type";
+            value = m_kwl->findKey( prefix, key );
+            if ( value.size() )
+            {
+               ++found;
+
+               if ( value == "cross_hair" )
+               {
+                  addCrossHairAnnotation( annotator, prefix );
+               }
+            }
+            ++i;
+         }
+
+         annotator->initialize();
+
+         // Assign return result:
+         result = annotator.get();
+      }
+   }
+   else
+   {
+      std::string errMsg = MODULE;
+      errMsg += " ERROR: Null source passed to method!";
+      throw ossimException(errMsg);
+   }
+
+   if ( traceDebug() )
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
+   }
+
+   return result;
+}
+
+void ossimChipperUtil::addCrossHairAnnotation(
+   ossimRefPtr<ossimAnnotationSource> annotator, const std::string& prefix ) const
+{
+   if ( annotator.valid() && prefix.size() )
+   {
+      std::string linePrefix = prefix + std::string("line.");
+      std::string textPrefix = prefix + std::string("text.");
+      ossimDpt centerPt;
+      centerPt.makeNan();
+      ossim_float64 lineSize = 8.0;
+      ossimDpt start;
+      ossimDpt end;
+
+      // Cross hair line location:
+      std::string key = "location";
+      std::string value = m_kwl->findKey( linePrefix, key );
+      if ( value.size() )
+      {
+         if (value == "scene_center")
+         {
+            ossimIrect boundingRect = annotator->getBoundingRect( 0 );
+            centerPt = boundingRect.midPoint();
+         }
+      }
+      else
+      {
+         key = "location.gpt";
+         value = m_kwl->findKey( linePrefix, key );
+         if ( value.size() )
+         {
+            ossimGpt gpt;
+            gpt.toPoint( value );
+            if ( gpt.hasNans() == false )
+            {
+               // Convert to view coordinate.
+               ossimDpt imgPt;
+               m_geom->worldToLocal( gpt, imgPt );
+               if ( m_ivt.valid() )
+               {
+                  m_ivt->imageToView( imgPt, centerPt );
+               }
+               else
+               {
+                  centerPt = imgPt;
+               }
+            }
+         }
+      }
+
+      if ( centerPt.hasNans() == false )
+      {
+         // Cross hair size:
+         key = "size";
+         value = m_kwl->findKey( linePrefix, key );
+         if ( value.size() )
+         {
+            lineSize = ossimString::toInt32( ossimString(value) );
+         }
+         ossim_float64 halfLine = lineSize/2.0;
+
+         // Create lines.
+         ossimRefPtr<ossimAnnotationLineObject> line1 = new ossimAnnotationLineObject();
+
+         // Pick up r,g,b,thickness.
+         line1->loadState( *(m_kwl.get()), linePrefix.c_str() );
+
+         start.x = centerPt.x;
+         start.y = centerPt.y-halfLine;
+         end.x   = centerPt.x;
+         end.y   = centerPt.y+halfLine;
+
+         // ossimAnnotationLineObject::setLine recomputes the bounding box.
+         line1->setLine( start, end );
+
+         annotator->addObject( line1.get() );
+
+         ossimRefPtr<ossimAnnotationLineObject> line2 = new ossimAnnotationLineObject();
+
+         // This will pick up r,g,b,thickness.
+         line2->loadState( *(m_kwl.get()), linePrefix.c_str() );
+
+         start.x = centerPt.x-halfLine;
+         start.y = centerPt.y;
+         end.x   = centerPt.x+halfLine;
+         end.y   = centerPt.y;
+
+         // ossimAnnotationLineObject::setLine recomputes the bounding box.
+         line2->setLine( start, end );
+
+         annotator->addObject( line2.get() );
+
+         // Set text if any:
+         key = "string";
+         value = m_kwl->findKey( textPrefix, key );
+         if ( value.size() )
+         {
+            ossimRefPtr<ossimAnnotationFontObject> text = new ossimAnnotationFontObject();
+            text->loadState( *(m_kwl.get()), textPrefix.c_str() );
+
+            text->setString( ossimString(value) );
+
+            // text scale:
+            key = "scale";
+            value = m_kwl->findKey( textPrefix, key );
+            if ( value.size() )
+            {
+               ossimDpt scale;
+               scale.toPoint( value );
+               text->setScale( scale );
+            }
+
+            // text point size:
+            key = "point_size";
+            value = m_kwl->findKey( textPrefix, key );
+            if ( value.size() )
+            {
+               ossimIpt ptSize;
+               ptSize.toPoint( value );
+               text->setPointSize( ptSize );
+            }
+
+            // text location:
+            key = "location";
+            value = m_kwl->findKey( textPrefix, key );
+            if ( value.size() )
+            {
+               if ( value == "bottom" )
+               {
+                  ossimIpt ipt;
+                  ipt.x = (ossim_int32)centerPt.x;
+                  ipt.y = (ossim_int32)(centerPt.y+halfLine+10);
+                  text->setUpperLeftPosition( ipt );
+
+                  ossimDrect rect;
+                  text->getBoundingRect( rect );
+                  ipt.x = ipt.x - rect.width()/2;
+                  text->setUpperLeftPosition( ipt );
+               }
+            }
+
+            annotator->addObject( text.get() );
+         }
+      }
+   }
+
+} // End: ossimChipperUtil::addCrossHairAnnotations( ... )
 
 bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& chain) const
 {
@@ -3855,13 +4202,13 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
-   } 
-   
+   }
+
    bool result = false;
 
    ossimHistogramRemapper::StretchMode mode =
       (ossimHistogramRemapper::StretchMode)getHistoMode();
-            
+
    if ( chain.valid() )
    {
       ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
@@ -3869,12 +4216,12 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
 
       if ( ih.valid() && remapper.valid() &&
            ( mode != ossimHistogramRemapper::STRETCH_UNKNOWN ) )
-      {         
+      {
          result = true;
 
          bool roiStretch = ( m_kwl->hasKey( HIST_AOI_KW ) || m_kwl->hasKey( HIST_LLWH_KW ) ||
                              m_kwl->hasKey( HIST_CENTER_KW ) );
-         
+
          if ( !roiStretch )
          {
             bool openedHistogram = false;
@@ -3887,11 +4234,10 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
                   // For backward compatibility check if single entry and _e0.his
                   f = ih->getFilenameWithThisExtension( ossimString("his"), true );
                }
-               
+
                if ( f.exists() )
                {
                   openedHistogram = remapper->openHistogram( f );
-                  
                   if ( !openedHistogram && traceDebug() )
                   {
                      ossimNotify(ossimNotifyLevel_WARN)
@@ -3899,7 +4245,7 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
                         << "\nCould not open:  " << f << "\n";
                   }
                }
-               
+
                if ( !openedHistogram )
                {
                   //---
@@ -3915,11 +4261,11 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
          // Enable and set mode:
          remapper->setEnableFlag(true);
          remapper->setStretchMode( mode );
- 
+         
          if ( roiStretch )
          {
             ossimIrect aoi;
-            
+
             std::string value =  m_kwl->findKey( HIST_AOI_KW );
             if ( value.size() )
             {
@@ -3966,16 +4312,16 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
          {
             remapper->setEnableFlag(false);
          }
-         
+
       } // Matches: if ( ih.valid() && remapper.valid() && mode... )
-      
+
    } // Matches: if ( chain.valid() )
 
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
    }
-   
+
    return result;
 }
 
@@ -4009,7 +4355,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
 
    // Nan rect for starters.
    rect.makeNan();
-   
+
    if ( source )
    {
       if (  m_kwl->hasKey( CUT_BBOX_XYWH_KW ) )
@@ -4018,15 +4364,15 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
          std::string cutBbox = m_kwl->findKey( CUT_BBOX_XYWH_KW );
          getIrect( cutBbox, rect );
       }
-      
+
       if ( rect.hasNans() )
       {
          if ( m_geom.valid() )
          {
-            if ( m_kwl->find( CUT_CENTER_LAT_KW.c_str() ) ) 
+            if ( m_kwl->find( CUT_CENTER_LAT_KW.c_str() ) )
             {
                // "Cut Center" with: --cut-center-llwh or --cut-center-llr:
-               
+
                ossimString latStr = m_kwl->findKey( CUT_CENTER_LAT_KW );
                ossimString lonStr = m_kwl->findKey( CUT_CENTER_LON_KW );
                if ( latStr.size() && lonStr.size() )
@@ -4037,7 +4383,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                   // Want the height nan going into worldToLocal call so it gets picked
                   // up by the elevation manager.
                   //---
-                  centerGpt.makeNan(); 
+                  centerGpt.makeNan();
 
                   centerGpt.lat = latStr.toFloat64();
                   centerGpt.lon = lonStr.toFloat64();
@@ -4050,13 +4396,13 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
 
                      if ( !centerDpt.hasNans() )
                      {
-                        if ( isIdentity() && m_ivt.valid() ) // Chipping in image space.
+                        if ( isChipMode() && m_ivt.valid() ) // Chipping in image space.
                         {
                            // Tranform image center point to view:
                            ossimDpt ipt = centerDpt;
                            m_ivt->imageToView( ipt, centerDpt );
                         }
-                     
+
                         // --cut-center-llwh:
                         ossimString widthStr  = m_kwl->findKey( CUT_WIDTH_KW );
                         ossimString heightStr = m_kwl->findKey( CUT_HEIGHT_KW );
@@ -4072,7 +4418,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                               rect = ossimIrect(ul, lr);
                            }
                         }
-                        else // --cut-center-llr: 
+                        else // --cut-center-llr:
                         {
                            ossimString radiusStr = m_kwl->findKey( CUT_RADIUS_KW );
                            if ( radiusStr.size() )
@@ -4087,7 +4433,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                                  {
                                     ossim_float64 rx = radius/mpp.x;
                                     ossim_float64 ry = radius/mpp.y;
-                                 
+
                                     ossimIpt ul( ossim::round<int>( centerDpt.x - rx ),
                                                  ossim::round<int>( centerDpt.y - ry ) );
                                     ossimIpt lr( ossim::round<int>( centerDpt.x + rx ),
@@ -4098,15 +4444,15 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                            }
                         }
                      }
-                  
+
                   } // Matches: if ( !centerGpt.hasNans() )
-               
+
                } // Matches: if ( latStr && lonStr )
-            
+
             } // Matches: if ( m_kwl->find( CUT_CENTER_LAT_KW ) )
-         
+
             else if ( (m_kwl->find( CUT_MAX_LAT_KW.c_str() ) ||
-                       (m_kwl->find( CUT_WMS_BBOX_LL_KW.c_str() )))) 
+                       (m_kwl->find( CUT_WMS_BBOX_LL_KW.c_str() ))))
             {
                ossimString maxLat;
                ossimString maxLon;
@@ -4119,7 +4465,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                   maxLat = m_kwl->findKey( CUT_MAX_LAT_KW );
                   maxLon = m_kwl->findKey( CUT_MAX_LON_KW );
                   minLat = m_kwl->findKey( CUT_MIN_LAT_KW );
-                  minLon = m_kwl->findKey( CUT_MIN_LON_KW );               
+                  minLon = m_kwl->findKey( CUT_MIN_LON_KW );
                }
                else
                {
@@ -4135,7 +4481,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                      maxLat = cutBox[3];
                   }
                }
-        
+
                if ( maxLat.size() && maxLon.size() && minLat.size() && minLon.size() )
                {
                   ossim_float64 minLatF = minLat.toFloat64();
@@ -4162,38 +4508,38 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                   ossimDpt halfDpp;
                   m_geom->getDegreesPerPixel( halfDpp );
                   halfDpp = halfDpp/2.0;
-            
+
                   ossimGpt gpt(0.0, 0.0, 0.0);
                   ossimDpt ulPt;
                   ossimDpt lrPt;
-            
+
                   // Upper left:
                   gpt.lat = maxLatF - halfDpp.y;
                   gpt.lon = minLonF + halfDpp.x;
                   m_geom->worldToLocal(gpt, ulPt);
-            
+
                   // Lower right:
                   gpt.lat = minLatF + halfDpp.y;
                   gpt.lon = maxLonF - halfDpp.x;
                   m_geom->worldToLocal(gpt, lrPt);
 
-                  if ( isIdentity() && m_ivt.valid() )
+                  if ( isChipMode() && m_ivt.valid() )
                   {
                      // Chipping in image space:
-                  
+
                      // Tranform image ul point to view:
                      ossimDpt ipt = ulPt;
                      m_ivt->imageToView( ipt, ulPt );
-                  
+
                      // Tranform image lr point to view:
                      ipt = lrPt;
                      m_ivt->imageToView( ipt, lrPt );
                   }
-            
+
                   rect = ossimIrect( ossimIpt(ulPt), ossimIpt(lrPt) );
                }
             }
-            else if ( m_kwl->find( CUT_WMS_BBOX_KW.c_str() ) ) 
+            else if ( m_kwl->find( CUT_WMS_BBOX_KW.c_str() ) )
             {
                ossimString cutBbox = m_kwl->findKey( CUT_WMS_BBOX_KW );
 
@@ -4217,11 +4563,11 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                         ossimDpt halfDpp;
                         m_geom->getDegreesPerPixel( halfDpp );
                         halfDpp = halfDpp/2.0;
-                  
+
                         ossimGpt gpt(0.0, 0.0, 0.0);
                         ossimDpt ulPt;
                         ossimDpt lrPt;
-                  
+
                         // Upper left:
                         gpt.lat = maxy - halfDpp.y;
                         gpt.lon = minx + halfDpp.x;
@@ -4230,7 +4576,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                         gpt.lat = maxy - halfDpp.y;
                         gpt.lon = maxx - halfDpp.x;
                         m_geom->worldToLocal(gpt, ptsArray[1]);
-                  
+
                         // Lower right:
                         gpt.lat = miny + halfDpp.y;
                         gpt.lon = maxx - halfDpp.x;
@@ -4272,12 +4618,12 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
             }
 
             // If no user defined rect set to scene bounding rect.
-            if ( rect.hasNans() ) 
+            if ( rect.hasNans() )
             {
                // Get the rectangle from the input chain:
                rect = source->getBoundingRect(0);
             }
-      
+
          } // if ( m_getOutputGeometry.valid() )
          else
          {
@@ -4293,18 +4639,18 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
             }
             throw( ossimException(errMsg) );
          }
-         
+
       } // if ( rect.hasNans() )
 
    } // if ( source )
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "aoi: " << rect << "\n"
          << MODULE << " exited...\n";
    }
-   
+
 } // End: ossimChipperUtil::getAreaOfInterest
 
 bool ossimChipperUtil::getIrect( const std::string& s, ossimIrect& rect ) const
@@ -4342,7 +4688,7 @@ bool ossimChipperUtil::getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
       ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
       if ( ih.valid() )
       {
-         // Get the geometry from the image handler.      
+         // Get the geometry from the image handler.
          ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
          if ( geom.valid() )
          {
@@ -4369,7 +4715,7 @@ bool ossimChipperUtil::getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
          }
       }
    }
-   
+
    return result;
 }
 
@@ -4397,7 +4743,7 @@ bool ossimChipperUtil::getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
    }
    return result;
 }
-   
+
 void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalRect,
                                                      ossimIrect& adjustedRect)
 {
@@ -4429,15 +4775,15 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
          if ( maxRectDimension > thumbSize )
          {
             // Need to adjust scale:
-            
+
             // Get the corners before the scale change:
             ossimGpt ulGpt;
             ossimGpt lrGpt;
-            
+
             m_geom->localToWorld(ossimDpt(originalRect.ul()), ulGpt);
-            m_geom->localToWorld(ossimDpt(originalRect.lr()), lrGpt);         
-            
-            if ( isIdentity()  && m_ivt.valid() ) // Chipping in image space.)
+            m_geom->localToWorld(ossimDpt(originalRect.lr()), lrGpt);
+
+            if ( isChipMode()  && m_ivt.valid() ) // Chipping in image space.)
             {
                ossim_float64 scale = thumbSize / maxRectDimension;
                if ( m_ivt->getScale().hasNans() )
@@ -4446,13 +4792,13 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
                }
                else
                {
-                  m_ivt->scale( m_ivt->getScale().x*scale,m_ivt->getScale().y*scale ); 
+                  m_ivt->scale( m_ivt->getScale().x*scale,m_ivt->getScale().y*scale );
                }
             }
             else
             {
                ossim_float64 scale = maxRectDimension / thumbSize;
-               
+
                //---
                // Adjust the projection scale.  Note the "true" is to recenter
                // the tie point so it falls relative to the projection origin.
@@ -4463,13 +4809,13 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
             }
 
             // Must call to reset the ossimImageRenderer's bounding rect for each input.
-            propagateOutputProjectionToChains();  
+            propagateOutputProjectionToChains();
 
             // Get the new upper left in view space.
             ossimDpt dpt;
             m_geom->worldToLocal(ulGpt, dpt);
             ossimIpt ul(dpt);
-            
+
             // Get the new lower right in view space.
             m_geom->worldToLocal(lrGpt, dpt);
             ossimIpt lr(dpt);
@@ -4480,7 +4826,7 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
             //---
             ossim_int32 ts = thumbSize;
             bool pad = padThumbnail();
-            
+
             if ( ( (lr.x - ul.x + 1) > ts ) || pad )
             {
                lr.x = ul.x + ts - 1;
@@ -4489,11 +4835,11 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
             {
                lr.y = ul.y + ts - 1;
             }
-            
+
             adjustedRect = ossimIrect(ul, lr);
          }
       }
-      
+
    } // if ( !originalRect.hasNans() && m_geom.valid() )
    else
    {
@@ -4509,7 +4855,7 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
       }
       throw( ossimException(errMsg) );
    }
-   
+
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << "\nadjusted rect: " << adjustedRect << "\n";
@@ -4545,7 +4891,7 @@ bool ossimChipperUtil::hasWmsBboxCutWidthHeight()const
 
    return result;
 }
-        
+
 bool ossimChipperUtil::hasCutBoxWidthHeight() const
 {
    bool result = false;
@@ -4557,7 +4903,7 @@ bool ossimChipperUtil::hasCutBoxWidthHeight() const
          {
             if ( m_kwl->hasKey( CUT_MIN_LAT_KW ) )
             {
-               if ( m_kwl->hasKey( CUT_MIN_LON_KW ) )               
+               if ( m_kwl->hasKey( CUT_MIN_LON_KW ) )
                {
                   if ( m_kwl->hasKey( CUT_MAX_LAT_KW ) )
                   {
@@ -4622,7 +4968,7 @@ void ossimChipperUtil::setReaderProps( ossimImageHandler* ih ) const
             {
                ossimRefPtr<ossimProperty> prop =
                   new ossimStringProperty(splitArray[0], splitArray[1]);
-               
+
                ih->setProperty( prop );
             }
          }
@@ -4637,7 +4983,7 @@ void ossimChipperUtil::getBandList( std::vector<ossim_uint32>& bandList ) const
    {
       ossimString os;
       os.string() = m_kwl->findKey( std::string( ossimKeywordNames::BANDS_KW ) );
-      if ( os.size() )
+      if ( os.size() &&(os!="default"))
       {
          std::vector<ossimString> band_list(0);
          os.split( band_list, ossimString(","), false );
@@ -4656,8 +5002,23 @@ void ossimChipperUtil::getBandList( std::vector<ossim_uint32>& bandList ) const
          }
       }
    }
-   
+
 } // End: ossimChipperUtil::getBandList
+
+bool ossimChipperUtil::hasAnnotations() const
+{
+   bool result = false;
+   if ( m_kwl.valid() )
+   {
+      ossimString regularExpression = "annotation[0-9]*\\.type";
+      ossim_uint32 count = m_kwl->getNumberOfKeysThatMatch( regularExpression );
+      if ( count > 0 )
+      {
+         result = true;
+      }
+   }
+   return result;
+}
 
 bool ossimChipperUtil::hasLutFile() const
 {
@@ -4692,7 +5053,7 @@ bool ossimChipperUtil::hasGeoPolyCutterOption()const
 {
    bool result = (m_kwl->find(CLIP_WMS_BBOX_LL_KW.c_str())||
                   m_kwl->find(CLIP_POLY_LAT_LON_KW.c_str()));
-   
+
    return result;
 }
 
@@ -4864,7 +5225,7 @@ bool ossimChipperUtil::northUp() const
    return keyIsTrue( std::string(NORTH_UP_KW) );
 }
 
-bool ossimChipperUtil::isIdentity() const
+bool ossimChipperUtil::isChipMode() const
 {
    return (m_operation == OSSIM_CHIPPER_OP_CHIP);
 }
@@ -4910,7 +5271,7 @@ ossim_int32 ossimChipperUtil::getZone() const
    }
    return result;
 }
-      
+
 
 std::string ossimChipperUtil::getHemisphere() const
 {
@@ -4934,7 +5295,7 @@ bool ossimChipperUtil::hasSensorModelInput()
       ossimRefPtr<ossimImageHandler> ih = (*chainIdx)->getImageHandler();
       if ( ih.valid() )
       {
-         // Get the geometry from the first image handler.      
+         // Get the geometry from the first image handler.
          ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
          if ( geom.valid() )
          {
@@ -4951,7 +5312,7 @@ bool ossimChipperUtil::hasSensorModelInput()
                }
             }
          }
-      }   
+      }
       ++chainIdx;
    }
 
@@ -4965,7 +5326,7 @@ bool ossimChipperUtil::hasSensorModelInput()
          ossimRefPtr<ossimImageHandler>  ih = (*chainIdx)->getImageHandler();
          if ( ih.valid() )
          {
-            // Get the geometry from the first image handler.      
+            // Get the geometry from the first image handler.
             ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
             if ( geom.valid() )
             {
@@ -4982,11 +5343,11 @@ bool ossimChipperUtil::hasSensorModelInput()
                   }
                }
             }
-         }   
+         }
          ++chainIdx;
       }
    }
-   
+
    return result;
 }
 
@@ -5011,7 +5372,7 @@ void  ossimChipperUtil::initializeSrcKwl()
    }
    else
    {
-      m_srcKwl = 0; 
+      m_srcKwl = 0;
    }
 
    if ( traceDebug() )
@@ -5029,21 +5390,28 @@ void  ossimChipperUtil::initializeSrcKwl()
 ossim_uint32 ossimChipperUtil::getNumberOfInputs() const
 {
    ossim_uint32 result = 0;
+   
+   ossimString demRegExpr = "dem[0-9]*\\.file";
+   ossimString imgRegExpr = "image[0-9]*\\.file";
+   
    if ( m_kwl.valid() )
    {
       // Look for dems, e.g. dem0.file: foo.tif
-      ossimString regularExpression = "dem[0-9]*\\.file";
-      result = m_kwl->getNumberOfKeysThatMatch( regularExpression );
-      
+      result = m_kwl->getNumberOfKeysThatMatch( demRegExpr );
+
       // Look for images, e.g. image0.file: foo.tif
-      regularExpression = "image[0-9]*\\.file";
-      result += m_kwl->getNumberOfKeysThatMatch( regularExpression );
+      result += m_kwl->getNumberOfKeysThatMatch( imgRegExpr );
    }
+
    if ( m_srcKwl.valid() )
    {
-      result += m_srcKwl->numberOf( DEM_KW.c_str() );
-      result += m_srcKwl->numberOf( IMG_KW.c_str() );
+      // Look for dems, e.g. dem0.file: foo.tif
+      result += m_srcKwl->getNumberOfKeysThatMatch( demRegExpr );
+
+      // Look for images, e.g. image0.file: foo.tif
+      result += m_srcKwl->getNumberOfKeysThatMatch( imgRegExpr );     
    }
+
    return result;
 }
 
@@ -5117,12 +5485,12 @@ ossim_float64 ossimChipperUtil::getBrightness() const
             << "\nvalid range: -1.0 to 1.0"
             << "\nReturned brightness has been reset to: 0.0"
             << std::endl;
-         
+
          brightness = 0.0;
       }
    }
    return brightness;
-   
+
 }
 
 ossim_float64 ossimChipperUtil::getContrast() const
@@ -5142,19 +5510,19 @@ ossim_float64 ossimChipperUtil::getContrast() const
             << "\nvalid range: 0 to 20.0"
             << "\nReturned contrast has been reset to: 1.0"
             << std::endl;
-         
+
          contrast = 1.0;
       }
    }
    return contrast;
-   
+
 }
 
 std::string ossimChipperUtil::getSharpenMode() const
 {
    ossimString mode = m_kwl->findKey( SHARPEN_MODE_KW );
    if ( mode.size() )
-   {   
+   {
       mode.downcase();
       if ( (mode != "light") && (mode != "heavy") && (mode != "none") )
       {
@@ -5165,6 +5533,7 @@ std::string ossimChipperUtil::getSharpenMode() const
             << std::endl;
          mode = "";
       }
+      if(mode=="none") mode = "";
    }
    return mode.string();
 }
@@ -5175,7 +5544,7 @@ int ossimChipperUtil::getHistoMode() const
 
    ossimString op = m_kwl->findKey( HIST_OP_KW );
    op.downcase();
-   
+
    if ( ( op.string() == "auto-minmax" ) )
    {
       result = ossimHistogramRemapper::LINEAR_AUTO_MIN_MAX;
@@ -5183,11 +5552,11 @@ int ossimChipperUtil::getHistoMode() const
    else if ( (op == "std-stretch-1") || (op == "std-stretch 1") )
    {
       result = ossimHistogramRemapper::LINEAR_1STD_FROM_MEAN;
-   } 
+   }
    else if ( (op == "std-stretch-2") || (op == "std-stretch 2") )
    {
       result = ossimHistogramRemapper::LINEAR_2STD_FROM_MEAN;
-   } 
+   }
    else if ( (op == "std-stretch-3") || (op == "std-stretch 3") )
    {
       result = ossimHistogramRemapper::LINEAR_3STD_FROM_MEAN;
@@ -5205,14 +5574,14 @@ void ossimChipperUtil::usage(ossimArgumentParser& ap)
 {
    // Add global usage options.
    ossimInit::instance()->addOptions(ap);
-   
+
    // Set app name.
    std::string appName = ap.getApplicationName();
    ap.getApplicationUsage()->setApplicationName( ossimString( appName ) );
 
    // Add options.
    addArguments(ap);
-   
+
    // Write usage.
    ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
 
@@ -5222,7 +5591,7 @@ void ossimChipperUtil::usage(ossimArgumentParser& ap)
       << "NOTES:\n"
       << "1) Never use same base name in the same directory! Example is you have a Chicago.tif\n"
       << "   and you want a Chicago.jp2, output Chicago.jp2 to its own directory.\n"
-      
+
       << "\nExample commands:\n"
 
       << "\n// File conversion: Convert geotiff to a jp2 file.\n"
@@ -5230,10 +5599,10 @@ void ossimChipperUtil::usage(ossimArgumentParser& ap)
 
       << "\n// Orthorectification: Orthorectify a nitf with RPC model out to a geotiff.\n"
       << appName << " --op ortho 5V090205P0001912264B220000100282M_001508507.ntf outputs/ortho.tif\n"
-      
+
       << "\n// Mosaic: Mosaic multiple images together and output to a geotiff.\n"
       << appName << " --combiner-type ossimImageMosaic --op ortho f1.tif f2.tif f3.tif outputs/mosaic.tif\n"
-      
+
       << "\n// Mosaic: Feather Mosaic multiple images together and output to a geotiff.\n"
       << appName << " --combiner-type ossimFeatherMosaic --op ortho f1.tif f2.tif f3.tif outputs/feather.tif\n"
 
@@ -5245,7 +5614,7 @@ void ossimChipperUtil::usage(ossimArgumentParser& ap)
 
       << "\n// Hill shade: Hill shade two DEMs, output to a geotiff.\n"
       << appName << " --color 255 255 255 --azimuth 270 --elevation 45 --exaggeration 2.0 --op  hillshade N37W123.hgt N38W123.hgt outputs/hillshade.tif\n"
-      
+
       << "\n// Two color multi view with cut box.  First image is old, second image is new:\n"
       << appName << " --cut-bbox-ll 28.092885092033352 -80.664539599998633 28.109128691071547 -80.626914963229325 --op 2cmv oldMLB.tif newMLB.tif outputs/2cmv-test1.tif\n"
 
@@ -5265,4 +5634,3 @@ void ossimChipperUtil::usage(ossimArgumentParser& ap)
       << appName << " --options r39-options.kwl\n"
       << std::endl;
 }
-

@@ -17,7 +17,7 @@ ossimElevationManagerEventListener::~ossimElevationManagerEventListener()
 void ossimElevationManagerEventListener::processEvent( ossimEvent& event )
 {
    ossimElevationManagerEvent* elevationManagerEvent =
-      PTR_CAST( ossimElevationManagerEvent, &event );
+      dynamic_cast<ossimElevationManagerEvent*>( &event );
 
    if ( elevationManagerEvent )
    {

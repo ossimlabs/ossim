@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 // 
@@ -9,10 +9,7 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfImageHeaderV2_1.cpp 23318 2015-05-26 14:08:49Z dburken $
-#include <sstream>
-#include <iomanip>
-#include <cstring> // for memset
+// $Id$
 
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimString.h>
@@ -27,6 +24,10 @@
 #include <ossim/support_data/ossimNitfVqCompressionHeader.h>
 #include <ossim/support_data/ossimNitfFileHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfDataExtensionSegmentV2_1.h>
+
+#include <sstream>
+#include <iomanip>
+#include <cstring> // for memset
 
 RTTI_DEF1(ossimNitfImageHeaderV2_1,
           "ossimNitfImageHeaderV2_1",
@@ -60,12 +61,12 @@ ossimNitfImageHeaderV2_1::~ossimNitfImageHeaderV2_1()
 {
 }
 
-void ossimNitfImageHeaderV2_1::parseStream(std::istream &in)
+void ossimNitfImageHeaderV2_1::parseStream(ossim::istream& in)
 {
    parseStream(in, NULL);
 }
 
-void ossimNitfImageHeaderV2_1::parseStream(std::istream &in, const ossimNitfFileHeaderV2_1 *file)
+void ossimNitfImageHeaderV2_1::parseStream(ossim::istream& in, const ossimNitfFileHeaderV2_1 *file)
 {
    if (!in)
    {
@@ -109,14 +110,17 @@ void ossimNitfImageHeaderV2_1::parseStream(std::istream &in, const ossimNitfFile
    {
       in.read(theGeographicLocation, 60);
    }
+
+   // Up to 3 80 character comments treated as a single comment.
    in.read(theNumberOfComments, 1);
    ossim_int32 numberOfComments = ossimString(theNumberOfComments).toInt32();
-   
-   // for now just ignore the comments
    if(numberOfComments > 0)
    {
-      in.ignore(numberOfComments*80);
+      ossim_int32 bytes = numberOfComments*80;
+      theImageComments.resize( bytes );
+      in.read( (char*)&(theImageComments.front()), bytes );
    }
+   
    in.read(theCompression, 2);
    
    // only need the Rate code if its not
@@ -358,7 +362,7 @@ void ossimNitfImageHeaderV2_1::parseStream(std::istream &in, const ossimNitfFile
    theDataLocation = in.tellg();
 }
 
-void ossimNitfImageHeaderV2_1::writeStream(std::ostream &out)
+void ossimNitfImageHeaderV2_1::writeStream(ossim::ostream &out)
 {
    out.write(theType, 2);
    out.write(theImageId, 10);
@@ -396,8 +400,12 @@ void ossimNitfImageHeaderV2_1::writeStream(std::ostream &out)
    {
       out.write(theGeographicLocation, 60);
    }
-   // for now force the number of comments to be 0
+   
    out.write(theNumberOfComments, 1);
+   if ( theImageComments.size() )
+   {
+      out.write( (char*)&(theImageComments.front()), theImageComments.size() );
+   }
    
    out.write(theCompression, 2);
    ossimString compressionTest = theCompression;
@@ -561,8 +569,26 @@ std::ostream& ossimNitfImageHeaderV2_1::print(std::ostream& out,
        << prefix << setw(24)
        << "IGEOLO:" << theGeographicLocation << "\n"
        << prefix << setw(24)
-       << "NICOM:"  << theNumberOfComments << "\n"
-       << prefix << setw(24)
+       << "NICOM:"  << theNumberOfComments << "\n";
+
+   ossim_int32 numberOfComments = ossimString(theNumberOfComments).toInt32();
+   if(numberOfComments > 0)
+   {
+      out << prefix << setw(24)
+          << "ICOM1:"  << theImageComments.substr(0,80) << "\n";
+      if ( numberOfComments > 1 )
+      {
+         out << prefix << setw(24)
+             << "ICOM2:"  << theImageComments.substr(80, 80) << "\n";
+      }
+      if ( numberOfComments > 2 )
+      {
+         out << prefix << setw(24)
+             << "ICOM3:"  << theImageComments.substr(160, 80) << "\n";
+      }
+   }
+
+   out << prefix << setw(24)
        << "IC:"     << theCompression << "\n"
        << prefix << setw(24)
        << "COMRAT:" << theCompressionRateCode << "\n"
@@ -978,6 +1004,7 @@ void ossimNitfImageHeaderV2_1::clearFields()
    memset(theCoordinateSystem, ' ',1);
    memset(theGeographicLocation, ' ',60);
    memset(theNumberOfComments, '0', 1);
+   theImageComments.clear();
    memcpy(theCompression, "NC",2);
    memset(theCompressionRateCode, ' ',4);
    memset(theNumberOfBands, '0',1);
@@ -1100,30 +1127,35 @@ ossim_int32 ossimNitfImageHeaderV2_1::getNumberOfPixelsPerBlockVert()const
 
 ossimIrect ossimNitfImageHeaderV2_1::getImageRect()const
 {
-   ossimDpt ul(ossimString((char*)(&theImageLocation[5])).toDouble(),
-               ossimString((char*)theImageLocation,
-                           (char*)(&theImageLocation[5])).toDouble());
-   
+//   ossimDpt ul(ossimString((char*)(&theImageLocation[5])).toDouble(),
+//               ossimString((char*)theImageLocation,
+//                           (char*)(&theImageLocation[5])).toDouble());
+   ossimDpt ul(0.0,0.0);   
     double rows = ossimString(theSignificantRows).toDouble();
     double cols = ossimString(theSignificantCols).toDouble();
 
-    ossimDpt lr(ul.x + cols-1,
-                ul.y + rows-1);
+//    ossimDpt lr(ul.x + cols-1,
+//                ul.y + rows-1);
+    ossimDpt lr(cols-1,
+                rows-1);
    
     return ossimIrect(ul, lr);
 }
 
 ossimIrect ossimNitfImageHeaderV2_1::getBlockImageRect()const
 {
-   ossimDpt ul(ossimString((char*)(&theImageLocation[5])).toDouble(),
-               ossimString((char*)theImageLocation,
-                           (char*)(&theImageLocation[5])).toDouble());
+//   ossimDpt ul(ossimString((char*)(&theImageLocation[5])).toDouble(),
+//               ossimString((char*)theImageLocation,
+//g                           (char*)(&theImageLocation[5])).toDouble());
+   ossimDpt ul(0.0,0.0);   
    
    double rows = getNumberOfPixelsPerBlockVert()*getNumberOfBlocksPerCol();
    double cols = getNumberOfPixelsPerBlockHoriz()*getNumberOfBlocksPerRow();;
    
-   ossimDpt lr(ul.x + cols-1,
-               ul.y + rows-1);
+//   ossimDpt lr(ul.x + cols-1,
+//               ul.y + rows-1);
+   ossimDpt lr(cols-1,
+               rows-1);
    
     return ossimIrect(ul, lr);
 }

@@ -256,9 +256,8 @@ bool ossimLlxyProjection::loadState(const ossimKeywordlist& kwl,
 
 bool ossimLlxyProjection::operator==(const ossimProjection& projection) const
 {
-   const ossimLlxyProjection* proj
-      = PTR_CAST(ossimLlxyProjection, &projection);
-
+   const ossimLlxyProjection* proj = dynamic_cast<const ossimLlxyProjection*>(&projection);
+   
    if(!proj)
    {
       return false;

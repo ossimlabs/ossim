@@ -167,7 +167,7 @@ ossimHistogram::ossimHistogram(const double* data, ossim_uint32 size, ossim_uint
    delta = (vmax - vmin) / num;
    vals = new float [num];
    counts = new float [num];
-   for (ossim_uint32 i=0; i<num; i++)
+   for (ossim_int32 i=0; i<num; ++i)
    {
       vals[i] = vmin + delta * (i + 0.5);
       counts[i] = 0.0;
@@ -944,7 +944,7 @@ float ossimHistogram::GetCount(float pixelval)const
 
 float ossimHistogram::GetMinVal()const
 {
-   register int i=0;
+   int i=0;
 
    while (i<num-1 && !counts[i])
       i++;
@@ -957,7 +957,7 @@ float ossimHistogram::GetMinVal()const
 
 float ossimHistogram::GetMaxVal()const
 {
-   register int i=num-1;
+   int i=num-1;
 
    while (i>0 && !counts[i])
       i--;
@@ -971,7 +971,7 @@ float ossimHistogram::GetMaxVal()const
 
 float ossimHistogram::GetMaxCount()const
 {
-   register int i=0;
+   int i=0;
    float max;
    max = 0.0;
    for (i=0; i < num; i++)
@@ -1033,7 +1033,7 @@ float ossimHistogram::ComputeArea(float low, float high)const
          if (high<vmin) indexhigh = 0;
          else indexhigh = num-1;
       }
-      register int i=indexlow;
+      int i=indexlow;
       float sum = 0.0;
 
       while (i<=indexhigh)

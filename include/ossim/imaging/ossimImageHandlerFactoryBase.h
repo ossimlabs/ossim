@@ -1,11 +1,11 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimImageHandlerFactoryBase.h 22632 2014-02-20 00:53:14Z dburken $
+// $Id$
 
 #ifndef ossimImageHandlerFactoryBase_HEADER
 #define ossimImageHandlerFactoryBase_HEADER 1
@@ -14,8 +14,10 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/base/ossimObjectFactory.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <algorithm>
 #include <iosfwd>
+#include <memory>
 #include <vector>
 
 class ossimFilename;
@@ -63,7 +65,7 @@ public:
                                    bool openOverview=true)const = 0;
    virtual ossimImageHandler* open(const ossimKeywordlist& kwl,
                                    const char* prefix=0)const = 0;
-
+#if 0
    /**
     *  @brief Open method.
     *
@@ -79,9 +81,25 @@ public:
     *  
     *  @return This implementation returns an ossimRefPtr with a null pointer.
     */
-   virtual ossimRefPtr<ossimImageHandler> open( std::istream* str,
+   virtual ossimRefPtr<ossimImageHandler> open( ossim::istream* str,
                                                 std::streamoff restartPosition,
-                                                bool youOwnIt ) const;   
+                                                bool youOwnIt ) const;
+#endif
+   
+   /**
+    * @brief Open method that takes a stream.
+    *
+    * This implementation returns an ossimRefPtr with a null pointer.
+    * 
+    * @param str Open stream to image.
+    * @param connectionString
+    * @param openOverview If true attempt to open overview file. 
+    * @return ossimImageHandler
+    */
+   virtual ossimRefPtr<ossimImageHandler> open(
+      std::shared_ptr<ossim::istream>& str,
+      const std::string& connectionString,
+      bool openOverview=true ) const;
 
    /**
     * @brief Open overview that takes a file name.
@@ -95,6 +113,20 @@ public:
     */
    virtual ossimRefPtr<ossimImageHandler> openOverview(
       const ossimFilename& file ) const;
+
+   /**
+    * @brief Open method that takes a stream.
+    *
+    * This implementation returns an ossimRefPtr with a null pointer.
+    * 
+    * @param str Open stream to image.
+    * @param connectionString
+    * @return ossimImageHandler
+    */
+   virtual ossimRefPtr<ossimImageHandler> openOverview(
+      std::shared_ptr<ossim::istream>& str,
+      const ossimString& connectionString ) const;
+
 
    virtual void getImageHandlersBySuffix(ImageHandlerList& result,
                                          const ossimString& ext)const;

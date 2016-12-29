@@ -1,19 +1,17 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// LICENSE: See top level LICENSE.txt file.
+// LICENSE: MIT
 // 
 // Author: Garrett Potts
 // 
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfImageHeaderV2_1.h 23072 2015-01-12 15:34:18Z dburken $
+// $Id$
 
 #ifndef ossimNitfImageHeaderV2_1_HEADER
-#define ossimNitfImageHeaderV2_1_HEADER
-
-#include <stdexcept>
+#define ossimNitfImageHeaderV2_1_HEADER 1
 
 #include <ossim/support_data/ossimNitfImageHeaderV2_X.h>
 #include <ossim/support_data/ossimNitfImageBandV2_1.h>

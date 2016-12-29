@@ -1,13 +1,11 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
+// License: MIT
 //
-// See LICENSE.txt file in the top level directory for more details.
-// 
 // Description: This class provides manipulation of filenames.
 //
-//*************************************************************************
-// $Id: ossimFilename.cpp 20192 2011-10-25 17:27:25Z dburken $
+//---
+// $Id$
 
 #include <ossim/ossimConfig.h>  /* to pick up platform defines */
 
@@ -553,8 +551,17 @@ ossimFilename ossimFilename::expand() const
                {
                   if(tempPtr[scanIdx+1] == '(')
                   {
-                     scanIdx +=2;
+                     scanIdx += 2;
                      startIdx = scanIdx;
+                  }
+                  else
+                  {
+                     //---
+                     // Infinite loop fix with below file on window:
+                     // "\\kiosk\x$\SourceImagery\foo.ntf" (drb 21 Nov. 2016)
+                     //---
+                     finalResult += tempPtr[scanIdx];
+                     ++scanIdx;
                   }
                }
                // look for an end pattern and apply if we found a start pattern
@@ -622,18 +629,24 @@ ossimFilename ossimFilename::expand() const
 bool ossimFilename::exists() const
 {
    bool result = false;
+   if ( isUrl() == false )
+   {
 #if defined(_WIN32)
-   result = (_access(c_str(), ossimFilename::OSSIM_EXIST) == 0);
+      result = (_access(c_str(), ossimFilename::OSSIM_EXIST) == 0);
 #else
-   result = ((access(c_str(), ossimFilename::OSSIM_EXIST)) == 0);
+      result = ((access(c_str(), ossimFilename::OSSIM_EXIST)) == 0);
 #endif
+   }
+   else
+   {
+      result = true; // No test for url at this point.
+   }
    return result;
 }
 
 bool ossimFilename::isFile() const
 {
 #if defined(_WIN32)
-
    struct _stat sbuf;
    if ( _stat(c_str(), &sbuf ) == -1)
       return false;
@@ -685,6 +698,24 @@ bool ossimFilename::isReadable() const
 #else
    return (access(c_str(), ossimFilename::OSSIM_READ) == 0);
 #endif
+}
+
+bool ossimFilename::isUrl() const
+{
+   bool result = false;
+   if ( m_str.size() )
+   {
+      //---
+      // Must have at least room for a protocol and "://", e.g.
+      // "s3://my_bucket/data1/foo.tif
+      //---
+      std::size_t found = m_str.find( std::string("://") );
+      if ( ( found != std::string::npos ) && ( found > 1 ) )
+      {
+         result = true;
+      }
+   }
+   return result;
 }
 
 bool ossimFilename::isWriteable() const
@@ -1199,24 +1230,31 @@ bool ossimFilename::wildcardRemove(const ossimFilename& pathname)
 
 bool ossimFilename::rename(const ossimFilename& destFile, bool overwriteDestinationFlag)const
 {
-   if(!overwriteDestinationFlag)
+   bool result = true;
+   if ( this->string() != destFile.string() )
    {
-      if(destFile.exists())
+      if ( overwriteDestinationFlag && destFile.exists() )
+      {
+         destFile.remove();
+      }
+
+      if ( destFile.exists() == false )
+      {
+         // std::rename from cstdio returns 0 on success.
+         if ( std::rename(this->c_str(), destFile.c_str()) != 0 )
+         {
+            result = false;
+         }
+      }
+      else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "WARNING: "
-            << "ossimFilename::rename WARNING:"
+            << "ossimFilenam::rename WARNING:"
             << "\nDestination File Exists: " << destFile << std::endl;
-         return false;
+         result = false;
       }
    }
-   else if(destFile.exists())
-   {
-      destFile.remove();
-   }
-   ::rename(this->c_str(), destFile.c_str());
-   
-   return true;
+   return result;
 }
    
 bool ossimFilename::remove()const
@@ -1328,21 +1366,26 @@ bool ossimFilename::isRelative() const
 bool ossimFilename::needsExpansion() const
 {
    bool result = false;
-   if ( size() )
+   if ( m_str.size() )
    {
-      result = isRelative();
-      if (result == false)
+      // Do not expand URLs.
+      if ( isUrl() == false )
       {
-         // Check for '$'
-         std::string::size_type pos = m_str.find('$', 0);
+         result = isRelative();
+         if (result == false)
          {
-            if (pos != std::string::npos)
+            // Check for '$'
+            std::string::size_type pos = m_str.find('$', 0);
             {
-               // found '$'
-               result = true;
+               if (pos != std::string::npos)
+               {
+                  // found '$'
+                  result = true;
+               }
             }
+            
          }
-      }    
+      }
    }
    return result;
 }

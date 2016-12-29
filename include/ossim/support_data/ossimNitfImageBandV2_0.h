@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,14 +9,16 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfImageBandV2_0.h 15416 2009-09-11 20:58:51Z dburken $
-#ifndef ossimNitfImageBandV2_0_HEADER
-#define ossimNitfImageBandV2_0_HEADER
+// $Id$
 
-#include <string>
+#ifndef ossimNitfImageBandV2_0_HEADER
+#define ossimNitfImageBandV2_0_HEADER 1
+
 #include <ossim/base/ossimConstants.h>
 #include <ossim/support_data/ossimNitfImageBand.h>
 #include <ossim/support_data/ossimNitfImageLutV2_0.h>
+#include <string>
+
 
 class OSSIM_DLL ossimNitfImageBandV2_0 : public ossimNitfImageBand
 {
@@ -28,8 +30,8 @@ public:
    /** virtual destructory */
    virtual ~ossimNitfImageBandV2_0();
    
-   virtual void parseStream(std::istream& in);
-   virtual void writeStream(std::ostream& out);
+   virtual void parseStream(ossim::istream& in);
+   virtual void writeStream(ossim::ostream& out);
 
    /**
     * @brief print method that outputs a key/value type format adding prefix

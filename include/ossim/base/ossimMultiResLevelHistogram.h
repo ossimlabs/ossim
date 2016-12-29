@@ -24,6 +24,7 @@ public:
    ossimMultiResLevelHistogram();
    ossimMultiResLevelHistogram(ossim_uint32 numberOfResLevels);
    ossimMultiResLevelHistogram(const ossimMultiResLevelHistogram& rhs);
+   virtual ~ossimMultiResLevelHistogram();
    
 
    ossimRefPtr<ossimHistogram> getHistogram(ossim_uint32 band,
@@ -68,7 +69,6 @@ public:
                           const char* prefix=0)const;
    
 protected:
-   virtual ~ossimMultiResLevelHistogram();
   class  ossimProprietaryHeaderInformation
    {
    public:

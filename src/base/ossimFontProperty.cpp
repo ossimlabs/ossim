@@ -41,9 +41,7 @@ const ossimProperty& ossimFontProperty::assign(const ossimProperty& rhs)
 {
    ossimProperty::assign(rhs);
 
-   ossimFontProperty* rhsPtr = PTR_CAST(ossimFontProperty,
-                                        &rhs);
-
+   const ossimFontProperty* rhsPtr = dynamic_cast<const ossimFontProperty*>(&rhs);
    if(rhsPtr)
    {
       theValue = rhsPtr->theValue;

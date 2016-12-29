@@ -1,15 +1,16 @@
 //*******************************************************************
 //
-// LICENSE: LGPL  see top level LICENSE.txt
+// LICENSE: MIT
 //
 // Author: Garrett Potts
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfTagInformation.cpp 23572 2015-10-09 15:50:19Z dburken $
+// $Id$
 
 #include <ossim/support_data/ossimNitfTagInformation.h>
 #include <ossim/base/ossimCommon.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/support_data/ossimNitfTagFactoryRegistry.h>
 #include <ossim/support_data/ossimNitfUnknownTag.h>
@@ -27,7 +28,7 @@ ossimNitfTagInformation::~ossimNitfTagInformation()
 {
 }
 
-void ossimNitfTagInformation::parseStream(std::istream &in)
+void ossimNitfTagInformation::parseStream(ossim::istream& in)
 {
    if(in)
    {
@@ -76,7 +77,7 @@ void ossimNitfTagInformation::parseStream(std::istream &in)
    }
 }
 
-void ossimNitfTagInformation::writeStream(std::ostream &out)
+void ossimNitfTagInformation::writeStream(ossim::ostream &out)
 {
    theTagOffset = out.tellp(); // Capture the offset.
    out.write(theTagName, 6);

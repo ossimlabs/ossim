@@ -46,9 +46,9 @@ RTTI_DEF3(ossimSensorModel, "ossimSensorModel", ossimProjection, ossimOptimizabl
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimDatumFactory.h>
-
 #include <ossim/elevation/ossimElevManager.h>
 #include <ossim/base/ossimTieGptSet.h>
+#include <ossim/projection/ossimProjectionFactoryRegistry.h>
 
 #include <ossim/matrix/newmatrc.h>
 
@@ -513,7 +513,6 @@ std::ostream& ossimSensorModel::print(std::ostream& out) const
        << "\n theBoundGndPolygon: \n" << theBoundGndPolygon
        << "\n   theImageClipRect: " << theImageClipRect
        << "\n theNominalPosError: " << theNominalPosError
-       << "\n     theNominalPosError: " << theNominalPosError
        << "\n     theRelPosError: " << theRelPosError
        << endl;
 
@@ -684,6 +683,13 @@ bool ossimSensorModel::saveState(ossimKeywordlist& kwl,
            ossimString::toString(theImageClipRect.lr().x) + " " +
            ossimString::toString(theImageClipRect.lr().y),
            true);
+
+   if ( theSeedFunction.valid() )
+   {
+      ossimString seedPrefix = prefix;
+      seedPrefix += "seed_projection.";
+      theSeedFunction->saveState(kwl, seedPrefix.c_str());
+   }
 
    // Avoid passing null char* to method that takes an ossimString.
    ossimString tmpStr;
@@ -911,6 +917,18 @@ bool ossimSensorModel::loadState(const ossimKeywordlist& kwl,
                                     theImageSize.samp-1, theImageSize.line-1);
    }
    
+   // theSeedFunction: This is in the base class ossimSensorModel but is not
+   // in the ossimSensorModel::loadState so do it here.
+   ossimString seedPrefix = prefix;
+   seedPrefix += ".seed_projection.";
+   value = kwl.find( seedPrefix.chars(), ossimKeywordNames::TYPE_KW );
+   if ( value )
+   {
+      // Only do expensive factory call if key is found...
+      theSeedFunction = ossimProjectionFactoryRegistry::instance()->
+         createProjection(kwl, seedPrefix.chars());
+   }
+
    // Avoid passing null char* to method that takes an ossimString.
    ossimString tmpStr;
    if (prefix)
@@ -1666,10 +1684,10 @@ ossimSensorModel::getForwardDeriv(int parmIdx, const ossimGpt& gpos, double hdel
    double middle = getAdjustableParameter(parmIdx);
    //set parm to high value
    setAdjustableParameter(parmIdx, middle + hdelta, true);
-   res = inverse(gpos);
+   res = forward(gpos);
    //set parm to low value and gte difference
    setAdjustableParameter(parmIdx, middle - hdelta, true);
-   res -= inverse(gpos);
+   res -= forward(gpos);
    //get partial derivative
    res = res*den;
 

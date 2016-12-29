@@ -167,11 +167,11 @@ void ossimImageFileWriter::changeSequencer(ossimImageSourceSequencer* sequencer)
 }
 
 bool ossimImageFileWriter::saveState(ossimKeywordlist& kwl,
-                                 const char* prefix)const
+                                     const char* prefix)const
 {
    kwl.add(prefix,
            ossimKeywordNames::TYPE_KW,
-           TYPE_NAME(this),
+           getClassName(),
            true);
 
    kwl.add(prefix,

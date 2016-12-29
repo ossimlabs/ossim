@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -15,7 +15,7 @@
 // $Id
 
 #ifndef ossimNitfAcftbTag_HEADER
-#define ossimNitfAcftbTag_HEADER
+#define ossimNitfAcftbTag_HEADER 1
 
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 
@@ -63,10 +63,10 @@ public:
    virtual ~ossimNitfAcftbTag();
 
    /** @brief Method to parse data from stream. */
-   virtual void parseStream(std::istream& in);
+   virtual void parseStream(ossim::istream& in);
 
    /** @brief Method to write data to stream. */
-   virtual void writeStream(std::ostream& out);
+   virtual void writeStream(ossim::ostream& out);
 
    /** @brief Method to clear all fields including null terminating. */
    virtual void clearFields();

@@ -402,7 +402,8 @@ bool ossimSpaceObliqueMercatorProjection::operator==(const ossimProjection& proj
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimSpaceObliqueMercatorProjection* p = PTR_CAST(ossimSpaceObliqueMercatorProjection, &proj);
+   const ossimSpaceObliqueMercatorProjection* p =
+      dynamic_cast<const ossimSpaceObliqueMercatorProjection*>(&proj);
    if (!p) return false;
 
    if (theSatelliteType != p->theSatelliteType) return false;

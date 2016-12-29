@@ -1,14 +1,13 @@
 //*******************************************************************
-// Copyright (C) 2000 ImageLinks Inc.
 //
-// License:  See top level LICENSE.txt.
+// License: MIT
 // 
 // Author:  Garrett Potts
 //
 // Description:  Contains class declaration for ossimBandSelector.
 // 
 //*******************************************************************
-//  $Id: ossimBandSelector.h 23427 2015-07-15 14:51:51Z okramer $
+//  $Id$
 #ifndef ossimBandSelector_HEADER
 #define ossimBandSelector_HEADER 1
 
@@ -43,6 +42,26 @@ public:
     */
    virtual void getOutputBandList(std::vector<ossim_uint32>& bandList) const;
 
+
+   /**
+    * @brief Will set to three bands (rgb) out.
+    *
+    * This will attempt to auto detect the zero based rgb band order from the
+    * input image handler.  If the result is < 3 bands we will
+    * not increase the band output by adding more bands.  For example,  
+    * if the input is grey or thermal then it will just output one band for
+    * a default allocation.  Note,  this can be overriden by explicitly setting
+    * the output band list.  
+    * 
+    * If the image handler implemented getRgbBandList(...) it will use that:
+    *    bands = 2,1,0 ( or whatever handler thinks rgb is )
+    * else if 3 band or greater and can't determine rgb:
+    *    bands = 0,1,2
+    * else (less than three bands)
+    *    bands = 0
+    */
+   virtual void setThreeBandRgb();
+    
    /**
     * Sets the output band list.
     *
@@ -157,11 +176,12 @@ protected:
     */
    bool getRgbBandList(std::vector<ossim_uint32>& bandList) const;
    
-   ossimRefPtr<ossimImageData>           theTile;
-   std::vector<ossim_uint32>             theOutputBandList;
-   ossimBandSelectorWithinRangeFlagState theWithinRangeFlag;
-   bool                                  thePassThroughFlag;
-   bool                                  theDelayLoadRgbFlag;
+   ossimRefPtr<ossimImageData>           m_tile;
+   std::vector<ossim_uint32>             m_outputBandList;
+   ossimBandSelectorWithinRangeFlagState m_withinRangeFlag;
+   bool                                  m_passThroughFlag;
+   bool                                  m_delayLoadRgbFlag;
+   bool                                  m_inputIsSelectable;
 
 TYPE_DATA
 };

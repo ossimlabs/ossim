@@ -923,3 +923,10 @@ bool ossimUtmProjection::operator==(const ossimProjection& proj) const
    }
    return result;   
 }
+
+ossim_uint32 ossimUtmProjection::getPcsCode() const
+{
+   // Always recompute in case origin, zone, or hemisphere were changed.
+   return ossimEpsgProjectionDatabase::instance()->getCodeFromUtmProj( this );
+}
+

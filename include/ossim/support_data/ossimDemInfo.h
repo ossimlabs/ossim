@@ -42,6 +42,8 @@ public:
     */
    virtual bool open(const ossimFilename& file);
    
+   virtual bool open(std::shared_ptr<ossim::istream>& str,
+                     const std::string& connectionString);
    /**
     * Print method.
     *
@@ -52,7 +54,10 @@ public:
    virtual std::ostream& print(std::ostream& out) const;
 
 private:
-   ossimFilename theFile;
+   //ossimFilename theFile;
+
+   mutable std::shared_ptr<ossim::istream> m_fileStr;
+   std::string m_connectionString;  
 };
 
 #endif /* End of "#ifndef ossimDemInfo_HEADER" */

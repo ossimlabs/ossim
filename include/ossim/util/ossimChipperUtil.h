@@ -31,6 +31,7 @@
 #include <vector>
 
 // Forward class declarations:
+class ossimAnnotationSource;
 class ossimArgumentParser;
 class ossimDpt;
 class ossimFilename;
@@ -467,6 +468,23 @@ private:
       ossimScalarType scalar) const;
 
    /**
+    * @brief Add annotation source to chain.
+    * @param Source to connect to.
+    * @return End of chain with annotion source on it.
+    */
+   ossimRefPtr<ossimImageSource> addAnnotations(
+      ossimRefPtr<ossimImageSource> &source) const;
+
+   /**
+    * @brief Adds cross hair graphic to annotation source.
+    * @param Annotator to add objects to.
+    * @param prefix e.g. annotation0.
+    */
+   void addCrossHairAnnotation(
+      ossimRefPtr<ossimAnnotationSource> annotator,
+      const std::string& prefix ) const;
+
+   /**
     * @brief Set up ossimHistogramRemapper for a chain.
     * @param chain Chain to set up.
     * @return true on success, false on error.
@@ -555,6 +573,9 @@ private:
     * @param bandList List initialized by this.
     */
    void getBandList( std::vector<ossim_uint32>& bandList ) const;
+
+   /** @return true if annotation options are set; false, if not. */
+   bool hasAnnotations() const;
 
    /** @return true if color table (lut) is set; false, if not. */
    bool hasLutFile() const;
@@ -649,7 +670,7 @@ private:
    bool northUp() const;
 
    /** @return true if operation is "chip" or identity; false, if not. */
-   bool isIdentity() const;
+   bool isChipMode() const;
 
    /** @return true if key is set to true; false, if not. */
    bool keyIsTrue( const std::string& key ) const;

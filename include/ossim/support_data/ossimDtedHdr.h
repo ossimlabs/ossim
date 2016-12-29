@@ -19,14 +19,16 @@
 #include <ossim/base/ossimErrorStatusInterface.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <memory>
 
 class ossimProperty;
 
 class OSSIM_DLL ossimDtedHdr : public ossimErrorStatusInterface
 {
 public:
-   ossimDtedHdr(const ossimFilename& dted_file="", ossim_int32 offset=0);
-   ossimDtedHdr(std::istream& in);
+  ossimDtedHdr();
+  ossimDtedHdr(std::shared_ptr<ossim::istream>& str, ossim_int64 offset=0);
 
    enum
    {

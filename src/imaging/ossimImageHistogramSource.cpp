@@ -27,8 +27,8 @@ ossimImageHistogramSource::ossimImageHistogramSource(ossimObject* owner)
                          false),// output can still grow though
     theHistogramRecomputeFlag(true),
     theMaxNumberOfResLevels(1),
-    theComputationMode(OSSIM_HISTO_MODE_NORMAL),
-    theNumberOfTilesToUseInFastMode(100)
+    theComputationMode(OSSIM_HISTO_MODE_NORMAL)
+    // theNumberOfTilesToUseInFastMode(100)
 {
    theAreaOfInterest.makeNan();
    addListener((ossimConnectableObjectListener*)this);
@@ -116,6 +116,7 @@ bool ossimImageHistogramSource::execute()
             theAreaOfInterest = interface->getBoundingRect();
          }
       }
+
       switch(theComputationMode)
       {
          case OSSIM_HISTO_MODE_FAST:
@@ -355,6 +356,7 @@ void ossimImageHistogramSource::computeNormalModeHistogram()
             sequencer->setAreaOfInterest(theAreaOfInterest*decimationFactors[index]);
             
             sequencer->setToStartOfSequence();
+            
             theHistogram->getMultiBandHistogram(index)->create(numberOfBands,
                                                                numberOfBins,
                                                                minValue,
@@ -395,6 +397,97 @@ void ossimImageHistogramSource::computeNormalModeHistogram()
 
 void ossimImageHistogramSource::computeFastModeHistogram()
 {
+   // Compute at most 9 x 9 tiles of 16 x 16 tile size. 
+
+   ossim_uint32 resLevelsToCompute = 1;
+	
+   // ref ptr, not a leak.
+   theHistogram = new ossimMultiResLevelHistogram;
+   theHistogram->create(resLevelsToCompute);
+   ossimImageSource* input = PTR_CAST(ossimImageSource, getInput(0));
+   if(!input)
+   {
+      setPercentComplete(100.0);
+      return;
+   }
+   // sum up all tiles needing processing.  We will use the sequencer.
+   //      ossim_uint32 numberOfResLevels = input->getNumberOfDecimationLevels();
+   double tileCount   = 0.0;
+   double totalTiles  = 0.0;
+   ossim_uint32 numberOfBands = input->getNumberOfOutputBands();
+   ossim_uint32 numberOfBins  = 0;
+   ossim_float64 minValue     = 0;
+   ossim_float64 maxValue     = 0;
+   getBinInformation(numberOfBins, minValue, maxValue, 0);
+
+   // Fixed 16 x 16 tile size:
+   ossimIpt tileSize( 16, 16 );
+
+   ossimIrect tileBoundary = theAreaOfInterest;
+   tileBoundary.stretchToTileBoundary(tileSize);
+
+   // Max of 9 x 9 tiles accross the image.
+   const ossim_uint32 MAX_TILES_WIDE = 9;
+
+   ossim_uint32 tilesWide = ossim::min( (ossim_uint32)(tileBoundary.width()/tileSize.x),
+                                        MAX_TILES_WIDE);
+   ossim_uint32 tilesHigh = ossim::min( (ossim_uint32)(tileBoundary.height()/tileSize.y),
+                                        MAX_TILES_WIDE);
+
+   totalTiles = tilesWide*tilesHigh;
+
+   if(numberOfBins > 0)
+   {
+      ossimIpt origin = theAreaOfInterest.ul();
+		
+      ossim_uint32 xTileOffset = tileBoundary.width()  / tilesWide;
+      ossim_uint32 yTileOffset = tileBoundary.height() / tilesHigh;
+
+      theHistogram->getMultiBandHistogram(0)->create(numberOfBands,
+                                                     numberOfBins,
+                                                     minValue,
+                                                     maxValue);	
+      ossim_uint32 x = 0;
+      ossim_uint32 y = 0;
+      tileCount = 0;
+      totalTiles = tilesWide*tilesHigh;
+      
+      for(y = 0; y < tilesHigh; ++y)
+      {
+         for(x = 0; x < tilesWide; ++x)
+         {
+            ossimIpt ul( origin.x + (x*xTileOffset), origin.y + (y*yTileOffset) );
+            ossimIrect tileRect(ul.x, ul.y, ul.x + tileSize.x-1, ul.y + tileSize.y-1);
+
+            ossimRefPtr<ossimImageData> data = input->getTile(tileRect);
+				
+            if(data.valid()&&data->getBuf()&&(data->getDataObjectStatus() != OSSIM_EMPTY))
+            {
+               data->populateHistogram(theHistogram->getMultiBandHistogram(0));
+            }
+
+            // Check for abort request.
+            if (needsAborting())
+            {
+               break;
+            }
+            
+            ++tileCount;
+         }
+
+         // Check for abort request.
+         if (needsAborting())
+         {
+            setPercentComplete(100);
+            break; 
+         }
+         
+         setPercentComplete((100.0*(tileCount/totalTiles)));
+      }
+   }
+
+#if 0  /* drb - old code was not working... */
+   
    // We will only compute a full res histogram in fast mode.  and will only do a MAX of 100 tiles.
    //
    ossim_uint32 resLevelsToCompute = 1;
@@ -419,7 +512,10 @@ void ossimImageHistogramSource::computeFastModeHistogram()
    getBinInformation(numberOfBins, minValue, maxValue, 0);
 	
    ossimIrect tileBoundary = theAreaOfInterest;
-   ossimIpt tileSize(ossim::max((ossim_uint32)input->getTileWidth(), (ossim_uint32)64),
+   // ossimIpt tileSize(ossim::max((ossim_uint32)input->getTileWidth(), (ossim_uint32)64),
+   //                   ossim::max((ossim_uint32)input->getTileHeight(), (ossim_uint32)64));
+
+   ossimIpt tileSize(ossim::max<ossim_uint32>(input->getTileWidth(), (ossim_uint32)64),
                      ossim::max((ossim_uint32)input->getTileHeight(), (ossim_uint32)64));
 	
    tileBoundary.stretchToTileBoundary(tileSize);
@@ -466,6 +562,8 @@ void ossimImageHistogramSource::computeFastModeHistogram()
          }
       }
    }
+
+#endif
 }
 
 bool ossimImageHistogramSource::loadState(const ossimKeywordlist& kwl,
@@ -500,11 +598,12 @@ bool ossimImageHistogramSource::loadState(const ossimKeywordlist& kwl,
       setNumberOfInputs(1);
    }
    
-   ossimString numberOfTiles = kwl.find(prefix, "number_of_tiles");
-   if(!numberOfTiles.empty())
-   {
-      theNumberOfTilesToUseInFastMode = numberOfTiles.toUInt32();
-   }
+   // ossimString numberOfTiles = kwl.find(prefix, "number_of_tiles");
+   // if(!numberOfTiles.empty())
+   // {
+   //    theNumberOfTilesToUseInFastMode = numberOfTiles.toUInt32();
+   // }
+
    theInputListIsFixedFlag = true;
    theOutputListIsFixedFlag = false;
 	

@@ -1,18 +1,21 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  See top level LICENSE.txt file
+// License: MIT
 //
-// Author:  David Burken
+// Author: David Burken
 //
 // Description: Class definition of registry (singleton) for info factories.
 //
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/support_data/ossimInfoFactoryRegistry.h>
 #include <ossim/support_data/ossimInfoFactoryInterface.h>
 #include <ossim/support_data/ossimInfoFactory.h>
+#include <ossim/support_data/ossimInfoBase.h>
 
 #include <algorithm> /* for std::find */
 
@@ -68,24 +71,61 @@ void ossimInfoFactoryRegistry::unregisterFactory(
    m_mutex.unlock();
 }
 
-ossimInfoBase* ossimInfoFactoryRegistry::create(
+std::shared_ptr<ossimInfoBase> ossimInfoFactoryRegistry::create(
    const ossimFilename& file) const
 {
-   ossimInfoBase* result = 0;
+   std::shared_ptr<ossimInfoBase> result(0);
    
-   std::vector<ossimInfoFactoryInterface*>::const_iterator i =
-      m_factoryList.begin();
-
-   while ( i != m_factoryList.end() )
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file.c_str(), std::ios_base::in|std::ios_base::binary );
+   if ( str )
    {
-      result = (*i)->create(file);
-      if ( result )
-      {
-         break;
-      }
-      ++i;
+      std::string connectionString = file.c_str();
+      result = create( str, connectionString );
+      str.reset();
    }
+   
+   if(!result)
+   {
+      std::vector<ossimInfoFactoryInterface*>::const_iterator i =
+         m_factoryList.begin();
 
+      while ( i != m_factoryList.end() )
+      {
+         result = (*i)->create( file );
+         if ( result )
+         {
+            break;
+         }
+         ++i;
+      }
+   }
+   
+   return result;
+} 
+
+std::shared_ptr<ossimInfoBase> ossimInfoFactoryRegistry::create(
+   std::shared_ptr<ossim::istream>& str,
+   const std::string& connectionString) const
+{
+   std::shared_ptr<ossimInfoBase> result(0);
+   if ( str )
+   {
+      std::vector<ossimInfoFactoryInterface*>::const_iterator i =
+         m_factoryList.begin();
+      
+      while ( i != m_factoryList.end() )
+      {
+         result = (*i)->create(str, connectionString);
+         if ( result )
+         {
+            break;
+         }
+         str->clear();
+         str->seekg(0);
+         ++i;
+      }
+   }
    return result;
 }
 

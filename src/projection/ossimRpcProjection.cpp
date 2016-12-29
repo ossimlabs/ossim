@@ -38,7 +38,7 @@ RTTI_DEF3(ossimRpcProjection, "ossimRpcProjection", ossimProjection, ossimOptimi
 static ossimTrace traceExec  ("ossimRpcProjection:exec");
 static ossimTrace traceDebug ("ossimRpcProjection:debug");
 
-static const int    MODEL_VERSION_NUMBER  = 1;
+//static const int    MODEL_VERSION_NUMBER  = 1;
 static const int    NUM_COEFFS        = 20;
 static const char*  MODEL_TYPE        = "ossimRpcModel";
 static const char*  POLY_TYPE_KW      = "polynomial_format";
@@ -1013,10 +1013,10 @@ ossimRpcProjection::getForwardDeriv(int parmIdx, const ossimGpt& gpos, double hd
    double middle = getAdjustableParameter(parmIdx);
    //set parm to high value
    setAdjustableParameter(parmIdx, middle + hdelta, true);
-   res = inverse(gpos);
+   res = forward(gpos);
    //set parm to low value and gte difference
    setAdjustableParameter(parmIdx, middle - hdelta, true);
-   res -= inverse(gpos);
+   res -= forward(gpos);
    //get partial derivative
    res = res*den;
 

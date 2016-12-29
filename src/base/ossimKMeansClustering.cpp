@@ -189,8 +189,8 @@ bool ossimKMeansClustering::computeKmeans()
       cout << endl;
    }
 
-   delete variances;
-   delete priorCounts;
+   delete [] variances;
+   delete [] priorCounts;
    m_clustersValid = true;
    return true;
 

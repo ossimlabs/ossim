@@ -231,7 +231,7 @@ bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
          ossimString val = ossimPreferences::instance()->preferencesKWL().findKey( pref, key );
          if ( val.size() )
          {
-            if ( val[0] != '.' )
+            if ( val.string()[0] != '.' )
             {
                m_extension = ".";
                m_extension += val;

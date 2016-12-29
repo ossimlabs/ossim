@@ -580,11 +580,6 @@ protected:
    ossim_int32                  theEntryNumberToRender;
    
    /**
-    * The size of the output tile.
-    */
-   ossimIpt                     theTileSize;
-
-   /**
     * Holds the enumeration specifying the product type.
     * The product type can be a CIB or a CADRG product.
     */

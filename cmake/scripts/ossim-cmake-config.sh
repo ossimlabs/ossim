@@ -98,6 +98,7 @@ fi
 # Additional stuff for ECLIPSE CDT4 users:
 CMAKE_G_ARG="Unix Makefiles"
 if [ "$BUILD_TYPE_ARG" == "ECLIPSE" ]; then
+  echo "Generating eclipse project files."
   CMAKE_G_ARG="Eclipse CDT4 - Unix Makefiles"
   cp -f $CMAKE_DIR/CMakeLists.txt $OSSIM_DEV_HOME
   CMAKE_DIR=$OSSIM_DEV_HOME
@@ -121,12 +122,19 @@ fi
 if [ -z $BUILD_OSSIM_GUI ]; then
   BUILD_OSSIM_GUI=OFF
 fi
+if [ -z $BUILD_OSSIM_QT4 ]; then
+  BUILD_OSSIM_QT4=OFF
+fi
 if [ -z $BUILD_OMS ]; then
   BUILD_OMS=OFF
 fi
 if [ -z $BUILD_OSSIM_APPS ] ; then
    export BUILD_OSSIM_APPS=ON
 fi
+if [ -z $BUILD_OSSIM_HDF5_SUPPORT ] ; then
+   export BUILD_OSSIM_HDF5_SUPPORT=OFF
+fi
+
 if [ -z $BUILD_OSSIM_CURL_APPS ] ; then
    export BUILD_OSSIM_CURL_APPS=OFF
 fi
@@ -171,6 +179,7 @@ fi
 if [ -z $BUILD_POTRACE_PLUGIN ]; then
   BUILD_POTRACE_PLUGIN=OFF
 fi
+
 if [ -z $BUILD_JPEG12_PLUGIN ]; then
   BUILD_JPEG12_PLUGIN=OFF
 fi
@@ -180,15 +189,47 @@ fi
 if [ -z $BUILD_WEB_PLUGIN ]; then
   BUILD_WEB_PLUGIN=OFF
 fi
+if [ -z $BUILD_AWS_PLUGIN ] ; then
+   export BUILD_AWS_PLUGIN=OFF
+fi
+
+if [ "${BUILD_OSSIM_GUI}" == "ON" ]; then
+  if [ -z $QT_CMAKE_DIR ]; then
+    if [ -d "/usr/lib64/cmake/Qt5Core" ]; then
+      export QT_CMAKE_DIR="/usr/lib64/cmake" 
+    elif [ -d "/usr/local/opt/qt5/lib/cmake" ]; then
+      export QT_CMAKE_DIR="/usr/local/opt/qt5/lib/cmake"
+    fi
+  fi   
+  if [ -z $Qt5Core_DIR ]; then
+    export Qt5Core_DIR=${QT_CMAKE_DIR}/Qt5Core
+  fi
+
+  if [ -z $Qt5Widgets_DIR ]; then
+    export Qt5Widgets_DIR=${QT_CMAKE_DIR}/Qt5Widgets
+  fi
+
+  if [ -z $Qt5OpenGL_DIR ]; then
+    export Qt5OpenGL_DIR=${QT_CMAKE_DIR}/Qt5OpenGL
+  fi
+fi
+
+if [ -d /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk ] ; then
+  export CMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+elif [ -d /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/ ] ; then
+  export CMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
+fi
 
 echo "Generating Makefiles in" $OSSIM_BUILD_DIR
+
 
 # CMAKE command 
 cmake -G "$CMAKE_G_ARG" \
 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
 -DOSSIM_DEV_HOME=$OSSIM_DEV_HOME \
 -DCMAKE_OSX_ARCHITECTURES="x86_64" \
--DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk \
+-DCMAKE_OSX_SYSROOT=$CMAKE_OSX_SYSROOT \
+-DCMAKE_OSX_DEPLOYMENT_TARGET=$CMAKE_OSX_DEPLOYMENT_TARGET \
 -DBUILD_OSSIM_FRAMEWORKS=ON \
 -DBUILD_OMS=$BUILD_OMS \
 -DBUILD_CNES_PLUGIN=$BUILD_CNES_PLUGIN \
@@ -209,15 +250,18 @@ cmake -G "$CMAKE_G_ARG" \
 -DBUILD_OPENJPEG_PLUGIN=$BUILD_OPENJPEG_PLUGIN \
 -DBUILD_PDAL_PLUGIN=$BUILD_PDAL_PLUGIN \
 -DBUILD_PNG_PLUGIN=$BUILD_PNG_PLUGIN \
+-DBUILD_AWS_PLUGIN=$BUILD_AWS_PLUGIN \
 -DBUILD_POTRACE_PLUGIN=$BUILD_POTRACE_PLUGIN \
 -DBUILD_SQLITE_PLUGIN=$BUILD_SQLITE_PLUGIN \
 -DBUILD_WEB_PLUGIN=$BUILD_WEB_PLUGIN \
 -DBUILD_OSSIM_VIDEO=$BUILD_OSSIM_VIDEO \
 -DBUILD_OSSIM_GUI=$BUILD_OSSIM_GUI \
+-DBUILD_OSSIM_QT4=$BUILD_OSSIM_QT4 \
 -DBUILD_OSSIM_WMS=$BUILD_OSSIM_WMS \
 -DBUILD_OSSIM_PLANET=$BUILD_OSSIM_PLANET \
 -DBUILD_OSSIM_APPS=$BUILD_OSSIM_APPS \
 -DBUILD_OSSIM_CURL_APPS=$BUILD_OSSIM_CURL_APPS \
+-DBUILD_OSSIM_HDF5_SUPPORT=$BUILD_OSSIM_HDF5_SUPPORT \
 -DOSSIM_BUILD_ADDITIONAL_DIRECTORIES=$OSSIM_BUILD_ADDITIONAL_DIRECTORIES \
 $CMAKE_DIR
 

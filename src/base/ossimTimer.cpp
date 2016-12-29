@@ -69,7 +69,8 @@ ossimTimer::Timer_t ossimTimer::tick() const
 
 #else
 
-#include <sys/time.h>
+
+#include <unistd.h>
 
 ossimTimer::ossimTimer(  )
 {
@@ -78,11 +79,32 @@ ossimTimer::ossimTimer(  )
    setStartTick();        
 }
 
-ossimTimer::Timer_t ossimTimer::tick() const
-{
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   return ((ossimTimer::Timer_t)tv.tv_sec)*1000000+(ossimTimer::Timer_t)tv.tv_usec;
-}
+
+ #if defined(_POSIX_TIMERS) && ( _POSIX_TIMERS > 0 ) && defined(_POSIX_MONOTONIC_CLOCK)
+     #include <time.h>
+
+     ossimTimer::Timer_t ossimTimer::tick() const
+     {
+         struct timespec ts;
+         clock_gettime(CLOCK_MONOTONIC, &ts);
+         return ((ossimTimer::Timer_t)ts.tv_sec)*1000000+(ossimTimer::Timer_t)ts.tv_nsec/1000;
+     }
+ #else
+     #include <sys/time.h>
+
+     ossimTimer::Timer_t ossimTimer::tick() const
+     {
+         struct timeval tv;
+         gettimeofday(&tv, NULL);
+         return ((ossimTimer::Timer_t)tv.tv_sec)*1000000+(ossimTimer::Timer_t)tv.tv_usec;
+     }
+ #endif
+
+// ossimTimer::Timer_t ossimTimer::tick() const
+// {
+//    struct timeval tv;
+//    gettimeofday(&tv, NULL);
+//    return ((ossimTimer::Timer_t)tv.tv_sec)*1000000+(ossimTimer::Timer_t)tv.tv_usec;
+// }
 
 #endif

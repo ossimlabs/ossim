@@ -8,12 +8,14 @@
 // Description: This class defines a DEM grid.
 //
 //********************************************************************
-// $Id: ossimDemGrid.cpp 9094 2006-06-13 19:12:40Z dburken $
+// $Id$
 
 #include <ossim/support_data/ossimDemGrid.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/support_data/ossimDemPoint.h>
 #include <ossim/support_data/ossimDemUtil.h>
-#include <ossim/base/ossimNotifyContext.h>
+
 
 ossimDemGrid::ossimDemGrid(ossim_float32 missingDataValue)
    : _missDataVal(missingDataValue),
@@ -27,11 +29,15 @@ ossimDemGrid::ossimDemGrid(ossim_float32 missingDataValue)
 
 ossimDemGrid::~ossimDemGrid()
 {
-   if(_grid) delete [] _grid; _grid =0;
+   if(_grid)
+   {
+      delete [] _grid;
+      _grid =0;
+   }
 }
 
 long
-ossimDemGrid::read(std::istream& dem, bool incrementalRead)
+ossimDemGrid::read(ossim::istream& dem, bool incrementalRead)
 {
    if (_firstTime)
    {
@@ -85,7 +91,7 @@ ossim_float32 ossimDemGrid::getMissingDataValue() const
    return _missDataVal;
 }
 
-long ossimDemGrid::fillGeographic(std::istream& dem,bool incrementalRead)
+long ossimDemGrid::fillGeographic(ossim::istream& dem,bool incrementalRead)
 {
    if (_firstTime) {
       _curProfile = 0;
@@ -103,7 +109,11 @@ long ossimDemGrid::fillGeographic(std::istream& dem,bool incrementalRead)
 
    // Assume all profiles have as many elevations as the first.
    _height = _profiles[0].getNumberOfElevations();
-   if(_grid) delete [] _grid; _grid =0;
+   if(_grid)
+   {
+      delete [] _grid;
+      _grid =0;
+   }
    _grid = new ossim_float32[_width * _height];
 
    ossimDemPoint sw_corner = _profiles[0].getProfileLocation();
@@ -128,7 +138,7 @@ long ossimDemGrid::fillGeographic(std::istream& dem,bool incrementalRead)
 }
 
 long
-ossimDemGrid::fillUTM(std::istream& dem, bool incrementalRead)
+ossimDemGrid::fillUTM(ossim::istream& dem, bool incrementalRead)
 {
    // 7.5 UTM DEMs are small enough we can get away with doing this stupid...
 
@@ -195,7 +205,11 @@ ossimDemGrid::fillUTM(std::istream& dem, bool incrementalRead)
    // Allocate a rectangular array large enough to hold them.
 
    _height = static_cast<long>(((maxy - miny) / dy) + 1);
-   if(_grid) delete [] _grid; _grid =0;
+   if(_grid)
+   {
+      delete [] _grid;
+      _grid =0;
+   }
    _grid = new ossim_float32[_width * _height];
 
    // Fill grid with the "missing data" value.
