@@ -103,16 +103,15 @@ else( TIFF_FOUND )
    message( FATAL_ERROR "Could not find required tiff package!" )
 endif( TIFF_FOUND )
 
-# DL - Required on unix:
-if( UNIX )
-   find_library( DL_LIBRARY dl )
-   if ( DL_LIBRARY )
-      set( ossimDependentLibs ${ossimDependentLibs} ${DL_LIBRARY} )
-   else( DL_LIBRARY )
-      # TODO:  Is this required on unix?  If so move to the required section.
-      message( FATAL_ERROR "Could not find dl library!" )
-   endif( DL_LIBRARY )
-endif( UNIX )
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+  find_library( DL_LIBRARY dl )
+  if ( DL_LIBRARY )
+    set( ossimDependentLibs ${ossimDependentLibs} ${DL_LIBRARY} )
+  else( DL_LIBRARY )
+    # TODO:  Is this required on unix?  If so move to the required section.
+    message( FATAL_ERROR "Could not find dl library!" )
+  endif( DL_LIBRARY )
+endif() # if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 # FREETYPE - Optional:
 set( OSSIM_HAS_FREETYPE 0 )

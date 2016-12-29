@@ -20,13 +20,7 @@ class ossimDrect;
 class ossimIrect;
 class OssimPolyArea2dPrivate;
 
-namespace geos
-{
-   namespace geom
-   {
-      class Geometry;
-   }
-}
+#include <geos_c.h>
 
 class OSSIM_DLL ossimPolyArea2d : public ossimReferenced
 {
@@ -132,19 +126,21 @@ public:
 protected:
    
    void clearPolygons();
-   void recurseVisibleGeometries(ossimPolygon::Vector& polyList,
-                                 const geos::geom::Geometry* geom) const;
-   
+
+      void recurseVisibleGeometries(ossimPolygon::Vector& polyList,
+                                 const GEOSGeometry* geom) const;
+
    void recurseHoles(ossimPolygon::Vector& polyList,
-                     const geos::geom::Geometry* geom) const;
-   
+                     const GEOSGeometry* geom) const;   
+
    /**
     * @brief Recurses over the Geometry object to load all complete polygons
     * (a shell and any internal holes) into the ossimPolyArea2d.
     */
+
    void recurseCompleteGeometries(std::vector<ossimPolyArea2d>& polyList,
-                                  const geos::geom::Geometry* geom) const;
-   
+                                  const GEOSGeometry* geom) const;   
+
    OssimPolyArea2dPrivate* m_privateData;
 };
 
