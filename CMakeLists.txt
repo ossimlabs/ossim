@@ -9,6 +9,8 @@ ENDIF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
 
 cmake_minimum_required(VERSION 2.8)
 
+SET(OSSIM_LIBNAME ossim)
+
 INCLUDE(OssimVersion)
 INCLUDE(OssimCommonVariables)
 
