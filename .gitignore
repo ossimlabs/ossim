@@ -1,6 +1,4 @@
 *~
-include/ossim/ossimConfig.h
-include/ossim/ossimVersion.h
 doc/html
 *CMakeFiles*
 *Makefile

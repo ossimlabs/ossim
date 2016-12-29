@@ -37,6 +37,9 @@ ENDIF (OSSIM_HAS_HDF5)
 ADD_DEFINITIONS("-DOSSIMMAKINGDLL")
 ############################### GRAB HEADERS #####################################
 FILE(GLOB ossim_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/*.h")
+FILE(GLOB ossim_config_HDRS  "${PROJECT_BINARY_DIR}/include/ossim/ossim*.h")
+list(APPEND ossim_HDRS ${ossim_config_HDRS})
+
 FILE(GLOB ossim_base_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/base/*.h")
 FILE(GLOB ossim_elevation_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/elevation/*.h")
 FILE(GLOB ossim_font_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/font/*.h")

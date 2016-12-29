@@ -193,14 +193,12 @@ IF(NOT BUILD_OSSIM_ID_SUPPORT)
    set(OSSIM_ID_ENABLED 0)
 ENDIF(NOT BUILD_OSSIM_ID_SUPPORT)
 
-SET(OSSIM_CONFIGURE_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/ossim/ossimConfig.h")
-CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/ossimConfig.h.in"
-	       "${OSSIM_CONFIGURE_HEADER}")
-SET(OSSIM_VERSION_HEADER_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/src/ossimVersion.h.in")
-SET(OSSIM_VERSION_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/ossim/ossimVersion.h")
-CONFIGURE_FILE("${OSSIM_VERSION_HEADER_CONFIG}"
-               "${OSSIM_VERSION_HEADER}")
 
+CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/ossimConfig.h.in"
+	       "${PROJECT_BINARY_DIR}/include/ossim/ossimConfig.h")
+
+CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/ossimVersion.h.in"
+               "${PROJECT_BINARY_DIR}/include/ossim/ossimVersion.h")
 
 ##################################################################################################
 # Point to the CMakeLists.txt in the src dir. OLK: Removed unnecessary src/ossim structure and
