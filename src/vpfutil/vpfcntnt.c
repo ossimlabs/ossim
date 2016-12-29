@@ -48,7 +48,7 @@
 #    endif
 #    define MAXLONG  LONG_MAX
 #  else
-#    ifndef __FreeBSD__
+#if !defined(__OpenBSD__) && !defined( __FreeBSD__)
 #      include <malloc.h>
 #    endif
 #  endif
