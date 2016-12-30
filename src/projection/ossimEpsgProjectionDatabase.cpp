@@ -23,6 +23,7 @@
 #include <ossim/projection/ossimLambertConformalConicProjection.h>
 #include <ossim/projection/ossimCassiniProjection.h>
 #include <ossim/projection/ossimAlbersProjection.h>
+#include <ossim/projection/ossimUpsProjection.h>
 #include <ossim/base/ossimEpsgDatumFactory.h>
 #include <ossim/base/ossimDatumFactory.h>
 #include <ossim/base/ossimDatumFactoryRegistry.h>
@@ -740,6 +741,15 @@ ossimEpsgProjectionDatabase::createProjFromFormatARecord(ProjDbRecord* record) c
       nz_proj->setOrigin(origin);
       nz_proj->setFalseEastingNorthing(fe, fn);
       record->proj = nz_proj;
+   }
+   else if (proj_type.contains("Polar Stereographic"))
+   {
+      origin.lat = decodeSexagesimalDms(record->csvRecord[A_NAT_ORG_LAT]);
+      origin.lon = decodeSexagesimalDms(record->csvRecord[A_NAT_ORG_LON]);
+      double fe = mtrs_per_unit*record->csvRecord[A_FALSE_EASTING].toDouble();
+      double fn = mtrs_per_unit*record->csvRecord[A_FALSE_NORTHING].toDouble();
+      ossimUpsProjection* ups_proj = new ossimUpsProjection(ossimEllipsoid(), origin);
+      record->proj = ups_proj;
    }
    else 
    {
