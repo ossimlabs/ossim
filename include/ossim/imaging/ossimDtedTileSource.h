@@ -21,11 +21,13 @@
 #include <fstream>
 
 #include <ossim/imaging/ossimImageHandler.h>
+#include <ossim/support_data/ossimDtedInfo.h>
 #include <ossim/support_data/ossimDtedVol.h>
 #include <ossim/support_data/ossimDtedHdr.h>
 #include <ossim/support_data/ossimDtedUhl.h>
 #include <ossim/support_data/ossimDtedDsi.h>
 #include <ossim/support_data/ossimDtedAcc.h>
+#include <ossim/base/ossimIoStream.h>
 
 class ossimImageData;
 
@@ -214,7 +216,9 @@ protected:
    ossim_sint16 convertSignedMagnitude(ossim_uint16& s) const;
    
    ossimRefPtr<ossimImageData> theTile;
-   mutable std::ifstream      theFileStr;
+   mutable std::shared_ptr<ossim::istream>      m_fileStr;
+   mutable std::shared_ptr<ossimDtedInfo>       m_dtedInfo;
+
    ossim_uint32               theTileWidth;
    ossim_uint32               theTileHeight;   
    ossim_uint32               theNumberOfLines;

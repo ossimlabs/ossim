@@ -1,15 +1,16 @@
 #include <ossim/support_data/ossimRpfColorConverterOffsetRecord.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
 
-ostream& operator <<(ostream& out,
-                     const ossimRpfColorConverterOffsetRecord& data)
+std::ostream& operator <<(std::ostream& out,
+                          const ossimRpfColorConverterOffsetRecord& data)
 {
-   out << "theColorConverterTableId:                 " << data.theColorConverterTableId << endl
-       << "theNumberOfColorConverterRecords:         " << data.theNumberOfColorConverterRecords << endl
-       << "theColorConverterTableOffset:             " << data.theColorConverterTableOffset << endl
-       << "theSourceColorGrayscaleOffsetTableOffset: " << data.theSourceColorGrayscaleOffsetTableOffset << endl
-       << "theTargetColorGrayscaleOffsetTableOffset: " << data.theTargetColorGrayscaleOffsetTableOffset;
+   out << "theColorConverterTableId:                 " << data.theColorConverterTableId
+       << "\ntheNumberOfColorConverterRecords:         " << data.theNumberOfColorConverterRecords
+       << "\ntheColorConverterTableOffset:             " << data.theColorConverterTableOffset
+       << "\ntheSourceColorGrayscaleOffsetTableOffset: " << data.theSourceColorGrayscaleOffsetTableOffset
+       << "\ntheTargetColorGrayscaleOffsetTableOffset: " << data.theTargetColorGrayscaleOffsetTableOffset;
 
    return out;
 }
@@ -19,7 +20,7 @@ ossimRpfColorConverterOffsetRecord::ossimRpfColorConverterOffsetRecord()
    clearFields();
 }
 
-ossimErrorCode ossimRpfColorConverterOffsetRecord::parseStream(istream& in,
+ossimErrorCode ossimRpfColorConverterOffsetRecord::parseStream(ossim::istream& in,
                                                                ossimByteOrder byteOrder)
 {
    if(in)

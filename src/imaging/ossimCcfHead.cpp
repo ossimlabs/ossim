@@ -19,15 +19,17 @@ using namespace std;
 
 #include <ossim/imaging/ossimCcfHead.h>
 #include <ossim/base/ossimIrect.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimScalarTypeLut.h>
 #include <ossim/base/ossimErrorCodes.h>
 #include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIoStream.h>
 
 static const bool TRACE = false; // Temp until trace code implemented.
 
 ossimCcfHead::ossimCcfHead()
    :
-      theCcfFile(),
+      m_connectionString(),
       theNumberOfBands(1),
       thePixelType(OSSIM_UCHAR),
       theFileType(),
@@ -62,7 +64,7 @@ ossimCcfHead::ossimCcfHead()
 //***************************************************************************
 ossimCcfHead::ossimCcfHead(const char* ccf_file)
    :
-      theCcfFile(ccf_file),
+      m_connectionString(ccf_file),
       theNumberOfBands(1),
       thePixelType(OSSIM_UCHAR),
       theFileType(),
@@ -106,6 +108,27 @@ ossimCcfHead::ossimCcfHead(const char* ccf_file)
    }
 }
 
+ossimCcfHead::ossimCcfHead(std::shared_ptr<ossim::istream>& str, 
+                           const std::string& connectionString)
+{
+   static const char MODULE[] = "ossimCcfHead::ossimCcfHead";
+   if(!str)
+   {
+      theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+   }
+   else if (!parseCcfHeader(str, connectionString))
+   {
+      theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+      
+      if (TRACE)
+      {
+         cerr << MODULE << " ERROR!"
+              << "\nError initializing from ccf_file:  " << connectionString
+              << "\nReturning..." << std::endl;
+      }
+   }
+
+}
 //***************************************************************************
 // Destructor:
 //***************************************************************************
@@ -117,28 +140,34 @@ ossimCcfHead::~ossimCcfHead()
 //***************************************************************************
 bool ossimCcfHead::parseCcfHeader(const char* ccf_file)
 {
+   static const char MODULE[] = "ossimCcfHead::parseCcfHeader";
+   std::string connectionString = ccf_file;
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( connectionString, std::ios_base::in|std::ios_base::binary);
+
+   return parseCcfHeader(str, connectionString);
+}
+
+bool ossimCcfHead::parseCcfHeader(std::shared_ptr<ossim::istream>& str, 
+                                  const std::string& connectionString)
+{
    static const char MODULE[] = "ossimCcfHead::parseossimCcfHeader";
-
-   theCcfFile = ccf_file;
-   
-   std::ifstream *is = new std::ifstream(ccf_file);
-
-   if (!(*is))
+   m_ccfStr = str;
+   m_connectionString = connectionString;
+   if (!m_ccfStr)
    {
       theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
       
       if (TRACE)
       {
          cerr << MODULE << " ERROR!"
-              << "\nCannot open file:  " << ccf_file << std::endl;
+              << "\nCannot open file:  " << m_connectionString << std::endl;
       }
       
-      is->close();
-      delete is;
-      
-      return false;
+      str.reset();
    }
-
+   m_ccfStr->clear();
+   m_ccfStr->seekg(0);
    const ossim_uint32 MAX_LEN = 256;
    char tmp[MAX_LEN];
 
@@ -150,7 +179,7 @@ bool ossimCcfHead::parseCcfHeader(const char* ccf_file)
    // been read in.
    //
    char type[4];
-   is->read(type, 3);
+   m_ccfStr->read(type, 3);
    type[3] = '\0';
    theFileType = type;
    if (theFileType != "CCF")
@@ -160,16 +189,14 @@ bool ossimCcfHead::parseCcfHeader(const char* ccf_file)
          cerr << MODULE << " ERROR!"
               << "\nNot a ccf file.  Returning..." << std::endl;
       }
-
-      is->close();
-      delete is;
+      m_ccfStr.reset();
 
       return false;
    }
 
    
    // Check the version number.
-   (*is) >> tmp 
+   (*m_ccfStr) >> tmp 
          >> theVersionNumber;
 
    //***
@@ -182,10 +209,10 @@ bool ossimCcfHead::parseCcfHeader(const char* ccf_file)
    switch(theVersionNumber)
    {
    case 5:
-      status = parseV5CcfHeader(*is);
+      status = parseV5CcfHeader(*m_ccfStr);
       break;
    case 6:
-      status = parseV6CcfHeader(*is);
+      status = parseV6CcfHeader(*m_ccfStr);
       break;
    default:
       // Version type not supported...
@@ -195,16 +222,15 @@ bool ossimCcfHead::parseCcfHeader(const char* ccf_file)
               << "\nUsupported version:  " << theVersionNumber
               << "  Returning..." << std::endl;
       }
-      is->close();
-      delete is;
-       return false;
+      m_ccfStr.reset();
+      return false;
 
       break;
    }
-   
+   m_ccfStr.reset();
    // Close the stream.
-   is->close();
-   delete is;
+   //is->close();
+   //delete is;
    //***
    // Parse the radiometry string.  This will initialize "theNumberOfBands"
    // and the pixel type.
@@ -546,7 +572,7 @@ std::ostream& ossimCcfHead::print(std::ostream& out) const
 
    out << MODULE
        << "\ntheErrorStatus:                 " << theErrorStatus
-       << "\ntheCcfFile:                     " << theCcfFile
+       << "\ntheCcfFile:                     " << m_connectionString
        << "\ntheNumberOfBands:               " << theNumberOfBands
        << "\nthePixelType:                   "
        << (ossimScalarTypeLut::instance()->getEntryString(thePixelType))

@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,11 +9,7 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfImageHeader.cpp 22417 2013-09-26 14:54:58Z gpotts $
-
-#include <cmath> /* for fmod */
-#include <iomanip>
-#include <sstream>
+// $Id$
 
 #include <ossim/support_data/ossimNitfImageHeader.h>
 #include <ossim/base/ossimContainerProperty.h>
@@ -21,11 +17,18 @@
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimNotifyContext.h>
 
+#include <cmath> /* for fmod */
+#include <iomanip>
+#include <ostream>
+#include <sstream>
+
 RTTI_DEF2(ossimNitfImageHeader,
           "ossimNitfImageHeader",
           ossimObject,
           ossimPropertyInterface)
+
 static const char* TAGS_KW = "tags";
+
 ossimNitfImageHeader::ossimNitfImageHeader()
 {
 }

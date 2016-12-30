@@ -1,25 +1,21 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author: Ken Melero (kmelero@imagelinks.com)
 //         Orginally written by Dave Burken (dburken@imagelinks.com)
 // Description: This class parses an EOSAT Fast Format rev c header.
 //
 //********************************************************************
-// $Id: ossimFfRevc.cpp 13217 2008-07-23 19:19:13Z dburken $
-
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-using namespace std;
-
-#include <cstdlib>
-#include <cstring>
+// $Id$
 
 #include <ossim/support_data/ossimFfRevc.h>
+#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimString.h>
-#include <ossim/base/ossimNotifyContext.h>
+#include <sstream>
+#include <iomanip>
 
 const int LOCATION_OFFSET [4] = { 23,
                                   183,
@@ -114,9 +110,8 @@ ossimFfRevc::ossimFfRevc(const char* headerFile)
    :
    theErrorStatus(OSSIM_OK)
 {
-   ifstream is;
-
-   is.open(headerFile);
+   std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+      createIstream(ossimString(headerFile), std::ios_base::in);
 
    if (!is)
    {
@@ -129,10 +124,7 @@ ossimFfRevc::ossimFfRevc(const char* headerFile)
       return;
    }
 
-   loadFromStream(is);
-
-   is.close();
-
+   loadFromStream( *is );
 }
 
 
@@ -149,7 +141,7 @@ int ossimFfRevc::path(int sceneNbr) const
    char tmpBuff[4];
    int path = 0;
 
-   istringstream is(theAdminRecord.thePathRowNumber[sceneNbr]);
+   std::istringstream is(theAdminRecord.thePathRowNumber[sceneNbr]);
 
    if (is)
    {
@@ -174,11 +166,11 @@ int ossimFfRevc::row(int sceneNbr) const
    char tmpBuff[4];
    int row = 0;
 
-   istringstream is(theAdminRecord.thePathRowNumber[sceneNbr]);
+   std::istringstream is(theAdminRecord.thePathRowNumber[sceneNbr]);
 
    if (is)
    {
-      is.seekg(4, ios::beg);
+      is.seekg(4, std::ios_base::beg);
       is.get(tmpBuff, 4);
       row = atoi(tmpBuff);
    }
@@ -200,11 +192,11 @@ int ossimFfRevc::fraction(int sceneNbr) const
    char tmpBuff[3];
    int fraction = 0;
 
-   istringstream is(theAdminRecord.thePathRowNumber[sceneNbr]);
+   std::istringstream is(theAdminRecord.thePathRowNumber[sceneNbr]);
 
    if (is)
    {
-      is.seekg(7, ios::beg);
+      is.seekg(7, std::ios_base::beg);
       is.get(tmpBuff, 3);
       fraction = atoi(tmpBuff);
    }
@@ -226,11 +218,11 @@ ossimString ossimFfRevc::subScene(int sceneNbr) const
    char   tmpBuff[3];
    ossimString subScene;
 
-   istringstream is(theAdminRecord.thePathRowNumber[sceneNbr]);
+   std::istringstream is(theAdminRecord.thePathRowNumber[sceneNbr]);
 
    if (is)
    {
-      is.seekg(9, ios::beg);
+      is.seekg(9, std::ios_base::beg);
       is.get(tmpBuff, 3);
       subScene = tmpBuff;
    }
@@ -260,144 +252,144 @@ ossimString ossimFfRevc::pathRow(int sceneNbr) const
 //
 // Prints data members.
 //***************************************************************************
-void ossimFfRevc::print(ostream& os) const
+void ossimFfRevc::print(std::ostream& os) const
 {
-   os << setiosflags(ios::left | ios::fixed)
+   os << std::setiosflags(std::ios_base::left | std::ios_base::fixed)
       << "Administrative Record:"
-      << setw(30) << "\ntheProductOrderNumber:" 
+      << std::setw(30) << "\ntheProductOrderNumber:" 
       << theAdminRecord.theProductOrderNumber;
 
    int i;
    for (i = 0; i < NUMBER_OF_SCENES; i++)
    {
-      os << "\nScene" << (i + 1) << setw(23) << " PathRowNumber:"
+      os << "\nScene" << (i + 1) << std::setw(23) << " PathRowNumber:"
          << theAdminRecord.thePathRowNumber[i]
-         << "\nScene" << (i + 1) << setw(23) << " AcquisitionDate:  "
+         << "\nScene" << (i + 1) << std::setw(23) << " AcquisitionDate:  "
          << theAdminRecord.theAcquisitionDate[i]
-         << "\nScene" << (i + 1) << setw(23) << " SatelliteName:    "
+         << "\nScene" << (i + 1) << std::setw(23) << " SatelliteName:    "
          << theAdminRecord.theSatName[i]
-         << "\nScene" << (i + 1) << setw(23) << " SensorName:       "
+         << "\nScene" << (i + 1) << std::setw(23) << " SensorName:       "
          << theAdminRecord.theSensorName[i]
-         << "\nScene" << (i + 1) << setw(23) << " SensorMode:       "
+         << "\nScene" << (i + 1) << std::setw(23) << " SensorMode:       "
          << theAdminRecord.theSensorMode[i]
-         << "\nScene" << (i + 1) << setw(23) << " OffNadirAngle:    "
-         << setprecision(2) << theAdminRecord.theOffNadirAngle[i];
+         << "\nScene" << (i + 1) << std::setw(23) << " OffNadirAngle:    "
+         << std::setprecision(2) << theAdminRecord.theOffNadirAngle[i];
    }
 
-   os << setw(30) << "\nProductType:" 
+   os << std::setw(30) << "\nProductType:" 
       << theAdminRecord.theProductType
-      << setw(30) << "\nProductSize:" 
+      << std::setw(30) << "\nProductSize:" 
       << theAdminRecord.theProductSize
-      << setw(30) << "\nProcessingType:" 
+      << std::setw(30) << "\nProcessingType:" 
       << theAdminRecord.theProcessingType 
-      << setw(30) << "\nResampAlgorithm:" 
+      << std::setw(30) << "\nResampAlgorithm:" 
       << theAdminRecord.theResampAlgorithm
-      << setw(30) << "\nTapeVolumeNumber:" 
+      << std::setw(30) << "\nTapeVolumeNumber:" 
       << theAdminRecord.theTapeVolumeNumber
-      << setw(30) << "\nNumberVolumesPerTape:" 
+      << std::setw(30) << "\nNumberVolumesPerTape:" 
       << theAdminRecord.theNumberVolumesPerTape
-      << setw(30) << "\nPixelsPerLine:" 
+      << std::setw(30) << "\nPixelsPerLine:" 
       << theAdminRecord.thePixelsPerLine
-      << setw(30) << "\nLinesPerImage:" 
+      << std::setw(30) << "\nLinesPerImage:" 
       << theAdminRecord.theLinesPerImage
-      << setw(30) << "\n1stLineInVolume:" 
+      << std::setw(30) << "\n1stLineInVolume:" 
       << theAdminRecord.the1stLineInVolume
-      << setw(30) << "\nTapeBlockingFactor:" 
+      << std::setw(30) << "\nTapeBlockingFactor:" 
       << theAdminRecord.theTapeBlockingFactor
-      << setw(30) << "\nRecordSize:" 
+      << std::setw(30) << "\nRecordSize:" 
       << theAdminRecord.theRecordSize
-      << setw(30) << "\nGsd:" 
-      << setprecision(2) << theAdminRecord.theGsd
-      << setw(30) << "\nOutputBitsPerPixel:" 
+      << std::setw(30) << "\nGsd:" 
+      << std::setprecision(2) << theAdminRecord.theGsd
+      << std::setw(30) << "\nOutputBitsPerPixel:" 
       << theAdminRecord.theOutputBitsPerPixel
-      << setw(30) << "\nAcquiredBitsPerPixel:" 
+      << std::setw(30) << "\nAcquiredBitsPerPixel:" 
       << theAdminRecord.theAcquiredBitsPerPixel
-      << setw(30) << "\nBandsPresentString:" 
+      << std::setw(30) << "\nBandsPresentString:" 
       << theAdminRecord.theBandsPresentString
-      << setw(30) << "\nFormatVersion:" 
+      << std::setw(30) << "\nFormatVersion:" 
       << theAdminRecord.theFormatVersion
-      << endl 
-      << setw(30) << "Radiometric record:";
+      << "\n" 
+      << std::setw(30) << "Radiometric record:";
 
-   os << setprecision(15);
+   os << std::setprecision(15);
 
    for (i = 0; i < NUMBER_OF_BANDS; i++)
    {
-      os << "\nBand" << (i + 1) << setw(24) << " bias:" 
+      os << "\nBand" << (i + 1) << std::setw(24) << " bias:" 
          << theRadiomRecord.theBias[i]
-         << "\nBand" << (i + 1) << setw(24) << " gain:" 
+         << "\nBand" << (i + 1) << std::setw(24) << " gain:" 
          << theRadiomRecord.theGain[i];
    }
 
-   os << endl
+   os << "\n"
       << "Geometric Record:"
-      << setw(30) << "\nMapProjectionName:" 
+      << std::setw(30) << "\nMapProjectionName:" 
       << theGeoRecord.theMapProjectionName
-      << setw(30) << "\nEllipsoid:" 
+      << std::setw(30) << "\nEllipsoid:" 
       << theGeoRecord.theEllipsoid
-      << setw(30) << "\nDatum:" 
+      << std::setw(30) << "\nDatum:" 
       << theGeoRecord.theDatum;
 
    for (i = 0; i < 15; i++)
    {
-      os << "\nProjectionParams[" << setw(2) << i << setw(10) << "]:  "
+      os << "\nProjectionParams[" << std::setw(2) << i << std::setw(10) << "]:  "
          << theGeoRecord.theProjectionParams[i];
    }
 
-   os << setprecision(3) 
-      << setw(30) << "\nUlLon:" 
+   os << std::setprecision(3) 
+      << std::setw(30) << "\nUlLon:" 
       << theGeoRecord.theUlLon
-      << setw(30) << "\nUlLat:" 
+      << std::setw(30) << "\nUlLat:" 
       << theGeoRecord.theUlLat
-      << setw(30) << "\nUlEasting:" 
+      << std::setw(30) << "\nUlEasting:" 
       << theGeoRecord.theUlEasting
-      << setw(30) << "\nUlNorthing:" 
+      << std::setw(30) << "\nUlNorthing:" 
       << theGeoRecord.theUlNorthing   
-      << setw(30) << "\nUrLon:" 
+      << std::setw(30) << "\nUrLon:" 
       << theGeoRecord.theUrLon
-      << setw(30) << "\nUrLat:" 
+      << std::setw(30) << "\nUrLat:" 
       << theGeoRecord.theUrLat
-      << setw(30) << "\nUrEasting:" 
+      << std::setw(30) << "\nUrEasting:" 
       << theGeoRecord.theUrEasting
-      << setw(30) << "\nUrNorthing:" 
+      << std::setw(30) << "\nUrNorthing:" 
       << theGeoRecord.theUrNorthing
-      << setw(30) << "\nLrLon:" 
+      << std::setw(30) << "\nLrLon:" 
       << theGeoRecord.theLrLon
-      << setw(30) << "\nLrLat:" 
+      << std::setw(30) << "\nLrLat:" 
       << theGeoRecord.theLrLat
-      << setw(30) << "\nLrEasting:" 
+      << std::setw(30) << "\nLrEasting:" 
       << theGeoRecord.theLrEasting
-      << setw(30) << "\nLrNorthing:" 
+      << std::setw(30) << "\nLrNorthing:" 
       << theGeoRecord.theLrNorthing
-      << setw(30) << "\nLlLon:" 
+      << std::setw(30) << "\nLlLon:" 
       << theGeoRecord.theLlLon
-      << setw(30) << "\nLlLat:" 
+      << std::setw(30) << "\nLlLat:" 
       << theGeoRecord.theLlLat
-      << setw(30) << "\nLlEasting:" 
+      << std::setw(30) << "\nLlEasting:" 
       << theGeoRecord.theLlEasting
-      << setw(30) << "\nLlNorthing:" 
+      << std::setw(30) << "\nLlNorthing:" 
       << theGeoRecord.theLlNorthing
-      << setw(30) << "\nCenterLon:" 
+      << std::setw(30) << "\nCenterLon:" 
       << theGeoRecord.theCenterLon
-      << setw(30) << "\nCenterLat:" 
+      << std::setw(30) << "\nCenterLat:" 
       << theGeoRecord.theCenterLat
-      << setw(30) << "\nCenterEasting:" 
+      << std::setw(30) << "\nCenterEasting:" 
       << theGeoRecord.theCenterEasting
-      << setw(30) << "\nCenterNorthing:" 
+      << std::setw(30) << "\nCenterNorthing:" 
       << theGeoRecord.theCenterNorthing
-      << setw(30) << "\nCenterSample:" 
+      << std::setw(30) << "\nCenterSample:" 
       << theGeoRecord.theCenterSample
-      << setw(30) << "\nCenterLine:" 
+      << std::setw(30) << "\nCenterLine:" 
       << theGeoRecord.theCenterLine
-      << setw(30) << "\nHorizontalOffset:" 
+      << std::setw(30) << "\nHorizontalOffset:" 
       << theGeoRecord.theHorizontalOffset
-      << setprecision(2) << setw(30) << "\nOrientationAngle:" 
+      << std::setprecision(2) << std::setw(30) << "\nOrientationAngle:" 
       << theGeoRecord.theOrientationAngle
-      << setw(30) << "\nSunElevationAngle:" 
-      << setprecision(1) << theGeoRecord.theSunElevationAngle
-      << setw(30) << "\nSunAzimuth:" <<  theGeoRecord.theSunAzimuth
-      << resetiosflags(ios::left)
-      << endl << endl;
+      << std::setw(30) << "\nSunElevationAngle:" 
+      << std::setprecision(1) << theGeoRecord.theSunElevationAngle
+      << std::setw(30) << "\nSunAzimuth:" <<  theGeoRecord.theSunAzimuth
+      << std::resetiosflags(std::ios_base::left)
+      << "\n\n";
 
 }
 
@@ -407,7 +399,7 @@ void ossimFfRevc::print(ostream& os) const
 //
 // Writes data members in EOSAT Fast Format Rev C format.
 //***************************************************************************
-void ossimFfRevc::write(ostream& os) const
+void ossimFfRevc::write(ossim::ostream& os) const
 {
    const char PRODUCT_ID_DESC [PRODUCT_ORDER_NUMBER_DESC_SIZE + 1]
       = "PRODUCT ID =";
@@ -529,17 +521,17 @@ void ossimFfRevc::write(ostream& os) const
    //>
    // Start at beginning of the stream.
    //<
-   os.seekp(0, ios::beg);
+   os.seekp(0, std::ios_base::beg);
 
    //>
    // Start of administrative record.
    //<
 
-   os << setiosflags(ios::fixed)  // Disable scientific mode.
+   os << std::setiosflags(std::ios_base::fixed)  // Disable scientific mode.
 
       << PRODUCT_ID_DESC
 
-      << setw(PRODUCT_ORDER_NUMBER_SIZE)
+      << std::setw(PRODUCT_ORDER_NUMBER_SIZE)
       << theAdminRecord.theProductOrderNumber;
 
    //>
@@ -549,169 +541,169 @@ void ossimFfRevc::write(ostream& os) const
    int i;
    for (i = 0; i < 4; i++)
    {
-      os.seekp(LOCATION_OFFSET[i], ios::beg);
+      os.seekp(LOCATION_OFFSET[i], std::ios_base::beg);
 
       os << LOCATION_DESC         
       
-         << setw(PATH_ROW_NUMBER_SIZE) 
+         << std::setw(PATH_ROW_NUMBER_SIZE) 
          << theAdminRecord.thePathRowNumber[i] 
 
          << DATE_DESC
 
-         << setw(DATE_SIZE) 
+         << std::setw(DATE_SIZE) 
          << theAdminRecord.theAcquisitionDate[i] 
 
-         << setw(1) << SPACE << endl // End of line.
+         << std::setw(1) << SPACE << "\n" // End of line.
 
          << SATELLITE_NAME_DESC // Start of line.
 
-         << setw(SAT_NAME_SIZE) 
+         << std::setw(SAT_NAME_SIZE) 
          << theAdminRecord.theSatName[i] 
 
          << SENSOR_NAME_DESC
       
-         << setw(SENSOR_NAME_SIZE) 
+         << std::setw(SENSOR_NAME_SIZE) 
          << theAdminRecord.theSensorName[i]
 
          << SENSOR_MODE_DESC
 
-         << setw(SENSOR_MODE_SIZE) 
+         << std::setw(SENSOR_MODE_SIZE) 
          << theAdminRecord.theSensorMode[i]
 
          << LOOK_ANGLE_DESC
 
-         << setw(OFF_NADIR_ANGLE_SIZE)
-         << setiosflags(ios::right)
-         << setprecision(2) 
+         << std::setw(OFF_NADIR_ANGLE_SIZE)
+         << std::setiosflags(std::ios_base::right)
+         << std::setprecision(2) 
          << theAdminRecord.theOffNadirAngle[i] // End of scene.
-         << resetiosflags(ios::right)
-         << endl 
-         << setw(23) << SPACE; // End of line.
+         << std::resetiosflags(std::ios_base::right)
+         << "\n" 
+         << std::setw(23) << SPACE; // End of line.
    } // End of scene loop.
 
-   os.seekp(640, ios::beg); // Start of line.
+   os.seekp(640, std::ios_base::beg); // Start of line.
 
    os << PRODUCT_TYPE_DESC
 
-      << setiosflags(ios::left)
+      << std::setiosflags(std::ios_base::left)
       
-      << setw(PRODUCT_TYPE_SIZE)
+      << std::setw(PRODUCT_TYPE_SIZE)
       << theAdminRecord.theProductType
 
       << PRODUCT_SIZE_DESC
 
-      << setw(PRODUCT_SIZE_SIZE)
+      << std::setw(PRODUCT_SIZE_SIZE)
       << theAdminRecord.theProductSize
 
-      << setw(22) << SPACE << endl; // End of line.
+      << std::setw(22) << SPACE << "\n"; // End of line.
 
-   os.seekp(720, ios::beg);
+   os.seekp(720, std::ios_base::beg);
 
    os << PROCESSING_TYPE_DESC
 
-      << setw(PROCESSING_TYPE_SIZE)
+      << std::setw(PROCESSING_TYPE_SIZE)
       << theAdminRecord.theProcessingType
 
       << RESAMPLING_ALGO_DESC
 
-      << setw(RESAMPLING_ALGO_SIZE)
+      << std::setw(RESAMPLING_ALGO_SIZE)
       << theAdminRecord.theResampAlgorithm
 
-      << resetiosflags(ios::left)
+      << std::resetiosflags(std::ios_base::left)
 
-      << setw(33) << SPACE << endl; // End of line.
+      << std::setw(33) << SPACE << "\n"; // End of line.
 
-   os.seekp(800, ios::beg);  // Start of line.
+   os.seekp(800, std::ios_base::beg);  // Start of line.
    
    os << TAPE_VOLUME_NUMBER_DESC
 
-      << setiosflags(ios::right)
+      << std::setiosflags(std::ios_base::right)
 
-      << setw(TAPE_VOLUME_NUMBER_SIZE) 
+      << std::setw(TAPE_VOLUME_NUMBER_SIZE) 
       << theAdminRecord.theTapeVolumeNumber
-      << "/" << setw(VOLUMES_PER_TAPE_SIZE)
+      << "/" << std::setw(VOLUMES_PER_TAPE_SIZE)
       << theAdminRecord.theNumberVolumesPerTape
 
       << PIXELS_PER_LINE_DESC
 
-      << setw(PIXELS_PER_LINE_SIZE)
+      << std::setw(PIXELS_PER_LINE_SIZE)
       << theAdminRecord.thePixelsPerLine 
 
       << LINES_PER_IMAGE_DESC
 
-      << setw(LINES_PER_IMAGE_SIZE)
+      << std::setw(LINES_PER_IMAGE_SIZE)
       << theAdminRecord.theLinesPerImage
 
       << "/"
 
-      << setw(LINES_PER_IMAGE_SIZE)
+      << std::setw(LINES_PER_IMAGE_SIZE)
       << theAdminRecord.theLinesPerImage
 
-      << setw(4) << SPACE << endl;  // End of line.
+      << std::setw(4) << SPACE << "\n";  // End of line.
   
-   os.seekp(880, ios::beg);  // Start of line.
+   os.seekp(880, std::ios_base::beg);  // Start of line.
 
-   os << setiosflags(ios::right)
+   os << std::setiosflags(std::ios_base::right)
 
       << FIRST_LINE_DESC
 
-      << setw(LINES_PER_IMAGE_SIZE)
+      << std::setw(LINES_PER_IMAGE_SIZE)
       << theAdminRecord.the1stLineInVolume
 
       << BLOCKING_FACTOR_DESC
 
-      << setw(BLOCKING_FACTOR_SIZE)
+      << std::setw(BLOCKING_FACTOR_SIZE)
       << theAdminRecord.theTapeBlockingFactor
  
       << RECORD_LENGTH_DESC
 
-      << setw(RECORD_LENGTH_SIZE)
+      << std::setw(RECORD_LENGTH_SIZE)
       << theAdminRecord.theRecordSize
 
       << PIXEL_GSD_DESC
 
       
-      << setw(PIXEL_GSD_SIZE)
-      << setprecision(2)
+      << std::setw(PIXEL_GSD_SIZE)
+      << std::setprecision(2)
       << theAdminRecord.theGsd
 
-      << endl;  // End of line.
+      << "\n";  // End of line.
 
-   os.seekp(960, ios::beg);  // Start of line.
+   os.seekp(960, std::ios_base::beg);  // Start of line.
 
    os << BITS_PER_PIXEL_DESC
 
-      << setw(BITS_PER_PIXEL_SIZE)
+      << std::setw(BITS_PER_PIXEL_SIZE)
       << theAdminRecord.theOutputBitsPerPixel
 
       << AQUIRED_BITS_PER_PIXEL_DESC
 
-      << setw(BITS_PER_PIXEL_SIZE)
+      << std::setw(BITS_PER_PIXEL_SIZE)
       << theAdminRecord.theAcquiredBitsPerPixel
 
-      << resetiosflags(ios::right)
+      << std::resetiosflags(std::ios_base::right)
 
-      << setw(26) << SPACE << endl;  // End of line.
+      << std::setw(26) << SPACE << "\n";  // End of line.
 
-   os.seekp(1040, ios::beg);  // Start of line.
+   os.seekp(1040, std::ios_base::beg);  // Start of line.
 
    os << BANDS_PRESENT_DESC
 
-      << setw(BANDS_PRESENT_SIZE)
+      << std::setw(BANDS_PRESENT_SIZE)
       << theAdminRecord.theBandsPresentString
 
-      << setw(31) << SPACE << endl // End of line.
-      << setw(79) << SPACE << endl
-      << setw(79) << SPACE << endl
-      << setw(79) << SPACE << endl
-      << setw(79) << SPACE << endl
-      << setw(79) << SPACE << endl;
+      << std::setw(31) << SPACE << "\n" // End of line.
+      << std::setw(79) << SPACE << "\n"
+      << std::setw(79) << SPACE << "\n"
+      << std::setw(79) << SPACE << "\n"
+      << std::setw(79) << SPACE << "\n"
+      << std::setw(79) << SPACE << "\n";
 
-   os.seekp(1520, ios::beg);
+   os.seekp(1520, std::ios_base::beg);
    
    os << REV_DESC
 
-      << setw(FORMAT_VERSION_SIZE)
+      << std::setw(FORMAT_VERSION_SIZE)
       << theAdminRecord.theFormatVersion;
 
    //***
@@ -722,51 +714,51 @@ void ossimFfRevc::write(ostream& os) const
    // Beginning of radiometric record.
    //***
 
-   os.seekp(1536, ios::beg);  
+   os.seekp(1536, std::ios_base::beg);  
 
    os << BIAS_GAIN_DESC
 
-      << setw(29) << SPACE << endl; 
+      << std::setw(29) << SPACE << "\n"; 
 
    //***
    // Loop through the bands and get write out the bias and gain for each
    // band.
    //***
    
-   os << resetiosflags(ios::left) << setiosflags(ios::right);
+   os << std::resetiosflags(std::ios_base::left) << std::setiosflags(std::ios_base::right);
 
    for (i = 0; i < 8; i++)
    {
-      os.seekp(BIAS_OFFSET[i], ios::beg);
+      os.seekp(BIAS_OFFSET[i], std::ios_base::beg);
 
-      os << setprecision(15)
+      os << std::setprecision(15)
          
-         << setw(BIAS_SIZE)
+         << std::setw(BIAS_SIZE)
          << theRadiomRecord.theBias[i]
 
          << SPACE 
 
-         << setw(GAIN_SIZE) 
+         << std::setw(GAIN_SIZE) 
          << theRadiomRecord.theGain[i]
 
-         << setw(30) << SPACE << endl;
+         << std::setw(30) << SPACE << "\n";
    } // End of loop through the bands.
 
-   os << resetiosflags(ios::right);
+   os << std::resetiosflags(std::ios_base::right);
 
-   os.seekp(2256, ios::beg);
+   os.seekp(2256, std::ios_base::beg);
 
-   os << setw(79) << SPACE << endl;
-   os << setw(79) << SPACE << endl;
-   os << setw(79) << SPACE << endl;
-   os << setw(79) << SPACE << endl;
-   os << setw(79) << SPACE << endl;
-   os << setw(79) << SPACE << endl;
-   os << setw(79) << SPACE << endl;
-   os << setw(79) << SPACE << endl;
-   os << setw(79) << SPACE << endl;
-   os << setw(79) << SPACE << endl;
-   os << setw(15) << SPACE << endl;
+   os << std::setw(79) << SPACE << "\n";
+   os << std::setw(79) << SPACE << "\n";
+   os << std::setw(79) << SPACE << "\n";
+   os << std::setw(79) << SPACE << "\n";
+   os << std::setw(79) << SPACE << "\n";
+   os << std::setw(79) << SPACE << "\n";
+   os << std::setw(79) << SPACE << "\n";
+   os << std::setw(79) << SPACE << "\n";
+   os << std::setw(79) << SPACE << "\n";
+   os << std::setw(79) << SPACE << "\n";
+   os << std::setw(15) << SPACE << "\n";
 
    //***
    // End of radiometric record(bytes 1536 to 3071).
@@ -776,46 +768,46 @@ void ossimFfRevc::write(ostream& os) const
    // Start of geometric record(bytes 3072 to 4607).
    //***
 
-   os.seekp(3072, ios::beg);  // Start of record.
+   os.seekp(3072, std::ios_base::beg);  // Start of record.
 
    os << GEO_DESC
 
       << MAP_PROJECTION_NAME_DESC
 
-      << setiosflags(ios::left) // Alpha fields left justified.
+      << std::setiosflags(std::ios_base::left) // Alpha fields left justified.
 
-      << setw(MAP_PROJECTION_NAME_SIZE)
+      << std::setw(MAP_PROJECTION_NAME_SIZE)
       << theGeoRecord.theMapProjectionName
 
       << ELLIPSOID_DESC // Looks like this has changed.
 
-      << setw(ELLIPSOID_SIZE)
+      << std::setw(ELLIPSOID_SIZE)
       << theGeoRecord.theEllipsoid
 
       << DATUM_DESC
 
-      << setw(DATUM_SIZE)
+      << std::setw(DATUM_SIZE)
       << theGeoRecord.theDatum
 
-      << resetiosflags(ios::left)
+      << std::resetiosflags(std::ios_base::left)
       
-      << endl // End of line
+      << "\n" // End of line
 
       << PROJECTION_PARAMETER_DESC
       << SPACE;
 
-   os.seekp(PROJ_PARAM_OFFSET[0], ios::beg);
-   os << setprecision(15)
-      << setiosflags(ios::right)
+   os.seekp(PROJ_PARAM_OFFSET[0], std::ios_base::beg);
+   os << std::setprecision(15)
+      << std::setiosflags(std::ios_base::right)
       
-      << setw(PROJECTION_PARAMETER_SIZE) 
+      << std::setw(PROJECTION_PARAMETER_SIZE) 
       << theGeoRecord.theProjectionParams[0]
       << SPACE;
 
-   os.seekp(PROJ_PARAM_OFFSET[1], ios::beg);
-   os << setw(PROJECTION_PARAMETER_SIZE) 
+   os.seekp(PROJ_PARAM_OFFSET[1], std::ios_base::beg);
+   os << std::setw(PROJECTION_PARAMETER_SIZE) 
       << theGeoRecord.theProjectionParams[1]
-      << setw(1) << SPACE << endl;
+      << std::setw(1) << SPACE << "\n";
 
    //***
    // Code is duplicated every three projection parameter four times; 
@@ -825,196 +817,196 @@ void ossimFfRevc::write(ostream& os) const
    {
       for (int j = i * 3 + 2; j < (i * 3) + 5; j++)
       {
-         os.seekp(PROJ_PARAM_OFFSET[j], ios::beg);
+         os.seekp(PROJ_PARAM_OFFSET[j], std::ios_base::beg);
 
-         os << setw(PROJECTION_PARAMETER_SIZE) 
+         os << std::setw(PROJECTION_PARAMETER_SIZE) 
             << theGeoRecord.theProjectionParams[j]
-            << setw(1) << SPACE;
+            << std::setw(1) << SPACE;
 
-         os.seekp(PROJ_PARAM_OFFSET[j], ios::beg);
-         os << setw(PROJECTION_PARAMETER_SIZE) 
+         os.seekp(PROJ_PARAM_OFFSET[j], std::ios_base::beg);
+         os << std::setw(PROJECTION_PARAMETER_SIZE) 
             << theGeoRecord.theProjectionParams[j]
-            << setw(1) << SPACE;
+            << std::setw(1) << SPACE;
 
-         os.seekp(PROJ_PARAM_OFFSET[j], ios::beg);
-         os << setw(PROJECTION_PARAMETER_SIZE) 
+         os.seekp(PROJ_PARAM_OFFSET[j], std::ios_base::beg);
+         os << std::setw(PROJECTION_PARAMETER_SIZE) 
             << theGeoRecord.theProjectionParams[j]
-            << setw(5) << SPACE << endl;
+            << std::setw(5) << SPACE << "\n";
       }
    }
 
-   os.seekp(PROJ_PARAM_OFFSET[14], ios::beg);
-   os << setw(PROJECTION_PARAMETER_SIZE) 
+   os.seekp(PROJ_PARAM_OFFSET[14], std::ios_base::beg);
+   os << std::setw(PROJECTION_PARAMETER_SIZE) 
       << theGeoRecord.theProjectionParams[14]
-      << setw(55) << SPACE << endl << resetiosflags(ios::right);
+      << std::setw(55) << SPACE << "\n" << std::resetiosflags(std::ios_base::right);
 
 
-   os.seekp(3632, ios::beg);
+   os.seekp(3632, std::ios_base::beg);
    os << UL_DESC
  
       << SPACE
       
-      << setw(LON_SIZE) << theGeoRecord.theUlLon
+      << std::setw(LON_SIZE) << theGeoRecord.theUlLon
 
       << SPACE
 
-      << setw(LAT_SIZE) << theGeoRecord.theUlLat
+      << std::setw(LAT_SIZE) << theGeoRecord.theUlLat
 
       << SPACE
 
-      << setprecision(3)
+      << std::setprecision(3)
       
-      << setw(EASTING_SIZE) << setiosflags(ios::right) 
+      << std::setw(EASTING_SIZE) << std::setiosflags(std::ios_base::right) 
       << theGeoRecord.theUlEasting
 
       << SPACE
 
-      << setw(NORTHING_SIZE) 
+      << std::setw(NORTHING_SIZE) 
       << theGeoRecord.theUlNorthing
 
-      << setw(20) << SPACE << endl << resetiosflags(ios::right);
+      << std::setw(20) << SPACE << "\n" << std::resetiosflags(std::ios_base::right);
 
       
-   os.seekp(3712, ios::beg);
+   os.seekp(3712, std::ios_base::beg);
    os << UR_DESC
  
       << SPACE
       
-      << setw(LON_SIZE) << theGeoRecord.theUrLon
+      << std::setw(LON_SIZE) << theGeoRecord.theUrLon
 
       << SPACE
 
-      << setw(LAT_SIZE) << theGeoRecord.theUrLat
+      << std::setw(LAT_SIZE) << theGeoRecord.theUrLat
 
       << SPACE
 
-      << setw(EASTING_SIZE) << setiosflags(ios::right) 
+      << std::setw(EASTING_SIZE) << std::setiosflags(std::ios_base::right) 
       << theGeoRecord.theUrEasting
 
       << SPACE
 
-      << setw(NORTHING_SIZE) 
+      << std::setw(NORTHING_SIZE) 
       << theGeoRecord.theUrNorthing
 
-      << setw(20) << SPACE << endl << resetiosflags(ios::right);
+      << std::setw(20) << SPACE << "\n" << std::resetiosflags(std::ios_base::right);
 
       
-   os.seekp(3792, ios::beg);
+   os.seekp(3792, std::ios_base::beg);
    os << LR_DESC
  
       << SPACE
       
-      << setw(LON_SIZE) << theGeoRecord.theLrLon
+      << std::setw(LON_SIZE) << theGeoRecord.theLrLon
 
       << SPACE
 
-      << setw(LAT_SIZE) << theGeoRecord.theLrLat
+      << std::setw(LAT_SIZE) << theGeoRecord.theLrLat
 
       << SPACE
 
-      << setw(EASTING_SIZE) << setiosflags(ios::right) 
+      << std::setw(EASTING_SIZE) << std::setiosflags(std::ios_base::right) 
       << theGeoRecord.theLrEasting
 
       << SPACE
 
-      << setw(NORTHING_SIZE) 
+      << std::setw(NORTHING_SIZE) 
       << theGeoRecord.theLrNorthing
 
-      << setw(20) << SPACE << endl << resetiosflags(ios::right);
+      << std::setw(20) << SPACE << "\n" << std::resetiosflags(std::ios_base::right);
 
       
-   os.seekp(3872, ios::beg);
+   os.seekp(3872, std::ios_base::beg);
    os << LL_DESC
  
       << SPACE
       
-      << setw(LON_SIZE) << theGeoRecord.theLlLon
+      << std::setw(LON_SIZE) << theGeoRecord.theLlLon
 
       << SPACE
 
-      << setw(LAT_SIZE) << theGeoRecord.theLlLat
+      << std::setw(LAT_SIZE) << theGeoRecord.theLlLat
 
       << SPACE
 
-      << setw(EASTING_SIZE) << setiosflags(ios::right) 
+      << std::setw(EASTING_SIZE) << std::setiosflags(std::ios_base::right) 
       << theGeoRecord.theLlEasting
 
       << SPACE
 
-      << setw(NORTHING_SIZE) 
+      << std::setw(NORTHING_SIZE) 
       << theGeoRecord.theLlNorthing
 
-      << setw(20) << SPACE << endl << resetiosflags(ios::right);
+      << std::setw(20) << SPACE << "\n" << std::resetiosflags(std::ios_base::right);
 
-   os.seekp(3952, ios::beg);
+   os.seekp(3952, std::ios_base::beg);
    os << CENTER_DESC
 
       << SPACE
 
-      << setw(LON_SIZE) 
+      << std::setw(LON_SIZE) 
       << theGeoRecord.theCenterLon
       
       << SPACE
 
-      << setw(LAT_SIZE) 
+      << std::setw(LAT_SIZE) 
       << theGeoRecord.theCenterLat
 
       << SPACE
 
-      << setw(EASTING_SIZE) << setiosflags(ios::right) 
+      << std::setw(EASTING_SIZE) << std::setiosflags(std::ios_base::right) 
       << theGeoRecord.theCenterEasting
 
       << SPACE
 
-      << setw(NORTHING_SIZE) 
+      << std::setw(NORTHING_SIZE) 
       << theGeoRecord.theCenterNorthing
 
       << SPACE 
 
-      << setw(CENTER_SAMPLE_SIZE) 
+      << std::setw(CENTER_SAMPLE_SIZE) 
       << theGeoRecord.theCenterSample
 
       << SPACE 
 
-      << setw(CENTER_LINE_SIZE) 
+      << std::setw(CENTER_LINE_SIZE) 
       << theGeoRecord.theCenterLine
 
-      << setw(4) << SPACE << endl;
+      << std::setw(4) << SPACE << "\n";
 
-   os.seekp(4032, ios::beg);
+   os.seekp(4032, std::ios_base::beg);
    os << HORIZONTAL_OFFSET_DESC
 
-      << setw(HORIZONTAL_OFFSET_SIZE) 
+      << std::setw(HORIZONTAL_OFFSET_SIZE) 
       << theGeoRecord.theHorizontalOffset
 
       << ORIENTATION_ANGLE_DESC
 
-      << setw(ORIENTATION_ANGLE_SIZE) 
-      << setprecision(2)
+      << std::setw(ORIENTATION_ANGLE_SIZE) 
+      << std::setprecision(2)
       << theGeoRecord.theOrientationAngle
 
-      << setw(39) << SPACE << endl; // 41 in spec
+      << std::setw(39) << SPACE << "\n"; // 41 in spec
 
-   os.seekp(4112, ios::beg);
+   os.seekp(4112, std::ios_base::beg);
    os << SUN_ELEVATION_DESC
 
-      << setw(SUN_ELEVATION_SIZE) 
-      << setprecision(1) 
+      << std::setw(SUN_ELEVATION_SIZE) 
+      << std::setprecision(1) 
       << theGeoRecord.theSunElevationAngle
 
       << SUN_AZIMUTH_DESC
 
-      << setw(SUN_AZIMUTH_SIZE) 
-      << setprecision(1) 
+      << std::setw(SUN_AZIMUTH_SIZE) 
+      << std::setprecision(1) 
       << theGeoRecord.theSunAzimuth  // End of data.
 
-      << setw(29) << SPACE << endl 
-      << setw(79) << SPACE << endl 
-      << setw(79) << SPACE << endl 
-      << setw(79) << SPACE << endl 
-      << setw(79) << SPACE << endl
-      << setw(79) << SPACE << endl
-      << setw(15) << SPACE << endl << flush; // ? size
+      << std::setw(29) << SPACE << "\n" 
+      << std::setw(79) << SPACE << "\n" 
+      << std::setw(79) << SPACE << "\n" 
+      << std::setw(79) << SPACE << "\n" 
+      << std::setw(79) << SPACE << "\n"
+      << std::setw(79) << SPACE << "\n"
+      << std::setw(15) << SPACE << "\n" << std::flush; // ? size
 
    //***
    // End of geometric record(bytes 3072 to 4607).
@@ -1027,7 +1019,7 @@ void ossimFfRevc::write(ostream& os) const
 // PRIVATE METHOD:
 // ossimFfRevc::loadFromStream(istream& is)
 //***************************************************************************
-void ossimFfRevc::loadFromStream(istream& is)
+void ossimFfRevc::loadFromStream(ossim::istream& is)
 {
    //***
    // See .h for enumerations for field sizes and offsets. 
@@ -1049,7 +1041,7 @@ void ossimFfRevc::loadFromStream(istream& is)
    // Start of administrative record.
    //***
 
-   is.seekg(PRODUCT_ORDER_NUMBER_OFFSET, ios::beg);
+   is.seekg(PRODUCT_ORDER_NUMBER_OFFSET, std::ios_base::beg);
 
    is.get(theAdminRecord.theProductOrderNumber, 
           PRODUCT_ORDER_NUMBER_SIZE + 1,
@@ -1065,37 +1057,37 @@ void ossimFfRevc::loadFromStream(istream& is)
    for (i = 0; i < NUMBER_OF_SCENES; i++)
    {
  
-      is.seekg(PATH_ROW_NUMBER_OFFSET[i], ios::beg);
+      is.seekg(PATH_ROW_NUMBER_OFFSET[i], std::ios_base::beg);
 
       is.get(theAdminRecord.thePathRowNumber[i], PATH_ROW_NUMBER_SIZE + 1);
    
       if (checkStream(is)) return;
 
-      is.seekg(DATE_OFFSET[i], ios::beg);
+      is.seekg(DATE_OFFSET[i], std::ios_base::beg);
 
       is.get(theAdminRecord.theAcquisitionDate[i], DATE_SIZE + 1);
    
       if (checkStream(is)) return;
 
-      is.seekg(SAT_NAME_OFFSET[i], ios::beg);
+      is.seekg(SAT_NAME_OFFSET[i], std::ios_base::beg);
 
       is.get(theAdminRecord.theSatName[i], SAT_NAME_SIZE + 1);
    
       if (checkStream(is)) return;
 
-      is.seekg(SENSOR_NAME_OFFSET[i], ios::beg);
+      is.seekg(SENSOR_NAME_OFFSET[i], std::ios_base::beg);
 
       is.get(theAdminRecord.theSensorName[i], SENSOR_NAME_SIZE + 1);
    
       if (checkStream(is)) return;
 
-      is.seekg(SENSOR_MODE_OFFSET[i], ios::beg);
+      is.seekg(SENSOR_MODE_OFFSET[i], std::ios_base::beg);
 
       is.get(theAdminRecord.theSensorMode[i], SENSOR_MODE_SIZE + 1);
   
       if (checkStream(is)) return;
 
-      is.seekg(OFF_NADIR_ANGLE_OFFSET[i], ios::beg);
+      is.seekg(OFF_NADIR_ANGLE_OFFSET[i], std::ios_base::beg);
 
       is.get(tmpBuff, OFF_NADIR_ANGLE_SIZE + 1);
 
@@ -1105,31 +1097,31 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    } // End of scene loop.
    
-   is.seekg(PRODUCT_TYPE_OFFSET, ios::beg);
+   is.seekg(PRODUCT_TYPE_OFFSET, std::ios_base::beg);
 
    is.get(theAdminRecord.theProductType, PRODUCT_TYPE_SIZE + 1);
 
    if (checkStream(is)) return;
  
-   is.seekg(PRODUCT_SIZE_OFFSET, ios::beg);
+   is.seekg(PRODUCT_SIZE_OFFSET, std::ios_base::beg);
 
    is.get(theAdminRecord.theProductSize, PRODUCT_SIZE_SIZE + 1);
 
    if (checkStream(is)) return;
    
-   is.seekg(PROCESSING_TYPE_OFFSET, ios::beg);
+   is.seekg(PROCESSING_TYPE_OFFSET, std::ios_base::beg);
 
    is.get(theAdminRecord.theProcessingType, PROCESSING_TYPE_SIZE + 1);
 
    if (checkStream(is)) return;
    
-   is.seekg(RESAMPLING_ALGO_OFFSET, ios::beg);
+   is.seekg(RESAMPLING_ALGO_OFFSET, std::ios_base::beg);
 
    is.get(theAdminRecord.theResampAlgorithm, RESAMPLING_ALGO_SIZE + 1);
 
    if (checkStream(is)) return;
    
-   is.seekg(TAPE_VOLUME_NUMBER_OFFSET, ios::beg);
+   is.seekg(TAPE_VOLUME_NUMBER_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, TAPE_VOLUME_NUMBER_SIZE + 1, '/');
 
@@ -1137,7 +1129,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theAdminRecord.theTapeVolumeNumber = atoi(tmpBuff);
 
-   is.seekg(VOLUMES_PER_TAPE_OFFSET, ios::beg);
+   is.seekg(VOLUMES_PER_TAPE_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, VOLUMES_PER_TAPE_SIZE + 1);
 
@@ -1145,7 +1137,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theAdminRecord.theNumberVolumesPerTape = atoi(tmpBuff);
     
-   is.seekg(PIXELS_PER_LINE_OFFSET, ios::beg);
+   is.seekg(PIXELS_PER_LINE_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, PIXELS_PER_LINE_SIZE + 1);
 
@@ -1153,7 +1145,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theAdminRecord.thePixelsPerLine = atoi(tmpBuff);
    
-   is.seekg(LINES_PER_IMAGE_OFFSET, ios::beg);
+   is.seekg(LINES_PER_IMAGE_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, LINES_PER_IMAGE_SIZE + 1);
 
@@ -1161,7 +1153,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theAdminRecord.theLinesPerImage = atoi(tmpBuff);
 
-   is.seekg(FIRST_LINE_IN_VOLUME_OFFSET, ios::beg);
+   is.seekg(FIRST_LINE_IN_VOLUME_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, FIRST_LINE_IN_VOLUME_SIZE + 1);
 
@@ -1169,7 +1161,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theAdminRecord.the1stLineInVolume = atoi(tmpBuff);
 
-   is.seekg(BLOCKING_FACTOR_OFFSET, ios::beg);
+   is.seekg(BLOCKING_FACTOR_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, BLOCKING_FACTOR_SIZE + 1);
 
@@ -1177,7 +1169,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theAdminRecord.theTapeBlockingFactor = atoi(tmpBuff);
    
-   is.seekg(RECORD_LENGTH_OFFSET, ios::beg);
+   is.seekg(RECORD_LENGTH_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, RECORD_LENGTH_SIZE + 1);
 
@@ -1185,7 +1177,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theAdminRecord.theRecordSize = atoi(tmpBuff);
    
-   is.seekg(PIXEL_GSD_OFFSET, ios::beg);
+   is.seekg(PIXEL_GSD_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, PIXEL_GSD_SIZE + 1);
 
@@ -1193,7 +1185,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theAdminRecord.theGsd = atof(tmpBuff);
    
-   is.seekg(BITS_PER_PIXEL_OFFSET, ios::beg);
+   is.seekg(BITS_PER_PIXEL_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, BITS_PER_PIXEL_SIZE + 1);
 
@@ -1201,7 +1193,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theAdminRecord.theOutputBitsPerPixel = atoi(tmpBuff);
    
-   is.seekg(ACQUIRED_BITS_PER_PIXEL_OFFSET, ios::beg);
+   is.seekg(ACQUIRED_BITS_PER_PIXEL_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, BITS_PER_PIXEL_SIZE + 1);
 
@@ -1209,13 +1201,13 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theAdminRecord.theAcquiredBitsPerPixel = atoi(tmpBuff);
    
-   is.seekg(BANDS_PRESENT_OFFSET, ios::beg);
+   is.seekg(BANDS_PRESENT_OFFSET, std::ios_base::beg);
 
    is.get(theAdminRecord.theBandsPresentString, BANDS_PRESENT_SIZE + 1);
 
    if (checkStream(is)) return;
    
-   is.seekg(FORMAT_VERSION_OFFSET, ios::beg);
+   is.seekg(FORMAT_VERSION_OFFSET, std::ios_base::beg);
 
    is.get(theAdminRecord.theFormatVersion, FORMAT_VERSION_SIZE + 1);
 
@@ -1230,7 +1222,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    for (i = 0; i < NUMBER_OF_BANDS; i++)
    {
-      is.seekg(BIAS_OFFSET[i], ios::beg);
+      is.seekg(BIAS_OFFSET[i], std::ios_base::beg);
 
       is.get(tmpBuff, BIAS_SIZE + 1);
 
@@ -1238,7 +1230,7 @@ void ossimFfRevc::loadFromStream(istream& is)
    
       theRadiomRecord.theBias[i] = atof(tmpBuff);
 
-      is.seekg(GAIN_OFFSET[i], ios::beg);
+      is.seekg(GAIN_OFFSET[i], std::ios_base::beg);
 
       is.get(tmpBuff, GAIN_SIZE + 1);
 
@@ -1254,19 +1246,19 @@ void ossimFfRevc::loadFromStream(istream& is)
    // Start of geometric record.
    //***
 
-   is.seekg(MAP_PROJECTION_NAME_OFFSET, ios::beg);
+   is.seekg(MAP_PROJECTION_NAME_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theMapProjectionName, MAP_PROJECTION_NAME_SIZE + 1);
 
    if (checkStream(is)) return;
 
-   is.seekg(ELLIPSOID_OFFSET, ios::beg);
+   is.seekg(ELLIPSOID_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theEllipsoid, ELLIPSOID_SIZE + 1);
 
    if (checkStream(is)) return;
 
-   is.seekg(DATUM_OFFSET, ios::beg);
+   is.seekg(DATUM_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theDatum, DATUM_SIZE + 1, ' ');
    
@@ -1278,7 +1270,7 @@ void ossimFfRevc::loadFromStream(istream& is)
    
    for(i = 0; i < 15; i++)
    {
-      is.seekg(PROJ_PARAM_OFFSET[i], ios::beg);
+      is.seekg(PROJ_PARAM_OFFSET[i], std::ios_base::beg);
    
       is.get(tmpBuff, PROJECTION_PARAMETER_SIZE + 1);
 
@@ -1290,19 +1282,19 @@ void ossimFfRevc::loadFromStream(istream& is)
    //***
    // Start of upper left data:  longitude, latitude, easting, and northing. 
    //***
-   is.seekg(UL_LON_OFFSET, ios::beg);
+   is.seekg(UL_LON_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theUlLon, LON_SIZE + 1);
    
    if (checkStream(is)) return;
    
-   is.seekg(UL_LAT_OFFSET, ios::beg);
+   is.seekg(UL_LAT_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theUlLat, LAT_SIZE + 1);
    
    if (checkStream(is)) return;
    
-   is.seekg(UL_EASTING_OFFSET, ios::beg);
+   is.seekg(UL_EASTING_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, EASTING_SIZE + 1);
 
@@ -1310,7 +1302,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theGeoRecord.theUlEasting = atof(tmpBuff);
 
-   is.seekg(UL_NORTHING_OFFSET, ios::beg);
+   is.seekg(UL_NORTHING_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, NORTHING_SIZE + 1);
 
@@ -1325,19 +1317,19 @@ void ossimFfRevc::loadFromStream(istream& is)
    //***
    // Start of upper right data:  longitude, latitude, easting, and northing. 
    //***
-   is.seekg(UR_LON_OFFSET, ios::beg);
+   is.seekg(UR_LON_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theUrLon, LON_SIZE + 1);
    
    if (checkStream(is)) return;
    
-   is.seekg(UR_LAT_OFFSET, ios::beg);
+   is.seekg(UR_LAT_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theUrLat, LAT_SIZE + 1);
    
    if (checkStream(is)) return;
    
-   is.seekg(UR_EASTING_OFFSET, ios::beg);
+   is.seekg(UR_EASTING_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, EASTING_SIZE + 1);
 
@@ -1345,7 +1337,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theGeoRecord.theUrEasting = atof(tmpBuff);
 
-   is.seekg(UR_NORTHING_OFFSET, ios::beg);
+   is.seekg(UR_NORTHING_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, NORTHING_SIZE + 1);
 
@@ -1360,19 +1352,19 @@ void ossimFfRevc::loadFromStream(istream& is)
    //***
    // Start of lower right data:  longitude, latitude, easting, and northing. 
    //***
-   is.seekg(LR_LON_OFFSET, ios::beg);
+   is.seekg(LR_LON_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theLrLon, LON_SIZE + 1);
    
    if (checkStream(is)) return;
    
-   is.seekg(LR_LAT_OFFSET, ios::beg);
+   is.seekg(LR_LAT_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theLrLat, LAT_SIZE + 1);
    
    if (checkStream(is)) return;
    
-   is.seekg(LR_EASTING_OFFSET, ios::beg);
+   is.seekg(LR_EASTING_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, EASTING_SIZE + 1);
 
@@ -1380,7 +1372,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theGeoRecord.theLrEasting = atof(tmpBuff);
 
-   is.seekg(LR_NORTHING_OFFSET, ios::beg);
+   is.seekg(LR_NORTHING_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, NORTHING_SIZE + 1);
 
@@ -1395,19 +1387,19 @@ void ossimFfRevc::loadFromStream(istream& is)
    //***
    // Start of lower left data:  longitude, latitude, easting, and northing. 
    //***
-   is.seekg(LL_LON_OFFSET, ios::beg);
+   is.seekg(LL_LON_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theLlLon, LON_SIZE + 1);
    
    if (checkStream(is)) return;
    
-   is.seekg(LL_LAT_OFFSET, ios::beg);
+   is.seekg(LL_LAT_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theLlLat, LAT_SIZE + 1);
    
    if (checkStream(is)) return;
    
-   is.seekg(LL_EASTING_OFFSET, ios::beg);
+   is.seekg(LL_EASTING_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, EASTING_SIZE + 1);
 
@@ -1415,7 +1407,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theGeoRecord.theLlEasting = atof(tmpBuff);
 
-   is.seekg(LL_NORTHING_OFFSET, ios::beg);
+   is.seekg(LL_NORTHING_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, NORTHING_SIZE + 1);
 
@@ -1431,19 +1423,19 @@ void ossimFfRevc::loadFromStream(istream& is)
    // Start of scene center data:  longitude, latitude, easting, northing,
    // sample, line. 
    //***
-   is.seekg(CENTER_LON_OFFSET, ios::beg);
+   is.seekg(CENTER_LON_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theCenterLon, LON_SIZE + 1);
    
    if (checkStream(is)) return;
    
-   is.seekg(CENTER_LAT_OFFSET, ios::beg);
+   is.seekg(CENTER_LAT_OFFSET, std::ios_base::beg);
 
    is.get(theGeoRecord.theCenterLat, LAT_SIZE + 1);
    
    if (checkStream(is)) return;
    
-   is.seekg(CENTER_EASTING_OFFSET, ios::beg);
+   is.seekg(CENTER_EASTING_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, EASTING_SIZE + 1);
 
@@ -1451,7 +1443,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theGeoRecord.theCenterEasting = atof(tmpBuff);
 
-   is.seekg(CENTER_NORTHING_OFFSET, ios::beg);
+   is.seekg(CENTER_NORTHING_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, NORTHING_SIZE + 1);
 
@@ -1459,7 +1451,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theGeoRecord.theCenterNorthing = atof(tmpBuff);
 
-   is.seekg(CENTER_SAMPLE_OFFSET, ios::beg);
+   is.seekg(CENTER_SAMPLE_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, CENTER_SAMPLE_SIZE + 1);
 
@@ -1467,7 +1459,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theGeoRecord.theCenterSample = atoi(tmpBuff);
 
-   is.seekg(CENTER_LINE_OFFSET, ios::beg);
+   is.seekg(CENTER_LINE_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, CENTER_LINE_SIZE + 1);
 
@@ -1479,7 +1471,7 @@ void ossimFfRevc::loadFromStream(istream& is)
    // End of scene center data.
    //***
    
-   is.seekg(HORIZONTAL_OFFSET_OFFSET, ios::beg);
+   is.seekg(HORIZONTAL_OFFSET_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, HORIZONTAL_OFFSET_SIZE + 1);
 
@@ -1487,7 +1479,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theGeoRecord.theHorizontalOffset = atoi(tmpBuff);
    
-   is.seekg(ORIENTATION_ANGLE_OFFSET, ios::beg);
+   is.seekg(ORIENTATION_ANGLE_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, ORIENTATION_ANGLE_SIZE + 1);
 
@@ -1495,7 +1487,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theGeoRecord.theOrientationAngle = atof(tmpBuff);
    
-   is.seekg(SUN_ELEVATION_OFFSET, ios::beg);
+   is.seekg(SUN_ELEVATION_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, SUN_ELEVATION_SIZE + 1);
 
@@ -1503,7 +1495,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 
    theGeoRecord.theSunElevationAngle = atof(tmpBuff);
    
-   is.seekg(SUN_AZIMUTH_OFFSET, ios::beg);
+   is.seekg(SUN_AZIMUTH_OFFSET, std::ios_base::beg);
 
    is.get(tmpBuff, SUN_AZIMUTH_SIZE + 1);
 
@@ -1524,7 +1516,7 @@ void ossimFfRevc::loadFromStream(istream& is)
 // Checks the stream.  If an error has occurred it sets theErrorStatus.
 // Returns: theErrorStatus    ( 0 = OK,  1 = ERROR )
 //***************************************************************************
-int ossimFfRevc::checkStream(istream& is)
+int ossimFfRevc::checkStream(ossim::istream& is)
 {
    //***
    // istreams set fault bits and the operator! is overloaded to return
@@ -1547,7 +1539,7 @@ int ossimFfRevc::checkStream(istream& is)
 // Function:
 // ostream& operator<<(ostream& os, const ossimFfRevc& head)
 //***************************************************************************
-ostream& operator<<(ostream& os, const ossimFfRevc& head)
+std::ostream& operator<<(std::ostream& os, const ossimFfRevc& head)
 {
    head.print(os);
 

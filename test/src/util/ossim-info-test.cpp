@@ -23,6 +23,7 @@
 #include <ossim/util/ossimInfo.h>
 
 #include <iostream>
+#include <memory>
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -58,8 +59,8 @@ int main(int argc, char *argv[])
          cout << kwl << endl;
 
          cout << "\n\ntest info dump to a keyword list:\n";
-         ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
-         if (info.valid())
+         std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
+         if (info)
          {
             info->setProcessOverviewFlag(false);
 

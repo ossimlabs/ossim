@@ -1,20 +1,20 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Description: NITF Info object.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
-
-
 
 #include <ossim/support_data/ossimNitfInfo.h>
 #include <ossim/base/ossimKeywordlist.h>
+#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+
 #include <ostream>
 #include <sstream>
+#include <memory>
 
 ossimNitfInfo::ossimNitfInfo()
    : m_nitfFile(0)
@@ -23,26 +23,39 @@ ossimNitfInfo::ossimNitfInfo()
 
 ossimNitfInfo::~ossimNitfInfo()
 {
-   m_nitfFile = 0;
+   m_nitfFile.reset();
 }
 
 bool ossimNitfInfo::open(const ossimFilename& file)
 {
-   m_nitfFile = new ossimNitfFile();
-
-   bool result = m_nitfFile->parseFile(file);
-
-   if (result == false)
+   bool result = false;
+   
+   std::string connectionString = file.c_str();
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file.c_str(), std::ios_base::in|std::ios_base::binary);
+   
+   if ( str )
    {
-      m_nitfFile = 0;
+      result = open(str, connectionString);
    }
+   return result;
+}
 
+bool ossimNitfInfo::open(std::shared_ptr<ossim::istream>& str,
+                         const std::string& connectionString)
+{
+   bool result = false;
+   if ( str )
+   {
+      m_nitfFile = std::make_shared<ossimNitfFile>();
+      result = m_nitfFile->parseStream(ossimFilename(connectionString), *str);
+   }
    return result;
 }
 
 std::ostream& ossimNitfInfo::print(std::ostream& out) const
 {
-   if ( m_nitfFile.valid() )
+   if ( m_nitfFile )
    {
       std::string prefix;
       m_nitfFile->print(out, prefix, getProcessOverviewFlag());

@@ -18,53 +18,27 @@
 
 #include <ossim/support_data/ossimDtedAcc.h>
 #include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimStringProperty.h>
+#include <ossim/base/ossimIoStream.h>
 
-//**************************************************************************
-// CONSTRUCTOR
-//**************************************************************************
-ossimDtedAcc::ossimDtedAcc(const ossimFilename& dted_file,
-                           ossim_int32 offset)
+ossimDtedAcc::ossimDtedAcc()
 {
-   if(!dted_file.empty())
+   
+}
+
+ossimDtedAcc::ossimDtedAcc(std::shared_ptr<ossim::istream>& str, ossim_int64 offset)
+{
+   if(str)
    {
-      theStartOffset = offset;
-      // Check to see that dted file exists. 
-      if(!dted_file.exists())
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_WARN) << "WARNING ossimDtedAcc::ossimDtedAcc: The DTED file does not exist: " << dted_file << std::endl;
-         return;
-      }
-      
-      // Check to see that the dted file is readable.
-      if(!dted_file.isReadable())
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_WARN) << "WARNING ossimDtedAcc::ossimDtedAcc: The DTED file is not readable: " << dted_file << std::endl;
-         return;
-      }
-      
-      // Open the dted file for reading.
-      std::ifstream in(dted_file.c_str());
-      if(!in)
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_WARN) << "WARNING ossimDtedAcc::ossimDtedAcc: Can't open the DTED file: " << dted_file << std::endl;
-         return;
-      }
-      in.seekg(offset);
-      parse(in);
+      str->seekg(offset);
+      parse(*str); 
    }
    else
    {
-      clearFields();
+      theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
    }
-}
-ossimDtedAcc::ossimDtedAcc(std::istream& in)
-{
-   parse(in);
 }
 
 void ossimDtedAcc::clearFields()

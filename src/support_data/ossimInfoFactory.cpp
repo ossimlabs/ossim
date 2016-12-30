@@ -14,6 +14,8 @@
 #include <ossim/support_data/ossimInfoFactory.h>
 #include <ossim/ossimConfig.h>
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/support_data/ossimInfoBase.h>
 #include <ossim/support_data/ossimCcfInfo.h>
 #include <ossim/support_data/ossimDemInfo.h>
@@ -29,7 +31,7 @@
 #include <ossim/support_data/ossimXmpInfo.h>
 
 #if OSSIM_HAS_HDF5
-#include <ossim/hdf5/ossimHdf5Info.h>
+#  include <ossim/hdf5/ossimHdf5Info.h>
 #endif
 
 
@@ -46,7 +48,233 @@ ossimInfoFactory* ossimInfoFactory::instance()
    }
    return theInstance;
 }
+  
+std::shared_ptr<ossimInfoBase> ossimInfoFactory::create(std::shared_ptr<ossim::istream>& str,
+                                                        const std::string& connectionString) const
+{
+   std::shared_ptr<ossimInfoBase> result(0);
 
+   if ( str )
+   {
+      str->clear();
+      str->seekg(0);
+      result = std::make_shared<ossimNitfInfo>();
+      if ( result->open(str, connectionString) )
+      {
+         return result;      
+      }
+      else
+      {
+         result.reset();
+      }
+      
+      str->clear();
+      str->seekg(0);
+      result = std::make_shared<ossimTiffInfo>();
+      if ( result->open(str, connectionString) )
+      {
+         return result;      
+      }
+      else
+      {
+         result.reset();
+      }
+      
+      str->clear();
+      str->seekg(0);
+      result = std::make_shared<ossimCcfInfo>();
+      if ( result->open(str, connectionString) )
+      {
+         return result;      
+      }
+      else
+      {
+         result.reset();
+      }
+      
+      str->clear();
+      str->seekg(0);
+      result = std::make_shared<ossimDtedInfo>();
+      if ( result->open(str, connectionString) )
+      {
+         return result;      
+      }
+      else
+      {
+         result.reset();
+      }
+      
+      str->clear();
+      str->seekg(0);
+      result = std::make_shared<ossimDoqq>();
+      if ( result->open(str, connectionString) )
+      {
+         return result;      
+      }
+      else
+      {
+         result.reset();
+      }
+      
+      str->clear();
+      str->seekg(0);
+      result = std::make_shared<ossimDemInfo>();
+      if ( result->open(str, connectionString) )
+      {
+         return result;      
+      }
+      else
+      {
+         result.reset();
+      }
+      
+      str->clear();
+      str->seekg(0);
+   }
+   
+   return result;
+}
+
+std::shared_ptr<ossimInfoBase> ossimInfoFactory::create(const ossimFilename& file) const
+{
+   std::shared_ptr<ossimInfoBase> result(0);
+
+   result = std::make_shared<ossimNitfInfo>();
+   if ( result->open( file ) )
+   {
+      return result;      
+   }
+   else
+   {
+      result.reset();
+   }
+      
+   result = std::make_shared<ossimTiffInfo>();
+   if ( result->open( file ) )
+   {
+      return result;      
+   }
+   else
+   {
+      result.reset();
+   }
+      
+   result = std::make_shared<ossimCcfInfo>();
+   if ( result->open( file ) )
+   {
+      return result;      
+   }
+   else
+   {
+      result.reset();
+   }
+      
+   result = std::make_shared<ossimDtedInfo>();
+   if ( result->open( file ) )
+   {
+      return result;      
+   }
+   else
+   {
+      result.reset();
+   }
+
+   result = std::make_shared<ossimDoqq>();
+   if ( result->open( file ) )
+   {
+      return result;      
+   }
+   else
+   {
+      result.reset();
+   }
+   
+   result = std::make_shared<ossimDemInfo>();
+   if ( result->open( file ) )
+   {
+      return result;      
+   }
+   else
+   {
+      result.reset();
+   }
+      
+   result = std::make_shared<ossimJp2Info>();
+   if ( result->open( file ) )
+   {
+      return result;
+   }
+   else
+   {
+      result.reset();
+   }
+   
+   result = std::make_shared<ossimEnviInfo>();
+   if ( result->open( file ) )
+   {
+      return result;
+   }
+   else
+   {
+      result.reset();
+   }
+         
+   result = std::make_shared<ossimRpfInfo>();
+   if ( result->open( file ) )
+   {
+      return result;
+   }
+   else
+   {
+      result.reset();
+   }
+   
+   result = std::make_shared<ossimXmpInfo>();
+   if ( result->open( file ) )
+   {
+      return result;
+   }
+   else
+   {
+      result.reset();
+   }
+   
+   result = std::make_shared<ossimLasInfo>();
+   if ( result->open( file ) )
+   {
+      return result;
+   }
+   else
+   {
+      result.reset();
+   }
+   
+   result = std::make_shared<ossimJ2kInfo>();
+   if ( result->open( file ) )
+   {
+      return result;
+   }
+   else
+   {
+      result.reset();
+   }
+   
+#if OSSIM_HAS_HDF5
+   result = std::make_shared<ossimHdf5Info>();
+   if ( result->open( file ) )
+   {
+      return result;
+   }
+   else
+   {
+      result.reset();
+   }
+#endif
+   
+   return result;
+}
+
+#if 0
 ossimInfoBase* ossimInfoFactory::create(const ossimFilename& file) const
 {
    ossimRefPtr<ossimInfoBase> result = 0;
@@ -130,10 +358,9 @@ ossimInfoBase* ossimInfoFactory::create(const ossimFilename& file) const
       return result.release();
    }
 #endif
-
    return 0;
 }
-
+#endif
 ossimInfoFactory::ossimInfoFactory()
 {}
 

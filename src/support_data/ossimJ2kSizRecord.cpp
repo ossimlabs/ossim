@@ -1,8 +1,6 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -10,16 +8,16 @@
 //
 // See document BPJ2K01.00 Table 7-6 Image and tile size (15444-1 Annex A5.1)
 // 
-//----------------------------------------------------------------------------
-// $Id: ossimJ2kSizRecord.h,v 1.5 2005/10/13 21:24:47 dburken Exp $
-
-#include <iostream>
-#include <iomanip>
+//---
+// $Id$
 
 #include <ossim/support_data/ossimJ2kSizRecord.h>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimEndian.h>
+#include <ossim/base/ossimIoStream.h>
+#include <iostream>
+#include <iomanip>
 
 
 ossimJ2kSizRecord::ossimJ2kSizRecord()
@@ -46,7 +44,7 @@ ossimJ2kSizRecord::~ossimJ2kSizRecord()
 {
 }
 
-void ossimJ2kSizRecord::parseStream(std::istream& in)
+void ossimJ2kSizRecord::parseStream(ossim::istream& in)
 {
    // Get the stream posistion.
    std::streamoff pos = in.tellg();

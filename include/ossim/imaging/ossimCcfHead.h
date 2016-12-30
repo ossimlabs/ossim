@@ -25,6 +25,8 @@
 #include <ossim/base/ossimErrorStatusInterface.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimIpt.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <memory>
 
 class ossimIrect;
 
@@ -38,6 +40,8 @@ public:
    ossimCcfHead();
    
    ossimCcfHead(const char* ccf_file);
+   ossimCcfHead(std::shared_ptr<ossim::istream>& str, 
+                const std::string& connectionString);
 
    ~ossimCcfHead ();
 
@@ -46,6 +50,7 @@ public:
     *  successful read, false on error.
     */
    bool parseCcfHeader(const char* ccf_file);
+   bool parseCcfHeader(std::shared_ptr<ossim::istream>& str, const std::string& connectionString);
 
    virtual std::ostream& print(std::ostream& out) const;
 
@@ -78,7 +83,7 @@ public:
    /*!
     *  Returns the ccf file name as a String.
     */
-   ossimString imageFile() const { return theCcfFile; }
+   ossimString imageFile() const { return m_connectionString; }
 
    /*!
     *  Returns the radiometry string.
@@ -154,7 +159,8 @@ private:
     */
    void parseRadString();
 
-   ossimString            theCcfFile;
+   std::shared_ptr<ossim::istream> m_ccfStr;
+   std::string            m_connectionString;
    ossim_uint32           theNumberOfBands;
    ossimScalarType        thePixelType;
    ossimString            theFileType;

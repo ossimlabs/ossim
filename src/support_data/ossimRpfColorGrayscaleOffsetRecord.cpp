@@ -1,9 +1,10 @@
 #include <ossim/support_data/ossimRpfColorGrayscaleOffsetRecord.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
 
-ostream& operator <<(ostream& out,
-                     const ossimRpfColorGrayscaleOffsetRecord& data)
+std::ostream& operator <<(std::ostream& out,
+                          const ossimRpfColorGrayscaleOffsetRecord& data)
 {
    data.print(out);
    
@@ -15,7 +16,7 @@ ossimRpfColorGrayscaleOffsetRecord::ossimRpfColorGrayscaleOffsetRecord()
    clearFields();
 }
 
-ossimErrorCode ossimRpfColorGrayscaleOffsetRecord::parseStream(istream& in,
+ossimErrorCode ossimRpfColorGrayscaleOffsetRecord::parseStream(ossim::istream& in,
                                                                ossimByteOrder byteOrder)
 {
    if(in)
@@ -48,14 +49,14 @@ ossimErrorCode ossimRpfColorGrayscaleOffsetRecord::parseStream(istream& in,
    return ossimErrorCodes::OSSIM_OK;
 }
 
-void ossimRpfColorGrayscaleOffsetRecord::print(ostream& out)const
+void ossimRpfColorGrayscaleOffsetRecord::print(std::ostream& out)const
 {
-   out << "theColorGrayscaleTableId:                 " << theColorGrayscaleTableId << endl
-       << "theNumberOfColorGrayscaleRecords:         " << theNumberOfColorGrayscaleRecords << endl
-       << "theColorGrayscaleElementLength:           " << (unsigned long)theColorGrayscaleElementLength << endl
-       << "theHistogramRecordLength:                 " << theHistogramRecordLength << endl
-       << "theColorGrayscaleTableOffset:             " << theColorGrayscaleTableOffset << endl
-       << "theHistogramTableOffset:                  " << theHistogramTableOffset;
+   out << "theColorGrayscaleTableId:                 " << theColorGrayscaleTableId
+       << "\ntheNumberOfColorGrayscaleRecords:         " << theNumberOfColorGrayscaleRecords
+       << "\ntheColorGrayscaleElementLength:           " << (unsigned long)theColorGrayscaleElementLength
+       << "\ntheHistogramRecordLength:                 " << theHistogramRecordLength
+       << "\ntheColorGrayscaleTableOffset:             " << theColorGrayscaleTableOffset
+       << "\ntheHistogramTableOffset:                  " << theHistogramTableOffset;
 }
 
 void ossimRpfColorGrayscaleOffsetRecord::clearFields()

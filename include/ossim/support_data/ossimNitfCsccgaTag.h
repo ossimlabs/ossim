@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  Garrett Potts
 //
@@ -8,6 +8,7 @@
 //
 //----------------------------------------------------------------------------
 // $Id$
+
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 
 /**
@@ -41,8 +42,8 @@ public:
    };
    ossimNitfCsccgaTag();
 
-   virtual void parseStream(std::istream& in);
-   virtual void writeStream(std::ostream& out);
+   virtual void parseStream(ossim::istream& in);
+   virtual void writeStream(ossim::ostream& out);
 
    virtual std::ostream& print(std::ostream& out,
                                const std::string& prefix=std::string()) const;

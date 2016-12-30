@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -11,22 +11,22 @@
 //********************************************************************
 // $Id: ossimNitfImageHeaderV2_0.cpp 21518 2012-08-22 21:15:56Z dburken $
 
-
-#include <iomanip>
-
 #include <ossim/support_data/ossimNitfImageHeaderV2_0.h>
-#include <ossim/base/ossimString.h>
-#include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimDrect.h>
-#include <cstring> //for memset
 #include <ossim/base/ossimEndian.h>
-#include <ossim/support_data/ossimNitfVqCompressionHeader.h>
-#include <ossim/base/ossimTrace.h>
+#include <ossim/base/ossimIpt.h>
+#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimString.h>
 #include <ossim/base/ossimStringProperty.h>
-#include <stdexcept>
-#include <sstream>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/support_data/ossimNitfCommon.h>
+#include <ossim/support_data/ossimNitfVqCompressionHeader.h>
+
+#include <cstring> //for memset
+#include <iomanip>
+#include <stdexcept>
+#include <sstream>
+
 static const ossimTrace traceDebug(ossimString("ossimNitfImageHeaderV2_0:debug"));
 
 RTTI_DEF1(ossimNitfImageHeaderV2_0,
@@ -50,7 +50,7 @@ ossimNitfImageHeaderV2_0::~ossimNitfImageHeaderV2_0()
 {
 }
 
-void ossimNitfImageHeaderV2_0::parseStream(std::istream &in)
+void ossimNitfImageHeaderV2_0::parseStream(ossim::istream& in)
 {
    clearFields();
    theImageBands.clear();
@@ -91,10 +91,16 @@ void ossimNitfImageHeaderV2_0::parseStream(std::istream &in)
    }
    in.read(theNumberOfComments, 1);
    ossim_uint32 numberOfComments = ossimString(theNumberOfComments).toInt32();
+
+   // for now let's ignore the comments
    if(numberOfComments > 0)
    {
-      // for now let's ignore the comments about the image
-      in.ignore(numberOfComments*80);
+      //---
+      // NOTE: The ossim::S3IStream is not handling the "ignore" so changed out
+      // to a seekg for now.  (drb 09 Nov. 2016)
+      //---
+      // in.ignore(numberOfComments*80);
+      in.seekg( numberOfComments*80, std::ios_base::cur );
    }
    in.read(theCompression, 2);
    // check to see if there is compression
@@ -302,7 +308,7 @@ void ossimNitfImageHeaderV2_0::parseStream(std::istream &in)
    theDataLocation = in.tellg();
 }
 
-void ossimNitfImageHeaderV2_0::writeStream(std::ostream &out)
+void ossimNitfImageHeaderV2_0::writeStream(ossim::ostream &out)
 {
    out.write(theType, 2);
    out.write(theImageId, 10);

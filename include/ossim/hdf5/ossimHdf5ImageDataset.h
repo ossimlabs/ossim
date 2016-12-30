@@ -32,7 +32,7 @@ class ossimHdf5ImageHandler;
 /**
  * @brief Class encapsulates a HDF5 Data set that can be loaded as an image.
  */
-class OSSIM_PLUGINS_DLL ossimHdf5ImageDataset : public ossimReferenced
+class OSSIM_DLL ossimHdf5ImageDataset : public ossimReferenced
 {
 public:
    /** default constructor */

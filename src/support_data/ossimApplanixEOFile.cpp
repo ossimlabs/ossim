@@ -1,26 +1,28 @@
 //*******************************************************************
 //
-// LGPL
+// MIT
 // 
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimApplanixEOFile.cpp 20483 2012-01-21 15:42:22Z dburken $
+// $Id$
 
 #include <ossim/support_data/ossimApplanixEOFile.h>
+#include <ossim/base/ossimCommon.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimRegExp.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimTrace.h>
-#include <ossim/base/ossimCommon.h>
+
 #include <iterator>
-#include <fstream>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
 
 static ossimTrace traceDebug("ossimApplanixEOFile:debug");
 
-static std::istream& applanix_skipws(std::istream& in)
+static std::istream& applanix_skipws(ossim::istream& in)
 {
    int c = in.peek();
    while(((c == ' ') ||
@@ -110,16 +112,32 @@ ossimApplanixEOFile::ossimApplanixEOFile()
 
 bool ossimApplanixEOFile::parseFile(const ossimFilename& file)
 {
-   std::ifstream in(file.c_str());
+   bool result = false;
+   
+   std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+      createIstream(file, std::ios_base::in);
+      
+   if ( in )
+   {
+      result = parseStream( *in );
+   }
 
-   return parseStream(in);
+   return result;
 }
 
 bool ossimApplanixEOFile::isEOFile(const ossimFilename& file)const
 {
-   std::ifstream in(file.c_str());
-
-   return isEOFile(in);
+   bool result = false;
+   
+   std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file, std::ios_base::in);
+      
+   if ( in )
+   {
+      result = isEOFile( *in );
+   }
+   
+   return result;
 }
 
 bool ossimApplanixEOFile::isEOFile(std::istream& in)const
@@ -384,9 +402,17 @@ bool ossimApplanixEOFile::parseStream(std::istream& in)
 bool ossimApplanixEOFile::parseHeader(const ossimFilename& file,
                                       ossimString& header)const
 {
-   std::ifstream in(file.c_str());
+   bool result = false;
 
-   return parseHeader(in, header);
+   std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file, std::ios_base::in);
+   
+   if ( in )
+   {
+      result = parseHeader( *in, header);
+   }
+   
+   return result;
 }
 
 bool ossimApplanixEOFile::parseHeader(std::istream& in,

@@ -71,6 +71,9 @@ public:
    //! ENGINEERING CODE. Used for testing
    size_t numRecords() const { return m_projDatabase.size(); }
 
+   //! Given UTM projection, derives the associated EPSG code. This is faster than a Db lookup.
+   ossim_uint32 getCodeFromUtmProj(const ossimUtmProjection* proj) const;
+
 protected:
    enum RecordFormat
    {  
@@ -116,9 +119,6 @@ protected:
    //! Unfortunately OSSIM does make a distinction. For the time being, parse the code and
    //! programmatically arrives at the UTM projection.
    ossimMapProjection* createProjFromUtmCode(ossim_uint32 code) const;
-
-   //! Given UTM projection, derives the associated EPSG code. This is faster than a Db lookup.
-   ossim_uint32 getCodeFromUtmProj(const ossimUtmProjection* proj) const;
 
    //! Populates the database with contents of DB files as specified in ossim_preferences.
    void initialize() const;

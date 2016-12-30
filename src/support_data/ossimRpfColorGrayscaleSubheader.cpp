@@ -1,8 +1,9 @@
 #include <ossim/support_data/ossimRpfColorGrayscaleSubheader.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
 
-ostream& operator <<(ostream& out,
-                     const ossimRpfColorGrayscaleSubheader& data)
+std::ostream& operator <<(std::ostream& out,
+                          const ossimRpfColorGrayscaleSubheader& data)
 {
    data.print(out);
 
@@ -14,7 +15,7 @@ ossimRpfColorGrayscaleSubheader::ossimRpfColorGrayscaleSubheader()
    clearFields();
 }
 
-ossimErrorCode ossimRpfColorGrayscaleSubheader::parseStream(istream& in,
+ossimErrorCode ossimRpfColorGrayscaleSubheader::parseStream(ossim::istream& in,
                                                             ossimByteOrder /* byteOrder */)
 {
    if(in)
@@ -39,11 +40,11 @@ ossimErrorCode ossimRpfColorGrayscaleSubheader::parseStream(istream& in,
    return ossimErrorCodes::OSSIM_OK;
 }
 
-void ossimRpfColorGrayscaleSubheader::print(ostream& out)const
+void ossimRpfColorGrayscaleSubheader::print(std::ostream& out)const
 {
-   out << "theNumberOfColorGreyscaleOffsetRecords:    " << (int)theNumberOfColorGreyscaleOffsetRecords << endl
-       << "theNumberOfColorConverterOffsetRecords:    " << (int)theNumberOfColorConverterOffsetRecords << endl
-       << "theColorGrayscaleFilename:                 " << theColorGrayscaleFilename;
+   out << "theNumberOfColorGreyscaleOffsetRecords:    " << (int)theNumberOfColorGreyscaleOffsetRecords
+       << "\ntheNumberOfColorConverterOffsetRecords:    " << (int)theNumberOfColorConverterOffsetRecords
+       << "\ntheColorGrayscaleFilename:                 " << theColorGrayscaleFilename;
    
 }
 

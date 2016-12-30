@@ -19,8 +19,13 @@
 // 
 // windoze users:       I'll have to look this up...
 //
-// You can also use the "-P <preference_file>" option at application startup.
-// where <preference_file> is full path and filename.
+// Use the "-P <preference_file>" option at application startup to specify
+// a path to preferences file.  Where <preference_file> is full path and 
+// filename.
+//
+// Use the "-K key=value option at application startup to specify a key value
+// pair. e.g.:
+// ossim-chipper -K ossim.std.out.progress=1 --options tgt-008-options.kwl
 //
 // Note that system environment variables found in this ossim preferences
 // file in the format "$(env_var_name)" will be expanded in place.
@@ -325,6 +330,7 @@ plugin.file0:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.s
 // NTM plugin, alway make second plugin:
 plugin.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
 
+plugin.file3:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
 plugin.file5:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kakadu_plugin.so
 plugin.file10:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_jpeg12_plugin.so
 plugin.file15: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin.so
@@ -611,3 +617,35 @@ tfrd_iamp_file: $(OSSIM_INSTALL_PREFIX)/share/ossim/tfrd-tables/oamt.dat
 // 
 hdf5.options.max_recursion_level: 8
 hdf5.options.renderable_datasets: /All_Data/VIIRS-DNB-SDR_All/Radiance
+
+
+//-------
+// AWS plugin settings
+//-------
+//
+// We can specify the S3 read block size.
+// You can give it a numerical value and end it with B, K, M, or G.
+// which stand for Bytes, Kilobytes, Megabytes or Gigabytes.
+//
+//  So a value of 1k means 1024 bytes
+//  A value of 1024k is equivalent to 1M or one megabyte
+//
+ossim.plugins.aws.s3.readBlocksize: 1M
+
+
+// We can specify the S3 open file for read entries to cache.
+//
+// here we say we can remember 10000 different files and cache their sizes so 
+// we do not have to query the content length
+// If it exceeds this limit then the cache will shrink down by 20%.
+//
+ossim.plugins.aws.s3.nReadCacheHeaders: 10000
+
+//---
+// Turn on/off progress output to console standard output. Code
+// auto detects if running in a console window; hence, typically this is not
+// needed.
+// values: 0, 1, true or false
+// default = commented out / auto-detected.
+//---
+// ossim.std.out.progress: 1

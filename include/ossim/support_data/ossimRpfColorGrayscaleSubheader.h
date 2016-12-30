@@ -1,22 +1,22 @@
 #ifndef ossimRpfColorGrayscaleSubheader_HEADER
-#define ossimRpfColorGrayscaleSubheader_HEADER
-#include <iostream>
-using namespace std;
-#include <ossim/base/ossimErrorContext.h>
+#define ossimRpfColorGrayscaleSubheader_HEADER 1
+
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIosFwd.h>
 
 class ossimRpfColorGrayscaleSubheader
 {
 public:
-   friend ostream& operator <<(ostream& out,
-                               const ossimRpfColorGrayscaleSubheader& data);
+   friend std::ostream& operator <<(
+      std::ostream& out, const ossimRpfColorGrayscaleSubheader& data);
    
    ossimRpfColorGrayscaleSubheader();
    ~ossimRpfColorGrayscaleSubheader(){}
    
-   ossimErrorCode parseStream(istream& in,
-                            ossimByteOrder byteOrder);
-   void print(ostream& out)const;
+   ossimErrorCode parseStream(ossim::istream& in,
+                              ossimByteOrder byteOrder);
+   void print(std::ostream& out)const;
    unsigned long getStartOffset()const
       {
          return theStartOffset;

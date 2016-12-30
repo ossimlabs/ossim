@@ -1,9 +1,10 @@
 #include <ossim/support_data/ossimRpfCompressionLookupOffsetRecord.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
 
-ostream& operator <<(ostream &out,
-                     const ossimRpfCompressionLookupOffsetRecord& data)
+std::ostream& operator <<(std::ostream &out,
+                          const ossimRpfCompressionLookupOffsetRecord& data)
 {
    data.print(out);
    
@@ -15,7 +16,7 @@ ossimRpfCompressionLookupOffsetRecord::ossimRpfCompressionLookupOffsetRecord()
    clearFields();
 }
 
-ossimErrorCode ossimRpfCompressionLookupOffsetRecord::parseStream(istream& in,
+ossimErrorCode ossimRpfCompressionLookupOffsetRecord::parseStream(ossim::istream& in,
                                                                   ossimByteOrder byteOrder)
 {
    if(in)
@@ -45,13 +46,13 @@ ossimErrorCode ossimRpfCompressionLookupOffsetRecord::parseStream(istream& in,
    return ossimErrorCodes::OSSIM_OK;
 }
 
-void ossimRpfCompressionLookupOffsetRecord::print(ostream& out)const
+void ossimRpfCompressionLookupOffsetRecord::print(std::ostream& out)const
 {
-   out << "theCompressionLookupTableId:                 " << theCompressionLookupTableId << endl
-       << "theNumberOfCompressionLookupRecords:         " << theNumberOfCompressionLookupRecords << endl
-       << "theNumberOfValuesPerCompressionLookupRecord: " << theNumberOfValuesPerCompressionLookupRecord << endl
-       << "theCompressionLookupValueBitLength:          " << theCompressionLookupValueBitLength << endl
-       << "theCompressionLookupTableOffset:             " << theCompressionLookupTableOffset;
+   out << "theCompressionLookupTableId:                 " << theCompressionLookupTableId
+       << "\ntheNumberOfCompressionLookupRecords:         " << theNumberOfCompressionLookupRecords
+       << "\ntheNumberOfValuesPerCompressionLookupRecord: " << theNumberOfValuesPerCompressionLookupRecord
+       << "\ntheCompressionLookupValueBitLength:          " << theCompressionLookupValueBitLength
+       << "\ntheCompressionLookupTableOffset:             " << theCompressionLookupTableOffset;
 }
 
 void ossimRpfCompressionLookupOffsetRecord::clearFields()

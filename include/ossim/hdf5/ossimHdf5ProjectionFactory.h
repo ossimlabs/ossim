@@ -8,10 +8,10 @@
 #ifndef ossimH5ProjectionFactory_HEADER
 #define ossimH5ProjectionFactory_HEADER 1
 
-#include <ossim/plugin/ossimPluginConstants.h>
+#include <ossim/base/ossimConstants.h>
 #include <ossim/projection/ossimProjectionFactoryBase.h>
 
-class OSSIM_PLUGINS_DLL ossimHdf5ProjectionFactory : public ossimProjectionFactoryBase
+class OSSIM_DLL ossimHdf5ProjectionFactory : public ossimProjectionFactoryBase
 {
 public:
 

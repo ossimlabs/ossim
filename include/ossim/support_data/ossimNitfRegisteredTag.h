@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 // 
@@ -9,11 +9,13 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfRegisteredTag.h 22013 2012-12-19 17:37:20Z dburken $
+// $Id$
+
 #ifndef ossimNitfRegisteredTag_HEADER
 #define ossimNitfRegisteredTag_HEADER 1
 
 #include <ossim/base/ossimObject.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimPropertyInterface.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <string>
@@ -85,8 +87,8 @@ public:
    /**
     * This will allow the user defined data to parse the stream.
     */
-   virtual void parseStream(std::istream& in)=0;
-   virtual void writeStream(std::ostream& out)=0;
+   virtual void parseStream(ossim::istream& in)=0;
+   virtual void writeStream(ossim::ostream& out)=0;
 
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;

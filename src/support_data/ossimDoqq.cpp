@@ -34,26 +34,21 @@ ossimDoqq::ossimDoqq()
 ossimDoqq::ossimDoqq(ossimFilename file)
    :  theErrorStatus(OSSIM_ERROR)
 {
-   open(file);
-   theDoqFile.close();
+   ossimInfoBase::open(file);
+   //theDoqFile.close();
 }
 
-//**************************************************************************
-// Opens the DOQ header and parses info.
-//**************************************************************************
-bool ossimDoqq::open(const ossimFilename& file)
+
+bool ossimDoqq::open(std::shared_ptr<ossim::istream>& str,
+                     const std::string& connectionString)
 {
-   // Assume all kosher:
    theErrorStatus = OSSIM_OK;
-
-   // Check first line of header to determine which version to parse.
-   if (theDoqFile.is_open())
-      theDoqFile.close();
-
-   theDoqFile.open(file.c_str(), std::ios::in);
+   if(!str) return false;
    char header[23];
-   theDoqFile.seekg(0, std::ios::beg);
-   theDoqFile.get(header, 22);
+   str->clear();
+   str->seekg(0);
+   str->get(header, 22);
+
    header[22] = '\0';
    if(strcmp((const char*)header, "BEGIN_USGS_DOQ_HEADER") == 0)
    {
@@ -64,7 +59,7 @@ bool ossimDoqq::open(const ossimFilename& file)
             << std::endl;
       }
 
-      ldstr_v2(theDoqFile);
+      ldstr_v2(*str);
    }
    else
    {
@@ -75,17 +70,22 @@ bool ossimDoqq::open(const ossimFilename& file)
             << std::endl;
       }
 
-      ldstr_v1(theDoqFile);
+      ldstr_v1(*str);
    }
 
    // Check for error.
    if(theErrorStatus)
       return false;
+
+   m_connectionString = connectionString;
+   m_doqqFileStr = str;
    return true;
 }
 
+
 ossimDoqq::~ossimDoqq()
 {
+   m_doqqFileStr.reset();
 }
 
 void ossimDoqq::ldstr_v2(std::istream& in)

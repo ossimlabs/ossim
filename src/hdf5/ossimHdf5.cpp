@@ -1,14 +1,10 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  David Burken
+// License: MIT
 //
 // Description: OSSIM HDF5 utility class.
 //
-//----------------------------------------------------------------------------
+//---
 // $Id
 
 #include <ossim/hdf5/ossimHdf5.h>
@@ -29,7 +25,6 @@ ossimHdf5::~ossimHdf5()
    close();
 }
 
-
 bool ossimHdf5::open(const ossimFilename& fullname)
 {
    // Check for empty filename.
@@ -46,21 +41,21 @@ bool ossimHdf5::open(const ossimFilename& fullname)
    {
       // Turn off the auto-printing when failure occurs so that we can handle the errors:
       H5::Exception::dontPrint();
-      if ( H5File::isHdf5(m_filename.chars()) )
+      if ( H5File::isHdf5( m_filename.string() ) )
       {
-         m_h5File = new H5File(m_filename.chars(), H5F_ACC_RDONLY);
+         m_h5File = new H5File(m_filename.string(), H5F_ACC_RDONLY);
          success  = true;
       }
    }
    catch( const H5::Exception& e )
    {
       success = false;
-      ossimNotify(ossimNotifyLevel_WARN)<<e.getDetailMsg();
+      ossimNotify(ossimNotifyLevel_WARN) <<e.getDetailMsg() << std::endl;
    }
    catch( ... )
    {
       ossimNotify(ossimNotifyLevel_WARN)<< "ossimH5Info::open WARNING Caught unhandled exception "
-            "for file <"<< fullname <<">"<< endl;
+         "for file <"<< fullname <<">"<< std::endl;
       success = false;
    }
 
@@ -72,7 +67,6 @@ bool ossimHdf5::open(const ossimFilename& fullname)
 
    return success;
 }
-
 
 bool ossimHdf5::close()
 {
@@ -276,7 +270,7 @@ H5::Group* ossimHdf5::findGroupByName(const char* name, const H5::Group* parent,
       std::vector<Group>::iterator group = groupList.begin();
       while (group != groupList.end())
       {
-         bool found;
+         // bool found;
          ossimString dsName = group->getObjName();
          if (dsName.contains(name))
          {
@@ -321,7 +315,7 @@ H5::DataSet* ossimHdf5::findDatasetByName(const char* name, const H5::Group* gro
       std::vector<H5::DataSet>::iterator dataset = datasetList.begin();
       while (dataset != datasetList.end())
       {
-         bool found;
+         // bool found;
          ossimString dsName = dataset->getObjName();
          if (dsName.contains(name))
          {

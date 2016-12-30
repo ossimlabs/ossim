@@ -1,16 +1,19 @@
 //*******************************************************************
 // Copyright (C) 2004 Garrett Potts
 //
-// LICENSE: LGPL see top level LICENSE.txt for more details
+// LICENSE: MIT
 // 
 // Author: Garrett Potts
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfCompressionHeader.h 18415 2010-11-11 20:02:44Z gpotts $
+// $Id$
+
 #ifndef ossimNitfCompressionHeader_HEADER
-#define ossimNitfCompressionHeader_HEADER
+#define ossimNitfCompressionHeader_HEADER 1
+
 #include <ossim/base/ossimObject.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimString.h>
 
 #include <iosfwd>
@@ -19,7 +22,7 @@
 class OSSIM_DLL ossimNitfCompressionHeader : public ossimObject
 {
 public:
-   virtual void parseStream(std::istream& in) = 0;
+   virtual void parseStream(ossim::istream& in) = 0;
 
    /**
     * @brief print method that outputs a key/value type format adding prefix

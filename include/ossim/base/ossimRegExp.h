@@ -123,8 +123,8 @@ private:
   char* regpiece (int*);
   char* regatom (int*);
   char* regnode (char);
-  const char* regnext (register const char*);
-  char* regnext (register char*);
+  const char* regnext (const char*);
+  char* regnext (char*);
   void        regc (unsigned char);
   void        reginsert (char, char*);
   void        regtail (char*, const char*);

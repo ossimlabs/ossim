@@ -30,7 +30,7 @@ class ossimEndian;
  *
  * Encapsulates the listgeo functionality.
  */
-class OSSIMDLLEXPORT ossimHdf5Info : public ossimInfoBase
+class OSSIM_DLL ossimHdf5Info : public ossimInfoBase
 {
 public:
    

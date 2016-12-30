@@ -21,12 +21,14 @@
 #include <ossim/support_data/ossimDtedUhl.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimProperty.h>
+#include <ossim/base/ossimIoStream.h>
 
+ossimDtedUhl::ossimDtedUhl()
+{
 
-//**************************************************************************
-// CONSTRUCTOR
-//**************************************************************************
-ossimDtedUhl::ossimDtedUhl(const ossimFilename& dted_file, ossim_int32 offset)
+}
+
+ossimDtedUhl::ossimDtedUhl(std::shared_ptr<ossim::istream>& str, ossim_int64 offset)
    :
       theRecSen(),
       theField2(),
@@ -42,59 +44,17 @@ ossimDtedUhl::ossimDtedUhl(const ossimFilename& dted_file, ossim_int32 offset)
       theStartOffset(0),
       theStopOffset(0)
 {
-   if(!dted_file.empty())
-   {
-      // Check to see that dted file exists.
-      if(!dted_file.exists())
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimDtedUhl::ossimDtedUhl: The DTED file does not exist: " << dted_file << std::endl;
-         return;
-      }
-      
-      // Check to see that the dted file is readable.
-      if(!dted_file.isReadable())
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimDtedUhl::ossimDtedUhl: The DTED file is not readable --> " << dted_file << std::endl;
-         return;
-      }
-      
-      std::ifstream in(dted_file.c_str());
-      if(!in)
-      {
-         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimDtedUhl::ossimDtedUhl: Error opening the DTED file: " << dted_file << std::endl;
-         
-         return;
-      }
-      in.seekg(offset);
-      parse(in);
-      
-      in.close();
-   }
+  if(str)
+  {
+    str->seekg(offset);
+    parse(*str);
+  }
+  else
+  {
+    theErrorStatus = ossimErrorCodes::OSSIM_ERROR;  
+  }
 }
 
-//**************************************************************************
-// CONSTRUCTOR
-//**************************************************************************
-ossimDtedUhl::ossimDtedUhl(std::istream& in)
-   :
-      theRecSen(),
-      theLonOrigin(),
-      theLatOrigin(),
-      theLonInterval(),
-      theLatInterval(),
-      theAbsoluteLE(),
-      theSecurityCode(),
-      theNumLonLines(),
-      theNumLatPoints(),
-      theMultipleAccuracy(),
-      theStartOffset(0),
-      theStopOffset(0)
-{
-   parse(in);
-}
 
 //**************************************************************************
 // ossimDtedUhl::parse()

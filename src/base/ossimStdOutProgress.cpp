@@ -1,17 +1,16 @@
-//*******************************************************************
+//---
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author: Garrett Potts
 //
-//*************************************************************************
-// $Id: ossimStdOutProgress.cpp 9094 2006-06-13 19:12:40Z dburken $
+//---
+// $Id$
 
-#include <iomanip>
 #include <ossim/base/ossimStdOutProgress.h>
+#include <ossim/base/ossimPreferences.h>
+#include <iomanip>
 
 #if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
    #include <io.h>
@@ -37,8 +36,21 @@ ossimStdOutProgress::ossimStdOutProgress(ossim_uint32 precision,
 {
    // Determine if running in a terminal window. Progress reports are only written to console if
    // running in one.
-   if (!ISATTY(FILENO(stdout)))
+
+   bool prefsFlag = theRunningInConsoleFlag;
+   ossimString stdOutConsole;
+   stdOutConsole.string() = ossimPreferences::instance()->
+      preferencesKWL().findKey(std::string("ossim.std.out.progress"));
+
+   if ( stdOutConsole.size() )
+   {
+      // Override auto detected console.
+      theRunningInConsoleFlag = stdOutConsole.toBool();
+   }
+   else if ( !ISATTY(FILENO(stdout) ) )
+   {
       theRunningInConsoleFlag = false;
+   }
 }
 
 void ossimStdOutProgress::processProgressEvent(ossimProcessProgressEvent& event)
@@ -52,15 +64,14 @@ void ossimStdOutProgress::processProgressEvent(ossimProcessProgressEvent& event)
       event.getMessage(s);
       if (!s.empty())
       {
-		  ossimNotify(ossimNotifyLevel_NOTICE) << s.c_str() << std::endl;
+         ossimNotify(ossimNotifyLevel_NOTICE) << s.c_str() << std::endl;
       }
       return; // Don't output percentage on a message update.
    }
-
    
    double p = event.getPercentComplete();
    ossimNotify(ossimNotifyLevel_NOTICE)
-	   << std::setiosflags(std::ios::fixed)
+      << std::setiosflags(std::ios::fixed)
       << std::setprecision(thePrecision)
       << p << "%\r";
    

@@ -36,6 +36,7 @@
 #include <xtiffio.h>
 #include <geo_normalize.h>
 #include <cstdlib> /* for abs(int) */
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 
 RTTI_DEF1(ossimTiffTileSource, "ossimTiffTileSource", ossimImageHandler)
 
@@ -58,6 +59,137 @@ static ossimTrace traceDebug("ossimTiffTileSource:debug");
 // Only affects reading strip tiffs.
 //---
 #define OSSIM_BUFFER_SCAN_LINE_READS 1
+
+class TiffStreamAdaptor
+{
+public:
+   TiffStreamAdaptor(ossimTiffTileSource* tiffTileSource)
+      :m_tiffTileSource(tiffTileSource)
+   {
+      m_tiffStream = ossim::StreamFactoryRegistry::instance()->createIstream(m_tiffTileSource->getFilename());
+   }
+
+   TiffStreamAdaptor(ossimTiffTileSource* tiffTileSource, 
+                     std::shared_ptr<ossim::istream>& tiffStream)
+      :m_tiffTileSource(tiffTileSource),
+       m_tiffStream(tiffStream)
+   {
+
+   }
+   
+   ~TiffStreamAdaptor()
+   {
+      close();
+   }
+   ossimFilename getFilename()const
+   {
+      if(m_tiffTileSource)
+      {
+         return m_tiffTileSource->getFilename();
+      }
+
+      return "";
+   }
+   void close()
+   {
+      m_tiffStream.reset();
+      m_tiffTileSource = 0;
+   }
+   ossimTiffTileSource* m_tiffTileSource;
+   std::shared_ptr<ossim::istream> m_tiffStream;
+};
+
+tsize_t tiff_Read(thandle_t st,tdata_t buffer,tsize_t size)
+{
+   TiffStreamAdaptor* streamAdaptor = (TiffStreamAdaptor*)st;
+   tsize_t result = -1;
+   if(streamAdaptor->m_tiffStream)
+   {
+      streamAdaptor->m_tiffStream->read((char*)buffer, size);
+
+      result = streamAdaptor->m_tiffStream->gcount();
+   }
+
+   return result;
+};
+
+tsize_t tiff_Write(thandle_t st,tdata_t buffer,tsize_t size)
+{
+   return -1;
+};
+
+int tiff_Close(thandle_t st)
+{
+   TiffStreamAdaptor* streamAdaptor = (TiffStreamAdaptor*)st;
+
+   streamAdaptor->close();
+   
+   return 0;
+};
+
+toff_t tiff_Seek(thandle_t st,toff_t pos, int whence)
+{
+   TiffStreamAdaptor* streamAdaptor = (TiffStreamAdaptor*)st;
+   toff_t result = -1;
+   std::ios_base::seekdir seekDir = std::ios::beg;
+// std::cout << "SIZE OF POS =============== " << sizeof(toff_t) << std::endl;
+// std::cout << "tiff_Seek POS =============== " << pos << std::endl;
+   //std::cout<< "CALLING THE tiff_Seek!!!!!!!!!!!!!!\n" << std::endl;
+   if (!streamAdaptor->m_tiffStream)
+   {
+    return result;      
+   }
+   switch(whence)
+   {
+      case 0: // SEEK_SET
+      {
+       seekDir = std::ios::beg;
+       break;
+      }
+      case 1: // SEEK_CUR
+      {
+         seekDir = std::ios::cur;
+         break;
+      }
+      case 2: // SEEK_END
+      {
+        seekDir = std::ios::end;
+         break;
+      }
+   }
+       // std::cout << "tiff_Seek RESULT === " << result << "\n";
+
+   streamAdaptor->m_tiffStream->seekg(pos, seekDir);
+   return streamAdaptor->m_tiffStream->tellg();
+};
+
+toff_t tiff_Size(thandle_t st)
+{
+   toff_t result = -1;
+   //std::cout<< "CALLING THE tiff_Size!!!!!!!!!!!!!!\n" << std::endl;
+   TiffStreamAdaptor* streamAdaptor = (TiffStreamAdaptor*)st;
+    if (streamAdaptor->m_tiffStream)
+    {
+      ossim_int64 currentOffset = streamAdaptor->m_tiffStream->tellg();
+      streamAdaptor->m_tiffStream->seekg(0, std::ios::end);
+      result = streamAdaptor->m_tiffStream->tellg();
+      streamAdaptor->m_tiffStream->seekg(currentOffset);
+    }
+    // std::cout << "tiff_Size RESULT =========== " << result << "\n";
+   return result;
+};
+
+int tiff_Map(thandle_t, tdata_t*, toff_t*)
+{
+   std::cout << "tiff_Map\n";
+    return 0;
+};
+
+void tiff_Unmap(thandle_t, tdata_t, toff_t)
+{
+   std::cout << "tiff_Unmap\n";
+    return;
+};
 
 //*******************************************************************
 // Public Constructor:
@@ -362,11 +494,19 @@ bool ossimTiffTileSource::open(const ossimFilename& image_file)
 
 void ossimTiffTileSource::close()
 {
+   // std::cout << "ossimTiffTileSource::close()\n";
+
    if(theTiffPtr)
    {
       XTIFFClose(theTiffPtr);
       theTiffPtr = 0;
    }
+   if(m_streamAdaptor)
+   {
+      m_streamAdaptor->close();
+      m_streamAdaptor.reset();
+   }
+
    theImageWidth.clear();
    theImageLength.clear();
    theReadMethod.clear();
@@ -384,50 +524,41 @@ void ossimTiffTileSource::close()
    ossimImageHandler::close();
 }
 
-bool ossimTiffTileSource::open()
+bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
+                                const std::string& connectionString )
 {
    static const char MODULE[] = "ossimTiffTileSource::open";
-
-   if (traceDebug())
-   {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << MODULE << " Entered..."
-         << "\nFile:  " << theImageFile.c_str() << std::endl;
-   }
-
    if(isOpen())
    {
-     close();
+      close();
    }
 
+   // std::cout << "NOW DOING THE STREAM OPEN!!!!!!!!!!!!!!!!" << (ossim_int64)this 
+   //           << " for file:" 
+   //           << connectionString << "\n";
+   
    // Check for empty file name.
-   if (theImageFile.empty())
+   if ( connectionString.empty() )
    {
       return false;
    }
-#if 0  
-   // First we do a quick test to see if the file looks like a tiff file.
-   FILE		*fp;
-   unsigned char header[2];
 
-   fp = fopen( theImageFile.c_str(), "rb" );
-   if( fp == NULL )
-       return false;
-
-   fread( header, 2, 1, fp );
-   fclose( fp );
-
-   if( (header[0] != 'M' || header[1] != 'M')
-       && (header[0] != 'I' || header[1] != 'I') )
-       return false;
-#endif
-   
+   theImageFile = ossimFilename(connectionString);
    theImageDirectoryList.clear();
 
    //---
    // Note:  The 'm' in "rm" is to tell TIFFOpen to not memory map the file.
    //---
-   theTiffPtr = XTIFFOpen(theImageFile.c_str(), "rm");
+   //theTiffPtr = XTIFFOpen(theImageFile.c_str(), "rm");
+   //m_streamAdaptor = std::make_shared<TiffStreamAdaptor>(this);
+   m_streamAdaptor = std::make_shared<TiffStreamAdaptor>(this, str);
+
+   theTiffPtr = XTIFFClientOpen(connectionString.c_str(), "rm", 
+                                (thandle_t)m_streamAdaptor.get(),
+                                tiff_Read, tiff_Write, tiff_Seek, tiff_Close, tiff_Size,
+                                tiff_Map, tiff_Unmap);
+
+// std::cout << "TIFF PTR ????????????" << theTiffPtr << std::endl;
    if (!theTiffPtr)
    {
       if (traceDebug())
@@ -520,7 +651,6 @@ bool ossimTiffTileSource::open()
          theMaxSampleValue = maxValue;
       }
    }
-
    if ( !TIFFGetField( theTiffPtr,
                        TIFFTAG_SMINSAMPLEVALUE,
                        &theMinSampleValue ) )
@@ -806,7 +936,7 @@ bool ossimTiffTileSource::open()
       theScalarType = OSSIM_SINT16;
    }
    else if(theBitsPerSample == 64 &&
-	   theSampleFormatUnit == SAMPLEFORMAT_IEEEFP)
+      theSampleFormatUnit == SAMPLEFORMAT_IEEEFP)
    {
       theBytesPerPixel = 8;
       theScalarType = OSSIM_FLOAT64;
@@ -831,8 +961,10 @@ bool ossimTiffTileSource::open()
    
    setReadMethod();
    
+   // std::cout << "DOING GTIFF ALLOCATE\n";
    // Establish raster pixel alignment type:
    GTIF* gtif = GTIFNew(theTiffPtr);
+   // std::cout << "ALLOCATED!!!!!\n";
    ossim_uint16 raster_type;
    if (GTIFKeyGet(gtif, GTRasterTypeGeoKey, &raster_type, 0, 1) && (raster_type == 1))
    {
@@ -842,8 +974,9 @@ bool ossimTiffTileSource::open()
    {
       thePixelType = OSSIM_PIXEL_IS_POINT;
    }
-   GTIFFree(gtif);
 
+   GTIFFree(gtif);
+// std::cout << "DOING COMPLETE OPEN!!!!!!!!!!!!\n";
    // Let base-class finish the rest:
    completeOpen();
 
@@ -863,9 +996,32 @@ bool ossimTiffTileSource::open()
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " Debug:";
       print(ossimNotify(ossimNotifyLevel_DEBUG));
    }
-   
+ // std::cout << "DONE DOING COMPLETE OPEN!!!!!!!!!!!!\n";
+  
    // Finished...
    return true;
+
+}
+
+bool ossimTiffTileSource::open()
+{
+   static const char MODULE[] = "ossimTiffTileSource::open";
+   bool result = false;
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " Entered..."
+         << "\nFile:  " << theImageFile.c_str() << std::endl;
+   }
+   std::shared_ptr<std::istream> tiffStream = ossim::StreamFactoryRegistry::instance()->createIstream(theImageFile);
+
+   if(tiffStream)
+   {
+      result = open(tiffStream, theImageFile);
+   }
+
+   return result;
+
 }
    
 ossim_uint32 ossimTiffTileSource::getNumberOfLines( ossim_uint32 resLevel ) const

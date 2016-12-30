@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 // Copyright (c) 2005, David Burken, all rights reserved.
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -12,9 +12,10 @@
 // Support data class for a Shuttle Radar Topography Mission (SRTM) file.
 //
 //----------------------------------------------------------------------------
-// $Id: ossimSrtmSupportData.h 17602 2010-06-20 19:12:24Z dburken $
+// $Id$
+
 #ifndef ossimSrtmSupportData_HEADER
-#define ossimSrtmSupportData_HEADER
+#define ossimSrtmSupportData_HEADER 1
 
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimConstants.h>
@@ -22,6 +23,7 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/projection/ossimProjection.h>
+#include <memory>
 
 /**
  * @class ossimStrmSupportData
@@ -182,22 +184,23 @@ private:
     */
    bool computeMinMax();
   
-   ossimFilename theFile;
-   ossim_uint32  theNumberOfLines;
-   ossim_uint32  theNumberOfSamples;
-   ossim_float64 theSouthwestLatitude;  //< decimal degrees
-   ossim_float64 theSouthwestLongitude; //< decimal degrees
-   ossim_float64 theLatSpacing;         //< decimal degrees
-   ossim_float64 theLonSpacing;         //< decimal degrees
-   ossim_float64 theMinPixelValue;      //< meters
-   ossim_float64 theMaxPixelValue;      //< meters
+   ossimFilename m_file;
+   ossim_uint32  m_numberOfLines;
+   ossim_uint32  m_numberOfSamples;
+   ossim_float64 m_southwestLatitude;  //< decimal degrees
+   ossim_float64 m_southwestLongitude; //< decimal degrees
+   ossim_float64 m_latSpacing;         //< decimal degrees
+   ossim_float64 m_lonSpacing;         //< decimal degrees
+   ossim_float64 m_minPixelValue;      //< meters
+   ossim_float64 m_maxPixelValue;      //< meters
 
-   ossimScalarType theScalarType;
+   ossimScalarType m_scalarType;
 
-   mutable ossimRefPtr<ossimIFStream> theFileStream;
+   // mutable ossimRefPtr<ossimIFStream> theFileStream;
+   mutable std::shared_ptr<ossim::ifstream> m_str;
+   
    template <class T>
-   bool computeMinMaxTemplate(T dummy,
-                              double defaultNull);
+   bool computeMinMaxTemplate(T dummy, double defaultNull);
 };
 
 #endif /* #ifndef ossimSrtmSupportData */

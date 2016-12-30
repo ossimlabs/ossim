@@ -94,7 +94,7 @@ bool ossimRangeDomeTileSource::open()
 #endif
 
    ossimString dome_spec;
-   ossim_uint32 sizeOfMagic = OSSIM_RANGE_DOME_SPEC_MAGIC_NUMBER.size();
+   ossim_uint32 sizeOfMagic = (ossim_uint32)OSSIM_RANGE_DOME_SPEC_MAGIC_NUMBER.size();
    char* magic_number = new char [ sizeOfMagic ];
 
    // Open the CSV and check proper file type:

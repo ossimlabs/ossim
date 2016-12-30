@@ -20,6 +20,7 @@ OSSIM_SETUP_APPLICATION(ossim-obj-allocate INSTALL COMMAND_LINE COMPONENT_NAME o
 OSSIM_SETUP_APPLICATION(ossim-point-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-point-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-rect-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-rect-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-ref-ptr-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-ref-ptr-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-stream-factory-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-stream-factory-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-string-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-string-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-thin-plate-spline-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-thin-plate-spline-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-threaded-logfile-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-threaded-logfile-test.cpp)

@@ -1,17 +1,16 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: Factory for info objects.
 // 
-//----------------------------------------------------------------------------
-// $Id: ossimInfoFactory.h 20125 2011-10-11 19:47:19Z dburken $
+//---
+// $Id$
+
 #ifndef ossimInfoFactory_HEADER
-#define ossimInfoFactory_HEADER
+#define ossimInfoFactory_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/support_data/ossimInfoFactoryInterface.h>
@@ -39,7 +38,11 @@ public:
     * @return ossimInfoBase* on success 0 on failure.  Caller is responsible
     * for memory.
     */
-   virtual ossimInfoBase* create(const ossimFilename& file) const;
+   // virtual ossimInfoBase* create(const ossimFilename& file) const;
+   virtual std::shared_ptr<ossimInfoBase> create(const ossimFilename& file) const;
+   
+   virtual std::shared_ptr<ossimInfoBase> create(std::shared_ptr<ossim::istream>& str,
+                                                 const std::string& connectionString)const;
    
 private:
    

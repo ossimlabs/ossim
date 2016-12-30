@@ -1,25 +1,23 @@
 #include <ossim/support_data/ossimRpfCompressionSection.h>
 #include <ossim/support_data/ossimRpfCompressionSectionSubheader.h>
 #include <ossim/support_data/ossimRpfCompressionLookupOffsetRecord.h>
-#include <string.h> // for memset
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIoStream.h>
+#include <cstring> // for memset
+#include <iterator>
 
-#ifndef NULL
-#include <stddef.h>
-#endif
-
-ostream& operator<<(ostream& out,
-                    const ossimRpfCompressionOffsetTableData& data)
+std::ostream& operator<<(std::ostream& out,
+                         const ossimRpfCompressionOffsetTableData& data)
 {
    unsigned long size = (data.theNumberOfValuesPerLookup*data.theNumberOfLookupValues*
                          data.theCompressionLookupValueBitLength)/8;
    
-   out << "theTableId:                         " << data.theTableId << endl
-       << "theNumberOfLookupValues:            " << data.theNumberOfLookupValues << endl
-       << "theCompressionLookupValueBitLength: " << data.theCompressionLookupValueBitLength << endl
-       << "theNumberOfValuesPerLookup:         " << data.theNumberOfValuesPerLookup << endl
-       << "Data Size in bytes:                 "
+   out << "theTableId:                         " << data.theTableId
+       << "\ntheNumberOfLookupValues:            " << data.theNumberOfLookupValues
+       << "\ntheCompressionLookupValueBitLength: " << data.theCompressionLookupValueBitLength
+       << "\ntheNumberOfValuesPerLookup:         " << data.theNumberOfValuesPerLookup
+       << "\nData Size in bytes:                 "
        << size;
 
    return out;
@@ -94,11 +92,10 @@ ossimRpfCompressionOffsetTableData::~ossimRpfCompressionOffsetTableData()
 }
 
 
-ostream& operator << (ostream& out,
-                      const ossimRpfCompressionSection& data)
+std::ostream& operator << (
+   std::ostream& out, const ossimRpfCompressionSection& data)
 {
    data.print(out);
-   
    return out;
 }
 
@@ -117,7 +114,7 @@ ossimRpfCompressionSection::~ossimRpfCompressionSection()
    }
 }
 
-ossimErrorCode ossimRpfCompressionSection::parseStream(istream& in,
+ossimErrorCode ossimRpfCompressionSection::parseStream(ossim::istream& in,
                                                        ossimByteOrder byteOrder)
 {
    ossimErrorCode result = ossimErrorCodes::OSSIM_OK;
@@ -156,7 +153,7 @@ ossimErrorCode ossimRpfCompressionSection::parseStream(istream& in,
                record.parseStream(in, byteOrder);
                unsigned long rememberLocation = in.tellg();
                in.seekg(record.getCompressionLookupTableOffset()+
-                        theSubheader->getEndOffset(), ios::beg);
+                        theSubheader->getEndOffset(), std::ios_base::beg);
 
                theTable[index].theTableId                            = record.getCompressionLookupTableId();
                theTable[index].theNumberOfLookupValues               = record.getNumberOfCompressionLookupRecords();
@@ -176,7 +173,7 @@ ossimErrorCode ossimRpfCompressionSection::parseStream(istream& in,
 
                in.read( (char*)theTable[index].theData, size);
                
-               in.seekg(rememberLocation, ios::beg);
+               in.seekg(rememberLocation, std::ios_base::beg);
             }
          }
       }
@@ -189,14 +186,14 @@ ossimErrorCode ossimRpfCompressionSection::parseStream(istream& in,
    return result;
 }
 
-void ossimRpfCompressionSection::print(ostream& out)const
+void ossimRpfCompressionSection::print(std::ostream& out)const
 {
    if(theSubheader)
    {
-      out << *theSubheader << endl;
+      out << *theSubheader << "\n";
       copy(theTable.begin(),
            theTable.end(),
-           ostream_iterator<ossimRpfCompressionOffsetTableData>(out, "\n"));
+           std::ostream_iterator<ossimRpfCompressionOffsetTableData>(out, "\n"));
    }
 }
 

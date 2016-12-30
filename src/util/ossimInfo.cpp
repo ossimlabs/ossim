@@ -115,11 +115,12 @@ ossimInfo::~ossimInfo()
 
 void ossimInfo::setUsage(ossimArgumentParser& ap)
 {
+   // Add global usage options.
+   ossimInit::instance()->addOptions(ap);
+   
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   if (usageString != "ossim-info")
-      usageString += " info";
    usageString += " [options] <optional-image>";
    au->setCommandLineUsage(usageString);
 
@@ -1390,7 +1391,10 @@ void ossimInfo::openImage(const ossimFilename& file)
 
 ossimRefPtr<ossimImageHandler> ossimInfo::openImageHandler(const ossimFilename& file) const
 {
-   ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->open(file);
+   // Go through new interface that passes a stream around. (drb 10 Nov. 2016)
+   // ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->open(file);
+   ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->
+      openConnection(file);
    if ( result.valid() == false )
    {
       std::string errMsg = "ossimInfo::openImage ERROR:\nCould not open: ";
@@ -1412,12 +1416,24 @@ ossimRefPtr<ossimImageHandler> ossimInfo::getImageHandler()
 
 void ossimInfo::prettyPrint(const ossimFilename& file) const
 {
-   ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
-   if (info.valid())
+   std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
+   if (info)
    {
-      info->setProcessOverviewFlag(false);
+      //---
+      // Old -d behavior was to dump all unless the dump no overview flag
+      // was set. Need to see tiff tags in file order for all image file
+      // directories(ifd's) so commenting out hard coded
+      // info->setProcessOverviewFlag(false) that used to be settable with -d
+      // + --dno options.  Note the old -d option used to do file order for
+      // tiffs but now dumps to a keyword list that prints alphabetical(not
+      // file order) so can't use that anymore.
+      // 
+      // drb - 15 Dec. 2016
+      //---
+      // info->setProcessOverviewFlag(false);
+      
       info->print(ossimNotify(ossimNotifyLevel_INFO));
-      info = 0;
+      info.reset();
    }
    else
    {
@@ -1430,15 +1446,15 @@ void ossimInfo::dumpImage(const ossimFilename& file,
                           bool dnoFlag,
                           ossimKeywordlist& kwl) const
 {
-   ossimRefPtr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
-   if (info.valid())
+   std::shared_ptr<ossimInfoBase> info = ossimInfoFactoryRegistry::instance()->create(file);
+   if (info)
    {
       if (dnoFlag) // Default info processes overviews.
       {
          info->setProcessOverviewFlag(false);
       }
       info->getKeywordlist(kwl);
-      info = 0;
+      info.reset();
    }
    else
    {
@@ -2320,14 +2336,16 @@ std::ostream& ossimInfo::printDatums(std::ostream& out) const
          if ( datum->ellipsoid() )
          {
             out << setiosflags(ios::left)
-                      << setw(7)
-                      << datum->code().c_str()
-                      << setw(48)
-                      << datum->name().c_str()
-                      << setw(10)
-                      << "Ellipse:"
-                      << datum->ellipsoid()->name()
-                      << std::endl;
+                << setw(7)
+                << datum->code().c_str()
+                << setw(7)
+                << datum->epsgCode()
+                << setw(48)
+                << datum->name().c_str()
+                << setw(10)
+                << "Ellipse:"
+                << datum->ellipsoid()->name()
+                << std::endl;
          }
          else
          {

@@ -5,7 +5,8 @@
 // Author:  Garrett Potts (gpotts@imagelinks.com)
 //
 //*******************************************************************
-//  $Id: ossimImageHandlerFactoryBase.cpp 22632 2014-02-20 00:53:14Z dburken $
+// $Id$
+
 #include <ossim/imaging/ossimImageHandlerFactoryBase.h>
 
 RTTI_DEF1(ossimImageHandlerFactoryBase, "ossimImageHandlerFactoryBase", ossimObjectFactory);
@@ -26,11 +27,27 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::openOverview(
    return ossimRefPtr<ossimImageHandler>(0);
 }
 
-
+#if 0
 ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::open(
-   std::istream* /* str */,
+   ossim::istream* /* str */,
    std::streamoff /* restartPosition */,
    bool /* youOwnIt */ ) const
+{
+   return ossimRefPtr<ossimImageHandler>(0);
+}
+#endif
+
+ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::open(
+   std::shared_ptr<ossim::istream>& /*str */,
+   const std::string& /* connectionString */,
+   bool /* openOverview */ ) const
+{
+   return ossimRefPtr<ossimImageHandler>(0);
+}
+
+ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::openOverview(
+   std::shared_ptr<ossim::istream>& /* str */,
+   const ossimString& /* connectionString */ ) const
 {
    return ossimRefPtr<ossimImageHandler>(0);
 }

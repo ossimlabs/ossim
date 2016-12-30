@@ -1,35 +1,35 @@
 #ifndef ossimRpfColorConverterSubsection_HEADER
-#define ossimRpfColorConverterSubsection_HEADER
-#include <iostream>
-#include <vector>
-#include <iterator>
-using namespace std;
+#define ossimRpfColorConverterSubsection_HEADER 1
+
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimErrorContext.h>
 #include <ossim/support_data/ossimRpfColorConverterTable.h>
+#include <vector>
 
 class ossimRpfColorConverterSubsection
 {
 public:
-   friend ostream& operator <<(ostream& out,
-                               const ossimRpfColorConverterSubsection& data);
+   friend std::ostream& operator <<(
+      std::ostream& out, const ossimRpfColorConverterSubsection& data);
+
    ossimRpfColorConverterSubsection();
    virtual ~ossimRpfColorConverterSubsection(){}
 
-   ossimErrorCode parseStream(istream& in,
+   ossimErrorCode parseStream(ossim::istream& in,
                               ossimByteOrder byteOrder);
    
    ossim_uint32 getStartOffset()const{return theStartOffset;}
    ossim_uint32 getEndOffset()const{return theEndOffset;}
 
-   const vector<ossimRpfColorConverterTable>& getColorConversionTable()const
-      {
-         return theTableList;
-      }
+   const std::vector<ossimRpfColorConverterTable>& getColorConversionTable()const
+   {
+      return theTableList;
+   }
    const ossimRpfColorConverterTable* getColorConversionTable(ossim_uint32 givenThisNumberOfEntires)const;
    
    void setNumberOfColorConverterOffsetRecords(ossim_uint16 numberOfRecords);
-   void print(ostream& out)const;
+   void print(std::ostream& out)const;
 
    void clearFields();
    
@@ -46,7 +46,7 @@ private:
    ossim_uint16  theColorConverterOffsetRecordLength;
    ossim_uint16  theConverterRecordLength;
 
-   vector<ossimRpfColorConverterTable> theTableList;
+   std::vector<ossimRpfColorConverterTable> theTableList;
 };
 
 #endif

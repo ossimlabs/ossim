@@ -1,22 +1,21 @@
 #ifndef ossimRpfAttributeOffsetRecord_HEADER
-#define ossimRpfAttributeOffsetRecord_HEADER
-#include <iostream>
-using namespace std;
+#define ossimRpfAttributeOffsetRecord_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIosFwd.h>
 
 class ossimRpfAttributeOffsetRecord
 {
 public:
-   friend ostream& operator <<(ostream& out,
-                               const ossimRpfAttributeOffsetRecord& data);
+   friend std::ostream& operator <<(std::ostream& out,
+                                    const ossimRpfAttributeOffsetRecord& data);
 
    ossimRpfAttributeOffsetRecord();
    virtual ~ossimRpfAttributeOffsetRecord(){}
 
-   ossimErrorCode parseStream(istream& in, ossimByteOrder byteOrder);
-   void print(ostream& out)const;
+   ossimErrorCode parseStream(ossim::istream& in, ossimByteOrder byteOrder);
+   void print(std::ostream& out)const;
    ossim_uint16  getAttributeId()const{return theAttributeId;}
    ossim_uint8   getParamterId()const{return theParameterId;}
    ossim_uint32  getAttributeRecordOffset()const{return theAttributeRecordOffset;}
