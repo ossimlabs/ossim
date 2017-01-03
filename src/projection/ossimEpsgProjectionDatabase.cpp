@@ -746,12 +746,12 @@ ossimEpsgProjectionDatabase::createProjFromFormatARecord(ProjDbRecord* record) c
    {
       origin.lat = decodeSexagesimalDms(record->csvRecord[A_NAT_ORG_LAT]);
       origin.lon = decodeSexagesimalDms(record->csvRecord[A_NAT_ORG_LON]);
-      double fe = mtrs_per_unit*record->csvRecord[A_FALSE_EASTING].toDouble();
-      double fn = mtrs_per_unit*record->csvRecord[A_FALSE_NORTHING].toDouble();
+      // double fe = mtrs_per_unit*record->csvRecord[A_FALSE_EASTING].toDouble();
+      // double fn = mtrs_per_unit*record->csvRecord[A_FALSE_NORTHING].toDouble();
       ossimUpsProjection* ups_proj = new ossimUpsProjection(ossimEllipsoid(), origin);
       record->proj = ups_proj;
    }
-   else 
+   else
    {
       // Can't handle it now. 
       //ossimNotify(ossimNotifyLevel_FATAL)<<MODULE<<"EPSG:"<<record->csvRecord[A_CODE]<<" \""<<proj_type<<"\" "
