@@ -37,7 +37,6 @@ ossimStdOutProgress::ossimStdOutProgress(ossim_uint32 precision,
    // Determine if running in a terminal window. Progress reports are only written to console if
    // running in one.
 
-   bool prefsFlag = theRunningInConsoleFlag;
    ossimString stdOutConsole;
    stdOutConsole.string() = ossimPreferences::instance()->
       preferencesKWL().findKey(std::string("ossim.std.out.progress"));
