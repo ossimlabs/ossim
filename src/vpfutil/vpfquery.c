@@ -46,7 +46,7 @@
 #include <sys/types.h>
 #include <sys/malloc.h>
 #else
-#ifndef __FreeBSD__
+#if !defined(__OpenBSD__) && !defined( __FreeBSD__)
 #include <malloc.h>
 #include <string.h>
 #endif
