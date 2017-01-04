@@ -103,15 +103,26 @@ else( TIFF_FOUND )
    message( FATAL_ERROR "Could not find required tiff package!" )
 endif( TIFF_FOUND )
 
-if (CMAKE_SYSTEM_NAME MATCHES "Linux")
-  find_library( DL_LIBRARY dl )
-  if ( DL_LIBRARY )
-    set( ossimDependentLibs ${ossimDependentLibs} ${DL_LIBRARY} )
-  else( DL_LIBRARY )
-    # TODO:  Is this required on unix?  If so move to the required section.
-    message( FATAL_ERROR "Could not find dl library!" )
-  endif( DL_LIBRARY )
-endif() # if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+# This caused a core dump on ossim executables running in jenins pipeline (ossim-test-dev)
+#if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+#  find_library( DL_LIBRARY dl )
+#  if ( DL_LIBRARY )
+#    set( ossimDependentLibs ${ossimDependentLibs} ${DL_LIBRARY} )
+#  else( DL_LIBRARY )
+#    # TODO:  Is this required on unix?  If so move to the required section.
+#    message( FATAL_ERROR "Could not find dl library!" )
+#  endif( DL_LIBRARY )
+#endif() # if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+message( INFO "CMAKE_SYSTEM_NAME = <${CMAKE_SYSTEM_NAME}>" )
+if( UNIX )
+   find_library( DL_LIBRARY dl )
+   if ( DL_LIBRARY )
+      set( ossimDependentLibs ${ossimDependentLibs} ${DL_LIBRARY} )
+   else( DL_LIBRARY )
+      # TODO:  Is this required on unix?  If so move to the required section.
+      message( FATAL_ERROR "Could not find dl library!" )
+   endif( DL_LIBRARY )
+endif( UNIX )
 
 # FREETYPE - Optional:
 set( OSSIM_HAS_FREETYPE 0 )
@@ -165,7 +176,7 @@ if (BUILD_OSSIM_HDF5_SUPPORT)
 else (BUILD_OSSIM_HDF5_SUPPORT)
   message( STATUS "Native HDF5 support was not requested. If you want HDF5 support, set the environment BUILD_OSSIM_HDF5_SUPPORT=ON..." )
 endif ( BUILD_OSSIM_HDF5_SUPPORT )
-  
+
 
 
 #---
@@ -265,7 +276,3 @@ endif()
 IF(BUILD_OSSIM_TESTS)
    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test/src ${CMAKE_CURRENT_BINARY_DIR}/test/src)
 ENDIF()
-
-
-
-
