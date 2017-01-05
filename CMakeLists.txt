@@ -104,25 +104,25 @@ else( TIFF_FOUND )
 endif( TIFF_FOUND )
 
 # This caused a core dump on ossim executables running in jenins pipeline (ossim-test-dev)
-#if (CMAKE_SYSTEM_NAME MATCHES "Linux")
-#  find_library( DL_LIBRARY dl )
-#  if ( DL_LIBRARY )
-#    set( ossimDependentLibs ${ossimDependentLibs} ${DL_LIBRARY} )
-#  else( DL_LIBRARY )
-#    # TODO:  Is this required on unix?  If so move to the required section.
-#    message( FATAL_ERROR "Could not find dl library!" )
-#  endif( DL_LIBRARY )
-#endif() # if (CMAKE_SYSTEM_NAME MATCHES "Linux")
-
-if( UNIX )
-   find_library( DL_LIBRARY dl )
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+  find_library( DL_LIBRARY dl )
   if ( DL_LIBRARY )
-      set( ossimDependentLibs ${ossimDependentLibs} ${DL_LIBRARY} )
-   else( DL_LIBRARY )
-      # TODO:  Is this required on unix?  If so move to the required section.
-      message( FATAL_ERROR "Could not find dl library!" )
-   endif( DL_LIBRARY )
-endif( UNIX )
+    set( ossimDependentLibs ${ossimDependentLibs} ${DL_LIBRARY} )
+  else( DL_LIBRARY )
+    # TODO:  Is this required on unix?  If so move to the required section.
+    message( FATAL_ERROR "Could not find dl library!" )
+  endif( DL_LIBRARY )
+endif() # if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+
+#if( UNIX )
+#   find_library( DL_LIBRARY dl )
+#  if ( DL_LIBRARY )
+#      set( ossimDependentLibs ${ossimDependentLibs} ${DL_LIBRARY} )
+#   else( DL_LIBRARY )
+#      # TODO:  Is this required on unix?  If so move to the required section.
+#      message( FATAL_ERROR "Could not find dl library!" )
+#   endif( DL_LIBRARY )
+#endif( UNIX )
 
 # FREETYPE - Optional:
 set( OSSIM_HAS_FREETYPE 0 )
