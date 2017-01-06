@@ -29,15 +29,25 @@
 #include <exception>
 #include <vector>
 
+class MyGeomFactory : public geos::geom::GeometryFactory
+{
+public:
+   MyGeomFactory():
+   geos:geom:GeometryFactory(new geos::geom::PrecisionModel(geos::geom::PrecisionModel::FLOATING),
+                             -1)
+   {
+
+   }
+}; 
 class ossimGeometryFactoryWrapper : public ossimReferenced
 {
 public:
    ossimGeometryFactoryWrapper()
       : m_geomFactory(0)
    {
-      geos::geom::PrecisionModel *pm =
-         new geos::geom::PrecisionModel(geos::geom::PrecisionModel::FLOATING);
-      m_geomFactory = new geos::geom::GeometryFactory(pm, -1); 
+      //geos::geom::PrecisionModel *pm =
+      //   new geos::geom::PrecisionModel(geos::geom::PrecisionModel::FLOATING);
+      m_geomFactory = new MyGeomFactory();//new geos::geom::GeometryFactory(pm, -1); 
    }
    virtual ~ossimGeometryFactoryWrapper(){if(m_geomFactory) delete m_geomFactory;m_geomFactory=0;}
    
