@@ -51,7 +51,7 @@ public:
    }
    virtual ~ossimGeometryFactoryWrapper(){if(m_geomFactory) delete m_geomFactory;m_geomFactory=0;}
    
-   geos::geom::GeometryFactory* m_geomFactory;
+   MyGeomFactory* m_geomFactory;
 };
 
 class OssimPolyArea2dPrivate
