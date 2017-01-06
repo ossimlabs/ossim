@@ -33,7 +33,7 @@ class MyGeomFactory : public geos::geom::GeometryFactory
 {
 public:
    MyGeomFactory():
-   geos:geom:GeometryFactory(new geos::geom::PrecisionModel(geos::geom::PrecisionModel::FLOATING),
+   geos::geom::GeometryFactory(new geos::geom::PrecisionModel(geos::geom::PrecisionModel::FLOATING),
                              -1)
    {
 
