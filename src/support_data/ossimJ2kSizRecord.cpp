@@ -46,9 +46,6 @@ ossimJ2kSizRecord::~ossimJ2kSizRecord()
 
 void ossimJ2kSizRecord::parseStream(ossim::istream& in)
 {
-   // Get the stream posistion.
-   std::streamoff pos = in.tellg();
-
    // Note: Marker is not read.
    in.read((char*)&m_Lsiz,      2);
    in.read((char*)&m_Rsiz,      2);
@@ -61,13 +58,10 @@ void ossimJ2kSizRecord::parseStream(ossim::istream& in)
    in.read((char*)&m_XTOsiz,    4);
    in.read((char*)&m_YTOsiz,    4);
    in.read((char*)&m_Csiz,      2);
-   in.read((char*)&m_Ssiz,      1);
-   in.read((char*)&m_XRsiz,     1);
-   in.read((char*)&m_YRsiz,     1);
 
    if (ossim::byteOrder() == OSSIM_LITTLE_ENDIAN)
    {
-      // Stored big endian, must swap.
+      // Stored in file big endian, must swap.
       ossimEndian s;
       s.swap(m_Lsiz);
       s.swap(m_Rsiz);
@@ -82,56 +76,123 @@ void ossimJ2kSizRecord::parseStream(ossim::istream& in)
       s.swap(m_Csiz);
    }
 
-   //---
-   // Seek to next record.  This is needed because there are sometimes extra
-   // bytes.
-   //---
-   in.seekg(pos + m_Lsiz, std::ios_base::beg);
+   m_Ssiz.resize( m_Csiz );
+   in.read((char*)&m_Ssiz.front(), m_Csiz);
+   
+   m_XRsiz.resize( m_Csiz );
+   in.read((char*)&m_XRsiz.front(), m_Csiz);
+   
+   m_YRsiz.resize( m_Csiz );
+   in.read((char*)&m_YRsiz.front(), m_Csiz);
+}
+
+void ossimJ2kSizRecord::writeStream(std::ostream& out)
+{
+   // Length of this marker segment(marker not included):
+   m_Lsiz = 38 + 3*m_Csiz;
+
+   // Grab component count before swapping:
+   ossim_uint16 components = m_Csiz;
+
+   ossimEndian* s = 0;
+   
+   if (ossim::byteOrder() == OSSIM_LITTLE_ENDIAN)
+   {
+      // Stored in file big endian, must swap.
+      s = new ossimEndian();
+      s->swap(m_Lsiz);
+      s->swap(m_Rsiz);
+      s->swap(m_Xsiz);
+      s->swap(m_Ysiz);
+      s->swap(m_XOsiz);
+      s->swap(m_YOsiz);
+      s->swap(m_XTsiz);
+      s->swap(m_YTsiz);
+      s->swap(m_XTOsiz);
+      s->swap(m_YTOsiz);
+      s->swap(m_Csiz);
+   }
+
+   out.write( (char*)&m_marker, 2 );
+   out.write((char*)&m_Lsiz,    2);
+   out.write((char*)&m_Rsiz,    2);
+   out.write((char*)&m_Xsiz,    4);
+   out.write((char*)&m_Ysiz,    4);
+   out.write((char*)&m_XOsiz,   4);
+   out.write((char*)&m_YOsiz,   4);
+   out.write((char*)&m_XTsiz,   4);
+   out.write((char*)&m_YTsiz,   4);
+   out.write((char*)&m_XTOsiz,  4);
+   out.write((char*)&m_YTOsiz,  4);
+   out.write((char*)&m_Csiz,    2);
+
+   out.write((char*)&m_Ssiz.front(),  components);
+   out.write((char*)&m_XRsiz.front(), components);
+   out.write((char*)&m_YRsiz.front(), components);
+
+   if ( s )
+   {
+      // Swap it back to native.
+      s->swap(m_Lsiz);
+      s->swap(m_Rsiz);
+      s->swap(m_Xsiz);
+      s->swap(m_Ysiz);
+      s->swap(m_XOsiz);
+      s->swap(m_YOsiz);
+      s->swap(m_XTsiz);
+      s->swap(m_YTsiz);
+      s->swap(m_XTOsiz);
+      s->swap(m_YTOsiz);
+      s->swap(m_Csiz);
+   }   
 }
 
 ossimScalarType ossimJ2kSizRecord::getScalarType() const
 {
+   // Currently assumes all components the same scalar type.
+   
    ossimScalarType result = OSSIM_SCALAR_UNKNOWN;
 
-   // Bits per pixel first seven bits plus one.
-   ossim_uint8 bpp = ( m_Ssiz & 0x3f ) + 1;
-
-   // Signed bit is msb.
-   bool isSigned = ( m_Ssiz & 0x80 ) ? true : false;
-
-   // std::cout << "bpp: " << int(bpp) << " signed: " << isSigned << std::endl;
+   if ( m_Ssiz.size() )
+   {
+      // Bits per pixel first seven bits plus one.
+      ossim_uint8 bpp = ( m_Ssiz[0] & 0x3f ) + 1;
       
-   if ( bpp <= 8 )
-   {
-      if ( isSigned == 0 )
+      // Signed bit is msb.
+      bool isSigned = ( m_Ssiz[0] & 0x80 ) ? true : false;
+      
+      if ( bpp <= 8 )
       {
-         result = OSSIM_UINT8;
+         if ( isSigned == 0 )
+         {
+            result = OSSIM_UINT8;
+         }
+         else if (isSigned == 1)
+         {
+            result = OSSIM_SINT8;
+         }
       }
-      else if (isSigned == 1)
+      else if ( bpp == 11 )
       {
-         result = OSSIM_SINT8;
+         if ( isSigned == 0 )
+         {
+            result = OSSIM_USHORT11;
+         }
+         else
+         {
+            result = OSSIM_SINT16;
+         }
       }
-   }
-   else if ( bpp == 11 )
-   {
-      if ( isSigned == 0 )
+      else if( bpp <= 16 )
       {
-         result = OSSIM_USHORT11;
-      }
-      else
-      {
-         result = OSSIM_SINT16;
-      }
-   }
-   else if( bpp <= 16 )
-   {
-      if( isSigned == 0 )
-      {
-         result = OSSIM_UINT16;
-      }
-      else if( isSigned == 1 )
-      {
-         result = OSSIM_SINT16;
+         if( isSigned == 0 )
+         {
+            result = OSSIM_UINT16;
+         }
+         else if( isSigned == 1 )
+         {
+            result = OSSIM_SINT16;
+         }
       }
    }
    return result;
@@ -145,7 +206,7 @@ std::ostream& ossimJ2kSizRecord::print(std::ostream& out,
 
    std::string pfx = prefix;
    pfx += "siz.";
-
+   
    out.setf(std::ios_base::hex, std::ios_base::basefield);
    out << pfx << "marker: 0x" << m_marker << "\n";
    out.setf(std::ios_base::fmtflags(0), std::ios_base::basefield);
@@ -160,11 +221,16 @@ std::ostream& ossimJ2kSizRecord::print(std::ostream& out,
        << pfx << "YTsiz:  " << m_YTsiz      << "\n"
        << pfx << "XTOsiz: " << m_XTOsiz     << "\n"
        << pfx << "YTOsiz: " << m_YTOsiz     << "\n"
-       << pfx << "Csiz:   " << m_Csiz       << "\n"
-       << pfx << "Ssiz:   " << int(m_Ssiz)  << "\n"
-       << pfx << "XRsiz:  " << int(m_XRsiz) << "\n"
-       << pfx << "YRsiz:  " << int(m_YRsiz)
-       << std::endl;
+       << pfx << "Csiz:   " << m_Csiz       << "\n";
+   
+   for ( ossim_uint16 i = 0; i < m_Csiz; ++i )
+   {
+      out << pfx << "Ssiz[" << i  << "]:  " << int(m_Ssiz[i])  << "\n"
+          << pfx << "XRsiz[" << i << "]:  " << int(m_XRsiz[i]) << "\n"
+          << pfx << "YRsiz[" << i << "]:  " << int(m_YRsiz[i]) << "\n";
+   }
+
+   out.flush();
 
    // Reset flags.
    out.setf(f);
