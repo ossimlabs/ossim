@@ -144,6 +144,10 @@ void ossimJ2kSizRecord::writeStream(std::ostream& out)
       s->swap(m_XTOsiz);
       s->swap(m_YTOsiz);
       s->swap(m_Csiz);
+
+      // Cleanup:
+      delete s;
+      s = 0;
    }   
 }
 
