@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author:  David Burken
 //
@@ -8,24 +8,24 @@
 //
 // Contains class definition for CcfHead.
 // 
-//*******************************************************************
-//  $Id: ossimCcfHead.cpp 13842 2008-11-04 19:40:10Z gpotts $
+//---
+//  $Id$
+
+#include <ossim/imaging/ossimCcfHead.h>
+#include <ossim/base/ossimIrect.h>
+#include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimScalarTypeLut.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+#include <ossim/base/ossimTrace.h>
 
 #include <sstream>
 #include <iostream>
 #include <fstream>
 
-using namespace std;
-
-#include <ossim/imaging/ossimCcfHead.h>
-#include <ossim/base/ossimIrect.h>
-#include <ossim/base/ossimStreamFactoryRegistry.h>
-#include <ossim/base/ossimScalarTypeLut.h>
-#include <ossim/base/ossimErrorCodes.h>
-#include <ossim/base/ossimErrorContext.h>
-#include <ossim/base/ossimIoStream.h>
-
-static const bool TRACE = false; // Temp until trace code implemented.
+static ossimTrace traceDebug("ossimCcfHead:debug");
 
 ossimCcfHead::ossimCcfHead()
    :
@@ -99,11 +99,12 @@ ossimCcfHead::ossimCcfHead(const char* ccf_file)
    {
       theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
       
-      if (TRACE)
+      if (traceDebug())
       {
-         cerr << MODULE << " ERROR!"
-              << "\nError initializing from ccf_file:  " << ccf_file
-              << "\nReturning..." << std::endl;
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << MODULE << " ERROR!"
+            << "\nError initializing from ccf_file:  " << ccf_file
+            << "\nReturning...\n";
       }
    }
 }
@@ -120,11 +121,12 @@ ossimCcfHead::ossimCcfHead(std::shared_ptr<ossim::istream>& str,
    {
       theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
       
-      if (TRACE)
+      if (traceDebug())
       {
-         cerr << MODULE << " ERROR!"
-              << "\nError initializing from ccf_file:  " << connectionString
-              << "\nReturning..." << std::endl;
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << MODULE << " ERROR!"
+            << "\nError initializing from ccf_file:  " << connectionString
+            << "\nReturning...\n";
       }
    }
 
@@ -141,131 +143,139 @@ ossimCcfHead::~ossimCcfHead()
 bool ossimCcfHead::parseCcfHeader(const char* ccf_file)
 {
    static const char MODULE[] = "ossimCcfHead::parseCcfHeader";
+   bool result = false;
+
    std::string connectionString = ccf_file;
    std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
       createIstream( connectionString, std::ios_base::in|std::ios_base::binary);
-
-   return parseCcfHeader(str, connectionString);
+   if ( str )
+   {
+      result = parseCcfHeader(str, connectionString);
+   }
+   else
+   {
+      theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << MODULE << " ERROR!"
+            << "\nCannot open file:  " << m_connectionString << "\n";
+      }
+   }
+   return result;
 }
 
 bool ossimCcfHead::parseCcfHeader(std::shared_ptr<ossim::istream>& str, 
                                   const std::string& connectionString)
 {
    static const char MODULE[] = "ossimCcfHead::parseossimCcfHeader";
-   m_ccfStr = str;
-   m_connectionString = connectionString;
-   if (!m_ccfStr)
+
+   bool result = false;
+
+   if ( str )
    {
-      theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+      str->clear();
+      str->seekg(0);
       
-      if (TRACE)
+      const ossim_uint32 MAX_LEN = 256;
+      char tmp[MAX_LEN];
+
+      // Check the first string should be "CCF" else get out...
+      // this might hang so I changed it to not use the
+      // >> operator unless it is a ccf file.  If it is another
+      // file we might not be guranteed a whitespace or \n character
+      // will exist and therefore the entrie file could have
+      // been read in.
+      //
+      char type[4];
+      str->read(type, 3);
+      type[3] = '\0';
+      theFileType = type;
+      if (theFileType == "CCF")
       {
-         cerr << MODULE << " ERROR!"
-              << "\nCannot open file:  " << m_connectionString << std::endl;
-      }
-      
-      str.reset();
-   }
-   m_ccfStr->clear();
-   m_ccfStr->seekg(0);
-   const ossim_uint32 MAX_LEN = 256;
-   char tmp[MAX_LEN];
-
-   // Check the first string should be "CCF" else get out...
-   // this might hang so I changed it to not use the
-   // >> operator unless it is a ccf file.  If it is another
-   // file we might not be guranteed a whitespace or \n character
-   // will exist and therefore the entrie file could have
-   // been read in.
-   //
-   char type[4];
-   m_ccfStr->read(type, 3);
-   type[3] = '\0';
-   theFileType = type;
-   if (theFileType != "CCF")
-   {
-      if (TRACE)
-      {
-         cerr << MODULE << " ERROR!"
-              << "\nNot a ccf file.  Returning..." << std::endl;
-      }
-      m_ccfStr.reset();
-
-      return false;
-   }
-
+         m_ccfStr = str;
+         m_connectionString = connectionString;
    
-   // Check the version number.
-   (*m_ccfStr) >> tmp 
-         >> theVersionNumber;
+         // Check the version number.
+         (*m_ccfStr) >> tmp >> theVersionNumber;
 
-   //***
-   // Call the appropriate method for the version.  Currently only version 6
-   // supported as that was all I had in-house.  Feel free to add your own
-   // version reader!
-   //***
-   bool status = false;
-   
-   switch(theVersionNumber)
-   {
-   case 5:
-      status = parseV5CcfHeader(*m_ccfStr);
-      break;
-   case 6:
-      status = parseV6CcfHeader(*m_ccfStr);
-      break;
-   default:
-      // Version type not supported...
-      if (TRACE)
-      {
-         cerr << MODULE << " ERROR!"
-              << "\nUsupported version:  " << theVersionNumber
-              << "  Returning..." << std::endl;
+         //---
+         // Call the appropriate method for the version.  Currently only version 6
+         // supported as that was all I had in-house.  Feel free to add your own
+         // version reader!
+         //---
+         switch(theVersionNumber)
+         {
+            case 5:
+            {
+               result = parseV5CcfHeader(*m_ccfStr);
+               break;
+            }
+            case 6:
+            {
+               result = parseV6CcfHeader(*m_ccfStr);
+               break;
+            }
+            default:
+            {
+               m_ccfStr = 0;
+               // Version type not supported...
+               if (traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_DEBUG)
+                     << MODULE << " ERROR!"
+                     << "\nUsupported version:  " << theVersionNumber
+                     << "  Returning...\n";
+               }
+            }
+            break;
+         }
       }
-      m_ccfStr.reset();
-      return false;
 
-      break;
+      if ( result )
+      {
+         //---
+         // Parse the radiometry string.  This will initialize "theNumberOfBands"
+         // and the pixel type.
+         //---
+         parseRadString();
+      }
+      else
+      {
+         str->clear();
+         str->seekg(0);
+      }
    }
-   m_ccfStr.reset();
-   // Close the stream.
-   //is->close();
-   //delete is;
-   //***
-   // Parse the radiometry string.  This will initialize "theNumberOfBands"
-   // and the pixel type.
-   //***
-   parseRadString();
-
-   return status;
+   
+   return result;
 }
 
 //***************************************************************************
 // Private Method:
 //***************************************************************************
-bool ossimCcfHead::parseV5CcfHeader(std::istream& is)
+bool ossimCcfHead::parseV5CcfHeader(ossim::istream& is)
 {
    static const char MODULE[] = "CcfHead::parseV5CcfHeader";
 
    // Check the stream.
-   if (!is)
+   if ( !is )
    {
-      if (TRACE)
+      if (traceDebug())
       {
-         cerr << MODULE << " Bad Stream passed to method!"
-              << "\nReturning..."
-              << std::endl;
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << MODULE << " Bad Stream passed to method!"
+            << "\nReturning...\n";
       }
-
+      
       return false;
    }
-
+   
    const ossim_uint32 MAX_LEN = 256;
    char tmp[MAX_LEN];
    
-   //***
+   //---
    // These are all fixed/not used so just skip...
-   //***
+   //---
    is.read(tmp, 1);                   // eat the '\n'
    is.getline(tmp, MAX_LEN-1, '\n');  // skip "ccf_maker"
 
@@ -302,7 +312,7 @@ bool ossimCcfHead::parseV5CcfHeader(std::istream& is)
       >> theFirstBandHeaderPointer;  // Offset to band header.
 
    // Seek to the band header record.
-   is.seekg(theFirstBandHeaderPointer, ios::beg);
+   is.seekg(theFirstBandHeaderPointer, std::ios_base::beg);
 
    is.getline(tmp, MAX_LEN-1, '\n');  // skip "BAND" line
    is.getline(tmp, MAX_LEN-1, '\n');  // skip "NextBandHeaderPointer" line
@@ -401,11 +411,11 @@ bool ossimCcfHead::parseV6CcfHeader(std::istream& is)
    // Check the stream.
    if (!is)
    {
-      if (TRACE)
+      if (traceDebug())
       {
-         cerr << MODULE << " Bad Stream passed to method!"
-              << "\nReturning..."
-              << std::endl;
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << MODULE << " Bad Stream passed to method!"
+            << "\nReturning...\n";
       }
 
       return false;
@@ -474,7 +484,7 @@ bool ossimCcfHead::parseV6CcfHeader(std::istream& is)
       >> theFirstBandHeaderPointer;  // Offset to band header.
 
    // Seek to the band header record.
-   is.seekg(theFirstBandHeaderPointer, ios::beg);
+   is.seekg(theFirstBandHeaderPointer, std::ios_base::beg);
 
    is.getline(tmp, MAX_LEN-1, '\n');  // skip "BAND" line
    is.getline(tmp, MAX_LEN-1, '\n');  // skip "NextBandHeaderPointer" line
@@ -630,11 +640,12 @@ ossim_uint32 ossimCcfHead::numberOfLines(ossim_uint32 reduced_res_level) const
 
    if (reduced_res_level > highestReducedResSet() )
    {
-      cerr << MODULE << " ERROR!"
-           << "\nInvalid reduced res level:  " << reduced_res_level
-           << "\nHighest reduced res level available:  "
-           << highestReducedResSet() << std::endl;   
-      return 0;
+       ossimNotify(ossimNotifyLevel_WARN)
+          << MODULE << " ERROR!"
+          << "\nInvalid reduced res level:  " << reduced_res_level
+          << "\nHighest reduced res level available:  "
+          << highestReducedResSet() << std::endl;   
+       return 0;
    }
 
    return theNumberOfLines[reduced_res_level];
@@ -649,10 +660,11 @@ ossim_uint32 ossimCcfHead::numberOfSamples(ossim_uint32 reduced_res_level) const
 
    if (reduced_res_level > highestReducedResSet() )
    {
-      cerr << MODULE << " ERROR!"
-           << "\nInvalid reduced res level:  " << reduced_res_level
-           << "\nHighest reduced res level available:  "
-           << highestReducedResSet() << std::endl;   
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE << " ERROR!"
+         << "\nInvalid reduced res level:  " << reduced_res_level
+         << "\nHighest reduced res level available:  "
+         << highestReducedResSet() << std::endl;   
       return 0;
    }
    
@@ -668,10 +680,11 @@ ossim_uint32 ossimCcfHead::chunksInLineDir(ossim_uint32 reduced_res_level) const
 
    if (reduced_res_level > highestReducedResSet() )
    {
-      cerr << MODULE << " ERROR!"
-           << "\nInvalid reduced res level:  " << reduced_res_level
-           << "\nHighest reduced res level available:  "
-           << highestReducedResSet() << std::endl;   
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE << " ERROR!"
+         << "\nInvalid reduced res level:  " << reduced_res_level
+         << "\nHighest reduced res level available:  "
+         << highestReducedResSet() << std::endl;   
       return 0;
    }
    
@@ -687,10 +700,11 @@ ossim_uint32 ossimCcfHead::chunksInSampleDir(ossim_uint32 reduced_res_level) con
 
    if (reduced_res_level > highestReducedResSet() )
    {
-      cerr << MODULE << " ERROR!"
-           << "\nInvalid reduced res level:  " << reduced_res_level
-           << "\nHighest reduced res level available:  "
-           << highestReducedResSet() << std::endl;   
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE << " ERROR!"
+         << "\nInvalid reduced res level:  " << reduced_res_level
+         << "\nHighest reduced res level available:  "
+         << highestReducedResSet() << std::endl;   
       return 0;
    }
    
@@ -707,7 +721,7 @@ std::streampos ossimCcfHead::startOfData(ossim_uint32 reduced_res_level) const
 
    if (reduced_res_level > highestReducedResSet() )
    {
-      cerr << MODULE << " ERROR!"
+      ossimNotify(ossimNotifyLevel_WARN) << MODULE << " ERROR!"
            << "\nInvalid reduced res level:  " << reduced_res_level
            << "\nHighest reduced res level available:  "
            << highestReducedResSet() << std::endl;   
@@ -726,7 +740,7 @@ ossimIrect ossimCcfHead::imageRect(ossim_uint32 reduced_res_level) const
    
    if (reduced_res_level > highestReducedResSet() )
    {
-      cerr << MODULE << " ERROR!"
+      ossimNotify(ossimNotifyLevel_WARN) << MODULE << " ERROR!"
            << "\nInvalid reduced res level:  " << reduced_res_level
            << "\nHighest reduced res level available:  "
            << highestReducedResSet() << std::endl;
@@ -774,17 +788,19 @@ void ossimCcfHead::parseRadString()
    }
    else
    {
-      cerr << MODULE << " Unknown radiometry!"
-           << "\ntheRadiometryString:  " << theRadiometryString << std::endl;
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE << " Unknown radiometry!"
+         << "\ntheRadiometryString:  " << theRadiometryString << std::endl;
    }
 
-   if (TRACE)
+   if (traceDebug())
    {
-      cout << MODULE
-           << "\ntheRadiometryString:  " << theRadiometryString
-           << "\ntheNumberOfBands:     " << theNumberOfBands
-           << "\nthePixelType:         "
-           << (ossimScalarTypeLut::instance()->getEntryString(thePixelType))
-           << std::endl;
+       ossimNotify(ossimNotifyLevel_DEBUG)
+          << MODULE
+          << "\ntheRadiometryString:  " << theRadiometryString
+          << "\ntheNumberOfBands:     " << theNumberOfBands
+          << "\nthePixelType:         "
+          << (ossimScalarTypeLut::instance()->getEntryString(thePixelType))
+          << "\n";
    }
 }
