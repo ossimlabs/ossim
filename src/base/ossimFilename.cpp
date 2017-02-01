@@ -1421,7 +1421,10 @@ ossimFilename& ossimFilename::append(const ossimString& append_this)
 void ossimFilename::convertToNative()
 {
 #if defined(_WIN32)
-   convertForwardToBackSlashes();
+   if ( isUrl() == false )
+   {
+      convertForwardToBackSlashes();
+   }
 #else
    convertBackToForwardSlashes();
 #endif
