@@ -68,6 +68,12 @@ public:
    virtual void addGeoid(ossimRefPtr<ossimGeoid> geoid, bool toFrontFlag=false);
 
    ossimGeoid* findGeoidByShortName(const ossimString& shortName, bool caseSensitive=true);
+
+  /**
+   * Permits to clear the GeoidList
+   */
+   virtual void clear();
+
 private:
    /**
     *  Private constructor.  Use "instance" method.
