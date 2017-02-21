@@ -416,7 +416,14 @@ bool ossimNitfImageHeaderV2_X::isValid()const
   {
     return false;
   }
+  ossim_uint32 actualBitsPerPixel = getActualBitsPerPixel();
+  ossim_uint32 bitsPerPixel = getBitsPerPixel();
 
+  if(actualBitsPerPixel>bitsPerPixel)
+  {
+    return false;
+  }
+  
   return true;
 }
 
