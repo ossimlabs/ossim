@@ -709,6 +709,18 @@ bool ossimNitfImageHeaderV2_1::saveState(ossimKeywordlist& kwl, const ossimStrin
    return true;
 }
 
+bool ossimNitfImageHeaderV2_1::isValid()const
+{
+   bool result = ossimNitfImageHeaderV2_X::isValid();
+
+   if(result)
+   {
+
+   }
+
+   return result;
+}
+
 bool ossimNitfImageHeaderV2_1::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
    // Note: Currently not looking up all fieds only ones that make sense.

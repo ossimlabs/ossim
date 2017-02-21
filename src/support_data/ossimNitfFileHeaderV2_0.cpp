@@ -206,6 +206,18 @@ ossimNitfFileHeaderV2_0::~ossimNitfFileHeaderV2_0()
 {
 }
 
+bool ossimNitfFileHeaderV2_0::isValid()const
+{
+   bool result = ossimNitfFileHeaderV2_X::isValid();
+
+   if(result)
+   {
+
+   }
+
+   return result;
+}
+
 void ossimNitfFileHeaderV2_0::parseStream(ossim::istream& in)
 {
    if(traceDebug())
