@@ -226,6 +226,10 @@ public:
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
+   /**
+   * isValid will test if the fields are valid and will return true or false.
+   */
+   virtual bool isValid()const;
 
    /*!
     * @brief Method to set fields from a keyword list.

@@ -412,6 +412,17 @@ void ossimNitfImageHeaderV2_0::writeStream(ossim::ostream &out)
    }
 }
 
+bool ossimNitfImageHeaderV2_0::isValid()const
+{
+   bool result = ossimNitfImageHeaderV2_X::isValid();
+
+   if(result)
+   {
+
+   }
+
+   return result;
+}
 std::ostream& ossimNitfImageHeaderV2_0::print(std::ostream& out,
                                               const std::string& prefix) const
 {

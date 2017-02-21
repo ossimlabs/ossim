@@ -217,6 +217,11 @@ ossimString ossimNitfFileHeaderV2_X::getEncryption()const
    return theEncryption;
 }
 
+bool ossimNitfFileHeaderV2_X::isValid()const
+{
+   return true;
+}
+
 void ossimNitfFileHeaderV2_X::setProperty(ossimRefPtr<ossimProperty> property)
 {
    if(!property.valid()) return;

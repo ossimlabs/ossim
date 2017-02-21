@@ -410,6 +410,16 @@ ossim_uint32 ossimNitfImageHeaderV2_X::getNumberOfPixelsPerBlockCol()const
    return ossimString(theNumberOfPixelsPerBlockHoriz).toUInt32();
 }
 
+bool ossimNitfImageHeaderV2_X::isValid()const
+{
+  if((theType[0] != 'I') || theType[1] != 'M')
+  {
+    return false;
+  }
+
+  return true;
+}
+
 bool ossimNitfImageHeaderV2_X::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
    // Note: Currently not looking up all fieds only ones that make sense.

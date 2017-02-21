@@ -82,6 +82,7 @@ public:
                             const ossimNitfImageBandV2_0& info);
    virtual void setNumberOfRows(ossim_uint32 rows);
    virtual void setNumberOfCols(ossim_uint32 cols);
+   virtual bool isValid()const;
    virtual bool saveState(ossimKeywordlist& kwl, const ossimString& prefix="")const;
    
    static const ossimString ISCODE_KW;
