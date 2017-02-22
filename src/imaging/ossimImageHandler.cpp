@@ -27,6 +27,7 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimPolygon.h>
+#include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimScalarTypeLut.h>
@@ -89,6 +90,10 @@ thePixelType(OSSIM_PIXEL_IS_POINT)
          << std::endl;
 #endif      
    }
+
+   // Check for global preference supplementary dir.
+   theSupplementaryDirectory.string() = ossimPreferences::instance()->
+      preferencesKWL().findKey( std::string("ossim_supplementary_directory") );
 }
 
 ossimImageHandler::~ossimImageHandler()
@@ -679,13 +684,6 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
          //---
          theGeometry = new ossimImageGeometry();
 
-         // Set image things the geometry object should know about.
-         // because some models require the image size , ... etc to be know 
-         // during this process we will make sure they are set before
-         // calling extenGeometry.
-         //
-         initImageParameters( theGeometry.get() );
-
          //---
          // And finally allow factories to extend the internal geometry.
          // This allows plugins for tagged formats with tags not know in the base
@@ -700,13 +698,11 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
             // kind of geometry loaded
             //---
             theGeometry = getInternalImageGeometry();
-            // Set image things the geometry object should know about.
-            // Because getInternal might return a new geometry we will make sure the
-            // image paramters are set.
-            initImageParameters( theGeometry.get() );
          }
       }
 
+      // Set image things the geometry object should know about.
+      initImageParameters( theGeometry.get() );
    }
    return theGeometry;
 }
