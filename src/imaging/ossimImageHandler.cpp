@@ -683,6 +683,7 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
          // as it does a recursive call back to ossimImageHandler::getImageGeometry().
          //---
          theGeometry = new ossimImageGeometry();
+         initImageParameters( theGeometry.get() );
 
          //---
          // And finally allow factories to extend the internal geometry.
@@ -698,11 +699,9 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
             // kind of geometry loaded
             //---
             theGeometry = getInternalImageGeometry();
+            initImageParameters( theGeometry.get() );
          }
       }
-
-      // Set image things the geometry object should know about.
-      initImageParameters( theGeometry.get() );
    }
    return theGeometry;
 }
