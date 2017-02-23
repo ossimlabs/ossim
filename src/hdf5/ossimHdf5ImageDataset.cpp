@@ -86,7 +86,7 @@ bool ossimHdf5ImageDataset::initialize( const H5::DataSet& dataset)
 
    determineScalarType();
 
-   if (!determineExtents() || !scanForValidImageRect() || !scanForMinMax())
+   if (!determineExtents())// || !scanForValidImageRect())// || !scanForMinMax())
       return false;
 
    return true;
@@ -768,16 +768,17 @@ void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect,
 
 double ossimHdf5ImageDataset::getMaxPixelValue(ossim_uint32 band) const
 {
-   if (band < m_bands)
+   if (band < m_maxValue.size())
       return m_maxValue[band];
-   return 0;
+
+   return  ossim::defaultMax(m_scalar);
 }
 
 double ossimHdf5ImageDataset::getMinPixelValue(ossim_uint32 band) const
 {
-   if (band < m_bands)
+   if (band < m_minValue.size())
       return m_minValue[band];
-   return 0;
+   return  ossim::defaultMin(m_scalar);
 }
 
 std::ostream& ossimHdf5ImageDataset::print( std::ostream& out ) const

@@ -126,7 +126,7 @@ private:
    bool scanForValidImageRect();
    bool determineScalarType();
    bool scanForMinMax();
-
+   
    ossimRefPtr<ossimHdf5ImageHandler> m_handler;
    ossimRefPtr<ossimHdf5> m_hdf5;
    H5::DataSet     m_dataset;
