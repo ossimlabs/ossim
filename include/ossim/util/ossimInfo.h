@@ -360,6 +360,13 @@ public:
     * @return stream
     */
    std::ostream& deg2rad(const ossim_float64& degrees, std::ostream& out) const;
+   
+   /**
+    * @brief Converts ecef point to lat lon height.
+    * @param out Output to write to.
+    * @return stream
+    */
+   std::ostream& ecef2llh(const ossimEcefPoint& ecefPoint, std::ostream& out) const;
 
    /** @brief Converts radians to degrees and outputs to stdout. */
    void rad2deg(const ossim_float64& radians) const;

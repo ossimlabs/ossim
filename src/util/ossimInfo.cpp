@@ -24,6 +24,7 @@
 #include <ossim/base/ossimDrect.h>
 #include <ossim/base/ossimFontInformation.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
+#include <ossim/base/ossimEcefPoint.h>
 #include <ossim/base/ossimEllipsoid.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimFilename.h>
@@ -97,6 +98,7 @@ static const char VERSION_KW[]              = "version";
 static const char WRITERS_KW[]              = "writers_kw";
 static const char WRITER_PROPS_KW[]         = "writer_props";
 static const char ZOOM_LEVEL_GSDS_KW[]      = "zoom_level_gsds";
+static const char ECEF2LLH_KW[]             = "ecef2llh";
 
 const char* ossimInfo::DESCRIPTION =
       "Dumps metadata information about input image and OSSIM in general.";
@@ -145,6 +147,8 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--dno", "A generic dump if one is available.  This option ignores overviews.");
 
+   au->addCommandLineOption("--ecef2llh", "<X> <Y>  <Z> in ECEF coordinates and returns latitude longitude height position.");
+
    au->addCommandLineOption("-f", "<format> Will output the information specified format [KWL | XML].  Default is KWL.");   
 
    au->addCommandLineOption("--factories", "<keyword_list_flag> Prints factory list.  If keyword_list_flag is true, the result of a saveState will be output for each object.");
@@ -158,7 +162,7 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("-h", "Display this information");
 
    au->addCommandLineOption("--height", "<latitude-in-degrees> <longitude-in-degrees> Returns the MSL and ellipoid height given a latitude longitude position.");
-
+   
    au->addCommandLineOption("-i", "Will print out the general image information.");
 
    au->addCommandLineOption("--img2grd", "<x> <y> Gives ground point from zero based image point.  Returns \"nan\" if point is outside of image area.");
@@ -273,6 +277,8 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       ossimArgumentParser::ossimParameter sp1(ts1);
       std::string ts2;
       ossimArgumentParser::ossimParameter sp2(ts2);
+      std::string ts3;
+      ossimArgumentParser::ossimParameter sp3(ts3);
       const char TRUE_KW[] = "true";
 
       if( ap.read("--build-date") )
@@ -429,7 +435,19 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             break;
          }
       }
+      if( ap.read("--ecef2llh", sp1, sp2, sp3))
+      {
+         ossimString x = ts1;
+         ossimString y = ts2;
+         ossimString z = ts3;
+         ossimEcefPoint ecefPoint(x.toFloat64(), y.toFloat64(), z.toFloat64());
+         m_kwl.add( ECEF2LLH_KW, ecefPoint.toString().c_str() );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
 
+      }
       if( ap.read("-i") )
       {
          m_kwl.add( IMAGE_INFO_KW, TRUE_KW );
@@ -770,6 +788,15 @@ bool ossimInfo::execute()
             ++consumedKeys;
             value = lookup;
             deg2rad( value.toFloat64() );
+         }
+         lookup = m_kwl.find(ECEF2LLH_KW);
+         if(lookup)
+         {
+            ++consumedKeys;
+            ossimEcefPoint ecefPoint;
+            ecefPoint.toPoint(lookup);
+
+            ecef2llh(ecefPoint, ossimNotify(ossimNotifyLevel_INFO));
          }
 
          lookup = m_kwl.find(FACTORIES_KW);
@@ -2412,6 +2439,14 @@ std::ostream& ossimInfo::deg2rad(const ossim_float64& degrees, std::ostream& out
 
    // Reset flags.
    out.setf(f);
+
+   return out;
+}
+
+std::ostream& ossimInfo::ecef2llh(const ossimEcefPoint& ecefPoint, std::ostream& out) const
+{
+   out << "ECEF:            " << ecefPoint.toString() << "\n"
+       << "Lat Lon Height:  " << ossimGpt(ecefPoint).toString() << "\n"; 
 
    return out;
 }
