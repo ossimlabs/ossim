@@ -341,7 +341,7 @@ public:
    *                   ossim_float64 lat = (start.y+deltaPoint.y*t);
    *
    * If we do not cross the dateline then if the image is affected by elevation (i.e. a sensor model) then we use the partitions
-   * paraemter to calculate that number of partitions to sample along each edge.
+   * parameter to calculate that number of partitions to sample along each edge.
    *
    * if The geometry is not affected by elevation then we just use the corner points and ignore the partitions parameter
    *
