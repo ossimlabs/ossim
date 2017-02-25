@@ -20,6 +20,7 @@
 
 #include <ossim/projection/ossimImageViewTransform.h>
 #include <ossim/imaging/ossimImageGeometry.h>
+#include <ossim/base/ossimPolyArea2d.h>
 
 class OSSIMDLLEXPORT ossimImageViewProjectionTransform : public ossimImageViewTransform
 {
@@ -41,10 +42,10 @@ public:
    virtual bool isIdentity() const { return (m_imageGeometry == m_viewGeometry); }
 
    //! Assigns the geometry to use for output view. This object does NOT own the geometry.
-   void setViewGeometry(ossimImageGeometry* g) { m_viewGeometry = g; }   
+   void setViewGeometry(ossimImageGeometry* g);   
 
    //! Assigns the geometry to use for input image. This object does NOT own the geometry.
-   void setImageGeometry(ossimImageGeometry* g) { m_imageGeometry = g; }  
+   void setImageGeometry(ossimImageGeometry* g);  
 
    //! Workhorse of the object. Converts image-space to view-space.
    virtual void imageToView(const ossimDpt& imagePoint, ossimDpt& viewPoint) const;
@@ -60,9 +61,32 @@ public:
    const ossimImageGeometry* getImageGeometry()const  { return m_imageGeometry.get(); }
    const ossimImageGeometry* getViewGeometry()const   { return m_viewGeometry.get(); }
    
-   //! OLK: Not sure where this is used, but needed to satisfy ossimViewInterface base class.
-   //! The ownership flag is ignored.
+   /**
+   * Because of the fact we can have dateline crossings there exist on the view
+   * plane both positive and negative bounds.  We need a generalized interface that allows
+   * us to calculate the valid bounds of an image transformed to the view.
+   *
+   *
+   * @param viewBounds Returns the result in the viewBound list
+   * @param polyArea   Specify the poly areas.
+   * @param numberOfEdgePoints If the value is 0 it will do a standard bounds check.  If
+   *                           the paramter is greater than 0 this will only be used if the
+   *                           input projection is affected by elevation.  If it's not affected
+   *                           by elevation then the default bounds will be calculated.
+   */
+   virtual void getViewBounds(std::vector<ossimDrect>& viewBounds, 
+                              ossimPolyArea2d& polyArea,
+                              ossim_uint32 numberOfEdgePoints=0)const; 
+
+
+   /**
+   * This is used a a general access point for setting a view to a chain.  
+   * There are multiple locations that need a projector in order to run properly.  
+   * When a "Set View" event is sent through the chain.  Typically this is passed
+   * down from The renderer.
+   */
    virtual bool setView(ossimObject* baseObject);
+   
    virtual       ossimObject* getView()       { return m_viewGeometry.get(); }
    virtual const ossimObject* getView() const { return m_viewGeometry.get(); }
 
@@ -94,10 +118,12 @@ protected:
     * @return true on success, false on error.
     */
    bool initializeViewSize();  
-   
+   void initializeDatelineCrossing();
+
    ossimRefPtr<ossimImageGeometry> m_imageGeometry;
    ossimRefPtr<ossimImageGeometry> m_viewGeometry;
-   
+
+   bool m_crossesDateline;
 TYPE_DATA
 };
 
