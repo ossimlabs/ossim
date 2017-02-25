@@ -193,8 +193,9 @@ bool ossimImageGeometry::localToWorld(const ossimDpt& local_pt, ossimGpt& world_
    // Perform projection to world coordinates:
    m_projection->lineSampleToWorld(full_image_pt, world_pt);
 
+   
     // Put longitude between -180 and +180 and latitude between -90 and +90 if not so. 
-    world_pt.wrap();
+   // world_pt.wrap();
     
    return true;
 }
