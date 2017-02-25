@@ -310,6 +310,12 @@ ossimPolyArea2d::ossimPolyArea2d(const vector<ossimGpt>& polygon)
    (*this) = polygon;
 }
 
+ossimPolyArea2d::ossimPolyArea2d(const vector<ossimDpt>& polygon)
+   :m_privateData(new OssimPolyArea2dPrivate)
+{
+   (*this) = polygon;
+}
+
 ossimPolyArea2d::ossimPolyArea2d(const ossimIrect& rect)
    :m_privateData(new OssimPolyArea2dPrivate)
 {
@@ -576,8 +582,15 @@ const ossimPolyArea2d& ossimPolyArea2d::operator -=(const ossimPolyArea2d& rhs)
 
 void ossimPolyArea2d::add(const ossimPolyArea2d& rhs)
 {
-   geos::geom::Geometry* geom = m_privateData->m_geometry->Union(rhs.m_privateData->m_geometry);
-   if(geom) m_privateData->setGeometry(geom);
+   if(isEmpty())
+   {
+      *this=rhs;
+   }
+   else
+   {
+      geos::geom::Geometry* geom = m_privateData->m_geometry->Union(rhs.m_privateData->m_geometry);
+      if(geom) m_privateData->setGeometry(geom);
+   }
 }
 
 void ossimPolyArea2d::clearPolygons()
