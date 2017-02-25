@@ -336,7 +336,8 @@ private:
    bool                     m_AutoUpdateInputTransform;
    ossim_uint32             m_MaxLevelsToCompute;
 
-   ossimPolyArea2d            m_viewArea;
+   ossimPolyArea2d          m_viewArea;
+   bool                     m_crossesDateline;
    
 TYPE_DATA
 };

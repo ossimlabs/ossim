@@ -1068,13 +1068,16 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
       return m_BlankTile;
    }
 
-   if( !theInputConnection || !m_viewRect.intersects(tileRect) )
+   if( !theInputConnection || 
+       !m_viewRect.intersects(tileRect) ||
+       !m_viewArea.intersects(tileRect) )
    {
       if(traceDebug())
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
             << MODULE << "No intersection, Returning...." << endl;
       }
+      std::cout << "NO INTERSECTION\n";
       return m_BlankTile;
    }
    
@@ -1121,6 +1124,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    subRectInfo.transformViewToImage();
 
    if((!m_viewArea.intersects(subRectInfo.getViewRect())))
+//   if((!m_viewRect.intersects(subRectInfo.getViewRect())))
    {
      return m_BlankTile;
    }
@@ -1438,7 +1442,6 @@ void ossimImageRenderer::getBoundingRect(ossimIrect& rect, ossim_uint32 resLevel
    {
       rect.makeNan();
    }
-
 #if 0 /* Please leave for debug. */
    if(traceDebug())
    {
@@ -1451,16 +1454,57 @@ void ossimImageRenderer::getBoundingRect(ossimIrect& rect, ossim_uint32 resLevel
 
 void ossimImageRenderer::initializeBoundingRects()
 {
-   m_rectsDirty = true;
-   
+   m_rectsDirty      = true;
+   ossimImageViewProjectionTransform* ivpt = PTR_CAST(ossimImageViewProjectionTransform, 
+                                                      m_ImageViewTransform.get());
+   if(!theInputConnection) return;
+   m_inputR0Rect = theInputConnection->getBoundingRect(0);
+
+   if(ivpt)
+   {
+      ossim_uint32 idx;
+      std::vector<ossimDrect> boundList;
+      ivpt->getViewBounds(boundList, m_viewArea, 50);
+
+      if(boundList.size())
+      {
+        m_rectsDirty = false;
+        m_viewRect   = boundList[0];
+        ossim_uint32 idx = 0;
+        for(idx=1;idx<boundList.size();++idx)
+        {
+          m_viewRect = m_viewRect.combine(boundList[idx]);
+        }
+      }
+   }
+   else if(m_ImageViewTransform.valid())
+   {
+     ossimDpt p1;
+     ossimDpt p2;
+     ossimDpt p3;
+     ossimDpt p4;
+
+     m_ImageViewTransform->imageToView(m_inputR0Rect.ul(), p1);
+     m_ImageViewTransform->imageToView(m_inputR0Rect.ur(), p2);
+     m_ImageViewTransform->imageToView(m_inputR0Rect.lr(), p3);
+     m_ImageViewTransform->imageToView(m_inputR0Rect.ll(), p4);
+
+     m_viewRect = ossimDrect(p1,p2,p3,p4);
+     m_viewRect = m_viewRect;
+
+     m_rectsDirty = false;
+   }
+#if 0   
    // Get the input bounding rect:
    if ( theInputConnection && m_ImageViewTransform.valid())
    {
+      ossimRefPtr<ossimImageGeometry> inputGeometry = theInputConnection->getImageGeometry();
+
       m_inputR0Rect = theInputConnection->getBoundingRect(0);
       if (!m_inputR0Rect.hasNans() )
       {
          // This will call ossim::round<int> on the dpt's.
-         m_viewRect = m_ImageViewTransform->getImageToViewBounds(m_inputR0Rect);
+         //m_viewRect = m_ImageViewTransform->getImageToViewBounds(m_inputR0Rect);
          if ( m_viewRect.hasNans() == false )
          {
             // Clear the dirty flag:
@@ -1542,7 +1586,7 @@ void ossimImageRenderer::initializeBoundingRects()
       
       //ossimPolyArea2d testPolyarea = polyArea&ossimPolyArea2d(tileRect);
    }
-
+#endif
    if ( m_rectsDirty )
    {
       m_viewRect.makeNan();
