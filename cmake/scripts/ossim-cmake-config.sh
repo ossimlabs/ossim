@@ -41,19 +41,19 @@
 # Fetch the build type from command line:
 BUILD_TYPE_ARG="${1}"
 case "$BUILD_TYPE_ARG" in
-  DEBUG)
+  DEBUG|Debug)
       CMAKE_BUILD_TYPE="Debug"
       ;;
   ECLIPSE)
       CMAKE_BUILD_TYPE="Debug"
       ;;
-  RELEASE)
+  RELEASE|Release)
       CMAKE_BUILD_TYPE="Release"
       ;;
-  RELWITHDEBINFO)
+  RELWITHDEBINFO|RelWithDebInfo)
       CMAKE_BUILD_TYPE="RelWithDebInfo"
       ;;
-  MINSIZEREL)
+  MINSIZEREL|MinSizeRel)
       CMAKE_BUILD_TYPE="MinSizeRel"
       ;;
   *)
