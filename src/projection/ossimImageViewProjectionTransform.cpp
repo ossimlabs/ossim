@@ -186,11 +186,15 @@ void ossimImageViewProjectionTransform::viewToImage(const ossimDpt& vp, ossimDpt
 #endif
 }
 
-void ossimImageViewProjectionTransform::getViewBounds(std::vector<ossimDrect>& viewBounds, 
+void ossimImageViewProjectionTransform::getViewSegments(std::vector<ossimDrect>& viewBounds, 
                                                       ossimPolyArea2d& polyArea,
                                                       ossim_uint32 numberOfEdgePoints)const
 {
   ossimDrect imageRect;
+  ossimDrect worldRect(ossimDpt(-180,-90),
+                       ossimDpt(-180,90),
+                       ossimDpt(180,90),
+                       ossimDpt(180,-90));
   viewBounds.clear();
   polyArea.clear();
 
@@ -205,81 +209,7 @@ void ossimImageViewProjectionTransform::getViewBounds(std::vector<ossimDrect>& v
 
     if((numberOfEdgePoints > 2)&&(affectedByElevation))
     {
-       ossimDpt uli = imageRect.ul();
-       ossimDpt uri = imageRect.ur();
-       ossimDpt lri = imageRect.lr();
-       ossimDpt lli = imageRect.ll();
-
-       ossim_float32 stepSize = numberOfEdgePoints;
-       std::vector<ossimDpt> poly;
-
-       ossimDpt deltaUpper = (uri-uli)*(1.0/stepSize);
-       ossimDpt deltaRight = (lri-uri)*(1.0/stepSize);
-       ossimDpt deltaLower = (lli-lri)*(1.0/stepSize);
-       ossimDpt deltaLeft  = (uli-lli)*(1.0/stepSize);
-
-       ossimDpt p;
-       ossim_int32 idx = 0;
-       ossimDpt initialPoint= uli;
-
-       for(idx = 0; idx < stepSize;++idx)
-       {
-          points.push_back(initialPoint);
-         // m_ImageViewTransform->imageToView(initialPoint, p);
-          // if(!p.hasNans())
-          // {
-          //    poly.push_back(p);
-          // }
-          initialPoint.x+=deltaUpper.x;
-          initialPoint.y+=deltaUpper.y;
-       }
-
-       initialPoint= uri;
-       for(idx = 0; idx < stepSize;++idx)
-       {
-          points.push_back(initialPoint);
-          //m_ImageViewTransform->imageToView(initialPoint, p);
-//          if(!p.hasNans())
-//          {
-//             poly.push_back(p);
-//          }
-          initialPoint.x+=deltaRight.x;
-          initialPoint.y+=deltaRight.y;
-       }
-
-       initialPoint= lri;
-       for(idx = 0; idx < stepSize;++idx)
-       {
-           points.push_back(initialPoint);
-         //m_ImageViewTransform->imageToView(initialPoint, p);
-         // if(!p.hasNans())
-         // {
-         //    poly.push_back(p);
-         // }
-          initialPoint.x+=deltaLower.x;
-          initialPoint.y+=deltaLower.y;
-       }
-
-       initialPoint= lli;
-       for(idx = 0; idx < stepSize;++idx)
-       {
-          points.push_back(initialPoint);
-//          m_ImageViewTransform->imageToView(initialPoint, p);
-          // if(!p.hasNans())
-          // {
-          //    poly.push_back(p);
-          // }
-          initialPoint.x+=deltaLeft.x;
-          initialPoint.y+=deltaLeft.y;
-       }
-
-       // Close the polygon and set the view area:
-       // if (poly.size() >= 4)
-       // {
-       //    poly.push_back(poly[0]);
-       //    m_viewArea = ossimPolyArea2d(ossimPolygon(poly));
-       // }
-
+          m_imageGeometry->getImageEdgePoints(points, numberOfEdgePoints);
     }
     else
     {
@@ -290,7 +220,6 @@ void ossimImageViewProjectionTransform::getViewBounds(std::vector<ossimDrect>& v
       points[2] = imageRect.lr();
       points[3] = imageRect.ll();
     }
-   // gPoints.resize(points.size());
     for(idx=0; idx < points.size();++idx)
     {
       ossimGpt testGpt;
@@ -303,10 +232,6 @@ void ossimImageViewProjectionTransform::getViewBounds(std::vector<ossimDrect>& v
     }
     if(m_crossesDateline)
     {
-      ossimDrect worldRect(ossimDpt(-180,-90),
-                     ossimDpt(-180,90),
-                     ossimDpt(180,90),
-                     ossimDpt(180,-90));
       ossimDpt testPt;
       ossimGpt cg;
       m_imageGeometry->localToWorld(imageRect.midPoint(), cg);
@@ -390,16 +315,16 @@ void ossimImageViewProjectionTransform::getViewBounds(std::vector<ossimDrect>& v
             points.push_back(points[0]);
             polyArea.add(ossimPolyArea2d(points));//ossimPolygon(points)));
          }
+
       }
-    }
-    else // if(m_crossesDateline) else
+    }// end: if(m_crossesDateline)
+    else 
     {
       for(idx=0; idx < gPoints.size();++idx)
       {
         m_viewGeometry->worldToLocal(gPoints[idx], points[idx]);
 
       }
-
       viewBounds.push_back(ossimDrect(points));
       polyArea.add(ossimPolyArea2d(points));//ossimPolygon(points)));
     }

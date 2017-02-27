@@ -67,16 +67,16 @@ public:
    * us to calculate the valid bounds of an image transformed to the view.
    *
    *
-   * @param viewBounds Returns the result in the viewBound list
-   * @param polyArea   Specify the poly areas.
+   * @param viewBounds Returns bounds for each segment
+   * @param polyArea   Returns the polygons for each segment.
    * @param numberOfEdgePoints If the value is 0 it will do a standard bounds check.  If
    *                           the paramter is greater than 0 this will only be used if the
    *                           input projection is affected by elevation.  If it's not affected
    *                           by elevation then the default bounds will be calculated.
    */
-   virtual void getViewBounds(std::vector<ossimDrect>& viewBounds, 
-                              ossimPolyArea2d& polyArea,
-                              ossim_uint32 numberOfEdgePoints=0)const; 
+   virtual void getViewSegments(std::vector<ossimDrect>& viewBounds, 
+                                ossimPolyArea2d& polyArea,
+                                ossim_uint32 numberOfEdgePoints=0)const; 
 
 
    /**
