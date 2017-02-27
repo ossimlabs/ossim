@@ -193,7 +193,7 @@ bool ossimImageGeometry::localToWorld(const ossimDpt& local_pt, ossimGpt& world_
    // Perform projection to world coordinates:
    m_projection->lineSampleToWorld(full_image_pt, world_pt);
 
-   
+
     // Put longitude between -180 and +180 and latitude between -90 and +90 if not so. 
    // world_pt.wrap();
     
@@ -1061,7 +1061,13 @@ bool ossimImageGeometry::getCrossesDateline()const
       result = ( (fabs(center.lond()-ul.lond()) > 180.0) ||
                  (fabs(center.lond()-ur.lond()) > 180.0) ||
                  (fabs(center.lond()-lr.lond()) > 180.0) ||
-                 (fabs(center.lond()-ll.lond()) > 180.0));
+                 (fabs(center.lond()-ll.lond()) > 180.0) ||
+                 (fabs(ul.lond()) > 180.0) ||
+                 (fabs(ur.lond()) > 180.0) ||
+                 (fabs(lr.lond()) > 180.0) ||
+                 (fabs(ll.lond()) > 180.0)
+
+                 );
    }
 
    return result; 
@@ -1069,6 +1075,154 @@ bool ossimImageGeometry::getCrossesDateline()const
 
 void ossimImageGeometry::calculatePolyBounds(ossimPolyArea2d& result, ossim_int32 partitions)const
 {
+   std::vector<ossimDpt> points;
+   std::vector<ossimGpt> gPoints;
+   std::vector<ossimPolygon> polyList;
+   ossimDrect imageRect;
+   ossimGpt cg;
+   ossimDrect worldRect(ossimDpt(-180,-90),
+                        ossimDpt(-180,90),
+                        ossimDpt(180,90),
+                        ossimDpt(180,-90));
+   getBoundingRect(imageRect);
+   bool affectedByElevation = isAffectedByElevation();
+   bool crossesDateline     = getCrossesDateline();
+   result.clear();
+   if(imageRect.hasNans())
+   {
+      // error out
+      return;
+   }
+   localToWorld(imageRect.midPoint(), cg);
+   if(cg.isLatNan() || cg.isLonNan())
+   {
+      return;
+   }
+   ossim_int32 sgn = static_cast<ossim_int32>(
+                                ossim::sgn(cg.lond()));
+
+   // First get the image points we will be transforming
+   if(partitions > 2)
+   {
+      ossimDpt uli = imageRect.ul();
+      ossimDpt uri = imageRect.ur();
+      ossimDpt lri = imageRect.lr();
+      ossimDpt lli = imageRect.ll();
+
+      ossim_float32 stepSize = partitions;
+      ossimDpt deltaUpper = (uri-uli)*(1.0/stepSize);
+      ossimDpt deltaRight = (lri-uri)*(1.0/stepSize);
+      ossimDpt deltaLower = (lli-lri)*(1.0/stepSize);
+      ossimDpt deltaLeft  = (uli-lli)*(1.0/stepSize);
+
+      ossimDpt p;
+      ossim_int32 idx = 0;
+      ossimDpt initialPoint= uli;
+
+      for(idx = 0; idx < stepSize;++idx)
+      {
+         points.push_back(initialPoint);
+         initialPoint.x+=deltaUpper.x;
+         initialPoint.y+=deltaUpper.y;
+      }
+
+      initialPoint= uri;
+      for(idx = 0; idx < stepSize;++idx)
+      {
+         points.push_back(initialPoint);
+         initialPoint.x+=deltaRight.x;
+         initialPoint.y+=deltaRight.y;
+      }
+
+      initialPoint= lri;
+      for(idx = 0; idx < stepSize;++idx)
+      {
+         points.push_back(initialPoint);
+         initialPoint.y+=deltaLower.y;
+      }
+
+      initialPoint= lli;
+      for(idx = 0; idx < stepSize;++idx)
+      {
+         points.push_back(initialPoint);
+         initialPoint.x+=deltaLeft.x;
+         initialPoint.y+=deltaLeft.y;
+      }
+   }
+   else // If not enough partitions then we will just use the corners
+   {
+      points.resize(4);
+
+      points[0] = imageRect.ul();
+      points[1] = imageRect.ur();
+      points[2] = imageRect.lr();
+      points[3] = imageRect.ll();
+   }
+   if(crossesDateline)
+   {
+      for(std::vector<ossimDpt>::const_iterator iter=points.begin(); 
+          iter != points.end();
+          ++iter)
+      {
+         ossimGpt testGpt;
+         localToWorld(*iter, testGpt); 
+
+         if(!testGpt.isLatNan()&&!testGpt.isLonNan())
+         {
+            bool needToShift =( (std::fabs(testGpt.lond()-cg.lond()) > 180.0)||
+                                (std::fabs(testGpt.lond()>180.0)) ); 
+            if(needToShift)
+            {
+               testGpt.lond(testGpt.lond()+sgn*360);
+            }
+            gPoints.push_back(testGpt);        
+         }
+      }
+      // now clip the ground list to the full ground rect
+      //
+      ossimPolygon tempPoly(gPoints);
+      tempPoly.clipToRect(polyList, worldRect);
+      for(std::vector<ossimPolygon>::const_iterator iter = polyList.begin();
+         iter!=polyList.end();++iter)
+      {
+         result.add(ossimPolyArea2d(*iter));
+      }
+      // now shift gpoints to the other side
+      //
+      for(std::vector<ossimGpt>::iterator iter = gPoints.begin();
+          iter != gPoints.end();
+          ++iter)
+      {
+        (*iter).lond((*iter).lond()+(-sgn*360));
+      }
+      tempPoly = gPoints;
+      polyList.clear();
+      tempPoly.clipToRect(polyList, worldRect);
+      for(std::vector<ossimPolygon>::const_iterator iter = polyList.begin();
+         iter!=polyList.end();++iter)
+      {
+         result.add(ossimPolyArea2d(*iter));
+      }
+   }
+   else
+   {
+      ossim_uint32 idx=0;
+      for(std::vector<ossimDpt>::const_iterator iter=points.begin(); 
+          iter != points.end();++iter)
+      {
+         ossimGpt testGpt;
+         localToWorld(*iter, testGpt); 
+
+         if(!testGpt.isLatNan()&&!testGpt.isLonNan())
+         {
+            gPoints.push_back(testGpt);        
+         }
+      }
+      result.add(ossimPolygon(gPoints));
+   }
+
+
+#if 0
    if(!m_imageSize.hasNans())
    {
       ossim_int64 delta = 0;
@@ -1385,6 +1539,7 @@ void ossimImageGeometry::calculatePolyBounds(ossimPolyArea2d& result, ossim_int3
          if(!result.isValid()) result.setToBufferedShape();
       }
    }
+#endif
 }
 
 
