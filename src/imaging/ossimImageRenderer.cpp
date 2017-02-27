@@ -1077,7 +1077,6 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
          ossimNotify(ossimNotifyLevel_DEBUG)
             << MODULE << "No intersection, Returning...." << endl;
       }
-      std::cout << "NO INTERSECTION\n";
       return m_BlankTile;
    }
    
@@ -1464,16 +1463,25 @@ void ossimImageRenderer::initializeBoundingRects()
    {
       ossim_uint32 idx;
       std::vector<ossimDrect> boundList;
-      ivpt->getViewBounds(boundList, m_viewArea, 50);
+      ivpt->getViewSegments(boundList, m_viewArea, 25);
 
+
+      // for now lets convert the m_viewArea to a multi polygon for
+      // the bounds.  We will use the bounding rect for each sampled polygon
+      // So clear the area returned for it's the multi poly and just use the bounds
+      // arrae and put it into a multi polygon m_viewArea.
+      //
+      m_viewArea.clear();
       if(boundList.size())
       {
         m_rectsDirty = false;
         m_viewRect   = boundList[0];
         ossim_uint32 idx = 0;
+        m_viewArea.add(ossimPolygon(boundList[idx]));
         for(idx=1;idx<boundList.size();++idx)
         {
           m_viewRect = m_viewRect.combine(boundList[idx]);
+          m_viewArea.add(ossimPolygon(boundList[idx]));
         }
       }
    }
@@ -1494,99 +1502,6 @@ void ossimImageRenderer::initializeBoundingRects()
 
      m_rectsDirty = false;
    }
-#if 0   
-   // Get the input bounding rect:
-   if ( theInputConnection && m_ImageViewTransform.valid())
-   {
-      ossimRefPtr<ossimImageGeometry> inputGeometry = theInputConnection->getImageGeometry();
-
-      m_inputR0Rect = theInputConnection->getBoundingRect(0);
-      if (!m_inputR0Rect.hasNans() )
-      {
-         // This will call ossim::round<int> on the dpt's.
-         //m_viewRect = m_ImageViewTransform->getImageToViewBounds(m_inputR0Rect);
-         if ( m_viewRect.hasNans() == false )
-         {
-            // Clear the dirty flag:
-            m_rectsDirty = false;
-         }
-         
-         // now get a coarse estimate of the boundary poly
-         ossimDpt uli = m_inputR0Rect.ul();
-         ossimDpt uri = m_inputR0Rect.ur();
-         ossimDpt lri = m_inputR0Rect.lr();
-         ossimDpt lli = m_inputR0Rect.ll();
-         ossim_int32 stepSize = 50;
-
-         std::vector<ossimDpt> poly;
-
-         ossimDpt deltaUpper = (uri-uli)*(1.0/stepSize);
-         ossimDpt deltaRight = (lri-uri)*(1.0/stepSize);
-         ossimDpt deltaLower = (lli-lri)*(1.0/stepSize);
-         ossimDpt deltaLeft  = (uli-lli)*(1.0/stepSize);
-
-         ossimDpt p;
-         ossim_int32 idx = 0;
-         ossimDpt initialPoint= uli;
-
-         for(idx = 0; idx < stepSize;++idx)
-         {
-            m_ImageViewTransform->imageToView(initialPoint, p);
-            if(!p.hasNans())
-            {
-               poly.push_back(p);
-            }
-            initialPoint.x+=deltaUpper.x;
-            initialPoint.y+=deltaUpper.y;
-         }
-
-         initialPoint= uri;
-         for(idx = 0; idx < stepSize;++idx)
-         {
-            m_ImageViewTransform->imageToView(initialPoint, p);
-            if(!p.hasNans())
-            {
-               poly.push_back(p);
-            }
-            initialPoint.x+=deltaRight.x;
-            initialPoint.y+=deltaRight.y;
-         }
-
-         initialPoint= lri;
-         for(idx = 0; idx < stepSize;++idx)
-         {
-            m_ImageViewTransform->imageToView(initialPoint, p);
-            if(!p.hasNans())
-            {
-               poly.push_back(p);
-            }
-            initialPoint.x+=deltaLower.x;
-            initialPoint.y+=deltaLower.y;
-         }
-
-         initialPoint= lli;
-         for(idx = 0; idx < stepSize;++idx)
-         {
-            m_ImageViewTransform->imageToView(initialPoint, p);
-            if(!p.hasNans())
-            {
-               poly.push_back(p);
-            }
-            initialPoint.x+=deltaLeft.x;
-            initialPoint.y+=deltaLeft.y;
-         }
-
-         // Close the polygon and set the view area:
-         if (poly.size() >= 4)
-         {
-            poly.push_back(poly[0]);
-            m_viewArea = ossimPolyArea2d(ossimPolygon(poly));
-         }
-      }
-      
-      //ossimPolyArea2d testPolyarea = polyArea&ossimPolyArea2d(tileRect);
-   }
-#endif
    if ( m_rectsDirty )
    {
       m_viewRect.makeNan();
