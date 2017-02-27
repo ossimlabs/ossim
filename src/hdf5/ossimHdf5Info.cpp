@@ -465,8 +465,6 @@ void ossimHdf5Info::dumpAttribute(const H5::Attribute& attr,
                                   const std::string& prefix) const
 {
    std::string str_value;
-   ossim_int32 int_value = 0;
-   float float_value = 0;
 
    try
    {
@@ -475,6 +473,7 @@ void ossimHdf5Info::dumpAttribute(const H5::Attribute& attr,
       bool swapOrder = (order!=ossim::byteOrder());
 
       H5T_class_t class_type = attr.getDataType().getClass();
+      ossim_uint32 dataSize = attr.getDataType().getSize();
       switch (class_type)
       {
       case H5T_STRING:
@@ -484,18 +483,149 @@ void ossimHdf5Info::dumpAttribute(const H5::Attribute& attr,
       }
       case H5T_INTEGER:
       {
-         attr.read(attr.getDataType(), &int_value);
-         if (swapOrder)
-            endian.swap(int_value);
-         str_value = ossimString::toString(int_value).string();
+         ossim_uint32 signType = H5Tget_sign(attr.getDataType().getId());
+         switch(dataSize)
+         {
+            case 1: // one byte integer
+            {
+               switch(signType)
+               {
+                  case H5T_SGN_NONE:
+                  {
+                     ossim_uint8 intValue;
+                     attr.read(attr.getDataType(), &intValue);
+                     str_value = ossimString::toString(intValue).string();
+
+                     break;
+                  }
+                  case H5T_SGN_2:
+                  {
+                    ossim_int8 intValue;
+                    attr.read(attr.getDataType(), &intValue);
+                    str_value = ossimString::toString(intValue).string();
+                    break;
+                  }
+                  default:
+                  {
+                     break;
+                  }
+               }
+               break;
+            }
+            case 2:  // 2 byte integer
+            {
+               switch(signType)
+               {
+                  case H5T_SGN_NONE: // unsigned
+                  {
+                     ossim_uint16 intValue;
+                     attr.read(attr.getDataType(), &intValue);
+                     if (swapOrder)
+                        endian.swap(intValue);
+                     str_value = ossimString::toString(intValue).string();
+
+                     break;
+                  }
+                  case H5T_SGN_2: // Signed
+                  {
+                    ossim_int16 intValue;
+                    attr.read(attr.getDataType(), &intValue);
+                    if (swapOrder)
+                        endian.swap(intValue);
+                    str_value = ossimString::toString(intValue).string();
+                    break;
+                  }
+                  default:
+                  {
+                     break;
+                  }
+
+               }
+               break;
+            }
+            case 4: // 4 byte integer
+            {
+               switch(signType)
+               {
+                  case H5T_SGN_NONE:
+                  {
+                     ossim_uint32 intValue;
+                     attr.read(attr.getDataType(), &intValue);
+                     if (swapOrder)
+                        endian.swap(intValue);
+                     str_value = ossimString::toString(intValue).string();
+
+                     break;
+                  }
+                  case H5T_SGN_2:
+                  {
+                    ossim_int32 intValue;
+                    attr.read(attr.getDataType(), &intValue);
+                    if (swapOrder)
+                       endian.swap(intValue);
+                    str_value = ossimString::toString(intValue).string();
+                    break;
+                  }
+                  default:
+                  {
+                     break;
+                  }
+               }
+               break;
+            }
+            case 8: // 8 byte integer
+            {
+               switch(signType)
+               {
+                  case H5T_SGN_NONE:
+                  {
+                     ossim_uint64 intValue;
+                     attr.read(attr.getDataType(), &intValue);
+                     if (swapOrder)
+                        endian.swap(intValue);
+                     str_value = ossimString::toString(intValue).string();
+
+                     break;
+                  }
+                  case H5T_SGN_2:
+                  {
+                    ossim_int64 intValue;
+                    attr.read(attr.getDataType(), &intValue);
+                    if (swapOrder)
+                       endian.swap(intValue);
+                    str_value = ossimString::toString(intValue).string();
+                    break;
+                  }
+               }
+               break;
+            }
+
+         }
          break;
       }
       case H5T_FLOAT:
       {
-         attr.read(attr.getDataType(), &float_value);
-         if (swapOrder)
-            endian.swap(float_value);
-         str_value = ossimString::toString(float_value).string();
+         switch(dataSize)
+         {
+            case 4:
+            {
+               ossim_float32 float_value;
+               attr.read(attr.getDataType(), &float_value);
+               if (swapOrder)
+                  endian.swap(float_value);
+               str_value = ossimString::toString(float_value).string();
+               break;
+            }
+            case 8:
+            {
+               ossim_float64 float_value;
+               attr.read(attr.getDataType(), &float_value);
+               if (swapOrder)
+                  endian.swap(float_value);
+               str_value = ossimString::toString(float_value).string();
+               break;
+            }
+         }
          break;
       }
       default:
