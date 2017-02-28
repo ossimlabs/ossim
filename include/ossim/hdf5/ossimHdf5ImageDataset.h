@@ -98,6 +98,9 @@ public:
    double getMaxPixelValue(ossim_uint32 band=0) const;
    double getMinPixelValue(ossim_uint32 band=0) const;
 
+   bool isMinPixelSet()const;
+   bool isMaxPixelSet()const;
+   
    /**
     *  @brief Method to grab a tile(rectangle) from image.
     *
@@ -111,6 +114,7 @@ public:
     *  @param scale If true, uses min and max to stretch the data to a UINT16 range.
     */
    void getTileBuf(void* buffer, const ossimIrect& rect, ossim_uint32 band, bool scale=true);
+
 
    /**
     * @brief print method.

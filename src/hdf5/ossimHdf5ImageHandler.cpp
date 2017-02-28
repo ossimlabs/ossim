@@ -156,7 +156,6 @@ bool ossimHdf5ImageHandler::getTile(ossimImageData* result, ossim_uint32 resLeve
             {
                // Hdf5 file to buffer:
                m_entries[m_currentEntry]->getTileBuf(&dataBuffer.front(), clipRect, band);
-
 #if 0
                // Scan and fix non-standard null value:
                if ( m_entries[m_currentEntry]->getScalarType() == OSSIM_FLOAT32 )
@@ -255,14 +254,13 @@ bool ossimHdf5ImageHandler::open()
       m_hdf5->close();
       m_hdf5 = 0;
    }
-
    // Filter for specified renderable datasets:
    if (m_renderableNames.size())
    {
       std::vector<H5::DataSet>::iterator dataset = datasetList.begin();
       while (dataset != datasetList.end())
       {
-         bool found;
+         bool found=false;
          ossimString dsName = dataset->getObjName();
          std::vector<ossimString>::iterator name = m_renderableNames.begin();
          while (name != m_renderableNames.end())
@@ -280,7 +278,6 @@ bool ossimHdf5ImageHandler::open()
             ++dataset;
       }
    }
-
 #if 0
    ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimHdf5ImageHandler:"<<__LINE__ << " DEBUG\nDataset names:\n";
    for ( ossim_uint32 i = 0; i < datasetList.size(); ++i )
@@ -509,15 +506,25 @@ double ossimHdf5ImageHandler::getNullPixelValue( ossim_uint32 band ) const
 double ossimHdf5ImageHandler::getMaxPixelValue( ossim_uint32 band ) const
 {
    if ( m_currentEntry >= m_entries.size() )
-      return 0;
-   return m_entries[m_currentEntry]->getMaxPixelValue(band);
+   {
+      if(m_entries[m_currentEntry]->isMaxPixelSet())
+      {
+         return m_entries[m_currentEntry]->getMaxPixelValue(band);
+      }
+   }
+   return ossimImageHandler::getMaxPixelValue( band );
 }
 
 double ossimHdf5ImageHandler::getMinPixelValue( ossim_uint32 band ) const
 {
    if ( m_currentEntry >= m_entries.size() )
-      return 0;
-   return m_entries[m_currentEntry]->getMinPixelValue(band);
+   {
+      if(m_entries[m_currentEntry]->isMinPixelSet())
+      {
+         return m_entries[m_currentEntry]->getMinPixelValue(band);
+      }
+   }
+   return ossimImageHandler::getMinPixelValue( band );
 }
 
 void ossimHdf5ImageHandler::setProperty(ossimRefPtr<ossimProperty> property)
