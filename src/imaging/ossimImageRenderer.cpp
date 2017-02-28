@@ -1463,7 +1463,8 @@ void ossimImageRenderer::initializeBoundingRects()
    {
       ossim_uint32 idx;
       std::vector<ossimDrect> boundList;
-      ivpt->getViewSegments(boundList, m_viewArea, 25);
+      //ivpt->getViewSegments(boundList, m_viewArea, 25);
+      ivpt->getViewSegments(boundList, m_viewArea, 50);
 
 
       // for now lets convert the m_viewArea to a multi polygon for
