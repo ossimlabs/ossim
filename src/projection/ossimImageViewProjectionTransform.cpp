@@ -207,9 +207,9 @@ void ossimImageViewProjectionTransform::getViewSegments(std::vector<ossimDrect>&
     bool affectedByElevation = m_imageGeometry->isAffectedByElevation();
 
 
-    if((numberOfEdgePoints > 2)&&(affectedByElevation))
+    if(numberOfEdgePoints > 2)//&&(affectedByElevation))
     {
-          m_imageGeometry->getImageEdgePoints(points, numberOfEdgePoints);
+      m_imageGeometry->getImageEdgePoints(points, numberOfEdgePoints);
     }
     else
     {
