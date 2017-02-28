@@ -76,7 +76,7 @@ public:
    */
    virtual void getViewSegments(std::vector<ossimDrect>& viewBounds, 
                                 ossimPolyArea2d& polyArea,
-                                ossim_uint32 numberOfEdgePoints=0)const; 
+                                ossim_uint32 numberOfEdgePoints=25)const; 
 
 
    /**
