@@ -1549,22 +1549,13 @@ void ossimImageRenderer::initializeBoundingRects()
      }
      else if(m_ImageViewTransform.valid())
      {
-       ossimDpt p1;
-       ossimDpt p2;
-       ossimDpt p3;
-       ossimDpt p4;
+       m_viewRect = m_ImageViewTransform->getImageToViewBounds(m_inputR0Rect);
 
-       m_ImageViewTransform->imageToView(m_inputR0Rect.ul(), p1);
-       m_ImageViewTransform->imageToView(m_inputR0Rect.ur(), p2);
-       m_ImageViewTransform->imageToView(m_inputR0Rect.lr(), p3);
-       m_ImageViewTransform->imageToView(m_inputR0Rect.ll(), p4);
-
-       m_viewRect = ossimDrect(p1,p2,p3,p4);
-       m_viewRect = m_viewRect;
        if(!m_viewRect.hasNans())
        {
-        m_rectsDirty = false;
+          m_rectsDirty = false;
        } 
+
        m_viewArea = m_viewRect;
      }
    }
