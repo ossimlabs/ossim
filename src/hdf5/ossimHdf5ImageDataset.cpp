@@ -86,7 +86,7 @@ bool ossimHdf5ImageDataset::initialize( const H5::DataSet& dataset)
 
    determineScalarType();
 
-   if (!determineExtents())// || !scanForValidImageRect())// || !scanForMinMax())
+//   if (!determineExtents() || !scanForValidImageRect() || !scanForMinMax())
    if (!determineExtents())// || !scanForMinMax())
       return false;
 

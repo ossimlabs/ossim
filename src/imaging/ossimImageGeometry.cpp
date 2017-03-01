@@ -1101,14 +1101,12 @@ void ossimImageGeometry::getImageEdgePoints(std::vector<ossimDpt>& result, ossim
       ossimDpt p;
       ossim_int32 idx = 0;
       ossimDpt initialPoint= uli;
-
       for(idx = 0; idx < stepSize;++idx)
       {
          result.push_back(initialPoint);
          initialPoint.x+=deltaUpper.x;
          initialPoint.y+=deltaUpper.y;
       }
-
       initialPoint= uri;
       for(idx = 0; idx < stepSize;++idx)
       {
@@ -1121,6 +1119,7 @@ void ossimImageGeometry::getImageEdgePoints(std::vector<ossimDpt>& result, ossim
       for(idx = 0; idx < stepSize;++idx)
       {
          result.push_back(initialPoint);
+         initialPoint.x+=deltaLower.x;
          initialPoint.y+=deltaLower.y;
       }
 

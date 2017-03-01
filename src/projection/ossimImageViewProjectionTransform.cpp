@@ -207,7 +207,7 @@ void ossimImageViewProjectionTransform::getViewSegments(std::vector<ossimDrect>&
     bool affectedByElevation = m_imageGeometry->isAffectedByElevation();
 
 
-    if(numberOfEdgePoints > 2)//&&(affectedByElevation))
+    if((numberOfEdgePoints > 2)&&(affectedByElevation))
     {
       m_imageGeometry->getImageEdgePoints(points, numberOfEdgePoints);
     }
@@ -220,16 +220,6 @@ void ossimImageViewProjectionTransform::getViewSegments(std::vector<ossimDrect>&
       points[2] = imageRect.lr();
       points[3] = imageRect.ll();
     }
-    for(idx=0; idx < points.size();++idx)
-    {
-      ossimGpt testGpt;
-      m_imageGeometry->localToWorld(points[idx], testGpt); 
-
-      if(!testGpt.isLatNan()&&!testGpt.isLonNan())
-      {
-        gPoints.push_back(testGpt);        
-      }
-    }
     if(m_crossesDateline)
     {
       ossimDpt testPt;
@@ -237,6 +227,16 @@ void ossimImageViewProjectionTransform::getViewSegments(std::vector<ossimDrect>&
       m_imageGeometry->localToWorld(imageRect.midPoint(), cg);
       ossim_int32 sgn = static_cast<ossim_int32>(ossim::sgn(cg.lond()));
       std::vector<ossimPolygon> polyList;
+      for(idx=0; idx < points.size();++idx)
+      {
+        ossimGpt testGpt;
+        m_imageGeometry->localToWorld(points[idx], testGpt); 
+
+        if(!testGpt.isLatNan()&&!testGpt.isLonNan())
+        {
+          gPoints.push_back(testGpt);        
+        }
+      }
 
       // first we get the list of ground points initialized
       // and shifted to one side of the full world rect
@@ -249,6 +249,7 @@ void ossimImageViewProjectionTransform::getViewSegments(std::vector<ossimDrect>&
             gPoints[idx].lond(gPoints[idx].lond()+sgn*360);
          }
       }
+
       // now clip the ground list to the full ground rect
       //
       ossimPolygon tempPoly(gPoints);
@@ -320,13 +321,26 @@ void ossimImageViewProjectionTransform::getViewSegments(std::vector<ossimDrect>&
     }// end: if(m_crossesDateline)
     else 
     {
-      for(idx=0; idx < gPoints.size();++idx)
+      ossimDpt testPoint;
+      std::vector<ossimDpt> vpoints;
+
+      for(idx=0; idx < points.size();++idx)
       {
-        m_viewGeometry->worldToLocal(gPoints[idx], points[idx]);
+        ossimDpt testDpt;
+        imageToView(points[idx], testDpt); 
+        if(!testDpt.hasNans())
+        {
+          vpoints.push_back(testDpt);
+        }
+      }
+  
+      if(vpoints.size())
+      {
+        vpoints.push_back(vpoints[0]);
+        viewBounds.push_back(ossimDrect(vpoints));
+        polyArea = vpoints;// = ossimPolyArea2d(points);
 
       }
-      viewBounds.push_back(ossimDrect(points));
-      polyArea.add(ossimPolyArea2d(points));//ossimPolygon(points)));
     }
   } 
 }
