@@ -59,12 +59,9 @@ void ossimEnvironmentUtility::setEnvironmentVariable(const char* variable, const
    setenv(variable,  value,    1); // For backwards compatiblity.
 #else
    ostringstream arg;
-   arg<<variable<<"="<<value<<ends;
-   char varExp [512];
-   arg.str().copy(varExp, 512);
-   _putenv(varExp); // For backwards compatiblity.
+   arg<<variable<<"="<<value;
+   _putenv( arg.str().c_str() );
 #endif
-
 }
 
 ossimFilename ossimEnvironmentUtility::getUserOssimSupportDir()const
