@@ -1477,6 +1477,20 @@ void ossimImageRenderer::initializeBoundingRects()
          ossimDpt mpp = igeom->getMetersPerPixel();
          ossimDpt vmpp = vgeom->getMetersPerPixel();
          ossim_float64 scale = 1.0;
+         ossim_uint32 maxLen = ossim::max(testRect.width(), testRect.height());
+
+         // (GP March 2, 2017) determine goodMatch : test if we have either enough samples to closely match the post spacing 
+         //  or if we have at least half the number of pixels along the edge of an image
+         //
+         // This is hopefully to help avoid when using the polygon for intersection to not have
+         // bad intersection tests when zooming.  We might have to rethink it and implement
+         // this as a windowed edge walker.  So when zooming we create a polygon that 
+         // is denser for only what the view can see and not the entire image.  Basically interatively
+         // tesselate the input image model based on bounding volumes and then create a dense edge walker
+         // for what lies in the view at the given scale.  Too much to implement right now so we will cheet
+         // and take an easy way out for now.
+         // 
+
          if(!mpp.hasNans()&&!vmpp.hasNans())
          {
             scale = mpp.y/vmpp.y;
@@ -1498,22 +1512,23 @@ void ossimImageRenderer::initializeBoundingRects()
          if(divisor < 30) divisor = 30.0;
 
 
-         // now test to see if our edge walk is close to matching
-         // the elevation.
+         // now test to see if our edge walk is close to matching enough
+         // points for a good match.
          //
-         const ossim_uint32 MAX_EDGE_SAMPLE = 50;
-         ossim_float64 maxLen = scale*ossim::max(testRect.width(), testRect.height());
-         ossim_float64 testEdgeSample = (maxLen*mpp.y)/divisor;
-         bool goodMatch = testEdgeSample<=MAX_EDGE_SAMPLE;
-         ossim_float64 steps = ossim::min(testEdgeSample,
-                                          static_cast<ossim_float64>(MAX_EDGE_SAMPLE)); 
+         ossim_uint32 maxEdgeSample = ossim::min(static_cast<ossim_uint32>(50), maxLen); 
+         if(maxEdgeSample < 1) maxEdgeSample = 1;
+         ossim_uint32 testEdgeSample = ossim::round<ossim_uint32>((maxLen*scale*mpp.y)/divisor);
+
+         bool goodMatch = (testEdgeSample<=maxEdgeSample)||(testEdgeSample>=(maxLen>>1));
+         ossim_float64 steps = ossim::min(testEdgeSample, maxEdgeSample); 
 
          ossim_uint32 finalSteps = ossim::round<ossim_uint32>(steps);
          if(finalSteps<1) finalSteps=1;
          if(igeom->getCrossesDateline())
          {
-            if(finalSteps < 25) finalSteps = 25;
+            if(finalSteps < maxEdgeSample) finalSteps = maxEdgeSample;
          }
+
          ivpt->getViewSegments(boundList, m_viewArea, finalSteps);
          if(boundList.size())
          {
