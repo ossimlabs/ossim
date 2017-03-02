@@ -38,8 +38,7 @@ ossimStdOutProgress::ossimStdOutProgress(ossim_uint32 precision,
    // running in one.
 
    ossimString stdOutConsole;
-   stdOutConsole.string() = ossimPreferences::instance()->
-      preferencesKWL().findKey(std::string("ossim.std.out.progress"));
+   stdOutConsole = ossimPreferences::instance()->findPreference("ossim.std.out.progress");
 
    if ( stdOutConsole.size() )
    {
