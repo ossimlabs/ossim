@@ -338,7 +338,7 @@ ossimProjection* ossimEpsgProjectionDatabase::findProjection(ossim_uint32 epsg_c
       return 0;
 
    // Check for Google projection:
-   else if ((epsg_code==3857)||(epsg_code == 900913))
+   else if ((epsg_code==3857)||(epsg_code == 900913)||(epsg_code == 3785))
    {
       proj = new ossimGoogleProjection();
 
