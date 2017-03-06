@@ -465,7 +465,7 @@ void ossimHdf5Info::dumpAttribute(const H5::Attribute& attr,
                                   const std::string& prefix) const
 {
    std::string str_value;
-
+   char buf[1024];
    try
    {
       ossimByteOrder order = m_hdf5->getByteOrder(&attr);
@@ -607,22 +607,27 @@ void ossimHdf5Info::dumpAttribute(const H5::Attribute& attr,
       {
          switch(dataSize)
          {
+            // we will use a buf pointer.  There is something going on with some datasets
+            // and the attribute reader core dumping when providing the address of a float
+            // To fix this we will use a char* buf and reinterpret the cast.
             case 4:
             {
-               ossim_float32 float_value;
-               attr.read(attr.getDataType(), &float_value);
+               ossim_float32* float_value=0;
+               attr.read(attr.getDataType(), buf);
+               float_value = reinterpret_cast<ossim_float32*>(buf);
                if (swapOrder)
-                  endian.swap(float_value);
-               str_value = ossimString::toString(float_value).string();
+                  endian.swap(*float_value);
+               str_value = ossimString::toString(*float_value).string();
                break;
             }
             case 8:
             {
-               ossim_float64 float_value;
-               attr.read(attr.getDataType(), &float_value);
+               ossim_float64* float_value=0;
+               attr.read(attr.getDataType(), buf);
+               float_value = reinterpret_cast<ossim_float64*>(buf);
                if (swapOrder)
-                  endian.swap(float_value);
-               str_value = ossimString::toString(float_value).string();
+                  endian.swap(*float_value);
+               str_value = ossimString::toString(*float_value).string();
                break;
             }
          }
