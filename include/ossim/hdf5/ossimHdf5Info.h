@@ -77,7 +77,7 @@ private:
 
    void dumpDataset(const H5::DataSet& dataset, const std::string& prefix) const;
 
-   void dumpCompoundTypeInfo(const H5::DataSet& dataset, const std::string& prefix) const;
+   void dumpCompoundTypeInfo(const H5::CompType& compound, const std::string& prefix) const;
    void dumpEnumTypeInfo(H5::EnumType datatype, const std::string& prefix) const;
    void dumpArrayTypeInfo(H5::ArrayType datatype, const std::string& prefix) const;
    void dumpNumericalTypeInfo(const H5::DataSet& dataset,

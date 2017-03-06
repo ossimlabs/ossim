@@ -674,32 +674,37 @@ void ossimHdf5Info::dumpDataset(const DataSet& dataset,
       // Dump specific datatypes:
       switch(type_class)
       {
-      case H5T_COMPOUND:
-         dumpCompoundTypeInfo(dataset, datasetPrefix);
-         break;
-      case H5T_ENUM:
-      {
-         H5::EnumType enumType (dataset);
-         dumpEnumTypeInfo(enumType, datasetPrefix);
-         break;
-      }
-      case H5T_ARRAY:
-      {
-         H5::ArrayType arrayType (dataset.getId());
-         dumpArrayTypeInfo(arrayType, datasetPrefix);
-         break;
-      }
-      case H5T_INTEGER:
-      case H5T_FLOAT:
-      {
-         ossimByteOrder byteOrder = m_hdf5->getByteOrder( &dataset );
-         dumpNumericalTypeInfo(dataset, byteOrder, datasetPrefix);
-         break;
-      }
-      default:
-         m_kwl.addPair(datasetPrefix, string(ossimKeywordNames::SCALAR_TYPE_KW),
-                       string("OSSIM_SCALAR_UNKNOWN"));
-         break;
+         case H5T_COMPOUND:
+         {
+            H5::CompType compType(dataset);
+            dumpCompoundTypeInfo(compType, datasetPrefix);
+            break;
+         }
+         case H5T_ENUM:
+         {
+            H5::EnumType enumType (dataset);
+            dumpEnumTypeInfo(enumType, datasetPrefix);
+            break;
+         }
+         case H5T_ARRAY:
+         {
+            H5::ArrayType arrayType (dataset.getId());
+            dumpArrayTypeInfo(arrayType, datasetPrefix);
+            break;
+         }
+         case H5T_INTEGER:
+         case H5T_FLOAT:
+         {
+            ossimByteOrder byteOrder = m_hdf5->getByteOrder( &dataset );
+            dumpNumericalTypeInfo(dataset, byteOrder, datasetPrefix);
+            break;
+         }
+         default:
+         {
+            m_kwl.addPair(datasetPrefix, string(ossimKeywordNames::SCALAR_TYPE_KW),
+                          string("OSSIM_SCALAR_UNKNOWN"));
+            break;
+         }
       }
 
       // Dump Extents:
@@ -732,16 +737,16 @@ void ossimHdf5Info::dumpDataset(const DataSet& dataset,
 }
 
 
-void ossimHdf5Info::dumpCompoundTypeInfo(const H5::DataSet& dataset,
+void ossimHdf5Info::dumpCompoundTypeInfo(const H5::CompType& compound,
                                          const std::string& prefix) const
 {
    try
    {
-      H5::CompType compound(dataset);
+     // H5::CompType compound(dataset);
       ossim_int32 nMembers    = compound.getNmembers();
       ossim_int32 memberIdx   = 0;
       ostringstream typePrefix;
-      typePrefix << prefix << "compound_type.";
+      typePrefix << prefix << ".compound_type.";
       m_kwl.addPair(prefix, string("type"), string("compound"));
 
       for(memberIdx=0;memberIdx < nMembers;++memberIdx)
@@ -749,32 +754,44 @@ void ossimHdf5Info::dumpCompoundTypeInfo(const H5::DataSet& dataset,
          H5::DataType dataType (compound.getMemberDataType(memberIdx));
          H5std_string memberName (compound.getMemberName(memberIdx));
          ostringstream newPrefix;
-         newPrefix<<typePrefix.str() << "."<<memberName<< ".";
+         newPrefix<<typePrefix.str() <<memberName<< ".";
 
          H5T_class_t class_type = dataType.getClass();
          m_kwl.addPair(newPrefix.str(), string("class_type"), m_hdf5->getDatatypeClassType(class_type));
 
          switch(class_type)
          {
-         case H5T_INTEGER:
-         case H5T_FLOAT:
-         {
-            break;
-         }
-         case H5T_ENUM:
-         {
-            H5::EnumType enudataType = compound.getMemberEnumType(memberIdx);
-            dumpEnumTypeInfo(enudataType, newPrefix.str());
-            break;
-         }
-         case H5T_ARRAY:
-         {
-            H5::ArrayType arrdataType = compound.getMemberArrayType(memberIdx);
-            dumpArrayTypeInfo(arrdataType, newPrefix.str());
-            break;
-         }
-         default:
-            break;
+            case H5T_COMPOUND:
+            {
+             // dumpCompoundTypeInfo(compound.getMemberCompType(memberIdx, newPrefix);
+              break;            
+            }
+            case H5T_INTEGER:
+            {
+               H5::IntType intType = compound.getMemberIntType(memberIdx);
+               break;
+            }
+            case H5T_FLOAT:
+            {
+               H5::FloatType intType = compound.getMemberFloatType(memberIdx);
+               break;
+            }
+            case H5T_ENUM:
+            {
+               H5::EnumType enudataType = compound.getMemberEnumType(memberIdx);
+               dumpEnumTypeInfo(enudataType, newPrefix.str());
+               break;
+            }
+            case H5T_ARRAY:
+            {
+               H5::ArrayType arrdataType = compound.getMemberArrayType(memberIdx);
+               dumpArrayTypeInfo(arrdataType, newPrefix.str());
+               break;
+            }
+            default:
+            {
+               break;
+            }
          }
       }
    }
