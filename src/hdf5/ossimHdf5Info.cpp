@@ -682,8 +682,8 @@ void ossimHdf5Info::dumpDataset(const DataSet& dataset,
          }
          case H5T_ENUM:
          {
-            H5::EnumType enumType (dataset);
-            dumpEnumTypeInfo(enumType, datasetPrefix);
+           H5::EnumType enumType (dataset);
+           dumpEnumTypeInfo(enumType, datasetPrefix);
             break;
          }
          case H5T_ARRAY:
@@ -701,22 +701,25 @@ void ossimHdf5Info::dumpDataset(const DataSet& dataset,
          }
          default:
          {
-            m_kwl.addPair(datasetPrefix, string(ossimKeywordNames::SCALAR_TYPE_KW),
-                          string("OSSIM_SCALAR_UNKNOWN"));
+           m_kwl.addPair(datasetPrefix, string(ossimKeywordNames::SCALAR_TYPE_KW),
+                         string("OSSIM_SCALAR_UNKNOWN"));
             break;
          }
       }
 
-      // Dump Extents:
+//      Dump Extents:
       vector<ossim_uint32> extents;
       m_hdf5->getExtents( dataset, extents );
       ostringstream value;
-      value <<extents[0];
-      for ( ossim_uint32 i = 1; i < extents.size(); ++i )
+      if(!extents.empty())
       {
-         value << ", " << extents[i];
+         value <<extents[0];
+         for ( ossim_uint32 i = 1; i < extents.size(); ++i )
+         {
+            value << ", " << extents[i];
+         }
+         m_kwl.addPair(datasetPrefix, "extents", value.str());
       }
-      m_kwl.addPair(datasetPrefix, "extents", value.str());
 
 #if 0
       // Attributes:
@@ -763,12 +766,13 @@ void ossimHdf5Info::dumpCompoundTypeInfo(const H5::CompType& compound,
          {
             case H5T_COMPOUND:
             {
-             // dumpCompoundTypeInfo(compound.getMemberCompType(memberIdx, newPrefix);
+              dumpCompoundTypeInfo(compound.getMemberCompType(memberIdx), newPrefix.str());
               break;            
             }
             case H5T_INTEGER:
             {
                H5::IntType intType = compound.getMemberIntType(memberIdx);
+               
                break;
             }
             case H5T_FLOAT:
