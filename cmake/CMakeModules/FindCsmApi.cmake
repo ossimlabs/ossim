@@ -7,10 +7,10 @@
 # also defined, but not for general use are
 #  CSMAPI_LIBRARY, where to find the CSMAPI library.
 SET(CMAKE_FIND_FRAMEWORK "LAST")
-FIND_PATH(CSMAPI_INCLUDE_DIRS csm.h
-	PATHS
-        ${OSSIM_DEPENDENCIES}/include/csm
-		${OSSIM_INSTALL_PREFIX}/include/csm
+FIND_PATH(CSMAPI_INCLUDE_DIRS csm/csm.h
+        PATHS
+        ${OSSIM_DEPENDENCIES}/include
+		${OSSIM_INSTALL_PREFIX}/include
 )
 
 set(CSMAPI_NAMES ${CSMAPI_NAMES} csmapi libcsmapi)
