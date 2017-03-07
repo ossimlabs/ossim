@@ -43,6 +43,7 @@ public:
     * @return True if result valid */
    bool getRoot(H5::Group& root) const;
 
+
    /** Assigns list of groups under specified group.
     * @param recursive If true, recursively visits all subgroups
     * @return True if result valid */

@@ -88,6 +88,7 @@ bool ossimHdf5::close()
    return success;
 }
 
+
 bool ossimHdf5::getRoot(Group& root) const
 {
    if (!m_h5File)
