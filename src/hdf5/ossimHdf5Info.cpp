@@ -1154,7 +1154,7 @@ void ossimHdf5Info::dumpArrayType(const H5::ArrayType& dataType,
             case H5T_STRING:
             {
                std::ostringstream out;
-               ossimString newPrefix = prefix+"values";
+               ossimString newPrefix = prefix+".values";
                out<<"(";
                const char* startPtr = 0;
                const char* endPtr = 0;
@@ -1194,7 +1194,8 @@ void ossimHdf5Info::dumpArrayType(const H5::ArrayType& dataType,
                out << ")";
                //out<<prefix<<".array_type: H5T_STRING\n";
 //               out<<prefix<<".values: <NOT SUPPORTED>";
-               m_kwl.addPair(prefix, out.str());
+               m_kwl.addPair(newPrefix, out.str());
+               m_kwl.addPair(prefix+".array_type", "H5T_STRING");
 
                break;
             }
@@ -1205,7 +1206,7 @@ void ossimHdf5Info::dumpArrayType(const H5::ArrayType& dataType,
                ossimByteOrder order = m_hdf5->getByteOrder(*dataTypePtr);
                ossimEndian endian;
                bool swapOrder = (order!=ossim::byteOrder());
-               ossimString newPrefix = prefix+"values";
+               ossimString newPrefix = prefix+".values";
                out<<"(";
                for(idx=0;idx<nArrayElements;++idx)
                {
@@ -1222,7 +1223,8 @@ void ossimHdf5Info::dumpArrayType(const H5::ArrayType& dataType,
                   dataPtr+=typeSize;
                }
                out << ")";
-               m_kwl.addPair(prefix, out.str());
+               m_kwl.addPair(newPrefix, out.str());
+               m_kwl.addPair(prefix+".array_type", "H5T_INTEGER");
               break;
             }
             case H5T_FLOAT:
@@ -1234,7 +1236,7 @@ void ossimHdf5Info::dumpArrayType(const H5::ArrayType& dataType,
                bool swapOrder = (order!=ossim::byteOrder());
 
                //out<<prefix<<".array_type: H5T_INTEGER\n";
-               ossimString newPrefix = prefix+"values";
+               ossimString newPrefix = prefix+".values";
                out<<"(";
                for(idx=0;idx<nArrayElements;++idx)
                {
@@ -1250,6 +1252,9 @@ void ossimHdf5Info::dumpArrayType(const H5::ArrayType& dataType,
                   }
                   dataPtr+=typeSize;
                }
+               out << ")";
+               m_kwl.addPair(newPrefix, out.str());
+               m_kwl.addPair(prefix+".array_type", "H5T_FLOAT");
                break;
             }
             default:

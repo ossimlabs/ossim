@@ -580,7 +580,6 @@ bool ossimHdf5::floatTypeToString(std::string& result,
 {
    char* buf = const_cast<char*>(dataPtr);
    ossim_uint32 dataSize = dataType.getSize();
-   std::string strValue;
    ossimByteOrder order = getByteOrder(dataType);
    ossimEndian endian;
    bool swapOrder = (order!=ossim::byteOrder());
@@ -621,7 +620,6 @@ bool ossimHdf5::intTypeToString(std::string& result,
    char* buf = const_cast<char*>(dataPtr);
    ossim_uint32 signType = H5Tget_sign(dataType.getId());
    ossim_uint32 dataSize = dataType.getSize();
-   std::string strValue;
    ossimByteOrder order = getByteOrder(dataType);
    ossimEndian endian;
    bool swapOrder = (order!=ossim::byteOrder());
@@ -666,7 +664,7 @@ bool ossimHdf5::intTypeToString(std::string& result,
               intValue = reinterpret_cast<ossim_uint16*>(buf);
               if (swapOrder)
                  endian.swap(*intValue);
-              strValue = ossimString::toString(*intValue).string();
+              result = ossimString::toString(*intValue).string();
 
                break;
             }
