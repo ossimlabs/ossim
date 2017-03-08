@@ -992,6 +992,26 @@ void ossim::toSimpleStringList(ossimString& result,
    result = "("+out.str()+")";
 }
 
+template <>
+void ossim::toSimpleStringList(ossimString& result,
+                               const std::vector<ossimString>& valuesList)
+
+{
+   std::ostringstream out;
+   if(!valuesList.empty())
+   {
+      ossim_uint32 idx = 0;
+      ossim_uint32 size = (ossim_uint32) (valuesList.size()-1);
+      for(idx = 0; idx < size; ++idx)
+      {
+         out << valuesList[idx] << ",";
+      }
+      out << valuesList[size];
+   }
+   
+   result = "("+out.str()+")";
+}
+
 bool ossim::toSimpleVector(std::vector<ossim_int32>& result,
                            const ossimString& stringOfPoints)
 {
@@ -1074,6 +1094,15 @@ bool ossim::toSimpleVector(std::vector<ossim_int8>& result,
          result.push_back(extractedValues[idx].toUInt8());
       }
    }
+   return resultFlag;
+}
+
+bool ossim::toSimpleVector(std::vector<ossimString>& result,
+                    const ossimString& stringOfStrings)
+{
+   std::vector<ossimString> extractedValues;
+   bool resultFlag = extractSimpleValues(result, stringOfStrings);
+
    return resultFlag;
 }
 
