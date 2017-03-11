@@ -89,16 +89,16 @@ private:
    void dumpNumericalTypeInfo(const H5::DataSet& dataset,
                               ossimByteOrder order,
                               const std::string& prefix) const;
-   void dumpIntType(const H5::IntType& dataType,
-                                  const char* dataPtr,
-                                  const std::string& prefix)const;
+   void dumpIntType( const H5::IntType& dataType,
+                     const char* dataPtr,
+                     const std::string& prefix)const;
    void dumpFloatType(const H5::FloatType& dataType,
                                   const char* dataPtr,
                                   const std::string& prefix)const;
    void dumpStringType(const H5::StrType& dataType,
                        const char* dataPtr,
                        const std::string& prefix)const;
-   void dumpArrayType(const H5::ArrayType& dataType,
+   void dumpArrayType( H5::ArrayType& dataType,
                        const char* dataPtr,
                        const std::string& prefix)const;
    void dumpNumerical(const H5::DataSet& dataset,
