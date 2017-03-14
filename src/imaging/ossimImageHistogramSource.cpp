@@ -242,6 +242,10 @@ void ossimImageHistogramSource::getBinInformation(ossim_uint32& numberOfBins,
          }
          case OSSIM_SINT32:
          case OSSIM_UINT32:
+         {
+           numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT16+1;
+           break;
+         }
          case OSSIM_FLOAT32:
          case OSSIM_FLOAT64:
          {
