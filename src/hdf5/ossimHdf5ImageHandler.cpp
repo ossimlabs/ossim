@@ -217,6 +217,12 @@ bool ossimHdf5ImageHandler::loadState(const ossimKeywordlist& kwl,
    return false;
 }
 
+void ossimHdf5ImageHandler::loadMetaData()
+{
+   m_tile = 0;
+   ossimImageHandler::loadMetaData();
+}
+
 bool ossimHdf5ImageHandler::open()
 {
    static const char* M = "ossimHdf5ImageHandler::open(filename) -- ";
