@@ -1,7 +1,7 @@
 PROJECT(ossimlabs)
 
 # Allows developer to customize compiler with their own flags (e.g., "-std=c++11")
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} $ENV{OSSIM_CXX_FLAGS}" )
+SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{OSSIM_CXX_FLAGS}" )
 
 IF ("${OSSIM_DEV_HOME}"  STREQUAL "")
   IF ("$ENV{OSSIM_DEV_HOME}"  STREQUAL "")
@@ -86,14 +86,6 @@ ENDIF(NOT OSSIM_INCLUDE_DIR)
 #IF(NOT OSSIMQT_LIBRARY)
 #   SET(OSSIMQT_LIBRARY "ossimQt" CACHE STRING "Caching" FORCE)
 #ENDIF(NOT OSSIMQT_LIBRARY)
-
-#IF(NOT CSMAPI_LIBRARY)
-#   SET(CSMAPI_LIBRARY "csmApi" CACHE STRING "Caching" FORCE)
-#ENDIF()
-
-#IF(NOT CSMAPI_INCLUDE_DIR)
-#   SET(CSMAPI_INCLUDE_DIR "${OSSIM_DEV_HOME}/csmApi/include" CACHE STRING "Caching" FORCE)
-#ENDIF(NOT CSMAPI_INCLUDE_DIR)
 
 ############################### Add subdirectories to build based on BUILD variables and presence of repo ###########################
 add_subdirectory(${OSSIM_HOME} ${CMAKE_CURRENT_BINARY_DIR}/ossim) 

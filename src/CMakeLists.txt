@@ -28,6 +28,7 @@ ELSEIF(WIN32)
 ENDIF(UNIX)
    
 IF (OSSIM_HAS_HDF5)
+   message( STATUS "HDF5 components will be included." )
    FILE(GLOB ossim_hdf5_SRCS RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/hdf5/*.cpp")
    LIST(APPEND ossim_SRCS "${ossim_hdf5_SRCS}")
 ELSE (OSSIM_HAS_HDF5)
