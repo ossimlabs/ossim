@@ -700,6 +700,12 @@ void ossimImageUtil::processFile(const ossimFilename& file)
             ossimNotify(ossimNotifyLevel_NOTICE) << ih->getFilename().expand(); 
          }
  
+          // Compute/Scan for min, max.  Note the overview sequencer may have computed for us.
+         if ( ( scanForMinMax() || scanForMinMaxNull() ) && !consumedCmmOptions )
+         {
+            computeMinMax( ih );
+         }
+
          if ( createOverviews() )
          {
             // Skip shape files...
@@ -715,12 +721,6 @@ void ossimImageUtil::processFile(const ossimFilename& file)
             createHistogram( ih );
          }
  
-         // Compute/Scan for min, max.  Note the overview sequencer may have computed for us.
-         if ( ( scanForMinMax() || scanForMinMaxNull() ) && !consumedCmmOptions )
-         {
-            computeMinMax( ih );
-         }
-
          // Launch any file system commands.
          executeFileCommands( file );
       }
@@ -1396,7 +1396,7 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
       okwl.write(omd_file);
       ossimNotify(ossimNotifyLevel_INFO)
          << "wrote file:  " << omd_file << endl;
-         
+      ih->loadMetaData(); 
    } // Matches: if ( ih.valid() )
    
    if(traceDebug())
