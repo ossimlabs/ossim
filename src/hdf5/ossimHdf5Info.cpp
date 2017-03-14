@@ -677,10 +677,10 @@ void ossimHdf5Info::dumpAttribute(const H5::Attribute& attr,
    {
       ossimByteOrder order = m_hdf5->getByteOrder(&attr);
       ossimEndian endian;
-      bool swapOrder = (order!=ossim::byteOrder());
+      // bool swapOrder = (order!=ossim::byteOrder());
 
       H5T_class_t class_type = attr.getDataType().getClass();
-      ossim_uint32 dataSize = attr.getDataType().getSize();
+      // ossim_uint32 dataSize = attr.getDataType().getSize();
       switch (class_type)
       {
          case H5T_STRING:
@@ -1084,8 +1084,8 @@ void ossimHdf5Info::dumpNumericalTypeInfo(const H5::DataSet& dataset,
 }
 
 void ossimHdf5Info::dumpIntType(const H5::IntType& dataType,
-                                  const char* dataPtr,
-                                  const std::string& prefix)const
+                                const char* dataPtr,
+                                const std::string& prefix)const
 {
    std::string strValue;
    if(ossimHdf5::intTypeToString(strValue, dataType, dataPtr))
@@ -1118,9 +1118,9 @@ void ossimHdf5Info::dumpStringType(const H5::StrType& dataType,
    }
 }
 
-void ossimHdf5Info::dumpArrayType(const H5::ArrayType& dataType,
-                       const char* dataPtr,
-                       const std::string& prefix)const
+void ossimHdf5Info::dumpArrayType( H5::ArrayType& dataType,
+                                   const char* dataPtr,
+                                   const std::string& prefix)const
 {
    ossim_uint32 arrayNdims = dataType.getArrayNDims();
 //   ossimByteOrder order = m_hdf5->getByteOrder(dataType);
