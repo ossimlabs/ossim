@@ -36,6 +36,7 @@ public:
    
    ossimPolyArea2d();
    ossimPolyArea2d(const vector<ossimGpt>& polygon);
+   ossimPolyArea2d(const vector<ossimDpt>& polygon);
    ossimPolyArea2d(const ossimPolygon& shell, const vector<ossimPolygon>& holes); 
    
    ossimPolyArea2d(const ossimDpt& p1,

@@ -72,6 +72,7 @@ public:
    ossim_uint32 getBlocksPerCol()const;
    ossim_uint32 getNumberOfPixelsPerBlockRow()const;
    ossim_uint32 getNumberOfPixelsPerBlockCol()const;
+   virtual bool isValid()const;
 
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;

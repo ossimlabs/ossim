@@ -11,6 +11,7 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimIosFwd.h>
 #include <string>
+#include <vector>
 
 class OSSIM_DLL ossimJ2kSizRecord
 {
@@ -31,7 +32,21 @@ public:
     */
    void parseStream(ossim::istream& in);
 
-   /** @return scalar type based on bit depth and signed bit from theSsiz. */
+   /**
+    * Write method.
+    *
+    * @param out Stream to write to.
+    */
+   void writeStream(std::ostream& out);
+
+   /**
+    * @brief Gets the scalar type.
+    * 
+    * Currently assumes all components are the same scalar type.
+    * I.e., only looks at first component.
+    *
+    * @return scalar type based on bit depth and signed bit from theSsiz.
+    */
    ossimScalarType getScalarType() const;
 
    /**
@@ -99,24 +114,30 @@ public:
    ossim_uint16 m_Csiz;
 
    /**
+    * One for each component:
+    * 
     * sign bit and bit depth of data
     * unsigned = 0xxx xxxx (msb == 0)
     * signed   = 1xxx xxxx (msb == 1)
     * bit depth = x000 0000 + 1 (first seven bits plus one)
     */
-   ossim_uint8  m_Ssiz;
+   std::vector<ossim_uint8> m_Ssiz;
 
    /**
+    * One for each component:
+    * 
     * Horizontal separation of a sample of the component with respect to the
     * reference grid.
     */
-   ossim_uint8  m_XRsiz;
+   std::vector<ossim_uint8> m_XRsiz;
 
    /**
+    * One for each component:
+    * 
     * Vertical separation of a sample of the component with respect to the
     * reference grid.
     */
-   ossim_uint8  m_YRsiz;
+   std::vector<ossim_uint8> m_YRsiz;
 };
 
 #endif /* End of "#ifndef ossimJ2kSizRecord_HEADER" */

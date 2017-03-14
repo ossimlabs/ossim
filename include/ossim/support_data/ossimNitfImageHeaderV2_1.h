@@ -26,6 +26,7 @@ public:
    virtual void parseStream(std::istream &in, const ossimNitfFileHeaderV2_1 *file);
    virtual void parseStream(std::istream &in);
    virtual void writeStream(std::ostream &out);
+   virtual bool isValid()const;
 
    /**
     * @brief print method that outputs a key/value type format adding prefix

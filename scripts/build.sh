@@ -60,7 +60,9 @@ if [ "$(ps -o stat= -p $PPID)" == "Ss" ]; then
     4) CMAKE_BUILD_TYPE="MinSizeRel";;
   esac
 else
-  CMAKE_BUILD_TYPE="Release"
+  if [ -z $CMAKE_BUILD_TYPE ] ; then
+    CMAKE_BUILD_TYPE="Release"
+  fi
 fi 
 
 # Try running the CMake config script (sourcing here to capture OSSIM_BUILD_DIR var 

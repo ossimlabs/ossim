@@ -158,6 +158,11 @@ public:
    virtual ossimDrect getImageRect()const=0;
    virtual ossimString getSecurityClassification()const=0;
    
+   /**
+   * isValid will test if the fields are valid and will return true or false.
+   */
+   virtual bool isValid()const=0;
+   
    bool hasImages()const;
    bool hasSymbols()const;
    bool hasGraphics()const;

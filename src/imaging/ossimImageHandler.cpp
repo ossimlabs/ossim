@@ -27,6 +27,7 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimPolygon.h>
+#include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimScalarTypeLut.h>
@@ -89,6 +90,10 @@ thePixelType(OSSIM_PIXEL_IS_POINT)
          << std::endl;
 #endif      
    }
+
+   // Check for global preference supplementary dir.
+   theSupplementaryDirectory.string() = ossimPreferences::instance()->
+      preferencesKWL().findKey( std::string("ossim_supplementary_directory") );
 }
 
 ossimImageHandler::~ossimImageHandler()
@@ -678,6 +683,7 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
          // as it does a recursive call back to ossimImageHandler::getImageGeometry().
          //---
          theGeometry = new ossimImageGeometry();
+         initImageParameters( theGeometry.get() );
 
          //---
          // And finally allow factories to extend the internal geometry.
@@ -693,11 +699,9 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
             // kind of geometry loaded
             //---
             theGeometry = getInternalImageGeometry();
+            initImageParameters( theGeometry.get() );
          }
       }
-
-      // Set image things the geometry object should know about.
-      initImageParameters( theGeometry.get() );
    }
    return theGeometry;
 }

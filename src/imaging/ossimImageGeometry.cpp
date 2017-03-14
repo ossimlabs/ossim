@@ -193,8 +193,9 @@ bool ossimImageGeometry::localToWorld(const ossimDpt& local_pt, ossimGpt& world_
    // Perform projection to world coordinates:
    m_projection->lineSampleToWorld(full_image_pt, world_pt);
 
+
     // Put longitude between -180 and +180 and latitude between -90 and +90 if not so. 
-    world_pt.wrap();
+   // world_pt.wrap();
     
    return true;
 }
@@ -1060,330 +1061,185 @@ bool ossimImageGeometry::getCrossesDateline()const
       result = ( (fabs(center.lond()-ul.lond()) > 180.0) ||
                  (fabs(center.lond()-ur.lond()) > 180.0) ||
                  (fabs(center.lond()-lr.lond()) > 180.0) ||
-                 (fabs(center.lond()-ll.lond()) > 180.0));
+                 (fabs(center.lond()-ll.lond()) > 180.0) ||
+                 (fabs(ul.lond()) > 180.0) ||
+                 (fabs(ur.lond()) > 180.0) ||
+                 (fabs(lr.lond()) > 180.0) ||
+                 (fabs(ll.lond()) > 180.0)
+
+                 );
    }
 
    return result; 
 }
 
-void ossimImageGeometry::calculatePolyBounds(ossimPolyArea2d& result, ossim_int32 partitions)const
+void ossimImageGeometry::getImageEdgePoints(std::vector<ossimDpt>& result, ossim_uint32 partitions)const
 {
-   if(!m_imageSize.hasNans())
+
+   ossimDrect imageRect;
+   getBoundingRect(imageRect);
+   if(imageRect.hasNans())
    {
-      ossim_int64 delta = 0;
-      ossim_int64 stepSizex = m_imageSize.x/partitions;
-      ossim_int64 stepSizey = m_imageSize.y/partitions;
-      ossim_int64 w1        = m_imageSize.x-1;
-      ossim_int64 h1        = m_imageSize.y-1;
-      ossimGpt    gpt;
-      ossimGpt t1,t2,t3,t4;
-      localToWorld(ossimDpt(0,0), t1);
-      localToWorld(ossimDpt(w1,0), t2);
-      localToWorld(ossimDpt(w1,h1), t3);
-      localToWorld(ossimDpt(0,h1), t4);
-      if(t1.isLatLonNan()||t2.isLatLonNan()||t3.isLatLonNan()||t4.isLatLonNan())
+      // error out
+      return;
+   }
+   result.clear();
+   // First get the image points we will be transforming
+   if(partitions > 2)
+   {
+      ossimDpt uli = imageRect.ul();
+      ossimDpt uri = imageRect.ur();
+      ossimDpt lri = imageRect.lr();
+      ossimDpt lli = imageRect.ll();
+
+      ossim_float32 stepSize = partitions;
+      ossimDpt deltaUpper = (uri-uli)*(1.0/stepSize);
+      ossimDpt deltaRight = (lri-uri)*(1.0/stepSize);
+      ossimDpt deltaLower = (lli-lri)*(1.0/stepSize);
+      ossimDpt deltaLeft  = (uli-lli)*(1.0/stepSize);
+
+      ossimDpt p;
+      ossim_int32 idx = 0;
+      ossimDpt initialPoint= uli;
+      for(idx = 0; idx < stepSize;++idx)
       {
-         // need to print error if a corners are nan
-         return;
+         result.push_back(initialPoint);
+         initialPoint.x+=deltaUpper.x;
+         initialPoint.y+=deltaUpper.y;
+      }
+      initialPoint= uri;
+      for(idx = 0; idx < stepSize;++idx)
+      {
+         result.push_back(initialPoint);
+         initialPoint.x+=deltaRight.x;
+         initialPoint.y+=deltaRight.y;
       }
 
-      // set initial point
-      gpt = t1;
-      if(getCrossesDateline())
+      initialPoint= lri;
+      for(idx = 0; idx < stepSize;++idx)
       {
-         // make sure we have enough samples to cross the dateline properly
-         if(partitions < 20) partitions = 20;
-         stepSizex = m_imageSize.x/partitions;
-         stepSizey = m_imageSize.y/partitions;
-
-         ossimGpt previousPoint;
-         std::vector<std::vector<ossimDpt> > polygons(2);
-         ossim_uint32 whichPoly = 0;
-         //localToWorld(ossimDpt(0,0), gpt);
-         //gpt = t1;
- 
-         polygons[whichPoly].push_back(gpt);
-
-         previousPoint = gpt;
-
-         // top
-         for(delta = stepSizex; delta < w1;delta+=stepSizex)
-         {
-            localToWorld(ossimDpt(delta, 0), gpt);
-            if(!gpt.isLatLonNan())
-            {
-            // need to print error if a corner is nan
-
-               if(fabs(gpt.lond()-previousPoint.lond()) > 180.0)
-               {
-                  ossimGpt tempGpt;
-                  ossim_uint32 currentPolyIndex = whichPoly;
-                  whichPoly ^= 1;
-
-                  localToWorld(ossimDpt( (delta-stepSizex) + .5, 0), tempGpt);
-
-                  if(!tempGpt.isLatLonNan())
-                  {
-                     ossimDpt start = previousPoint;
-                     ossimDpt end   = tempGpt;
-                     ossimDpt deltaPoint = end-start;
-
-                     if(gpt.lond() > 0) // crossing negative to positive
-                     {
-                        ossim_float64 t = ((-180-start.x)/deltaPoint.x);
-                        ossim_float64 lat = (start.y+deltaPoint.y*t);
-                        polygons[currentPolyIndex].push_back(ossimGpt(lat, -180.0));
-                        polygons[whichPoly].push_back(ossimGpt(lat, 180.0));
-                        //std::cout << "LON ==== " << -180 << " LAT === " << (start.y+deltaPoint.y*t) << "\n";
-
-                        //std::cout << "TOP CROSSING NEGATIVE TO POSITIVE\n";
-                     }
-                     else // crossing positive to negative 
-                     {
-                        ossim_float64 t = ((180-start.x)/deltaPoint.x);
-                        ossim_float64 lat = (start.y+deltaPoint.y*t);
-                        polygons[currentPolyIndex].push_back(ossimGpt(lat, 180.0));
-                        polygons[whichPoly].push_back(ossimGpt(lat, -180.0));
-
-                        //std::cout << "TOP CROSSING POSITIVE TO NEGATIVE\n";
-                     }
-                     //std::cout << ossimDpt(previousPoint) << " --> " << ossimDpt(gpt) << "\n";
-                  }
-               }
-               polygons[whichPoly].push_back(gpt);
-               previousPoint = gpt;
-            }
-         }
-         // right
-         for(delta = stepSizey; delta<h1; delta+=stepSizey)
-         {
-            localToWorld(ossimDpt(w1, delta), gpt);
-            if(!gpt.isLatLonNan())
-            {
-
-               if(fabs(gpt.lond()-previousPoint.lond()) > 180.0)
-               {
-                  ossimGpt tempGpt;
-                  ossim_uint32 currentPolyIndex = whichPoly;
-                  whichPoly ^= 1;
-
-                  localToWorld(ossimDpt( w1, (delta-stepSizey)+0.5), tempGpt);
-                  if(!tempGpt.isLatLonNan())
-                  {
-                     ossimDpt start = previousPoint;
-                     ossimDpt end   = tempGpt;
-                     ossimDpt deltaPoint = end-start;
-
-                     if(gpt.lond() > 0) // crossing negative to positive
-                     {
-                        ossim_float64 t = ((-180-start.x)/deltaPoint.x);
-                        ossim_float64 lat = (start.y+deltaPoint.y*t);
-                        polygons[currentPolyIndex].push_back(ossimGpt(lat, -180.0));
-                        polygons[whichPoly].push_back(ossimGpt(lat, 180.0));
-                       // std::cout << "RIGHT CROSSING NEGATIVE TO POSITIVE\n";
-                     }
-                     else // crossing positive to negative 
-                     {
-                        ossim_float64 t = ((180-start.x)/deltaPoint.x);
-                        ossim_float64 lat = (start.y+deltaPoint.y*t);
-                        polygons[currentPolyIndex].push_back(ossimGpt(lat, 180.0));
-                        polygons[whichPoly].push_back(ossimGpt(lat, -180.0));
-                        //std::cout << "RIGHT CROSSING POSITIVE TO NEGATIVE\n";
-                     }
-                     //std::cout << ossimDpt(previousPoint) << " --> " << ossimDpt(gpt) << "\n";
-                  }
-               }
-               polygons[whichPoly].push_back(gpt);
-               previousPoint = gpt;
-            }
-         }
-
-         // bottom
-         for(delta = w1; delta > 0;delta-=stepSizex)
-         {
-            localToWorld(ossimDpt(delta, h1), gpt);
-            if(!gpt.isLatLonNan())
-            {
-               if(fabs(gpt.lond()-previousPoint.lond()) > 180.0)
-               {
-                  ossimGpt tempGpt;
-                  ossim_uint32 currentPolyIndex = whichPoly;
-                  whichPoly ^= 1;
-
-                  localToWorld(ossimDpt( (delta+stepSizex)-0.5, h1), tempGpt);
-                  if(!tempGpt.isLatLonNan())
-                  {
-                     ossimDpt start = previousPoint;
-                     ossimDpt end   = tempGpt;
-                     ossimDpt deltaPoint = end-start;
-
-                     if(gpt.lond() > 0) // crossing negative to positive
-                     {
-                        ossim_float64 t = ((-180-start.x)/deltaPoint.x);
-                        ossim_float64 lat = (start.y+deltaPoint.y*t);
-                        polygons[currentPolyIndex].push_back(ossimGpt(lat, -180.0));
-                        polygons[whichPoly].push_back(ossimGpt(lat, 180.0));
-                        //std::cout << "BOTTOM CROSSING NEGATIVE TO POSITIVE\n";
-                     }
-                     else // crossing positive to negative 
-                     {
-                        ossim_float64 t = ((180-start.x)/deltaPoint.x);
-                        ossim_float64 lat = (start.y+deltaPoint.y*t);
-                        polygons[currentPolyIndex].push_back(ossimGpt(lat, 180.0));
-                        polygons[whichPoly].push_back(ossimGpt(lat, -180.0));
-                        //std::cout << "BOTTOM CROSSING POSITIVE TO NEGATIVE\n";
-                     }
-                     //std::cout << ossimDpt(previousPoint) << " --> " << ossimDpt(gpt) << "\n";
-                  }
-               }
-               polygons[whichPoly].push_back(gpt);
-               previousPoint = gpt;
-            }
-         }
-         // left
-         for(delta = h1; delta > 0;delta-=stepSizey)
-         {
-            localToWorld(ossimDpt(0, delta), gpt);
-
-            if(!gpt.isLatLonNan())
-            {
-
-
-               if(fabs(gpt.lond()-previousPoint.lond()) > 180.0)
-               {
-                  ossimGpt tempGpt;
-                  ossim_uint32 currentPolyIndex = whichPoly;
-                  whichPoly ^= 1;
-
-                  localToWorld(ossimDpt( 0, (delta+stepSizey)-0.5), tempGpt);
-
-                  if(!tempGpt.isLatLonNan())
-                  {
-                     ossimDpt start = previousPoint;
-                     ossimDpt end   = tempGpt;
-                     ossimDpt deltaPoint = end-start;
-
-                     if(gpt.lond() > 0) // crossing negative to positive
-                     {
-                        ossim_float64 t = ((-180-start.x)/deltaPoint.x);
-                        ossim_float64 lat = (start.y+deltaPoint.y*t);
-                        polygons[currentPolyIndex].push_back(ossimDpt(-180.0, lat));
-                        polygons[whichPoly].push_back(ossimDpt(180.0, lat));
-                        //std::cout << "LEFT CROSSING NEGATIVE TO POSITIVE\n";
-                     }
-                     else // crossing positive to negative 
-                     {
-                        ossim_float64 t = ((180-start.x)/deltaPoint.x);
-                        ossim_float64 lat = (start.y+deltaPoint.y*t);
-                        polygons[currentPolyIndex].push_back(ossimDpt(180.0, lat));
-                        polygons[whichPoly].push_back(ossimDpt(-180.0, lat));
-                        //std::cout << "LEFT CROSSING POSITIVE TO NEGATIVE\n";
-                     }
-                     //std::cout << ossimDpt(previousPoint) << " --> " << ossimDpt(gpt) << "\n";
-                  }
-
-               }
-               polygons[whichPoly].push_back(gpt);
-               previousPoint = gpt;
-            }
-         }
-         if(polygons[0].size() > 0) polygons[0].push_back(polygons[0][0]);
-         if(polygons[1].size() > 0) polygons[1].push_back(polygons[1][0]);
-
-         if((polygons[0].size() > 3)&&
-            (polygons[1].size() > 3))
-         {
-            result  = polygons[0];
-            if(!result.isValid()) result.setToBufferedShape();
-            ossimPolyArea2d tempPolyArea;
-            tempPolyArea = polygons[1];
-            if(!tempPolyArea.isValid()) tempPolyArea.setToBufferedShape();
-            result.add(tempPolyArea);
-         }
-
+         result.push_back(initialPoint);
+         initialPoint.x+=deltaLower.x;
+         initialPoint.y+=deltaLower.y;
       }
-      else
+
+      initialPoint= lli;
+      for(idx = 0; idx < stepSize;++idx)
       {
-         std::vector<ossimGpt> poly;
-         // if(!isAffectedByElevation())
-         // {
-         //    poly.push_back(t1);
-         //    poly.push_back(t2);
-         //    poly.push_back(t3);
-         //    poly.push_back(t4);
-         //    poly.push_back(t5);
-         // }
-         // else
-         {
-         //localToWorld(ossimDpt(0,0), gpt);
-            poly.push_back(gpt);
-            
-            // top
-            for(delta = stepSizex; delta < w1;delta+=stepSizex)
-            {
-               localToWorld(ossimDpt(delta, 0), gpt);
-               if(!gpt.isLatLonNan())
-               {
-                  poly.push_back(gpt);
-               }
-            }
-            localToWorld(ossimDpt(w1, 0), gpt);
-            if(!gpt.isLatLonNan())
-            {
-               poly.push_back(gpt);
-            }
-
-            //right
-            for(delta = stepSizey; delta<h1; delta+=stepSizey)
-            {
-               localToWorld(ossimDpt(w1, delta), gpt);
-               if(!gpt.isLatLonNan())
-               {
-                  poly.push_back(gpt);
-               }
-            }
-            localToWorld(ossimDpt(w1, h1), gpt);
-            if(!gpt.isLatLonNan())
-            {
-               poly.push_back(gpt);
-            }
-
-            //bottom
-            for(delta = w1; delta > 0;delta-=stepSizex)
-            {
-               localToWorld(ossimDpt(delta, h1), gpt);
-               if(!gpt.isLatLonNan())
-               {
-                  poly.push_back(gpt);
-               }
-            }
-            localToWorld(ossimDpt(0, h1), gpt);
-            if(!gpt.isLatLonNan())
-            {
-               poly.push_back(gpt);
-            }
-
-            //left
-            for(delta = h1; delta > 0;delta-=stepSizey)
-            {
-               localToWorld(ossimDpt(0, delta), gpt);
-               if(!gpt.isLatLonNan())
-               {
-                  poly.push_back(gpt);
-               }
-            }
-            localToWorld(ossimDpt(0, 0), gpt);
-            if(!gpt.isLatLonNan())
-            {
-               poly.push_back(gpt);
-            }
-            
-         }
-
-         result = poly;
-         if(!result.isValid()) result.setToBufferedShape();
+         result.push_back(initialPoint);
+         initialPoint.x+=deltaLeft.x;
+         initialPoint.y+=deltaLeft.y;
       }
    }
+   else // If not enough partitions then we will just use the corners
+   {
+      result.resize(4);
+
+      result[0] = imageRect.ul();
+      result[1] = imageRect.ur();
+      result[2] = imageRect.lr();
+      result[3] = imageRect.ll();
+   }   
+
+}
+
+void ossimImageGeometry::calculatePolyBounds(ossimPolyArea2d& result, ossim_uint32 partitions)const
+{
+   std::vector<ossimDpt> points;
+   std::vector<ossimGpt> gPoints;
+   std::vector<ossimPolygon> polyList;
+   ossimDrect imageRect;
+   ossimGpt cg;
+   ossimDrect worldRect(ossimDpt(-180,-90),
+                        ossimDpt(-180,90),
+                        ossimDpt(180,90),
+                        ossimDpt(180,-90));
+   getBoundingRect(imageRect);
+   bool affectedByElevation = isAffectedByElevation();
+   bool crossesDateline     = getCrossesDateline();
+   result.clear();
+   if(imageRect.hasNans())
+   {
+      // error out
+      return;
+   }
+   localToWorld(imageRect.midPoint(), cg);
+   if(cg.isLatNan() || cg.isLonNan())
+   {
+      return;
+   }
+   ossim_int32 sgn = static_cast<ossim_int32>(
+                                ossim::sgn(cg.lond()));
+
+   getImageEdgePoints(points, partitions);
+   if(points.empty())
+   {
+      return;
+   }
+
+   if(crossesDateline)
+   {
+      for(std::vector<ossimDpt>::const_iterator iter=points.begin(); 
+          iter != points.end();
+          ++iter)
+      {
+         ossimGpt testGpt;
+         localToWorld(*iter, testGpt); 
+
+         if(!testGpt.isLatNan()&&!testGpt.isLonNan())
+         {
+            bool needToShift =( (std::fabs(testGpt.lond()-cg.lond()) > 180.0)||
+                                (std::fabs(testGpt.lond()>180.0)) ); 
+            if(needToShift)
+            {
+               testGpt.lond(testGpt.lond()+sgn*360);
+            }
+            gPoints.push_back(testGpt);        
+         }
+      }
+      // now clip the ground list to the full ground rect
+      //
+      ossimPolygon tempPoly(gPoints);
+      tempPoly.clipToRect(polyList, worldRect);
+      for(std::vector<ossimPolygon>::const_iterator iter = polyList.begin();
+         iter!=polyList.end();++iter)
+      {
+         result.add(ossimPolyArea2d(*iter));
+      }
+      // now shift gpoints to the other side
+      //
+      for(std::vector<ossimGpt>::iterator iter = gPoints.begin();
+          iter != gPoints.end();
+          ++iter)
+      {
+        (*iter).lond((*iter).lond()+(-sgn*360));
+      }
+      tempPoly = gPoints;
+      polyList.clear();
+      tempPoly.clipToRect(polyList, worldRect);
+      for(std::vector<ossimPolygon>::const_iterator iter = polyList.begin();
+         iter!=polyList.end();++iter)
+      {
+         result.add(ossimPolyArea2d(*iter));
+      }
+   }
+   else
+   {
+      ossim_uint32 idx=0;
+      for(std::vector<ossimDpt>::const_iterator iter=points.begin(); 
+          iter != points.end();++iter)
+      {
+         ossimGpt testGpt;
+         localToWorld(*iter, testGpt); 
+
+         if(!testGpt.isLatNan()&&!testGpt.isLonNan())
+         {
+            gPoints.push_back(testGpt);        
+         }
+      }
+      result.add(ossimPolygon(gPoints));
+   }
+   if(!result.isValid()) result.setToBufferedShape();
 }
 
 

@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author:  David Burken
 //
@@ -13,13 +13,10 @@
 //   data needed for loading.
 // - Currently only version 6 is supported.
 //
-//*******************************************************************
-//  $Id: ossimCcfHead.h 10265 2007-01-14 19:18:43Z dburken $
+//---
+//  $Id$
 #ifndef ossimCcfHead_HEADER
-#define ossimCcfHead_HEADER
-
-#include <iosfwd>
-#include <vector>
+#define ossimCcfHead_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorStatusInterface.h>
@@ -27,6 +24,7 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimIosFwd.h>
 #include <memory>
+#include <vector>
 
 class ossimIrect;
 

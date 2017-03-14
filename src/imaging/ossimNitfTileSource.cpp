@@ -257,43 +257,45 @@ bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
                   << "\n";
             }
          }
-            
-         if( !hdr->isCompressed() )
+         if(hdr->isValid())
          {
-            // Skip entries tagged NODISPLAY, e.g. cloud mask entries.
-            if (hdr->getRepresentation() != "NODISPLY")
+            if( !hdr->isCompressed() )
             {
-               theEntryList.push_back(i);
-               theNitfImageHeader.push_back(hdr);
-            }
-            else 
-            {
-               ossimString cat = hdr->getCategory().trim().downcase();
-               // this is an NGA Highr Resoluion Digital Terrain Model NITF format
-               if(cat == "dtem")
+               // Skip entries tagged NODISPLAY, e.g. cloud mask entries.
+               if (hdr->getRepresentation() != "NODISPLY")
                {
                   theEntryList.push_back(i);
                   theNitfImageHeader.push_back(hdr);
                }
-            }
+               else 
+               {
+                  ossimString cat = hdr->getCategory().trim().downcase();
+                  // this is an NGA Highr Resoluion Digital Terrain Model NITF format
+                  if(cat == "dtem")
+                  {
+                     theEntryList.push_back(i);
+                     theNitfImageHeader.push_back(hdr);
+                  }
+               }
 
-         }
-         else if ( canUncompress(hdr.get()) )
-         {
-            theEntryList.push_back(i);
-            theCacheEnabledFlag = true;
-            theNitfImageHeader.push_back(hdr);
-         }
-         else
-         {
-            if(traceDebug())
-            {
-               ossimNotify(ossimNotifyLevel_DEBUG)
-                  << "Entry " << i
-                  <<" has an unsupported compression code = "
-                  << hdr->getCompressionCode() << std::endl;
             }
-         }
+            else if ( canUncompress(hdr.get()) )
+            {
+               theEntryList.push_back(i);
+               theCacheEnabledFlag = true;
+               theNitfImageHeader.push_back(hdr);
+            }
+            else
+            {
+               if(traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_DEBUG)
+                     << "Entry " << i
+                     <<" has an unsupported compression code = "
+                     << hdr->getCompressionCode() << std::endl;
+               }
+            }
+         }   
          
       } // End: image header loop
 
@@ -436,42 +438,55 @@ bool ossimNitfTileSource::parseFile()
          }
       }
 
-      if( !hdr->isCompressed() )
+      if(hdr->isValid())
       {
-         // Skip entries tagged NODISPLAY, e.g. cloud mask entries.
-         if (hdr->getRepresentation() != "NODISPLY")
+         if( !hdr->isCompressed() )
          {
-            theEntryList.push_back(i);
-            theNitfImageHeader.push_back(hdr);
-         }
-         else 
-         {
-            ossimString cat = hdr->getCategory().trim().downcase();
-            // this is an NGA Highr Resoluion Digital Terrain Model NITF format
-            if(cat == "dtem")
+            // Skip entries tagged NODISPLAY, e.g. cloud mask entries.
+            if (hdr->getRepresentation() != "NODISPLY")
             {
                theEntryList.push_back(i);
                theNitfImageHeader.push_back(hdr);
             }
-         }
+            else 
+            {
+               ossimString cat = hdr->getCategory().trim().downcase();
+               // this is an NGA Highr Resoluion Digital Terrain Model NITF format
+               if(cat == "dtem")
+               {
+                  theEntryList.push_back(i);
+                  theNitfImageHeader.push_back(hdr);
+               }
+            }
 
-      }
-      else if ( canUncompress(hdr.get()) )
-      {
-         theEntryList.push_back(i);
-         theCacheEnabledFlag = true;
-         theNitfImageHeader.push_back(hdr);
+         }
+         else if ( canUncompress(hdr.get()) )
+         {
+            theEntryList.push_back(i);
+            theCacheEnabledFlag = true;
+            theNitfImageHeader.push_back(hdr);
+         }
+         else
+         {
+            if(traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "Entry " << i
+                  <<" has an unsupported compression code = "
+                  << hdr->getCompressionCode() << std::endl;
+            }
+            return false;
+         }
       }
       else
       {
          if(traceDebug())
          {
-            ossimNotify(ossimNotifyLevel_DEBUG)
-               << "Entry " << i
-               <<" has an unsupported compression code = "
-               << hdr->getCompressionCode() << std::endl;
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "Entry " << i
+                  <<" has an invalid image header\n";
+
          }
-         return false;
       }
    }
 

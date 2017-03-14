@@ -56,6 +56,8 @@ public:
    virtual std::ostream& print(std::ostream& out) const;
 
    virtual bool getKeywordlist(ossimKeywordlist& kwl) const;
+   virtual bool getKeywordlistDataset(ossimKeywordlist& kwl, const std::string& datasetName) const;
+   virtual bool getKeywordlistGroup(ossimKeywordlist& kwl, const std::string& groupName) const;
 
    // Methods for printing collections. These are public to enable dumping debug information:
    std::ostream& printSubGroups (std::ostream& out, const H5::Group& obj,    const ossimString& lm=ossimString()) const;
@@ -77,13 +79,28 @@ private:
 
    void dumpDataset(const H5::DataSet& dataset, const std::string& prefix) const;
 
-   void dumpCompoundTypeInfo(const H5::DataSet& dataset, const std::string& prefix) const;
+   void dumpCompound(const H5::DataSet& dataset,
+                     const H5::CompType& compound,
+                     const std::string& prefix)const;
+   void dumpCompoundTypeInfo(const H5::CompType& compound, 
+                             const std::string& prefix) const;
    void dumpEnumTypeInfo(H5::EnumType datatype, const std::string& prefix) const;
    void dumpArrayTypeInfo(H5::ArrayType datatype, const std::string& prefix) const;
    void dumpNumericalTypeInfo(const H5::DataSet& dataset,
                               ossimByteOrder order,
                               const std::string& prefix) const;
-
+   void dumpIntType( const H5::IntType& dataType,
+                     const char* dataPtr,
+                     const std::string& prefix)const;
+   void dumpFloatType(const H5::FloatType& dataType,
+                                  const char* dataPtr,
+                                  const std::string& prefix)const;
+   void dumpStringType(const H5::StrType& dataType,
+                       const char* dataPtr,
+                       const std::string& prefix)const;
+   void dumpArrayType( H5::ArrayType& dataType,
+                       const char* dataPtr,
+                       const std::string& prefix)const;
    void dumpNumerical(const H5::DataSet& dataset,
                       const char* dataPtr,
                       const std::string& prefix) const;
@@ -108,6 +125,7 @@ private:
 
    ossimRefPtr<ossimHdf5>  m_hdf5;
    mutable ossimKeywordlist m_kwl;
+   mutable bool m_byteOrder;
 };
 
 #endif

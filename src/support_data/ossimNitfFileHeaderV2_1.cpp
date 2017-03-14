@@ -383,12 +383,24 @@ void ossimNitfFileHeaderV2_1::parseStream(ossim::istream& in)
          current = in.tellg();
       }
       theHeaderSize += extendedHeaderDataLength;
-      //in.seekg(start + extendedHeaderDataLength);
+      in.seekg(start + extendedHeaderDataLength);
    }
 
    // this need to be re-thought
    initializeAllOffsets();
    readOverflowTags(in);
+}
+
+bool ossimNitfFileHeaderV2_1::isValid()const
+{
+   bool result = ossimNitfFileHeaderV2_X::isValid();
+
+   if(result)
+   {
+
+   }
+
+   return result;
 }
 
 void ossimNitfFileHeaderV2_1::readOverflowTags(ossim::istream& in)

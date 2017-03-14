@@ -29,7 +29,8 @@ public:
    {
       UKNOWN     = 0,
       NATIVE     = 1,
-      NORMALIZED = 2
+      MIN_MAX    = 2,  // the data is native but must use min max for scale
+      NORMALIZED = 3
    };
 
    /** default constructor */

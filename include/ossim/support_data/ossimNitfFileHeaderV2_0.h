@@ -220,6 +220,11 @@ public:
    virtual ossimString getOriginatorsName()const;
    virtual ossimString getOriginatorsPhone()const;
 
+   /**
+   * isValid will test if the fields are valid and will return true or false.
+   */
+   virtual bool isValid()const;
+
    ossimString getComplianceLevel()const;
    ossimString getSecurityDowngrade()const;
    ossimString getDowngradingEvent()const;

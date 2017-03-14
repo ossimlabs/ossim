@@ -41,12 +41,13 @@ class OSSIMDLLEXPORT ossimHistogramRemapper : public ossimTableRemapper
 public:
    enum StretchMode
    {
-      LINEAR_ONE_PIECE      = 0,
-      LINEAR_1STD_FROM_MEAN = 1,
-      LINEAR_2STD_FROM_MEAN = 2,
-      LINEAR_3STD_FROM_MEAN = 3,
-      LINEAR_AUTO_MIN_MAX   = 4,
-      STRETCH_UNKNOWN = 5 // Alway last as used for number of modes method.
+      LINEAR_ONE_PIECE       = 0,
+      LINEAR_1STD_FROM_MEAN  = 1,
+      LINEAR_2STD_FROM_MEAN  = 2,
+      LINEAR_3STD_FROM_MEAN  = 3,
+      LINEAR_AUTO_MIN_MAX    = 4,
+      LINEAR_AUTO_PERCENTILE = 5,
+      STRETCH_UNKNOWN = 6 // Alway last as used for number of modes method.
    };
 
    /** default constructor */
@@ -494,8 +495,10 @@ private:
    void buildTable();
    void buildLinearTable();
    void buildAutoLinearMinMaxTable();
+   void buildAutoLinearPercentileTable();
    template <class T> void buildLinearTable(T dummy);
    template <class T> void buildAutoLinearMinMaxTableTemplate(T dummy);
+   template <class T> void buildAutoLinearPercentileTableTemplate(T dummy);
 
    /**
     * Sets clip points using mean and standard deviations then calls

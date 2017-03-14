@@ -327,6 +327,9 @@ public:
 
    bool getCrossesDateline()const;
    
+
+   void getImageEdgePoints(std::vector<ossimDpt>& result, ossim_uint32 partitions = 25)const;
+
    /**
    * This is the first stage implementation.   It will determine if it crosses the dateline
    * and do a special multi polygon for the ossimPolyArea2d result.  For each edge
@@ -341,14 +344,14 @@ public:
    *                   ossim_float64 lat = (start.y+deltaPoint.y*t);
    *
    * If we do not cross the dateline then if the image is affected by elevation (i.e. a sensor model) then we use the partitions
-   * paraemter to calculate that number of partitions to sample along each edge.
+   * parameter to calculate that number of partitions to sample along each edge.
    *
    * if The geometry is not affected by elevation then we just use the corner points and ignore the partitions parameter
    *
    * @param poly holds the resulting polygon.  This could be a MultiPolygon depending on the geometry
    * @param partitions These are the number of steps you want when walking the border.
    */
-   void calculatePolyBounds(ossimPolyArea2d& result, ossim_int32 partitions = 25)const;
+   void calculatePolyBounds(ossimPolyArea2d& result, ossim_uint32 partitions = 25)const;
 
    /**
     * @brief Get the bounding rect of (0, 0) to (imageSize.x-1, imageSize.y-1).

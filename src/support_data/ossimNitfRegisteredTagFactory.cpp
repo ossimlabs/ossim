@@ -42,6 +42,8 @@
 #include <ossim/support_data/ossimNitfRsmidaTag.h>
 #include <ossim/support_data/ossimNitfRsmpcaTag.h>
 #include <ossim/support_data/ossimNitfRsmpiaTag.h>
+#include <ossim/support_data/ossimNitfStreobTag.h>
+
 
 RTTI_DEF1(ossimNitfRegisteredTagFactory, "ossimNitfRegisteredTagFactory", ossimNitfTagFactory);
 
@@ -64,6 +66,7 @@ static const char RPCB_TAG[]                 = "RPC00B";
 static const char RPCA_TAG[]                 = "RPC00A";
 static const char SENSRA_TAG[]               = "SENSRA";
 static const char STDIDC_TAG[]               = "STDIDC";
+static const char STREOB_TAG[]               = "STREOB";
 static const char USE00A_TAG[]               = "USE00A";
 static const char HISTOA_TAG[]               = "HISTOA";
 static const char CSCCGA_TAG[]               = "CSCCGA";
@@ -73,7 +76,6 @@ static const char RSMECA_TAG[]               = "RSMECA";
 static const char RSMIDA_TAG[]               = "RSMIDA";
 static const char RSMPCA_TAG[]               = "RSMPCA";
 static const char RSMPIA_TAG[]               = "RSMPIA";
-
 ossimNitfRegisteredTagFactory::ossimNitfRegisteredTagFactory()
 {
 }
@@ -155,39 +157,43 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    }
    else if(tagName == RPCB_TAG)
    {
-      return new ossimNitfRpcBTag;
+      return new ossimNitfRpcBTag();
    }
    else if(tagName == RPCA_TAG)
    {
-      return new ossimNitfRpcATag;
+      return new ossimNitfRpcATag();
    }
    else if (tagName == SENSRA_TAG)
    {
-      return new ossimNitfSensraTag;
+      return new ossimNitfSensraTag();
    }
    else if (tagName == STDIDC_TAG)
    {
-      return new ossimNitfStdidcTag;
+      return new ossimNitfStdidcTag();
+   }
+   else if (tagName == STREOB_TAG)
+   {
+      return new ossimNitfStreobTag();
    }
    else if (tagName == USE00A_TAG)
    {
-      return new ossimNitfUse00aTag;
+      return new ossimNitfUse00aTag();
    }
    else if(tagName == HISTOA_TAG)
    {
-      return new ossimNitfHistoaTag;
+      return new ossimNitfHistoaTag();
    }
    else if(tagName == CSCCGA_TAG)
    {
-      return new ossimNitfCsccgaTag;
+      return new ossimNitfCsccgaTag();
    }
    else if(tagName == CSPROA_TAG)
    {
-      return new ossimNitfCsproaTag;
+      return new ossimNitfCsproaTag();
    }
    else if(tagName == EXOPTA_TAG)
    {
-      return new ossimNitfExoptaTag;
+      return new ossimNitfExoptaTag();
    }
    else if(tagName == RSMECA_TAG)
    {

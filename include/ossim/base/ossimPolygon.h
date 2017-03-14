@@ -42,6 +42,7 @@ public:
    ossimPolygon();
    ossimPolygon(const vector<ossimIpt>& polygon);
    ossimPolygon(const vector<ossimDpt>& polygon);
+   ossimPolygon(const vector<ossimGpt>& polygon);
    ossimPolygon(int numVertices, const ossimDpt* vertex_array);
 
    ossimPolygon(const ossimPolygon& copy_this);
@@ -166,6 +167,7 @@ public:
     */
    const ossimPolygon& operator= (const ossimPolygon& copy_this);
    const ossimPolygon& operator= (const vector<ossimDpt>& vertexList);
+   const ossimPolygon& operator= (const vector<ossimGpt>& vertexList);
    const ossimPolygon& operator= (const vector<ossimIpt>& vertexList);
    const ossimPolygon& operator= (const ossimIrect& rect);
    const ossimPolygon& operator= (const ossimDrect& rect);

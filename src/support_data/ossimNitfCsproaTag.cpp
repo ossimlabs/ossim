@@ -40,7 +40,7 @@ std::ostream& ossimNitfCsproaTag::print(std::ostream& out,
                             const std::string& prefix) const
 {
    std::string pfx = prefix;
-   pfx += getTagLength();
+   pfx += getTagName();
    pfx += ".";
    out << setiosflags(ios::left)
        << pfx << std::setw(24) << "CETAG:"      << getTagName() << "\n"

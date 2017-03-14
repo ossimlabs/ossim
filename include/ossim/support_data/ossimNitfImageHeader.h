@@ -71,6 +71,11 @@ public:
    virtual bool isCompressed()const=0;
    virtual bool isEncrypted()const=0;
 
+   /**
+   * isValid will test if the fields are valid and will return true or false.
+   */
+   virtual bool isValid()const=0;
+
    virtual ossimString getCompressionCode()const=0;
    virtual ossimString getCompressionRateCode()const=0;
    virtual ossim_uint32 getDisplayLevel()const=0;

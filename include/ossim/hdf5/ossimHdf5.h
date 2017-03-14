@@ -43,6 +43,7 @@ public:
     * @return True if result valid */
    bool getRoot(H5::Group& root) const;
 
+
    /** Assigns list of groups under specified group.
     * @param recursive If true, recursively visits all subgroups
     * @return True if result valid */
@@ -64,7 +65,7 @@ public:
                                std::vector<H5::DataSet>& datasetList,
                                bool recursive=false);
 
-   /** Assigns map of attributes (key, value) for the specified object.
+   /** 
     * @param objPath Either relative or absolute path in file to object.
     * @return True if result valid */
    static bool getAttributes(const H5::H5Object& obj, std::vector<H5::Attribute>& attrList);
@@ -74,28 +75,39 @@ public:
     * @param group If null, implies root group.
     * @param recursive If true, recursively visits all subgroups.
     * @return result Set to valid dataset object if found (caller assumes ownership), else NULL. */
-   H5::Group* findGroupByName(const char* group_name,
+   H5::Group* findGroupByName(const std::string& group_name,
                               const H5::Group* parent_group=0,
-                              bool recursive=false);
+                              bool recursive=false)const;
 
    /** Finds a dataset by name. The first object with specified name (can be relative path -- a
     * naive string comparison is performed) under the specified group is returned.
     * @param group If null, implies root group.
     * @param recursive If true, recursively visits all subgroups.
-    * @return result Set to valid dataset object if found (caller assumes ownership), else NULL. */
-   H5::DataSet* findDatasetByName(const char* dataset_name,
+    * @return result Set to valid dataset object if found (caller assumes ownership), else NULL.
+    *         The return value must be deleted by the caller  
+    */
+   H5::DataSet* findDatasetByName(const std::string& dataset_name,
                                   const H5::Group* group=0,
-                                  bool recursive=false);
+                                  bool recursive=false)const ;
+
 
    static ossimByteOrder getByteOrder( const H5::AbstractDs* obj );
-
+   static ossimByteOrder getByteOrder( const H5::AtomType& obj );
    static std::string getDatatypeClassType( ossim_int32 type );
 
    static void getExtents( const H5::DataSet& dataset, std::vector<ossim_uint32>& extents );
 
    static ossimScalarType getScalarType( const H5::DataSet& dataset );
    static ossimScalarType getScalarType( const H5::DataType& datatype );
-
+   static bool floatTypeToString(std::string& result,
+                        const H5::FloatType& dataType,
+                        const char* dataPtr);
+   static bool intTypeToString(std::string& result,
+                        const H5::IntType& dataType,
+                        const char* dataPtr);
+   static bool stringTypeToString(std::string& result,
+                        const H5::StrType& dataType,
+                        const char* dataPtr);
 private:
    ossimFilename m_filename;
    H5::H5File* m_h5File;

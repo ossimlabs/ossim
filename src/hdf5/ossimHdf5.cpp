@@ -11,6 +11,7 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimEndian.h>
 #include <string>
 
 using namespace H5;
@@ -88,6 +89,7 @@ bool ossimHdf5::close()
    return success;
 }
 
+
 bool ossimHdf5::getRoot(Group& root) const
 {
    if (!m_h5File)
@@ -151,7 +153,9 @@ bool ossimHdf5::getDatasets(H5::Group group, vector<DataSet>& datasetList,
    datasetList.clear();
    vector<Group> groupList;
    if (recursive)
+   {
       getChildGroups(group, groupList, true);
+   }
    groupList.insert(groupList.begin(), group);
 
    bool success = true;
@@ -244,9 +248,9 @@ bool ossimHdf5::getAttributes(const H5Object& obj, vector<Attribute>& attrList)
 }
 
 
-H5::Group* ossimHdf5::findGroupByName(const char* name, const H5::Group* parent, bool recursive)
+H5::Group* ossimHdf5::findGroupByName(const std::string& name, const H5::Group* parent, bool recursive)const
 {
-   if (!name)
+   if (name.empty())
       return NULL;
 
    H5::Group baseGroup;
@@ -288,10 +292,10 @@ H5::Group* ossimHdf5::findGroupByName(const char* name, const H5::Group* parent,
    return named_group;
 }
 
-H5::DataSet* ossimHdf5::findDatasetByName(const char* name, const H5::Group* group,
-                                          bool recursive)
+H5::DataSet* ossimHdf5::findDatasetByName(const std::string& name, const H5::Group* group,
+                                          bool recursive)const
 {
-   if (!name)
+   if (name.empty())
       return NULL;
 
    H5::Group baseGroup;
@@ -304,12 +308,10 @@ H5::DataSet* ossimHdf5::findDatasetByName(const char* name, const H5::Group* gro
    {
       baseGroup = *group;
    }
-
    H5::DataSet* named_dataset = 0;
    vector<DataSet> datasetList;
    if (!getDatasets(baseGroup, datasetList, recursive))
       return NULL;
-
    try
    {
       std::vector<H5::DataSet>::iterator dataset = datasetList.begin();
@@ -372,6 +374,23 @@ ossimByteOrder ossimHdf5::getByteOrder( const H5::AbstractDs* obj )
    }
    return byteOrder;
 }
+
+ossimByteOrder ossimHdf5::getByteOrder( const H5::AtomType& obj )
+{
+   ossimByteOrder byteOrder = ossim::byteOrder();
+   H5T_order_t order = obj.getOrder();
+   if ( order == H5T_ORDER_LE )
+   {
+      byteOrder = OSSIM_LITTLE_ENDIAN;
+   }
+   else if ( order == H5T_ORDER_BE )
+   {
+      byteOrder = OSSIM_BIG_ENDIAN;
+   }
+
+   return byteOrder;
+}
+
 
 std::string ossimHdf5::getDatatypeClassType( ossim_int32 type )
 {
@@ -555,3 +574,203 @@ ossimScalarType ossimHdf5::getScalarType( const H5::DataSet& dataset )
    return scalar;
 }
 
+bool ossimHdf5::floatTypeToString(std::string& result,
+                                      const H5::FloatType& dataType,
+                                      const char* dataPtr)
+{
+   char* buf = const_cast<char*>(dataPtr);
+   ossim_uint32 dataSize = dataType.getSize();
+   ossimByteOrder order = getByteOrder(dataType);
+   ossimEndian endian;
+   bool swapOrder = (order!=ossim::byteOrder());
+   bool returnValue = true;
+   switch(dataSize)
+   {
+      case 4:
+      {
+         ossim_float32* float_value=0;
+         float_value = reinterpret_cast<ossim_float32*>(buf);
+         if (swapOrder)
+            endian.swap(*float_value);
+         result = ossimString::toString(*float_value).string();
+         break;
+      }
+      case 8:
+      {
+         ossim_float64* float_value=0;
+         float_value = reinterpret_cast<ossim_float64*>(buf);
+         if (swapOrder)
+            endian.swap(*float_value);
+         result = ossimString::toString(*float_value).string();
+         break;
+      }
+      default:
+      {
+         returnValue = false;
+         break;
+      }
+   }
+   return returnValue;
+}
+
+bool ossimHdf5::intTypeToString(std::string& result,
+                                    const H5::IntType& dataType,
+                                    const char* dataPtr)
+{
+   char* buf = const_cast<char*>(dataPtr);
+   ossim_uint32 signType = H5Tget_sign(dataType.getId());
+   ossim_uint32 dataSize = dataType.getSize();
+   ossimByteOrder order = getByteOrder(dataType);
+   ossimEndian endian;
+   bool swapOrder = (order!=ossim::byteOrder());
+   bool returnValue = true;
+   switch(dataSize)
+   {
+      case 1: // one byte integer
+      {
+         switch(signType)
+         {
+            case H5T_SGN_NONE:
+            {
+              ossim_uint8* intValue=0;
+              intValue = reinterpret_cast<ossim_uint8*>(buf);
+              result = ossimString::toString(*intValue).string();
+
+               break;
+            }
+            case H5T_SGN_2:
+            {
+              ossim_int8* intValue=0;
+              intValue = reinterpret_cast<ossim_int8*>(buf);
+              result = ossimString::toString(*intValue).string();
+
+              break;
+            }
+            default:
+            {
+               returnValue = false;
+               break;
+            }
+         }
+         break;
+      }
+      case 2:  // 2 byte integer
+      {
+         switch(signType)
+         {
+            case H5T_SGN_NONE: // unsigned
+            {
+              ossim_uint16* intValue=0;
+              intValue = reinterpret_cast<ossim_uint16*>(buf);
+              if (swapOrder)
+                 endian.swap(*intValue);
+              result = ossimString::toString(*intValue).string();
+
+               break;
+            }
+            case H5T_SGN_2: // Signed
+            {
+              ossim_int16* intValue=0;
+              intValue = reinterpret_cast<ossim_int16*>(buf);
+              if (swapOrder)
+                 endian.swap(*intValue);
+              result = ossimString::toString(*intValue).string();
+              break;
+            }
+            default:
+            {
+               returnValue = false;
+               break;
+            }
+
+         }
+         break;
+      }
+      case 4: // 4 byte integer
+      {
+         switch(signType)
+         {
+            case H5T_SGN_NONE:
+            {
+              ossim_uint32* intValue=0;
+              intValue = reinterpret_cast<ossim_uint32*>(buf);
+              if (swapOrder)
+                 endian.swap(*intValue);
+              result = ossimString::toString(*intValue).string();
+
+               break;
+            }
+            case H5T_SGN_2:
+            {
+              ossim_int32* intValue=0;
+              intValue = reinterpret_cast<ossim_int32*>(buf);
+              if (swapOrder)
+                 endian.swap(*intValue);
+              result = ossimString::toString(*intValue).string();
+              break;
+            }
+            default:
+            {
+               returnValue = false;
+               break;
+            }
+         }
+         break;
+      }
+      case 8: // 8 byte integer
+      {
+         switch(signType)
+         {
+            case H5T_SGN_NONE:
+            {
+              ossim_uint64* intValue=0;
+              intValue = reinterpret_cast<ossim_uint64*>(buf);
+              if (swapOrder)
+                 endian.swap(*intValue);
+              result = ossimString::toString(*intValue).string();
+
+               break;
+            }
+            case H5T_SGN_2:
+            {
+              ossim_int64* intValue=0;
+              intValue = reinterpret_cast<ossim_int64*>(buf);
+              if (swapOrder)
+                 endian.swap(*intValue);
+              result = ossimString::toString(*intValue).string();
+              break;
+            }
+            default:
+            {
+               returnValue = false;
+               break;
+            }
+         }
+         break;
+      }
+      default:
+      {
+         returnValue = false;
+      }
+   }
+
+   return returnValue;
+}
+
+bool ossimHdf5::stringTypeToString(std::string& result,
+                                    const H5::StrType& dataType,
+                                    const char* dataPtr)
+{
+   bool returnValue = false;
+   const char* startPtr = dataPtr;
+   const char* endPtr   = dataPtr;
+   const char* maxPtr   = dataPtr + dataType.getSize();
+   if(dataPtr)
+   {
+      while((endPtr != maxPtr)&&(*endPtr!='\0')) ++endPtr;
+      result = std::string(startPtr, endPtr);
+      bool returnValue = true;
+   }
+
+   return returnValue;
+}

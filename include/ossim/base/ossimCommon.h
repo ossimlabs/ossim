@@ -518,6 +518,9 @@ namespace ossim
    template <>
    OSSIM_DLL void toSimpleStringList(ossimString& result,
                                      const std::vector<ossim_float32>& valuesList);
+   template <>
+   OSSIM_DLL void toSimpleStringList(ossimString& result,
+                                     const std::vector<ossimString>& valuesList);
    
    /**
     * Generic function to extract a list of values into a vector of string where
@@ -606,6 +609,13 @@ namespace ossim
     */
    OSSIM_DLL bool toSimpleVector(std::vector<ossim_int8>& result,
                                  const ossimString& stringOfPoints);
+
+    /**
+    *  Takes input format of the form:
+    *  (value1,value2,...,valueN)
+    */
+  OSSIM_DLL bool toSimpleVector(std::vector<ossimString>& result,
+                                 const ossimString& stringOfStrings);
    
         // lex str into tokens starting at position start using whitespace  
 	//    chars as delimiters and quotes[0] and quotes[1] as the opening
