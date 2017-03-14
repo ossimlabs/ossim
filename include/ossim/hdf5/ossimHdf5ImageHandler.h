@@ -136,7 +136,7 @@ public:
 
    /** Close method. */
    virtual void close();
-
+   virtual void loadMetaData();
    /**
     * @return The number of entries (images) in the image file.
     */

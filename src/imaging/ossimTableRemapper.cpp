@@ -416,8 +416,13 @@ void ossimTableRemapper::remapFromNormalizedTable(
          buf[pixel] = (p >= 0.0) ? ( (p <=1.0) ? p : 1) : 0.0;
       }
 
+      // (GP)this is not for th table so this offset appears wrong
+      // commenting this out and replacing with t bin count
       // Go to next band.
-      rt += BAND_OFFSET;
+      //rt += BAND_OFFSET;
+
+
+      rt += theTableBinCount;
       buf += PPB;
    }
    

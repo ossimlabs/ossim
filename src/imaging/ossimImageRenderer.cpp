@@ -36,7 +36,8 @@
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <iostream>
-using namespace std;
+#include <stack>
+// using namespace std;
 
 #ifdef OSSIM_ID_ENABLED
 static const char OSSIM_ID[] = "$Id: ossimImageRenderer.cpp 23663 2015-12-11 21:10:54Z dburken $";
@@ -300,17 +301,24 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRe
       rect.m_viewBounds = m_viewBounds;
       rect.transformViewToImage();
 
-      if(rect.imageIsNan())
+      if(rect.imageHasNans())
       {
         if(rect.m_viewBounds->intersects(rect.getViewRect()))
         {
           result.push_back(rect);
         }
       }
-      else
-      {
-        result.push_back(rect);
-      }
+      // if(rect.imageIsNan())
+      // {
+      //   if(rect.m_viewBounds->intersects(rect.getViewRect()))
+      //   {
+      //     result.push_back(rect);
+      //   }
+      // }
+      // else
+      // {
+      //   result.push_back(rect);
+      // }
     }
   }
   // horizontal split if only the upper left and lower left 
@@ -376,7 +384,7 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::tooBig()const
 {
   ossimDrect vRect = getViewRect();
 
-  return ((vRect.width() > 64) || (vRect.height() > 64));
+  return ((vRect.width() > 32) || (vRect.height() > 32));
 }
 
 ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
@@ -384,16 +392,16 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
   ossim_uint16 result = SPLIT_NONE;
   ossimDrect vRect = getViewRect();
 
-  if(imageIsNan())
+  if(imageHasNans()||tooBig())
   {
-    if(m_viewBounds->intersects(getViewRect()))
-    {
-//      result = SPLIT_ALL;
-    }
-    else
-    {
-      return result;
-    }
+     if(m_viewBounds->intersects(getViewRect()))
+     {
+      result = SPLIT_ALL;
+     }
+     else
+     {
+        return result;
+     }
   }
   /*
   if(result != SPLIT_ALL)
@@ -1140,7 +1148,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 //      return m_Tile;
 //   }
    recursiveResample(m_Tile, subRectInfo, 1);
-   
+  
    if(m_Tile.valid())
    {
       m_Tile->validate();
@@ -1157,14 +1165,65 @@ void ossimImageRenderer::recursiveResample(ossimRefPtr<ossimImageData> outputDat
                                            const ossimRendererSubRectInfo& rectInfo,
                                            ossim_uint32 level)
 {
+  // Removed recursion and just use the std::stack.
+  //
+  std::stack<ossimRendererSubRectInfo> rectStack;
+  rectStack.push(rectInfo);
+
+  while(!rectStack.empty())
+  {
+    ossimRendererSubRectInfo currentRectInfo = rectStack.top();
+    ossimIrect tempViewRect = currentRectInfo.getViewRect();
+    rectStack.pop();
+    if(m_viewArea.intersects(tempViewRect))
+    {
+      if(tempViewRect.width() <2 ||
+          tempViewRect.height() <2)
+      {
+          if(!currentRectInfo.imageHasNans())
+          {
+             fillTile(outputData,
+                      currentRectInfo);
+          }
+      }
+      else
+      {
+        ossim_uint32 idx = 0;
+        std::vector<ossimRendererSubRectInfo> splitRects;
+        currentRectInfo.splitView(splitRects);
+        if(!splitRects.empty())
+        {
+          for(idx = 0; idx < splitRects.size();++idx)
+          {
+            if(m_viewArea.intersects(splitRects[idx].getViewRect()))
+            {
+              rectStack.push(splitRects[idx]);
+            }
+            // recursiveResample(outputData,
+            //                   splitRects[idx],
+            //                   level + 1);
+          }
+        }
+        else
+        {
+          if(!currentRectInfo.imageHasNans())
+          {
+            fillTile(outputData,
+                    currentRectInfo);
+          }
+        }
+      }
+
+    }
+  }
+  #if 0
    ossimIrect tempViewRect = rectInfo.getViewRect();
-   //std::cout << rectInfo << std::endl;
    if(rectInfo.imageIsNan())
    {
-    if(!rectInfo.tooBig()) return;
+      return;
    } 
 
-  if(tempViewRect.width() <2 &&
+  if(tempViewRect.width() <2 ||
       tempViewRect.height() <2)
   {
       if(!rectInfo.imageHasNans())
@@ -1195,6 +1254,7 @@ void ossimImageRenderer::recursiveResample(ossimRefPtr<ossimImageData> outputDat
     fillTile(outputData,
             rectInfo);
   }
+  #endif
 }
 
 #define RSET_SEARCH_THRESHHOLD 0.1

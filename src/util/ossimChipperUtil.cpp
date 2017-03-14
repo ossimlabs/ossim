@@ -252,7 +252,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--histogram-llwh", "<latitude>,<longitude>,<width>,<height>\nSpecify the region of interest(roi) to compute histogram from. Latitude and longitude will be roi center space with width and height in pixels. Comma separated, no spaces.");
 
-   au->addCommandLineOption("--histogram-op", "<operation>\nHistogram operation to perform. Valid operations are \"auto-minmax\", \"std-stretch-1\", \"std-stretch-2\" and \"std-stretch-3\".");
+   au->addCommandLineOption("--histogram-op", "<operation>\nHistogram operation to perform. Valid operations are \"auto-minmax\", \"auto-percentile\", \"std-stretch-1\", \"std-stretch-2\" and \"std-stretch-3\".");
 
    au->addCommandLineOption("--image-space-scale","<x> <y>\nSpecifies an image space scale for x and y direction. \"chip\" operation only.");
 
@@ -5548,6 +5548,10 @@ int ossimChipperUtil::getHistoMode() const
    if ( ( op.string() == "auto-minmax" ) )
    {
       result = ossimHistogramRemapper::LINEAR_AUTO_MIN_MAX;
+   }
+   else if ( ( op.string() == "auto-percentile" ) )
+   {
+      result = ossimHistogramRemapper::LINEAR_AUTO_PERCENTILE;
    }
    else if ( (op == "std-stretch-1") || (op == "std-stretch 1") )
    {
