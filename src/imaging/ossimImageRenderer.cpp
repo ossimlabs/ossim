@@ -384,7 +384,7 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::tooBig()const
 {
   ossimDrect vRect = getViewRect();
 
-  return ((vRect.width() > 32) || (vRect.height() > 32));
+  return ((vRect.width() > 64) || (vRect.height() > 64));
 }
 
 ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
