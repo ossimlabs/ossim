@@ -111,6 +111,10 @@ if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
       export BUILD_CNES_PLUGIN=ON
    fi
 
+   if [ -z $BUILD_CSM_PLUGIN ] ; then
+      export BUILD_CSM_PLUGIN=ON
+   fi
+
    if [ -z $BUILD_WEB_PLUGIN ] ; then
       export BUILD_WEB_PLUGIN=ON
    fi
