@@ -53,7 +53,7 @@ ossimRefPtr<ossimImageData> ossimElevRemapper::getTile(const ossimIrect& tile_re
    }
    ossimDataObjectStatus status =  result->getDataObjectStatus();
    
-   if((status == OSSIM_NULL))
+   if(status == OSSIM_NULL)
    { 
 	return result.get();
    }
