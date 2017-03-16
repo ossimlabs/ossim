@@ -182,9 +182,13 @@ int ossimJobThreadQueue::cancel()
             }
          }
 #endif
+// RP - The extra cancel and join resolves a bug where threads were not being
+// closed out and OS thread limits are quickly hit
          OpenThreads::Thread::YieldCurrentThread();
+	 OpenThreads::Thread::cancel();
       }
    }
+   OpenThreads::Thread::join();
    return OpenThreads::Thread::cancel();
 }
 

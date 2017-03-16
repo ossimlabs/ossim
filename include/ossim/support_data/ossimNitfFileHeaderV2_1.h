@@ -153,6 +153,9 @@ public:
    virtual ossimDrect getImageRect()const;
 
    virtual void addImageInfoRecord(const ossimNitfImageInfoRecordV2_1& recordInfo);
+   virtual void deleteLastImageInfoRecord();
+   virtual void deleteLastDataExtSegInfoRecord();
+
    virtual void addTextInfoRecord(const ossimNitfTextFileInfoRecordV2_1& recordInfo);
 	virtual void addDataExtSegInfoRecord(const ossimNitfDataExtSegInfoRecordV2_1& recordInfo);
 
@@ -243,7 +246,8 @@ public:
     */
    virtual bool loadState(const ossimKeywordlist& kwl,
                           const char* prefix=0);
-   
+
+   virtual bool saveState(ossimKeywordlist& kwl, const ossimString& prefix="")const;
 
    /**
     * Properties of a NITF 2.1 Header file. See MIL-STD-2500B for details.
@@ -309,6 +313,7 @@ private:
     * parse all overflow tags and put them into theTagList.
     */
    void readOverflowTags(ossim::istream& in);
+   void readDes(std::istream& in);     
 
    // Note: these are work variables and not part of the
    // Nitf header.  These variables will be used to quickly

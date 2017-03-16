@@ -32,13 +32,16 @@ public:
    //! Full constructor accepts the original image chain to clone. 
    //! @param num_threads  Total number of cloned chains to make available.
    //! 
-   ossimImageChainMtAdaptor(ossimImageChain* original, ossim_uint32 num_threads=0);
+   ossimImageChainMtAdaptor(ossimImageChain* original, ossim_uint32 num_threads=0, bool use_shared_handlers=false, bool use_cache=false, ossim_uint32 cache_tile_size=64);
    ~ossimImageChainMtAdaptor();
 
    //! Alternate way of specifying number of threads to support. This is the same as the number of 
    //! clones that will be available after replicating the original chain. 
    //! @param num_threads  Total number of cloned chains to make available.
    void setNumberOfThreads(ossim_uint32 num_threads);
+   void setUseSharedHandlers(bool use_shared_handlers);
+   void setCacheTileSize(ossim_uint32 cache_tile_size);
+   void setUseCache(bool use_cache);
 
    //! Alternate way of specifying the original chain being adapted for multi-threading.
    //! @param original  Image chain to be adapted.
@@ -116,6 +119,8 @@ protected:
    ossim_uint32 m_numThreads;
 
    bool d_useSharedHandlers;
+   ossim_uint32 d_cacheTileSize;
+   bool d_useCache;
    bool d_debugEnabled;
 
 };

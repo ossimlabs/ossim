@@ -89,6 +89,10 @@ ossimRefPtr<ossimImageData> ossimImageDataFactory::create(
          break;
       }
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          result = new ossimU11ImageData(owner, bands, width, height);
          break;
@@ -164,6 +168,10 @@ ossimRefPtr<ossimImageData> ossimImageDataFactory::create(
          break;
       }
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          result = new ossimU11ImageData(owner, bands, width, height);
          break;

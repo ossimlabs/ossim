@@ -23,7 +23,7 @@ class OSSIMDLLEXPORT ossimImageHandlerMtAdaptor : public ossimImageHandler
 public:
    static const char* ADAPTEE_ID_KW;
 
-   ossimImageHandlerMtAdaptor(ossimImageHandler* adaptee = 0);
+   ossimImageHandlerMtAdaptor(ossimImageHandler* adaptee = 0, bool use_cache=false, ossim_uint32 cache_tile_size=64);
 
    //! Sets the handler being adapted.
    void setAdaptee(ossimImageHandler* handler);
@@ -70,8 +70,12 @@ public:
    virtual ossim_float64   getMinPixelValue(ossim_uint32 band=0)const;
    virtual ossim_float64   getMaxPixelValue(ossim_uint32 band=0)const;
    virtual ossim_float64   getNullPixelValue(ossim_uint32 band=0)const;
+   void setCacheTileSize(ossim_uint32 cache_tile_size);
+   void setUseCache(bool use_cache);
+   void writeTime() const;
 
    double       d_getTileT;
+   ossim_uint32 d_cacheTileSize;
 
 protected:
    //! Protected destructor forces using reference pointer for instantiation.

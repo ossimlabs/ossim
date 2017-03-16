@@ -50,7 +50,7 @@ static ossimTrace traceDebug = ossimTrace("ossimSensorModelFactory:debug");
 #include <ossim/projection/ossimSarModel.h>
 #include <ossim/projection/ossimRS1SarModel.h>
 #include <ossim/support_data/ossimSpotDimapSupportData.h>
-#include <ossim/projection/ossimNitfMapModel.h>
+//#include <ossim/projection/ossimNitfMapModel.h>
 #include <ossim/projection/ossimFcsiModel.h>
 #include <ossim/projection/ossimApplanixUtmModel.h>
 #include <ossim/projection/ossimApplanixEcefModel.h>
@@ -163,10 +163,10 @@ ossimSensorModelFactory::createProjection(const ossimString &name) const
       return new ossimLandSatModel;
    }
 
-   if(name == STATIC_TYPE_NAME(ossimNitfMapModel))
-   {
-      return new ossimNitfMapModel;
-   }
+//   if(name == STATIC_TYPE_NAME(ossimNitfMapModel))
+//   {
+//      return new ossimNitfMapModel;
+//   }
 
    if(name == STATIC_TYPE_NAME(ossimQuickbirdRpcModel))
    {
@@ -275,7 +275,7 @@ ossimSensorModelFactory::getTypeNameList(std::vector<ossimString>& typeList)
    typeList.push_back(STATIC_TYPE_NAME(ossimQuickbirdRpcModel));
    typeList.push_back(STATIC_TYPE_NAME(ossimNitfRpcModel));
    typeList.push_back(STATIC_TYPE_NAME(ossimLandSatModel));
-   typeList.push_back(STATIC_TYPE_NAME(ossimNitfMapModel));
+//   typeList.push_back(STATIC_TYPE_NAME(ossimNitfMapModel));
    typeList.push_back(STATIC_TYPE_NAME(ossimFcsiModel));
    typeList.push_back(STATIC_TYPE_NAME(ossimSpot5Model));
    typeList.push_back(STATIC_TYPE_NAME(ossimSarModel));
@@ -487,12 +487,13 @@ ossimProjection* ossimSensorModelFactory::createProjection(
            << MODULE << " DEBUG: testing ossimIkinosRpcModel" << std::endl;
      }
      
-     model = new ossimNitfMapModel(filename); // filename = NITF_file
-     if(!model->getErrorStatus())
-     {
-        return model.release();
-     }
-     model = 0;
+     // RP - This model crashes routinely if it ever happens to get a hold of a NITF
+     //model = new ossimNitfMapModel(filename); // filename = NITF_file
+     //if(!model->getErrorStatus())
+     //{
+     //   return model.release();
+     //}
+     //model = 0;
    }
    else if(isLandsat(filename))
    {

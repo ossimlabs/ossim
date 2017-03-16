@@ -31,6 +31,10 @@ public:
    virtual void readStream(std::istream& in) = 0;
    virtual void writeStream(std::ostream& out) = 0;
 
+   virtual ossim_uint16 getRed() const = 0;
+   virtual ossim_uint16 getGreen() const = 0;
+   virtual ossim_uint16 getBlue() const = 0;
+   virtual ossim_uint16 getIntensity() const = 0;
    virtual ossim_int32  getX() const = 0;
    virtual ossim_int32  getY() const = 0;
    virtual ossim_int32  getZ() const = 0;

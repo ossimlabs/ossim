@@ -514,7 +514,8 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
       // have references to tags GEO_DOUBLE_PARAMS_TAG and
       // GEO_ASCII_PARAMS_TAG.
       //---
-      if (geoKeyBlock)
+      // Commenting out for now as these keys do not work with KWL
+      if (false) //(geoKeyBlock)
       {
          printGeoKeys(out, prefix, geoKeyLength, geoKeyBlock,
                       geoDoubleLength,geoDoubleBlock,
@@ -1708,8 +1709,10 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
 
       case ossim::OTIFFTAG_IMAGEDESCRIPTION: // tag 270
       {
-         out << prefix << "image_description: ";
-         printArray(out, type, count, valueArray);
+	 // This tag is not safe for KWL for some imagery - commenting out
+	 // for now
+         //out << prefix << "image_description: ";
+         //printArray(out, type, count, valueArray);
          break;
       }
 

@@ -2873,6 +2873,26 @@ void ossimInfo::getRadiometry(ossimScalarType scalar, std::string& s) const
       s = "11-bit";
       break;
    }
+   case OSSIM_USHORT12:
+   {
+      s = "12-bit";
+      break;
+   }
+   case OSSIM_USHORT13:
+   {
+      s = "13-bit";
+      break;
+   }
+   case OSSIM_USHORT14:
+   {
+      s = "14-bit";
+      break;
+   }
+   case OSSIM_USHORT15:
+   {
+      s = "15-bit";
+      break;
+   }
    case OSSIM_UINT16:
    {
       s = "16-bit unsigned";

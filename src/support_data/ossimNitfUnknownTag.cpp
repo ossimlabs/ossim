@@ -85,7 +85,10 @@ std::ostream& ossimNitfUnknownTag::print(std::ostream& out,
    
    if (tagDataIsAscii())
    {
-      out << m_tagData << "\n";
+      if (tagDataIsXml())
+        out << "<![CDATA[" << m_tagData << "]]>" << "\n";
+      else
+        out << m_tagData << "\n";
    }
    else
    {
@@ -93,6 +96,20 @@ std::ostream& ossimNitfUnknownTag::print(std::ostream& out,
    }
    
    return out;
+}
+
+bool ossimNitfUnknownTag::tagDataIsXml() const
+{
+   ossimString xmlTest = "<?xml";
+   ossim_uint32 len = xmlTest.length();
+   if ( (m_tagLength < len) || !m_tagData )
+   {
+      return false;
+   }
+
+   ossimString tagDataString = ossimString(m_tagData).substr(0, len);
+   if (tagDataString == xmlTest) return true;
+   return false;
 }
 
 void ossimNitfUnknownTag::setTagLength(ossim_uint32 length)

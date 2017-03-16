@@ -43,7 +43,8 @@ ossimImageData::ossimImageData()
                              m_maxPixelValue(0),
                              m_alpha(0),
                              m_origin(0, 0),
-                             m_indexedFlag(false)
+                             m_indexedFlag(false),
+			     m_histogram(NULL)
 {
    ossimIpt tileSize;
    ossim::defaultTileSize(tileSize);
@@ -64,7 +65,8 @@ ossimImageData::ossimImageData(ossimSource*    owner,
                              m_maxPixelValue(0),
                              m_alpha(0),
                              m_origin(0, 0),
-                             m_indexedFlag(false)
+                             m_indexedFlag(false),
+			     m_histogram(NULL)
 {
    ossimIpt tileSize;
    ossim::defaultTileSize(tileSize);
@@ -89,6 +91,7 @@ ossimImageData::ossimImageData(ossimSource* owner,
                              m_alpha(0),
                              m_origin(0, 0),
                              m_indexedFlag(false),
+			     m_histogram(NULL),
                              m_percentFull(0)
 {   
    m_spatialExtents[0] = width;
@@ -227,7 +230,11 @@ const ossim_uint8* ossimImageData::getUcharBuf() const
 const ossim_uint16* ossimImageData::getUshortBuf() const
 {
    if (m_scalarType == OSSIM_UINT16 ||
-         m_scalarType == OSSIM_USHORT11)
+         m_scalarType == OSSIM_USHORT11 ||
+	 m_scalarType == OSSIM_USHORT12 ||
+	 m_scalarType == OSSIM_USHORT13 ||
+	 m_scalarType == OSSIM_USHORT14 ||
+	 m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<const ossim_uint16*>(getBuf());
    }
@@ -275,7 +282,11 @@ ossim_uint8* ossimImageData::getUcharBuf()
 ossim_uint16* ossimImageData::getUshortBuf() 
 {
    if (m_scalarType == OSSIM_UINT16 ||
-         m_scalarType == OSSIM_USHORT11)
+         m_scalarType == OSSIM_USHORT11 ||
+	 m_scalarType == OSSIM_USHORT12 ||
+	 m_scalarType == OSSIM_USHORT13 ||
+	 m_scalarType == OSSIM_USHORT14 ||
+	 m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<ossim_uint16*>(getBuf());
    }
@@ -323,7 +334,11 @@ const ossim_uint8* ossimImageData::getUcharBuf(ossim_uint32 band) const
 const ossim_uint16* ossimImageData::getUshortBuf(ossim_uint32 band) const
 {
    if (m_scalarType == OSSIM_UINT16 ||
-         m_scalarType == OSSIM_USHORT11)
+         m_scalarType == OSSIM_USHORT11 ||
+	 m_scalarType == OSSIM_USHORT12 ||
+	 m_scalarType == OSSIM_USHORT13 ||
+	 m_scalarType == OSSIM_USHORT14 ||
+	 m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<const ossim_uint16*>(getBuf(band));
    }
@@ -371,7 +386,11 @@ ossim_uint8* ossimImageData::getUcharBuf(ossim_uint32 band)
 ossim_uint16* ossimImageData::getUshortBuf(ossim_uint32 band) 
 {
    if (m_scalarType == OSSIM_UINT16 ||
-         m_scalarType == OSSIM_USHORT11)
+         m_scalarType == OSSIM_USHORT11 ||
+	 m_scalarType == OSSIM_USHORT12 ||
+	 m_scalarType == OSSIM_USHORT13 ||
+	 m_scalarType == OSSIM_USHORT14 ||
+	 m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<ossim_uint16*>(getBuf(band));
    }
@@ -431,6 +450,10 @@ void ossimImageData::getNormalizedFloat(ossim_uint32 offset,
          break;
       }
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       {
          const ossim_uint16* sourceBuf = getUshortBuf(bandNumber);
@@ -538,6 +561,10 @@ void ossimImageData::setNormalizedFloat(ossim_uint32 offset,
          break;
       }
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       {
          ossim_uint16* sourceBuf = getUshortBuf(bandNumber);
@@ -707,6 +734,10 @@ ossim_float64 ossimImageData::computeMeanSquaredError(
    }
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       result = computeMeanSquaredError(ossim_uint16(0),
                                        meanValue,
@@ -864,6 +895,10 @@ void ossimImageData::populateHistogram(ossimRefPtr<ossimMultiBandHistogram> hist
    }
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       for(ossim_uint32 band = 0; band < numberOfBands; ++band)
       {
@@ -1016,6 +1051,10 @@ ossim_float64 ossimImageData::computeAverageBandValue(ossim_uint32 bandNumber) c
    }
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       result = computeAverageBandValue(ossim_uint16(0),
                                        bandNumber);
@@ -1122,6 +1161,10 @@ ossimDataObjectStatus ossimImageData::validate() const
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       return validate(ossim_uint16(0));
    }
@@ -1226,6 +1269,10 @@ void ossimImageData::makeBlank()
    }
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       makeBlank(ossim_uint16(0));
       return;
@@ -1413,6 +1460,10 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       }
       case OSSIM_UINT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
@@ -1643,6 +1694,10 @@ ossim_float64 ossimImageData::getPix(ossim_uint32 offset, ossim_uint32 band) con
       break;
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       const ossim_uint16* buf = getUshortBuf(band);
@@ -1738,6 +1793,10 @@ void ossimImageData::fill(ossim_uint32 band, ossim_float64 value)
    }
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       ossim_uint16* p = getUshortBuf(band);
       ossim_uint16 np = static_cast<ossim_uint16>(value);
@@ -1855,6 +1914,10 @@ void ossimImageData::createTestTile()
       }
       case OSSIM_UINT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          createTestTile(ossim_uint16(0));
          break;
@@ -1980,6 +2043,10 @@ bool ossimImageData::isNull(ossim_uint32 offset)const
    }
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       for(band = 0; band < numberOfBands; band++)
       {
@@ -2115,6 +2182,10 @@ bool ossimImageData::isNull(ossim_uint32 offset, ossim_uint32 band)const
    }
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       const ossim_uint16* buf =
             static_cast<const ossim_uint16*>(getBuf(band))+offset;
@@ -2240,6 +2311,10 @@ void ossimImageData::setNull(ossim_uint32 offset)
    }
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       for(band = 0; band < numberOfBands; band++)
       {
@@ -2328,6 +2403,10 @@ void ossimImageData::setNull(ossim_uint32 offset, ossim_uint32 band)
    }
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       ossim_uint16* buf = static_cast<ossim_uint16*>(getBuf(band))+offset;
       *buf = (ossim_uint16)getNullPix(band);
@@ -2777,6 +2856,10 @@ void ossimImageData::loadBand(const void* src,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       loadBandTemplate(ossim_uint16(0), src, src_rect, band);
       return;
 
@@ -2832,6 +2915,10 @@ void ossimImageData::loadBand(const void* src,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       loadBandTemplate(ossim_uint16(0), src, src_rect, clip_rect, band);
       return;
 
@@ -3191,6 +3278,10 @@ void ossimImageData::nullTileAlpha(const ossim_uint8* src,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       nullTileAlphaTemplate(ossim_uint16(0), src, src_rect, clip_rect, multiplyAlphaFlag);
       return;
 
@@ -3244,6 +3335,10 @@ void ossimImageData::loadTileFromBip(const void* src,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       loadTileFromBipTemplate(ossim_uint16(0), src, src_rect);
       return;
 
@@ -3296,6 +3391,10 @@ void ossimImageData::loadTileFromBipAlpha(const void* src,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       loadTileFromBipAlphaTemplate(ossim_uint16(0), src, src_rect);
       return;
 
@@ -3349,6 +3448,10 @@ void ossimImageData::loadTileFromBip(const void* src,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       loadTileFromBipTemplate(ossim_uint16(0), src, src_rect, clip_rect);
       return;
 
@@ -3401,6 +3504,10 @@ void ossimImageData::loadTileFromBil(const void* src,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       loadTileFromBilTemplate(ossim_uint16(0), src, src_rect);
       return;
 
@@ -3454,6 +3561,10 @@ void ossimImageData::loadTileFromBil(const void* src,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       loadTileFromBilTemplate(ossim_uint16(0), src, src_rect, clip_rect);
       return;
 
@@ -3506,6 +3617,10 @@ void ossimImageData::loadTileFromBsq(const void* src,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       loadTileFromBsqTemplate(ossim_uint16(0), src, src_rect);
       return;
 
@@ -3559,6 +3674,10 @@ void ossimImageData::loadTileFromBsq(const void* src,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       loadTileFromBsqTemplate(ossim_uint16(0), src, src_rect, clip_rect);
       return;
 
@@ -3623,6 +3742,10 @@ void ossimImageData::computeMinMaxPix(vector<ossim_float64>& minBands,
 
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       computeMinMaxPix((ossim_uint16)0,
@@ -3757,6 +3880,10 @@ void ossimImageData::computeMinMaxNulPix(vector<ossim_float64>& minBands,
       break;
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       computeMinMaxNulPix((ossim_uint16)0,
@@ -4439,6 +4566,10 @@ void ossimImageData::unloadTileToBip(void* dest,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       unloadTileToBipTemplate(ossim_uint16(0), dest, dest_rect, clip_rect);
       return;
 
@@ -4492,6 +4623,10 @@ void ossimImageData::unloadTileToBipAlpha(void* dest,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       unloadTileToBipAlphaTemplate(ossim_uint16(0), dest, dest_rect, clip_rect);
       return;
 
@@ -4545,6 +4680,10 @@ void ossimImageData::unloadTileToBil(void* dest,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       unloadTileToBilTemplate(ossim_uint16(0), dest, dest_rect, clip_rect);
       return;
 
@@ -4598,6 +4737,10 @@ void ossimImageData::unloadTileToBsq(void* dest,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       unloadTileToBsqTemplate(ossim_uint16(0), dest, dest_rect, clip_rect);
       return;
 
@@ -4660,6 +4803,10 @@ void ossimImageData::unloadBand(void* dest,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       unloadBandTemplate(ossim_uint16(0), dest, dest_rect, clip_rect, band);
       return;
 
@@ -4749,6 +4896,10 @@ void ossimImageData::unloadBandToBsq( void* dest,
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       unloadBandToBsqTemplate(ossim_uint16(0), dest, src_band, dest_band, dest_rect, clip_rect, ow_type );
       return;
 
@@ -5796,6 +5947,10 @@ void ossimImageData::copyTileToNormalizedBuffer(ossim_float64* buf)const
 
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       copyTileToNormalizedBuffer((ossim_uint16)0, buf);
@@ -6162,6 +6317,10 @@ void ossimImageData::copyTileBandToNormalizedBuffer(ossim_uint32 band,
 
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       copyTileToNormalizedBuffer((ossim_uint16)0, band, buf);
@@ -6254,6 +6413,10 @@ void ossimImageData::copyTileToNormalizedBuffer(ossim_float32* buf)const
 
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       copyTileToNormalizedBuffer((ossim_uint16)0, buf);
@@ -6344,6 +6507,10 @@ void ossimImageData::copyTileBandToNormalizedBuffer(ossim_uint32 band,
 
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       copyTileToNormalizedBuffer((ossim_uint16)0, band, buf);
@@ -6435,6 +6602,10 @@ void ossimImageData::copyNormalizedBufferToTile(ossim_float64* buf)
 
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       copyNormalizedBufferToTile((ossim_uint16)0, buf);
@@ -6527,6 +6698,10 @@ void ossimImageData::copyNormalizedBufferToTile(ossim_uint32 band,
 
       }
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       {
          copyNormalizedBufferToTile((ossim_uint16)0, band, buf);
@@ -6617,6 +6792,10 @@ void ossimImageData::copyNormalizedBufferToTile(ossim_float32* buf)
 
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       copyNormalizedBufferToTile((ossim_uint16)0, buf);
@@ -6707,6 +6886,10 @@ void ossimImageData::copyNormalizedBufferToTile(ossim_uint32 band,
 
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       copyNormalizedBufferToTile((ossim_uint16)0, band, buf);
@@ -6808,6 +6991,10 @@ void ossimImageData::stretchMinMax()
       }
       case OSSIM_UINT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          stretchMinMax(ossim_uint16(0));
          return;
@@ -6935,6 +7122,10 @@ void ossimImageData::computeAlphaChannel()
       }
       case OSSIM_UINT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          computeAlphaChannel(ossim_uint16(0));
          return;
@@ -7105,6 +7296,10 @@ void ossimImageData::copyLine(const void* src,
 
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_UINT16:
    {
       copyLineTemplate((ossim_uint16)0, src, lineNumber, lineStartSample,
@@ -7349,3 +7544,13 @@ bool ossimImageData::loadState(const ossimKeywordlist& kwl, const char* prefix)
 
    return result;
 }                     
+
+void ossimImageData::setHistogram(ossimRefPtr<ossimMultiResLevelHistogram> histo)
+{
+  m_histogram = histo;
+}
+
+ossimRefPtr<ossimMultiResLevelHistogram> ossimImageData::getHistogram()
+{
+  return m_histogram;
+}

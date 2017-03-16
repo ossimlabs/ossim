@@ -1400,3 +1400,19 @@ void ossimSarModel::setAcquisitionMode(const ossimString& mode)
       theAcquisitionMode = ossimSarModel::UNKNOWN;
    }
 }
+
+double ossimSarModel::sensorAzimuth(const ossimDpt& image_point) const
+{
+   ossimGpt ground;
+   lineSampleToWorld(image_point, ground);
+
+   // Get image time
+   ossim_float64 iTime = getArpTime(image_point);
+
+   // Get ARP position
+   ossimEcefPoint arpPos = getArpPos(iTime);
+
+   ossimGpt sensor(arpPos);
+
+   return ground.azimuthTo(sensor);
+}

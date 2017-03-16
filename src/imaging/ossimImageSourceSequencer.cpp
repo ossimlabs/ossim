@@ -20,6 +20,7 @@
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/imaging/ossimImageWriter.h>
+#include <ossim/base/ossimMultiResLevelHistogram.h>
 
 RTTI_DEF2(ossimImageSourceSequencer, "ossimImageSourceSequencer",
           ossimImageSource, ossimConnectableObjectListener);
@@ -38,7 +39,8 @@ ossimImageSourceSequencer::ossimImageSourceSequencer(ossimImageSource* inputSour
     theTileSize(OSSIM_DEFAULT_TILE_WIDTH, OSSIM_DEFAULT_TILE_HEIGHT),
     theNumberOfTilesHorizontal(0),
     theNumberOfTilesVertical(0),
-    theCurrentTileNumber(0)
+    theCurrentTileNumber(0),
+    theCreateHistogram(false)
 {
    ossim::defaultTileSize(theTileSize);
    theAreaOfInterest.makeNan();
@@ -248,6 +250,7 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
 {
    if(theInputConnection)
    {
+      /*
       ossimRefPtr<ossimImageData> tile =
          theInputConnection->getTile(rect, resLevel);
       if (tile.valid()&&tile->getBuf())
@@ -260,6 +263,53 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
          theBlankTile->setImageRectangle(rect);
          return theBlankTile;
       }
+      */
+      // For Use with multithreaded sequencer
+      ossimRefPtr<ossimImageData> tile = ossimImageDataFactory::instance()->create(this, this);
+      tile->setImageRectangle(rect);
+      tile->initialize();
+      tile->makeBlank();
+      setToStartOfSequence();
+      ossim_uint32 num_tiles = getNumberOfTiles();
+      bool hasHistoOutput = true;
+      ossim_uint32 numberOfBands = 1;
+      ossim_uint32 numberOfBins  = 0;
+      ossim_float64 minValue     = 0;
+      ossim_float64 maxValue     = 0;
+      ossimScalarType stype;
+      ossimRefPtr<ossimMultiResLevelHistogram> histogram = 0;
+
+      if (theCreateHistogram)
+      {
+       stype = tile->getScalarType();
+       histogram = new ossimMultiResLevelHistogram;
+       histogram->create(1);
+       numberOfBands = tile->getNumberOfBands();
+
+       getBinInformation(numberOfBins, minValue, maxValue, stype);
+       histogram->getMultiBandHistogram(0)->create(numberOfBands, numberOfBins, minValue, maxValue);
+
+      }
+      for (ossim_uint32 tile_idx=0; tile_idx<num_tiles; ++tile_idx)
+      {
+       ossimRefPtr<ossimImageData> imagedata = getNextTile();
+       //tile->setDataObjectStatus(imagedata->getDataObjectStatus());
+       if(imagedata->getBuf() && (imagedata->getDataObjectStatus()!=OSSIM_EMPTY))
+       {
+         tile->loadTile(imagedata.get());
+         if (theCreateHistogram)
+         {
+           imagedata->populateHistogram(histogram->getMultiBandHistogram(0));
+         }
+       }
+       if (traceDebug())
+       {
+       ossimNotify(ossimNotifyLevel_WARN)<< "BASE SEQUENCER TILE " << tile_idx << " RECT: " << rect << std::endl;;
+       }
+      }
+      tile->validate();
+      if (theCreateHistogram) tile->setHistogram(histogram);
+      return tile;
    }
 
    return 0;
@@ -283,6 +333,11 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getNextTile( ossim_uint32
       }
    }
    return result;
+}
+
+bool ossimImageSourceSequencer::getNextTileStream(std::ostream& bos)
+{
+  return false;
 }
 
 ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
@@ -445,4 +500,122 @@ bool ossimImageSourceSequencer::isMaster() const
    return true;
 }
 
+void ossimImageSourceSequencer::getBinInformation(ossim_uint32& numberOfBins,
+                                                  ossim_float64& minValue,
+                                                  ossim_float64& maxValue,
+                                                 ossimScalarType stype)const
+{
+   numberOfBins = 0;
+   minValue     = 0;
+   maxValue     = 0;
+
+      switch(stype)
+      {
+         case OSSIM_UINT8:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UCHAR;
+            numberOfBins = 256;
+
+            break;
+         }
+         case OSSIM_USHORT11:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT11;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT11 + 1;
+
+            break;
+         }
+         case OSSIM_USHORT12:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT12;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT12 + 1;
+
+            break;
+         }
+         case OSSIM_USHORT13:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT13;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT13 + 1;
+
+            break;
+         }
+         case OSSIM_USHORT14:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT14;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT14 + 1;
+
+            break;
+         }
+         case OSSIM_USHORT15:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT15;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT15 + 1;
+
+            break;
+         }
+         case OSSIM_UINT16:
+         case OSSIM_UINT32:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT16;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT16 + 1;
+
+            break;
+         }
+         case OSSIM_SINT16:
+         case OSSIM_SINT32:
+         case OSSIM_FLOAT32:
+         case OSSIM_FLOAT64:
+         {
+            minValue     = OSSIM_DEFAULT_MIN_PIX_SINT16;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_SINT16;
+            numberOfBins = (OSSIM_DEFAULT_MAX_PIX_SINT16-OSSIM_DEFAULT_MIN_PIX_SINT16) + 1;
+
+            break;
+         }
+         case OSSIM_NORMALIZED_FLOAT:
+         case OSSIM_NORMALIZED_DOUBLE:
+         {
+            minValue     = 0;
+            maxValue     = 1.0;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT16+1;
+            break;
+         }
+         default:
+         {
+            if(traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_WARN)
+                  << "Unsupported scalar type in ossimImageHistogramSource::computeHistogram()" << endl;
+            }
+            return;
+         }
+      }
+
+}
+
+bool ossimImageSourceSequencer::loadState(const ossimKeywordlist& kwl, const char* prefix)
+{
+   const char* lookup;
+   lookup = kwl.find(prefix, "create_histogram");
+   if(lookup)
+   {
+      bool create_histogram = ossimString(lookup).toBool();
+      setCreateHistogram(create_histogram);
+   }
+   bool status = ossimImageSource::loadState(kwl, prefix);
+
+   return status;
+}
+
+void ossimImageSourceSequencer::setCreateHistogram(bool create_histogram)
+{
+   theCreateHistogram = create_histogram;
+}
 

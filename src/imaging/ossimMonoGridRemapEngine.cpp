@@ -152,6 +152,158 @@ void ossimMonoGridRemapEngine::remapTile(const ossimDpt&       origin,
       }
       break;
    }
+
+   case OSSIM_USHORT12:
+   {
+      ossim_uint16* tile_buf  = (ossim_uint16*)tile->getBuf(0);
+      int  pixel;
+
+      for (double line=origin.line; line<origin.line+height; line+=1.0)
+      {
+         for (double samp=origin.samp; samp<origin.samp+width; samp+=1.0)
+         {
+            //***
+            // Scan for null pixel before adding remap delta:
+            //***
+            if (tile_buf[offset] != (ossim_uint16) null)
+            {
+               //***
+               // Remap MONO pixel with spatially variant bias value:
+               //***
+               pixel = tile_buf[offset] + (int) grid(samp,line);
+
+               //***
+               // Clamp:
+               //***
+               if      (pixel<0)    tile_buf[offset] = 0;
+               else if (pixel>4095) tile_buf[offset] = 4095;
+               else                 tile_buf[offset] = pixel;
+
+               //***
+               // Avoid NULLS:
+               //***
+               if (tile_buf[offset] == (ossim_uint16) null) tile_buf[offset]++;
+            }
+
+            offset++;
+         }
+      }
+      break;
+   }
+
+   case OSSIM_USHORT13:
+   {
+      ossim_uint16* tile_buf  = (ossim_uint16*)tile->getBuf(0);
+      int  pixel;
+
+      for (double line=origin.line; line<origin.line+height; line+=1.0)
+      {
+         for (double samp=origin.samp; samp<origin.samp+width; samp+=1.0)
+         {
+            //***
+            // Scan for null pixel before adding remap delta:
+            //***
+            if (tile_buf[offset] != (ossim_uint16) null)
+            {
+               //***
+               // Remap MONO pixel with spatially variant bias value:
+               //***
+               pixel = tile_buf[offset] + (int) grid(samp,line);
+
+               //***
+               // Clamp:
+               //***
+               if      (pixel<0)    tile_buf[offset] = 0;
+               else if (pixel>8191) tile_buf[offset] = 8191;
+               else                 tile_buf[offset] = pixel;
+
+               //***
+               // Avoid NULLS:
+               //***
+               if (tile_buf[offset] == (ossim_uint16) null) tile_buf[offset]++;
+            }
+
+            offset++;
+         }
+      }
+      break;
+   }
+
+   case OSSIM_USHORT14:
+   {
+      ossim_uint16* tile_buf  = (ossim_uint16*)tile->getBuf(0);
+      int  pixel;
+
+      for (double line=origin.line; line<origin.line+height; line+=1.0)
+      {
+         for (double samp=origin.samp; samp<origin.samp+width; samp+=1.0)
+         {
+            //***
+            // Scan for null pixel before adding remap delta:
+            //***
+            if (tile_buf[offset] != (ossim_uint16) null)
+            {
+               //***
+               // Remap MONO pixel with spatially variant bias value:
+               //***
+               pixel = tile_buf[offset] + (int) grid(samp,line);
+
+               //***
+               // Clamp:
+               //***
+               if      (pixel<0)    tile_buf[offset] = 0;
+               else if (pixel>16383) tile_buf[offset] = 16383;
+               else                 tile_buf[offset] = pixel;
+
+               //***
+               // Avoid NULLS:
+               //***
+               if (tile_buf[offset] == (ossim_uint16) null) tile_buf[offset]++;
+            }
+
+            offset++;
+         }
+      }
+      break;
+   }
+
+   case OSSIM_USHORT15:
+   {
+      ossim_uint16* tile_buf  = (ossim_uint16*)tile->getBuf(0);
+      int  pixel;
+
+      for (double line=origin.line; line<origin.line+height; line+=1.0)
+      {
+         for (double samp=origin.samp; samp<origin.samp+width; samp+=1.0)
+         {
+            //***
+            // Scan for null pixel before adding remap delta:
+            //***
+            if (tile_buf[offset] != (ossim_uint16) null)
+            {
+               //***
+               // Remap MONO pixel with spatially variant bias value:
+               //***
+               pixel = tile_buf[offset] + (int) grid(samp,line);
+
+               //***
+               // Clamp:
+               //***
+               if      (pixel<0)    tile_buf[offset] = 0;
+               else if (pixel>32767) tile_buf[offset] = 32767;
+               else                 tile_buf[offset] = pixel;
+
+               //***
+               // Avoid NULLS:
+               //***
+               if (tile_buf[offset] == (ossim_uint16) null) tile_buf[offset]++;
+            }
+
+            offset++;
+         }
+      }
+      break;
+   }
    
    case OSSIM_USHORT16:
    {

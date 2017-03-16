@@ -59,7 +59,10 @@ ossimConnectableObject::~ossimConnectableObject()
 {
    
    // tell the immediate listeners that we are destructing.
-   ossimObjectDestructingEvent event(this);
+   // RP - Probably not a great change, but the multithread sequencer boms
+   // here due to one image handler with multiple connected thread image
+   // chains
+   //ossimObjectDestructingEvent event(this);
    
    //    if(theOwner)
    //    {
@@ -75,7 +78,7 @@ ossimConnectableObject::~ossimConnectableObject()
    
    // notify all other listeners that you are destructing
    //
-   fireEvent(event);
+   //fireEvent(event);
    
  }
 
@@ -977,7 +980,9 @@ void ossimConnectableObject::disconnectAllOutputs()
    if(theOutputObjectList.size() == 1)
    {
       //     ossimConnectableObject* obj = disconnectMyOutput((ossim_int32)0, false);
-      disconnectMyOutput((ossim_int32)0);
+      // RP - another probably bad change to keep the multithread adapter from
+      // crashing on the destructor
+      disconnectMyOutput((ossim_int32)0, false, false);
       //     if(obj)
       //     {
       //        obj->disconnectMyInput(this,

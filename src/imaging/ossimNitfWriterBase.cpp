@@ -199,6 +199,15 @@ void ossimNitfWriterBase::writeGeometry(ossimNitfImageHeaderV2_X* hdr,
                addBlockaTag(mapInfo, hdr);
             }
          }
+         else
+         {
+            ossimGpt ul, ur, lr, ll;
+            bool status = geom->getCornerGpts(ul, ur, lr, ll);
+            if (status)
+            {
+                hdr->setGeographicLocationDms(ul, ur, lr, ll);
+            }
+         }
          
          if (theEnableRpcbTagFlag)
          {
@@ -336,9 +345,44 @@ void ossimNitfWriterBase::setComplexityLevel(std::streamoff endPosition,
    }
 }
 
+// Alternate calculation option for complexity.  This seems to match more test data.
+void ossimNitfWriterBase::setComplexityLevel(ossimNitfFileHeaderV2_X* hdr, ossim_uint64 width, ossim_uint64 height)
+{
+   if (hdr)
+   {
+      ossim_uint64 max = (width > height) ? width : height;
+      ossimString complexity = "03";
+      if (max > 65536) complexity = "07";
+      else if (max > 8192) complexity = "06";
+      else if (max > 2048) complexity = "05";
+
+      hdr->setComplexityLevel(complexity);
+   }
+}
+
 ossimString ossimNitfWriterBase::getExtension() const
 {
    return ossimString("ntf");
+}
+
+void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag)
+{
+}
+
+void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique)
+{
+}
+
+void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique, const ossim_uint32& ownerIndex, const ossimString& tagType)
+{
+}
+
+void ossimNitfWriterBase::setFileHeaderV2_1(ossimRefPtr<ossimNitfFileHeaderV2_1>, bool preferSource)
+{
+}
+
+void ossimNitfWriterBase::setImageHeaderV2_1(ossimRefPtr<ossimNitfImageHeaderV2_1>, bool preferSource)
+{
 }
 
 void ossimNitfWriterBase::initializeDefaultsFromConfigFile( ossimNitfFileHeaderV2_X* fileHdr,

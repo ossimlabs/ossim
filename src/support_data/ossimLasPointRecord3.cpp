@@ -148,6 +148,27 @@ ossim_int32 ossimLasPointRecord3::getZ() const
    return m_record.m_z;
 }
 
+ossim_uint16 ossimLasPointRecord3::getRed() const
+{
+   return 0;
+}
+
+ossim_uint16 ossimLasPointRecord3::getGreen() const
+{
+   return 0;
+}
+
+ossim_uint16 ossimLasPointRecord3::getBlue() const
+{
+   return 0;
+}
+
+
+ossim_uint16 ossimLasPointRecord3::getIntensity() const
+{
+   return m_record.m_intensity;
+}
+
 ossim_uint8 ossimLasPointRecord3::getReturnNumber() const
 {
    return (m_record.m_bitFlags.m_returnNumber);

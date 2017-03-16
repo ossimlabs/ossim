@@ -458,6 +458,14 @@ std::ostream& ossimERS::print(std::ostream& out) const
       celltype = "Signed32BitInteger";
    else if (theCelltype == OSSIM_USHORT11)
       celltype = "Unsigned16BitInteger";
+   else if (theCelltype == OSSIM_USHORT12)
+      celltype = "Unsigned16BitInteger";
+   else if (theCelltype == OSSIM_USHORT13)
+      celltype = "Unsigned16BitInteger";
+   else if (theCelltype == OSSIM_USHORT14)
+      celltype = "Unsigned16BitInteger";
+   else if (theCelltype == OSSIM_USHORT15)
+      celltype = "Unsigned16BitInteger";
    else if (theCelltype == OSSIM_USHORT16)
       celltype = "Unsigned16BitInteger";
    

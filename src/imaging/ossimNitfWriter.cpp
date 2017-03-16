@@ -393,7 +393,7 @@ bool ossimNitfWriter::writeBlockBandSeparate()
    else if(bands == 1)
    {
       m_imageHeader->setRepresentation("MONO");
-      m_imageHeader->setCategory("MS");
+      m_imageHeader->setCategory("VIS");
    }
    else
    {
@@ -449,6 +449,10 @@ bool ossimNitfWriter::writeBlockBandSeparate()
          {
             case OSSIM_USHORT16:
             case OSSIM_USHORT11:
+            case OSSIM_USHORT12:
+            case OSSIM_USHORT13:
+            case OSSIM_USHORT14:
+            case OSSIM_USHORT15:
             {
                endian.swap((ossim_uint16*)data->getBuf(),
                            data->getWidth()*data->getHeight()*data->getNumberOfBands());
@@ -601,7 +605,7 @@ bool ossimNitfWriter::writeBlockBandSequential()
    else if(bands == 1)
    {
       m_imageHeader->setRepresentation("MONO");
-      m_imageHeader->setCategory("MS");
+      m_imageHeader->setCategory("VIS");
    }
    else
    {
@@ -660,6 +664,10 @@ bool ossimNitfWriter::writeBlockBandSequential()
          {
             case OSSIM_USHORT16:
             case OSSIM_USHORT11:
+            case OSSIM_USHORT12:
+            case OSSIM_USHORT13:
+            case OSSIM_USHORT14:
+            case OSSIM_USHORT15:
             {
                endian.swap((ossim_uint16*)data->getBuf(),
                            data->getWidth()*data->getHeight()*data->getNumberOfBands());

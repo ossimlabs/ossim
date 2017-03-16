@@ -98,6 +98,10 @@ ossimRefPtr<ossimImageData> ossimIndexToRgbLutFilter::getTile(const ossimIrect& 
          break;
       case OSSIM_USHORT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
          index = (double)(((ossim_uint16*) tile->getBuf())[pixel]);
          break;
       default:

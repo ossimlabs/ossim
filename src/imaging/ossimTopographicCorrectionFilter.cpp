@@ -245,6 +245,10 @@ void ossimTopographicCorrectionFilter::executeTopographicCorrection(
       break;
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_USHORT16:
    {
       if(theTopoCorrectionType!=TOPO_CORRECTION_MINNAERT)
@@ -640,6 +644,10 @@ void ossimTopographicCorrectionFilter::computeC()
             break;
          }
          case OSSIM_USHORT11:
+         case OSSIM_USHORT12:
+         case OSSIM_USHORT13:
+         case OSSIM_USHORT14:
+         case OSSIM_USHORT15:
          case OSSIM_USHORT16:
          {
             addRegressionPointsTemplate((ossim_uint16)0,

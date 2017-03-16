@@ -104,6 +104,10 @@ ossimRefPtr<ossimImageData> ossimBandAverageFilter::getTile(const ossimIrect& re
       break;
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_USHORT16:
    {
       averageInput((ossim_uint16)0, // setup template variable

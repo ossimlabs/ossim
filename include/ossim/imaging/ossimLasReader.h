@@ -230,6 +230,8 @@ public:
    /** @return The total number of decimation levels. */
    virtual ossim_uint32 getNumberOfDecimationLevels() const;
 
+   virtual ossim_uint32 getNumberOfOutputBands() const;
+
 protected:
    /**
     * @brief Will complete the opening process.
@@ -247,13 +249,25 @@ private:
    class Bucket
    {
    public:
-      Bucket(): a(0.0), c(0) {}
+      Bucket(): a(0.0), c(0), red(0), green(0), blue(0) {}
          
       void add(const ossim_float64& point) { a += point; ++c; }
       ossim_float64 getValue() const { return ( c ? a/c : -99999.0 ); }
+      void setRed(const ossim_uint16& value) { red = value; }
+      void setGreen(const ossim_uint16& value) { green = value; }
+      void setBlue(const ossim_uint16& value) { blue = value; }
+      void setIntensity(const ossim_uint16& value) { intensity = value; }
+      ossim_uint16 getRed() const { return red; }
+      ossim_uint16 getGreen() const { return green; }
+      ossim_uint16 getBlue() const { return blue; }
+      ossim_uint16 getIntensity() const { return intensity; }
 
       ossim_float64 a; // accumulation
       ossim_uint32  c; // count
+      ossim_uint16 red;
+      ossim_uint16 green;
+      ossim_uint16 blue;
+      ossim_uint16 intensity;
    };
 
    bool init();

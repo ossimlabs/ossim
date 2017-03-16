@@ -73,6 +73,7 @@ protected:
    bool                        theEventProgressFlag;
    bool                        theUseInputTileSizeFlag;
    RLevelCacheList             theRLevelCacheList;
+   ossimIpt                    theTileSizeXY;
    
    /** For lock and unlock. */
 

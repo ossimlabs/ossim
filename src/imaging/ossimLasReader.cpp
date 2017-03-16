@@ -31,10 +31,12 @@
 #include <ossim/support_data/ossimFgdcTxtDoc.h>
 #include <ossim/support_data/ossimLasHdr.h>
 #include <ossim/support_data/ossimLasPointRecordInterface.h>
+#include <ossim/support_data/ossimLasPointRecord0.h>
 #include <ossim/support_data/ossimLasPointRecord1.h>
 #include <ossim/support_data/ossimLasPointRecord2.h>
 #include <ossim/support_data/ossimLasPointRecord3.h>
 #include <ossim/support_data/ossimLasPointRecord4.h>
+#include <ossim/base/ossimConstants.h>
 
 #include <ossim/support_data/ossimTiffInfo.h>
 
@@ -101,7 +103,7 @@ bool ossimLasReader::open()
          m_hdr->readStream(m_str);
          ossim_uint32 dataFormatId = m_hdr->getPointDataFormatId();
 
-         if ( (dataFormatId == 1) || (dataFormatId == 2) ||
+         if ( (dataFormatId == 0) || (dataFormatId == 1) || (dataFormatId == 2) ||
               (dataFormatId == 3) || (dataFormatId == 4) )
          {
             result = init();
@@ -195,7 +197,7 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
    bool status = false;
 
 
-   if ( m_hdr && result && (result->getScalarType() == OSSIM_FLOAT32) &&
+   if ( m_hdr && result && (result->getScalarType() == OSSIM_FLOAT32||result->getScalarType() == OSSIM_UINT16) &&
         (result->getDataObjectStatus() != OSSIM_NULL) &&
         !m_ul.hasNans() && !m_gsd.hasNans() )
    {
@@ -206,7 +208,7 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
       const ossim_int32 TILE_WIDTH  = static_cast<ossim_int32>(TILE_RECT.width());
       const ossim_int32 TILE_SIZE   = static_cast<ossim_int32>(TILE_RECT.area());
 
-      const ossim_uint16 ENTRY = m_entry+1;
+      const ossim_uint16 ENTRY = m_entry;
 
       // Get the scale for this resLevel:
       ossimDpt scale;
@@ -215,6 +217,8 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
       // Set the starting upper left of upper left pixel for this tile.
       const ossimDpt UL_PROG_PT( m_ul.x - scale.x / 2.0 + TILE_RECT.ul().x * scale.x,
                                  m_ul.y + scale.y / 2.0 - TILE_RECT.ul().y * scale.y);
+      //const ossimDpt UL_PROG_PT( m_ul.x + TILE_RECT.ul().x * scale.x,
+      //                           m_ul.y + scale.y / 2.0 - TILE_RECT.ul().y * scale.y);
 
       //---
       // Set the lower right to the edge of the tile boundary.  This looks like an
@@ -259,8 +263,8 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
          // m_str.read((char*)lasPtRec, 28);
          lasPtRec->readStream( m_str );
 
-         if ( lasPtRec->getReturnNumber() == ENTRY )
-         {
+         //if ( lasPtRec->getReturnNumber() == ENTRY )
+         //{
             lasPt.x = lasPtRec->getX() * SCALE_X + OFFSET_X;
             lasPt.y = lasPtRec->getY() * SCALE_Y + OFFSET_Y;
             if ( m_unitConverter )
@@ -281,9 +285,14 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
                   ossim_float64 z = lasPtRec->getZ() * SCALE_Z + OFFSET_Z;
                   if (  m_unitConverter ) convertToMeters(z);
                   bucket[bucketIndex].add( z ); 
+        bucket[bucketIndex].setRed(lasPtRec->getRed());
+        bucket[bucketIndex].setGreen(lasPtRec->getGreen());
+        bucket[bucketIndex].setBlue(lasPtRec->getBlue());
+        bucket[bucketIndex].setIntensity(lasPtRec->getIntensity());
+
                }
             }
-         }
+         //}
          if ( m_str.eof() ) break;
       }
       delete lasPtRec;
@@ -295,12 +304,40 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
       //---
       result->makeBlank();
 
-      ossim_float32* buf = result->getFloatBuf(); // Tile buffer to fill.
-      
-      // Fill the tile.  Currently no band loop:
-      for (ossim_int32 i = 0; i < TILE_SIZE; ++i)
+      //ossim_float32* buf = result->getFloatBuf(); // Tile buffer to fill.
+      if(m_entry == 1)
       {
-         buf[i] = bucket[i].getValue();
+        ossim_uint32 BANDS = getNumberOfOutputBands();
+        std::vector<ossim_uint16> tempBuf(TILE_SIZE * BANDS);
+   ossim_uint16* buffer = &tempBuf.front();
+   for (ossim_int32 band = 0; band < BANDS; ++band)
+   {
+     for (ossim_int32 i = 0; i < TILE_SIZE; ++i)
+     {
+       if(band == 0) buffer[i] = bucket[i].getRed();
+       if(band == 1) buffer[i] = bucket[i].getGreen();
+       if(band == 2) buffer[i] = bucket[i].getBlue();
+     }
+        }
+   result->loadTile(buffer, TILE_RECT, TILE_RECT, OSSIM_BIP);
+      }
+      else if (m_entry == 2)
+      {
+   ossim_uint16* buf = result->getUshortBuf();
+   for (ossim_int32 i = 0; i < TILE_SIZE; ++i)
+   {
+     buf[i] = bucket[i].getIntensity();
+   }
+      }
+      else
+      {
+   ossim_float32* buf = result->getFloatBuf();
+      
+        // Fill the tile.  Currently no band loop:
+        for (ossim_int32 i = 0; i < TILE_SIZE; ++i)
+        {
+           buf[i] = bucket[i].getValue();
+        }
       }
 
       // Revalidate.
@@ -316,12 +353,18 @@ ossim_uint32 ossimLasReader::getNumberOfInputBands() const
    return 1; // tmp
 }
 
+ossim_uint32 ossimLasReader::getNumberOfOutputBands() const
+{
+  if(m_entry == 1) return 3;
+  return 1;
+}
+
 ossim_uint32 ossimLasReader::getNumberOfLines(ossim_uint32 resLevel) const
 {
    ossim_uint32 result = 0;
    if ( isOpen() )
    {
-      result = static_cast<ossim_uint32>(ceil(m_ul.y - m_lr.y) / m_gsd.y);
+      result = static_cast<ossim_uint32>(ceil((m_ul.y - m_lr.y) / m_gsd.y));
       if (resLevel) result = (result>>resLevel);
    }
    return result;
@@ -332,7 +375,7 @@ ossim_uint32 ossimLasReader::getNumberOfSamples(ossim_uint32 resLevel) const
    ossim_uint32 result = 0;
    if ( isOpen() )
    {
-      result = static_cast<ossim_uint32>(ceil(m_lr.x - m_ul.x) / m_gsd.x);
+      result = static_cast<ossim_uint32>(ceil((m_lr.x - m_ul.x) / m_gsd.x));
       if (resLevel) result = (result>>resLevel);
    }
    return result;
@@ -364,17 +407,23 @@ ossim_uint32 ossimLasReader::getTileHeight() const
 
 ossimScalarType ossimLasReader::getOutputScalarType() const
 {
-   return OSSIM_FLOAT32;
+   //return OSSIM_FLOAT32;
+   ossimScalarType stype = OSSIM_FLOAT32;
+   if(m_entry == 1 || m_entry == 2) stype = OSSIM_UINT16;
+   return stype;
 }
 
 void ossimLasReader::getEntryList(std::vector<ossim_uint32>& entryList)const
 {
    if ( isOpen() )
    {
-      for ( ossim_uint32 entry = 0; entry < 15; ++entry )
-      {
-         if ( m_hdr->getNumberOfPoints(entry) ) entryList.push_back(entry);
-      }
+      entryList.push_back(0);
+      entryList.push_back(1);
+      entryList.push_back(2);
+      //for ( ossim_uint32 entry = 0; entry < 15; ++entry )
+      //{
+      //   if ( m_hdr->getNumberOfPoints(entry) ) entryList.push_back(entry);
+      //}
    }
    else
    {
@@ -405,6 +454,7 @@ bool ossimLasReader::setCurrentEntry(ossim_uint32 entryIdx)
          ++i;
       }
    }
+   if(result) initTile();
    return result;
 }
 
@@ -640,14 +690,13 @@ bool ossimLasReader::init()
          }
       }
 
-      if ( !result )
-      {     
-         result = parseVarRecords();
-         if ( !result )
-         {
-            result = initFromExternalMetadata(); // Checks for external FGDC text file.
-         }
-      }
+      // There is nothing we can do if parseVarRecords fails.
+      // VAR record is optional, so guess the projection
+      // Moved to setCurrentEntry
+      //if ( result )
+      //{
+      //   initTile();
+      //}
    }
    
    return result;
@@ -718,7 +767,7 @@ bool ossimLasReader::initProjection()
 
 void ossimLasReader::initTile()
 {
-   const ossim_uint32 BANDS = getNumberOfOutputBands();
+   ossim_uint32 BANDS = getNumberOfOutputBands();
 
    m_tile = new ossimImageData(this,
                                getOutputScalarType(),
@@ -728,9 +777,12 @@ void ossimLasReader::initTile()
 
    for(ossim_uint32 band = 0; band < BANDS; ++band)
    {
-      m_tile->setMinPix(getMinPixelValue(band),   band);
-      m_tile->setMaxPix(getMaxPixelValue(band),   band);
-      m_tile->setNullPix(getNullPixelValue(band), band);
+      if (m_entry == 0 || m_entry == 1)
+      {
+        m_tile->setMinPix(getMinPixelValue(band),   band);
+        m_tile->setMaxPix(getMaxPixelValue(band),   band);
+        m_tile->setNullPix(getNullPixelValue(band), band);
+      }
    }
 
    m_tile->initialize();
@@ -821,6 +873,10 @@ void ossimLasReader::initValues()
          x = lasPtRec->getX() * SCALE_X + OFFSET_X;
          y = lasPtRec->getY() * SCALE_Y + OFFSET_Y;
          z = lasPtRec->getZ() * SCALE_Z + OFFSET_Z;
+
+    //std::cout << "X: " << lasPtRec->getX() << " SCALE: " << SCALE_X << " OFFSET: " << OFFSET_X << " XNORM: " << x << std::endl;
+    //std::cout << "Y: " << lasPtRec->getY() << " SCALE: " << SCALE_Y << " OFFSET: " << OFFSET_Y << " YNORM: " << y << std::endl;
+    //std::cout << "Z: " << lasPtRec->getZ() << " SCALE: " << SCALE_Z << " OFFSET: " << OFFSET_Z << " ZNORM: " << z << std::endl;
          
          if ( x < m_ul.x ) m_ul.x = x;
          if ( x > m_lr.x ) m_lr.x = x;
@@ -1050,6 +1106,28 @@ bool ossimLasReader::parseVarRecords()
             }
          }
       }
+      else
+      {
+   /*  Current data samples appear to be UTM but not sure where to find the zone
+      const char* prefix = "image0.";
+           // Build a default projection
+           ossimKeywordlist geomKwl;
+           geomKwl.add(prefix, "datum", "WGE", true);
+           geomKwl.add(prefix, "pixel_type", "pixel_is_area",  true);
+           geomKwl.add(prefix, "type", "ossimEquDistCylProjection", true);
+           m_proj = ossimProjectionFactoryRegistry::instance()->createProjection(geomKwl);
+           if(m_proj.valid())
+           {
+             initUnits(geomKwl);
+             initValues();
+             result = initProjection(); // Sets the ties and scale...
+             if (traceDebug())
+             {
+               m_proj->print(ossimNotify(ossimNotifyLevel_DEBUG));
+             }
+           }
+   */
+      }
 
       if ( geoKeyBlock )
       {
@@ -1147,6 +1225,11 @@ ossimLasPointRecordInterface* ossimLasReader::getNewPointRecord() const
 
    switch(m_hdr->getPointDataFormatId())
    {
+      case 0:
+      {
+         result = new ossimLasPointRecord0();
+         break;
+      }
       case 1:
       {
          result = new ossimLasPointRecord1();
@@ -1205,4 +1288,3 @@ void ossimLasReader::setGsd( const ossim_float64& gsd )
       }
    }
 }
-

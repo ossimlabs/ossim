@@ -294,6 +294,7 @@ private:
    ossimFilterResampler::ossimFilterResamplerType     m_resampleType;
    std::vector<double>                                m_nullPixelValues;
    bool                                               m_copyAllFlag;
+   ossimString                                        m_tempExtension;
    bool                                               m_outputTileSizeSetFlag;
    bool                                               m_internalOverviewsFlag;
 

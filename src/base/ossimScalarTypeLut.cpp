@@ -89,6 +89,18 @@ ossimScalarTypeLut::ossimScalarTypeLut()
    entry.init(OSSIM_USHORT11, "ushort11");
    theTable.push_back(entry);
 
+   entry.init(OSSIM_USHORT12, "ushort12");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT13, "ushort13");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT14, "ushort14");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT15, "ushort15");
+   theTable.push_back(entry);
+
    entry.init(OSSIM_FLOAT, "float");
    theTable.push_back(entry);
 
@@ -110,6 +122,18 @@ ossimScalarTypeLut::ossimScalarTypeLut()
    theTable.push_back(entry);
 
    entry.init(OSSIM_USHORT11, "U11");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT12, "U12");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT13, "U13");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT14, "U14");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT15, "U15");
    theTable.push_back(entry);
 
    entry.init(OSSIM_UINT16, "U16");
@@ -136,6 +160,18 @@ ossimScalarTypeLut::ossimScalarTypeLut()
    theTable.push_back(entry);
 
    entry.init(OSSIM_USHORT11, "11-bit");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT12, "12-bit");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT13, "13-bit");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT14, "14-bit");
+   theTable.push_back(entry);
+
+   entry.init(OSSIM_USHORT15, "15-bit");
    theTable.push_back(entry);
 
    entry.init(OSSIM_UINT16, "16-bit unsigned");

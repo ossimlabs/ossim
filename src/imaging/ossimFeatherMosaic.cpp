@@ -108,6 +108,10 @@ ossimRefPtr<ossimImageData> ossimFeatherMosaic::getTile(const ossimIrect& tileRe
       }
       case OSSIM_USHORT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          return combine(static_cast<ossim_uint16>(0),
                         tileRect, resLevel);

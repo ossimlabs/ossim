@@ -61,6 +61,7 @@ public:
    void setMinValueOverride(ossim_float32 minValueOverride);
 
    void setMaxValueOverride(ossim_float32 maxValueOverride);
+   void setNumberOfTiles(ossim_uint32 numberOfTiles);
 
    ossimHistogramMode getComputationMode()const;
    void setComputationMode(ossimHistogramMode mode);

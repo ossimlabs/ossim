@@ -384,7 +384,7 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::tooBig()const
 {
   ossimDrect vRect = getViewRect();
 
-  return ((vRect.width() > 64) || (vRect.height() > 64));
+  return ((vRect.width() > 32) || (vRect.height() > 32));
 }
 
 ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
@@ -2221,6 +2221,10 @@ ossimRefPtr<ossimImageData>  ossimImageRenderer::getTileAtResLevel(const ossimIr
                   }
                   case OSSIM_UINT16:
                   case OSSIM_USHORT11:
+                  case OSSIM_USHORT12:
+                  case OSSIM_USHORT13:
+                  case OSSIM_USHORT14:
+                  case OSSIM_USHORT15:
                   {
                      resampleTileToDecimation((ossim_uint16)0,
                                               m_TemporaryBuffer,

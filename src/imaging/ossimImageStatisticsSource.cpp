@@ -45,6 +45,10 @@ void ossimImageStatisticsSource::computeStatistics()
          }
          case OSSIM_USHORT16:
          case OSSIM_USHORT11:
+         case OSSIM_USHORT12:
+         case OSSIM_USHORT13:
+         case OSSIM_USHORT14:
+         case OSSIM_USHORT15:
          {
             computeStatisticsTemplate((ossim_uint16)0);
             break;

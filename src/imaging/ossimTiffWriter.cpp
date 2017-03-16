@@ -194,6 +194,10 @@ MODULE);
 
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       bitsPerSample = 16;
       sampleFormat = SAMPLEFORMAT_UINT;
       break;
@@ -301,7 +305,11 @@ MODULE);
    bool lutEnabled = (theColorLutFlag&&
          ((scalarType == OSSIM_UINT8)||
                (scalarType == OSSIM_UINT16)||
-               (scalarType == OSSIM_USHORT11))&&
+               (scalarType == OSSIM_USHORT11)||
+	       (scalarType == OSSIM_USHORT12)||
+	       (scalarType == OSSIM_USHORT13)||
+	       (scalarType == OSSIM_USHORT14)||
+	       (scalarType == OSSIM_USHORT15))&&
                (theColorLut->getNumberOfEntries() > 0)&&
                (theInputConnection->getNumberOfOutputBands() == 1));
    if(lutEnabled)
@@ -1358,6 +1366,10 @@ void ossimTiffWriter::writeMinMaxTags(const vector<ossim_float64>& minBand,
       switch( theInputConnection->getOutputScalarType() )
       {
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          TIFFSetField( tiffPtr, TIFFTAG_MINSAMPLEVALUE,
                        static_cast<ossim_sint16>(0) );

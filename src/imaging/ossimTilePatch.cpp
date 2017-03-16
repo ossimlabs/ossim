@@ -160,6 +160,10 @@ void ossimTilePatch::fillTile(ossimRefPtr<ossimImageData>& result,
       }
       case OSSIM_USHORT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          fillTileTemplate(static_cast<ossim_uint16>(0),
                           result,
@@ -236,6 +240,10 @@ void ossimTilePatch::fillTile(ossimRefPtr<ossimImageData>& result,
       }
       case OSSIM_USHORT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          fillTileTemplate(static_cast<ossim_uint16>(0),
                           result,

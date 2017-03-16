@@ -1036,7 +1036,7 @@ bool ossimGeoTiff::readTags(
    theAngularUnits    = thePrivateDefinitions->m_defs->UOMAngle;
    theLinearUnitsCode = thePrivateDefinitions->m_defs->UOMLength;
 
-   if (theAngularUnits == ANGULAR_DMS_HEMISPHERE)
+   if (theAngularUnits == ANGULAR_DMS_HEMISPHERE || theAngularUnits == 9122)
    {
       //---
       // Hack for bug, where the libgeotiff funtion GTIFGetDefn sets the angular units 
@@ -1163,6 +1163,7 @@ bool ossimGeoTiff::readTags(
             break;
          }
          case ProjFalseOriginLongGeoKey:
+	 case ProjStraightVertPoleLongGeoKey:
          {
             theOriginLon = thePrivateDefinitions->m_defs->ProjParm[idx];
             break;

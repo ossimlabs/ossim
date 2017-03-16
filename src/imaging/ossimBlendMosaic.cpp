@@ -138,6 +138,10 @@ ossimRefPtr<ossimImageData> ossimBlendMosaic::getTile(
       }
       case OSSIM_UINT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          if(!hasDifferentInputs())
          {

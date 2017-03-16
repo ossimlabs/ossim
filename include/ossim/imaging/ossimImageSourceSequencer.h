@@ -15,6 +15,8 @@
 #include <ossim/imaging/ossimImageSource.h>
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimConnectableObjectListener.h>
+#include <ossim/base/ossimHistogramSource.h>
+#include <ossim/base/ossimMultiResLevelHistogram.h>
 
 
 class OSSIMDLLEXPORT ossimImageSourceSequencer
@@ -90,6 +92,7 @@ public:
     * 
     */
    virtual ossimRefPtr<ossimImageData> getNextTile(ossim_uint32 resLevel=0);
+   virtual bool getNextTileStream(std::ostream& bos);
 
    virtual bool getTileOrigin(ossim_int64 id, ossimIpt& origin)const;
 
@@ -136,10 +139,18 @@ public:
    virtual double getNullPixelValue(ossim_uint32 band=0)const;
    virtual double getMinPixelValue(ossim_uint32 band=0)const;
    virtual double getMaxPixelValue(ossim_uint32 band=0)const;
+
+   void setCreateHistogram(bool create_histogram);
+   bool loadState(const ossimKeywordlist& kwl, const char* prefix);
+
+   void getBinInformation(ossim_uint32& numberOfBins,
+                          ossim_float64& minValue,
+                          ossim_float64& maxValue, ossimScalarType stype)const;
    
 protected:
    ossimImageSource*  theInputConnection;
    ossimRefPtr<ossimImageData> theBlankTile;
+   ossimRefPtr<ossimMultiResLevelHistogram> theHistogram;
    /*!
     * Is the area of interest.  The default will
     * 
@@ -158,6 +169,7 @@ protected:
    ossim_int64 theNumberOfTilesHorizontal;
    ossim_int64 theNumberOfTilesVertical;
    ossim_int64 theCurrentTileNumber;
+   bool theCreateHistogram;
 
    virtual void updateTileDimensions();
 

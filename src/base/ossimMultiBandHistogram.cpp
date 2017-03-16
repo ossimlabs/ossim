@@ -71,6 +71,34 @@ void ossimMultiBandHistogram::create(const ossimImageSource* input)
             numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT11 + 1;
             break;
          }
+         case OSSIM_USHORT12:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT12;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT12 + 1;
+            break;
+         }
+         case OSSIM_USHORT13:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT13;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT13 + 1;
+            break;
+         }
+         case OSSIM_USHORT14:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT14;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT14 + 1;
+            break;
+         }
+         case OSSIM_USHORT15:
+         {
+            minValue     = 0;
+            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT15;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT15 + 1;
+            break;
+         }
          case OSSIM_UINT16:
          case OSSIM_UINT32:
          {

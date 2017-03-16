@@ -68,6 +68,8 @@ public:
     */
    virtual void setBandSignificance(const ossimString& rep);
 
+   bool loadState(const ossimKeywordlist& kwl, const char* prefix, ossim_uint32 index=0);
+
 protected:
    void clearFields();
    void printLookupTables(std::ostream& out)const;
