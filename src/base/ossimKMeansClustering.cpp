@@ -65,7 +65,7 @@ bool ossimKMeansClustering::computeKmeans()
    }
 
    double max_delta = overall_max - overall_min;
-   double convergenceThreshold = 0.1*(max_delta)/m_numEntries;
+   // double convergenceThreshold = 0.1*(max_delta)/m_numEntries;
    ossim_uint32 numClusters = m_clusters.size();
    double* variances = new double [numClusters];
    ossim_uint32* priorCounts = new ossim_uint32 [numClusters];
@@ -87,7 +87,8 @@ bool ossimKMeansClustering::computeKmeans()
       priorCounts[gid] = 0;
    }
    double delta, min_delta;
-   ossim_uint32 best_gid, np, iters = 0, max_iters = 20;
+   // ossim_uint32 best_gid, np, iters = 0, max_iters = 20;
+   ossim_uint32 best_gid, iters = 0, max_iters = 20;
    bool converged = false;
 
    // Loop until converged on best solution:

@@ -1,6 +1,6 @@
 //*******************************************************************
 // 
-// See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -11,7 +11,7 @@
 // Remaps a tile based on mode and histogram clip points.
 //
 //*************************************************************************
-// $Id: ossimHistogramRemapper.cpp 23182 2015-03-09 14:30:52Z okramer $
+// $Id$
 
 #include <ossim/imaging/ossimHistogramRemapper.h>
 #include <ossim/base/ossimMultiResLevelHistogram.h>
@@ -1768,7 +1768,7 @@ template <class T> void ossimHistogramRemapper::buildAutoLinearPercentileTableTe
    for (ossim_uint32 band = 0; band < BANDS; ++band)
    {
       ossimRefPtr<ossimHistogram> h  = getHistogram(band);
-      T nullPix = static_cast<T>(getNullPixelValue(band));
+      // T nullPix = static_cast<T>(getNullPixelValue(band));
       // h->fillInteriorEmptyBins();
       if(h.valid())
       {

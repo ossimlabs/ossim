@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -320,9 +320,8 @@ public:
     */
    virtual void convertToNormalizedDouble(ossimImageData* result)const;
 
-   template <class T>
-   void copyTileToFloatBuffer(T dummyTemplate,
-                                   ossim_float32* buf)const
+   template <class T> void copyTileToFloatBuffer(
+      T /* dummyTemplate*/, ossim_float32* buf)const
    {
      const ossim_uint32 SIZE  = getSizePerBand();
      const ossim_uint32 BANDS = getNumberOfBands();

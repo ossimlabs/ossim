@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author: Ken Melero (kmelero@imagelinks.com)
 //         Orginally developed by:
@@ -15,7 +15,7 @@
 // frequency m_counts for each of these buckets.
 //
 //********************************************************************
-// $Id: ossimHistogram.cpp 23236 2015-04-08 00:47:22Z gpotts $
+// $Id$
 
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimHistogram.h>
@@ -912,7 +912,7 @@ float ossimHistogram::GetMinValFromIndex(ossim_uint32 idx)const
 {
    float result = 0.0;
    
-   if(idx < m_num)
+   if((int)idx < m_num)
    {
       result = (m_vals[idx]-(0.5 * m_delta));
       if(result < m_vmin) result = m_vmin;
@@ -925,7 +925,7 @@ float ossimHistogram::GetMaxValFromIndex(ossim_uint32 idx)const
 {
    float result = 0.0;
    
-   if(idx < m_num)
+   if((int)idx < m_num)
    {
       result = (m_vals[idx]+(0.5 * m_delta));
       if(result > m_vmax) result = m_vmax;
@@ -937,7 +937,7 @@ float ossimHistogram::GetMaxValFromIndex(ossim_uint32 idx)const
 float ossimHistogram::GetValFromIndex(ossim_uint32 idx)const
 {
    float result = 0.0;
-   if(idx < m_num)
+   if((int)idx < m_num)
    {
       result = m_vals[idx];
    }

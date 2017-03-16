@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2001 ImageLinks Inc.
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author:  David Burken
 //
@@ -11,9 +11,7 @@
 // This class is used to remap image data from one scalar type to another.
 //
 //*******************************************************************
-//  $Id: ossimScalarRemapper.cpp 22135 2013-02-02 16:27:24Z dburken $
-
-#include <iostream>
+//  $Id$
 
 #include <ossim/imaging/ossimScalarRemapper.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
@@ -23,6 +21,8 @@
 #include <ossim/base/ossimRefreshEvent.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimStringProperty.h>
+
+#include <iostream>
 
 RTTI_DEF1(ossimScalarRemapper,
           "ossimScalarRemapper",

@@ -1,13 +1,13 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
 // Author: Garrett Potts
 //
 //*************************************************************************
-// $Id: ossimImageData.cpp 23529 2015-09-22 18:00:06Z dburken $
+// $Id$
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorCodes.h>
