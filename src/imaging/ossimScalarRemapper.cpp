@@ -36,7 +36,8 @@ ossimScalarRemapper::ossimScalarRemapper()
       theNormBuf(NULL),
       theTile(NULL),
       theOutputScalarType(OSSIM_UINT8),
-      theByPassFlag(false)
+      theByPassFlag(false),
+      thePreserveMagnitudeFlag(false)
 {
 }
 
@@ -87,6 +88,10 @@ void ossimScalarRemapper::destroy()
 ossimRefPtr<ossimImageData> ossimScalarRemapper::getTile(
    const ossimIrect& tileRect, ossim_uint32 resLevel)
 {
+   if(traceDebug())
+   {
+     std::cout << "ossimScalarRemapper::getTile START ... " << tileRect << " RES: " << resLevel << std::endl;
+   }
    if(!theInputConnection)
    {
       return ossimRefPtr<ossimImageData>();
@@ -163,43 +168,81 @@ ossimRefPtr<ossimImageData> ossimScalarRemapper::getTile(
       return inputTile;
    }
    
-   switch(inputTile->getScalarType())
+   if(thePreserveMagnitudeFlag)
    {
-      case OSSIM_NORMALIZED_DOUBLE:
-      {
-         // Un-normalize and copy the buffer to the destination tile.
-         theTile->copyNormalizedBufferToTile(
-            static_cast<double*>( inputTile->getBuf() ) );
-         break;
-      }
-      case OSSIM_NORMALIZED_FLOAT:
-      {
-         // Un-normalize and copy the buffer to the destination tile.
-         theTile->copyNormalizedBufferToTile(
-            static_cast<float*>( inputTile->getBuf() ) );
-         break;
-      }
-      default:
-      {
-         //---
-         // NOTE: stretchMinMax commented out as it was incorrectly not resetting
-         // the tile's min/max data members; hence, messing up the downstream copy
-         // to normalized buffer. (drb 02 Feb. 2013)
-         // Special case.  Stretch assuming caller want to view this data.
-         //---
-         // inputTile->stretchMinMax();
+     switch(inputTile->getScalarType())
+     {
+        case OSSIM_SINT16:
+        {
+          inputTile->copyTileToFloatBuffer(ossim_sint16(0), theTile->getFloatBuf());
+          break;
+        }
+        case OSSIM_UINT16:
+        {
+          inputTile->copyTileToFloatBuffer(ossim_uint16(0), theTile->getFloatBuf());
+          break;
+        }
+        case OSSIM_SINT32:
+        {
+          inputTile->copyTileToFloatBuffer(ossim_sint32(0), theTile->getFloatBuf());
+          break;
+        }
+        case OSSIM_UINT32:
+        {
+          inputTile->copyTileToFloatBuffer(ossim_uint32(0), theTile->getFloatBuf());
+          break;
+        }
+        default:
+        {
+          break;
+        }
+     }
+   }
+   else
+   {
+     switch(inputTile->getScalarType())
+     {
+        case OSSIM_NORMALIZED_DOUBLE:
+        {
+           // Un-normalize and copy the buffer to the destination tile.
+           theTile->copyNormalizedBufferToTile(
+              static_cast<double*>( inputTile->getBuf() ) );
+           break;
+        }
+        case OSSIM_NORMALIZED_FLOAT:
+        {
+           // Un-normalize and copy the buffer to the destination tile.
+           theTile->copyNormalizedBufferToTile(
+              static_cast<float*>( inputTile->getBuf() ) );
+           break;
+        }
+        default:
+        {
+           //---
+           // NOTE: stretchMinMax commented out as it was incorrectly not resetting
+           // the tile's min/max data members; hence, messing up the downstream copy
+           // to normalized buffer. (drb 02 Feb. 2013)
+           // Special case.  Stretch assuming caller want to view this data.
+           //---
+           // inputTile->stretchMinMax();
 
-         // Normalize and copy the source tile to a buffer.
-         inputTile->copyTileToNormalizedBuffer(theNormBuf);
+           // Normalize and copy the source tile to a buffer.
+           inputTile->copyTileToNormalizedBuffer(theNormBuf);
          
-         // Un-normalize and copy the buffer to the destination tile.
-         theTile->copyNormalizedBufferToTile(theNormBuf);
+           // Un-normalize and copy the buffer to the destination tile.
+           theTile->copyNormalizedBufferToTile(theNormBuf);
 
-         break;
-      }
+           break;
+        }
+     }
    }
    
    theTile->validate();
+   if(traceDebug())
+   {
+     std::cout << "ossimScalarRemapper::getTile END ... " << tileRect << " RES: " << resLevel << std::endl;
+   }
+
    
    return theTile;
 }
@@ -423,6 +466,7 @@ bool ossimScalarRemapper::saveState(ossimKeywordlist& kwl,
            ossimKeywordNames::SCALAR_TYPE_KW,
            ossimScalarTypeLut::instance()->getEntryString(theOutputScalarType),
            true);
+   kwl.add(prefix, "elevation", ossimString::toString(thePreserveMagnitudeFlag).c_str());
 
    return true;
 }
@@ -449,6 +493,11 @@ bool ossimScalarRemapper::loadState(const ossimKeywordlist& kwl,
    if (scalar != ossimLookUpTable::NOT_FOUND)
    {
       setOutputScalarType(static_cast<ossimScalarType>(scalar));
+   }
+   const char* lookup = kwl.find(prefix, "elevation");
+   if(lookup)
+   {
+      thePreserveMagnitudeFlag = ossimString(lookup).toBool();
    }
 
    return true;
@@ -568,6 +617,11 @@ double ossimScalarRemapper::getMaxPixelValue(ossim_uint32 band) const
    }
    
    return ossim::defaultMax(theOutputScalarType);
+}
+
+void ossimScalarRemapper::setPreserveMagnitude(bool value)
+{
+   thePreserveMagnitudeFlag = value;
 }
 
 ossimString ossimScalarRemapper::getLongName()const

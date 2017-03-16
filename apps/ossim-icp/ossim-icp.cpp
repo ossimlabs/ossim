@@ -30,7 +30,7 @@
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <ossim/imaging/ossimCacheTileSource.h>
 #include <ossim/imaging/ossimBandSelector.h>
-#include <ossim/imaging/ossimCibCadrgTileSource.h>
+//#include <ossim/imaging/ossimCibCadrgTileSource.h>
 #include <ossim/imaging/ossimRgbToGreyFilter.h>
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimArgumentParser.h>
@@ -380,15 +380,15 @@ int main(int argc, char* argv[])
    ossimRefPtr<ossimImageHandler> ih =
       ossimImageHandlerRegistry::instance()->open(ossimFilename(input_file));
    
-   ossimCibCadrgTileSource* its = PTR_CAST(ossimCibCadrgTileSource, ih.get());
+   //ossimCibCadrgTileSource* its = PTR_CAST(ossimCibCadrgTileSource, ih.get());
    
-   if (its)
-   {
+   //if (its)
+   //{
       if (cibcadrg_entry > 0)
       {
-         its->setCurrentEntry(cibcadrg_entry);
+         ih->setCurrentEntry(cibcadrg_entry);
       }
-   }
+   //}
    
    if (!ih)
    {

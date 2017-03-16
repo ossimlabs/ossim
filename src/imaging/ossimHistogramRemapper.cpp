@@ -253,7 +253,11 @@ ossimRefPtr<ossimImageData> ossimHistogramRemapper::getTile(
       break;
 
    case OSSIM_USHORT11:
-   case OSSIM_USHORT16:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
+   case OSSIM_UINT16:
       applyLinearStretch(ossim_uint16(0), inputTile);
       break;
 
@@ -1299,6 +1303,10 @@ void ossimHistogramRemapper::buildLinearTable()
       }
          
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       {
          buildLinearTable(ossim_uint16(0));
@@ -1362,6 +1370,10 @@ void ossimHistogramRemapper::buildAutoLinearMinMaxTable()
       }
          
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       {
          buildAutoLinearMinMaxTableTemplate(ossim_uint16(0));
@@ -1415,6 +1427,10 @@ void ossimHistogramRemapper::buildAutoLinearPercentileTable()
       }
          
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       {
          buildAutoLinearPercentileTableTemplate(ossim_uint16(0));
@@ -1958,6 +1974,26 @@ void ossimHistogramRemapper::setupTable()
          bytes_per_pixel = 2;
          theTableType = ossimTableRemapper::NATIVE;
          break;
+      case OSSIM_USHORT12:
+          values_per_band = 4096; // 2 ^ 12
+          bytes_per_pixel = 2;
+          theTableType = ossimTableRemapper::NATIVE;
+          break;
+      case OSSIM_USHORT13:
+          values_per_band = 8192; // 2 ^ 13
+          bytes_per_pixel = 2;
+          theTableType = ossimTableRemapper::NATIVE;
+          break;
+      case OSSIM_USHORT14:
+          values_per_band = 16384; // 2 ^ 14
+          bytes_per_pixel = 2;
+          theTableType = ossimTableRemapper::NATIVE;
+          break;
+      case OSSIM_USHORT15:
+          values_per_band = 32768; // 2 ^ 15
+          bytes_per_pixel = 2;
+          theTableType = ossimTableRemapper::NATIVE;
+          break;
          
       case OSSIM_UINT16:
       case OSSIM_SINT16:

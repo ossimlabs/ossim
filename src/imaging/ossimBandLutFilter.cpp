@@ -150,6 +150,10 @@ ossimRefPtr<ossimImageData> ossimBandLutFilter::getTile(const ossimIrect& tileRe
             theTile->getUshortBuf(band)[pixel] = value;
             break;
          case OSSIM_USHORT11:
+         case OSSIM_USHORT12:
+         case OSSIM_USHORT13:
+         case OSSIM_USHORT14:
+         case OSSIM_USHORT15:
             theTile->getUshortBuf(band)[pixel] = value;
             break;
          default:
@@ -191,7 +195,23 @@ void ossimBandLutFilter::allocate()
       break;
    case OSSIM_USHORT11:
       theTile->setMinPix(0);
+      theTile->setMaxPix(2047);
+      break;
+   case OSSIM_USHORT12:
+      theTile->setMinPix(0);
       theTile->setMaxPix(4095);
+      break;
+   case OSSIM_USHORT13:
+      theTile->setMinPix(0);
+      theTile->setMaxPix(8191);
+      break;
+   case OSSIM_USHORT14:
+      theTile->setMinPix(0);
+      theTile->setMaxPix(16383);
+      break;
+   case OSSIM_USHORT15:
+      theTile->setMinPix(0);
+      theTile->setMaxPix(32767);
       break;
    default:
       break;

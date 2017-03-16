@@ -184,6 +184,22 @@ void ossimWktProjectionFactory::loadRecords() const
    db_stream.close();
 }
 
+ossim_uint32 ossimWktProjectionFactory::getCode(const ossimString& pcsName)
+{
+   if (m_wktProjRecords.empty())
+      loadRecords();
+
+   std::map<std::string, ossim_uint32>::const_iterator it = m_wktProjRecords.find(pcsName.string());
+
+   if (it != m_wktProjRecords.end())
+   {
+      // Found an entry by this name, fetch the EPSG code:
+      return it->second;
+   }
+   return 0;
+}
+
+
 //*************************************************************************************************
 //! From keywordlist (as generated typically by ossimWkt class)
 //*************************************************************************************************

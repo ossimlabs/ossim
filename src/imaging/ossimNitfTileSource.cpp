@@ -814,12 +814,56 @@ void ossimNitfTileSource::initializeScalarType()
          }
          break;
       }
+      case 12:
+      {
+         if(pixelValueType == "SI")
+         {
+            theScalarType = OSSIM_SINT16;
+         }
+         else
+         {
+            theScalarType = OSSIM_USHORT12;
+         }
+         break;
+      }
+      case 13:
+      {
+         if(pixelValueType == "SI")
+         {
+            theScalarType = OSSIM_SINT16;
+         }
+         else
+         {
+            theScalarType = OSSIM_USHORT13;
+         }
+         break;
+      }
+      case 14:
+      {
+         if(pixelValueType == "SI")
+         {
+            theScalarType = OSSIM_SINT16;
+         }
+         else
+         {
+            theScalarType = OSSIM_USHORT14;
+         }
+         break;
+      }
+      case 15:
+      {
+         if(pixelValueType == "SI")
+         {
+            theScalarType = OSSIM_SINT16;
+         }
+         else
+         {
+            theScalarType = OSSIM_USHORT15;
+         }
+         break;
+      }
       case  9:
       case 10:
-      case 12:
-      case 13:
-      case 14:
-      case 15:
       case 16:         
       {
          if(pixelValueType == "SI")
@@ -911,7 +955,7 @@ void ossimNitfTileSource::initializeBandCount()
    // Initialize the read mode.
    theNumberOfInputBands = 0;
    theNumberOfOutputBands = 0;
-   theOutputBandList.clear();
+   //theOutputBandList.clear();
    
    const ossimNitfImageHeader* hdr = getCurrentImageHeader();
    if (!hdr)
@@ -938,11 +982,16 @@ void ossimNitfTileSource::initializeBandCount()
       }
    }
    
-   theOutputBandList.resize(theNumberOfOutputBands);
-   
-   for (ossim_uint32 i=0; i < theNumberOfOutputBands; ++i)
+   //for (ossim_uint32 i=0; i < theNumberOfOutputBands; ++i)
+   // Need to take bands from loadState to pass to Kakadu to avoid decompressing all bands
+   if (theOutputBandList.size() > 0) theNumberOfOutputBands = theOutputBandList.size();
+   else
    {
-      theOutputBandList[i] = i; // One to one for initial setup.
+      theOutputBandList.resize(theNumberOfOutputBands);
+      for (ossim_uint32 i=0; i < theNumberOfOutputBands; ++i)
+      {
+        theOutputBandList[i] = i; // One to one for initial setup.
+      }
    }
 
    if (traceDebug())
@@ -1931,6 +1980,10 @@ void ossimNitfTileSource::convertTransparentToNull(ossimRefPtr<ossimImageData> t
                      break;
                   }
                   case OSSIM_USHORT11:
+                  case OSSIM_USHORT12:
+                  case OSSIM_USHORT13:
+                  case OSSIM_USHORT14:
+                  case OSSIM_USHORT15:
                   case OSSIM_UINT16:
                   {
                      ossim_uint16 transparentValue = hdr->getTransparentCode();
@@ -2238,6 +2291,13 @@ bool ossimNitfTileSource::loadState(const ossimKeywordlist& kwl,
    {
       ossimString s(lookup);
       theCurrentEntry = s.toUInt32();
+   }
+
+   theOutputBandList.clear();
+   ossimString bands = kwl.find(prefix, ossimKeywordNames::BANDS_KW);
+   if (!bands.empty())
+   {
+      ossim::toSimpleVector(theOutputBandList, bands);
    }
 
    lookup = kwl.find(prefix,ossimKeywordNames::ENABLE_CACHE_KW);

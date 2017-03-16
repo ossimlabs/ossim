@@ -469,6 +469,10 @@ ossimString ossimNitfCommon::getNitfPixelType(ossimScalarType scalarType)
    {
       case OSSIM_UINT8:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       case OSSIM_UINT32:
       {
@@ -514,24 +518,24 @@ ossimString ossimNitfCommon::getCompressionRate(const ossimIrect& rect,
                           (static_cast<ossim_float64>(lengthInBytes) /
                            uncompressedSize) );
 
-   // Multiply by ten as there is an implied decimal point.
-   rate *= 10.0;
+   // Multiply by 100 as there is an implied decimal point.
+   rate *= 100.0;
 
    // Convert to string with zero precision.
-   ossimString s = ossimString::toString(rate, 0);
+   ossimString s = ossimString::toString(rate, 0, 4);
 
    if (s.size())
    {
       if (s.size() <= 3)
       {
          result = "N";
-         if (s.size() == 2)
+         if (s.size() == 3)
          {
-            result += "0";
+            result = "0";
          }
-         else if (s.size() == 1)
+         else if (s.size() == 2)
          {
-            result += "00";
+            result = "00";
          }
          result += s;
       }

@@ -187,6 +187,50 @@ ossimScalarType ossimJ2kSizRecord::getScalarType() const
             result = OSSIM_SINT16;
          }
       }
+      else if ( bpp == 12 )
+      {
+         if ( isSigned == 0 )
+         {
+            result = OSSIM_USHORT12;
+         }
+         else
+         {
+            result = OSSIM_SINT16;
+         }
+      }
+      else if ( bpp == 13 )
+      {
+         if ( isSigned == 0 )
+         {
+            result = OSSIM_USHORT13;
+         }
+         else
+         {
+            result = OSSIM_SINT16;
+         }
+      }
+      else if ( bpp == 14 )
+      {
+         if ( isSigned == 0 )
+         {
+            result = OSSIM_USHORT14;
+         }
+         else
+         {
+            result = OSSIM_SINT16;
+         }
+      }
+      else if ( bpp == 15 )
+      {
+         if ( isSigned == 0 )
+         {
+            result = OSSIM_USHORT15;
+         }
+         else
+         {
+            result = OSSIM_SINT16;
+         }
+      }
       else if( bpp <= 16 )
       {
          if( isSigned == 0 )

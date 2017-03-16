@@ -49,6 +49,7 @@ const ossimString ossimNitfImageHeaderV2_1::ISCRSN_KW = "iscrsn";
 const ossimString ossimNitfImageHeaderV2_1::ISSRDT_KW = "issrdt";
 const ossimString ossimNitfImageHeaderV2_1::ISCTLN_KW = "isctln";
 const ossimString ossimNitfImageHeaderV2_1::XBANDS_KW = "xbands";
+const ossimString NBANDS_KW                           = "nbands";
 
 static const
 ossimTrace traceDebug(ossimString("ossimNitfImageHeaderV2_1:debug"));
@@ -116,9 +117,15 @@ void ossimNitfImageHeaderV2_1::parseStream(ossim::istream& in, const ossimNitfFi
    ossim_int32 numberOfComments = ossimString(theNumberOfComments).toInt32();
    if(numberOfComments > 0)
    {
-      ossim_int32 bytes = numberOfComments*80;
-      theImageComments.resize( bytes );
-      in.read( (char*)&(theImageComments.front()), bytes );
+      theImageComments.resize(numberOfComments);
+      for (ossim_uint32 i=0; i < numberOfComments; ++i)
+      {
+        char comment[81];
+        memset(comment, ' ', 80);
+        comment[80] = '\0';
+        in.read(comment, 80);
+        theImageComments[i] = ossimString(comment).trim();
+      }
    }
    
    in.read(theCompression, 2);
@@ -402,9 +409,17 @@ void ossimNitfImageHeaderV2_1::writeStream(ossim::ostream &out)
    }
    
    out.write(theNumberOfComments, 1);
-   if ( theImageComments.size() )
+
+   if (ossimString(theNumberOfComments).toUInt32() > 0)
    {
-      out.write( (char*)&(theImageComments.front()), theImageComments.size() );
+     for (ossim_uint32 i=0; i < theImageComments.size(); ++i)
+     {
+        char icom[81];
+        memset(icom, ' ', 80);
+        icom[80] = '\0';
+        strcpy(icom, theImageComments[i].c_str());
+        out.write(icom, 80);
+     }
    }
    
    out.write(theCompression, 2);
@@ -478,7 +493,16 @@ void ossimNitfImageHeaderV2_1::writeStream(ossim::ostream &out)
          memcpy(theExtendedSubheaderDataLen, tempOut.str().c_str(), 5);
          
          out.write(theExtendedSubheaderDataLen, 5);
-         memset(theExtendedSubheaderOverflow, '0', 3);
+         ossim_uint32 theExtendedSubheaderDataLenBytes = ossimString(theExtendedSubheaderDataLen).toUInt32();
+
+         if (theExtendedSubheaderDataLenBytes > 0)
+         {
+           strcpy(theExtendedSubheaderOverflow, ossimString("001").c_str());
+         }
+         else
+         {
+            memset(theExtendedSubheaderOverflow, '0', 3);
+         }
          
          if(totalLength > 0)
          {
@@ -571,21 +595,11 @@ std::ostream& ossimNitfImageHeaderV2_1::print(std::ostream& out,
        << prefix << setw(24)
        << "NICOM:"  << theNumberOfComments << "\n";
 
-   ossim_int32 numberOfComments = ossimString(theNumberOfComments).toInt32();
-   if(numberOfComments > 0)
+   ossim_uint32 idx = 0;
+   for(idx = 0; idx < theImageComments.size(); ++idx)
    {
-      out << prefix << setw(24)
-          << "ICOM1:"  << theImageComments.substr(0,80) << "\n";
-      if ( numberOfComments > 1 )
-      {
-         out << prefix << setw(24)
-             << "ICOM2:"  << theImageComments.substr(80, 80) << "\n";
-      }
-      if ( numberOfComments > 2 )
-      {
-         out << prefix << setw(24)
-             << "ICOM3:"  << theImageComments.substr(160, 80) << "\n";
-      }
+       ossimString icpre = "ICOM" + ossimString::toString(idx) + ":";
+       out << prefix << std::setw(24) << icpre << theImageComments[idx].trim() << "\n";
    }
 
    out << prefix << setw(24)
@@ -597,7 +611,6 @@ std::ostream& ossimNitfImageHeaderV2_1::print(std::ostream& out,
        << prefix << setw(24)
        << "XBANDS:" << theNumberOfMultispectralBands << "\n";
    
-   ossim_uint32 idx = 0;
    for(idx = 0; idx < theImageBands.size(); ++idx)
    {
       if(theImageBands[idx].valid())
@@ -802,6 +815,17 @@ bool ossimNitfImageHeaderV2_1::loadState(const ossimKeywordlist& kwl, const char
    {
       setSecurityControlNumber( ossimString(lookup) );
    }
+   lookup = kwl.find( prefix, NBANDS_KW );
+   if ( lookup )
+   {
+      setNumberOfBands( ossimString(lookup).toUInt32() );
+   }
+   /* Setting this in the writer versus loadstate right now
+   for (int i=0; i < theImageBands.size(); ++i)
+   {
+     theImageBands[i]->loadState(kwl, prefix, i);
+   }
+   */
    
    return ossimNitfImageHeaderV2_X::loadState(kwl, prefix);
 }
@@ -1500,6 +1524,11 @@ void ossimNitfImageHeaderV2_1::setProperty(ossimRefPtr<ossimProperty> property)
    else if(name.contains(ISCRSN_KW))
    {
       setClassificationReason(property->valueToString());
+   }
+   else if(name == ISCRSN_KW)
+   {
+      property = new ossimStringProperty(name,
+                                         ossimString(theClassificationReason).trim());
    }
    else if(name.contains(ISSRDT_KW))
    {

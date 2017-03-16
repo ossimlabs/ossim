@@ -118,6 +118,22 @@ bool ossimGeneralRasterTileSource::getTile(ossimImageData* result,
             //---
             result->setScalarType(OSSIM_USHORT11);
          }
+         else if(getOutputScalarType() == OSSIM_USHORT12)
+         {
+            result->setScalarType(OSSIM_USHORT12);
+         }
+         else if(getOutputScalarType() == OSSIM_USHORT13)
+         {
+            result->setScalarType(OSSIM_USHORT13);
+         }
+         else if(getOutputScalarType() == OSSIM_USHORT14)
+         {
+            result->setScalarType(OSSIM_USHORT14);
+         }
+         else if(getOutputScalarType() == OSSIM_USHORT15)
+         {
+            result->setScalarType(OSSIM_USHORT15);
+         }
       }
       
       if (!status) // Did not get an overview tile.

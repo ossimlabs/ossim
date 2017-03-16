@@ -601,6 +601,54 @@ bool ossimWriter::writeMinMaxTiffTags( const vector<ossim_float64>& minBands,
                                        1, &v, arrayWritePos );
             break;
          }
+         case OSSIM_USHORT12:
+         {
+            ossim_uint16 v = 0;
+            writeTiffTag<ossim_uint16>( ossim::OTIFFTAG_MINSAMPLEVALUE,
+                                        ossim::OTIFF_SHORT,
+                                        1, &v, arrayWritePos );
+            v = 4095;
+            writeTiffTag<ossim_uint16>( ossim::OTIFFTAG_MAXSAMPLEVALUE,
+                                       ossim::OTIFF_SHORT,
+                                       1, &v, arrayWritePos );
+            break;
+         }
+         case OSSIM_USHORT13:
+         {
+            ossim_uint16 v = 0;
+            writeTiffTag<ossim_uint16>( ossim::OTIFFTAG_MINSAMPLEVALUE,
+                                        ossim::OTIFF_SHORT,
+                                        1, &v, arrayWritePos );
+            v = 8191;
+            writeTiffTag<ossim_uint16>( ossim::OTIFFTAG_MAXSAMPLEVALUE,
+                                       ossim::OTIFF_SHORT,
+                                       1, &v, arrayWritePos );
+            break;
+         }
+         case OSSIM_USHORT14:
+         {
+            ossim_uint16 v = 0;
+            writeTiffTag<ossim_uint16>( ossim::OTIFFTAG_MINSAMPLEVALUE,
+                                        ossim::OTIFF_SHORT,
+                                        1, &v, arrayWritePos );
+            v = 16383;
+            writeTiffTag<ossim_uint16>( ossim::OTIFFTAG_MAXSAMPLEVALUE,
+                                       ossim::OTIFF_SHORT,
+                                       1, &v, arrayWritePos );
+            break;
+         }
+         case OSSIM_USHORT15:
+         {
+            ossim_uint16 v = 0;
+            writeTiffTag<ossim_uint16>( ossim::OTIFFTAG_MINSAMPLEVALUE,
+                                        ossim::OTIFF_SHORT,
+                                        1, &v, arrayWritePos );
+            v = 32767;
+            writeTiffTag<ossim_uint16>( ossim::OTIFFTAG_MAXSAMPLEVALUE,
+                                       ossim::OTIFF_SHORT,
+                                       1, &v, arrayWritePos );
+            break;
+         }
          case OSSIM_UINT8:
          case OSSIM_UINT16:
          {
@@ -851,6 +899,10 @@ ossim_uint16 ossimWriter::getTiffSampleFormat() const
    {
       case OSSIM_UINT8:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       case OSSIM_UINT32:
          result = ossim::OSAMPLEFORMAT_UINT;

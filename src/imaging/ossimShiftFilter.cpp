@@ -105,6 +105,10 @@ ossimRefPtr<ossimImageData> ossimShiftFilter::getTile(
                   }
                   case OSSIM_UINT16:
                   case OSSIM_USHORT11:
+                  case OSSIM_USHORT12:
+                  case OSSIM_USHORT13:
+                  case OSSIM_USHORT14:
+                  case OSSIM_USHORT15:
                   {
                      fillTile( ossim_uint16(0), inputTile.get(), m_tile.get() );
                      break;

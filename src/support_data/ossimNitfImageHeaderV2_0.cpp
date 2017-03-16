@@ -95,12 +95,15 @@ void ossimNitfImageHeaderV2_0::parseStream(ossim::istream& in)
    // for now let's ignore the comments
    if(numberOfComments > 0)
    {
-      //---
-      // NOTE: The ossim::S3IStream is not handling the "ignore" so changed out
-      // to a seekg for now.  (drb 09 Nov. 2016)
-      //---
-      // in.ignore(numberOfComments*80);
-      in.seekg( numberOfComments*80, std::ios_base::cur );
+      theImageComments.resize(numberOfComments);
+      for (ossim_uint32 i=0; i < numberOfComments; ++i)
+      {
+        char comment[81];
+        memset(comment, ' ', 80);
+        comment[80] = '\0';
+        in.read(comment, 80);
+        theImageComments[i] = ossimString(comment).trim();
+      }
    }
    in.read(theCompression, 2);
    // check to see if there is compression
@@ -476,15 +479,21 @@ std::ostream& ossimNitfImageHeaderV2_0::print(std::ostream& out,
        << prefix << std::setw(24) << "IGEOLO:"
        << theGeographicLocation  << "\n"
        << prefix << std::setw(24) << "NICOM:"
-       << theNumberOfComments << "\n" 
-       << prefix << std::setw(24) << "IC:"
+       << theNumberOfComments << "\n"; 
+
+   ossim_uint32 idx = 0;
+   for(idx = 0; idx < theImageComments.size(); ++idx)
+   {
+       ossimString icpre = "ICOM" + ossimString::toString(idx) + ":";
+       out << prefix << std::setw(24) << icpre << theImageComments[idx].trim() << "\n";
+   }
+   out << prefix << std::setw(24) << "IC:"
        << theCompression  << "\n"     
        << prefix << std::setw(24) << "COMRAT:"
        << theCompressionRateCode  << "\n"
        << prefix << std::setw(24) << "NBANDS:"
        << theNumberOfBands  << "\n";
 
-   ossim_uint32 idx = 0;
    for(idx = 0; idx < theImageBands.size(); ++idx)
    {
       if(theImageBands[idx].valid())

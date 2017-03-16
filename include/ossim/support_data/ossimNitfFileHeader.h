@@ -20,6 +20,7 @@
 #include <ossim/base/ossimPropertyInterface.h>
 #include <ossim/base/ossimProperty.h>
 #include <ossim/support_data/ossimNitfTagInformation.h>
+#include <ossim/support_data/ossimNitfDesInformation.h>
 
 #include <vector>
 
@@ -147,6 +148,9 @@ public:
    virtual bool  getTagInformation(ossimNitfTagInformation& tag,
                                    int idx)const;
 
+   virtual std::vector<ossimNitfTagInformation> getAllTags() { return theTagList; }
+   virtual void setAllTags(std::vector<ossimNitfTagInformation> tagList) { theTagList = tagList; }
+
    virtual int getNumberOfTags()const;
 
    virtual bool getTag(ossimNitfTagInformation& tagInfo,
@@ -218,6 +222,7 @@ public:
    
 protected:
    std::vector<ossimNitfTagInformation> theTagList;
+   std::vector<ossimNitfDesInformation> theDesList;
    
 TYPE_DATA
 };

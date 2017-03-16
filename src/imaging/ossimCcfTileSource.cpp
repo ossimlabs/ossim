@@ -164,6 +164,10 @@ bool ossimCcfTileSource::fillBuffer(const ossimIrect& tile_rect,
                                   tile);
          break;
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_USHORT16:
          status = fillUshortBuffer(tile_rect,
                                    clip_rect,

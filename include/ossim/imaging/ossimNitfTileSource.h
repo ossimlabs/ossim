@@ -522,9 +522,8 @@ protected:
    ossim_uint32                  theNumberOfImages;
    ossim_uint32                  theCurrentEntry;
    ossimIrect                    theImageRect;
-   
-   std::shared_ptr<ossim::istream> theFileStr;   
-
+   std::shared_ptr<ossim::istream> theFileStr;
+   std::vector<ossim_uint32>     theSelectorBandList;
    std::vector<ossim_uint32>     theOutputBandList;
    ossimIpt                      theCacheSize;
    ossimInterleaveType           theCacheTileInterLeaveType;

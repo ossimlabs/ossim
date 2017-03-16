@@ -895,6 +895,22 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
             // 11 bit EO, i.e. Ikonos, QuickBird, WorldView, GeoEye.
             theScalarType = OSSIM_USHORT11; // IKONOS probably...
          }
+         else if (theMaxSampleValue <= 4095) // 2^12-1
+         {
+            theScalarType = OSSIM_USHORT12; 
+         }
+         else if (theMaxSampleValue <= 8191) // 2^13-1
+         {
+            theScalarType = OSSIM_USHORT13;
+         }
+         else if (theMaxSampleValue <= 16383) // 2^14-1
+         {
+            theScalarType = OSSIM_USHORT14;
+         }
+         else if (theMaxSampleValue <= 32767) // 2^15-1
+         {
+            theScalarType = OSSIM_USHORT15;
+         }
          else
          {
             theScalarType = OSSIM_UINT16; 
@@ -906,6 +922,22 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
          {
             // 11 bit EO, i.e. Ikonos, QuickBird, WorldView, GeoEye.
             theScalarType = OSSIM_USHORT11; // IKONOS probably...
+         }
+         else if (theMaxSampleValue <= 4095) // 2^12-1
+         {
+            theScalarType = OSSIM_USHORT12; 
+         }
+         else if (theMaxSampleValue <= 8191) // 2^13-1
+         {
+            theScalarType = OSSIM_USHORT13;
+         }
+         else if (theMaxSampleValue <= 16383) // 2^14-1
+         {
+            theScalarType = OSSIM_USHORT14;
+         }
+         else if (theMaxSampleValue <= 32767) // 2^15-1
+         {
+            theScalarType = OSSIM_USHORT15;
          }
          else
             theScalarType = OSSIM_UINT16; // Default to unsigned...

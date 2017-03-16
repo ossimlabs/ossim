@@ -91,6 +91,10 @@ ossimRefPtr<ossimImageData> ossimDilationFilter::getTile(const ossimIrect& rect,
          doDilation(ossim_uint8(0), inputData);
          break;
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
          doDilation(ossim_uint16(0), inputData);
          break;

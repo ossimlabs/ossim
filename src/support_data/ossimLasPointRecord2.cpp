@@ -105,7 +105,7 @@ ossimLasPointRecord2::~ossimLasPointRecord2()
 
 void ossimLasPointRecord2::readStream(std::istream& in)
 {
-   in.read((char*)&m_record, sizeof(ossimLasPointRecord2Data));
+   in.read((char*)&m_record, 26); // sizeof reports 28 due to actual space used for STRUCT //sizeof(ossimLasPointRecord2Data));
 
    if ( ossim::byteOrder() == OSSIM_BIG_ENDIAN )
    {
@@ -121,7 +121,7 @@ void ossimLasPointRecord2::writeStream(std::ostream& out)
       swap();
    }
 
-   out.write((char*)&m_record, sizeof(ossimLasPointRecord2Data));
+   out.write((char*)&m_record, 26); // sizeof reports 28 due to actual space used for STRUCT //sizeof(ossimLasPointRecord2Data));
 
    if ( ossim::byteOrder() == OSSIM_BIG_ENDIAN )
    {
@@ -143,6 +143,26 @@ ossim_int32 ossimLasPointRecord2::getY() const
 ossim_int32 ossimLasPointRecord2::getZ() const
 {
    return m_record.m_z;
+}
+
+ossim_uint16 ossimLasPointRecord2::getRed() const
+{  
+   return m_record.m_red;
+}
+
+ossim_uint16 ossimLasPointRecord2::getGreen() const
+{
+   return m_record.m_green;
+}
+
+ossim_uint16 ossimLasPointRecord2::getBlue() const
+{
+   return m_record.m_blue;
+}
+
+ossim_uint16 ossimLasPointRecord2::getIntensity() const
+{
+   return m_record.m_intensity;
 }
 
 ossim_uint8 ossimLasPointRecord2::getReturnNumber() const

@@ -211,6 +211,10 @@ void ossimTableRemapper::remapFromNativeTable(
       }
       
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_USHORT16:
       {
          remapFromNativeTable(ossim_uint16(0), inputTile);
@@ -499,6 +503,10 @@ ostream& ossimTableRemapper::print(ostream& os) const
       }
       
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_USHORT16:
       {
          dumpTable(ossim_uint16(0), os);

@@ -21,6 +21,7 @@
 #include <ossim/base/ossimNumericProperty.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimNotifyContext.h>
+#include <ossim/base/ossimPreferences.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_X.h>
 #include <ossim/support_data/ossimNitfDataExtensionSegmentV2_1.h> // ??? drb
@@ -45,6 +46,9 @@ const ossimString ossimNitfFileHeaderV2_1::FSCATP_KW  = "FSCATP";
 const ossimString ossimNitfFileHeaderV2_1::FSCRSN_KW  = "FSCRSN";
 const ossimString ossimNitfFileHeaderV2_1::FSSRDT_KW  = "FSSRDT";
 const ossimString ossimNitfFileHeaderV2_1::FBKGC_KW   = "FBKGC";
+const ossimString FL_KW                               = "FL";
+const ossimString HL_KW                                      = "HL";
+const ossimString NUMI_KW    = "NUMI";
 
 static const
 ossimTrace traceDebug(ossimString("ossimNitfFileHeaderV2_1:debug"));
@@ -389,6 +393,9 @@ void ossimNitfFileHeaderV2_1::parseStream(ossim::istream& in)
    // this need to be re-thought
    initializeAllOffsets();
    readOverflowTags(in);
+   // custom DES parsers
+   bool parseDes = ossimString(ossimPreferences::instance()->findPreference("des_parser")).toBool();
+   if (parseDes) readDes(in);
 }
 
 bool ossimNitfFileHeaderV2_1::isValid()const
@@ -435,6 +442,19 @@ void ossimNitfFileHeaderV2_1::readOverflowTags(ossim::istream& in)
          }
       }
       delete des;
+   }
+}
+
+void ossimNitfFileHeaderV2_1::readDes(istream& in)
+{
+   ossimNitfDesInformation des;
+
+   for (int i=0; i<getNumberOfDataExtSegments(); ++i)
+   {
+      ossimIFStream64::seekg64(in, theDataExtSegOffsetList[i].theDataExtSegHeaderOffset, ios::beg);
+      des.parseStream(in, theNitfDataExtSegInfoRecords[i].getDataExtSegLength());
+      theDesList.push_back(des);
+
    }
 }
 
@@ -860,6 +880,12 @@ std::ostream& ossimNitfFileHeaderV2_1::print(std::ostream& out,
        << theExtendedHeaderDataOverflow
        << "\n";
 
+   // Call DES PRINT
+   for (int i=0; i<theDesList.size(); ++i)
+   {
+      theDesList[i].print(out, prefix);
+   }
+
    return ossimNitfFileHeader::print(out, prefix);
 }
 
@@ -1090,6 +1116,13 @@ void ossimNitfFileHeaderV2_1::readDataExtSegInfoRecords(ossim::istream& in)
    }
 }
 
+void ossimNitfFileHeaderV2_1::deleteLastDataExtSegInfoRecord()
+{
+   if (theNitfDataExtSegInfoRecords.size()) theNitfDataExtSegInfoRecords.pop_back();
+
+   setNumberOfDataExtSegInfoRecords(theNitfDataExtSegInfoRecords.size());
+}
+
 void ossimNitfFileHeaderV2_1::readResExtSegInfoRecords(ossim::istream& in)
 {
    ossim_int32 numberOfResExtSegs = ossimString(theNumberOfResExtSegInfoRecords).toInt32();
@@ -1109,6 +1142,13 @@ void ossimNitfFileHeaderV2_1::readResExtSegInfoRecords(ossim::istream& in)
       
       theNitfResExtSegInfoRecords.push_back(temp);      
    }
+}
+
+void ossimNitfFileHeaderV2_1::deleteLastImageInfoRecord()
+{
+   if (theNitfImageInfoRecords.size()) theNitfImageInfoRecords.pop_back();
+
+   setNumberOfImageInfoRecords(theNitfImageInfoRecords.size());
 }
 
 ossim_int32 ossimNitfFileHeaderV2_1::getNumberOfLabels()const
@@ -1158,6 +1198,38 @@ void ossimNitfFileHeaderV2_1::addTextInfoRecord(const ossimNitfTextFileInfoRecor
    theNitfTextFileInfoRecords.push_back(recordInfo);
 
    setNumberOfTextInfoRecords(theNitfTextFileInfoRecords.size());
+}
+
+bool ossimNitfFileHeaderV2_1::saveState(ossimKeywordlist& kwl, const ossimString& prefix)const
+{
+   bool result = ossimNitfFileHeaderV2_X::saveState(kwl, prefix);
+
+   if(result)
+   {
+      kwl.add(prefix, FSCLSY_KW.c_str(), theSecurityClassificationSys);
+      kwl.add(prefix, FSCODE_KW.c_str(), theCodewords);
+      kwl.add(prefix, FSCTLH_KW.c_str(), theControlAndHandling);
+      kwl.add(prefix, FSREL_KW.c_str(), theReleasingInstructions);
+      kwl.add(prefix, FSDCTP_KW.c_str(), theDeclassificationType);
+      kwl.add(prefix, FSDCDT_KW.c_str(), theDeclassificationDate);
+      kwl.add(prefix, FSDCXM_KW.c_str(), theDeclassificationExemption);
+      kwl.add(prefix, FSDG_KW.c_str(), theDowngrade);
+      kwl.add(prefix, FSDGDT_KW.c_str(), theDowngradingDate);
+      kwl.add(prefix, FSCLTX_KW.c_str(), theClassificationText);
+      kwl.add(prefix, FSCATP_KW.c_str(), theClassificationAuthorityType);
+      kwl.add(prefix, FSCAUT_KW.c_str(), theClassificationAuthorityType);
+      kwl.add(prefix, FSCRSN_KW.c_str(), theClassificationReason);
+      kwl.add(prefix, FSSRDT_KW.c_str(), theSecuritySourceDate);
+      kwl.add(prefix, FSCTLN_KW.c_str(), theSecurityControlNumber);
+      //kwl.add(prefix, FBKGC_KW.c_str(), theFileBackgroundColor);
+      kwl.add(prefix, ONAME_KW.c_str(), theOriginatorsName);
+      kwl.add(prefix, OPHONE_KW.c_str(), theOriginatorsPhone);
+      kwl.add(prefix, FL_KW.c_str(), theFileLength);
+      kwl.add(prefix, HL_KW.c_str(), theHeaderLength);
+      kwl.add(prefix, NUMI_KW.c_str(), theNumberOfImageInfoRecords);
+   }
+
+   return result;
 }
 
 void ossimNitfFileHeaderV2_1::addDataExtSegInfoRecord(const ossimNitfDataExtSegInfoRecordV2_1& recordInfo)
@@ -1789,11 +1861,6 @@ bool ossimNitfFileHeaderV2_1::loadState(const ossimKeywordlist& kwl,
       setClassificationAuthorityType( ossimString(lookup) );
    }  
    lookup = kwl.find( prefix, FSCRSN_KW );
-   if ( lookup )
-   {
-      setClassificationReason( ossimString(lookup) );
-   }  
-   lookup = kwl.find( prefix, FSSRDT_KW );
    if ( lookup )
    {
       setClassificationReason( ossimString(lookup) );

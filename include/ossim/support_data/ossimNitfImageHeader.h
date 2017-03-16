@@ -37,6 +37,10 @@ public:
 
    virtual bool getTagInformation(ossimNitfTagInformation& tagInfo,
                                   ossim_uint32 idx) const;
+
+   virtual std::vector<ossimNitfTagInformation> getAllTags() { return theTagList; }
+
+   virtual void setAllTags(std::vector<ossimNitfTagInformation> tagList) { theTagList = tagList; }
    
    virtual bool getTagInformation(ossimNitfTagInformation& tagInfo,
                                   const ossimString& tagName) const;

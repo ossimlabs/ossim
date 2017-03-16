@@ -108,6 +108,10 @@ int main(int argc, char *argv[])
          case OSSIM_UINT16:
          case OSSIM_SINT16:
          case OSSIM_USHORT11:
+         case OSSIM_USHORT12:
+         case OSSIM_USHORT13:
+         case OSSIM_USHORT14:
+         case OSSIM_USHORT15:
             diff_found = tilesAreDifferent<ossim_uint16>(tile1.get(), tile2.get());
             break;
 

@@ -34,9 +34,11 @@ ossimCacheTileSource::ossimCacheTileSource()
      theFixedTileSize(),
      theCachingEnabled(true),
      theEventProgressFlag(false),
-     theUseInputTileSizeFlag(false)
+     theUseInputTileSizeFlag(false),
+     theTileSizeXY()
 {
    ossim::defaultTileSize(theFixedTileSize);
+   ossim::defaultTileSize(theTileSizeXY);
 }
 
 ossimCacheTileSource::~ossimCacheTileSource()
@@ -79,6 +81,10 @@ void ossimCacheTileSource::allocate()
 ossimRefPtr<ossimImageData> ossimCacheTileSource::getTile(
    const ossimIrect& tileRect, ossim_uint32 resLevel)
 {
+   if(traceDebug())
+   {
+     std::cout << "CACHE TILE START: " << tileRect << std::endl;
+   }
    ossimRefPtr<ossimImageData> result = 0;
    
    if ( theInputConnection )
@@ -108,6 +114,10 @@ ossimRefPtr<ossimImageData> ossimCacheTileSource::getTile(
       }
 
    } // End:  if ( theInputConnection )
+   if(traceDebug())
+   {
+     std::cout << "CACHE TILE END: " << tileRect << std::endl;
+   }
 
    return result;
 }
@@ -282,6 +292,7 @@ bool ossimCacheTileSource::loadState(const ossimKeywordlist& kwl,
       ossimIpt pt;
       pt.toPoint(std::string(lookup));
       setTileSize(pt);
+      theTileSizeXY = pt;
    }
    
    bool result = ossimImageSourceFilter::loadState(kwl, prefix);
@@ -468,9 +479,9 @@ ossimAppFixedTileCache::ossimAppFixedCacheId ossimCacheTileSource::getCacheId(os
             (cacheTileSize.y > static_cast<ossim_int64>(rect.height())))
          {
             cacheTileSize.x = ossim::max(static_cast<ossim_int64>(rect.width()), 
-                                         static_cast<ossim_int64>(64));
+                                         static_cast<ossim_int64>(theTileSizeXY.x));
             cacheTileSize.y = ossim::max(static_cast<ossim_int64>(rect.height()), 
-                                         static_cast<ossim_int64>(64));
+                                         static_cast<ossim_int64>(theTileSizeXY.y));
          }
 
          rect.stretchToTileBoundary(theFixedTileSize);

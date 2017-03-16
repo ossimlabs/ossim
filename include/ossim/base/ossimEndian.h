@@ -173,6 +173,10 @@ inline void ossimEndian::swap(ossimScalarType scalar,
       case OSSIM_USHORT16:
       case OSSIM_SSHORT16:
       case  OSSIM_USHORT11:
+      case  OSSIM_USHORT12:
+      case  OSSIM_USHORT13:
+      case  OSSIM_USHORT14:
+      case  OSSIM_USHORT15:
          swapTwoBytes(data, size);
          return;
          

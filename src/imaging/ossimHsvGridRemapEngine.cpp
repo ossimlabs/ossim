@@ -113,6 +113,10 @@ void ossimHsvGridRemapEngine::remapTile(const ossimDpt&       origin,
       }
       
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
          break;
          
       case OSSIM_UINT16:

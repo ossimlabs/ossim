@@ -192,6 +192,10 @@ ossimRefPtr<ossimImageData> ossimMaskFilter::executeMaskFilterSelect(
       break;
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_USHORT16:
    {
       executeMaskFilterSelection((ossim_uint16)0,
@@ -256,6 +260,10 @@ ossimRefPtr<ossimImageData> ossimMaskFilter::executeMaskFilterInvertSelect(ossim
       break;
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_USHORT16:
    {
       executeMaskFilterInvertSelection((ossim_uint16)0,
@@ -320,6 +328,10 @@ ossimRefPtr<ossimImageData> ossimMaskFilter::executeMaskFilterWeighted(ossimRefP
       break;
    }
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    case OSSIM_USHORT16:
    {
       executeMaskFilterWeighted((ossim_uint16)0,
@@ -384,6 +396,10 @@ ossimRefPtr<ossimImageData> ossimMaskFilter::executeMaskFilterBinary(
          break;
       }
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_USHORT16:
       {
          executeMaskFilterBinarySelection((ossim_uint16)0,

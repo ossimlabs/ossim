@@ -384,7 +384,7 @@ protected:
    * FIELD ICOMnn:
    * Dynamic buffer for the comments.  Each comment is 80 bytes
    */
-   std::string theImageComments;
+   std::vector<ossimString> theImageComments;
 
    /**
     * FIELD: IGEOLO

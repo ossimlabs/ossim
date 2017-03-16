@@ -125,6 +125,10 @@ void ossimBitMaskWriter::generateMask(ossimRefPtr<ossimImageData> tile, ossim_ui
       break;
    case OSSIM_UINT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       m_flipper->flipPixels(ossim_uint16(0), tile.get(), rLevel);
       break;
    case OSSIM_SSHORT16:

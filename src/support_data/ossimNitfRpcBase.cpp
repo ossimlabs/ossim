@@ -926,3 +926,113 @@ void ossimNitfRpcBase::getPropertyNames(std::vector<ossimString>& propertyNames)
    }
 }
 
+bool ossimNitfRpcBase::loadState(const ossimKeywordlist& kwl, const char* prefix)
+{
+   bool result = ossimNitfRegisteredTag::loadState(kwl, prefix);
+   const char* lookup;
+
+   if(!result) return result;
+   lookup = kwl.find(prefix, "SUCCESS");
+   if(lookup)
+   {
+        strcpy(theSuccess, lookup);
+   }
+   lookup = kwl.find(prefix, "ERR_BIAS");
+   if(lookup)
+   {
+        strcpy(theErrorBias, lookup); 
+   }
+   lookup = kwl.find(prefix, "ERR_RAND");
+   if(lookup)
+   {
+        strcpy(theErrRand, lookup); 
+   }
+   lookup = kwl.find(prefix, "LINE_OFF");
+   if(lookup)
+   {
+        strcpy(theLineOffset, lookup);
+   }
+   lookup = kwl.find(prefix, "SAMP_OFF");
+   if(lookup)
+   {
+        strcpy(theSampleOffset, lookup);
+   }
+   lookup = kwl.find(prefix, "LAT_OFF");
+   if(lookup)
+   {
+        strcpy(theGeodeticLatOffset, lookup); 
+   }
+   lookup = kwl.find(prefix, "LONG_OFF");
+   if(lookup)
+   {
+        strcpy(theGeodeticLonOffset, lookup); 
+   }
+   lookup = kwl.find(prefix, "HEIGHT_OFF");
+   if(lookup)
+   {
+        strcpy(theGeodeticHeightOffset, lookup);
+   }
+   lookup = kwl.find(prefix, "LINE_SCALE");
+   if(lookup)
+   {
+        strcpy(theLineScale, lookup);
+   }
+   lookup = kwl.find(prefix, "SAMP_SCALE");
+   if(lookup)
+   {
+        strcpy(theSampleScale, lookup);
+   }
+   lookup = kwl.find(prefix, "LAT_SCALE");
+   if(lookup)
+   {
+        strcpy(theGeodeticLatScale, lookup); 
+   }
+   lookup = kwl.find(prefix, "LONG_SCALE");
+   if(lookup)
+   {
+        strcpy(theGeodeticLonScale, lookup);
+   }
+   lookup = kwl.find(prefix, "HEIGHT_SCALE");
+   if(lookup)
+   {
+        strcpy(theGeodeticHeightScale, lookup);
+   }
+   for (ossim_uint32 i = 0; i < 20; ++i)
+   {
+       ossimString line_num_coeff = "LINE_NUM_COEFF_" + ossimString::toString(i);
+       lookup = kwl.find(prefix, line_num_coeff);
+       if(lookup)
+       {
+           theLineNumeratorCoefficient[i] = ossimString(lookup); //temp.substr(0,1) + "0." + temp.substr(1,6) + "E" + temp.substr(7,2);
+       }
+   }
+   for (ossim_uint32 i = 0; i < 20; ++i)
+   {
+        ossimString line_den_coeff = "LINE_DEN_COEFF_" + ossimString::toString(i);
+        lookup = kwl.find(prefix, line_den_coeff);
+        if(lookup)
+        {
+          theLineDenominatorCoefficient[i] = ossimString(lookup); //temp.substr(0,1) + "0." + temp.substr(1,6) + "E" + temp.substr(7,2);
+        }
+   }
+   for (ossim_uint32 i = 0; i < 20; ++i)
+   {
+        ossimString samp_num_coeff = "SAMP_NUM_COEFF_" + ossimString::toString(i);
+        lookup = kwl.find(prefix, samp_num_coeff);
+        if(lookup)
+        {
+          theSampleNumeratorCoefficient[i] = ossimString(lookup); //temp.substr(0,1) + "0." + temp.substr(1,6) + "E" + temp.substr(7,2);
+        }
+   }
+   for (ossim_uint32 i = 0; i < 20; ++i)
+   {
+        ossimString samp_den_coeff = "SAMP_DEN_COEFF_" + ossimString::toString(i);
+        lookup = kwl.find(prefix, samp_den_coeff);
+        if(lookup)
+        {
+          theSampleDenominatorCoefficient[i] = ossimString(lookup); //temp.substr(0,1) + "0." + temp.substr(1,6) + "E" + temp.substr(7,2);
+        }
+   }
+
+   return result;
+}

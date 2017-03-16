@@ -15,6 +15,9 @@
 #define ossimNitfWriterBase_HEADER
 
 #include <ossim/imaging/ossimImageFileWriter.h>
+#include <ossim/support_data/ossimNitfRegisteredTag.h>
+#include <ossim/support_data/ossimNitfFileHeaderV2_1.h>
+#include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
 
 class ossimFilename;
 class ossimImageSourceSequencer;
@@ -115,6 +118,13 @@ public:
     */
    virtual ossimString getExtension() const;
 
+   virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag);
+   virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique);
+   virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique, const ossim_uint32& ownerIndex, const ossimString& tagType);
+
+   virtual void setFileHeaderV2_1(ossimRefPtr<ossimNitfFileHeaderV2_1>, bool preferSource=false);
+   virtual void setImageHeaderV2_1(ossimRefPtr<ossimNitfImageHeaderV2_1>, bool preferSource=false);
+
 protected:
 
    /**
@@ -155,6 +165,8 @@ protected:
     */
    void setComplexityLevel(std::streamoff,
                            ossimNitfFileHeaderV2_X* hdr);
+
+   void setComplexityLevel(ossimNitfFileHeaderV2_X* hdr, ossim_uint64 width=0, ossim_uint64 height=0);
 
    /**
     * @brief Sets file header and image header defaults from config file if

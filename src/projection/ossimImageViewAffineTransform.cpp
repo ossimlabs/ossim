@@ -255,6 +255,13 @@ bool ossimImageViewAffineTransform::saveState(ossimKeywordlist& kwl,
            "rotation",
            m_rotation,
            true);
+
+   // Fixed for multithread sequencer load, this uses saveState/loadState to
+   // clone image chains and rotate was not cloning, producing invalid tiles
+   kwl.add(prefix,
+           "rotate",
+           m_rotation,
+           true);
    kwl.add(prefix,
            "pivot",
            m_pivot.toString(),

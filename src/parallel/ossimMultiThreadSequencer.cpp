@@ -109,6 +109,9 @@ ossimMultiThreadSequencer::ossimMultiThreadSequencer(ossimImageSource* input,
    d_debugEnabled(false),
    d_timedBlocksDt(0),
    d_timeMetricsEnabled(false),
+   d_useSharedHandlers(true),
+   d_cacheTileSize(1024),
+   d_useCache(true),
    d_t1(0.0)                              
 {
    //###### DEBUG ############
@@ -133,6 +136,9 @@ ossimMultiThreadSequencer::ossimMultiThreadSequencer(ossimImageSource* input,
 //*************************************************************************************************
 ossimMultiThreadSequencer::~ossimMultiThreadSequencer()
 {
+   m_inputChain = 0; //!< Same as base class' theInputConnection
+   m_jobMtQueue = 0;
+   m_callback = 0;
 }
 
 //*************************************************************************************************
@@ -162,6 +168,9 @@ void ossimMultiThreadSequencer::setToStartOfSequence()
    if (m_inputChain.valid())
    {
       m_inputChain->setNumberOfThreads(m_numThreads);
+      m_inputChain->setUseSharedHandlers(d_useSharedHandlers);
+      m_inputChain->setCacheTileSize(d_cacheTileSize);
+      m_inputChain->setUseCache(d_useCache);
    }
    else
    {
@@ -176,7 +185,7 @@ void ossimMultiThreadSequencer::setToStartOfSequence()
 
       // This instantiation creates a set of cloned image chains, one per thread, that will be
       // accessed in parallel for the getTile() operation:
-      m_inputChain = new ossimImageChainMtAdaptor(chain, m_numThreads);
+      m_inputChain = new ossimImageChainMtAdaptor(chain, m_numThreads, d_useSharedHandlers, d_useCache, d_cacheTileSize);
    }
 
    // Set the output of the chain to be this sequencer:
@@ -250,7 +259,9 @@ ossimRefPtr<ossimImageData> ossimMultiThreadSequencer::getNextTile(ossim_uint32 
       if (d_timeMetricsEnabled)
          d_idleTime1 += ossimTimer::instance()->time_s() - d_t1; 
 
-      tile_iter = m_tileCache.find(theCurrentTileNumber);
+      // RP - Just grab the first tile for better performance, because order does not matter, we need
+      // to process them all
+      tile_iter = m_tileCache.begin(); //.find(theCurrentTileNumber);
       m_cacheMutex.unlock();
 
       if (tile_iter == m_tileCache.end())
@@ -331,6 +342,30 @@ void ossimMultiThreadSequencer::setNumberOfThreads(ossim_uint32 num_threads)
       m_jobMtQueue->getJobQueue()->clear();
 
    m_nextTileID = 0; // effectively resets this sequencer
+}
+
+void ossimMultiThreadSequencer::setUseSharedHandlers(bool use_shared_handlers)
+{
+   d_useSharedHandlers = use_shared_handlers;
+
+   if (m_inputChain.valid())
+      m_inputChain->setUseSharedHandlers(use_shared_handlers);
+}
+
+void ossimMultiThreadSequencer::setCacheTileSize(ossim_uint32 cache_tile_size)
+{
+   d_cacheTileSize = cache_tile_size;
+
+   if (m_inputChain.valid())
+      m_inputChain->setCacheTileSize(cache_tile_size);
+}
+
+void ossimMultiThreadSequencer::setUseCache(bool use_cache)
+{
+   d_useCache = use_cache;
+
+   if (m_inputChain.valid())
+      m_inputChain->setUseCache(use_cache);
 }
 
 //*************************************************************************************************
@@ -439,3 +474,36 @@ double ossimMultiThreadSequencer::handlerGetTileT()
    return -1;
 }
 
+bool ossimMultiThreadSequencer::loadState(const ossimKeywordlist& kwl, const char* prefix)
+{
+   const char* lookup;
+   lookup = kwl.find(prefix, "num_threads");
+   if(lookup)
+   {
+      ossim_uint32 num_threads = ossimString(lookup).toUInt32();
+      setNumberOfThreads(num_threads);
+   }
+   lookup = kwl.find(prefix, "use_shared_handlers");
+   if(lookup)
+   {
+      bool use_shared_handlers = ossimString(lookup).toBool();
+      setUseSharedHandlers(use_shared_handlers);
+   }
+   lookup = kwl.find(prefix, "cache_tile_size");
+   if(lookup)
+   {
+      ossim_uint32 cache_tile_size = ossimString(lookup).toUInt32();
+      setCacheTileSize(cache_tile_size);
+   }
+   lookup = kwl.find(prefix, "use_cache");
+
+   if(lookup)
+   {
+      bool use_cache = ossimString(lookup).toBool();
+      setUseCache(use_cache);
+   }
+
+   bool status = ossimImageSourceSequencer::loadState(kwl, prefix);
+
+   return status;
+}

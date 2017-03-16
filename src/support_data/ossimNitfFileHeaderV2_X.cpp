@@ -436,7 +436,17 @@ bool ossimNitfFileHeaderV2_X::loadState(const ossimKeywordlist& kwl, const char*
    // Note: Currently not looking up all fieds only ones that make sense.
    
    const char* lookup;
-   
+
+   lookup = kwl.find( prefix, CLEVEL_KW);
+   if ( lookup )
+   {
+      setComplexityLevel( ossimString(lookup) );
+   }
+   lookup = kwl.find( prefix, STYPE_KW);
+   if ( lookup )
+   {
+      setSystemType( ossimString(lookup) );
+   }
    lookup = kwl.find( prefix, OSTAID_KW);
    if ( lookup )
    {

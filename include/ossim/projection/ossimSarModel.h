@@ -111,6 +111,7 @@ public:
    virtual void imagingRay(const ossimDpt& image_point,
                            ossimEcefRay&   image_ray) const;
 
+   virtual double sensorAzimuth(const ossimDpt& image_point) const;
    
    /**
     * @brief Compute partials of range/Doppler WRT ground point

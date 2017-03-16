@@ -51,6 +51,18 @@ public:
    /** @return z */
    virtual ossim_int32 getZ() const;
 
+   /** @return red */
+   virtual ossim_uint16 getRed() const;
+
+   /** @return green */
+   virtual ossim_uint16 getGreen() const;
+
+   /** @return blue */
+   virtual ossim_uint16 getBlue() const;
+
+   /** @return intensity */
+   virtual ossim_uint16 getIntensity() const;
+
    /** @return return number */
    virtual ossim_uint8 getReturnNumber() const;
 

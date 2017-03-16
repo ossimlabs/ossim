@@ -823,8 +823,8 @@ bool ossimOrthoIgen::execute()
      }
    }
 
-   if(ossimMpi::instance()->getRank() == 0)
-   {
+   //if(ossimMpi::instance()->getRank() == 0)
+   //{
       try
       {
          setupIgenChain();
@@ -842,7 +842,7 @@ bool ossimOrthoIgen::execute()
       {
          generateLog();
       }
-   }
+   //}
 
    try
    {

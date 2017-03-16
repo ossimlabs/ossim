@@ -473,10 +473,104 @@ bool ossimNitfImageHeaderV2_X::loadState(const ossimKeywordlist& kwl, const char
    {
       setImageSource( ossimString(lookup) );
    }
+   lookup = kwl.find( prefix, NROWS_KW);
+   if ( lookup )
+   {
+      ossimNitfCommon::setField(theSignificantRows, ossimString(lookup), 8);
+   }
+
+   lookup = kwl.find( prefix, NCOLS_KW);
+   if ( lookup )
+   {
+      ossimNitfCommon::setField(theSignificantCols, ossimString(lookup), 8);
+   }
+
+   lookup = kwl.find( prefix, PVTYPE_KW);
+   if ( lookup )
+   {
+      ossimNitfCommon::setField(thePixelValueType, ossimString(lookup), 3);
+   }
+
+   lookup = kwl.find( prefix, IREP_KW);
+   if ( lookup )
+   {
+      ossimNitfCommon::setField(theRepresentation, ossimString(lookup), 8);
+   }
    lookup = kwl.find( prefix, ICAT_KW);
    if ( lookup )
    {
       setCategory( ossimString(lookup) );
+   }
+   lookup = kwl.find( prefix, ABPP_KW);
+   if ( lookup )
+   {
+      ossimNitfCommon::setField(theActualBitsPerPixelPerBand, ossimString(lookup), 2);
+   }
+   lookup = kwl.find( prefix, NBPP_KW);
+   if ( lookup )
+   {
+      setBitsPerPixel(ossimString(lookup).toUInt32());
+   }
+   lookup = kwl.find( prefix, PJUST_KW);
+   if ( lookup )
+   {
+      setJustification(ossimString(lookup));
+   }
+   lookup = kwl.find( prefix, ICORDS_KW);
+   if ( lookup )
+   {
+      setCoordinateSystem(ossimString(lookup));
+   }
+   lookup = kwl.find( prefix, IGEOLO_KW);
+   if ( lookup )
+   {
+      setGeographicLocation(ossimString(lookup));
+   }
+   lookup = kwl.find( prefix, NICOM_KW);
+   if ( lookup )
+   {
+      setNumberOfComments(ossimString(lookup));
+   }
+   ossim_uint32 numberOfComments = ossimString(theNumberOfComments).toUInt32();
+   if (numberOfComments > 0)
+   {
+      theImageComments.resize(numberOfComments);
+      for(ossim_uint32 i=0; i < numberOfComments; ++i)
+      {
+        ossimString icpre = ossimString(ICOM_KW) + ossimString::toString(i);
+         lookup = kwl.find( prefix, icpre );
+        theImageComments[i] = ossimString(lookup);
+      }
+   }
+   lookup = kwl.find( prefix, IC_KW);
+   if ( lookup )
+   {
+      setCompression(ossimString(lookup));
+   }
+   lookup = kwl.find( prefix, COMRAT_KW);
+   if ( lookup )
+   {
+      setCompressionRateCode(ossimString(lookup));
+   }
+   lookup = kwl.find( prefix, IMODE_KW);
+   if ( lookup )
+   {
+      setImageMode(lookup[0]);
+   }
+   lookup = kwl.find( prefix, ISYNC_KW);
+   if ( lookup )
+   {
+      ossimNitfCommon::setField(theImageSyncCode, ossimString(lookup), 1);
+   }
+   lookup = kwl.find( prefix, IALVL_KW);
+   if ( lookup )
+   {
+      setAttachmentLevel(ossimString(lookup));
+   }
+   lookup = kwl.find( prefix, IDLVL_KW);
+   if ( lookup )
+   {
+      setDisplayLevel(ossimString(lookup));
    }
    
    return true;
@@ -915,7 +1009,11 @@ bool ossimNitfImageHeaderV2_X::saveState(ossimKeywordlist& kwl, const ossimStrin
    kwl.add(prefix, PJUST_KW.c_str(),    theJustification);
    kwl.add(prefix, ICORDS_KW.c_str(),   theCoordinateSystem);
    kwl.add(prefix, NICOM_KW.c_str(),    theNumberOfComments);
-   kwl.add(prefix, ICOM_KW.c_str(),     ossimString(theImageComments));
+   for (ossim_uint32 i=0; i < ossimString(theNumberOfComments).toUInt32(); ++i)
+   {
+     ossimString icpre = ossimString(ICOM_KW) + ossimString::toString(i);
+     kwl.add(prefix, icpre.c_str(), theImageComments[i]);
+   }
    kwl.add(prefix, IGEOLO_KW.c_str(),   theGeographicLocation);
    kwl.add(prefix, IC_KW.c_str(),       theCompression);
    kwl.add(prefix, COMRAT_KW.c_str(),   theCompressionRateCode);

@@ -163,6 +163,10 @@ ossimRefPtr<ossimImageData> ossimConvolutionSource::getTile(
    }
    case OSSIM_USHORT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
    {
       if(theConvolutionKernelList.size() == 1)
       {

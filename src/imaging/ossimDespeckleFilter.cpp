@@ -89,6 +89,10 @@ ossimDespeckleFilter::getTile(const ossimIrect& tileRect,ossim_uint32 resLevel)
    
    case OSSIM_USHORT16:
    case OSSIM_USHORT11:
+   case OSSIM_USHORT12:
+   case OSSIM_USHORT13:
+   case OSSIM_USHORT14:
+   case OSSIM_USHORT15:
       despeckle(static_cast<ossim_uint16>(0), inputTile);
       break;
 

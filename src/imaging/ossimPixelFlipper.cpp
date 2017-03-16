@@ -103,6 +103,10 @@ ossimRefPtr<ossimImageData> ossimPixelFlipper::getTile(
       
       case OSSIM_UINT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          flipPixels(ossim_uint16(0), inputTile.get(), resLevel);
          break;
@@ -609,6 +613,42 @@ ossimScalarType ossimPixelFlipper::getOutputScalarType() const
             // USHORT11 ( (2^11- 1) = 2047 ).
             //---
             return OSSIM_USHORT11;
+         }
+         else if (scalar == OSSIM_USHORT16 && theClampValueHi == 4095.0)
+         {
+            //---
+            // Special case:
+            // We have an unsigned 16 bit type but we want to call it
+            // USHORT12 ( (2^12- 1) = 4095 ).
+            //---
+            return OSSIM_USHORT12;
+         }
+         else if (scalar == OSSIM_USHORT16 && theClampValueHi == 8191.0)
+         {
+            //---
+            // Special case:
+            // We have an unsigned 16 bit type but we want to call it
+            // USHORT13 ( (2^13- 1) = 8191 ).
+            //---
+            return OSSIM_USHORT13;
+         }
+         else if (scalar == OSSIM_USHORT16 && theClampValueHi == 16383.0)
+         {
+            //---
+            // Special case:
+            // We have an unsigned 16 bit type but we want to call it
+            // USHORT14 ( (2^14- 1) = 16383 ).
+            //---
+            return OSSIM_USHORT14;
+         }
+         else if (scalar == OSSIM_USHORT16 && theClampValueHi == 32767.0)
+         {
+            //---
+            // Special case:
+            // We have an unsigned 16 bit type but we want to call it
+            // USHORT15 ( (2^15- 1) = 32767 ).
+            //---
+            return OSSIM_USHORT15;
          }
          return scalar;
       }

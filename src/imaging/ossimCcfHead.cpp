@@ -786,6 +786,22 @@ void ossimCcfHead::parseRadString()
    {
       thePixelType = OSSIM_USHORT11;
    }
+   else if (theRadiometryString.contains("12"))
+   {
+      thePixelType = OSSIM_USHORT12;
+   }
+   else if (theRadiometryString.contains("13"))
+   {
+      thePixelType = OSSIM_USHORT13;
+   }
+   else if (theRadiometryString.contains("14"))
+   {
+      thePixelType = OSSIM_USHORT14;
+   }
+   else if (theRadiometryString.contains("15"))
+   {
+      thePixelType = OSSIM_USHORT15;
+   }
    else
    {
       ossimNotify(ossimNotifyLevel_WARN)

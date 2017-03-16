@@ -49,6 +49,8 @@ public:
     */
    virtual void setOutputScalarType(ossimScalarType scalarType);
    virtual void setOutputScalarType(ossimString scalarType);
+
+   virtual void setPreserveMagnitude(bool value);
      
    /**
     *  Sets the current resolution level.  Returns true on success, false
@@ -101,6 +103,7 @@ protected:
    ossimScalarType             theOutputScalarType;
 
    bool                        theByPassFlag;
+   bool                        thePreserveMagnitudeFlag;
 TYPE_DATA
 };
 

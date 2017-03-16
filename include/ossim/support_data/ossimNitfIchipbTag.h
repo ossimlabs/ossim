@@ -243,6 +243,8 @@ public:
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
+
+   bool loadState(const ossimKeywordlist& kwl, const char* prefix);
    
 protected:
 
