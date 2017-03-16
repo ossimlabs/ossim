@@ -26,14 +26,16 @@ void ossimNitfXmlDataContentDes::parseStream(std::istream& in)
 
    if(getSizeInBytes())
    {
-     char c[getSizeInBytes()+1];
+     char* c = new char[getSizeInBytes()+1];
      in.read(c, getSizeInBytes());
      c[getSizeInBytes()] = '\0';
      m_xmlString.string().resize(getSizeInBytes());
      m_xmlString = c;
      m_xmlDocument = new ossimXmlDocument;;
      std::istringstream xmlStringStream(m_xmlString.string());
-     bool status = m_xmlDocument->read(xmlStringStream);
+     m_xmlDocument->read(xmlStringStream);
+     delete [] c;
+     c = 0;
    }
 }
 
