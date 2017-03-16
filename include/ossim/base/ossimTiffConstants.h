@@ -53,6 +53,7 @@ namespace ossim
       OTIFFTAG_DATETIME                   = 306,
       
       OTIFFTAG_ARTIST                     = 315,
+      OTIFFTAG_PREDICTOR                  = 317,      
       OTIFFTAG_SUBIFD                     = 330,
       OTIFFTAG_TILEWIDTH                  = 322,
       OTIFFTAG_TILELENGTH                 = 323,
@@ -130,7 +131,8 @@ namespace ossim
       OGEO_DOUBLE_PARAMS_TAG              = 34736,
       OGEO_ASCII_PARAMS_TAG               = 34737,
       OGDAL_METADATA_TAG                  = 42112,
-      OGDAL_NODATA                        = 42113
+      OGDAL_NODATA                        = 42113,
+      ORPC_COEFFICIENT_TAG                = 50844
    };
 
    enum CompressType
