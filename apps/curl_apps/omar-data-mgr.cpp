@@ -14,6 +14,7 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/init/ossimInit.h>
+#include <ossim/parallel/ossimMpi.h>
 #include "omarDataMgrUtil.h"
 
 #include <iostream>
@@ -21,6 +22,10 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+#if OSSIM_HAS_MPI
+   ossimMpi::instance()->initialize(&argc, &argv);
+#endif
+
    int rv = 0; // Return value.
    
    //---
