@@ -23,7 +23,7 @@
 RTTI_DEF1(ossimNitfStreobTag, "ossimNitfStreobTag", ossimNitfRegisteredTag);
 
 ossimNitfStreobTag::ossimNitfStreobTag()
-   : ossimNitfRegisteredTag(std::string("STREOB"), 70)
+   : ossimNitfRegisteredTag(std::string("STREOB"), 94)
 {
    clearFields();
 }
