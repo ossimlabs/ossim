@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc.
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -10,7 +10,7 @@
 // Description:
 //
 //*******************************************************************
-//  $Id: ossimImageSourceSequencer.cpp 23082 2015-01-15 12:30:25Z dburken $
+// $Id$
 
 #include <ossim/imaging/ossimImageSourceSequencer.h>
 #include <ossim/base/ossimConstants.h>
@@ -246,7 +246,7 @@ void ossimImageSourceSequencer::setToStartOfSequence()
 }
 
 ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
-   const ossimIrect& rect, ossim_uint32 resLevel)
+   const ossimIrect& rect, ossim_uint32 /* resLevel */ )
 {
    if(theInputConnection)
    {
@@ -271,7 +271,7 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
       tile->makeBlank();
       setToStartOfSequence();
       ossim_uint32 num_tiles = getNumberOfTiles();
-      bool hasHistoOutput = true;
+      // bool hasHistoOutput = true;
       ossim_uint32 numberOfBands = 1;
       ossim_uint32 numberOfBins  = 0;
       ossim_float64 minValue     = 0;
@@ -335,7 +335,7 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getNextTile( ossim_uint32
    return result;
 }
 
-bool ossimImageSourceSequencer::getNextTileStream(std::ostream& bos)
+bool ossimImageSourceSequencer::getNextTileStream(std::ostream& /* bos */)
 {
   return false;
 }

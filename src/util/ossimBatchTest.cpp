@@ -575,8 +575,11 @@ ossim_uint8 ossimBatchTest::execute()
                << (stopTime-startTime)
                << endl; // flush
       m_logStr.close();
-      
-      cout << "\nWrote log: " << logFile << "\n" << endl;
+
+      cout << "\ntotal elapsed time in seconds: "
+           << std::setiosflags(ios::fixed) << std::setprecision(4)
+           << (stopTime-startTime)
+           << "\nWrote log: " << logFile << "\n" << endl;
    }
    catch (ossimException& e)
    {

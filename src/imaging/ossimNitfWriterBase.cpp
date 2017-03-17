@@ -365,23 +365,23 @@ ossimString ossimNitfWriterBase::getExtension() const
    return ossimString("ntf");
 }
 
-void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag)
+void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> /* registeredTag */)
 {
 }
 
-void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique)
+void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> /* registeredTag */, bool /* unique */)
 {
 }
 
-void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique, const ossim_uint32& ownerIndex, const ossimString& tagType)
+void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> /* registeredTag */, bool /* unique */, const ossim_uint32& /* ownerIndex */, const ossimString& /* tagType */)
 {
 }
 
-void ossimNitfWriterBase::setFileHeaderV2_1(ossimRefPtr<ossimNitfFileHeaderV2_1>, bool preferSource)
+void ossimNitfWriterBase::setFileHeaderV2_1(ossimRefPtr<ossimNitfFileHeaderV2_1>, bool /* preferSource */)
 {
 }
 
-void ossimNitfWriterBase::setImageHeaderV2_1(ossimRefPtr<ossimNitfImageHeaderV2_1>, bool preferSource)
+void ossimNitfWriterBase::setImageHeaderV2_1(ossimRefPtr<ossimNitfImageHeaderV2_1>, bool /* preferSource */)
 {
 }
 

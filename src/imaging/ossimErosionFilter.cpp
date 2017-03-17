@@ -109,7 +109,7 @@ ossimRefPtr<ossimImageData> ossimErosionFilter::getTile(const ossimIrect& rect,
 }
 
 template <class T>
-void ossimErosionFilter::doErosion(T scalarType , ossimRefPtr<ossimImageData>& inputData)
+void ossimErosionFilter::doErosion(T /* scalarType */, ossimRefPtr<ossimImageData>& inputData)
 {
    ossimDataObjectStatus status = inputData->getDataObjectStatus();
 
