@@ -16,6 +16,7 @@
 #include <ossim/base/ossimPolyArea2d.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimTrace.h>
+#include <ossim/base/ossim2dBilinearTransform.h>
 #include <ossim/base/ossimProcessProgressEvent.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
@@ -392,16 +393,16 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
   ossim_uint16 result = SPLIT_NONE;
   ossimDrect vRect = getViewRect();
 
-  if(imageHasNans()||tooBig())
+  if(imageHasNans())
   {
-     if(m_viewBounds->intersects(getViewRect()))
-     {
+    if(m_viewBounds->intersects(getViewRect()))
+    {
       result = SPLIT_ALL;
-     }
-     else
-     {
-        return result;
-     }
+    }
+    else
+    {
+      return result;
+    }
   }
   /*
   if(result != SPLIT_ALL)
@@ -431,32 +432,33 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
 */
   if(result != SPLIT_ALL)
   {
-    ossim_float64 sensitivityScale = m_ImageToViewScale.length();
-    //std::cout << sensitivityScale << std::endl;
-    if(sensitivityScale < 1.0) sensitivityScale = 1.0/sensitivityScale;
+    ossim_float64 bias = m_ImageToViewScale.length();
+    if(bias < 1.0) bias = 1.0/bias;
+    bias = std::sqrt(bias);
 
+    if(bias < 1) bias = 1.0;
 
-     // if((m_ulRoundTripError.length() > sensitivityScale)||
-     //    (m_urRoundTripError.length() > sensitivityScale)||
-     //    (m_lrRoundTripError.length() > sensitivityScale)||
-     //    (m_llRoundTripError.length() > sensitivityScale))
+     // if((m_ulRoundTripError.length() > bias)||
+     //    (m_urRoundTripError.length() > bias)||
+     //    (m_lrRoundTripError.length() > bias)||
+     //    (m_llRoundTripError.length() > bias))
      // {
-     //   std::cout << "________________\n";
+       // std::cout << "________________\n";
 
-     //   std::cout << "Sens:  " << sensitivityScale << "\n"
-     //             << "View:  " << getViewRect() << "\n"
-     //             << "UL:    " << m_ulRoundTripError.length() << "\n"
-     //             << "UR:   " << m_urRoundTripError.length() << "\n"
-     //             << "LR:   " << m_lrRoundTripError.length() << "\n"
-     //             << "LL:   " << m_llRoundTripError.length() << "\n";
-     // }
+       // std::cout << "Bias:  " << bias << "\n"
+       //           << "View:  " << getViewRect() << "\n"
+       //           << "UL:    " << m_ulRoundTripError.length() << "\n"
+       //           << "UR:   " << m_urRoundTripError.length() << "\n"
+       //           << "LR:   " << m_lrRoundTripError.length() << "\n"
+       //           << "LL:   " << m_llRoundTripError.length() << "\n";
+//     }
    // if(m_ulRoundTripError.length() > sensitivityScale) result |= UPPER_LEFT_SPLIT_FLAG;
    // if(m_urRoundTripError.length() > sensitivityScale) result |= UPPER_RIGHT_SPLIT_FLAG;
    // if(m_lrRoundTripError.length() > sensitivityScale) result |= LOWER_RIGHT_SPLIT_FLAG;
    // if(m_llRoundTripError.length() > sensitivityScale) result |= LOWER_LEFT_SPLIT_FLAG;
        // std::cout << result << " == " << SPLIT_ALL << "\n";
 
-    if((result!=SPLIT_ALL)&&!canBilinearInterpolate(sensitivityScale))
+    if((result!=SPLIT_ALL)&&!canBilinearInterpolate(bias))
     {
       // std::cout << "TESTING BILINEAR!!!!\n";
       result = SPLIT_ALL;
@@ -769,8 +771,27 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
     ossimDpt iUpper, iRight, iBottom, iLeft, iCenter;
     ossimDpt testUpper, testRight, testBottom, testLeft, testCenter;
 
+    ossim2dBilinearTransform viewToImageTransform(m_Vul, m_Vur, m_Vlr, m_Vll
+                                                 ,m_Iul, m_Iur, m_Ilr, m_Ill);
+
+//    std::cout << "vMid:  " << testMid << "\n";
+//    std::cout << "testMid:  " << testMid << "\n";
+//    std::cout << "testCenter:  " << testCenter << "\n";
+    
     getViewMids(vUpper, vRight, vBottom, vLeft, vCenter);
-    getImageMids(iUpper, iRight, iBottom, iLeft, iCenter);
+    
+    // do a bilinear transform of some test points
+    viewToImageTransform.forward(vUpper, iUpper);
+    viewToImageTransform.forward(vRight, iRight);
+    viewToImageTransform.forward(vBottom, iBottom);
+    viewToImageTransform.forward(vLeft, iLeft);
+    viewToImageTransform.forward(vCenter, iCenter);
+
+
+   // viewToImageTransform.forward(vMid, iTestMid);
+    //m_transform->viewToImage(vMid, testCenter);
+
+    //getImageMids(iUpper, iRight, iBottom, iLeft, iCenter);
     
     // get the model centers for the mid upper left right bottom
     m_transform->viewToImage(vCenter, testCenter);
@@ -812,13 +833,18 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
               (errorCheck3 < error)&&
               (errorCheck4 < error)&&
               (errorCheck5 < error));
-   // std::cout <<"__________________________\n"
-   //       << "ERROR1:" <<errorCheck1 << "\n" 
-   //       << "ERROR2:" <<errorCheck2 << "\n" 
-   //       << "ERROR3:" <<errorCheck3 << "\n" 
-   //       << "ERROR4:" <<errorCheck4 << "\n" 
-   //       << "ERROR5:" <<errorCheck5 << "\n"
-   //       << "SENS:  " << error <<  "\n"; 
+    // if(!result)
+    // {
+       // std::cout <<"__________________________\n"
+       //       << "ERROR1:" <<errorCheck1 << "\n" 
+       //       << "ERROR2:" <<errorCheck2 << "\n" 
+       //       << "ERROR3:" <<errorCheck3 << "\n" 
+       //       << "ERROR4:" <<errorCheck4 << "\n" 
+       //       << "ERROR5:" <<errorCheck5 << "\n"
+       //       << "SENS:  " << error <<  "\n"; 
+
+    //   std::cout << "Can't bilinear!!\n";
+    // }
 
 #else
     ossimDpt vUpper, vRight, vBottom, vLeft, vCenter;
