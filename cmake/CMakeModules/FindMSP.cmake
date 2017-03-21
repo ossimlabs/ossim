@@ -1,88 +1,155 @@
 SET(CMAKE_FIND_FRAMEWORK "LAST")
-#FIND_PATH(MSP_INCLUDE_DIRS msp/Mensuration/MensurationService.h
-#        PATHS
-#        ${OSSIM_DEPENDENCIES}/include
-#		${OSSIM_INSTALL_PREFIX}/include
-#)
+FIND_PATH(MSP_INCLUDE_DIRS Mensuration/MensurationService.h
+        PATHS
+        $ENV{MSP_HOME}/include
+        ${OSSIM_DEPENDENCIES}/include
+		${OSSIM_INSTALL_PREFIX}/include
+)
 
-# Need to copy pattern from FindQt5 for extensive lib list...
-#set(MSP_NAMES ${MSP_NAMES} ??? )
-#find_library(MSP_LIBRARY NAMES ${MSP_NAMES}
-#   PATHS
-#      ${OSSIM_DEPENDENCIES}/lib
-#      ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX}
-#      ${OSSIM_INSTALL_PREFIX}
-#)
+find_library(MSP_LIBRARY NAMES CSM_PCAPI PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPnitf PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPasdetre PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPntmtre PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPCCSUtils PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPOutputMethodService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPcoordconverter PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPPointExtractionService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPCoordinateConversionService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPRageServiceUtils PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPCovarianceService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPrage PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPcsisd PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPrageutilities PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPcsm PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPrsme PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPcsmutil PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPRsmGeneratorService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPdei PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPrsmg PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPDEIUtil PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPrutil PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPdtcc PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPSensorModelService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPgeometry PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPSensorSpecificService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPImagingGeometryService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPSourceSelectionService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPjson PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPSScovmodel PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPlas PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPSSrutil PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPmath PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPSupportDataService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPmens PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPTerrainService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPMensurationService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPutilities PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPMensurationSessionRecordService PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPwriteRsmNitf PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPMSPVersionUtils PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
+find_library(MSP_LIBRARY NAMES MSPmtdCommon PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY})
+
 
 #---
 # This function sets MSP_FOUND if variables are valid.
 #--- 
-#include(FindPackageHandleStandardArgs)
-#find_package_handle_standard_args( MSP DEFAULT_MSG 
-#                                   MSP_LIBRARY 
-#                                   MSP_INCLUDE_DIRS )
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args( MSP DEFAULT_MSG 
+                                   MSP_LIBRARIES 
+                                   MSP_INCLUDE_DIRS )
 
-# 
-# Temporary expect an ENV var called MSP_HOME until fully integrated:
-set (MSP_INCLUDE_DIRS ${MSP_HOME}/include)
-set (MSP_LIBRARIES 
-    ${MSP_HOME}/lib/libCSM_PCAPI.so                           
-    ${MSP_HOME}/lib/libMSPnitf.so
-    ${MSP_HOME}/lib/libMSPasdetre.so                          
-    ${MSP_HOME}/lib/libMSPntmtre.so
-    ${MSP_HOME}/lib/libMSPCCSUtils.so                         
-    ${MSP_HOME}/lib/libMSPOutputMethodService.so
-    ${MSP_HOME}/lib/libMSPcoordconverter.so                   
-    ${MSP_HOME}/lib/libMSPPointExtractionService.so
-    ${MSP_HOME}/lib/libMSPCoordinateConversionService.so      
-    ${MSP_HOME}/lib/libMSPRageServiceUtils.so
-    ${MSP_HOME}/lib/libMSPCovarianceService.so                
-    ${MSP_HOME}/lib/libMSPrage.so
-    ${MSP_HOME}/lib/libMSPcsisd.so                            
-    ${MSP_HOME}/lib/libMSPrageutilities.so
-    ${MSP_HOME}/lib/libMSPcsm.so                              
-    ${MSP_HOME}/lib/libMSPrsme.so
-    ${MSP_HOME}/lib/libMSPcsmutil.so                          
-    ${MSP_HOME}/lib/libMSPRsmGeneratorService.so
-    ${MSP_HOME}/lib/libMSPdei.so                              
-    ${MSP_HOME}/lib/libMSPrsmg.so
-    ${MSP_HOME}/lib/libMSPDEIUtil.so                          
-    ${MSP_HOME}/lib/libMSPrutil.so
-    ${MSP_HOME}/lib/libMSPdtcc.so                             
-    ${MSP_HOME}/lib/libMSPSensorModelService.so
-    ${MSP_HOME}/lib/libMSPgeometry.so                         
-    ${MSP_HOME}/lib/libMSPSensorSpecificService.so
-    ${MSP_HOME}/lib/libMSPImagingGeometryService.so           
-    ${MSP_HOME}/lib/libMSPSourceSelectionService.so
-    ${MSP_HOME}/lib/libMSPjson.so                             
-    ${MSP_HOME}/lib/libMSPSScovmodel.so
-    ${MSP_HOME}/lib/libMSPlas.so                              
-    ${MSP_HOME}/lib/libMSPSSrutil.so
-    ${MSP_HOME}/lib/libMSPmath.so                             
-    ${MSP_HOME}/lib/libMSPSupportDataService.so
-    ${MSP_HOME}/lib/libMSPmens.so                             
-    ${MSP_HOME}/lib/libMSPTerrainService.so
-    ${MSP_HOME}/lib/libMSPMensurationService.so               
-    ${MSP_HOME}/lib/libMSPutilities.so
-    ${MSP_HOME}/lib/libMSPMensurationSessionRecordService.so  
-    ${MSP_HOME}/lib/libMSPwriteRsmNitf.so
-    ${MSP_HOME}/lib/libMSPMSPVersionUtils.so                  
-    ${MSP_HOME}/lib/libMSPmtdCommon.so
-) 
+if(NOT MSP_FOUND)
+   if( NOT MSP_FIND_QUIETLY )
+      message( WARNING "Could not find MSP" )
+   endif( NOT MSP_FIND_QUIETLY )
+endif(NOT MSP_FOUND)
 
-set (MSP_FOUND ON) 
+if( NOT MSP_FIND_QUIETLY )
+   message( STATUS "MSP_INCLUDE_DIRS=${MSP_INCLUDE_DIRS}" )
+   message( STATUS "MSP_LIBRARIES=${MSP_LIBRARIES}" )
+endif( NOT MSP_FIND_QUIETLY )
 
-#if(MSP_FOUND)
-#   set( MSP_LIBRARIES ${MSP_LIBRARY} )
-#else( MSP_FOUND )
-#   if( NOT MSP_FIND_QUIETLY )
-#      message( WARNING "Could not find MSP" )
-#   endif( NOT MSP_FIND_QUIETLY )
-#endif(MSP_FOUND)
-
-#if( NOT MSP_FIND_QUIETLY )
-#   message( STATUS "MSP_INCLUDE_DIRS=${MSP_INCLUDE_DIRS}" )
-#   message( STATUS "MSP_LIBRARY=${MSP_LIBRARY}" )
-#endif( NOT MSP_FIND_QUIETLY )
-
-mark_as_advanced(MSP_INCLUDE_DIRS MSP_LIBRARY)
+mark_as_advanced(MSP_INCLUDE_DIRS MSP_LIBRARIES)
