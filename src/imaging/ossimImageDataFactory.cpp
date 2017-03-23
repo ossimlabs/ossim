@@ -13,6 +13,10 @@
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/imaging/ossimU8ImageData.h>
 #include <ossim/imaging/ossimU11ImageData.h>
+#include <ossim/imaging/ossimU12ImageData.h>
+#include <ossim/imaging/ossimU13ImageData.h>
+#include <ossim/imaging/ossimU14ImageData.h>
+#include <ossim/imaging/ossimU15ImageData.h>
 #include <ossim/imaging/ossimU16ImageData.h>
 #include <ossim/imaging/ossimS16ImageData.h>
 #include <ossim/imaging/ossimImageData.h>
@@ -89,12 +93,28 @@ ossimRefPtr<ossimImageData> ossimImageDataFactory::create(
          break;
       }
       case OSSIM_USHORT11:
-      case OSSIM_USHORT12:
-      case OSSIM_USHORT13:
-      case OSSIM_USHORT14:
-      case OSSIM_USHORT15:
       {
          result = new ossimU11ImageData(owner, bands, width, height);
+         break;
+      }
+      case OSSIM_USHORT12:
+      {
+         result = new ossimU12ImageData(owner, bands, width, height);
+         break;
+      }
+      case OSSIM_USHORT13:
+      {
+         result = new ossimU13ImageData(owner, bands, width, height);
+         break;
+      }
+      case OSSIM_USHORT14:
+      {
+         result = new ossimU14ImageData(owner, bands, width, height);
+         break;
+      }
+      case OSSIM_USHORT15:
+      {
+         result = new ossimU15ImageData(owner, bands, width, height);
          break;
       }
       case OSSIM_UINT16:
@@ -168,12 +188,28 @@ ossimRefPtr<ossimImageData> ossimImageDataFactory::create(
          break;
       }
       case OSSIM_USHORT11:
-      case OSSIM_USHORT12:
-      case OSSIM_USHORT13:
-      case OSSIM_USHORT14:
-      case OSSIM_USHORT15:
       {
          result = new ossimU11ImageData(owner, bands, width, height);
+         break;
+      }
+      case OSSIM_USHORT12:
+      {
+         result = new ossimU12ImageData(owner, bands, width, height);
+         break;
+      }
+      case OSSIM_USHORT13:
+      {
+         result = new ossimU13ImageData(owner, bands, width, height);
+         break;
+      }
+      case OSSIM_USHORT14:
+      {
+         result = new ossimU14ImageData(owner, bands, width, height);
+         break;
+      }
+      case OSSIM_USHORT15:
+      {
+         result = new ossimU15ImageData(owner, bands, width, height);
          break;
       }
       case OSSIM_UINT16:
