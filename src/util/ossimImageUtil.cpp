@@ -1,10 +1,8 @@
 //----------------------------------------------------------------------------
 // File: ossimImageUtil.cpp
 // 
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: ossimImageUtil class definition
@@ -700,7 +698,7 @@ void ossimImageUtil::processFile(const ossimFilename& file)
             ossimNotify(ossimNotifyLevel_NOTICE) << ih->getFilename().expand(); 
          }
  
-          // Compute/Scan for min, max.  Note the overview sequencer may have computed for us.
+         // Compute/Scan for min, max.  Note the overview sequencer may have computed for us.
          if ( ( scanForMinMax() || scanForMinMaxNull() ) && !consumedCmmOptions )
          {
             computeMinMax( ih );
@@ -1396,7 +1394,9 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
       okwl.write(omd_file);
       ossimNotify(ossimNotifyLevel_INFO)
          << "wrote file:  " << omd_file << endl;
+
       ih->loadMetaData(); 
+
    } // Matches: if ( ih.valid() )
    
    if(traceDebug())
