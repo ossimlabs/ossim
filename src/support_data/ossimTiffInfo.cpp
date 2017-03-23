@@ -84,7 +84,8 @@ ossimTiffInfo::~ossimTiffInfo()
 {
    if (m_endian)
    {
-      m_endian.reset();
+      delete m_endian;
+      m_endian = 0;
    }
 }
 
@@ -122,12 +123,13 @@ bool ossimTiffInfo::open( std::shared_ptr<ossim::istream>& str,
       {
          if(!m_endian)
          {
-            m_endian = std::make_shared<ossimEndian>();
+            m_endian = new ossimEndian();
          }
       }
       else if (m_endian)
       {
-         m_endian.reset();
+         delete m_endian;
+         m_endian = 0;
       }
       
       //--
@@ -154,7 +156,8 @@ bool ossimTiffInfo::open( std::shared_ptr<ossim::istream>& str,
       m_connectionString.clear();
       if (m_endian)
       {
-         m_endian.reset();
+         delete m_endian;
+         m_endian = 0;
       }
    }
    return result;   
@@ -203,12 +206,13 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
    {
       if(!m_endian)
       {
-         m_endian = std::make_shared<ossimEndian>();
+         m_endian = new ossimEndian();
       }
    }
    else if (m_endian)
    {
-      m_endian.reset();
+      delete m_endian;
+      m_endian = 0;
    }
 
    //--
@@ -514,8 +518,7 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
       // have references to tags GEO_DOUBLE_PARAMS_TAG and
       // GEO_ASCII_PARAMS_TAG.
       //---
-      // Commenting out for now as these keys do not work with KWL
-      if (false) //(geoKeyBlock)
+      if (geoKeyBlock)
       {
          printGeoKeys(out, prefix, geoKeyLength, geoKeyBlock,
                       geoDoubleLength,geoDoubleBlock,
@@ -620,12 +623,13 @@ std::ostream& ossimTiffInfo::print(std::istream& inStr,
    {
       if (!m_endian)
       {
-         m_endian = std::make_shared<ossimEndian>();
+         m_endian = new ossimEndian();
       }
    }
    else if (m_endian) // No swapping required.
    {
-      m_endian.reset();
+      delete m_endian;
+      m_endian = 0;
    }
 
    //--
@@ -1709,10 +1713,8 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
 
       case ossim::OTIFFTAG_IMAGEDESCRIPTION: // tag 270
       {
-	 // This tag is not safe for KWL for some imagery - commenting out
-	 // for now
-         //out << prefix << "image_description: ";
-         //printArray(out, type, count, valueArray);
+         out << prefix << "image_description: ";
+         printArray(out, type, count, valueArray);
          break;
       }
 
@@ -1889,6 +1891,13 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
       {
          out << prefix << "artist: ";
          printArray(out, type, count, valueArray);
+         break;
+      }
+
+      case ossim::OTIFFTAG_PREDICTOR: // tag 317
+      {
+         out << prefix << "predictor: ";
+         printValue(out, type, valueArray);
          break;
       }
       
@@ -2103,6 +2112,13 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          printArray(out, type, count, valueArray);
          break;
       }
+
+      case ossim::ORPC_COEFFICIENT_TAG: // tag 50844
+      {
+         printRpcs(out, prefix, type, count, valueArray);
+         break;
+      }
+      
       default:
       {
          out << prefix << "unhandled_tag: " << tag << "\n";
@@ -3031,6 +3047,83 @@ std::ostream& ossimTiffInfo::printGeoKeys(
    return out;
 }
 
+std::ostream& ossimTiffInfo::printRpcs(std::ostream& out,
+                                       const std::string& prefix,
+                                       ossim_uint16 type,
+                                       ossim_uint64 count,
+                                       ossim_uint8* valueArray) const
+{
+   if ( valueArray )
+   {
+      if ( count == 92 )
+      {
+         switch (type)
+         {
+            case ossim::OTIFF_DOUBLE:
+            {
+               ossim_float64* p = (ossim_float64*)valueArray;
+               
+               out << prefix << "rpc.bias_error:         " << p[0] << "\n"
+                   << prefix << "rpc.rand_error:         " << p[1] << "\n"
+                   << prefix << "rpc.line_off:           " << p[2] << "\n"
+                   << prefix << "rpc.samp_off:           " << p[3] << "\n"
+                   << prefix << "rpc.lat_off:            " << p[4] << "\n"
+                   << prefix << "rpc.long_off:           " << p[5] << "\n"
+                   << prefix << "rpc.height_off:         " << p[6] << "\n"
+                   << prefix << "rpc.line_scale:         " << p[7] << "\n"
+                   << prefix << "rpc.samp_scale:         " << p[8] << "\n"
+                   << prefix << "rpc.lat_scale:          " << p[9] << "\n"
+                   << prefix << "rpc.long_scale:         " << p[10] << "\n"
+                   << prefix << "rpc.height_scale:       " << p[11] << "\n";
+               
+               ossim_int32 i = 12;
+               ossim_int32 coeff = 0;
+               
+               for (coeff = 0; coeff < 20; ++coeff)
+               {
+                  out << prefix << "rpc.line_num_coeff_" << std::setfill('0')
+                      << std::setw(2) << coeff << ": " << p[i] << "\n";
+                  ++i;
+               }
+               for (coeff = 0; coeff < 20; ++coeff)
+               {
+                  out << prefix << "rpc.line_den_coeff_" << std::setfill('0')
+                      << std::setw(2) << coeff << ": " << p[i] << "\n";
+                  ++i;
+               }
+               for (coeff = 0; coeff < 20; ++coeff)
+               {
+                  out << prefix << "rpc.samp_num_coeff_" << std::setfill('0')
+                      << std::setw(2) << coeff << ": " << p[i] << "\n";
+                  ++i;
+               }
+               for (coeff = 0; coeff < 20; ++coeff)
+               {
+                  out << prefix << "rpc.samp_den_coeff_" << std::setfill('0')
+                      << std::setw(2) << coeff << ": " << p[i] << "\n";
+                  ++i;
+               }
+               break;
+            }
+            
+            default:
+            {
+               out << "print_rpcs_unhandled_type: " << type << "\n";
+               break;
+            }
+         }
+      }
+      else
+      {
+         out << "print_rpcs_invalid_count: " << count << "\n";
+      }
+   }
+   else
+   {
+      out << "print_rpcs_error: null_array\n";
+   }
+   return out;  
+}
 
 std::ostream& ossimTiffInfo::printModelType(std::ostream& out,
                                             const std::string& prefix,

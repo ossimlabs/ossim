@@ -120,6 +120,22 @@ public:
                          ossim_uint32 entryIndex) const;
 
    /**
+    * @brief extracts geometry info from stream to keyword list.
+    *  
+    * Populates geomKwl from gtiffKwl.
+    *
+    * @param gtiffKwl Raw keywordlist extracted from tiff/geotiff keys.
+    * 
+    * @param geomKwl Keyword list that will be initialized with geometry info.
+    * Returns true if geometry info is present, false if not.
+    *
+    * @param entryIndex Entry to get geometry from. 
+    */
+   bool getImageGeometry(const ossimKeywordlist& gtiffKwl,
+                         ossimKeywordlist& geomKwl,
+                         ossim_uint32 entryIndex) const;
+
+   /**
     * @brief Extracts geometry info from geotiff keys to keyword list.
     *
     * Helper method used to extract keywords from geotiff keys embedded in
@@ -179,23 +195,20 @@ public:
                               ossim_uint64   geoAsciiLength,
                               ossim_int8*    geoAsciiBlock) const;
 
-private:
-
    /**
-    * @brief extracts geometry info from stream to keyword list.
-    *  
-    * Populates geomKwl from gtiffKwl.
+    * @brief Prints tag 50844
     *
-    * @param gtiffKwl Raw keywordlist extracted from tiff/geotiff keys.
-    * 
-    * @param geomKwl Keyword list that will be initialized with geometry info.
-    * Returns true if geometry info is present, false if not.
+    * Note: This is in RPC00B polynomial format.
     *
-    * @param entryIndex Entry to get geometry from. 
+    * http://geotiff.maptools.org/rpc_prop.html 
     */
-   bool getImageGeometry(const ossimKeywordlist& gtiffKwl,
-                         ossimKeywordlist& geomKwl,
-                         ossim_uint32 entryIndex) const;
+   std::ostream& printRpcs(std::ostream& out,
+                           const std::string& prefix,
+                           ossim_uint16 type,
+                           ossim_uint64 count,
+                           ossim_uint8* valueArray) const;
+
+private:
    
    /** Initializes s reference.  Does byte swapping as needed. */
    void readShort(ossim_uint16& s, std::istream& str) const;
@@ -619,7 +632,7 @@ private:
    std::string m_connectionString;
    mutable std::shared_ptr<ossim::istream> m_inputStream;
    //ossimFilename          theFile;
-   mutable std::shared_ptr<ossimEndian>   m_endian;
+   mutable ossimEndian* m_endian;
 };
 
 #endif /* End of "#ifndef ossimTiffInfo_HEADER" */
