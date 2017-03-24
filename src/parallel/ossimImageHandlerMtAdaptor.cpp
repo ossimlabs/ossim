@@ -12,11 +12,13 @@
 //  $Id$
 #include <ossim/parallel/ossimImageHandlerMtAdaptor.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
-#include <ossim/parallel/ossimMtDebug.h>
+  // #include <ossim/parallel/ossimMtDebug.h>
+#include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimTimer.h>
 #include <ossim/base/ossimTrace.h>
-#include <stdio.h>
-#include <sys/time.h>
+#include <cstdio>
+#include <ctime>
+// #include <sys/time.h>
 
 RTTI_DEF1(ossimImageHandlerMtAdaptor, "ossimImageHandlerMtAdaptor", ossimImageHandler);
 
@@ -35,7 +37,7 @@ ossimImageHandlerMtAdaptor::ossimImageHandlerMtAdaptor(ossimImageHandler* adapte
       d_useFauxTile (false)
 {
    //###### DEBUG ############
-   ossimMtDebug* mt_debug = ossimMtDebug::instance();
+   // ossimMtDebug* mt_debug = ossimMtDebug::instance();
    //d_useCache = mt_debug->handlerCacheEnabled;
    //d_useFauxTile = mt_debug->handlerUseFauxTile;
    //###### END DEBUG ############
@@ -377,12 +379,19 @@ ossim_uint32 ossimImageHandlerMtAdaptor::getNumberOfDecimationLevels() const
 
 void ossimImageHandlerMtAdaptor::writeTime() const
 {
-       struct timeval tv;
-       struct timezone tz;
-       struct tm *tm;
-       gettimeofday(&tv, &tz);
-       tm=localtime(&tv.tv_sec);
-       printf("%d:%02d:%02d.%ld ", tm->tm_hour, tm->tm_min,tm->tm_sec,tv.tv_usec);
+#if 0  /* not portable (drb) */
+   struct timeval tv;
+   struct timezone tz;
+   struct tm *tm;
+   gettimeofday(&tv, &tz);
+   tm=localtime(&tv.tv_sec);
+   printf("%d:%02d:%02d.%ld ", tm->tm_hour, tm->tm_min,tm->tm_sec,tv.tv_usec);
+#endif
+   // Sorry no usecs...
+   time_t rawTime = (time_t)ossim::getTime();
+   char buf[9];
+   strftime(buf, 9, "%H:%M:%S", gmtime(&rawTime));
+   cerr << buf << std::endl;
 }
 
 ossimScalarType ossimImageHandlerMtAdaptor::getOutputScalarType() const

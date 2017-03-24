@@ -147,7 +147,7 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--dno", "A generic dump if one is available.  This option ignores overviews.");
 
-   au->addCommandLineOption("--ecef2llh", "<X> <Y>  <Z> in ECEF coordinates and returns latitude longitude height position.");
+   au->addCommandLineOption("--ecef2llh", "<X> <Y> <Z> in ECEF coordinates and returns latitude longitude height position.");
 
    au->addCommandLineOption("-f", "<format> Will output the information specified format [KWL | XML].  Default is KWL.");   
 
@@ -2446,7 +2446,7 @@ std::ostream& ossimInfo::deg2rad(const ossim_float64& degrees, std::ostream& out
 std::ostream& ossimInfo::ecef2llh(const ossimEcefPoint& ecefPoint, std::ostream& out) const
 {
    out << "ECEF:            " << ecefPoint.toString() << "\n"
-       << "Lat Lon Height:  " << ossimGpt(ecefPoint).toString() << "\n"; 
+       << "lat_lon_height:  " << ossimGpt(ecefPoint).toString() << "\n"; 
 
    return out;
 }

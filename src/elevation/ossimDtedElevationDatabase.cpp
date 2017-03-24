@@ -119,7 +119,7 @@ bool ossimDtedElevationDatabase::openDtedDirectory(const ossimFilename& dir)
                << "ossimDtedElevationDatabase::open: WARNING "
                << "Scan for dted extension failed!\n"
                << "Can be set in ossim preferences.  Example:\n"
-               << "elevation_manager.elevation_source0.extension: .dt2";
+               << "elevation_manager.elevation_source0.extension: .dt2\n";
          }
       }
       
@@ -237,10 +237,9 @@ bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
                m_extension += val;
                
                ossimNotify(ossimNotifyLevel_WARN)
-                  << "ossimDtedElevationDatabase::loadState: WARNING\n"
+                  << "\nossimDtedElevationDatabase::loadState: WARNING\n"
                   << "Key value for \"extension\" does not start with a dot!\n"
-                  << "   Changing: " << val
-                  << "\n   To:       " << m_extension
+                  << "Consider changing \"" << val << "\" to \"" << m_extension << "\"\n"
                   << std::endl;   
             }
             else
@@ -251,10 +250,10 @@ bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
          else if ( traceDebug() )
          {
             ossimNotify(ossimNotifyLevel_DEBUG)
-               << "ossimDtedElevationDatabase::loadState: NOTICE\n"
+               << "\nossimDtedElevationDatabase::loadState: NOTICE\n"
                << "Key lookup for \"extension\" failed!\n"
                << "Can be set in ossim preferences.  Example:\n"
-               << "elevation_manager.elevation_source0.extension: .dt2";
+               << pref << key << ": .dt2\n\n";
          }
 
          key = "upcase";
@@ -266,10 +265,10 @@ bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
          else if ( traceDebug() )
          {
             ossimNotify(ossimNotifyLevel_DEBUG)
-               << "ossimDtedElevationDatabase::loadState: NOTICE\n"
+               << "\nossimDtedElevationDatabase::loadState: NOTICE\n"
                << "Key lookup for \"upcase\" failed!\n"
                << "Can be set in ossim preferences.  Example:\n"
-               << "elevation_manager.elevation_source0.upcase: false";
+               << pref << key << ": false\n\n";
          }
          
 
