@@ -147,6 +147,10 @@ IF(EXISTS ${OSSIM_DEV_HOME}/ossim-plugins)
   add_subdirectory(${OSSIM_DEV_HOME}/ossim-plugins ${CMAKE_CURRENT_BINARY_DIR}/ossim-plugins)
 ENDIF()
 
+IF(BUILD_DSMG AND EXISTS ${OSSIM_DEV_HOME}/ossim-dsmg)
+  add_subdirectory(${OSSIM_DEV_HOME}/ossim-dsmg ${CMAKE_CURRENT_BINARY_DIR}/ossim-dsmg)
+ENDIF()
+
 IF(OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
     FOREACH(it IN LISTS OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
         MESSAGE(STATUS "**********************Adding additional subdirectory ${it}*************************")
