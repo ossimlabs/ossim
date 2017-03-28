@@ -27,3 +27,23 @@ void ossimHttpResponse::convertHeaderStreamToKeywordlist()
       m_statusCode = 0;
    }
 }
+
+ossimString ossimHttpResponse::getHeaderValue(const ossimString& headerName)const
+{
+   ossimString result = m_headerKwl.find(headerName);
+
+   return result;
+}
+
+ossim_int64 ossimHttpResponse::getContentLength()const
+{
+   ossim_float64 result = -1;
+   ossimString contentLength = m_headerKwl.find("Content-Length");
+   
+   if(!contentLength.empty())
+   {
+      result = contentLength.toInt64();
+   }
+
+   return result;
+}

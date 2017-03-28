@@ -1,6 +1,7 @@
 #ifndef ossimWebRequest_HEADER
 #define ossimWebRequest_HEADER
 #include <ossim/base/ossimObject.h>
+#include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimUrl.h>
 #include <ossim/base/ossimWebResponse.h>
 
@@ -15,7 +16,7 @@ public:
    virtual bool setUrl(const ossimUrl& url){m_url = url; return true;}
    void clearLastError(){m_lastError = "";}
    const ossimString getLastError(){return m_lastError;}
-   virtual ossimWebResponse* getResponse(){return 0;}
+   virtual ossimRefPtr<ossimWebResponse> getResponse(){return 0;}
    
 protected:
    ossimUrl m_url;
