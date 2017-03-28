@@ -15,6 +15,7 @@ public:
    const ossimUrl& getUrl()const{return m_url;}
    virtual bool setUrl(const ossimUrl& url){m_url = url; return true;}
    void clearLastError(){m_lastError = "";}
+   void clearLastError()const{m_lastError = "";}
    const ossimString getLastError(){return m_lastError;}
    virtual ossimRefPtr<ossimWebResponse> getResponse(){return 0;}
    
