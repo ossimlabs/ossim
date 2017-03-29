@@ -16,6 +16,7 @@
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimString.h>
+#include <ossim/base/ossimStringProperty.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimImageHandlerFactory.h>
 #include <ossim/imaging/ossimImageHandlerFactoryBase.h>
@@ -326,20 +327,43 @@ std::ostream& ossimImageHandlerRegistry::printReaderProps(std::ostream& out) con
             dynamic_cast<ossimImageHandler*>( (*factory)->createObject( (*i) ) );
          if ( ih.valid() )
          {
-            std::vector<ossimString> propertyList;
-            ih->getPropertyNames(propertyList);
             out << "reader: " << ih->getClassName() << "\n";
-            
-            if ( propertyList.size() )
+
+            // Loop through image handler properties:
+            std::vector<ossimString> propNames;
+            ih->getPropertyNames(propNames);
+            if ( propNames.size() )
             {
-               // Loop through image handler properties:
-               out << "properties:\n";
-               std::vector<ossimString>::const_iterator p = propertyList.begin();
-               while ( p != propertyList.end() )
+               out << "\nproperties:\n";
+               ossimRefPtr<ossimProperty> prop = 0;
+               std::vector<ossimString>::const_iterator p = propNames.begin();
+               while ( p != propNames.end() )
                {
-                  out << (*p) << "\n";
+                  out << "   " << (*p) << "\n";
+                  prop = ih->getProperty( *p );
+                  if ( prop.valid() )
+                  {
+                     ossimStringProperty* stringProp =
+                        dynamic_cast<ossimStringProperty*>(prop.get());
+                     if ( stringProp )
+                     {
+                        if ( stringProp->getConstraints().size() )
+                        {
+                           out << "      constraints:\n";
+                           std::vector<ossimString>::const_iterator strPropIter =
+                              stringProp->getConstraints().begin();
+                           while( strPropIter != stringProp->getConstraints().end() )
+                           {
+                              out << "         " << (*strPropIter) << "\n";
+                              ++strPropIter;
+                           }
+                        }
+                     }
+                  }
+                  
                   ++p;
                }
+               out << "\n";
             }
          }
          ++i;

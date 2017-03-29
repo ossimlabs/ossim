@@ -636,12 +636,12 @@ ossim_uint32 ossimAdrgTileSource::getImageTileHeight() const
 
 ossimRefPtr<ossimProperty> ossimAdrgTileSource::getProperty(const ossimString& name)const
 {
-	if(name == "file_type")
-	{
-		return new ossimStringProperty(name, "ADRG");
-	}
-	
-	return ossimImageHandler::getProperty(name);
+   if(name == "file_type")
+   {
+      return new ossimStringProperty(name, "ADRG");
+   }
+   
+   return ossimImageHandler::getProperty(name);
 }
 
 void ossimAdrgTileSource::getPropertyNames(std::vector<ossimString>& propertyNames)const
@@ -662,7 +662,12 @@ ossimString ossimAdrgTileSource::getLongName()const
 
 ossim_uint32 ossimAdrgTileSource::getNumberOfInputBands() const
 {
-   return m_AdrgHeader->numberOfBands();
+   ossim_uint32 bands = 1;
+   if ( m_AdrgHeader )
+   {
+      bands = m_AdrgHeader->numberOfBands();
+   }
+   return bands;
 }
 
 bool ossimAdrgTileSource::isOpen()const
