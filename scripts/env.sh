@@ -51,6 +51,13 @@ if [ -z $OSSIM_VERSION ] ; then
    export OSSIM_VERSION=1.9.0
 fi
 
+if [ -z $OSSIM_VERSION_TAG ] ; then
+   if [ "${OSSIM_GIT_BRANCH}" == "dev" ] ; then
+      export OSSIM_VERSION_TAG="SNAPSHOT"
+   else 
+       export OSSIM_VERSION_TAG="RELEASE"
+   fi
+fi
 # For RPM packaging
 #
 if [ -z $OSSIM_BUILD_RELEASE ] ; then
