@@ -462,48 +462,36 @@ ossim_uint32 ossimUsgsDemTileSource::getTileHeight() const
 
 ossim_uint32 ossimUsgsDemTileSource::getNumberOfLines(ossim_uint32 reduced_res_level) const
 {
+   ossim_uint32 result = 0;
    if (reduced_res_level == 0)
    {
       if (theDem)
       {
-         return theDem->getHeight();
-      }
-      else
-      {
-         cerr << "ossimUsgsDemTileSource::getNumberOfLines ERROR:"
-              << "\nNot initialized!" << std::endl;
-         return 0;
+         result = theDem->getHeight();
       }
    }
    else if (theOverview.valid())
    {
-      return theOverview->getNumberOfLines(reduced_res_level);
+      result = theOverview->getNumberOfLines(reduced_res_level);
    }
-
-   return 0;
+   return result;
 }
 
 ossim_uint32 ossimUsgsDemTileSource::getNumberOfSamples(ossim_uint32 reduced_res_level) const
 {
+   ossim_uint32 result = 0;
    if (reduced_res_level == 0)
    {
       if (theDem)
       {
-         return theDem->getWidth();
-      }
-      else
-      {
-         cerr << "ossimUsgsDemTileSource::getNumberOfSamples ERROR:"
-              << "\nNot initialized!" << std::endl;
-         return 0;
+         result = theDem->getWidth();
       }
    }
    else if (theOverview.valid())
    {
-      return theOverview->getNumberOfSamples(reduced_res_level);
+      result = theOverview->getNumberOfSamples(reduced_res_level);
    }
-
-   return 0;
+   return result;
 }
 
 ossim_uint32 ossimUsgsDemTileSource::getImageTileWidth() const

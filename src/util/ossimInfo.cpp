@@ -2307,9 +2307,11 @@ void ossimInfo::printConfiguration() const
 
 std::ostream& ossimInfo::printConfiguration(std::ostream& out) const
 {
-   out << "\npreferences_keyword_list:\n"
-         << ossimPreferences::instance()->preferencesKWL()
-         << std::endl;
+   out << "\npreferences_keyword_file: "
+       << ossimPreferences::instance()->getPreferencesFilename() << "\n"
+       << "preferences_keyword_list:\n"
+       << ossimPreferences::instance()->preferencesKWL()
+       << std::endl;
    return out;
 }
 
