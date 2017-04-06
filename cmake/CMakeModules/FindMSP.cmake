@@ -6,7 +6,20 @@ FIND_PATH(MSP_INCLUDE_DIRS Mensuration/MensurationService.h
 		${OSSIM_INSTALL_PREFIX}/include
 )
 
+set (MSP_INCLUDE_DIRS ${MSP_INCLUDE_DIRS} 
+                      ${MSP_INCLUDE_DIRS}/common
+                      ${MSP_INCLUDE_DIRS}/common/utilities
+                      ${MSP_INCLUDE_DIRS}/common/geometry
+                      ${MSP_INCLUDE_DIRS}/common/math
+                      ${MSP_INCLUDE_DIRS}/common/csmutil
+                      ${MSP_INCLUDE_DIRS}/common/csm)
+
+
 MESSAGE("MSP_HOME = $ENV{MSP_HOME}")
+
+find_library(MSP_LIBRARY00 NAMES pthread )
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY00})
+
 find_library(MSP_LIBRARY01 NAMES CSM_PCAPI PATHS $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
 set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY01})
 
