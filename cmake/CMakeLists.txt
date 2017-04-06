@@ -147,10 +147,6 @@ IF(EXISTS ${OSSIM_DEV_HOME}/ossim-plugins)
   add_subdirectory(${OSSIM_DEV_HOME}/ossim-plugins ${CMAKE_CURRENT_BINARY_DIR}/ossim-plugins)
 ENDIF()
 
-IF(BUILD_DSMG AND EXISTS ${OSSIM_DEV_HOME}/ossim-dsmg)
-  add_subdirectory(${OSSIM_DEV_HOME}/ossim-dsmg ${CMAKE_CURRENT_BINARY_DIR}/ossim-dsmg)
-ENDIF()
-
 IF(OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
     FOREACH(it IN LISTS OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
         MESSAGE(STATUS "**********************Adding additional subdirectory ${it}*************************")
@@ -160,6 +156,14 @@ ENDIF()
 
 IF(BUILD_CSMAPI AND EXISTS ${OSSIM_DEV_HOME}/csmApi)
     add_subdirectory(${OSSIM_DEV_HOME}/csmApi ${CMAKE_CURRENT_BINARY_DIR}/csmApi)
+ENDIF()
+
+IF(BUILD_DSMG AND EXISTS ${OSSIM_DEV_HOME}/ossim-dsmg)
+  add_subdirectory(${OSSIM_DEV_HOME}/ossim-dsmg ${CMAKE_CURRENT_BINARY_DIR}/ossim-dsmg)
+ENDIF()
+
+IF(BUILD_MSP AND EXISTS ${OSSIM_DEV_HOME}/ossim-msp)
+  add_subdirectory(${OSSIM_DEV_HOME}/ossim-msp ${CMAKE_CURRENT_BINARY_DIR}/ossim-msp)
 ENDIF()
 
 ############################## Doxygen installation for current ossim core module ###########################################
@@ -337,4 +341,6 @@ MESSAGE( STATUS "BUILD_OSSIM_VIDEO               = ${BUILD_OSSIM_VIDEO}" )
 MESSAGE( STATUS "BUILD_OSSIM_WMS                 = ${BUILD_OSSIM_WMS}" )
 MESSAGE( STATUS "BUILD_LIBRARY_DIR               = ${BUILD_LIBRARY_DIR}" )
 MESSAGE( STATUS "BUILD_RUNTIME_DIR               = ${BUILD_RUNTIME_DIR}" )
+MESSAGE( STATUS "BUILD_DSMG                      = ${BUILD_DSMG}" )
+MESSAGE( STATUS "BUILD_MSP                       = ${BUILD_MSP}" )
 MESSAGE( STATUS "Use OSSIM_BUILD_ADDITIONAL_DIRECTORIES to add other cmake builds." )
