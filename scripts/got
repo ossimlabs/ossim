@@ -26,7 +26,6 @@ function do_git {
     pushd $1 > /dev/null
     git $2 $3 $4 $5
     popd > /dev/null
-    echo; 
   fi
 }
 export -f do_git
@@ -59,5 +58,8 @@ find . -maxdepth 1 -type d -name "omar-*" -exec bash -c "do_git {} $*" \;
 if [ -d o2-paas ]; then
   bash -c "do_git o2-paas $*"
 fi
+
+echo
+  
 
 
