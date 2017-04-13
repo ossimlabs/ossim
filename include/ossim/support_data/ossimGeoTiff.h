@@ -210,7 +210,6 @@ public:
 private:
 
    // Disallow ...
-   ossimGeoTiff(const ossimGeoTiff* /* rhs */ ) {}
    ossimGeoTiff& operator=(const ossimGeoTiff& /*rhs*/) { return *this; }
 
    //! Initializes data members given a projection code. Returns TRUE if valid PCS code specified.
