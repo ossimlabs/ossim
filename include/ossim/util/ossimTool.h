@@ -87,10 +87,10 @@ public:
     */
    void getVersion(std::string& s) const;
 
-   // NOTE: The ossimUtilityFactory::getCapabilities() needs to access a brief description of each
-   // utility. For convenience, the ossimUtility-derived (final) classes should declare a public
-   // static member to hold the description string. See ossimViewshedUtility for an example.
-   //static const char* DESCRIPTION;
+   // NOTE: The ossimToolFactory::getCapabilities() needs to access a brief description of each
+   // utility. For convenience, the ossimTool-derived (final) classes should declare a public
+   // static member to hold the description string. See ossimViewshedTool for an example.
+   // static const char* DESCRIPTION;
 
    /** Overrides base class implementation to indicate this class supports getChip() calls.
     * Can be done with dynamic cast and pointer test, but not sure how that is supported in SWIG

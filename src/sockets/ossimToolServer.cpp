@@ -362,7 +362,7 @@ bool ossimToolServer::runCommand(ossimString& command)
       // Fetch OSSIM utility for requested operation:
       ossimArgumentParser ap (command);
       ossimString util_name = ap[0];
-      utility = factory->createUtility(util_name);
+      utility = factory->createTool(util_name);
 
       try
       {

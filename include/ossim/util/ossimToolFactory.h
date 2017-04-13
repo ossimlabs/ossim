@@ -21,7 +21,7 @@ public:
    virtual ~ossimToolFactory();
    static ossimToolFactory* instance();
 
-   virtual ossimTool* createUtility(const std::string& typeName) const;
+   virtual ossimTool* createTool(const std::string& typeName) const;
 
    /*!
     * This should return the type name of all objects in all factories.

@@ -50,7 +50,7 @@ bool runCommand(ossimArgumentParser& ap)
    ossimString command = ap[1];
    ap.remove(1);
    ossimToolFactoryBase* factory = ossimToolRegistry::instance();
-   ossimRefPtr<ossimTool> utility = factory->createUtility(command);
+   ossimRefPtr<ossimTool> utility = factory->createTool(command);
 
    if (!utility.valid())
    {
