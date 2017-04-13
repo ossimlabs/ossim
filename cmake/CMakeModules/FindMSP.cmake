@@ -7,11 +7,16 @@ FIND_PATH(MSP_INCLUDE_DIRS Mensuration/MensurationService.h
 )
 
 set (MSP_INCLUDE_DIRS ${MSP_INCLUDE_DIRS} 
+                      ${MSP_INCLUDE_DIRS}/CoordinateConversion
                       ${MSP_INCLUDE_DIRS}/common
                       ${MSP_INCLUDE_DIRS}/common/utilities
                       ${MSP_INCLUDE_DIRS}/common/geometry
                       ${MSP_INCLUDE_DIRS}/common/math
                       ${MSP_INCLUDE_DIRS}/common/csmutil
+                      ${MSP_INCLUDE_DIRS}/common/ntmtre
+                      ${MSP_INCLUDE_DIRS}/common/nitf
+                      ${MSP_INCLUDE_DIRS}/common/deiutil
+                      ${MSP_INCLUDE_DIRS}/common/dtcc
                       ${MSP_INCLUDE_DIRS}/common/csm)
 
 
@@ -147,6 +152,8 @@ find_library(MSP_LIBRARY42 NAMES MSPmtdCommon PATHS $ENV{MSP_HOME}/lib ${OSSIM_D
 set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY42})
 
 
+set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARIES})
+
 #---
 # This function sets MSP_FOUND if variables are valid.
 #--- 
@@ -161,9 +168,9 @@ if(NOT MSP_FOUND)
    endif( NOT MSP_FIND_QUIETLY )
 endif(NOT MSP_FOUND)
 
-if( NOT MSP_FIND_QUIETLY )
-   message( STATUS "MSP_INCLUDE_DIRS=${MSP_INCLUDE_DIRS}" )
-   message( STATUS "MSP_LIBRARIES=${MSP_LIBRARIES}" )
-endif( NOT MSP_FIND_QUIETLY )
+#if( NOT MSP_FIND_QUIETLY )
+#   message( STATUS "MSP_INCLUDE_DIRS=${MSP_INCLUDE_DIRS}" )
+#   message( STATUS "MSP_LIBRARIES=${MSP_LIBRARIES}" )
+#endif( NOT MSP_FIND_QUIETLY )
 
 mark_as_advanced(MSP_INCLUDE_DIRS MSP_LIBRARIES)
