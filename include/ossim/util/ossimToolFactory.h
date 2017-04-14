@@ -32,7 +32,7 @@ public:
    /**
     * Appends map with available utilities along with descriptions as <name, description> pairs.
     * The names are the human-readable name of the utility/service, typically the utility's class
-    * name without the "ossim" prefix nor "Util" suffix, all lowercase.
+    * name without the "ossim" prefix nor "Tool" suffix, all lowercase.
     */
    virtual void getCapabilities(std::map<std::string, std::string>& capabilities) const;
    virtual std::map<std::string, std::string> getCapabilities() const;
