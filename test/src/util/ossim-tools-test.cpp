@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
       }
       string toolName = argv[1];
       ossimRefPtr<ossimChipProcTool> chipProcUtil =
-            (ossimChipProcTool*) ossimToolRegistry::instance()->createUtility(toolName);
+            (ossimChipProcTool*) ossimToolRegistry::instance()->createTool(toolName);
       if (chipProcUtil == 0)
          cerr<<"OssimTools() Bad opeation requested: <"<<toolName<<">. Ignoring."<<endl;
 

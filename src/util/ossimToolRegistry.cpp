@@ -56,13 +56,13 @@ std::map<std::string, std::string> ossimToolRegistry::getCapabilities() const
    return result;
 }
 
-ossimTool* ossimToolRegistry::createUtility(const std::string& argName) const
+ossimTool* ossimToolRegistry::createTool(const std::string& argName) const
 {
    ossimTool* result = 0;
    vector<ossimToolFactoryBase*>::const_iterator iter = m_factoryList.begin();
    while ((iter != m_factoryList.end()) && (!result))
    {
-      result = (*iter)->createUtility(argName);
+      result = (*iter)->createTool(argName);
       ++iter;
    }
    return result;

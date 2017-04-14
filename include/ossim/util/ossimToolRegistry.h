@@ -42,7 +42,7 @@ public:
    virtual void getCapabilities(std::map<std::string, std::string>& capabilities) const;
    virtual std::map<std::string, std::string> getCapabilities() const;
 
-   virtual ossimTool* createUtility(const std::string& typeName) const;
+   virtual ossimTool* createTool(const std::string& typeName) const;
 
    virtual ossimString getClassName() const { return "ossimUtilityManager"; }
 

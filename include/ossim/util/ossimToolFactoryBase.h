@@ -18,17 +18,17 @@ class OSSIM_DLL ossimToolFactoryBase : public ossimObjectFactory
 {
 public:
    virtual ossimObject* createObject(const ossimString& typeName) const
-   { return (ossimObject*) createUtility(typeName); }
+   { return (ossimObject*) createTool(typeName); }
 
    virtual ossimObject* createObject(const ossimKeywordlist& kwl, const char* prefix=0) const
-   { return (ossimObject*) createUtility(kwl, prefix); }
+   { return (ossimObject*) createTool(kwl, prefix); }
 
-   virtual ossimTool* createUtility(const std::string& typeName) const=0;
+   virtual ossimTool* createTool(const std::string& typeName) const=0;
 
-   virtual ossimTool* createUtility(const ossimKeywordlist& kwl, const char* prefix=0) const
+   virtual ossimTool* createTool(const ossimKeywordlist& kwl, const char* prefix=0) const
    {
       ossimString type = kwl.find(prefix, ossimKeywordNames::TYPE_KW);
-      return createUtility(type);
+      return createTool(type);
    }
 
    /**

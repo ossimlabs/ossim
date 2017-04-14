@@ -372,7 +372,7 @@ bool ossimShorelineTool::execute()
 
    // Now for vector product, need services of a plugin utility. Check if available:
    ossimRefPtr<ossimTool> potrace =
-         ossimToolRegistry::instance()->createUtility(string("potrace"));
+         ossimToolRegistry::instance()->createTool(string("potrace"));
    if (!potrace.valid())
    {
       ossimNotify(ossimNotifyLevel_WARN)<<"ossimShorelineUtil:"<<__LINE__<<"  Need the "
