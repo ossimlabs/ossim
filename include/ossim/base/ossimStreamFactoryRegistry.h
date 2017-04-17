@@ -33,16 +33,19 @@ namespace ossim
 
       virtual std::shared_ptr<ossim::istream>
          createIstream(const std::string& connectionString,
+                       const ossimKeywordlist& options=ossimKeywordlist(),
                        std::ios_base::openmode mode=
                        std::ios_base::in|std::ios_base::binary) const;
       
       virtual std::shared_ptr<ossim::ostream>
          createOstream(const std::string& connectionString,
+                       const ossimKeywordlist& options=ossimKeywordlist(),
                        std::ios_base::openmode mode=
                        std::ios_base::out|std::ios_base::binary) const;
       
       virtual std::shared_ptr<ossim::iostream>
          createIOstream(const std::string& connectionString,
+                       const ossimKeywordlist& options=ossimKeywordlist(),
                         std::ios_base::openmode mode=
                         std::ios_base::in|std::ios_base::out|std::ios_base::binary) const;
    
