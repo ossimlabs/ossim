@@ -649,3 +649,29 @@ ossim.plugins.aws.s3.nReadCacheHeaders: 10000
 // default = commented out / auto-detected.
 //---
 // ossim.std.out.progress: 1
+
+
+//---
+// If you have the ossim-web-plugin installed then these options are available
+//
+//
+// Uncomment to add a Certificate Authority for CERT verification
+// Sometimes this is not needed and the client Cert and key is all that is needed.
+//
+//ossim.plugins.web.curl.cacert: 
+
+// Uncomment to add a client certificate file. 
+//ossim.plugins.web.curl.clientCert: 
+
+// Uncomment and specify the type of the client certificate
+// P12 or PEM
+//ossim.plugins.web.curl.clientCertType: P12
+
+// If the client private key is not bundled in the clientCert then you can specify the key 
+// here.
+//
+//ossim.plugins.web.curl.clientKey:
+
+// If a password is on your private key file then specify it here. 
+//ossim.plugins.web.curl.clientKeyPassword:
+/---
