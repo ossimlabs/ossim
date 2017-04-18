@@ -14,6 +14,7 @@
 #define ossimStreamFactoryBase_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIoStream.h>
 #include <iosfwd>
@@ -31,14 +32,17 @@ namespace ossim
       
       virtual std::shared_ptr<ossim::istream>
          createIstream(const std::string& connectionString,
+                       const ossimKeywordlist& options,
                        std::ios_base::openmode mode) const=0;
 
       virtual std::shared_ptr<ossim::ostream>
          createOstream(const std::string& connectionString,
+                       const ossimKeywordlist& options,
                        std::ios_base::openmode mode) const=0;
 
       virtual std::shared_ptr<ossim::iostream>
          createIOstream(const std::string& connectionString,
+                       const ossimKeywordlist& options,
                         std::ios_base::openmode mode) const=0;
    };
 }
