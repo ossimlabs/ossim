@@ -54,6 +54,7 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
+#include <memory>
 
 static const char BUILD_DATE_KW[]           = "build_date";
 static const char CENTER_GROUND_KW[]        = "center_ground";

@@ -28,6 +28,7 @@ public:
     * Initializes from command line arguments.
     * This base class has some common arguments to read. The derived class should call this
     * implementation in addition to setting its own arguments.
+    * @param ap Represents command line.
     * @return FALSE if --help option requested or no params provided, so that derived classes can
     * exit without error.
     * @note Throws ossimException on error.
@@ -36,15 +37,31 @@ public:
 
    /**
     * Reads processing params from KWL and prepares for execute. Returns TRUE if successful.
+    * @param kwl Full keyword-list representing state
     * @note Throws ossimException on error.
     */
    virtual void initialize(const ossimKeywordlist& kwl);
 
    /**
-    * Writes product to output file. Always returns true since using exception on error.
+    * Reads processing params from string provided (usually JSON-formatted, though that's up to the
+    * derived class to implement and contract with consumer). If all good, the object is ready for
+    * subsequent call to execute().
+    * @note Throws ossimException on error.
+    */
+   virtual void initialize(const std::string& request);
+
+   /**
+    * Writes product to output file if applicable. The product may also beAlways returns true since using exception on error.
     * @note Throws ossimException on error.
     */
    virtual bool execute() = 0;
+
+   /**
+    * Fetch product as string (typically JSON) when applicable, otherwise passes back empty string.
+    * Always returns true since using exception on error.
+    * @return Returns non-empty string if valid response available.
+    */
+   virtual const std::string& getResponse() const { return m_response; }
 
    /**
     * Disconnects and clears the DEM and image layers. Leaves OSSIM initialized.
@@ -123,6 +140,7 @@ protected:
    ossimKeywordlist m_kwl;
    std::ostream* m_consoleStream;
    bool m_helpRequested;
+   std::string m_response;
 
 private:
    /**

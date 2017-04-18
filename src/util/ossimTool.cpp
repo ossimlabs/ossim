@@ -35,7 +35,7 @@ void ossimTool::abort()
 
 ossimString ossimTool::getClassName() const
 {
-   return "ossimUtility";
+   return "ossimTool";
 }
 
 void ossimTool::setUsage(ossimArgumentParser& ap)
@@ -97,6 +97,11 @@ void ossimTool::initialize(const ossimKeywordlist& kwl)
    m_kwl = kwl;
 }
 
+void ossimTool::initialize(const std::string& request)
+{
+   m_helpRequested = false;
+}
+
 void ossimTool::getKwlTemplate(ossimKeywordlist& kwl)
 {
    ossimFilename share_dir = ossimPreferences::instance()->
@@ -106,7 +111,7 @@ void ossimTool::getKwlTemplate(ossimKeywordlist& kwl)
 
    if (!kwl.addFile(kwl_path))
    {
-      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::getKwlTemplate() -- Could not find <"
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimTool::getKwlTemplate() -- Could not find <"
             <<kwl_path<<">. Ignoring"<<endl;
    }
 }
@@ -135,7 +140,7 @@ bool ossimTool::readTextFile(const ossimFilename& filename, string& contents) co
    std::ifstream is(filename.chars());
    if (!is)
    {
-      ossimNotify(ossimNotifyLevel_WARN)<<"ossimUtility::readTextFile() -- Could not find <"
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimTool::readTextFile() -- Could not find <"
             <<filename<<">. Ignoring."<<endl;
       return false;
    }

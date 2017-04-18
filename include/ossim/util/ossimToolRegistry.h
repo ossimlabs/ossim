@@ -44,7 +44,7 @@ public:
 
    virtual ossimTool* createTool(const std::string& typeName) const;
 
-   virtual ossimString getClassName() const { return "ossimUtilityManager"; }
+   virtual ossimString getClassName() const { return "ossimToolRegistry"; }
 
    virtual void getTypeNameList(std::vector<ossimString>& typeList) const;
 
