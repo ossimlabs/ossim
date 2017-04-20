@@ -513,6 +513,8 @@ void ossimInit::initializeDefaultFactories()
 
 void ossimInit::initializePlugins()
 {
+
+#if 0   
    // Note: Removed "autoload" code. Commented out below.
    
    const ossimKeywordlist& KWL = thePreferences->preferencesKWL();
@@ -602,7 +604,8 @@ void ossimInit::initializePlugins()
       }
    }
 
-#if 0 /* Old code that auto loads plugins. */
+#else  /* Old code that auto loads plugins. */
+   #if 0
    ossimString regExpressionDir =  ossimString("^(") + "plugin.dir[0-9]+)";
    ossimString regExpressionFile =  ossimString("^(") + "plugin.file[0-9]+)";
 
@@ -670,47 +673,46 @@ void ossimInit::initializePlugins()
          }
       }
    }
-   
+   #endif   
    // now check new plugin loading that supports passing options to the plugins
    // 
-   regExpressionFile =  ossimString("^(") + "plugin[0-9]+\\.file)";
-   keys = kwl.getSubstringKeyList( regExpressionFile );
+   ossimString regExpressionFile =  ossimString("^(") + "plugin[0-9]+\\.file)";
+   const ossimKeywordlist& kwl = thePreferences->preferencesKWL();
+   vector<ossimString> keys = kwl.getSubstringKeyList( regExpressionFile );
    
-   numberOfFiles = (ossim_uint32)keys.size();
-   offset = (ossim_uint32)ossimString("plugin").size();
-   numberList.resize(numberOfFiles);
+   ossim_uint32 numberOfFiles = (ossim_uint32)keys.size();
+   ossim_uint32 offset = (ossim_uint32)ossimString("plugin").size();
+   std::vector<int> numberList(numberOfFiles);
    
    if(numberList.size()>0)
    {
-      for(idx = 0; idx < (int)numberList.size();++idx)
+      ossim_uint32 idx = 0;
+      for(idx = 0; idx < numberList.size();++idx)
       {
-         std::vector<ossimString> splitArray;
-         keys[idx].split(splitArray, ".");
-         if(splitArray.size())
-         {
-            keys[idx] = ossimString(splitArray[0].begin(), splitArray[0].begin()+offset);
-         }
-         ossimString numberStr(splitArray[0].begin() + offset,
-                               splitArray[0].end());
+         ossimString numberStr(keys[idx].begin() + offset,
+                               keys[idx].end());
          numberList[idx] = numberStr.toInt();
       }
-      
-      std::sort(numberList.begin(), numberList.end());   
-      for(idx=0;idx < (int)numberList.size();++idx)
+      std::sort(numberList.begin(), numberList.end());
+      ossimFilename pluginFile;
+      ossimString options;
+      for(std::vector<ossim_int32>::const_iterator iter = numberList.begin();
+         iter != numberList.end();++iter)
       {
-         ossimString newPrefix = ossimString("plugin")+ossimString::toString(numberList[idx]) + ".";
-         const char* file    = kwl.find((newPrefix+"file").c_str());
-         const char* options = kwl.find((newPrefix+"options").c_str());
-         if(file&&ossimFilename(file).exists())
+         ossimString newPrefix = ossimString("plugin")+ossimString::toString(*iter) + ".";
+       
+         pluginFile = kwl.find((newPrefix+"file").c_str());
+         options    = kwl.find((newPrefix+"options").c_str());
+         if(pluginFile.exists())
          {
-            loadPlugins(file, options);
+            ossimSharedPluginRegistry::instance()->registerPlugin(pluginFile, options);
          }
       }
    }
 
    ossimString auto_load_plugins(ossimPreferences::instance()->findPreference("ossim_init.auto_load_plugins"));
    
-   if(auto_load_plugins.empty()) auto_load_plugins = "true";
+   if(auto_load_plugins.empty()) auto_load_plugins = "false";
    // now load any plugins not found in the keywordlist
    //
    // check for plugins in the current directory
