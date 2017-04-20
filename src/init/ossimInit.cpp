@@ -676,8 +676,8 @@ void ossimInit::initializePlugins()
    #endif   
    // now check new plugin loading that supports passing options to the plugins
    // 
-   ossimString regExpressionFile =  ossimString("^(") + "plugin[0-9]+\\.file)";
    const ossimKeywordlist& kwl = thePreferences->preferencesKWL();
+   ossimString regExpressionFile =  ossimString("^(") + "plugin[0-9]+\\.file)";
    vector<ossimString> keys = kwl.getSubstringKeyList( regExpressionFile );
    
    ossim_uint32 numberOfFiles = (ossim_uint32)keys.size();
@@ -709,6 +709,40 @@ void ossimInit::initializePlugins()
          }
       }
    }
+
+   regExpressionFile =  ossimString("^(") + "plugin.file[0-9]+)";
+   keys = kwl.getSubstringKeyList( regExpressionFile );
+   
+   numberOfFiles = (ossim_uint32)keys.size();
+   offset = (ossim_uint32)ossimString("plugin.file").size();
+   numberList.resize(numberOfFiles);
+   
+   if(numberList.size()>0)
+   {
+      ossim_uint32 idx = 0;
+      for(idx = 0; idx < numberList.size();++idx)
+      {
+         ossimString numberStr(keys[idx].begin() + offset,
+                               keys[idx].end());
+         numberList[idx] = numberStr.toInt();
+      }
+      std::sort(numberList.begin(), numberList.end());
+      ossimFilename pluginFile;
+      ossimString options;
+      for(std::vector<ossim_int32>::const_iterator iter = numberList.begin();
+         iter != numberList.end();++iter)
+      {
+         ossimString newPrefix = ossimString("plugin.file")+ossimString::toString(*iter);
+       
+         pluginFile = kwl.find(newPrefix.c_str());
+         if(pluginFile.exists())
+         {
+            ossimSharedPluginRegistry::instance()->registerPlugin(pluginFile, options);
+         }
+      }
+   }
+
+
 
    ossimString auto_load_plugins(ossimPreferences::instance()->findPreference("ossim_init.auto_load_plugins"));
    
