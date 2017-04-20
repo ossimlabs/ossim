@@ -9,17 +9,24 @@
 
 #include <ossim/ossimConfig.h>  /* to pick up platform defines */
 
-#include <iostream>
-#include <fstream>
-using namespace std;
+#include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimCommon.h>
+#include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimDirectory.h>
+#include <ossim/base/ossimDate.h>
+#include <ossim/base/ossimEnvironmentUtility.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimRegExp.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
-#include <ossim/base/ossimDirectory.h>
-#include <ossim/base/ossimDate.h>
-#include <ossim/base/ossimEnvironmentUtility.h>
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 #if defined(_WIN32)
 #  include <io.h>
@@ -43,12 +50,6 @@ using namespace std;
 #  include <stdlib.h>
 #  include <io.h>
 #endif
-
-#include <ossim/base/ossimFilename.h>
-#include <ossim/base/ossimRegExp.h>
-#include <ossim/base/ossimCommon.h>
-#include <ossim/base/ossimConstants.h>
-#include <ossim/base/ossimNotifyContext.h>
 
 #if defined(_WIN32)
 const char ossimFilename::thePathSeparator = '\\';
@@ -639,7 +640,7 @@ bool ossimFilename::exists() const
    }
    else
    {
-      result = true; // No test for url at this point.
+      result = ossim::StreamFactoryRegistry::instance()->exists( this->string() );
    }
    return result;
 }

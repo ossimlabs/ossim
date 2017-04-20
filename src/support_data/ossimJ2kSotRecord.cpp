@@ -1,28 +1,29 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
 // Author:  David Burken
 //
-// // Description: Container class for J2K "Start Of Tile" (SOT) record.
+// Description: Container class for J2K "Start Of Tile" (SOT) record.
+//
+// marker: FF90
 //
 // See document BPJ2K01.00 Table 7-3 Image and tile size (15444-1 Annex A.4.2)
 // 
-//----------------------------------------------------------------------------
-// $Id: ossimJ2kSotRecord.h,v 1.5 2005/10/13 21:24:47 dburken Exp $
-
-#include <iostream>
-#include <iomanip>
+//---
+// $Id$
 
 #include <ossim/support_data/ossimJ2kSotRecord.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimEndian.h>
 
+#include <iostream>
+#include <iomanip>
+
 ossimJ2kSotRecord::ossimJ2kSotRecord()
    :
-   theMarker(0xff90),
    theLsot(0),
    theIsot(0),
    thePsot(0),
@@ -48,11 +49,50 @@ void ossimJ2kSotRecord::parseStream(std::istream& in)
    if (ossim::byteOrder() == OSSIM_LITTLE_ENDIAN)
    {
       // Stored big endian, must swap.
-      ossimEndian s;
-      s.swap(theLsot);
-      s.swap(theIsot);
-      s.swap(thePsot);
+      ossimEndian endian;
+      endian.swap(theLsot);
+      endian.swap(theIsot);
+      endian.swap(thePsot);
    }
+}
+
+void ossimJ2kSotRecord::writeStream(std::ostream& out)
+{
+   ossimEndian* endian = 0;
+   if (ossim::byteOrder() == OSSIM_LITTLE_ENDIAN)
+   {
+      // Stored in file big endian, must swap.
+      endian = new ossimEndian();
+      endian->swap( theLsot );
+      endian->swap( theIsot );
+      endian->swap( thePsot );      
+   }
+   
+   // Marker 0xff90:
+   out.put( 0xff );
+   out.put( 0x90 );
+   
+   out.write( (char*)&theLsot,  2);
+   out.write( (char*)&theIsot,  2);
+   out.write( (char*)&thePsot,  4);
+   out.write( (char*)&theTpsot, 1);
+   out.write( (char*)&theTnsot, 1);   
+      
+   if ( endian )
+   {
+      // Swap back to native:
+      endian->swap(theLsot);
+      endian->swap(theIsot);
+      endian->swap(thePsot);
+
+      delete endian;
+      endian = 0;
+   }  
+}
+
+void ossimJ2kSotRecord::setIsot( ossim_uint16 isot )
+{
+   theIsot = isot;
 }
 
 std::ostream& ossimJ2kSotRecord::print(std::ostream& out,
@@ -65,7 +105,7 @@ std::ostream& ossimJ2kSotRecord::print(std::ostream& out,
    pfx += "sot.";
 
    out.setf(std::ios_base::hex, std::ios_base::basefield);
-   out << pfx << "marker: 0x" << theMarker << "\n";
+   out << pfx << "marker: 0xff90\n";
    out.setf(std::ios_base::fmtflags(0), std::ios_base::basefield);
 
    out << pfx << "Lsot:   "  << theLsot      << "\n"

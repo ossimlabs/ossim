@@ -1,6 +1,6 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -10,8 +10,8 @@
 //
 // See document BPJ2K01.00 Table 7-7 Image and tile size (15444-1 Annex A5.1)
 // 
-//----------------------------------------------------------------------------
-// $Id: ossimJ2kCodRecord.h,v 1.5 2005/10/13 21:24:47 dburken Exp $
+//---
+// $Id$
 #ifndef ossimJ2kCodRecord_HEADER
 #define ossimJ2kCodRecord_HEADER 1
 
@@ -50,6 +50,14 @@ public:
     */
    std::ostream& print(std::ostream& out,
                        const std::string& prefix=std::string()) const;
+
+   /**
+    * @return LRCP, RLCP, RPCL, PCRL, CPRL or unknown.
+    */
+   std::string getProgressionOrderAsString(
+      ossim_uint8 progressionOrder ) const;
+
+   ossim_uint8 getProgressionOrder() const;
 
    /** operator<< */
    friend OSSIM_DLL std::ostream& operator<<(

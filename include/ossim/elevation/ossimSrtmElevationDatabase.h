@@ -1,10 +1,8 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #ifndef ossimSrtmElevationDatabase_HEADER
@@ -19,24 +17,14 @@ class OSSIM_DLL ossimSrtmElevationDatabase : public ossimElevationCellDatabase
 {
 public:
    typedef std::vector<ossimRefPtr<CellInfo> > DirectMap; // 360x180 cell grid
-   ossimSrtmElevationDatabase()
-   :ossimElevationCellDatabase()
-   {
-   }
-   ossimSrtmElevationDatabase(const ossimSrtmElevationDatabase& rhs)
-   :ossimElevationCellDatabase(rhs)
-   {
-   }
-   virtual ~ossimSrtmElevationDatabase()
-   {
-   }
+   
+   ossimSrtmElevationDatabase();
 
-   virtual ossimObject* dup() const
-   {
-      ossimSrtmElevationDatabase* duped = new ossimSrtmElevationDatabase;
-      duped->open(m_connectionString);
-      return duped;
-   }
+   ossimSrtmElevationDatabase(const ossimSrtmElevationDatabase& rhs);
+
+   virtual ~ossimSrtmElevationDatabase();
+
+   virtual ossimObject* dup() const;
 
    virtual bool open(const ossimString& connectionString);
    bool getAccuracyInfo(ossimElevationAccuracyInfo& info, const ossimGpt& /*gpt*/) const;

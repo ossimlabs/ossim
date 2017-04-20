@@ -1,25 +1,23 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: Container class for J2K Coding style default (COD) record.
 //
 // See document BPJ2K01.00 Table 7-7 Image and tile size (15444-1 Annex A5.1)
 // 
-//----------------------------------------------------------------------------
-// $Id: ossimJ2kCodRecord.h,v 1.5 2005/10/13 21:24:47 dburken Exp $
-
-#include <iostream>
-#include <iomanip>
+//---
+// $Id$
 
 #include <ossim/support_data/ossimJ2kCodRecord.h>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimEndian.h>
+
+#include <iostream>
+#include <iomanip>
 
 
 ossimJ2kCodRecord::ossimJ2kCodRecord()
@@ -93,12 +91,13 @@ std::ostream& ossimJ2kCodRecord::print(std::ostream& out,
    pfx += "cod.";
 
    out.setf(std::ios_base::hex, std::ios_base::basefield);
-   out << pfx << "marker: 0x" << m_marker << "\n";
+   out << pfx << "marker: 0xff90\n";
    out.setf(std::ios_base::fmtflags(0), std::ios_base::basefield);
 
    out << pfx << "Lcod: " << m_lcod       << "\n"
        << pfx << "Scod: " << int(m_scod)  << "\n"
-       << pfx << "SGcod_progression_order:  " << int(m_progressionOrder) << "\n"
+       << pfx << "SGcod_progression_order:  "
+       << getProgressionOrderAsString(m_progressionOrder) << "\n"
        << pfx << "SGcod_number_of_layers:  " << m_numberOfLayers << "\n"
        << pfx << "SGcod_multiple_component_transform:  "
        << int(m_multipleComponentTransform) << "\n"
@@ -115,6 +114,43 @@ std::ostream& ossimJ2kCodRecord::print(std::ostream& out,
    out.setf(f);
 
    return out;
+}
+
+std::string ossimJ2kCodRecord::getProgressionOrderAsString( ossim_uint8 progressionOrder ) const
+{
+   std::string result;
+   
+   if ( progressionOrder == 0x00 )
+   {
+      result = "LRCP";
+   }
+   else if ( progressionOrder == 0x01 )
+   {
+      result = "RLCP";
+   }
+   else if ( progressionOrder == 0x02 )
+   {
+      result = "RPCL";
+   }
+   else if ( progressionOrder == 0x03 )
+   {
+      result = "PCRL";
+   }
+   else if ( progressionOrder == 0x04 )
+   {
+      result = "CPRL";
+   }
+   else
+   {
+      result = "unknown";
+   }
+   
+   return result;
+}
+
+ossim_uint8 ossimJ2kCodRecord::getProgressionOrder() const
+{
+   return m_progressionOrder;
 }
 
 std::ostream& operator<<(std::ostream& out, const ossimJ2kCodRecord& obj)

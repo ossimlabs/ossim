@@ -1,6 +1,7 @@
 //---
 // License: MIT
 // Description: Container class for J2K "Start Of Tile" (SOT) record.
+// marker: FF90
 // See document BPJ2K01.00 Table 7-3 Image and tile size (15444-1 Annex A.4.2)
 // $Id$
 //---
@@ -32,6 +33,21 @@ public:
    void parseStream(ossim::istream& in);
 
    /**
+    * Write method.
+    *
+    * Note: Write includes two marker bytes.
+    *
+    * @param out Stream to write to.
+    */
+   void writeStream(std::ostream& out);
+
+   /**
+    * @brief Sets the tile index.
+    * @param isot
+    */
+   void setIsot( ossim_uint16 isot );
+   
+   /**
     * @brief print method that outputs a key/value type format adding prefix
     * to keys.
     * @param out String to output to.
@@ -49,9 +65,6 @@ public:
    friend OSSIM_DLL std::ostream& operator<<(
       std::ostream& out, const ossimJ2kSotRecord& obj);
 
-   /** Start of tile-part marker code. 0xff90 */
-   ossim_uint16 theMarker;
-   
    /** Length in bytes of the marker segment. */
    ossim_uint16 theLsot;
 

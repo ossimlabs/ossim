@@ -113,7 +113,10 @@ void ossimJ2kSizRecord::writeStream(std::ostream& out)
       s->swap(m_Csiz);
    }
 
-   out.write( (char*)&m_marker, 2 );
+   out.put( 0xff );
+   out.put( 0x51 );
+   // out.write( (char*)&m_marker, 2 );
+   
    out.write((char*)&m_Lsiz,    2);
    out.write((char*)&m_Rsiz,    2);
    out.write((char*)&m_Xsiz,    4);
