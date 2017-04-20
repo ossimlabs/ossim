@@ -686,6 +686,9 @@ hdf5.options.renderable_datasets: /All_Data/VIIRS-DNB-SDR_All/Radiance
 //
 ossim.plugins.aws.s3.readBlocksize: 1M
 
+// Override default aws region:
+// ossim.plugins.aws.s3.region: us-iso-east-1
+ossim.plugins.aws.s3.region: us-east-1
 
 // We can specify the S3 open file for read entries to cache.
 //
