@@ -1,11 +1,11 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  Frank Warmerdam (warmerda@home.com)
 //
 //*******************************************************************
-//  $Id: ossimTiffWriter.cpp 22942 2014-11-02 20:39:27Z gpotts $
+// $Id$
 
 #include <ossim/ossimConfig.h>
 #include <ossim/imaging/ossimTiffWriter.h>
@@ -303,15 +303,15 @@ MODULE);
 
    ossimScalarType scalarType = theInputConnection->getOutputScalarType();
    bool lutEnabled = (theColorLutFlag&&
-         ((scalarType == OSSIM_UINT8)||
-               (scalarType == OSSIM_UINT16)||
-               (scalarType == OSSIM_USHORT11)||
-	       (scalarType == OSSIM_USHORT12)||
-	       (scalarType == OSSIM_USHORT13)||
-	       (scalarType == OSSIM_USHORT14)||
-	       (scalarType == OSSIM_USHORT15))&&
-               (theColorLut->getNumberOfEntries() > 0)&&
-               (theInputConnection->getNumberOfOutputBands() == 1));
+                      ((scalarType == OSSIM_UINT8)||
+                       (scalarType == OSSIM_UINT16)||
+                       (scalarType == OSSIM_USHORT11)||
+                       (scalarType == OSSIM_USHORT12)||
+                       (scalarType == OSSIM_USHORT13)||
+                       (scalarType == OSSIM_USHORT14)||
+                       (scalarType == OSSIM_USHORT15))&&
+                      (theColorLut->getNumberOfEntries() > 0)&&
+                      (theInputConnection->getNumberOfOutputBands() == 1));
    if(lutEnabled)
    {
       TIFFSetField( tiffPtr, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_PALETTE );
@@ -1495,6 +1495,7 @@ ossimRefPtr<ossimProperty> ossimTiffWriter::getProperty(const ossimString& name)
                                     false); // editable flag
       stringProp->addConstraint(ossimString("none"));
       stringProp->addConstraint(ossimString("jpeg"));
+      stringProp->addConstraint(ossimString("lzw"));      
       stringProp->addConstraint(ossimString("packbits"));
       stringProp->addConstraint(ossimString("deflate"));
       stringProp->addConstraint(ossimString("zip"));      

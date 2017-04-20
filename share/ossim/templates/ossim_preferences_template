@@ -100,6 +100,7 @@ elevation_manager.elevation_source0.upcase: false
 elevation_manager.elevation_source1.connection_string: $(OSSIM_DATA)/elevation/srtm/1arc
 elevation_manager.elevation_source1.enabled: false
 elevation_manager.elevation_source1.type: srtm_directory
+elevation_manager.elevation_source1.mean_spacing: 30
 elevation_manager.elevation_source1.min_open_cells: 25
 elevation_manager.elevation_source1.max_open_cells: 50
 elevation_manager.elevation_source1.memory_map_cells: false
@@ -120,6 +121,7 @@ elevation_manager.elevation_source2.upcase: false
 elevation_manager.elevation_source3.connection_string: $(OSSIM_DATA)/elevation/srtm/3arc
 elevation_manager.elevation_source3.enabled: false
 elevation_manager.elevation_source3.type: srtm_directory
+elevation_manager.elevation_source3.mean_spacing: 90
 elevation_manager.elevation_source3.min_open_cells: 25
 elevation_manager.elevation_source3.max_open_cells: 50
 elevation_manager.elevation_source3.memory_map_cells: false
@@ -317,57 +319,109 @@ font.dir0: $(OSSIM_INSTALL_PREFIX)/share/ossim/fonts
 // Loaded library:  /usr/local/lib/libossimcontrib_plugin.so
 //
 // Keywords:
-//
-// plugin.dir1:  < directory where plugins are >
-//
-// you can also list by individual file names
-//
-// plugin.file1: < full path and file name >
-//---
-// Example, edit/uncomment as needed:
-plugin.file0:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.so
-
-// NTM plugin, alway make second plugin:
-plugin.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
-
-plugin.file3:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
-plugin.file5:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kakadu_plugin.so
-plugin.file10:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_jpeg12_plugin.so
-plugin.file15: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin.so
-plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_cnes_plugin.so
-plugin.file30: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_sqlite_plugin.so
-plugin.file35: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_potrace_plugin.so
-plugin.file40: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_web_plugin.so
-plugin.file45: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kml_plugin.so
-plugin.file50: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ndf_plugin.so
-plugin.file55: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_geopdf_plugin.so
-plugin.file60: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_opencv_plugin.so
-plugin.file70: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_openjpeg_plugin.so
-
-plugin.file80: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_pdal_plugin.so
-
-//---
-// Always put gdal last as it has duplicate readers and need to pick ours up
-// first.
-//---
-//plugin.file65: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
-
-// plugin.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_reg_plugin.so
-// plugin.file2: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_contrib_plugin.so
 // 
-//
-// We also support a second style that allows one to pass options to any
-// plugins that support them
-// the options param is an embedded keywordlist that is surrounded by triple
-// quotes:
 // plugin0.file: <path to>/libossim_kakadu_plugin
 // plugin0.options: """
 //                  read_factory.location: front
 //                  writer_factory.location: back
 //                  """
+// 
+// OLD style with no options:
+//
+// plugin.file1: < full path and file name >
+// plugin.dir1:  < directory where plugins are >
+//---
+
+// Example, edit/uncomment as needed:
+plugin0.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.so
+// plugin0.options:
+
+// NTM plugin, alway make second plugin:
+plugin1.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
+plugin1.options:
+
+plugin3.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
+// plugin3.options:
+
+plugin5.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kakadu_plugin.so
+// plugin5.options:
+
+// plugin10.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_jpeg12_plugin.so
+// plugin10.options:
+
+plugin15.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin.so
+// plugin15 .options:
+
+plugin20.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_cnes_plugin.so
+// plugin20.options:
+
+plugin30.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_sqlite_plugin.so
+// plugin30.options:
+
+// plugin35.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_potrace_plugin.so
+// plugin35.options:
+
+plugin40.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_web_plugin.so
+// plugin40.options:
+
+plugin45.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kml_plugin.so
+// plugin45.options:
+
+plugin50.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ndf_plugin.so
+// plugin50.options:
+
+plugin55.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_geopdf_plugin.so
+// plugin55.options:
+
+// plugin60.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_opencv_plugin.so
+// plugin60.options:
+
+// plugin70.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_openjpeg_plugin.so
+// plugin70.options:
+
+// plugin80.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_pdal_plugin.so
+// plugin80.options:
+
+//---
+// Always put gdal last as it has duplicate readers and need to pick ours up
+// first.
+//---
+//plugin85.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
+// plugin85.options:
+
+//---
+// Old style with no options keyword:
+//---
+
+// plugin.file0:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.so
+
+// NTM plugin, alway make second plugin:
+// plugin.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
+
+// plugin.file3:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
+// plugin.file5:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kakadu_plugin.so
+// plugin.file10:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_jpeg12_plugin.so
+// plugin.file15: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin.so
+// plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_cnes_plugin.so
+// plugin.file30: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_sqlite_plugin.so
+// plugin.file35: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_potrace_plugin.so
+// plugin.file40: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_web_plugin.so
+// plugin.file45: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kml_plugin.so
+// plugin.file50: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ndf_plugin.so
+// plugin.file55: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_geopdf_plugin.so
+// plugin.file60: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_opencv_plugin.so
+// plugin.file70: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_openjpeg_plugin.so
+// plugin.file80: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_pdal_plugin.so
+
+//---
+// Always put gdal last as it has duplicate readers and need to pick ours up
+// first.
+//---
+// plugin.file65: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
 //
 // END OSSIM plugin support
 //---
+
 
 // Toggles for recceVue application:
 statusLatLon: true

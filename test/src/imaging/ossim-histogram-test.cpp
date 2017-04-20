@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
                            ossim_uint32 max_idx = std::floor(h->GetMaxVal());
                            
                            cout << "band:            " << band << "\n"
+                                << "buckets:         " << h->GetRes() << "\n"
                                 << "min_val:         " << h->GetMinVal() << "\n"
                                 << "max_val:         " << h->GetMaxVal() << "\n"
                                 << "max_count:       " << h->GetMaxCount() << "\n"

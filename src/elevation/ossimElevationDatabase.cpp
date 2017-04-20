@@ -24,18 +24,28 @@ double ossimElevationDatabase::getOffsetFromEllipsoid(const ossimGpt& gpt)
 
 bool ossimElevationDatabase::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
+   // Connection string:
    m_connectionString = kwl.find(prefix, "connection_string");
-   ossimString geoidType = kwl.find(prefix, "geoid.type");
    if(m_connectionString.empty())
    {
-      // try backward compatability to a filename
-      //
+      // Try backward compatability to a filename:
       m_connectionString = kwl.find(prefix, ossimKeywordNames::FILENAME_KW);
    }
-   if(!geoidType.empty())
+
+   // Geoid:
+   ossimString value = kwl.find(prefix, "geoid.type");
+   if( value.size() )
    {
-      m_geoid = ossimGeoidManager::instance()->findGeoidByShortName(geoidType);
+      m_geoid = ossimGeoidManager::instance()->findGeoidByShortName(value);
    }
+   
+   // Mean spacing:
+   value = kwl.find(prefix, "mean_spacing");
+   if( value.size() )
+   {
+      m_meanSpacing = value.toFloat64();
+   }
+   
    return ossimSource::loadState(kwl, prefix);
 }
 

@@ -21,6 +21,13 @@
 
 #include <fstream>
 
+#if defined(_WIN32)
+#  include <io.h>     /* _access(...) */
+#else
+#  include <unistd.h> /* access(...) */
+#endif
+
+
 ossim::StreamFactory* ossim::StreamFactory::m_instance = 0;
 
 ossim::StreamFactory::~StreamFactory()
@@ -37,8 +44,8 @@ ossim::StreamFactory* ossim::StreamFactory::instance()
 }
 
 std::shared_ptr<ossim::istream> ossim::StreamFactory::createIstream(
-   const std::string& connectionString, 
-   const ossimKeywordlist& options,
+   const std::string& connectionString,
+   const ossimKeywordlist& /* options */,
    std::ios_base::openmode mode ) const
 {
    std::shared_ptr<ossim::istream> result(0);
@@ -62,8 +69,8 @@ std::shared_ptr<ossim::istream> ossim::StreamFactory::createIstream(
 }
       
 std::shared_ptr<ossim::ostream> ossim::StreamFactory::createOstream(
-   const std::string& connectionString, 
-   const ossimKeywordlist& options,
+   const std::string& connectionString,
+   const ossimKeywordlist& /* options */,
    std::ios_base::openmode mode) const
 {
    std::shared_ptr<ossim::ostream> result(0);
@@ -84,11 +91,47 @@ std::shared_ptr<ossim::ostream> ossim::StreamFactory::createOstream(
 }
 
 std::shared_ptr<ossim::iostream> ossim::StreamFactory::createIOstream(
-   const std::string& /*connectionString*/, 
+   const std::string& /*connectionString*/,
    const ossimKeywordlist& options,
    std::ios_base::openmode /*mode*/) const
 {
    return std::shared_ptr<ossim::iostream>(0);
+}
+
+bool ossim::StreamFactory::exists(const std::string& connectionString, bool& continueFlag) const
+{
+   bool result = false;
+   if ( connectionString.size() )
+   {
+      std::string file;
+      std::size_t pos = connectionString.find( "://" );
+      if ( pos != std::string::npos )
+      {
+         // is url:
+         ossimString protocol = connectionString.substr( 0, pos );
+         if ( (protocol.downcase() == "file") && ( connectionString.size() > pos+3) )
+         {
+            // Strip off "file://" for access(...) function:
+            file = connectionString.substr( pos+3 );
+         }
+      }
+      else // not a url
+      {
+         file = connectionString;
+      }
+
+      if ( file.size() )
+      {
+         // Set continueFlag to false to stop downstream factory exists checks.
+         continueFlag = false;
+#if defined(_WIN32)
+         result = (_access(file.c_str(), ossimFilename::OSSIM_EXIST) == 0);
+#else
+         result = ((access(file.c_str(), ossimFilename::OSSIM_EXIST)) == 0);
+#endif
+      }
+   }
+   return result;
 }
 
 // Hidden from use:
@@ -104,8 +147,7 @@ ossim::StreamFactory::StreamFactory(const ossim::StreamFactory& )
 // Deprecated code...
 ossimStreamFactory* ossimStreamFactory::theInstance = 0;
 
-ossimStreamFactory::ossimStreamFactory()
-   : ossimStreamFactoryBase()
+ossimStreamFactory::ossimStreamFactory(): ossimStreamFactoryBase()
 {
 }
 
@@ -190,6 +232,3 @@ ossimRefPtr<ossimIFStream> ossimStreamFactory::createNewIFStream(
 ossimStreamFactory::ossimStreamFactory(const ossimStreamFactory&)
    : ossimStreamFactoryBase()
 {}
-
-
-
