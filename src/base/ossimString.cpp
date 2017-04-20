@@ -456,7 +456,7 @@ bool ossimString::toBool()const
       return false;
    }
    
-   s = s.downcase();
+   s = s.trim().downcase();
    if ( (s == "true") ||
         (s == "yes")  ||
         (s == "y")    ||
