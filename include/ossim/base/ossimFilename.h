@@ -1,18 +1,16 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author: Ken Melero
 //
 // Description: This class provides manipulation of filenames.
 //
-//*************************************************************************
-// $Id: ossimFilename.h 20192 2011-10-25 17:27:25Z dburken $
+//---
+// $Id$
 
 #ifndef ossimFilename_HEADER
-#define ossimFilename_HEADER
+#define ossimFilename_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimString.h>
@@ -35,6 +33,7 @@ public:
    ossimFilename(const ossimString& src);
    ossimFilename(const std::string& src);
    ossimFilename(const char* src);
+   const ossimFilename& operator=(const ossimFilename& f);
 
    template <class Iter> ossimFilename(Iter s, Iter e);
 
@@ -49,8 +48,8 @@ public:
 //    friend std::ostream& operator<<(std::ostream& os,
    //                                const ossimFilename& s);
    
-   void convertBackToForwardSlashes();
-   void convertForwardToBackSlashes();
+   // void convertBackToForwardSlashes();
+   // void convertForwardToBackSlashes();
 
    bool setTimes(ossimLocalTm* accessTime,
                  ossimLocalTm* modTime,
@@ -264,16 +263,26 @@ public:
     */
    ossimFilename& append(const ossimString& append_this_to_filename);
 
+   /**
+    * @return This as a string converted to native slashes.
+    */
+   std::string native() const;
+
 protected:
 
-   void convertToNative();
+   /**
+    * @brief Converts slashes of this to internal '/' format.
+    */
+   void converPathSeparator();
+
+   //    void convertToNative();
 
    /*!
     * since windows uses \ for path separation
     * and unix / we need to be consistent.
     */
-   static const char thePathSeparator;
-
+   static const char OSSIM_NATIVE_PATH_SEPARATOR;
+   static const char OSSIM_FILENAME_PATH_SEPARATOR;
 };
 
 // inline std::ostream& operator<<(std::ostream& os, const ossimFilename& f)
