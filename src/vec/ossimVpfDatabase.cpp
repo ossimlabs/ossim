@@ -35,7 +35,7 @@ bool ossimVpfDatabase::openDatabase(const ossimFilename& filename)
 
    ossimFilename tempFilename = filename;
 
-   tempFilename.convertBackToForwardSlashes();
+   // tempFilename.convertBackToForwardSlashes();
 
    // we should have two table to look at for the database.
    // 1) database header (dht) 2) and the Library attribute (lat)

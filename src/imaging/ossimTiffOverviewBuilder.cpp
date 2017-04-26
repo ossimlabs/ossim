@@ -161,10 +161,15 @@ bool ossimTiffOverviewBuilder::execute()
    }
 
    // RP - allow user to set extension with hidden option.  Used to add unique suffix to prevent duplicate requests from stomping each other
-   ossimFilename outputFileTemp = m_outputFile + "." + m_tempExtension;
-   
+   ossimFilename outputFileTemp;
    if ( !buildInternalOverviews() )
-   {
+   {   
+      outputFileTemp = m_outputFile;
+      if ( m_tempExtension.size() )
+      {
+         outputFileTemp += "." + m_tempExtension;
+      }
+
       // Add .tmp in case process gets aborted to avoid leaving bad .ovr file.
       outputFileTemp += ".tmp";
    }
