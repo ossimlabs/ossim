@@ -288,8 +288,11 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRe
   ossim_int32 h  = vrect.height();
   ossim_int32 w2 = w>>1;
   ossim_int32 h2 = h>>1;
-  
-  if((w2 <2)&&(h2<2))
+  if(!splitFlags)
+  {
+    return;
+  }
+  else if((w2 <2)&&(h2<2))
   {
     if(splitFlags)
     {
@@ -342,7 +345,7 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRe
       splitVertical(result);
     }
   }
-  else if(splitFlags)//if((w>1)&&(h>1)&&(splitFlags))
+  else//if((w>1)&&(h>1)&&(splitFlags))
   {
     if((w<2)&&(h>1))
     {
