@@ -1,8 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  Garrett Potts
 //
@@ -999,9 +997,9 @@ m_MaxRecursionLevel(5),
 m_AutoUpdateInputTransform(true),
 m_MaxLevelsToCompute(999999) // something large so it will always compute
 {
-    ossimViewInterface::theObject = this;
-    m_Resampler = new ossimFilterResampler();
-    m_ImageViewTransform = new ossimImageViewProjectionTransform;
+   ossimViewInterface::theObject = this;
+   m_Resampler = new ossimFilterResampler();
+   m_ImageViewTransform = new ossimImageViewProjectionTransform;
 }
 
 ossimImageRenderer::ossimImageRenderer(ossimImageSource* inputSource,
@@ -1044,7 +1042,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    const  ossimIrect& tileRect,
    ossim_uint32 resLevel)
 {
-  // std::cout << "_________________________\n";
+   // std::cout << "_________________________\n";
    static const char MODULE[] = "ossimImageRenderer::getTile";
    if(traceDebug())
    {
@@ -1114,11 +1112,18 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
       return m_BlankTile;
    }
    
-   if(!m_Tile)
+   // drb - handled above...
+   // if(!m_Tile)
+   // {
+   //    return theInputConnection->getTile(tileRect, resLevel);
+   // }
+
+   // Check for identity transform:
+   if( m_ImageViewTransform->isIdentity() == true )
    {
       return theInputConnection->getTile(tileRect, resLevel);
    }
-
+   
    // long tw = m_Tile->getWidth();
    // long th = m_Tile->getHeight();
    
@@ -1189,7 +1194,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 
 void ossimImageRenderer::recursiveResample(ossimRefPtr<ossimImageData> outputData,
                                            const ossimRendererSubRectInfo& rectInfo,
-                                           ossim_uint32 level)
+                                           ossim_uint32 /* level */)
 {
   // Removed recursion and just use the std::stack.
   //
@@ -1548,13 +1553,13 @@ void ossimImageRenderer::initializeBoundingRects()
    {
      if(ivpt&&ivpt->getImageGeometry()&&ivpt->getViewGeometry())
      {
-         // Liitle complicated but instead of always setting the edge walk
+         // Little complicated but instead of always setting the edge walk
          // to a high number like 50 points per edge
          // we will look at the image to view scale change
          // and use that as a factor.  So as the image zooms out we
          // need fewer points to estimate the edge.
          //
-         ossim_uint32 idx;
+         // ossim_uint32 idx;
          std::vector<ossimDrect> boundList;
          ossimImageGeometry* igeom = ivpt->getImageGeometry(); // look at projected meters
          ossimImageGeometry* vgeom = ivpt->getViewGeometry(); // look at projected meters
