@@ -8,7 +8,10 @@ void ossimElevationCellDatabase::getOpenCellList(std::vector<ossimFilename>& lis
 
    while(iter!=m_cacheMap.end())
    {
-      list.push_back(iter->second->m_handler->getFilename());
+      if ( iter->second->m_handler.valid() )
+      {
+         list.push_back(iter->second->m_handler->getFilename());
+      }
       ++iter;
    }
 
