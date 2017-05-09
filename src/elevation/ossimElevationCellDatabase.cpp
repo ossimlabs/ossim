@@ -88,6 +88,53 @@ void ossimElevationCellDatabase::getCellsForBounds( const ossim_float64& minLat,
    
 } // End: ossimElevationCellDatabase::getCellsForBounds( ... )
 
+/* 
+ * New code caches null handlers so that createCell() is not called
+ * unnecessarily. drb - 20170509
+ */
+#if 1 
+ossimRefPtr<ossimElevCellHandler> ossimElevationCellDatabase::getOrCreateCellHandler(
+   const ossimGpt& gpt)
+{
+   ossimRefPtr<ossimElevCellHandler> result = 0;
+
+   ossim_uint64 id = createId(gpt);
+
+   m_cacheMapMutex.lock();
+
+   CellMap::iterator iter = m_cacheMap.find(id);
+   if(iter != m_cacheMap.end())
+   {
+      iter->second->updateTimestamp();
+      result = iter->second->m_handler.get();
+   }
+   else
+   {
+      m_cacheMapMutex.unlock();                                                                  
+
+      result = createCell(gpt);
+
+      m_cacheMapMutex.lock();
+
+      //---
+      // Code speed up:
+      // Add it to the cache even if it's not valid so this database will not
+      // call createCell(...) again.
+      //--- 
+      m_cacheMap.insert(std::make_pair(id, new CellInfo(id, result.get())));
+      
+      // Check the map size and purge cells if needed.
+      if(m_cacheMap.size() > m_maxOpenCells)
+      {
+         flushCacheToMinOpenCells();
+      }
+   }
+
+   m_cacheMapMutex.unlock();
+              
+   return result;
+}
+#else
 ossimRefPtr<ossimElevCellHandler> ossimElevationCellDatabase::getOrCreateCellHandler(const ossimGpt& gpt)
 {
   ossimRefPtr<ossimElevCellHandler> result = 0;
@@ -123,6 +170,7 @@ ossimRefPtr<ossimElevCellHandler> ossimElevationCellDatabase::getOrCreateCellHan
 
   return result;
 }
+#endif
 
 bool ossimElevationCellDatabase::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
