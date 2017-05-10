@@ -203,19 +203,18 @@ void ossimDtedElevationDatabase::createRelativePath(ossimFilename& file, const o
 
 ossimRefPtr<ossimElevCellHandler> ossimDtedElevationDatabase::createCell(const ossimGpt& gpt)
 {
-  ossimRefPtr<ossimElevCellHandler> result = 0;
-  ossimFilename f;
-  createFullPath(f, gpt);
-  if(f.exists())
-  {
-     ossimRefPtr<ossimDtedHandler> h = new ossimDtedHandler(f, m_memoryMapCellsFlag);
-     if (!(h->getErrorStatus()))
-     {
-        result = h.get();
-     }
-  }
-
-  return result;
+   ossimRefPtr<ossimElevCellHandler> result = 0;
+   ossimFilename f;
+   createFullPath(f, gpt);
+   if(f.exists())
+   {
+      ossimRefPtr<ossimDtedHandler> h = new ossimDtedHandler(f, m_memoryMapCellsFlag);
+      if (!(h->getErrorStatus()))
+      {
+         result = h.get();
+      }
+   }
+   return result;
 }
 
 bool ossimDtedElevationDatabase::loadState(const ossimKeywordlist& kwl, const char* prefix )
