@@ -27,7 +27,7 @@ void ossimElevationCellDatabase::getCellsForBounds( const ossim_float64& minLat,
    const ossim_float64 SEARCH_SPACING = 0.1;
    ossimGpt gpt(0.0, 0.0, 0.0);
    ossimFilename f;
-   ossim_uint32 limitNumberOfCells = maxNumberOfCells>0?maxNumberOfCells:static_cast<ossim_uint32>(9999999999);
+   ossim_uint32 limitNumberOfCells = maxNumberOfCells>0?maxNumberOfCells:9999999999;
    // Latitude loop:
    ossim_float64 lat = minLat;
    while ( (lat <= maxLat) &&(cells.size() < limitNumberOfCells))
