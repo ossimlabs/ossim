@@ -16,6 +16,7 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+// #include <ossim/imaging/ossimTiledImagePatch.h>
 #include <ossim/support_data/ossimSrcRecord.h>
 
 ossimSingleImageChain::ossimSingleImageChain()
@@ -215,10 +216,47 @@ void ossimSingleImageChain::createRenderedChain()
    if ( m_addResamplerCacheFlag )
    {
       m_resamplerCache = addCache();
+
+      // If input image is tiled set the cache input tile size to that.
+      if ( m_handler.valid() )
+      {
+         if ( m_handler->isImageTiled() )
+         {
+            ossimIpt inputImageTileSize;
+            inputImageTileSize.x = (ossim_int32)m_handler->getImageTileWidth();
+            inputImageTileSize.y = (ossim_int32)m_handler->getImageTileHeight();
+            if ( m_resamplerCache.valid() )
+            {
+               m_resamplerCache->setTileSize( inputImageTileSize );
+            }
+         }
+      }
    }
+
+#if 0 /* test code - drb */
+   ossimRefPtr<ossimTiledImagePatch> tp = new ossimTiledImagePatch();
+   if ( m_handler.valid() )
+   {
+      if ( m_handler->isImageTiled() )
+      {
+         ossimIpt inputImageTileSize;
+         inputImageTileSize.x = (ossim_int32)m_handler->getImageTileWidth();
+         inputImageTileSize.y = (ossim_int32)m_handler->getImageTileHeight();
+         tp->setInputTileSize( inputImageTileSize );
+      }
+   }
+   addFirst( tp.get() );
+#endif   
    
    // resampler
    addResampler();
+
+#if 0 /* test code - drb */
+   ossimRefPtr<ossimTiledImagePatch> tp2 = new ossimTiledImagePatch();
+   ossimIpt inputImageTileSize(64, 64);
+   tp2->setInputTileSize( inputImageTileSize );
+   addFirst( tp2.get() );
+#endif   
 
    //---
    // Do this here so that if a band selector is added to the end of the

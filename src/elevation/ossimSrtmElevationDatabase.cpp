@@ -64,6 +64,7 @@ double ossimSrtmElevationDatabase::getHeightAboveEllipsoid(const ossimGpt& gpt)
    
    return h;
 }
+
 bool ossimSrtmElevationDatabase::open(const ossimString& connectionString)
 {
    bool result = false;
@@ -242,27 +243,22 @@ bool ossimSrtmElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
 
 bool ossimSrtmElevationDatabase::saveState(ossimKeywordlist& kwl, const char* prefix)const
 {
-   bool result = ossimElevationCellDatabase::saveState(kwl, prefix);
-   
-   return result;
+   return ossimElevationCellDatabase::saveState(kwl, prefix);
 }
 
 ossimRefPtr<ossimElevCellHandler>
 ossimSrtmElevationDatabase::createCell(const ossimGpt& gpt)
 {
-
-  ossimRefPtr<ossimElevCellHandler> result = 0;
-  ossimFilename f;
-  createFullPath(f, gpt);
-
-  if(f.exists())
-  {
-     ossimRefPtr<ossimSrtmHandler> h = new ossimSrtmHandler();
-     if (h->open(f, m_memoryMapCellsFlag))
-     {
-        result = h.get();
-     }
-  }
-
-  return result;
+   ossimRefPtr<ossimElevCellHandler> result = 0;
+   ossimFilename f;
+   createFullPath(f, gpt);
+   if(f.exists())
+   {
+      ossimRefPtr<ossimSrtmHandler> h = new ossimSrtmHandler();
+      if (h->open(f, m_memoryMapCellsFlag))
+      {
+         result = h.get();
+      }
+   }
+   return result;
 }

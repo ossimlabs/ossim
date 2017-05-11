@@ -4358,6 +4358,8 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
 
    if ( source )
    {
+      source->initialize(); // Ensure all bounding rectangles are set.
+      
       if (  m_kwl->hasKey( CUT_BBOX_XYWH_KW ) )
       {
          // <x>,<y>,<w>,<h>

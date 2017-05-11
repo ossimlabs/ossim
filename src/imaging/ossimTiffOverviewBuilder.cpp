@@ -1,8 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -10,8 +8,8 @@
 //
 // Contains class definition for TiffOverviewBuilder
 // 
-//*******************************************************************
-//  $Id: ossimTiffOverviewBuilder.cpp 22362 2013-08-07 20:23:22Z dburken $
+//---
+// $Id$
 
 #include <ossim/imaging/ossimTiffOverviewBuilder.h>
 #include <ossim/parallel/ossimMpi.h>
@@ -910,6 +908,7 @@ bool ossimTiffOverviewBuilder::setTags(TIFF* tif,
          << "\nimageHeight:     " << imageHeight
          << "\nminSampleValue:  " << minSampleValue
          << "\nmaxSampleValue:  " << maxSampleValue
+         << "\ncompression:     " << m_tiffCompressType
          << std::endl;
    }
    TIFFSetField( tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_SEPARATE );
@@ -927,21 +926,23 @@ bool ossimTiffOverviewBuilder::setTags(TIFF* tif,
    TIFFSetField( tif, TIFFTAG_TILEWIDTH,  m_tileWidth  );
    TIFFSetField( tif, TIFFTAG_TILELENGTH, m_tileHeight );
 
-   //---
-   // Only turn on compression for 8 bit, one or three band data.  Not sure what compression
-   // types can handle what but this was crashing ossim-prepoc on a directory walk with jpeg
-   // compression.
-   //---
-   if ( ( m_imageHandler->getOutputScalarType() == OSSIM_UINT8 ) &&
-        ( ( m_imageHandler->getNumberOfInputBands() == 3 ) ||
-          ( m_imageHandler->getNumberOfInputBands() == 1 ) ) )
+   // Set the compression related tags...
+   if (m_tiffCompressType != COMPRESSION_JPEG)
    {
-      // Set the compression related tags...
+      TIFFSetField( tif, TIFFTAG_COMPRESSION, m_tiffCompressType ); 
+   }
+   //---
+   // If jpeg only turn on compression for 8 bit, one or three band data.  Not
+   // sure what compression types can handle what but this was crashing
+   // ossim-prepoc on a directory walk with jpeg compression.
+   //---
+   else if ( (m_tiffCompressType == COMPRESSION_JPEG) &&
+             ( m_imageHandler->getOutputScalarType() == OSSIM_UINT8 ) &&
+             ( ( m_imageHandler->getNumberOfInputBands() == 3 ) ||
+               ( m_imageHandler->getNumberOfInputBands() == 1 ) ) )
+   {
       TIFFSetField( tif, TIFFTAG_COMPRESSION, m_tiffCompressType );
-      if (m_tiffCompressType == COMPRESSION_JPEG)
-      {
-         TIFFSetField( tif, TIFFTAG_JPEGQUALITY,  m_jpegCompressQuality);
-      }
+      TIFFSetField( tif, TIFFTAG_JPEGQUALITY, m_jpegCompressQuality);
    }
    else
    {
