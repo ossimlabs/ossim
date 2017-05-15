@@ -256,7 +256,7 @@ ENDIF()
 # INSTALL(FILES ${OSSIM_DEV_HOME}/ossim_package_support/fonts/times.ttf DESTINATION "share/ossim/fonts" COMPONENT ossim)
 
 FILE(GLOB ossim_cmake_modules ${OSSIM_DEV_HOME}/ossim/cmake/CMakeModules/*.cmake* )
-INSTALL(FILES ${ossim_cmake_modules} DESTINATION share/ossim/${OSSIM_VERSION}/CMakeModules COMPONENT ossim)
+INSTALL(FILES ${ossim_cmake_modules} DESTINATION share/ossim/CMakeModules COMPONENT ossim)
 
 FILE(GLOB projection_files "${OSSIM_HOME}/share/ossim/projection/*.csv"  "${OSSIM_HOME}/share/ossim/projection/*.txt")
 INSTALL(FILES ${projection_files} DESTINATION share/ossim/projection COMPONENT ossim)
