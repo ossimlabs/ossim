@@ -1,9 +1,7 @@
-//----------------------------------------------------------------------------
+//---
 // File: ossimInfo.h
 // 
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -11,8 +9,8 @@
 //
 // See class doxygen descriptions below for more.
 // 
-//----------------------------------------------------------------------------
-// $Id: ossimInfo.h 23588 2015-10-20 20:31:39Z dburken $
+//---
+// $Id$
 
 #ifndef ossimInfo_HEADER
 #define ossimInfo_HEADER 1
@@ -240,6 +238,12 @@ public:
     * @param kwl Keyword list to populate.
     */
    void getCenterImage(ossimKeywordlist& kwl);
+
+   /**
+    * @brief Populates keyword list with edge to edge image bounds.
+    * @param kwl Keyword list to populate.
+    */  
+   void getImageBounds(ossimKeywordlist& kwl);
 
    /**
     * @brief Populates keyword list with image center ground point..
@@ -589,6 +593,12 @@ private:
    void getCenterImage( ossimImageHandler* ih,
                         ossimKeywordlist& kwl ) const;
    void getCenterImage( ossimImageHandler* ih,
+                        ossim_uint32 entry, 
+                        ossimKeywordlist& kwl ) const;
+
+   void getImageBounds( ossimImageHandler* ih,
+                        ossimKeywordlist& kwl ) const;
+   void getImageBounds( ossimImageHandler* ih,
                         ossim_uint32 entry, 
                         ossimKeywordlist& kwl ) const;
 

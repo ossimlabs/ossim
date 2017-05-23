@@ -1,18 +1,16 @@
-//----------------------------------------------------------------------------
+//---
 // File: ossimInfo.cpp
 // 
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: ossimInfo class definition
 //
 // Utility class for getting information from the ossim library.
 // 
-//----------------------------------------------------------------------------
-// $Id: ossimInfo.cpp 23640 2015-12-02 20:14:33Z dburken $
+//---
+// $Id$
 
 #include <ossim/util/ossimInfo.h>
 #include <ossim/ossimVersion.h>
@@ -72,6 +70,7 @@ static const char FT2MTRS_KW[]              = "ft2mtrs";
 static const char FT2MTRS_US_SURVEY_KW[]    = "ft2mtrs_us_survey";
 static const char GEOM_INFO_KW[]            = "geometry_info";
 static const char HEIGHT_KW[]               = "height";
+static const char IMAGE_BOUNDS_KW[]         = "image_bounds";
 static const char IMAGE_CENTER_KW[]         = "image_center";
 static const char IMAGE_FILE_KW[]           = "image_file";
 static const char IMAGE_INFO_KW[]           = "image_info";
@@ -128,6 +127,8 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
+   au->addCommandLineOption("--bounds", "Will print out the edge to edge image bounds.");
+   
    au->addCommandLineOption("--build-date", "Build date of code.");
 
    au->addCommandLineOption("-c", "Will print ground and image center.");
@@ -281,6 +282,15 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       std::string ts3;
       ossimArgumentParser::ossimParameter sp3(ts3);
       const char TRUE_KW[] = "true";
+
+      if( ap.read("--bounds") )
+      {
+         m_kwl.add( IMAGE_BOUNDS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
 
       if( ap.read("--build-date") )
       {
@@ -1097,7 +1107,8 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
 
    bool centerGroundFlag = false;
    bool centerImageFlag  = false;
-   bool imageCenterFlag  = false;
+   bool imageBoundsFlag  = false;
+   bool imageCenterFlag  = false;   
    bool imageGeomFlag    = false;
    bool imageInfoFlag    = false;
    bool imageRectFlag    = false;
@@ -1141,6 +1152,15 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       ++consumedKeys;
       value = lookup;
       paletteFlag = value.toBool();
+   }
+
+   // Image bounds:
+   lookup = m_kwl.find( IMAGE_BOUNDS_KW );
+   if ( lookup )
+   {
+      ++consumedKeys;
+      value = lookup;
+      imageBoundsFlag = value.toBool();
    }
 
    // Image center:
@@ -1217,9 +1237,9 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       imageGeomFlag = true;
    }
 
-   if ( centerGroundFlag || centerImageFlag || imageCenterFlag || imageRectFlag ||
-         img2grdFlag || metaDataFlag || paletteFlag || imageInfoFlag ||
-         imageGeomFlag || northUpFlag || upIsUpFlag )
+   if ( centerGroundFlag || centerImageFlag || imageBoundsFlag || imageCenterFlag ||
+        imageRectFlag || img2grdFlag || metaDataFlag || paletteFlag ||
+        imageInfoFlag || imageGeomFlag || northUpFlag || upIsUpFlag )
    {
       // Requires open image.
       if ( m_img.valid() == false )
@@ -1242,6 +1262,11 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
          // -c option prints both ground and image point of center.
          getCenterGround(okwl);
          getCenterImage(okwl);
+      }
+
+      if ( imageBoundsFlag )
+      {
+         getImageBounds(okwl);
       }
 
       if ( imageRectFlag )
@@ -1982,6 +2007,87 @@ void ossimInfo::getCenterGround( ossimImageHandler* ih,
    } // if ( ih )
 }
 
+void ossimInfo::getImageBounds(ossimKeywordlist& kwl)
+{
+   if ( m_img.valid() )
+   {
+      getImageBounds( m_img.get(), kwl );
+   }
+}
+
+void ossimInfo::getImageBounds( ossimImageHandler* ih, ossimKeywordlist& kwl) const
+{
+   if ( ih )
+   {  
+      std::vector<ossim_uint32> entryList;
+      ih->getEntryList(entryList);
+
+      std::vector<ossim_uint32>::const_iterator i = entryList.begin();
+      while ( i != entryList.end() )
+      {
+         getImageBounds( ih, (*i), kwl );
+         ++i;
+      }
+   } 
+}
+
+void ossimInfo::getImageBounds( ossimImageHandler* ih,
+                                ossim_uint32 entry, 
+                                ossimKeywordlist& kwl ) const
+{
+   if ( ih )
+   {
+      if ( ih->setCurrentEntry(entry) )
+      {
+         ossimString prefix = "image";
+         prefix = prefix + ossimString::toString(entry) + ".bounds.";
+
+         ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
+         if(geom.valid())
+         {
+            ossimDrect bounds;
+            geom->getBoundingRect( bounds );
+
+            if( !bounds.hasNans() )
+            {
+               ossimDpt iPt;
+               ossimGpt gPt;
+               iPt = bounds.ul();
+               iPt.x -= 0.5;
+               iPt.y -= 0.5;
+               geom->localToWorld(iPt, gPt);
+               kwl.add(prefix, "ul", gPt.toString().c_str(), true);
+
+               iPt = bounds.ur();
+               iPt.x += 0.5;
+               iPt.y -= 0.5;
+               geom->localToWorld(iPt, gPt);
+               kwl.add(prefix, "ur", gPt.toString().c_str(), true);
+
+               iPt = bounds.lr();
+               iPt.x += 0.5;
+               iPt.y += 0.5;
+               geom->localToWorld(iPt, gPt);
+               kwl.add(prefix, "lr", gPt.toString().c_str(), true);
+
+               iPt = bounds.ll();
+               iPt.x -= 0.5;
+               iPt.y += 0.5;
+               geom->localToWorld(iPt, gPt);
+               kwl.add(prefix, "ll", gPt.toString().c_str(), true);
+            }
+         }
+
+      } // if ( ih->setCurrentEntry(entry) )
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+                  << "Could not get image bounds for: " << ih->getFilename() << std::endl;
+      }
+
+   } // if ( ih )
+}
+
 void ossimInfo::getImg2grd(ossimKeywordlist& kwl)
 {
    if ( m_img.valid() )
@@ -2026,6 +2132,11 @@ void ossimInfo::getImg2grd( ossimImageHandler* ih,
 
             if( !bounds.hasNans() )
             {
+               //---
+               // Expand the bounds out to edge of image so caller can do:
+               // ossim-info --img2grd -0.5 -0.5 <image.tif>
+               //---
+               bounds.expand( ossimDpt(0.5, 0.5) );
                std::string value = m_kwl.findKey( IMG2GRD_KW );
                if ( value.size() )
                {
