@@ -2580,7 +2580,7 @@ bool ossimNitfTileSource::setCurrentEntry(ossim_uint32 entryIdx)
             theOverviewFile.clear();
             
             theCurrentEntry = entryIdx;
-            
+            theOutputBandList.clear();
             //---
             // Since we were previously open and the the entry has changed we
             // need to reinitialize some things.
