@@ -2048,32 +2048,23 @@ void ossimInfo::getImageBounds( ossimImageHandler* ih,
             ossimDrect bounds;
             geom->getBoundingRect( bounds );
 
+            // Make edge to edge.
+            bounds.expand( ossimDpt(0.5, 0.5) );
+
             if( !bounds.hasNans() )
             {
-               ossimDpt iPt;
                ossimGpt gPt;
-               iPt = bounds.ul();
-               iPt.x -= 0.5;
-               iPt.y -= 0.5;
-               geom->localToWorld(iPt, gPt);
+
+               geom->localToWorld(bounds.ul(), gPt);
                kwl.add(prefix, "ul", gPt.toString().c_str(), true);
 
-               iPt = bounds.ur();
-               iPt.x += 0.5;
-               iPt.y -= 0.5;
-               geom->localToWorld(iPt, gPt);
+               geom->localToWorld(bounds.ur(), gPt);
                kwl.add(prefix, "ur", gPt.toString().c_str(), true);
 
-               iPt = bounds.lr();
-               iPt.x += 0.5;
-               iPt.y += 0.5;
-               geom->localToWorld(iPt, gPt);
+               geom->localToWorld(bounds.lr(), gPt);
                kwl.add(prefix, "lr", gPt.toString().c_str(), true);
 
-               iPt = bounds.ll();
-               iPt.x -= 0.5;
-               iPt.y += 0.5;
-               geom->localToWorld(iPt, gPt);
+               geom->localToWorld(bounds.ll(), gPt);
                kwl.add(prefix, "ll", gPt.toString().c_str(), true);
             }
          }
