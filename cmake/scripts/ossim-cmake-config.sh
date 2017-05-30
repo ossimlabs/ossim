@@ -137,9 +137,11 @@ fi
 if [ -z $BUILD_OSSIM_HDF5_SUPPORT ] ; then
    export BUILD_OSSIM_HDF5_SUPPORT=OFF
 fi
-
 if [ -z $BUILD_OSSIM_CURL_APPS ] ; then
    export BUILD_OSSIM_CURL_APPS=OFF
+fi
+if [ -z $BUILD_OSSIM_MSP ] ; then
+   export BUILD_OSSIM_MSP=OFF
 fi
 
 # Plugins:
