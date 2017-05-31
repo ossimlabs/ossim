@@ -262,6 +262,16 @@ public:
    void getImg2grd(ossimKeywordlist& kwl);
 
    /**
+    * @brief Populates keyword list with image point for grund point.
+    *
+    * Associated input key values: "grd2img: (lat,lon,hgt,datum)"
+    * Output key: image0.image_point:  (x, y)
+    * 
+    * @param kwl Keyword list to populate.
+    */
+   void getGrd2img(ossimKeywordlist& kwl);
+
+   /**
     * @brief Populates keyword list with up_is_up_angle.
     *
     * @param kwl Keyword list to populate.
@@ -283,6 +293,27 @@ public:
     * This requires open image.
     */
    void getUpIsUpAngle(ossim_uint32 entry, ossimKeywordlist& kwl);
+
+   /**
+    * @brief Populates keyword list with image_to_ground. It will outoput image_point and ground_point
+    *
+    * @param kwl Keyword list to populate.
+    *
+    * This requires open image.
+    */
+   void getImageToGround(ossimKeywordlist& kwl);
+
+   /**
+    * @brief Populates keyword list with image_to_ground. It will outoput image_point and ground_point
+    *
+    * @param entry Entry number to select.  Note this is the entry number
+    * from the getEntryList call not a simple zero based entry index.
+    * 
+    * @param kwl Keyword list to populate.
+    *
+    * This requires open image.
+    */
+   void getImageToGround(ossim_uint32 entry, ossimKeywordlist& kwl);
    
    /**
     * @brief Populates keyword list with north_up_angle.
@@ -629,6 +660,30 @@ private:
     * @param kwl Keyword list to populate.
     */
    void getImg2grd( ossimImageHandler* ih,
+                    ossim_uint32 entry, 
+                    ossimKeywordlist& kwl ) const;
+
+   /**
+    * @brief Gets gound point from image point.
+    *
+    * Input key:value "img2grd: <x> <y>"
+    *
+    * @param Pointer to an image handler.
+    * @param kwl Keyword list to populate.
+    */
+   void getGrd2img( ossimImageHandler* ih,
+                    ossimKeywordlist& kwl ) const;
+   /**
+    * @brief Gets gound point from image point.
+    *
+    * Input key:value "img2grd: <x> <y>"
+    *
+    * @param Pointer to an image handler.
+    * @param entry Entry number to select. Note this is the entry number
+    * from the getEntryList call not a simple zero based entry index.
+    * @param kwl Keyword list to populate.
+    */
+   void getGrd2img( ossimImageHandler* ih,
                     ossim_uint32 entry, 
                     ossimKeywordlist& kwl ) const;
    
