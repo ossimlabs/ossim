@@ -76,6 +76,7 @@ static const char IMAGE_FILE_KW[]           = "image_file";
 static const char IMAGE_INFO_KW[]           = "image_info";
 static const char IMAGE_RECT_KW[]           = "image_rect";
 static const char IMG2GRD_KW[]              = "img2grd";
+static const char GRD2IMG_KW[]              = "grd2img";
 static const char METADATA_KW[]             = "metadata";
 static const char MTRS2FT_KW[]              = "mtrs2ft";
 static const char MTRS2FT_US_SURVEY_KW[]    = "mtrs2ft_us_survey";
@@ -168,6 +169,7 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("-i", "Will print out the general image information.");
 
    au->addCommandLineOption("--img2grd", "<x> <y> Gives ground point from zero based image point.  Returns \"nan\" if point is outside of image area.");
+   au->addCommandLineOption("--grd2img", "<lat> <lon> <height> Gives full res image point from lat lon height.");
 
    au->addCommandLineOption("-m", "Will print out meta data image information.");
 
@@ -216,6 +218,8 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--writers", "Prints list of available writers.");
 
    au->addCommandLineOption("--zoom-level-gsds", "Prints zoom level gsds for projections EPSG:4326 and EPSG:3857.");
+   au->addCommandLineOption("--image-to-ground", "Takes a 3 tuple of the form x y res where x and y are image coordinates and res is the resolution.  res = 0 is full resolution");
+   au->addCommandLineOption("--ground-to-image", "Takes a 2 or 3 tuple of the form lat lon h where x and y are image coordinates and res is the resolution");
 
    ostringstream description;
    description << DESCRIPTION << "\n\n Examples:\n\n"
@@ -477,6 +481,22 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          dpt.x = x.toFloat64();
          dpt.y = y.toFloat64();
          m_kwl.add( IMG2GRD_KW, dpt.toString().c_str() );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--grd2img", sp1, sp2, sp3) )
+      {
+         ossimString lat = ts1;
+         ossimString lon = ts2;
+         ossimString hgt = ts2;
+         ossimGpt gpt;
+         gpt.latd(lat.toFloat64());
+         gpt.lond(lon.toFloat64());
+         gpt.height(hgt.toFloat64());
+         m_kwl.add( GRD2IMG_KW, gpt.toString().c_str() );
          if ( ap.argc() < 2 )
          {
             break;
@@ -1105,18 +1125,21 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       }
    }
 
-   bool centerGroundFlag = false;
-   bool centerImageFlag  = false;
-   bool imageBoundsFlag  = false;
-   bool imageCenterFlag  = false;   
-   bool imageGeomFlag    = false;
-   bool imageInfoFlag    = false;
-   bool imageRectFlag    = false;
-   bool img2grdFlag      = false;
-   bool metaDataFlag     = false;
-   bool northUpFlag      = false;
-   bool paletteFlag      = false;
-   bool upIsUpFlag       = false;
+   bool centerGroundFlag  = false;
+   bool centerImageFlag   = false;
+   bool imageBoundsFlag   = false;
+   bool imageCenterFlag   = false;   
+   bool imageGeomFlag     = false;
+   bool imageInfoFlag     = false;
+   bool imageRectFlag     = false;
+   bool img2grdFlag       = false;
+   bool grd2imgFlag       = false;
+   bool metaDataFlag      = false;
+   bool northUpFlag       = false;
+   bool paletteFlag       = false;
+   bool upIsUpFlag        = false;
+   bool imageToGroundFlag = false;
+   bool groundToImageFlag = false;
 
    // Center Ground:
    lookup = m_kwl.find( CENTER_GROUND_KW );
@@ -1200,6 +1223,13 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       img2grdFlag = true;
    }
 
+   lookup = m_kwl.find( GRD2IMG_KW );
+   if ( lookup )
+   {
+      ++consumedKeys;
+      grd2imgFlag = true;
+   }
+
    //---
    // Image geometry info:
    // Defaulted on if no image options set.
@@ -1238,8 +1268,9 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    }
 
    if ( centerGroundFlag || centerImageFlag || imageBoundsFlag || imageCenterFlag ||
-        imageRectFlag || img2grdFlag || metaDataFlag || paletteFlag ||
-        imageInfoFlag || imageGeomFlag || northUpFlag || upIsUpFlag )
+        imageRectFlag || img2grdFlag || grd2imgFlag || metaDataFlag || paletteFlag ||
+        imageInfoFlag || imageGeomFlag || northUpFlag || upIsUpFlag || 
+        imageToGroundFlag || groundToImageFlag)
    {
       // Requires open image.
       if ( m_img.valid() == false )
@@ -1277,6 +1308,10 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       if ( img2grdFlag )
       {
          getImg2grd(okwl);
+      }
+      if ( grd2imgFlag )
+      {
+         getGrd2img(okwl);
       }
 
       if ( metaDataFlag )
@@ -1730,6 +1765,8 @@ bool ossimInfo::getImageInfo( ossimImageHandler* ih, ossim_uint32 entry,
             kwl.add(prefix, "radiometry", rad.c_str(), true);
             kwl.add(prefix,"number_decimation_levels", ih->getNumberOfDecimationLevels(), true);
 
+
+
          } // if ( outputEntry )
 
       } // if ( ih->setCurrentEntry(entry) )
@@ -2158,6 +2195,66 @@ void ossimInfo::getImg2grd( ossimImageHandler* ih,
    } // if ( ih )
 }
 
+void ossimInfo::getGrd2img(ossimKeywordlist& kwl)
+{
+   if ( m_img.valid() )
+   {
+      getGrd2img( m_img.get(), kwl );
+   }
+}
+
+void ossimInfo::getGrd2img( ossimImageHandler* ih, ossimKeywordlist& kwl) const
+{
+   if ( ih )
+   {  
+      std::vector<ossim_uint32> entryList;
+      ih->getEntryList(entryList);
+
+      std::vector<ossim_uint32>::const_iterator i = entryList.begin();
+      while ( i != entryList.end() )
+      {
+         getGrd2img( ih, (*i), kwl );
+         ++i;
+      }
+   } 
+}
+
+void ossimInfo::getGrd2img( ossimImageHandler* ih,
+                            ossim_uint32 entry, 
+                            ossimKeywordlist& kwl ) const
+{
+   if ( ih )
+   {
+      if ( ih->setCurrentEntry(entry) )
+      {
+         ossimString prefix = "image";
+         prefix = prefix + ossimString::toString(entry) + ".";
+
+         ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
+         if(geom.valid())
+         {
+            std::string value = m_kwl.findKey( GRD2IMG_KW );
+            if ( value.size() )
+            {
+               ossimGpt gpt;
+               ossimDpt dpt;
+               gpt.toPoint( value );
+               dpt.makeNan();
+               geom->worldToLocal(gpt, dpt);
+               kwl.add(prefix, "image_point", dpt.toString().c_str(), true);
+            }
+         }
+
+      } // if ( ih->setCurrentEntry(entry) )
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+                  << "Could not get ground center for: " << ih->getFilename() << std::endl;
+      }
+
+   } // if ( ih )
+}
+
 void ossimInfo::getUpIsUpAngle(ossimKeywordlist& kwl)
 {
    if ( m_img.valid() )
@@ -2226,6 +2323,7 @@ void ossimInfo::getUpIsUpAngle( ossimImageHandler* ih,
 
    } // if ( ih )
 }
+
 
 void ossimInfo::getNorthUpAngle(ossimKeywordlist& kwl)
 {
