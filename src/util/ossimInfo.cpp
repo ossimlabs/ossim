@@ -491,7 +491,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       {
          ossimString lat = ts1;
          ossimString lon = ts2;
-         ossimString hgt = ts2;
+         ossimString hgt = ts3;
          ossimGpt gpt;
          gpt.makeNan();
          gpt.latd(lat.toFloat64());
