@@ -1,9 +1,7 @@
 //**************************************************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  Oscar Kramer
 //
 // Description: Class implementation of ossimImageGeometry. See .h file for class documentation.
@@ -753,14 +751,12 @@ void ossimImageGeometry::getTiePoint(ossimGpt& tie, bool edge) const
          }
          else
          {
-            ossimDpt dpp = map_proj->getDecimalDegreesPerPixel();
-            dpp.lat*=0.5;
-            dpp.lon*=0.5;
             tie = grect.ul();
             if(edge)
             {
-               tie.lat -= dpp.lat;
-               tie.lon += dpp.lon; 
+               ossimDpt half_pixel_shift =  map_proj->getDecimalDegreesPerPixel() * 0.5;
+               tie.lat += half_pixel_shift.y;
+               tie.lon -= half_pixel_shift.x;
             }
          }
       }
