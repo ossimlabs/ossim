@@ -493,9 +493,13 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          ossimString lon = ts2;
          ossimString hgt = ts2;
          ossimGpt gpt;
+         gpt.makeNan();
          gpt.latd(lat.toFloat64());
          gpt.lond(lon.toFloat64());
-         gpt.height(hgt.toFloat64());
+         if(hgt != "nan")
+         {
+           gpt.height(hgt.toFloat64());
+         }
          m_kwl.add( GRD2IMG_KW, gpt.toString().c_str() );
          if ( ap.argc() < 2 )
          {
