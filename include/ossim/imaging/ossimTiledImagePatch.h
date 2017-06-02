@@ -14,10 +14,10 @@
 #include <ossim/imaging/ossimImageSourceFilter.h>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimIpt.h>
-#include <ossim/base/ossimIrect.h>
 #include <ossim/imaging/ossimImageData.h>
 #include <vector>
 
+class ossimIrect;
 
 /**
  * @class ossimTiledImagePatch
@@ -117,7 +117,6 @@ private:
    
    ossimRefPtr<ossimImageData> m_tile;
    ossimIpt                    m_inputTileSize;
-   std::vector<ossimIrect>     m_inputBoundingRect;
 
 TYPE_DATA
 };
