@@ -3011,22 +3011,28 @@ std::ostream& ossimInfo::printZoomLevelGsds(std::ostream& out) const
    double level_0_gsd = EPSG_4326_BOUNDS / TILE_SIZE;
    double level_gsd = 0.0;
    int i = 0;
+   int tilesX = 2;
+   int tilesY = 1;
 
    out << "EPSG:4326 level info:\n"
-         << "Note: Assuming square pixels, level 0 having (2x1) tiles.\n"
-         << "bounds: 360.0 X 180.0\n"
-         << "level[" << std::setw(2) << std::setfill('0') << i << "] dpp:"
-         << std::setw(20) << std::setfill(' ') << level_0_gsd
-         << "  equivalent mpp:" << std::setw(23)
-   << (level_0_gsd * MTRS_PER_DEGREE_AT_EQUATOR) << "\n";
+       << "Note: Assuming square pixels, level 0 having (2x1) tiles.\n"
+       << "bounds: 360.0 X 180.0\n"
+       << "level[" << std::setw(2) << std::setfill('0') << i << "] dpp:"
+       << std::setw(18) << std::setfill(' ') << level_0_gsd
+       << "  equivalent mpp:" << std::setw(22)
+       << (level_0_gsd * MTRS_PER_DEGREE_AT_EQUATOR)
+       << " (" << tilesX << "x" << tilesY << ")" << "\n";
 
    for ( i = 1; i <= MAX_LEVEL; ++i )
    {
+      tilesX = tilesX << 1;
+      tilesY = tilesY << 1;
       level_gsd = level_0_gsd / std::pow( 2.0, i );
       out << "level[" << std::setw(2) << std::setfill('0') << i << "] dpp:"
-            << std::setw(20) << std::setfill(' ') << level_gsd
-            << "  equivalent mpp:" << std::setw(23)
-      << (level_gsd * MTRS_PER_DEGREE_AT_EQUATOR) << "\n";
+          << std::setw(18) << std::setfill(' ') << level_gsd
+          << "  equivalent mpp:" << std::setw(22)
+          << (level_gsd * MTRS_PER_DEGREE_AT_EQUATOR)
+          << " (" << tilesX << "x" << tilesY << ")"<< "\n";
 
    }
 
@@ -3034,18 +3040,22 @@ std::ostream& ossimInfo::printZoomLevelGsds(std::ostream& out) const
    level_0_gsd = EPSG_3857_BOUNDS / TILE_SIZE;
    level_gsd = 0.0;
    i = 0;
+   tilesX = 1; // X and y the same.
 
    out << "\n\nEPSG:3857 level info:\n"
-         << "Note: Assuming square pixels, level 0 having (1x1) tile.\n"
-         << "bounds: 40075016.685578488 X 40075016.685578488\n"
-         << "level[" << std::setw(2) << std::setfill('0') << i << "] mpp:"
-         << std::setw(24) << std::setfill(' ') << level_0_gsd << "\n";
+       << "Note: Assuming square pixels, level 0 having (1x1) tile.\n"
+       << "bounds: 40075016.685578488 X 40075016.685578488\n"
+       << "level[" << std::setw(2) << std::setfill('0') << i << "] mpp:"
+       << std::setw(23) << std::setfill(' ') << level_0_gsd
+       << " (" << tilesX << "x" << tilesX << ")" << "\n";
 
    for ( i = 1; i <= MAX_LEVEL; ++i )
    {
+      tilesX = tilesX << 1;
       level_gsd = level_0_gsd / std::pow( 2.0, i );
       out << "level[" << std::setw(2) << std::setfill('0') << i << "] mpp:"
-            << std::setw(24) << std::setfill(' ') << level_gsd << "\n";
+          << std::setw(23) << std::setfill(' ') << level_gsd
+          << " (" << tilesX << "x" << tilesX << ")" << "\n";
    }
 
    // Reset flags.
