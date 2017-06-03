@@ -48,7 +48,8 @@ ossimScalarRemapper::ossimScalarRemapper(ossimImageSource* inputSource,
       theNormBuf(NULL),
       theTile(NULL),
       theOutputScalarType(outputScalarType),
-      theByPassFlag(false)
+      theByPassFlag(false),
+      thePreserveMagnitudeFlag(false)
 {
    if(inputSource)
    {
