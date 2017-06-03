@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
    if (argc < 2)
    {
       cout << argv[0] << "<image_file> <optional_output_file>"
-           << "\nOpens up single image chain and dumps the state to keyword"
+           << "\nOpens up single image chain and remaps it to the hardcoded parameters."
            << " list." << endl;
       return 0;
    }
@@ -72,11 +72,7 @@ int main(int argc, char* argv[])
 
       // ((<min_in> <max_in> <min_out> <max_out>),(<min_in> <max_in> <min_out> <max_out>))
       key = "band0.remap0";
-      val = "((0, 127, 0, 127), (128, 255, 128, 382))";
-      kwl.addPair(key, val);
-      key = "band0.remap1";
-      val = "((0, 382, 0, 255))";
-      kwl.addPair(key, val);
+      val = "(1, 255, 255, 1)";
 
       key = "scalar_type";
       val = "OSSIM_UINT8";

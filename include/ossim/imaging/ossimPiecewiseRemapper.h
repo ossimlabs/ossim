@@ -22,31 +22,42 @@
 /**
  * @class ossimPiecewiseRemapper
  *
- * Given object2 is a ossimPiecewiseRemapper with a state of:
+ * This class provides piecewise linear remapping of input pixels to output pixels. The
+ * object's state is represented as:
+ *
+ *   band0.remap0:  ( <segment0>, <segment1>, ...)
+ *   band0.remap1:  ( <segment0>, ... )
+ *
+ * The vertices of each linear segment are specified as four numbers in parentheses:
+ *
+ *   (<min_in>, <max_in>, <min_out>, <max_out>)
+ *
+ * A linear function is computed to map min_in to min_out and likewise max_in to max_out,
+ * with all intermediate points distributed linearly between the two extremes. Multiple
+ * remaps are cascaded: if an input pixel's value falls outside the ranges defined in the
+ * first remapper, then the second remapper's table is referenced. The cascading continues
+ * until a value is found. If no lookup is available, the output pixel is assigned to the
+ * NULL value.
+ *
+ * Example: Given object2 with a state of:
  * 
- * object2.band0.remap0:  ((0,127,0,127),(128,255,128,382))
- * object2.band0.remap1:  ((0,382,0,255))
+ *   object2.type: ossimPiecewiseRemapper
+ *   object2.remap_type: linear_native
+ *   object2.band0.remap0:  ( (10, 127, 10, 127), (200, 255, 128, 382) )
+ *   object2.band0.remap1:  ( (0, 382, 0, 255) )
  *
- * Quadruples map to:
- * (<min_in> <max_in> <min_out> <max_out>)
- *
- * There can be any number of quadrupals.
- *
- * From above example:
- * 
- * 0 <-> 127 is mapped to 0 <-> 127
- * 128 <->  255 is mapped to 128 <-> 382
- * 0 <-> 382 is mapped to 0 <-> 255
+ * The input range 0 <-> 127 passes through with a one-to-one mapping.
+ * 200 <->  255 is stretched out to 128 <-> 382.
+ * Any pixels outside those ranges are mapped according to the linear function specified in
+ * remap1, where 0 maps to 0 and 382 maps to 255 (compression).
  *
  * Notes:
  * 
- * 1) Currently there is only one remap type so it's not really needed but
- *    left in the code for future type remaps, e.g. a remap where there is
+ * 1) Currently there is only one remap type (linear_native) is supported so it's not
+ *    needed but left in the code for future type remaps, e.g. a remap where there is
  *    a linear and a logarithmic section.
  *
  * 2) Any number of "remaps" are allowed.
- *
- * 3) Last remap should get data between scalar types.
  * 
  */
 class OSSIMDLLEXPORT ossimPiecewiseRemapper : public ossimTableRemapper
