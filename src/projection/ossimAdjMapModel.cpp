@@ -264,20 +264,23 @@ void ossimAdjMapModel::worldToLineSample(const ossimGpt& world_point,
 //----------------------------------------------------------------------------
 bool ossimAdjMapModel::saveState(ossimKeywordlist& kwl, const char* prefix) const
 {
-   kwl.add(prefix, ossimKeywordNames::TYPE_KW, "ossimAdjMapModel");
+   // Save off map projection info:
+   if (theMapProjection.valid())
+   {
+      ossimString map_prefix(prefix);
+      if (map_prefix.size() && (map_prefix[map_prefix.size()-1] != '.'))
+            map_prefix += ".";
+      map_prefix += "map_proj.";
+      theMapProjection->saveState(kwl, map_prefix.chars());
+   }
 
    // Hand off to base class for common stuff:
    ossimSensorModel::saveState(kwl, prefix);
 
    // Save off data members:
+   kwl.add(prefix, ossimKeywordNames::TYPE_KW, "ossimAdjMapModel");
    for (int i=0; i<NUM_ADJ_PARAMS; i++)
       kwl.add(prefix, PARAMETER_KEYWORDS[i], theAdjParams[i]);
-
-   // Save off map projection info:
-   if (theMapProjection.valid())
-   {
-      theMapProjection->saveState(kwl, prefix);
-   }
 
    return true;
 }
@@ -303,6 +306,13 @@ bool ossimAdjMapModel::loadState(const ossimKeywordlist& kwl, const char* prefix
          throw (error_msg + ossimKeywordNames::TYPE_KW);
       }
 
+      ossimString map_prefix(prefix);
+      if (map_prefix.size() && (map_prefix[map_prefix.size()-1] != '.'))
+            map_prefix += ".";
+      map_prefix += "map_proj.";
+      theMapProjection = dynamic_cast<ossimMapProjection*>(
+         ossimMapProjectionFactory::instance()->createProjection(kwl, map_prefix.chars()));
+
       //---
       // Instantiate the map projection via the factory if one has not been
       // initialized yet:
@@ -322,6 +332,9 @@ bool ossimAdjMapModel::loadState(const ossimKeywordlist& kwl, const char* prefix
             throw "Error encountered instantiating map ";
          }
       }
+
+      // Hand off to base class for common stuff:
+      ossimSensorModel::loadState(kwl, prefix);
 
       // Everything OK so far, just load in the adjustable parameters. This involves modifying the
       // center value of the bsae class adjustable parameter:
