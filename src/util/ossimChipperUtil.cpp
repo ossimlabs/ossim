@@ -272,7 +272,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--origin-latitude","<latidude_in_decimal_degrees>\nNote if set this will be used for the origin latitude of the projection.  Setting this to something other than 0.0 with a geographic projection creates a scaled geographic projection.");
 
-   au->addCommandLineOption("--output-radiometry", "<R>\nSpecifies the desired product's pixel radiometry type. Possible values for <R> are: U8, U11, U16, S16, F32. Note this overrides the deprecated option \"scale-to-8-bit\".");
+   au->addCommandLineOption("--output-radiometry", "<R>\nSpecifies the desired product's pixel radiometry type. Possible values for <R> are: ossim_uint8, ossim_uint11, ossim_uint16, ossim_sint16, ossim_float32. Note this overrides the deprecated option \"scale-to-8-bit\".");
 
    au->addCommandLineOption("--pad-thumbnail", "<boolean>\nIf true, output thumbnail dimensions will be padded in width or height to make square; else, it will have the aspect ratio of input,  Default=false");
 
@@ -5634,7 +5634,7 @@ void ossimChipperUtil::usage(ossimArgumentParser& ap)
       << appName << " --op chip -u -b 3,2,1 --histogram-op auto-minmax --cut-center-llwh -42.819784401784275 147.265811350983 512 512 5V090205M0001912264B220000100072M_001508507.ntf up-is-up-chip.tif\n"
 
       << "\n// Chip in image space, rotate 39 degrees (-r option) about point, 1024x1024, scaled to eight bit:\n"
-      << appName << " --op chip -r 39 --histogram-op auto-minmax --cut-center-llwh -42.883809539602893 147.331984112985765 1024 1024 --output-radiometry U8 5V090205P0001912264B220000100282M_001508507.ntf outputs/r39.png\n"
+      << appName << " --op chip -r 39 --histogram-op auto-minmax --cut-center-llwh -42.883809539602893 147.331984112985765 1024 1024 --output-radiometry ossim_uint8 5V090205P0001912264B220000100282M_001508507.ntf outputs/r39.png\n"
 
       << "\n// Above command where all options are in a keyword list:\n"
       << appName << " --options r39-options.kwl\n"
