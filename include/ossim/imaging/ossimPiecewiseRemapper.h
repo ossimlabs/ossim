@@ -48,7 +48,7 @@
  * The input range 0 <-> 127 passes through with a one-to-one mapping.
  * 128 <-> 255 is stretched out to 128 <-> 382.
  * 
- * remap0 output if fed to remap1:
+ * remap0 output is fed to remap1:
  * 0 maps to 0 and 382 maps to 255 (compression).
  * 
  * Notes:
