@@ -272,7 +272,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--origin-latitude","<latidude_in_decimal_degrees>\nNote if set this will be used for the origin latitude of the projection.  Setting this to something other than 0.0 with a geographic projection creates a scaled geographic projection.");
 
-   au->addCommandLineOption("--output-radiometry", "<R>\nSpecifies the desired product's pixel radiometry type. Possible values for <R> are: ossim_uint8, ossim_uint11, ossim_uint16, ossim_sint16, ossim_float32. Note this overrides the deprecated option \"scale-to-8-bit\".");
+   au->addCommandLineOption("--output-radiometry", "<R>\nSpecifies the desired product's pixel radiometry type. Possible values for <R> are: U8, U11, U16, S16, F32. Note this overrides the deprecated option \"scale-to-8-bit\".");
 
    au->addCommandLineOption("--pad-thumbnail", "<boolean>\nIf true, output thumbnail dimensions will be padded in width or height to make square; else, it will have the aspect ratio of input,  Default=false");
 
