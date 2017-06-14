@@ -132,6 +132,7 @@ protected:
    void parseOptions(ossimArgumentParser& parser);
 
    void parseNotifyOption(ossimArgumentParser& parser);
+   void parseEnvOptions(ossimArgumentParser& parser);
    /*!
     * METHOD: removeOptions()
     * Utility for stripping from argv all characters associated with a

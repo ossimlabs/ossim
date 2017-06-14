@@ -139,6 +139,8 @@ void ossimInit::initialize(ossimArgumentParser& parser)
       }
       return;
    }
+   theInstance->parseEnvOptions(parser);
+   theInstance->parseNotifyOption(parser);
 
    // Stream factories must be initialized before call to: ossimPreferences::instance()
    ossim::StreamFactoryRegistry::instance()->registerFactory(ossim::StreamFactory::instance());
@@ -146,7 +148,7 @@ void ossimInit::initialize(ossimArgumentParser& parser)
 
    theInstance->theAppName  = parser.getApplicationUsage()->getApplicationName();
 
-   theInstance->parseNotifyOption(parser);
+
 
    theInstance->thePreferences = ossimPreferences::instance();
 
@@ -341,22 +343,7 @@ void ossimInit::parseOptions(ossimArgumentParser& parser)
    
    std::string tempString;
    ossimArgumentParser::ossimParameter stringParameter(tempString);
-   while(parser.read("--env", stringParameter))
-   {
-      ossimString option = tempString;
-      if (option.contains("=") )
-      {
-         ossimString delimiter = "=";
-         ossimString key (option.before(delimiter));
-         ossimString value = option.after(delimiter);
-         ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), value.c_str());
-      }
-      else
-      {
-         ossimString key (option);
-         ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), "");
-      }
-   }
+
    tempString = "";
    while(parser.read("-P", stringParameter));
 
@@ -467,6 +454,27 @@ void ossimInit::parseNotifyOption(ossimArgumentParser& parser)
    }
 }
 
+void ossimInit::parseEnvOptions(ossimArgumentParser& parser)
+{
+   std::string tempString;
+   ossimArgumentParser::ossimParameter stringParameter(tempString);
+   while(parser.read("--env", stringParameter))
+   {
+      ossimString option = tempString;
+      if (option.contains("=") )
+      {
+         ossimString delimiter = "=";
+         ossimString key (option.before(delimiter));
+         ossimString value = option.after(delimiter);
+         ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), value.c_str());
+      }
+      else
+      {
+         ossimString key (option);
+         ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), "");
+      }
+   }
+}
 /*!****************************************************************************
  * METHOD: ossimInit::removeOption()
  *  
