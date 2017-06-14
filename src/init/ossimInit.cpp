@@ -357,7 +357,7 @@ void ossimInit::parseOptions(ossimArgumentParser& parser)
          ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), "");
       }
    }
-
+   tempString = "";
    while(parser.read("-P", stringParameter));
 
    if(tempString != "")
