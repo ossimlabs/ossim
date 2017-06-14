@@ -96,6 +96,7 @@ ossimInit* ossimInit::instance()
 
 void ossimInit::addOptions(ossimArgumentParser& parser)
 {
+   parser.getApplicationUsage()->addCommandLineOption("--env", "Specify an env variable to set.  Any number of these can appear with format --env VARIABLE=VALUE");
    parser.getApplicationUsage()->addCommandLineOption("-P", "specify a preference file to load");
    parser.getApplicationUsage()->addCommandLineOption("-K", "specify individual keywords to add to the preferences keyword list: name=value");
    parser.getApplicationUsage()->addCommandLineOption("-T", "specify the classes to trace, ex: ossimInit|ossimImage.* \nwill trace ossimInit and all ossimImage classes");
@@ -340,12 +341,30 @@ void ossimInit::parseOptions(ossimArgumentParser& parser)
    
    std::string tempString;
    ossimArgumentParser::ossimParameter stringParameter(tempString);
+   while(parser.read("--env", stringParameter))
+   {
+      ossimString option = tempString;
+      if (option.contains("=") )
+      {
+         ossimString delimiter = "=";
+         ossimString key (option.before(delimiter));
+         ossimString value = option.after(delimiter);
+         ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), value.c_str());
+      }
+      else
+      {
+         ossimString key (option);
+         ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), "");
+      }
+   }
+
    while(parser.read("-P", stringParameter));
 
    if(tempString != "")
    {
       thePreferences->loadPreferences(ossimFilename(tempString));
    }
+
    while(parser.read("-K", stringParameter))
    {
       ossimString option = tempString;
