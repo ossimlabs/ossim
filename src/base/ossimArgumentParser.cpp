@@ -203,7 +203,7 @@ ossimArgumentParser::~ossimArgumentParser()
    if (theMemAllocated)
    {
       for (int i=0; i<*theArgc; ++i)
-         delete theArgv[i];
+         delete [] theArgv[i];
       delete [] theArgv;
       delete theArgc;
    }

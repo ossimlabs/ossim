@@ -1,15 +1,13 @@
-//----------------------------------------------------------------------------
-// License:  LGPL
+//---
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description:
 //
 // Piecewise remapper class declaration.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #ifndef ossimPiecewiseRemapper_HEADER
@@ -43,14 +41,16 @@
  * 
  *   object2.type: ossimPiecewiseRemapper
  *   object2.remap_type: linear_native
- *   object2.band0.remap0:  ( (10, 127, 10, 127), (200, 255, 128, 382) )
+ *   object2.band0.remap0:  ( (0, 127, 0, 127), (128, 255, 128, 382) )
  *   object2.band0.remap1:  ( (0, 382, 0, 255) )
  *
+ * remap0 applied:   
  * The input range 0 <-> 127 passes through with a one-to-one mapping.
- * 200 <->  255 is stretched out to 128 <-> 382.
- * Any pixels outside those ranges are mapped according to the linear function specified in
- * remap1, where 0 maps to 0 and 382 maps to 255 (compression).
- *
+ * 128 <-> 255 is stretched out to 128 <-> 382.
+ * 
+ * remap0 output is fed to remap1:
+ * 0 maps to 0 and 382 maps to 255 (compression).
+ * 
  * Notes:
  * 
  * 1) Currently there is only one remap type (linear_native) is supported so it's not

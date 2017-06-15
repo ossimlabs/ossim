@@ -5634,7 +5634,7 @@ void ossimChipperUtil::usage(ossimArgumentParser& ap)
       << appName << " --op chip -u -b 3,2,1 --histogram-op auto-minmax --cut-center-llwh -42.819784401784275 147.265811350983 512 512 5V090205M0001912264B220000100072M_001508507.ntf up-is-up-chip.tif\n"
 
       << "\n// Chip in image space, rotate 39 degrees (-r option) about point, 1024x1024, scaled to eight bit:\n"
-      << appName << " --op chip -r 39 --histogram-op auto-minmax --cut-center-llwh -42.883809539602893 147.331984112985765 1024 1024 --output-radiometry U8 5V090205P0001912264B220000100282M_001508507.ntf outputs/r39.png\n"
+      << appName << " --op chip -r 39 --histogram-op auto-minmax --cut-center-llwh -42.883809539602893 147.331984112985765 1024 1024 --output-radiometry ossim_uint8 5V090205P0001912264B220000100282M_001508507.ntf outputs/r39.png\n"
 
       << "\n// Above command where all options are in a keyword list:\n"
       << appName << " --options r39-options.kwl\n"

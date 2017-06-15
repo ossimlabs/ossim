@@ -96,6 +96,7 @@ ossimInit* ossimInit::instance()
 
 void ossimInit::addOptions(ossimArgumentParser& parser)
 {
+   parser.getApplicationUsage()->addCommandLineOption("--env", "Specify an env variable to set.  Any number of these can appear with format --env VARIABLE=VALUE");
    parser.getApplicationUsage()->addCommandLineOption("-P", "specify a preference file to load");
    parser.getApplicationUsage()->addCommandLineOption("-K", "specify individual keywords to add to the preferences keyword list: name=value");
    parser.getApplicationUsage()->addCommandLineOption("-T", "specify the classes to trace, ex: ossimInit|ossimImage.* \nwill trace ossimInit and all ossimImage classes");
@@ -138,20 +139,18 @@ void ossimInit::initialize(ossimArgumentParser& parser)
       }
       return;
    }
-
+   theInstance->parseEnvOptions(parser);
+   theInstance->parseNotifyOption(parser);
+   theInstance->parsePrefsOptions(parser);
    // Stream factories must be initialized before call to: ossimPreferences::instance()
    ossim::StreamFactoryRegistry::instance()->registerFactory(ossim::StreamFactory::instance());
    ossimStreamFactoryRegistry::instance()->registerFactory(ossimStreamFactory::instance());
 
    theInstance->theAppName  = parser.getApplicationUsage()->getApplicationName();
 
-   theInstance->parseNotifyOption(parser);
-
-   theInstance->thePreferences = ossimPreferences::instance();
-
    //Parse the command line:
-   theInstance->parseOptions(parser);
 
+   theInstance->parseOptions(parser);
    // we will also support defining a trace pattern from an Environment
    // variable.  This will make JNI code easier to enable tracing
    //
@@ -333,19 +332,31 @@ void ossimInit::loadPlugins(const ossimFilename& plugin, const char* options)
    }
 }
 
-void ossimInit::parseOptions(ossimArgumentParser& parser)
+void ossimInit::parsePrefsOptions(ossimArgumentParser& parser)
 {
    if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG)
       << "DEBUG ossimInit::parseOptions: entering..." << std::endl;
+
    
    std::string tempString;
    ossimArgumentParser::ossimParameter stringParameter(tempString);
+
+   tempString = "";
+   ossimString prefsFile = ossimEnvironmentUtility::instance()->getEnvironmentVariable("OSSIM_PREFS_FILE");
+   theInstance->thePreferences = ossimPreferences::instance();
+   if(!prefsFile.empty())
+   {
+      thePreferences->loadPreferences();// Use the default load 
+   }
+   tempString = "";
+   // override ENV with passed in variable
    while(parser.read("-P", stringParameter));
 
    if(tempString != "")
    {
       thePreferences->loadPreferences(ossimFilename(tempString));
    }
+   tempString = "";
    while(parser.read("-K", stringParameter))
    {
       ossimString option = tempString;
@@ -362,6 +373,18 @@ void ossimInit::parseOptions(ossimArgumentParser& parser)
          thePreferences->addPreference(key, "");
       }
    }
+
+}
+
+void ossimInit::parseOptions(ossimArgumentParser& parser)
+{
+   if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG)
+      << "DEBUG ossimInit::parseOptions: entering..." << std::endl;
+   
+   std::string tempString;
+   ossimArgumentParser::ossimParameter stringParameter(tempString);
+
+   tempString = "";
 
    while(parser.read("-T", stringParameter))
    {
@@ -448,6 +471,28 @@ void ossimInit::parseNotifyOption(ossimArgumentParser& parser)
    }
 }
 
+void ossimInit::parseEnvOptions(ossimArgumentParser& parser)
+{
+   std::string tempString;
+   ossimArgumentParser::ossimParameter stringParameter(tempString);
+   while(parser.read("--env", stringParameter))
+   {
+      ossimString option = tempString;
+      if (option.contains("=") )
+      {
+         ossimString delimiter = "=";
+         ossimString key (option.before(delimiter));
+         ossimString value = option.after(delimiter);
+         ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), value.c_str());
+
+      }
+      else
+      {
+         ossimString key (option);
+         ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), "");
+      }
+   }
+}
 /*!****************************************************************************
  * METHOD: ossimInit::removeOption()
  *  
