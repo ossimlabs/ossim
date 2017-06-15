@@ -58,7 +58,7 @@ void ossimTool::setUsage(ossimArgumentParser& ap)
 bool ossimTool::initialize(ossimArgumentParser& ap)
 {
    m_helpRequested = false;
-   if ( (ap.argc() == 1) || ap.read("-h") || ap.read("--help") )
+   if (ap.read("-h") || ap.read("--help") )
    {
       // Write usage.
       setUsage(ap);
