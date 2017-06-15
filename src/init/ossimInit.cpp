@@ -141,20 +141,16 @@ void ossimInit::initialize(ossimArgumentParser& parser)
    }
    theInstance->parseEnvOptions(parser);
    theInstance->parseNotifyOption(parser);
-
+   theInstance->parsePrefsOptions(parser);
    // Stream factories must be initialized before call to: ossimPreferences::instance()
    ossim::StreamFactoryRegistry::instance()->registerFactory(ossim::StreamFactory::instance());
    ossimStreamFactoryRegistry::instance()->registerFactory(ossimStreamFactory::instance());
 
    theInstance->theAppName  = parser.getApplicationUsage()->getApplicationName();
 
-
-
-   theInstance->thePreferences = ossimPreferences::instance();
-
    //Parse the command line:
-   theInstance->parseOptions(parser);
 
+   theInstance->parseOptions(parser);
    // we will also support defining a trace pattern from an Environment
    // variable.  This will make JNI code easier to enable tracing
    //
@@ -336,22 +332,31 @@ void ossimInit::loadPlugins(const ossimFilename& plugin, const char* options)
    }
 }
 
-void ossimInit::parseOptions(ossimArgumentParser& parser)
+void ossimInit::parsePrefsOptions(ossimArgumentParser& parser)
 {
    if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG)
       << "DEBUG ossimInit::parseOptions: entering..." << std::endl;
+
    
    std::string tempString;
    ossimArgumentParser::ossimParameter stringParameter(tempString);
 
    tempString = "";
+   ossimString prefsFile = ossimEnvironmentUtility::instance()->getEnvironmentVariable("OSSIM_PREFS_FILE");
+   theInstance->thePreferences = ossimPreferences::instance();
+   if(!prefsFile.empty())
+   {
+      thePreferences->loadPreferences(ossimFilename(prefsFile));
+   }
+   tempString = "";
+   // override ENV with passed in variable
    while(parser.read("-P", stringParameter));
 
    if(tempString != "")
    {
       thePreferences->loadPreferences(ossimFilename(tempString));
    }
-
+   tempString = "";
    while(parser.read("-K", stringParameter))
    {
       ossimString option = tempString;
@@ -368,6 +373,18 @@ void ossimInit::parseOptions(ossimArgumentParser& parser)
          thePreferences->addPreference(key, "");
       }
    }
+
+}
+
+void ossimInit::parseOptions(ossimArgumentParser& parser)
+{
+   if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG)
+      << "DEBUG ossimInit::parseOptions: entering..." << std::endl;
+   
+   std::string tempString;
+   ossimArgumentParser::ossimParameter stringParameter(tempString);
+
+   tempString = "";
 
    while(parser.read("-T", stringParameter))
    {
@@ -467,6 +484,7 @@ void ossimInit::parseEnvOptions(ossimArgumentParser& parser)
          ossimString key (option.before(delimiter));
          ossimString value = option.after(delimiter);
          ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), value.c_str());
+
       }
       else
       {
