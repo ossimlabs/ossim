@@ -33,10 +33,12 @@ public:
    // Initializer
    virtual bool init(std::ostream& report = std::cout) = 0;
 
-   // Define collection ROI
-   virtual bool setBox(std::vector<ossimIrect> roi,
-                       const ossim_uint32& index,
-                       std::vector<ossimImageSource*> src) = 0;
+   virtual bool setImageList(std::vector<ossimImageSource*> src) = 0;
+
+   // Define collection ROIs, coordinate system depends on derived class use. List of AOIs
+   // must correspond to the list of images.
+   virtual bool setROIs(std::vector<ossimIrect> roi) = 0;
+
    virtual bool isValidCollectionBox() const = 0;
 
    // Measurement collection

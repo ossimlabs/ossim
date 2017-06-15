@@ -1150,9 +1150,8 @@ void ossimAutRegUtil::execute()
    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    // Set correlation areas
    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   int primeIndex = 0; //TODO
-   m_tGen->setBox(m_roiRects, primeIndex, src);
-
+   m_tGen->setImageList(src);
+   m_tGen->setROIs(m_roiRects);
 
    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    // Run the OpenCV detector/extractor/matcher to collect tiepoints
