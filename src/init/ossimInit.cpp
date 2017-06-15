@@ -346,7 +346,7 @@ void ossimInit::parsePrefsOptions(ossimArgumentParser& parser)
    theInstance->thePreferences = ossimPreferences::instance();
    if(!prefsFile.empty())
    {
-      thePreferences->loadPreferences(ossimFilename(prefsFile));
+      thePreferences->loadPreferences();// Use the default load 
    }
    tempString = "";
    // override ENV with passed in variable
