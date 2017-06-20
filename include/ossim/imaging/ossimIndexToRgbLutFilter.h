@@ -68,7 +68,7 @@ class ossimImageData;
  * to green, and then 128 to 250 will map from green (through yellow) to red. Note that any value
  * above 250 as well as 0 are outside of the remap range and will map to the null pixel (0,0,0).
  *
- * Example or regular piecewise linear. This is the default mode. For backward compatibility, the
+ * Example of regular piecewise linear. This is the default mode. For backward compatibility, the
  * mode keyword here is optional and if omitted will imply this mode. Also, unlike previous form,
  * the number_of_entries keyword is not required and is ignored if present.
  *
