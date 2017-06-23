@@ -39,7 +39,6 @@ ossimPreferences::ossimPreferences()
     * expand it in place.
     */
    theKWL.setExpandEnvVarsFlag( true );
-
    loadPreferences();
 }
 
@@ -92,6 +91,7 @@ bool ossimPreferences::loadPreferences()
     */
    char* pref_filename = getenv(PREF_FILE_ENV_VAR_NAME);
 
+   //std::cout << "ossimPreferences::loadPreferences() ======== " << ossimString(pref_filename) << "\n";
    if (pref_filename)
    {
       /*!
@@ -113,20 +113,6 @@ bool ossimPreferences::loadPreferences()
             << "Preferences were not loaded.\n";
       }
    }
-
-//   else
-//   {
-//       if (traceDebug())
-//       {
-//          // No ENV var found. Print warning:
-//          CLOG << "WARNING: the preferences file environment variable \""
-//               << PREF_FILE_ENV_VAR_NAME << "\" is not defined. No preferences "
-//               << "were loaded. The environment variable should be set to "
-//               << "the full path to the preferences keywordlist file desired."
-//               << endl;
-//       }
-//   }
-   
    if (traceExec())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)

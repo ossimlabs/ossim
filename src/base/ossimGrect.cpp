@@ -236,19 +236,23 @@ bool ossimGrect::completely_within(const ossimGrect& rect) const
 
    bool rtn = true;
    
-   if (theUlCorner.lon < rect.ul().lon)
+   if ((theUlCorner.lon < rect.ul().lon)||
+       (theUlCorner.lon > rect.ur().lon))
    {
       rtn = false;
    }
-   else if (theLrCorner.lon > rect.lr().lon)
+   else if ((theLrCorner.lon > rect.lr().lon)||
+            (theLrCorner.lon < rect.ul().lon))
    {
       rtn = false;
    }
-   else if (theUlCorner.lat < rect.ul().lat)
+   else if ((theUlCorner.lat > rect.ul().lat)||
+            (theUlCorner.lat < rect.lr().lat))
    {
       rtn = false;
    }
-   else if (theLrCorner.lat > rect.lr().lat)
+   else if ((theLrCorner.lat < rect.lr().lat)||
+            (theLrCorner.lat > rect.ul().lat))
    {
       rtn = false;
    }

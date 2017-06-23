@@ -57,6 +57,7 @@
 #include <ossim/projection/ossimVanDerGrintenProjection.h>
 #include <ossim/projection/ossimSpaceObliqueMercatorProjection.h>
 #include <ossim/projection/ossimGoogleProjection.h>
+#include <ossim/projection/ossimAdjMapModel.h>
 #include <ossim/support_data/ossimSpaceImagingGeom.h>
 //***
 // ADD_PROJECTION: List names of all map projections produced by this factory:
@@ -238,8 +239,10 @@ ossimProjection* ossimMapProjectionFactory::createProjection(const ossimString &
       return new ossimVanDerGrintenProjection;
    if(name == STATIC_TYPE_NAME(ossimSpaceObliqueMercatorProjection))
       return new ossimSpaceObliqueMercatorProjection;
-    if(name == STATIC_TYPE_NAME(ossimGoogleProjection))
-      return new ossimGoogleProjection;
+   if(name == STATIC_TYPE_NAME(ossimGoogleProjection))
+     return new ossimGoogleProjection;
+   if(name == STATIC_TYPE_NAME(ossimAdjMapModel))
+     return new ossimAdjMapModel;
   return NULL;
 }
 
@@ -286,5 +289,6 @@ void ossimMapProjectionFactory::getTypeNameList(std::vector<ossimString>& typeLi
    typeList.push_back(ossimString(STATIC_TYPE_NAME(ossimVanDerGrintenProjection)));
    typeList.push_back(ossimString(STATIC_TYPE_NAME(ossimSpaceObliqueMercatorProjection)));
    typeList.push_back(ossimString(STATIC_TYPE_NAME(ossimGoogleProjection)));
+   typeList.push_back(ossimString(STATIC_TYPE_NAME(ossimAdjMapModel)));
 
 }

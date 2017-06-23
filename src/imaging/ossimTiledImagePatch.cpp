@@ -13,6 +13,7 @@
 // $Id$
 
 #include <ossim/imaging/ossimTiledImagePatch.h>
+#include <ossim/base/ossimIrect.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 
 RTTI_DEF1(ossimTiledImagePatch, "ossimTiledImagePatch", ossimImageSourceFilter)
@@ -21,8 +22,7 @@ ossimTiledImagePatch::ossimTiledImagePatch()
    :
    ossimImageSourceFilter(),  // base class
    m_tile(0),
-   m_inputTileSize(),
-   m_inputBoundingRect()
+   m_inputTileSize()
 {
    m_inputTileSize.makeNan();
 }
@@ -41,7 +41,6 @@ void ossimTiledImagePatch::initialize()
 
    // Clear everything.  The tile will be allocated on first getTile call.
    m_tile = 0;
-   m_inputBoundingRect.clear();
 
    // Get the input tile sizes:
    if ( theInputConnection )
@@ -50,17 +49,6 @@ void ossimTiledImagePatch::initialize()
       {
          m_inputTileSize.x = theInputConnection->getTileWidth();
          m_inputTileSize.y = theInputConnection->getTileHeight();
-      }
-      
-      const ossim_uint32 RLEVELS = theInputConnection->getNumberOfDecimationLevels();
-      if ( RLEVELS )
-      {
-         ossimIrect rect;
-         for ( ossim_uint32 i = 0; i < RLEVELS; ++i )
-         {
-            theInputConnection->getBoundingRect( rect, i );
-            m_inputBoundingRect.push_back( rect );
-         }
       }
    }
 }
@@ -102,7 +90,10 @@ bool ossimTiledImagePatch::getTile(ossimImageData* result, ossim_uint32 resLevel
       // See if any point of the requested tile is in the image.
       ossimIrect tile_rect = result->getImageRectangle();
 
-      if ( tile_rect.intersects( m_inputBoundingRect[resLevel] ) )
+      ossimIrect input_rect;
+      theInputConnection->getBoundingRect( input_rect, resLevel );
+
+      if ( tile_rect.intersects( input_rect ) )         
       {
          // Initialize the tile if needed as we're going to stuff it.
          if (result->getDataObjectStatus() == OSSIM_NULL)
@@ -114,17 +105,17 @@ bool ossimTiledImagePatch::getTile(ossimImageData* result, ossim_uint32 resLevel
          result->makeBlank();
          
          // Clip rect:
-         ossimIrect clip_rect = tile_rect.clipToRect( m_inputBoundingRect[resLevel] );
+         ossimIrect clip_rect = tile_rect.clipToRect( input_rect );
          
          // Zero based start point.
-         ossimIpt inputOrigin = clip_rect.ul() - m_inputBoundingRect[resLevel].ul();
+         ossimIpt inputOrigin = clip_rect.ul() - input_rect.ul();         
 
          // Zero based point on input tile boundary.
          inputOrigin.x = (inputOrigin.x / m_inputTileSize.x) * m_inputTileSize.x;
          inputOrigin.y = (inputOrigin.y / m_inputTileSize.y) * m_inputTileSize.y;
 
          // Shift back to original space:
-         inputOrigin += m_inputBoundingRect[resLevel].ul();
+         inputOrigin += input_rect.ul();
 
          // Line loop:
          for ( ossim_int32 y = inputOrigin.y; y < clip_rect.lr().y; y += m_inputTileSize.y )
@@ -223,14 +214,14 @@ void ossimTiledImagePatch::allocateTile()
 
 bool ossimTiledImagePatch::isValidRLevel(ossim_uint32 resLevel) const
 {
-   return (resLevel < m_inputBoundingRect.size());
+   // return (resLevel < m_inputBoundingRect.size());
+   return (resLevel < theInputConnection->getNumberOfDecimationLevels());
 }
 
 // Private to disallow use...
 ossimTiledImagePatch::ossimTiledImagePatch(const ossimTiledImagePatch&)
    : m_tile(0),
-     m_inputTileSize(),
-     m_inputBoundingRect()
+     m_inputTileSize()
 {
 }
 
