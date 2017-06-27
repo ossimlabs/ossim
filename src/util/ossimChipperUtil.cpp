@@ -4300,7 +4300,7 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
                ossimRefPtr<ossimImageHistogramSource> ihist =
                   new ossimImageHistogramSource();
                ihist->setAreaOfInterest( aoi );
-               ihist->connectMyInputTo( ih.get() );
+               ihist->connectMyInputTo( remapper->getInput() );//ih.get());
                remapper->connectMyInputTo( ihist.get() );
 #else
                remapper->computeHistogram( aoi );
