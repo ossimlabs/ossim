@@ -4218,9 +4218,13 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
            ( mode != ossimHistogramRemapper::STRETCH_UNKNOWN ) )
       {
          result = true;
-
+         ossimString histCenterKw = m_kwl->findKey(HIST_CENTER_KW);
+         if(histCenterKw.empty())
+         {
+           histCenterKw = "false";
+         }
          bool roiStretch = ( m_kwl->hasKey( HIST_AOI_KW ) || m_kwl->hasKey( HIST_LLWH_KW ) ||
-                             m_kwl->hasKey( HIST_CENTER_KW ) );
+                             histCenterKw.toBool() );
 
          if ( !roiStretch )
          {
