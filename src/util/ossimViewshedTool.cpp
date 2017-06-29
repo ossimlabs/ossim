@@ -610,6 +610,7 @@ bool ossimViewshedTool::optimizeFOV()
       stop  = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
       break;
    case NW:
+   default:
       start = m_observerGpt.azimuthTo(m_aoiGroundRect.ur());
       stop  = m_observerGpt.azimuthTo(m_aoiGroundRect.ll());
       break;
