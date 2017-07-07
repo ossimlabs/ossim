@@ -26,6 +26,8 @@ public:
    ossimCacheTileSource();
    // ossimCacheTileSource(ossimImageSource* inputSource);
 
+   virtual ~ossimCacheTileSource();
+
    virtual ossimString getLongName()  const;
    virtual ossimString getShortName() const;
    
@@ -59,8 +61,6 @@ public:
 
    
 protected:
-   virtual ~ossimCacheTileSource();
-
    void allocate();
    void deleteRlevelCache();
    void initializeRlevelCache();

@@ -28,6 +28,8 @@ public:
    ossimBandAverageFilter(ossimImageSource* input,
                           const std::vector<double>& weights);
 
+   virtual ~ossimBandAverageFilter();
+
    /**
     * The data object argument is deprecated and should not be used.
     * eventually we will remove it from the base classes.  This method will
@@ -92,8 +94,6 @@ public:
                           const char* prefix=0)const;
 
 protected:
-   virtual ~ossimBandAverageFilter();
-   
   ossimRefPtr<ossimImageData> theTile;
    std::vector<double>         theWeights;
 

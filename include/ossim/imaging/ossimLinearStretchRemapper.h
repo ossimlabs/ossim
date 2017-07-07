@@ -36,6 +36,7 @@ class OSSIM_DLL ossimLinearStretchRemapper : public ossimImageSourceFilter
 public:
 
    ossimLinearStretchRemapper();
+   virtual ~ossimLinearStretchRemapper();
 
    virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& origin,
                                                ossim_uint32 resLevel=0);
@@ -55,7 +56,6 @@ public:
    virtual ossimScalarType getOutputScalarType() const { return OSSIM_NORMALIZED_DOUBLE; }
 
 protected:
-   virtual ~ossimLinearStretchRemapper();
 
    /**
     * Called on first getTile, will initialize all data needed.
