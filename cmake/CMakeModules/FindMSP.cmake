@@ -8,15 +8,15 @@ SET(CMAKE_FIND_FRAMEWORK "LAST")
 
 macro(FIND_MSP_LIBRARY LIBS_OK MYLIBRARYNAME)
   if (LIBS_OK)
-     find_library( TARGET_LIBRARY
+     find_library( TARGET_LIBRARY_${MYLIBRARYNAME}
         NAMES "${MYLIBRARYNAME}"
         PATHS
         $ENV{MSP_HOME}/lib 
         /usr/lib64
         /usr/lib
         /usr/local/lib )
-     if (TARGET_LIBRARY)
-         set (MSP_LIBRARIES ${MSP_LIBRARIES} ${TARGET_LIBRARY})
+     if (TARGET_LIBRARY_${MYLIBRARYNAME})
+         set (MSP_LIBRARIES ${MSP_LIBRARIES} ${TARGET_LIBRARY_${MYLIBRARYNAME}})
      else()
        set(LIBS_OK "NO")
      endif()
