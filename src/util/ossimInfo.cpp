@@ -94,7 +94,9 @@ static const char RAD2DEG_KW[]              = "rad2deg";
 static const char READER_PROPS_KW[]         = "reader_props";
 static const char RESAMPLER_FILTERS_KW[]    = "resampler_filters";
 static const char REVISION_NUMBER_KW[]      = "revision_number";
-static const char UP_IS_UP_KW[]             = "up_is_up_angle";
+static const char UP_IS_UP_KW[]             = "up_is_up";
+static const char UP_IS_UP_GPT_KW[]         = "up_is_up_gpt";
+static const char UP_IS_UP_IPT_KW[]         = "up_is_up_ipt";
 static const char VERSION_KW[]              = "version";
 static const char WRITERS_KW[]              = "writers_kw";
 static const char WRITER_PROPS_KW[]         = "writer_props";
@@ -208,6 +210,8 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("-s", "Force the ground rect to be the specified datum");
 
    au->addCommandLineOption("-u or --up-is-up", "Rotation angle to \"up is up\" for an image.\nWill return 0 if image's projection is not affected by elevation.");
+   au->addCommandLineOption("--up-is-up-gpt", "Computes up angle given full res image point: <x> <y>");
+   au->addCommandLineOption("--up-is-up-ipt", "Computes up angle given gpt: <lat> <lon>");
 
    au->addCommandLineOption("-v", "Overwrite existing geometry.");
 
@@ -408,7 +412,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             break;
          }
       }
-
+ 
       if( ap.read("--fonts") )
       {
          m_kwl.add( FONTS_KW, TRUE_KW );
@@ -674,7 +678,25 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
             break;
          }
       }
-
+     if( ap.read("--up-is-up-ipt", sp1, sp2))
+      {
+         m_kwl.add( UP_IS_UP_KW, TRUE_KW);
+         m_kwl.add( UP_IS_UP_IPT_KW, (ts1 +" "+ts2).c_str() );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+      if(ap.read("--up-is-up-gpt",sp1, sp2))
+      {
+         m_kwl.add( UP_IS_UP_KW, TRUE_KW);
+         m_kwl.add( UP_IS_UP_GPT_KW, (ts1 +" "+ ts2).c_str() );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+ 
       if( ap.read("-v") )
       {
          m_kwl.add( OVERWRITE_KW, TRUE_KW );
@@ -2310,7 +2332,29 @@ void ossimInfo::getUpIsUpAngle( ossimImageHandler* ih,
             ossim_float64 upIsUp = 0.0;
             if ( geom->isAffectedByElevation() )
             {
-               upIsUp = geom->upIsUpAngle();
+               ossimDpt imagePt;
+               imagePt.makeNan();
+               ossimString lookup = m_kwl.find(UP_IS_UP_GPT_KW);
+               if(!lookup.empty())
+               {
+                  std::istringstream in(lookup.c_str());
+                  ossim_float64 lat,lon;
+                  in>>lat>>lon;
+                  ossimGpt gpt(lat,lon);
+                  geom->worldToLocal(gpt, imagePt);
+               }
+               else
+               {
+                  lookup = m_kwl.find(UP_IS_UP_IPT_KW);
+                  if(!lookup.empty())
+                  {
+                     std::istringstream in(lookup.c_str());
+                     ossim_float64 x,y;
+                     in>>x>>y;
+                     imagePt = ossimDpt(x,y);                     
+                  }
+               }
+               upIsUp = geom->upIsUpAngle(imagePt);
                kwl.add(prefix, UP_IS_UP_KW, upIsUp, true);
             }
          }
