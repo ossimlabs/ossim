@@ -210,8 +210,8 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("-s", "Force the ground rect to be the specified datum");
 
    au->addCommandLineOption("-u or --up-is-up", "Rotation angle to \"up is up\" for an image.\nWill return 0 if image's projection is not affected by elevation.");
-   au->addCommandLineOption("--up-is-up-gpt", "Computes up angle given full res image point: <x> <y>");
-   au->addCommandLineOption("--up-is-up-ipt", "Computes up angle given gpt: <lat> <lon>");
+   au->addCommandLineOption("--up-is-up-gpt", "Computes up angle given gpt: <lat> <lon>");
+   au->addCommandLineOption("--up-is-up-ipt", "Computes up angle given full res image point: <x> <y>");
 
    au->addCommandLineOption("-v", "Overwrite existing geometry.");
 
@@ -222,8 +222,6 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--writers", "Prints list of available writers.");
 
    au->addCommandLineOption("--zoom-level-gsds", "Prints zoom level gsds for projections EPSG:4326 and EPSG:3857.");
-   au->addCommandLineOption("--image-to-ground", "Takes a 3 tuple of the form x y res where x and y are image coordinates and res is the resolution.  res = 0 is full resolution");
-   au->addCommandLineOption("--ground-to-image", "Takes a 2 or 3 tuple of the form lat lon h where x and y are image coordinates and res is the resolution");
 
    ostringstream description;
    description << DESCRIPTION << "\n\n Examples:\n\n"
