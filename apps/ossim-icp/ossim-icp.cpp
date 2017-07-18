@@ -646,7 +646,7 @@ int main(int argc, char* argv[])
    ossimRefPtr<ossimImageFileWriter> writer =
       ossimImageWriterFactoryRegistry::instance()->createWriter(kwl, PREFIX);
 
-   if( writer == 0 )
+   if( !writer)
    {
       ossimNotify(ossimNotifyLevel_NOTICE)
          << "\nCould not create writer of type:  "

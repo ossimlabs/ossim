@@ -1242,7 +1242,7 @@ void ossimOrthoIgen::setupIgenChain()
 
    // Finished initializing the inputs to the mosaic. Add the mosaic to the product chain.
    theProductChain = new ossimImageChain;
-   if (bandMergeObject != 0)
+   if (bandMergeObject)
    {
       theProductChain->addFirst(bandMergeObject.get());
    }

@@ -2471,8 +2471,8 @@ void ossimImageRenderer::refreshEvent(ossimRefreshEvent& event)
       (event.getRefreshType() & ossimRefreshEvent::REFRESH_GEOMETRY))
    {
       ossimRefPtr<ossimImageGeometry> inputGeom =
-         theInputConnection?theInputConnection->getImageGeometry():0;
-      if(inputGeom.valid())
+         theInputConnection?theInputConnection->getImageGeometry().get():0;
+      if(inputGeom)
       {
          ossimImageViewProjectionTransform* ivpt = 
                          dynamic_cast<ossimImageViewProjectionTransform*>(m_ImageViewTransform.get()); 
