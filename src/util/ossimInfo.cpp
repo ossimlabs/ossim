@@ -209,10 +209,9 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
 
    au->addCommandLineOption("-s", "Force the ground rect to be the specified datum");
 
-   au->addCommandLineOption("-u or --up-is-up", "Rotation angle to \"up is up\" for an image.\nWill return 0 if image's projection is not affected by elevation.");
-   au->addCommandLineOption("--up-is-up-gpt", "Computes up angle given full res image point: <x> <y>");
-   au->addCommandLineOption("--up-is-up-ipt", "Computes up angle given gpt: <lat> <lon>");
-
+   au->addCommandLineOption("--up-is-up or -u", "Rotation angle to \"up is up\" for an image.\nWill return 0 if image's projection is not affected by elevation.");
+   au->addCommandLineOption("--up-is-up-gpt", "Computes up angle given gpt: <lat> <lon>");
+   au->addCommandLineOption("--up-is-up-ipt", "Computes up angle given full res image point: <x> <y>");
    au->addCommandLineOption("-v", "Overwrite existing geometry.");
 
    au->addCommandLineOption("-V or --vesion", "Version of code, e.g. 1.8.20");
@@ -222,8 +221,6 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--writers", "Prints list of available writers.");
 
    au->addCommandLineOption("--zoom-level-gsds", "Prints zoom level gsds for projections EPSG:4326 and EPSG:3857.");
-   au->addCommandLineOption("--image-to-ground", "Takes a 3 tuple of the form x y res where x and y are image coordinates and res is the resolution.  res = 0 is full resolution");
-   au->addCommandLineOption("--ground-to-image", "Takes a 2 or 3 tuple of the form lat lon h where x and y are image coordinates and res is the resolution");
 
    ostringstream description;
    description << DESCRIPTION << "\n\n Examples:\n\n"
@@ -479,6 +476,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
       if( ap.read("--img2grd", sp1, sp2) )
       {
+         requiresInputImage = true;
          ossimString x = ts1;
          ossimString y = ts2;
          ossimDpt dpt;
@@ -493,6 +491,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
       if( ap.read("--grd2img", sp1, sp2, sp3) )
       {
+         requiresInputImage = true;
          ossimString lat = ts1;
          ossimString lon = ts2;
          ossimString hgt = ts3;
@@ -661,7 +660,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       }
 
       if( ap.read("--revision") ||
-            ap.read("--revision-number") ) // backwards compat
+          ap.read("--revision-number") ) // backwards compat
       {
          m_kwl.add( REVISION_NUMBER_KW, TRUE_KW );
          if ( ap.argc() < 2 )
@@ -672,14 +671,16 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
 
       if( ap.read("-u") || ap.read("--up-is-up") )
       {
+         requiresInputImage = true;
          m_kwl.add( UP_IS_UP_KW, TRUE_KW );
          if ( ap.argc() < 2 )
          {
             break;
          }
       }
-     if( ap.read("--up-is-up-ipt", sp1, sp2))
+      if( ap.read("--up-is-up-ipt", sp1, sp2))
       {
+         requiresInputImage = true;
          m_kwl.add( UP_IS_UP_KW, TRUE_KW);
          m_kwl.add( UP_IS_UP_IPT_KW, (ts1 +" "+ts2).c_str() );
          if ( ap.argc() < 2 )
@@ -689,6 +690,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       }
       if(ap.read("--up-is-up-gpt",sp1, sp2))
       {
+         requiresInputImage = true;
          m_kwl.add( UP_IS_UP_KW, TRUE_KW);
          m_kwl.add( UP_IS_UP_GPT_KW, (ts1 +" "+ ts2).c_str() );
          if ( ap.argc() < 2 )
@@ -760,8 +762,12 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       m_kwl.add( IMAGE_FILE_KW, ap[1]  );
    }
 
-   if ( requiresInputImage && ( ap.argc() == 1 ) )
+   if ( (( ap.argc() == 1 ) && requiresInputImage) || (m_kwl.getSize() == 0) )
    {
+      if ( requiresInputImage )
+      {
+         ossimNotify(ossimNotifyLevel_NOTICE) << "\nError: Option requires input image!\n\n";
+      }
       setUsage(ap);
       ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
       result = false;
