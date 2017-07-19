@@ -1220,7 +1220,7 @@ void ossimOrthoIgen::setupIgenChain()
 
          if (theSrcRecords[idx].isRgbData())
          {
-            if (bandMergeObject == 0)
+            if (!bandMergeObject)
             {
                bandMergeObject = new ossimBandMergeSource();
             }
