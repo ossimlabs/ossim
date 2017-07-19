@@ -887,8 +887,10 @@ void ossimNitfWriter::addDataExtensionSegment(const ossimNitfDataExtensionSegmen
    if (allowTreOverflow == false)
    {
       ossimRefPtr<ossimProperty> pId = des.getProperty(ossimNitfDataExtensionSegmentV2_1::DESID_KW);
-      if (pId == NULL || pId->valueToString() == "TRE_OVERFLOW" ||
-         pId->valueToString() == "REGISTERED EXTENSIONS" || pId->valueToString() == "CONTROLLED EXTENSIONS")
+      if (  !pId ||
+            (pId->valueToString() == "TRE_OVERFLOW") ||
+            (pId->valueToString() == "REGISTERED EXTENSIONS") ||
+            (pId->valueToString() == "CONTROLLED EXTENSIONS"))
       {
          return;
       }
