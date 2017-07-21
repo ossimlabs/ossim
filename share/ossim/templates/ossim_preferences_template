@@ -698,6 +698,11 @@ ossim.plugins.aws.s3.region: us-east-1
 //
 ossim.plugins.aws.s3.nReadCacheHeaders: 10000
 
+// We can also specify if we cache invalid locations.  So if there is a s3://..... URL
+// and it is invalid and can't get the header size it will cache and mark it as invalid
+//
+ossim.plugins.aws.s3.cacheInvalidLocations: true
+
 //---
 // Turn on/off progress output to console standard output. Code
 // auto detects if running in a console window; hence, typically this is not

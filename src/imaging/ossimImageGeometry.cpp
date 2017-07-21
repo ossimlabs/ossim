@@ -1472,7 +1472,8 @@ bool ossimImageGeometry::computeGroundToImagePartials(NEWMAT::Matrix& result,
    return false;
 }
 
-ossim_float64 ossimImageGeometry::upIsUpAngle() const
+
+ossim_float64 ossimImageGeometry::upIsUpAngle(const ossimDpt& pt) const
 {
    ossim_float64 result = ossim::nan();
 
@@ -1490,15 +1491,19 @@ ossim_float64 ossimImageGeometry::upIsUpAngle() const
          
          if( !bounds.hasNans() )
          {
-            ossim_float64 widthPercent  = bounds.width()*.1;
-            ossim_float64 heightPercent = bounds.height()*.1;
+            // only need an average
+            // so will keep the test close to the pixel location
+            // we are sampling
+            // let's get rid of the scale
+            ossim_float64 widthPercent  = 1;//bounds.width()*.1;
+            ossim_float64 heightPercent = 1;//bounds.height()*.1;
             
             //---
             // Sanity check to make sure that taking 10 percent out on the image
             // gets us to at least 1 pixel away.
             //---
-            if(widthPercent < 1.0) widthPercent = 1.0;
-            if(heightPercent < 1.0) heightPercent = 1.0;
+           // if(widthPercent < 1.0) widthPercent = 1.0;
+           // if(heightPercent < 1.0) heightPercent = 1.0;
             
             // set up some work variables to help calculate the average partial
             //
@@ -1507,9 +1512,11 @@ ossim_float64 ossimImageGeometry::upIsUpAngle() const
             std::vector<ossimDpt> iptsDisplacement(NUMBER_OF_SAMPLES);
             std::vector<ossimDpt> partials(NUMBER_OF_SAMPLES);
             ossimDpt averageDelta(0.0,0.0);
-            
-            ossimDpt centerIpt = bounds.midPoint();
-            
+            ossimDpt centerIpt = pt;
+            if(centerIpt.hasNans())
+            {
+               centerIpt = bounds.midPoint();
+            }
             //---
             // Lets take an average displacement about the center point (3x3 grid)
             // we will go 10 percent out of the width and height of the image and
@@ -1591,6 +1598,35 @@ ossim_float64 ossimImageGeometry::upIsUpAngle() const
             if(result < 0) result += 360.0;
             
          }  // Matches: if( bounds.hasNans() == false )
+      }
+      else
+      {
+         result = 0;
+      }
+      
+   } // Matches: if ( m_projection.valid() && m_projection->isAffectedByElevation() )
+
+   return result;
+
+}
+
+
+ossim_float64 ossimImageGeometry::upIsUpAngle() const
+{
+   ossim_float64 result = ossim::nan();
+
+   if ( m_projection.valid() )
+   {
+      if ( m_projection->isAffectedByElevation() )
+      {
+         
+         ossimDrect bounds;
+         getBoundingRect( bounds );
+         
+         if( !bounds.hasNans() )
+         {
+            return upIsUpAngle(bounds.midPoint());
+         }
       }
       else
       {

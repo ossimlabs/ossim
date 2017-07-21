@@ -112,12 +112,8 @@ IF(BUILD_OSSIM_VIDEO AND EXISTS ${OSSIM_DEV_HOME}/ossim-video)
   add_subdirectory(${OSSIM_DEV_HOME}/ossim-video ${CMAKE_CURRENT_BINARY_DIR}/ossim-video)
 ENDIF()
 
-IF(BUILD_OSSIM_MSP AND EXISTS ${OSSIM_DEV_HOME}/ossim-msp)
-  add_subdirectory(${OSSIM_DEV_HOME}/ossim-msp ${CMAKE_CURRENT_BINARY_DIR}/ossim-msp)
-ENDIF()
-
-IF(BUILD_OSSIM_ATP AND EXISTS ${OSSIM_DEV_HOME}/ossim-atp)
-  add_subdirectory(${OSSIM_DEV_HOME}/ossim-atp ${CMAKE_CURRENT_BINARY_DIR}/ossim-atp)
+IF(BUILD_OSSIM_ISA AND EXISTS ${OSSIM_DEV_HOME}/ossim-isa)
+  add_subdirectory(${OSSIM_DEV_HOME}/ossim-isa ${CMAKE_CURRENT_BINARY_DIR}/ossim-isa)
 ENDIF()
 
 IF(BUILD_OMS AND EXISTS ${OSSIM_DEV_HOME}/ossim-oms)
@@ -130,7 +126,6 @@ IF(BUILD_OMS AND EXISTS ${OSSIM_DEV_HOME}/ossim-oms)
   ENDIF(NOT OMS_INCLUDE_DIR)
   add_subdirectory(${OSSIM_DEV_HOME}/ossim-oms ${CMAKE_CURRENT_BINARY_DIR}/ossim-oms)
 ENDIF()
-
 
 IF(BUILD_OSSIM_PLANET AND EXISTS ${OSSIM_DEV_HOME}/ossim-planet)
   
@@ -360,6 +355,5 @@ MESSAGE( STATUS "BUILD_OSSIM_WMS                 = ${BUILD_OSSIM_WMS}" )
 MESSAGE( STATUS "BUILD_LIBRARY_DIR               = ${BUILD_LIBRARY_DIR}" )
 MESSAGE( STATUS "BUILD_RUNTIME_DIR               = ${BUILD_RUNTIME_DIR}" )
 MESSAGE( STATUS "BUILD_DSMG                      = ${BUILD_DSMG}" )
-MESSAGE( STATUS "BUILD_OSSIM_MSP                 = ${BUILD_OSSIM_MSP}" )
-MESSAGE( STATUS "BUILD_OSSIM_ATP                 = ${BUILD_OSSIM_ATP}" )
+MESSAGE( STATUS "BUILD_OSSIM_ISA                 = ${BUILD_OSSIM_ISA}" )
 MESSAGE( STATUS "Use OSSIM_BUILD_ADDITIONAL_DIRECTORIES to add other cmake builds." )

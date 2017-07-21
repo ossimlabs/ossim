@@ -1,182 +1,106 @@
+#---
+# This module sets MSP_FOUND if variables are valid.
+#--- 
+
 SET(CMAKE_FIND_FRAMEWORK "LAST")
+
+##############################################################
+
+macro(FIND_MSP_LIBRARY LIBS_OK MYLIBRARYNAME)
+  if (LIBS_OK)
+     find_library( TARGET_LIBRARY_${MYLIBRARYNAME}
+        NAMES "${MYLIBRARYNAME}"
+        PATHS
+        $ENV{MSP_HOME}/lib 
+        /usr/lib64
+        /usr/lib
+        /usr/local/lib )
+     if (TARGET_LIBRARY_${MYLIBRARYNAME})
+         set (MSP_LIBRARIES ${MSP_LIBRARIES} ${TARGET_LIBRARY_${MYLIBRARYNAME}})
+     else()
+       set(LIBS_OK "NO")
+     endif()
+   endif()
+endmacro(FIND_MSP_LIBRARY LIBS_OK MYLIBRARYNAME)
+
+##############################################################
+
+set(MSP_FOUND "NO")
+
 FIND_PATH(MSP_INCLUDE_DIRS Mensuration/MensurationService.h
         PATHS
-        /usr/local/msp-1.5/ToolKit/include
         $ENV{MSP_HOME}/include
-        ${OSSIM_DEPENDENCIES}/include
-		${OSSIM_INSTALL_PREFIX}/include
-)
+        /usr/include
+		    /usr/local/include)
 
-set (MSP_INCLUDE_DIRS ${MSP_INCLUDE_DIRS} 
-                      ${MSP_INCLUDE_DIRS}/CoordinateConversion
-                      ${MSP_INCLUDE_DIRS}/Terrain
-                      ${MSP_INCLUDE_DIRS}/common
-                      ${MSP_INCLUDE_DIRS}/common/utilities
-                      ${MSP_INCLUDE_DIRS}/common/geometry
-                      ${MSP_INCLUDE_DIRS}/common/math
-                      ${MSP_INCLUDE_DIRS}/common/csmutil
-                      ${MSP_INCLUDE_DIRS}/common/ntmtre
-                      ${MSP_INCLUDE_DIRS}/common/nitf
-                      ${MSP_INCLUDE_DIRS}/common/deiutil
-                      ${MSP_INCLUDE_DIRS}/common/dtcc
-                      ${MSP_INCLUDE_DIRS}/common/csm)
+if (MSP_INCLUDE_DIRS)
+  set (MSP_INCLUDE_DIRS ${MSP_INCLUDE_DIRS} 
+                        ${MSP_INCLUDE_DIRS}/CoordinateConversion
+                        ${MSP_INCLUDE_DIRS}/Terrain
+                        ${MSP_INCLUDE_DIRS}/common
+                        ${MSP_INCLUDE_DIRS}/common/utilities
+                        ${MSP_INCLUDE_DIRS}/common/geometry
+                        ${MSP_INCLUDE_DIRS}/common/math
+                        ${MSP_INCLUDE_DIRS}/common/csmutil
+                        ${MSP_INCLUDE_DIRS}/common/ntmtre
+                        ${MSP_INCLUDE_DIRS}/common/nitf
+                        ${MSP_INCLUDE_DIRS}/common/deiutil
+                        ${MSP_INCLUDE_DIRS}/common/dtcc
+                        ${MSP_INCLUDE_DIRS}/common/csm)
+  set(LIBS_OK "YES")
+  FIND_MSP_LIBRARY(LIBS_OK MSPPointExtractionService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPSensorModelService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPSourceSelectionService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPCovarianceService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPSupportDataService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPTerrainService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPCCSUtils)
+  FIND_MSP_LIBRARY(LIBS_OK MSPCoordinateConversionService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPOutputMethodService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPasdetre)
+  FIND_MSP_LIBRARY(LIBS_OK MSPcoordconverter)
+  FIND_MSP_LIBRARY(LIBS_OK MSPcsisd)
+  FIND_MSP_LIBRARY(LIBS_OK MSPcsm)
+  FIND_MSP_LIBRARY(LIBS_OK MSPcsmutil)
+  FIND_MSP_LIBRARY(LIBS_OK MSPdtcc)
+  FIND_MSP_LIBRARY(LIBS_OK MSPlas)
+  FIND_MSP_LIBRARY(LIBS_OK MSPgeometry)
+  FIND_MSP_LIBRARY(LIBS_OK MSPmath)
+  FIND_MSP_LIBRARY(LIBS_OK MSPnitf)
+  FIND_MSP_LIBRARY(LIBS_OK MSPntmtre)
+  FIND_MSP_LIBRARY(LIBS_OK MSPrage)
+  FIND_MSP_LIBRARY(LIBS_OK MSPRageServiceUtils)
+  FIND_MSP_LIBRARY(LIBS_OK MSPrageutilities)
+  FIND_MSP_LIBRARY(LIBS_OK MSPSScovmodel)
+  FIND_MSP_LIBRARY(LIBS_OK MSPSSrutil)
+  FIND_MSP_LIBRARY(LIBS_OK MSPutilities)
+  FIND_MSP_LIBRARY(LIBS_OK CSM_PCAPI)
+  FIND_MSP_LIBRARY(LIBS_OK MSPrsme)
+  FIND_MSP_LIBRARY(LIBS_OK MSPRsmGeneratorService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPdei)
+  FIND_MSP_LIBRARY(LIBS_OK MSPrsmg)
+  FIND_MSP_LIBRARY(LIBS_OK MSPDEIUtil)
+  FIND_MSP_LIBRARY(LIBS_OK MSPrutil)
+  FIND_MSP_LIBRARY(LIBS_OK MSPSensorSpecificService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPImagingGeometryService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPjson)
+  FIND_MSP_LIBRARY(LIBS_OK MSPmens)
+  FIND_MSP_LIBRARY(LIBS_OK MSPTerrainService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPMensurationService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPMensurationSessionRecordService)
+  FIND_MSP_LIBRARY(LIBS_OK MSPwriteRsmNitf)
+  FIND_MSP_LIBRARY(LIBS_OK MSPMSPVersionUtils)
+  FIND_MSP_LIBRARY(LIBS_OK MSPmtdCommon)
+  FIND_MSP_LIBRARY(LIBS_OK pthread )
+  FIND_MSP_LIBRARY(LIBS_OK dl  )
 
+  if( LIBS_OK )
+    set(MSP_FOUND "YES")
+    message("-- MSP_INCLUDE_DIRS = ${MSP_INCLUDE_DIRS}")
+    message("-- MSP_LIBRARIES = ${MSP_LIBRARIES}")
+  endif()
 
-MESSAGE("MSP_HOME = $ENV{MSP_HOME}")
-
-find_library(MSP_LIBRARY43 NAMES MSPPointExtractionService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY43})
-
-find_library(MSP_LIBRARY24 NAMES MSPSensorModelService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY24})
-
-find_library(MSP_LIBRARY28 NAMES MSPSourceSelectionService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY28})
-
-find_library(MSP_LIBRARY11 NAMES MSPCovarianceService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY11})
-
-find_library(MSP_LIBRARY34 NAMES MSPSupportDataService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY34})
-
-find_library(MSP_LIBRARY36 NAMES MSPTerrainService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY36})
-
-find_library(MSP_LIBRARY05 NAMES MSPCCSUtils PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY05})
-
-find_library(MSP_LIBRARY09 NAMES MSPCoordinateConversionService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY09})
-
-find_library(MSP_LIBRARY06 NAMES MSPOutputMethodService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY06})
-
-find_library(MSP_LIBRARY03 NAMES MSPasdetre PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY03})
-
-find_library(MSP_LIBRARY07 NAMES MSPcoordconverter PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY07})
-
-find_library(MSP_LIBRARY13 NAMES MSPcsisd PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY13})
-
-find_library(MSP_LIBRARY15 NAMES MSPcsm PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY15})
-
-find_library(MSP_LIBRARY17 NAMES MSPcsmutil PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY17})
-
-find_library(MSP_LIBRARY23 NAMES MSPdtcc PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY23})
-
-find_library(MSP_LIBRARY31 NAMES MSPlas PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY31})
-
-find_library(MSP_LIBRARY25 NAMES MSPgeometry PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY25})
-
-find_library(MSP_LIBRARY33 NAMES MSPmath PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY33})
-
-find_library(MSP_LIBRARY02 NAMES MSPnitf PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY02})
-
-find_library(MSP_LIBRARY04 NAMES MSPntmtre PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY04})
-
-find_library(MSP_LIBRARY12 NAMES MSPrage PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY12})
-
-find_library(MSP_LIBRARY10 NAMES MSPRageServiceUtils PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY10})
-
-find_library(MSP_LIBRARY14 NAMES MSPrageutilities PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY14})
-
-find_library(MSP_LIBRARY30 NAMES MSPSScovmodel PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY30})
-
-find_library(MSP_LIBRARY32 NAMES MSPSSrutil PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY32})
-
-find_library(MSP_LIBRARY38 NAMES MSPutilities PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY38})
-
-find_library(MSP_LIBRARY01 NAMES CSM_PCAPI PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY01})
-
-find_library(MSP_LIBRARY16 NAMES MSPrsme PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY16})
-
-find_library(MSP_LIBRARY18 NAMES MSPRsmGeneratorService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY18})
-
-find_library(MSP_LIBRARY19 NAMES MSPdei PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY19})
-
-find_library(MSP_LIBRARY20 NAMES MSPrsmg PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY20})
-
-find_library(MSP_LIBRARY21 NAMES MSPDEIUtil PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY21})
-
-find_library(MSP_LIBRARY22 NAMES MSPrutil PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY22})
-
-find_library(MSP_LIBRARY26 NAMES MSPSensorSpecificService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY26})
-
-find_library(MSP_LIBRARY27 NAMES MSPImagingGeometryService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY27})
-
-find_library(MSP_LIBRARY29 NAMES MSPjson PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY29})
-
-find_library(MSP_LIBRARY35 NAMES MSPmens PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY35})
-
-find_library(MSP_LIBRARY36 NAMES MSPTerrainService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY36})
-
-find_library(MSP_LIBRARY37 NAMES MSPMensurationService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY37})
-
-find_library(MSP_LIBRARY39 NAMES MSPMensurationSessionRecordService PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY39})
-
-find_library(MSP_LIBRARY40 NAMES MSPwriteRsmNitf PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY40})
-
-find_library(MSP_LIBRARY41 NAMES MSPMSPVersionUtils PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY41})
-
-find_library(MSP_LIBRARY42 NAMES MSPmtdCommon PATHS /usr/local/msp-1.5/ToolKit/lib $ENV{MSP_HOME}/lib ${OSSIM_DEPENDENCIES}/lib ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX} )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY42})
-
-find_library(MSP_LIBRARY00 NAMES pthread )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARY00})
-
-find_library(MSP_LIBRARYDL NAMES dl  )
-set (MSP_LIBRARIES ${MSP_LIBRARIES} ${MSP_LIBRARYDL})
-
-
-#---
-# This function sets MSP_FOUND if variables are valid.
-#--- 
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args( MSP DEFAULT_MSG 
-                                   MSP_LIBRARIES 
-                                   MSP_INCLUDE_DIRS )
-
-if(NOT MSP_FOUND)
-   if( NOT MSP_FIND_QUIETLY )
-      message( WARNING "Could not find MSP" )
-   endif( NOT MSP_FIND_QUIETLY )
-endif(NOT MSP_FOUND)
-
-#if( NOT MSP_FIND_QUIETLY )
-#   message( STATUS "MSP_INCLUDE_DIRS=${MSP_INCLUDE_DIRS}" )
-#   message( STATUS "MSP_LIBRARIES=${MSP_LIBRARIES}" )
-#endif( NOT MSP_FIND_QUIETLY )
+endif()
 
 mark_as_advanced(MSP_INCLUDE_DIRS MSP_LIBRARIES)
+

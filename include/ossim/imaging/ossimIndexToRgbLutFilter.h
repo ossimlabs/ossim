@@ -107,6 +107,8 @@ public:
 
    ossimIndexToRgbLutFilter();
 
+   virtual ~ossimIndexToRgbLutFilter();
+
    virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& origin,
                                                ossim_uint32 resLevel=0);
    
@@ -147,8 +149,6 @@ public:
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=NULL);
 
 protected:
-   virtual ~ossimIndexToRgbLutFilter();
-
    /**
     * Called on first getTile, will initialize all data needed.
     */

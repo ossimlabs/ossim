@@ -441,8 +441,9 @@ public:
 
    /**
     * @return Returns the angle to "up is up" in decimal degrees, 0.0 if image
-    * is not affected by elevation, ossim::nan on error.
+    * is not affected by elevation, ossim::nan on error.  
     */
+   ossim_float64 upIsUpAngle(const ossimDpt&) const;
    ossim_float64 upIsUpAngle() const;
 
    /**

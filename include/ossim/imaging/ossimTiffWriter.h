@@ -28,7 +28,9 @@ public:
 
    ossimTiffWriter();
       
-   enum UnitType
+   virtual ~ossimTiffWriter();
+
+  enum UnitType
    {
       UNDEFINED                    =     0,
       LINEAR_METER                 =  9001,
@@ -148,8 +150,6 @@ public:
    static void dumpTileToFile(ossimRefPtr<ossimImageData> t,  const ossimFilename& f);
 
 protected:
-   virtual ~ossimTiffWriter();
-   
    virtual bool writeFile();
 
    /**

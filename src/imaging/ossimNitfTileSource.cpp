@@ -175,14 +175,17 @@ bool ossimNitfTileSource::open()
    
    theErrorStatus = ossimErrorCodes::OSSIM_OK;
 
-   if ( parseFile() )
-   {
-      result = allocate();
-   }
-   if (result)
-   {
-      completeOpen();
-   }
+   std::shared_ptr<ossim::istream> nitfStream= ossim::StreamFactoryRegistry::instance()->createIstream(getFilename().c_str());
+
+   result = open(nitfStream, getFilename().c_str());
+   // if ( parseFile() )
+   // {
+   //    result = allocate();
+   // }
+   // if (result)
+   // {
+   //    completeOpen();
+   // }
    
    return result;
 }

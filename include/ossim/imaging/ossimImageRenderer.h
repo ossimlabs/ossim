@@ -31,6 +31,8 @@ public:
    ossimImageRenderer(ossimImageSource* inputSource,
                       ossimImageViewTransform* imageViewTrans = NULL);
 
+   virtual ~ossimImageRenderer();
+
    virtual ossimString getLongName()  const;
    virtual ossimString getShortName() const;
 
@@ -150,8 +152,6 @@ public:
 
    
 protected:
-   virtual ~ossimImageRenderer();
-
 private:
    
    class ossimRendererSubRectInfo
