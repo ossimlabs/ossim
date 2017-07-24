@@ -145,7 +145,7 @@ bool ossimTilingPoly::loadState(const ossimKeywordlist& kwl,
 
 bool ossimTilingPoly::nextFeature()
 {
-   if (m_exteriorCut == 0)
+   if (!m_exteriorCut)
    {
       m_exteriorCut = new ossimGeoPolyCutter;
       m_exteriorCut->setView(theMapProjection.get());
@@ -159,7 +159,7 @@ bool ossimTilingPoly::nextFeature()
       {
          if (m_features[tileId].m_polyType == ossimGeoAnnotationPolyObject::OSSIM_POLY_INTERIOR_RING)
          {
-            if (m_interiorCut == 0)
+            if (!m_interiorCut)
             {
                m_interiorCut = new ossimGeoPolyCutter;
                m_interiorCut->setView(theMapProjection.get());
@@ -187,7 +187,7 @@ bool ossimTilingPoly::nextFeature()
             std::vector<ossimGeoPolygon> holePolys = geoPoly.getHoleList();
             if (holePolys.size() > 0)
             {
-               if (m_interiorCut == 0)
+               if (!m_interiorCut)
                {
                   m_interiorCut = new ossimGeoPolyCutter;
                   m_interiorCut->setView(theMapProjection.get());

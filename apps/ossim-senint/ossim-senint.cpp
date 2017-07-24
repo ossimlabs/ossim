@@ -261,7 +261,7 @@ int main(int argc, char *argv[])
       model[1] = PTR_CAST(ossimSensorModel,
          ossimSensorModelFactory::instance()->createProjection(inputFile[1],0));
 
-      if (model[1] == NULL)
+      if (!model[1])
       {
          std::cout << " loadState 2 Failed"<<std::endl;
          return 0;

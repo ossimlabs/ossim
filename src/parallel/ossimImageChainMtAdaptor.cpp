@@ -190,7 +190,7 @@ bool ossimImageChainMtAdaptor::replicate()
       {
          // Fetch a handler from the chain and wrap it with a handler adaptor:
          handler = visitor.getObjectAs<ossimImageHandler>(handler_idx++);
-         if (handler == NULL)
+         if (!handler)
             break; // Only exit point of while loop
          
          handler_adaptor = new ossimImageHandlerMtAdaptor(handler.get(), d_useCache, d_cacheTileSize);
@@ -347,7 +347,7 @@ bool ossimImageChainMtAdaptor::loadState(const ossimKeywordlist& kwl, const char
       candidate = visitor.getObject();
       m_chainContainers[i]->makeUniqueIds();
       ossimRefPtr<ossimImageSource> clone_source = dynamic_cast<ossimImageSource*>(candidate);
-      if (clone_source == NULL)
+      if (!clone_source)
          return false;
       m_clones.push_back(clone_source);
    }

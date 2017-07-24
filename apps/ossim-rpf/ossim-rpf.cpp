@@ -187,9 +187,8 @@ void printFrameList( const ossimFilename& imageFile,
 {
    // Tell the instance to skip the empty check and open 
    // the file no matter if the frame images are there or not.
-   ossimRefPtr<ossimCibCadrgTileSource> pRpf = 
-      new ossimCibCadrgTileSource();
-   if ( pRpf != 0 )
+   ossimRefPtr<ossimCibCadrgTileSource> pRpf = new ossimCibCadrgTileSource();
+   if ( pRpf )
    {
       if( pRpf->isOpen() )
       {
