@@ -402,7 +402,6 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
             m_inputStream.reset();
             return out;
          }
-
          // Get the array size in bytes.
          arraySizeInBytes = getArraySizeInBytes(count, type);
          if (arraySizeInBytes == 0)
