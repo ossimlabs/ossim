@@ -1276,16 +1276,20 @@ bool ossimPolygon::shrink(ossimPolygon &dest, double inset) const
    ossimDpt pt;
    
    //don't let people shrink themselves, that isn't going to work
-   if(&dest==this) return false;
+   if (&dest==this)
+      return false;
 
    dest.clear();
-   for(int i=0;i<numpts;i++) {
+   for(int i=0;i<numpts;i++)
+   {
       fitCircleInsideVertex(pt,i,inset);
       dest.addPoint(pt);
    }
-   if(isPolyWithin(dest)) {
+   if(isPolyWithin(dest))
+   {
       return true;
-   } else {
+   } else
+   {
       //return an empty polygon
       dest=ossimPolygon();
       return false;

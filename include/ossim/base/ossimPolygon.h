@@ -183,6 +183,11 @@ public:
    void resize(ossim_uint32 newSize);
 
    /**
+   * METHOD: remove()
+   * Removes the vertex from the polygon. */
+   void removeVertex(int vertex);
+
+   /**
     * METHOD: print()
     */
    void print(ostream& os) const;
@@ -213,12 +218,6 @@ protected:
     */
    bool shrink(ossimPolygon &dest, double inset) const;
    
-   /**
-   * METHOD: remove()
-   * Removes the vertex from the polygon.
-
-    */
-   void removeVertex(int vertex);
    /**
    * METHOD: removeSmallestContributingVertex()
    * Removes the vertex that contributes the smallest area to the polygon.
