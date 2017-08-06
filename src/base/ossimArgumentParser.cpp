@@ -184,7 +184,7 @@ ossimArgumentParser::ossimArgumentParser(const ossimString& commandLine):
 {
    vector<ossimString> args = commandLine.split(" ", true);
    *theArgc = (int)args.size();
-   if (theArgc > 0)
+   if (*theArgc > 0)
    {
       theArgv = new char* [*theArgc];
       for (size_t i=0; i<args.size(); i++)
@@ -211,7 +211,7 @@ ossimArgumentParser::~ossimArgumentParser()
 
 void ossimArgumentParser::initialize(int* argc, const char **argv)
 {
-   if(argc > 0) delete (theArgv);
+   if(*argc > 0) delete (theArgv);
    theArgc = argc;
    theArgv = new char*[*argc];
    for(int i=0;i<*argc;i++)
