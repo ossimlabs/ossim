@@ -40,6 +40,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/tcp.h>
+#include <netinet/in.h>
 #endif
 
 
@@ -168,7 +169,7 @@ void ossimToolServer::initSocket(const char* portid)
    if (setsockopt(m_svrsockfd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes) == -1)
       error("Error on setsockopt() call");
 
-#ifdef __APPLE__
+#if defined (__APPLE__) || defined(__FreeBSD__)
    int bindResult = ::bind(m_svrsockfd, server_info->ai_addr, server_info->ai_addrlen);
 #else
    int bindResult = bind(m_svrsockfd, server_info->ai_addr, server_info->ai_addrlen);
