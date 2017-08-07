@@ -1,4 +1,4 @@
-//----------------------------------------------------------------------------
+//---
 //
 // File: ossimLasReader.cpp
 //
@@ -10,7 +10,7 @@
 //
 // Description: OSSIM LAS LIDAR reader.
 //
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #include <ossim/imaging/ossimLasReader.h>
@@ -208,8 +208,6 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
       const ossim_int32 TILE_WIDTH  = static_cast<ossim_int32>(TILE_RECT.width());
       const ossim_int32 TILE_SIZE   = static_cast<ossim_int32>(TILE_RECT.area());
 
-      const ossim_uint16 ENTRY = m_entry;
-
       // Get the scale for this resLevel:
       ossimDpt scale;
       getScale(scale, resLevel);
@@ -265,33 +263,33 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
 
          //if ( lasPtRec->getReturnNumber() == ENTRY )
          //{
-            lasPt.x = lasPtRec->getX() * SCALE_X + OFFSET_X;
-            lasPt.y = lasPtRec->getY() * SCALE_Y + OFFSET_Y;
-            if ( m_unitConverter )
-            {
-               convertToMeters(lasPt.x);
-               convertToMeters(lasPt.y);
-            }
-            if ( PROJ_RECT.pointWithin( lasPt ) )
-            {
-               // Compute the bucket index:
-               ossim_int32 line = static_cast<ossim_int32>((UL_PROG_PT.y - lasPt.y) / scale.y);
-               ossim_int32 samp = static_cast<ossim_int32>((lasPt.x - UL_PROG_PT.x) / scale.x );
-               ossim_int32 bucketIndex = line * TILE_WIDTH + samp;
+         lasPt.x = lasPtRec->getX() * SCALE_X + OFFSET_X;
+         lasPt.y = lasPtRec->getY() * SCALE_Y + OFFSET_Y;
+         if ( m_unitConverter )
+         {
+            convertToMeters(lasPt.x);
+            convertToMeters(lasPt.y);
+         }
+         if ( PROJ_RECT.pointWithin( lasPt ) )
+         {
+            // Compute the bucket index:
+            ossim_int32 line = static_cast<ossim_int32>((UL_PROG_PT.y - lasPt.y) / scale.y);
+            ossim_int32 samp = static_cast<ossim_int32>((lasPt.x - UL_PROG_PT.x) / scale.x );
+            ossim_int32 bucketIndex = line * TILE_WIDTH + samp;
                
-               // Range check and add if in there.
-               if ( ( bucketIndex >= 0 ) && ( bucketIndex < TILE_SIZE ) )
-               {
-                  ossim_float64 z = lasPtRec->getZ() * SCALE_Z + OFFSET_Z;
-                  if (  m_unitConverter ) convertToMeters(z);
-                  bucket[bucketIndex].add( z ); 
-        bucket[bucketIndex].setRed(lasPtRec->getRed());
-        bucket[bucketIndex].setGreen(lasPtRec->getGreen());
-        bucket[bucketIndex].setBlue(lasPtRec->getBlue());
-        bucket[bucketIndex].setIntensity(lasPtRec->getIntensity());
+            // Range check and add if in there.
+            if ( ( bucketIndex >= 0 ) && ( bucketIndex < TILE_SIZE ) )
+            {
+               ossim_float64 z = lasPtRec->getZ() * SCALE_Z + OFFSET_Z;
+               if (  m_unitConverter ) convertToMeters(z);
+               bucket[bucketIndex].add( z ); 
+               bucket[bucketIndex].setRed(lasPtRec->getRed());
+               bucket[bucketIndex].setGreen(lasPtRec->getGreen());
+               bucket[bucketIndex].setBlue(lasPtRec->getBlue());
+               bucket[bucketIndex].setIntensity(lasPtRec->getIntensity());
 
-               }
             }
+         }
          //}
          if ( m_str.eof() ) break;
       }
@@ -307,37 +305,37 @@ bool ossimLasReader::getTile(ossimImageData* result, ossim_uint32 resLevel)
       //ossim_float32* buf = result->getFloatBuf(); // Tile buffer to fill.
       if(m_entry == 1)
       {
-        ossim_uint32 BANDS = getNumberOfOutputBands();
-        std::vector<ossim_uint16> tempBuf(TILE_SIZE * BANDS);
-   ossim_uint16* buffer = &tempBuf.front();
-   for (ossim_int32 band = 0; band < BANDS; ++band)
-   {
-     for (ossim_int32 i = 0; i < TILE_SIZE; ++i)
-     {
-       if(band == 0) buffer[i] = bucket[i].getRed();
-       if(band == 1) buffer[i] = bucket[i].getGreen();
-       if(band == 2) buffer[i] = bucket[i].getBlue();
-     }
-        }
-   result->loadTile(buffer, TILE_RECT, TILE_RECT, OSSIM_BIP);
+         const ossim_uint32 BANDS = getNumberOfOutputBands();
+         std::vector<ossim_uint16> tempBuf(TILE_SIZE * BANDS);
+         ossim_uint16* buffer = &tempBuf.front();
+         for (ossim_uint32 band = 0; band < BANDS; ++band)
+         {
+            for (ossim_int32 i = 0; i < TILE_SIZE; ++i)
+            {
+               if(band == 0) buffer[i] = bucket[i].getRed();
+               if(band == 1) buffer[i] = bucket[i].getGreen();
+               if(band == 2) buffer[i] = bucket[i].getBlue();
+            }
+         }
+         result->loadTile(buffer, TILE_RECT, TILE_RECT, OSSIM_BIP);
       }
       else if (m_entry == 2)
       {
-   ossim_uint16* buf = result->getUshortBuf();
-   for (ossim_int32 i = 0; i < TILE_SIZE; ++i)
-   {
-     buf[i] = bucket[i].getIntensity();
-   }
+         ossim_uint16* buf = result->getUshortBuf();
+         for (ossim_int32 i = 0; i < TILE_SIZE; ++i)
+         {
+            buf[i] = bucket[i].getIntensity();
+         }
       }
       else
       {
-   ossim_float32* buf = result->getFloatBuf();
+         ossim_float32* buf = result->getFloatBuf();
       
-        // Fill the tile.  Currently no band loop:
-        for (ossim_int32 i = 0; i < TILE_SIZE; ++i)
-        {
-           buf[i] = bucket[i].getValue();
-        }
+         // Fill the tile.  Currently no band loop:
+         for (ossim_int32 i = 0; i < TILE_SIZE; ++i)
+         {
+            buf[i] = bucket[i].getValue();
+         }
       }
 
       // Revalidate.
@@ -690,13 +688,17 @@ bool ossimLasReader::init()
          }
       }
 
-      // There is nothing we can do if parseVarRecords fails.
-      // VAR record is optional, so guess the projection
-      // Moved to setCurrentEntry
-      //if ( result )
-      //{
-      //   initTile();
-      //}
+      if ( !result )
+      {
+         // Check for option var record.
+         result = parseVarRecords();
+         
+         if ( !result )
+         {
+            // Checks for external FGDC text file.
+            result = initFromExternalMetadata();
+         }
+      }
    }
    
    return result;
