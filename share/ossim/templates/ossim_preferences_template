@@ -337,7 +337,7 @@ plugin0.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.s
 // plugin0.options:
 
 // NTM plugin, alway make second plugin:
-plugin1.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
+plugin1.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
 plugin1.options:
 
 plugin3.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
