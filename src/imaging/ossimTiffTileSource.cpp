@@ -132,6 +132,12 @@ toff_t tiff_Seek(thandle_t st,toff_t pos, int whence)
    TiffStreamAdaptor* streamAdaptor = (TiffStreamAdaptor*)st;
    toff_t result = -1;
    std::ios_base::seekdir seekDir = std::ios::beg;
+
+   // Because we are adapting, on each seek we need to clear our previous error so 
+   // we can continue on.  Do not want the stream to stay in a failed state.
+   //
+   streamAdaptor->m_tiffStream->clear();
+   
 // std::cout << "SIZE OF POS =============== " << sizeof(toff_t) << std::endl;
 // std::cout << "tiff_Seek POS =============== " << pos << std::endl;
    //std::cout<< "CALLING THE tiff_Seek!!!!!!!!!!!!!!\n" << std::endl;

@@ -89,16 +89,6 @@ if ( OPENCV_INCLUDE_DIR AND
      OPENCV_PHOTO_LIBRARY AND
      OPENCV_VIDEO_LIBRARY)
    set(OPENCV_FOUND "YES")
-   set(OPENCV_LIBRARIES ${OPENCV_OBJDETECT_LIBRARY} 
-                        ${OPENCV_CORE_LIBRARY} 
-                        ${OPENCV_FEATURES2D_LIBRARY} 
-                        ${OPENCV_XFEATURES2D_LIBRARY} 
-                        ${OPENCV_FLANN_LIBRARY} 
-                        ${OPENCV_HIGHGUI_LIBRARY} 
-                        ${OPENCV_IMGPROC_LIBRARY} 
-                        ${OPENCV_ML_LIBRARY} 
-                        ${OPENCV_PHOTO_LIBRARY}
-                        ${OPENCV_VIDEO_LIBRARY})
 else()
    message( WARNING "Could not find all OpenCV libraries. Check the list for NOTFOUND:" )
    message( "${OPENCV_LIBRARIES}" )
