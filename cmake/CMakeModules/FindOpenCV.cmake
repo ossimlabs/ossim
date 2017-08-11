@@ -33,7 +33,8 @@ find_path(OPENCV_INCLUDE_DIR opencv/cv.hpp
           PATHS
           $ENV{OPENCV_HOME}/include
           /usr/include
-          /usr/local/include)
+          /usr/local/include
+          /usr/local/opencv-3.2)
 
 macro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
 
@@ -43,7 +44,8 @@ macro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
       $ENV{OPENCV_HOME}/lib   
       /usr/lib64
       /usr/lib
-      /usr/local/lib)
+      /usr/local/lib
+      /usr/local/opencv-3.2)
 
 endmacro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
 
