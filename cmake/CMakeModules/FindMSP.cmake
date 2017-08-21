@@ -96,8 +96,8 @@ if (MSP_INCLUDE_DIRS)
 
   if( LIBS_OK )
     set(MSP_FOUND "YES")
-    message("-- MSP_INCLUDE_DIRS = ${MSP_INCLUDE_DIRS}")
-    message("-- MSP_LIBRARIES = ${MSP_LIBRARIES}")
+    #message("-- MSP_INCLUDE_DIRS = ${MSP_INCLUDE_DIRS}")
+    #message("-- MSP_LIBRARIES = ${MSP_LIBRARIES}")
   endif()
 
 endif()

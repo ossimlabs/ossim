@@ -1086,7 +1086,10 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain( ossimIrect& aoi
       // the ossimImageGeometry::worldToLocal call for a geographic projection to handle wrapping
       // accross the date line.
       //---
-      m_geom->setImageSize( aoi.size() );
+      if(m_geom.valid())
+      {
+        m_geom->setImageSize( aoi.size() );
+      }
 
       if ( hasThumbnailResolution() )
       {
@@ -1774,8 +1777,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
    if ( file.size() )
    {
       // ossimFilename::exists() currently does not work with s3 url's.
-      // if ( file.exists() )
-      if ( 1 )
+      if ( file.exists() )
       {
          ic = new ossimSingleImageChain;
          if ( ic->open( file ) )
@@ -1927,6 +1929,10 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
                   ic->addGeoPolyCutterPolygon(polygon);
                }
             }
+         }
+         else
+         {
+           ic = 0;
          }
       }
    }
