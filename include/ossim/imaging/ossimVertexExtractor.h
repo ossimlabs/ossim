@@ -109,7 +109,7 @@ public:
          return (object&& PTR_CAST(ossimImageSource, object));
       }
 
-   vector<ossimIpt> getVertices() { return theVertice; }
+   const vector<ossimIpt>& getVertices() const { return theVertice; }
    
 protected:
    virtual ~ossimVertexExtractor();
@@ -149,7 +149,7 @@ protected:
    ossim_int32*     theRightEdge;
 
    //! Disallow copy constructor and operator=
-   ossimVertexExtractor(const ossimVertexExtractor&) {}
+   ossimVertexExtractor(const ossimVertexExtractor&) : theLeftEdge(0), theRightEdge(0) {}
    const ossimVertexExtractor& operator=(const ossimVertexExtractor& rhs)
       {return rhs;}
 

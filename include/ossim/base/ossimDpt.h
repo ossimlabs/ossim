@@ -101,7 +101,11 @@ public:
       { return ossimDpt(d*x, d*y); }
    ossimDpt operator/(const double& d) const
       { return ossimDpt(x/d, y/d); }
-  ossim_float64 operator*(const ossimDpt& pt)const
+   const ossimDpt& operator*=(const double& d)
+      { x*=d; y*=d; return *this; }
+
+   /** Dot product */
+   ossim_float64 operator*(const ossimDpt& pt)const
       { return (x*pt.x+y*pt.y); }
 
    std::ostream& print(std::ostream& os, ossim_uint32 precision=15) const;
