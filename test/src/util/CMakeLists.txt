@@ -1,0 +1,7 @@
+# $Id: CMakeLists.txt 23496 2015-08-28 15:26:18Z okramer $
+
+OSSIM_SETUP_APPLICATION(ossim-chipper-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-chipper-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-info-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-info-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-viewshed-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-viewshed-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-tools-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-tools-test.cpp)
+

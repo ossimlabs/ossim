@@ -439,7 +439,7 @@ bool ossimMollweidProjection::operator==(const ossimProjection& proj) const
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimMollweidProjection* p = PTR_CAST(ossimMollweidProjection, &proj);
+   const ossimMollweidProjection* p = dynamic_cast<const ossimMollweidProjection*>(&proj);
    if (!p) return false;
 
    if (!ossim::almostEqual(Moll_Origin_Long,p->Moll_Origin_Long)) return false;

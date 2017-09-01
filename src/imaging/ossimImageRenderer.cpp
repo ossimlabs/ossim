@@ -1,13 +1,11 @@
 //*******************************************************************
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimImageRenderer.cpp 23564 2015-10-02 14:12:25Z dburken $
+//  $Id: ossimImageRenderer.cpp 23663 2015-12-11 21:10:54Z dburken $
 
 #include <ossim/imaging/ossimImageRenderer.h>
 #include <ossim/base/ossimDpt.h>
@@ -16,6 +14,7 @@
 #include <ossim/base/ossimPolyArea2d.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimTrace.h>
+#include <ossim/base/ossim2dBilinearTransform.h>
 #include <ossim/base/ossimProcessProgressEvent.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
@@ -36,10 +35,11 @@
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <iostream>
-using namespace std;
+#include <stack>
+// using namespace std;
 
 #ifdef OSSIM_ID_ENABLED
-static const char OSSIM_ID[] = "$Id: ossimImageRenderer.cpp 23564 2015-10-02 14:12:25Z dburken $";
+static const char OSSIM_ID[] = "$Id: ossimImageRenderer.cpp 23663 2015-12-11 21:10:54Z dburken $";
 #endif
 
 static ossimTrace traceDebug("ossimImageRenderer:debug");
@@ -288,8 +288,11 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRe
   ossim_int32 h  = vrect.height();
   ossim_int32 w2 = w>>1;
   ossim_int32 h2 = h>>1;
-  
-  if((w2 <2)&&(h2<2))
+  if(!splitFlags)
+  {
+    return;
+  }
+  else if((w2 <2)&&(h2<2))
   {
     if(splitFlags)
     {
@@ -300,17 +303,24 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRe
       rect.m_viewBounds = m_viewBounds;
       rect.transformViewToImage();
 
-      if(rect.imageIsNan())
+      if(rect.imageHasNans())
       {
         if(rect.m_viewBounds->intersects(rect.getViewRect()))
         {
           result.push_back(rect);
         }
       }
-      else
-      {
-        result.push_back(rect);
-      }
+      // if(rect.imageIsNan())
+      // {
+      //   if(rect.m_viewBounds->intersects(rect.getViewRect()))
+      //   {
+      //     result.push_back(rect);
+      //   }
+      // }
+      // else
+      // {
+      //   result.push_back(rect);
+      // }
     }
   }
   // horizontal split if only the upper left and lower left 
@@ -335,7 +345,7 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRe
       splitVertical(result);
     }
   }
-  else if(splitFlags)//if((w>1)&&(h>1)&&(splitFlags))
+  else//if((w>1)&&(h>1)&&(splitFlags))
   {
     if((w<2)&&(h>1))
     {
@@ -376,7 +386,7 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::tooBig()const
 {
   ossimDrect vRect = getViewRect();
 
-  return ((vRect.width() > 64) || (vRect.height() > 64));
+  return ((vRect.width() > 32) || (vRect.height() > 32));
 }
 
 ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
@@ -384,11 +394,11 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
   ossim_uint16 result = SPLIT_NONE;
   ossimDrect vRect = getViewRect();
 
-  if(imageIsNan())
+  if(imageHasNans())
   {
     if(m_viewBounds->intersects(getViewRect()))
     {
-//      result = SPLIT_ALL;
+      result = SPLIT_ALL;
     }
     else
     {
@@ -423,32 +433,33 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
 */
   if(result != SPLIT_ALL)
   {
-    ossim_float64 sensitivityScale = m_ImageToViewScale.length();
-    //std::cout << sensitivityScale << std::endl;
-    if(sensitivityScale < 1.0) sensitivityScale = 1.0/sensitivityScale;
+    ossim_float64 bias = m_ImageToViewScale.length();
+    if(bias < 1.0) bias = 1.0/bias;
+    bias = std::sqrt(bias);
 
+    if(bias < 1) bias = 1.0;
 
-     // if((m_ulRoundTripError.length() > sensitivityScale)||
-     //    (m_urRoundTripError.length() > sensitivityScale)||
-     //    (m_lrRoundTripError.length() > sensitivityScale)||
-     //    (m_llRoundTripError.length() > sensitivityScale))
+     // if((m_ulRoundTripError.length() > bias)||
+     //    (m_urRoundTripError.length() > bias)||
+     //    (m_lrRoundTripError.length() > bias)||
+     //    (m_llRoundTripError.length() > bias))
      // {
-     //   std::cout << "________________\n";
+       // std::cout << "________________\n";
 
-     //   std::cout << "Sens:  " << sensitivityScale << "\n"
-     //             << "View:  " << getViewRect() << "\n"
-     //             << "UL:    " << m_ulRoundTripError.length() << "\n"
-     //             << "UR:   " << m_urRoundTripError.length() << "\n"
-     //             << "LR:   " << m_lrRoundTripError.length() << "\n"
-     //             << "LL:   " << m_llRoundTripError.length() << "\n";
-     // }
+       // std::cout << "Bias:  " << bias << "\n"
+       //           << "View:  " << getViewRect() << "\n"
+       //           << "UL:    " << m_ulRoundTripError.length() << "\n"
+       //           << "UR:   " << m_urRoundTripError.length() << "\n"
+       //           << "LR:   " << m_lrRoundTripError.length() << "\n"
+       //           << "LL:   " << m_llRoundTripError.length() << "\n";
+//     }
    // if(m_ulRoundTripError.length() > sensitivityScale) result |= UPPER_LEFT_SPLIT_FLAG;
    // if(m_urRoundTripError.length() > sensitivityScale) result |= UPPER_RIGHT_SPLIT_FLAG;
    // if(m_lrRoundTripError.length() > sensitivityScale) result |= LOWER_RIGHT_SPLIT_FLAG;
    // if(m_llRoundTripError.length() > sensitivityScale) result |= LOWER_LEFT_SPLIT_FLAG;
        // std::cout << result << " == " << SPLIT_ALL << "\n";
 
-    if((result!=SPLIT_ALL)&&!canBilinearInterpolate(sensitivityScale))
+    if((result!=SPLIT_ALL)&&!canBilinearInterpolate(bias))
     {
       // std::cout << "TESTING BILINEAR!!!!\n";
       result = SPLIT_ALL;
@@ -468,10 +479,8 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
 //  std::cout << "TRANSFORM VIEW TO IMAGE!!!!!!!!!!!!!!\n";
 
    ossimDrect vrect = getViewRect();
-   ossim_float64 w = vrect.width();
+   ossim_float64 w = vrect.width() - 1; // subtract 1 to prevent core dump in full-earth view rect
    ossim_float64 h = vrect.height();
-   // ossim_float64 w2 = w*0.5;
-   // ossim_float64 h2 = h*0.5;
 
    m_transform->viewToImage(m_Vul, m_Iul);
    m_transform->viewToImage(m_Vur, m_Iur);
@@ -480,14 +489,14 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
 
 //  m_ulRoundTripError = m_transform->getRoundTripErrorView(m_Vul);
 //  m_urRoundTripError = m_transform->getRoundTripErrorView(m_Vur);
-//  m_lrRoundTripError = m_transform->getRoundTripErrorView(m_Vlr);;
-//  m_llRoundTripError = m_transform->getRoundTripErrorView(m_Vll);;
+//  m_lrRoundTripError = m_transform->getRoundTripErrorView(m_Vlr);
+//  m_llRoundTripError = m_transform->getRoundTripErrorView(m_Vll);
 
 #if 1
-   m_VulScale = computeViewToImageScale(m_Vul, ossimDpt(w,h));
-   m_VurScale = computeViewToImageScale(m_Vur, ossimDpt(-w,h));
+   m_VulScale = computeViewToImageScale(m_Vul, ossimDpt( w, h));
+   m_VurScale = computeViewToImageScale(m_Vur, ossimDpt(-w, h));
    m_VlrScale = computeViewToImageScale(m_Vlr, ossimDpt(-w,-h));
-   m_VllScale = computeViewToImageScale(m_Vll, ossimDpt(w,-h));
+   m_VllScale = computeViewToImageScale(m_Vll, ossimDpt( w,-h));
 
    ossim_int32 n = 0;
    m_ViewToImageScale.x = 0.0;
@@ -513,23 +522,16 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
       m_ViewToImageScale += m_VllScale; 
       ++n;
    }
-
    if(!n)
    {
       m_ViewToImageScale.makeNan();
-      m_ImageToViewScale.makeNan();
    }
    else
    {
       m_ViewToImageScale.x/=n;
       m_ViewToImageScale.y/=n;
-
-      m_ImageToViewScale.x = 1.0/m_ViewToImageScale.x;
-      m_ImageToViewScale.y = 1.0/m_ViewToImageScale.y;
    }
 
-
-//std::cout << m_ViewToImageScale << std::endl;
 #else
    {
       m_ViewToImageScale = ossimDpt(1.0, 1.0);
@@ -554,33 +556,26 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
       double lengthViewP1P3 = deltaViewP1P3.length();//+1;
 
       if(lengthViewP1P2 > FLT_EPSILON)
-      {
          m_ViewToImageScale.x = averageHoriz/lengthViewP1P2;
-      }
       else
-      {
          m_ViewToImageScale.makeNan();
-      }
       if(lengthViewP1P3 > FLT_EPSILON)
-      {
          m_ViewToImageScale.y = averageVert/lengthViewP1P3;
-      }
       else
-      {
          m_ViewToImageScale.makeNan();
-      }
-
-      if(!m_ViewToImageScale.hasNans())
-      {
-         m_ImageToViewScale.x = 1.0/m_ViewToImageScale.x;
-         m_ImageToViewScale.y = 1.0/m_ViewToImageScale.y;
-      }
-      else
-      {
-         m_ImageToViewScale.makeNan();
-      }
    }
 #endif
+
+   //std::cout << m_ViewToImageScale << std::endl;
+   if(!m_ViewToImageScale.hasNans())
+   {
+      m_ImageToViewScale.x = 1.0/m_ViewToImageScale.x;
+      m_ImageToViewScale.y = 1.0/m_ViewToImageScale.y;
+   }
+   else
+   {
+      m_ImageToViewScale.makeNan();
+   }
 }
 
 ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::computeViewToImageScale(const ossimDpt& viewPt,
@@ -777,8 +772,27 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
     ossimDpt iUpper, iRight, iBottom, iLeft, iCenter;
     ossimDpt testUpper, testRight, testBottom, testLeft, testCenter;
 
+    ossim2dBilinearTransform viewToImageTransform(m_Vul, m_Vur, m_Vlr, m_Vll
+                                                 ,m_Iul, m_Iur, m_Ilr, m_Ill);
+
+//    std::cout << "vMid:  " << testMid << "\n";
+//    std::cout << "testMid:  " << testMid << "\n";
+//    std::cout << "testCenter:  " << testCenter << "\n";
+    
     getViewMids(vUpper, vRight, vBottom, vLeft, vCenter);
-    getImageMids(iUpper, iRight, iBottom, iLeft, iCenter);
+    
+    // do a bilinear transform of some test points
+    viewToImageTransform.forward(vUpper, iUpper);
+    viewToImageTransform.forward(vRight, iRight);
+    viewToImageTransform.forward(vBottom, iBottom);
+    viewToImageTransform.forward(vLeft, iLeft);
+    viewToImageTransform.forward(vCenter, iCenter);
+
+
+   // viewToImageTransform.forward(vMid, iTestMid);
+    //m_transform->viewToImage(vMid, testCenter);
+
+    //getImageMids(iUpper, iRight, iBottom, iLeft, iCenter);
     
     // get the model centers for the mid upper left right bottom
     m_transform->viewToImage(vCenter, testCenter);
@@ -820,13 +834,18 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
               (errorCheck3 < error)&&
               (errorCheck4 < error)&&
               (errorCheck5 < error));
-   // std::cout <<"__________________________\n"
-   //       << "ERROR1:" <<errorCheck1 << "\n" 
-   //       << "ERROR2:" <<errorCheck2 << "\n" 
-   //       << "ERROR3:" <<errorCheck3 << "\n" 
-   //       << "ERROR4:" <<errorCheck4 << "\n" 
-   //       << "ERROR5:" <<errorCheck5 << "\n"
-   //       << "SENS:  " << error <<  "\n"; 
+    // if(!result)
+    // {
+       // std::cout <<"__________________________\n"
+       //       << "ERROR1:" <<errorCheck1 << "\n" 
+       //       << "ERROR2:" <<errorCheck2 << "\n" 
+       //       << "ERROR3:" <<errorCheck3 << "\n" 
+       //       << "ERROR4:" <<errorCheck4 << "\n" 
+       //       << "ERROR5:" <<errorCheck5 << "\n"
+       //       << "SENS:  " << error <<  "\n"; 
+
+    //   std::cout << "Can't bilinear!!\n";
+    // }
 
 #else
     ossimDpt vUpper, vRight, vBottom, vLeft, vCenter;
@@ -915,10 +934,10 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
 }
 
 void ossimImageRenderer::ossimRendererSubRectInfo::getViewMids(ossimDpt& upperMid,
-				     ossimDpt& rightMid,
-				     ossimDpt& bottomMid,
-				     ossimDpt& leftMid,
-				     ossimDpt& center)const
+                 ossimDpt& rightMid,
+                 ossimDpt& bottomMid,
+                 ossimDpt& leftMid,
+                 ossimDpt& center)const
 {
   
   upperMid  = (m_Vul + m_Vur)*.5;
@@ -929,10 +948,10 @@ void ossimImageRenderer::ossimRendererSubRectInfo::getViewMids(ossimDpt& upperMi
 }
 
 void ossimImageRenderer::ossimRendererSubRectInfo::getImageMids(ossimDpt& upperMid,
-				      ossimDpt& rightMid,
-				      ossimDpt& bottomMid,
-				      ossimDpt& leftMid,
-				      ossimDpt& center)const
+                  ossimDpt& rightMid,
+                  ossimDpt& bottomMid,
+                  ossimDpt& leftMid,
+                  ossimDpt& center)const
 {
   if(imageHasNans())
   {
@@ -953,7 +972,7 @@ void ossimImageRenderer::ossimRendererSubRectInfo::getImageMids(ossimDpt& upperM
 }
 
 ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::getParametricCenter(const ossimDpt& ul, const ossimDpt& ur, 
-									   const ossimDpt& lr, const ossimDpt& ll)const
+                              const ossimDpt& lr, const ossimDpt& ll)const
 {
   ossimDpt top    = ur - ul;
   ossimDpt bottom = lr - ll;
@@ -981,9 +1000,9 @@ m_MaxRecursionLevel(5),
 m_AutoUpdateInputTransform(true),
 m_MaxLevelsToCompute(999999) // something large so it will always compute
 {
-    ossimViewInterface::theObject = this;
-    m_Resampler = new ossimFilterResampler();
-    m_ImageViewTransform = new ossimImageViewProjectionTransform;
+   ossimViewInterface::theObject = this;
+   m_Resampler = new ossimFilterResampler();
+   m_ImageViewTransform = new ossimImageViewProjectionTransform;
 }
 
 ossimImageRenderer::ossimImageRenderer(ossimImageSource* inputSource,
@@ -1026,7 +1045,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    const  ossimIrect& tileRect,
    ossim_uint32 resLevel)
 {
-  // std::cout << "_________________________\n";
+   // std::cout << "_________________________\n";
    static const char MODULE[] = "ossimImageRenderer::getTile";
    if(traceDebug())
    {
@@ -1084,7 +1103,9 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
       return m_BlankTile;
    }
 
-   if( !theInputConnection || !m_viewRect.intersects(tileRect) )
+   if( !theInputConnection || 
+       !m_viewRect.intersects(tileRect) ||
+       !m_viewArea.intersects(tileRect) )
    {
       if(traceDebug())
       {
@@ -1094,11 +1115,18 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
       return m_BlankTile;
    }
    
-   if(!m_Tile)
+   // drb - handled above...
+   // if(!m_Tile)
+   // {
+   //    return theInputConnection->getTile(tileRect, resLevel);
+   // }
+
+   // Check for identity transform:
+   if( m_ImageViewTransform->isIdentity() == true )
    {
       return theInputConnection->getTile(tileRect, resLevel);
    }
-
+   
    // long tw = m_Tile->getWidth();
    // long th = m_Tile->getHeight();
    
@@ -1137,6 +1165,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    subRectInfo.transformViewToImage();
 
    if((!m_viewArea.intersects(subRectInfo.getViewRect())))
+//   if((!m_viewRect.intersects(subRectInfo.getViewRect())))
    {
      return m_BlankTile;
    }
@@ -1153,7 +1182,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 //      return m_Tile;
 //   }
    recursiveResample(m_Tile, subRectInfo, 1);
-   
+  
    if(m_Tile.valid())
    {
       m_Tile->validate();
@@ -1168,16 +1197,67 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 
 void ossimImageRenderer::recursiveResample(ossimRefPtr<ossimImageData> outputData,
                                            const ossimRendererSubRectInfo& rectInfo,
-                                           ossim_uint32 level)
+                                           ossim_uint32 /* level */)
 {
+  // Removed recursion and just use the std::stack.
+  //
+  std::stack<ossimRendererSubRectInfo> rectStack;
+  rectStack.push(rectInfo);
+
+  while(!rectStack.empty())
+  {
+    ossimRendererSubRectInfo currentRectInfo = rectStack.top();
+    ossimIrect tempViewRect = currentRectInfo.getViewRect();
+    rectStack.pop();
+    if(m_viewArea.intersects(tempViewRect))
+    {
+      if(tempViewRect.width() <2 ||
+          tempViewRect.height() <2)
+      {
+          if(!currentRectInfo.imageHasNans())
+          {
+             fillTile(outputData,
+                      currentRectInfo);
+          }
+      }
+      else
+      {
+        ossim_uint32 idx = 0;
+        std::vector<ossimRendererSubRectInfo> splitRects;
+        currentRectInfo.splitView(splitRects);
+        if(!splitRects.empty())
+        {
+          for(idx = 0; idx < splitRects.size();++idx)
+          {
+            if(m_viewArea.intersects(splitRects[idx].getViewRect()))
+            {
+              rectStack.push(splitRects[idx]);
+            }
+            // recursiveResample(outputData,
+            //                   splitRects[idx],
+            //                   level + 1);
+          }
+        }
+        else
+        {
+          if(!currentRectInfo.imageHasNans())
+          {
+            fillTile(outputData,
+                    currentRectInfo);
+          }
+        }
+      }
+
+    }
+  }
+  #if 0
    ossimIrect tempViewRect = rectInfo.getViewRect();
-   //std::cout << rectInfo << std::endl;
    if(rectInfo.imageIsNan())
    {
-    if(!rectInfo.tooBig()) return;
+      return;
    } 
 
-  if(tempViewRect.width() <2 &&
+  if(tempViewRect.width() <2 ||
       tempViewRect.height() <2)
   {
       if(!rectInfo.imageHasNans())
@@ -1208,6 +1288,7 @@ void ossimImageRenderer::recursiveResample(ossimRefPtr<ossimImageData> outputDat
     fillTile(outputData,
             rectInfo);
   }
+  #endif
 }
 
 #define RSET_SEARCH_THRESHHOLD 0.1
@@ -1454,7 +1535,6 @@ void ossimImageRenderer::getBoundingRect(ossimIrect& rect, ossim_uint32 resLevel
    {
       rect.makeNan();
    }
-
 #if 0 /* Please leave for debug. */
    if(traceDebug())
    {
@@ -1467,104 +1547,131 @@ void ossimImageRenderer::getBoundingRect(ossimIrect& rect, ossim_uint32 resLevel
 
 void ossimImageRenderer::initializeBoundingRects()
 {
-   m_rectsDirty = true;
-
-   // Get the input bounding rect:
-   if ( theInputConnection )
+   m_rectsDirty      = true;
+   ossimImageViewProjectionTransform* ivpt = 
+                   dynamic_cast<ossimImageViewProjectionTransform*>(m_ImageViewTransform.get()); 
+   if(!theInputConnection||!m_ImageViewTransform.valid()) return;
+   m_inputR0Rect = theInputConnection->getBoundingRect(0);
+   if (!m_inputR0Rect.hasNans() )
    {
-      m_inputR0Rect = theInputConnection->getBoundingRect(0);
-   
-      if ( m_ImageViewTransform.valid() && !m_inputR0Rect.hasNans() )
-      {
-         // This will call ossim::round<int> on the dpt's.
-         m_viewRect = m_ImageViewTransform->getImageToViewBounds(m_inputR0Rect);
-         if ( m_viewRect.hasNans() == false )
+     if(ivpt&&ivpt->getImageGeometry()&&ivpt->getViewGeometry())
+     {
+         // Little complicated but instead of always setting the edge walk
+         // to a high number like 50 points per edge
+         // we will look at the image to view scale change
+         // and use that as a factor.  So as the image zooms out we
+         // need fewer points to estimate the edge.
+         //
+         // ossim_uint32 idx;
+         std::vector<ossimDrect> boundList;
+         ossimImageGeometry* igeom = ivpt->getImageGeometry(); // look at projected meters
+         ossimImageGeometry* vgeom = ivpt->getViewGeometry(); // look at projected meters
+         ossimDrect testRect;
+         igeom->getBoundingRect(testRect);
+         ossimDpt mpp = igeom->getMetersPerPixel();
+         ossimDpt vmpp = vgeom->getMetersPerPixel();
+         ossim_float64 scale = 1.0;
+         ossim_uint32 maxLen = ossim::max(testRect.width(), testRect.height());
+
+         // (GP March 2, 2017) determine goodMatch : test if we have either enough samples to closely match the post spacing 
+         //  or if we have at least half the number of pixels along the edge of an image
+         //
+         // This is hopefully to help avoid when using the polygon for intersection to not have
+         // bad intersection tests when zooming.  We might have to rethink it and implement
+         // this as a windowed edge walker.  So when zooming we create a polygon that 
+         // is denser for only what the view can see and not the entire image.  Basically interatively
+         // tesselate the input image model based on bounding volumes and then create a dense edge walker
+         // for what lies in the view at the given scale.  Too much to implement right now so we will cheet
+         // and take an easy way out for now.
+         // 
+
+         if(!mpp.hasNans()&&!vmpp.hasNans())
          {
-            // Clear the dirty flag:
-            m_rectsDirty = false;
+            scale = mpp.y/vmpp.y;
+            if(scale > 1.0) scale = 1.0; 
+         }  
+         ossim_float64 mppTest = mpp.y;
+         ossim_float64 divisor = mppTest; // default to 30 meter elevation
+         if(mppTest < 500 )
+         {
+            if(mppTest >= 45 )
+            {
+               divisor = 90; // 90 meters
+            }
          }
-      }
-      // now get a coarse estimate of the boundary poly
-      //
-      if(!m_inputR0Rect.hasNans())
-      {
-        ossimDpt uli = m_inputR0Rect.ul();
-        ossimDpt uri = m_inputR0Rect.ur();
-        ossimDpt lri = m_inputR0Rect.lr();
-        ossimDpt lli = m_inputR0Rect.ll();
-        ossim_int32 stepSize = 50;
+         else
+         {
+            divisor = 1000; // 1 kilometer
+         }
+         if(divisor < 30) divisor = 30.0;
 
-        std::vector<ossimDpt> poly;
 
-        ossimDpt deltaUpper = (uri-uli)*(1.0/stepSize);
-        ossimDpt deltaRight = (lri-uri)*(1.0/stepSize);
-        ossimDpt deltaLower = (lli-lri)*(1.0/stepSize);
-        ossimDpt deltaLeft  = (uli-lli)*(1.0/stepSize);
+         // now test to see if our edge walk is close to matching enough
+         // points for a good match.
+         //
+         ossim_uint32 maxEdgeSample = ossim::min(static_cast<ossim_uint32>(50), maxLen); 
+         if(maxEdgeSample < 1) maxEdgeSample = 1;
+         ossim_uint32 testEdgeSample = ossim::round<ossim_uint32>((maxLen*scale*mpp.y)/divisor);
 
-        ossimDpt p;
-        ossim_int32 idx = 0;
-        ossimDpt initialPoint= uli;
+         bool goodMatch = (testEdgeSample<=maxEdgeSample)||(testEdgeSample>=(maxLen>>1));
+         ossim_float64 steps = ossim::min(testEdgeSample, maxEdgeSample); 
 
-        for(idx = 0; idx < stepSize;++idx) 
-        {
-          m_ImageViewTransform->imageToView(initialPoint, p);
-          if(!p.hasNans())
-          {
-            poly.push_back(p);
-          }
-          initialPoint.x+=deltaUpper.x;
-          initialPoint.y+=deltaUpper.y;
-        }
-        
-        initialPoint= uri;
-        for(idx = 0; idx < stepSize;++idx) 
-        {
-          m_ImageViewTransform->imageToView(initialPoint, p);
-          if(!p.hasNans())
-          {
-            poly.push_back(p);
-          }
-          initialPoint.x+=deltaRight.x;
-          initialPoint.y+=deltaRight.y;
-        }
-        
-        initialPoint= lri;
-        for(idx = 0; idx < stepSize;++idx) 
-        {
-          m_ImageViewTransform->imageToView(initialPoint, p);
-          if(!p.hasNans())
-          {
-            poly.push_back(p);
-          }
-          initialPoint.x+=deltaLower.x;
-          initialPoint.y+=deltaLower.y;
-        }
-        
-        initialPoint= lli;
-        for(idx = 0; idx < stepSize;++idx) 
-        {
-          m_ImageViewTransform->imageToView(initialPoint, p);
-          if(!p.hasNans())
-          {
-            poly.push_back(p);
-          }
-          initialPoint.x+=deltaLeft.x;
-          initialPoint.y+=deltaLeft.y;
-        }
-        poly.push_back(poly[0]);
+         ossim_uint32 finalSteps = ossim::round<ossim_uint32>(steps);
+         if(finalSteps<1) finalSteps=1;
+         if(igeom->getCrossesDateline())
+         {
+            if(finalSteps < maxEdgeSample) finalSteps = maxEdgeSample;
+         }
 
-        m_viewArea = ossimPolyArea2d(ossimPolygon(poly));
-      }
+         ivpt->getViewSegments(boundList, m_viewArea, finalSteps);
+         if(boundList.size())
+         {
+            m_viewRect   = boundList[0];
+            ossim_uint32 idx = 0;
 
-      //ossimPolyArea2d testPolyarea = polyArea&ossimPolyArea2d(tileRect);
+            if(goodMatch)
+            {
+               m_viewArea = boundList[idx];
+            }
+            else
+            {
+               m_viewArea = m_viewRect;
+            }
+            for(idx=1;idx<boundList.size();++idx)
+            {
+               ossimIrect rectBounds = ossimIrect(boundList[idx]);
+               m_viewRect = m_viewRect.combine(rectBounds);
+               if(goodMatch)
+               {
+                  m_viewArea.add(ossimPolygon(boundList[idx]));
+               }
+               else
+               {
+                  m_viewArea.add(rectBounds);
+               }
+            } //
+            if(!m_viewRect.hasNans())
+            {
+               m_rectsDirty = false;
+            } 
+        } //END if boundList.size()
+     }
+     else if(m_ImageViewTransform.valid())
+     {
+       m_viewRect = m_ImageViewTransform->getImageToViewBounds(m_inputR0Rect);
 
+       if(!m_viewRect.hasNans())
+       {
+          m_rectsDirty = false;
+       } 
+
+       m_viewArea = m_viewRect;
+     }
    }
-
    if ( m_rectsDirty )
    {
       m_viewRect.makeNan();
    }
-
 #if 0 /* Please leave for debug. */
    ossimNotify(ossimNotifyLevel_DEBUG)
       << "ossimImageRenderer::initializeBoundingRects() debug:\n"
@@ -1760,8 +1867,8 @@ ossimRefPtr<ossimImageGeometry> ossimImageRenderer::getImageGeometry()
    if (m_ImageViewTransform.valid() && !m_ImageViewTransform->isValid())
       checkIVT();
 
-   ossimImageViewProjectionTransform* ivpt = PTR_CAST(ossimImageViewProjectionTransform, 
-                                                      m_ImageViewTransform.get());
+   ossimImageViewProjectionTransform* ivpt = 
+                   dynamic_cast<ossimImageViewProjectionTransform*>(m_ImageViewTransform.get()); 
    if (ivpt)
    {
       // we need to return the right side since the geometry changed to a view geometry
@@ -1783,8 +1890,8 @@ void ossimImageRenderer::connectInputEvent(ossimConnectionEvent& /* event */)
 
 void ossimImageRenderer::disconnectInputEvent(ossimConnectionEvent& /* event */)
 {
-   ossimImageViewProjectionTransform* ivpt = PTR_CAST(ossimImageViewProjectionTransform,
-                                                      m_ImageViewTransform.get());
+   ossimImageViewProjectionTransform* ivpt = 
+                   dynamic_cast<ossimImageViewProjectionTransform*>(m_ImageViewTransform.get()); 
    if(ivpt)
       ivpt->setImageGeometry(0);
    
@@ -1812,9 +1919,9 @@ void ossimImageRenderer::setProperty(ossimRefPtr<ossimProperty> property)
    //   else if(tempName == "Blur factor")
    //     {
    //       if(m_Resampler)
-   // 	{
-   // 	  m_Resampler->setBlurFactor(property->valueToString().toDouble());
-   // 	}
+   //    {
+   //      m_Resampler->setBlurFactor(property->valueToString().toDouble());
+   //    }
    //     }
    else
    {
@@ -1833,9 +1940,9 @@ ossimRefPtr<ossimProperty> ossimImageRenderer::getProperty(const ossimString& na
       m_Resampler->getFilterTypes(filterNames);
       
       ossimStringProperty* stringProp = new ossimStringProperty("filter_type",
-								m_Resampler->getMinifyFilterTypeAsString(),
-								false,
-								filterNames);
+                        m_Resampler->getMinifyFilterTypeAsString(),
+                        false,
+                        filterNames);
       stringProp->clearChangeType();
       stringProp->setReadOnlyFlag(false);
       stringProp->setCacheRefreshBit();
@@ -1880,7 +1987,7 @@ void ossimImageRenderer::checkIVT()
    // Detected uninitialized IVT. We are only concerned with projection IVTs (IVPTs) so 
    // make sure that's what we're working with:
    ossimImageViewProjectionTransform* ivpt = 
-      PTR_CAST(ossimImageViewProjectionTransform, m_ImageViewTransform.get());
+                   dynamic_cast<ossimImageViewProjectionTransform*>(m_ImageViewTransform.get()); 
    ossimImageSource* inputSrc = PTR_CAST(ossimImageSource, getInput(0));
 
    if(!ivpt || !inputSrc) 
@@ -1941,8 +2048,8 @@ void ossimImageRenderer::checkIVT()
             // ossimMapProjection::update we do that before setUlTiePoints as it in
             // turn calls setUlEastingNorthing(forward(gpt)) which depends on the orgin.
             //---
-           // myMapProj->setOrigin(inputProj->origin());
-           // myMapProj->setUlTiePoints( inputProj->origin() );
+            myMapProj->setOrigin(inputProj->origin());
+            myMapProj->setUlTiePoints( inputProj->origin() );
 
          }
          myMapProj->setMetersPerPixel(meters);
@@ -1968,7 +2075,7 @@ void ossimImageRenderer::checkIVT()
 }
 
 void ossimImageRenderer::getDecimationFactor(ossim_uint32 resLevel,
-					     ossimDpt& result)const
+                    ossimDpt& result)const
 {
    if(isSourceEnabled())
    {
@@ -1977,7 +2084,7 @@ void ossimImageRenderer::getDecimationFactor(ossim_uint32 resLevel,
    else
    {
       ossimImageSourceFilter::getDecimationFactor(resLevel,
-						  result);
+                    result);
    }
 }
 
@@ -2148,6 +2255,10 @@ ossimRefPtr<ossimImageData>  ossimImageRenderer::getTileAtResLevel(const ossimIr
                   }
                   case OSSIM_UINT16:
                   case OSSIM_USHORT11:
+                  case OSSIM_USHORT12:
+                  case OSSIM_USHORT13:
+                  case OSSIM_USHORT14:
+                  case OSSIM_USHORT15:
                   {
                      resampleTileToDecimation((ossim_uint16)0,
                                               m_TemporaryBuffer,
@@ -2202,9 +2313,9 @@ ossim_uint32 ossimImageRenderer::getMaxLevelsToCompute()const
 
 template <class T>
 void ossimImageRenderer::resampleTileToDecimation(T /* dummyVariable */,
-						  ossimRefPtr<ossimImageData> result,
-						  ossimRefPtr<ossimImageData> tile,
-						  ossim_uint32 multiplier)
+                    ossimRefPtr<ossimImageData> result,
+                    ossimRefPtr<ossimImageData> tile,
+                    ossim_uint32 multiplier)
 {
    if(tile->getDataObjectStatus() == OSSIM_EMPTY ||
       !tile->getBuf())
@@ -2360,11 +2471,11 @@ void ossimImageRenderer::refreshEvent(ossimRefreshEvent& event)
       (event.getRefreshType() & ossimRefreshEvent::REFRESH_GEOMETRY))
    {
       ossimRefPtr<ossimImageGeometry> inputGeom =
-         theInputConnection?theInputConnection->getImageGeometry():0;
-      if(inputGeom.valid())
+         theInputConnection?theInputConnection->getImageGeometry().get():0;
+      if(inputGeom)
       {
-         ossimImageViewProjectionTransform* ivpt = PTR_CAST(ossimImageViewProjectionTransform, 
-                                                            m_ImageViewTransform.get());
+         ossimImageViewProjectionTransform* ivpt = 
+                         dynamic_cast<ossimImageViewProjectionTransform*>(m_ImageViewTransform.get()); 
          if(ivpt)
          {
             ivpt->setImageGeometry(inputGeom.get());

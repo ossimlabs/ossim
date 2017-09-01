@@ -52,6 +52,20 @@ ossimPolygon::ossimPolygon(const vector<ossimIpt>& polygon)
    }
 }
 
+ossimPolygon::ossimPolygon(const vector<ossimGpt>& polygon)
+   :theOrderingType(OSSIM_VERTEX_ORDER_UNKNOWN),
+   theVertexList(polygon.size()),
+   theCurrentVertex(0)
+   
+{
+   // Assign std::vector<ossimIpt> list to std::vector<ossimDpt> theVertexList.
+   for (std::vector<ossimGpt>::size_type i = 0; i < polygon.size(); ++i)
+   {
+      theVertexList[i] = polygon[i];
+   }
+}
+
+
 ossimPolygon::ossimPolygon(const vector<ossimDpt>& polygon)
    :theOrderingType(OSSIM_VERTEX_ORDER_UNKNOWN),
    theVertexList(polygon),
@@ -566,6 +580,22 @@ const ossimPolygon& ossimPolygon::operator= (const vector<ossimDpt>& vertexList)
 }
 
 const ossimPolygon& ossimPolygon::operator=(const vector<ossimIpt>& vertexList)
+{
+   theVertexList.resize(vertexList.size());
+   
+   // Assign std::vector<ossimIpt> list to std::vector<ossimDpt> theVertexList.
+   for (std::vector<ossimIpt>::size_type i = 0; i < vertexList.size(); ++i)
+   {
+      theVertexList[i] = vertexList[i];
+   }
+   
+   theCurrentVertex = 0;
+   theOrderingType = OSSIM_VERTEX_ORDER_UNKNOWN;
+   
+   return *this;
+}
+
+const ossimPolygon& ossimPolygon::operator=(const vector<ossimGpt>& vertexList)
 {
    theVertexList.resize(vertexList.size());
    
@@ -1246,16 +1276,20 @@ bool ossimPolygon::shrink(ossimPolygon &dest, double inset) const
    ossimDpt pt;
    
    //don't let people shrink themselves, that isn't going to work
-   if(&dest==this) return false;
+   if (&dest==this)
+      return false;
 
    dest.clear();
-   for(int i=0;i<numpts;i++) {
+   for(int i=0;i<numpts;i++)
+   {
       fitCircleInsideVertex(pt,i,inset);
       dest.addPoint(pt);
    }
-   if(isPolyWithin(dest)) {
+   if(isPolyWithin(dest))
+   {
       return true;
-   } else {
+   } else
+   {
       //return an empty polygon
       dest=ossimPolygon();
       return false;

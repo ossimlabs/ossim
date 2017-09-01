@@ -40,6 +40,8 @@ public:
    //! "Anguilla_1957_British_West_Indies_Grid"
    virtual ossimProjection* createProjection(const ossimString& name) const;
 
+   virtual ossim_uint32 getCode(const ossimString& name);
+
    //! Looks for presence of "projection" keyword with the value in WKT format,
    //! for example "Anguilla_1957_British_West_Indies_Grid" 
    virtual ossimProjection* createProjection(const ossimKeywordlist& kwl,

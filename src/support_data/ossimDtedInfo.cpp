@@ -13,11 +13,6 @@
 
 #include <iostream>
 #include <ossim/support_data/ossimDtedInfo.h>
-#include <ossim/support_data/ossimDtedVol.h>
-#include <ossim/support_data/ossimDtedHdr.h>
-#include <ossim/support_data/ossimDtedUhl.h>
-#include <ossim/support_data/ossimDtedDsi.h>
-#include <ossim/support_data/ossimDtedAcc.h>
 #include <ossim/base/ossimErrorContext.h>
 #include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimContainerProperty.h>
@@ -25,7 +20,6 @@
 
 
 ossimDtedInfo::ossimDtedInfo()
-   : theFile()
 {
 }
 
@@ -33,36 +27,38 @@ ossimDtedInfo::~ossimDtedInfo()
 {
 }
 
-bool ossimDtedInfo::open(const ossimFilename& file)
+bool ossimDtedInfo::open(std::shared_ptr<ossim::istream>& str,
+                         const std::string& connectionString)
 {
    bool result = false;
-
+   if(!str) return false;
    // Test for extension, like dt0, dt1...
-   ossimString ext = file.ext();
+   ossimString ext = ossimFilename(connectionString).ext();
    ossimRegExp regExp("^[d|D][t|T][0-9]");
-   
+   m_dtedFileStr.reset();
    if ( regExp.find( ext.c_str() ) )
    {
-      ossimDtedVol vol(file, 0);
-      ossimDtedHdr hdr(file, vol.stopOffset());
-      ossimDtedUhl uhl(file, hdr.stopOffset());
-      ossimDtedDsi dsi(file, uhl.stopOffset());
-      ossimDtedAcc acc(file, dsi.stopOffset());
-      
+      m_vol.parse(*str);
+      m_hdr.parse(*str);
+      m_uhl.parse(*str);
+      m_dsi.parse(*str);
+      m_acc.parse(*str);
       //---
       // Check for errors.  Must have uhl, dsi and acc records.  vol and hdr
       // are for magnetic tape only; hence, may or may not be there.
       //---
-      if ( (uhl.getErrorStatus() == ossimErrorCodes::OSSIM_OK) &&
-           (dsi.getErrorStatus() == ossimErrorCodes::OSSIM_OK) &&
-           (acc.getErrorStatus() == ossimErrorCodes::OSSIM_OK) )
+      if ( (m_uhl.getErrorStatus() == ossimErrorCodes::OSSIM_OK) &&
+           (m_dsi.getErrorStatus() == ossimErrorCodes::OSSIM_OK) &&
+           (m_acc.getErrorStatus() == ossimErrorCodes::OSSIM_OK) )
       {
-         theFile = file;
          result = true;
+         m_connectionString = connectionString;
+         m_dtedFileStr = str;
       }
       else
       {
-         theFile.clear();
+         m_connectionString.clear();
+         m_dtedFileStr.reset();
       }
    }
 
@@ -71,35 +67,26 @@ bool ossimDtedInfo::open(const ossimFilename& file)
 
 std::ostream& ossimDtedInfo::print(std::ostream& out) const
 {
-   if ( theFile.size() )
+   std::string prefix = "dted.";
+   if( m_vol.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
    {
-      std::string prefix = "dted.";
-      
-      ossimDtedVol vol(theFile, 0);
-      ossimDtedHdr hdr(theFile, vol.stopOffset());
-      ossimDtedUhl uhl(theFile, hdr.stopOffset());
-      ossimDtedDsi dsi(theFile, uhl.stopOffset());
-      ossimDtedAcc acc(theFile, dsi.stopOffset());
-      if( vol.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
-      {
-         vol.print(out, prefix);
-      }
-      if( hdr.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
-      {
-         hdr.print(out, prefix);
-      }
-      if( uhl.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
-      {
-         uhl.print(out, prefix);
-      }
-      if( dsi.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
-      {
-         dsi.print(out, prefix);
-      }
-      if( acc.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
-      {
-         acc.print(out, prefix);
-      }
+      m_vol.print(out, prefix);
+   }
+   if( m_hdr.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
+   {
+      m_hdr.print(out, prefix);
+   }
+   if( m_uhl.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
+   {
+      m_uhl.print(out, prefix);
+   }
+   if( m_dsi.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
+   {
+      m_dsi.print(out, prefix);
+   }
+   if( m_acc.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
+   {
+      m_acc.print(out, prefix);
    }
    return out;
 }
@@ -114,8 +101,8 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
    // Must have uhl, dsi and acc records.  vol and hdr
    // are for magnetic tape only; hence, may or may not be there.
    //---
-   ossimDtedVol vol(theFile, 0);
-   if( vol.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
+   //ossimDtedVol vol(m_dtedFileStr, 0);
+   if( m_vol.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
    {
       if (name == "dted_vol_record")
       {
@@ -123,14 +110,14 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
          box->setName(name);
 
          std::vector<ossimString> list;
-         vol.getPropertyNames(list);
+         m_vol.getPropertyNames(list);
 
          std::vector< ossimRefPtr<ossimProperty> > propList;
 
          std::vector<ossimString>::const_iterator i = list.begin();
          while (i != list.end())
          {
-            ossimRefPtr<ossimProperty> prop = vol.getProperty( (*i) );
+            ossimRefPtr<ossimProperty> prop = m_vol.getProperty( (*i) );
             if (prop.valid())
             {
                propList.push_back(prop);
@@ -143,8 +130,8 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
    }
    if (result.valid() == false)
    {
-      ossimDtedHdr hdr(theFile, vol.stopOffset());
-      if( hdr.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
+      //ossimDtedHdr hdr(m_dtedFileStr, vol.stopOffset());
+      if( m_hdr.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
       {
          if (name == "dted_hdr_record")
          {
@@ -152,14 +139,14 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
             box->setName(name);
             
             std::vector<ossimString> list;
-            hdr.getPropertyNames(list);
+            m_hdr.getPropertyNames(list);
             
             std::vector< ossimRefPtr<ossimProperty> > propList;
             
             std::vector<ossimString>::const_iterator i = list.begin();
             while (i != list.end())
             {
-               ossimRefPtr<ossimProperty> prop = hdr.getProperty( (*i) );
+               ossimRefPtr<ossimProperty> prop = m_hdr.getProperty( (*i) );
                if (prop.valid())
                {
                   propList.push_back(prop);
@@ -172,8 +159,8 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
       }
       if (result.valid() == false)
       {
-         ossimDtedUhl uhl(theFile, hdr.stopOffset());
-         if( uhl.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
+        // ossimDtedUhl uhl(m_dtedFileStr, hdr.stopOffset());
+         if( m_uhl.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
          {
             if (name == "dted_uhl_record")
             {
@@ -181,14 +168,14 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
                box->setName(name);
                
                std::vector<ossimString> list;
-               uhl.getPropertyNames(list);
+               m_uhl.getPropertyNames(list);
                
                std::vector< ossimRefPtr<ossimProperty> > propList;
                
                std::vector<ossimString>::const_iterator i = list.begin();
                while (i != list.end())
                {
-                  ossimRefPtr<ossimProperty> prop = uhl.getProperty( (*i) );
+                  ossimRefPtr<ossimProperty> prop = m_uhl.getProperty( (*i) );
                   if (prop.valid())
                   {
                      propList.push_back(prop); 
@@ -201,8 +188,8 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
          }
          if (result.valid() == false)
          {
-            ossimDtedDsi dsi(theFile, uhl.stopOffset());
-            if( dsi.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
+            //ossimDtedDsi dsi(m_dtedFileStr, uhl.stopOffset());
+            if( m_dsi.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
             {
                if (name == "dted_dsi_record")
                {
@@ -211,7 +198,7 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
                   box->setName(name);
                   
                   std::vector<ossimString> list;
-                  dsi.getPropertyNames(list);
+                  m_dsi.getPropertyNames(list);
                   
                   std::vector< ossimRefPtr<ossimProperty> > propList;
                   
@@ -219,7 +206,7 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
                   while (i != list.end())
                   {
                      ossimRefPtr<ossimProperty> prop =
-                        dsi.getProperty( (*i) );
+                        m_dsi.getProperty( (*i) );
                      if (prop.valid())
                      {
                         propList.push_back(prop);
@@ -232,8 +219,8 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
             }
             if (result.valid() == false)
             {
-               ossimDtedAcc acc(theFile, dsi.stopOffset());
-               if( acc.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
+               //ossimDtedAcc acc(m_dtedFileStr, dsi.stopOffset());
+               if( m_acc.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
                {
                   if (name == "dted_acc_record")
                   {
@@ -242,7 +229,7 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
                      box->setName(name);
                      
                      std::vector<ossimString> list;
-                     acc.getPropertyNames(list);
+                     m_acc.getPropertyNames(list);
                      
                      std::vector< ossimRefPtr<ossimProperty> > propList;
                      
@@ -252,7 +239,7 @@ ossimRefPtr<ossimProperty> ossimDtedInfo::getProperty(
                      while (i != list.end())
                      {
                         ossimRefPtr<ossimProperty> prop =
-                           acc.getProperty( (*i) );
+                           m_acc.getProperty( (*i) );
                         if (prop.valid())
                         {
                            propList.push_back(prop);

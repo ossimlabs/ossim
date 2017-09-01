@@ -53,38 +53,7 @@ ENDMACRO(OSSIM_CDR)
 #      MACRO FOR GETTING THE DATE AND TIME INFORMATION
 #################################################################################
 MACRO (TODAYS_DATE RESULT)
-
-   set(TEMP_DATE "")
-  
-   IF (CMAKE_HOST_WIN32)
-      IF(NOT EXISTS "${CMAKE_BINARY_DIR}/get_date.cmd")
-
-      ###### OUTPUT DATE ROUTINE #####
-      write_file("${CMAKE_BINARY_DIR}/get_date.cmd" "@echo off
-      @REM Seamonkey's quick date batch (MMDDYYYY format)
-      @REM Setups %date variable
-      @REM First parses month, day, and year into mm , dd, yyyy formats and then combines to be MMDDYYYY
-
-      @FOR /F \"TOKENS=1* DELIMS= \" %%A IN ('DATE/T') DO SET CDATE=%%B
-      @FOR /F \"TOKENS=1,2 eol=/ DELIMS=/ \" %%A IN ('DATE/T') DO SET mm=%%B
-      @FOR /F \"TOKENS=1,2 DELIMS=/ eol=/\" %%A IN ('echo %CDATE%') DO SET dd=%%B
-      @FOR /F \"TOKENS=2,3 DELIMS=/ \" %%A IN ('echo %CDATE%') DO SET yyyy=%%B
-      @SET CURRENT_DATE=%yyyy%%mm%%dd%
-      @echo on
-      @echo %CURRENT_DATE%")
-
-      ENDIF(NOT EXISTS "${CMAKE_BINARY_DIR}/get_date.cmd")
- 
-      EXECUTE_PROCESS(COMMAND "cmake" "-E" "comspec" "${CMAKE_BINARY_DIR}/get_date.cmd"  OUTPUT_VARIABLE ${RESULT})
-      string(REGEX REPLACE "\n|\r" "" ${RESULT} ${${RESULT}})
-   ELSEIF(CMAKE_HOST_UNIX)
-      EXECUTE_PROCESS(COMMAND "date" "+%Y%m%d" OUTPUT_VARIABLE ${RESULT})
-      string(REGEX REPLACE "(..)/(..)/..(..).*" "\\3\\2\\1" ${RESULT} ${${RESULT}})
-      string(REGEX REPLACE "\n|\r" "" ${RESULT} ${${RESULT}})
-   ELSE (WIN32)
-      MESSAGE(SEND_ERROR "date not implemented")
-      SET(${RESULT} 000000)
-   ENDIF (CMAKE_HOST_WIN32)
+  string(TIMESTAMP  ${RESULT} "%Y%m%d" UTC)
 ENDMACRO (TODAYS_DATE)
 
 #################################################################################
@@ -295,12 +264,18 @@ MACRO(OSSIM_LINK_LIBRARY)
           SET_TARGET_PROPERTIES(${LINK_NAME} PROPERTIES 
                              FRAMEWORK TRUE
                              BUILD_WITH_INSTALL_RPATH ON 
-                             INSTALL_NAME_DIR @executable_path/../Frameworks)
+                             INSTALL_NAME_DIR @rpath/Frameworks)
         ELSE(BUILD_OSSIM_FRAMEWORKS)
+          #---
+          # Given install prefix=/usr/local and 
+          # install lib dir = lib64 and 
+          # link name = libossim.dylib
+          # You get "/usr/local/lib64/libossim.dylib" in the rpath.
+          #---
           SET_TARGET_PROPERTIES(${LINK_NAME} PROPERTIES 
-                             FRAMEWORK FALSE
-                             BUILD_WITH_INSTALL_RPATH ON 
-                             INSTALL_NAME_DIR @executable_path/../lib)
+                                FRAMEWORK FALSE
+                                BUILD_WITH_INSTALL_RPATH ON 
+                                INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_LIBRARY_DIR}")
         ENDIF(BUILD_OSSIM_FRAMEWORKS)
       ELSE(BUILD_SHARED_LIBRARY)
           SET_TARGET_PROPERTIES(${LINK_NAME} PROPERTIES 

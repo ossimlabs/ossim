@@ -43,9 +43,7 @@ const ossimProperty& ossimStringListProperty::assign(const ossimProperty& rhs)
 {
    ossimProperty::assign(rhs);
 
-   ossimStringListProperty *rhsPtr = PTR_CAST(ossimStringListProperty,
-                                              &rhs);
-
+   const ossimStringListProperty *rhsPtr = dynamic_cast<const ossimStringListProperty*>(&rhs);
    if(rhsPtr)
    {
       theValueList         = rhsPtr->theValueList;

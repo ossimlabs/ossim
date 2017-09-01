@@ -24,6 +24,8 @@
 
 using namespace std;
 
+#define USE_UINT8 false
+
 int main(int argc, char *argv[])
 {
    int returnCode = 0;
@@ -32,28 +34,19 @@ int main(int argc, char *argv[])
    ossimInit::instance()->addOptions(ap);
    ossimInit::instance()->initialize(ap);
    
-   if ( (ap.argc() < 2) || ap.read("-h") || ap.read("--help") )
+   if ( (ap.argc() < 4) || ap.read("-h") || ap.read("--help") )
    {
-      cout << "\nUsage: "<<ap[0]<<" <filename>\n"<<endl;
+      cout << "\nUsage: "<<ap[0]<<" <dx> <dy> <filename>\n"<<endl;
       return 0;
    }
 
-   ossimFilename filename = ap[1];
+   int dx = atoi(ap[1]);
+   int dy = atoi(ap[2]);
+   ossimFilename filename = ap[3];
    filename.setExtension(".tif");
 
-   // Set the destination image size:
-   ossimIpt image_size (256 , 256);
-   ossimRefPtr<ossimImageData> outImage =
-         ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, image_size.x, image_size.y);
-   if(outImage.valid())
-      outImage->initialize();
-   else
-      return -1;
-   
-   // Fill the buffer with test image pattern. Start with fill:
-   outImage->fill(1);
-
    // Establish the image geometry's map projection:
+   ossimIpt image_size (256, 256);
    ossimGpt observerGpt (0, 0, 0);
    ossimDpt gsd (1.0, 1.0); // must be same value in both directions
    ossimRefPtr<ossimEquDistCylProjection> mapProj = new ossimEquDistCylProjection();
@@ -68,104 +61,51 @@ int main(int argc, char *argv[])
    ossimRefPtr<ossimImageGeometry> geometry = new ossimImageGeometry(0, mapProj.get());
    geometry->setImageSize(image_size);
 
-   // Define different tile textures: noisy, inclined, flat, combo.
-   ossim_uint32 tile_size = 32;
+   // Set the destination image size:
+#if USE_UINT8
+   ossimRefPtr<ossimImageData> outImage =
+         ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, image_size.x, image_size.y);
+   typedef unsigned char PIXEL_TYPE;
+   double min = 0.0;
+   double max = 255;
+#else
+   ossimRefPtr<ossimImageData> outImage =
+         ossimImageDataFactory::instance()->create(0, OSSIM_NORMALIZED_DOUBLE, 1, image_size.x, image_size.y);
+   typedef double PIXEL_TYPE;
+   double min = 0.0;
+   double max = 1.0;
+#endif
 
-   // Start with noisy tiles below and above amplitude threshold:
-   ossim_uint32 buf_size = tile_size*tile_size;
-   ossimRefPtr<ossimImageData> noisy_tile1 =
-         ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, tile_size, tile_size);
-   noisy_tile1->initialize();
-   ossim_float32* noisy_buf1 = noisy_tile1->getFloatBuf();
+   if(outImage.valid())
+      outImage->initialize();
+   else
+      return -1;
+   double A = (max - min)/2.0;
+   outImage->fill(min);
+   PIXEL_TYPE* buffer = ( PIXEL_TYPE*) outImage->getBuf(0);
 
-   ossimRefPtr<ossimImageData> noisy_tile2 =
-         ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, tile_size, tile_size);
-   noisy_tile2->initialize();
-   ossim_float32* noisy_buf2 = noisy_tile2->getFloatBuf();
-
-   float noiseAmplitude1 = 0.5; // meters
-   float noiseAmplitude2 = 5.0; // meters
-   srand (time(NULL));
-   for (ossim_uint32 i=0; i<buf_size; ++i)
+   if ((dx != 0) || (dy != 0))
    {
-      noisy_buf1[i] = 1.0 + noiseAmplitude1 * ((float)rand()/(float)RAND_MAX - 0.5);
-      noisy_buf2[i] = 1.0 + noiseAmplitude2 * ((float)rand()/(float)RAND_MAX - 0.5);
-   }
+      // Allocate image buffer:
+      ossim_uint32 i = 0;
+      double phase = 0;
 
-   // Inclined planes below and above inclination threshold.
-   // Eq. of plane in terms of azimuth and inclination is: z = -tan(in) [ x sin(az) + y cos(az) ]
-   ossimRefPtr<ossimImageData> incline_tile1 =
-         ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, tile_size, tile_size);
-   incline_tile1->initialize();
-   ossim_float32* incline_buf1 = incline_tile1->getFloatBuf();
+      double dpx = 0;
+      if (dx != 0)
+         dpx = 2*M_PI/dx; // phase rate (radians per pixel)
+      double dpy = 0;
+      if (dy != 0)
+         dpy = 2*M_PI/dy; // phase rate (radians per pixel)
 
-   ossimRefPtr<ossimImageData> incline_tile2 =
-         ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, tile_size, tile_size);
-   incline_tile2->initialize();
-   ossim_float32* incline_buf2 = incline_tile2->getFloatBuf();
-
-   double azimuth = 45.0; // degrees azimuth, horizontal component of surface normal
-   double inclination1 = 2.0; // degrees inclination of surface normal from local vertical
-   double inclination2 = 8.0; // (above threshold)
-   double sinAz = ossim::sind(azimuth);
-   double cosAz = ossim::cosd(azimuth);
-   double x0 = tile_size/2.0;
-   double y0 = tile_size/2.0;
-   double gain1 = -gsd.x * ossim::tand(inclination1);
-   double gain2 = -gsd.x * ossim::tand(inclination2);
-   for (ossim_uint32 y=0; y<tile_size; ++y)
-   {
-      for (ossim_uint32 x=0; x<tile_size; ++x)
+      for (int y=0; y<image_size.y; y++)
       {
-         incline_tile1->setValue(x, y, 1.0 + gain1*((x-x0)*sinAz + (y-y0)*cosAz));
-         incline_tile2->setValue(x, y, 1.0 + gain2*((x-x0)*sinAz + (y-y0)*cosAz));
-      }
-   }
-
-   // Create hybrid incline and noisy, below and above threshold:
-   ossimRefPtr<ossimImageData> hybrid_tile1 =
-         ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, tile_size, tile_size);
-   hybrid_tile1->initialize();
-   ossim_float32* hybrid_buf1 = hybrid_tile1->getFloatBuf();
-
-   ossimRefPtr<ossimImageData> hybrid_tile2 =
-         ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, tile_size, tile_size);
-   hybrid_tile2->initialize();
-   ossim_float32* hybrid_buf2 = hybrid_tile2->getFloatBuf();
-
-   for (ossim_uint32 i=0; i<buf_size; ++i)
-   {
-      hybrid_buf1[i] = noisy_buf1[i] + incline_buf1[i] - 1.0;
-      hybrid_buf2[i] = noisy_buf2[i] + incline_buf2[i] - 1.0;
-   }
-
-   // Create plateau:
-   ossimRefPtr<ossimImageData> plateau_tile =
-         ossimImageDataFactory::instance()->create(0, OSSIM_FLOAT32, 1, tile_size, tile_size);
-   plateau_tile->initialize();
-   plateau_tile->fill(5.0);
-
-   // Now populate the output buffer with tiles: XXXOXOXXOXXOXOO
-   std::vector<ossimImageData*> tiles;
-   tiles.push_back(noisy_tile1.get());
-   tiles.push_back(noisy_tile2.get());
-   tiles.push_back(incline_tile1.get());
-   tiles.push_back(incline_tile2.get());
-   tiles.push_back(hybrid_tile1.get());
-   tiles.push_back(hybrid_tile2.get());
-   tiles.push_back(plateau_tile.get());
-   ossimImageData* tile;
-   ossim_uint32 tiles_idx = 0;
-   ossimIpt tile_origin(0,0);
-   for (tile_origin.y=0; tile_origin.y<image_size.y; tile_origin.y+=tile_size)
-   {
-      for (tile_origin.x=0; tile_origin.x<image_size.x; tile_origin.x+=tile_size)
-      {
-         tile = tiles[tiles_idx++];
-         if (tiles_idx == tiles.size())
-            tiles_idx = 0;
-         tile->setOrigin(tile_origin);
-         outImage->loadTile(tile);
+         phase = y*dpy;
+         for (int x=0; x<image_size.x; x++)
+         {
+            // Loops to fill one n x n chip with a single freq (1/lambda) component:
+            buffer[i++] = (PIXEL_TYPE) (A * (cos(phase) + 1.0));
+            phase += dpx;
+         }
       }
    }
 
@@ -179,6 +119,7 @@ int main(int argc, char *argv[])
    writer->setFilename(filename);
    writer->setGeotiffFlag(true);
    bool success = writer->execute();
+   //writer->writeExternalGeometryFile();
 
    return 0;
 }

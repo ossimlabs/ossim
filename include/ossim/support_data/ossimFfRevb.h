@@ -1,20 +1,19 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author: Ken Melero (kmelero@imagelinks.com)
 //         Orginally written by Dave Burken (dburken@imagelinks.com)
 // Description: This class parses an EOSAT Fast Format rev b header.
 //
 //********************************************************************
-// $Id: ossimFfRevb.h 10384 2007-01-26 20:32:12Z gpotts $
+// $Id$
 
 #ifndef ossimFfRevb_HEADER
-#define ossimFfRevb_HEADER
-#include <ossim/base/ossimReferenced.h>
+#define ossimFfRevb_HEADER 1
 
-#include <iostream>
-using namespace std;
+#include <ossim/base/ossimReferenced.h>
+#include <iosfwd>
 
 //***************************************************************************
 // CLASS: ossimFfRevb.h
@@ -183,9 +182,9 @@ public:
 
    int errorStatus() const { return theErrorStatus; }
 
-   void print(ostream& os) const;
+   void print(std::ostream& os) const;
 
-   void write(ostream& os) const;
+   void write(std::ostream& os) const;
 
    int    path() const;
       //> Returns the path as an int.
@@ -201,7 +200,7 @@ public:
       //   "D" to denote the exponent, to a double.
       //<
 
-   friend ostream& operator<<(ostream& os, const ossimFfRevb& head);
+   friend std::ostream& operator<<(std::ostream& os, const ossimFfRevb& head);
      
    char   theProductOrderNumber[PRODUCT_ORDER_NUMBER_SIZE + 1];
    char   thePathRowNumber[PATH_ROW_NUMBER_SIZE + 1];   
@@ -281,9 +280,9 @@ public:
    char    theFormatVersion[FORMAT_VERSION_SIZE + 1];
 
 private:
-   void loadFromStream(istream& is);
+   void loadFromStream(std::istream& is);
 
-   int checkStream(istream& is);
+   int checkStream(std::istream& is);
 
    ErrorStatus theErrorStatus;
 };

@@ -85,9 +85,54 @@ ossimWktProjectionFactory* ossimWktProjectionFactory::instance()
 void ossimWktProjectionFactory::loadRecords() const
 {
    // Fetch filename of WKT projection DB file specified in ossim_preferences:
-   ossimFilename wkt_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
-   wkt_path += "/ossim/projection/";
-   ossimFilename db_name = wkt_path + ossimPreferences::instance()->preferencesKWL().find("wkt_database_file");
+
+   // Optional ossim share dir:
+   ossimFilename share_dir = ossimPreferences::instance()->
+      preferencesKWL().findKey( std::string( "ossim_share_directory" ) );
+   
+   ossimFilename db_name;
+   
+   ossimFilename wkt_path = ossimPreferences::instance()->preferencesKWL().
+      findKey( std::string( "wkt_database_file" ) );
+
+   if ( wkt_path.size() )
+   {
+      if ( !wkt_path.isRelative() )
+      {
+         //---
+         // example:
+         // wkt_database_file:/usr/share/ossim/projection/ossim_wkt_pcs.csv
+         //---
+         db_name = wkt_path;
+      }
+      else if ( share_dir.size() )
+      {
+         //---
+         // example:
+         // ossim_share_dir: /usr/share/ossim
+         // wkt_database_file: projection/ossim_wkt_pcs.csv
+         //---
+         db_name = share_dir.dirCat( wkt_path );
+         
+         //---
+         // This block is for backwards compatibility.
+         // Try tacking "projection" onto share dir.
+         //---
+         if ( !db_name.isReadable() )
+         {
+            db_name = share_dir.dirCat( ossimFilename("projection") );
+            db_name = db_name.dirCat( wkt_path);
+
+            // Lastly: Try tacking "ossim/projection" onto share dir.
+            if ( !db_name.isReadable() )
+            {
+               db_name = share_dir.dirCat( ossimFilename("ossim/projection") );
+               db_name = db_name.dirCat( wkt_path);
+            }
+         }
+      }
+   }
+      
    if (!db_name.isReadable())
       return;
 
@@ -139,6 +184,22 @@ void ossimWktProjectionFactory::loadRecords() const
    db_stream.close();
 }
 
+ossim_uint32 ossimWktProjectionFactory::getCode(const ossimString& pcsName)
+{
+   if (m_wktProjRecords.empty())
+      loadRecords();
+
+   std::map<std::string, ossim_uint32>::const_iterator it = m_wktProjRecords.find(pcsName.string());
+
+   if (it != m_wktProjRecords.end())
+   {
+      // Found an entry by this name, fetch the EPSG code:
+      return it->second;
+   }
+   return 0;
+}
+
+
 //*************************************************************************************************
 //! From keywordlist (as generated typically by ossimWkt class)
 //*************************************************************************************************
@@ -180,6 +241,9 @@ ossimProjection* ossimWktProjectionFactory::createProjection(const ossimKeywordl
    // Use EPSG if determined:
    if (!epsg_code.empty())
    {
+      // Strip quotes if any:
+      epsg_code.trim( ossimString("\"") );
+
       proj = ossimEpsgProjectionDatabase::instance()->findProjection(epsg_code.toUInt32());
       if (proj)
          return proj;

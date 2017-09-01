@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -13,23 +13,29 @@
 // ossimTiffTileSource  is derived from ImageHandler which is derived from
 // TileSource.
 //*******************************************************************
-//  $Id: ossimTiffTileSource.h 22243 2013-04-20 15:27:22Z dburken $
+// $Id$
 
 #ifndef ossimTiffTileSource_HEADER
 #define ossimTiffTileSource_HEADER 1
 
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/base/ossimIrect.h>
-#include <tiffio.h>
 #include <vector>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+
+/*
+ * TIFF is defined as an incomplete type to hide the tiff library's internal
+ * data structures from clients.
+ */
+typedef struct tiff TIFF;  
 
 class ossimImageData;
 class ossimTiffOverviewTileSource;
-
+class TiffStreamAdaptor;
 class OSSIMDLLEXPORT ossimTiffTileSource : public ossimImageHandler
 {
 public:
-
+  friend class TiffStreamAdaptor; 
    enum ReadMethod
    {
       UNKNOWN,
@@ -50,6 +56,17 @@ public:
     *  Returns true if the image_file can be opened and is a valid tiff file.
     */
    virtual bool open(const ossimFilename& image_file);
+
+   /**
+    *  @brief This open takes a stream and stores/captures the shared pointer
+    *  on success.
+    *  @param str Open stream to image.
+    *  @param connectionString Stored on success as the file name.
+    *  @return true on success, false on error.
+    */
+   bool open( std::shared_ptr<ossim::istream>& str,
+              const std::string& connectionString );
+
    virtual void close();
    
    /**
@@ -233,7 +250,8 @@ protected:
 
    // Must be protected for derived ossimTerraSarTiffReader.
    TIFF* theTiffPtr; 
-   
+
+
 private:
 
    /**
@@ -357,7 +375,7 @@ private:
    ossim_uint32              theCurrentTiffRlevel;
    ossim_int32               theCompressionType;
    std::vector<ossim_uint32> theOutputBandList;
-   
+   shared_ptr<TiffStreamAdaptor> m_streamAdaptor;
 TYPE_DATA
 };
 

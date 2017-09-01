@@ -12,29 +12,38 @@
 //  $Id$
 #include <ossim/parallel/ossimImageHandlerMtAdaptor.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
-#include <ossim/parallel/ossimMtDebug.h>
+  // #include <ossim/parallel/ossimMtDebug.h>
+#include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimTimer.h>
+#include <ossim/base/ossimTrace.h>
+#include <cstdio>
+#include <ctime>
+// #include <sys/time.h>
 
 RTTI_DEF1(ossimImageHandlerMtAdaptor, "ossimImageHandlerMtAdaptor", ossimImageHandler);
 
 const char* ossimImageHandlerMtAdaptor::ADAPTEE_ID_KW = "adaptee_id";
+static ossimTrace traceDebug = ossimTrace("ossimImageHandlerMtAdaptor:debug");
 
 //**************************************************************************************************
 // Constructor
 //**************************************************************************************************
-ossimImageHandlerMtAdaptor::ossimImageHandlerMtAdaptor(ossimImageHandler* adaptee)
+ossimImageHandlerMtAdaptor::ossimImageHandlerMtAdaptor(ossimImageHandler* adaptee, bool use_cache, ossim_uint32 cache_tile_size)
    :  d_getTileT (0),
+      d_cacheTileSize(1024),
       m_adaptedHandler (0),
       m_cache (0),
       d_useCache (false),
       d_useFauxTile (false)
 {
    //###### DEBUG ############
-   ossimMtDebug* mt_debug = ossimMtDebug::instance();
-   d_useCache = mt_debug->handlerCacheEnabled;
-   d_useFauxTile = mt_debug->handlerUseFauxTile;
+   // ossimMtDebug* mt_debug = ossimMtDebug::instance();
+   //d_useCache = mt_debug->handlerCacheEnabled;
+   //d_useFauxTile = mt_debug->handlerUseFauxTile;
    //###### END DEBUG ############
 
+   setUseCache(use_cache);
+   setCacheTileSize(cache_tile_size);
    setAdaptee(adaptee);
 }
 
@@ -45,6 +54,7 @@ ossimImageHandlerMtAdaptor::~ossimImageHandlerMtAdaptor()
 {
    m_adaptedHandler = 0;
    m_cache = 0;
+   d_fauxTile = 0;
 }
 
 //**************************************************************************************************
@@ -63,9 +73,10 @@ void ossimImageHandlerMtAdaptor::setAdaptee(ossimImageHandler* handler)
    {
       // Create the cache and connect this adaptor as its output:
       m_cache = new ossimCacheTileSource;
+      m_cache->setTileSize(ossimIpt(d_cacheTileSize, d_cacheTileSize));
       m_cache->connectMyOutputTo(this, true, false);
       m_cache->changeOwner(this);
-      m_cache->connectMyOutputTo(this, true, false);
+      //m_cache->connectMyOutputTo(this, true, false);
       handler->disconnectMyOutputs(output_list, true, false);
       handler->connectMyOutputTo(m_cache.get(), true, true);
    }
@@ -131,6 +142,11 @@ ossimRefPtr<ossimImageData>
 ossimRefPtr<ossimImageData>  
    ossimImageHandlerMtAdaptor::getTile(const ossimIrect& tile_rect, ossim_uint32 rLevel)
 {
+   if (traceDebug())
+   {
+       std::cout << "TILE: " << tile_rect << std::endl;
+   }
+
    if (d_useFauxTile)
    {
       ossimRefPtr<ossimImageData> ftile = new ossimImageData(*(d_fauxTile.get()));
@@ -142,11 +158,24 @@ ossimRefPtr<ossimImageData>
       return NULL;
 
    // The sole purpose of the adapter is this mutex lock around the actual handler getTile:
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+   //OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
 
    ossimRefPtr<ossimImageData> tile = new ossimImageData();
    ossimRefPtr<ossimImageData> temp_tile = 0;
    double dt = ossimTimer::instance()->time_s();
+
+   //writeTime();
+   if (traceDebug())
+   {
+     std::cout << "WAIT LOCK: " << tile_rect << std::endl;
+   }
+   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+
+   if (traceDebug())
+   {
+     std::cout << "START LOCK: " << tile_rect << std::endl;
+   }
+
    if (d_useCache)
       temp_tile = m_cache->getTile(tile_rect, rLevel);
    else
@@ -161,6 +190,17 @@ ossimRefPtr<ossimImageData>
       *tile = *(temp_tile.get());
    else
       tile = NULL;
+
+   //writeTime();
+   if (traceDebug())
+   {
+      std::cout << "END LOCK: " << tile_rect << std::endl;
+   }
+   if (traceDebug())
+   {
+       std::cout << "END TILE: " << tile_rect << std::endl;
+   }
+
    return tile;
 }
 
@@ -302,8 +342,15 @@ ossimString ossimImageHandlerMtAdaptor::getShortName() const
 
 void ossimImageHandlerMtAdaptor::close()
 {
+   removeListener((ossimConnectableObjectListener*)this);
+   this->disconnectAllOutputs();
+   m_cache = 0;
    if (m_adaptedHandler.valid())
-      return m_adaptedHandler->close();
+   {
+       m_adaptedHandler->closeOverview();
+       m_adaptedHandler->close();
+   }
+   d_fauxTile = 0;
 }
 
 ossim_uint32 ossimImageHandlerMtAdaptor::getNumberOfOutputBands() const
@@ -313,11 +360,38 @@ ossim_uint32 ossimImageHandlerMtAdaptor::getNumberOfOutputBands() const
    return 0;
 }
 
+void ossimImageHandlerMtAdaptor::setUseCache(bool use_cache)
+{
+   d_useCache = use_cache;
+}
+
+void ossimImageHandlerMtAdaptor::setCacheTileSize(ossim_uint32 cache_tile_size)
+{
+   d_cacheTileSize = cache_tile_size;
+}
+
 ossim_uint32 ossimImageHandlerMtAdaptor::getNumberOfDecimationLevels() const
 {
    if (m_adaptedHandler.valid())
       return m_adaptedHandler->getNumberOfDecimationLevels();
    return 0;
+}
+
+void ossimImageHandlerMtAdaptor::writeTime() const
+{
+#if 0  /* not portable (drb) */
+   struct timeval tv;
+   struct timezone tz;
+   struct tm *tm;
+   gettimeofday(&tv, &tz);
+   tm=localtime(&tv.tv_sec);
+   printf("%d:%02d:%02d.%ld ", tm->tm_hour, tm->tm_min,tm->tm_sec,tv.tv_usec);
+#endif
+   // Sorry no usecs...
+   time_t rawTime = (time_t)ossim::getTime();
+   char buf[9];
+   strftime(buf, 9, "%H:%M:%S", gmtime(&rawTime));
+   cerr << buf << std::endl;
 }
 
 ossimScalarType ossimImageHandlerMtAdaptor::getOutputScalarType() const

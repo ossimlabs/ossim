@@ -252,6 +252,10 @@ bool ossimArcInfoGridWriter::writeBinaryAigHeader()
          case OSSIM_UCHAR:
          case OSSIM_SSHORT16:
          case OSSIM_USHORT11:
+         case OSSIM_USHORT12:
+         case OSSIM_USHORT13:
+         case OSSIM_USHORT14:
+         case OSSIM_USHORT15:
          case OSSIM_USHORT16:
 //      {
 //         aigHeader.setIntCoverage();
@@ -269,7 +273,7 @@ bool ossimArcInfoGridWriter::writeBinaryAigHeader()
          {
             ossimNotify(ossimNotifyLevel_WARN)
                << "ossimArcInfoGridWriter::writeBinaryAigHeader: "
-               << "unkown scalar type" << std::endl;
+               << "unknown scalar type" << std::endl;
          }
       }
       

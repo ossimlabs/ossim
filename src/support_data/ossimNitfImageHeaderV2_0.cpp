@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -11,22 +11,22 @@
 //********************************************************************
 // $Id: ossimNitfImageHeaderV2_0.cpp 21518 2012-08-22 21:15:56Z dburken $
 
-
-#include <iomanip>
-
 #include <ossim/support_data/ossimNitfImageHeaderV2_0.h>
-#include <ossim/base/ossimString.h>
-#include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimDrect.h>
-#include <cstring> //for memset
 #include <ossim/base/ossimEndian.h>
-#include <ossim/support_data/ossimNitfVqCompressionHeader.h>
-#include <ossim/base/ossimTrace.h>
+#include <ossim/base/ossimIpt.h>
+#include <ossim/base/ossimIoStream.h>
+#include <ossim/base/ossimString.h>
 #include <ossim/base/ossimStringProperty.h>
-#include <stdexcept>
-#include <sstream>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/support_data/ossimNitfCommon.h>
+#include <ossim/support_data/ossimNitfVqCompressionHeader.h>
+
+#include <cstring> //for memset
+#include <iomanip>
+#include <stdexcept>
+#include <sstream>
+
 static const ossimTrace traceDebug(ossimString("ossimNitfImageHeaderV2_0:debug"));
 
 RTTI_DEF1(ossimNitfImageHeaderV2_0,
@@ -50,7 +50,7 @@ ossimNitfImageHeaderV2_0::~ossimNitfImageHeaderV2_0()
 {
 }
 
-void ossimNitfImageHeaderV2_0::parseStream(std::istream &in)
+void ossimNitfImageHeaderV2_0::parseStream(ossim::istream& in)
 {
    clearFields();
    theImageBands.clear();
@@ -91,10 +91,19 @@ void ossimNitfImageHeaderV2_0::parseStream(std::istream &in)
    }
    in.read(theNumberOfComments, 1);
    ossim_uint32 numberOfComments = ossimString(theNumberOfComments).toInt32();
+
+   // for now let's ignore the comments
    if(numberOfComments > 0)
    {
-      // for now let's ignore the comments about the image
-      in.ignore(numberOfComments*80);
+      theImageComments.resize(numberOfComments);
+      for (ossim_uint32 i=0; i < numberOfComments; ++i)
+      {
+        char comment[81];
+        memset(comment, ' ', 80);
+        comment[80] = '\0';
+        in.read(comment, 80);
+        theImageComments[i] = ossimString(comment).trim();
+      }
    }
    in.read(theCompression, 2);
    // check to see if there is compression
@@ -302,7 +311,7 @@ void ossimNitfImageHeaderV2_0::parseStream(std::istream &in)
    theDataLocation = in.tellg();
 }
 
-void ossimNitfImageHeaderV2_0::writeStream(std::ostream &out)
+void ossimNitfImageHeaderV2_0::writeStream(ossim::ostream &out)
 {
    out.write(theType, 2);
    out.write(theImageId, 10);
@@ -406,6 +415,17 @@ void ossimNitfImageHeaderV2_0::writeStream(std::ostream &out)
    }
 }
 
+bool ossimNitfImageHeaderV2_0::isValid()const
+{
+   bool result = ossimNitfImageHeaderV2_X::isValid();
+
+   if(result)
+   {
+
+   }
+
+   return result;
+}
 std::ostream& ossimNitfImageHeaderV2_0::print(std::ostream& out,
                                               const std::string& prefix) const
 {
@@ -459,15 +479,21 @@ std::ostream& ossimNitfImageHeaderV2_0::print(std::ostream& out,
        << prefix << std::setw(24) << "IGEOLO:"
        << theGeographicLocation  << "\n"
        << prefix << std::setw(24) << "NICOM:"
-       << theNumberOfComments << "\n" 
-       << prefix << std::setw(24) << "IC:"
+       << theNumberOfComments << "\n"; 
+
+   ossim_uint32 idx = 0;
+   for(idx = 0; idx < theImageComments.size(); ++idx)
+   {
+       ossimString icpre = "ICOM" + ossimString::toString(idx) + ":";
+       out << prefix << std::setw(24) << icpre << theImageComments[idx].trim() << "\n";
+   }
+   out << prefix << std::setw(24) << "IC:"
        << theCompression  << "\n"     
        << prefix << std::setw(24) << "COMRAT:"
        << theCompressionRateCode  << "\n"
        << prefix << std::setw(24) << "NBANDS:"
        << theNumberOfBands  << "\n";
 
-   ossim_uint32 idx = 0;
    for(idx = 0; idx < theImageBands.size(); ++idx)
    {
       if(theImageBands[idx].valid())

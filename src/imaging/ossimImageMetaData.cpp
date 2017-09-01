@@ -34,7 +34,8 @@ ossimImageMetaData::ossimImageMetaData()
     theNullValuesValidFlag(false),
     theScalarType(OSSIM_SCALAR_UNKNOWN),
     theBytesPerPixel(0),
-    theNumberOfBands(0)
+    theNumberOfBands(0),
+    theRgbBands()
 {
 }
 
@@ -48,7 +49,8 @@ ossimImageMetaData::ossimImageMetaData(ossimScalarType aType,
     theNullValuesValidFlag(false),
     theScalarType(aType),
     theBytesPerPixel(0),
-    theNumberOfBands(numberOfBands)
+    theNumberOfBands(numberOfBands),
+    theRgbBands()
 {
    if(theNumberOfBands)
    {
@@ -71,7 +73,8 @@ ossimImageMetaData::ossimImageMetaData(const ossimImageMetaData& rhs)
    theNullValuesValidFlag(rhs.theNullValuesValidFlag),
    theScalarType(rhs.theScalarType),
    theBytesPerPixel(rhs.theBytesPerPixel),
-   theNumberOfBands(rhs.theNumberOfBands)
+   theNumberOfBands(rhs.theNumberOfBands),
+   theRgbBands(rhs.theRgbBands)
 {
    if(theNumberOfBands)
    {
@@ -118,6 +121,7 @@ const ossimImageMetaData& ossimImageMetaData::operator=( const ossimImageMetaDat
                    rhs.theMaxPixelArray+theNumberOfBands,
                    theMaxPixelArray);
       }
+      theRgbBands = rhs.theRgbBands;
    }
    return *this;
 }
@@ -147,6 +151,7 @@ void ossimImageMetaData::clear()
    theScalarType    = OSSIM_SCALAR_UNKNOWN;
    theBytesPerPixel = 0;
    theNumberOfBands = 0;
+   theRgbBands.clear();
 }
 
 void ossimImageMetaData::setDefaultsForArrays()
@@ -200,11 +205,13 @@ bool ossimImageMetaData::loadState(const ossimKeywordlist& kwl, const char* pref
 
    std::string pfx = ( prefix ? prefix : "" );
    
+   theRgbBands = kwl.findKey( pfx, std::string("rgb_bands") );
+   
    ossim_uint32 bands = getBandCount( kwl, pfx );
    if ( bands )
    {
       result = true;
-
+      
       setNumberOfBands( bands );
       
       theMinValuesValidFlag  = true;
@@ -275,13 +282,41 @@ bool ossimImageMetaData::saveState(ossimKeywordlist& kwl,
 
       kwl.add( prefix, "bytes_per_pixel", theBytesPerPixel, true );
    }
-   
+
+   if ( theRgbBands.size() )
+   {
+      kwl.add( prefix, "rgb_bands", theRgbBands.c_str(), true );
+   }   
+
    return true;
 }
 
 ossim_uint32 ossimImageMetaData::getNumberOfBands()const
 {
    return theNumberOfBands;
+}
+
+const std::string& ossimImageMetaData::getRgbBands() const
+{
+   return theRgbBands;
+}
+
+bool ossimImageMetaData::getRgbBands(std::vector<ossim_uint32>& bandList) const
+{
+   bool result = false;
+   if ( ( theNumberOfBands > 2) && theRgbBands.size() )
+   {
+      ossim::toSimpleVector( bandList, ossimString(theRgbBands) );
+      if ( bandList.size() == 3 )
+      {
+         result = true;
+      }
+      else
+      {
+         bandList.clear();
+      }
+   }
+   return result;
 }
 
 void ossimImageMetaData::setScalarType(ossimScalarType aType)
@@ -469,13 +504,14 @@ void ossimImageMetaData::updateMetaData(
          {
             theNullPixelArray[ band - startBand ] = value.toFloat64();
          }
-      }  
+      }
    }
 
+   
    // Scalar, only look for if not set.
    if ( theScalarType == OSSIM_SCALAR_UNKNOWN )
    {
-      std::string key = ossimKeywordNames::SCALAR_TYPE_KW; // "scalar_type"
+      key = ossimKeywordNames::SCALAR_TYPE_KW; // "scalar_type"
       value.string() = kwl.findKey( prefix, key );
       if ( value.empty() )
       {

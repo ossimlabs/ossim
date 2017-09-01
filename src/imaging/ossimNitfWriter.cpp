@@ -26,12 +26,8 @@
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimRectangleCutFilter.h>
 #include <ossim/support_data/ossimNitfCommon.h>
-#include <ossim/support_data/ossimNitfGeoPositioningTag.h>
-#include <ossim/support_data/ossimNitfLocalGeographicTag.h>
-#include <ossim/support_data/ossimNitfLocalCartographicTag.h>
 #include <ossim/support_data/ossimNitfProjectionParameterTag.h>
 #include <ossim/support_data/ossimNitfNameConversionTables.h>
-#include <ossim/support_data/ossimNitfBlockaTag.h>
 #include <ossim/support_data/ossimNitfImageDataMaskV2_1.h>
 #include <tiffio.h>
 #include <fstream>
@@ -54,7 +50,7 @@ static const ossim_uint64 GB10 = 10 * GB;
 ossimNitfWriter::ossimNitfWriter(const ossimFilename& filename,
                                  ossimImageSource* inputSource)
    : ossimNitfWriterBase(filename, inputSource),
-     m_outputStream(0),
+     m_str(0),
      m_fileHeader(0),
      m_imageHeader(0),
      m_textHeader(0),
@@ -105,30 +101,40 @@ ossimNitfWriter::~ossimNitfWriter()
 
 bool ossimNitfWriter::isOpen()const
 {
-   return m_outputStream;
+   return (m_str ? m_str->is_open() : false);
 }
 
 bool ossimNitfWriter::open()
 {
+   bool result = true;
    if(isOpen())
    {
       close();
    }
-   m_outputStream = new ossimOFStream64(theFilename.c_str(), 
-                                            ios::out|ios::binary);
-   //new std::ofstream;
-   //m_outputStream->open(theFilename.c_str(), ios::out|ios::binary);
    
-   return m_outputStream->good();
+   // there is a bug in gcc < 5.0 and we can't use constructors in the 
+   // C++11 build.  Will refactor to do a new ifstream then use open
+   //
+   m_str = std::make_shared<ossim::ofstream>();
+   m_str->open(theFilename.c_str(), ios::out|ios::binary);
+   if(!m_str->is_open())
+   {
+      m_str.reset();
+      result = false;
+   }
+   
+   //new std::ofstream;
+   //m_str->open(theFilename.c_str(), ios::out|ios::binary);
+   
+   return result;
 }
 
 void ossimNitfWriter::close()
 {
-   if(m_outputStream)
+   if(m_str)
    {
-      m_outputStream->close();
-      delete m_outputStream;
-      m_outputStream = 0;
+      m_str->close();
+      m_str.reset();
    }
 }
 
@@ -300,7 +306,7 @@ bool ossimNitfWriter::writeBlockBandSeparate()
    ossimIrect      rect        = theInputConnection->getBoundingRect();
    ossim_uint64    bands       = theInputConnection->getNumberOfOutputBands();
    ossim_uint64    idx         = 0;
-   ossim_uint64    headerStart = (ossim_uint64)m_outputStream->tellp64();
+   ossim_uint64    headerStart = (ossim_uint64)m_str->tellp();
 
    // Set the sequencer block size to be the same as output.
    theInputConnection->setTileSize(m_blockSize);
@@ -360,8 +366,8 @@ bool ossimNitfWriter::writeBlockBandSeparate()
    // need a better way to get the length.  This should be queried on the
    // header before writing
    //---
-   m_fileHeader->writeStream(*m_outputStream); 
-   ossim_uint64 headerLength = ((ossim_uint64)m_outputStream->tellp64() - headerStart) /* + 1 */;
+   m_fileHeader->writeStream( *m_str ); 
+   ossim_uint64 headerLength = ((ossim_uint64)m_str->tellp() - headerStart) /* + 1 */;
    
    ossimString representation;
    m_imageHeader->setActualBitsPerPixel(ossim::getActualBitsPerPixel(scalarType));
@@ -387,7 +393,7 @@ bool ossimNitfWriter::writeBlockBandSeparate()
    else if(bands == 1)
    {
       m_imageHeader->setRepresentation("MONO");
-      m_imageHeader->setCategory("MS");
+      m_imageHeader->setCategory("VIS");
    }
    else
    {
@@ -415,9 +421,9 @@ bool ossimNitfWriter::writeBlockBandSeparate()
       m_imageHeader->setBandInfo(idx, bandInfo);
    }
 
-   ossim_uint64 imageHeaderStart = m_outputStream->tellp64();
-   m_imageHeader->writeStream(*m_outputStream);
-   ossim_uint64 imageHeaderEnd = m_outputStream->tellp64();
+   ossim_uint64 imageHeaderStart = m_str->tellp();
+   m_imageHeader->writeStream( *m_str );
+   ossim_uint64 imageHeaderEnd = m_str->tellp();
    ossim_uint64 imageHeaderSize = imageHeaderEnd - imageHeaderStart;
 
    // Start the sequence through tiles:
@@ -432,7 +438,7 @@ bool ossimNitfWriter::writeBlockBandSeparate()
    {
       blockZeros.resize(blockLength);
       memset(&blockZeros.front(), '\0', blockLength);
-      datamask.writeStream(*m_outputStream);
+      datamask.writeStream( *m_str );
    }
    while( data.valid() && !needsAborting())
    {
@@ -443,6 +449,10 @@ bool ossimNitfWriter::writeBlockBandSeparate()
          {
             case OSSIM_USHORT16:
             case OSSIM_USHORT11:
+            case OSSIM_USHORT12:
+            case OSSIM_USHORT13:
+            case OSSIM_USHORT14:
+            case OSSIM_USHORT15:
             {
                endian.swap((ossim_uint16*)data->getBuf(),
                            data->getWidth()*data->getHeight()*data->getNumberOfBands());
@@ -483,7 +493,7 @@ bool ossimNitfWriter::writeBlockBandSeparate()
       }
       if(write)
       {
-         m_outputStream->write((char*)(data->getBuf()), data->getSizeInBytes());         
+         m_str->write((char*)(data->getBuf()), data->getSizeInBytes());         
       }
       
       setPercentComplete(((double)tileNumber / (double)numberOfTiles) * 100);
@@ -495,31 +505,31 @@ bool ossimNitfWriter::writeBlockBandSeparate()
       ++tileNumber;
    }
 
-   // ossim_uint64 imageSegmentEnd = m_outputStream->tellp64();
+   // ossim_uint64 imageSegmentEnd = m_str->tellp();
 
    // Let's write our text header
    if ( m_textHeader.valid() )
    {
-      m_textHeader->writeStream(*m_outputStream); 
+      m_textHeader->writeStream( *m_str ); 
       //Now write the text
-      m_outputStream->write((char*)(m_textEntry.c_str()), m_textEntry.length());
+      m_str->write((char*)(m_textEntry.c_str()), m_textEntry.length());
    }   
 
 
    for (vector<ossimNitfDataExtensionSegmentV2_1>::iterator iter = m_dataExtensionSegments.begin();
       iter != m_dataExtensionSegments.end(); iter++)
    {
-      iter->writeStream(*m_outputStream);
+      iter->writeStream( *m_str );
    }
 
    if (masked)
    {
-      m_outputStream->seekp(imageHeaderEnd);
-      datamask.writeStream(*m_outputStream);
+      m_str->seekp(imageHeaderEnd);
+      datamask.writeStream( *m_str );
       //delete [] blockZeros;
    }
 
-   std::streamoff pos = m_outputStream->tellp64();
+   std::streamoff pos = m_str->tellp();
 
    setComplexityLevel(pos, m_fileHeader.get());
 
@@ -529,10 +539,10 @@ bool ossimNitfWriter::writeBlockBandSeparate()
     */
    m_fileHeader->setFileLength(static_cast<ossim_uint64>(pos));
    m_fileHeader->setHeaderLength(headerLength);
-   m_outputStream->seekp(0, ios::beg);
+   m_str->seekp(0, ios::beg);
    imageInfoRecord.setSubheaderLength(imageHeaderSize);
    m_fileHeader->replaceImageInfoRecord(0, imageInfoRecord);
-   m_fileHeader->writeStream(*m_outputStream);
+   m_fileHeader->writeStream( *m_str );
    
    return true;
 }
@@ -544,7 +554,7 @@ bool ossimNitfWriter::writeBlockBandSequential()
    ossimIrect      rect       = theInputConnection->getBoundingRect();
    ossim_uint64    bands      = theInputConnection->getNumberOfOutputBands();
    ossim_uint64    idx        = 0;
-   ossim_uint64    headerStart   = (ossim_uint64)m_outputStream->tellp64();
+   ossim_uint64    headerStart   = (ossim_uint64)m_str->tellp();
 
    // Set the sequencer block size to be the same as output.
    theInputConnection->setTileSize(m_blockSize);
@@ -576,8 +586,8 @@ bool ossimNitfWriter::writeBlockBandSequential()
    // need a better way to get the length.  This should be queried on the
    // header before writing
    //---  
-   m_fileHeader->writeStream(*m_outputStream);
-   ossim_uint64 headerLength = ((ossim_uint64)m_outputStream->tellp64() - headerStart) /* + 1 */;
+   m_fileHeader->writeStream( *m_str );
+   ossim_uint64 headerLength = ((ossim_uint64)m_str->tellp() - headerStart) /* + 1 */;
    
    ossimString representation;
    m_imageHeader->setActualBitsPerPixel(ossim::getActualBitsPerPixel(scalarType));
@@ -595,7 +605,7 @@ bool ossimNitfWriter::writeBlockBandSequential()
    else if(bands == 1)
    {
       m_imageHeader->setRepresentation("MONO");
-      m_imageHeader->setCategory("MS");
+      m_imageHeader->setCategory("VIS");
    }
    else
    {
@@ -622,9 +632,9 @@ bool ossimNitfWriter::writeBlockBandSequential()
       m_imageHeader->setBandInfo(idx, bandInfo);
    }
 
-   ossim_uint64 imageHeaderStart = m_outputStream->tellp64();
-   m_imageHeader->writeStream(*m_outputStream);
-   ossim_uint64 imageHeaderEnd = m_outputStream->tellp64();
+   ossim_uint64 imageHeaderStart = m_str->tellp();
+   m_imageHeader->writeStream( *m_str );
+   ossim_uint64 imageHeaderEnd = m_str->tellp();
    ossim_uint64 imageHeaderSize = imageHeaderEnd - imageHeaderStart;
 
    // ossimIpt ul = rect.ul();
@@ -638,7 +648,7 @@ bool ossimNitfWriter::writeBlockBandSequential()
 
    // get the start to the first band of data block
    //
-   ossim_uint64 streamOffset = m_outputStream->tellp64();
+   ossim_uint64 streamOffset = m_str->tellp();
    
    // holds the total pixels to the next band
 
@@ -654,6 +664,10 @@ bool ossimNitfWriter::writeBlockBandSequential()
          {
             case OSSIM_USHORT16:
             case OSSIM_USHORT11:
+            case OSSIM_USHORT12:
+            case OSSIM_USHORT13:
+            case OSSIM_USHORT14:
+            case OSSIM_USHORT15:
             {
                endian.swap((ossim_uint16*)data->getBuf(),
                            data->getWidth()*data->getHeight()*data->getNumberOfBands());
@@ -686,12 +700,12 @@ bool ossimNitfWriter::writeBlockBandSequential()
 
       for(idx = 0; idx < bands; ++idx)
       {
-         m_outputStream->seekp(streamOffset+ // start of image stream
+         m_str->seekp(streamOffset+ // start of image stream
                                tileNumber*blockSizeInBytes + // start of block for band separate output
                                bandOffsetInBytes*idx, // which band offset is it
                                ios::beg); 
          
-         m_outputStream->write((char*)(data->getBuf(idx)),
+         m_str->write((char*)(data->getBuf(idx)),
                                blockSizeInBytes);
       }
       ++tileNumber;
@@ -707,12 +721,12 @@ bool ossimNitfWriter::writeBlockBandSequential()
    // Let's write our text header
    if ( m_textHeader.valid() )
    {
-      m_textHeader->writeStream(*m_outputStream); 
+      m_textHeader->writeStream( *m_str ); 
       //Now write the text
-      m_outputStream->write((char*)(m_textEntry.c_str()), m_textEntry.length());
+      m_str->write((char*)(m_textEntry.c_str()), m_textEntry.length());
    }   
 
-   ossim_uint64 pos = m_outputStream->tellp64();
+   ossim_uint64 pos = m_str->tellp();
 
    setComplexityLevel(pos, m_fileHeader.get());
 
@@ -722,10 +736,10 @@ bool ossimNitfWriter::writeBlockBandSequential()
     */
    m_fileHeader->setFileLength(static_cast<ossim_uint64>(pos));
    m_fileHeader->setHeaderLength(headerLength);
-   m_outputStream->seekp(0, ios::beg);
+   m_str->seekp(0, ios::beg);
    imageInfoRecord.setSubheaderLength(imageHeaderSize);
    m_fileHeader->replaceImageInfoRecord(0, imageInfoRecord);
-   m_fileHeader->writeStream(*m_outputStream);
+   m_fileHeader->writeStream( *m_str );
    
    return true;
 }
@@ -873,8 +887,10 @@ void ossimNitfWriter::addDataExtensionSegment(const ossimNitfDataExtensionSegmen
    if (allowTreOverflow == false)
    {
       ossimRefPtr<ossimProperty> pId = des.getProperty(ossimNitfDataExtensionSegmentV2_1::DESID_KW);
-      if (pId == NULL || pId->valueToString() == "TRE_OVERFLOW" ||
-         pId->valueToString() == "REGISTERED EXTENSIONS" || pId->valueToString() == "CONTROLLED EXTENSIONS")
+      if (  !pId ||
+            (pId->valueToString() == "TRE_OVERFLOW") ||
+            (pId->valueToString() == "REGISTERED EXTENSIONS") ||
+            (pId->valueToString() == "CONTROLLED EXTENSIONS"))
       {
          return;
       }

@@ -1,24 +1,17 @@
-//----------------------------------------------------------------------------
-//
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  David Burken
-//
+//---
+// License: MIT
 // Description: Container class for J2K "Start Of Tile" (SOT) record.
-//
+// marker: FF90
 // See document BPJ2K01.00 Table 7-3 Image and tile size (15444-1 Annex A.4.2)
-// 
-//----------------------------------------------------------------------------
-// $Id: ossimJ2kSotRecord.h,v 1.5 2005/10/13 21:24:47 dburken Exp $
-#ifndef ossimJ2kSotRecord_HEADER
-#define ossimJ2kSotRecord_HEADER
+// $Id$
+//---
 
-#include <iosfwd>
-#include <string>
+#ifndef ossimJ2kSotRecord_HEADER
+#define ossimJ2kSotRecord_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <string>
 
 class OSSIM_DLL ossimJ2kSotRecord
 {
@@ -37,8 +30,23 @@ public:
     *
     * @note Marker is not read.
     */
-   void parseStream(std::istream& in);
+   void parseStream(ossim::istream& in);
 
+   /**
+    * Write method.
+    *
+    * Note: Write includes two marker bytes.
+    *
+    * @param out Stream to write to.
+    */
+   void writeStream(std::ostream& out);
+
+   /**
+    * @brief Sets the tile index.
+    * @param isot
+    */
+   void setIsot( ossim_uint16 isot );
+   
    /**
     * @brief print method that outputs a key/value type format adding prefix
     * to keys.
@@ -57,9 +65,6 @@ public:
    friend OSSIM_DLL std::ostream& operator<<(
       std::ostream& out, const ossimJ2kSotRecord& obj);
 
-   /** Start of tile-part marker code. 0xff90 */
-   ossim_uint16 theMarker;
-   
    /** Length in bytes of the marker segment. */
    ossim_uint16 theLsot;
 

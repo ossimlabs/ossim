@@ -1,18 +1,16 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author: Ken Melero
 //
 // Description: This class provides manipulation of filenames.
 //
-//*************************************************************************
-// $Id: ossimFilename.h 20192 2011-10-25 17:27:25Z dburken $
+//---
+// $Id$
 
 #ifndef ossimFilename_HEADER
-#define ossimFilename_HEADER
+#define ossimFilename_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimString.h>
@@ -35,6 +33,7 @@ public:
    ossimFilename(const ossimString& src);
    ossimFilename(const std::string& src);
    ossimFilename(const char* src);
+   const ossimFilename& operator=(const ossimFilename& f);
 
    template <class Iter> ossimFilename(Iter s, Iter e);
 
@@ -49,8 +48,8 @@ public:
 //    friend std::ostream& operator<<(std::ostream& os,
    //                                const ossimFilename& s);
    
-   void convertBackToForwardSlashes();
-   void convertForwardToBackSlashes();
+   // void convertBackToForwardSlashes();
+   // void convertForwardToBackSlashes();
 
    bool setTimes(ossimLocalTm* accessTime,
                  ossimLocalTm* modTime,
@@ -58,6 +57,13 @@ public:
    bool getTimes(ossimLocalTm* accessTime,
                  ossimLocalTm* modTime,
                  ossimLocalTm* createTime)const;
+   /**
+    * @brief Time in seconds since last accessed.
+    * 
+    * @return The number of seconds since last accessed or -1 if file does not
+    * exist.
+    */
+   ossim_int64 lastAccessed() const;
    
    bool touch()const;
    
@@ -77,8 +83,10 @@ public:
    bool        isFile()       const;
    bool        isDir()        const;
    bool        isReadable()   const;
+   bool        isUrl()        const;
    bool        isWriteable()  const;
    bool        isExecutable() const;
+   
    ossim_int64 fileSize()     const;
    
    // Methods to access parts of the ossimFilename.
@@ -218,7 +226,7 @@ public:
     * 
     * @return True on success, false on error.
     */
-   bool copyFileTo(const ossimFilename& ouputFile) const;
+   bool copyFileTo(const ossimFilename& outputFile) const;
 
    /**
     * @brief Checks whether file name is relative or absolute.
@@ -244,16 +252,37 @@ public:
    /** @return The path separator. */
    char getPathSeparator() const;
    
+   /**
+    * Convenience method to append a generic timestamp to the base-name portion of the filename.
+    * This is useful for establishing rolling names for temporary files and logs. Returns this.
+    */
+   ossimFilename& appendTimestamp();
+
+   /**
+    * Convenience method to append a string to the base-name portion of the filename. Returns this.
+    */
+   ossimFilename& append(const ossimString& append_this_to_filename);
+
+   /**
+    * @return This as a string converted to native slashes.
+    */
+   std::string native() const;
+
 protected:
 
-   void convertToNative();
+   /**
+    * @brief Converts slashes of this to internal '/' format.
+    */
+   void converPathSeparator();
+
+   //    void convertToNative();
 
    /*!
     * since windows uses \ for path separation
     * and unix / we need to be consistent.
     */
-   static const char thePathSeparator;
-
+   static const char OSSIM_NATIVE_PATH_SEPARATOR;
+   static const char OSSIM_FILENAME_PATH_SEPARATOR;
 };
 
 // inline std::ostream& operator<<(std::ostream& os, const ossimFilename& f)

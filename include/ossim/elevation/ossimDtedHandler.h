@@ -59,6 +59,7 @@ public:
    };
 
    virtual bool open(const ossimFilename& file, bool memoryMapFlag=false);
+   virtual bool open(std::shared_ptr<ossim::istream>& fileStr, const std::string& connectionString, bool memoryMapFlag=false);
    virtual void close();
    
    /*!
@@ -91,23 +92,23 @@ public:
    
    const ossimDtedVol& vol()const
    {
-      return m_vol;
+      return *m_vol;
    }
    const ossimDtedHdr& hdr()const
    {
-      return m_hdr;
+      return *m_hdr;
    }
    const ossimDtedUhl& uhl()const
    {
-      return m_uhl;
+      return *m_uhl;
    }
    const ossimDtedDsi& dsi()const
    {
-      return m_dsi;
+      return *m_dsi;
    }
    const ossimDtedAcc& acc()const
    {
-      return m_acc;
+      return *m_acc;
    }
 
    virtual ossimObject* dup () const
@@ -180,8 +181,10 @@ protected:
    void readPostsFromFile(DtedHeight &postData, int offset);
 
    mutable OpenThreads::Mutex m_fileStrMutex;
-   mutable std::ifstream m_fileStr;
-   
+  // mutable std::ifstream m_fileStr;
+   mutable std::shared_ptr<ossim::istream> m_fileStr;
+   mutable std::string m_connectionString;
+
    ossim_int32      m_numLonLines;  // east-west dir
    ossim_int32      m_numLatPoints; // north-south
    ossim_int32      m_dtedRecordSizeInBytes;
@@ -199,11 +202,12 @@ protected:
    mutable OpenThreads::Mutex m_memoryMapMutex;
    mutable std::vector<ossim_uint8> m_memoryMap;
    
-   ossimDtedVol m_vol;
-   ossimDtedHdr m_hdr;
-   ossimDtedUhl m_uhl;
-   ossimDtedDsi m_dsi;
-   ossimDtedAcc m_acc;
+   std::shared_ptr<ossimDtedVol> m_vol;
+   std::shared_ptr<ossimDtedHdr> m_hdr;
+   std::shared_ptr<ossimDtedUhl> m_uhl;
+   std::shared_ptr<ossimDtedDsi> m_dsi;
+   std::shared_ptr<ossimDtedAcc> m_acc;
+   
    TYPE_DATA
 };
 
@@ -226,15 +230,17 @@ inline ossim_sint16 ossimDtedHandler::convertSignedMagnitude(ossim_uint16& s) co
 
 inline bool ossimDtedHandler::isOpen()const
 {
-   if(!m_memoryMap.empty()) return true;
-   
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_fileStrMutex);
-   return (m_fileStr.is_open());
+
+  if(!m_memoryMap.empty()) return true;
+  OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_fileStrMutex);
+
+
+  return (m_fileStr != 0);
 }
 
 inline void ossimDtedHandler::close()
 {
-   m_fileStr.close();
+   m_fileStr.reset();
    m_memoryMap.clear();
 }
 

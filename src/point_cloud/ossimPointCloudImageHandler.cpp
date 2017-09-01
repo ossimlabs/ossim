@@ -252,7 +252,7 @@ bool ossimPointCloudImageHandler::getTile(ossimImageData* result, ossim_uint32 r
       // This should never happen;
       ossimNotify(ossimNotifyLevel_FATAL)
             << "ossimPointCloudImageHandler::getTile() ERROR: \n"
-            << "More bands were requsted than was available from the point cloud source. Returning "
+            << "More bands were requested than was available from the point cloud source. Returning "
             << "blank tile." << endl;
       result->makeBlank();
       return false;

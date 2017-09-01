@@ -16,7 +16,7 @@
 #ifndef ossimImageElevationDatabase_HEADER
 #define ossimImageElevationDatabase_HEADER 1
 
-#include <ossim/elevation/ossimElevationDatabase.h>
+#include <ossim/elevation/ossimElevationCellDatabase.h>
 #include <ossim/base/ossimFileProcessorInterface.h>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimFilename.h>
@@ -168,7 +168,7 @@ protected:
 
 private:
 
-   // Private container to hold bounding rect and image handler.
+   // Private container to hold bounding rect, nominal GSD, and image handler.
    struct ossimImageElevationFileEntry
    {
       /** @brief default constructor */
@@ -184,6 +184,7 @@ private:
 
       /** Bounding rectangle in decimal degrees. */
       ossimGrect m_rect;
+      ossimDpt m_nominalGSD; // post spacing at center
 
       /** True if in ossimElevationCellDatabase::m_cacheMap. */
       bool m_loadedFlag;

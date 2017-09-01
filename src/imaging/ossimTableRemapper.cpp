@@ -211,6 +211,10 @@ void ossimTableRemapper::remapFromNativeTable(
       }
       
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_USHORT16:
       {
          remapFromNativeTable(ossim_uint16(0), inputTile);
@@ -416,8 +420,13 @@ void ossimTableRemapper::remapFromNormalizedTable(
          buf[pixel] = (p >= 0.0) ? ( (p <=1.0) ? p : 1) : 0.0;
       }
 
+      // (GP)this is not for th table so this offset appears wrong
+      // commenting this out and replacing with t bin count
       // Go to next band.
-      rt += BAND_OFFSET;
+      //rt += BAND_OFFSET;
+
+
+      rt += theTableBinCount;
       buf += PPB;
    }
    
@@ -494,6 +503,10 @@ ostream& ossimTableRemapper::print(ostream& os) const
       }
       
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_USHORT16:
       {
          dumpTable(ossim_uint16(0), os);
@@ -567,6 +580,12 @@ ostream& operator<<(ostream& os, const ossimTableRemapper& tr)
 
 // Private to disallow use...
 ossimTableRemapper::ossimTableRemapper(const ossimTableRemapper&)
+: theNormBuf(0),
+  theTableBinCount(0),
+  theTableBandCount(0),
+  theTableType(UKNOWN),
+  theInputScalarType(OSSIM_SCALAR_UNKNOWN),
+  theOutputScalarType(OSSIM_SCALAR_UNKNOWN)
 {
 }
 

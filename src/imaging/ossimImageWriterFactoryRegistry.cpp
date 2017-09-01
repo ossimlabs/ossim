@@ -16,7 +16,9 @@
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <ossim/base/ossimKeywordNames.h>
+#include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimString.h>
+#include <ossim/base/ossimStringProperty.h>
 #include <algorithm>
 #include <iterator>
 #include <ostream>
@@ -251,20 +253,43 @@ std::ostream& ossimImageWriterFactoryRegistry::printWriterProps(std::ostream& ou
                ++imageTypeListIter;
             }
 
-            // Loop through writer properties, e.g. compression_quality.
-            out << "\nproperties:\n";
+            // Loop through writer properties:
             std::vector<ossimString> propNames;
             writer->getPropertyNames(propNames);
-            std::vector<ossimString>::const_iterator propNamesIter = propNames.begin();
-            while ( propNamesIter != propNames.end() )
+            if ( propNames.size() )
             {
-               out << (*propNamesIter) << "\n";
-               
-               ++propNamesIter;
+               out << "\nproperties:\n";
+               ossimRefPtr<ossimProperty> prop = 0;
+               std::vector<ossimString>::const_iterator p = propNames.begin();
+               while ( p != propNames.end() )
+               {
+                  out << "   " << (*p) << "\n";
+                  prop = writer->getProperty( *p );
+                  if ( prop.valid() )
+                  {
+                     ossimStringProperty* stringProp =
+                        dynamic_cast<ossimStringProperty*>(prop.get());
+                     if ( stringProp )
+                     {
+                        if ( stringProp->getConstraints().size() )
+                        {
+                           out << "      constraints:\n";
+                           std::vector<ossimString>::const_iterator strPropIter =
+                              stringProp->getConstraints().begin();
+                           while( strPropIter != stringProp->getConstraints().end() )
+                           {
+                              out << "         " << (*strPropIter) << "\n";
+                              ++strPropIter;
+                           }
+                        }
+                     }
+                  }
+                  
+                  ++p;
+               }
+               out << "\n";
             }
-            out << "\n";
          }
-
          ++typeNamesIter;
       }
       

@@ -637,7 +637,7 @@ bool ossimLambertConformalConicProjection::operator==(const ossimProjection& pro
    if (!ossimMapProjection::operator==(proj)) 
       return false;
 
-   ossimLambertConformalConicProjection* p = PTR_CAST(ossimLambertConformalConicProjection, &proj);
+   const ossimLambertConformalConicProjection* p = dynamic_cast<const ossimLambertConformalConicProjection*>(&proj);
    if (!p) return false;
 
    if (!ossim::almostEqual(Lambert_Std_Parallel_1,p->Lambert_Std_Parallel_1)) return false;

@@ -15,11 +15,13 @@
 
 #include <ossim/elevation/ossimImageElevationHandler.h>
 #include <ossim/base/ossimCommon.h>
+#include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimGpt.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <OpenThreads/ScopedLock>
 
 #include <iostream> // tmp drb
 using namespace std;
@@ -30,25 +32,28 @@ RTTI_DEF1(ossimImageElevationHandler, "ossimImageElevationHandler" , ossimElevCe
 
 // Define Trace flags for use within this file:
 static ossimTrace traceDebug ("ossimImageElevationHandler:debug");
+static const ossim_uint32 MAX_TILE_CACHE_SIZE = 32;
 
 ossimImageElevationHandler::ossimImageElevationHandler()
    :
    ossimElevCellHandler(),
-   m_ih(0),
-   m_geom(0),
    m_rect(),
+   m_tileSize(256,256),
+   m_numTilesPerRow(0),
    m_mutex()
 {
+   ossim::defaultTileSize(m_tileSize);
 }
 
 ossimImageElevationHandler::ossimImageElevationHandler(const ossimFilename& file)
    :
    ossimElevCellHandler(),
-   m_ih(0),
-   m_geom(0),
    m_rect(),
+   m_tileSize(256,256),
+   m_numTilesPerRow(0),
    m_mutex()
 {
+   ossim::defaultTileSize(m_tileSize);
    open(file);
 }
 
@@ -74,12 +79,12 @@ bool ossimImageElevationHandler::open(const ossimFilename& file)
          {
             result = true;
 
-            //---
             // Image rect stored as a drect for ossimImageElevationHandler::pointHasCoverage
             // method.
-            //---
-            m_rect = ossimDrect(0.0, 0.0,
-                                m_ih->getNumberOfSamples()-1, m_ih->getNumberOfLines()-1);
+            m_rect = ossimDrect(0.0, 0.0, m_ih->getNumberOfSamples()-1, m_ih->getNumberOfLines()-1);
+            m_numTilesPerRow = m_rect.width()/m_tileSize.x;
+            if (m_numTilesPerRow * m_tileSize.x != m_rect.width())
+               ++m_numTilesPerRow;
 
             // Initialize base class stuff.
             theFilename = file;
@@ -137,81 +142,115 @@ double ossimImageElevationHandler::getHeightAboveMSL(const ossimGpt& gpt)
    ossimDpt dpt;
    m_geom->worldToLocal(gpt, dpt);
 
-   if ( m_rect.pointWithin(dpt) )
-   {
-      // Cast it to an int which will shift to nearest upper left post.
-      ossim_int32 x0 = static_cast<ossim_int32>(dpt.x);
-      ossim_int32 y0 = static_cast<ossim_int32>(dpt.y);
-      
-      // Right edge check.
-      if(x0 == static_cast<ossim_int32>(m_rect.lr().x))
-      {
-         --x0;
-      }
-      
-      // Bottom edge check.
-      if(y0 == static_cast<ossim_int32>(m_rect.lr().y))
-      {
-         --y0;
-      }
+   if  ( !m_rect.pointWithin(dpt) )
+      return height;
 
-      m_mutex.lock(); // Call to getTile not thread safe.
-      ossimRefPtr<ossimImageData> data = m_ih->getTile( ossimIrect(x0, y0, x0+1, y0+1), 0 );
-      if ( data.valid() )
-      {
-         ossimIrect dataRect = data->getImageRectangle();
+   // Cast it to an int which will shift to nearest upper left post.
+   ossim_uint32 x0 = static_cast<ossim_uint32>(dpt.x);
+   ossim_uint32 y0 = static_cast<ossim_uint32>(dpt.y);
 
-         double p00 = data->getPix( ossimIpt(x0,   y0)   );
-         double p01 = data->getPix( ossimIpt(x0+1, y0)   );
-         double p10 = data->getPix( ossimIpt(x0,   y0+1) );
-         double p11 = data->getPix( ossimIpt(x0+1, y0+1) );
-         
-         double xt0 = dpt.x - x0;
-         double yt0 = dpt.y - y0;
-         double xt1 = 1-xt0;
-         double yt1 = 1-yt0;
-         
-         double w00 = xt1*yt1;
-         double w01 = xt0*yt1;
-         double w10 = xt1*yt0;
-         double w11 = xt0*yt0;
-         
-         // Test for null posts and set the corresponding weights to 0:
-         const double NP = data->getNullPix(0);
-         
-         if (p00 == NP)
-            w00 = 0.0;
-         if (p01 == NP)
-            w01 = 0.0;
-         if (p10 == NP)
-            w10 = 0.0;
-         if (p11 == NP)
-            w11 = 0.0;
-         
+   ossimRefPtr<ossimImageData> data = getTile(x0, y0);
+
+   // Check if we are at the bottom or right edge of the tile to move in one post:
+   ossimIpt data_lr = data->getImageRectangle().lr();
+   if (x0 == static_cast<ossim_uint32>(data_lr.x))
+      --x0;
+   if (y0 == static_cast<ossim_uint32>(data_lr.y))
+      --y0;
+
+   double p00 = data->getPix( ossimIpt(x0,   y0)   );
+   double p01 = data->getPix( ossimIpt(x0+1, y0)   );
+   double p10 = data->getPix( ossimIpt(x0,   y0+1) );
+   double p11 = data->getPix( ossimIpt(x0+1, y0+1) );
+
+   double xt0 = dpt.x - x0;
+   double yt0 = dpt.y - y0;
+   double xt1 = 1-xt0;
+   double yt1 = 1-yt0;
+
+   double w00 = xt1*yt1;
+   double w01 = xt0*yt1;
+   double w10 = xt1*yt0;
+   double w11 = xt0*yt0;
+
+   // Test for null posts and set the corresponding weights to 0:
+   const double NP = data->getNullPix(0);
+
+   if (p00 == NP)
+      w00 = 0.0;
+   if (p01 == NP)
+      w01 = 0.0;
+   if (p10 == NP)
+      w10 = 0.0;
+   if (p11 == NP)
+      w11 = 0.0;
+
 #if 0 /* Serious debug only... */
-         cout << "\np00:  " << p00
-              << "\np01:  " << p01
-              << "\np10:  " << p10
-              << "\np11:  " << p11
-              << "\nw00:  " << w00
-              << "\nw01:  " << w01
-              << "\nw10:  " << w10
-              << "\nw11:  " << w11
-              << endl;
+   cout << "\np00:  " << p00
+         << "\np01:  " << p01
+         << "\np10:  " << p10
+         << "\np11:  " << p11
+         << "\nw00:  " << w00
+         << "\nw01:  " << w01
+         << "\nw10:  " << w10
+         << "\nw11:  " << w11
+         << endl;
 #endif
-         
-         double sum_weights = w00 + w01 + w10 + w11;
-         
-         if (sum_weights)
-            height = (p00*w00 + p01*w01 + p10*w10 + p11*w11) / sum_weights;
 
-      } // if ( data.valid() )
-
-      m_mutex.unlock();
-      
-   } // if ( m_rect.pointWithin(dpt) )
+   double sum_weights = w00 + w01 + w10 + w11;
+   if (sum_weights)
+      height = (p00*w00 + p01*w01 + p10*w10 + p11*w11) / sum_weights;
 
    return height;
+}
+
+ossimImageData* ossimImageElevationHandler::getTile(ossim_uint32 x, ossim_uint32 y) const
+{
+   // Establish the tile ID that this post belongs to:
+   ossim_uint32 u = x/m_tileSize.x;
+   ossim_uint32 v = y/m_tileSize.y;
+   ossim_uint32 tile_id = v*m_numTilesPerRow + u;
+
+   ossimRefPtr<ossimImageData> data = 0;
+
+   // Search for this tile in the cache:
+   OpenThreads::ScopedWriteLock lock (m_mutex);
+   vector<TileCacheEntry>::iterator iter = m_tileCache.begin();
+   while ((iter != m_tileCache.end()) && (iter->id != tile_id))
+      ++iter;
+
+   if (iter != m_tileCache.end())
+   {
+      // Found an entry in the cache:
+      data = iter->data;
+      if (iter != m_tileCache.begin())
+      {
+         // Need to move the entry to the top of the list (current most popular)
+         TileCacheEntry temp = *iter;
+         m_tileCache.erase(iter);
+         m_tileCache.insert(m_tileCache.begin(), temp);
+      }
+   }
+   else
+   {
+      // Didn't find the tile in the cache, read it from the handler and insert into the cache:
+      ossimIpt ul (u*m_tileSize.x, v*m_tileSize.y);
+      ossimIpt lr (ul.x + m_tileSize.x - 1, ul.y + m_tileSize.y - 1);
+      ossimIrect tileRect (ul, lr);
+      ossimRefPtr<ossimImageData> inData = m_ih->getTile(tileRect, 0 );
+      if (inData.valid())
+      {
+         // Always insert at beginning. Need to check for overflow:
+         data = (ossimImageData*) inData->dup();
+         data->assign(inData.get());
+         TileCacheEntry entry (tile_id, data.get());
+         if (m_tileCache.size() == MAX_TILE_CACHE_SIZE)
+            m_tileCache.pop_back();
+         m_tileCache.insert(m_tileCache.begin(), entry);
+      }
+   }
+
+   return data.get();
 }
 
 ossimIpt ossimImageElevationHandler::getSizeOfElevCell() const
@@ -230,18 +269,13 @@ double ossimImageElevationHandler::getPostValue(const ossimIpt& gridPt ) const
    double height = ossim::nan();
    if ( m_rect.pointWithin(ossimDpt(gridPt)) )
    {
-      ossimRefPtr<ossimImageHandler> ih = const_cast<ossimImageHandler*>(m_ih.get());
-      
-      m_mutex.lock(); // Call to getTile(...) not thread safe.
-      ossimRefPtr<ossimImageData> data =
-         ih->getTile( ossimIrect(gridPt.x, gridPt.y, gridPt.x+1, gridPt.y+1), 0 );
+      ossimRefPtr<ossimImageData> data = getTile(gridPt.x, gridPt.y);
       if ( data.valid() )
       {
          height = data->getPix(0, 0);
          if (height == data->getNullPix(0))
             height = ossim::nan();
       }
-      m_mutex.unlock();
    }
    return height;
 }

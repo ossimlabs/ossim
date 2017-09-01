@@ -62,7 +62,8 @@ public:
    
    ossimKeywordlist& headerKwl(){return m_headerKwl;}
    const ossimKeywordlist& headerKwl()const{return m_headerKwl;}
-   
+   ossim_int64 getContentLength()const;
+   ossimString getHeaderValue(const ossimString& headerName)const;
    const ossimString& statusLine()const{return m_statusLine;}
    ossim_uint32 getStatusCode()const{return m_statusCode;}
    

@@ -71,6 +71,7 @@ protected:
     * @return true if all characters in theTagData are printable.
     */
    bool tagDataIsAscii() const;
+   bool tagDataIsXml() const;
 
    /**
     * Holds entire tag data(theTagLength) plus one byte for null terminator.

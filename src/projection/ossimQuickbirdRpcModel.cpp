@@ -99,11 +99,12 @@ ossimObject* ossimQuickbirdRpcModel::dup() const
 //*************************************************************************************************
 bool ossimQuickbirdRpcModel::parseFile(const ossimFilename& file)
 {
-   if (!parseNitfFile(file))
+   bool result = parseNitfFile(file);
+   if ( !result )
    {
-      return parseTiffFile(file);
+      result = parseTiffFile(file);
    }
-   return true;
+   return result;
 }
 
 //*************************************************************************************************
@@ -112,10 +113,20 @@ bool ossimQuickbirdRpcModel::parseFile(const ossimFilename& file)
 bool ossimQuickbirdRpcModel::parseNitfFile(const ossimFilename& file)
 {
    setErrorStatus();
-   ossimFilename nitfFile = file;
-   
+
+   //---
+   // ossimNitfFile::parseFile(...) checks the first eight byte so three calls
+   // to parseFile are not necessary. drb - 21 Dec. 2016  
+   //---
    ossimRefPtr<ossimNitfFile> nitfFilePtr = new ossimNitfFile;
+   if( nitfFilePtr->parseFile( file ) == false )
+   {
+      return false;
+   }
    
+#if 0   
+   ossimFilename nitfFile = file;
+   ossimRefPtr<ossimNitfFile> nitfFilePtr = new ossimNitfFile;
    if(!nitfFilePtr->parseFile(nitfFile))
    {
       nitfFile = nitfFile.setExtension("NTF");
@@ -126,6 +137,7 @@ bool ossimQuickbirdRpcModel::parseNitfFile(const ossimFilename& file)
             return false;
       }
    }
+#endif
    
    ossimRefPtr<ossimNitfImageHeader> ih = nitfFilePtr->getNewImageHeader(0);
    if (!ih)
@@ -327,8 +339,11 @@ bool ossimQuickbirdRpcModel::parseMetaData(const ossimFilename& base_name)
    if(!theSupportData->open(metadataFile))
    {
       theSupportData = 0; // ossimRefPtr
-      ossimNotify(ossimNotifyLevel_WARN) << "ossimQuickbirdRpcModel::parseNitfFile WARNING:"
+#if 0 /* This should be wrapped in trace. drb */
+      ossimNotify(ossimNotifyLevel_WARN)
+         << "ossimQuickbirdRpcModel::parseMetaData WARNING:"
          << "\nCould not open IMD file.  Sensor ID unknown." << std::endl;
+#endif
       return false;
    }
 

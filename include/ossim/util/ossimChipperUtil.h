@@ -10,7 +10,7 @@
 //
 // Description:
 // 
-// Utility class to for chipping out images. , orthorectifying imagery with an
+// Utility class to for chipping out images. Orthorectifying imagery with an
 // added slant toward doing digital elevation model(DEM) operations.
 // 
 //----------------------------------------------------------------------------
@@ -31,6 +31,7 @@
 #include <vector>
 
 // Forward class declarations:
+class ossimAnnotationSource;
 class ossimArgumentParser;
 class ossimDpt;
 class ossimFilename;
@@ -421,7 +422,7 @@ private:
     * @brief Creates a new writer.
     *
     * This will use the writer option (-w or --writer), if present; else,
-    * it will be derived from the output file extention.
+    * it will be derived from the output file extension.
     *
     * This will also set any writer properties passed in.
     *
@@ -467,6 +468,23 @@ private:
       ossimScalarType scalar) const;
 
    /**
+    * @brief Add annotation source to chain.
+    * @param Source to connect to.
+    * @return End of chain with annotion source on it.
+    */
+   ossimRefPtr<ossimImageSource> addAnnotations(
+      ossimRefPtr<ossimImageSource> &source) const;
+
+   /**
+    * @brief Adds cross hair graphic to annotation source.
+    * @param Annotator to add objects to.
+    * @param prefix e.g. annotation0.
+    */
+   void addCrossHairAnnotation(
+      ossimRefPtr<ossimAnnotationSource> annotator,
+      const std::string& prefix ) const;
+
+   /**
     * @brief Set up ossimHistogramRemapper for a chain.
     * @param chain Chain to set up.
     * @return true on success, false on error.
@@ -496,6 +514,39 @@ private:
    void getAreaOfInterest( ossimImageSource* source, ossimIrect& rect ) const;
 
    /**
+    * Gets rect from string in the form of <x>,<y>,<w>,<h>.
+    * @param s String to parse.
+    * @rect Initialized by this.
+    * @return true on success, false, on error.
+    */
+   bool getIrect( const std::string& s, ossimIrect& rect ) const;
+
+   /**
+    * Gets image rect from string in the form of <lat>,<lon>,<w>,<h>.
+    *
+    * Computes image rect from world point assumed to be center of aoi.
+    *
+    * @param chain
+    * @param s String to parse.
+    * @rect Initialized by this.
+    * @return true on success, false, on error.
+    */
+   bool getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
+                  const std::string& s, ossimIrect& rect ) const;
+   
+   /**
+    * Gets 256 x 256 image rect from center of the image.
+    *
+    * Computes image rect from world point assumed to be center of aoi.
+    *
+    * @param chain
+    * @rect Initialized by this.
+    * @return true on success, false, on error.
+    */
+   bool getIrect( ossimRefPtr<ossimSingleImageChain>& chain,
+                  ossimIrect& rect ) const;
+   
+   /**
     * @brief Method to calculate and initialize scale and area of interest
     * for making a thumbnail.
     *
@@ -522,6 +573,9 @@ private:
     * @param bandList List initialized by this.
     */
    void getBandList( std::vector<ossim_uint32>& bandList ) const;
+
+   /** @return true if annotation options are set; false, if not. */
+   bool hasAnnotations() const;
 
    /** @return true if color table (lut) is set; false, if not. */
    bool hasLutFile() const;
@@ -616,7 +670,7 @@ private:
    bool northUp() const;
 
    /** @return true if operation is "chip" or identity; false, if not. */
-   bool isIdentity() const;
+   bool isChipMode() const;
 
    /** @return true if key is set to true; false, if not. */
    bool keyIsTrue( const std::string& key ) const;
@@ -711,6 +765,8 @@ private:
     * @return sharpness mode
     */   
    std::string getSharpenMode() const;
+
+   int getHistoMode() const;
 
    /** @brief Initializes arg parser and outputs usage. */
    void usage(ossimArgumentParser& ap);

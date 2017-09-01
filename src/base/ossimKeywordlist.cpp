@@ -1,15 +1,17 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Description: This class provides capabilities for keywordlists.
 //
-//********************************************************************
-// $Id: ossimKeywordlist.cpp 22516 2013-12-14 17:19:47Z dburken $
+//---
+// $Id$
 
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDirectory.h>
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimIoStream.h>
+
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimRegExp.h>
 #include <ossim/base/ossimTrace.h>
@@ -21,14 +23,10 @@
 #include <utility>
 
 static ossimTrace traceDebug("ossimKeywordlist:debug");
-static const ossim_int32 MAX_LINE_LENGTH = 256;
-static const char NULL_KEY_NOTICE[]
-= "ossimKeywordlist Notice:  Null key passed to method.";
-
 
 #ifdef OSSIM_ID_ENABLED
 static const bool TRACE = false;
-static const char OSSIM_ID[] = "$Id: ossimKeywordlist.cpp 22516 2013-12-14 17:19:47Z dburken $";
+static const char OSSIM_ID[] = "$Id: ossimKeywordlist.cpp 23632 2015-11-19 20:43:06Z dburken $";
 #endif
 
 const std::string ossimKeywordlist::NULL_KW = "";
@@ -724,29 +722,31 @@ ossimKeywordlist::getMapEntry(const ossimString& key)
 bool ossimKeywordlist::parseFile(const ossimFilename& file,
                                  bool ignoreBinaryChars)
 {
-   if(!file.exists()) return false;
+   if(!file.exists())
+      return false;
+
    bool result = false;
    std::ifstream is;
    is.open(file.c_str(), std::ios::in | std::ios::binary);
-   
+
    if(!is.fail())
    {
+      m_currentlyParsing = file;
       result = parseStream(is, ignoreBinaryChars);
    }
-   
+
    is.close();
-   
    return result;
 }
 
-bool ossimKeywordlist::parseStream(std::istream& is, bool /* ignoreBinaryChars */)
+bool ossimKeywordlist::parseStream(ossim::istream& is, bool /* ignoreBinaryChars */)
 {
    return parseStream(is);
 }
 
 bool ossimKeywordlist::parseString(const std::string& inString)
 {
-   std::istringstream in(inString);
+   ossim::istringstream in(inString);
    
    return parseStream(in);
 }
@@ -767,7 +767,7 @@ bool ossimKeywordlist::isValidKeywordlistCharacter(ossim_uint8 c)const
    return false;
 }
 
-void ossimKeywordlist::skipWhitespace(std::istream& in)const
+void ossimKeywordlist::skipWhitespace(ossim::istream& in)const
 {
    int c = in.peek();
    while( !in.fail() &&
@@ -778,7 +778,7 @@ void ossimKeywordlist::skipWhitespace(std::istream& in)const
    }
 }
 
-ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readComments(ossimString& sequence, std::istream& in)const
+ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readComments(ossimString& sequence, ossim::istream& in)const
 {
    KeywordlistParseState result = KeywordlistParseState_FAIL;
    char c = (char)in.peek();
@@ -793,16 +793,17 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readComments(ossimStri
          while(!in.bad()&&!in.eof())
          {
             c = (char)in.get();
+            if (in.bad() || in.eof())
+               break;
+
             if(!isValidKeywordlistCharacter(c))
             {
                result = KeywordlistParseState_BAD_STREAM;
                break;
             }
-            if((c == '\n')||
-               (c == '\r'))
-            {
+            if((c == '\n')|| (c == '\r'))
                break;
-            }
+
             sequence += c;
          }
       }
@@ -810,7 +811,53 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readComments(ossimStri
    return result;
 }
 
-ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readKey(ossimString& sequence, std::istream& in)const
+ossimKeywordlist::KeywordlistParseState
+ossimKeywordlist::readPreprocDirective(ossim::istream& in)
+{
+   KeywordlistParseState status = KeywordlistParseState_FAIL;
+
+   char c = (char)in.peek();
+   while (c == '#')
+   {
+      // Read the line as one big value:
+      ossimString sequence;
+      status = readValue(sequence, in);
+      if (status)
+         break;
+
+      ossimString directive = sequence.before(" ");
+
+      // Check for external KWL include file:
+      if (directive == "#include")
+      {
+         ossimFilename includeFile = sequence.after(" ");
+         if (includeFile.empty())
+            break; // ignore bogus preproc line
+         includeFile.trim("\"");
+         includeFile.expandEnvironmentVariable();
+
+         // The filename can be either relative to the current file being parsed or absolute:
+         if (includeFile.string()[0] != '/')
+            includeFile = m_currentlyParsing.path() + "/" + includeFile;
+
+         // Save the current path in case the new one contains it's own include directive!
+         ossimFilename savedCurrentPath = m_currentlyParsing;
+         addFile(includeFile); // Quietly ignore any errors loading external KWL.
+         m_currentlyParsing = savedCurrentPath;
+      }
+
+//      else if (directive == "#add_new_directive_here")
+//      {
+//         process directive
+//      }
+
+      status = KeywordlistParseState_OK;
+      break;
+   }
+   return status;
+}
+
+ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readKey(ossimString& sequence, ossim::istream& in)const
 {
    KeywordlistParseState result = KeywordlistParseState_FAIL;
    if(!sequence.empty())
@@ -873,7 +920,7 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readKey(ossimString& s
    return result;
 }
 
-ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readValue(ossimString& sequence, std::istream& in)const
+ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readValue(ossimString& sequence, ossim::istream& in)const
 {
    KeywordlistParseState result = KeywordlistParseState_OK;
    
@@ -898,7 +945,7 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readValue(ossimString&
          break;
       }
    }
-   // The ifstream object will end in 'ÿ' (character 255 or -1) if the end-of-file indicator 
+   // The ifstream object will end in 'ï¿½' (character 255 or -1) if the end-of-file indicator 
    // will not be set(e.g \n). In this case, end-of-file conditions would never be detected. 
    // add EOF (which is actually the integer -1 or 255) check here.
    // Reference link http://www.cplusplus.com/forum/general/33821/
@@ -916,7 +963,10 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readValue(ossimString&
          {
             if(quoteCount < 1)
             {
-               // if quoted
+               //---
+               // If string has leading tripple quoted bump the "quoteCount" so
+               // we start skipping line breaks, preserving paragraph style strings.
+               //---
                if(ossimString(sequence.begin(), sequence.begin()+3) == "\"\"\"")
                {
                   ++quoteCount;
@@ -932,7 +982,17 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readValue(ossimString&
          }
          if(quoteCount > 1)
          {
-            sequence = ossimString(sequence.begin()+3, sequence.begin()+(sequence.size()-3));
+            //---
+            // Have leading and trailing tripple quotes. Some tiff writers, e.g. Space
+            // Imaging are using four quotes.  Below code strips all quotes from each end.
+            //---
+            char quote = '"';
+            std::string::size_type startPos = sequence.string().find_first_not_of(quote);
+            std::string::size_type stopPos  = sequence.string().find_last_not_of(quote);
+            if ( ( startPos != std::string::npos ) && (stopPos != std::string::npos) )
+            {
+               sequence = sequence.string().substr( startPos, stopPos-startPos+1 );
+            }
             break;
          }
       }
@@ -945,7 +1005,7 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readValue(ossimString&
    return result;
 }
 
-ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readKeyAndValuePair(ossimString& key, ossimString& value, std::istream& in)const
+ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readKeyAndValuePair(ossimString& key, ossimString& value, ossim::istream& in)const
 {
    ossimKeywordlist::KeywordlistParseState keyState   = readKey(key, in);
    if(keyState & KeywordlistParseState_BAD_STREAM) return keyState;
@@ -954,7 +1014,7 @@ ossimKeywordlist::KeywordlistParseState ossimKeywordlist::readKeyAndValuePair(os
                                                                  static_cast<int>(valueState)) );
 }
 
-bool ossimKeywordlist::parseStream(std::istream& is)
+bool ossimKeywordlist::parseStream(ossim::istream& is)
 {
    if (!is) // Check stream state.
    {
@@ -967,9 +1027,21 @@ bool ossimKeywordlist::parseStream(std::istream& is)
    while(!is.eof() && !is.bad())
    {
       skipWhitespace(is);
-      if(is.eof() || is.bad()) return true; // we skipped to end so valid keyword list
-      state = readComments(sequence, is);
-      if(state & KeywordlistParseState_BAD_STREAM) return false;
+      if(is.eof() || is.bad())
+         return true; // we skipped to end so valid keyword list
+
+      state = readPreprocDirective(is);
+      if(state & KeywordlistParseState_BAD_STREAM)
+         return false;
+
+      // if we failed a preprocessor directive parse then try comment parse.
+      if(state == KeywordlistParseState_FAIL)
+      {
+         state = readComments(sequence, is);
+         if(state & KeywordlistParseState_BAD_STREAM)
+            return false;
+      }
+
       // if we failed a comment parse then try key value parse.
       if(state == KeywordlistParseState_FAIL)
       {
@@ -979,18 +1051,11 @@ bool ossimKeywordlist::parseStream(std::istream& is)
          {
             key = key.trim();
             if(key.empty())
-            {
                return true;
-            }
+
             if ( m_expandEnvVars == true )
-            {
-               ossimString result = value.expandEnvironmentVariable();
-               m_map.insert(std::make_pair(key.string(), result.string()));
-            }
-            else
-            {
-               m_map.insert(std::make_pair(key.string(), value.string()));
-            }
+               value = value.expandEnvironmentVariable();
+            m_map.insert(std::make_pair(key.string(), value.string()));
          }
          else if(testKeyValueState & KeywordlistParseState_BAD_STREAM)
          {
@@ -1135,32 +1200,9 @@ void ossimKeywordlist::getSubstringKeyList(std::vector<ossimString>& result,
 ossim_uint32 ossimKeywordlist::getNumberOfSubstringKeys(const ossimString& regularExpression)const
 {
    KeywordMap::const_iterator i;
-   std::list<ossimString> currentList;
-   ossim_uint32 result = 0;
-   ossimRegExp regExp;
-   
-   regExp.compile(regularExpression.c_str());
-   
-   for(i = m_map.begin(); i != m_map.end(); ++i)
-   {
-      if(regExp.find( (*i).first.c_str()))
-      {
-         ossimString value = ossimString((*i).first.begin()+regExp.start(),
-                                         (*i).first.begin()+regExp.start()+regExp.end());
-         
-         // make sure we have not already marked it as
-         // found
-         if(std::find(currentList.begin(),
-                      currentList.end(),
-                      value) == currentList.end())
-         {
-            currentList.push_back(value);
-            ++result;
-         }
-      }
-   }
-   
-   return result;
+   std::vector<ossimString> currentList;
+   getSubstringKeyList(currentList, regularExpression);
+   return (ossim_uint32)currentList.size();
 }
 
 void ossimKeywordlist::addPrefixToAll(const ossimString& prefix)

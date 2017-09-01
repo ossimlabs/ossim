@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc.
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -20,6 +20,7 @@
 #include <ossim/imaging/ossimNitf20Writer.h>
 #include <ossim/imaging/ossimPdfWriter.h>
 #include <ossim/imaging/ossimTiffWriter.h>
+#include <ossim/imaging/ossimWriter.h>
 
 ossimImageWriterFactory* ossimImageWriterFactory::theInstance = (ossimImageWriterFactory*)NULL;
 
@@ -130,6 +131,22 @@ ossimImageWriterFactory::createWriter(const ossimString& typeName)const
       return writer.release();
    }
  
+   // Check for generic ossim writer.
+   writer = new ossimWriter;
+   if ( writer->getClassName() == typeName )
+   {
+      return writer.release();
+   }
+   else
+   {
+      // See if the type name is supported by the writer.
+      if ( writer->hasImageType(typeName) )
+      {
+         writer->setOutputImageType(typeName);
+         return writer.release();
+      }
+   }
+
    writer = new ossimTiffWriter;
    
    if (STATIC_TYPE_NAME(ossimTiffWriter) == typeName )
@@ -284,7 +301,6 @@ ossimObject* ossimImageWriterFactory::createObject(const ossimString& typeName)c
    return createWriter(typeName);
 }
 
-
 void ossimImageWriterFactory::getExtensions(std::vector<ossimString>& result)const
 {
    result.push_back("ras");
@@ -304,7 +320,8 @@ void ossimImageWriterFactory::getTypeNameList(std::vector<ossimString>& typeList
    typeList.push_back(STATIC_TYPE_NAME(ossimGeneralRasterWriter));
    typeList.push_back(STATIC_TYPE_NAME(ossimNitfWriter));
    typeList.push_back(STATIC_TYPE_NAME(ossimNitf20Writer));
-   typeList.push_back(STATIC_TYPE_NAME(ossimPdfWriter));   
+   typeList.push_back(STATIC_TYPE_NAME(ossimPdfWriter));
+   typeList.push_back(STATIC_TYPE_NAME(ossimWriter));
 }
 
 void ossimImageWriterFactory::getImageFileWritersBySuffix(
@@ -366,6 +383,10 @@ void ossimImageWriterFactory::getImageTypeList( std::vector<ossimString>& imageT
    
    // Add the pdf writer types.
    writer = new ossimPdfWriter;
+   writer->getImageTypeList(imageTypeList);
+   
+   // Add the generic ossim writer types.
+   writer = new ossimWriter;
    writer->getImageTypeList(imageTypeList);
    
    writer = 0;

@@ -25,6 +25,8 @@
 #include <ossim/imaging/ossimFilterResampler.h>
 #include <ossim/imaging/ossimImageMetaData.h>
 
+class ossimMultiResLevelHistogram;
+
 /**
  *  This class defines an abstract Handler which all image handlers(loaders)
  *  should derive from.
@@ -193,10 +195,12 @@ public:
     *  @param numberOfRLevels sets the maximum number of reduced resolution
     *  level to compute histogram for.
     *
+    *  @param mode OSSIM_HISTO_MODE_NORMAL or OSSIM_HISTO_MODE_FAST.
+    *
     *  @return true on success, false if not open.
     */
-   virtual bool buildHistogram(int numberOfRLevels=0);
-   
+   virtual bool buildHistogram(
+      int numberOfRLevels=0, ossimHistogramMode mode=OSSIM_HISTO_MODE_NORMAL );
    
    /**
     *  Build a histograms for all image entries.
@@ -204,9 +208,12 @@ public:
     *  @param numberOfRLevels sets the maximum number of reduced resolution
     *  level to compute histogram for.
     *
+    *  @param mode OSSIM_HISTO_MODE_NORMAL or OSSIM_HISTO_MODE_FAST.
+    *
     *  @return true on success, false if not open.
     */
-   virtual bool buildAllHistograms(int numberOfRLevels=0);
+   virtual bool buildAllHistograms(
+      int numberOfRLevels=0, ossimHistogramMode mode=OSSIM_HISTO_MODE_NORMAL );
    
    /**
     *  Will build over file for theImageFile.
@@ -243,6 +250,26 @@ public:
                               ossimFilterResampler::ossimFilterResamplerType resampleType = ossimFilterResampler::ossimFilterResampler_BOX,
                               bool includeFullResFlag=false);
    
+   /**
+    * @brief Fetches the current entry image's histogram.
+    * 
+    * @return Ref pointer to histogram or null if histogram does not exist.
+    *
+    * @note Old behaviour: "If none exists, it will be created." taken out.
+    *
+    * Do:
+    * ossimRefPtr<ossimMultiResLevelHistogram> his = ih->getImageHistogram();
+    * if ( ih.valid() )
+    * {
+    * }
+    * else
+    * {
+    *    ih->buildHistogram();
+    * }
+    * 
+    */
+   ossimRefPtr<ossimMultiResLevelHistogram> getImageHistogram() const;
+
    /**
     * Returns the image geometry object associated with this tile source or
     * NULL if non defined.  The geometry contains full-to-local image
@@ -606,7 +633,11 @@ public:
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
    
    /**
-    * Returns the image file with extension set.
+    * @brief Returns the image file with extension set using supplentary
+    * directory for dirname if set.
+    *
+    * Default behaviour is to add the "_en.ext" only if the file is
+    * multi-entry. Use set_e0_prefix to override this.
     *
     * Examples:
     * 
@@ -627,11 +658,30 @@ public:
     * @param set_e0_prefix If true and the number of entries = 1 then
     * "foo.geom" would come out "foo_e0.geom" instead. Default = false.
     * 
-    * @return theImageFile with sent extension.
+    * @return theImageFile with the extension replaced with ext.
     */
    ossimFilename getFilenameWithThisExtension(const ossimString& ext,
                                               bool set_e0_prefix=false) const;
-   
+
+   /**
+    * Returns the image file with extension set using supplentary directory
+    * for dirname if set. This is like the getFilenameWithThisExtension(...)
+    * method except it does NOT add the "_en" if image is multi entry.
+    *
+    * Examples:
+    * 
+    * - theImageFile          = "foo.tif"
+    * - ext parameter         = "geom"
+    * - return of method will = "foo.geom"
+    *
+    * @param ext Extension to tack onto file.  Can have or have not ".", it
+    * will be added if "." is not the first character.
+    *
+    * @param f Initialized by this.
+    */
+   void getFilenameWithThisExt( const ossimString& ext,
+                                ossimFilename& f ) const;
+     
    ossim_uint32 getStartingResLevel() const;
    
    void setStartingResLevel(ossim_uint32 level);
@@ -756,6 +806,18 @@ protected:
     */
    virtual bool setOutputBandList(const std::vector<ossim_uint32>& inBandList,
                                   std::vector<ossim_uint32>& outBandList);
+
+   
+   /**
+    * @brief Get filename with no extension, using supplentary directory for
+    * dirname if set.
+    *
+    * Examples:
+    * 
+    * f = "foo.tif"
+    * f = "foo"
+    */
+   void getFilenameWithNoExtension( ossimFilename& f ) const;
 
    ossimFilename theImageFile;
    ossimFilename theOverviewFile;

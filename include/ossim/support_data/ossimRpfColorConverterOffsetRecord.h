@@ -1,19 +1,19 @@
 #ifndef ossimRpfColorConverterOffsetRecord_HEADER
-#define ossimRpfColorConverterOffsetRecord_HEADER
-#include <iostream>
-using namespace std;
-#include <ossim/base/ossimConstants.h>
-#include <ossim/base/ossimErrorContext.h>
+#define ossimRpfColorConverterOffsetRecord_HEADER 1
 
+#include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <ossim/base/ossimErrorContext.h>
 
 class ossimRpfColorConverterOffsetRecord
 {
 public:
-   friend ostream& operator <<(ostream& out,
-                               const ossimRpfColorConverterOffsetRecord& data);
+   friend std::ostream& operator <<(
+      std::ostream& out, const ossimRpfColorConverterOffsetRecord& data);
+
    ossimRpfColorConverterOffsetRecord();
    
-   ossimErrorCode parseStream(istream& in,
+   ossimErrorCode parseStream(ossim::istream& in,
                               ossimByteOrder byteOrder);
 
    void clearFields();

@@ -118,6 +118,22 @@ bool ossimGeneralRasterTileSource::getTile(ossimImageData* result,
             //---
             result->setScalarType(OSSIM_USHORT11);
          }
+         else if(getOutputScalarType() == OSSIM_USHORT12)
+         {
+            result->setScalarType(OSSIM_USHORT12);
+         }
+         else if(getOutputScalarType() == OSSIM_USHORT13)
+         {
+            result->setScalarType(OSSIM_USHORT13);
+         }
+         else if(getOutputScalarType() == OSSIM_USHORT14)
+         {
+            result->setScalarType(OSSIM_USHORT14);
+         }
+         else if(getOutputScalarType() == OSSIM_USHORT15)
+         {
+            result->setScalarType(OSSIM_USHORT15);
+         }
       }
       
       if (!status) // Did not get an overview tile.
@@ -302,7 +318,7 @@ bool ossimGeneralRasterTileSource::fillBIP(const ossimIpt& origin, const ossimIp
    {
       // Seek to line.
       m_fileStrList[0]->seekg(rasterOffset, ios::beg);
-      if (!(*m_fileStrList[0]))
+      if  (!(*m_fileStrList[0]))
       {
          theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
          ossimNotify(ossimNotifyLevel_WARN)
@@ -903,11 +919,11 @@ bool ossimGeneralRasterTileSource::initializeHandler()
       ossimFilename f = aList[i];
       
       // open it...
-      ossimRefPtr<ossimIFStream> is = ossimStreamFactoryRegistry::instance()->
-         createNewIFStream(f, std::ios::in|std::ios::binary);
+      std::shared_ptr<ossim::ifstream> is = ossimStreamFactoryRegistry::instance()->
+         createIFStream(f, std::ios::in|std::ios::binary);
 
       // check the stream...
-      if(is.valid())
+      if( is )
       {
          // Check the file stream.
          if ( is->fail() )
@@ -976,7 +992,7 @@ bool ossimGeneralRasterTileSource::isOpen() const
    bool result = false;
    if (m_fileStrList.size() > 0)
    {
-      if(m_fileStrList[0].valid())
+      if( m_fileStrList[0] )
       {
          result = !(m_fileStrList[0]->fail());
       }
@@ -1003,7 +1019,7 @@ void ossimGeneralRasterTileSource::close()
       m_lineBuffer = 0;
    }
 
-   std::vector<ossimRefPtr<ossimIFStream> >::iterator is = m_fileStrList.begin();
+   std::vector< shared_ptr<ossim::ifstream> >::iterator is = m_fileStrList.begin();
    while (is != m_fileStrList.end())
    {
       (*is)->close();

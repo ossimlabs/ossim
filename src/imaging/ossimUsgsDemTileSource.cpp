@@ -175,7 +175,7 @@ bool ossimUsgsDemTileSource::fillBuffer(T,
                                         const ossimIrect& clip_rect,
                                         ossimImageData* tile)
 {
-   const uint32 TILE_WIDTH = tile->getWidth();
+   const ossim_uint32 TILE_WIDTH = tile->getWidth();
 
    T* d = static_cast<T*>(tile->getBuf());
    
@@ -183,14 +183,14 @@ bool ossimUsgsDemTileSource::fillBuffer(T,
    if (spatialResZ == 0.0) spatialResZ = 1.0;
 
    // Compute the starting offset.
-   uint32 offset = (clip_rect.ul().y - tile_rect.ul().y) * TILE_WIDTH +
-                   clip_rect.ul().x - tile_rect.ul().x;
+   ossim_uint32 offset = (clip_rect.ul().y - tile_rect.ul().y) * TILE_WIDTH +
+      clip_rect.ul().x - tile_rect.ul().x;
 
-   for (int32 line = clip_rect.ul().y; line <= clip_rect.lr().y; ++line)
+   for (ossim_int32 line = clip_rect.ul().y; line <= clip_rect.lr().y; ++line)
    {
       // Loop in the longitude or sample direction.
       int samp_offset = 0;
-      for (int32 samp = clip_rect.ul().x; samp <= clip_rect.lr().x; ++samp)
+      for (ossim_int32 samp = clip_rect.ul().x; samp <= clip_rect.lr().x; ++samp)
       {
          ossim_float32 p = theDem->getElevation(samp, line);
          if (p != theNullValue)
@@ -462,48 +462,36 @@ ossim_uint32 ossimUsgsDemTileSource::getTileHeight() const
 
 ossim_uint32 ossimUsgsDemTileSource::getNumberOfLines(ossim_uint32 reduced_res_level) const
 {
+   ossim_uint32 result = 0;
    if (reduced_res_level == 0)
    {
       if (theDem)
       {
-         return theDem->getHeight();
-      }
-      else
-      {
-         cerr << "ossimUsgsDemTileSource::getNumberOfLines ERROR:"
-              << "\nNot initialized!" << std::endl;
-         return 0;
+         result = theDem->getHeight();
       }
    }
    else if (theOverview.valid())
    {
-      return theOverview->getNumberOfLines(reduced_res_level);
+      result = theOverview->getNumberOfLines(reduced_res_level);
    }
-
-   return 0;
+   return result;
 }
 
 ossim_uint32 ossimUsgsDemTileSource::getNumberOfSamples(ossim_uint32 reduced_res_level) const
 {
+   ossim_uint32 result = 0;
    if (reduced_res_level == 0)
    {
       if (theDem)
       {
-         return theDem->getWidth();
-      }
-      else
-      {
-         cerr << "ossimUsgsDemTileSource::getNumberOfSamples ERROR:"
-              << "\nNot initialized!" << std::endl;
-         return 0;
+         result = theDem->getWidth();
       }
    }
    else if (theOverview.valid())
    {
-      return theOverview->getNumberOfSamples(reduced_res_level);
+      result = theOverview->getNumberOfSamples(reduced_res_level);
    }
-
-   return 0;
+   return result;
 }
 
 ossim_uint32 ossimUsgsDemTileSource::getImageTileWidth() const

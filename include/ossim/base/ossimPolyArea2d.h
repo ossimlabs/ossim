@@ -4,20 +4,20 @@
 //
 // Author: Garrett Potts
 //*******************************************************************
-//$Id: ossimPolyArea2d.h 23548 2015-09-28 21:01:36Z dburken $
+//$Id: ossimPolyArea2d.h 23608 2015-10-28 13:51:35Z gpotts $
 
 #ifndef ossimPolyArea2d_HEADER
 #define ossimPolyArea2d_HEADER 1
 
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimGpt.h>
-#include <ossim/base/ossimDrect.h>
-#include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimPolygon.h>
 #include <ossim/base/ossimReferenced.h>
 #include <vector>
 
+class ossimDrect;
+class ossimIrect;
 class OssimPolyArea2dPrivate;
 
 namespace geos
@@ -36,6 +36,7 @@ public:
    
    ossimPolyArea2d();
    ossimPolyArea2d(const vector<ossimGpt>& polygon);
+   ossimPolyArea2d(const vector<ossimDpt>& polygon);
    ossimPolyArea2d(const ossimPolygon& shell, const vector<ossimPolygon>& holes); 
    
    ossimPolyArea2d(const ossimDpt& p1,
@@ -58,6 +59,7 @@ public:
    const ossimPolyArea2d& operator =(const ossimIrect& rect);
    const ossimPolyArea2d& operator =(const ossimDrect& rect);
    const ossimPolyArea2d& operator =(const vector<ossimGpt>& polygon);
+   const ossimPolyArea2d& operator =(const vector<ossimDpt>& polygon);
    const ossimPolyArea2d& operator &=(const ossimPolyArea2d& rhs);
    ossimPolyArea2d operator &(const ossimPolyArea2d& rhs)const;
    ossimPolyArea2d operator +(const ossimPolyArea2d& rhs)const;
@@ -105,6 +107,11 @@ public:
    void getBoundingRect(ossimDrect& rect);
    
    /**
+   * Returns the Well Known Text string
+   */
+   std::string toString()const;
+
+   /**
     * @brief Buffers the ossimPolyArea2d shape and returns a copy. This method
     * does not alter polygon.
     *  
@@ -113,8 +120,11 @@ public:
     * @return A shape that is a buffered (expanded/contracted) version of this
     * shape
     */
-   ossimPolyArea2d getBufferedShape(double distance) const;
+   ossimPolyArea2d getBufferedShape(double distance=FLT_EPSILON) const;
    
+   ossimPolyArea2d& setToBufferedShape(double distance=FLT_EPSILON);
+
+   ossimPolyArea2d& toMultiPolygon();
    bool saveState(ossimKeywordlist& kwl,
                   const char* prefix=0)const;
    bool loadState(const ossimKeywordlist& kwl,

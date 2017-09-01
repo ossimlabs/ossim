@@ -13,6 +13,7 @@
 
 #include <ossim/support_data/ossimInfoBase.h>
 #include <ossim/base/ossimKeywordlist.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <sstream>
 
 ossimInfoBase::ossimInfoBase()
@@ -21,6 +22,21 @@ ossimInfoBase::ossimInfoBase()
 
 ossimInfoBase::~ossimInfoBase()
 {}
+
+bool ossimInfoBase::open(const ossimFilename& file)
+{
+   std::string connectionString = file.c_str();
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file.c_str(), std::ios_base::in|std::ios_base::binary);
+   if(!str) return false;
+   return open(str, connectionString);
+}
+
+bool ossimInfoBase::open(std::shared_ptr<ossim::istream>& str,
+                         const std::string& connectionString)
+{
+   return false;
+}
 
 void ossimInfoBase::setProcessOverviewFlag(bool flag)
 {
@@ -41,4 +57,11 @@ bool ossimInfoBase::getKeywordlist(ossimKeywordlist& kwl)const
    std::istringstream in(out.str());
    // Give the result to the keyword list.
    return kwl.parseStream(in);
+}
+
+bool ossimInfoBase::getKeywordlist(ossimKeywordlist& kwl,
+                                   ossim_uint32 /* entryIndex */ )const
+{
+   // If this gets hit the specific info object does not support entry indexes.
+   return getKeywordlist( kwl );
 }

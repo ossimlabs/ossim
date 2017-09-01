@@ -545,6 +545,10 @@ bool ossimOverviewSequencer::writeOmdFile(const std::string& file)
                case OSSIM_SINT8:                  
                case OSSIM_UINT16:
                case OSSIM_USHORT11:
+               case OSSIM_USHORT12:
+               case OSSIM_USHORT13:
+               case OSSIM_USHORT14:
+               case OSSIM_USHORT15:
                case OSSIM_UINT32:
                {
                   // All of these should have a null of 0.
@@ -854,6 +858,10 @@ void ossimOverviewSequencer::resampleTile(const ossimImageData* inputTile)
       }
 
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       {
          resampleTile(inputTile, ossim_uint16(0));
@@ -891,7 +899,7 @@ void ossimOverviewSequencer::resampleTile(const ossimImageData* inputTile)
       }
       default:
          ossimNotify(ossimNotifyLevel_WARN)
-            << "ossimOverviewSequencer::resampleTile Unkown pixel type!"
+            << "ossimOverviewSequencer::resampleTile Unknown pixel type!"
             << std::endl;
          return;
          

@@ -1,27 +1,32 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
+// License: MIT
 //
-// See LICENSE.txt file in the top level directory for more details.
-// 
 // Description: This class provides manipulation of filenames.
 //
-//*************************************************************************
-// $Id: ossimFilename.cpp 20192 2011-10-25 17:27:25Z dburken $
+//---
+// $Id$
 
 #include <ossim/ossimConfig.h>  /* to pick up platform defines */
 
-#include <iostream>
-#include <fstream>
-using namespace std;
+#include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimCommon.h>
+#include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimDirectory.h>
+#include <ossim/base/ossimDate.h>
+#include <ossim/base/ossimEnvironmentUtility.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimRegExp.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
-#include <ossim/base/ossimDirectory.h>
-#include <ossim/base/ossimDate.h>
-#include <ossim/base/ossimEnvironmentUtility.h>
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 #if defined(_WIN32)
 #  include <io.h>
@@ -46,16 +51,14 @@ using namespace std;
 #  include <io.h>
 #endif
 
-#include <ossim/base/ossimFilename.h>
-#include <ossim/base/ossimRegExp.h>
-#include <ossim/base/ossimConstants.h>
-#include <ossim/base/ossimNotifyContext.h>
-
 #if defined(_WIN32)
-const char ossimFilename::thePathSeparator = '\\';
+const char ossimFilename::OSSIM_NATIVE_PATH_SEPARATOR = '\\';
 #else
-const char ossimFilename::thePathSeparator = '/';
+const char ossimFilename::OSSIM_NATIVE_PATH_SEPARATOR = '/';
 #endif
+
+// Internal ossimFilename separator.
+const char ossimFilename::OSSIM_FILENAME_PATH_SEPARATOR = '/';
 
 
 /**
@@ -217,7 +220,8 @@ ossimFilename::ossimFilename(const ossimString& src)
 {
    if ( m_str.size() )
    {
-      convertToNative();
+      converPathSeparator();
+      // convertToNative();
    }
 }
 
@@ -226,7 +230,8 @@ ossimFilename::ossimFilename(const std::string& src)
 {
    if ( m_str.size() )
    {
-      convertToNative();
+      converPathSeparator();
+      // convertToNative();
    }
 }
 
@@ -235,8 +240,18 @@ ossimFilename::ossimFilename(const char* src)
 {
    if ( m_str.size() )
    {
-      convertToNative();
+      converPathSeparator();
+      // convertToNative();
    }
+}
+
+const ossimFilename& ossimFilename::operator=(const ossimFilename& f)
+{
+   if ( this != &f )
+   {
+      m_str = f.m_str;
+   }
+   return *this;
 }
 
 template <class Iter> ossimFilename::ossimFilename(Iter s, Iter e)
@@ -244,7 +259,8 @@ template <class Iter> ossimFilename::ossimFilename(Iter s, Iter e)
 {
    if ( m_str.size() )
    {
-      convertToNative();
+      converPathSeparator();
+      // convertToNative();
    }
 }
 
@@ -263,6 +279,7 @@ bool ossimFilename::operator == (const char* rhs)const
    return ossimString::operator ==(rhs);
 }
 
+#if 0
 void ossimFilename::convertBackToForwardSlashes()
 {
    std::string::iterator currentChar = this->begin();
@@ -289,7 +306,9 @@ void ossimFilename::convertForwardToBackSlashes()
       }
       ++currentChar;
    }
+   m_pathSeparator = '\\';
 }
+#endif
 
 bool ossimFilename::setTimes(ossimLocalTm* accessTime,
                              ossimLocalTm* modTime,
@@ -429,6 +448,31 @@ bool ossimFilename::getTimes(ossimLocalTm *accessTime,
    return false;
 }
 
+// Time in seconds since last accessed.
+ossim_int64 ossimFilename::lastAccessed() const
+{
+   ossim_int64 result = -1;
+
+   if( expand().exists() )
+   {
+      ossim_int64 currentTime = ossim::getTime();
+      
+#if defined(_WIN32)
+      cerr << "ossimFilename::lastAccessed() not implemented for windows!" << endl;
+#else
+      struct stat sbuf;
+      stat(c_str(), &sbuf);
+      if ( stat( expand().c_str(), &sbuf) == 0 )
+      {
+         time_t atime = sbuf.st_atime; // This cast to seconds(time_t).
+         result = currentTime - (ossim_int64)atime;
+      }
+#endif // platforms
+   }
+
+   return result;
+}
+
 bool ossimFilename::touch()const
 {
 #if defined( _WIN32 )
@@ -468,7 +512,7 @@ ossimFilename ossimFilename::expand() const
 
          bool addCwd = false;
          
-         if ( (size() > 1) && (*(begin()) == '~') && (*(begin()+1) == thePathSeparator) )
+         if ( (size() > 1) && (*(begin()) == '~') && (*(begin()+1) == OSSIM_FILENAME_PATH_SEPARATOR) )
          {
             ossimFilename homeDir =
                ossimEnvironmentUtility::instance()->getUserDir();
@@ -477,13 +521,13 @@ ossimFilename ossimFilename::expand() const
             result = homeDir.dirCat(s);
          }
          else if( (size() > 1) &&
-                  (*(begin()) == '.') && (*(begin()+1) == thePathSeparator) )
+                  (*(begin()) == '.') && (*(begin()+1) == OSSIM_FILENAME_PATH_SEPARATOR) )
          {
             // dot slash i.e. ./foo
             addCwd = true;
          }
          else if ( (size() > 2)  && (*(begin()) == '.')
-                   && (*(begin()+1) == '.') && (*(begin()+2) == thePathSeparator) )
+                   && (*(begin()+1) == '.') && (*(begin()+2) == OSSIM_FILENAME_PATH_SEPARATOR) )
          {
             // ../foo
             addCwd = true;
@@ -527,8 +571,17 @@ ossimFilename ossimFilename::expand() const
                {
                   if(tempPtr[scanIdx+1] == '(')
                   {
-                     scanIdx +=2;
+                     scanIdx += 2;
                      startIdx = scanIdx;
+                  }
+                  else
+                  {
+                     //---
+                     // Infinite loop fix with below file on window:
+                     // "\\kiosk\x$\SourceImagery\foo.ntf" (drb 21 Nov. 2016)
+                     //---
+                     finalResult += tempPtr[scanIdx];
+                     ++scanIdx;
                   }
                }
                // look for an end pattern and apply if we found a start pattern
@@ -596,18 +649,24 @@ ossimFilename ossimFilename::expand() const
 bool ossimFilename::exists() const
 {
    bool result = false;
+   if ( isUrl() == false )
+   {
 #if defined(_WIN32)
-   result = (_access(c_str(), ossimFilename::OSSIM_EXIST) == 0);
+      result = (_access(c_str(), ossimFilename::OSSIM_EXIST) == 0);
 #else
-   result = ((access(c_str(), ossimFilename::OSSIM_EXIST)) == 0);
+      result = ((access(c_str(), ossimFilename::OSSIM_EXIST)) == 0);
 #endif
+   }
+   else
+   {
+      result = ossim::StreamFactoryRegistry::instance()->exists( this->string() );
+   }
    return result;
 }
 
 bool ossimFilename::isFile() const
 {
 #if defined(_WIN32)
-
    struct _stat sbuf;
    if ( _stat(c_str(), &sbuf ) == -1)
       return false;
@@ -661,6 +720,24 @@ bool ossimFilename::isReadable() const
 #endif
 }
 
+bool ossimFilename::isUrl() const
+{
+   bool result = false;
+   if ( m_str.size() )
+   {
+      //---
+      // Must have at least room for a protocol and "://", e.g.
+      // "s3://my_bucket/data1/foo.tif
+      //---
+      std::size_t found = m_str.find( std::string("://") );
+      if ( ( found != std::string::npos ) && ( found > 1 ) )
+      {
+         result = true;
+      }
+   }
+   return result;
+}
+
 bool ossimFilename::isWriteable() const
 {
 #if defined(_WIN32)
@@ -689,58 +766,45 @@ bool ossimFilename::isExecutable() const
 
 ossimString ossimFilename::ext() const
 {
-   ossimFilename file = *this;
-   std::string::size_type pos = file.m_str.rfind('.');
+   std::string::size_type pos = m_str.rfind('.');
    if (pos == std::string::npos)
    {
       return ossimFilename::NIL;
    }
 
-   return ossimFilename(file.m_str.substr(pos+1));
+   return ossimFilename(m_str.substr(pos+1));
 }
 
 ossimFilename ossimFilename::file() const
 {
-   ossimFilename file = *this;
-
-   //file.convertBackToForwardSlashes();
-
-   std::string::size_type pos = file.m_str.rfind(thePathSeparator);
+   std::string::size_type pos = m_str.rfind(OSSIM_FILENAME_PATH_SEPARATOR);
    if (pos == std::string::npos)
       return *this;
    else
-      return ossimFilename(file.m_str.substr(pos+1));
+      return ossimFilename(m_str.substr(pos+1));
 }
 
 ossimFilename ossimFilename::path() const
 {
-   ossimFilename file = *this;
-   //file.convertBackToForwardSlashes();
-
    // finds the last occurrence of the given string; in this case '/';
-   std::string::size_type pos = file.m_str.rfind(thePathSeparator);
+   std::string::size_type pos = m_str.rfind(OSSIM_FILENAME_PATH_SEPARATOR);
 
    if (pos == 0)
-      return ossimFilename(ossimFilename(thePathSeparator));
+      return ossimFilename(ossimFilename(OSSIM_FILENAME_PATH_SEPARATOR));
    if (pos == std::string::npos)
    {
       // We got to the end of the file and did not find a path separator.
       return ossimFilename::NIL;
    }
 
-   return ossimFilename(file.m_str.substr(0, pos));
+   return ossimFilename(m_str.substr(0, pos));
 }
 
 ossimFilename ossimFilename::drive()const
 {
-   ossimFilename tempFile(*this);
    ossimFilename result;
-
-   tempFile.convertForwardToBackSlashes();
-
    ossimRegExp regEx("^([a-z|A-Z])+:");
-
-   if(regEx.find(tempFile.c_str()))
+   if(regEx.find( m_str.c_str() ) )
    {
       result = ossimFilename(ossimString(this->begin() + regEx.start(),
                                          this->begin() + regEx.end()));
@@ -755,11 +819,8 @@ ossimFilename ossimFilename::drive()const
 
 ossimFilename ossimFilename::fileNoExtension()const
 {
-   ossimFilename f = *this;
-   //f.convertBackToForwardSlashes();
-
-   std::string::size_type dot_pos   = f.m_str.rfind('.');
-   std::string::size_type slash_pos = f.m_str.rfind(thePathSeparator);
+   std::string::size_type dot_pos   = m_str.rfind('.');
+   std::string::size_type slash_pos = m_str.rfind(OSSIM_FILENAME_PATH_SEPARATOR);
 
    if(dot_pos == std::string::npos)
    {
@@ -951,22 +1012,22 @@ ossimFilename ossimFilename::dirCat(const ossimFilename& file) const
 
    --i; // decrement past the trailing null.
 
-   if ( (*i) != thePathSeparator)
+   if ( (*i) != OSSIM_FILENAME_PATH_SEPARATOR)
    {
-      dir += ossimString(thePathSeparator);
+      dir += ossimString(OSSIM_FILENAME_PATH_SEPARATOR);
    }
 
    // check for dot slash or just slash: ./foo or /foo   
    std::string::iterator iter = tempFile.begin();
    if (iter != tempFile.end())
    {
-      if ((*iter) == thePathSeparator)
+      if ((*iter) == OSSIM_FILENAME_PATH_SEPARATOR)
       {
          ++iter; // skip slash
       }
       else if (tempFile.size() > 1)
       {
-         if ( ((*iter) == '.') &&  ( *(iter + 1) == thePathSeparator) )
+         if ( ((*iter) == '.') &&  ( *(iter + 1) == OSSIM_FILENAME_PATH_SEPARATOR) )
          {
             iter = iter + 2; // skip dot slash
          }
@@ -1019,7 +1080,7 @@ bool ossimFilename::createDirectory( bool recurseFlag,
       ossimString tempString = this->expand().c_str();
 
       vector<ossimString> result;
-      tempString.split(result,thePathSeparator);
+      tempString.split(result,OSSIM_FILENAME_PATH_SEPARATOR);
 
       if(result.size())
       {
@@ -1036,14 +1097,14 @@ bool ossimFilename::createDirectory( bool recurseFlag,
             if ( fstar0=='\\' && fstar1=='\\' )
             {
                bGotUNC = true;
-               current = thePathSeparator;
+               current = OSSIM_FILENAME_PATH_SEPARATOR;
             }
          }
 #endif
 
          for(ossim_uint32 i = 1; i < result.size(); ++i)
          {
-            current += (thePathSeparator+result[i]);
+            current += (OSSIM_FILENAME_PATH_SEPARATOR+result[i]);
 
 #if defined(_WIN32)
             if ( bGotUNC == true && i==1 )
@@ -1053,7 +1114,7 @@ bool ossimFilename::createDirectory( bool recurseFlag,
             }
 #endif
             
-            if(current != thePathSeparator)
+            if(current != OSSIM_FILENAME_PATH_SEPARATOR)
             {
                if(!ossimFilename(current).exists())
                {
@@ -1173,24 +1234,31 @@ bool ossimFilename::wildcardRemove(const ossimFilename& pathname)
 
 bool ossimFilename::rename(const ossimFilename& destFile, bool overwriteDestinationFlag)const
 {
-   if(!overwriteDestinationFlag)
+   bool result = true;
+   if ( this->string() != destFile.string() )
    {
-      if(destFile.exists())
+      if ( overwriteDestinationFlag && destFile.exists() )
+      {
+         destFile.remove();
+      }
+
+      if ( destFile.exists() == false )
+      {
+         // std::rename from cstdio returns 0 on success.
+         if ( std::rename(this->c_str(), destFile.c_str()) != 0 )
+         {
+            result = false;
+         }
+      }
+      else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "WARNING: "
-            << "ossimFilename::rename WARNING:"
+            << "ossimFilenam::rename WARNING:"
             << "\nDestination File Exists: " << destFile << std::endl;
-         return false;
+         result = false;
       }
    }
-   else if(destFile.exists())
-   {
-      destFile.remove();
-   }
-   ::rename(this->c_str(), destFile.c_str());
-   
-   return true;
+   return result;
 }
    
 bool ossimFilename::remove()const
@@ -1302,36 +1370,88 @@ bool ossimFilename::isRelative() const
 bool ossimFilename::needsExpansion() const
 {
    bool result = false;
-   if ( size() )
+   if ( m_str.size() )
    {
-      result = isRelative();
-      if (result == false)
+      // Do not expand URLs.
+      if ( isUrl() == false )
       {
-         // Check for '$'
-         std::string::size_type pos = m_str.find('$', 0);
+         result = isRelative();
+         if (result == false)
          {
-            if (pos != std::string::npos)
+            // Check for '$'
+            std::string::size_type pos = m_str.find('$', 0);
             {
-               // found '$'
-               result = true;
+               if (pos != std::string::npos)
+               {
+                  // found '$'
+                  result = true;
+               }
             }
+            
          }
-      }    
+      }
    }
    return result;
 }
 
 char ossimFilename::getPathSeparator() const
 {
-   return thePathSeparator;
+   return OSSIM_FILENAME_PATH_SEPARATOR;
 }
 
+ossimFilename& ossimFilename::appendTimestamp()
+{
+   const std::string format = "%Y%m%d-%H%Mh%Ss";
+   std::string timestamp;
+   ossim::getFormattedTime(format, true, timestamp);
+
+   return append(timestamp);
+}
+
+ossimFilename& ossimFilename::append(const ossimString& append_this)
+{
+   ossimString drivePart;
+   ossimString pathPart;
+   ossimString filePart;
+   ossimString extPart;
+
+   split(drivePart, pathPart, filePart, extPart);
+   filePart += append_this;
+   merge(drivePart, pathPart, filePart, extPart);
+
+   return *this;
+}
+
+void ossimFilename::converPathSeparator()
+{
+   if ( m_str.size() )
+   {
+      std::replace( m_str.begin(), m_str.end(), '\\', OSSIM_FILENAME_PATH_SEPARATOR );
+   }
+}
+
+std::string ossimFilename::native() const
+{
+#if defined(_WIN32)
+   std::string s = m_str;
+   std::replace( s.begin(), s.end(),OSSIM_FILENAME_PATH_SEPARATOR, OSSIM_NATIVE_PATH_SEPARATOR );
+   return s;
+#else
+   return m_str;   
+#endif  
+}
+
+#if 0
 void ossimFilename::convertToNative()
 {
 #if defined(_WIN32)
-   convertForwardToBackSlashes();
+   if ( isUrl() == false )
+   {
+      convertForwardToBackSlashes();
+   }
 #else
    convertBackToForwardSlashes();
+   
 #endif
-	
 }
+#endif

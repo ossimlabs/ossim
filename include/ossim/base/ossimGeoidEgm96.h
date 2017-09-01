@@ -55,7 +55,6 @@ public:
    double ellipsoidToGeoidHeight(double lat,
                            double lon,
                            double ellipsoidHeight);
-
 protected:
 
    std::vector<float> theGeoidHeightBuffer;

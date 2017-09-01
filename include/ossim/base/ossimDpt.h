@@ -34,7 +34,8 @@ public:
 
    ossimDpt(double anX, double aY) : x(anX), y(aY) {}
          
-   ossimDpt(const ossimDpt& pt) : x(pt.x), y(pt.y) {}
+   // trust the default generated copy-constructor
+   // ossimDpt(const ossimDpt& pt) = default;
 
    ossimDpt(const ossimFpt& pt);
    
@@ -44,7 +45,8 @@ public:
 
    ossimDpt(const ossimGpt &pt); // assigns lat, lon only
 
-   const ossimDpt& operator=(const ossimDpt&);
+   // trust the default generated copy-constructor
+   // const ossimDpt& operator=(const ossimDpt&) = default;
 
    const ossimDpt& operator=(const ossimFpt&);
    
@@ -99,6 +101,12 @@ public:
       { return ossimDpt(d*x, d*y); }
    ossimDpt operator/(const double& d) const
       { return ossimDpt(x/d, y/d); }
+   const ossimDpt& operator*=(const double& d)
+      { x*=d; y*=d; return *this; }
+
+   /** Dot product */
+   ossim_float64 operator*(const ossimDpt& pt)const
+      { return (x*pt.x+y*pt.y); }
 
    std::ostream& print(std::ostream& os, ossim_uint32 precision=15) const;
    
@@ -144,6 +152,12 @@ public:
    friend OSSIMDLLEXPORT std::istream& operator>>(std::istream& is,
                                                   ossimDpt& pt);
    bool isEqualTo(const ossimDpt& rhs, ossimCompareType compareType=OSSIM_COMPARE_FULL)const;
+
+   /**
+    * Returns the average of x and y
+    */
+   double mean() const { return (x + y) / 2.0; }
+
    //***
    // Public data members:
    //***
@@ -152,15 +166,5 @@ public:
 
 };
 
-inline const ossimDpt& ossimDpt::operator=(const ossimDpt& pt)
-{
-   if (this != &pt)
-   {
-      x = pt.x;
-      y = pt.y;
-   }
-   
-   return *this;
-}
 
 #endif /* #ifndef ossimDpt_HEADER */

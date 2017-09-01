@@ -39,7 +39,8 @@ bool ossimDynamicLibrary::load()
 bool ossimDynamicLibrary::load(const ossimString& name)
 {
    ossimFilename libraryName = name.trim();
-   if(libraryName.empty()||!libraryName.isFile()) return false;
+   if(libraryName.empty()||!libraryName.isFile())
+      return false;
    
 #  if defined(__WIN32__) || defined(_WIN32)
    theLibrary = LoadLibrary(libraryName.c_str());
@@ -51,28 +52,22 @@ bool ossimDynamicLibrary::load(const ossimString& name)
    {
       theLibraryName = libraryName;
    }
+   else
+   {
+      ossimNotify(ossimNotifyLevel_WARN)<<"ossimDynamicLibrary:"<<__LINE__
+            << "  Failed to load library:  " << name << std::endl;
+#if !defined(__WIN32__) && !defined(_WIN32)
+      ossimNotify(ossimNotifyLevel_WARN) << dlerror() << std::endl;
+#endif
+   }
 
    if (traceDebug())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "ossimDynamicLibrary::load DEBUG:" << std::endl;
-      
       if (isLoaded())
       {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "Loaded library:  " << name << std::endl;
+         ossimNotify(ossimNotifyLevel_DEBUG)<<"ossimDynamicLibrary:"<<__LINE__
+               << "  Loaded library:  " << name << std::endl;
       }
-      else
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimDynamicLibrary::load DEBUG:"
-            << "\nFailed to load library:  " << name
-            << std::endl;
-#  if !defined(__WIN32__) && !defined(_WIN32)
-         ossimNotify(ossimNotifyLevel_DEBUG) << dlerror() << std::endl;
-#endif
-      }
-      
    }
    
    return isLoaded();

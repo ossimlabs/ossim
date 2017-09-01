@@ -713,7 +713,8 @@ bool ossimObliqueMercatorProjection::operator==(const ossimProjection& proj) con
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimObliqueMercatorProjection* p = PTR_CAST(ossimObliqueMercatorProjection, &proj);
+   const ossimObliqueMercatorProjection* p =
+      dynamic_cast<const ossimObliqueMercatorProjection*>(&proj);
    if (!p) return false;
 
    if (theCentralPoint1 != p->theCentralPoint1) return false;

@@ -20,6 +20,7 @@
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimReferenced.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/util/ossimImageUtil.h>
 
 #include <OpenThreads/Mutex>
 #include <ostream>
@@ -134,8 +135,38 @@ private:
    /** @brief Gets url string, e.g. http://localhost:8080/omar */
    void getUrl(std::string& url) const;
 
-   /** @brief Runs the curl command. */
-   void callService( const ossimFilename& file );
+   /**
+    * @brief Runs the curl command to call addRaster service.
+    * @param file Image file.
+    * @return true if http status code of 200(OK); else, false
+    */
+   bool callAddRasterService( const ossimFilename& file );
+
+   /**
+    * @brief Runs the curl command to call removeRaster service.
+    * @param file Image file.
+    * @return true if http status code of 200(OK); else, false
+    */
+   bool callRemoveRasterService( const ossimFilename& file );
+
+   /**
+    * @brief Removes files from disk.
+    *
+    * Triggered by the --clean option.
+    * 
+    * Given: 
+    * base file = foo.ntf
+    *
+    * Currently removes:
+    * foo.ntf
+    * foo.ovr
+    * foo.his
+    * foo.omd
+    *
+    * There are no checks for multi-entry images or directory based image
+    * files.
+    */
+   void clean( const ossimFilename& file ) const;
 
    /**
     * @brief Convenience method to check file to see is if file should be
@@ -171,7 +202,7 @@ private:
     */
    void addOption( const std::string& key, ossim_uint32 value );
    void addOption( const std::string& key, const std::string& value );
-
+   
    /**
     * @brief Sets the m_errorStatus for return on execute.
     */
@@ -190,6 +221,14 @@ private:
     * DUMP_FILTERED_IMAGES_KW = "dump_filtered_images"
     */
    bool getDumpFilterImagesFlag() const;
+
+   /**
+    * @return true if CLEAN_KW key is found and value is true; else,
+    * false.
+    * 
+    * CLEAN_KW = "clean"
+    */
+   bool getCleanFlag() const;
 
    /**
     * @brief Sets the override filtered images flag.
@@ -211,6 +250,17 @@ private:
     */
    bool isDirectoryBasedImage(const ossimImageHandler* ih) const;
 
+   /**
+    * @brief Checks file last access time against threshold.
+    *
+    * This check for option key "access_time_threshold", value in days.  If
+    * found will return true if files last access time is greater than the
+    * threshold days.  If key is not set the default return is true.
+    * 
+    * @return true if file is past last accessed threshold.
+    */
+   bool isPastLastAccessedThreshold( const ossimFilename& file ) const;
+
    /** @return true if key is set to true; false, if not. */
    bool keyIsTrue( const std::string& key ) const;
    
@@ -220,6 +270,7 @@ private:
    ossimFileWalker*   m_fileWalker;
    OpenThreads::Mutex m_mutex;
 
+   ossimRefPtr<ossimImageUtil> m_imageUtil;
    ossim_int32 m_errorStatus;
 
    /** Hold images we never want to process. */

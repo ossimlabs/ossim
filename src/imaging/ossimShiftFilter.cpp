@@ -105,6 +105,10 @@ ossimRefPtr<ossimImageData> ossimShiftFilter::getTile(
                   }
                   case OSSIM_UINT16:
                   case OSSIM_USHORT11:
+                  case OSSIM_USHORT12:
+                  case OSSIM_USHORT13:
+                  case OSSIM_USHORT14:
+                  case OSSIM_USHORT15:
                   {
                      fillTile( ossim_uint16(0), inputTile.get(), m_tile.get() );
                      break;
@@ -298,6 +302,7 @@ void ossimShiftFilter::allocate()
 
 // Private to disallow use...
 ossimShiftFilter::ossimShiftFilter(const ossimShiftFilter&)
+: m_min(0),m_max(0),m_null(0)
 {
 }
 

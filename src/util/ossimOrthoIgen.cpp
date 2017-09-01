@@ -823,8 +823,8 @@ bool ossimOrthoIgen::execute()
      }
    }
 
-   if(ossimMpi::instance()->getRank() == 0)
-   {
+   //if(ossimMpi::instance()->getRank() == 0)
+   //{
       try
       {
          setupIgenChain();
@@ -842,7 +842,7 @@ bool ossimOrthoIgen::execute()
       {
          generateLog();
       }
-   }
+   //}
 
    try
    {
@@ -1220,7 +1220,7 @@ void ossimOrthoIgen::setupIgenChain()
 
          if (theSrcRecords[idx].isRgbData())
          {
-            if (bandMergeObject == 0)
+            if (!bandMergeObject)
             {
                bandMergeObject = new ossimBandMergeSource();
             }
@@ -1242,7 +1242,7 @@ void ossimOrthoIgen::setupIgenChain()
 
    // Finished initializing the inputs to the mosaic. Add the mosaic to the product chain.
    theProductChain = new ossimImageChain;
-   if (bandMergeObject != 0)
+   if (bandMergeObject)
    {
       theProductChain->addFirst(bandMergeObject.get());
    }

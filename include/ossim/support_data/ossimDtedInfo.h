@@ -19,6 +19,11 @@
 #include <ossim/support_data/ossimInfoBase.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/support_data/ossimDtedVol.h>
+#include <ossim/support_data/ossimDtedHdr.h>
+#include <ossim/support_data/ossimDtedUhl.h>
+#include <ossim/support_data/ossimDtedDsi.h>
+#include <ossim/support_data/ossimDtedAcc.h>
 
 class ossimNitfFile;
 class ossimProperty;
@@ -41,11 +46,13 @@ public:
    /**
     * @brief open method.
     *
-    * @param file File name to open.
+    * @param str stream to test.
+    * @param connectionString original string for the stream.
     *
     * @return true on success false on error.
     */
-   virtual bool open(const ossimFilename& file);
+   virtual bool open(std::shared_ptr<ossim::istream>& str,
+                     const std::string& connectionString);
    
    /**
     * Print method.
@@ -71,7 +78,15 @@ public:
    void getPropertyNames(std::vector<ossimString>& propertyNames)const;
 
 private:
-   ossimFilename theFile;
+  mutable std::shared_ptr<ossim::istream> m_dtedFileStr;
+  std::string  m_connectionString;
+  ossimDtedVol m_vol;
+  ossimDtedHdr m_hdr;
+  ossimDtedUhl m_uhl;
+  ossimDtedDsi m_dsi;
+  ossimDtedAcc m_acc;
+
+   //ossimFilename theFile;
 };
 
 #endif /* End of "#ifndef ossimDtedInfo_HEADER" */

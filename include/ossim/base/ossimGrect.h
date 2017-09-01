@@ -136,7 +136,7 @@ public:
    inline ossimGrect combine(const ossimGrect& rect)const;
 
    /**
-    * Expands existing rect to accomodate argument point. If this object contains NaNs
+    * Expands existing rect to accommodate argument point. If this object contains NaNs
     * (uninitialized), then the rect is set to 0-area with the arg point as both UL and LR --
     * convenient for establishing bounds in a loop over collection of points. This method does not
     * consider height.

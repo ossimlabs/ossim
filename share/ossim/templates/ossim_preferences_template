@@ -19,8 +19,13 @@
 // 
 // windoze users:       I'll have to look this up...
 //
-// You can also use the "-P <preference_file>" option at application startup.
-// where <preference_file> is full path and filename.
+// Use the "-P <preference_file>" option at application startup to specify
+// a path to preferences file.  Where <preference_file> is full path and 
+// filename.
+//
+// Use the "-K key=value option at application startup to specify a key value
+// pair. e.g.:
+// ossim-chipper -K ossim.std.out.progress=1 --options tgt-008-options.kwl
 //
 // Note that system environment variables found in this ossim preferences
 // file in the format "$(env_var_name)" will be expanded in place.
@@ -47,6 +52,7 @@
 // elevation_source.type: dted_directory
 // elevation_source.type: srtm_directory
 // elevation_source.type: general_raster_directory
+// elevation_source.type: image_directory
 // 
 // The elevation_source.connection_string is a connection for your database.
 // Typically this is a directory location.
@@ -54,76 +60,83 @@
 // NOTES:
 // 
 // 1) Order dependent, i.e. ALWAYS put your highest resolution first.
-// 
-// 2) The elevation_source keyword replaces the deprecated keywords:
-// dted_directory
-// image_directory
-// srtm_directory
-// dted_cell 
 //
-// 3) We support bringing cells into memory for dted and srtm datasets.  You can also control the
+// 2) We support bringing cells into memory for dted and srtm datasets.  You can also control the
 // number of open cells by specifying a min and max open cells.  If the number of cells opened
 // exceeds the maximum then it will shrink the active opened cells to the minumum.  We currently
 // use a least recently used algorithm.
 // 
-// 4) A good elevation source is the Shuttle Radar Topographic Mission(SRTM):
+// 3) A good elevation source is the Shuttle Radar Topographic Mission(SRTM):
 //    http://srtm.usgs.gov/index.php
-
-// 5) Examples below are defaulted to some value.  To change enabled key to
+//
+// 4) Examples below are defaulted to some value.  To change enabled key to
 //    true, e.g.:
 //    elevation_manager.elevation_source0.enabled: true
-//    
+// 
+// 5) Key "extension" is currently for dted only.  If set this disables the scanning for
+//    the extension at start up.  e.g.:
+//    elevation_manager.elevation_source0.extension: .dt2
+// 
+// 6) Key "upcase" is currently for dted only. If true looks for upcased files.
+//    If this is set to true, note that the "extension" should also be upcase.
+//    elevation_manager.elevation_source0.upcase: false
+//    looks for (example): e045/n34.dt2
+//    else:
+//    looks for (example): E045/N34.DT2
 //---
 
+// One arc second post spacing dted, ~30 meters, default enabled:
 elevation_manager.elevation_source0.connection_string: $(OSSIM_DATA)/elevation/dted/level2
 elevation_manager.elevation_source0.enabled: true
+elevation_manager.elevation_source0.extension: .dt2
 elevation_manager.elevation_source0.type: dted_directory
 elevation_manager.elevation_source0.min_open_cells: 25
 elevation_manager.elevation_source0.max_open_cells: 50
 elevation_manager.elevation_source0.memory_map_cells: false
 elevation_manager.elevation_source0.geoid.type: geoid1996
+elevation_manager.elevation_source0.upcase: false
 
+// One arc second post spacing srtm, ~30 meters, default disabled:
 elevation_manager.elevation_source1.connection_string: $(OSSIM_DATA)/elevation/srtm/1arc
-elevation_manager.elevation_source1.enabled: true
+elevation_manager.elevation_source1.enabled: false
 elevation_manager.elevation_source1.type: srtm_directory
+elevation_manager.elevation_source1.mean_spacing: 30
 elevation_manager.elevation_source1.min_open_cells: 25
 elevation_manager.elevation_source1.max_open_cells: 50
 elevation_manager.elevation_source1.memory_map_cells: false
 elevation_manager.elevation_source1.geoid.type: geoid1996
 
+// Three arc seconds post spacing dted, ~90 meters, default enabled:
 elevation_manager.elevation_source2.connection_string: $(OSSIM_DATA)/elevation/dted/level1
 elevation_manager.elevation_source2.enabled: true
+elevation_manager.elevation_source2.extension: .dt1
 elevation_manager.elevation_source2.type: dted_directory
 elevation_manager.elevation_source2.min_open_cells: 25
 elevation_manager.elevation_source2.max_open_cells: 50
 elevation_manager.elevation_source2.memory_map_cells: false
 elevation_manager.elevation_source2.geoid.type: geoid1996
+elevation_manager.elevation_source2.upcase: false
 
+// Three arc seconds post spacing srtm, ~90 meters, default disabled:
 elevation_manager.elevation_source3.connection_string: $(OSSIM_DATA)/elevation/srtm/3arc
-elevation_manager.elevation_source3.enabled: true
+elevation_manager.elevation_source3.enabled: false
 elevation_manager.elevation_source3.type: srtm_directory
+elevation_manager.elevation_source3.mean_spacing: 90
 elevation_manager.elevation_source3.min_open_cells: 25
 elevation_manager.elevation_source3.max_open_cells: 50
 elevation_manager.elevation_source3.memory_map_cells: false
 elevation_manager.elevation_source3.geoid.type: geoid1996
 
+// One Kilometer post spacing, can memory map, default enabled, always last:
 elevation_manager.elevation_source4.connection_string: $(OSSIM_DATA)/elevation/dted/level0
 elevation_manager.elevation_source4.enabled: true
+elevation_manager.elevation_source2.extension: .dt0
 elevation_manager.elevation_source4.type: dted_directory
 elevation_manager.elevation_source4.min_open_cells: 25
 elevation_manager.elevation_source4.max_open_cells: 50
 elevation_manager.elevation_source4.memory_map_cells: true
 elevation_manager.elevation_source4.geoid.type: geoid1996
-
-// "image_directory" can be any type of image, i.e. tiff, nitf and so on.
-// elevation_manager.elevation_source5.connection_string: $(OSSIM_DATA)/elevation/some_dir
-// elevation_manager.elevation_source5.enabled: false
-// elevation_manager.elevation_source5.type: image_directory
-// elevation_manager.elevation_source5.min_open_cells: 25
-// elevation_manager.elevation_source5.max_open_cells: 50
-// elevation_manager.elevation_source5.memory_map_cells: false
-// elevation_manager.elevation_source5.geoid.type: geoid1996
-
+elevation_manager.elevation_source4.upcase: false
 
 //---
 // Identity geoid is 0 everywhere, so MSL = Ellipsoid. Useful when DEM
@@ -196,25 +209,25 @@ elevation_manager.threads: yes
 // Location of other shared files can be accessed using this preference to permit 
 // specifying paths relative to it.
 //---
-ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/ossim/share
+ossim_share_directory: $(OSSIM_INSTALL_PREFIX)/share/ossim
 
 //---
 // Look-up tables for European Petroleum Survey Group (EPSG) coded 
-// projections and datums (located in <ossim_share_directory>/ossim/projection)
+// projections and datums (located in <ossim_share_directory>/projection)
 // These are expected to be delimiter-separated value (*.csv|tsv) files.
 // NOTE: ESRI codes are NOT EPSG codes, however, they do not conflict with 
 // EPSG so ingesting them as if they were EPSG. Eventually, separate 
 // databases or a multi-Db solution may need to be 
 // implemented. OLK 05/2010
 // --- 
-epsg_database_file0: ossim_epsg_projections-v7_4.csv
-epsg_database_file1: ossim_harn_state_plane_epsg.csv
-epsg_database_file2: ossim_state_plane_spcs.csv
-epsg_database_file3: ossim_harn_state_plane_esri.csv
+epsg_database_file0: projection/ossim_epsg_projections-v7_4.csv
+epsg_database_file1: projection/ossim_harn_state_plane_epsg.csv
+epsg_database_file2: projection/ossim_state_plane_spcs.csv
+epsg_database_file3: projection/ossim_harn_state_plane_esri.csv
 
 // Database file for WKT-based projection factory 
 // (located in <ossim_share_directory>/ossim/projection):
-wkt_database_file: ossim_wkt_pcs.csv
+wkt_database_file: projection/ossim_wkt_pcs.csv
 
 //---
 // Geoid support:
@@ -270,7 +283,7 @@ geoid_ngs_directory.byte_order: little_endian
 // - Can be downloaded from svn:
 // svn co http://svn.osgeo.org/ossim/trunk/ossim_package_support/geoids geoids
 //---
-geoid_egm_96_grid: $(OSSIM_INSTALL_PREFIX)/share/ossim/geoids/geoid1996/egm96.grd
+geoid_egm_96_grid: $(OSSIM_INSTALL_PREFIX)/share/ossim/geoids/egm96.grd
 
 // ---
 // Font support:
@@ -279,6 +292,7 @@ geoid_egm_96_grid: $(OSSIM_INSTALL_PREFIX)/share/ossim/geoids/geoid1996/egm96.gr
 // ---
 // font.file1: /usr/share/fonts/default/Type1/b018032l.pfb
 // font.dir1: /usr/share/fonts/default/Type1
+font.dir0: $(OSSIM_INSTALL_PREFIX)/share/ossim/fonts
 
 
 //---
@@ -305,44 +319,109 @@ geoid_egm_96_grid: $(OSSIM_INSTALL_PREFIX)/share/ossim/geoids/geoid1996/egm96.gr
 // Loaded library:  /usr/local/lib/libossimcontrib_plugin.so
 //
 // Keywords:
-//
-// plugin.dir1:  < directory where plugins are >
-//
-// you can also list by individual file names
-//
-// plugin.file1: < full path and file name >
-//---
-// Example, edit/uncomment as needed:
-plugin.file0:  $(OSSIM_INSTALL_PREFIX)/plugins/libossim_png_plugin.so
-plugin.file5:  $(OSSIM_INSTALL_PREFIX)/plugins/libossim_kakadu_plugin.so
-plugin.file10: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_mrsid_plugin.so
-plugin.file15: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_cnes_plugin.so
-plugin.file20: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_hdf5_plugin.so
-plugin.file25: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_sqlite_plugin.so
-plugin.file40: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_web_plugin.so
-plugin.file45: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_kml_plugin.so
-plugin.file50: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_ndf_plugin.so
-plugin.file55: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_geopdf_plugin.so
-plugin.file60: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_opencv_plugin.so
-plugin.file61: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_pdal_plugin.so
-plugin.file65: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_gdal_plugin.so
-
-// plugin.file1: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_reg_plugin.so
-// plugin.file2: $(OSSIM_INSTALL_PREFIX)/plugins/libossim_contrib_plugin.so
 // 
-//
-// We also support a second style that allows one to pass options to any
-// plugins that support them
-// the options param is an embedded keywordlist that is surrounded by triple
-// quotes:
 // plugin0.file: <path to>/libossim_kakadu_plugin
 // plugin0.options: """
 //                  read_factory.location: front
 //                  writer_factory.location: back
 //                  """
+// 
+// OLD style with no options:
+//
+// plugin.file1: < full path and file name >
+// plugin.dir1:  < directory where plugins are >
+//---
+
+// Example, edit/uncomment as needed:
+plugin0.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.so
+// plugin0.options:
+
+// NTM plugin, alway make second plugin:
+plugin1.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
+plugin1.options:
+
+plugin3.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
+// plugin3.options:
+
+plugin5.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kakadu_plugin.so
+// plugin5.options:
+
+// plugin10.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_jpeg12_plugin.so
+// plugin10.options:
+
+plugin15.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin.so
+// plugin15 .options:
+
+plugin20.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_cnes_plugin.so
+// plugin20.options:
+
+plugin30.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_sqlite_plugin.so
+// plugin30.options:
+
+// plugin35.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_potrace_plugin.so
+// plugin35.options:
+
+plugin40.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_web_plugin.so
+// plugin40.options:
+
+plugin45.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kml_plugin.so
+// plugin45.options:
+
+plugin50.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ndf_plugin.so
+// plugin50.options:
+
+plugin55.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_geopdf_plugin.so
+// plugin55.options:
+
+// plugin60.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_opencv_plugin.so
+// plugin60.options:
+
+// plugin70.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_openjpeg_plugin.so
+// plugin70.options:
+
+// plugin80.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_pdal_plugin.so
+// plugin80.options:
+
+//---
+// Always put gdal last as it has duplicate readers and need to pick ours up
+// first.
+//---
+//plugin85.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
+// plugin85.options:
+
+//---
+// Old style with no options keyword:
+//---
+
+// plugin.file0:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.so
+
+// NTM plugin, alway make second plugin:
+// plugin.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
+
+// plugin.file3:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
+// plugin.file5:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kakadu_plugin.so
+// plugin.file10:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_jpeg12_plugin.so
+// plugin.file15: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin.so
+// plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_cnes_plugin.so
+// plugin.file30: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_sqlite_plugin.so
+// plugin.file35: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_potrace_plugin.so
+// plugin.file40: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_web_plugin.so
+// plugin.file45: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kml_plugin.so
+// plugin.file50: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ndf_plugin.so
+// plugin.file55: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_geopdf_plugin.so
+// plugin.file60: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_opencv_plugin.so
+// plugin.file70: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_openjpeg_plugin.so
+// plugin.file80: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_pdal_plugin.so
+
+//---
+// Always put gdal last as it has duplicate readers and need to pick ours up
+// first.
+//---
+// plugin.file65: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
 //
 // END OSSIM plugin support
 //---
+
 
 // Toggles for recceVue application:
 statusLatLon: true
@@ -356,9 +435,9 @@ statusUpdateOnClick: true
 // Keyword: cache_size
 // The cache size is in megabytes.
 // ---
-cache_size: 256
+// cache_size: 256
 // cache_size: 512
-// cache_size: 1024
+cache_size: 1024
 // cache_size: 2048
 
 
@@ -419,9 +498,9 @@ overview_stop_dimension: 8
 // Uncomment one below.  
 // ---
 // tile_size: 32 32
-// tile_size: 64 64
+ tile_size: 64 64
 // tile_size: 128 128
-tile_size: 256 256
+//tile_size: 256 256
 // tile_size: 512 512
 // tile_size: 1024 1024
 
@@ -575,3 +654,86 @@ orthoigen.flip_null_pixels: none
 // NITF writer site configuration file:
 // ---
 // nitf_writer.site_configuration_file: $(OSSIM_DATA)/ossim/share/nitf-site-configuration.kwl
+
+// TFRD support files(ntm plugin):
+tfrd_fq_file: $(OSSIM_INSTALL_PREFIX)/share/ossim/tfrd-tables/fq.dat
+tfrd_iamp_file: $(OSSIM_INSTALL_PREFIX)/share/ossim/tfrd-tables/oamt.dat
+
+//----
+// HDF5 READER
+//----
+// allows on to specify configuration options and parsing for the hdf5 plugin
+// In this example we have only the Radiance file supported for VIIRS data
+// to get a listing of dataset use the ossim-info -d on any hdf5 dataset file
+// and look at the top for the dataset comma seperated list of dataset paths.
+// You can add a comma seperated list for renderable_datasets and only those will show
+// up in an ossim-info
+// 
+hdf5.options.max_recursion_level: 8
+hdf5.options.renderable_datasets: /All_Data/VIIRS-DNB-SDR_All/Radiance
+
+
+//-------
+// AWS plugin settings
+//-------
+//
+// We can specify the S3 read block size.
+// You can give it a numerical value and end it with B, K, M, or G.
+// which stand for Bytes, Kilobytes, Megabytes or Gigabytes.
+//
+//  So a value of 1k means 1024 bytes
+//  A value of 1024k is equivalent to 1M or one megabyte
+//
+ossim.plugins.aws.s3.readBlocksize: 1M
+
+// Override default aws region:
+// ossim.plugins.aws.s3.region: us-iso-east-1
+ossim.plugins.aws.s3.region: us-east-1
+
+// We can specify the S3 open file for read entries to cache.
+//
+// here we say we can remember 10000 different files and cache their sizes so 
+// we do not have to query the content length
+// If it exceeds this limit then the cache will shrink down by 20%.
+//
+ossim.plugins.aws.s3.nReadCacheHeaders: 10000
+
+// We can also specify if we cache invalid locations.  So if there is a s3://..... URL
+// and it is invalid and can't get the header size it will cache and mark it as invalid
+//
+ossim.plugins.aws.s3.cacheInvalidLocations: true
+
+//---
+// Turn on/off progress output to console standard output. Code
+// auto detects if running in a console window; hence, typically this is not
+// needed.
+// values: 0, 1, true or false
+// default = commented out / auto-detected.
+//---
+// ossim.std.out.progress: 1
+
+
+//---
+// If you have the ossim-web-plugin installed then these options are available
+//
+//
+// Uncomment to add a Certificate Authority for CERT verification
+// Sometimes this is not needed and the client Cert and key is all that is needed.
+//
+//ossim.plugins.web.curl.cacert: 
+
+// Uncomment to add a client certificate file. 
+//ossim.plugins.web.curl.clientCert: 
+
+// Uncomment and specify the type of the client certificate
+// P12 or PEM
+//ossim.plugins.web.curl.clientCertType: P12
+
+// If the client private key is not bundled in the clientCert then you can specify the key 
+// here.
+//
+//ossim.plugins.web.curl.clientKey:
+
+// If a password is on your private key file then specify it here. 
+//ossim.plugins.web.curl.clientKeyPassword:
+/---

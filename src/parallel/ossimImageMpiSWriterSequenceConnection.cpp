@@ -140,7 +140,7 @@ void ossimImageMpiSWriterSequenceConnection::slaveProcessTiles()
    ossimEndian endian;
    ossim_uint32 numberOfTiles    = getNumberOfTiles();
    long currentSendRequest = 0;
-   long numberOfTilesSent  = 0;
+   //long numberOfTilesSent  = 0;
    int errorValue= 0;
    MPI_Request *requests   = new MPI_Request[theNumberOfTilesToBuffer];
    for (int i = 0; i < theNumberOfTilesToBuffer; ++i)
@@ -313,7 +313,7 @@ void ossimImageMpiSWriterSequenceConnection::slaveProcessTiles()
       }
 #endif
       theCurrentTileNumber += (theNumberOfProcessors-1);
-      numberOfTilesSent++;
+      //numberOfTilesSent++;
       currentSendRequest++;
       currentSendRequest %= theNumberOfTilesToBuffer;
    }
@@ -322,10 +322,10 @@ void ossimImageMpiSWriterSequenceConnection::slaveProcessTiles()
    //
    while(tempCount < theNumberOfTilesToBuffer)
    {
+      errorValue = MPI_Wait(&requests[currentSendRequest], MPI_STATUS_IGNORE);
       currentSendRequest++;
       currentSendRequest %= theNumberOfTilesToBuffer;
       
-      errorValue = MPI_Wait(&requests[currentSendRequest], MPI_STATUS_IGNORE);
       ++tempCount;
    }
    

@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author:  Garrett Potts
 //
@@ -9,12 +9,14 @@
 // Contains class definition for ImageHandlerRegistry.
 //
 //*******************************************************************
-//  $Id: ossimImageHandlerRegistry.cpp 22636 2014-02-23 17:55:50Z dburken $
+// $Id$
 
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimString.h>
+#include <ossim/base/ossimStringProperty.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimImageHandlerFactory.h>
 #include <ossim/imaging/ossimImageHandlerFactoryBase.h>
@@ -139,6 +141,43 @@ void ossimImageHandlerRegistry::getSupportedExtensions(
    
 }
 
+ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openConnection(
+   const ossimString& connectionString, bool openOverview )const
+{
+   ossimRefPtr<ossimImageHandler> result(0);
+
+   std::string myConnectionString = connectionString.downcase().string();
+   std::string fileStr = "file://";
+   std::size_t found = myConnectionString.find( fileStr );
+   if ( found == 0 )
+   {
+      myConnectionString = connectionString.string().substr( fileStr.size() );
+   }
+   else
+   {
+      myConnectionString = connectionString.string();
+   }
+   
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( myConnectionString, std::ios_base::in|std::ios_base::binary);
+
+   if ( str )
+   {
+      result = open( str, myConnectionString, openOverview );
+   }
+
+   if ( result.valid() == false )
+   {
+      ossimFilename f = myConnectionString;
+      if ( f.exists() )
+      {
+         result = this->open( f, true, openOverview );
+      }
+   }
+   
+   return result;
+}
+
 ossimImageHandler* ossimImageHandlerRegistry::open(const ossimFilename& fileName,
                                                    bool trySuffixFirst,
                                                    bool openOverview)const
@@ -155,9 +194,7 @@ ossimImageHandler* ossimImageHandlerRegistry::open(const ossimFilename& fileName
    // now try magic number opens
    //
    ossimImageHandler*                   result = NULL;
-   vector<ossimImageHandlerFactoryBase*>::const_iterator factory;
-
-   factory = m_factoryList.begin();
+   vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
    while((factory != m_factoryList.end()) && !result)
    {
       result = (*factory)->open(fileName, openOverview);
@@ -183,7 +220,30 @@ ossimImageHandler* ossimImageHandlerRegistry::open(const ossimKeywordlist& kwl,
    return result;
 }
 
-ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open( std::istream* str,
+ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open(
+   std::shared_ptr<ossim::istream>& str,
+   const std::string& connectionString,
+   bool openOverview ) const
+{
+   ossimRefPtr<ossimImageHandler> result = 0;
+   if ( str )
+   {
+      vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+      while( factory != m_factoryList.end() )
+      {
+         result = (*factory)->open( str, connectionString, openOverview );
+         if ( result.valid() )
+         {
+            break;
+         }
+         ++factory;
+      }
+   }
+   return result; 
+}
+
+#if 0
+ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open( ossim::istream* str,
                                                                 std::streamoff restartPosition,
                                                                 bool youOwnIt ) const
 {
@@ -200,21 +260,46 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open( std::istream* st
    }  
    return result; 
 }
+#endif
 
 ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openOverview(
    const ossimFilename& file ) const
 {
    ossimRefPtr<ossimImageHandler> result = 0;
-   vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
-   while( factory != m_factoryList.end() )
+
+   // See if we can open via the stream interface:
+   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file, std::ios_base::in|std::ios_base::binary);
+   
+   if ( str )
    {
-      result = (*factory)->openOverview( file );
-      if ( result.valid() )
+      std::vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+      while( factory != m_factoryList.end() )
       {
-         break;
+         result = (*factory)->openOverview( str, file );
+         if ( result.valid() )
+         {
+            break;
+         }
+         ++factory;
       }
-      ++factory;
-   }  
+
+      str = 0;
+   }
+
+   if ( (result.valid() == false) && file.exists() )
+   {  
+      vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+      while( factory != m_factoryList.end() )
+      {
+         result = (*factory)->openOverview( file );
+         if ( result.valid() )
+         {
+            break;
+         }
+         ++factory;
+      }
+   }
    return result;
 }
 
@@ -242,20 +327,43 @@ std::ostream& ossimImageHandlerRegistry::printReaderProps(std::ostream& out) con
             dynamic_cast<ossimImageHandler*>( (*factory)->createObject( (*i) ) );
          if ( ih.valid() )
          {
-            std::vector<ossimString> propertyList;
-            ih->getPropertyNames(propertyList);
             out << "reader: " << ih->getClassName() << "\n";
-            
-            if ( propertyList.size() )
+
+            // Loop through image handler properties:
+            std::vector<ossimString> propNames;
+            ih->getPropertyNames(propNames);
+            if ( propNames.size() )
             {
-               // Loop through image handler properties:
-               out << "properties:\n";
-               std::vector<ossimString>::const_iterator p = propertyList.begin();
-               while ( p != propertyList.end() )
+               out << "\nproperties:\n";
+               ossimRefPtr<ossimProperty> prop = 0;
+               std::vector<ossimString>::const_iterator p = propNames.begin();
+               while ( p != propNames.end() )
                {
-                  out << (*p) << "\n";
+                  out << "   " << (*p) << "\n";
+                  prop = ih->getProperty( *p );
+                  if ( prop.valid() )
+                  {
+                     ossimStringProperty* stringProp =
+                        dynamic_cast<ossimStringProperty*>(prop.get());
+                     if ( stringProp )
+                     {
+                        if ( stringProp->getConstraints().size() )
+                        {
+                           out << "      constraints:\n";
+                           std::vector<ossimString>::const_iterator strPropIter =
+                              stringProp->getConstraints().begin();
+                           while( strPropIter != stringProp->getConstraints().end() )
+                           {
+                              out << "         " << (*strPropIter) << "\n";
+                              ++strPropIter;
+                           }
+                        }
+                     }
+                  }
+                  
                   ++p;
                }
+               out << "\n";
             }
          }
          ++i;

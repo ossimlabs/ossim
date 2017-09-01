@@ -30,210 +30,46 @@
 #include <iostream>
 #include <sstream>
 
-// Define Trace flags for use within this file:
-static ossimTrace traceExec  ("ossimRsmModel:exec");
-static ossimTrace traceDebug ("ossimRsmModel:debug");
-
 RTTI_DEF1(ossimRsmModel, "ossimRsmModel", ossimSensorModel);
 
-static const char* MODEL_TYPE = "ossimRsmModel";
-static const char* RNRMO_KW   = "rnrmo";
-static const char* CNRMO_KW   = "cnrmo";
-static const char* XNRMO_KW   = "xnrmo";
-static const char* YNRMO_KW   = "ynrmo";
-static const char* ZNRMO_KW   = "znrmo";
-static const char* RNRMSF_KW  = "rnrmsf";
-static const char* CNRMSF_KW  = "cnrmsf";
-static const char* XNRMSF_KW  = "xnrmsf";
-static const char* YNRMSF_KW  = "ynrmsf";
-static const char* ZNRMSF_KW  = "znrmsf";
-static const char* RNPWRX_KW  = "rnpwrx";
-static const char* RNPWRY_KW  = "rnpwry";
-static const char* RNPWRZ_KW  = "rnpwrz";
-static const char* RNTRMS_KW  = "rntrms";
-static const char* RNPCF_KW   = "rnpcf";
-static const char* RDPWRX_KW  = "rdpwrx";
-static const char* RDPWRY_KW  = "rdpwry";
-static const char* RDPWRZ_KW  = "rdpwrz";
-static const char* RDTRMS_KW  = "rdtrms";
-static const char* RDPCF_KW   = "rdpcf";
-static const char* CNPWRX_KW  = "cnpwrx";
-static const char* CNPWRY_KW  = "cnpwry";
-static const char* CNPWRZ_KW  = "cnpwrz";
-static const char* CNTRMS_KW  = "cntrms";
-static const char* CNPCF_KW   = "cnpcf";
-static const char* CDPWRX_KW  = "cdpwrx";
-static const char* CDPWRY_KW  = "cdpwry";
-static const char* CDPWRZ_KW  = "cdpwrz";
-static const char* CDTRMS_KW  = "cdtrms";
-static const char* CDPCF_KW   = "cdpcf";
-      
+// Define Trace flags for use within this file:
+static const ossimTrace traceExec  ("ossimRsmModel:exec");
+static const ossimTrace traceDebug ("ossimRsmModel:debug");
+
+static std::string MODEL_TYPE_KW  = "ossimRsmModel";
+
 ossimRsmModel::ossimRsmModel()
    :
    ossimSensorModel(),
-
-   m_iid(),
-   m_edition(),
-
-   m_rsn(0),
-   m_csn(0),
-
-   m_rfep(0.0),
-   m_cfep(0.0),
-   m_rnrmo(0.0),
-   m_cnrmo(0.0),
-   m_xnrmo(0.0),
-   m_ynrmo(0.0),
-   m_znrmo(0.0),
-   m_rnrmsf(0.0),
-   m_cnrmsf(0.0),
-   m_xnrmsf(0.0),
-   m_ynrmsf(0.0),
-   m_znrmsf(0.0),
-   
-   m_rnpwrx(0),
-   m_rnpwry(0),
-   m_rnpwrz(0),
-   m_rntrms(0),
-
-   m_rnpcf(),
-   
-   m_rdpwrx(0),
-   m_rdpwry(0),
-   m_rdpwrz(0),
-   m_rdtrms(0),
-
-   m_rdpcf(),
-   
-   m_cnpwrx(0),
-   m_cnpwry(0),
-   m_cnpwrz(0),
-   m_cntrms(0),
-
-   m_cnpcf(),
-   
-   m_cdpwrx(0),
-   m_cdpwry(0),
-   m_cdpwrz(0),
-   m_cdtrms(0),
-
-   m_cdpcf()
+   m_ida(),
+   m_pia(),   
+   m_pca()
 {
    initAdjustableParameters();
    
-} // End: ossimRsmModel::ossimRsmModel()
+}
 
 ossimRsmModel::ossimRsmModel( const ossimRsmModel& obj )
    :
    ossimSensorModel( obj ),
-
-   m_iid( obj.m_iid ),
-   m_edition( obj.m_edition ),
-
-   m_rsn( obj.m_rsn ),
-   m_csn( obj.m_csn ),
-
-   m_rfep( obj.m_rfep ),
-   m_cfep( obj.m_cfep ),
-   m_rnrmo( obj.m_rnrmo ),
-   m_cnrmo( obj.m_cnrmo ),
-   m_xnrmo( obj.m_xnrmo ),
-   m_ynrmo( obj.m_ynrmo ),
-   m_znrmo( obj.m_znrmo ),
-   m_rnrmsf( obj.m_rnrmsf ),
-   m_cnrmsf( obj.m_cnrmsf ),
-   m_xnrmsf( obj.m_xnrmsf ),
-   m_ynrmsf( obj.m_ynrmsf ),
-   m_znrmsf( obj.m_znrmsf ),
-   
-   m_rnpwrx( obj.m_rnpwrx ),
-   m_rnpwry( obj.m_rnpwry ),
-   m_rnpwrz( obj.m_rnpwrz ),
-   m_rntrms( obj.m_rntrms ),
-
-   m_rnpcf( obj.m_rnpcf ),
-   
-   m_rdpwrx( obj.m_rdpwrx ),
-   m_rdpwry( obj.m_rdpwry ),
-   m_rdpwrz( obj.m_rdpwrz ),
-   m_rdtrms( obj.m_rdtrms ),
-
-   m_rdpcf( obj.m_rdpcf ),
-   
-   m_cnpwrx( obj.m_cnpwrx ),
-   m_cnpwry( obj.m_cnpwry ),
-   m_cnpwrz( obj.m_cnpwrz ),
-   m_cntrms( obj.m_cntrms ),
-
-   m_cnpcf( obj.m_cnpcf ),
-   
-   m_cdpwrx( obj.m_cdpwrx ),
-   m_cdpwry( obj.m_cdpwry ),
-   m_cdpwrz( obj.m_cdpwrz ),
-   m_cdtrms( obj.m_cdtrms ),
-
-   m_cdpcf( obj.m_cdpcf )
+   m_ida( obj.m_ida ),
+   m_pia( obj.m_pia ),
+   m_pca( obj.m_pca )
 {
    
-} // End: ossimRsmModel::ossimRsmModel( const ossimRsmModel& obj )
+}
 
 const ossimRsmModel& ossimRsmModel::operator=( const ossimRsmModel& rhs )
 {
    if (this != &rhs)
    {
       ossimSensorModel::operator=(rhs);
-
-      m_iid = rhs.m_iid;
-      m_edition = rhs.m_edition;
-      
-      m_rsn = rhs.m_rsn;
-      m_csn = rhs.m_csn;
-      
-      m_rfep = rhs.m_rfep;
-      m_cfep = rhs.m_cfep;
-      m_rnrmo = rhs.m_rnrmo;
-      m_cnrmo = rhs.m_cnrmo;
-      m_xnrmo = rhs.m_xnrmo;
-      m_ynrmo = rhs.m_ynrmo;
-      m_znrmo = rhs.m_znrmo;
-      m_rnrmsf = rhs.m_rnrmsf;
-      m_cnrmsf = rhs.m_cnrmsf;
-      m_xnrmsf = rhs.m_xnrmsf;
-      m_ynrmsf = rhs.m_ynrmsf;
-      m_znrmsf = rhs.m_znrmsf;
-      
-      m_rnpwrx = rhs.m_rnpwrx;
-      m_rnpwry = rhs.m_rnpwry;
-      m_rnpwrz = rhs.m_rnpwrz;
-      m_rntrms = rhs.m_rntrms;
-      
-      m_rnpcf = rhs.m_rnpcf;
-      
-      m_rdpwrx = rhs.m_rdpwrx;
-      m_rdpwry = rhs.m_rdpwry;
-      m_rdpwrz = rhs.m_rdpwrz;
-      m_rdtrms = rhs.m_rdtrms;
-      
-      m_rdpcf = rhs.m_rdpcf;
-      
-      m_cnpwrx = rhs.m_cnpwrx;
-      m_cnpwry = rhs.m_cnpwry;
-      m_cnpwrz = rhs.m_cnpwrz;
-      m_cntrms = rhs.m_cntrms;
-      
-      m_cnpcf = rhs.m_cnpcf;
-      
-      m_cdpwrx = rhs.m_cdpwrx;
-      m_cdpwry = rhs.m_cdpwry;
-      m_cdpwrz = rhs.m_cdpwrz;
-      m_cdtrms = rhs.m_cdtrms;
-      
-      m_cdpcf = rhs.m_cdpcf;
+      m_ida = rhs.m_ida;
+      m_pia = rhs.m_pia;      
+      m_pca = rhs.m_pca;
    }
-   
-   return *this;
-   
-} // End: ossimRsmModel::operator=( const ossimRsmModel& rhs )
+   return *this;  
+}
 
 ossimRsmModel::~ossimRsmModel()
 {
@@ -255,33 +91,52 @@ void ossimRsmModel::worldToLineSample(const ossimGpt& ground_point,
    }
 
    //---
-   // Normalize the lat, lon, hgt:
-   // a_norm = (a-offset)/scalefactor
-   //
-   // Note:
-   //
-   // Was getting bogus line sample values in Western hemisphere; hence, the
-   // test on longitude. (drb - 22 May 2015)
+   // RSMIDA GRNDD Ground Domain Form:
+   // G: Geodetic: range x is -pi to pi, y is -pi/2 to pi/2
+   // H: Geodetic: range x is 0 to 2pi, y is -pi/2 to pi/2 (where image is close to pi.
+   // R: Rectangular (not supported).
    //---
-   double lon = (ground_point.lon >= 0.0) ? ground_point.lon : ground_point.lon + 360.0;
-   double y = (ossim::degreesToRadians(ground_point.lat) - m_ynrmo) / m_ynrmsf;
-   // double x = (ossim::degreesToRadians(ground_point.lon) - m_xnrmo) / m_xnrmsf;
-   double x = ( ossim::degreesToRadians(lon) - m_xnrmo) / m_xnrmsf;   
-   double z;
 
-   if( ground_point.isHgtNan() )
+   // Initial xyz for computing the pca index.
+   double x;
+   if ( m_ida.m_grndd == 'H' )
    {
-     z = ( - m_znrmo) / m_znrmsf;
+      x = ossim::degreesToRadians((ground_point.lon >= 0.0) ?
+                                  ground_point.lon : ground_point.lon + 360.0);
    }
    else
    {
-     z = (ground_point.hgt - m_znrmo) / m_znrmsf;
+      x = ossim::degreesToRadians( ground_point.lon );
+   }
+      
+   double y = ossim::degreesToRadians(ground_point.lat);
+   double z = ground_point.hgt;
+   if ( ossim::isnan( z ) )
+   {
+      z = 0.0; // ??? drb
    }
 
-   double rnNrm =  polynomial(x, y, z, m_rnpwrx, m_rnpwry, m_rnpwrz, m_rnpcf); 
-   double rdNrm =  polynomial(x, y, z, m_rdpwrx, m_rdpwry, m_rdpwrz, m_rdpcf);
-   double cnNrm =  polynomial(x, y, z, m_cnpwrx, m_cnpwry, m_cnpwrz, m_cnpcf);
-   double cdNrm =  polynomial(x, y, z, m_cdpwrx, m_cdpwry, m_cdpwrz, m_cdpcf);
+   ossim_uint32 pcaIndex = getPcaIndex( x, y, z );
+
+   //---
+   // Normalize the lat, lon, hgt:
+   // a_norm = (a-offset)/scalefactor
+   //---
+   y = (y - m_pca[pcaIndex].m_ynrmo) / m_pca[pcaIndex].m_ynrmsf;
+   x = (x - m_pca[pcaIndex].m_xnrmo) / m_pca[pcaIndex].m_xnrmsf;   
+   if( ground_point.isHgtNan() )
+   {
+     z = ( - m_pca[pcaIndex].m_znrmo) / m_pca[pcaIndex].m_znrmsf;
+   }
+   else
+   {
+     z = (ground_point.hgt - m_pca[pcaIndex].m_znrmo) / m_pca[pcaIndex].m_znrmsf;
+   }
+
+   double rnNrm =  polynomial(x, y, z, m_pca[pcaIndex].m_rnpwrx, m_pca[pcaIndex].m_rnpwry, m_pca[pcaIndex].m_rnpwrz, m_pca[pcaIndex].m_rnpcf); 
+   double rdNrm =  polynomial(x, y, z, m_pca[pcaIndex].m_rdpwrx, m_pca[pcaIndex].m_rdpwry, m_pca[pcaIndex].m_rdpwrz, m_pca[pcaIndex].m_rdpcf);
+   double cnNrm =  polynomial(x, y, z, m_pca[pcaIndex].m_cnpwrx, m_pca[pcaIndex].m_cnpwry, m_pca[pcaIndex].m_cnpwrz, m_pca[pcaIndex].m_cnpcf);
+   double cdNrm =  polynomial(x, y, z, m_pca[pcaIndex].m_cdpwrx, m_pca[pcaIndex].m_cdpwry, m_pca[pcaIndex].m_cdpwrz, m_pca[pcaIndex].m_cdpcf);
    
    double rNrm  = rnNrm / rdNrm;
    double cNrm  = cnNrm / cdNrm;
@@ -298,8 +153,9 @@ void ossimRsmModel::worldToLineSample(const ossimGpt& ground_point,
    
    // img_pt.line = (rNrm * m_rnrmsf) + m_rnrmo; 
    // img_pt.samp = (cNrm * m_cnrmsf) + m_cnrmo; 
-   img_pt.line = (rNrm * m_rnrmsf) + m_rnrmo - 0.5; 
-   img_pt.samp = (cNrm * m_cnrmsf) + m_cnrmo - 0.5; 
+   img_pt.line = (rNrm * m_pca[pcaIndex].m_rnrmsf) + m_pca[pcaIndex].m_rnrmo - 0.5; 
+   img_pt.samp = (cNrm * m_pca[pcaIndex].m_cnrmsf) + m_pca[pcaIndex].m_cnrmo - 0.5; 
+
 
 } // End: ossimRsmModel::worldToLineSample( ... )
 
@@ -352,12 +208,14 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    static const int    MAX_NUM_ITERATIONS  = 100;
    static const double CONVERGENCE_EPSILON = 0.05;  // pixels
 
+   ossim_uint32 pcaIndex = getPcaIndex( image_point, true );
+   
+   // Image point of 0 to ossim is 0.5 to RSM.
    // double U    = (image_point.y-m_rnrmo) / (m_rnrmsf);
    // double V    = (image_point.x-m_cnrmo) / (m_cnrmsf);
 
-
-   double U = (image_point.y+0.5-m_rnrmo) / (m_rnrmsf);
-   double V = (image_point.x+0.5-m_cnrmo) / (m_cnrmsf);
+   double U = (image_point.y+0.5-m_pca[pcaIndex].m_rnrmo) / (m_pca[pcaIndex].m_rnrmsf);
+   double V = (image_point.x+0.5-m_pca[pcaIndex].m_cnrmo) / (m_pca[pcaIndex].m_cnrmsf);
 
    //---
    // Initialize quantities to be used in the iteration for ground point:
@@ -368,15 +226,15 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
 
    if(ossim::isnan(ellHeight))
    {
-     nhgt = (- m_znrmo) / m_znrmsf;  // norm height
+     nhgt = (- m_pca[pcaIndex].m_znrmo) / m_pca[pcaIndex].m_znrmsf;  // norm height
    }
    else
    {
-      nhgt = (ellHeight - m_znrmo) / m_znrmsf;  // norm height
+      nhgt = (ellHeight - m_pca[pcaIndex].m_znrmo) / m_pca[pcaIndex].m_znrmsf;  // norm height
    }
 
-   double epsilonU = CONVERGENCE_EPSILON/m_rnrmsf;
-   double epsilonV = CONVERGENCE_EPSILON/m_cnrmsf;
+   double epsilonU = CONVERGENCE_EPSILON/m_pca[pcaIndex].m_rnrmsf;
+   double epsilonV = CONVERGENCE_EPSILON/m_pca[pcaIndex].m_cnrmsf;
    int    iteration = 0;
    //---
    // Declare variables only once outside the loop. These include:
@@ -405,10 +263,10 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
       // Calculate the normalized line and sample Uc, Vc as ratio of
       // polynomials Pu, Qu and Pv, Qv:
       //---
-      Pu = polynomial(nlon, nlat, nhgt, m_rnpwrx, m_rnpwry, m_rnpwrz, m_rnpcf);
-      Qu = polynomial(nlon, nlat, nhgt, m_rdpwrx, m_rdpwry, m_rdpwrz, m_rdpcf);
-      Pv = polynomial(nlon, nlat, nhgt, m_cnpwrx, m_cnpwry, m_cnpwrz, m_cnpcf);
-      Qv = polynomial(nlon, nlat, nhgt, m_cdpwrx, m_cdpwry, m_cdpwrz, m_cdpcf);
+      Pu = polynomial(nlon, nlat, nhgt, m_pca[pcaIndex].m_rnpwrx, m_pca[pcaIndex].m_rnpwry, m_pca[pcaIndex].m_rnpwrz, m_pca[pcaIndex].m_rnpcf);
+      Qu = polynomial(nlon, nlat, nhgt, m_pca[pcaIndex].m_rdpwrx, m_pca[pcaIndex].m_rdpwry, m_pca[pcaIndex].m_rdpwrz, m_pca[pcaIndex].m_rdpcf);
+      Pv = polynomial(nlon, nlat, nhgt, m_pca[pcaIndex].m_cnpwrx, m_pca[pcaIndex].m_cnpwry, m_pca[pcaIndex].m_cnpwrz, m_pca[pcaIndex].m_cnpcf);
+      Qv = polynomial(nlon, nlat, nhgt, m_pca[pcaIndex].m_cdpwrx, m_pca[pcaIndex].m_cdpwry, m_pca[pcaIndex].m_cdpwrz, m_pca[pcaIndex].m_cdpcf);
       Uc = Pu/Qu;
       Vc = Pv/Qv;
 
@@ -426,14 +284,14 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
          //---
          // Analytically compute the partials of each polynomial wrt lat, lon:
          //---
-         dPu_dLat = dPoly_dLat(nlon, nlat, nhgt, m_rnpwrx, m_rnpwry, m_rnpwrz, m_rnpcf);
-         dQu_dLat = dPoly_dLat(nlon, nlat, nhgt, m_rdpwrx, m_rdpwry, m_rdpwrz, m_rdpcf);
-         dPv_dLat = dPoly_dLat(nlon, nlat, nhgt, m_cnpwrx, m_cnpwry, m_cnpwrz, m_cnpcf);
-         dQv_dLat = dPoly_dLat(nlon, nlat, nhgt, m_cdpwrx, m_cdpwry, m_cdpwrz, m_cdpcf);
-         dPu_dLon = dPoly_dLon(nlon, nlat, nhgt, m_rnpwrx, m_rnpwry, m_rnpwrz, m_rnpcf);
-         dQu_dLon = dPoly_dLon(nlon, nlat, nhgt, m_rdpwrx, m_rdpwry, m_rdpwrz, m_rdpcf);
-         dPv_dLon = dPoly_dLon(nlon, nlat, nhgt, m_cnpwrx, m_cnpwry, m_cnpwrz, m_cnpcf);
-         dQv_dLon = dPoly_dLon(nlon, nlat, nhgt, m_cdpwrx, m_cdpwry, m_cdpwrz, m_cdpcf);
+         dPu_dLat = dPoly_dLat(nlon, nlat, nhgt, m_pca[pcaIndex].m_rnpwrx, m_pca[pcaIndex].m_rnpwry, m_pca[pcaIndex].m_rnpwrz, m_pca[pcaIndex].m_rnpcf);
+         dQu_dLat = dPoly_dLat(nlon, nlat, nhgt, m_pca[pcaIndex].m_rdpwrx, m_pca[pcaIndex].m_rdpwry, m_pca[pcaIndex].m_rdpwrz, m_pca[pcaIndex].m_rdpcf);
+         dPv_dLat = dPoly_dLat(nlon, nlat, nhgt, m_pca[pcaIndex].m_cnpwrx, m_pca[pcaIndex].m_cnpwry, m_pca[pcaIndex].m_cnpwrz, m_pca[pcaIndex].m_cnpcf);
+         dQv_dLat = dPoly_dLat(nlon, nlat, nhgt, m_pca[pcaIndex].m_cdpwrx, m_pca[pcaIndex].m_cdpwry, m_pca[pcaIndex].m_cdpwrz, m_pca[pcaIndex].m_cdpcf);
+         dPu_dLon = dPoly_dLon(nlon, nlat, nhgt, m_pca[pcaIndex].m_rnpwrx, m_pca[pcaIndex].m_rnpwry, m_pca[pcaIndex].m_rnpwrz, m_pca[pcaIndex].m_rnpcf);
+         dQu_dLon = dPoly_dLon(nlon, nlat, nhgt, m_pca[pcaIndex].m_rdpwrx, m_pca[pcaIndex].m_rdpwry, m_pca[pcaIndex].m_rdpwrz, m_pca[pcaIndex].m_rdpcf);
+         dPv_dLon = dPoly_dLon(nlon, nlat, nhgt, m_pca[pcaIndex].m_cnpwrx, m_pca[pcaIndex].m_cnpwry, m_pca[pcaIndex].m_cnpwrz, m_pca[pcaIndex].m_cnpcf);
+         dQv_dLon = dPoly_dLon(nlon, nlat, nhgt, m_pca[pcaIndex].m_cdpwrx, m_pca[pcaIndex].m_cdpwry, m_pca[pcaIndex].m_cdpwrz, m_pca[pcaIndex].m_cdpcf);
 
          //---
          // Analytically compute partials of quotients U and V wrt lat, lon:
@@ -476,9 +334,9 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    // GRNDD field when value is "H" versus "G".   OSSIMGPT wrap handles this
    // automatically, so no need to worry about it.
    //---
-   gpt.lat = ossim::radiansToDegrees(nlat*m_ynrmsf + m_ynrmo);
-   gpt.lon = ossim::radiansToDegrees(nlon*m_xnrmsf + m_xnrmo);
-   gpt.hgt = (nhgt * m_znrmsf) + m_znrmo; //ellHeight;
+   gpt.lat = ossim::radiansToDegrees(nlat*m_pca[pcaIndex].m_ynrmsf + m_pca[pcaIndex].m_ynrmo);
+   gpt.lon = ossim::radiansToDegrees(nlon*m_pca[pcaIndex].m_xnrmsf + m_pca[pcaIndex].m_xnrmo);
+   gpt.hgt = (nhgt * m_pca[pcaIndex].m_znrmsf) + m_pca[pcaIndex].m_znrmo; //ellHeight;
 
    //---
    // Note: See above note. Added in wrap call. Longitude was coming out 242
@@ -498,6 +356,8 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
 void ossimRsmModel::imagingRay(const ossimDpt& imagePoint,
                                ossimEcefRay&   imageRay) const
 {
+   ossim_uint32 pcaIndex = getPcaIndex( imagePoint, true );
+   
    //---
    // For "from point", "to point" we want the image ray to be from above the
    // ellipsoid down to Earth.
@@ -507,17 +367,17 @@ void ossimRsmModel::imagingRay(const ossimDpt& imagePoint,
    // ossimEllipsoid::nearestIntersection method, else it goes off in the
    // weeds...
    //---
-   double vectorLength = m_znrmsf * 2.0;
+   double vectorLength = m_pca[pcaIndex].m_znrmsf * 2.0;
 
    ossimGpt gpt;
 
    // "from" point
-   double intHgt = m_znrmo + vectorLength;
+   double intHgt = m_pca[pcaIndex].m_znrmo + vectorLength;
    lineSampleHeightToWorld(imagePoint, intHgt, gpt);
    ossimEcefPoint intECFfrom(gpt);
 
    // "to" point
-   lineSampleHeightToWorld(imagePoint, m_znrmo, gpt);
+   lineSampleHeightToWorld(imagePoint, m_pca[pcaIndex].m_znrmo, gpt);
    ossimEcefPoint intECFto(gpt);
 
    // Construct ray
@@ -553,360 +413,168 @@ std::ostream& ossimRsmModel::print(std::ostream& out) const
    return out;
 }
 
-//---
-//  METHOD: ossimRsmModel::saveState()
-//  
-//  Saves the model state to the KWL. This KWL also serves as a geometry file.
-//  
-//---
 bool ossimRsmModel::saveState(ossimKeywordlist& kwl,
                               const char* prefix) const
 {
+   static const char MODULE[] = "ossimRsmModel::saveState";
    if (traceExec())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "DEBUG ossimRsmModel::saveState(): entering..." << std::endl;
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
 
-   kwl.add(prefix, ossimKeywordNames::TYPE_KW, MODEL_TYPE);
+   kwl.add(prefix, ossimKeywordNames::TYPE_KW, MODEL_TYPE_KW.c_str());
 
    //---
    // Hand off to base class for common stuff:
    //---
    ossimSensorModel::saveState(kwl, prefix);
 
-   //---
-   // Save off offsets and scales:
-   //---
-   kwl.add(prefix, RNRMO_KW, m_rnrmo);
-   kwl.add(prefix, CNRMO_KW, m_cnrmo);
-   kwl.add(prefix, XNRMO_KW, m_xnrmo);
-   kwl.add(prefix, YNRMO_KW, m_ynrmo);
-   kwl.add(prefix, ZNRMO_KW, m_znrmo);
-   kwl.add(prefix, RNRMSF_KW, m_rnrmsf);
-   kwl.add(prefix, CNRMSF_KW, m_cnrmsf);
-   kwl.add(prefix, XNRMSF_KW, m_xnrmsf);
-   kwl.add(prefix, YNRMSF_KW, m_ynrmsf);
-   kwl.add(prefix, ZNRMSF_KW, m_znrmsf);
+   std::string pfx = (prefix ? prefix : "" );
 
-   kwl.add(prefix, RNPWRX_KW, m_rnpwrx);
-   kwl.add(prefix, RNPWRY_KW, m_rnpwry);
-   kwl.add(prefix, RNPWRZ_KW, m_rnpwrz);
-   kwl.add(prefix, RNTRMS_KW, m_rntrms);
-   for (ossim_uint32 i=0; i<m_rntrms; ++i)
+   // IDA:
+   m_ida.saveState( kwl, prefix );
+
+   // PIA:
+   m_pia.saveState( kwl, prefix );  
+
+   // PCA:
+   for ( ossim_uint32 i = 0; i < m_pca.size(); ++i )
    {
-      ossimString key;
-      key = RNPCF_KW;
-      key += ossimString::toString(i);
-      kwl.add(prefix, key.c_str(), m_rnpcf[i]);
+      m_pca[i].saveState( kwl, pfx, i );
    }
-
-   kwl.add(prefix, RDPWRX_KW, m_rdpwrx);
-   kwl.add(prefix, RDPWRY_KW, m_rdpwry);
-   kwl.add(prefix, RDPWRZ_KW, m_rdpwrz);
-   kwl.add(prefix, RDTRMS_KW, m_rdtrms);
-   for (ossim_uint32 i=0; i<m_rdtrms; ++i)
-   {
-	
-      ossimString key;
-      key = RDPCF_KW;
-      key += ossimString::toString(i);
-      kwl.add(prefix, key.c_str(), m_rdpcf[i]);
-   }
-
-   kwl.add(prefix, CNPWRX_KW, m_cnpwrx);
-   kwl.add(prefix, CNPWRY_KW, m_cnpwry);
-   kwl.add(prefix, CNPWRZ_KW, m_cnpwrz);
-   kwl.add(prefix, CNTRMS_KW, m_cntrms);
-   for (ossim_uint32 i=0; i<m_cntrms; ++i)
-   {
-      ossimString key;
-      key = CNPCF_KW;
-      key += ossimString::toString(i);
-      kwl.add(prefix, key.c_str(), m_cnpcf[i]);
-   }
-
-   kwl.add(prefix, CDPWRX_KW, m_cdpwrx);
-   kwl.add(prefix, CDPWRY_KW, m_cdpwry);
-   kwl.add(prefix, CDPWRZ_KW, m_cdpwrz);
-   kwl.add(prefix, CDTRMS_KW, m_cdtrms);
-   for (ossim_uint32 i=0; i<m_cdtrms; ++i)
-   {
-      ossimString key;
-      key = CDPCF_KW;
-      key += ossimString::toString(i);
-      kwl.add(prefix, key.c_str(), m_cdpcf[i]);
-   }
-
+   
    if (traceExec())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "DEBUG ossimRsmModel::saveState(): returning..." << std::endl;
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
    }
 
    return true;
 }
 
-//---
-//  METHOD: ossimRsmModel::loadState()
-//  
-//  Restores the model's state from the KWL. This KWL also serves as a
-//  geometry file.
-//  
-//---
 bool ossimRsmModel::loadState(const ossimKeywordlist& kwl,
-                                  const char* prefix) 
+                              const char* prefix) 
 {
+   static const char MODULE[] = "ossimRsmModel::loadState";
    if (traceExec())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "DEBUG ossimRsmModel::loadState(): entering..." << std::endl;
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
+
+   bool status = false;
    
-   const char* value;
-   
-   //---
-   // Pass on to the base-class for parsing first:
-   //---
-   bool success = ossimSensorModel::loadState(kwl, prefix);
-   if (!success)
+   // Check for type match before preceeding:
+   std::string pfx = ( prefix ? prefix : "" );
+   std::string type = kwl.findKey( pfx, std::string(ossimKeywordNames::TYPE_KW) );
+   if ( (type == "ossimNitfRsmModel" ) || ( type == MODEL_TYPE_KW ) )
    {
-      if (traceExec())
+      // Pass on to the base-class for parsing first:
+      if ( ossimSensorModel::loadState(kwl, prefix) )
       {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "DEBUG ossimRsmModel::loadState(): returning with error..."
-            << std::endl;
-      }
-      return false;
-   }
-   
-   //---
-   // Continue parsing for local members:
-   //---
-   value = kwl.find(prefix, RNRMO_KW);
-   if (value)
-   {
-      m_rnrmo = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, CNRMO_KW);
-   if (value)
-   {
-      m_cnrmo = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, XNRMO_KW);
-   if (value)
-   {
-      m_xnrmo = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, YNRMO_KW);
-   if (value)
-   {
-      m_ynrmo = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, ZNRMO_KW);
-   if (value)
-   {
-      m_znrmo = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, RNRMSF_KW);
-   if (value)
-   {
-      m_rnrmsf = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, CNRMSF_KW);
-   if (value)
-   {
-      m_cnrmsf = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, XNRMSF_KW);
-   if (value)
-   {
-      m_xnrmsf = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, YNRMSF_KW);
-   if (value)
-   {
-      m_ynrmsf = ossimString(value).toFloat64();
-   }
-   value = kwl.find(prefix, ZNRMSF_KW);
-   if (value)
-   {
-      m_znrmsf = ossimString(value).toFloat64();
-   }
-
-   value = kwl.find(prefix, RNPWRX_KW);
-   if (value)
-   {
-      m_rnpwrx = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, RNPWRY_KW);
-   if (value)
-   {
-      m_rnpwry = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, RNPWRZ_KW);
-   if (value)
-   {
-      m_rnpwrz = ossimString(value).toUInt32();
-   }
-   
-   value = kwl.find(prefix, RNTRMS_KW);
-   if (value)
-   {
-      m_rntrms = ossimString(value).toUInt32();
-      m_rnpcf.resize(m_rntrms);      
-      for (ossim_uint32 i=0; i<m_rntrms; ++i)
-      {
-         ossimString keyword;
-         keyword = RNPCF_KW;
-         keyword += ossimString::toString(i); 
-         value = kwl.find(prefix, keyword.c_str());
-         if (!value)
+         if ( m_ida.loadState( kwl, pfx ) )
          {
-            ossimNotify(ossimNotifyLevel_FATAL)
-               << "FATAL ossimRsmModel::loadState(): Error "
-               << "encountered parsing the following required keyword: "
-               << "<" << keyword << ">. Check the keywordlist for proper syntax."
-               << std::endl;
-            return false;
-         }
-         m_rnpcf[i] = ossimString(value).toFloat64();
-      }
-   }
+            if ( m_pia.loadState( kwl, pfx ) )
+            {
+               m_pca.clear();
+               
+               for ( ossim_uint32 tagIndex = 0; tagIndex < m_pia.m_tnis; ++tagIndex )
+               {
+                  ossimRsmpca pca;
+                  if ( pca.loadState( kwl, pfx, tagIndex ) )
+                  {
+                     m_pca.push_back( pca );
+                  }
+                  else
+                  {
+                     ossimNotify(ossimNotifyLevel_WARN)
+                        << "WARNING! RSMPCA[" << tagIndex << "] intitialization failed!"
+                        << std::endl;
+                     break; // Get out...
+                  }
+               }
 
-   value = kwl.find(prefix, RDPWRX_KW);
-   if (value)
-   {
-      m_rdpwrx = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, RDPWRY_KW);
-   if (value)
-   {
-      m_rdpwry = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, RDPWRZ_KW);
-   if (value)
-   {
-      m_rdpwrz = ossimString(value).toUInt32();
-   }
-
-   value = kwl.find(prefix, RDTRMS_KW);
-   if (value)
-   {
-      m_rdtrms = ossimString(value).toUInt32();
-      m_rdpcf.resize(m_rdtrms);
-      for (ossim_uint32 i=0; i<m_rdtrms; ++i)
-      {
-         ossimString keyword;
-         keyword = RDPCF_KW;
-         keyword += ossimString::toString(i);
-         value = kwl.find(prefix, keyword.c_str());
-         if (!value)
-         {
-            ossimNotify(ossimNotifyLevel_FATAL)
-               << "FATAL ossimRsmModel::loadState(): Error "
-               << "encountered parsing the following required keyword: "
-               << "<" << keyword << ">. Check the keywordlist for proper syntax."
-               << std::endl;
-            return false;
-         }
-         m_rdpcf[i] = ossimString(value).toFloat64();
-      } 
-   }
-
-   value = kwl.find(prefix, CNPWRX_KW);
-   if (value)
-   {
-      m_cnpwrx = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, CNPWRY_KW);
-   if (value)
-   {
-      m_cnpwry = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, CNPWRZ_KW);
-   if (value)
-   {
-      m_cnpwrz = ossimString(value).toUInt32();
-   }
-
-   value = kwl.find(prefix, CNTRMS_KW);
-   if (value)
-   {
-      m_cntrms = ossimString(value).toUInt32();
-      m_cnpcf.resize(m_cntrms);
-      for (ossim_uint32 i=0; i<m_cntrms; ++i)
-      {
-         ossimString keyword;
-         keyword = CNPCF_KW;
-         keyword += ossimString::toString(i);
-         value = kwl.find(prefix, keyword.c_str());
-         if (!value)
-         {
-            ossimNotify(ossimNotifyLevel_FATAL)
-               << "FATAL ossimRsmModel::loadState(): Error "
-               << "encountered parsing the following required keyword: "
-               << "<" << keyword << ">. Check the keywordlist for proper syntax."
-               << std::endl;
-            return false;
-         }
-         m_cnpcf[i] = ossimString(value).toFloat64();
-      } 
-   }
-
-   value = kwl.find(prefix, CDPWRX_KW);
-   if (value)
-   {
-      m_cdpwrx = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, CDPWRY_KW);
-   if (value)
-   {
-      m_cdpwry = ossimString(value).toUInt32();
-   }
-   value = kwl.find(prefix, CDPWRZ_KW);
-   if (value)
-   {
-      m_cdpwrz = ossimString(value).toUInt32();
-   }
-
-   value = kwl.find(prefix, CDTRMS_KW);
-   if (value)
-   {
-      m_cdtrms = ossimString(value).toUInt32();
-      m_cdpcf.resize(m_cdtrms);
-      for (ossim_uint32 i=0; i<m_cdtrms; ++i)
-      {
-         ossimString keyword;
-         keyword = CDPCF_KW;
-         keyword += ossimString::toString(i);
-         value = kwl.find(prefix, keyword.c_str());
-         if (!value)
-         {
-            ossimNotify(ossimNotifyLevel_FATAL)
-               << "FATAL ossimRsmModel::loadState(): Error "
-               << "encountered parsing the following required keyword: "
-               << "<" << keyword << ">. Check the keywordlist for proper syntax."
-               << std::endl;
-            return false;
-         }
-         m_cdpcf[i] = ossimString(value).toFloat64();
-      }
-   }
-
-   updateModel();
+               // Should now have a rsmpca record for each segment.
+               if ( m_pia.m_tnis == (ossim_uint32)m_pca.size() )
+               {
+                  // Set the status for downstream code.
+                  status = true;
+                  
+                  updateModel();
+               }
+               
+            } // Matches: if ( m_pia.loadState( kwl, pfx ) )
+            
+         } // Matches:if ( m_ida.loadState( kwl, pfx ) ) 
+         
+      } // Matches: if ( ossimSensorModel::loadState(kwl, prefix) )
+      
+   } // Matches: if ( (type == "ossimNitfRsmModel" ) || ...
    
    if (traceExec())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "DEBUG ossimRsmModel::loadState(): returning..." << std::endl;
+         << MODULE << " exit status = " << (status?"true":"false") << "\n";
    }
-   return true;
+   
+   return status;
+}
+
+ossim_uint32 ossimRsmModel::getPcaIndex(
+   const double& x, const double& y, const double& z) const
+{
+   ossimDpt ipt;
+   lowOrderPolynomial( x, y, z, ipt );
+   return getPcaIndex( ipt, false );
+}
+
+ossim_uint32 ossimRsmModel::getPcaIndex( const ossimDpt& ipt, bool shiftPoint ) const
+{
+   //---
+   //  RSM (0,0) is upper left corner of pixel(0,0). OSSIM (0,0) is
+   //  center of the pixel; hence, the shift 0.5 if coming from ossim.
+   //---
+   double shift = shiftPoint ? 0.5 : 0.0;
+   
+   // Row section number:
+   double rsn = std::floor( ( ipt.y + shift - (double)(m_ida.m_minr) ) /
+                            (double)(m_pia.m_rssiz) );
+   if ( rsn < 0.0 )
+   {
+      rsn = 0.0;
+   }
+   else if ( rsn > (m_pia.m_rnis-1) )
+   {
+      rsn = m_pia.m_rnis-1;
+   }
+   // Column section number:
+   double csn = std::floor( ( ipt.x + shift - (double)(m_ida.m_minc) ) / (double)(m_pia.m_cssiz) );
+   if ( csn < 0.0 )
+   {
+      csn = 0.0;
+   }
+   else if ( csn > (m_pia.m_cnis-1) )
+   {
+      csn = m_pia.m_cnis-1;
+   }
+
+   //return static_cast<ossim_uint32>(rsn) * m_pia.m_rnis + static_cast<ossim_uint32>(csn);
+   return static_cast<ossim_uint32>(rsn) * m_pia.m_cnis + static_cast<ossim_uint32>(csn);
+}
+
+void ossimRsmModel::lowOrderPolynomial(
+   const double& x, const double& y, const double& z, ossimDpt& ipt ) const
+{
+   ipt.y = m_pia.m_r0 + m_pia.m_rx * x + m_pia.m_ry * y + m_pia.m_rz * z +
+      m_pia.m_rxx * x * x + m_pia.m_rxy * x * y + m_pia.m_rxz * x * z +
+      m_pia.m_ryy * y * y + m_pia.m_ryz * y * z + m_pia.m_rzz * z * z;
+
+   ipt.x = m_pia.m_c0 + m_pia.m_cx * x + m_pia.m_cy * y + m_pia.m_cz * z +
+      m_pia.m_cxx * x * x + m_pia.m_cxy * x * y + m_pia.m_cxz * x * z +
+      m_pia.m_cyy * y * y + m_pia.m_cyz * y * z + m_pia.m_czz * z * z;
 }
 
 double ossimRsmModel::polynomial(
    const double& x, const double& y, const double& z, const ossim_uint32& maxx,
-   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<ossim_float64> pcf) const
+   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<double> pcf) const
 {
    double r = 0.0;
    ossim_uint32 index = 0;
@@ -926,7 +594,7 @@ double ossimRsmModel::polynomial(
 
 double ossimRsmModel::dPoly_dLat(
    const double& x, const double& y, const double& z, const ossim_uint32& maxx,
-   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<ossim_float64> pcf) const
+   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<double> pcf) const
                                  
 {
    double dr = 0.0;
@@ -950,7 +618,7 @@ double ossimRsmModel::dPoly_dLat(
 
 double ossimRsmModel::dPoly_dLon(
    const double& x, const double& y, const double& z, const ossim_uint32& maxx,
-   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<ossim_float64> pcf) const
+   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<double> pcf) const
 {
    double dr = 0.0;
    ossim_uint32 index = 0;
@@ -974,7 +642,7 @@ double ossimRsmModel::dPoly_dLon(
 
 double ossimRsmModel::dPoly_dHgt(
    const double& x, const double& y, const double& z, const ossim_uint32& maxx,
-   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<ossim_float64> pcf) const
+   const ossim_uint32& maxy, const ossim_uint32& maxz, std::vector<double> pcf) const
 {
    double dr = 0.0;
    ossim_uint32 index = 0;
@@ -995,3 +663,58 @@ double ossimRsmModel::dPoly_dHgt(
    }
    return dr;
 }
+
+bool ossimRsmModel::validate() const
+{
+   static const char MODULE[] = "ossimRsmModel::validate";
+
+   bool status = true;
+
+   if (  (m_pia.m_rnis == 0) ||  (m_pia.m_rnis == 0) || (m_pia.m_tnis == 0) )
+   {
+      status = false;
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmpia must have at least one section!" << std::endl;
+   }
+
+   if ( m_pca.size() != m_pia.m_tnis )
+   {
+      status = false;
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmpca array not equal to section count!" << std::endl;
+   }
+   if ( ( m_ida.m_grndd != 'G' ) && ( m_ida.m_grndd != 'H' ) && ( m_ida.m_grndd != 'R' ) )
+   {
+      status = false;
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmida grndd Ground Domain Form not set!" << std::endl;
+   }
+   if ( m_ida.m_grndd == 'R' )
+   {
+      status = false;
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmida grndd Rectangular Ground Domain not supported!" << std::endl;
+   }
+   if ( m_pia.m_rssiz == 0 )
+   {
+      status = false; // divide by zero.
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmpia rrsiz Section row size cannot be zero!" << std::endl;
+   }
+   if ( m_pia.m_cssiz == 0 )
+   {
+      status = false; // divide by zero.
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE
+         << " ERROR: rsmpia cssiz Section column size cannot be zero!" << std::endl;
+   }
+
+   return status;
+}
+
+

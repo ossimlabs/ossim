@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author: Garrett Potts
 //
@@ -18,19 +18,31 @@
 // ossimIFStream
 // ossimOFStream
 //
-//*******************************************************************
-//  $Id: ossimIoStream.h 22475 2013-11-07 13:28:51Z gpotts $
+//---
+// $Id$
+
 #ifndef ossimIoStream_HEADER
-#define ossimIoStream_HEADER
+#define ossimIoStream_HEADER 1
+
+#include <ossim/base/ossimIosFwd.h>
+
+// NOTE: All below includes will go away once deprecated code is replaced.
+// drb 04 Nov. 2016
+
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimStreamBase.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <ossim/base/ossimString.h>
 
+#include <istream>
+#include <iostream>
+#include <ostream>
+#include <fstream>
+#include <sstream>
 
+//---
+// Depreciated:
+//---
 class OSSIM_DLL ossimIStream : public ossimStreamBase, public std::basic_istream<char>   
 {
 public:

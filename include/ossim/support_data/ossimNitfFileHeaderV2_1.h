@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,14 +9,14 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfFileHeaderV2_1.h 22418 2013-09-26 15:01:12Z gpotts $
-#ifndef ossimNitfFileHeaderV2_1_HEADER
-#define ossimNitfFileHeaderV2_1_HEADER
+// $Id$
 
-#include <iosfwd>
+#ifndef ossimNitfFileHeaderV2_1_HEADER
+#define ossimNitfFileHeaderV2_1_HEADER 1
 
 #include <ossim/support_data/ossimNitfFileHeaderV2_X.h>
 #include <ossim/base/ossimDate.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimKeywordlist.h>
 
 class OSSIMDLLEXPORT ossimNitfImageInfoRecordV2_1
@@ -136,8 +136,8 @@ public:
    
    ossimNitfFileHeaderV2_1();
    virtual ~ossimNitfFileHeaderV2_1();
-   virtual void parseStream(std::istream &in);
-   virtual void writeStream(std::ostream &out);
+   virtual void parseStream(ossim::istream& in);
+   virtual void writeStream(ossim::ostream& out);
    virtual bool isEncrypted()const;
    virtual ossim_int32 getNumberOfImages()const;
    virtual ossim_int32 getNumberOfLabels()const;
@@ -153,21 +153,24 @@ public:
    virtual ossimDrect getImageRect()const;
 
    virtual void addImageInfoRecord(const ossimNitfImageInfoRecordV2_1& recordInfo);
+   virtual void deleteLastImageInfoRecord();
+   virtual void deleteLastDataExtSegInfoRecord();
+
    virtual void addTextInfoRecord(const ossimNitfTextFileInfoRecordV2_1& recordInfo);
 	virtual void addDataExtSegInfoRecord(const ossimNitfDataExtSegInfoRecordV2_1& recordInfo);
 
    virtual void replaceImageInfoRecord(int i, const ossimNitfImageInfoRecordV2_1& recordInfo);
    
    virtual ossimNitfImageHeader*  getNewImageHeader(ossim_uint32 imageNumber,
-                                                    std::istream& in)const;
+                                                    ossim::istream& in)const;
    virtual ossimNitfSymbolHeader* getNewSymbolHeader(ossim_uint32 symbolNumber,
-                                                     std::istream& in)const;
+                                                     ossim::istream& in)const;
    virtual ossimNitfLabelHeader* getNewLabelHeader(ossim_uint32 labelNumber,
-                                                   std::istream& in)const;
+                                                   ossim::istream& in)const;
    virtual ossimNitfTextHeader* getNewTextHeader(ossim_uint32 textNumber,
-                                                   std::istream& in)const;
+                                                 ossim::istream& in)const;
    virtual ossimNitfDataExtensionSegment* getNewDataExtensionSegment(
-      ossim_int32 dataExtNumber, std::istream& in)const;
+      ossim_int32 dataExtNumber, ossim::istream& in)const;
 
    virtual ossimNitfImageHeader*  allocateImageHeader()const;
    virtual ossimNitfSymbolHeader* allocateSymbolHeader()const;
@@ -226,6 +229,10 @@ public:
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
+   /**
+   * isValid will test if the fields are valid and will return true or false.
+   */
+   virtual bool isValid()const;
 
    /*!
     * @brief Method to set fields from a keyword list.
@@ -239,7 +246,8 @@ public:
     */
    virtual bool loadState(const ossimKeywordlist& kwl,
                           const char* prefix=0);
-   
+
+   virtual bool saveState(ossimKeywordlist& kwl, const ossimString& prefix="")const;
 
    /**
     * Properties of a NITF 2.1 Header file. See MIL-STD-2500B for details.
@@ -285,11 +293,11 @@ private:
    void setNumberOfGraphicInfoRecords(ossim_uint64 num);
    void setNumberOfDataExtSegInfoRecords(ossim_uint64 num);
 
-   void readImageInfoRecords(std::istream &in);
-   void readGraphicInfoRecords(std::istream &in);
-   void readTextFileInfoRecords(std::istream &in);
-   void readDataExtSegInfoRecords(std::istream &in);
-   void readResExtSegInfoRecords(std::istream &in);
+   void readImageInfoRecords(ossim::istream& in);
+   void readGraphicInfoRecords(ossim::istream& in);
+   void readTextFileInfoRecords(ossim::istream& in);
+   void readDataExtSegInfoRecords(ossim::istream& in);
+   void readResExtSegInfoRecords(ossim::istream& in);
 
    /**
     * If the header was parsed this method will initialize the offsets
@@ -304,7 +312,8 @@ private:
     * If the header was parsed and the offsets have been initialized, this method will
     * parse all overflow tags and put them into theTagList.
     */
-   void readOverflowTags(std::istream& in);
+   void readOverflowTags(ossim::istream& in);
+   void readDes(std::istream& in);     
 
    // Note: these are work variables and not part of the
    // Nitf header.  These variables will be used to quickly

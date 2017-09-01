@@ -23,6 +23,7 @@
 #include <ossim/projection/ossimLambertConformalConicProjection.h>
 #include <ossim/projection/ossimCassiniProjection.h>
 #include <ossim/projection/ossimAlbersProjection.h>
+#include <ossim/projection/ossimUpsProjection.h>
 #include <ossim/base/ossimEpsgDatumFactory.h>
 #include <ossim/base/ossimDatumFactory.h>
 #include <ossim/base/ossimDatumFactoryRegistry.h>
@@ -190,14 +191,18 @@ void ossimEpsgProjectionDatabase::initialize() const
 {
    // Fetch filenames of all projection DB files from the share directory specified in
    // ossim_preferences:
-   ossimFilename epsg_path (ossimPreferences::instance()->findPreference("ossim_share_directory"));
-   epsg_path += "/ossim/projection/";
+
+   // Optional ossim share dir:
+   ossimFilename share_dir = ossimPreferences::instance()->
+      preferencesKWL().findKey( std::string( "ossim_share_directory" ) );
+   
    ossimString regEx =  ossimString("^epsg_database_file[0-9]+");
    vector<ossimString> keys = 
       ossimPreferences::instance()->preferencesKWL().getSubstringKeyList(regEx);
    vector<ossimString>::const_iterator i = keys.begin();
 
    // Create only once outside the loop:
+   ossimFilename epsg_path;
    ossimFilename db_name;
    ossimString group_id;
    ossimString format_id;
@@ -206,10 +211,51 @@ void ossimEpsgProjectionDatabase::initialize() const
    // Loop over each file and read contents into memory:
    while ( i != keys.end() )
    {
-      db_name = epsg_path + ossimPreferences::instance()->preferencesKWL().find( (*i).c_str() );
+      db_name.clear();
+      epsg_path = ossimPreferences::instance()->preferencesKWL().findKey( (*i).string() );
+      if ( epsg_path.size() )
+      {
+         if ( !epsg_path.isRelative() )
+         {
+            //---
+            // example:
+            // epsg_database_file0:/usr/share/ossim/projection/ossim_epsg_projections-v7_4.csv
+            //---
+            db_name = epsg_path;
+         }
+         else if ( share_dir.size() )
+         {
+            //---
+            // example:
+            // ossim_share_dir: /usr/share/ossim
+            // epsg_database_file0: projection/ossim_epsg_projections-v7_4.csv
+            //---
+            db_name = share_dir.dirCat( epsg_path );
+
+            //---
+            // This block is for backwards compatibility.
+            // Try tacking "projection" onto share dir.
+            //---
+            if ( !db_name.isReadable() )
+            {
+               db_name = share_dir.dirCat( ossimFilename("projection") );
+               db_name = db_name.dirCat( epsg_path);
+
+               // Lastly: Try tacking "ossim/projection" onto share dir.
+               if ( !db_name.isReadable() )
+               {
+                  db_name = share_dir.dirCat( ossimFilename("ossim/projection") );
+                  db_name = db_name.dirCat( epsg_path);
+               }
+            }
+         }
+      }
       ++i;
+      
       if (!db_name.isReadable())
+      {
          continue;
+      }
 
       // Open the DB file:
       std::ifstream db_stream (db_name.chars());
@@ -292,7 +338,7 @@ ossimProjection* ossimEpsgProjectionDatabase::findProjection(ossim_uint32 epsg_c
       return 0;
 
    // Check for Google projection:
-   else if ((epsg_code==3857)||(epsg_code == 900913))
+   else if (( epsg_code==3857) || (epsg_code == 900913))
    {
       proj = new ossimGoogleProjection();
 
@@ -658,7 +704,7 @@ ossimEpsgProjectionDatabase::createProjFromFormatARecord(ProjDbRecord* record) c
       double fn = mtrs_per_unit*record->csvRecord[A_FALSE_NORTHING].toDouble();
       record->proj =  new ossimCassiniProjection(*ellipsoid, origin, fe, fn);
    }
-   else if (proj_type.contains("Mercator (1SP)") || proj_type.contains("Pseudo-Mercator"))
+   else if (proj_type.contains("Mercator (1SP)"))
    {
       origin.lat = decodeSexagesimalDms(record->csvRecord[A_NAT_ORG_LAT]);
       origin.lon = decodeSexagesimalDms(record->csvRecord[A_NAT_ORG_LON]);
@@ -666,6 +712,27 @@ ossimEpsgProjectionDatabase::createProjFromFormatARecord(ProjDbRecord* record) c
       double fn = mtrs_per_unit*record->csvRecord[A_FALSE_NORTHING].toDouble();
       double sf = record->csvRecord[A_NAT_ORG_SCALE].toDouble();
       record->proj = new ossimMercatorProjection(*ellipsoid, origin, fe, fn, sf);
+   }
+   else if(proj_type.contains("Popular Visualisation Sphere"))
+   {
+      origin.lat = decodeSexagesimalDms(record->csvRecord[A_NAT_ORG_LAT]);
+      origin.lon = decodeSexagesimalDms(record->csvRecord[A_NAT_ORG_LON]);
+      double fe = mtrs_per_unit*record->csvRecord[A_FALSE_EASTING].toDouble();
+      double fn = mtrs_per_unit*record->csvRecord[A_FALSE_NORTHING].toDouble();
+      double sf = record->csvRecord[A_NAT_ORG_SCALE].toDouble();
+      record->proj = new ossimMercatorProjection(*ellipsoid, origin, fe, fn, sf);
+
+      // Set this for saveState:
+      record->proj->setPcsCode( 3785 );
+
+   }
+   else if(proj_type.contains("Pseudo Mercator"))
+   {
+      record->proj = new ossimGoogleProjection();
+
+      // Set this for saveState:
+      record->proj->setPcsCode( 3857 );
+
    }
    else if (proj_type.contains("Albers"))
    {
@@ -696,7 +763,16 @@ ossimEpsgProjectionDatabase::createProjFromFormatARecord(ProjDbRecord* record) c
       nz_proj->setFalseEastingNorthing(fe, fn);
       record->proj = nz_proj;
    }
-   else 
+   else if (proj_type.contains("Polar Stereographic"))
+   {
+      origin.lat = decodeSexagesimalDms(record->csvRecord[A_NAT_ORG_LAT]);
+      origin.lon = decodeSexagesimalDms(record->csvRecord[A_NAT_ORG_LON]);
+      // double fe = mtrs_per_unit*record->csvRecord[A_FALSE_EASTING].toDouble();
+      // double fn = mtrs_per_unit*record->csvRecord[A_FALSE_NORTHING].toDouble();
+      ossimUpsProjection* ups_proj = new ossimUpsProjection(ossimEllipsoid(), origin);
+      record->proj = ups_proj;
+   }
+   else
    {
       // Can't handle it now. 
       //ossimNotify(ossimNotifyLevel_FATAL)<<MODULE<<"EPSG:"<<record->csvRecord[A_CODE]<<" \""<<proj_type<<"\" "
@@ -909,7 +985,20 @@ ossim_uint32 ossimEpsgProjectionDatabase::getCodeFromUtmProj(const ossimUtmProje
       epsg_code += 24800 + 60;
    
    else
-      epsg_code = 0;
+   {
+      //---
+      // Use a projection code that does not imply a datum.
+      // See section "6.3.3.2 Projection Codes" for definition.
+      //---
+      if  ( hemisphere == 'N' ) // Northern hemisphere.
+      {
+         epsg_code += 16000;
+      }
+      else // Southern hemisphere.
+      {
+         epsg_code += 16100;
+      }
+   }
 
    return epsg_code;
 }

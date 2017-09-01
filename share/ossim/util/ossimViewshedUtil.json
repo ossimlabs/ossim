@@ -34,7 +34,7 @@
         "eyeHeight": {
             "datatype": "double:positive_range",
             "description": "eye height (meters)",
-            "datatype": "double:positive_range"
+            "required": false    
         },
         "gsd": {
             "datatype": "double:positive_range",

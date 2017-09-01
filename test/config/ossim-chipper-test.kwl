@@ -1,0 +1,300 @@
+//---
+// File ossim-chipper-test.kwl
+//---
+
+// ---
+// Begin test1:
+// ---
+test1.name: test1
+test1.description: Test height for center of image from test2 as it is affected by height.
+
+// Clean up commands.
+test1.clean_command0: $(RMDIR_CMD) $(OBT_OUT_DIR)/t1-info-height.txt
+
+// Commands to generate expected results:
+
+// Height center of image for test2
+test1.expected_results_command0: ossim-info --height -42.8612076379401 147.259269295413,253.262469256983 > $(OBT_EXP_DIR)/t1-info-height.txt
+
+// The actual commands to test:
+
+test1.test_command0: ossim-info --height -42.8612076379401 147.259269295413,253.262469256983 > $(OBT_OUT_DIR)/t1-info-height.txt
+
+// Post process commands for diffs and stuff:
+
+test1.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/t1-info-height.txt $(OBT_OUT_DIR)/t1-info-height.txt
+ 
+// ---
+// End test1:
+// ---
+
+// ---
+// Begin test2:
+// ---
+test2.name: test2
+test2.description: Test ossim-chipper ortho mode on rpc image.
+test2.enabled: 1
+
+// Commands to generate expected results:
+
+test2.expected_results_command0: ossim-chipper --op ortho --histogram-op auto-minmax --cut-center-llwh -42.883986392005788 147.331309643650911 512 512 --scale-to-8-bit -w tiff_tiled_band_separate $(OSSIM_BATCH_TEST_DATA)/geoeye1/GE1_Hobart_GeoStereo_NITF-NCD/001508507_01000SP00332258/5V090205P0001912264B220000100282M_001508507/Volume1/5V090205P0001912264B220000100282M_001508507.ntf $(OBT_EXP_DIR)/t2.tif
+
+test2.expected_results_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram $(OBT_EXP_DIR)/t2.tif
+
+test2.expected_results_command2: ossim-info -d -i -p $(OBT_EXP_DIR)/t2.tif > $(OBT_EXP_DIR)/t2-info.txt
+
+// The actual commands to test:
+
+test2.test_command0: ossim-chipper --op ortho --histogram-op auto-minmax --cut-center-llwh -42.883986392005788 147.331309643650911 512 512 --scale-to-8-bit -w tiff_tiled_band_separate $(OSSIM_BATCH_TEST_DATA)/geoeye1/GE1_Hobart_GeoStereo_NITF-NCD/001508507_01000SP00332258/5V090205P0001912264B220000100282M_001508507/Volume1/5V090205P0001912264B220000100282M_001508507.ntf $(OBT_OUT_DIR)/t2.tif
+
+test2.test_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram-fast $(OBT_OUT_DIR)/t2.tif
+
+test2.test_command2: ossim-info -d -i -p $(OBT_OUT_DIR)/t2.tif > $(OBT_OUT_DIR)/t2-info.txt
+
+// Post process commands for diffs and stuff:
+
+test2.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/t2-info.txt $(OBT_OUT_DIR)/t2-info.txt
+test2.postprocess_command1: $(DIFF_CMD) $(OBT_EXP_DIR)/t2.his $(OBT_OUT_DIR)/t2.his
+
+// ---
+// End test2:
+// ---
+
+
+// ---
+// Begin test3:
+// Note no geometry with "chip" mode so no -p in ossim-info.
+// ---
+test3.name: test3
+test3.description: Test ossim-chipper chip mode, with up is up, on rpc image.
+test3.enabled: 1
+
+// Commands to generate expected results:
+
+test3.expected_results_command0: ossim-chipper --op chip -u --histogram-op auto-minmax --cut-center-llwh -42.883986392005788 147.331309643650911 512 512 --scale-to-8-bit -w tiff_tiled_band_separate $(OSSIM_BATCH_TEST_DATA)/geoeye1/GE1_Hobart_GeoStereo_NITF-NCD/001508507_01000SP00332258/5V090205P0001912264B220000100282M_001508507/Volume1/5V090205P0001912264B220000100282M_001508507.ntf $(OBT_EXP_DIR)/t3.tif
+
+test3.expected_results_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram $(OBT_EXP_DIR)/t3.tif
+
+test3.expected_results_command2: ossim-info -d -i $(OBT_EXP_DIR)/t3.tif > $(OBT_EXP_DIR)/t3-info.txt
+
+// The actual commands to test:
+
+test3.test_command0: ossim-chipper --op chip -u --histogram-op auto-minmax --cut-center-llwh -42.883986392005788 147.331309643650911 512 512 --scale-to-8-bit -w tiff_tiled_band_separate $(OSSIM_BATCH_TEST_DATA)/geoeye1/GE1_Hobart_GeoStereo_NITF-NCD/001508507_01000SP00332258/5V090205P0001912264B220000100282M_001508507/Volume1/5V090205P0001912264B220000100282M_001508507.ntf $(OBT_OUT_DIR)/t3.tif
+
+test3.test_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram-fast $(OBT_OUT_DIR)/t3.tif
+
+test3.test_command2: ossim-info -d -i $(OBT_OUT_DIR)/t3.tif > $(OBT_OUT_DIR)/t3-info.txt
+
+// Post process commands for diffs and stuff:
+
+test3.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/t3-info.txt $(OBT_OUT_DIR)/t3-info.txt
+test3.postprocess_command1: $(DIFF_CMD) $(OBT_EXP_DIR)/t3.his $(OBT_OUT_DIR)/t3.his
+
+// ---
+// End test3:
+// ---
+
+
+// ---
+// Begin test4:
+// Note no geometry with "chip" mode so no -p in ossim-info.
+// ---
+test4.name: test4
+test4.description: Test ossim-chipper chip mode, with north up, on rpc image.
+test4.enabled: 1
+
+// Commands to generate expected results:
+
+test4.expected_results_command0: ossim-chipper --op chip -n --histogram-op auto-minmax --cut-center-llwh -42.883986392005788 147.331309643650911 512 512 --scale-to-8-bit -w tiff_tiled_band_separate $(OSSIM_BATCH_TEST_DATA)/geoeye1/GE1_Hobart_GeoStereo_NITF-NCD/001508507_01000SP00332258/5V090205P0001912264B220000100282M_001508507/Volume1/5V090205P0001912264B220000100282M_001508507.ntf $(OBT_EXP_DIR)/t4.tif
+
+test4.expected_results_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram $(OBT_EXP_DIR)/t4.tif
+
+test4.expected_results_command2: ossim-info -d -i $(OBT_EXP_DIR)/t4.tif > $(OBT_EXP_DIR)/t4-info.txt
+
+// The actual commands to test:
+
+test4.test_command0: ossim-chipper --op chip -n --histogram-op auto-minmax --cut-center-llwh -42.883986392005788 147.331309643650911 512 512 --scale-to-8-bit -w tiff_tiled_band_separate $(OSSIM_BATCH_TEST_DATA)/geoeye1/GE1_Hobart_GeoStereo_NITF-NCD/001508507_01000SP00332258/5V090205P0001912264B220000100282M_001508507/Volume1/5V090205P0001912264B220000100282M_001508507.ntf $(OBT_OUT_DIR)/t4.tif
+
+test4.test_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram-fast $(OBT_OUT_DIR)/t4.tif
+
+test4.test_command2: ossim-info -d -i $(OBT_OUT_DIR)/t4.tif > $(OBT_OUT_DIR)/t4-info.txt
+
+// Post process commands for diffs and stuff:
+
+test4.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/t4-info.txt $(OBT_OUT_DIR)/t4-info.txt
+test4.postprocess_command1: $(DIFF_CMD) $(OBT_EXP_DIR)/t4.his $(OBT_OUT_DIR)/t4.his
+
+// ---
+// End test4:
+// ---
+
+// ---
+// Begin test5:
+// Note no geometry with "chip" mode so no -p in ossim-info.
+// ---
+test5.name: test5
+test5.description: Test ossim-chipper chip mode, with rotation, on rpc image.
+test5.enabled: 1
+
+// Commands to generate expected results:
+
+test5.expected_results_command0: ossim-chipper --op chip -r 45.0 --histogram-op auto-minmax --cut-center-llwh -42.883986392005788 147.331309643650911 512 512 --scale-to-8-bit -w tiff_tiled_band_separate $(OSSIM_BATCH_TEST_DATA)/geoeye1/GE1_Hobart_GeoStereo_NITF-NCD/001508507_01000SP00332258/5V090205P0001912264B220000100282M_001508507/Volume1/5V090205P0001912264B220000100282M_001508507.ntf $(OBT_EXP_DIR)/t5.tif
+
+test5.expected_results_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram $(OBT_EXP_DIR)/t5.tif
+
+test5.expected_results_command2: ossim-info -d -i $(OBT_EXP_DIR)/t5.tif > $(OBT_EXP_DIR)/t5-info.txt
+
+// The actual commands to test:
+
+test5.test_command0: ossim-chipper --op chip -r 45.0 --histogram-op auto-minmax --cut-center-llwh -42.883986392005788 147.331309643650911 512 512 --scale-to-8-bit -w tiff_tiled_band_separate $(OSSIM_BATCH_TEST_DATA)/geoeye1/GE1_Hobart_GeoStereo_NITF-NCD/001508507_01000SP00332258/5V090205P0001912264B220000100282M_001508507/Volume1/5V090205P0001912264B220000100282M_001508507.ntf $(OBT_OUT_DIR)/t5.tif
+
+test5.test_command1: ossim-preproc -r --ot ossim_kakadu_nitf_j2k --create-histogram-fast $(OBT_OUT_DIR)/t5.tif
+
+test5.test_command2: ossim-info -d -i $(OBT_OUT_DIR)/t5.tif > $(OBT_OUT_DIR)/t5-info.txt
+
+// Post process commands for diffs and stuff:
+
+test5.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/t5-info.txt $(OBT_OUT_DIR)/t5-info.txt
+test5.postprocess_command1: $(DIFF_CMD) $(OBT_EXP_DIR)/t5.his $(OBT_OUT_DIR)/t5.his
+
+// ---
+// End test5:
+// ---
+
+
+// ---
+// Begin test6:
+// ---
+test6.name: test6
+test6.description: Test ossim-chipper ortho mode on, rpc image, with polygon remapper in chain.
+test6.enabled: 1
+
+// Commands to generate expected results:
+
+test6.expected_results_command0: ossim-chipper --op ortho --clip-poly-lat-lon "(-42.826019566439,147.293941362084468),(-42.822529953243581,147.297524165910716),(-42.822242150093437,147.308125338875925),(-42.826271394195437,147.311757222206637),(-42.828501868609038,147.306898351264209),(-42.834042079249286,147.307192828291022),(-42.833358546767698,147.297229688883874),(-42.829113450303090,147.292518056454895),(-42.826019566439,147.293941362084468)" --histogram-op auto-minmax --cut-center-llwh -42.828034188490058 147.304419836288560 4096 4096 --scale-to-8-bit -w tiff_tiled_band_separate $(OSSIM_BATCH_TEST_DATA)/geoeye1/GE1_Hobart_GeoStereo_NITF-NCD/001508507_01000SP00332258/5V090205P0001912264B220000100282M_001508507/Volume1/5V090205P0001912264B220000100282M_001508507.ntf $(OBT_EXP_DIR)/t6.tif
+
+test6.expected_results_command1: ossim-preproc -r -o --ch $(OBT_EXP_DIR)/t6.tif
+
+test6.expected_results_command2: ossim-info -d -i -p $(OBT_EXP_DIR)/t6.tif > $(OBT_EXP_DIR)/t6-info.txt
+
+// The actual commands to test:
+
+test6.test_command0: ossim-chipper --op ortho --clip-poly-lat-lon "(-42.826019566439,147.293941362084468),(-42.822529953243581,147.297524165910716),(-42.822242150093437,147.308125338875925),(-42.826271394195437,147.311757222206637),(-42.828501868609038,147.306898351264209),(-42.834042079249286,147.307192828291022),(-42.833358546767698,147.297229688883874),(-42.829113450303090,147.292518056454895),(-42.826019566439,147.293941362084468)" --histogram-op auto-minmax --cut-center-llwh -42.828034188490058 147.304419836288560 4096 4096 --scale-to-8-bit -w tiff_tiled_band_separate $(OSSIM_BATCH_TEST_DATA)/geoeye1/GE1_Hobart_GeoStereo_NITF-NCD/001508507_01000SP00332258/5V090205P0001912264B220000100282M_001508507/Volume1/5V090205P0001912264B220000100282M_001508507.ntf $(OBT_OUT_DIR)/t6.tif
+
+
+test6.test_command1: ossim-preproc -r -o --ch $(OBT_OUT_DIR)/t6.tif
+
+test6.test_command2: ossim-info -d -i -p $(OBT_OUT_DIR)/t6.tif > $(OBT_OUT_DIR)/t6-info.txt
+
+// Post process commands for diffs and stuff:
+
+test6.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/t6-info.txt $(OBT_OUT_DIR)/t6-info.txt
+test6.postprocess_command1: $(DIFF_CMD) $(OBT_EXP_DIR)/t6.his $(OBT_OUT_DIR)/t6.his
+
+// ---
+// End test6:
+// ---
+
+
+
+// ---
+// Begin test7:
+// ---
+test7.name: test7
+test7.description: Test ossim-chipper --op hillshade mode:
+test7.enabled: 1
+
+// Commands to generate expected results:
+
+test7.expected_results_command0: ossim-chipper --op hillshade --color 240 210 180 $(OSSIM_BATCH_TEST_DATA)/public/elevation/srtm/1arc/N37W123.hgt $(OBT_EXP_DIR)/t7.tif
+
+test7.expected_results_command1: ossim-preproc -r -o --ch $(OBT_EXP_DIR)/t7.tif
+
+test7.expected_results_command2: ossim-info -d -i -p $(OBT_EXP_DIR)/t7.tif > $(OBT_EXP_DIR)/t7-info.txt
+
+// The actual commands to test:
+
+test7.test_command0: ossim-chipper --op hillshade --color 240 210 180 $(OSSIM_BATCH_TEST_DATA)/public/elevation/srtm/1arc/N37W123.hgt $(OBT_OUT_DIR)/t7.tif
+
+test7.test_command1: ossim-preproc -r -o --ch $(OBT_OUT_DIR)/t7.tif
+
+test7.test_command2: ossim-info -d -i -p $(OBT_OUT_DIR)/t7.tif > $(OBT_OUT_DIR)/t7-info.txt
+
+// Post process commands for diffs and stuff:
+
+test7.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/t7-info.txt $(OBT_OUT_DIR)/t7-info.txt
+test7.postprocess_command1: $(DIFF_CMD) $(OBT_EXP_DIR)/t7.his $(OBT_OUT_DIR)/t7.his
+
+// ---
+// End test7:
+// ---
+
+// ---
+// Begin test8:
+// ---
+test8.name: test8
+test8.description: Test ossim-chipper --op hillshade mode with color lut.
+test8.enabled: 1
+
+// Commands to generate expected results:
+
+test8.expected_results_command0: ossim-chipper --op hillshade --azimuth 270 --elevation 45 --exaggeration 10 --color-table color-relief-lut1.kwl $(OSSIM_BATCH_TEST_DATA)/public/elevation/srtm/1arc/N37W123.hgt $(OBT_EXP_DIR)/t8.tif
+
+test8.expected_results_command1: ossim-preproc -r -o --ch $(OBT_EXP_DIR)/t8.tif
+
+test8.expected_results_command2: ossim-info -d -i -p $(OBT_EXP_DIR)/t8.tif > $(OBT_EXP_DIR)/t8-info.txt
+
+// The actual commands to test:
+
+test8.test_command0: ossim-chipper --op hillshade --azimuth 270 --elevation 45 --exaggeration 10 --color-table color-relief-lut1.kwl $(OSSIM_BATCH_TEST_DATA)/public/elevation/srtm/1arc/N37W123.hgt $(OBT_OUT_DIR)/t8.tif
+
+test8.test_command1: ossim-preproc -r -o --ch $(OBT_OUT_DIR)/t8.tif
+
+test8.test_command2: ossim-info -d -i -p $(OBT_OUT_DIR)/t8.tif > $(OBT_OUT_DIR)/t8-info.txt
+
+// Post process commands for diffs and stuff:
+
+test8.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/t8-info.txt $(OBT_OUT_DIR)/t8-info.txt
+test8.postprocess_command1: $(DIFF_CMD) $(OBT_EXP_DIR)/t8.his $(OBT_OUT_DIR)/t8.his
+
+// ---
+// End test8:
+// ---
+
+// ---
+// Begin test9:
+// ---
+test9.name: test9
+test9.description: "Test ossimChipper::getChip() through ossim-chipper-test app."
+test9.enabled: 1
+
+// Commands to generate expected results:
+
+// Write chip to file:
+test9.expected_results_command0: ossim-chipper-test chipper-test-options-001.kwl $(OBT_EXP_DIR)/t9.ras
+
+// Make a histogram:
+test9.expected_results_command1: ossim-preproc --ch $(OBT_EXP_DIR)/t9.ras
+
+// Make an info file:
+test9.expected_results_command2: ossim-info -i $(OBT_EXP_DIR)/t9.ras > $(OBT_EXP_DIR)/t9-info.txt
+
+// The actual commands to test:
+
+// Write chip to file:
+test9.test_command0: ossim-chipper-test chipper-test-options-001.kwl $(OBT_OUT_DIR)/t9.ras
+
+// Make a histogram:
+test9.test_command1: ossim-preproc --ch $(OBT_OUT_DIR)/t9.ras
+
+// Make an info file:
+test9.test_command2: ossim-info -i $(OBT_OUT_DIR)/t9.ras > $(OBT_OUT_DIR)/t9-info.txt
+
+// Post process commands for diffs and stuff:
+test9.postprocess_command0: $(DIFF_CMD) $(OBT_EXP_DIR)/t9-info.txt $(OBT_OUT_DIR)/t9-info.txt
+test9.postprocess_command1: $(DIFF_CMD) $(OBT_EXP_DIR)/t9.his $(OBT_OUT_DIR)/t9.his
+
+// ---
+// End test9:
+// ---
+

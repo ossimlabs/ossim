@@ -59,7 +59,10 @@ ossimConnectableObject::~ossimConnectableObject()
 {
    
    // tell the immediate listeners that we are destructing.
-   ossimObjectDestructingEvent event(this);
+   // RP - Probably not a great change, but the multithread sequencer boms
+   // here due to one image handler with multiple connected thread image
+   // chains
+   //ossimObjectDestructingEvent event(this);
    
    //    if(theOwner)
    //    {
@@ -75,7 +78,7 @@ ossimConnectableObject::~ossimConnectableObject()
    
    // notify all other listeners that you are destructing
    //
-   fireEvent(event);
+   //fireEvent(event);
    
  }
 
@@ -407,8 +410,8 @@ ossimConnectableObject* ossimConnectableObject::findObjectOfType(RTTItypeid type
    
    if(recurse)
    {
-      ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                           this);
+      ossimConnectableContainerInterface* inter =
+         dynamic_cast<ossimConnectableContainerInterface*>(this);
       if(inter)
       {
          ossimConnectableObject* tempObj = inter->findFirstObjectOfType(typeId);
@@ -420,8 +423,7 @@ ossimConnectableObject* ossimConnectableObject::findObjectOfType(RTTItypeid type
       
       for(ossim_uint32 index = 0; index < connectableList->size(); ++index)
       {
-         inter = PTR_CAST(ossimConnectableContainerInterface,
-                          (*connectableList)[index].get());
+         inter = dynamic_cast<ossimConnectableContainerInterface*>((*connectableList)[index].get());
          if(inter)
          {
             ossimConnectableObject* tempObj = inter->findFirstObjectOfType(typeId);
@@ -489,8 +491,8 @@ ossimConnectableObject* ossimConnectableObject::findObjectOfType(
    
    if(recurse)
    {
-      ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                           this);
+      ossimConnectableContainerInterface* inter =
+         dynamic_cast<ossimConnectableContainerInterface*>(this);
       if(inter)
       {
          ossimConnectableObject* tempObj = inter->findFirstObjectOfType(className);
@@ -501,7 +503,7 @@ ossimConnectableObject* ossimConnectableObject::findObjectOfType(
       }
       for(ossim_uint32 index = 0; index < connectableList->size(); ++index)
       {
-         inter = PTR_CAST(ossimConnectableContainerInterface,
+         inter = dynamic_cast<ossimConnectableContainerInterface*>(
                           (*connectableList)[index].get());
          if(inter)
          {
@@ -549,7 +551,7 @@ ossimConnectableObject* ossimConnectableObject::findInputObjectOfType(
    ossimConnectableObject* result = 0;
    // If we are a container, look inside for type.
    ossimConnectableContainerInterface* container =
-   PTR_CAST(ossimConnectableContainerInterface, this);
+      dynamic_cast<ossimConnectableContainerInterface*>(this);
    if (container)
    {
       const ossim_uint32 NUMBER_OF_OBJECTS =
@@ -978,7 +980,9 @@ void ossimConnectableObject::disconnectAllOutputs()
    if(theOutputObjectList.size() == 1)
    {
       //     ossimConnectableObject* obj = disconnectMyOutput((ossim_int32)0, false);
-      disconnectMyOutput((ossim_int32)0);
+      // RP - another probably bad change to keep the multithread adapter from
+      // crashing on the destructor
+      disconnectMyOutput((ossim_int32)0, false, false);
       //     if(obj)
       //     {
       //        obj->disconnectMyInput(this,
@@ -1595,8 +1599,8 @@ void  ossimConnectableObject::findAllObjectsOfType(ConnectableObjectList& result
    int j;
    // go through children first
    //
-   ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                        this);
+   ossimConnectableContainerInterface* inter =
+      dynamic_cast<ossimConnectableContainerInterface*>(this);
    if(inter)
    {
       ConnectableObjectList tempList = inter->findAllObjectsOfType(typeInfo,
@@ -1621,8 +1625,8 @@ void ossimConnectableObject::findAllObjectsOfType(ConnectableObjectList& result,
    int j;
    // go through children first
    //
-   ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                        this);
+   ossimConnectableContainerInterface* inter =
+      dynamic_cast<ossimConnectableContainerInterface*>(this);
    if(inter)
    {
       ConnectableObjectList tempList = inter->findAllObjectsOfType(className,
@@ -1649,8 +1653,8 @@ void ossimConnectableObject::findAllInputsOfType(ConnectableObjectList& result,
    int j;
    // go through children first
    //
-   ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                        this);
+   ossimConnectableContainerInterface* inter =
+      dynamic_cast<ossimConnectableContainerInterface*>(this);
    if(inter&&recurseChildren)
    {
       ConnectableObjectList tempList = inter->findAllObjectsOfType(typeInfo,
@@ -1678,7 +1682,7 @@ void ossimConnectableObject::findAllInputsOfType(ConnectableObjectList& result,
             result.push_back(current);
          }
       }
-      inter = PTR_CAST(ossimConnectableContainerInterface, current);
+      inter = dynamic_cast<ossimConnectableContainerInterface*>(current);
       if(inter)
       {
          ConnectableObjectList tempList = inter->findAllObjectsOfType(typeInfo, true);
@@ -1710,8 +1714,8 @@ void ossimConnectableObject::findAllInputsOfType(ConnectableObjectList& result,
    int j;
    // go through children first
    //
-   ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                        this);
+   ossimConnectableContainerInterface* inter =
+      dynamic_cast<ossimConnectableContainerInterface*>(this);
    if(inter&&recurseChildren)
    {
       ConnectableObjectList tempList = inter->findAllObjectsOfType(className,
@@ -1737,8 +1741,8 @@ void ossimConnectableObject::findAllInputsOfType(ConnectableObjectList& result,
             result.push_back(current);
          }
       }
-      ossimConnectableContainerInterface* inter = PTR_CAST(ossimConnectableContainerInterface,
-                                                           current);
+      ossimConnectableContainerInterface* inter =
+         dynamic_cast<ossimConnectableContainerInterface*>(current);
       if(inter)
       {
          ConnectableObjectList tempList = inter->findAllObjectsOfType(className, true);

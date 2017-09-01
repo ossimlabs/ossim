@@ -578,6 +578,10 @@ void ossimTiledElevationDatabase::mapRegion()
                case OSSIM_UINT8:
                case OSSIM_SINT8:
                case OSSIM_USHORT11:
+               case OSSIM_USHORT12:
+               case OSSIM_USHORT13:
+               case OSSIM_USHORT14:
+               case OSSIM_USHORT15:
                case OSSIM_UINT16:
                case OSSIM_UINT32:
                case OSSIM_NORMALIZED_DOUBLE:

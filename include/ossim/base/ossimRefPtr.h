@@ -20,27 +20,33 @@ template<class T> class ossimRefPtr
    
    inline ossimRefPtr& operator = (const ossimRefPtr& rp)
       {
-         if (m_ptr==rp.m_ptr) return *this;
+         if (m_ptr==rp.m_ptr)
+            return *this;
          T* tmpPtr = m_ptr;
          m_ptr = rp.m_ptr;
-         if (m_ptr) m_ptr->ref();
+         if (m_ptr)
+            m_ptr->ref();
          // unref second to prevent any deletion of any object which might
          // be referenced by the other object. i.e rp is child of the
          // original _ptr.
-         if (tmpPtr) tmpPtr->unref();
+         if (tmpPtr)
+            tmpPtr->unref();
          return *this;
       }
    
    inline ossimRefPtr& operator = (T* ptr)
       {
-         if (m_ptr==ptr) return *this;
+         if (m_ptr==ptr)
+            return *this;
          T* tmpPtr = m_ptr;
          m_ptr = ptr;
-         if (m_ptr) m_ptr->ref();
+         if (m_ptr)
+            m_ptr->ref();
          // unref second to prevent any deletion of any object which might
          // be referenced by the other object. i.e rp is child of the
          // original m_ptr.
-         if (tmpPtr) tmpPtr->unref();
+         if (tmpPtr)
+            tmpPtr->unref();
          return *this;
       }
    
@@ -68,6 +74,12 @@ template<class T> class ossimRefPtr
    
    inline bool valid() const	{ return m_ptr!=0L; }
    
+   /**
+    * Used in boolean expression. Example: "if (obj)" is same as "if (obj.valid())". This is
+    * the same syntax as c++11 shared_ptr.
+    */
+   inline operator bool() const { return m_ptr!=0L; }
+
    inline T* get() { return m_ptr; }
    
    inline const T* get() const { return m_ptr; }

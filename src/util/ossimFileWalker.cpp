@@ -379,7 +379,7 @@ bool ossimFileWalker::isDotFile(const ossimFilename& f) const
             ossimFilename f2 = f;
             
             // Convert an '\'s to '/'s. 
-            f2.convertBackToForwardSlashes();
+            // f2.convertBackToForwardSlashes();
             
             // Find the first slash from end.
             std::string::size_type lastSlashPos = f2.find_last_of('/');

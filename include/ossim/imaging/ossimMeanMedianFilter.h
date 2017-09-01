@@ -49,6 +49,8 @@ public:
 
    ossimMeanMedianFilter(ossimObject* owner=NULL);
 
+   virtual ~ossimMeanMedianFilter();
+
    virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& rect,
                                                ossim_uint32 resLevel=0);
    virtual void initialize();
@@ -93,8 +95,6 @@ public:
    virtual ossimIrect getBoundingRect(ossim_uint32 resLevel=0)const;
 
 protected:
-   virtual ~ossimMeanMedianFilter();
-   
    ossimRefPtr<ossimImageData> theTile;
    ossimMeanMedianFilterType   theFilterType;
    ossim_uint32                theWindowSize;

@@ -23,7 +23,7 @@
 
 static ossimTrace traceDebug(ossimString("ossimImageElevationDatabase:debug"));
 
-RTTI_DEF1(ossimImageElevationDatabase, "ossimImageElevationDatabase", ossimElevationDatabase);
+RTTI_DEF1(ossimImageElevationDatabase, "ossimImageElevationDatabase", ossimElevationCellDatabase);
 
 ossimImageElevationDatabase::ossimImageElevationDatabase()
    :
@@ -96,6 +96,9 @@ double ossimImageElevationDatabase::getHeightAboveMSL(const ossimGpt& gpt)
       if(handler.valid())
       {
          h = handler->getHeightAboveMSL(gpt); // still need to shift
+
+         // Save the elev source's post spacing as the database's mean spacing:
+         m_meanSpacing = handler->getMeanSpacingMeters();
       }
    }
 
@@ -117,6 +120,9 @@ ossimRefPtr<ossimElevCellHandler> ossimImageElevationDatabase::createCell(
 {
    ossimRefPtr<ossimElevCellHandler> result = 0;
    
+   // Need to disable elevation while loading the DEM image to prevent recursion:
+   disableSource();
+
    std::map<ossim_uint64, ossimImageElevationFileEntry>::iterator i = m_entryMap.begin();
    while ( i != m_entryMap.end() )
    {
@@ -188,6 +194,7 @@ ossimRefPtr<ossimElevCellHandler> ossimImageElevationDatabase::createCell(
       ++i;
    }
    
+   enableSource();
    return result;
 }
 
@@ -357,7 +364,7 @@ bool ossimImageElevationDatabase::loadState(const ossimKeywordlist& kwl, const c
       std::string type = lookup;
       if ( ( type == "image_directory" ) || ( type == "ossimImageElevationDatabase" ) )
       {
-         result = ossimElevationDatabase::loadState(kwl, prefix);
+         result = ossimElevationCellDatabase::loadState(kwl, prefix);
 
          if ( result )
          {
@@ -376,7 +383,7 @@ bool ossimImageElevationDatabase::loadState(const ossimKeywordlist& kwl, const c
 
 bool ossimImageElevationDatabase::saveState(ossimKeywordlist& kwl, const char* prefix) const
 {
-   return ossimElevationDatabase::saveState(kwl, prefix);
+   return ossimElevationCellDatabase::saveState(kwl, prefix);
 }
 
 void ossimImageElevationDatabase::processFile(const ossimFilename& file)

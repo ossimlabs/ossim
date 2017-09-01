@@ -34,8 +34,9 @@ static ossimTrace traceDebug = ossimTrace("ossim-chipper:debug");
 
 int main(int argc, char* argv[])
 {
+   ossimTimer timer;
    // Start the timer.
-   ossimTimer::instance()->setStartTick();
+   ossimTimer::Timer_t tickStart = timer.tick();
 
    //---
    // Get the arg count so we can tell if an arg was consumed by
@@ -70,12 +71,14 @@ int main(int argc, char* argv[])
          {      
             // ossimChipperUtil::execute can throw an excepion.
             chipper->execute();
+            ossimTimer::Timer_t tickEnd = timer.tick();
+            
             
             ossimNotify(ossimNotifyLevel_NOTICE)
                << "elapsed time in seconds: "
                << std::setiosflags(ios::fixed)
                << std::setprecision(3)
-               << ossimTimer::instance()->time_s() << endl;
+               << timer.delta_s(tickStart, tickEnd) << endl;
          }
       }
       catch (const ossimException& e)

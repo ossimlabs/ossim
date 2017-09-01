@@ -38,7 +38,7 @@ MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
       IF(MSVC)
          message("MSVC_VERSION: ${MSVC_VERSION}")
 
-         if( (${MSVC_VERSION} EQUAL 1600) OR (${MSVC_VERSION} EQUAL 1700) )
+         if( (MSVC_VERSION GREATER 1600) OR (MSVC_VERSION EQUAL 1600))
             if (DEBUG_BUILD)
                SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRT /FORCE:MULTIPLE /MANIFEST:NO")
                SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMTD /FORCE:MULTIPLE /MANIFEST:NO")
@@ -52,7 +52,7 @@ MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
             SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMTD /FORCE:MULTIPLE")
          else( )
             SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:LIBCMTD")
-         endif( (${MSVC_VERSION} EQUAL 1600) OR (${MSVC_VERSION} EQUAL 1700) )
+         endif()
       ENDIF(MSVC)
    ENDIF(WIN32)
 
@@ -70,6 +70,18 @@ MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
    MARK_AS_ADVANCED(OSSIM_COMMON_COMPILER_FLAGS)
 ENDMACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
 
+MACRO(USE_CXX11)
+  if (CMAKE_VERSION VERSION_LESS "3.1")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
+    elseif (APPLE)
+      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
+    endif()
+  else ()
+    set (CMAKE_CXX_STANDARD 11)
+  endif ()
+ENDMACRO(USE_CXX11)
+
 MACRO(OSSIM_ADD_COMMON_SETTINGS)
    ###################################################################################
    # Set defaults for Universal Binaries. We want 32-bit Intel/PPC on 10.4
@@ -81,7 +93,30 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    # FORCE is used because the options are not reflected in the UI otherwise.
    # Seems like a good place to add version specific compiler flags too.
    ###################################################################################
+
+   USE_CXX11()
+
    IF(APPLE)
+      # use, i.e. don't skip the full RPATH for the build tree
+        SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+
+        # when building, don't use the install RPATH already
+        # (but later on when installing)
+        SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+
+        SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}")
+
+        # add the automatically determined parts of the RPATH
+        # which point to directories outside the build tree to the install RPATH
+        SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+
+        # the RPATH to be used when installing, but only if it's not a system directory
+        LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+
+        IF("${isSystemDir}" STREQUAL "-1")
+           SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}")
+        ENDIF("${isSystemDir}" STREQUAL "-1")
         SET(TEMP_CMAKE_OSX_ARCHITECTURES "")
         SET(CMAKE_OSX_SYSROOT "${CMAKE_OSX_SYSROOT}")
         # This is really fragile, but CMake doesn't provide the OS system
@@ -147,11 +182,19 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
 #      SET(OSSIM_RUNTIME_BUILD_OUTPUT_DIRECTORY ${${PROJECT_NAME}_SOURCE_DIR}/bin)
 #   ENDIF(NOT OSSIM_RUNTIME_BUILD_OUTPUT_DIRECTORY)
 
+   # Libraries and archives go to lib or lib64.
+   get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
+   if(LIB64)
+      set(LIBSUFFIX 64)
+   else()
+      set(LIBSUFFIX "")
+   endif()
+
    IF(MAKE_APPENDS_BUILD_TYPE)
       SET(BUILD_FRAMEWORK_DIR "")
       SET(BUILD_RUNTIME_DIR   "bin")
-      SET(BUILD_LIBRARY_DIR   "lib")
-      SET(BUILD_ARCHIVE_DIR   "lib")
+      SET(BUILD_LIBRARY_DIR lib${LIBSUFFIX})
+      SET(BUILD_ARCHIVE_DIR lib${LIBSUFFIX})
       SET(BUILD_INCLUDE_DIR   "include")
    ELSE()
       IF(NOT DEFINED BUILD_FRAMEWORK_DIR)
@@ -161,10 +204,10 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
          SET(BUILD_RUNTIME_DIR   "bin")
       ENDIF()
       IF(NOT DEFINED BUILD_LIBRARY_DIR)
-         SET(BUILD_LIBRARY_DIR   "lib")
+         SET(BUILD_LIBRARY_DIR lib${LIBSUFFIX})
       ENDIF()
       IF(NOT DEFINED BUILD_ARCHIVE_DIR)
-         SET(BUILD_ARCHIVE_DIR   "lib")
+         SET(BUILD_ARCHIVE_DIR lib${LIBSUFFIX})
       ENDIF()
       IF(NOT DEFINED BUILD_INCLUDE_DIR)
          SET(BUILD_INCLUDE_DIR   "include")
@@ -175,13 +218,6 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    SET(INSTALL_RUNTIME_DIR   "bin")
    SET(INSTALL_INCLUDE_DIR   "include")
 
-   # Libraries and archives go to lib or lib64.
-   get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
-   if(LIB64)
-      set(LIBSUFFIX 64)
-   else()
-      set(LIBSUFFIX "")
-   endif()
    set(INSTALL_LIBRARY_DIR lib${LIBSUFFIX} CACHE PATH "Installation directory for libraries")
    set(INSTALL_ARCHIVE_DIR lib${LIBSUFFIX} CACHE PATH "Installation directory for archive")
    mark_as_advanced(LIBSUFFIX)

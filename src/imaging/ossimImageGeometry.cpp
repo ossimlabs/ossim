@@ -1,9 +1,7 @@
 //**************************************************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  Oscar Kramer
 //
 // Description: Class implementation of ossimImageGeometry. See .h file for class documentation.
@@ -22,6 +20,7 @@
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <cmath>
 
 RTTI_DEF1(ossimImageGeometry, "ossimImageGeometry", ossimObject);
@@ -80,6 +79,20 @@ m_targetRrds(0)
 ossimImageGeometry::~ossimImageGeometry()
 {
    // Nothing to do
+}
+
+bool ossimImageGeometry::open(const ossimFilename& image)
+{
+   ossimRefPtr<ossimImageHandler> handler = ossimImageHandlerRegistry::instance()->open(image);
+   if (!handler.valid())
+      return false;
+
+   ossimRefPtr<ossimImageGeometry> geom = handler->getImageGeometry();
+   if (!geom.valid())
+      return false;
+
+   *this = *geom;
+   return true;
 }
 
 void ossimImageGeometry::rnToRn(const ossimDpt& inRnPt, ossim_uint32 inResolutionLevel,
@@ -178,10 +191,23 @@ bool ossimImageGeometry::localToWorld(const ossimDpt& local_pt, ossimGpt& world_
    // Perform projection to world coordinates:
    m_projection->lineSampleToWorld(full_image_pt, world_pt);
 
+
     // Put longitude between -180 and +180 and latitude between -90 and +90 if not so. 
-    world_pt.wrap();
+   // world_pt.wrap();
     
    return true;
+}
+
+bool ossimImageGeometry::localToWorld(const ossimDrect& local_rect, ossimGrect& world_rect) const
+{
+   ossimGpt gp1, gp2, gp3, gp4;
+   if (  localToWorld(local_rect.ul(), gp1) && localToWorld(local_rect.ur(), gp2) &&
+         localToWorld(local_rect.lr(), gp3) && localToWorld(local_rect.ll(), gp4))
+   {
+      world_rect = ossimGrect(gp1, gp2, gp3, gp4);
+      return true;
+   }
+   return false;
 }
 
 //**************************************************************************************************
@@ -224,17 +250,25 @@ bool ossimImageGeometry::worldToLocal(const ossimGpt& world_pt, ossimDpt& local_
    
    if ( m_projection.valid() )
    {
-      const ossimEquDistCylProjection* eqProj =
-         dynamic_cast<const ossimEquDistCylProjection*>( m_projection.get() );
+      //const ossimEquDistCylProjection* eqProj =
+      //   dynamic_cast<const ossimEquDistCylProjection*>( m_projection.get() );
       
       ossimDpt full_image_pt;
 
-      if ( eqProj && (m_imageSize.hasNans() == false) )
-      {
+      //***** GCP
+      // I am having major problems with the call and is messing up on Image that are edge to edge -180 to 180.
+      // It appears to wrap and think that the image is onl 1 pixel wide.  I am commenting out for now
+      // until a better solution can be done for points that wrap.  We need a general implementation that will work
+      // with any projector
+      //
+
+      //if ( eqProj && (m_imageSize.hasNans() == false) )
+     // {
          // Call specialized method to handle wrapping...
-         eqProj->worldToLineSample( world_pt, m_imageSize, full_image_pt );
-      }
-      else if( isAffectedByElevation() )
+     //    eqProj->worldToLineSample( world_pt, m_imageSize, full_image_pt );
+     // }
+     // else if( isAffectedByElevation() )
+      if( isAffectedByElevation() )
       {
          ossimGpt copyPt( world_pt );
          if(world_pt.isHgtNan())
@@ -263,6 +297,18 @@ bool ossimImageGeometry::worldToLocal(const ossimGpt& world_pt, ossimDpt& local_
    return result;
    
 } // End: ossimImageGeometry::worldToLocal(const ossimGpt&, ossimDpt&)
+
+bool ossimImageGeometry::worldToLocal(const ossimGrect& world_rect, ossimDrect& local_rect) const
+{
+   ossimDpt dp1, dp2, dp3, dp4;
+   if (  worldToLocal(world_rect.ul(), dp1) && worldToLocal(world_rect.ur(), dp2) &&
+         worldToLocal(world_rect.lr(), dp3) && worldToLocal(world_rect.ll(), dp4))
+   {
+      local_rect = ossimDrect(dp1, dp2, dp3, dp4);
+      return true;
+   }
+   return false;
+}
 
 //**************************************************************************************************
 //! Sets the transform to be used for local-to-full-image coordinate transformation
@@ -705,14 +751,12 @@ void ossimImageGeometry::getTiePoint(ossimGpt& tie, bool edge) const
          }
          else
          {
-            ossimDpt dpp = map_proj->getDecimalDegreesPerPixel();
-            dpp.lat*=0.5;
-            dpp.lon*=0.5;
             tie = grect.ul();
             if(edge)
             {
-               tie.lat -= dpp.lat;
-               tie.lon += dpp.lon; 
+               ossimDpt half_pixel_shift =  map_proj->getDecimalDegreesPerPixel() * 0.5;
+               tie.lat += half_pixel_shift.y;
+               tie.lon -= half_pixel_shift.x;
             }
          }
       }
@@ -1013,11 +1057,187 @@ bool ossimImageGeometry::getCrossesDateline()const
       result = ( (fabs(center.lond()-ul.lond()) > 180.0) ||
                  (fabs(center.lond()-ur.lond()) > 180.0) ||
                  (fabs(center.lond()-lr.lond()) > 180.0) ||
-                 (fabs(center.lond()-ll.lond()) > 180.0));
+                 (fabs(center.lond()-ll.lond()) > 180.0) ||
+                 (fabs(ul.lond()) > 180.0) ||
+                 (fabs(ur.lond()) > 180.0) ||
+                 (fabs(lr.lond()) > 180.0) ||
+                 (fabs(ll.lond()) > 180.0)
+
+                 );
    }
 
    return result; 
 }
+
+void ossimImageGeometry::getImageEdgePoints(std::vector<ossimDpt>& result, ossim_uint32 partitions)const
+{
+
+   ossimDrect imageRect;
+   getBoundingRect(imageRect);
+   if(imageRect.hasNans())
+   {
+      // error out
+      return;
+   }
+   result.clear();
+   // First get the image points we will be transforming
+   if(partitions > 2)
+   {
+      ossimDpt uli = imageRect.ul();
+      ossimDpt uri = imageRect.ur();
+      ossimDpt lri = imageRect.lr();
+      ossimDpt lli = imageRect.ll();
+
+      ossim_float32 stepSize = partitions;
+      ossimDpt deltaUpper = (uri-uli)*(1.0/stepSize);
+      ossimDpt deltaRight = (lri-uri)*(1.0/stepSize);
+      ossimDpt deltaLower = (lli-lri)*(1.0/stepSize);
+      ossimDpt deltaLeft  = (uli-lli)*(1.0/stepSize);
+
+      ossimDpt p;
+      ossim_int32 idx = 0;
+      ossimDpt initialPoint= uli;
+      for(idx = 0; idx < stepSize;++idx)
+      {
+         result.push_back(initialPoint);
+         initialPoint.x+=deltaUpper.x;
+         initialPoint.y+=deltaUpper.y;
+      }
+      initialPoint= uri;
+      for(idx = 0; idx < stepSize;++idx)
+      {
+         result.push_back(initialPoint);
+         initialPoint.x+=deltaRight.x;
+         initialPoint.y+=deltaRight.y;
+      }
+
+      initialPoint= lri;
+      for(idx = 0; idx < stepSize;++idx)
+      {
+         result.push_back(initialPoint);
+         initialPoint.x+=deltaLower.x;
+         initialPoint.y+=deltaLower.y;
+      }
+
+      initialPoint= lli;
+      for(idx = 0; idx < stepSize;++idx)
+      {
+         result.push_back(initialPoint);
+         initialPoint.x+=deltaLeft.x;
+         initialPoint.y+=deltaLeft.y;
+      }
+   }
+   else // If not enough partitions then we will just use the corners
+   {
+      result.resize(4);
+
+      result[0] = imageRect.ul();
+      result[1] = imageRect.ur();
+      result[2] = imageRect.lr();
+      result[3] = imageRect.ll();
+   }   
+
+}
+
+void ossimImageGeometry::calculatePolyBounds(ossimPolyArea2d& result, ossim_uint32 partitions)const
+{
+   std::vector<ossimDpt> points;
+   std::vector<ossimGpt> gPoints;
+   std::vector<ossimPolygon> polyList;
+   ossimDrect imageRect;
+   ossimGpt cg;
+   ossimDrect worldRect(ossimDpt(-180,-90),
+                        ossimDpt(-180,90),
+                        ossimDpt(180,90),
+                        ossimDpt(180,-90));
+   getBoundingRect(imageRect);
+   bool affectedByElevation = isAffectedByElevation();
+   bool crossesDateline     = getCrossesDateline();
+   result.clear();
+   if(imageRect.hasNans())
+   {
+      // error out
+      return;
+   }
+   localToWorld(imageRect.midPoint(), cg);
+   if(cg.isLatNan() || cg.isLonNan())
+   {
+      return;
+   }
+   ossim_int32 sgn = static_cast<ossim_int32>(
+                                ossim::sgn(cg.lond()));
+
+   getImageEdgePoints(points, partitions);
+   if(points.empty())
+   {
+      return;
+   }
+
+   if(crossesDateline)
+   {
+      for(std::vector<ossimDpt>::const_iterator iter=points.begin(); 
+          iter != points.end();
+          ++iter)
+      {
+         ossimGpt testGpt;
+         localToWorld(*iter, testGpt); 
+
+         if(!testGpt.isLatNan()&&!testGpt.isLonNan())
+         {
+            bool needToShift =( (std::fabs(testGpt.lond()-cg.lond()) > 180.0)||
+                                (std::fabs(testGpt.lond()>180.0)) ); 
+            if(needToShift)
+            {
+               testGpt.lond(testGpt.lond()+sgn*360);
+            }
+            gPoints.push_back(testGpt);        
+         }
+      }
+      // now clip the ground list to the full ground rect
+      //
+      ossimPolygon tempPoly(gPoints);
+      tempPoly.clipToRect(polyList, worldRect);
+      for(std::vector<ossimPolygon>::const_iterator iter = polyList.begin();
+         iter!=polyList.end();++iter)
+      {
+         result.add(ossimPolyArea2d(*iter));
+      }
+      // now shift gpoints to the other side
+      //
+      for(std::vector<ossimGpt>::iterator iter = gPoints.begin();
+          iter != gPoints.end();
+          ++iter)
+      {
+        (*iter).lond((*iter).lond()+(-sgn*360));
+      }
+      tempPoly = gPoints;
+      polyList.clear();
+      tempPoly.clipToRect(polyList, worldRect);
+      for(std::vector<ossimPolygon>::const_iterator iter = polyList.begin();
+         iter!=polyList.end();++iter)
+      {
+         result.add(ossimPolyArea2d(*iter));
+      }
+   }
+   else
+   {
+      ossim_uint32 idx=0;
+      for(std::vector<ossimDpt>::const_iterator iter=points.begin(); 
+          iter != points.end();++iter)
+      {
+         ossimGpt testGpt;
+         localToWorld(*iter, testGpt); 
+
+         if(!testGpt.isLatNan()&&!testGpt.isLonNan())
+         {
+            gPoints.push_back(testGpt);        
+         }
+      }
+      result.add(ossimPolygon(gPoints));
+   }
+   if(!result.isValid()) result.setToBufferedShape();
+}
+
 
 void ossimImageGeometry::getBoundingRect(ossimIrect& bounding_rect) const
 {
@@ -1252,7 +1472,8 @@ bool ossimImageGeometry::computeGroundToImagePartials(NEWMAT::Matrix& result,
    return false;
 }
 
-ossim_float64 ossimImageGeometry::upIsUpAngle() const
+
+ossim_float64 ossimImageGeometry::upIsUpAngle(const ossimDpt& pt) const
 {
    ossim_float64 result = ossim::nan();
 
@@ -1270,15 +1491,19 @@ ossim_float64 ossimImageGeometry::upIsUpAngle() const
          
          if( !bounds.hasNans() )
          {
-            ossim_float64 widthPercent  = bounds.width()*.1;
-            ossim_float64 heightPercent = bounds.height()*.1;
+            // only need an average
+            // so will keep the test close to the pixel location
+            // we are sampling
+            // let's get rid of the scale
+            ossim_float64 widthPercent  = 1;//bounds.width()*.1;
+            ossim_float64 heightPercent = 1;//bounds.height()*.1;
             
             //---
             // Sanity check to make sure that taking 10 percent out on the image
             // gets us to at least 1 pixel away.
             //---
-            if(widthPercent < 1.0) widthPercent = 1.0;
-            if(heightPercent < 1.0) heightPercent = 1.0;
+           // if(widthPercent < 1.0) widthPercent = 1.0;
+           // if(heightPercent < 1.0) heightPercent = 1.0;
             
             // set up some work variables to help calculate the average partial
             //
@@ -1287,9 +1512,11 @@ ossim_float64 ossimImageGeometry::upIsUpAngle() const
             std::vector<ossimDpt> iptsDisplacement(NUMBER_OF_SAMPLES);
             std::vector<ossimDpt> partials(NUMBER_OF_SAMPLES);
             ossimDpt averageDelta(0.0,0.0);
-            
-            ossimDpt centerIpt = bounds.midPoint();
-            
+            ossimDpt centerIpt = pt;
+            if(centerIpt.hasNans())
+            {
+               centerIpt = bounds.midPoint();
+            }
             //---
             // Lets take an average displacement about the center point (3x3 grid)
             // we will go 10 percent out of the width and height of the image and
@@ -1371,6 +1598,35 @@ ossim_float64 ossimImageGeometry::upIsUpAngle() const
             if(result < 0) result += 360.0;
             
          }  // Matches: if( bounds.hasNans() == false )
+      }
+      else
+      {
+         result = 0;
+      }
+      
+   } // Matches: if ( m_projection.valid() && m_projection->isAffectedByElevation() )
+
+   return result;
+
+}
+
+
+ossim_float64 ossimImageGeometry::upIsUpAngle() const
+{
+   ossim_float64 result = ossim::nan();
+
+   if ( m_projection.valid() )
+   {
+      if ( m_projection->isAffectedByElevation() )
+      {
+         
+         ossimDrect bounds;
+         getBoundingRect( bounds );
+         
+         if( !bounds.hasNans() )
+         {
+            return upIsUpAngle(bounds.midPoint());
+         }
       }
       else
       {

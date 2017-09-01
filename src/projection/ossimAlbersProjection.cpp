@@ -630,7 +630,7 @@ bool ossimAlbersProjection::operator==(const ossimProjection& proj) const
 {
    if (!ossimMapProjection::operator==(proj)) return false;
 
-   ossimAlbersProjection* p = PTR_CAST(ossimAlbersProjection, &proj);
+   const ossimAlbersProjection* p = dynamic_cast<const ossimAlbersProjection*>(&proj);
    if (!p) return false;
 
    if (!ossim::almostEqual(Albers_Std_Parallel_1,p->Albers_Std_Parallel_1)) return false;

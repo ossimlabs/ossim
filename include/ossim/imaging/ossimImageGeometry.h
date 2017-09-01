@@ -20,6 +20,7 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimRtti.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/base/ossimPolyArea2d.h>
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/base/ossim2dTo2dTransform.h>
@@ -81,6 +82,11 @@ public:
    //! can be NULL -- the associated mapping would be identity.
    ossimImageGeometry(ossim2dTo2dTransform* transform, ossimProjection* projection);
 
+   //! Shortcut way of getting to an image's geometry when access to pixels is not needed.
+   //! @param image Image to open
+   //! @return true if open was successful and a valid geometry was initialized.
+   bool open(const ossimFilename& image);
+
    //! rnToRn is a utility method that takes a rn resolution image point and maps it to the another
    //! rn resolution image point.
    //!
@@ -132,6 +138,7 @@ public:
    //! is available in the ground_pt argument. This method depends on the existence of elevation
    //! information. If no DEM is available, the results will be incorrect or inaccurate.
    bool localToWorld(const ossimDpt& local_pt, ossimGpt& world_pt) const;
+   bool localToWorld(const ossimDrect& local_rect, ossimGrect& world_rect) const;
 
    //! Exposes the 3D projection from image to world coordinates given a constant height above 
    //! ellipsoid. The caller should verify that a valid projection exists before calling this
@@ -142,6 +149,7 @@ public:
    //! that a valid projection exists before calling this method. Returns TRUE if a valid image 
    //! point is available in the local_pt argument.
    bool worldToLocal(const ossimGpt& world_pt, ossimDpt& local_pt) const;
+   bool worldToLocal(const ossimGrect& world_rect, ossimDrect& local_rect) const;
 
    //! Sets the transform to be used for local-to-full-image coordinate transformation
    void setTransform(ossim2dTo2dTransform* transform);
@@ -319,6 +327,32 @@ public:
 
    bool getCrossesDateline()const;
    
+
+   void getImageEdgePoints(std::vector<ossimDpt>& result, ossim_uint32 partitions = 25)const;
+
+   /**
+   * This is the first stage implementation.   It will determine if it crosses the dateline
+   * and do a special multi polygon for the ossimPolyArea2d result.  For each edge
+   * of the image we walk "partitions" number of points.   If we cross a dateline we calculate
+   * the crossing lat by using the parametric form of the equation.   For example, if we
+   * are crossing from positive to negative that means we are going through the 180 degree lon
+   * location and we will need to solve for the paramtetric parameter t and plug back into the parametric
+   * equation to solve for the latitude.  Basic form:  start + (end-start)*t = 180.  If we are coming from
+   * negative to positive then we solve basic form: start + (end-start)*t = -180.  Where deltaPoint is (end-start) 
+   *
+   *                   ossim_float64 t = ((180-start.x)/deltaPoint.x);
+   *                   ossim_float64 lat = (start.y+deltaPoint.y*t);
+   *
+   * If we do not cross the dateline then if the image is affected by elevation (i.e. a sensor model) then we use the partitions
+   * parameter to calculate that number of partitions to sample along each edge.
+   *
+   * if The geometry is not affected by elevation then we just use the corner points and ignore the partitions parameter
+   *
+   * @param poly holds the resulting polygon.  This could be a MultiPolygon depending on the geometry
+   * @param partitions These are the number of steps you want when walking the border.
+   */
+   void calculatePolyBounds(ossimPolyArea2d& result, ossim_uint32 partitions = 25)const;
+
    /**
     * @brief Get the bounding rect of (0, 0) to (imageSize.x-1, imageSize.y-1).
     *
@@ -407,8 +441,9 @@ public:
 
    /**
     * @return Returns the angle to "up is up" in decimal degrees, 0.0 if image
-    * is not affected by elevation, ossim::nan on error.
+    * is not affected by elevation, ossim::nan on error.  
     */
+   ossim_float64 upIsUpAngle(const ossimDpt&) const;
    ossim_float64 upIsUpAngle() const;
 
    /**

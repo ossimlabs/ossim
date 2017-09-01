@@ -94,6 +94,22 @@ double ossim::defaultMin(ossimScalarType scalarType)
       {
          return OSSIM_DEFAULT_MIN_PIX_UINT11;
       }
+      case OSSIM_USHORT12:
+      {
+         return OSSIM_DEFAULT_MIN_PIX_UINT12;
+      }
+      case OSSIM_USHORT13:
+      {
+         return OSSIM_DEFAULT_MIN_PIX_UINT13;
+      }
+      case OSSIM_USHORT14:
+      {
+         return OSSIM_DEFAULT_MIN_PIX_UINT14;
+      }
+      case OSSIM_USHORT15:
+      {
+         return OSSIM_DEFAULT_MIN_PIX_UINT15;
+      }
       case OSSIM_UINT32:
       {
          return OSSIM_DEFAULT_MIN_PIX_UINT32;
@@ -153,9 +169,25 @@ double ossim::defaultMax(ossimScalarType scalarType)
       {
          return OSSIM_DEFAULT_MAX_PIX_SINT16;
       }
-      case OSSIM_USHORT11:
+      case OSSIM_UINT11:
       {
          return OSSIM_DEFAULT_MAX_PIX_UINT11;
+      }
+      case OSSIM_UINT12:
+      {
+         return OSSIM_DEFAULT_MAX_PIX_UINT12;
+      }
+      case OSSIM_UINT13:
+      {
+         return OSSIM_DEFAULT_MAX_PIX_UINT13;
+      }
+      case OSSIM_UINT14:
+      {
+         return OSSIM_DEFAULT_MAX_PIX_UINT14;
+      }
+      case OSSIM_UINT15:
+      {
+         return OSSIM_DEFAULT_MAX_PIX_UINT15;
       }
       case OSSIM_UINT32:
       {
@@ -216,9 +248,25 @@ double ossim::defaultNull(ossimScalarType scalarType)
       {
          return OSSIM_DEFAULT_NULL_PIX_SINT16;
       }
-      case OSSIM_USHORT11:
+      case OSSIM_UINT11:
       {
          return OSSIM_DEFAULT_NULL_PIX_UINT11;
+      }
+      case OSSIM_UINT12:
+      {
+         return OSSIM_DEFAULT_NULL_PIX_UINT12;
+      }
+      case OSSIM_UINT13:
+      {
+         return OSSIM_DEFAULT_NULL_PIX_UINT13;
+      }
+      case OSSIM_UINT14:
+      {
+         return OSSIM_DEFAULT_NULL_PIX_UINT14;
+      }
+      case OSSIM_UINT15:
+      {
+         return OSSIM_DEFAULT_NULL_PIX_UINT15;
       }
       case OSSIM_UINT32:
       {
@@ -274,6 +322,10 @@ ossim_uint32 ossim::scalarSizeInBytes(ossimScalarType scalarType)
       }
       case OSSIM_UINT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          return sizeof(ossim_uint16);
       }
@@ -353,6 +405,26 @@ ossim_uint32 ossim::getActualBitsPerPixel(ossimScalarType scalarType)
          actualBitsPerPixel = 11;
          break;
       }
+      case OSSIM_USHORT12:
+      {
+         actualBitsPerPixel = 12;
+         break;
+      }
+      case OSSIM_USHORT13:
+      {
+         actualBitsPerPixel = 13;
+         break;
+      }
+      case OSSIM_USHORT14:
+      {
+         actualBitsPerPixel = 14;
+         break;
+      }
+      case OSSIM_USHORT15:
+      {
+         actualBitsPerPixel = 15;
+         break;
+      }
       case OSSIM_UINT16:
       case OSSIM_SINT16:
       {
@@ -408,6 +480,10 @@ ossim_uint32 ossim::getBitsPerPixel(ossimScalarType scalarType)
          break;
       }
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          bitsPerPixel = 16;
          break;
@@ -950,6 +1026,68 @@ void ossim::toSimpleStringList(ossimString& result,
    result = "("+out.str()+")";
 }
 
+template <>
+void ossim::toSimpleStringList(ossimString& result,
+                               const std::vector<ossim_float64>& valuesList)
+
+{
+   std::ostringstream out;
+   out << std::setiosflags(std::ios::fixed) << std::setprecision(20);
+   if(!valuesList.empty())
+   {
+      ossim_uint32 idx = 0;
+      ossim_uint32 size = (ossim_uint32) (valuesList.size()-1);
+      for(idx = 0; idx < size; ++idx)
+      {
+         out << valuesList[idx] << ",";
+      }
+      out << valuesList[size];
+   }
+   
+   result = "("+out.str()+")";
+}
+
+template <>
+void ossim::toSimpleStringList(ossimString& result,
+                               const std::vector<ossim_float32>& valuesList)
+
+{
+   std::ostringstream out;
+   out << std::setiosflags(std::ios::fixed) << std::setprecision(20);
+   if(!valuesList.empty())
+   {
+      ossim_uint32 idx = 0;
+      ossim_uint32 size = (ossim_uint32) (valuesList.size()-1);
+      for(idx = 0; idx < size; ++idx)
+      {
+         out << valuesList[idx] << ",";
+      }
+      out << valuesList[size];
+   }
+   
+   result = "("+out.str()+")";
+}
+
+template <>
+void ossim::toSimpleStringList(ossimString& result,
+                               const std::vector<ossimString>& valuesList)
+
+{
+   std::ostringstream out;
+   if(!valuesList.empty())
+   {
+      ossim_uint32 idx = 0;
+      ossim_uint32 size = (ossim_uint32) (valuesList.size()-1);
+      for(idx = 0; idx < size; ++idx)
+      {
+         out << valuesList[idx] << ",";
+      }
+      out << valuesList[size];
+   }
+   
+   result = "("+out.str()+")";
+}
+
 bool ossim::toSimpleVector(std::vector<ossim_int32>& result,
                            const ossimString& stringOfPoints)
 {
@@ -1035,6 +1173,15 @@ bool ossim::toSimpleVector(std::vector<ossim_int8>& result,
    return resultFlag;
 }
 
+bool ossim::toSimpleVector(std::vector<ossimString>& result,
+                    const ossimString& stringOfStrings)
+{
+   std::vector<ossimString> extractedValues;
+   bool resultFlag = extractSimpleValues(result, stringOfStrings);
+
+   return resultFlag;
+}
+
 ossim_uint32 ossim::getNumberOfThreads()
 {
    ossim_uint32 result;
@@ -1093,6 +1240,17 @@ void ossim::getFormattedTime(
    }
 
    timeMutex.unlock();
+}
+
+ossim_int64 ossim::getTime()
+{
+   time_t rawTime;
+   
+   timeMutex.lock();
+   time(&rawTime);
+   timeMutex.unlock();
+   
+   return (ossim_int64)rawTime;
 }
 
 ossim_uint32 ossim::computeLevels(const ossimIrect& rect)

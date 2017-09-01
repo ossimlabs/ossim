@@ -1,24 +1,17 @@
-//----------------------------------------------------------------------------
-//
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  David Burken
-//
+//---
+// License: MIT
 // Description: Container class for J2K Image and tile size (SIZ) record.
-//
 // See document BPJ2K01.00 Table 7-6 Image and tile size (15444-1 Annex A5.1)
-// 
-//----------------------------------------------------------------------------
-// $Id: ossimJ2kSizRecord.h,v 1.5 2005/10/13 21:24:47 dburken Exp $
-#ifndef ossimJ2kSizRecord_HEADER
-#define ossimJ2kSizRecord_HEADER
+// $Id$
+//---
 
-#include <iosfwd>
-#include <string>
+#ifndef ossimJ2kSizRecord_HEADER
+#define ossimJ2kSizRecord_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimIosFwd.h>
+#include <string>
+#include <vector>
 
 class OSSIM_DLL ossimJ2kSizRecord
 {
@@ -37,9 +30,23 @@ public:
     *
     * @note SIZ Marker (0xff51) is not read.
     */
-   void parseStream(std::istream& in);
+   void parseStream(ossim::istream& in);
 
-   /** @return scalar type based on bit depth and signed bit from theSsiz. */
+   /**
+    * Write method.
+    *
+    * @param out Stream to write to.
+    */
+   void writeStream(std::ostream& out);
+
+   /**
+    * @brief Gets the scalar type.
+    * 
+    * Currently assumes all components are the same scalar type.
+    * I.e., only looks at first component.
+    *
+    * @return scalar type based on bit depth and signed bit from theSsiz.
+    */
    ossimScalarType getScalarType() const;
 
    /**
@@ -107,24 +114,30 @@ public:
    ossim_uint16 m_Csiz;
 
    /**
+    * One for each component:
+    * 
     * sign bit and bit depth of data
     * unsigned = 0xxx xxxx (msb == 0)
     * signed   = 1xxx xxxx (msb == 1)
     * bit depth = x000 0000 + 1 (first seven bits plus one)
     */
-   ossim_uint8  m_Ssiz;
+   std::vector<ossim_uint8> m_Ssiz;
 
    /**
+    * One for each component:
+    * 
     * Horizontal separation of a sample of the component with respect to the
     * reference grid.
     */
-   ossim_uint8  m_XRsiz;
+   std::vector<ossim_uint8> m_XRsiz;
 
    /**
+    * One for each component:
+    * 
     * Vertical separation of a sample of the component with respect to the
     * reference grid.
     */
-   ossim_uint8  m_YRsiz;
+   std::vector<ossim_uint8> m_YRsiz;
 };
 
 #endif /* End of "#ifndef ossimJ2kSizRecord_HEADER" */

@@ -120,11 +120,12 @@ ossimElevSource* ossimSrtmFactory::getNewElevSource(const ossimGpt& gpt) const
          << std::endl;
    }
 
-   ossimRefPtr<ossimIFStream> is = ossimStreamFactoryRegistry::instance()->
-      createNewIFStream(srtmFile, std::ios::in | std::ios::binary);
+   // ossimRefPtr<ossimIFStream> is = ossimStreamFactoryRegistry::instance()->
+   std::shared_ptr<ossim::ifstream> is = ossimStreamFactoryRegistry::instance()->
+      createIFStream(srtmFile, std::ios::in | std::ios::binary);
 
    // Look for the file mix case, then all lower case, then all upper case.
-   if (is.valid())
+   if ( is )
    {
       if(is->fail())
       {
@@ -132,9 +133,9 @@ ossimElevSource* ossimSrtmFactory::getNewElevSource(const ossimGpt& gpt) const
          srtmFileBasename = srtmFileBasename.downcase();
          srtmFile = theDirectory.dirCat(srtmFileBasename);
          
-         is =  ossimStreamFactoryRegistry::instance()->
-            createNewIFStream(srtmFile, std::ios::in | std::ios::binary);      
-         if (is.valid())
+         is = ossimStreamFactoryRegistry::instance()->
+            createIFStream(srtmFile, std::ios::in | std::ios::binary);      
+         if ( is )
          {
             if(is->fail())
             {
@@ -142,16 +143,16 @@ ossimElevSource* ossimSrtmFactory::getNewElevSource(const ossimGpt& gpt) const
                srtmFileBasename = srtmFileBasename.upcase();
                srtmFile = theDirectory.dirCat(srtmFileBasename);
                is =  ossimStreamFactoryRegistry::instance()->
-                  createNewIFStream(srtmFile, std::ios::in | std::ios::binary);
+                  createIFStream(srtmFile, std::ios::in | std::ios::binary);
             }
          }
       }
    }
 
-   if ( is.valid() && (!is->fail()) )
+   if ( is && (!is->fail()) )
    {
-      is->close();
-      is = 0;
+      // is->close();
+      is.reset();
       srtmPtr = new ossimSrtmHandler();
       if(srtmPtr->open(srtmFile)&&srtmPtr->pointHasCoverage(gpt) )
       {

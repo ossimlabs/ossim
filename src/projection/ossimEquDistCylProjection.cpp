@@ -110,6 +110,12 @@ void ossimEquDistCylProjection::setOrigin(const ossimGpt& origin)
 {
    ossimMapProjection::setOrigin(origin); // breaks the projection
    setUlTiePoints(theUlGpt); // needed to reset easting northing
+
+   // Changing the projection origin from the equator implies a scale change in the longitude
+   // direction to maintain GSD (meters) square at origin:
+   ossimDpt gsd = getMetersPerPixel();
+   gsd.x = gsd.y; // reset X (longitude) direction GSD
+   setMetersPerPixel(gsd);
 }
 
 void ossimEquDistCylProjection::setFalseEasting(double falseEasting)
@@ -268,9 +274,10 @@ void ossimEquDistCylProjection::worldToLineSample( const ossimGpt& worldPoint,
 
          // Convert to easting northing.
          ossimDpt gptEastingNorthing = forward(gpt);
-
+        
          if( !gptEastingNorthing.isNan() )
          {
+#if 0            
             if ( imageSize.x > 0.0 )
             {
                ossimGpt edge(gpt.lat, -180.0, 0.0);
@@ -332,19 +339,18 @@ void ossimEquDistCylProjection::worldToLineSample( const ossimGpt& worldPoint,
             {
                lineSample.x = (gptEastingNorthing.x - theUlEastingNorthing.x)/theMetersPerPixel.x;
             }
-            
+ #endif
+            lineSample.x = (gptEastingNorthing.x - theUlEastingNorthing.x)/theMetersPerPixel.x;
             // We must remember that the Northing is negative since the positive
             // axis for an image is assumed to go down since it's image space.
             lineSample.y = (theUlEastingNorthing.y - gptEastingNorthing.y) / theMetersPerPixel.y;
             
          } // Matches: if( !lineSample.isNan() )
-         
       }
       else // Some point we need has nans...
       {
          lineSample.makeNan();
       }
-      
    } // Matches: if( theModelTransformUnitType == OSSIM_UNIT_UNKNOWN )
    else 
    {
@@ -597,14 +603,14 @@ long ossimEquDistCylProjection::Convert_Geodetic_To_Equidistant_Cyl (double Lati
   if (!Error_Code)
   { /* no errors */
     dlam = Longitude - Eqcy_Origin_Long;
-    if (dlam >= TWO_PI)
-    {
-      dlam -= TWO_PI;
-    }
-    if (dlam <= -TWO_PI)
-    {
-      dlam += TWO_PI;
-    }
+    //if (dlam >= TWO_PI)
+    //{
+    //  dlam -= TWO_PI;
+   // }
+   // if (dlam <= -TWO_PI)
+   // {
+   //   dlam += TWO_PI;
+   // }
 
     *Easting = Ra_Cos_Eqcy_Std_Parallel * dlam + Eqcy_False_Easting;
     *Northing = Ra * Latitude + Eqcy_False_Northing;

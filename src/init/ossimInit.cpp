@@ -1,7 +1,7 @@
 //*****************************************************************************
 // FILE: ossimInit.cpp
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -18,50 +18,49 @@
 //   24Apr2001  Oscar Kramer
 //              Initial coding.
 //*****************************************************************************
-// $Id: ossimInit.cpp 23588 2015-10-20 20:31:39Z dburken $
-
+// $Id$
 
 #include <ossim/init/ossimInit.h>
 #include <ossim/ossimVersion.h>
-#include <ossim/base/ossimPreferences.h>
-#include <ossim/base/ossimKeywordNames.h>
+
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
-#include <ossim/base/ossimTraceManager.h>
-#include <algorithm>
+#include <ossim/base/ossimBaseObjectFactory.h>
+#include <ossim/base/ossimDatumFactoryRegistry.h>
+#include <ossim/base/ossimDirectory.h>
 #include <ossim/base/ossimEnvironmentUtility.h>
-#include <ossim/base/ossimGeoidEgm96.h>
-#include <ossim/imaging/ossimCodecFactoryRegistry.h>
-
-//***
-// Define Trace flags for use within this file:
-//***
-#include <ossim/base/ossimTrace.h>
-
-// include the image file formats
-#include <ossim/base/ossimObjectFactoryRegistry.h>
-#include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
-#include <ossim/projection/ossimProjectionFactoryRegistry.h>
-#include <ossim/base/ossim2dTo2dTransformRegistry.h>
-#include <ossim/imaging/ossimImageGeometryRegistry.h>
-#include <ossim/elevation/ossimElevManager.h>
 #include <ossim/base/ossimGeoidManager.h>
+#include <ossim/base/ossimKeywordlist.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimObjectFactoryRegistry.h>
+#include <ossim/base/ossimPreferences.h>
+#include <ossim/base/ossimStreamFactory.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+#include <ossim/base/ossimTrace.h>
+#include <ossim/base/ossimTraceManager.h>
+#include <ossim/base/ossimGeoidEgm96.h>
+#include <ossim/base/ossim2dTo2dTransformRegistry.h>
+
+#include <ossim/elevation/ossimElevManager.h>
+
+#include <ossim/font/ossimFontFactoryRegistry.h>
+
+#include <ossim/imaging/ossimCodecFactoryRegistry.h>
+#include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
+#include <ossim/imaging/ossimImageGeometryRegistry.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/imaging/ossimOverviewBuilderFactoryRegistry.h>
 #include <ossim/imaging/ossimOverviewBuilderFactory.h>
-
 #include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
 #include <ossim/imaging/ossimImageMetaDataWriterRegistry.h>
-#include <ossim/projection/ossimProjectionViewControllerFactory.h>
-#include <ossim/base/ossimDatumFactoryRegistry.h>
-#include <ossim/base/ossimBaseObjectFactory.h>
-#include <ossim/base/ossimCustomEditorWindowRegistry.h>
-#include <ossim/base/ossimDirectory.h>
-#include <ossim/base/ossimKeywordlist.h>
+
 #include <ossim/plugin/ossimSharedPluginRegistry.h>
 #include <ossim/plugin/ossimDynamicLibrary.h>
-#include <ossim/font/ossimFontFactoryRegistry.h>
-#include <ossim/base/ossimNotifyContext.h>
+
+#include <ossim/projection/ossimProjectionFactoryRegistry.h>
+#include <ossim/projection/ossimProjectionViewControllerFactory.h>
+
+#include <algorithm>
 
 
 static ossimTrace traceExec = ossimTrace("ossimInit:exec");
@@ -78,7 +77,7 @@ ossimInit::ossimInit()
     :
        theInitializedFlag(false),
        theAppName(),
-       thePreferences(ossimPreferences::instance()),
+       thePreferences(0), // Delay instance() call until stream factory init.
        theElevEnabledFlag(true),
        thePluginLoaderEnabledFlag(true)
 {
@@ -97,6 +96,7 @@ ossimInit* ossimInit::instance()
 
 void ossimInit::addOptions(ossimArgumentParser& parser)
 {
+   parser.getApplicationUsage()->addCommandLineOption("--env", "Specify an env variable to set.  Any number of these can appear with format --env VARIABLE=VALUE");
    parser.getApplicationUsage()->addCommandLineOption("-P", "specify a preference file to load");
    parser.getApplicationUsage()->addCommandLineOption("-K", "specify individual keywords to add to the preferences keyword list: name=value");
    parser.getApplicationUsage()->addCommandLineOption("-T", "specify the classes to trace, ex: ossimInit|ossimImage.* \nwill trace ossimInit and all ossimImage classes");
@@ -115,9 +115,9 @@ void ossimInit::addOptions(ossimArgumentParser& parser)
  *****************************************************************************/
 void ossimInit::initialize(int& argc, char** argv)
 {
-    static OpenThreads::Mutex m;
+   static OpenThreads::Mutex m;
    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
-  if( !theInitializedFlag )
+   if( !theInitializedFlag )
    {
       ossimArgumentParser argumentParser(&argc, argv);
       theInstance->initialize(argumentParser);
@@ -139,16 +139,30 @@ void ossimInit::initialize(ossimArgumentParser& parser)
       }
       return;
    }
+   theInstance->parseEnvOptions(parser);
+   theInstance->parseNotifyOption(parser);
+   theInstance->parsePrefsOptions(parser);
+   // Stream factories must be initialized before call to: ossimPreferences::instance()
+   ossim::StreamFactoryRegistry::instance()->registerFactory(ossim::StreamFactory::instance());
+   ossimStreamFactoryRegistry::instance()->registerFactory(ossimStreamFactory::instance());
 
    theInstance->theAppName  = parser.getApplicationUsage()->getApplicationName();
-   theInstance->parseNotifyOption(parser);
-   theInstance->thePreferences = ossimPreferences::instance();
-      
+
    //Parse the command line:
+
    theInstance->parseOptions(parser);
+   // we will also support defining a trace pattern from an Environment
+   // variable.  This will make JNI code easier to enable tracing
+   //
+   ossimString traceVariable = ossimEnvironmentUtility::instance()->getEnvironmentVariable("OSSIM_TRACE");
+
+   if(!traceVariable.empty())
+   {
+      ossimTraceManager::instance()->setTracePattern(traceVariable);
+   }
 
    theInstance->initializeDefaultFactories();
-   
+
    if ( theElevEnabledFlag )
    {
       theInstance->initializeElevation();
@@ -175,6 +189,27 @@ void ossimInit::initialize(ossimArgumentParser& parser)
 
 void ossimInit::initialize()
 {
+   if(theInitializedFlag)
+   {
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "DEBUG ossimInit::initialize(parser):"
+            << " Already initialized, returning......"
+            << std::endl;
+      }
+      return;
+   }
+   
+   int argc = 1;
+   char* argv[1];
+
+   argv[0] = new char[1];
+   argv[0][0] = '\0';
+   initialize(argc, argv);
+   delete [] argv[0];
+
+#if 0   
     static OpenThreads::Mutex m;
    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
    if(theInitializedFlag)
@@ -220,6 +255,7 @@ void ossimInit::initialize()
    } 
    
    theInitializedFlag = true;
+#endif
 }
 
 void ossimInit::finalize()
@@ -279,8 +315,7 @@ void ossimInit::loadPlugins(const ossimFilename& plugin, const char* options)
          {
             ossimFilename file;
             
-            if(dir.getFirst(file,
-                            ossimDirectory::OSSIM_DIR_FILES))
+            if(dir.getFirst(file, ossimDirectory::OSSIM_DIR_FILES))
             {
                do
                { 
@@ -297,19 +332,31 @@ void ossimInit::loadPlugins(const ossimFilename& plugin, const char* options)
    }
 }
 
-void ossimInit::parseOptions(ossimArgumentParser& parser)
+void ossimInit::parsePrefsOptions(ossimArgumentParser& parser)
 {
    if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG)
       << "DEBUG ossimInit::parseOptions: entering..." << std::endl;
+
    
    std::string tempString;
    ossimArgumentParser::ossimParameter stringParameter(tempString);
+
+   tempString = "";
+   ossimString prefsFile = ossimEnvironmentUtility::instance()->getEnvironmentVariable("OSSIM_PREFS_FILE");
+   theInstance->thePreferences = ossimPreferences::instance();
+   if(!prefsFile.empty())
+   {
+      thePreferences->loadPreferences();// Use the default load 
+   }
+   tempString = "";
+   // override ENV with passed in variable
    while(parser.read("-P", stringParameter));
 
    if(tempString != "")
    {
       thePreferences->loadPreferences(ossimFilename(tempString));
    }
+   tempString = "";
    while(parser.read("-K", stringParameter))
    {
       ossimString option = tempString;
@@ -326,6 +373,18 @@ void ossimInit::parseOptions(ossimArgumentParser& parser)
          thePreferences->addPreference(key, "");
       }
    }
+
+}
+
+void ossimInit::parseOptions(ossimArgumentParser& parser)
+{
+   if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG)
+      << "DEBUG ossimInit::parseOptions: entering..." << std::endl;
+   
+   std::string tempString;
+   ossimArgumentParser::ossimParameter stringParameter(tempString);
+
+   tempString = "";
 
    while(parser.read("-T", stringParameter))
    {
@@ -412,6 +471,28 @@ void ossimInit::parseNotifyOption(ossimArgumentParser& parser)
    }
 }
 
+void ossimInit::parseEnvOptions(ossimArgumentParser& parser)
+{
+   std::string tempString;
+   ossimArgumentParser::ossimParameter stringParameter(tempString);
+   while(parser.read("--env", stringParameter))
+   {
+      ossimString option = tempString;
+      if (option.contains("=") )
+      {
+         ossimString delimiter = "=";
+         ossimString key (option.before(delimiter));
+         ossimString value = option.after(delimiter);
+         ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), value.c_str());
+
+      }
+      else
+      {
+         ossimString key (option);
+         ossimEnvironmentUtility::instance()->setEnvironmentVariable(key.c_str(), "");
+      }
+   }
+}
 /*!****************************************************************************
  * METHOD: ossimInit::removeOption()
  *  
@@ -476,7 +557,100 @@ void ossimInit::initializeDefaultFactories()
 }
 
 void ossimInit::initializePlugins()
-{      
+{
+
+#if 0   
+   // Note: Removed "autoload" code. Commented out below.
+   
+   const ossimKeywordlist& KWL = thePreferences->preferencesKWL();
+
+   //---
+   // Look for plugins in the form of:
+   // plugin0.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.so
+   // plugin0.option: front
+   //---
+   ossimString regExp =  ossimString("^(") + "plugin[0-9]+.file)";
+   ossim_uint32 numberOfPlugins = KWL.getNumberOfSubstringKeys( regExp );
+   if ( numberOfPlugins )
+   {  
+      const ossim_uint32 MAX_INDEX = numberOfPlugins + 1000; // for skipage...
+      ossim_uint32 index            = 0;
+      ossim_uint32 processedIndexes = 0;
+      const std::string PREFIX_BASE = "plugin";
+      const std::string DOT         = ".";
+      const std::string FILE_KEY    = "file";
+      const std::string OPTIONS_KEY = "options";
+      
+      ossimString prefix;
+      ossimFilename pluginFile;
+      ossimString pluginOptions;      
+
+      // Loop to load plugins in order. Note allows for skipage.
+      while ( processedIndexes < MAX_INDEX )
+      {
+         prefix = PREFIX_BASE + ossimString::toString(index).string() + DOT; 
+         pluginFile = KWL.findKey( prefix, FILE_KEY );
+         if ( pluginFile.size() )
+         {
+            if ( pluginFile.exists() )
+            {
+               // Found plugin, look for options:
+               pluginOptions = KWL.findKey( prefix, OPTIONS_KEY );
+               
+               ossimSharedPluginRegistry::instance()->registerPlugin(pluginFile, pluginOptions);
+            }
+            ++processedIndexes;
+         }
+         if ( processedIndexes == numberOfPlugins )
+         {
+            break;
+         }
+         ++index;
+      }
+   }
+
+   //---
+   // Look for plugins in the form of:
+   // plugin.file0: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.so
+   //---
+   regExp =  ossimString("^(") + "plugin.file[0-9]+)";
+   numberOfPlugins = KWL.getNumberOfSubstringKeys( regExp );
+   if ( numberOfPlugins )
+   {  
+      const ossim_uint32 MAX_INDEX = numberOfPlugins + 1000; // for skipage...
+      ossim_uint32 index            = 0;
+      ossim_uint32 processedIndexes = 0;
+      const std::string PREFIX_BASE = "plugin.file";
+      std::string fileKey;
+      
+      ossimString prefix;
+      ossimFilename pluginFile;
+      ossimString pluginOptions = ""; // No options:
+
+      // Loop to load plugins in order. Note allows for skipage.
+      while ( processedIndexes < MAX_INDEX )
+      {
+         fileKey = PREFIX_BASE + ossimString::toString(index).string();
+         pluginFile = KWL.findKey( fileKey );
+         if ( pluginFile.size() )
+         {
+            if ( pluginFile.exists() )
+            {
+               ossimSharedPluginRegistry::instance()->registerPlugin(pluginFile, pluginOptions);
+            }
+            ++processedIndexes;
+         }
+         
+         if ( processedIndexes == numberOfPlugins )
+         {
+            break;
+         }
+         ++index;
+      }
+   }
+
+#else  /* Old code that auto loads plugins. */
+   #if 0
    ossimString regExpressionDir =  ossimString("^(") + "plugin.dir[0-9]+)";
    ossimString regExpressionFile =  ossimString("^(") + "plugin.file[0-9]+)";
 
@@ -544,47 +718,80 @@ void ossimInit::initializePlugins()
          }
       }
    }
-   
+   #endif   
    // now check new plugin loading that supports passing options to the plugins
    // 
-   regExpressionFile =  ossimString("^(") + "plugin[0-9]+\\.file)";
-   keys = kwl.getSubstringKeyList( regExpressionFile );
+   const ossimKeywordlist& kwl = thePreferences->preferencesKWL();
+   ossimString regExpressionFile =  ossimString("^(") + "plugin[0-9]+\\.file)";
+   vector<ossimString> keys = kwl.getSubstringKeyList( regExpressionFile );
    
-   numberOfFiles = (ossim_uint32)keys.size();
-   offset = (ossim_uint32)ossimString("plugin").size();
-   numberList.resize(numberOfFiles);
+   ossim_uint32 numberOfFiles = (ossim_uint32)keys.size();
+   ossim_uint32 offset = (ossim_uint32)ossimString("plugin").size();
+   std::vector<int> numberList(numberOfFiles);
    
    if(numberList.size()>0)
    {
-      for(idx = 0; idx < (int)numberList.size();++idx)
+      ossim_uint32 idx = 0;
+      for(idx = 0; idx < numberList.size();++idx)
       {
-         std::vector<ossimString> splitArray;
-         keys[idx].split(splitArray, ".");
-         if(splitArray.size())
-         {
-            keys[idx] = ossimString(splitArray[0].begin(), splitArray[0].begin()+offset);
-         }
-         ossimString numberStr(splitArray[0].begin() + offset,
-                               splitArray[0].end());
+         ossimString numberStr(keys[idx].begin() + offset,
+                               keys[idx].end());
          numberList[idx] = numberStr.toInt();
       }
-      
-      std::sort(numberList.begin(), numberList.end());   
-      for(idx=0;idx < (int)numberList.size();++idx)
+      std::sort(numberList.begin(), numberList.end());
+      ossimFilename pluginFile;
+      ossimString options;
+      for(std::vector<ossim_int32>::const_iterator iter = numberList.begin();
+         iter != numberList.end();++iter)
       {
-         ossimString newPrefix = ossimString("plugin")+ossimString::toString(numberList[idx]) + ".";
-         const char* file    = kwl.find((newPrefix+"file").c_str());
-         const char* options = kwl.find((newPrefix+"options").c_str());
-         if(file&&ossimFilename(file).exists())
+         ossimString newPrefix = ossimString("plugin")+ossimString::toString(*iter) + ".";
+       
+         pluginFile = kwl.find((newPrefix+"file").c_str());
+         options    = kwl.find((newPrefix+"options").c_str());
+         if(pluginFile.exists())
          {
-            loadPlugins(file, options);
+            ossimSharedPluginRegistry::instance()->registerPlugin(pluginFile, options);
          }
       }
    }
 
+   regExpressionFile =  ossimString("^(") + "plugin.file[0-9]+)";
+   keys = kwl.getSubstringKeyList( regExpressionFile );
+   
+   numberOfFiles = (ossim_uint32)keys.size();
+   offset = (ossim_uint32)ossimString("plugin.file").size();
+   numberList.resize(numberOfFiles);
+   
+   if(numberList.size()>0)
+   {
+      ossim_uint32 idx = 0;
+      for(idx = 0; idx < numberList.size();++idx)
+      {
+         ossimString numberStr(keys[idx].begin() + offset,
+                               keys[idx].end());
+         numberList[idx] = numberStr.toInt();
+      }
+      std::sort(numberList.begin(), numberList.end());
+      ossimFilename pluginFile;
+      ossimString options;
+      for(std::vector<ossim_int32>::const_iterator iter = numberList.begin();
+         iter != numberList.end();++iter)
+      {
+         ossimString newPrefix = ossimString("plugin.file")+ossimString::toString(*iter);
+       
+         pluginFile = kwl.find(newPrefix.c_str());
+         if(pluginFile.exists())
+         {
+            ossimSharedPluginRegistry::instance()->registerPlugin(pluginFile, options);
+         }
+      }
+   }
+
+
+
    ossimString auto_load_plugins(ossimPreferences::instance()->findPreference("ossim_init.auto_load_plugins"));
    
-   if(auto_load_plugins.empty()) auto_load_plugins = "true";
+   if(auto_load_plugins.empty()) auto_load_plugins = "false";
    // now load any plugins not found in the keywordlist
    //
    // check for plugins in the current directory
@@ -610,6 +817,7 @@ void ossimInit::initializePlugins()
          }
       }
    }
+#endif
 }
 
 void ossimInit::initializeElevation()
@@ -619,29 +827,41 @@ void ossimInit::initializeElevation()
    
    const ossimKeywordlist& KWL = thePreferences->preferencesKWL();
 
+#if 0  /* All autoload stuff disabled. drb 20170408 */
    ossimFilename appPath = theAppName.path();
+   
    // look for bundled elevation and geoids
    {
-	   ossimFilename geoid = appPath.dirCat("geoids");
-	   geoid = geoid.dirCat("geoid1996");
-	   geoid = geoid.dirCat("egm96.grd");
-	   if(geoid.exists())
-	   {
+      ossimFilename geoid = appPath.dirCat("geoids");
+      geoid = geoid.dirCat("geoid1996");
+      geoid = geoid.dirCat("egm96.grd");
+      if(geoid.exists())
+      {
          ossimGeoid* geoidPtr = new ossimGeoidEgm96(geoid);
-
+         
          if (geoidPtr->getErrorStatus() == ossimErrorCodes::OSSIM_OK)
          {
-		    ossimGeoidManager::instance()->addGeoid(geoidPtr);
-		 }
-	   }
+            ossimGeoidManager::instance()->addGeoid(geoidPtr);
+         }
+         
+      }
    }
-   ossimGeoidManager::instance()->loadState(KWL);
+#endif
    
+   ossimGeoidManager::instance()->loadState(KWL);
+
+   //---
+   // Auto load removed to avoid un-wanted directory scanning.
+   // Use ossim preferences.  drb - 28 March 2016.
+   //---
+#if 0
    ossimFilename elevation = appPath.dirCat("elevation");
    if(elevation.exists())
    {
       ossimElevManager::instance()->loadElevationPath(elevation);
    }
+#endif
+
    // lets do backward compatability here
    //
    ossimString regExpression =  ossimString("^(") + "elevation_source[0-9]+.)";
@@ -706,6 +926,11 @@ ossimFilename ossimInit::appName()const
 }
 
 ossimInit::ossimInit(const ossimInit& /* obj */ )
+:  theInitializedFlag(false),
+   theAppName(),
+   thePreferences(ossimPreferences::instance()),
+   theElevEnabledFlag(true),
+   thePluginLoaderEnabledFlag(true)
 {}       
 
 void ossimInit::operator=(const ossimInit& /* rhs */) const

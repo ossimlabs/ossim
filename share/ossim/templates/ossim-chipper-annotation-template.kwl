@@ -1,0 +1,66 @@
+// ---
+// Outouts:
+// 1024 x 1024 png chip about center lat, lon, rotating up is up, with
+// auto histogram stretch, three bands out, eight bit, with two cross hair
+// annotations, one using scene center, one using ground point.
+//
+// Example usage:
+// $ ossim-chipper --options ossim-chipper-annotation-template.kwl
+// 
+// --
+
+cut_center_lat:  -42.845907553579273
+cut_center_lon:  147.326010803416864
+cut_height:  1024
+cut_width:  1024
+hist_op:  auto-minmax
+image0.file:  5V090205P0001912264B220000100282M_001508507.ntf
+operation:  chip
+output_file:  outputs/chipper-annotation-test.png
+output_radiometry: U8
+three_band_out: true
+up_is_up:  true
+writer:  ossim_png
+
+
+annotation0.type: cross_hair
+annotation0.line.location: scene_center
+
+// Size in pixels in one direction:
+annotation0.line.size: 33
+annotation0.line.red: 255
+annotation0.line.green: 1
+annotation0.line.blue: 255
+annotation0.line.thickness: 2
+annotation0.text.location: bottom
+annotation0.text.string: ABC123DEF
+annotation0.text.red: 1
+annotation0.text.green: 255
+annotation0.text.blue: 1
+annotation0.text.thickness: 2
+annotation0.text.point_size: ( 18, 18 )
+annotation0.text.rotation:  0.000000000000000
+annotation0.text.scale: ( 1.0, 1.0 )
+annotation0.text.shear: ( 0.0, 0.0 )
+
+annotation1.type: cross_hair
+
+// ( lat, lon, height, datum ) 
+annotation1.line.location.gpt: (-42.846310078173751,147.323676170201878,2.613,WGE) 
+
+// Size in pixels in one direction:
+annotation1.line.size: 33
+annotation1.line.red: 255
+annotation1.line.green: 1
+annotation1.line.blue: 255
+annotation1.line.thickness: 2
+annotation1.text.location: bottom
+annotation1.text.string: BLDG0123
+annotation1.text.red: 1
+annotation1.text.green: 255
+annotation1.text.blue: 1
+annotation1.text.thickness: 2
+annotation1.text.point_size: ( 18, 18 )
+annotation1.text.rotation:  1.000000000000000
+annotation1.text.scale: ( 1.0, 1.0 )
+annotation1.text.shear: ( 0.0, 0.0 )

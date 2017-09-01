@@ -1,24 +1,20 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author: Ken Melero (kmelero@imagelinks.com)
 //         Orginally written by Oscar Kramer (SoBe Software)
 // Description: Container class for LandSat5 Fast Format header files (RevB & C)
 //
 // ********************************************************************
-// $Id: ossimFfL5.h 15766 2009-10-20 12:37:09Z gpotts $
+// $Id$
 
 #ifndef ossimFfL5_HEADER
-#define ossimFfL5_HEADER
-
+#define ossimFfL5_HEADER 1
 
 #include <ossim/support_data/ossimFfL7.h>
 #include <ossim/support_data/ossimFfRevb.h>
-
-using namespace std;
-
-// Forward class declarations.
+#include <iosfwd>
 
 // ***************************************************************************
 // CLASS: ossimFfL5
@@ -26,7 +22,7 @@ using namespace std;
 
 class OSSIM_DLL ossimFfL5 : public ossimFfL7
 {
-   friend ostream& operator<<(ostream& os, const ossimFfL5& head);
+   friend std::ostream& operator<<(std::ostream& os, const ossimFfL5& head);
 
 public:
    ossimFfL5();

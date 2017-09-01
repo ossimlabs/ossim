@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,18 +9,19 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfImageHeader.h 22417 2013-09-26 14:54:58Z gpotts $
-#ifndef ossimNitfImageHeader_HEADER
-#define ossimNitfImageHeader_HEADER
+// $Id$
 
-#include <vector>
+#ifndef ossimNitfImageHeader_HEADER
+#define ossimNitfImageHeader_HEADER 1
 
 #include <ossim/base/ossimNBandLutDataObject.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimPropertyInterface.h>
 #include <ossim/support_data/ossimNitfTagInformation.h>
 #include <ossim/support_data/ossimNitfCompressionHeader.h>
 #include <ossim/support_data/ossimNitfImageBand.h>
+#include <vector>
 
 class ossimString;
 class ossimDpt;
@@ -36,25 +37,48 @@ public:
 
    virtual bool getTagInformation(ossimNitfTagInformation& tagInfo,
                                   ossim_uint32 idx) const;
+
+   virtual std::vector<ossimNitfTagInformation> getAllTags() { return theTagList; }
+
+   virtual void setAllTags(std::vector<ossimNitfTagInformation> tagList) { theTagList = tagList; }
    
    virtual bool getTagInformation(ossimNitfTagInformation& tagInfo,
                                   const ossimString& tagName) const;
-
+   
    ossimRefPtr<ossimNitfRegisteredTag> getTagData(const ossimString& tagName);
+   
    
    const ossimRefPtr<ossimNitfRegisteredTag> getTagData(
       const ossimString& tagName) const;
+
+   /**
+    * @brief Returns all tags of type tagName.
+    *
+    * Vector passed in "tags" is cleared, then initialized with all tags
+    * found of "tagName".  Size of vector is returned.
+    * 
+    * @param tagName E.g. "RSMPCA"
+    * @param tags Initialized by this.
+    */
+   void getTagData(
+      const ossimString& tagName,
+      std::vector< const ossimNitfRegisteredTag*> &tags ) const;
    
    virtual ossim_uint32 getNumberOfTags()const;
 
    virtual void addTag(const ossimNitfTagInformation& tag, bool unique=true);
    virtual void removeTag(const ossimString& tagName);
    
-   virtual void parseStream(std::istream &in)= 0;
-   virtual void writeStream(std::ostream &out)= 0;
+   virtual void parseStream(ossim::istream& in)= 0;
+   virtual void writeStream(ossim::ostream& out)= 0;
 
    virtual bool isCompressed()const=0;
    virtual bool isEncrypted()const=0;
+
+   /**
+   * isValid will test if the fields are valid and will return true or false.
+   */
+   virtual bool isValid()const=0;
 
    virtual ossimString getCompressionCode()const=0;
    virtual ossimString getCompressionRateCode()const=0;

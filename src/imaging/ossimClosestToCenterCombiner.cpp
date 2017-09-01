@@ -86,11 +86,15 @@ ossimRefPtr<ossimImageData> ossimClosestToCenterCombiner::getTile(const ossimIre
 
             if(idx >=0)
             {
-               for(band = 0; band < bands; ++band)
+               ossim_uint32 tileBands = normTileList[idx].theTile->getNumberOfBands();
+               if (tileBands > 0)
                {
-                  srcBandIdx = ossim::min(normTileList[idx].theTile->getNumberOfBands(), band);
-                  
-                  bandList[band][offset] = *(((ossim_float32*)normTileList[idx].theTile->getBuf(srcBandIdx))+offset);
+                  tileBands -= 1;
+                  for(band = 0; band < bands; ++band)
+                  {
+                     srcBandIdx = ossim::min( tileBands, band );
+                     bandList[band][offset] = *(((ossim_float32*)normTileList[idx].theTile->getBuf(srcBandIdx))+offset);
+                  }
                }
             }
             ++offset;

@@ -177,6 +177,13 @@ public:
    void setTileSize( ossim_uint32 tileSize );
 
    /**
+    * @brief Gets the tile size.
+    * @param tileSize Initialized by this.
+    * @return true on success, false if not in options list.
+    */
+   bool getTileSize( ossimIpt& tileSize ) const;
+
+   /**
     * @return Overview stop dimension or 0 if OVERVIEW_STOP_DIM_KW is not
     * found.
     */

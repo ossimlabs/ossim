@@ -1,0 +1,40 @@
+//***************************************************************
+// Template KWL for ossimInfo utility.
+// See ossimUtility.kwl for common keywords also referenced.
+//***************************************************************
+
+image_file: <image_file>
+build_date: <value>
+center_ground: <value>
+center_image: <value>
+configuration: <value>
+datums: <value>
+dump: <value>
+dump_no_overviews: <value>
+factories: <value>
+factory_keyword_list: <value>
+factory_object: <value>
+factory_type: <value>
+format: <value> 
+geometry_info: <value>
+image_center: <value>
+image_info: <value>
+image_rect: <value>
+metadata: <value>
+north_up_angle: <value>
+output_file: <value>
+ossim_logfile: <value>
+overview_types: <value>
+overwrite: <value>
+palette: <value>
+plugins: <value>
+projections: <value>
+reader_props: <value>
+resampler_filters: <value>
+revision_number: <value>
+up_is_up_angle: <value>
+version: <value>
+writers_kw: <value>
+writer_props: <value>
+zoom_level_gsds: <value>
+

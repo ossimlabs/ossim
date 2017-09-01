@@ -58,7 +58,7 @@ bool ossimVpfFeatureClass::isPrimitive(const ossimString& featureName)
 {
    // make sure we have forward slashes
    ossimFilename filename(featureName.trim());   
-   filename.convertBackToForwardSlashes();
+   // filename.convertBackToForwardSlashes();
    
    ossimString copyOfFeature = filename;
 

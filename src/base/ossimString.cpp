@@ -228,14 +228,7 @@ ossimString& ossimString::trim(const ossimString& valueToTrim)
 
 ossimString ossimString::beforePos(std::string::size_type pos)const
 {
-   ossimString result = *this;
-
-   if(pos < length())
-   {
-      result.erase(pos, std::string::npos);
-   }
-
-   return result;
+   return substr(0, pos);
 }
 
 ossimString ossimString::afterPos(std::string::size_type pos)const
@@ -259,9 +252,7 @@ std::vector<ossimString> ossimString::explode(const ossimString& delimeter) cons
 {
    ossimString exp_str = *this;
    std::vector<ossimString> result;
-   char* tokenPtr;
-
-   tokenPtr = strtok((char*)exp_str.c_str(), (char*)delimeter.c_str());
+   char* tokenPtr = strtok((char*)exp_str.c_str(), (char*)delimeter.c_str());
 
    while(tokenPtr != NULL)
    {
@@ -460,6 +451,7 @@ ossimString ossimString::replaceStrThatMatch(const char *regularExpressionPatter
 bool ossimString::toBool()const
 {
    ossimString s = c_str();
+   s = s.trim();
    if (s.empty())
    {
       return false;
@@ -529,10 +521,14 @@ ossim_uint8 ossimString::toUInt8()const
    {
       std::istringstream is(m_str);
       is >> i;
+#if 0
+      // if extraction fails, value (0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-        i = 0;
+	  i = 0;
       }
+#endif
    }
    return static_cast<ossim_uint8>(i);
 }
@@ -549,10 +545,14 @@ int ossimString::toInt()const
    {
       std::istringstream is(m_str);
       is >> i;
+#if 0
+      // if extraction fails, value (0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         i = 0;
+	  i = 0;
       }
+#endif
    }
    return i;
 }
@@ -569,10 +569,14 @@ ossim_int16 ossimString::toInt16()const
    {
       std::istringstream is(m_str);
       is >> i;
+#if 0
+      // if extraction fails, value (0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         i = 0;
+	  i = 0;
       }
+#endif
    }
    return i;
 }
@@ -589,10 +593,14 @@ ossim_uint16 ossimString::toUInt16()const
    {
       std::istringstream is(m_str);
       is >> i;
+#if 0
+      // if extraction fails, value (0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         i = 0;
+	  i = 0;
       }
+#endif
    }
    return i;
 }
@@ -609,10 +617,14 @@ ossim_int32 ossimString::toInt32()const
    {
       std::istringstream is(m_str);
       is >> i;
+#if 0
+      // if extraction fails, value (0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         i = 0;
+	  i = 0;
       }
+#endif
    }
    return i;
 }
@@ -629,10 +641,14 @@ ossim_uint32 ossimString::toUInt32()const
    {
       std::istringstream is(m_str);
       is >> i;
+#if 0
+      // if extraction fails, value (0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         i = 0;
+	  i = 0;
       }
+#endif
    }
    return i;
 }
@@ -649,10 +665,14 @@ ossim_int64 ossimString::toInt64()const
    {
       std::istringstream is(m_str);
       is >> i;
+#if 0
+      // if extraction fails, value (0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         i = 0;
+	  i = 0;
       }
+#endif
    }
    return i;
 }
@@ -669,10 +689,14 @@ ossim_uint64 ossimString::toUInt64()const
    {
       std::istringstream is(m_str);
       is >> i;
+#if 0
+      // if extraction fails, value (0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         i = 0;
+	  i = 0;
       }
+#endif
    }
    return i;
 }
@@ -689,10 +713,14 @@ long ossimString::toLong()const
    {
       std::istringstream is(m_str);
       is >> i;
+#if 0
+      // if extraction fails, value (0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         i = 0;
+	  i = 0;
       }
+#endif
    }
    return i;
 }
@@ -709,10 +737,14 @@ unsigned long  ossimString::toULong()const
    {
       std::istringstream is(m_str);
       is >> i;
+#if 0
+      // if extraction fails, value (0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         i = 0;
+	  i = 0;
       }
+#endif
    }
    return i;
 }
@@ -735,16 +767,19 @@ ossim_float32 ossimString::toFloat32()const
 
 #if 0
    d = (ossim_float32)atof(c_str());
-#endif
-#if 1
+#else
    if (!empty())
    {
-      std::istringstream is(c_str());
+      std::istringstream is(m_str); // std::istringstream takes a basic_string
       is >> d;
+#if 0
+      // if extraction fails, value (0.0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         d = 0.0;
+	  d = 0.0;
       }
+#endif
    }
 #endif
    return d;
@@ -772,12 +807,16 @@ ossim_float64 ossimString::toFloat64()const
 #if 1
    if (!empty())
    {
-      std::istringstream is(c_str());
+      std::istringstream is(m_str); // std::istringstream takes a basic_string
       is >> d;
+#if 0
+      // if extraction fails, value (0.0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
       if(is.fail())
       {
-         d = 0.0;
+	  d = 0.0;
       }
+#endif
    }
 #endif
    return d;
@@ -804,19 +843,19 @@ double ossimString::toDouble()const
    {
 #if 0
       d = atof(c_str());
-#endif
-#if 1
-      if(!empty())
+#else 
+      std::istringstream is(m_str); // std::istringstream takes a basic_string
+      is >> d;
+#if 0
+      // if extraction fails, value (0.0) is left unmodified until C++11, or
+      // is set to zero (C++11) => no test required!
+      if(is.fail())
       {
-         std::istringstream is(c_str());
-         is >> d;
-         if(is.fail())
-         {
-            d = 0.0;
-         }
+	  d = 0.0;
       }
 #endif
    }
+#endif
    return d;
 }
 

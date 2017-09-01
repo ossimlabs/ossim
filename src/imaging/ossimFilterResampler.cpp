@@ -117,6 +117,10 @@ void ossimFilterResampler::resample(const ossimRefPtr<ossimImageData>& input,
       }
       case OSSIM_UINT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
 	 resampleBilinearTile(ossim_uint16(0), // dummy template variable
 			      input,

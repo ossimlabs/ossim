@@ -35,6 +35,8 @@
 #include <string>
 #include <vector>
 
+static std::string ACCESS_TIME_THRESHOLD_KW    = "access_time_threshold";
+static std::string CLEAN_KW                    = "clean";
 static std::string DUMP_FILTERED_IMAGES_KW     = "dump_filtered_images";
 static std::string FALSE_KW                    = "false";
 static std::string FILE_KW                     = "file";
@@ -54,6 +56,7 @@ omarDataMgrUtil::omarDataMgrUtil()
    m_kwl( new ossimKeywordlist() ),
    m_fileWalker(0),
    m_mutex(),
+   m_imageUtil(0),
    m_errorStatus(0),
    m_filteredImages(0)
 {
@@ -77,13 +80,24 @@ void omarDataMgrUtil::addArguments(ossimArgumentParser& ap)
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
+
+   au->addCommandLineOption("--access-time-threshold", "<days> For \"remove\" action. Only remove if last access is greater than days.");
+   
+   au->addCommandLineOption("--clean", "Cleans/removes image file and associated files from file system if present.\n\"remove\" option only.\nLooks for associated files of image, e.g. .ovr, .his, .omd, .geom\nCAUTION: This command is irreversible once envoked!");
+   
    au->addCommandLineOption("--dump-filtered-image-list", "Outputs list of filtered images.");
 
    au->addCommandLineOption("--override-filtered-images", "Allows processing of file that is in the filtered image list.");
    
    au->addCommandLineOption("--threads", "<threads> The number of threads to use. (default=1) Note a default can be set in your ossim preferences file by setting the key \"ossim_threads\".");
+   
+   au->addCommandLineOption("--preproc", "Enables the use of the preproc utility to build overviews and histograms");
 
    au->addCommandLineOption( "-u", "<url> URL, e.g. \"http://omar.osssim.org/omar\"\n(default= url \"http://localhost:8080/omar\"" );
+
+   ossimRefPtr<ossimImageUtil> imageUtil = new ossimImageUtil();
+   imageUtil->addOptions(au);
+   imageUtil = 0;
    
 } // void omarDataMgrUtil::addArguments(ossimArgumentParser& ap)
 
@@ -116,6 +130,24 @@ bool omarDataMgrUtil::initialize(ossimArgumentParser& ap)
          // Used throughout below:
          std::string ts1;
          ossimArgumentParser::ossimParameter sp1(ts1);
+
+         if( ap.read("--access-time-threshold", sp1) )
+         {
+            m_kwl->addPair( ACCESS_TIME_THRESHOLD_KW, ts1 );
+            if ( ap.argc() < 3 )
+            {
+               break;
+            }
+         }
+
+         if( ap.read("--clean") )
+         {
+            addOption( CLEAN_KW, TRUE_KW );
+            if ( ap.argc() < 3 )
+            {
+               break;
+            }
+         }
 
          if( ap.read("--dump-filtered-image-list") )
          {
@@ -152,6 +184,22 @@ bool omarDataMgrUtil::initialize(ossimArgumentParser& ap)
                break;
             }
          }
+         
+         if( ap.read("--preproc"))
+         {
+            m_imageUtil = new ossimImageUtil();
+
+            if ( getOverrideFilteredImagesFlag() )
+            {
+               //---
+               // User requested override but the arg parser for omarDataMgr has
+               // stripped the argument for image util so manually set it.
+               //---
+               m_imageUtil->setOverrideFilteredImagesFlag( true );
+            }
+            
+            m_imageUtil->initialize(ap);
+         }
 
          if ( ap.argc() < 3 )
          {
@@ -176,6 +224,13 @@ bool omarDataMgrUtil::initialize(ossimArgumentParser& ap)
          // First arg should be service, e.g. "add", "remove".
          std::string value = ap[1];
          m_kwl->addPair( SERVICE_KW, value );
+
+         // Check for "clean" used with "add" and issue warning???
+         if ( getCleanFlag() && ( value == "add" ) )
+         {
+            ossimNotify(ossimNotifyLevel_NOTICE)
+               << "NOTICE: Using --clean with \"add\" service is illogical!\n";
+         }
 
          // The remaining args should be files to process.
          for (ossim_int32 i = 1; i < (ap.argc()-1); ++i)
@@ -246,9 +301,8 @@ ossim_int32 omarDataMgrUtil::execute()
       if ( !getOverrideFilteredImagesFlag() && m_filteredImages.empty() )
       {
          initializeDefaultFilterList();
+         m_fileWalker->initializeDefaultFilterList();
       }
-      
-      m_fileWalker->initializeDefaultFilterList();
 
       //---
       // Passing getNumberOfThreads() to ossimFileWalker::setNumberOfThreads was
@@ -319,7 +373,7 @@ void omarDataMgrUtil::processFile(const ossimFilename& file)
    if(traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << M << " entered...\n" << "file: " << file << "\n";
+         << M << " entered...\n" << "\nfile:    " << file << "\n";
    }
    
    if ( file.size() )
@@ -332,52 +386,25 @@ void omarDataMgrUtil::processFile(const ossimFilename& file)
       
       if ( processFileFlag )
       {
-         // Must be able to open:
-         m_mutex.lock();
-         ossimRefPtr<ossimImageHandler> ih =
-            ossimImageHandlerRegistry::instance()->open(file, true, true);
-         m_mutex.unlock();
-         
-         if ( ih.valid() && !ih->hasError() )
+         omarDataMgrUtil::OmarDataMgrUtilService service = getService();
+
+         if ( service == omarDataMgrUtil::ADD_RASTER )
          {
-            if ( isDirectoryBasedImage( ih.get() ) )
-            {
-               // Tell the walker not to recurse this directory.
-               m_mutex.lock();
-               m_fileWalker->setRecurseFlag(false);
-               m_mutex.unlock();
-            }
-            
-            // Must have geometry:
-            ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
-            if( geom.valid() )
-            {
-               // Geometry object must have a valid projection:
-               ossimRefPtr<ossimProjection> proj = geom->getProjection();
-               if ( proj.valid() )
-               {
-                  ossimNotify(ossimNotifyLevel_NOTICE)
-                     << "Processing file: " << file << std::endl;
-                  callService( file );
-               }
-               else
-               {
-                  ossimNotify(ossimNotifyLevel_WARN)
-                     << M << "\nCould create projection for: " << file << std::endl;
-               }
-            }
-            else
-            {
-               ossimNotify(ossimNotifyLevel_WARN)
-                  << M << "\nCould create geometry for: " << file << std::endl;
-            }
+            callAddRasterService( file );
+         }
+         else if ( service == omarDataMgrUtil::REMOVE_RASTER )
+         {
+            callRemoveRasterService( file );
          }
          else
          {
-            ossimNotify(ossimNotifyLevel_WARN) << M << "\nCould not open: " << file << std::endl;
+            std::string s;
+            getService( s );
+            ossimNotify(ossimNotifyLevel_WARN)
+               << "Unhandled service: " << s << "\n";
          }
       }
-      else // Matches: if ( processFileFlag )
+      else
       {
          ossimNotify(ossimNotifyLevel_NOTICE)
             << "Filtered file, not processing: " << file << std::endl;
@@ -391,7 +418,8 @@ void omarDataMgrUtil::processFile(const ossimFilename& file)
       // Since ossimFileWalker is threaded output the file so we know which job exited.
       ossimNotify(ossimNotifyLevel_DEBUG) << M << "\nfile: " << file << "\nexited...\n";
    }
-}
+   
+} // End: omarDataMgrUtil::processFile(const ossimFilename& file)
 
 void omarDataMgrUtil::usage(ossimArgumentParser& ap)
 {
@@ -408,15 +436,42 @@ void omarDataMgrUtil::usage(ossimArgumentParser& ap)
    ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
    
    ossimNotify(ossimNotifyLevel_INFO)
-      
       << "\nValid services: \"add\" and \"remove\"."
       << "\nExample usage:\n\n"
+
       << "Using default url \"http://localhost:8080/omar\":\n"
       << ap.getApplicationName()
       << " add 5V090205M0001912264B220000100072M_001508507.ntf\n\n"
+
+      << "Build overviews, histogram, and add to database.\n"
+      << ap.getApplicationName()
+      << " --preproc --ot ossim_kakadu_nitf_j2k --ch add "
+      << "5V090205M0001912264B220000100072M_001508507.ntf\n\n"
+
       << "Passing in url:\n"
       << ap.getApplicationName()
-      << " -u http://your_url/omar add 5V090205M0001912264B220000100072M_001508507.ntf\n"
+      << " -u http://your_url/omar add 5V090205M0001912264B220000100072M_001508507.ntf\n\n"
+
+      << "Adding all images in a directory using 32 threads:\n"
+      << ap.getApplicationName()
+      << " --threads 32 add /data1/imagery/2015/09/28/0000\n\n"
+      
+      << "Removing file from database:\n"
+      << ap.getApplicationName()
+      << " remove 5V090205M0001912264B220000100072M_001508507.ntf\n\n"
+
+      << "Removing file from database and file system:\n"
+      << ap.getApplicationName()
+      << " --clean remove 5V090205M0001912264B220000100072M_001508507.ntf\n\n"
+
+      << "Removing all images in a directory using 32 threads:\n"
+      << ap.getApplicationName()
+      << " --clean --threads 32 remove /data1/imagery/2015/09/28/0000\n\n"
+
+      << "Removing all images in a directory using 4 threads that have not been accessed in 30 days:\n"
+      << ap.getApplicationName()
+      << " --access-time-threshold  30 --clean --threads 4 remove /data1/imagery/2015/09/28/0000\n"
+
       << std::endl;
 }
 
@@ -434,6 +489,42 @@ bool omarDataMgrUtil::isDirectoryBasedImage(const ossimImageHandler* ih) const
          result = true;
       }
    }
+   return result;
+}
+
+bool omarDataMgrUtil::isPastLastAccessedThreshold( const ossimFilename& file ) const
+{
+   // Default to true.
+   bool result = true;
+
+   std::string value = m_kwl->findKey( ACCESS_TIME_THRESHOLD_KW );
+   if ( value.size() )
+   {
+      const ossim_int64 SECONDS_PER_DAY = 86400; // 60 * 60 * 24
+      ossim_int64 thresholdInDays = ossimString(value).toInt64();
+      if ( thresholdInDays )
+      {
+         // Returns -1 if does not exist.
+         ossim_int64 secondsSinceAccessed = file.lastAccessed();
+
+         if(traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << ACCESS_TIME_THRESHOLD_KW << ": " << thresholdInDays
+               << "\nfile_last_accessed: " << secondsSinceAccessed/SECONDS_PER_DAY
+               << "\n";
+         }
+
+         if ( secondsSinceAccessed > 0 )
+         {
+            if ( secondsSinceAccessed/SECONDS_PER_DAY <= thresholdInDays )
+            {
+               result = false;
+            }
+         }
+      }
+   }
+   
    return result;
 }
 
@@ -537,17 +628,161 @@ void omarDataMgrUtil::getUrl( std::string& url ) const
    }
 }
 
-void omarDataMgrUtil::callService( const ossimFilename& file )
+bool omarDataMgrUtil::callAddRasterService( const ossimFilename& file )
 {
-   std::string service;
-   getService( service );
-   
-   if ( service.size() )
+   static const char M[] = "omarDataMgrUtil::callAddRasterService";
+   if(traceDebug())
    {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << M << " entered...\n" << "\nfile:    " << file << "\n";
+   }
+   
+   bool result = false;
+
+   // Must be able to open:
+   m_mutex.lock();
+   ossimRefPtr<ossimImageHandler> ih =
+      ossimImageHandlerRegistry::instance()->open(file, true, true);
+   m_mutex.unlock();
+   
+   if ( ih.valid() && !ih->hasError() )
+   {
+      if ( isDirectoryBasedImage( ih.get() ) )
+      {
+         // Tell the walker not to recurse this directory.
+         m_mutex.lock();
+         m_fileWalker->setRecurseFlag(false);
+         m_mutex.unlock();
+      }
+            
+      // Must have geometry:
+      ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
+      if( geom.valid() )
+      {
+         // Geometry object must have a valid projection:
+         ossimRefPtr<ossimProjection> proj = geom->getProjection();
+         if ( proj.valid() )
+         {
+            ossimNotify(ossimNotifyLevel_NOTICE)
+               << "Processing file: " << file << std::endl;
+
+            if( m_imageUtil.valid() )
+            {
+               m_imageUtil->processFile(file);
+            }
+            
+            std::string service;
+            getService( service );
+            
+            std::string url;
+            getUrl( url );
+            
+            if ( service.size() && url.size() )
+            {
+               CURL* curl = curl_easy_init();
+               if ( curl )
+               {
+                  // Data for POST:
+                  std::string data = std::string("filename=") + file.string();
+                  curl_easy_setopt( curl, CURLOPT_POSTFIELDS, data.c_str() );
+                  
+                  // Create the URL string:
+                  std::string urlString = url + service;
+                  curl_easy_setopt( curl, CURLOPT_URL, urlString.c_str() );
+                  
+                  ossimNotify(ossimNotifyLevel_INFO)
+                     << "data: " << data 
+                     << "\nurl: " << urlString.c_str()
+                     << std::endl;
+                  
+                  // Tell libcurl to follow redirection
+                  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+                  
+                  // Run it:
+                  CURLcode res = curl_easy_perform(curl);
+                  
+                  // Check for errors:
+                  if ( res == CURLE_OK )
+                  {
+                     // Response code of the http transaction:
+                     long respcode; 
+                     res = curl_easy_getinfo(curl,CURLINFO_RESPONSE_CODE, &respcode);
+                     if ( res == CURLE_OK )
+                     {
+                        if ( respcode == 200 ) //  OK 200 "The request was fulfilled."
+                        {
+                           result = true; // Set return status for caller.
+                        }
+                     }
+                  }
+                  else
+                  {
+                     ossimNotify(ossimNotifyLevel_WARN)
+                        << "curl_easy_perform() failed: \n"
+                        << curl_easy_strerror(res)
+                        << std::endl;
+                     setErrorStatus( (ossim_int32)res );
+                  }
+                  
+                  ossimNotify(ossimNotifyLevel_WARN) << std::endl;
+                  
+                  // Always cleanup:
+                  curl_easy_cleanup(curl);
+               }
+               
+               // Cleanup curl:
+               curl_global_cleanup();
+            
+            } // Matches: if ( url.size() )
+
+         }
+         else
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << M << "\nCould create projection for: " << file << std::endl;
+         }
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << M << "\nCould create geometry for: " << file << std::endl;
+      }  
+   }
+   else
+   {
+      ossimNotify(ossimNotifyLevel_WARN) << M << "\nCould not open: " << file << std::endl;
+   }
+   
+   if(traceDebug())
+   {
+      // Since ossimFileWalker is threaded output the file so we know which job exited.
+      ossimNotify(ossimNotifyLevel_DEBUG) << M << "\nfile: " << file << "\nexited...\n";
+   }
+   
+   return result;
+   
+} // End: omarDataMgrUtil::callAddRasterService( file )
+
+bool omarDataMgrUtil::callRemoveRasterService( const ossimFilename& file )
+{
+   static const char M[] = "omarDataMgrUtil::callRemoveRasterService";
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << M << " entered...\n" << "\nfile:    " << file << "\n";
+   }
+   
+   bool result = false;
+
+   if ( isPastLastAccessedThreshold( file ) )
+   {
+      std::string service;
+      getService( service );
+   
       std::string url;
       getUrl( url );
-      
-      if ( url.size() )
+   
+      if ( service.size() && url.size() )
       {
          CURL* curl = curl_easy_init();
          if ( curl )
@@ -555,24 +790,43 @@ void omarDataMgrUtil::callService( const ossimFilename& file )
             // Data for POST:
             std::string data = std::string("filename=") + file.string();
             curl_easy_setopt( curl, CURLOPT_POSTFIELDS, data.c_str() );
-            
+         
             // Create the URL string:
             std::string urlString = url + service;
             curl_easy_setopt( curl, CURLOPT_URL, urlString.c_str() );
-            
+         
             ossimNotify(ossimNotifyLevel_INFO)
                << "data: " << data 
                << "\nurl: " << urlString.c_str()
                << std::endl;
-            
+         
             // Tell libcurl to follow redirection
             curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-            
+         
             // Run it:
             CURLcode res = curl_easy_perform(curl);
-            
+         
             // Check for errors:
-            if(res != CURLE_OK)
+            if ( res == CURLE_OK )
+            {
+               // Response code of the http transaction:
+               long respcode; 
+               res = curl_easy_getinfo(curl,CURLINFO_RESPONSE_CODE, &respcode);
+               if ( res == CURLE_OK )
+               {
+                  if ( respcode == 200 ) //  OK 200 "The request was fulfilled."
+                  {
+                     result = true; // Set return status for caller.
+
+                     // Check for clean flag:
+                     if ( getCleanFlag() )
+                     {
+                        clean( file );
+                     }
+                  }
+               }
+            }
+            else
             {
                ossimNotify(ossimNotifyLevel_WARN)
                   << "curl_easy_perform() failed: \n"
@@ -580,20 +834,70 @@ void omarDataMgrUtil::callService( const ossimFilename& file )
                   << std::endl;
                setErrorStatus( (ossim_int32)res );
             }
-
+         
             ossimNotify(ossimNotifyLevel_WARN) << std::endl;
-            
+         
             // Always cleanup:
             curl_easy_cleanup(curl);
          }
-         
+      
          // Cleanup curl:
          curl_global_cleanup();
-      }
       
-   } // Matches: if ( service.size() )
+      } // Matches: if ( service.size() )
       
-} // End: omarDataMgrUtil::callService( file )
+   } // Matches: if ( isPastLastAccessedThreshold( file ) )
+   
+   if(traceDebug())
+   {
+      // Since ossimFileWalker is threaded output the file so we know which job exited.
+      ossimNotify(ossimNotifyLevel_DEBUG) << M << "\nfile: " << file << "\nexited...\n";
+   }
+   
+   return result;
+      
+} // End: omarDataMgrUtil::callRemoveRasterService( file, clean )
+
+
+void omarDataMgrUtil::clean( const ossimFilename& file ) const
+{
+   // Remove files from disk:
+   ossimFilename f = file;
+   
+   // Base image file:
+   if ( f.exists() )
+   {
+      ossimNotify(ossimNotifyLevel_NOTICE) << "\nRemoving file: " << f << "\n";
+      ossimFilename::remove( f );
+   }
+   
+   // Overview:
+   ossimString e = "ovr";
+   f.setExtension( e );
+   if ( f.exists() )
+   {
+      ossimNotify(ossimNotifyLevel_NOTICE) << "Removing file: " << f << "\n";
+      ossimFilename::remove( f );
+   }
+
+   // Histogram:
+   e = "his";
+   f.setExtension( e );
+   if ( f.exists() )
+   {
+      ossimNotify(ossimNotifyLevel_NOTICE) << "Removing file: " << f << "\n";
+      ossimFilename::remove( f );
+   }
+   
+   // Omd file:
+   e = "omd";
+   f.setExtension( e );
+   if ( f.exists() )
+   {
+      ossimNotify(ossimNotifyLevel_NOTICE) << "Removing file: " << f << "\n";
+      ossimFilename::remove( f );
+   }
+}
 
 bool omarDataMgrUtil::isFiltered(const ossimFilename& file) const
 {
@@ -689,6 +993,11 @@ void omarDataMgrUtil::setDumpFilteredImageListFlag( bool flag )
 bool omarDataMgrUtil::getDumpFilterImagesFlag() const
 {
    return keyIsTrue( DUMP_FILTERED_IMAGES_KW );
+}
+
+bool omarDataMgrUtil::getCleanFlag() const
+{
+   return keyIsTrue( CLEAN_KW );
 }
 
 void omarDataMgrUtil::setOverrideFilteredImagesFlag( bool flag )

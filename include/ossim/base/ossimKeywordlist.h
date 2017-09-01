@@ -1,13 +1,13 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author: Ken Melero
 // 
 // Description: This class provides capabilities for keywordlists.
 //
-//********************************************************************
-// $Id: ossimKeywordlist.h 22516 2013-12-14 17:19:47Z dburken $
+//---
+// $Id$
 
 #ifndef ossimKeywordlist_HEADER
 #define ossimKeywordlist_HEADER 1
@@ -16,8 +16,9 @@
 #include <ossim/base/ossimReferenced.h>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorCodes.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimString.h>
-#include <iosfwd>
+#include <ossim/base/ossimFilename.h>
 #include <map>
 #include <vector>
 #include <algorithm>
@@ -26,7 +27,26 @@ static const char DEFAULT_DELIMITER = ':';
 
 class ossimFilename;
 
-
+/**
+ * Represents serializable keyword/value map. The format is
+ *
+ *   [<prefix>.]<keyword>: value [value ...]
+ *
+ * The map is not a multimap, i.e., the keywords must be unique. Only the last occurrence of
+ * identical keywords will be saved in the map. Methods are provided for reading from and writing
+ * to an ascii file. Methods are also provided for merging multiple maps (a.k.a. "lists" or "KWLs")
+ * as well as assorted operations for pruning and counting.
+ *
+ * Disk files representing a KWL can use the C-style "#include <filename>" preprocessor directive,
+ * where <filename> specifies another external KWL file that will be merged with the current list.
+ * This is convenient for sourcing common settings needed by multiple KWL files. Instead of
+ * duplicating all common keywords/value pairs, the various KWL files can all specify, for example,
+ *
+ *      #include common_prefs.kwl
+ *      #include "common config.kwl"
+ *
+ * The second form with quotes can be used, especially if the filename has spaces.
+ */
 class OSSIM_DLL ossimKeywordlist : public ossimErrorStatusInterface,
    public ossimReferenced
 {
@@ -393,10 +413,10 @@ public:
    void addList( const ossimKeywordlist &src, bool overwrite = true );
 
    /** deprecated method */
-   virtual bool parseStream(std::istream& is,
+   virtual bool parseStream(ossim::istream& is,
                             bool ignoreBinaryChars);
    
-   virtual bool parseStream(std::istream& is);
+   virtual bool parseStream(ossim::istream& is);
    virtual bool parseString(const std::string& inString);
 
    /*!
@@ -493,8 +513,12 @@ protected:
    enum KeywordlistParseState
    {
       KeywordlistParseState_OK         = 0,
-      KeywordlistParseState_FAIL       = 1, // just used to say this set of token has failed the rules
-      KeywordlistParseState_BAD_STREAM = 2, // Means an error occured that is a mal formed stream for Keywordlist
+      
+      // Used to say this set of token has failed the rules.
+      KeywordlistParseState_FAIL       = 1,
+
+      // Means an error occured that is a mal formed stream for Keywordlist.
+      KeywordlistParseState_BAD_STREAM = 2, 
    };
    /*!
     *  Method to parse files to initialize the list.  Method will error on
@@ -508,11 +532,13 @@ protected:
                   bool  ignoreBinaryChars = false);
 
    bool isValidKeywordlistCharacter(ossim_uint8 c)const;
-   void skipWhitespace(std::istream& in)const;
-   KeywordlistParseState readComments(ossimString& sequence, std::istream& in)const;
-   KeywordlistParseState readKey(ossimString& sequence, std::istream& in)const;
-   KeywordlistParseState readValue(ossimString& sequence, std::istream& in)const;
-   KeywordlistParseState readKeyAndValuePair(ossimString& key, ossimString& value, std::istream& in)const;
+   void skipWhitespace(ossim::istream& in)const;
+   KeywordlistParseState readComments(ossimString& sequence, ossim::istream& in)const;
+   KeywordlistParseState readPreprocDirective(ossim::istream& in);
+   KeywordlistParseState readKey(ossimString& sequence, ossim::istream& in)const;
+   KeywordlistParseState readValue(ossimString& sequence, ossim::istream& in)const;
+   KeywordlistParseState readKeyAndValuePair(ossimString& key,
+                                             ossimString& value, ossim::istream& in)const;
    
    // Method to see if keyword exists in list.
    KeywordMap::iterator getMapEntry(const std::string& key);
@@ -521,9 +547,14 @@ protected:
 
    KeywordMap               m_map;
    char                     m_delimiter;
-   bool                     m_preserveKeyValues; // enables preserving empty field values, multi lines, ... etc
+
+   // enables preserving empty field values, multi lines, ... etc
+   bool                     m_preserveKeyValues; 
+
    bool                     m_expandEnvVars;
+
+   // enables relative paths in #include directive
+   ossimFilename            m_currentlyParsing; 
 };
 
 #endif /* #ifndef ossimKeywordlist_HEADER */
-

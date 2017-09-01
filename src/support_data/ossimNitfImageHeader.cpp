@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,11 +9,7 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfImageHeader.cpp 22417 2013-09-26 14:54:58Z gpotts $
-
-#include <cmath> /* for fmod */
-#include <iomanip>
-#include <sstream>
+// $Id$
 
 #include <ossim/support_data/ossimNitfImageHeader.h>
 #include <ossim/base/ossimContainerProperty.h>
@@ -21,11 +17,18 @@
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimNotifyContext.h>
 
+#include <cmath> /* for fmod */
+#include <iomanip>
+#include <ostream>
+#include <sstream>
+
 RTTI_DEF2(ossimNitfImageHeader,
           "ossimNitfImageHeader",
           ossimObject,
           ossimPropertyInterface)
+
 static const char* TAGS_KW = "tags";
+
 ossimNitfImageHeader::ossimNitfImageHeader()
 {
 }
@@ -52,14 +55,14 @@ bool ossimNitfImageHeader::getTagInformation(ossimNitfTagInformation& tagInfo,
    return false;
 }
 
-bool ossimNitfImageHeader::getTagInformation(ossimNitfTagInformation& tag,
-                                             ossim_uint32 idx)const
+bool ossimNitfImageHeader::getTagInformation(
+   ossimNitfTagInformation& tagInfo, ossim_uint32 idx) const
 {
    bool result = false;
    
    if(idx < theTagList.size())
    {
-      tag = theTagList[idx];
+      tagInfo = theTagList[idx];
       result = true;
    }
    
@@ -98,6 +101,23 @@ const ossimRefPtr<ossimNitfRegisteredTag> ossimNitfImageHeader::getTagData(
    }
    
    return ossimRefPtr<ossimNitfRegisteredTag>();
+}
+
+void ossimNitfImageHeader::getTagData(
+   const ossimString& tagName,
+   std::vector< const ossimNitfRegisteredTag* > &tags ) const
+{
+   tags.clear();
+   if(theTagList.size())
+   {
+      for(ossim_uint32 idx = 0; idx < theTagList.size(); ++idx)
+      {
+         if(theTagList[idx].getTagName() == tagName)
+         {
+            tags.push_back( theTagList[idx].getTagData().get() );
+         }
+      }
+   }
 }
 
 ossim_uint32 ossimNitfImageHeader::getNumberOfTags()const

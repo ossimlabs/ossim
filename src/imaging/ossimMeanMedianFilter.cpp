@@ -136,6 +136,10 @@ void ossimMeanMedianFilter::applyFilter(ossimRefPtr<ossimImageData>& input)
          break;
       }
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       {
          switch (theFilterType)

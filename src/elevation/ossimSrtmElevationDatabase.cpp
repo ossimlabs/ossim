@@ -20,6 +20,27 @@ static ossimTrace traceDebug("ossimSrtmElevationDatabase:debug");
 
 RTTI_DEF1(ossimSrtmElevationDatabase, "ossimSrtmElevationDatabase", ossimElevationCellDatabase);
 
+ossimSrtmElevationDatabase::ossimSrtmElevationDatabase()
+   :ossimElevationCellDatabase()
+{
+}
+
+ossimSrtmElevationDatabase::ossimSrtmElevationDatabase(const ossimSrtmElevationDatabase& rhs)
+   :ossimElevationCellDatabase(rhs)
+{
+}
+
+ossimSrtmElevationDatabase::~ossimSrtmElevationDatabase()
+{
+}
+
+ossimObject* ossimSrtmElevationDatabase::dup() const
+{
+   ossimSrtmElevationDatabase* duped = new ossimSrtmElevationDatabase( *this );
+   // duped->open(m_connectionString);
+   return duped;
+}
+
 double ossimSrtmElevationDatabase::getHeightAboveMSL(const ossimGpt& gpt)
 {
    if(isSourceEnabled())
@@ -43,13 +64,13 @@ double ossimSrtmElevationDatabase::getHeightAboveEllipsoid(const ossimGpt& gpt)
    
    return h;
 }
+
 bool ossimSrtmElevationDatabase::open(const ossimString& connectionString)
 {
    bool result = false;
    ossimFilename file = ossimFilename(connectionString);
    m_connectionString = connectionString;
    result = openSrtmDirectory(file);
-   
    return result;
 }
 
@@ -136,13 +157,16 @@ bool ossimSrtmElevationDatabase::openSrtmDirectory(const ossimFilename& dir)
          ++count;
          if(handler->open(f))
          {
-            m_meanSpacing = handler->getMeanSpacingMeters();
+            m_meanSpacing = handler->getMeanSpacingMeters(); 
+
             if(traceDebug())
             {
-               ossimNotify(ossimNotifyLevel_DEBUG) << "ossimSrtmElevationDatabase::open: Found file " << f << "\n";
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "ossimSrtmElevationDatabase::open: Found file " << f << "\n";
                if(!m_geoid.valid())
                {
-                  ossimNotify(ossimNotifyLevel_DEBUG) << "ossimSrtmElevationDatabase::open: Unable to load goeid grid 1996 for SRTM database\n";
+                  ossimNotify(ossimNotifyLevel_DEBUG)
+                     << "ossimSrtmElevationDatabase::open: Unable to load goeid grid 1996 for SRTM database\n";
                }
             }
             return true;
@@ -197,7 +221,10 @@ void ossimSrtmElevationDatabase::createRelativePath(ossimFilename& file, const o
 
 bool ossimSrtmElevationDatabase::loadState(const ossimKeywordlist& kwl, const char* prefix )
 {
-   bool result = ossimElevationDatabase::loadState(kwl, prefix);
+   return ossimElevationCellDatabase::loadState(kwl, prefix);
+
+#if 0 /* Avoid open which in turn opens files unnecessarily. (drb - 20170419) */
+   bool result = ossimElevationCellDatabase::loadState(kwl, prefix);
    if(result)
    {
       if(!m_connectionString.empty()&&ossimFilename(m_connectionString).exists())
@@ -210,33 +237,28 @@ bool ossimSrtmElevationDatabase::loadState(const ossimKeywordlist& kwl, const ch
          result = false;
       }
    }
-   
    return result;
+#endif   
 }
 
 bool ossimSrtmElevationDatabase::saveState(ossimKeywordlist& kwl, const char* prefix)const
 {
-   bool result = ossimElevationDatabase::saveState(kwl, prefix);
-   
-   return result;
+   return ossimElevationCellDatabase::saveState(kwl, prefix);
 }
 
 ossimRefPtr<ossimElevCellHandler>
 ossimSrtmElevationDatabase::createCell(const ossimGpt& gpt)
 {
-
-  ossimRefPtr<ossimElevCellHandler> result = 0;
-  ossimFilename f;
-  createFullPath(f, gpt);
-
-  if(f.exists())
-  {
-     ossimRefPtr<ossimSrtmHandler> h = new ossimSrtmHandler();
-     if (h->open(f, m_memoryMapCellsFlag))
-     {
-        result = h.get();
-     }
-  }
-
-  return result;
+   ossimRefPtr<ossimElevCellHandler> result = 0;
+   ossimFilename f;
+   createFullPath(f, gpt);
+   if(f.exists())
+   {
+      ossimRefPtr<ossimSrtmHandler> h = new ossimSrtmHandler();
+      if (h->open(f, m_memoryMapCellsFlag))
+      {
+         result = h.get();
+      }
+   }
+   return result;
 }

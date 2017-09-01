@@ -1,10 +1,11 @@
 #include <ossim/support_data/ossimAlphaSensorSupportData.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimEcefPoint.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/support_data/ossimEnviHeader.h>
-#include <fstream>
 #include <sstream>
 
 static ossimTrace traceDebug("ossimAlphaSensorSupportData:debug");
@@ -319,9 +320,11 @@ bool ossimAlphaSensorSupportData::readInsGpsFile(const ossimFilename& file)
       ossimNotify(ossimNotifyLevel_DEBUG)
          << M << " entered:\n" << "file: " << file << "\n";
    }
-   
-   std::ifstream in(file.c_str(), std::ios::in);
-   if ( in.good() )
+
+   std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file, std::ios_base::in);
+
+   if ( in && in->good() )
    {
       ossim_float64 inum;
       ossim_float64 roll;
@@ -351,7 +354,7 @@ bool ossimAlphaSensorSupportData::readInsGpsFile(const ossimFilename& file)
 
       // Check the first line.  Some data has a phantom line, some starts with good data.
       std::string line1;
-      std::getline( in, line1 );
+      std::getline( *in, line1 );
       ossim_uint32 fields = 0;
       if ( line1.size() )
       {
@@ -369,16 +372,16 @@ bool ossimAlphaSensorSupportData::readInsGpsFile(const ossimFilename& file)
          if ( fields == 11 )
          {
             // First line is valid.
-            in.seekg( 0, std::ios_base::beg );
+            in->seekg( 0, std::ios_base::beg );
          }
       }
 
-      while( !in.eof() )
+      while( !in->eof() )
       {
          // To detect read error/missing value. Check eof was missing last line.
          timeCode = BOGUS; 
          
-         in >> inum >> roll >> pitch >> heading >> lon >> lat
+         *in >> inum >> roll >> pitch >> heading >> lon >> lat
             >> alt >> scanAng >> res >> frm >> timeCode;
 
          // if(!in.eof())

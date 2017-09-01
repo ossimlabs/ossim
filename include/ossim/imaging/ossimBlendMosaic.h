@@ -18,6 +18,7 @@ class OSSIMDLLEXPORT ossimBlendMosaic : public ossimImageMosaic
 public:
    ossimBlendMosaic();
    ossimBlendMosaic(ossimConnectableObject::ConnectableObjectList& inputSources);
+   virtual ~ossimBlendMosaic();
    virtual void initialize();
 
    virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& origin,
@@ -54,7 +55,6 @@ public:
    void findMinMax(double& minValue, double& maxValue)const;
    
 protected:
-   virtual ~ossimBlendMosaic();
    vector<double>              theWeights;
    ossimRefPtr<ossimImageData> theNormResult;
    /**

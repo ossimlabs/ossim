@@ -1,15 +1,15 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  Garrett Potts
 //
 // Description:  ossimCacheTileSource
 // 
 //*******************************************************************
-//  $Id: ossimCacheTileSource.h 20456 2012-01-13 19:39:30Z gpotts $
+//  $Id$
 #ifndef ossimCacheTileSource_HEADER
-#define ossimCacheTileSource_HEADER
+#define ossimCacheTileSource_HEADER 1
 #include <ossim/imaging/ossimImageSourceFilter.h>
 #include <ossim/imaging/ossimAppFixedTileCache.h>
 #include <ossim/base/ossimProcessProgressEvent.h>
@@ -25,6 +25,8 @@ public:
     */
    ossimCacheTileSource();
    // ossimCacheTileSource(ossimImageSource* inputSource);
+
+   virtual ~ossimCacheTileSource();
 
    virtual ossimString getLongName()  const;
    virtual ossimString getShortName() const;
@@ -59,13 +61,19 @@ public:
 
    
 protected:
-   virtual ~ossimCacheTileSource();
-
    void allocate();
    void deleteRlevelCache();
    void initializeRlevelCache();
    
    ossimAppFixedTileCache::ossimAppFixedCacheId getCacheId(ossim_uint32 resLevel);
+
+      virtual void fireProgressEvent(double percentComplete);
+   
+   // virtual ossimRefPtr<ossimImageData> fillTile(ossim_uint32 resLevel);
+   virtual ossimRefPtr<ossimImageData> fillTile(
+      const ossimIrect& tileRect, ossim_uint32 resLevel,
+      ossimAppFixedTileCache::ossimAppFixedCacheId cacheId );
+                                                
 
    ossimRefPtr<ossimImageData> theTile;
    ossimIpt                    theFixedTileSize;
@@ -73,16 +81,11 @@ protected:
    bool                        theEventProgressFlag;
    bool                        theUseInputTileSizeFlag;
    RLevelCacheList             theRLevelCacheList;
+   ossimIpt                    theTileSizeXY;
    
    /** For lock and unlock. */
 
-   
-   virtual void fireProgressEvent(double percentComplete);
-   
-   virtual ossimRefPtr<ossimImageData> fillTile(ossim_uint32 resLevel);
-
 TYPE_DATA
 };
-
 
 #endif /* end of "#ifndef ossimCacheTileSource_HEADER" */

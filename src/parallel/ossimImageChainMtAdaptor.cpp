@@ -30,11 +30,13 @@ static const char* ORIGINAL_SOURCE_ID_KW  = "ossimImageChainMtAdaptor.original_s
 ossimImageChainMtAdaptor::ossimImageChainMtAdaptor()
 :  m_numThreads (0),
    d_useSharedHandlers(false),
-   d_debugEnabled(false)
+   d_debugEnabled(false),
+   d_cacheTileSize(1024),
+   d_useCache(false)
 {
    //###### DEBUG ############
    ossimMtDebug* mt_debug = ossimMtDebug::instance();
-   d_useSharedHandlers = mt_debug->chainSharedHandlers;
+   //d_useSharedHandlers = mt_debug->chainSharedHandlers;
    d_debugEnabled = mt_debug->chainDebugEnabled;
    //###### END DEBUG ############
 }
@@ -43,18 +45,23 @@ ossimImageChainMtAdaptor::ossimImageChainMtAdaptor()
 // Constructor with original image chain provided. This source becomes the first clone in the list.
 //*************************************************************************************************
 ossimImageChainMtAdaptor::ossimImageChainMtAdaptor(ossimImageChain* original,
-                                                   ossim_uint32 num_threads_req)
+                                                   ossim_uint32 num_threads_req, bool use_shared_handlers, bool use_cache, ossim_uint32 cache_tile_size)
 :  m_numThreads (0),
-   d_useSharedHandlers(true),
-   d_debugEnabled(false)
+   d_useSharedHandlers(false),
+   d_debugEnabled(false),
+   d_cacheTileSize(1024),
+   d_useCache(false)
 {
    //###### DEBUG ############
    ossimMtDebug* mt_debug = ossimMtDebug::instance();
-   d_useSharedHandlers = mt_debug->chainSharedHandlers;
+   //d_useSharedHandlers = mt_debug->chainSharedHandlers;
    d_debugEnabled = mt_debug->chainDebugEnabled;
    //###### END DEBUG ############
 
    setNumberOfThreads(num_threads_req); 
+   setUseSharedHandlers(use_shared_handlers);
+   setUseCache(use_cache);
+   setCacheTileSize(cache_tile_size);
    setOriginalChain(original); 
 }
 
@@ -63,9 +70,17 @@ ossimImageChainMtAdaptor::ossimImageChainMtAdaptor(ossimImageChain* original,
 //*************************************************************************************************
 ossimImageChainMtAdaptor::~ossimImageChainMtAdaptor()
 {
-   removeListener((ossimConnectableObjectListener*)this);
-   m_clones.clear();
-   m_chainContainers.clear();
+  removeListener((ossimConnectableObjectListener*)this);
+  if (d_useSharedHandlers)
+    m_sharedHandlers[0]->disconnectAllOutputs();
+  m_clones.clear();
+  m_chainContainers.clear();
+  if (d_useSharedHandlers)
+  {
+    m_sharedHandlers[0]->close();
+    m_sharedHandlers[0] = 0;
+    m_sharedHandlers.clear();
+  }
 }
 
 //*************************************************************************************************
@@ -93,6 +108,21 @@ void ossimImageChainMtAdaptor::setNumberOfThreads(ossim_uint32 num_threads)
    // If there is a valid original chain, we can perform the replication:
    if (!m_chainContainers.empty())
       replicate();
+}
+ 
+void ossimImageChainMtAdaptor::setUseSharedHandlers(bool use_shared_handlers)
+{
+   d_useSharedHandlers = use_shared_handlers;
+}
+
+void ossimImageChainMtAdaptor::setCacheTileSize(ossim_uint32 cache_tile_size)
+{
+   d_cacheTileSize = cache_tile_size;
+}
+
+void ossimImageChainMtAdaptor::setUseCache(bool use_cache)
+{
+   d_useCache = use_cache;
 }
 
 //*************************************************************************************************
@@ -160,10 +190,10 @@ bool ossimImageChainMtAdaptor::replicate()
       {
          // Fetch a handler from the chain and wrap it with a handler adaptor:
          handler = visitor.getObjectAs<ossimImageHandler>(handler_idx++);
-         if (handler == NULL)
+         if (!handler)
             break; // Only exit point of while loop
          
-         handler_adaptor = new ossimImageHandlerMtAdaptor(handler.get());
+         handler_adaptor = new ossimImageHandlerMtAdaptor(handler.get(), d_useCache, d_cacheTileSize);
          m_sharedHandlers.push_back(handler_adaptor);
 
          // Change ownership:
@@ -317,7 +347,7 @@ bool ossimImageChainMtAdaptor::loadState(const ossimKeywordlist& kwl, const char
       candidate = visitor.getObject();
       m_chainContainers[i]->makeUniqueIds();
       ossimRefPtr<ossimImageSource> clone_source = dynamic_cast<ossimImageSource*>(candidate);
-      if (clone_source == NULL)
+      if (!clone_source)
          return false;
       m_clones.push_back(clone_source);
    }
@@ -370,8 +400,9 @@ bool ossimImageChainMtAdaptor::connectSharedHandlers(ossim_uint32 chain_index)
       // in the new chain using the ID of the corresponding object in the original chain:
       ConnectableObjectList handler_connections = (*handler)->getOutputList();
       ConnectableObjectList::iterator output_connection = handler_connections.begin();
-      while (output_connection != handler_connections.end())
-      {
+      // BUG HERE AFTER UPGRADING FROM 1.8.14 to 1.8.20 - only grabbing the first output connection
+      //while (output_connection != handler_connections.end())
+      //{
          ossimId obj_id = (*output_connection)->getId();
          ossimIdVisitor visitor (obj_id);
          m_chainContainers[chain_index]->accept(visitor);
@@ -384,7 +415,7 @@ bool ossimImageChainMtAdaptor::connectSharedHandlers(ossim_uint32 chain_index)
          output_obj->connectMyInputTo((*handler).get(), true, true);
 
          output_connection++;
-      }
+      //}
       handler++;
    }
    return true;

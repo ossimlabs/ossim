@@ -222,7 +222,7 @@ void ossimPpjFrameSensor::updateModel()
                                        m_cameraPositionEllipsoid.lond()   + deltal,
                                        m_cameraPositionEllipsoid.height() + computeParameterOffset(PARAM_ADJ_ALTITUDE_OFFSET));
 
-   // TODO  Need to add correction matrix to accomodate orientation offsets.  It
+   // TODO  Need to add correction matrix to accommodate orientation offsets.  It
    //       shouldn't be done in ECF frame.
    // double r = ossim::degreesToRadians(m_roll  + computeParameterOffset(PARAM_ADJ_ROLL_OFFSET));
    // double p = ossim::degreesToRadians(m_pitch + computeParameterOffset(PARAM_ADJ_PITCH_OFFSET) );

@@ -27,6 +27,7 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimPolygon.h>
+#include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimScalarTypeLut.h>
@@ -89,6 +90,10 @@ thePixelType(OSSIM_PIXEL_IS_POINT)
          << std::endl;
 #endif      
    }
+
+   // Check for global preference supplementary dir.
+   theSupplementaryDirectory.string() = ossimPreferences::instance()->
+      preferencesKWL().findKey( std::string("ossim_supplementary_directory") );
 }
 
 ossimImageHandler::~ossimImageHandler()
@@ -482,8 +487,8 @@ void ossimImageHandler::establishDecimationFactors()
    }
 }
 
-
-bool ossimImageHandler::buildHistogram(int numberOfRLevels)
+bool ossimImageHandler::buildHistogram( int numberOfRLevels,
+                                        ossimHistogramMode mode )
 {
    if(isOpen())
    {
@@ -501,6 +506,13 @@ bool ossimImageHandler::buildHistogram(int numberOfRLevels)
       {
          histoSource->setMaxNumberOfRLevels(getNumberOfDecimationLevels());
       }
+      
+      //---
+      // Note if mode==OSSIM_HISTO_MODE_UNKNOWN the histoSource defaults to
+      // normal mode.
+      //---
+      histoSource->setComputationMode( mode );
+
       histoSource->connectMyInputTo(0, this);
       histoSource->enableSource();
       writer->connectMyInputTo(0, histoSource.get());
@@ -520,7 +532,8 @@ bool ossimImageHandler::buildHistogram(int numberOfRLevels)
    return true;
 }
 
-bool ossimImageHandler::buildAllHistograms(int numberOfRLevels)
+bool ossimImageHandler::buildAllHistograms( int numberOfRLevels,
+                                            ossimHistogramMode mode )
 {
    ossim_uint32 currentEntry = getCurrentEntry();
    std::vector<ossim_uint32> entryList;
@@ -529,7 +542,7 @@ bool ossimImageHandler::buildAllHistograms(int numberOfRLevels)
    for(idx = 0; idx < entryList.size(); ++idx)
    {
       setCurrentEntry(entryList[idx]);
-      if(!buildHistogram(numberOfRLevels))
+      if(!buildHistogram( numberOfRLevels, mode ))
       {
          setCurrentEntry(currentEntry);
          return false;
@@ -637,12 +650,21 @@ bool ossimImageHandler::buildOverview(const ossimFilename& filename,
    return true;
 }
 
-//*****************************************************************************
-//! Returns the image geometry object associated with this tile source or
-//! NULL if non defined.
-//! The geometry contains full-to-local image transform as well as projection
-//! (image-to-world).
-//*****************************************************************************
+ossimRefPtr<ossimMultiResLevelHistogram> ossimImageHandler::getImageHistogram() const
+{
+   ossimRefPtr<ossimMultiResLevelHistogram> histogram = 0;
+   if ( isOpen() )
+   {
+      ossimFilename histoFile = getFilenameWithThisExtension(ossimString(".his"));
+      histogram = new ossimMultiResLevelHistogram();
+      if ( histogram->importHistogram(histoFile) == false )
+      {
+         histogram = 0;
+      }
+   }
+   return histogram;
+}
+
 ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
 {
    if ( !theGeometry )
@@ -661,6 +683,7 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
          // as it does a recursive call back to ossimImageHandler::getImageGeometry().
          //---
          theGeometry = new ossimImageGeometry();
+         initImageParameters( theGeometry.get() );
 
          //---
          // And finally allow factories to extend the internal geometry.
@@ -676,11 +699,9 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
             // kind of geometry loaded
             //---
             theGeometry = getInternalImageGeometry();
+            initImageParameters( theGeometry.get() );
          }
       }
-
-      // Set image things the geometry object should know about.
-      initImageParameters( theGeometry.get() );
    }
    return theGeometry;
 }
@@ -691,12 +712,16 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getExternalImageGeometry() co
 
    // No geometry object has been set up yet. Check for external geometry file.
    // Try "foo.geom" if image is "foo.tif":
-   ossimFilename filename = getFilenameWithThisExtension(ossimString(".geom"), false);
+   ossimFilename filename;
+   getFilenameWithThisExt( ossimString(".geom"), filename );
+
    if(!filename.exists())
    {
       // Try "foo_e0.tif" if image is "foo.tif" where "e0" is entry index.
       filename = getFilenameWithThisExtension(ossimString(".geom"), true);
    }
+
+#if 0 /* getgetFilenameWithThisExt... methods tack on sup dir if set. drb */
    if(!filename.exists())
    {
       // Try supplementary data directory for remote geometry:
@@ -709,6 +734,7 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getExternalImageGeometry() co
       filename = getFilenameWithThisExtension(ossimString(".geom"), true);
       filename = theSupplementaryDirectory.dirCat(filename.file());
    }
+#endif
 
    if(filename.exists())
    {
@@ -872,25 +898,85 @@ bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
 
 bool ossimImageHandler::openOverview()
 {
+   static const char MODULE[] = "ossimImageHandler::openOverview()";
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+   }
+   
+   bool result = false;
+   
    closeOverview();
    
    // 1) ESH 03/2009 -- Use the overview file set e.g. using a .spec file.
    ossimFilename overviewFilename = getOverviewFile();
-   
-   if (overviewFilename.empty() || (overviewFilename.exists() == false) )
+
+   // ossimFilename::exists() currently does not work with s3 url's.
+   if ( overviewFilename.empty() ) // || (overviewFilename.exists() == false) )
    {
       // 2) Generate the name from image name.
       overviewFilename = createDefaultOverviewFilename();
-      
+   }
+
+   // ossimFilename::exists() currently does not work with s3 url's.
+   if ( overviewFilename.size() ) 
+   {
+      result = openOverview( overviewFilename );
+
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << (result?"Opened ":"Could not open ") << "overview: " << overviewFilename
+            << "\n";
+      }
+   }
+
+   if ( !result )
+   {
       if (overviewFilename.empty() || (overviewFilename.exists() == false) )
       {  
          // 3) For backward compatibility check if single entry and _e0.ovr
          overviewFilename = getFilenameWithThisExtension(ossimString(".ovr"), true);
+
          if (overviewFilename.empty() || (overviewFilename.exists() == false) )
          {
-            // 4) For overviews built with gdal look for foo.tif.ovr
-            overviewFilename = getFilename();
+            //---
+            // 4) For overviews built with gdal.
+            // Examples:
+            // Single entry: foo.tif.ovr
+            // Multi-entry: foo.tif.x.ovr where "x" == one based entry number.
+            // 
+            // Note: Take into account a supplementary dir if any.
+            //---
+            if ( theSupplementaryDirectory.empty() )
+            {
+               overviewFilename = getFilename();
+            }
+            else
+            {
+               overviewFilename = theSupplementaryDirectory;
+               overviewFilename = overviewFilename.dirCat( getFilename().file() );
+            }
+
+            if ( getNumberOfEntries() > 1 )
+            {
+               overviewFilename += ".";
+               // Sample multi-entry data "one" based; hence, the + 1.
+               overviewFilename += ossimString::toString( getCurrentEntry()+1 );
+            }
             overviewFilename += ".ovr";
+         }
+      }
+   
+      if ( overviewFilename.exists() )
+      {
+         result = openOverview( overviewFilename );
+
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << (result?"Opened ":"Could not open ") << "overview: " << overviewFilename
+               << "\n";
          }
       }
    }
@@ -898,25 +984,10 @@ bool ossimImageHandler::openOverview()
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "Looking for " << overviewFilename
-         << " overview file..." << std::endl;
+         << MODULE << " exit result: " << (result?"true":"false") << "\n";
    }
 
-   bool status = false;
-   
-   if ( overviewFilename.exists() )
-   {
-      status = openOverview( overviewFilename );
-   }
-
-   if ( !status  && traceDebug() )
-   {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "ossimImageHandler::openOverview NOTICE:"
-         << "\nCould not find an overview." << std::endl;
-   }
-
-   return status;
+   return result;
 }
 
 
@@ -1102,10 +1173,10 @@ bool ossimImageHandler::setOutputBandList(const std::vector<ossim_uint32>& /* ba
    return false;
 }
 
-bool ossimImageHandler::getRgbBandList(
-   std::vector<ossim_uint32>& /* bandList */) const
+bool ossimImageHandler::getRgbBandList( std::vector<ossim_uint32>& bandList ) const
 {
-   return false;
+   // Looks for "rgb_bands" key in dot omd file.  E.g. "rgb_bands: (2,1,0)"
+   return theMetaData.getRgbBands( bandList );
 }
 
 bool ossimImageHandler::setOutputToInputBandList()
@@ -1123,7 +1194,7 @@ bool ossimImageHandler::setOutputToInputBandList()
 bool ossimImageHandler::isIdentityBandList( const std::vector<ossim_uint32>& bandList ) const
 {
    bool result = false;
-   const ossim_uint32 BANDS = bandList.size();
+   const ossim_uint32 BANDS = (ossim_uint32)bandList.size();
    if ( BANDS )
    {
       std::vector<ossim_uint32> inputList;
@@ -1156,7 +1227,7 @@ bool ossimImageHandler::setOutputBandList(const std::vector<ossim_uint32>& inBan
    bool result = false;
 
    const ossim_uint32 INPUT_BANDS  = getNumberOfInputBands();
-   const ossim_uint32 OUTPUT_BANDS = inBandList.size();
+   const ossim_uint32 OUTPUT_BANDS = (ossim_uint32)inBandList.size();
 
    if ( INPUT_BANDS && OUTPUT_BANDS )
    {
@@ -1195,8 +1266,30 @@ bool ossimImageHandler::isImageTiled() const
 
 void ossimImageHandler::loadMetaData()
 {
-  theMetaData.clear();
+   ossimFilename filename = getFilenameWithThisExtension(ossimString(".omd"), false);
+   theMetaData.clear();
 
+   std::shared_ptr<ossim::istream> instream = ossim::StreamFactoryRegistry::instance()->createIstream(filename.c_str());
+
+   if(!instream)
+   {
+      filename = getFilenameWithThisExtension(ossimString(".omd"), true);
+      instream = ossim::StreamFactoryRegistry::instance()->createIstream(filename.c_str());
+   }
+
+   if(instream)
+   {
+     ossimKeywordlist kwl;
+     
+     kwl.parseStream(*instream);
+     
+     theMetaData.loadState(kwl);
+   }
+   else
+   {
+     theMetaData.setScalarType(getOutputScalarType());
+   }
+/*
   ossimFilename filename = getFilenameWithThisExtension(ossimString(".omd"), false);
   if ( filename.exists() == false )
   {
@@ -1214,6 +1307,7 @@ void ossimImageHandler::loadMetaData()
   {
      theMetaData.setScalarType(getOutputScalarType());
   }
+  */
 }
 
 double ossimImageHandler::getMinPixelValue(ossim_uint32 band)const
@@ -1541,11 +1635,51 @@ ossimFilename ossimImageHandler::getFilenameWithThisExtension(
    // Get the image file.
    ossimFilename f = getFilename();
 
-   // If the supplementary directory is set, find the extension
-   // at that location instead of at the default.
+   getFilenameWithNoExtension( f );
+
+   if (set_e0_prefix || (getNumberOfEntries() > 1))
+   {
+      f += "_e";
+      f += ossimString::toString(getCurrentEntry());
+   }
+   
+   if (ext.size())
+   {
+      if (ext.string()[0] != '.')
+      {
+         f += ".";
+      }
+      f += ext;
+   }
+   return f;
+}
+
+void ossimImageHandler::getFilenameWithThisExt( const ossimString& ext,
+                                                ossimFilename& f ) const
+{
+   // Get the image file.
+   f = getFilename();
+
+   getFilenameWithNoExtension( f );
+
+   if (ext.size())
+   {
+      if (ext.string()[0] != '.')
+      {
+         f += ".";
+      }
+      f += ext;
+   } 
+}
+
+void ossimImageHandler::getFilenameWithNoExtension( ossimFilename& f ) const
+{
+   //---
+   // If the supplementary directory is set, find the extension at that
+   // location instead of at the default.
+   //---
    if ( theSupplementaryDirectory.size() )
    {
-      
       ossimString drivePart;
       ossimString pathPart;
       ossimString filePart;
@@ -1564,21 +1698,6 @@ ossimFilename ossimImageHandler::getFilenameWithThisExtension(
 
    // Wipe out the extension.
    f.setExtension("");
-
-   if (set_e0_prefix || (getNumberOfEntries() > 1))
-   {
-      f += "_e";
-      f += ossimString::toString(getCurrentEntry());
-   }
-   if (ext.size())
-   {
-      if (ext[static_cast<std::string::size_type>(0)] != '.')
-      {
-         f += ".";
-      }
-      f += ext;
-   }
-   return f;
 }
 
 bool ossimImageHandler::getOverviewTile(ossim_uint32 resLevel,

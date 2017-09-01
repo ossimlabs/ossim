@@ -1,7 +1,7 @@
 //*****************************************************************************
 // FILE: ossimSensorModelFactory.cc
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -11,14 +11,19 @@
 //   Contains implementation of class ossimSensorModelFactory
 //
 //*****************************************************************************
-//  $Id: ossimSensorModelFactory.cpp 23313 2015-05-21 00:16:00Z gpotts $
-#include <fstream>
-#include <algorithm>
+// $Id$
+
 #include <ossim/projection/ossimSensorModelFactory.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDirectory.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotifyContext.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+
+#include <fstream>
+#include <algorithm>
+#include <memory>
 
 //***
 // Define Trace flags for use within this file:
@@ -45,7 +50,7 @@ static ossimTrace traceDebug = ossimTrace("ossimSensorModelFactory:debug");
 #include <ossim/projection/ossimSarModel.h>
 #include <ossim/projection/ossimRS1SarModel.h>
 #include <ossim/support_data/ossimSpotDimapSupportData.h>
-#include <ossim/projection/ossimNitfMapModel.h>
+//#include <ossim/projection/ossimNitfMapModel.h>
 #include <ossim/projection/ossimFcsiModel.h>
 #include <ossim/projection/ossimApplanixUtmModel.h>
 #include <ossim/projection/ossimApplanixEcefModel.h>
@@ -59,6 +64,7 @@ static ossimTrace traceDebug = ossimTrace("ossimSensorModelFactory:debug");
 #include <ossim/support_data/ossimFfL5.h>
 #include <ossim/support_data/ossimPpjFrameSensorFile.h>
 #include <ossim/support_data/ossimAlphaSensorSupportData.h>
+#include <ossim/projection/ossimSpectraboticsRedEdgeModel.h>
 
 //***
 // ADD_MODEL: List names of all sensor models produced by this factory:
@@ -157,10 +163,10 @@ ossimSensorModelFactory::createProjection(const ossimString &name) const
       return new ossimLandSatModel;
    }
 
-   if(name == STATIC_TYPE_NAME(ossimNitfMapModel))
-   {
-      return new ossimNitfMapModel;
-   }
+//   if(name == STATIC_TYPE_NAME(ossimNitfMapModel))
+//   {
+//      return new ossimNitfMapModel;
+//   }
 
    if(name == STATIC_TYPE_NAME(ossimQuickbirdRpcModel))
    {
@@ -220,6 +226,11 @@ ossimSensorModelFactory::createProjection(const ossimString &name) const
    {
       return new ossimNitfRsmModel();
    }
+   if(name == STATIC_TYPE_NAME(ossimSpectraboticsRedEdgeModel))
+   {
+      return new ossimSpectraboticsRedEdgeModel();
+   }
+   
 
    //***
    // ADD_MODEL: (Please leave this comment for the next programmer)
@@ -264,7 +275,7 @@ ossimSensorModelFactory::getTypeNameList(std::vector<ossimString>& typeList)
    typeList.push_back(STATIC_TYPE_NAME(ossimQuickbirdRpcModel));
    typeList.push_back(STATIC_TYPE_NAME(ossimNitfRpcModel));
    typeList.push_back(STATIC_TYPE_NAME(ossimLandSatModel));
-   typeList.push_back(STATIC_TYPE_NAME(ossimNitfMapModel));
+//   typeList.push_back(STATIC_TYPE_NAME(ossimNitfMapModel));
    typeList.push_back(STATIC_TYPE_NAME(ossimFcsiModel));
    typeList.push_back(STATIC_TYPE_NAME(ossimSpot5Model));
    typeList.push_back(STATIC_TYPE_NAME(ossimSarModel));
@@ -276,6 +287,7 @@ ossimSensorModelFactory::getTypeNameList(std::vector<ossimString>& typeList)
    typeList.push_back(STATIC_TYPE_NAME(ossimAlphaSensorHRI));
    typeList.push_back(STATIC_TYPE_NAME(ossimAlphaSensorHSI));
    typeList.push_back(STATIC_TYPE_NAME(ossimNitfRsmModel));
+   typeList.push_back(STATIC_TYPE_NAME(ossimSpectraboticsRedEdgeModel));
    //***
    // ADD_MODEL: Please leave this comment for the next programmer. Add above.
    //***
@@ -286,7 +298,11 @@ ossimSensorModelFactory::getTypeNameList(std::vector<ossimString>& typeList)
 ossimProjection* ossimSensorModelFactory::createProjection(
    const ossimFilename& filename, ossim_uint32  entryIdx) const
 {
-   if(!filename.exists()) return 0;
+   // ossimFilename::exists() currently does not work with s3 url's.
+   // if(!filename.exists()) return 0;
+
+   if(filename.empty()) return 0;
+
    static const char MODULE[] = "ossimSensorModelFactory::createProjection";
    
    ossimKeywordlist kwl;
@@ -357,11 +373,10 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    }
    
    ifstream input(geomFile.c_str());
-   char ecgTest[4];
-   input.read((char*)ecgTest, 3);
-   ecgTest[3] = '\0';
+   char ecgTest[4] = { 0 };
+   input.read(ecgTest, 3); // even if `read()` fails, it will be initialized thanks to `= { 0 };`
    input.close();
-   if(ossimString(ecgTest) == "eCG")
+   if(std::string(ecgTest) == "eCG")
    {
       ossimKeywordlist kwlTemp;
       kwlTemp.add("type",
@@ -453,6 +468,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
         ossimNotify(ossimNotifyLevel_DEBUG)
            << MODULE << " DEBUG: testing ossimNitfRsmModel" << std::endl;
      }
+
      ossimRefPtr<ossimNitfRpcModel> rpcModel = new ossimNitfRpcModel();
      if ( rpcModel->parseFile(filename, entryIdx) ) // filename = NITF_file
      {
@@ -471,12 +487,13 @@ ossimProjection* ossimSensorModelFactory::createProjection(
            << MODULE << " DEBUG: testing ossimIkinosRpcModel" << std::endl;
      }
      
-     model = new ossimNitfMapModel(filename); // filename = NITF_file
-     if(!model->getErrorStatus())
-     {
-        return model.release();
-     }
-     model = 0;
+     // RP - This model crashes routinely if it ever happens to get a hold of a NITF
+     //model = new ossimNitfMapModel(filename); // filename = NITF_file
+     //if(!model->getErrorStatus())
+     //{
+     //   return model.release();
+     //}
+     //model = 0;
    }
    else if(isLandsat(filename))
    {
@@ -613,7 +630,7 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    {
       if(!model->getErrorStatus())
       {
-         return model.release();
+        return model.release();
       }
       model = 0;
    }
@@ -623,15 +640,15 @@ ossimProjection* ossimSensorModelFactory::createProjection(
    
 bool ossimSensorModelFactory::isNitf(const ossimFilename& filename)const
 {
-   std::ifstream in(filename.c_str(), ios::in|ios::binary);
+   std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+      createIstream( filename, std::ios_base::in | std::ios_base::binary );
    
-   if(in)
+   if( in )
    {
       char nitfFile[4];
-      in.read((char*)nitfFile, 4);
-
-      return (ossimString(nitfFile,
-                          nitfFile+4) == "NITF");
+      in->read((char*)nitfFile, 4);
+      
+      return (ossimString(nitfFile, nitfFile+4) == "NITF");
    }
 
    return false;

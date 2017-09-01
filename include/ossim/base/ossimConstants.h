@@ -294,12 +294,20 @@ enum ossimScalarType
    OSSIM_CFLOAT64          = 14, /**< 64 bit complex floating point */
    OSSIM_NORMALIZED_FLOAT  = 15, /**< 32 bit normalized floating point */
    OSSIM_NORMALIZED_DOUBLE = 16, /**< 64 bit normalized floating point */
-
+   OSSIM_UINT11            = 17, /**< 16 bit unsigned integer (11 bits used) */
+   OSSIM_UINT12            = 18, /**< 16 bit unsigned integer (12 bits used) */
+   OSSIM_UINT13            = 19, /**< 16 bit unsigned integer (13 bits used) */
+   OSSIM_UINT14            = 20, /**< 16 bit unsigned integer (14 bits used) */
+   OSSIM_UINT15            = 21, /**< 16 bit unsigned integer (15 bits used) */
    //---
    // Below for backward compatibility only.  Please use above enums in
    // conjunction with null, min, max settings to determine bit depth.
    //---
    OSSIM_USHORT11          = 17, /**< 16 bit unsigned integer (11 bits used) */
+   OSSIM_USHORT12          = 18, /**< 16 bit unsigned integer (12 bits used) */
+   OSSIM_USHORT13          = 19, /**< 16 bit unsigned integer (13 bits used) */
+   OSSIM_USHORT14          = 20, /**< 16 bit unsigned integer (14 bits used) */
+   OSSIM_USHORT15          = 21, /**< 16 bit unsigned integer (15 bits used) */
    OSSIM_UCHAR             = 1,  /**< 8 bit unsigned iteger  */
    OSSIM_USHORT16          = 3,  /**< 16 bit unsigned iteger */
    OSSIM_SSHORT16          = 4,  /**< 16 bit signed integer  */
@@ -523,6 +531,22 @@ enum ossimCompareType
 #define OSSIM_DEFAULT_NULL_PIX_UINT11 ((ossim_uint16)0)
 #define OSSIM_DEFAULT_MIN_PIX_UINT11  ((ossim_uint16)1)
 #define OSSIM_DEFAULT_MAX_PIX_UINT11  ((ossim_uint16)0x07FF)
+
+#define OSSIM_DEFAULT_NULL_PIX_UINT12 ((ossim_uint16)0)
+#define OSSIM_DEFAULT_MIN_PIX_UINT12  ((ossim_uint16)1)
+#define OSSIM_DEFAULT_MAX_PIX_UINT12  ((ossim_uint16)0x0FFF)
+
+#define OSSIM_DEFAULT_NULL_PIX_UINT13 ((ossim_uint16)0)
+#define OSSIM_DEFAULT_MIN_PIX_UINT13  ((ossim_uint16)1)
+#define OSSIM_DEFAULT_MAX_PIX_UINT13  ((ossim_uint16)0x1FFF)
+
+#define OSSIM_DEFAULT_NULL_PIX_UINT14 ((ossim_uint16)0)
+#define OSSIM_DEFAULT_MIN_PIX_UINT14  ((ossim_uint16)1)
+#define OSSIM_DEFAULT_MAX_PIX_UINT14  ((ossim_uint16)0x3FFF)
+
+#define OSSIM_DEFAULT_NULL_PIX_UINT15 ((ossim_uint16)0)
+#define OSSIM_DEFAULT_MIN_PIX_UINT15  ((ossim_uint16)1)
+#define OSSIM_DEFAULT_MAX_PIX_UINT15  ((ossim_uint16)0x7FFF)
 
 #define OSSIM_DEFAULT_NULL_PIX_FLOAT  ((ossim_float32)-1.0/FLT_EPSILON)
 #define OSSIM_DEFAULT_MIN_PIX_FLOAT   ((ossim_float32)((-1.0/FLT_EPSILON) + 1))

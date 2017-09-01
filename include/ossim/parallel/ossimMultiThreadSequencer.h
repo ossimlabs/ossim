@@ -48,6 +48,10 @@ public:
 
    //! Accessed for performance logging.
    ossim_uint32 maxCacheSize() const { return m_maxCacheSize; }
+   bool loadState(const ossimKeywordlist& kwl, const char* prefix);
+   void setUseSharedHandlers(bool use_shared_handlers);
+   void setCacheTileSize(ossim_uint32 cache_tile_size);
+   void setUseCache(bool use_cache);
 
    // FOR DEBUG:
    ossim_uint32 d_maxCacheUsed;
@@ -60,6 +64,9 @@ public:
    double       d_idleTime6;
    double       d_jobGetTileT;
    double       handlerGetTileT();
+   bool         d_useSharedHandlers;
+   ossim_uint32 d_cacheTileSize;
+   bool d_useCache;
 
 protected:
 

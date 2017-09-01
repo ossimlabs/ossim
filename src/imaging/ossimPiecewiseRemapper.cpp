@@ -727,6 +727,10 @@ void ossimPiecewiseRemapper::buildLinearNativeTable()
          break;
       }
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       {
          buildLinearNativeTable(ossim_uint16(0));
@@ -872,6 +876,26 @@ void ossimPiecewiseRemapper::setupTable()
             bytes_per_pixel = 2;
             theTableType = ossimTableRemapper::NATIVE;
             break;
+         case OSSIM_USHORT12:
+            values_per_band = 4096; // 2 ^ 12
+            bytes_per_pixel = 2;
+            theTableType = ossimTableRemapper::NATIVE;
+            break;
+         case OSSIM_USHORT13:
+            values_per_band = 8192; // 2 ^ 13
+            bytes_per_pixel = 2;
+            theTableType = ossimTableRemapper::NATIVE;
+            break;
+         case OSSIM_USHORT14:
+            values_per_band = 16384; // 2 ^ 14
+            bytes_per_pixel = 2;
+            theTableType = ossimTableRemapper::NATIVE;
+            break;
+         case OSSIM_USHORT15:
+            values_per_band = 32768; // 2 ^ 15
+            bytes_per_pixel = 2;
+            theTableType = ossimTableRemapper::NATIVE;
+            break;
             
          case OSSIM_UINT16:
          case OSSIM_SINT16:
@@ -913,6 +937,8 @@ void ossimPiecewiseRemapper::setupTable()
 
 // Private to disallow use...
 ossimPiecewiseRemapper::ossimPiecewiseRemapper(const ossimPiecewiseRemapper&)
+:  m_dirty(true),
+   m_remapType(UNKNOWN)
 {
 }
 

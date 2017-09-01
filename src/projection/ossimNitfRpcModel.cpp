@@ -455,6 +455,20 @@ bool ossimNitfRpcModel::getRpcData(const ossimNitfImageHeader* ih)
    theLonScale   = rpcTag->getGeodeticLonScale().toFloat64();
    theHgtScale   = rpcTag->getGeodeticHeightScale().toFloat64();
 
+   // OBC has some data with negative height offsets that blows up the ray intersection with elevation model.  The bilinear model seems more accurate than trying to work around this.
+   if (ih->getImageSource().trim() == "OBC" && theHgtOffset < 0)
+   {
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "ossimNitfRpcModel::getRpcData DEBUG:"
+            << "\nHeight Offset will force invalid ellipsoid intersection."
+            << "\nAborting with error..."
+            << std::endl;
+      }
+      return false;
+   }
+
    // Parse coefficients:
    ossim_uint32 i;
    

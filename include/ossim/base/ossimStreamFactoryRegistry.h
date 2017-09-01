@@ -1,21 +1,86 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
+//
+// See LICENSE.txt file in the top level directory for more details.
 //
 // Author: Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimStreamFactoryRegistry.h 22648 2014-02-28 14:34:29Z gpotts $
-//
-#ifndef ossimStreamFactoryRegistry_HEADER
-#define ossimStreamFactoryRegistry_HEADER
-#include <vector>
+// $Id$
 
+#ifndef ossimStreamFactoryRegistry_HEADER
+#define ossimStreamFactoryRegistry_HEADER 1
+
+#include <ossim/base/ossimFactoryListInterface.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimStreamFactoryBase.h>
 
+#include <memory>
+#include <vector>
 
+namespace ossim
+{
+   class OSSIM_DLL StreamFactoryRegistry : public StreamFactoryBase
+   {
+   public:
+      static StreamFactoryRegistry* instance();
+      virtual ~StreamFactoryRegistry();
+   
+      void registerFactory(StreamFactoryBase* factory);
+      void unregisterFactory(StreamFactoryBase* factory);
+
+      virtual std::shared_ptr<ossim::istream>
+         createIstream(const std::string& connectionString,
+                       const ossimKeywordlist& options=ossimKeywordlist(),
+                       std::ios_base::openmode mode=
+                       std::ios_base::in|std::ios_base::binary) const;
+      
+      virtual std::shared_ptr<ossim::ostream>
+         createOstream(const std::string& connectionString,
+                       const ossimKeywordlist& options=ossimKeywordlist(),
+                       std::ios_base::openmode mode=
+                       std::ios_base::out|std::ios_base::binary) const;
+      
+      virtual std::shared_ptr<ossim::iostream>
+         createIOstream(const std::string& connectionString,
+                        const ossimKeywordlist& options=ossimKeywordlist(),
+                        std::ios_base::openmode mode=
+                        std::ios_base::in|std::ios_base::out|std::ios_base::binary) const;
+
+      /**
+       * @brief Methods to test if connection exists.
+       * @return true on success, false, if not.  
+       */
+      bool exists(const std::string& connectionString) const;
+
+      /**
+       * @brief Methods to test if connection exists.
+       * @param connectionString
+       * @param continueFlag Initializes by this, if set to true, indicates factory
+       * handles file/url and no more factory checks are necessary.
+       * @return true on success, false, if not.  
+       */
+      virtual bool exists(const std::string& connectionString,
+                          bool& continueFlag) const;
+   
+   protected:
+      StreamFactoryRegistry();
+      
+   private:
+      
+      /** @brief copy constructor hidden from use */
+      StreamFactoryRegistry(const StreamFactoryRegistry&);
+      
+      std::vector<StreamFactoryBase*> m_factoryList;
+
+      static StreamFactoryRegistry*   m_instance;
+   };
+   
+} // End: namespace ossim
+
+// Deprecated code...
 class OSSIM_DLL ossimStreamFactoryRegistry : public ossimStreamFactoryBase
 {
 public:
@@ -23,6 +88,10 @@ public:
    virtual ~ossimStreamFactoryRegistry();
    
    void registerFactory(ossimStreamFactoryBase* factory);
+
+   virtual std::shared_ptr<ossim::ifstream>
+      createIFStream(const ossimFilename& file,
+                     std::ios_base::openmode openMode) const;
    
    virtual ossimRefPtr<ossimIFStream> createNewIFStream(
       const ossimFilename& file, std::ios_base::openmode openMode) const;

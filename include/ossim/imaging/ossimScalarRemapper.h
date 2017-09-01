@@ -24,6 +24,8 @@ public:
    ossimScalarRemapper(ossimImageSource* inputSource,
                        ossimScalarType outputScalarType);
 
+   virtual ~ossimScalarRemapper();
+
    virtual void initialize();
 
    virtual ossimString getLongName()  const;
@@ -49,6 +51,8 @@ public:
     */
    virtual void setOutputScalarType(ossimScalarType scalarType);
    virtual void setOutputScalarType(ossimString scalarType);
+
+   virtual void setPreserveMagnitude(bool value);
      
    /**
     *  Sets the current resolution level.  Returns true on success, false
@@ -84,8 +88,6 @@ public:
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
    
 protected:
-   virtual ~ossimScalarRemapper();
-
    /**
     *  Called on first getTile, will initialize all data needed.
     */
@@ -101,6 +103,7 @@ protected:
    ossimScalarType             theOutputScalarType;
 
    bool                        theByPassFlag;
+   bool                        thePreserveMagnitudeFlag;
 TYPE_DATA
 };
 

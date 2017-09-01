@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 // File: ossimStreamReaderInterface.h
 // 
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -16,7 +16,9 @@
 #ifndef ossimStreamReaderInterface_HEADER
 #define ossimStreamReaderInterface_HEADER 1
 
-#include <iosfwd>
+#include <ossim/base/ossimIosFwd.h>
+#include <memory>
+#include <string>
 
 /** @class ossimStreamReaderInterface */
 class ossimStreamReaderInterface
@@ -30,23 +32,19 @@ public:
    virtual ~ossimStreamReaderInterface(){}
 
    /**
-    *  @brief Pure virtual open method.
-    *
-    *  This open takes a stream, postition and a flag.
-    *
+    *  @brief Pure virtual open method that takes a stream.
     *  @param str Open stream to image.
-    *
-    *  @param restartPosition Typically 0, this is the stream offset to the
-    *  front of the image.
-    *
-    *  @param youOwnIt If true this object takes owner ship of the pointer
-    *  memory and will destroy on close.
-    *  
+    *  @param connectionString
     *  @return true on success, false on error.
     */
+   virtual bool open( std::shared_ptr<ossim::istream>& str,
+                      const std::string& connectionString ) = 0;
+   
+#if 0
    virtual bool open( std::istream* str,
                       std::streamoff restartPosition,
                       bool youOwnIt ) = 0;
+#endif
 };
 
 #endif /* #ifndef ossimStreamReaderInterface_HEADER */

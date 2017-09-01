@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -28,6 +28,13 @@ class ossimKeywordlist;
 class OSSIM_DLL ossimGpkgWriterInterface
 {
 public:
+
+   /**
+    * GP:  I had to add this or windows would not link with the latest
+    * compiler. Also had to put in dot.cpp for debug mode(again windows).
+    * (drb)
+    */
+   ossimGpkgWriterInterface();
 
    /**
     * @brief Opens file for writing, appending, merging without an input

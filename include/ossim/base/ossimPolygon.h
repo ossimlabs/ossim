@@ -42,6 +42,7 @@ public:
    ossimPolygon();
    ossimPolygon(const vector<ossimIpt>& polygon);
    ossimPolygon(const vector<ossimDpt>& polygon);
+   ossimPolygon(const vector<ossimGpt>& polygon);
    ossimPolygon(int numVertices, const ossimDpt* vertex_array);
 
    ossimPolygon(const ossimPolygon& copy_this);
@@ -166,6 +167,7 @@ public:
     */
    const ossimPolygon& operator= (const ossimPolygon& copy_this);
    const ossimPolygon& operator= (const vector<ossimDpt>& vertexList);
+   const ossimPolygon& operator= (const vector<ossimGpt>& vertexList);
    const ossimPolygon& operator= (const vector<ossimIpt>& vertexList);
    const ossimPolygon& operator= (const ossimIrect& rect);
    const ossimPolygon& operator= (const ossimDrect& rect);
@@ -179,6 +181,11 @@ public:
    ossimPolygon operator *(double scale)const;
    
    void resize(ossim_uint32 newSize);
+
+   /**
+   * METHOD: remove()
+   * Removes the vertex from the polygon. */
+   void removeVertex(int vertex);
 
    /**
     * METHOD: print()
@@ -211,12 +218,6 @@ protected:
     */
    bool shrink(ossimPolygon &dest, double inset) const;
    
-   /**
-   * METHOD: remove()
-   * Removes the vertex from the polygon.
-
-    */
-   void removeVertex(int vertex);
    /**
    * METHOD: removeSmallestContributingVertex()
    * Removes the vertex that contributes the smallest area to the polygon.

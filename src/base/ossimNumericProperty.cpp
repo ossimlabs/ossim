@@ -49,8 +49,7 @@ const ossimProperty& ossimNumericProperty::assign(const ossimProperty& rhs)
 {
    ossimProperty::assign(rhs);
 
-   ossimNumericProperty* numericProperty = PTR_CAST(ossimNumericProperty,
-                                                   &rhs);
+   const ossimNumericProperty* numericProperty = dynamic_cast<const ossimNumericProperty*>(&rhs);
    if(numericProperty)
    {
       theValue           = numericProperty->theValue;

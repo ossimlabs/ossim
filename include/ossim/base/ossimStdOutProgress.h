@@ -28,6 +28,7 @@ public:
 protected:
    ossim_uint32 thePrecision;
    bool         theFlushStreamFlag;
+   bool         theRunningInConsoleFlag;
 TYPE_DATA
 };
 

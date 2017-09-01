@@ -1,30 +1,30 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 // 
 // Author: Garrett Potts (gpotts@imagelinks.com)
 // Description: Rpf support class
 // 
 //********************************************************************
-// $Id: ossimRpfAttributeSectionSubheader.h 9967 2006-11-29 02:01:23Z gpotts $
+// $Id$
+
 #ifndef ossimRpfAttributeSectionSubheader_HEADER
-#define ossimRpfAttributeSectionSubheader_HEADER
-#include <iostream>
-using namespace std;
+#define ossimRpfAttributeSectionSubheader_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimErrorContext.h>
 
 class ossimRpfAttributeSectionSubheader
 {
 public:
-   friend ostream& operator <<(ostream& out,
-                               const ossimRpfAttributeSectionSubheader& data);
+   friend std::ostream& operator <<(std::ostream& out,
+                                    const ossimRpfAttributeSectionSubheader& data);
    ossimRpfAttributeSectionSubheader();
 
    virtual ~ossimRpfAttributeSectionSubheader(){}
-   ossimErrorCode parseStream(istream& in, ossimByteOrder byteOrder);
-   virtual void print(ostream& out)const;
+   ossimErrorCode parseStream(ossim::istream& in, ossimByteOrder byteOrder);
+   virtual void print(std::ostream& out)const;
    ossim_uint16 getNumberOfAttributeOffsetRecords()const
       {
          return theNumberOfAttributeOffsetRecords;

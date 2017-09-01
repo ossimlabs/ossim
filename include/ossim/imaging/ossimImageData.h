@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -21,6 +21,7 @@
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/base/ossimMultiResLevelHistogram.h>
 
 class ossimMultiBandHistogram;
 
@@ -319,6 +320,25 @@ public:
     */
    virtual void convertToNormalizedDouble(ossimImageData* result)const;
 
+   template <class T> void copyTileToFloatBuffer(
+      T /* dummyTemplate*/, ossim_float32* buf)const
+   {
+     const ossim_uint32 SIZE  = getSizePerBand();
+     const ossim_uint32 BANDS = getNumberOfBands();
+
+     for(ossim_uint32 band = 0; band < BANDS; ++band)
+     {
+       const T* s = (T*)getBuf(band);  // source
+       ossim_float32* d = (ossim_float32*)(buf + (band*SIZE));  // destination
+
+       for(ossim_uint32 offset = 0; offset < SIZE; ++offset)
+       {
+         ossim_float32 p = s[offset];
+         d[offset] = p;
+       }
+     }
+   }
+
    /**
     * Will take the normalized input and convert it
     * to this tile's data type.  Example:  if this
@@ -352,6 +372,9 @@ public:
       ossim_uint32 bandNumber = 0) const;
   
    virtual void populateHistogram(ossimRefPtr<ossimMultiBandHistogram> histo);
+
+   virtual void setHistogram(ossimRefPtr<ossimMultiResLevelHistogram> histo);
+   ossimRefPtr<ossimMultiResLevelHistogram> getHistogram();
 
    /**
     * @return true if alpha channel is initialized, false if not.
@@ -1203,6 +1226,8 @@ protected:
 
    /** Indicates data contains palette indexes. */
    bool m_indexedFlag;
+
+   ossimRefPtr<ossimMultiResLevelHistogram> m_histogram;
 
    /** percentage (0-100) of image tile that has valid (non-null) pixel values. This is computed
     * in validate() method.

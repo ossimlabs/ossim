@@ -8,7 +8,7 @@
 // Author: Oscar Kramer
 //
 //*************************************************************************
-// $Id: ossimIndexToRgbLutFilter.h 23190 2015-03-13 13:45:41Z okramer $
+// $Id: ossimIndexToRgbLutFilter.h 23616 2015-11-11 19:50:29Z dburken $
 #ifndef ossimIndexToRgbLutFilter_HEADER
 #define ossimIndexToRgbLutFilter_HEADER
 
@@ -68,7 +68,7 @@ class ossimImageData;
  * to green, and then 128 to 250 will map from green (through yellow) to red. Note that any value
  * above 250 as well as 0 are outside of the remap range and will map to the null pixel (0,0,0).
  *
- * Example or regular piecewise linear. This is the default mode. For backward compatibility, the
+ * Example of regular piecewise linear. This is the default mode. For backward compatibility, the
  * mode keyword here is optional and if omitted will imply this mode. Also, unlike previous form,
  * the number_of_entries keyword is not required and is ignored if present.
  *
@@ -107,6 +107,8 @@ public:
 
    ossimIndexToRgbLutFilter();
 
+   virtual ~ossimIndexToRgbLutFilter();
+
    virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& origin,
                                                ossim_uint32 resLevel=0);
    
@@ -117,6 +119,17 @@ public:
    void           setMode(Mode mode) { theMode = mode; }
    Mode           getMode() const { return theMode; }
 
+   /**
+    * @brief Set lookup table(lut) method.
+    *
+    * This opens the keyword list and initializes lut.
+    *
+    * CAUTION: Requires theMinValue, theMaxValue, and theMode to be set.  Typically a
+    * connection is made prior to this call.  If not connected to an input, "min",
+    * "max" and "mode" keywords should be passed in the keyword list file.
+    *
+    * @param file Keyword list containing lut.
+    */
    void           setLut(const ossimFilename& file);
    
    double         getMinValue()const;
@@ -131,17 +144,11 @@ public:
 
    virtual void initialize();
 
-   virtual void setProperty(ossimRefPtr<ossimProperty> property);
-   virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;
-   virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
-   
    virtual bool saveState(ossimKeywordlist& kwl, const char* prefix=NULL)const;
 
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=NULL);
 
 protected:
-   virtual ~ossimIndexToRgbLutFilter();
-
    /**
     * Called on first getTile, will initialize all data needed.
     */

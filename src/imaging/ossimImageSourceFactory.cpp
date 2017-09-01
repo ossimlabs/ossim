@@ -24,6 +24,7 @@
 #include <ossim/imaging/ossimHistogramRemapper.h>
 #include <ossim/imaging/ossimNullPixelFlip.h>
 #include <ossim/imaging/ossimImageMosaic.h>
+#include <ossim/imaging/ossimElevationMosaic.h>
 #include <ossim/imaging/ossimClosestToCenterCombiner.h>
 #include <ossim/imaging/ossimBlendMosaic.h>
 #include <ossim/imaging/ossimMaxMosaic.h>
@@ -91,6 +92,10 @@
 #include <ossim/imaging/ossimAtCorrGridRemapper.h>
 #include <ossim/imaging/ossimAtCorrRemapper.h>
 #include <ossim/imaging/ossimDilationFilter.h>
+#include <ossim/imaging/ossimErosionFilter.h>
+#include <ossim/imaging/ossimImageSourceSequencer.h>
+#include <ossim/imaging/ossimElevRemapper.h>
+#include <ossim/parallel/ossimMultiThreadSequencer.h>
 
 // Not sure if we want to keep this here
 #include <ossim/imaging/ossimAtbController.h>
@@ -131,9 +136,17 @@ ossimObject* ossimImageSourceFactory::createObject(const ossimString& name)const
       //---
       return new ossimBandSelector;
    }
+   else if(name ==  STATIC_TYPE_NAME(ossimMultiThreadSequencer) || name == "ossimMultiThreadSequencer")
+   {
+      return new ossimMultiThreadSequencer;
+   }
    else if(name ==  STATIC_TYPE_NAME(ossimNullPixelFlip))
    {
       return new ossimNullPixelFlip;
+   }
+   else if(name ==  STATIC_TYPE_NAME(ossimElevRemapper))
+   {
+      return new ossimElevRemapper;
    }
    else if(name == STATIC_TYPE_NAME(ossimImageRenderer))
    {
@@ -170,6 +183,18 @@ ossimObject* ossimImageSourceFactory::createObject(const ossimString& name)const
    else if(name == STATIC_TYPE_NAME(ossimImageMosaic))
    {
       return new ossimImageMosaic;
+   }
+   else if(name == STATIC_TYPE_NAME(ossimElevationMosaic))
+   {
+      return new ossimElevationMosaic;
+   }
+   else if(name == STATIC_TYPE_NAME(ossimPiecewiseRemapper))
+   {
+      return new ossimPiecewiseRemapper;
+   }
+   else if(name == STATIC_TYPE_NAME(ossimImageSourceSequencer))
+   {
+      return new ossimImageSourceSequencer;
    }
    else if(name == STATIC_TYPE_NAME(ossimClosestToCenterCombiner))
    {
@@ -439,6 +464,10 @@ ossimObject* ossimImageSourceFactory::createObject(const ossimString& name)const
    {
       return new ossimDilationFilter();
    }
+   else if(name == STATIC_TYPE_NAME(ossimErosionFilter))
+   {
+      return new ossimErosionFilter();
+   }
    return NULL;
 }
 
@@ -495,16 +524,19 @@ ossimObject* ossimImageSourceFactory::createObject(const ossimKeywordlist& kwl,
 void ossimImageSourceFactory::getTypeNameList(std::vector<ossimString>& typeList)const
 {
    typeList.push_back(STATIC_TYPE_NAME(ossimBandSelector));
+   typeList.push_back(STATIC_TYPE_NAME(ossimMultiThreadSequencer));
    typeList.push_back(STATIC_TYPE_NAME(ossimImageRenderer));
    typeList.push_back(STATIC_TYPE_NAME(ossimCacheTileSource));
    typeList.push_back(STATIC_TYPE_NAME(ossimBlendMosaic));
    typeList.push_back(STATIC_TYPE_NAME(ossimMaxMosaic));   
    typeList.push_back(STATIC_TYPE_NAME(ossimNullPixelFlip));
+   typeList.push_back(STATIC_TYPE_NAME(ossimElevRemapper));
    typeList.push_back(STATIC_TYPE_NAME(ossimColorNormalizedFusion));
    typeList.push_back(STATIC_TYPE_NAME(ossimLocalCorrelationFusion));
    typeList.push_back(STATIC_TYPE_NAME(ossimSFIMFusion));
    typeList.push_back(STATIC_TYPE_NAME(ossimHistogramRemapper));
    typeList.push_back(STATIC_TYPE_NAME(ossimImageMosaic));
+   typeList.push_back(STATIC_TYPE_NAME(ossimElevationMosaic));
    typeList.push_back(STATIC_TYPE_NAME(ossimClosestToCenterCombiner));
    typeList.push_back(STATIC_TYPE_NAME(ossimRgbToGreyFilter));
    typeList.push_back(STATIC_TYPE_NAME(ossimNBandToIndexFilter));
@@ -572,7 +604,10 @@ void ossimImageSourceFactory::getTypeNameList(std::vector<ossimString>& typeList
    typeList.push_back(STATIC_TYPE_NAME(ossimImageHistogramSource));
    typeList.push_back(STATIC_TYPE_NAME(ossimImageSourceFilter));
    typeList.push_back(STATIC_TYPE_NAME(ossimMemoryImageSource));
+   typeList.push_back(STATIC_TYPE_NAME(ossimPiecewiseRemapper));
+   typeList.push_back(STATIC_TYPE_NAME(ossimImageSourceSequencer));
    typeList.push_back(STATIC_TYPE_NAME(ossimDilationFilter));
+   typeList.push_back(STATIC_TYPE_NAME(ossimErosionFilter));
 }
 
 // Hide from use...

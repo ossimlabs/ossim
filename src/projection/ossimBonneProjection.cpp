@@ -523,7 +523,7 @@ bool ossimBonneProjection::operator==(const ossimProjection& proj) const
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimBonneProjection* p = PTR_CAST(ossimBonneProjection, &proj);
+   const ossimBonneProjection* p = dynamic_cast<const ossimBonneProjection*>(&proj);
    if (!p)
       return false;
 

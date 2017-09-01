@@ -270,8 +270,8 @@ std::ostream& ossimElevSource::print(std::ostream& out) const
          << "\ntheNullHeightValue = "<<theNullHeightValue
          << "\ntheSeaLevelValue = "<<theSeaLevelValue
          << "\ntheGroundRect = "<<theGroundRect;
-         //<< ossimSource::print(out);
-   ossimSource::print(out);
+         // GP: need this by itself.  MS errors out
+         ossimSource::print(out);
    return out;
 }
 

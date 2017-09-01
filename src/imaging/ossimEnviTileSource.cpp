@@ -1,6 +1,6 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -8,7 +8,7 @@
 // 
 // Image handler class for a raster files with an ENVI header file.
 //
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #include <ossim/imaging/ossimEnviTileSource.h>
@@ -248,29 +248,45 @@ ossimString ossimEnviTileSource::getLongName() const
 {
    return ossimString("ENVI reader");
 }
- 
+
+bool ossimEnviTileSource::getRgbBandList(std::vector<ossim_uint32>& bandList) const
+{
+   bool result = false;
+
+   bandList.clear();
+   
+   // Look in ENVI header for "default bands":
+   result = m_enviHdr.getDefaultBands( bandList );
+
+   if ( !result && ( getNumberOfInputBands() > 2 ) )
+   {
+      // Try to derive RGB from wavelengths if found in ENVI header.
+      ossimWavelength wl;
+      if ( wl.initialize( m_enviHdr ) )
+      {
+         result = wl.getRgbBands( bandList );
+      }
+   }
+   
+   if ( bandList.size() != 3 )
+   {
+      result = false;
+   }
+   
+   return result;
+}
 
 void ossimEnviTileSource::setDefaultBandList()
 {
    if ( isBandSelector() )
    {
-      // Look in ENVI header for "default bands":
-      std::vector<ossim_uint32> bands;
-      m_enviHdr.getDefaultBands( bands );
-
-      if ( !bands.size() && ( getNumberOfInputBands() > 2 ) )
+      std::vector<ossim_uint32> bandList;
+      if ( getRgbBandList( bandList ) )
       {
-         // Try to derive RGB from wavelengths if found in ENVI header.
-         ossimWavelength wl;
-         if ( wl.initialize( m_enviHdr ) )
-         {
-            wl.getRgbBands( bands );
+         if ( bandList.size() )
+         {            
+            ossimImageHandler::setOutputBandList(bandList, m_outputBandList);
          }
-      }
-      
-      if ( bands.size() )
-      {            
-         ossimImageHandler::setOutputBandList(bands, m_outputBandList);
       }
    }
    

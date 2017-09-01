@@ -381,7 +381,7 @@ public:
     * of children will pass to the argument container.
     * @return Returns TRUE if successful.
     */
-   virtual bool fillContainer(ossimConnectableContainer& container);
+   //virtual bool fillContainer(ossimConnectableContainer& container);
 
 protected:
    void prepareForRemoval(ossimConnectableObject* connectableObject);

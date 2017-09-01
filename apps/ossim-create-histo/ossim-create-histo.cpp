@@ -69,7 +69,8 @@ void computeHistogram(const ossimString& imageOption,
                       ossim_int32 numberOfBinsOverride,
                       ossim_int32 entryNumberOverride,
                       bool fastMode,
-                      int maxResLevels=1)
+                      int maxResLevels=1
+		      )
 {
    theStdOutProgress.setFlushStreamFlag(true);
    ossimRefPtr<ossimImageHandler> handler = ossimImageHandlerRegistry::instance()->open(ossimFilename(imageOption));
@@ -180,6 +181,7 @@ int main(int argc, char *argv[])
    argumentParser.getApplicationUsage()->addCommandLineOption("-i", "<image_file> Creates a histogram from the image_file.");
    
    argumentParser.getApplicationUsage()->addCommandLineOption("-l", "<res_level> Output the specified number of res levels default is, set to 0 if you want all(not supported for import histogram -i option");
+   argumentParser.getApplicationUsage()->addCommandLineOption("-t", "<tiles for fast histogram>");
    argumentParser.getApplicationUsage()->addCommandLineOption("--create-histogram-fast", "Computes a histogram in fast mode which samples partial tiles.");
    
    argumentParser.getApplicationUsage()->addCommandLineOption("-o", "<output_file> Output the histogram to the indicated file.");

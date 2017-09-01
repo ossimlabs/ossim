@@ -1,7 +1,8 @@
 #ifndef ossimNitfImageHeaderV2_X_HEADER
-#define ossimNitfImageHeaderV2_X_HEADER
+#define ossimNitfImageHeaderV2_X_HEADER 1
 #include <ossim/base/ossimConstants.h>
 #include <ossim/support_data/ossimNitfImageHeader.h>
+#include <string>
 
 class OSSIM_DLL ossimNitfImageHeaderV2_X : public ossimNitfImageHeader
 {
@@ -71,6 +72,7 @@ public:
    ossim_uint32 getBlocksPerCol()const;
    ossim_uint32 getNumberOfPixelsPerBlockRow()const;
    ossim_uint32 getNumberOfPixelsPerBlockCol()const;
+   virtual bool isValid()const;
 
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;
@@ -382,7 +384,7 @@ protected:
    * FIELD ICOMnn:
    * Dynamic buffer for the comments.  Each comment is 80 bytes
    */
-   char *theImageComments;
+   std::vector<ossimString> theImageComments;
 
    /**
     * FIELD: IGEOLO

@@ -17,6 +17,7 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimFilename.h>
 #include <vector>
+#include <map>
 #include <fstream>
 
 // Forward class declarations:
@@ -87,9 +88,6 @@ private:
                       const std::string& testCommand,
                       ossimKeywordlist& kwl);
 
-   // Turns everything off.
-   void disableAllKwl(ossimKeywordlist& kwl);
-
    //! Default preprocessing step makes expected and output results directories. Returns 
    //! @return TRUE if successful.
    bool makeDefaultResultsDir();
@@ -138,8 +136,8 @@ private:
    std::vector<std::string> m_cleanTestList;
    std::vector<std::string> m_preprocessTestList;
    std::vector<std::string> m_runTestList;
+   std::map<ossim_uint32, std::string> m_statusLabels;
 
-   bool          m_allIsDisabled;
    bool          m_templateModeActive;
    ossimFilename m_configFileName;
    ossimFilename m_outDir;

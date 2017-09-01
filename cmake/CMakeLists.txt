@@ -1,5 +1,8 @@
 PROJECT(ossimlabs)
 
+# Allows developer to customize compiler with their own flags (e.g., "-std=c++11")
+SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{OSSIM_CXX_FLAGS}" )
+
 IF ("${OSSIM_DEV_HOME}"  STREQUAL "")
   IF ("$ENV{OSSIM_DEV_HOME}"  STREQUAL "")
     SET(OSSIM_DEV_HOME "${CMAKE_CURRENT_SOURCE_DIR}/../.." CACHE STRING "Cache the OSSIM dev home" FORCE)
@@ -39,7 +42,7 @@ ENDIF(NOT APPLE)
 
 
 if(NOT OSSIM_DEV_HOME)
-   MESSAGE(FATAL_ERROR "Please pass in or define the OSSIM_DEV_HOME root path where all modules are located. This includes ossim, ossim-planet, ossim-wms, ams, � etc.")
+   MESSAGE(FATAL_ERROR "Please pass in or define the OSSIM_DEV_HOME root path where all modules are located. This includes ossim, ossim-planet, ... etc.")
 ENDIF(NOT OSSIM_DEV_HOME)
 
 #IF(NOT APPLE)
@@ -84,14 +87,6 @@ ENDIF(NOT OSSIM_INCLUDE_DIR)
 #   SET(OSSIMQT_LIBRARY "ossimQt" CACHE STRING "Caching" FORCE)
 #ENDIF(NOT OSSIMQT_LIBRARY)
 
-#IF(NOT CSMAPI_LIBRARY)
-#   SET(CSMAPI_LIBRARY "csmApi" CACHE STRING "Caching" FORCE)
-#ENDIF()
-
-#IF(NOT CSMAPI_INCLUDE_DIR)
-#   SET(CSMAPI_INCLUDE_DIR "${OSSIM_DEV_HOME}/csmApi/include" CACHE STRING "Caching" FORCE)
-#ENDIF(NOT CSMAPI_INCLUDE_DIR)
-
 ############################### Add subdirectories to build based on BUILD variables and presence of repo ###########################
 add_subdirectory(${OSSIM_HOME} ${CMAKE_CURRENT_BINARY_DIR}/ossim) 
 
@@ -117,6 +112,10 @@ IF(BUILD_OSSIM_VIDEO AND EXISTS ${OSSIM_DEV_HOME}/ossim-video)
   add_subdirectory(${OSSIM_DEV_HOME}/ossim-video ${CMAKE_CURRENT_BINARY_DIR}/ossim-video)
 ENDIF()
 
+IF(BUILD_OSSIM_ISA AND EXISTS ${OSSIM_DEV_HOME}/ossim-isa)
+  add_subdirectory(${OSSIM_DEV_HOME}/ossim-isa ${CMAKE_CURRENT_BINARY_DIR}/ossim-isa)
+ENDIF()
+
 IF(BUILD_OMS AND EXISTS ${OSSIM_DEV_HOME}/ossim-oms)
   IF(NOT OMS_LIBRARY)
      SET(OMS_LIBRARY "ossim-oms" CACHE STRING "Caching" FORCE)
@@ -140,8 +139,24 @@ IF(BUILD_OSSIM_PLANET AND EXISTS ${OSSIM_DEV_HOME}/ossim-planet)
   add_subdirectory(${OSSIM_DEV_HOME}/ossim-planet ${CMAKE_CURRENT_BINARY_DIR}/ossim-planet)
 ENDIF()
 
+IF(BUILD_OSSIM_PLANET_GUI AND EXISTS ${OSSIM_DEV_HOME}/ossim-planet-gui)
+  IF(NOT OSSIMPLANETGUI_LIBRARY)
+     SET(OSSIMPLANETGUI_LIBRARY "ossim-planet-gui" CACHE STRING "Caching" FORCE)
+  ENDIF(NOT OSSIMPLANETGUI_LIBRARY)
+  IF(NOT OSSIMPLANETGUI_INCLUDE_DIR)
+     SET(OSSIMPLANETGUI_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossim-planet-gui/include" CACHE STRING "Caching" FORCE)
+  ENDIF(NOT OSSIMPLANETGUI_INCLUDE_DIR)
+
+  add_subdirectory(${OSSIM_DEV_HOME}/ossim-planet-gui ${CMAKE_CURRENT_BINARY_DIR}/ossim-planet-gui)
+ENDIF()
+
+
 IF(BUILD_OSSIM_GUI AND EXISTS ${OSSIM_DEV_HOME}/ossim-gui)
      add_subdirectory(${OSSIM_DEV_HOME}/ossim-gui ${CMAKE_CURRENT_BINARY_DIR}/ossim-gui)
+ENDIF()
+
+IF(BUILD_OSSIM_QT4 AND EXISTS ${OSSIM_DEV_HOME}/ossim-qt4)
+     add_subdirectory(${OSSIM_DEV_HOME}/ossim-qt4 ${CMAKE_CURRENT_BINARY_DIR}/ossim-qt4)
 ENDIF()
 
 IF(EXISTS ${OSSIM_DEV_HOME}/ossim-plugins)
@@ -158,6 +173,11 @@ ENDIF()
 IF(BUILD_CSMAPI AND EXISTS ${OSSIM_DEV_HOME}/csmApi)
     add_subdirectory(${OSSIM_DEV_HOME}/csmApi ${CMAKE_CURRENT_BINARY_DIR}/csmApi)
 ENDIF()
+
+IF(BUILD_DSMG AND EXISTS ${OSSIM_DEV_HOME}/ossim-dsmg)
+  add_subdirectory(${OSSIM_DEV_HOME}/ossim-dsmg ${CMAKE_CURRENT_BINARY_DIR}/ossim-dsmg)
+ENDIF()
+
 
 ############################## Doxygen installation for current ossim core module ###########################################
 FIND_PACKAGE(Doxygen)
@@ -230,9 +250,14 @@ ENDIF()
 # INSTALL(FILES ${OSSIM_DEV_HOME}/ossim_package_support/fonts/times.ttf DESTINATION "share/ossim/fonts" COMPONENT ossim)
 
 FILE(GLOB ossim_cmake_modules ${OSSIM_DEV_HOME}/ossim/cmake/CMakeModules/*.cmake* )
-INSTALL(FILES ${ossim_cmake_modules} DESTINATION share/ossim/${OSSIM_VERSION}/CMakeModules COMPONENT ossim)
+INSTALL(FILES ${ossim_cmake_modules} DESTINATION share/ossim/CMakeModules COMPONENT ossim)
 
-############################## Setup the packages ###############################################################
+FILE(GLOB projection_files "${OSSIM_HOME}/share/ossim/projection/*.csv"  "${OSSIM_HOME}/share/ossim/projection/*.txt")
+INSTALL(FILES ${projection_files} DESTINATION share/ossim/projection COMPONENT ossim)
+
+INSTALL(FILES ${OSSIM_HOME}/share/ossim/templates/ossim_preferences_template DESTINATION "share/ossim" COMPONENT ossim RENAME ossim-preferences-template)
+
+############################## Setup the packages ##############################
 # present the packaging option only if we have the cpack command defined (effectively >= 2.6.0)
 IF(CMAKE_CPACK_COMMAND)
     OPTION(BUILD_OSSIM_PACKAGES "Set to ON to generate CPack configuration files and packaging targets" OFF)
@@ -240,6 +265,17 @@ IF(CMAKE_CPACK_COMMAND)
       INCLUDE(OssimCPack)
     ENDIF()
 ENDIF()
+
+set(PKGCONFIG_FILES ossim)
+
+foreach(PKGCONFIG_FILE ${PKGCONFIG_FILES})
+  configure_file(${OSSIM_DEV_HOME}/ossim/cmake/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
+    ${${PROJECT_NAME}_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc
+    @ONLY
+    )
+  INSTALL(FILES ${${PROJECT_NAME}_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc DESTINATION lib${LIBSUFFIX}/pkgconfig COMPONENT ossim)
+ENDFOREACH(PKGCONFIG_FILE)
+
 
 #####################################################################################################
 # We may want to add this as a build step instead so it can capture different output directories
@@ -310,7 +346,7 @@ MESSAGE( STATUS "BUILD_OSSIM                     = ${BUILD_OSSIM}" )
 MESSAGE( STATUS "BUILD_OSSIM_FREETYPE_SUPPORT    = ${BUILD_OSSIM_FREETYPE_SUPPORT}" )
 MESSAGE( STATUS "BUILD_OSSIM_GUI                 = ${BUILD_OSSIM_GUI}" )
 MESSAGE( STATUS "BUILD_OSSIMJNI                  = ${BUILD_OSSIMJNI}" )
-MESSAGE( STATUS "BUILD_OSSIMQT4                  = ${BUILD_OSSIMQT4}" )
+MESSAGE( STATUS "BUILD_OSSIM_QT4                 = ${BUILD_OSSIM_QT4}" )
 MESSAGE( STATUS "BUILD_OSSIM_MPI_SUPPORT         = ${BUILD_OSSIM_MPI_SUPPORT}" )
 MESSAGE( STATUS "BUILD_OSSIM_PLANET              = ${BUILD_OSSIM_PLANET}" )
 MESSAGE( STATUS "BUILD_OSSIMPLANETQT             = ${BUILD_OSSIMPLANETQT}" )
@@ -318,4 +354,6 @@ MESSAGE( STATUS "BUILD_OSSIM_VIDEO               = ${BUILD_OSSIM_VIDEO}" )
 MESSAGE( STATUS "BUILD_OSSIM_WMS                 = ${BUILD_OSSIM_WMS}" )
 MESSAGE( STATUS "BUILD_LIBRARY_DIR               = ${BUILD_LIBRARY_DIR}" )
 MESSAGE( STATUS "BUILD_RUNTIME_DIR               = ${BUILD_RUNTIME_DIR}" )
+MESSAGE( STATUS "BUILD_DSMG                      = ${BUILD_DSMG}" )
+MESSAGE( STATUS "BUILD_OSSIM_ISA                 = ${BUILD_OSSIM_ISA}" )
 MESSAGE( STATUS "Use OSSIM_BUILD_ADDITIONAL_DIRECTORIES to add other cmake builds." )

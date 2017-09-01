@@ -23,7 +23,8 @@ RTTI_DEF1(ossimMercatorProjection, "ossimMercatorProjection", ossimMapProjection
 
 #define PI         3.14159265358979323e0  /* PI                            */
 #define PI_OVER_2  ( PI / 2.0e0)  
-#define MAX_LAT    ( (PI * 89.5) / 180.0 )  /* 89.5 degrees in radians         */
+//#define MAX_LAT    ( (PI * 89.5) / 180.0 )  /* 89.5 degrees in radians         */
+#define MAX_LAT    ( (PI * 89.99) / 180.0 )  /* 89.99 degrees in radians         */
 
 #define MERC_NO_ERROR           0x0000
 #define MERC_LAT_ERROR          0x0001
@@ -155,7 +156,7 @@ ossimDpt ossimMercatorProjection::forward(const ossimGpt &latLon)const
    double easting  = 0.0;
    double northing = 0.0;
    ossimGpt gpt = latLon;
-   
+   ossimDpt result;
    if (theDatum)
    {
       if (theDatum->code() != latLon.datum()->code())
@@ -172,17 +173,26 @@ ossimDpt ossimMercatorProjection::forward(const ossimGpt &latLon)const
       northing = log( tan((90 + lat) * M_PI / 360.0 )) / (M_PI / 180.0);
       
       northing = northing * shift / 180.0;
+      result = ossimDpt(easting, northing);
    }
    else 
    {
-      Convert_Geodetic_To_Mercator(gpt.latr(),
+     long errorCode = Convert_Geodetic_To_Mercator(gpt.latr(),
                                    gpt.lonr(),
                                    &easting,
                                    &northing);
+     if(errorCode!=MERC_NO_ERROR)
+     {
+      result.makeNan();
+     }
+     else
+     {
+      result = ossimDpt(easting, northing);
+     }
    }      
 
    
-   return ossimDpt(easting, northing);
+   return result;
 }
 
 
@@ -386,10 +396,10 @@ long ossimMercatorProjection::Convert_Geodetic_To_Mercator (double Latitude,
   double pow_temp;
 
 
-//   if ((Latitude < -MAX_LAT) || (Latitude > MAX_LAT))
-//   { /* Latitude out of range */
-//     Error_Code |= MERC_LAT_ERROR;
-//   }
+   if ((Latitude < -MAX_LAT) || (Latitude > MAX_LAT))
+   { /* Latitude out of range */
+     Error_Code |= MERC_LAT_ERROR;
+   }
 //   if ((Longitude < -PI) || (Longitude > (2*PI)))
 //   { /* Longitude out of range */
 //     Error_Code |= MERC_LON_ERROR;
@@ -412,6 +422,7 @@ long ossimMercatorProjection::Convert_Geodetic_To_Mercator (double Latitude,
     *Easting = Merc_Scale_Factor * Merc_a * Delta_Long
                + Merc_False_Easting;
   }
+
   return (Error_Code);
 } /* END OF Convert_Geodetic_To_Mercator */
 
@@ -483,9 +494,9 @@ bool ossimMercatorProjection::operator==(const ossimProjection& proj) const
    if (!ossimMapProjection::operator==(proj))
       return false;
 
-   ossimMercatorProjection* p = PTR_CAST(ossimMercatorProjection, &proj);
+   const ossimMercatorProjection* p = dynamic_cast<const ossimMercatorProjection*>(&proj);
    if (!p) return false;
-
+   
    if (!ossim::almostEqual(Merc_Scale_Factor,p->Merc_Scale_Factor)) return false;
 
    return true;

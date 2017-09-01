@@ -13,7 +13,7 @@
 // LIMITATIONS: Does not support parameter adjustment (YET)
 //
 //*****************************************************************************
-//  $Id: ossimRpcModel.cpp 23548 2015-09-28 21:01:36Z dburken $
+//  $Id: ossimRpcModel.cpp 23670 2015-12-18 22:33:12Z dburken $
 
 #include <ossim/projection/ossimRpcModel.h>
 #include <ossim/elevation/ossimElevManager.h>
@@ -42,7 +42,7 @@ RTTI_DEF1(ossimRpcModel, "ossimRpcModel", ossimSensorModel);
 static ossimTrace traceExec  ("ossimRpcModel:exec");
 static ossimTrace traceDebug ("ossimRpcModel:debug");
 
-static const int    MODEL_VERSION_NUMBER  = 1;
+//static const int    MODEL_VERSION_NUMBER  = 1;
 static const int    NUM_COEFFS        = 20;
 static const char*  MODEL_TYPE        = "ossimRpcModel";
 static const char*  POLY_TYPE_KW      = "polynomial_format";
@@ -441,18 +441,24 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
                                             const double&   ellHeight,
                                             ossimGpt&       gpt) const
 {
-   // if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimRpcModel::lineSampleHeightToWorld: entering..." << std::endl;
+   // if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG)
+   // << "DEBUG ossimRpcModel::lineSampleHeightToWorld: entering..." << std::endl;
+
+   //---
+   // Removed below "gpt.makeNan()" if outside of image.  This was put in
+   // troubleshooting dateline wrap issues.  Returned nans are also
+   // causing issues so commenting out.  drb - 17 Dec. 2015
+   //---
 
    //***
    // Extrapolate if point is outside image:
    //***
-    if (!insideImage(image_point))
-    {
-//       gpt = extrapolate(image_point, ellHeight);
-//       if (traceExec())  CLOG << "returning..." << endl;
-       gpt.makeNan();
-       return;
-    }
+   // if (!insideImage(image_point))
+   // {
+   //    gpt = extrapolate(image_point, ellHeight);
+   //    if (traceExec())  CLOG << "returning..." << endl;
+   //    return;
+   // }
 
    //***
    // Constants for convergence tests:

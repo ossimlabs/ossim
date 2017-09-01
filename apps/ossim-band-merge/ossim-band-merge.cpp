@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
    argumentParser.getApplicationUsage()->setApplicationName(argumentParser.getApplicationName());
    argumentParser.getApplicationUsage()->setDescription(argumentParser.getApplicationName()+" merges band separate images to one image");
    argumentParser.getApplicationUsage()->addCommandLineOption("-h or --help","Display this information");
-   argumentParser.getApplicationUsage()->addCommandLineOption("-o or --create-overiew", "Creates and overview for the output image");
+   argumentParser.getApplicationUsage()->addCommandLineOption("-o or --create-overview", "Creates and overview for the output image");
    argumentParser.getApplicationUsage()->addCommandLineOption("-w or --tile-width", "Defines the tile width for the handlers that support tiled output");
    
    if (traceDebug()) CLOG << " Entered..." << std::endl;

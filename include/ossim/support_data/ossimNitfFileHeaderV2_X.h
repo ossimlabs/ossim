@@ -1,14 +1,15 @@
 //----------------------------------------------------------------------------
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 // 
 //----------------------------------------------------------------------------
-// $Id: ossimNitfFileHeaderV2_X.h 20123 2011-10-11 17:55:44Z dburken $
+// $Id$
 
 #ifndef ossimNitfFileHeaderV2_X_HEADER
-#define ossimNitfFileHeaderV2_X_HEADER
+#define ossimNitfFileHeaderV2_X_HEADER 1
+
 #include <ossim/base/ossimConstants.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
 
@@ -87,6 +88,11 @@ public:
    ossimString getCopyNumber()const;
    ossimString getNumberOfCopies()const;
    ossimString getEncryption()const;
+
+   /**
+   * isValid will test if the fields are valid and will return true or false.
+   */
+   virtual bool isValid()const;
 
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;

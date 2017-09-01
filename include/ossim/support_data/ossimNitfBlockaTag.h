@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -13,9 +13,11 @@
 // http://164.214.2.51/ntb/baseline/docs/stdi0002/final.pdf
 //
 //----------------------------------------------------------------------------
-// $Id: ossimNitfBlockaTag.h 22013 2012-12-19 17:37:20Z dburken $
+// $Id$
+
 #ifndef ossimNitfBlockaTag_HEADER
-#define ossimNitfBlockaTag_HEADER
+#define ossimNitfBlockaTag_HEADER 1
+
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 
 class ossimDpt;
@@ -48,14 +50,14 @@ public:
     *
     * @param in Stream to parse.
     */
-   virtual void parseStream(std::istream& in);
+   virtual void parseStream(ossim::istream& in);
    
    /**
     * Write method.
     *
     * @param out Stream to write to.
     */
-   virtual void writeStream(std::ostream& out);
+   virtual void writeStream(ossim::ostream& out);
    
    /**
     * Clears all string fields within the record to some default nothingness.

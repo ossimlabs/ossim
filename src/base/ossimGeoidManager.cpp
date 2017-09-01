@@ -59,6 +59,15 @@ ossimGeoidManager::~ossimGeoidManager()
 //       delete *g;
 //       ++g;
 //    }
+   clear();
+}
+
+//*****************************************************************************
+//  METHOD: ossimGeoidManager::clear()
+//
+//*****************************************************************************
+void ossimGeoidManager::clear()
+{
    theGeoidList.clear();
 }
 

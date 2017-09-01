@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -10,15 +10,15 @@
 // Description: Container class for a tiff world file data.
 //
 //********************************************************************
-// $Id: ossimTiffWorld.h 18693 2011-01-17 18:49:15Z dburken $
-#ifndef ossimTiffWorld_HEADER
-#define ossimTiffWorld_HEADER
+// $Id$
 
-#include <iostream>
+#ifndef ossimTiffWorld_HEADER
+#define ossimTiffWorld_HEADER 1
+
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDpt.h>
-using namespace std;
+#include <iosfwd>
 
 //***************************************************************************
 // CLASS:  ossimTiffWorld

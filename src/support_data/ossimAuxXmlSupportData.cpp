@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -18,7 +18,9 @@
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimGpt.h>
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimXmlAttribute.h>
@@ -27,8 +29,7 @@
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/projection/ossimProjection.h>
-#include <fstream>
-#include <ostream>
+#include <memory>
 
 // Static trace for debugging.
 static const ossimTrace traceDebug( ossimString("ossimAuxXmlSupportData:debug") );
@@ -45,13 +46,14 @@ ossimRefPtr<ossimProjection> ossimAuxXmlSupportData::getProjection(const ossimFi
 {
    ossimRefPtr<ossimProjection> result = 0;
 
-   std::ifstream is(file.c_str(), std::ios_base::binary|std::ios_base::in);
+   std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+      createIstream(file, std::ios_base::in | std::ios_base::binary);
 
-   if ( is.good() )
+   if ( is && is->good() )
    {
       // Read the xml document:
       ossimXmlDocument xdoc;
-      if ( xdoc.read( is ) )
+      if ( xdoc.read( *is ) )
       {
          // Get the WKT string
          ossimString wkt;

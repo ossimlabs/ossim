@@ -35,8 +35,7 @@ ossimObject* ossimContainerProperty::dup()const
 
 const ossimProperty& ossimContainerProperty::assign(const ossimProperty& rhs)
 {
-   ossimContainerProperty* rhsContainer = PTR_CAST(ossimContainerProperty,
-                                                   &rhs);
+   const ossimContainerProperty* rhsContainer = dynamic_cast<const ossimContainerProperty*>(&rhs);
    ossimProperty::assign(rhs);
 
    if(rhsContainer)
@@ -117,9 +116,9 @@ ossimRefPtr<ossimProperty> ossimContainerProperty::getProperty(const ossimString
          {
             return theChildPropertyList[idx];
          }
-         if(PTR_CAST(ossimContainerProperty, theChildPropertyList[idx].get())&&recurse)
+         if(dynamic_cast<ossimContainerProperty*>(theChildPropertyList[idx].get())&&recurse)
          {
-            containers.push_back(PTR_CAST(ossimContainerProperty, theChildPropertyList[idx].get()));
+            containers.push_back(dynamic_cast<ossimContainerProperty*>(theChildPropertyList[idx].get()));
          }
       }
    }

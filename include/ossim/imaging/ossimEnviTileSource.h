@@ -73,6 +73,15 @@ public:
     */
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
 
+   /**
+    * @brief Get the zero based rgb output band list from envi header.
+    * 
+    * @param bandList Initialized by this on success.
+    * 
+    * @return true on success; false, on error.
+    */
+   virtual bool getRgbBandList(std::vector<ossim_uint32>& bandList) const;
+
 protected:
    
    /** @brief Hidden from use destructor.  This is a ref ptr. */

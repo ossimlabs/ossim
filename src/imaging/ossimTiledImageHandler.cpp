@@ -137,30 +137,82 @@ ossimRefPtr<ossimImageData> ossimTiledImageHandler::getTile(const ossimIrect& ti
    // Loop over all tile-files to find which intersect the requested image rect. This necessarily
    // needs to be done at full res coordinates, so need to adjust by res level requested:
    ossimDpt decimation_factor;
-   const ossim_uint32 BANDS = m_tile->getNumberOfBands();
+   // const ossim_uint32 BANDS = m_tile->getNumberOfBands();
    // const ossim_uint32 PPB   = m_tile->getSizePerBand(); // pixels per band
    // bool none_found = true;
 
-   m_tile->setImageRectangle(tile_rect);
-   ossim_uint32 wd, hd, ws, hs;
-   m_tile->getWidthHeight(wd, hd);
-
+   
+   // ossim_uint32 wd, hd, ws, hs;
+   // m_tile->getWidthHeight(wd, hd);
+   
    // Always start with blank tile.
    m_tile->makeBlank();
-   
+
+   //---
+   // Add in the sub image offset if any for the rest of this method to work
+   // correctly.
+   //---
+   ossimIrect adjusted_tile_rect = tile_rect + m_fullImgRect.ul();
+
    // See if any point of the requested tile is in the image.
-   if ( tile_rect.intersects( m_fullImgRect ) )
+   if ( adjusted_tile_rect.intersects( m_fullImgRect ) )
    {
+      // This need to set for loadTile to work off the full image rect.
+      m_tile->setImageRectangle(adjusted_tile_rect);
+      
       vector<ossimTileFile>::iterator tf_iter = m_tileFiles.begin();
       ossimRefPtr<ossimImageData> source_tile = 0;
       while (tf_iter != m_tileFiles.end())
       {
          if (( (*tf_iter).subImageRects.size() > resLevel) &&
-             tile_rect.intersects((*tf_iter).subImageRects[resLevel]))
+             adjusted_tile_rect.intersects((*tf_iter).subImageRects[resLevel]))
          {
-            // Current image handler lies within requested rect, need to adjust this rect to be 
-            // relative to this subimage offset before fetching the tile:
+            //---
+            // Current image handler lies within requested rect, need to adjust
+            // this rect to be relative to this subimage offset before fetching
+            // the tile:
+            //---
+            ossimIrect full_image_clip_rect =
+               adjusted_tile_rect.clipToRect( (*tf_iter).subImageRects[resLevel]);
+
+            // Subtract the sub image offset to make zero base image rect.
+            ossimIrect relative_clip_rect( full_image_clip_rect -
+                                           (*tf_iter).subImageRects[resLevel].ul());
+            
+            source_tile = (*tf_iter).imageHandler->getTile(relative_clip_rect, resLevel);
+            if ( source_tile.valid() )
+            {
+               if ( (source_tile->getDataObjectStatus() != OSSIM_NULL) &&
+                    (source_tile->getDataObjectStatus() != OSSIM_EMPTY) )
+               {
+                  // Give the loadTile the clip rect relative to the full image.
+                  m_tile->loadTile( source_tile->getBuf(),
+                                    full_image_clip_rect,
+                                    OSSIM_BSQ);
+                  m_tile->validate();
+                  if ( m_tile->getDataObjectStatus() == OSSIM_FULL )
+                  {
+                     break;
+                  }
+               }
+            }
+         }
+         ++tf_iter;
+      }
+      
+   } // Matches: if ( adjusted_tile_rect.intersects( m_fullImgRect ) )
+
+   // Set back to zero based rect.
+   m_tile->setImageRectangle(tile_rect);
+   
+   return m_tile;
+}
+
+// Below code was core dumping on tiled DG data. drb - 20160822
+#if 0 
+   
             ossimIrect relative_rect (tile_rect - (*tf_iter).subImageRects[resLevel].ul());
+            std::cout << "reletive_rect: " << relative_rect << std::endl;
             source_tile = (*tf_iter).imageHandler->getTile(relative_rect, resLevel);
             
             // Quick check to see if a full tile was returned, in which case we can just return that
@@ -173,6 +225,8 @@ ossimRefPtr<ossimImageData> ossimTiledImageHandler::getTile(const ossimIrect& ti
 
             // Set the tile's rect back to full image space before saving to the list:
             source_tile->getWidthHeight(ws, hs);
+            std::cout << "ws: " << ws << " hs: " << hs << " wd: " << wd << " hd: " << hd
+                      << std::endl;
             for (ossim_uint32 band = 0; band < BANDS; ++band)
             {
                const ossim_uint16 null_pixel = (ossim_uint16) m_tile->getNullPix(band);
@@ -180,12 +234,13 @@ ossimRefPtr<ossimImageData> ossimTiledImageHandler::getTile(const ossimIrect& ti
                ossim_uint16* d = (ossim_uint16*) m_tile->getBuf(band);
                ossim_uint32 is = 0; 
                ossim_uint32 id = 0; 
-               for (ossim_uint32 y=0; (y<hd)&&(y<hs); y++)
+               for (ossim_uint32 y=0; (y<hd)&&(y<hs); ++y)
                {
-                  for (ossim_uint32 x=0; x<wd; x++)
+                  for (ossim_uint32 x=0; x<wd; ++x)
                   {
                      if (x < ws)
                      {
+                        // cout << "is: " << is << endl;
                         if (s[is] != null_pixel)
                            d[id] = s[is];
                         ++is;
@@ -194,6 +249,8 @@ ossimRefPtr<ossimImageData> ossimTiledImageHandler::getTile(const ossimIrect& ti
                   }
                }
             }
+
+
          }
          ++tf_iter;
       }
@@ -204,6 +261,7 @@ ossimRefPtr<ossimImageData> ossimTiledImageHandler::getTile(const ossimIrect& ti
 
    return m_tile;
 }
+#endif
 
 //*************************************************************************************************
 //! @param resLevel Reduced resolution level to return lines of.
@@ -329,6 +387,21 @@ ossimScalarType ossimTiledImageHandler::getOutputScalarType() const
 //*************************************************************************************************
 ossimIrect ossimTiledImageHandler::getImageRectangle(ossim_uint32 resLevel) const
 {
+   //---
+   // Note: Rectangle should be zero based.  Sub image offset handled in
+   // getTile and getImageGeometry. drb
+   //---
+   ossimIrect rect = m_fullImgRect - m_fullImgRect.ul();
+   if ( resLevel > 0 )
+   {
+      ossimDpt decimation;
+      getDecimationFactor(resLevel, decimation);
+      
+      rect = rect*decimation;
+   }
+   return rect;
+
+#if 0
    if (resLevel == 0)
       return m_fullImgRect;
 
@@ -336,6 +409,7 @@ ossimIrect ossimTiledImageHandler::getImageRectangle(ossim_uint32 resLevel) cons
    getDecimationFactor(resLevel, decimation);
 
    return m_fullImgRect*decimation;
+#endif
 }
 
 

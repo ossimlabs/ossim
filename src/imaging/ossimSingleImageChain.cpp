@@ -1,14 +1,12 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
 // Description: Utility class definition for a single image chain.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #include <ossim/imaging/ossimSingleImageChain.h>
@@ -18,6 +16,7 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+// #include <ossim/imaging/ossimTiledImagePatch.h>
 #include <ossim/support_data/ossimSrcRecord.h>
 
 ossimSingleImageChain::ossimSingleImageChain()
@@ -217,10 +216,47 @@ void ossimSingleImageChain::createRenderedChain()
    if ( m_addResamplerCacheFlag )
    {
       m_resamplerCache = addCache();
+
+      // If input image is tiled set the cache input tile size to that.
+      if ( m_handler.valid() )
+      {
+         if ( m_handler->isImageTiled() )
+         {
+            ossimIpt inputImageTileSize;
+            inputImageTileSize.x = (ossim_int32)m_handler->getImageTileWidth();
+            inputImageTileSize.y = (ossim_int32)m_handler->getImageTileHeight();
+            if ( m_resamplerCache.valid() )
+            {
+               m_resamplerCache->setTileSize( inputImageTileSize );
+            }
+         }
+      }
    }
+
+#if 0 /* test code - drb */
+   ossimRefPtr<ossimTiledImagePatch> tp = new ossimTiledImagePatch();
+   if ( m_handler.valid() )
+   {
+      if ( m_handler->isImageTiled() )
+      {
+         ossimIpt inputImageTileSize;
+         inputImageTileSize.x = (ossim_int32)m_handler->getImageTileWidth();
+         inputImageTileSize.y = (ossim_int32)m_handler->getImageTileHeight();
+         tp->setInputTileSize( inputImageTileSize );
+      }
+   }
+   addFirst( tp.get() );
+#endif   
    
    // resampler
    addResampler();
+
+#if 0 /* test code - drb */
+   ossimRefPtr<ossimTiledImagePatch> tp2 = new ossimTiledImagePatch();
+   ossimIpt inputImageTileSize(64, 64);
+   tp2->setInputTileSize( inputImageTileSize );
+   addFirst( tp2.get() );
+#endif   
 
    //---
    // Do this here so that if a band selector is added to the end of the
@@ -363,7 +399,8 @@ bool ossimSingleImageChain::addImageHandler(const ossimFilename& file, bool open
 
    close();
    
-   m_handler = ossimImageHandlerRegistry::instance()->open(file, true, openOverview);
+   // m_handler = ossimImageHandlerRegistry::instance()->open(file, true, openOverview);
+   m_handler = ossimImageHandlerRegistry::instance()->openConnection(file, openOverview);
    
    if ( m_handler.valid() )
    {
@@ -584,6 +621,10 @@ void ossimSingleImageChain::addResampler()
       // Add to the end of the chain.
       addFirst(m_resampler.get());
    }
+}
+void ossimSingleImageChain::addRenderer()
+{
+   addResampler();
 }
 
 void ossimSingleImageChain::addScalarRemapper()
@@ -850,6 +891,20 @@ bool ossimSingleImageChain::getSharpenFlag() const
 
 void ossimSingleImageChain::setToThreeBands()
 {
+   if (!m_bandSelector)
+   {
+      addBandSelector();
+   }
+
+   m_bandSelector->setEnableFlag(true);
+   m_bandSelector->setThreeBandRgb();
+
+   if ( m_histogramRemapper.valid() )
+   {
+      m_histogramRemapper->initialize();
+   } 
+
+#if 0
    if ( m_handler.valid() )
    {
       // Only do if not three bands already so the band list order is not wiped out.
@@ -878,6 +933,7 @@ void ossimSingleImageChain::setToThreeBands()
          setBandSelection(bandList);
       }
    }
+#endif
 }
 
 void ossimSingleImageChain::setToThreeBandsReverse()
@@ -916,6 +972,21 @@ void ossimSingleImageChain::setBandSelection(
       m_histogramRemapper->initialize();
    }
 }
+
+void ossimSingleImageChain::setDefaultBandSelection()
+{
+   if(!m_bandSelector)
+   {
+      addBandSelector();
+   }
+   m_bandSelector->setEnableFlag(true);
+
+   if(m_bandSelector.valid())
+   {
+      m_bandSelector->setThreeBandRgb();
+   }
+}
+
 ossimScalarType ossimSingleImageChain::getImageHandlerScalarType() const
 {
    ossimScalarType result = OSSIM_SCALAR_UNKNOWN;

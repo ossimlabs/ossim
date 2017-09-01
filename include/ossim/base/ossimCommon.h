@@ -50,9 +50,9 @@ namespace ossim
 /*     inline bool almostEqual(T x, T y, T tolerence = std::numeric_limits<T>::epsilon()) */
 /*         // are x and y within tolerance distance of each other? */
 /*         { return std::abs(x - y) <= tolerence; } */
-    inline bool almostEqual(T x, T y, T tolerence = FLT_EPSILON)
+    inline bool almostEqual(T x, T y, T tolerance = FLT_EPSILON)
         // are x and y within tolerance distance of each other?
-        { return std::fabs(x - y) <= tolerence; }
+        { return std::fabs(x - y) <= tolerance; }
 
     template <class T>
     inline bool inInterval(T x, T a, T b)
@@ -512,6 +512,15 @@ namespace ossim
    template <>
    OSSIM_DLL void toSimpleStringList(ossimString& result,
                                      const std::vector<ossim_uint8>& valuesList);
+   template <>
+   OSSIM_DLL void toSimpleStringList(ossimString& result,
+                                     const std::vector<ossim_float64>& valuesList);
+   template <>
+   OSSIM_DLL void toSimpleStringList(ossimString& result,
+                                     const std::vector<ossim_float32>& valuesList);
+   template <>
+   OSSIM_DLL void toSimpleStringList(ossimString& result,
+                                     const std::vector<ossimString>& valuesList);
    
    /**
     * Generic function to extract a list of values into a vector of string where
@@ -600,6 +609,13 @@ namespace ossim
     */
    OSSIM_DLL bool toSimpleVector(std::vector<ossim_int8>& result,
                                  const ossimString& stringOfPoints);
+
+    /**
+    *  Takes input format of the form:
+    *  (value1,value2,...,valueN)
+    */
+  OSSIM_DLL bool toSimpleVector(std::vector<ossimString>& result,
+                                 const ossimString& stringOfStrings);
    
         // lex str into tokens starting at position start using whitespace  
 	//    chars as delimiters and quotes[0] and quotes[1] as the opening
@@ -640,6 +656,19 @@ namespace ossim
    OSSIM_DLL void getFormattedTime( const std::string& format,
                                     bool gmtFlag,
                                     std::string& result );
+
+   /**
+    * @brief Gets the current time.
+    *
+    * Wrapper around time.h time_t time(time_t *t) with a mutex lock.
+    *
+    * Note that time_t is a long int.  Returning ossim_int64 to avoid include
+    * of time.h.
+    *
+    * @return The time  as  the  number of seconds since the Epoch,
+    * 1970-01-01 00:00:00 +0000 (UTC).  
+    */
+   OSSIM_DLL ossim_int64 getTime();
 
    /**
     * @brief Computes the number of decimation levels to get to the overview

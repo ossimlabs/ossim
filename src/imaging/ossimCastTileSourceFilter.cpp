@@ -199,6 +199,10 @@ ossimRefPtr<ossimImageData> ossimCastTileSourceFilter::applyCast(
       }
       case OSSIM_UINT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          ossim_uint16** bands =
             new ossim_uint16*[inputTile->getNumberOfBands()];
@@ -458,6 +462,10 @@ void ossimCastTileSourceFilter::castInputToOutput(inType **inBuffer,
       }
       case OSSIM_UINT16:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       {
          ossim_uint16** bands = new ossim_uint16*[theTile->getNumberOfBands()];
 

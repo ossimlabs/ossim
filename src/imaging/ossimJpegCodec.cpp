@@ -19,9 +19,32 @@
 #include <ossim/base/ossimNumericProperty.h>
 
 #include <ossim/imaging/ossimU8ImageData.h>
-#include <jpeglib.h>                   /** for jpeg stuff */
+#include <csetjmp>     /** for jmp_buf */
+#include <jpeglib.h>   /** for jpeg stuff */
 
 RTTI_DEF1(ossimJpegCodec, "ossimJpegCodec", ossimCodecBase);
+
+/** @brief Extended error handler struct. */
+struct ossimJpegErrorMgr
+{
+   struct jpeg_error_mgr pub;	/* "public" fields */
+   jmp_buf setjmp_buffer;	/* for return to caller */
+};
+typedef struct ossimJpegErrorMgr* ossimJpegErrorPtr;
+   
+void ossimJpegErrorExit (jpeg_common_struct* cinfo)
+{
+   /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
+   ossimJpegErrorPtr myerr = (ossimJpegErrorPtr) cinfo->err;
+   
+   /* Always display the message. */
+   /* We could postpone this until after returning, if we chose. */
+   (*cinfo->err->output_message) (cinfo);
+   
+   /* Return control to the setjmp point */
+   longjmp(myerr->setjmp_buffer, 1);
+}
+
 ossimJpegCodec::ossimJpegCodec()
 :m_quality(100)
 {

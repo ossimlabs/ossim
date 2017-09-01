@@ -75,6 +75,10 @@ ossimRefPtr<ossimImageData> ossimHistogramThreshholdFilter::getTile(
          }
          case OSSIM_USHORT16:
          case OSSIM_USHORT11:
+         case OSSIM_USHORT12:
+         case OSSIM_USHORT13:
+         case OSSIM_USHORT14:
+         case OSSIM_USHORT15:
          {
             return runThreshholdStretchAlgorithm((ossim_uint16)0,
                                                  inputTile);
@@ -202,8 +206,9 @@ ossimRefPtr<ossimImageData> ossimHistogramThreshholdFilter::runThreshholdStretch
             T minPix = static_cast<T>(tile->getMinPix(band));
             T maxPix = static_cast<T>(tile->getMaxPix(band));
             double range  = (maxPix - minPix);
-            double maxClip = (h->HighClipVal(theMaxValuePercent/100.0)/(double)h->GetRes());
-            double minClip = (h->LowClipVal(theMinValuePercent/100.0)/(double)h->GetRes());
+            double res = h->GetRes();
+            double maxClip = (h->HighClipVal(theMaxValuePercent/100.0)/res);
+            double minClip = (h->LowClipVal(theMinValuePercent/100.0)/res);
             ossim_float64 normPix;
             double delta   = fabs(maxClip - minClip);
             if(delta > 0.0)

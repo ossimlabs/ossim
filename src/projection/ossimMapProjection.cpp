@@ -1488,7 +1488,7 @@ bool ossimMapProjection::operator==(const ossimProjection& projection) const
       return false;
 
    // If both PCS codes are non-zero, that's all we need to check:
-   const ossimMapProjection* mapProj = PTR_CAST(ossimMapProjection, &projection);
+   const ossimMapProjection* mapProj = dynamic_cast<const ossimMapProjection*>(&projection);
    if (thePcsCode && mapProj->thePcsCode && (thePcsCode != 32767) && 
        (thePcsCode == mapProj->thePcsCode) )
    {

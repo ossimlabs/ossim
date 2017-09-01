@@ -7,12 +7,12 @@
 // Description: This class parses an EOSAT Fast Format rev c header.
 //
 //********************************************************************
-// $Id: ossimFfRevc.h 9967 2006-11-29 02:01:23Z gpotts $
+// $Id$
 
 #ifndef ossimFfRevc_HEADER
-#define ossimFfRevc_HEADER
-#include <iostream>
-using namespace std;
+#define ossimFfRevc_HEADER 1
+
+#include <ossim/base/ossimIosFwd.h>
 
 // Forward class declarations.
 class ossimString;
@@ -301,11 +301,11 @@ public:
    
    int errorStatus() const { return theErrorStatus; }
 
-   void print(ostream& os) const;
+   void print(std::ostream& os) const;
 
-   void write(ostream& os) const;
+   void write(std::ostream& os) const;
 
-   friend ostream& operator<<(ostream& os, const ossimFfRevc& head);
+   friend std::ostream& operator<<(std::ostream& os, const ossimFfRevc& head);
 
 
    //>
@@ -336,12 +336,11 @@ public:
       //<
 
 private:
-   void loadFromStream(istream& is);
+   void loadFromStream(ossim::istream& is);
 
-   int checkStream(istream& is);
+   int checkStream(ossim::istream& is);
 
    ErrorStatus theErrorStatus;
 };
-
    
 #endif

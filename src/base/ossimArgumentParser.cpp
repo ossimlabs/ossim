@@ -14,6 +14,8 @@
 #include <iostream>
 #include <set>
 
+using namespace std;
+
 bool ossimArgumentParser::isOption(const char* str)
 {
    return str && str[0]=='-';
@@ -140,60 +142,76 @@ bool ossimArgumentParser::ossimParameter::valid(const char* str) const
 
 bool ossimArgumentParser::ossimParameter::assign(const char* str)
 {
-   if (valid(str))
-   {
-      switch(theType)
-      {
-         case ossimParameter::OSSIM_FLOAT_PARAMETER:
-         {
-            *theValue.theFloat = (float)ossimString(str).toDouble();
-            break;
-         }
-         case ossimParameter::OSSIM_DOUBLE_PARAMETER:
-         {
-            *theValue.theDouble = ossimString(str).toDouble();
-            break;
-         }
-         case ossimParameter::OSSIM_INT_PARAMETER:
-         {
-            *theValue.theInt = ossimString(str).toInt();
-            break;
-         }
-         case ossimParameter::OSSIM_UNSIGNED_INT_PARAMETER:
-         {
-            *theValue.theUint = ossimString(str).toUInt32();
-            break;
-         }
-         case ossimParameter::OSSIM_STRING_PARAMETER:
-         {
-            *theValue.theString = str;
-            break;
-         }
-      }
-      return true;
-   }
-   else
-   {
+   if (!valid(str))
       return false;
+
+   switch(theType)
+   {
+   case ossimParameter::OSSIM_FLOAT_PARAMETER:
+      *theValue.theFloat = (float)ossimString(str).toDouble();
+      break;
+   case ossimParameter::OSSIM_DOUBLE_PARAMETER:
+      *theValue.theDouble = ossimString(str).toDouble();
+      break;
+   case ossimParameter::OSSIM_INT_PARAMETER:
+      *theValue.theInt = ossimString(str).toInt();
+      break;
+   case ossimParameter::OSSIM_UNSIGNED_INT_PARAMETER:
+      *theValue.theUint = ossimString(str).toUInt32();
+      break;
+   case ossimParameter::OSSIM_STRING_PARAMETER:
+      *theValue.theString = ossimString(str).chars();
+      break;
    }
+   return true;
 }
 
 ossimArgumentParser::ossimArgumentParser(int* argc,char **argv):
    theArgc(argc),
    theArgv(argv),
-   theUsage(ossimApplicationUsage::instance())
+   theUsage(ossimApplicationUsage::instance()),
+   theMemAllocated(false)
 {
    if (theArgc)
       theUsage->setApplicationName(argv[0]);
 }
 
+ossimArgumentParser::ossimArgumentParser(const ossimString& commandLine):
+   theArgc(new int),
+   theArgv(0),
+   theUsage(ossimApplicationUsage::instance()),
+   theMemAllocated(true)
+{
+   vector<ossimString> args = commandLine.split(" ", true);
+   *theArgc = (int)args.size();
+   if (*theArgc > 0)
+   {
+      theArgv = new char* [*theArgc];
+      for (size_t i=0; i<args.size(); i++)
+      {
+         size_t n = args[i].size();
+         theArgv[i] = new char [n+1];
+         strncpy(theArgv[i], args[i].chars(), n);
+         theArgv[i][n] = '\0';
+      }
+      theUsage->setApplicationName(theArgv[0]);
+   }
+}
+
 ossimArgumentParser::~ossimArgumentParser()
 {
+   if (theMemAllocated)
+   {
+      for (int i=0; i<*theArgc; ++i)
+         delete [] theArgv[i];
+      delete [] theArgv;
+      delete theArgc;
+   }
 }
 
 void ossimArgumentParser::initialize(int* argc, const char **argv)
 {
-   if(argc > 0) delete (theArgv);
+   if(*argc > 0) delete (theArgv);
    theArgc = argc;
    theArgv = new char*[*argc];
    for(int i=0;i<*argc;i++)
@@ -250,7 +268,7 @@ bool ossimArgumentParser::containsOptions() const
    return false;
 }
 
-int ossimArgumentParser::numberOfParams(const std::string& str, const ossimParameter& param) const
+int ossimArgumentParser::numberOfParams(const std::string& str, const ossimParameter param) const
 {
    int pos=find(str);
    if (pos<=0) 
@@ -276,6 +294,38 @@ void ossimArgumentParser::remove(int pos,int num)
       theArgv[pos]=0;
    }
    *theArgc-=num;
+}
+
+void ossimArgumentParser::insert(int pos, const ossimString& argstr)
+{
+   if (argstr.size()==0)
+      return;
+
+   // Split arg into components (separated by spaces). Need to reallocate args array to new size:
+   vector<ossimString> components = argstr.split(" ");
+   int new_argc = *theArgc + (int)components.size();
+   char** new_argv = new char*[new_argc];
+
+   // First copy the original list, leaving space for the new components:
+   int j = 0;
+   for (int i=0; i<*theArgc; ++i)
+   {
+      if (j == pos)
+         j += (int)components.size();
+      new_argv[j] = theArgv[i];
+      ++j;
+   }
+
+   // Insert new components:
+   for(ossim_uint32 i=0; i<components.size(); ++i)
+      new_argv[pos+i]=components[i].stringDup();
+
+   // Need to deallocate old arg storage?
+   if (theMemAllocated)
+      delete [] theArgv;
+   theArgv = new_argv;
+   *theArgc = new_argc;
+   theMemAllocated = true;
 }
 
 bool ossimArgumentParser::read(const std::string& str)
@@ -409,6 +459,50 @@ bool ossimArgumentParser::read(const std::string& str, ossimParameter value1,
    return true;
 }
 
+bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>& param_list)
+{
+   // This method reads a comma-separated list.
+   param_list.clear();
+
+   int pos=find(str);
+   if (pos<=0)
+      return false;
+
+   // Option is removed even if no values found:
+   remove(pos, 1);
+   bool includeNextItem = true;
+   while (pos < *theArgc)
+   {
+      // Check for occurence of next option:
+      if ((theArgv[pos][0] == '-'))
+         break;
+
+      // Skip a comma surrounded by spaces:
+      ossimString arg = theArgv[pos];
+      if (arg == ",")
+      {
+         remove(pos, 1);
+         includeNextItem = true;
+         continue;
+      }
+
+      if (!includeNextItem && (arg.string()[0] != ','))
+         break;
+
+      // Handle comma separated with no spaces (i.e., multiple args reflected as one in theArgv):
+      vector<ossimString> sub_args = arg.split(",", true);
+      for (ossim_uint32 i=0; i<sub_args.size(); ++i)
+         param_list.push_back(sub_args[i]);
+
+      // If current item ends with comma, the list continues:
+      if (arg[arg.length()-1] != ',')
+         includeNextItem = false;
+
+      remove(pos, 1);
+   }
+
+   return true;
+}
 
 /** if the argument value at the posotion pos matches specified string, and subsequent
  * parameters are also matched then set the paramter values and remove the from the list of arguments.*/

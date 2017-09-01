@@ -1,20 +1,21 @@
 #ifndef ossimRpfColorGrayscaleTable_HEADER
-#define ossimRpfColorGrayscaleTable_HEADER
-#include <iostream>
-using namespace std;
+#define ossimRpfColorGrayscaleTable_HEADER 1
+
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorContext.h>
+#include <ossim/base/ossimIosFwd.h>
 
 class ossimRpfColorGrayscaleTable
 {
 public:
-   friend ostream& operator <<(ostream& out,
-                               const ossimRpfColorGrayscaleTable& data);
+   friend std::ostream& operator <<(
+      std::ostream& out, const ossimRpfColorGrayscaleTable& data);
+   
    ossimRpfColorGrayscaleTable();
    ossimRpfColorGrayscaleTable(const ossimRpfColorGrayscaleTable& rhs);
    virtual ~ossimRpfColorGrayscaleTable();
 
-   ossimErrorCode parseStream(istream& in, ossimByteOrder byteOrder);
+   ossimErrorCode parseStream(std::istream& in, ossimByteOrder byteOrder);
    
    void setTableData(unsigned short id,
                      unsigned long  numberOfElements);
@@ -42,9 +43,6 @@ private:
     * 4                     ""                        CMYK
     */
    unsigned short theTableId;
-
-   
-
    unsigned char* theData;
 };
 

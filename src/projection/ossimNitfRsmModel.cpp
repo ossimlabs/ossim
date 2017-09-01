@@ -61,23 +61,27 @@ ossimNitfRsmModel::~ossimNitfRsmModel()
 bool ossimNitfRsmModel::parseFile( const ossimFilename& nitfFile,
                                    ossim_uint32 entryIndex )
 {
-   ossimRefPtr<ossimNitfFile> file = new ossimNitfFile;
-   
-   if(!file->parseFile(nitfFile))
-   {
-      setErrorStatus();
-      return false;
-   }
-   
-   ossimRefPtr<ossimNitfImageHeader> ih = file->getNewImageHeader(entryIndex);
-   if(!ih)
-   {
-      setErrorStatus();
-      return false;
-   }
-   
-   return parseImageHeader(ih.get());
+   bool status = false;
 
+   if ( nitfFile.exists() )
+   {
+      ossimRefPtr<ossimNitfFile> file = new ossimNitfFile;   
+      if( file->parseFile(nitfFile) )
+      {
+         ossimRefPtr<ossimNitfImageHeader> ih = file->getNewImageHeader(entryIndex);
+         if ( ih.valid() )
+         {
+            status = parseImageHeader( ih.get() );
+         }
+      }
+   }
+
+   if( !status )
+   {
+      setErrorStatus();
+   }
+   
+   return status;
 }
 
 bool ossimNitfRsmModel::parseImageHeader(const ossimNitfImageHeader* ih)
@@ -92,7 +96,9 @@ bool ossimNitfRsmModel::parseImageHeader(const ossimNitfImageHeader* ih)
 
    if ( getRsmData(ih) )
    {
-      theImageID = m_iid.trim();
+      
+      theImageID = m_pca[0].m_iid; // tmp drb...
+      theImageID = theImageID.trim();
       
       ossimIrect imageRect = ih->getImageRect();
       
@@ -109,20 +115,20 @@ bool ossimNitfRsmModel::parseImageHeader(const ossimNitfImageHeader* ih)
       
       ossimGpt v0, v1, v2, v3;
       ossimDpt ip0 (0.0, 0.0);
-      lineSampleHeightToWorld(ip0, m_znrmo, v0);
+      lineSampleHeightToWorld(ip0, m_pca[0].m_znrmo, v0);
       ossimDpt ip1 (theImageSize.samp-1.0, 0.0);
-      lineSampleHeightToWorld(ip1, m_znrmo, v1);
+      lineSampleHeightToWorld(ip1, m_pca[0].m_znrmo, v1);
       ossimDpt ip2 (theImageSize.samp-1.0, theImageSize.line-1.0);
-      lineSampleHeightToWorld(ip2, m_znrmo, v2);
+      lineSampleHeightToWorld(ip2, m_pca[0].m_znrmo, v2);
       ossimDpt ip3 (0.0, theImageSize.line-1.0);
-      lineSampleHeightToWorld(ip3, m_znrmo, v3);
+      lineSampleHeightToWorld(ip3, m_pca[0].m_znrmo, v3);
       
       theBoundGndPolygon = ossimPolygon (ossimDpt(v0), ossimDpt(v1), ossimDpt(v2), ossimDpt(v3));
       
       updateModel();
       
       // Set the ground reference point.
-      lineSampleHeightToWorld(theRefImgPt, m_znrmo, theRefGndPt);
+      lineSampleHeightToWorld(theRefImgPt, m_pca[0].m_znrmo, theRefGndPt);
 
       // Height could have nan if elevation is not set so check lat, lon individually.
       if ( ( theRefGndPt.isLatNan() == false ) && ( theRefGndPt.isLonNan() == false ) )
@@ -218,48 +224,62 @@ bool ossimNitfRsmModel::getRsmData(const ossimNitfImageHeader* ih)
                      dynamic_cast<ossimNitfRsmidaTag*>( tag.get() );
                   if ( rsmidaTag.valid() )
                   {
-                     if ( initializeModel( rsmidaTag.get() ) )
+                     if ( m_ida.initialize( rsmidaTag.get() ) )
                      {
-                        // RSMPCA:
-                        const ossimString RSMPCA_TAG = "RSMPCA";                        
-                        tag = ih->getTagData(RSMPCA_TAG);
+                        // RSMPIA:
+                        const ossimString RSMPIA_TAG = "RSMPIA";
+                        tag = ih->getTagData(RSMPIA_TAG);
                         if (tag.valid())
                         {
-                           ossimRefPtr<ossimNitfRsmpcaTag> rsmpcaTag =
-                              dynamic_cast<ossimNitfRsmpcaTag*>( tag.get() );
-                           if ( rsmpcaTag.valid() )
+                           ossimRefPtr<ossimNitfRsmpiaTag> rsmpiaTag =
+                              dynamic_cast<ossimNitfRsmpiaTag*>( tag.get() );
+                           if ( rsmpiaTag.valid() )
                            {
-                              if ( initializeModel( rsmpcaTag.get() ) )
+                              if ( m_pia.initialize( rsmpiaTag.get() ) )
                               {
-                                 // RSMPIA:
-                                 const ossimString RSMPIA_TAG = "RSMPIA";
-                                 tag = ih->getTagData(RSMPIA_TAG);
-                                 if (tag.valid())
+                                 //---
+                                 // RSMPCA:
+                                 // Multiple tags if image is sectioned.
+                                 //---
+                                 const ossimString RSMPCA_TAG = "RSMPCA";
+                                 std::vector< const ossimNitfRegisteredTag* > tags;
+                                 ih->getTagData( RSMPCA_TAG, tags );
+
+                                 if ( tags.size() == m_pia.m_tnis )
                                  {
-                                    ossimRefPtr<ossimNitfRsmpiaTag> rsmpiaTag =
-                                       dynamic_cast<ossimNitfRsmpiaTag*>( tag.get() );
-                                    if ( rsmpiaTag.valid() )
+                                    for ( ossim_uint32 tagIndex = 0;
+                                          tagIndex < m_pia.m_tnis;
+                                          ++tagIndex )
                                     {
-                                       // Last tag, assign status.
-                                       status = initializeModel( rsmpiaTag.get() );
+                                       const ossimNitfRsmpcaTag* rsmpcaTag =
+                                          dynamic_cast<const ossimNitfRsmpcaTag*>( tags[tagIndex] );
+                                       if ( rsmpcaTag )
+                                       {
+                                          ossimRsmpca pca;
+                                          if ( pca.initialize( rsmpcaTag ) )
+                                          {
+                                             m_pca.push_back( pca );
+                                          }
+                                          else if (traceDebug())
+                                          {
+                                             ossimNotify(ossimNotifyLevel_WARN)
+                                                << "WARNING! RSMPCA[" << tagIndex << "] intitialization failed!"
+                                                << std::endl;
+                                          }
+                                       }
                                     }
+
+                                    // Call base ossimRsmModel::validate() for sanity check:
+                                    status = validate();
                                  }
-                                 else if (traceDebug())
-                                 {
-                                    ossimNotify(ossimNotifyLevel_WARN)
-                                       << "ossimNitfRsmModel::getRsmData WARNING!"
-                                       << "\nCould not find RSM tag: " << RSMPIA_TAG
-                                       << "\nAborting with error..."
-                                       << std::endl;
-                                 }
-                              }
+                                 
+                              } // Matches: if ( m_pia.initialize( rsmpiaTag ) )
                            }
                         }
                         else if (traceDebug())
                         {
                            ossimNotify(ossimNotifyLevel_WARN)
-                              << "ossimNitfRsmModel::getRsmData WARNING!"
-                              << "\nCould not find RSM tag: " << RSMPCA_TAG
+                              << "\nCould not find RSM tag: " << RSMPIA_TAG
                               << "\nAborting with error..."
                               << std::endl;
                         }
@@ -269,7 +289,6 @@ bool ossimNitfRsmModel::getRsmData(const ossimNitfImageHeader* ih)
                else if (traceDebug())
                {
                   ossimNotify(ossimNotifyLevel_WARN)
-                     << "ossimNitfRsmModel::getRsmData WARNING!"
                      << "\nCould not find RSM tag: " << RSMIDA_TAG
                      << "\nAborting with error..." << std::endl;
                }
@@ -310,136 +329,19 @@ bool ossimNitfRsmModel::initializeModel( const ossimNitfRsmecaTag* rsmecaTag )
    
 } // End: ossimNitfRsmModel::initializeModel( rsmecaTag )
 
-bool ossimNitfRsmModel::initializeModel( const ossimNitfRsmidaTag* rsmidaTag )
-{
-   bool status = false;
-
-   if ( rsmidaTag )
-   {
-      // TODO:
-      status = true;
-   }
-
-   return status;
-   
-} // End: ossimNitfRsmModel::initializeModel( rsmidaTag )
-
-bool ossimNitfRsmModel::initializeModel( const ossimNitfRsmpcaTag* rsmpcaTag )
-{
-   bool status = false;
-
-   if ( rsmpcaTag )
-   {
-      m_iid = rsmpcaTag->getIid();
-      m_edition = rsmpcaTag->getEdition();
-      m_rsn = rsmpcaTag->getRsn().toUInt32();
-      m_csn = rsmpcaTag->getCsn().toUInt32();
-      
-      // Supporting only the single polynomial set case right now, so fail otherwise
-      if (m_rsn == 1 && m_csn == 1)
-      {
-         m_rfep = rsmpcaTag->getRfep().toFloat64();
-         m_cfep = rsmpcaTag->getCfep().toFloat64();
-         m_rnrmo = rsmpcaTag->getRnrmo().toFloat64();
-         m_cnrmo = rsmpcaTag->getCnrmo().toFloat64();
-         m_xnrmo = rsmpcaTag->getXnrmo().toFloat64();
-         m_ynrmo = rsmpcaTag->getYnrmo().toFloat64();
-         m_znrmo = rsmpcaTag->getZnrmo().toFloat64();
-         m_rnrmsf = rsmpcaTag->getRnrmsf().toFloat64();
-         m_cnrmsf = rsmpcaTag->getCnrmsf().toFloat64();
-         m_xnrmsf = rsmpcaTag->getXnrmsf().toFloat64();
-         m_ynrmsf = rsmpcaTag->getYnrmsf().toFloat64();
-         m_znrmsf = rsmpcaTag->getZnrmsf().toFloat64();
-         
-         m_rnpwrx = rsmpcaTag->getRnpwrx().toUInt32();
-         m_rnpwry = rsmpcaTag->getRnpwry().toUInt32();
-         m_rnpwrz = rsmpcaTag->getRnpwrz().toUInt32();
-         m_rntrms = rsmpcaTag->getRntrms().toUInt32();
-         m_rnpcf.resize(m_rntrms);
-         for (ossim_uint32 i = 0; i < m_rntrms; ++i)
-         {
-            m_rnpcf[i] = rsmpcaTag->getRnpcf(i).toFloat64();
-         }
-         
-         m_rdpwrx = rsmpcaTag->getRdpwrx().toUInt32();
-         m_rdpwry = rsmpcaTag->getRdpwry().toUInt32();
-         m_rdpwrz = rsmpcaTag->getRdpwrz().toUInt32();
-         m_rdtrms = rsmpcaTag->getRdtrms().toUInt32();
-         m_rdpcf.resize(m_rdtrms);
-         for (ossim_uint32 i = 0; i < m_rdtrms; ++i)
-         {
-            m_rdpcf[i] = rsmpcaTag->getRdpcf(i).toFloat64();
-         }
-         
-         m_cnpwrx = rsmpcaTag->getCnpwrx().toUInt32();
-         m_cnpwry = rsmpcaTag->getCnpwry().toUInt32();
-         m_cnpwrz = rsmpcaTag->getCnpwrz().toUInt32();
-         m_cntrms = rsmpcaTag->getCntrms().toUInt32();
-         m_cnpcf.resize(m_cntrms);
-         for (ossim_uint32 i = 0; i < m_cntrms; ++i)
-         {
-            m_cnpcf[i] = rsmpcaTag->getCnpcf(i).toFloat64();
-         }
-         
-         m_cdpwrx = rsmpcaTag->getCdpwrx().toUInt32();
-         m_cdpwry = rsmpcaTag->getCdpwry().toUInt32();
-         m_cdpwrz = rsmpcaTag->getCdpwrz().toUInt32();
-         m_cdtrms = rsmpcaTag->getCdtrms().toUInt32();
-         m_cdpcf.resize(m_cdtrms);
-         for (ossim_uint32 i = 0; i < m_cdtrms; ++i)
-         {
-            m_cdpcf[i] = rsmpcaTag->getCdpcf(i).toFloat64();
-         }
-         
-         status = true;
-      }
-      else if (traceDebug())
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimNitfRsmModel::getRsmData DEBUG:"
-            << "\nRow or Column Section Number not equal to 1: CSN is "
-            << ossimString::toString(m_csn) << ", RSN is " << ossimString::toString(m_rsn)
-            << "\nAborting with error..."
-            << std::endl;
-      }
-   }
-   
-   return status;
-   
-} // End: ossimNitfRsmModel::initializeModel( rsmpcaTag )
-
-bool ossimNitfRsmModel::initializeModel( const ossimNitfRsmpiaTag* rsmpiaTag )
-{
-   bool status = false;
-
-   if ( rsmpiaTag )
-   {
-      // TODO:
-      status = true;
-   }
-
-   return status;
-   
-} // End: ossimNitfRsmModel::initializeModel( rsmpiaTag )
-
 ossimObject* ossimNitfRsmModel::dup() const
 {
    return new ossimNitfRsmModel(*this);
 }
 
-//---**************************************************************************
-//  METHOD: ossimNitfRsmModel::saveState()
-//  
-//  Saves the model state to the KWL. This KWL also serves as a geometry file.
-//  
-//---**************************************************************************
 bool ossimNitfRsmModel::saveState(ossimKeywordlist& kwl,
                                   const char* prefix) const
 {
+   
+   static const char MODULE[] = "ossimNitfRsmModel::saveState";
    if (traceExec())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "DEBUG ossimNitfRsmModel::saveState(): entering..." << std::endl;
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
 
    //---
@@ -452,8 +354,7 @@ bool ossimNitfRsmModel::saveState(ossimKeywordlist& kwl,
 
    if (traceExec())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "DEBUG ossimNitfRsmModel::saveState(): returning..." << std::endl;
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
    }
 
    return status;
@@ -462,10 +363,10 @@ bool ossimNitfRsmModel::saveState(ossimKeywordlist& kwl,
 bool ossimNitfRsmModel::loadState( const ossimKeywordlist& kwl,
                                    const char* prefix ) 
 {
+   static const char MODULE[] = "ossimNitfRsmModel::loadState";
    if (traceExec())
    {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "DEBUG ossimNitfRsmModel::loadState(): entering..." << std::endl;
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
 
    bool status = false;
@@ -483,8 +384,7 @@ bool ossimNitfRsmModel::loadState( const ossimKeywordlist& kwl,
    if (traceExec())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "DEBUG ossimNitfRsmModel::loadState(): exit status: "
-         << ( status ? "true" : "false" ) << std::endl;
+         << MODULE << " exit status = " << (status?"true":"false") << "\n";
    }
    
    return status;

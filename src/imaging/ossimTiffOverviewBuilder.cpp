@@ -1,8 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -10,8 +8,8 @@
 //
 // Contains class definition for TiffOverviewBuilder
 // 
-//*******************************************************************
-//  $Id: ossimTiffOverviewBuilder.cpp 22362 2013-08-07 20:23:22Z dburken $
+//---
+// $Id$
 
 #include <ossim/imaging/ossimTiffOverviewBuilder.h>
 #include <ossim/parallel/ossimMpi.h>
@@ -51,6 +49,7 @@ static ossimTrace traceDebug("ossimTiffOverviewBuilder:degug");
 
 // Property keywords.
 static const char COPY_ALL_KW[]           = "copy_all_flag";
+static const char TEMP_EXTENSION[] = "temp_extension";
 static const char INTERNAL_OVERVIEWS_KW[] = "internal_overviews_flag";
 
 #ifdef OSSIM_ID_ENABLED
@@ -159,10 +158,16 @@ bool ossimTiffOverviewBuilder::execute()
       return false;
    }
 
-   ossimFilename outputFileTemp = m_outputFile;
-   
+   // RP - allow user to set extension with hidden option.  Used to add unique suffix to prevent duplicate requests from stomping each other
+   ossimFilename outputFileTemp;
    if ( !buildInternalOverviews() )
-   {
+   {   
+      outputFileTemp = m_outputFile;
+      if ( m_tempExtension.size() )
+      {
+         outputFileTemp += "." + m_tempExtension;
+      }
+
       // Add .tmp in case process gets aborted to avoid leaving bad .ovr file.
       outputFileTemp += ".tmp";
    }
@@ -618,16 +623,18 @@ bool ossimTiffOverviewBuilder::writeRn( ossimImageHandler* imageHandler,
                                         ossim_uint32 resLevel,
                                         bool firstResLevel )
 {
-   if ( tif ) //  && buildInternalOverviews() )
+   if ( ossimMpi::instance()->getRank() == 0 )
    {
-      // Create an empty directory to start with.
-      TIFFCreateDirectory( tif );
-   }
-   else
-   {
-      return false;
-   }
-   
+      if ( tif ) //  && buildInternalOverviews() )
+      {
+         // Create an empty directory to start with.
+         TIFFCreateDirectory( tif );
+      }
+      else
+      {
+         return false;
+      }
+   } 
    //---
    // Set up the sequencer.  This will be one of three depending on if we're
    // running mpi and if we are a master process or a slave process.
@@ -901,6 +908,7 @@ bool ossimTiffOverviewBuilder::setTags(TIFF* tif,
          << "\nimageHeight:     " << imageHeight
          << "\nminSampleValue:  " << minSampleValue
          << "\nmaxSampleValue:  " << maxSampleValue
+         << "\ncompression:     " << m_tiffCompressType
          << std::endl;
    }
    TIFFSetField( tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_SEPARATE );
@@ -918,21 +926,23 @@ bool ossimTiffOverviewBuilder::setTags(TIFF* tif,
    TIFFSetField( tif, TIFFTAG_TILEWIDTH,  m_tileWidth  );
    TIFFSetField( tif, TIFFTAG_TILELENGTH, m_tileHeight );
 
-   //---
-   // Only turn on compression for 8 bit, one or three band data.  Not sure what compression
-   // types can handle what but this was crashing ossim-prepoc on a directory walk with jpeg
-   // compression.
-   //---
-   if ( ( m_imageHandler->getOutputScalarType() == OSSIM_UINT8 ) &&
-        ( ( m_imageHandler->getNumberOfInputBands() == 3 ) ||
-          ( m_imageHandler->getNumberOfInputBands() == 1 ) ) )
+   // Set the compression related tags...
+   if (m_tiffCompressType != COMPRESSION_JPEG)
    {
-      // Set the compression related tags...
+      TIFFSetField( tif, TIFFTAG_COMPRESSION, m_tiffCompressType ); 
+   }
+   //---
+   // If jpeg only turn on compression for 8 bit, one or three band data.  Not
+   // sure what compression types can handle what but this was crashing
+   // ossim-prepoc on a directory walk with jpeg compression.
+   //---
+   else if ( (m_tiffCompressType == COMPRESSION_JPEG) &&
+             ( m_imageHandler->getOutputScalarType() == OSSIM_UINT8 ) &&
+             ( ( m_imageHandler->getNumberOfInputBands() == 3 ) ||
+               ( m_imageHandler->getNumberOfInputBands() == 1 ) ) )
+   {
       TIFFSetField( tif, TIFFTAG_COMPRESSION, m_tiffCompressType );
-      if (m_tiffCompressType == COMPRESSION_JPEG)
-      {
-         TIFFSetField( tif, TIFFTAG_JPEGQUALITY,  m_jpegCompressQuality);
-      }
+      TIFFSetField( tif, TIFFTAG_JPEGQUALITY, m_jpegCompressQuality);
    }
    else
    {
@@ -963,6 +973,10 @@ bool ossimTiffOverviewBuilder::setTags(TIFF* tif,
 
       case OSSIM_UINT8:
       case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
       case OSSIM_UINT16:
       case OSSIM_UINT32:
       default:
@@ -1216,6 +1230,10 @@ bool ossimTiffOverviewBuilder::setInputSource(ossimImageHandler* imageSource)
             break;
             
          case OSSIM_USHORT11:
+         case OSSIM_USHORT12:
+         case OSSIM_USHORT13:
+         case OSSIM_USHORT14:
+         case OSSIM_USHORT15:
          case OSSIM_UINT16:
             m_bitsPerSample = 16;
             m_bytesPerPixel = 2;
@@ -1371,6 +1389,10 @@ void ossimTiffOverviewBuilder::setProperty(ossimRefPtr<ossimProperty> property)
       {
          m_copyAllFlag = property->valueToString().toBool();
       }
+      else if(property->getName() == TEMP_EXTENSION)
+      {
+         m_tempExtension = property->valueToString();
+      }
       else if( property->getName() == INTERNAL_OVERVIEWS_KW )
       {
          m_internalOverviewsFlag = property->valueToString().toBool();
@@ -1397,6 +1419,7 @@ void ossimTiffOverviewBuilder::getPropertyNames(std::vector<ossimString>& proper
    propertyNames.push_back(COPY_ALL_KW);
    propertyNames.push_back(INTERNAL_OVERVIEWS_KW);
    propertyNames.push_back(ossimKeywordNames::OVERVIEW_STOP_DIMENSION_KW);
+   propertyNames.push_back(TEMP_EXTENSION);
 }
 
 bool ossimTiffOverviewBuilder::canConnectMyInputTo(

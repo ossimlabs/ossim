@@ -181,12 +181,12 @@ bool ossimAdrgTileSource::fillBuffer(const ossimIrect& /* tile_rect */,
    ossimIpt ulTilePt = tileOrigin;
    
    // Chunk loop in line direction.
-   for (int32 y=0; y<tiles_in_y_dir; y++)
+   for (ossim_int32 y=0; y<tiles_in_y_dir; y++)
    {
       ulTilePt.x = tileOrigin.x;
 
       // Tile loop in sample direction.
-      for (int32 x=0; x<tiles_in_x_dir; x++)
+      for (ossim_int32 x=0; x<tiles_in_x_dir; x++)
       {
          ossimIrect adrg_tile_rect(ulTilePt.x,
                                    ulTilePt.y,
@@ -636,12 +636,12 @@ ossim_uint32 ossimAdrgTileSource::getImageTileHeight() const
 
 ossimRefPtr<ossimProperty> ossimAdrgTileSource::getProperty(const ossimString& name)const
 {
-	if(name == "file_type")
-	{
-		return new ossimStringProperty(name, "ADRG");
-	}
-	
-	return ossimImageHandler::getProperty(name);
+   if(name == "file_type")
+   {
+      return new ossimStringProperty(name, "ADRG");
+   }
+   
+   return ossimImageHandler::getProperty(name);
 }
 
 void ossimAdrgTileSource::getPropertyNames(std::vector<ossimString>& propertyNames)const
@@ -662,7 +662,12 @@ ossimString ossimAdrgTileSource::getLongName()const
 
 ossim_uint32 ossimAdrgTileSource::getNumberOfInputBands() const
 {
-   return m_AdrgHeader->numberOfBands();
+   ossim_uint32 bands = 1;
+   if ( m_AdrgHeader )
+   {
+      bands = m_AdrgHeader->numberOfBands();
+   }
+   return bands;
 }
 
 bool ossimAdrgTileSource::isOpen()const

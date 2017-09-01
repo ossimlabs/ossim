@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,18 +9,20 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfFileHeader.h 22418 2013-09-26 15:01:12Z gpotts $
-#ifndef ossimNitfFileHeader_HEADER
-#define ossimNitfFileHeader_HEADER
+// $Id$
 
-#include <iosfwd>
-#include <vector>
-#include <iterator>
+#ifndef ossimNitfFileHeader_HEADER
+#define ossimNitfFileHeader_HEADER 1
+
 #include <ossim/base/ossimDrect.h>
+#include <ossim/base/ossimIosFwd.h>
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimPropertyInterface.h>
 #include <ossim/base/ossimProperty.h>
 #include <ossim/support_data/ossimNitfTagInformation.h>
+#include <ossim/support_data/ossimNitfDesInformation.h>
+
+#include <vector>
 
 class ossimNitfImageHeader;
 class ossimNitfSymbolHeader;
@@ -128,8 +130,8 @@ public:
    ossimNitfFileHeader();
    virtual ~ossimNitfFileHeader();
 
-   virtual void parseStream(std::istream &in)= 0;
-   virtual void writeStream(std::ostream &out)=0;
+   virtual void parseStream(ossim::istream& in)= 0;
+   virtual void writeStream(ossim::ostream& out)=0;
    
    virtual bool isEncrypted()const=0;
    virtual ossim_int32 getNumberOfImages()const=0;
@@ -146,6 +148,9 @@ public:
    virtual bool  getTagInformation(ossimNitfTagInformation& tag,
                                    int idx)const;
 
+   virtual std::vector<ossimNitfTagInformation> getAllTags() { return theTagList; }
+   virtual void setAllTags(std::vector<ossimNitfTagInformation> tagList) { theTagList = tagList; }
+
    virtual int getNumberOfTags()const;
 
    virtual bool getTag(ossimNitfTagInformation& tagInfo,
@@ -157,6 +162,11 @@ public:
    virtual ossimDrect getImageRect()const=0;
    virtual ossimString getSecurityClassification()const=0;
    
+   /**
+   * isValid will test if the fields are valid and will return true or false.
+   */
+   virtual bool isValid()const=0;
+   
    bool hasImages()const;
    bool hasSymbols()const;
    bool hasGraphics()const;
@@ -165,15 +175,15 @@ public:
    bool hasDataExtSegments()const;
 
    virtual ossimNitfImageHeader* getNewImageHeader(ossim_uint32 imageNumber,
-                                                   std::istream& in)const=0;
+                                                   ossim::istream& in)const=0;
    virtual ossimNitfSymbolHeader* getNewSymbolHeader(ossim_uint32 symbolNumber,
-                                                    std::istream& in)const=0;
+                                                    ossim::istream& in)const=0;
    virtual ossimNitfLabelHeader* getNewLabelHeader(ossim_uint32 labelNumber,
-                                                   std::istream& in)const=0;
+                                                   ossim::istream& in)const=0;
    virtual ossimNitfTextHeader* getNewTextHeader(ossim_uint32 textNumber,
-                                                std::istream& in)const=0;
+                                                ossim::istream& in)const=0;
    virtual ossimNitfDataExtensionSegment* getNewDataExtensionSegment(
-      ossim_int32 dataExtNumber, std::istream& in)const=0;
+      ossim_int32 dataExtNumber, ossim::istream& in)const=0;
    
    virtual ossimNitfImageHeader*    allocateImageHeader()const=0;
    virtual ossimNitfSymbolHeader*   allocateSymbolHeader()const=0;
@@ -212,6 +222,7 @@ public:
    
 protected:
    std::vector<ossimNitfTagInformation> theTagList;
+   std::vector<ossimNitfDesInformation> theDesList;
    
 TYPE_DATA
 };

@@ -1150,9 +1150,8 @@ void ossimAutRegUtil::execute()
    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    // Set correlation areas
    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   int primeIndex = 0; //TODO
-   m_tGen->setBox(m_roiRects, primeIndex, src);
-
+   m_tGen->setImageList(src);
+   m_tGen->setROIs(m_roiRects);
 
    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    // Run the OpenCV detector/extractor/matcher to collect tiepoints
@@ -1270,31 +1269,33 @@ void ossimAutRegUtil::saveAdjustment()
          // Get the adjustment info from the bundle adjustment via m_obsSet
          ossimFilename filename = m_imgLayer[img]->getImageHandler()->getFilename();
 
-         ossimAdjustableParameterInterface* adjParIface;
-
+         // Oscar, should this be a ref ptr? drb - 20160810
+         ossimAdjustableParameterInterface* adjParIface = 0;
          for (ossim_uint32 ii=0; ii<m_obsSet->numImages(); ++ii)
          {
             if (filename == m_obsSet->imageFile(ii))
                adjParIface = m_obsSet->getImageGeom(ii)->getAdjustableParameterInterface();
          }
 
-         adjParIface->setAdjustmentDescription(ts);
-         adjParIface->getAdjustment(*adjInfo);
-   
-         // Grab adjustable parameter interface and update it with the adjustment info
-         ossimAdjustableParameterInterface* iface = m_geom[img]->getAdjustableParameterInterface();
-         iface->setAdjustment(*adjInfo, true);
-
-         if (iface)
+         if ( adjParIface )
          {
-            ossimFilename fn = m_imgLayer[img]->getImageHandler()->createDefaultGeometryFilename();
+            adjParIface->setAdjustmentDescription(ts);
+            adjParIface->getAdjustment(*adjInfo);
+   
+            // Grab adjustable parameter interface and update it with the adjustment info
+            ossimAdjustableParameterInterface* iface = m_geom[img]->getAdjustableParameterInterface();
+            if ( iface )
+            {
+               iface->setAdjustment(*adjInfo, true);
+               ossimFilename fn = m_imgLayer[img]->getImageHandler()->createDefaultGeometryFilename();
 // TODO ***********
 //  dirty flag????
 // fn += "_test";
 // TODO ***********
-            ossimKeywordlist kwl;
-            iface->getBaseObject()->saveState(kwl);
-            kwl.write(fn);
+               ossimKeywordlist kwl;
+               iface->getBaseObject()->saveState(kwl);
+               kwl.write(fn);
+            }
          }
       }
    }

@@ -24,6 +24,7 @@
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDrect.h>
 #include <ossim/base/ossimImageTypeLut.h>
+#include <ossim/base/ossimTimer.h>
 
 #include <ossim/imaging/ossimJpegWriter.h>
 #include <ossim/imaging/ossimImageHandler.h>
@@ -315,7 +316,9 @@ int main(int argc, char* argv[])
       double start_time = 0.0;
       if(ossimMpi::instance()->getRank() == 0)
       {
-         start_time= MPI_Wtime();
+         // Start the timer.
+         ossimTimer::instance()->setStartTick();
+         //start_time= MPI_Wtime();
       }
 #  endif
 #endif
@@ -327,8 +330,13 @@ int main(int argc, char* argv[])
 #  if OSSIM_HAS_MPI
       if(ossimMpi::instance()->getRank() == 0)
       {
-         double stop_time = MPI_Wtime();
-         cout << "Elapsed time: " << (stop_time-start_time) << std::endl;
+	 ossimNotify(ossimNotifyLevel_NOTICE)
+               << "elapsed time in seconds: "
+               << std::setiosflags(ios::fixed)
+               << std::setprecision(3)
+               << ossimTimer::instance()->time_s() << endl;
+         //double stop_time = MPI_Wtime();
+         //cout << "Elapsed time: " << (stop_time-start_time) << std::endl;
       }
 #  endif
 #endif

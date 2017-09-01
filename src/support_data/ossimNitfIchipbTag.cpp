@@ -493,3 +493,120 @@ void ossimNitfIchipbTag::getPropertyNames(std::vector<ossimString>& propertyName
    propertyNames.push_back(FI_ROW_KW);
    propertyNames.push_back(FI_COL_KW);
 }
+  
+bool ossimNitfIchipbTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
+{
+   const char* lookup;
+   lookup = kwl.find(prefix, XFRM_FLAG_KW);
+   if(lookup)
+   {
+       strcpy(theXfrmFlag, lookup);
+   }
+   lookup = kwl.find(prefix, SCALE_FACTOR_KW);
+   if(lookup)
+   {
+        strcpy(theScaleFactor, lookup);
+   }
+   lookup = kwl.find(prefix, ANAMRPH_CORR_KW);
+   if(lookup)
+   {
+        strcpy(theAnamrphCorr, lookup);
+   }
+   lookup = kwl.find(prefix, SCANBLK_NUM_KW);
+   if(lookup)
+   {
+        strcpy(theScanBlock, lookup);
+   }
+   lookup = kwl.find(prefix, OP_ROW_11_KW);
+   if(lookup)
+   {
+        strcpy(theOpRow11, lookup);
+   }
+   lookup = kwl.find(prefix, OP_COL_11_KW);
+   if(lookup)
+   {
+        strcpy(theOpCol11, lookup);
+   }
+   lookup = kwl.find(prefix, OP_ROW_12_KW);
+   if(lookup)
+   {
+        strcpy(theOpRow12, lookup);
+   }
+   lookup = kwl.find(prefix, OP_COL_12_KW);
+   if(lookup)
+   {
+        strcpy(theOpCol12, lookup);
+   }
+   lookup = kwl.find(prefix, OP_ROW_21_KW);
+   if(lookup)
+   {
+        strcpy(theOpRow21, lookup);
+   }
+   lookup = kwl.find(prefix, OP_COL_21_KW);
+   if(lookup)
+   {
+        strcpy(theOpCol21, lookup);
+   }
+   lookup = kwl.find(prefix, OP_ROW_22_KW);
+   if(lookup)
+   {
+        strcpy(theOpRow22, lookup);
+   }
+   lookup = kwl.find(prefix, OP_COL_22_KW);
+   if(lookup)
+   {
+        strcpy(theOpCol22, lookup);
+   }
+   lookup = kwl.find(prefix, FI_ROW_11_KW);
+   if(lookup)
+   {
+        strcpy(theFiRow11, lookup);
+   }
+   lookup = kwl.find(prefix, FI_COL_11_KW);
+   if(lookup)
+   {
+        strcpy(theFiCol11, lookup);
+   }
+   lookup = kwl.find(prefix, FI_ROW_12_KW);
+   if(lookup)
+   {
+        strcpy(theFiRow12, lookup);
+   }
+   lookup = kwl.find(prefix, FI_COL_12_KW);
+   if(lookup)
+   {
+        strcpy(theFiCol12, lookup);
+   }
+   lookup = kwl.find(prefix, FI_ROW_21_KW);
+   if(lookup)
+   {
+        strcpy(theFiRow21, lookup);
+   }
+   lookup = kwl.find(prefix, FI_COL_21_KW);
+   if(lookup)
+   {
+        strcpy(theFiCol21, lookup);
+   }
+   lookup = kwl.find(prefix, FI_ROW_22_KW);
+   if(lookup)
+   {
+        strcpy(theFiRow22, lookup);
+   }
+   lookup = kwl.find(prefix, FI_COL_22_KW);
+   if(lookup)
+   {
+        strcpy(theFiCol22, lookup);
+   }
+   lookup = kwl.find(prefix, FI_ROW_KW);
+   if(lookup)
+   {
+        strcpy(theFullImageRow, lookup);
+   }
+   lookup = kwl.find(prefix, FI_COL_KW);
+   if(lookup)
+   {
+        strcpy(theFullImageCol, lookup);
+   }
+
+   return true;
+}

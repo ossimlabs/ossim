@@ -424,11 +424,10 @@ bool ossimIrect::toRect(const ossimString& rectString)
 //*******************************************************************
 bool ossimIrect::completely_within(const ossimIrect& rect) const
 {
-   if(rect.hasNans() || hasNans())
+   if(hasNans() || rect.hasNans())
    {
       return false;
    }
-   
    if (theOrientMode != rect.theOrientMode)
       return false;
    
@@ -445,28 +444,33 @@ bool ossimIrect::completely_within(const ossimIrect& rect) const
        --------------  */
 
    bool rtn = true;
-   
-   if (theUlCorner.x < rect.ul().x)
+   if ((theUlCorner.x > rect.ur().x)||
+       (theUlCorner.x < rect.ul().x))
       rtn = false;
    
-   else if (theLrCorner.x > rect.lr().x)
+   else if ((theLrCorner.x > rect.lr().x)||
+            (theLrCorner.x < rect.ll().x))
       rtn = false;
    
    else if (theOrientMode == OSSIM_LEFT_HANDED)
    {
-      if (theUlCorner.y < rect.ul().y)
+      if ((theUlCorner.y < rect.ul().y)||
+          (theUlCorner.y > rect.lr().y))
          rtn = false;
    
-      else if (theLrCorner.y > rect.lr().y)
+      else if ((theLrCorner.y > rect.lr().y)||
+               (theLrCorner.y < rect.ul().y))
          rtn = false;
    }
    
    else
    {
-      if (theUlCorner.y > rect.ul().y)
+      if ( (theUlCorner.y > rect.ul().y)||
+           (theUlCorner.y < rect.lr().y))
          rtn = false;
    
-      else if (theLrCorner.y < rect.lr().y)
+      else if ((theLrCorner.y < rect.lr().y)||
+               (theLrCorner.y > rect.ul().y))
          rtn = false;
    }
 

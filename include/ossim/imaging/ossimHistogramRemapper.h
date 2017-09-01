@@ -30,7 +30,7 @@
 //*************************************************************************
 // $Id: ossimHistogramRemapper.h 22746 2014-04-23 16:16:28Z gpotts $
 #ifndef ossimHistogramRemapper_HEADER
-#define ossimHistogramRemapper_HEADER
+#define ossimHistogramRemapper_HEADER 1
 
 #include <ossim/imaging/ossimTableRemapper.h>
 #include <ossim/base/ossimMultiResLevelHistogram.h>
@@ -41,12 +41,13 @@ class OSSIMDLLEXPORT ossimHistogramRemapper : public ossimTableRemapper
 public:
    enum StretchMode
    {
-      LINEAR_ONE_PIECE      = 0,
-      LINEAR_1STD_FROM_MEAN = 1,
-      LINEAR_2STD_FROM_MEAN = 2,
-      LINEAR_3STD_FROM_MEAN = 3,
-      LINEAR_AUTO_MIN_MAX   = 4,
-      STRETCH_UNKNOWN = 5 // Alway last as used for number of modes method.
+      LINEAR_ONE_PIECE       = 0,
+      LINEAR_1STD_FROM_MEAN  = 1,
+      LINEAR_2STD_FROM_MEAN  = 2,
+      LINEAR_3STD_FROM_MEAN  = 3,
+      LINEAR_AUTO_MIN_MAX    = 4,
+      LINEAR_AUTO_PERCENTILE = 5,
+      STRETCH_UNKNOWN = 6 // Alway last as used for number of modes method.
    };
 
    /** default constructor */
@@ -432,6 +433,15 @@ public:
    bool openHistogram(const ossimFilename& histogram_file);
 
    /**
+    * Compute the histogram from input connection and region of interest.
+    * With this method the histogram is owned by this object.
+    *
+    * @param roi Region of inte
+    * Returns true on success, false on error.
+    */
+   bool computeHistogram(const ossimIrect& roi);
+
+   /**
     * Returns the currently opened histogram.
     * Returns ossimFilename::NIL if no histogram is loaded.
     */
@@ -485,8 +495,10 @@ private:
    void buildTable();
    void buildLinearTable();
    void buildAutoLinearMinMaxTable();
+   void buildAutoLinearPercentileTable();
    template <class T> void buildLinearTable(T dummy);
    template <class T> void buildAutoLinearMinMaxTableTemplate(T dummy);
+   template <class T> void buildAutoLinearPercentileTableTemplate(T dummy);
 
    /**
     * Sets clip points using mean and standard deviations then calls

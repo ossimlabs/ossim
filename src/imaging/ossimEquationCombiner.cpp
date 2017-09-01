@@ -383,7 +383,9 @@ ossimEquationCombiner::ossimEquationCombiner()
     theLexer(NULL),
     theTile(NULL),
     theCastFilter(NULL),
-    theCastOutputFilter(NULL)
+    theCastOutputFilter(NULL),
+    theCurrentId(0),
+    theCurrentResLevel(0)
 {
    theLexer      = new ossimEquTokenizer;
    theCastFilter = new ossimCastTileSourceFilter;
@@ -397,7 +399,9 @@ ossimEquationCombiner::ossimEquationCombiner(ossimConnectableObject::Connectable
     theLexer(NULL),
     theTile(NULL),
     theCastFilter(NULL),
-    theCastOutputFilter(NULL)
+    theCastOutputFilter(NULL),
+    theCurrentId(0),
+    theCurrentResLevel(0)
 {
    theLexer      = new ossimEquTokenizer;
    theCastFilter = new ossimCastTileSourceFilter;
