@@ -9,6 +9,10 @@ ENDIF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
 
 cmake_minimum_required(VERSION 2.8)
 
+SET(CMAKE_MODULE_PATH
+  "${CMAKE_CURRENT_SOURCE_DIR}/ossim/cmake/CMakeModules" ${CMAKE_MODULE_PATH})
+
+include(CMakeDetermineSystem)
 INCLUDE(OssimVersion)
 INCLUDE(OssimCommonVariables)
 
