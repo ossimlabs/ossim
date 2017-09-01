@@ -737,3 +737,13 @@ ossim.plugins.aws.s3.cacheInvalidLocations: true
 // If a password is on your private key file then specify it here. 
 //ossim.plugins.web.curl.clientKeyPassword:
 /---
+
+// Keywords 
+// This is used by the stream factory registry when generating 
+// input streams.  If the connection pattern matches the includePattern
+// then it will wrap that stream with an ossim::BlockIStream so that all
+// calls are done on the defined block size boundary
+//
+ossim.stream.factory.registry.istream.block1.enabled: false
+ossim.stream.factory.registry.istream.block1.includePattern: ^/
+ossim.stream.factory.registry.istream.block1.size: 4096

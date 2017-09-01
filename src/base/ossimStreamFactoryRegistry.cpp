@@ -11,15 +11,18 @@
 #include <ossim/base/ossimStreamFactory.h>
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimFilename.h>
-
+#include <ossim/base/ossimPreferences.h>
+#include <ossim/base/ossimBlockIStream.h>
 #include <fstream>
 #include <algorithm>
 
 ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::m_instance = 0;
-
+static const ossimString ISTREAM_BLOCK_KW = "ossim.stream.factory.registry.istream.block";
 ossim::StreamFactoryRegistry::StreamFactoryRegistry()
 {
+   loadPatterns();
 }
+
 
 ossim::StreamFactoryRegistry::~StreamFactoryRegistry()
 {
@@ -30,9 +33,89 @@ ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::instance()
    if(!m_instance)
    {
       m_instance = new ossim::StreamFactoryRegistry();
+
    }
    return m_instance;
 }
+
+void ossim::StreamFactoryRegistry::loadPatterns()
+{
+   const ossimKeywordlist& kwl   = ossimPreferences::instance()->preferencesKWL();
+   ossimString regExpression     =  ossimString("^(") + ISTREAM_BLOCK_KW+ "[0-9]+.)";
+   std::vector<ossimString> keys = kwl.getSubstringKeyList( regExpression );
+   long numberOfBlocks           = (long)keys.size();
+
+   int offset = (int)ossimString(ISTREAM_BLOCK_KW).size();
+   int idx = 0;
+   std::vector<int> numberList(numberOfBlocks);
+   for(idx = 0; idx < (int)numberList.size();++idx)
+     {
+       ossimString numberStr(keys[idx].begin() + offset,
+              keys[idx].end());
+       numberList[idx] = numberStr.toInt();
+     }
+   std::sort(numberList.begin(), numberList.end());
+   if(numberList.size())
+   {
+      m_blockInfoList.resize(numberList.size());
+   }
+   else
+   {
+      m_blockInfoList.clear();
+   }
+   for(idx=0;idx < (int)numberList.size();++idx)
+   {
+      ossimString newPrefix = ISTREAM_BLOCK_KW;
+      newPrefix += ossimString::toString(numberList[idx]);
+      newPrefix += ossimString(".");
+
+      ossimString blockIStreamEnabled        = ossimPreferences::instance()->findPreference(newPrefix+"enabled");
+      ossimString blockIStreamIncludePattern = ossimPreferences::instance()->findPreference(newPrefix+"includePattern");
+      ossimString blockIStreamSize           = ossimPreferences::instance()->findPreference(newPrefix+"size");
+
+      if(!blockIStreamSize.empty())
+      {
+         m_blockInfoList[idx].m_size = blockIStreamSize.toUInt64();
+      }
+      if(!blockIStreamEnabled.empty())
+      {
+         m_blockInfoList[idx].m_enabled = blockIStreamEnabled.toBool();
+      }
+      if(m_blockInfoList[idx].m_enabled&&!blockIStreamIncludePattern.empty())
+      {
+         m_blockInfoList[idx].m_pattern.compile(blockIStreamIncludePattern.c_str());
+      }
+      else
+      {
+         m_blockInfoList[idx].m_pattern.set_invalid();
+      }
+
+   }
+
+}
+
+bool ossim::StreamFactoryRegistry::getBlocked(ossim_uint64& blockSize, 
+                                              const ossimString& connectionString)const
+{
+   bool result = false;
+
+   for(std::vector<BlockInfo>::const_iterator iter = m_blockInfoList.begin();
+      iter != m_blockInfoList.end(); ++iter)
+   {
+      if(iter->m_enabled&&iter->m_pattern.is_valid())
+      {
+         if(iter->m_pattern.find(connectionString.c_str()))
+         {
+            blockSize = iter->m_size;
+            result = true;
+            break;
+         }
+      }
+   }
+
+   return result;
+}
+
 
 std::shared_ptr<ossim::istream> ossim::StreamFactoryRegistry::createIstream(
    const std::string& connectionString,
@@ -44,6 +127,16 @@ std::shared_ptr<ossim::istream> ossim::StreamFactoryRegistry::createIstream(
    for(i = 0; (i < m_factoryList.size())&&(!result); ++i)
    {
       result = m_factoryList[i]->createIstream(connectionString, options, openMode);
+
+      if(result)
+      {
+         ossim_uint64 blockSize;
+         if(getBlocked(blockSize, connectionString))
+         {
+            result = std::make_shared<ossim::BlockIStream>(result, blockSize);
+         }
+               
+      }
    }
    return result;
 }

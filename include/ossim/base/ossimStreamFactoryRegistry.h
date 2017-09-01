@@ -16,6 +16,7 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimStreamFactoryBase.h>
+#include <ossim/base/ossimRegExp.h>
 
 #include <memory>
 #include <vector>
@@ -69,12 +70,23 @@ namespace ossim
       StreamFactoryRegistry();
       
    private:
-      
+      class BlockInfo{
+      public:
+        BlockInfo():m_enabled(false),m_pattern(""),m_size(4096){}
+
+        bool         m_enabled;
+        mutable ossimRegExp  m_pattern;
+        ossim_uint64 m_size;
+
+      };     
       /** @brief copy constructor hidden from use */
       StreamFactoryRegistry(const StreamFactoryRegistry&);
+      void loadPatterns();
+      bool getBlocked(ossim_uint64& blockSize, 
+                      const ossimString& connectionString)const;
       
       std::vector<StreamFactoryBase*> m_factoryList;
-
+      std::vector<BlockInfo>  m_blockInfoList;
       static StreamFactoryRegistry*   m_instance;
    };
    
