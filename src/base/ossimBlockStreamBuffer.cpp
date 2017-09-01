@@ -100,7 +100,6 @@ std::streambuf::pos_type ossim::BlockStreamBuffer::seekoff(off_type offset,
          }
          case std::ios_base::end:
          {
-            //if(!m_adaptStream->good()) m_adaptStream->clear();
             // at this point in time of implementation
             // we do not know the offset to the end of the stream
             // we are adapting

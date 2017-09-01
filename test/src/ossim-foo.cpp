@@ -67,6 +67,7 @@
 #include <ossim/imaging/ossimTwoColorView.h>
 #include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/imaging/ossimCcfHead.h>
 
 #include <ossim/init/ossimInit.h>
 
@@ -79,6 +80,10 @@
 
 #include <ossim/support_data/ossimSrcRecord.h>
 #include <ossim/support_data/ossimWkt.h>
+#include <ossim/support_data/ossimCcfInfo.h>
+
+#include <ossim/base/ossimBlockStreamBuffer.h>
+#include <ossim/base/ossimBlockIStream.h>
 
 // Put your includes here:
 
@@ -87,132 +92,165 @@
 #include <memory>
 #include <sstream>
 #include <iostream>
-using namespace std;
+#include <time.h>
+#include <random>
 
-/*
-void getOverlappingPatchCenters(std::vector<ossimGpt>& patchCenters,
-                           ossimRefPtr<ossimImageGeometry> geom1,
-                           ossimRefPtr<ossimImageGeometry> geom2,
-                           ossim_uint32 size=256)
-{
-   ossimDrect rect1;
-   ossimDrect rect2;
-   geom1->getBoundingRect(rect1);
-   geom2->getBoundingRect(rect2);
-   ossim_uint32 halfSize = size>>1;
-   ossimDpt halfPoint(halfSize, halfSize);
-   ossimIpt originTop    = rect1.ul() + halfPoint;
-   ossimIpt originBottom = rect1.lr() - halfPoint;
-   ossimIpt iteratePoint = originTop;
-   ossimIpt destTop    = rect2.ul() + halfPoint;
-   ossimIpt destBottom = rect2.lr() - halfPoint;
-   ossimDrect originRect(originTop, originBottom);
-   ossimDrect testRect(destTop, destBottom);
-
-   if(originRect.completely_within(rect1))
-   {
-      for(ossim_uint32 y = originTop.y; y < originBottom.y;y+=size)
-      {
-         for(ossim_uint32 x = originTop.x; x < originBottom.x;x+=size)
-         {
-            ossimDpt destImagePt;
-            ossimGpt gpt;
-            geom1->localToWorld(ossimDpt(x,y), gpt);
-            geom2->worldToLocal(gpt, destImagePt);
-            ossimDpt ul = destImagePt - halfPoint;
-            ossimDpt lr = ul + ossimDpt(size-1, size-1);
-            ossimDrect patchRect(ul, lr);
-            if(patchRect.completely_within(testRect))
-            {
-               patchCenters.push_back(gpt);   
-            }
-         }
-      }
-   }
-   else
-   {
-      std::cout << "Patch size is too big for it exceeds the bounds of the image\n";
-   }
-
-}
-*/
 int main(int argc, char *argv[])
 {
    int returnCode = 0;
-   
    ossimArgumentParser ap(&argc, argv);
    ossimInit::instance()->addOptions(ap);
    ossimInit::instance()->initialize(ap);
+   ossim_int32 i;
+   ossimString tempString1;
+   ossimApplicationUsage* au = ap.getApplicationUsage();
 
+   ossimString usageString = ap.getApplicationName();
+   usageString += " ";
+
+
+   au->setCommandLineUsage(usageString);
+   au->addCommandLineOption("--file", "Specify a file to test reading");
+   au->addCommandLineOption("--blocksize", "Specify a blockSize for the stream. Default 32k");
+   au->addCommandLineOption("--random-read", "Enable random read");
+   au->addCommandLineOption("--random-read-buf", "Enable random read buf size");
+   au->addCommandLineOption("--read-buf-size", "Specify the buf size");
+   au->addCommandLineOption("--number-of-reads", "Specify the number of reads");
+   au->addCommandLineOption("--block-read", "Enable block read");
+
+   ossimArgumentParser::ossimParameter stringParam1(tempString1);
+   ossimFilename file;
+   ossim_int64 blockSize=128*1024; 
+   ossim_uint32 numberOfReads = 1024*1024; 
+   ossim_uint32 readBufSize = 32; 
+   bool randomReadFlag = false;
+   bool randomReadBuf  = false;
+   bool blockRead  = false;
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<ossim_float64> randomBufSize;
+    std::uniform_real_distribution<ossim_float64> randomReadOffset;
+
+   if( ap.read("--blocksize", stringParam1) )
+   {
+      blockSize = ossimString(tempString1).toUInt32();
+   }
+   if( ap.read("--file", stringParam1) )
+   {
+      file = tempString1;
+   }
+   if( ap.read("--random-read") )
+   {
+      randomReadFlag = true;
+   }
+   if( ap.read("--random-read-buf") )
+   {
+      randomReadBuf = true;
+   }
+   if( ap.read("--read-buf-size", stringParam1) )
+   {
+      readBufSize = tempString1.toUInt32();
+   }
+   if( ap.read("--block-read") )
+   {
+      blockRead = true;
+   }
+
+   std::cout << "FILE =" << file << "=\n";
+   if(file.empty())
+   {
+      std::cout << "WRITING?????\n";
+      ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
+      return 0;
+   }
    try
    {
-      ossimKeywordlist kwl;
-      ossimRefPtr<ossimImageHandler> ih = ossimImageHandlerRegistry::instance()->open(ossimFilename(argv[1]));
-
-      ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
-      if(geom.valid())
-      {  
-         ossimDrect rect;
-         ossimDpt dpt;
-         geom->getBoundingRect(rect);
-         dpt = rect.midPoint();
-         std::cout << rect << "\n";
-
-         std::cout << "UP IS UP " << geom->upIsUpAngle(dpt) << "\n";
-      
-         ossimGpt gpt;
-         geom->localToWorld(dpt, gpt);
-         ossimEcefPoint ecefPoint(gpt);
-         
-         ossimGpt gpt2 = gpt;
-         gpt2.height(gpt2.height()+10);
-
-         ossimEcefPoint ecefPoint2(gpt2);
-
-         std::cout << "ecef: " << ecefPoint << "\n";
-         std::cout << "ecef2: " << ecefPoint2 << "\n";
-         ossimEcefVector v(ecefPoint2-ecefPoint);
-         std::cout << "ecef v: " << v << "\n";
-         std::cout << "LENGTH: " << v.normalize() << "\n";
-         std::cout << "NORM: " << v << "\n";
-
-      }
-   
-
-      /*
-      if(argc > 2)
+      if(randomReadFlag)
       {
-         ossim_uint32 patchSize = 512;
-         ossimRefPtr<ossimImageHandler> ih1 = ossimImageHandlerRegistry::instance()->open(ossimFilename(argv[1]));
-         ossimRefPtr<ossimImageHandler> ih2 = ossimImageHandlerRegistry::instance()->open(ossimFilename(argv[2]));
-         if(argc > 3)
+         std::cout << "file size ==== " << file.fileSize() << "\n";
+         randomReadOffset = std::uniform_real_distribution<double>(1, file.fileSize()-readBufSize);
+      }
+      if(randomReadBuf)
+      {
+         randomBufSize = std::uniform_real_distribution<ossim_float64>(1, readBufSize);
+      }
+      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->createIstream(file,
+                                                             std::ios_base::in|std::ios_base::binary);
+   
+     if(in)
+      {
+#if 1
+         std::vector<char> buf(readBufSize);
+         std::shared_ptr<ossim::istream> inputStream;
+         if(blockRead)
          {
-            patchSize = ossimString(argv[3]).toUInt32();
+            std::cout << "DOING BLOCK READ!!!!\n";
+            inputStream = std::make_shared<ossim::BlockIStream>(in,blockSize);
          }
-         if(ih1.valid()&&ih2.valid())
+         else
          {
-            std::vector<ossimGpt> points;
-            ossimPolyArea2d poly1;
-            ossimPolyArea2d poly2;
-            ossimRefPtr<ossimImageGeometry> geom1 = ih1->getImageGeometry();
-            ossimRefPtr<ossimImageGeometry> geom2 = ih2->getImageGeometry();
+            std::cout << "DOING NON BLOCK READS\n";
+            inputStream = in;
+         }
 
-            getOverlappingPatchCenters(points, geom1, geom2, patchSize);
+         ossim_int64 bytesRead = 0;
 
-            ossim_uint32 idx = 0;
-            for(idx=0;idx < points.size(); ++idx)
+         ossim_int32 count = 0;
+
+         if(randomReadFlag)
+         {
+            ossim_int64 offset = 0;
+            std::cout << "DOING RANDOM READ\n";
+            while(count < numberOfReads)
             {
+               offset = static_cast<ossim_int64>(randomReadOffset(mt));
+               if(!inputStream->good())
+               {
+                  inputStream->clear();
+               }
+               inputStream->seekg(offset);
+               ossim_uint32 tempSize = buf.size();
+               if(randomReadBuf)
+               {
+                  tempSize = static_cast<ossim_uint32>(randomBufSize(mt));
 
-               std::cout << points[idx].latd() <<  " " << points[idx].lond() << "\n";
+               }
+               
+               inputStream->read(&buf.front(), tempSize);
+               bytesRead += inputStream->gcount();
+
+               if((count%(4*1024))==0)
+               {
+              //    std::cout <<"bytesRead = " << bytesRead << "\n";
+               }
+               ++count;
             }
          }
+         else
+         {
+            std::cout << "DOING SEQUENTIAL READ\n";
+            while((count < numberOfReads)&&
+               (inputStream->good()))
+            {
+               ossim_uint32 tempSize = buf.size();
+               if(randomReadBuf)
+               {
+                  tempSize = static_cast<ossim_uint32>(randomBufSize(mt));
+
+               }
+               
+               inputStream->read(&buf.front(), tempSize);
+               // std::cout << "tellg: " << inputStream->tellg() << "\n";
+               bytesRead += inputStream->gcount();
+               
+               ++count;
+            }
+         }
+         std::cout << "NUMBER OF READS = " << count << "\n";
+         std::cout << "BYTES READ = " << bytesRead << "\n";
+         std::cout << "TELLG: " << inputStream->tellg() << "\n";
       }
-      else
-      {
-         std::cout << "Arguments must be <image 1> <image 2> <tile_size>\n";
-         std::cout << "  where tile_size is optional\n";
-      }
-*/
+      #endif
       // Put your code here.
    }
    catch(const ossimException& e)
@@ -226,6 +264,6 @@ int main(int argc, char *argv[])
          << "ossim-foo caught unhandled exception!" << std::endl;
       returnCode = 1;
    }
-   
+
    return returnCode;
 }
