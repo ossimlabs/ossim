@@ -18,7 +18,7 @@
 set(CMAKE_FIND_FRAMEWORK "LAST")
 find_path(OSSIM_INCLUDE_DIR ossim/ossimVersion.h ossimVersion.h
    PATHS
-      $ENV{OSSIM_DEV_HOME}/core/include
+      $ENV{OSSIM_DEV_HOME}/ossim/include
       $ENV{OSSIM_INSTALL_PREFIX}/include
    PATH_SUFFIXES 
       include
