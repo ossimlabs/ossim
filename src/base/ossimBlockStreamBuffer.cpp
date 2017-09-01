@@ -12,8 +12,6 @@ ossim::BlockStreamBuffer::BlockStreamBuffer(ossim::istream* adaptStream, ossim_u
    {
       m_blockBuffer.resize(m_blockInfo.m_blockSize);
       m_blockInfo.m_blockBufferPtr = &m_blockBuffer.front();
-
-//      setbuf(m_blockInfo.m_blockBufferPtr, m_blockInfo.m_blockSize);
    }
    setg(0, 0, 0);
 }
@@ -85,7 +83,6 @@ std::streambuf::pos_type ossim::BlockStreamBuffer::seekoff(off_type offset,
    pos_type result = pos_type(off_type(-1));
    if(m_adaptStream)
    {
-      // result = m_adaptStream->rdbuf()->pubseekoff(offset, dir, mode);
       ossim_int64 pos = m_currentPosValue;
       switch(dir)
       {
