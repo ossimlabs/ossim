@@ -100,7 +100,8 @@ bool ossim::StreamFactoryRegistry::getBlocked(ossim_uint64& blockSize,
    bool result = false;
 
    for(std::vector<BlockInfo>::const_iterator iter = m_blockInfoList.begin();
-      iter != m_blockInfoList.end(); ++iter)
+      iter != m_blockInfoList.end(); 
+      ++iter)
    {
       if(iter->m_enabled&&iter->m_pattern.is_valid())
       {
@@ -133,7 +134,14 @@ std::shared_ptr<ossim::istream> ossim::StreamFactoryRegistry::createIstream(
          ossim_uint64 blockSize;
          if(getBlocked(blockSize, connectionString))
          {
+            std::cout << "BLOCKED: " << connectionString << "\n";
+            std::cout << "SIZE:    " << blockSize << "\n";
             result = std::make_shared<ossim::BlockIStream>(result, blockSize);
+         }
+         else
+         {
+            std::cout << "NOT BLOCKED: " << connectionString << "\n";
+
          }
                
       }
