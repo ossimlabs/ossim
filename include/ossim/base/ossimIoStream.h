@@ -190,8 +190,11 @@ public:
    :ossim::istream(in->rdbuf()),
    m_inputStream(in)
    {
-      m_buffer.resize(bufferSize);
-      m_inputStream->rdbuf()->pubsetbuf(&m_buffer.front(), m_buffer.size());
+      if(bufferSize > 0)
+      {
+         m_buffer.resize(bufferSize);
+         rdbuf()->pubsetbuf(&m_buffer.front(), m_buffer.size());
+      }
    }
    virtual ~ossimBufferedInputStream()
    {
