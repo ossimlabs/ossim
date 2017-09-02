@@ -741,9 +741,11 @@ ossim.plugins.aws.s3.cacheInvalidLocations: true
 // Keywords 
 // This is used by the stream factory registry when generating 
 // input streams.  If the connection pattern matches the includePattern
-// then it will wrap that stream with an ossim::BlockIStream so that all
-// calls are done on the defined block size boundary
+// then it will wrap that stream with an ossim::BlockIStream if
+// enableBlocked is true or it will wrap with an ossimBufferedIStream
+// if enabledBlock is false
 //
-ossim.stream.factory.registry.istream.block1.enabled: false
-ossim.stream.factory.registry.istream.block1.includePattern: ^/
-ossim.stream.factory.registry.istream.block1.size: 4096
+//ossim.stream.factory.registry.istream.buffer1.enabled: false
+//ossim.stream.factory.registry.istream.buffer1.enableBlocked: false
+//ossim.stream.factory.registry.istream.buffer1.includePattern: ^/
+//ossim.stream.factory.registry.istream.buffer1.size: 65536
