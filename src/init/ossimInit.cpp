@@ -144,7 +144,7 @@ void ossimInit::initialize(ossimArgumentParser& parser)
    theInstance->parsePrefsOptions(parser);
    // Stream factories must be initialized before call to: ossimPreferences::instance()
    ossim::StreamFactoryRegistry::instance()->registerFactory(ossim::StreamFactory::instance());
-   ossimStreamFactoryRegistry::instance()->registerFactory(ossimStreamFactory::instance());
+   ossim::StreamFactoryRegistry::instance()->registerFactory(ossim::StreamFactory::instance());
 
    theInstance->theAppName  = parser.getApplicationUsage()->getApplicationName();
 
