@@ -102,7 +102,7 @@ ossimElevSource* ossimSrtmFactory::getNewElevSource(const ossimGpt& gpt) const
    {
       srtmFileBasename += "E";
    }
-
+   ossimKeywordlist istreamOptions;
    ilon = abs(ilon);
    std::ostringstream  os2;
    os2 << std::setfill('0') << std::setw(3) << ilon;
@@ -120,32 +120,25 @@ ossimElevSource* ossimSrtmFactory::getNewElevSource(const ossimGpt& gpt) const
          << std::endl;
    }
 
-   // ossimRefPtr<ossimIFStream> is = ossimStreamFactoryRegistry::instance()->
-   std::shared_ptr<ossim::ifstream> is = ossimStreamFactoryRegistry::instance()->
-      createIFStream(srtmFile, std::ios::in | std::ios::binary);
+   std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+      createIstream(srtmFile, istreamOptions, std::ios::in | std::ios::binary);
 
    // Look for the file mix case, then all lower case, then all upper case.
-   if ( is )
+   if ( is && is->fail())
    {
-      if(is->fail())
+      // Try down casing the whole thing.
+      srtmFileBasename = srtmFileBasename.downcase();
+      srtmFile = theDirectory.dirCat(srtmFileBasename);
+      
+      is = ossim::StreamFactoryRegistry::instance()->
+         createIstream(srtmFile, istreamOptions, std::ios::in | std::ios::binary);      
+      if ( is && is->fail())
       {
-         // Try down casing the whole thing.
-         srtmFileBasename = srtmFileBasename.downcase();
+         // OK, try upcasing the whole thing.
+         srtmFileBasename = srtmFileBasename.upcase();
          srtmFile = theDirectory.dirCat(srtmFileBasename);
-         
-         is = ossimStreamFactoryRegistry::instance()->
-            createIFStream(srtmFile, std::ios::in | std::ios::binary);      
-         if ( is )
-         {
-            if(is->fail())
-            {
-               // OK, try upcasing the whole thing.
-               srtmFileBasename = srtmFileBasename.upcase();
-               srtmFile = theDirectory.dirCat(srtmFileBasename);
-               is =  ossimStreamFactoryRegistry::instance()->
-                  createIFStream(srtmFile, std::ios::in | std::ios::binary);
-            }
-         }
+         is =  ossim::StreamFactoryRegistry::instance()->
+            createIstream(srtmFile, istreamOptions, std::ios::in | std::ios::binary);
       }
    }
 
