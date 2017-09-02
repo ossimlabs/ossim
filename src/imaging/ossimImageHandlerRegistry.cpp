@@ -231,6 +231,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open(
       vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
       while( factory != m_factoryList.end() )
       {
+         if(!str->good()) str->clear();
          result = (*factory)->open( str, connectionString, openOverview );
          if ( result.valid() )
          {
