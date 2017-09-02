@@ -91,7 +91,7 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(
    {
       // Reset the stream for downstream code.
       str->seekg(0, std::ios_base::beg);
-      str->clear();
+      if(!str->good())str->clear();
       
       // TIFF:
       ossimRefPtr<ossimTiffTileSource> ihTiff = new ossimTiffTileSource();
