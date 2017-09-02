@@ -40,6 +40,8 @@
 #include <fstream>
 #include <sstream>
 
+// needed by std::shared_ptr
+#include <memory>
 //---
 // Depreciated:
 //---
@@ -174,6 +176,43 @@ public:
 
    virtual ~ossimOFStream();
 
+};
+
+/**
+*  Alows one to create a buffered input stream
+*/
+class OSSIM_DLL ossimBufferedInputStream : public ossim::istream
+{
+public:
+   /**
+   * will use the read buffer of the passed in input stream and
+   * will set the buffer based on the buffer size passed in
+   */
+   ossimBufferedInputStream(std::shared_ptr<ossim::istream> in, ossim_uint32 bufferSize=1024 )
+   :ossim::istream(in->rdbuf()),
+   m_inputStream(in)
+   {
+      if(bufferSize > 0)
+      {
+         m_buffer.resize(bufferSize);
+         rdbuf()->pubsetbuf(&m_buffer.front(), m_buffer.size());
+      }
+   }
+   virtual ~ossimBufferedInputStream()
+   {
+      m_inputStream = 0;
+   }
+protected:
+   /**
+   * We have a buffer that we allocate so it does not
+   * loose scope through the life of this stream
+   */
+   std::vector<char> m_buffer;
+
+   /**
+   * We will save the input stream we set the buffer to.
+   */
+   std::shared_ptr<ossim::istream> m_inputStream;
 };
 
 
