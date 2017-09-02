@@ -1080,6 +1080,32 @@ bool ossimKeywordlist::parseStream(ossim::istream& is)
    return true;
 }
 
+void ossimKeywordlist::getSortedList(std::vector<ossimString>& prefixValues,
+                                     const ossimString &prefixKey)const
+{
+   ossimString regExpression     =  ossimString("^(") + prefixKey+ "[0-9]+)";
+   prefixValues.clear();
+   std::vector<ossimString> keys;
+   getSubstringKeyList(keys, regExpression);
+   ossim_uint32 nKeys = (long)keys.size();
+
+   ossim_uint32 offset = (int)ossimString(prefixKey).size();
+   ossim_uint32 idx = 0;
+   std::vector<ossim_uint32> numberList(nKeys);
+   for(idx = 0; idx < (int)numberList.size();++idx)
+   {
+    ossimString numberStr(keys[idx].begin() + offset,
+           keys[idx].end());
+    numberList[idx] = numberStr.toInt();
+   }
+   std::sort(numberList.begin(), numberList.end());
+
+   for(idx=0;idx < (int)numberList.size();++idx)
+   {
+      prefixValues.push_back(prefixKey+ossimString::toString(numberList[idx]));
+   }
+}
+
 std::vector<ossimString> ossimKeywordlist::findAllKeysThatContains(const ossimString &searchString)const
 {
    KeywordMap::const_iterator i;
