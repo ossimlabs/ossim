@@ -830,6 +830,7 @@ double ossimGeneralRasterTileSource::getMaxPixelValue(ossim_uint32 band)const
 
 bool ossimGeneralRasterTileSource::open()
 {
+std::cout << "ossimGeneralRasterTileSource::open(): .... entered\n";
    static const char MODULE[] = "ossimGeneralRasterTileSource::open";
 
    if (traceDebug()) CLOG << " Entered..." << std::endl;
@@ -919,26 +920,22 @@ bool ossimGeneralRasterTileSource::initializeHandler()
       ossimFilename f = aList[i];
       
       // open it...
-      std::shared_ptr<ossim::ifstream> is = ossimStreamFactoryRegistry::instance()->
-         createIFStream(f, std::ios::in|std::ios::binary);
+      std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+         createIstream(f, std::ios::in|std::ios::binary);
 
       // check the stream...
-      if( is )
+      if( is && is->fail())
       {
          // Check the file stream.
-         if ( is->fail() )
-         {
-            theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
-            ossimNotify(ossimNotifyLevel_WARN)
-               << "ossimGeneralRasterTileSource::open" << " ERROR:\n"
-               << "Cannot open:  " << f.c_str() << std::endl;
-            is = 0;
-            return false;
-         }
+         theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
+         ossimNotify(ossimNotifyLevel_WARN)
+            << "ossimGeneralRasterTileSource::open" << " ERROR:\n"
+            << "Cannot open:  " << f.c_str() << std::endl;
+         is = 0;
+         return false;
       }
 
       // Check the file size (removed).
-
       m_fileStrList.push_back(is); // Add it to the list...
    }
 
@@ -1019,10 +1016,11 @@ void ossimGeneralRasterTileSource::close()
       m_lineBuffer = 0;
    }
 
-   std::vector< shared_ptr<ossim::ifstream> >::iterator is = m_fileStrList.begin();
+   std::vector< shared_ptr<ossim::istream> >::iterator is = m_fileStrList.begin();
    while (is != m_fileStrList.end())
    {
-      (*is)->close();
+      (*is) = 0;
+    //  (*is)->close();
       // delete (*is);
       // (*is) = 0;
       ++is;

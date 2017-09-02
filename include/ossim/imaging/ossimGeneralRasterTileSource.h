@@ -189,7 +189,7 @@ protected:
    ossim_uint8*                             m_buffer;
    ossim_uint8*                             m_lineBuffer;
    ossimInterleaveType                      m_bufferInterleave;
-   std::vector< std::shared_ptr<ossim::ifstream> > m_fileStrList;
+   std::vector< std::shared_ptr<ossim::istream> > m_fileStrList;
    // std::vector< std::ifstream* >            m_fileStrList;   
    ossimGeneralRasterInfo                   m_rasterInfo;
    ossimIrect                               m_bufferRect;
