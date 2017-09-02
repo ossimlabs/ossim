@@ -75,9 +75,8 @@ bool ossimSrtmSupportData::setFilename(const ossimFilename& srtmFile,
          << "\nscanForMinMax flag:  " << scanForMinMax
          << std::endl;
    }
-   
-   m_str =  ossimStreamFactoryRegistry::instance()->
-      createIFStream(m_file, std::ios_base::in | std::ios_base::binary);
+   m_str =  ossim::StreamFactoryRegistry::instance()->
+      createIstream(m_file, m_istreamOptions, std::ios_base::in | std::ios_base::binary);
    if (m_str)
    {
       if(m_str->fail())
@@ -164,11 +163,11 @@ bool ossimSrtmSupportData::setFilename(const ossimFilename& srtmFile,
       saveState(kwl);
       kwl.write(omdFile);
    }
-
-   if(m_str->is_open())
-   {
-      m_str->close();
-   }
+   m_str = 0;
+   // if(m_str->is_open())
+   // {
+   //    m_str->close();
+   // }
    
    if (traceDebug())
    {
@@ -669,11 +668,11 @@ bool ossimSrtmSupportData::setSize()
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "ossimSrtmSupportData::setSize(): entered..." << std::endl;
    }
-
-   if(m_str->is_open() == false)
+//   if(m_str->is_open() == false)
+   if(!m_str)
    {
-      m_str = ossimStreamFactoryRegistry::instance()->createIFStream(
-         m_file, std::ios_base::in | std::ios_base::binary);
+      m_str = ossim::StreamFactoryRegistry::instance()->createIstream(
+         m_file, m_istreamOptions, std::ios_base::in | std::ios_base::binary);
    }
    
    if (!m_str)
@@ -812,7 +811,8 @@ bool ossimSrtmSupportData::setSize()
          << std::endl;
    }
 
-   m_str->close();
+   m_str = 0;
+   // m_str->close();
    
    return true;
 }
@@ -832,11 +832,13 @@ template <class T>
 bool ossimSrtmSupportData::computeMinMaxTemplate(T /* dummy */,
                                                  double defaultNull)
 {
-   if(m_str->is_open() == false)
+//   if(m_str->is_open() == false)
+   if(!m_str)
    {
       m_str =
-         ossimStreamFactoryRegistry::instance()->createIFStream(
+         ossim::StreamFactoryRegistry::instance()->createIstream(
             m_file,
+            m_istreamOptions,
             std::ios_base::in | std::ios_base::binary);
    }
    
@@ -878,7 +880,7 @@ bool ossimSrtmSupportData::computeMinMaxTemplate(T /* dummy */,
    m_minPixelValue = minValue;
    m_maxPixelValue = maxValue;
 
-   m_str->close();
+   m_str = 0;
 
    return true;
 }
