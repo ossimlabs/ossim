@@ -17,10 +17,10 @@
 #include <algorithm>
 
 ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::m_instance = 0;
-static const ossimString ISTREAM_BLOCK_KW = "ossim.stream.factory.registry.istream.block";
+static const ossimString ISTREAM_BUFFER_KW = "ossim.stream.factory.registry.istream.buffer";
 ossim::StreamFactoryRegistry::StreamFactoryRegistry()
 {
-   loadPatterns();
+   loadPreferences();
 }
 
 
@@ -38,76 +38,67 @@ ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::instance()
    return m_instance;
 }
 
-void ossim::StreamFactoryRegistry::loadPatterns()
+void ossim::StreamFactoryRegistry::loadPreferences()
 {
-   const ossimKeywordlist& kwl   = ossimPreferences::instance()->preferencesKWL();
-   ossimString regExpression     =  ossimString("^(") + ISTREAM_BLOCK_KW+ "[0-9]+.)";
-   std::vector<ossimString> keys = kwl.getSubstringKeyList( regExpression );
-   long numberOfBlocks           = (long)keys.size();
-
-   int offset = (int)ossimString(ISTREAM_BLOCK_KW).size();
-   int idx = 0;
-   std::vector<int> numberList(numberOfBlocks);
-   for(idx = 0; idx < (int)numberList.size();++idx)
-     {
-       ossimString numberStr(keys[idx].begin() + offset,
-              keys[idx].end());
-       numberList[idx] = numberStr.toInt();
-     }
-   std::sort(numberList.begin(), numberList.end());
-   if(numberList.size())
+   std::vector<ossimString> sortedList;
+   ossimPreferences::instance()->preferencesKWL()
+         .getSortedList(sortedList, ISTREAM_BUFFER_KW);
+   if(sortedList.size())
    {
-      m_blockInfoList.resize(numberList.size());
+      m_bufferInfoList.resize(sortedList.size());
    }
    else
    {
-      m_blockInfoList.clear();
+      m_bufferInfoList.clear();
    }
-   for(idx=0;idx < (int)numberList.size();++idx)
+   ossim_uint32 idx=0;
+   for(std::vector<ossimString>::const_iterator iter = sortedList.begin();
+       iter!=sortedList.end();
+       ++iter,++idx)
    {
-      ossimString newPrefix = ISTREAM_BLOCK_KW;
-      newPrefix += ossimString::toString(numberList[idx]);
-      newPrefix += ossimString(".");
+      ossimString prefix = *iter;
+      ossimString bufferIStreamEnabled        = ossimPreferences::instance()->findPreference(prefix+".enabled");
+      ossimString bufferIStreamBlockEnabled   = ossimPreferences::instance()->findPreference(prefix+".enableBlocked");
+      ossimString bufferIStreamIncludePattern = ossimPreferences::instance()->findPreference(prefix+".includePattern");
+      ossimString bufferIStreamSize           = ossimPreferences::instance()->findPreference(prefix+".size");
 
-      ossimString blockIStreamEnabled        = ossimPreferences::instance()->findPreference(newPrefix+"enabled");
-      ossimString blockIStreamIncludePattern = ossimPreferences::instance()->findPreference(newPrefix+"includePattern");
-      ossimString blockIStreamSize           = ossimPreferences::instance()->findPreference(newPrefix+"size");
-
-      if(!blockIStreamSize.empty())
+      if(!bufferIStreamSize.empty())
       {
-         m_blockInfoList[idx].m_size = blockIStreamSize.toUInt64();
+         m_bufferInfoList[idx].m_size = bufferIStreamSize.toUInt64();
       }
-      if(!blockIStreamEnabled.empty())
+      if(!bufferIStreamEnabled.empty())
       {
-         m_blockInfoList[idx].m_enabled = blockIStreamEnabled.toBool();
+         m_bufferInfoList[idx].m_enabled = bufferIStreamEnabled.toBool();
       }
-      if(m_blockInfoList[idx].m_enabled&&!blockIStreamIncludePattern.empty())
+      if(!bufferIStreamBlockEnabled.empty())
       {
-         m_blockInfoList[idx].m_pattern.compile(blockIStreamIncludePattern.c_str());
+         m_bufferInfoList[idx].m_enableBlocked = bufferIStreamBlockEnabled.toBool();
+      }
+      if(m_bufferInfoList[idx].m_enabled&&!bufferIStreamIncludePattern.empty())
+      {
+         m_bufferInfoList[idx].m_pattern.compile(bufferIStreamIncludePattern.c_str());
       }
       else
       {
-         m_blockInfoList[idx].m_pattern.set_invalid();
+         m_bufferInfoList[idx].m_pattern.set_invalid();
       }
-
    }
-
 }
 
-bool ossim::StreamFactoryRegistry::getBlocked(ossim_uint64& blockSize, 
+bool ossim::StreamFactoryRegistry::getBufferInfo(BufferInfo& bufferInfo, 
                                               const ossimString& connectionString)const
 {
    bool result = false;
 
-   for(std::vector<BlockInfo>::const_iterator iter = m_blockInfoList.begin();
-      iter != m_blockInfoList.end(); 
+   for(std::vector<BufferInfo>::const_iterator iter = m_bufferInfoList.begin();
+      iter != m_bufferInfoList.end(); 
       ++iter)
    {
       if(iter->m_enabled&&iter->m_pattern.is_valid())
       {
          if(iter->m_pattern.find(connectionString.c_str()))
          {
-            blockSize = iter->m_size;
+            bufferInfo = *iter;
             result = true;
             break;
          }
@@ -131,19 +122,18 @@ std::shared_ptr<ossim::istream> ossim::StreamFactoryRegistry::createIstream(
 
       if(result)
       {
-         ossim_uint64 blockSize;
-         if(getBlocked(blockSize, connectionString))
+         BufferInfo bufferInfo;
+         if(getBufferInfo(bufferInfo, connectionString))
          {
-            std::cout << "BLOCKED: " << connectionString << "\n";
-            std::cout << "SIZE:    " << blockSize << "\n";
-            result = std::make_shared<ossim::BlockIStream>(result, blockSize);
+            if(bufferInfo.m_enableBlocked)
+            {
+               result = std::make_shared<ossim::BlockIStream>(result, bufferInfo.m_size);
+            }
+            else
+            {
+               result = std::make_shared<ossimBufferedInputStream>(result, bufferInfo.m_size);
+            }
          }
-         else
-         {
-            std::cout << "NOT BLOCKED: " << connectionString << "\n";
-
-         }
-               
       }
    }
    return result;
@@ -207,92 +197,3 @@ void ossim::StreamFactoryRegistry::unregisterFactory(StreamFactoryBase* factory)
       m_factoryList.erase( iter );
    }
 }
-
-// Deprecated code:
-ossimStreamFactoryRegistry* ossimStreamFactoryRegistry::theInstance = 0;
-
-ossimStreamFactoryRegistry::ossimStreamFactoryRegistry()
-{
-}
-
-ossimStreamFactoryRegistry::~ossimStreamFactoryRegistry()
-{
-}
-
-ossimStreamFactoryRegistry* ossimStreamFactoryRegistry::instance()
-{
-   if(!theInstance)
-   {
-      theInstance = new ossimStreamFactoryRegistry();
-   }
-   return theInstance;
-}
-
-std::shared_ptr<ossim::ifstream> ossimStreamFactoryRegistry::createIFStream(
-   const ossimFilename& file, std::ios_base::openmode openMode) const
-{
-   std::shared_ptr<ossim::ifstream>result(0);
-   
-   for(ossim_uint32 idx = 0; ((idx < theFactoryList.size())&&(!result)); ++idx)
-   {
-      result = theFactoryList[idx]->createIFStream(file, openMode);
-   }
-
-   if(!result)
-   {
-      if(file.exists())
-      {
-         // there is a bug in gcc < 5.0 and we can't use constructors in the 
-         // C++11 build.  Will refactor to do a new ifstream then use open
-         //
-
-         result = std::make_shared<ossim::ifstream>();
-         result->open(file.c_str(), openMode);
-         if(!result->is_open())
-         {
-            result.reset();
-         }
-      }
-   }
-   
-   return result; 
-   
-}
-
-ossimRefPtr<ossimIFStream>
-ossimStreamFactoryRegistry::createNewIFStream(
-   const ossimFilename& file,
-   std::ios_base::openmode openMode) const
-{
-   ossim_uint32 idx = 0;
-   ossimRefPtr<ossimIFStream> result = 0;
-   for(idx = 0; ((idx < theFactoryList.size())&&(!result)); ++idx)
-   {
-      result = theFactoryList[idx]->createNewIFStream(file, openMode);
-   }
-
-   if(!result)
-   {
-      result = new ossimIFStream(file.c_str(),
-                                 openMode);
-//       result = new std::ifstream(file.c_str(),
-//                                  openMode);
-   }
-   
-   return result;
-}
-
-
-void ossimStreamFactoryRegistry::registerFactory(ossimStreamFactoryBase* factory)
-{
-   std::vector<ossimStreamFactoryBase*>::iterator iter = std::find(theFactoryList.begin(),
-                                                                  theFactoryList.end(),
-                                                                  factory);
-   if(iter == theFactoryList.end())
-   {
-      theFactoryList.push_back(factory);
-   }
-}
-
-ossimStreamFactoryRegistry::ossimStreamFactoryRegistry(const ossimStreamFactoryRegistry&)
-{}
