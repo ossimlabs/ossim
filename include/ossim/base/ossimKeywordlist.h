@@ -419,6 +419,26 @@ public:
    virtual bool parseStream(ossim::istream& is);
    virtual bool parseString(const std::string& inString);
 
+   /**
+   * This return the sorted keys if you have a list.
+   * Example:
+   * @code
+   * // given a keywordlist called kwl with contents: 
+   * // my.list.element1.prop
+   * // my.list.element345.prop
+   * // my.list.element22.prop
+   * std::vector<ossimString> sortedPrefixValues;
+   * kwl.getSortedList(sortedPrefixValues, "my.list.element");
+   * if(sortedPrefixValues.size())
+   * {
+   * // contents should be my.list.element1, my.list.element22, my.list.element345
+   *
+   * }
+   * @endcode
+   *
+   */
+   void getSortedList(std::vector<ossimString>& prefixValues,
+                      const ossimString &prefixKey)const;
    /*!
     *  Will return a list of keys that contain the string passed in.
     *  Later we will need to allow a user to specify regular expresion
