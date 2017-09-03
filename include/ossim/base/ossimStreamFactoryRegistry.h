@@ -218,30 +218,4 @@ namespace ossim
    
 } // End: namespace ossim
 
-// Deprecated code...
-class OSSIM_DLL ossimStreamFactoryRegistry : public ossimStreamFactoryBase
-{
-public:
-   static ossimStreamFactoryRegistry* instance();
-   virtual ~ossimStreamFactoryRegistry();
-   
-   void registerFactory(ossimStreamFactoryBase* factory);
-
-   virtual std::shared_ptr<ossim::ifstream>
-      createIFStream(const ossimFilename& file,
-                     std::ios_base::openmode openMode) const;
-   
-   virtual ossimRefPtr<ossimIFStream> createNewIFStream(
-      const ossimFilename& file, std::ios_base::openmode openMode) const;
-   
-protected:
-   ossimStreamFactoryRegistry();
-private:
-   /** @brief copy constructor hidden from use */
-   ossimStreamFactoryRegistry(const ossimStreamFactoryRegistry&);
-   
-   std::vector<ossimStreamFactoryBase*> theFactoryList;
-   static ossimStreamFactoryRegistry* theInstance;
-};
-
 #endif

@@ -65,27 +65,4 @@ namespace ossim
       static StreamFactory* m_instance;
    };
 }
-
-// Deprecated code...
-class OSSIM_DLL ossimStreamFactory : public ossimStreamFactoryBase
-{
-public:
-   static ossimStreamFactory* instance();
-   virtual ~ossimStreamFactory();
-
-   virtual std::shared_ptr<ossim::ifstream>
-      createIFStream(const ossimFilename& file,
-                     std::ios_base::openmode mode) const;
-   
-   virtual ossimRefPtr<ossimIFStream>
-      createNewIFStream(const ossimFilename& file,
-                        std::ios_base::openmode mode) const;
-   
-protected:
-   ossimStreamFactory();
-   ossimStreamFactory(const ossimStreamFactory&);
-   static ossimStreamFactory* theInstance;
-   
-};
-
 #endif

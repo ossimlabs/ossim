@@ -18,10 +18,11 @@
 #include <algorithm>
 #include <ossim/base/ossimTrace.h>
 
-static ossimTrace traceDebug("ossimStreamFactoryRegistry:debug");
 
 ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::m_instance = 0;
 static const ossimString ISTREAM_BUFFER_KW = "ossim.stream.factory.registry.istream.buffer";
+static ossimTrace traceDebug("ossimStreamFactoryRegistry:debug");
+
 ossim::StreamFactoryRegistry::StreamFactoryRegistry()
 {
    loadPreferences();
@@ -221,92 +222,3 @@ void ossim::StreamFactoryRegistry::unregisterFactory(StreamFactoryBase* factory)
       m_factoryList.erase( iter );
    }
 }
-
-// Deprecated code:
-ossimStreamFactoryRegistry* ossimStreamFactoryRegistry::theInstance = 0;
-
-ossimStreamFactoryRegistry::ossimStreamFactoryRegistry()
-{
-}
-
-ossimStreamFactoryRegistry::~ossimStreamFactoryRegistry()
-{
-}
-
-ossimStreamFactoryRegistry* ossimStreamFactoryRegistry::instance()
-{
-   if(!theInstance)
-   {
-      theInstance = new ossimStreamFactoryRegistry();
-   }
-   return theInstance;
-}
-
-std::shared_ptr<ossim::ifstream> ossimStreamFactoryRegistry::createIFStream(
-   const ossimFilename& file, std::ios_base::openmode openMode) const
-{
-   std::shared_ptr<ossim::ifstream>result(0);
-   
-   for(ossim_uint32 idx = 0; ((idx < theFactoryList.size())&&(!result)); ++idx)
-   {
-      result = theFactoryList[idx]->createIFStream(file, openMode);
-   }
-
-   if(!result)
-   {
-      if(file.exists())
-      {
-         // there is a bug in gcc < 5.0 and we can't use constructors in the 
-         // C++11 build.  Will refactor to do a new ifstream then use open
-         //
-
-         result = std::make_shared<ossim::ifstream>();
-         result->open(file.c_str(), openMode);
-         if(!result->is_open())
-         {
-            result.reset();
-         }
-      }
-   }
-   
-   return result; 
-   
-}
-
-ossimRefPtr<ossimIFStream>
-ossimStreamFactoryRegistry::createNewIFStream(
-   const ossimFilename& file,
-   std::ios_base::openmode openMode) const
-{
-   ossim_uint32 idx = 0;
-   ossimRefPtr<ossimIFStream> result = 0;
-   for(idx = 0; ((idx < theFactoryList.size())&&(!result)); ++idx)
-   {
-      result = theFactoryList[idx]->createNewIFStream(file, openMode);
-   }
-
-   if(!result)
-   {
-      result = new ossimIFStream(file.c_str(),
-                                 openMode);
-//       result = new std::ifstream(file.c_str(),
-//                                  openMode);
-   }
-   
-   return result;
-}
-
-
-void ossimStreamFactoryRegistry::registerFactory(ossimStreamFactoryBase* factory)
-{
-   std::vector<ossimStreamFactoryBase*>::iterator iter = std::find(theFactoryList.begin(),
-                                                                  theFactoryList.end(),
-                                                                  factory);
-   if(iter == theFactoryList.end())
-   {
-      theFactoryList.push_back(factory);
-   }
-}
-
-ossimStreamFactoryRegistry::ossimStreamFactoryRegistry(const ossimStreamFactoryRegistry&)
-{}
