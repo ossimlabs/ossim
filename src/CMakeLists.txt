@@ -23,7 +23,7 @@ IF(UNIX)
    LIST(APPEND ossim_SRCS "${ossim_sockets_SRCS}")
 ELSEIF(WIN32)
    FILE(GLOB ossim_dll_main_SRCS RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/dll_main/*.cpp")
-	LIST(APPEND ossim_SRCS "${ossim_dll_main_SRCS}")
+  LIST(APPEND ossim_SRCS "${ossim_dll_main_SRCS}")
 ENDIF(UNIX)
    
 IF (OSSIM_HAS_HDF5)
@@ -63,11 +63,11 @@ ENDIF (OSSIM_HAS_HDF5)
 
 MESSAGE( "${ossim_HDRS}" )
 SET(OSSIM_HEADER_FILES 
-	${ossim_HDRS}
- 	${ossim_base_HDRS} ${ossim_elevation_HDRS} ${ossim_font_HDRS}  ${ossim_imaging_HDRS} 
- 	${ossim_init_HDRS} ${ossim_matrix_HDRS} ${ossim_parallel_HDRS} ${ossim_plugin_HDRS} 
- 	${ossim_point_cloud_HDRS} ${ossim_projection_HDRS} ${ossim_support_data_HDRS} ${ossim_util_HDRS} 
- 	${ossim_vec_HDRS} ${ossim_video_HDRS} ${ossim_vpfutil_HDRS} ${ossim_sockets_HDRS} ${ossim_hdf5_HDRS} )
+  ${ossim_HDRS}
+  ${ossim_base_HDRS} ${ossim_elevation_HDRS} ${ossim_font_HDRS}  ${ossim_imaging_HDRS} 
+  ${ossim_init_HDRS} ${ossim_matrix_HDRS} ${ossim_parallel_HDRS} ${ossim_plugin_HDRS} 
+  ${ossim_point_cloud_HDRS} ${ossim_projection_HDRS} ${ossim_support_data_HDRS} ${ossim_util_HDRS} 
+  ${ossim_vec_HDRS} ${ossim_video_HDRS} ${ossim_vpfutil_HDRS} ${ossim_sockets_HDRS} ${ossim_hdf5_HDRS} )
 
 
 ################################## APPLE Framework support deep header mapping ###################################

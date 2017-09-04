@@ -474,7 +474,7 @@ bool ossimArgumentParser::read(const std::string& str, std::vector<ossimString>&
    while (pos < *theArgc)
    {
       // Check for occurence of next option:
-      if ((theArgv[pos][0] == '-'))
+      if (theArgv[pos][0] == '-')
          break;
 
       // Skip a comma surrounded by spaces:

@@ -61,18 +61,4 @@ namespace ossim
    };
 }
 
-class OSSIM_DLL ossimStreamFactoryBase
-{
-public:
-   virtual ~ossimStreamFactoryBase(){}
-
-   virtual std::shared_ptr<ossim::ifstream>
-      createIFStream(const ossimFilename& file,
-                     std::ios_base::openmode openMode) const=0;
-   
-   virtual ossimRefPtr<ossimIFStream> createNewIFStream(
-      const ossimFilename& file,
-      std::ios_base::openmode openMode)const=0;
-};
-
 #endif

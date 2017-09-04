@@ -119,10 +119,9 @@ ossimElevSource* ossimSrtmFactory::getNewElevSource(const ossimGpt& gpt) const
          << "\nSearching for file:  " << srtmFile
          << std::endl;
    }
-
    // ossimRefPtr<ossimIFStream> is = ossimStreamFactoryRegistry::instance()->
-   std::shared_ptr<ossim::ifstream> is = ossimStreamFactoryRegistry::instance()->
-      createIFStream(srtmFile, std::ios::in | std::ios::binary);
+   std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+                                           createIstream(srtmFile);
 
    // Look for the file mix case, then all lower case, then all upper case.
    if ( is )
@@ -133,8 +132,8 @@ ossimElevSource* ossimSrtmFactory::getNewElevSource(const ossimGpt& gpt) const
          srtmFileBasename = srtmFileBasename.downcase();
          srtmFile = theDirectory.dirCat(srtmFileBasename);
          
-         is = ossimStreamFactoryRegistry::instance()->
-            createIFStream(srtmFile, std::ios::in | std::ios::binary);      
+         is = ossim::StreamFactoryRegistry::instance()->
+               createIstream(srtmFile);
          if ( is )
          {
             if(is->fail())
@@ -142,8 +141,8 @@ ossimElevSource* ossimSrtmFactory::getNewElevSource(const ossimGpt& gpt) const
                // OK, try upcasing the whole thing.
                srtmFileBasename = srtmFileBasename.upcase();
                srtmFile = theDirectory.dirCat(srtmFileBasename);
-               is =  ossimStreamFactoryRegistry::instance()->
-                  createIFStream(srtmFile, std::ios::in | std::ios::binary);
+               is = ossim::StreamFactoryRegistry::instance()->
+                     createIstream(srtmFile);
             }
          }
       }
@@ -151,7 +150,6 @@ ossimElevSource* ossimSrtmFactory::getNewElevSource(const ossimGpt& gpt) const
 
    if ( is && (!is->fail()) )
    {
-      // is->close();
       is.reset();
       srtmPtr = new ossimSrtmHandler();
       if(srtmPtr->open(srtmFile)&&srtmPtr->pointHasCoverage(gpt) )

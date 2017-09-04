@@ -69,7 +69,7 @@ if [ -z $BUILD_OSSIM_APPS ] ; then
 fi
 
 if [ -z $BUILD_OSSIM_CURL_APPS ] ; then
-   export BUILD_OSSIM_CURL_APPS=ON
+   export BUILD_OSSIM_CURL_APPS=OFF
 fi
 
 if [ -d $OSSIM_DEV_HOME/ossim-video ] ; then
@@ -119,27 +119,27 @@ if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
    fi
 
    if [ -z $BUILD_CSM_PLUGIN ] ; then
-      export BUILD_CSM_PLUGIN=ON
+      export BUILD_CSM_PLUGIN=OFF
    fi
 
    if [ -z $BUILD_WEB_PLUGIN ] ; then
-      export BUILD_WEB_PLUGIN=ON
+      export BUILD_WEB_PLUGIN=OFF
    fi
 
    if [ -z $BUILD_SQLITE_PLUGIN ] ; then
-      export BUILD_SQLITE_PLUGIN=ON
+      export BUILD_SQLITE_PLUGIN=OFF
    fi
 
    if [ -z $BUILD_KAKADU_PLUGIN ] ; then
-      export BUILD_KAKADU_PLUGIN=ON
+      export BUILD_KAKADU_PLUGIN=OFF
    fi
 
    if [ -z $BUILD_KML_PLUGIN ] ; then
-      export BUILD_KML_PLUGIN=ON
+      export BUILD_KML_PLUGIN=OFF
    fi
 
    if [ -z $BUILD_GDAL_PLUGIN ] ; then
-      export BUILD_GDAL_PLUGIN=ON
+      export BUILD_GDAL_PLUGIN=OFF
    fi
 
    #if [ -z $BUILD_HDF5_PLUGIN ] ; then
@@ -147,15 +147,15 @@ if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
    #fi
 
    if [ -z $BUILD_POTRACE_PLUGIN ] ; then
-      export BUILD_POTRACE_PLUGIN=ON
+      export BUILD_POTRACE_PLUGIN=OFF
    fi
    
    if [ -z $BUILD_FFTW3_PLUGIN ] ; then
-      export BUILD_FFTW3_PLUGIN=ON
+      export BUILD_FFTW3_PLUGIN=OFF
    fi
 
    if [ -z $BUILD_GEOPDF_PLUGIN ] ; then
-   export BUILD_GEOPDF_PLUGIN=ON
+   export BUILD_GEOPDF_PLUGIN=OFF
    fi
 
    if [ -z $BUILD_OPENCV_PLUGIN ] ; then
@@ -163,11 +163,11 @@ if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
    fi
 
    if [ -z $BUILD_OPENJPEG_PLUGIN ] ; then
-      export BUILD_OPENJPEG_PLUGIN=ON
+      export BUILD_OPENJPEG_PLUGIN=OFF
    fi
 
    if [ -z $BUILD_PNG_PLUGIN ] ; then
-      export BUILD_PNG_PLUGIN=ON
+      export BUILD_PNG_PLUGIN=OFF
    fi
 
    if [ -z $BUILD_JPEG12_PLUGIN ] ; then
@@ -175,7 +175,7 @@ if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
    fi
 
    if [ -z $BUILD_OSSIM_HDF5_SUPPORT ] ; then
-      export BUILD_OSSIM_HDF5_SUPPORT=ON
+      export BUILD_OSSIM_HDF5_SUPPORT=OFF
    fi
 fi
 

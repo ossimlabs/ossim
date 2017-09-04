@@ -197,7 +197,7 @@ private:
    ossimScalarType m_scalarType;
 
    // mutable ossimRefPtr<ossimIFStream> theFileStream;
-   mutable std::shared_ptr<ossim::ifstream> m_str;
+   mutable std::shared_ptr<ossim::istream> m_str;
    
    template <class T>
    bool computeMinMaxTemplate(T dummy, double defaultNull);
