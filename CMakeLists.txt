@@ -9,10 +9,19 @@ ENDIF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
 
 cmake_minimum_required(VERSION 2.8)
 
+SET(CMAKE_MODULE_PATH
+  "${CMAKE_CURRENT_SOURCE_DIR}/ossim/cmake/CMakeModules" ${CMAKE_MODULE_PATH})
+
+include(CMakeDetermineSystem)
 INCLUDE(OssimVersion)
 INCLUDE(OssimCommonVariables)
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Expose some build options
+set(OSSIM_LIB_NAME ossim CACHE STRING "Name of ossim libray (default is ossim).")
 OPTION(BUILD_OSSIM_FREETYPE_SUPPORT "Set to ON to build OSSIM with freetype support.  Use OFF to turn off freetype support." ON)
 OPTION(BUILD_OSSIM_MPI_SUPPORT "Set to ON to build OSSIM with MPI support.  Use OFF to turn off MPI support." OFF)
 OPTION(BUILD_OSSIM_ID_SUPPORT "Set to ON to build OSSIM GIT ID support into the library.  Use OFF to turn off ID support." ON)
@@ -48,7 +57,7 @@ set( ossimDependentLibs )
 #---
 
 # GEOS - Currently optional until it is actually called.:
-find_package( GEOS )
+find_package( GEOS QUIET)
 if( GEOS_FOUND )
    include_directories( ${GEOS_INCLUDE_DIR} )
    set( ossimDependentLibs ${ossimDependentLibs} ${GEOS_LIBRARY} )
@@ -206,7 +215,7 @@ ENDIF(NOT BUILD_OSSIM_ID_SUPPORT)
 
 SET(OSSIM_CONFIGURE_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/ossim/ossimConfig.h")
 CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/ossimConfig.h.in"
-	       "${OSSIM_CONFIGURE_HEADER}")
+         "${OSSIM_CONFIGURE_HEADER}")
 SET(OSSIM_VERSION_HEADER_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/src/ossimVersion.h.in")
 SET(OSSIM_VERSION_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/ossim/ossimVersion.h")
 CONFIGURE_FILE("${OSSIM_VERSION_HEADER_CONFIG}"
