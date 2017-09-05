@@ -131,7 +131,7 @@ IF(APPLE)
 ENDIF(APPLE)
 
 #################################### SETUP the required link parameters using the Ossim macro ####################################
-OSSIM_LINK_LIBRARY(${OSSIM_LIB_NAME} 
+OSSIM_LINK_LIBRARY(${LIB_NAME} 
                    COMPONENT_NAME ossim 
                    TYPE ${OSSIM_USER_DEFINED_DYNAMIC_OR_STATIC}
                    LIBRARIES ${ossimDependentLibs}
