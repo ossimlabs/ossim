@@ -48,7 +48,7 @@ set( ossimDependentLibs )
 #---
 
 # GEOS - Currently optional until it is actually called.:
-find_package( GEOS )
+find_package( GEOS QUIET)
 if( GEOS_FOUND )
    include_directories( ${GEOS_INCLUDE_DIR} )
    set( ossimDependentLibs ${ossimDependentLibs} ${GEOS_LIBRARY} )
