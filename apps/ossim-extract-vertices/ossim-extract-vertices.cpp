@@ -27,13 +27,13 @@ static ossimTrace traceDebug("extract_vertices:main");
 
 void usage()
 {
-   cout << "\nextract_vertices <image_file> <optional_output_file>"
+   cout << "\nextract_vertices <image_file> [output_file]"
         << "\nNOTE:\n"
         << "   Scans the image, extracts vertices and writes results to"
         << " a keyword list.\n"
-        << "   The optional_output_file parameter specifies the path for the"
-        << " extracted\n"
-        << "   vertices.  If not specified, the name of the image_file with "
+        << "   The output_file parameter specifies the path for the extracted"
+        << " vertices.\n"
+        << "   If not specified, the name of the image_file with "
         << "\"_vertices.kwl\"\n"
         << "   appended.  So if image = \"foo.tif\" then"
         << "  results file = \"foo_vertices.kwl\".\n" << endl;
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
    
    ossimInit::instance()->initialize(argc, argv);
 
-   if (argc != 2)
+   if (argc != 2 && argc != 3)
    {
       usage();
       exit(0);
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
    {
       cout << "ERROR: Unsupported image file: " << input_file
            << "\nExiting application." << endl;
-      exit(0);
+      exit(1);
    }
 
    // Check for errors.
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
       cerr << "ERROR: Unable to read image file: " << input_file
            << "\nExiting application." << endl;
       ih = 0;
-      exit(1);
+      exit(2);
    }
 
    // Initialize the image handler.
@@ -87,7 +87,6 @@ int main(int argc, char *argv[])
    // Create the output file name from the input file name.
    else
    {
-     output_file = input_file.path();
      output_file = output_file.dirCat(input_file.fileNoExtension());
      output_file += "_vertices.kwl";
    }
@@ -112,9 +111,29 @@ int main(int argc, char *argv[])
    // Add a listener for the percent complete to standard output.
    ossimStdOutProgress prog(0, true);
    ve->addListener(&prog);
+
+   // Check that the output file can be created
+   if (!ve->open())
+   {
+       cerr << "ERROR: Unable to open output file: " << output_file
+            << "\nExiting application." << endl;
+       ih = 0;
+       ve->disconnect();
+       ve = 0;
+       exit(3);
+   }
    
    // Start the extraction...
-   ve->execute();
+   if (!ve->execute())
+   {
+       cerr << "ERROR: Unable to create output vertices: "
+            << "\nExiting application." << endl;
+       ih = 0;
+       ve->disconnect();
+       ve = 0;
+       exit(4);
+   }
+
    ih = 0;
    ve->disconnect();
    ve = 0;
