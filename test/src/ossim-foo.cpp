@@ -89,53 +89,6 @@
 #include <iostream>
 using namespace std;
 
-/*
-void getOverlappingPatchCenters(std::vector<ossimGpt>& patchCenters,
-                           ossimRefPtr<ossimImageGeometry> geom1,
-                           ossimRefPtr<ossimImageGeometry> geom2,
-                           ossim_uint32 size=256)
-{
-   ossimDrect rect1;
-   ossimDrect rect2;
-   geom1->getBoundingRect(rect1);
-   geom2->getBoundingRect(rect2);
-   ossim_uint32 halfSize = size>>1;
-   ossimDpt halfPoint(halfSize, halfSize);
-   ossimIpt originTop    = rect1.ul() + halfPoint;
-   ossimIpt originBottom = rect1.lr() - halfPoint;
-   ossimIpt iteratePoint = originTop;
-   ossimIpt destTop    = rect2.ul() + halfPoint;
-   ossimIpt destBottom = rect2.lr() - halfPoint;
-   ossimDrect originRect(originTop, originBottom);
-   ossimDrect testRect(destTop, destBottom);
-
-   if(originRect.completely_within(rect1))
-   {
-      for(ossim_uint32 y = originTop.y; y < originBottom.y;y+=size)
-      {
-         for(ossim_uint32 x = originTop.x; x < originBottom.x;x+=size)
-         {
-            ossimDpt destImagePt;
-            ossimGpt gpt;
-            geom1->localToWorld(ossimDpt(x,y), gpt);
-            geom2->worldToLocal(gpt, destImagePt);
-            ossimDpt ul = destImagePt - halfPoint;
-            ossimDpt lr = ul + ossimDpt(size-1, size-1);
-            ossimDrect patchRect(ul, lr);
-            if(patchRect.completely_within(testRect))
-            {
-               patchCenters.push_back(gpt);   
-            }
-         }
-      }
-   }
-   else
-   {
-      std::cout << "Patch size is too big for it exceeds the bounds of the image\n";
-   }
-
-}
-*/
 int main(int argc, char *argv[])
 {
    int returnCode = 0;
@@ -146,73 +99,6 @@ int main(int argc, char *argv[])
 
    try
    {
-      ossimKeywordlist kwl;
-      ossimRefPtr<ossimImageHandler> ih = ossimImageHandlerRegistry::instance()->open(ossimFilename(argv[1]));
-
-      ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
-      if(geom.valid())
-      {  
-         ossimDrect rect;
-         ossimDpt dpt;
-         geom->getBoundingRect(rect);
-         dpt = rect.midPoint();
-         std::cout << rect << "\n";
-
-         std::cout << "UP IS UP " << geom->upIsUpAngle(dpt) << "\n";
-      
-         ossimGpt gpt;
-         geom->localToWorld(dpt, gpt);
-         ossimEcefPoint ecefPoint(gpt);
-         
-         ossimGpt gpt2 = gpt;
-         gpt2.height(gpt2.height()+10);
-
-         ossimEcefPoint ecefPoint2(gpt2);
-
-         std::cout << "ecef: " << ecefPoint << "\n";
-         std::cout << "ecef2: " << ecefPoint2 << "\n";
-         ossimEcefVector v(ecefPoint2-ecefPoint);
-         std::cout << "ecef v: " << v << "\n";
-         std::cout << "LENGTH: " << v.normalize() << "\n";
-         std::cout << "NORM: " << v << "\n";
-
-      }
-   
-
-      /*
-      if(argc > 2)
-      {
-         ossim_uint32 patchSize = 512;
-         ossimRefPtr<ossimImageHandler> ih1 = ossimImageHandlerRegistry::instance()->open(ossimFilename(argv[1]));
-         ossimRefPtr<ossimImageHandler> ih2 = ossimImageHandlerRegistry::instance()->open(ossimFilename(argv[2]));
-         if(argc > 3)
-         {
-            patchSize = ossimString(argv[3]).toUInt32();
-         }
-         if(ih1.valid()&&ih2.valid())
-         {
-            std::vector<ossimGpt> points;
-            ossimPolyArea2d poly1;
-            ossimPolyArea2d poly2;
-            ossimRefPtr<ossimImageGeometry> geom1 = ih1->getImageGeometry();
-            ossimRefPtr<ossimImageGeometry> geom2 = ih2->getImageGeometry();
-
-            getOverlappingPatchCenters(points, geom1, geom2, patchSize);
-
-            ossim_uint32 idx = 0;
-            for(idx=0;idx < points.size(); ++idx)
-            {
-
-               std::cout << points[idx].latd() <<  " " << points[idx].lond() << "\n";
-            }
-         }
-      }
-      else
-      {
-         std::cout << "Arguments must be <image 1> <image 2> <tile_size>\n";
-         std::cout << "  where tile_size is optional\n";
-      }
-*/
       // Put your code here.
    }
    catch(const ossimException& e)
