@@ -140,6 +140,12 @@ std::shared_ptr<ossim::istream> ossim::StreamFactoryRegistry::createIstream(
    std::ios_base::openmode openMode) const
 {
    std::shared_ptr<ossim::istream> result(0);
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+      << "ossim::StreamFactoryRegistry::createIstream: ....... entered: "<< connectionString << "\n";
+   }
+
    ossim_uint32 i = 0;
    for(i = 0; (i < m_factoryList.size())&&(!result); ++i)
    {
@@ -161,6 +167,13 @@ std::shared_ptr<ossim::istream> ossim::StreamFactoryRegistry::createIstream(
          }
       }
    }
+
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+      << "ossim::StreamFactoryRegistry::createIstream: ....... leaving!\n";
+   }
+
    return result;
 }
       
@@ -191,13 +204,23 @@ bool ossim::StreamFactoryRegistry::exists(const std::string& connectionString) c
 bool ossim::StreamFactoryRegistry::exists(const std::string& connectionString,
                                           bool& continueFlag) const
 {
-   bool result = false;
-   std::vector<ossim::StreamFactoryBase*>::const_iterator i = m_factoryList.begin();
-   while ( i != m_factoryList.end() )
+   if(traceDebug())
    {
-      result = (*i)->exists( connectionString, continueFlag );
+      ossimNotify(ossimNotifyLevel_WARN)
+      << "ossim::StreamFactoryRegistry::exists: ....... entered: "<< connectionString << "\n";
+   }
+   bool result = false;
+   for(auto factory:m_factoryList)
+   {
+
+      result = factory->exists( connectionString, continueFlag );
       if ( ( result == true ) || (continueFlag == false ) ) break;
-      ++i;
+   }
+
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+      << "ossim::StreamFactoryRegistry::createIstream: ....... leaving!\n";
    }
    return result;
 }
