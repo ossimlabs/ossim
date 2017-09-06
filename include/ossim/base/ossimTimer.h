@@ -43,15 +43,19 @@ public:
    
    /** Get the time in seconds between timer ticks t1 and t2.*/
    inline double delta_s( Timer_t t1, Timer_t t2 ) const { return (double)(t2 - t1)*m_secsPerTick; }
+   inline double delta_s( Timer_t t1) const { return (double)(tick() - t1)*m_secsPerTick; }
    
    /** Get the time in milliseconds between timer ticks t1 and t2.*/
    inline double delta_m( Timer_t t1, Timer_t t2 ) const { return delta_s(t1,t2)*1e3; }
+   inline double delta_m( Timer_t t1) const { return delta_s(t1,tick())*1e3; }
    
    /** Get the time in microseconds between timer ticks t1 and t2.*/
    inline double delta_u( Timer_t t1, Timer_t t2 ) const { return delta_s(t1,t2)*1e6; }
+   inline double delta_u( Timer_t t1) const { return delta_s(t1,tick())*1e6; }
    
    /** Get the time in nanoseconds between timer ticks t1 and t2.*/
    inline double delta_n( Timer_t t1, Timer_t t2 ) const { return delta_s(t1,t2)*1e9; }
+   inline double delta_n( Timer_t t1) const { return delta_s(t1,tick())*1e9; }
    
    /** Get the the number of seconds per tick. */
    inline double getSecondsPerTick() const { return m_secsPerTick; }
