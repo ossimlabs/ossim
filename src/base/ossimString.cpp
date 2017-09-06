@@ -706,6 +706,46 @@ ossim_uint64 ossimString::toUInt64(const ossimString& aString)
    return aString.toUInt64();
 }
 
+ossim_int64 ossimString::memoryUnitToInt64()const
+{
+   ossim_int64 result = toInt64();
+   if((result != 0)&&size()>0)
+   {
+      ossimString byteType = *(begin()+(size()-1));
+      byteType.upcase();
+      if ( byteType == "K")
+      {
+         result *= static_cast<ossim_int64>(1024);
+      }
+      else if ( byteType == "M")
+      {
+         result *= static_cast<ossim_int64>(1048576);
+      }
+      else if ( byteType == "G")
+      {
+         result *= static_cast<ossim_int64>(1073741824);
+      }
+      else if( byteType == "T")
+      {
+         // to avoid possible integer size warnings
+         // we will start with a number that is 1 gig
+         // for it fits within a standard integer then 
+         // force 64 bit mutliplication.  
+         // Will do it like this for I do not know the 
+         // outcome for other compilers. 
+         result *= static_cast<ossim_int64>(1073741824);
+         result *= static_cast<ossim_int64>(1024);
+      }
+   }
+
+   return result;
+}
+
+ossim_int64 ossimString::memoryUnitToInt64(const ossimString& aString)
+{
+   return aString.memoryUnitToInt64();
+}
+
 long ossimString::toLong()const
 {
   long i = 0;
