@@ -16,6 +16,15 @@ using namespace std;
 #include <ossim/base/ossimLookUpTable.h>
 #include <ossim/base/ossimKeywordlist.h>
 
+ossimLookUpTable::ossimLookUpTable(const std::initializer_list<ossimString>& stringInitializer)
+{
+   ossim_uint32 idx = 0;
+   for(auto value:stringInitializer)
+   {
+      theTable.push_back(ossimKeyValueMap(idx, value));
+      ++idx;
+   }
+}
 //*******************************************************************
 // Protected Constructor:
 //*******************************************************************
@@ -123,6 +132,11 @@ ossim_int32 ossimLookUpTable::getEntryNumber(const ossimKeywordlist& kwl,
 ossim_uint32 ossimLookUpTable::getTableSize() const
 {
    return (ossim_uint32)theTable.size();
+}
+
+ossimKeyword ossimLookUpTable::getKeyword() const
+{
+   return ossimKeyword();
 }
 
 void ossimLookUpTable::dumpValues(std::ostream& out)const
