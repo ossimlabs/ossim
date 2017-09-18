@@ -19,6 +19,15 @@
 
 /**
  * The is a factory list interface that allows registries to be accessed in a common way.  
+ *
+ * This is typically used by the Registries.  The registries derive from this
+ * interface so that it will have the ability to give access to others
+ * to add to it's registry:
+ *
+ * Pseudo Code:
+ * @code
+ * someRegistry::instance()->addFactory(someFactory::instance());
+ * @endCode
  */
 template <class T, class NativeType>
 class ossimFactoryListInterface

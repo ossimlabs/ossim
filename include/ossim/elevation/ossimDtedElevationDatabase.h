@@ -6,6 +6,19 @@
 #include <ossim/elevation/ossimDtedHandler.h>
 #include <mutex>
 
+/**
+* The DTED elevation data base is also an elevation source but allows
+* one to point to an file based elevation tree.  The general format of
+* a DTED elevation tree:
+* 
+* <root dir>/e|w<longitude value>/n|s<latitiude value>.<extension>
+* Exmaple 1 kilometer:
+* <root dir>/w023/n15.dt0
+*
+* Note for 1 kilimeter the extension is dt0 and for 90 meter post spacing
+* it is .dt1 and for 30 meter spacing it is .dt2
+*
+*/  
 class OSSIM_DLL ossimDtedElevationDatabase : public ossimElevationCellDatabase
 {
 public:

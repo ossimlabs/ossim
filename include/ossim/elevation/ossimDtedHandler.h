@@ -34,21 +34,51 @@
 #include <ossim/support_data/ossimDtedRecord.h>
 
 #include <mutex>
-
+/**
+* the DTED handler is an elevation source that allows for handling of a
+* single cell of data.  DTED is typically a 1x1 degree cell.
+*
+* This can open from an ossim::istream or from a filename.  It allows
+* one to query the cell by overriding the getHeightAboveMSL.
+*
+* For reference @see ossimGpt
+* Example:
+* @code
+* ossimRefPtr<ossimDtedHandler> h = new ossimDtedHandler();
+* if(h->open(someFile))
+* {
+*    h->getHeightAboveMSL(ossimGpt(28, -110));  
+* }
+* @endCode
+* 
+* When a height is calculated it will use a weighted average of 4 neighboring
+* posts.
+*/
 class OSSIM_DLL ossimDtedHandler : public ossimElevCellHandler
 {
 public:
 
-   /// number of Dted posts per point.
+   // number of Dted posts per point.
    static const int TOTAL_POSTS = 4;
-   /// number of Dted posts per block
+   // number of Dted posts per block
    static const int NUM_POSTS_PER_BLOCK= 2;
 
-   /// ossimDtedHandler
+   /**
+   * Constructor
+   */
    ossimDtedHandler()
    {
    }
 
+   /**
+   * Constructor
+   *
+   * @param dted_file is a file path to the dted cell we wish to
+   *        open
+   * @param memoryMapFlag If this is set we will pull the entire cell
+   *        into memory and treat that memory location as an 
+   *        inputstream.
+   */
    ossimDtedHandler(const ossimFilename& dted_file, bool memoryMapFlag=false);
 
    enum
@@ -59,15 +89,37 @@ public:
       NULL_POST                  = -32767 // Fixed by DTED specification.
    };
 
+   /**
+   * opens a cell
+   *
+   * @param file is a file path to the dted cell we wish to
+   *        open
+   * @param memoryMapFlag If this is set we will pull the entire cell
+   *        into memory and treat that memory location as an 
+   *        inputstream.
+   */
    virtual bool open(const ossimFilename& file, bool memoryMapFlag=false);
+
+   /**
+   * opens a cell given a stream
+   *
+   * @param fileStr is a stream that was opened and has access
+   *        to a cell.
+   * @param connectionString is the connection string used to open the
+   *        input stream.
+   * @param memoryMapFlag If this is set we will pull the entire cell
+   *        into memory and treat that memory location as an 
+   *        inputstream.
+   */
    virtual bool open(std::shared_ptr<ossim::istream>& fileStr, const std::string& connectionString, bool memoryMapFlag=false);
    virtual void close();
    
-   /*!
-    * METHOD: getHeightAboveMSL
-    * Height access methods.
+   /**
+    * @param gpt is a ground point <lat, lon> that is used to 
+    *        lookup the elevation pos value.
+    * @return height above Mean Sea Level (MSL). 
     */
-   virtual double getHeightAboveMSL(const ossimGpt&);
+   virtual double getHeightAboveMSL(const ossimGpt& gpt);
 
    /*!
     *  METHOD:  getSizeOfElevCell
@@ -234,7 +286,6 @@ inline bool ossimDtedHandler::isOpen()const
 
   if(!m_memoryMap.empty()) return true;
   std::lock_guard<std::mutex> lock(m_fileStrMutex);
-
 
   return (m_fileStr != 0);
 }
