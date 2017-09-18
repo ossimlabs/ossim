@@ -22,6 +22,8 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimKeyword.h>
 
+#include <initializer_list>
+
 class ossimKeywordlist;
 
 //*******************************************************************
@@ -35,7 +37,13 @@ public:
    {
       NOT_FOUND    = -1
    };
-   
+
+   /**
+   * By default if you just give an initializer list with strings
+   * then it will assume keys 0..n-1 for each string.
+   */
+   ossimLookUpTable(const std::initializer_list<ossimString>& stringInitializer);
+
    virtual ~ossimLookUpTable();
 
    /*!
@@ -91,7 +99,7 @@ public:
    /*!
     *  Returns keyword for lookups from a Keywordlist.
     */
-   virtual ossimKeyword getKeyword() const=0;
+   virtual ossimKeyword getKeyword() const;
 
    virtual ossim_uint32 getTableSize() const;
   
@@ -100,13 +108,18 @@ protected:
 
    ossimLookUpTable(ossim_int32 table_size);
 
-   class ossimKeyValueMap
-   {
-   public:
-      void init (ossim_int32 key, const ossimString& value) { theKey=key; theValue=value; }
-      ossim_int32  theKey;
-      ossimString theValue;
-   };
+  class ossimKeyValueMap
+  {
+  public:
+    ossimKeyValueMap(ossim_int32 key=0, const ossimString& value=""):
+    theKey(key), 
+    theValue(value)
+    {}
+    void init (ossim_int32 key, const ossimString& value) { theKey=key; theValue=value; }
+
+    ossim_int32  theKey;
+    ossimString theValue;
+  };
 
    std::vector<ossimKeyValueMap>  theTable;
    

@@ -579,6 +579,28 @@ public:
    static ossim_uint64  toUInt64(const ossimString& aString);
 
    /**
+   * This takes a string and will test for
+   * numeric followed by a unit type:
+   *
+   * 123K is 123 kilobytes
+   * 123k is 123 kilobytes
+   * 64G  is 123 gigabytes
+   * 64g  is 64  gigabytes
+   *
+   * you can use any of the following modifiers
+   * k|K = kilobytes
+   * b|B = bytes
+   * m|M = megabytes
+   * g|G = gigabytes
+   * t|T = terrabyte
+   *
+   * If no unit is present then it will assume bytes and just return
+   * the value
+   */
+   ossim_int64         memoryUnitToInt64()const;
+   static ossim_int64  memoryUnitToInt64(const ossimString& aString);
+
+   /**
     * toLong's deprecated, please use the toInts...
     */
    long                 toLong()const;

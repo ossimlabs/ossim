@@ -11,8 +11,9 @@
 #include <ossim/imaging/ossimImageCombiner.h>
 
 /**
- * This is a 2 color view of the input.  It basically allows for a change detection and by default will take the first input and map
- * it to the blue channel and takes the second input and maps to the red channel.  The unused channel is mapped to a min pixel value.
+ * This is a 2 color view of the input.  It basically allows for a change detection and by default
+ * will take the first input and map it to the blue channel and takes the second input and maps to
+ * the red channel.  The unused channel is mapped to a min pixel value.
  */
 class OSSIM_DLL ossimTwoColorView : public ossimImageCombiner
 {

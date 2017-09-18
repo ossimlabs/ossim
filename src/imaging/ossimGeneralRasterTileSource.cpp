@@ -919,8 +919,8 @@ bool ossimGeneralRasterTileSource::initializeHandler()
       ossimFilename f = aList[i];
       
       // open it...
-      std::shared_ptr<ossim::ifstream> is = ossimStreamFactoryRegistry::instance()->
-         createIFStream(f, std::ios::in|std::ios::binary);
+      std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+         createIstream(f);
 
       // check the stream...
       if( is )
@@ -1019,12 +1019,11 @@ void ossimGeneralRasterTileSource::close()
       m_lineBuffer = 0;
    }
 
-   std::vector< shared_ptr<ossim::ifstream> >::iterator is = m_fileStrList.begin();
+   std::vector< shared_ptr<ossim::istream> >::iterator is = m_fileStrList.begin();
    while (is != m_fileStrList.end())
    {
-      (*is)->close();
-      // delete (*is);
-      // (*is) = 0;
+      (*is) = 0;
+
       ++is;
    }
    m_fileStrList.clear();
