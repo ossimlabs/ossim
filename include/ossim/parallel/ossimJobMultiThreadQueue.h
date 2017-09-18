@@ -1,6 +1,7 @@
 #ifndef ossimJobMultiThreadQueue_HEADER
 #define ossimJobMultiThreadQueue_HEADER
 #include <ossim/parallel/ossimJobThreadQueue.h>
+#include <mutex>
 
 class OSSIM_DLL ossimJobMultiThreadQueue : public ossimReferenced
 {
@@ -19,7 +20,7 @@ public:
    bool hasJobsToProcess()const;
 
 protected:
-   mutable OpenThreads::Mutex  m_mutex;
+   mutable std::mutex  m_mutex;
    ossimRefPtr<ossimJobQueue> m_jobQueue;
    ThreadQueueList m_threadQueueList;
 };

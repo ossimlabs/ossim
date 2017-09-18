@@ -5,20 +5,18 @@
 #ifndef ossimReferenced_HEADER
 #define ossimReferenced_HEADER
 #include <ossim/base/ossimConstants.h>
-#include <OpenThreads/ScopedLock>
-#include <OpenThreads/Mutex>
+
+#include <mutex>
 
 class OSSIMDLLEXPORT ossimReferenced
 {
  public:
    ossimReferenced()
-   : theRefMutex(new OpenThreads::Mutex),
-     theRefCount(0)
+   : theRefCount(0)
       {}
    
    ossimReferenced(const ossimReferenced&)
-   : theRefMutex(new OpenThreads::Mutex),
-   theRefCount(0)
+   : theRefCount(0)
    {}
    inline ossimReferenced& operator = (const ossimReferenced&) { return *this; }
    
@@ -41,15 +39,8 @@ class OSSIMDLLEXPORT ossimReferenced
        as the later can lead to memory leaks.*/
    inline void unref_nodelete() const 
    { 
-      if (theRefMutex)
-      {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*theRefMutex); 
-         --theRefCount;
-      }
-      else
-      {
-         --theRefCount;
-      }
+     std::lock_guard<std::mutex> lock(theRefMutex); 
+     --theRefCount;
    }
    
    /*! return the number pointers currently referencing this object. */
@@ -58,34 +49,21 @@ class OSSIMDLLEXPORT ossimReferenced
    
  protected:
    virtual ~ossimReferenced();
-   mutable OpenThreads::Mutex*     theRefMutex;
-   mutable int theRefCount;
+   mutable std::mutex theRefMutex;
+   mutable int        theRefCount;
 };
 
 inline void ossimReferenced::ref() const
 {
-   if (theRefMutex)
-   {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*theRefMutex); 
-      ++theRefCount;
-   }
-   else
-   {
-      ++theRefCount;
-   }
+  std::lock_guard<std::mutex> lock(theRefMutex); 
+  ++theRefCount;
 }
 
 inline void ossimReferenced::unref() const
 {
    bool needDelete = false;
-   if (theRefMutex)
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*theRefMutex); 
-      --theRefCount;
-      needDelete = theRefCount<=0;
-   }
-   else
-   {
+      std::lock_guard<std::mutex> lock(theRefMutex); 
       --theRefCount;
       needDelete = theRefCount<=0;
    }
@@ -94,14 +72,6 @@ inline void ossimReferenced::unref() const
    {
       delete this;
    }
-   
-#if 0
-    --theRefCount;
-    if (theRefCount==0)
-    {
-        delete this;
-    }
-#endif
 }
 
 #endif

@@ -13,7 +13,6 @@
 #include <ossim/parallel/ossimJob.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <ossim/util/ossimChipProcTool.h>
-#include <OpenThreads/ReadWriteMutex>
 
 /*!
  *  Class for computing the viewshed on a DEM given the viewer location and max range of visibility
@@ -111,7 +110,7 @@ protected:
 
    // For debugging:
    double d_accumT;
-   OpenThreads::Mutex d_mutex;
+   std::mutex d_mutex;
 };
 
 /**
@@ -168,7 +167,7 @@ public:
    static void doRadial(ossimViewshedTool* vs, ossim_uint32 s, ossim_uint32 r);
 
 private:
-   static OpenThreads::ReadWriteMutex m_bufMutex;
+   static std::mutex m_bufMutex;
    RadialProcessor() {};
 };
 

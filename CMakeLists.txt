@@ -16,10 +16,6 @@ include(CMakeDetermineSystem)
 INCLUDE(OssimVersion)
 INCLUDE(OssimCommonVariables)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 # Expose some build options
 set(LIB_NAME ossim CACHE STRING "Name of ossim libray (default is ossim).")
 OPTION(BUILD_OSSIM_FREETYPE_SUPPORT "Set to ON to build OSSIM with freetype support.  Use OFF to turn off freetype support." ON)

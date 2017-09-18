@@ -22,7 +22,7 @@ void ossimJob::setState(int value, bool on)
 
    bool stateChangedFlag = false;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       
       stateChangedFlag = newState != m_state;
       oldState = m_state;

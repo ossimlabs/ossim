@@ -22,9 +22,9 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/util/ossimImageUtil.h>
 
-#include <OpenThreads/Mutex>
 #include <ostream>
 #include <vector>
+#include <mutex>
 
 class ossimArgumentParser;
 class ossimFileWalker;
@@ -268,7 +268,7 @@ private:
    ossimRefPtr<ossimKeywordlist> m_kwl;
 
    ossimFileWalker*   m_fileWalker;
-   OpenThreads::Mutex m_mutex;
+   std::mutex m_mutex;
 
    ossimRefPtr<ossimImageUtil> m_imageUtil;
    ossim_int32 m_errorStatus;

@@ -237,7 +237,7 @@ void ossim::StreamFactoryRegistry::registerFactory(ossim::StreamFactoryBase* fac
 
 void ossim::StreamFactoryRegistry::unregisterFactory(StreamFactoryBase* factory)
 {
-   // OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+   // std::lock_guard<std::mutex> lock(m_factoryListMutex);
    std::vector<ossim::StreamFactoryBase*>::iterator iter = std::find(
       m_factoryList.begin(), m_factoryList.end(), factory);
    if(iter != m_factoryList.end())

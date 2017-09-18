@@ -9,9 +9,10 @@
 #include <ossim/init/ossimInit.h>
 #include <ossim/imaging/ossimAppFixedTileCache.h>
 #include <ossim/imaging/ossimImageData.h>
-#include <OpenThreads/Mutex>
 #include <OpenThreads/Barrier>
 #include <OpenThreads/Thread>
+#include <mutex>
+
 OpenThreads::Barrier* startBarrier = 0;
 OpenThreads::Barrier* endBarrier = 0;
 class TileCacheThread : public OpenThreads::Thread

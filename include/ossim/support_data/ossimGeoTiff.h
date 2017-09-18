@@ -24,8 +24,7 @@
 #include <vector>
 
 #include <tiffio.h>
-#include <OpenThreads/Mutex>
-#include <OpenThreads/ScopedLock>
+#include <mutex>
 
 class ossimFilename;
 class ossimKeywordlist;
@@ -283,7 +282,7 @@ private:
    
    ossimPrivateGtifDef*  thePrivateDefinitions;
    
-   static OpenThreads::Mutex theMutex;
+   static std::mutex theMutex;
 };
 
 #endif

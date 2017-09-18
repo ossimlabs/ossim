@@ -4,7 +4,7 @@
 #include <ossim/elevation/ossimElevationCellDatabase.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/elevation/ossimGeneralRasterElevHandler.h>
-#include <OpenThreads/Mutex>
+#include <mutex>
 
 class OSSIM_DLL ossimGeneralRasterElevationDatabase : public ossimElevationCellDatabase
 {

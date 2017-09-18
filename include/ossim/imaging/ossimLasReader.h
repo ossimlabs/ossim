@@ -306,7 +306,7 @@ private:
    ossimDpt                     m_gsd;
    ossimRefPtr<ossimImageData>  m_tile;
    ossim_uint8                  m_entry;
-   OpenThreads::Mutex           m_mutex;
+   std::mutex                   m_mutex;
    bool                         m_scan;  // Scan for bounds at open.
    ossimUnitType                m_units;
    ossimUnitConversionTool*     m_unitConverter;

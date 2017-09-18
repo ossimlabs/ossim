@@ -5,8 +5,8 @@
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/init/ossimInit.h>
-#include <OpenThreads/Thread>
 #include <iostream>
+#include <mutex>
 static const int INITIAL_THREADS = 10;
 static const int INITIAL_JOBS = 20;
 class ossimTestJob : public ossimJob

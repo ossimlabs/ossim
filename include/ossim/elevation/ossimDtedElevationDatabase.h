@@ -4,7 +4,7 @@
 #include <ossim/elevation/ossimElevationCellDatabase.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/elevation/ossimDtedHandler.h>
-#include <OpenThreads/Mutex>
+#include <mutex>
 
 class OSSIM_DLL ossimDtedElevationDatabase : public ossimElevationCellDatabase
 {
@@ -79,7 +79,7 @@ protected:
    bool m_upcase;
 
    ossimRefPtr<ossimElevCellHandler> m_lastHandler;
-   mutable OpenThreads::Mutex m_mutex;
+   mutable std::mutex m_mutex;
     
 
 TYPE_DATA

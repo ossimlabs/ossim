@@ -10,7 +10,7 @@
 
 #include <ossim/parallel/ossimJob.h>
 #include <OpenThreads/Block>
-
+#include <mutex>
 //*************************************************************************************************
 //! Class for maintaining an ordered list of jobs to be processed. As the jobs are completed and
 //! the product consumed, the jobs are removed from this list
@@ -49,7 +49,7 @@ protected:
    ossimJob::List::iterator findByNameOrPointer(const ossimJob* job);
    bool hasJob(ossimJob* job);
    
-   mutable OpenThreads::Mutex m_jobQueueMutex;
+   mutable std::mutex m_jobQueueMutex;
    OpenThreads::Block m_block;
    ossimJob::List m_jobQueue;
    ossimRefPtr<Callback> m_callback;

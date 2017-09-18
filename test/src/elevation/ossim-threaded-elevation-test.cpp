@@ -7,13 +7,12 @@
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimTimer.h>
 #include <ossim/init/ossimInit.h>
-#include <OpenThreads/Mutex>
 #include <OpenThreads/Barrier>
 #include <OpenThreads/Thread>
 
 OpenThreads::Barrier* startBarrier = 0;
 OpenThreads::Barrier* endBarrier = 0;
-OpenThreads::Mutex accumMutex;
+std::mutex accumMutex;
 ossimRefPtr<ossimDtedElevationDatabase> dtedDatabase = new ossimDtedElevationDatabase;
 double accumH = 0.0;
 

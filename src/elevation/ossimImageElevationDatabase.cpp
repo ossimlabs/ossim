@@ -259,7 +259,7 @@ ossimRefPtr<ossimElevCellHandler> ossimImageElevationDatabase::getOrCreateCellHa
 
       if(result.valid())
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_cacheMapMutex);
+         std::lock_guard<std::mutex> lock(m_cacheMapMutex);
 
          //---
          // Add the cell to map.

@@ -19,7 +19,6 @@
 #include <ossim/base/ossimNumericProperty.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/imaging/ossimImageData.h>
-#include <OpenThreads/ScopedLock>
 #include <cstdlib>
 
 RTTI_DEF1(ossimPixelFlipper, "ossimPixelFlipper", ossimImageSourceFilter)
@@ -89,7 +88,7 @@ ossimRefPtr<ossimImageData> ossimPixelFlipper::getTile(
    if (!inputTile->getBuf()) return inputTile;
    
    // Lock for the length of this method.
-	OpenThreads::ScopedLock<OpenThreads::Mutex> scopeLock(theMutex);
+	std::lock_guard<std::recursive_mutex> scopeLock(theMutex);
    
    // Call the appropriate load method.
    switch (inputTile->getScalarType())
@@ -569,7 +568,7 @@ void ossimPixelFlipper::allocateClipTileBuffer(ossimRefPtr<ossimImageData> input
 
 void ossimPixelFlipper::initialize()
 {
-	OpenThreads::ScopedLock<OpenThreads::Mutex> scopeLock(theMutex);
+	std::lock_guard<std::recursive_mutex> scopeLock(theMutex);
    ossimImageSourceFilter::initialize();
    theValidVertices.clear();
    theBoundingRects.clear();
@@ -783,7 +782,7 @@ void ossimPixelFlipper::setTargetValue(ossim_float64 target_value)
    // won't affect the output null, min and max ranges.  This will fix a
    // tiled nitf with max of 2047(11bit) with edge tile fill values of 2048.
    //---
-   OpenThreads::ScopedLock<OpenThreads::Mutex> scopeLock(theMutex);
+   std::lock_guard<std::recursive_mutex> scopeLock(theMutex);
 
    theTargetValueLo = target_value;
    theTargetValueHi = target_value; 
@@ -796,7 +795,7 @@ void ossimPixelFlipper::setTargetRange(ossim_float64 target_min, ossim_float64 t
    // won't affect the output null, min and max ranges.  This will fix a
    // tiled nitf with max of 2047(11bit) with edge tile fill values of 2048.
    //---
-   OpenThreads::ScopedLock<OpenThreads::Mutex> scopeLock(theMutex);
+   std::lock_guard<std::recursive_mutex> scopeLock(theMutex);
 
    theTargetValueLo = target_min;
    theTargetValueHi = target_max; 
@@ -804,7 +803,7 @@ void ossimPixelFlipper::setTargetRange(ossim_float64 target_min, ossim_float64 t
 
 void ossimPixelFlipper::setReplacementValue(ossim_float64 replacement_value)
 {
-	OpenThreads::ScopedLock<OpenThreads::Mutex> scopeLock(theMutex);
+	std::lock_guard<std::recursive_mutex> scopeLock(theMutex);
 
    // Range check to ensure within null, min and max of output radiometry.
    if (inRange(replacement_value))
@@ -815,7 +814,7 @@ void ossimPixelFlipper::setReplacementValue(ossim_float64 replacement_value)
 
 void ossimPixelFlipper::setClampValue(ossim_float64 clamp_value, bool clamp_max_value)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> scopeLock(theMutex);
+   std::lock_guard<std::recursive_mutex> scopeLock(theMutex);
 
    if (inRange(clamp_value))
    {
@@ -844,13 +843,13 @@ void ossimPixelFlipper::setClampValues(ossim_float64 clamp_value_lo, ossim_float
 
 void ossimPixelFlipper::setReplacementMode(ossimPixelFlipper::ReplacementMode mode)
 {
-	OpenThreads::ScopedLock<OpenThreads::Mutex> scopeLock(theMutex);
+	std::lock_guard<std::recursive_mutex> scopeLock(theMutex);
    theReplacementMode = mode;
 }
 
 bool ossimPixelFlipper::setReplacementMode(const ossimString& modeString)
 {
-	OpenThreads::ScopedLock<OpenThreads::Mutex> scopeLock(theMutex);
+	std::lock_guard<std::recursive_mutex> scopeLock(theMutex);
 
    ossimString mode = modeString;
    mode.upcase();
@@ -887,7 +886,7 @@ bool ossimPixelFlipper::setReplacementMode(const ossimString& modeString)
 
 void ossimPixelFlipper::setClipMode(ossimPixelFlipper::ClipMode mode)
 {
-	OpenThreads::ScopedLock<OpenThreads::Mutex> scopeLock(theMutex);
+	std::lock_guard<std::recursive_mutex> scopeLock(theMutex);
    theClipMode = mode;
 }
 
@@ -986,7 +985,7 @@ ossimRefPtr<ossimProperty> ossimPixelFlipper::getProperty(
    const ossimString& name)const
 {
    // Lock for the length of this method.
-	OpenThreads::ScopedLock<OpenThreads::Mutex> scopeLock(theMutex);
+	std::lock_guard<std::recursive_mutex> scopeLock(theMutex);
 
    if (name == PF_TARGET_VALUE_KW)
    {

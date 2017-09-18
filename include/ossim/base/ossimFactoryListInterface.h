@@ -10,13 +10,12 @@
 // $Id$
 #ifndef ossimFactoryListInterface_HEADER
 #define ossimFactoryListInterface_HEADER
-#include <OpenThreads/Mutex>
-#include <OpenThreads/ScopedLock>
 #include <vector>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimKeywordlist.h>
+#include <mutex>
 
 /**
  * The is a factory list interface that allows registries to be accessed in a common way.  
@@ -46,7 +45,7 @@ class ossimFactoryListInterface
       bool isFactoryRegistered(T* factory)const
       {
          if(!factory) return false;
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+         std::lock_guard<std::mutex> lock(m_factoryListMutex);
          
          return findFactory(factory);
       }
@@ -58,7 +57,7 @@ class ossimFactoryListInterface
       void registerFactory(T* factory, bool pushToFrontFlag=false)
       {
          if(!factory) return;
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+         std::lock_guard<std::mutex> lock(m_factoryListMutex);
          if(!findFactory(factory))
          {
             if (pushToFrontFlag)
@@ -76,7 +75,7 @@ class ossimFactoryListInterface
        */
       void unregisterFactory(T* factory)
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+         std::lock_guard<std::mutex> lock(m_factoryListMutex);
          ossim_uint32 idx = 0;
          for(idx = 0; idx < m_factoryList.size(); ++idx)
          {
@@ -93,7 +92,7 @@ class ossimFactoryListInterface
        */
       void unregisterAllFactories()
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+         std::lock_guard<std::mutex> lock(m_factoryListMutex);
          m_factoryList.clear();
       }
       
@@ -102,7 +101,7 @@ class ossimFactoryListInterface
        */
       void registerFactoryToFront(T* factory)
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+         std::lock_guard<std::mutex> lock(m_factoryListMutex);
          if(!findFactory(factory))
          {
             m_factoryList.insert(m_factoryList.begin(), factory);
@@ -115,7 +114,7 @@ class ossimFactoryListInterface
        */
       void registerFactoryBefore(T* factory, T* beforeThisFactory)
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+         std::lock_guard<std::mutex> lock(m_factoryListMutex);
          if(!findFactory(factory))
          {
             ossim_uint32 idx = 0;
@@ -186,14 +185,14 @@ class ossimFactoryListInterface
          
          return false;
       }
-      mutable OpenThreads::Mutex m_factoryListMutex;
+      mutable std::mutex m_factoryListMutex;
       FactoryListType m_factoryList;
    };
 
 template <class T, class NativeType>
 void ossimFactoryListInterface<T, NativeType>::getAllTypeNamesFromRegistry(std::vector<ossimString>& typeList)const
 {
-   //OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+   //std::lock_guard<std::mutex> lock(m_factoryListMutex);
    ossim_uint32 idx = 0;
    for(; idx<m_factoryList.size(); ++idx)
    {
@@ -203,7 +202,7 @@ void ossimFactoryListInterface<T, NativeType>::getAllTypeNamesFromRegistry(std::
 template <class T, class NativeType>
 ossimObject* ossimFactoryListInterface<T, NativeType>::createObjectFromRegistry(const ossimString& typeName)const
 {
-   //OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+   //std::lock_guard<std::mutex> lock(m_factoryListMutex);
    ossimObject* result = 0;
    ossim_uint32 idx = 0;
    for(;((idx<m_factoryList.size())&&!result); ++idx)
@@ -217,7 +216,7 @@ template <class T, class NativeType>
 ossimObject* ossimFactoryListInterface<T, NativeType>::createObjectFromRegistry(const ossimKeywordlist& kwl,
                                                                                 const char* prefix)const
 {
-   // OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_factoryListMutex);
+   // std::lock_guard<std::mutex> lock(m_factoryListMutex);
    ossimObject* result = 0;
    ossim_uint32 idx = 0;
    for(;((idx<m_factoryList.size())&&!result); ++idx)

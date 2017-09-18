@@ -16,6 +16,7 @@
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <ossim/parallel/ossimImageChainMtAdaptor.h>
 #include <OpenThreads/Thread>
+#include <mutex>
 
 //*************************************************************************************************
 //! This class manages the sequencing of tile requests across multiple threads. Note that multi-
@@ -131,15 +132,15 @@ protected:
    TileCache                             m_tileCache;  //!< Saves tiles output by threaded jobs
    ossim_uint32                          m_maxCacheSize;
    ossim_uint32                          m_maxTileCacheFactor;
-   mutable OpenThreads::Mutex            m_cacheMutex;   
-   mutable OpenThreads::Mutex            m_jobMutex;   
+   mutable std::mutex                    m_cacheMutex;   
+   mutable std::mutex                    m_jobMutex;   
    ossim_uint32                          m_totalNumberOfTiles;
    OpenThreads::Block                    m_getTileBlock; //<! Blocks execution of main thread while waiting for tile to become available
    OpenThreads::Block                    m_nextJobBlock; //<! Blocks execution of worker threads
 
    // FOR DEBUG:
-   mutable OpenThreads::Mutex d_printMutex;
-   mutable OpenThreads::Mutex d_timerMutex;
+   mutable std::mutex d_printMutex;
+   mutable std::mutex d_timerMutex;
    bool d_debugEnabled;
    ossim_uint32 d_timedBlocksDt;
    bool d_timeMetricsEnabled;

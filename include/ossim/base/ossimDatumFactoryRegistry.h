@@ -15,8 +15,7 @@
 #include <vector>
 #include <ossim/base/ossimConstants.h> /* for OSSIM_DLL macro */
 #include <ossim/base/ossimDatumFactoryInterface.h> 
-#include <OpenThreads/ReadWriteMutex>
-
+#include <mutex>
 // Forward class declarations.
 class ossimDatumFactoryInterface;
 class ossimString;
@@ -68,7 +67,7 @@ protected:
    /** Single static instance of this class. */
    //static ossimDatumFactoryRegistry* theInstance;
 
-	mutable OpenThreads::ReadWriteMutex theFactoryListMutex;
+	mutable std::mutex theFactoryListMutex;
    std::vector<ossimDatumFactoryInterface*> theFactoryList;
 };
 

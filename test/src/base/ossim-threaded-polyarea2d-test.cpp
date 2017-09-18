@@ -7,9 +7,10 @@
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimPolyArea2d.h>
 
-#include <OpenThreads/Mutex>
 #include <OpenThreads/Barrier>
 #include <OpenThreads/Thread>
+#include <mutex>
+
 OpenThreads::Barrier* startBarrier = 0;
 OpenThreads::Barrier* endBarrier = 0;
 class Polyarea2dThread : public OpenThreads::Thread

@@ -1,5 +1,4 @@
-#include<ossim/parallel/ossimJobThreadQueue.h>
-
+#include <ossim/parallel/ossimJobThreadQueue.h>
 ossimJobThreadQueue::ossimJobThreadQueue(ossimJobQueue* jqueue)
 :m_doneFlag(false)
 {
@@ -7,7 +6,7 @@ ossimJobThreadQueue::ossimJobThreadQueue(ossimJobQueue* jqueue)
 }
 void ossimJobThreadQueue::setJobQueue(ossimJobQueue* jqueue)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+   std::lock_guard<std::mutex> lock(m_threadMutex);
    
    if (m_jobQueue == jqueue) return;
    
@@ -30,25 +29,25 @@ void ossimJobThreadQueue::setJobQueue(ossimJobQueue* jqueue)
 
 ossimJobQueue* ossimJobThreadQueue::getJobQueue() 
 { 
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+   std::lock_guard<std::mutex> lock(m_threadMutex);
    return m_jobQueue.get(); 
 }
 
 const ossimJobQueue* ossimJobThreadQueue::getJobQueue() const 
 { 
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+   std::lock_guard<std::mutex> lock(m_threadMutex);
    return m_jobQueue.get(); 
 }
 
 ossimRefPtr<ossimJob> ossimJobThreadQueue::currentJob() 
 { 
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+   std::lock_guard<std::mutex> lock(m_threadMutex);
    return m_currentJob; 
 }
 
 void ossimJobThreadQueue::cancelCurrentJob()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+   std::lock_guard<std::mutex> lock(m_threadMutex);
    if(m_currentJob.valid())
    {
       m_currentJob->cancel();
@@ -56,7 +55,7 @@ void ossimJobThreadQueue::cancelCurrentJob()
 }
 bool ossimJobThreadQueue::isValidQueue()const
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+   std::lock_guard<std::mutex> lock(m_threadMutex);
    return m_jobQueue.valid();
 }
 
@@ -73,7 +72,7 @@ void ossimJobThreadQueue::run()
       if (job.valid()&&!m_doneFlag)
       {
          {
-            OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+            std::lock_guard<std::mutex> lock(m_threadMutex);
             m_currentJob = job;
          }
          
@@ -84,7 +83,7 @@ void ossimJobThreadQueue::run()
             job->start();
          }
          {            
-            OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+            std::lock_guard<std::mutex> lock(m_threadMutex);
             m_currentJob = 0;
          }
          job->setState(ossimJob::ossimJob_FINISHED);
@@ -103,13 +102,13 @@ void ossimJobThreadQueue::run()
    if(job.valid()&&m_doneFlag&&job->isReady())
    {
       {            
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+         std::lock_guard<std::mutex> lock(m_threadMutex);
          m_currentJob = 0;
       }
       job->cancel();
    }
    {            
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+      std::lock_guard<std::mutex> lock(m_threadMutex);
       m_currentJob = 0;
    }
    job = 0;
@@ -128,7 +127,7 @@ void ossimJobThreadQueue::setDone(bool done)
    if(done)
    {
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+         std::lock_guard<std::mutex> lock(m_threadMutex);
          if (m_currentJob.valid())
             m_currentJob->release();
       }
@@ -140,13 +139,13 @@ void ossimJobThreadQueue::setDone(bool done)
 
 bool ossimJobThreadQueue::isDone() const 
 { 
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+   std::lock_guard<std::mutex> lock(m_threadMutex);
    return m_doneFlag; 
 }
 
 bool ossimJobThreadQueue::isProcessingJob()const
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+   std::lock_guard<std::mutex> lock(m_threadMutex);
    return m_currentJob.valid();
 }
 
@@ -156,7 +155,7 @@ int ossimJobThreadQueue::cancel()
    if( isRunning() )
    {
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+         std::lock_guard<std::mutex> lock(m_threadMutex);
          m_doneFlag = true;
          if (m_currentJob.valid())
          {
@@ -174,7 +173,7 @@ int ossimJobThreadQueue::cancel()
       {
 #if 1
          {
-            OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+            std::lock_guard<std::mutex> lock(m_threadMutex);
             
             if (m_jobQueue.valid()) 
             {
@@ -194,7 +193,7 @@ int ossimJobThreadQueue::cancel()
 
 bool ossimJobThreadQueue::isEmpty()const
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+   std::lock_guard<std::mutex> lock(m_threadMutex);
    return m_jobQueue->isEmpty();
 }
 
@@ -222,7 +221,7 @@ bool ossimJobThreadQueue::hasJobsToProcess()const
 {
    bool result = false;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_threadMutex);
+      std::lock_guard<std::mutex> lock(m_threadMutex);
       result = !m_jobQueue->isEmpty()||m_currentJob.valid();
    }
    

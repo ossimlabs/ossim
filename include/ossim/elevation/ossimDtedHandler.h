@@ -26,13 +26,14 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/elevation/ossimElevCellHandler.h>
-#include <OpenThreads/Mutex>
 #include <ossim/support_data/ossimDtedVol.h>
 #include <ossim/support_data/ossimDtedHdr.h>
 #include <ossim/support_data/ossimDtedUhl.h>
 #include <ossim/support_data/ossimDtedDsi.h>
 #include <ossim/support_data/ossimDtedAcc.h>
 #include <ossim/support_data/ossimDtedRecord.h>
+
+#include <mutex>
 
 class OSSIM_DLL ossimDtedHandler : public ossimElevCellHandler
 {
@@ -180,7 +181,7 @@ protected:
    */
    void readPostsFromFile(DtedHeight &postData, int offset);
 
-   mutable OpenThreads::Mutex m_fileStrMutex;
+   mutable std::mutex m_fileStrMutex;
   // mutable std::ifstream m_fileStr;
    mutable std::shared_ptr<ossim::istream> m_fileStr;
    mutable std::string m_connectionString;
@@ -199,7 +200,7 @@ protected:
    // Indicates whether byte swapping is needed.
    bool m_swapBytesFlag;
 
-   mutable OpenThreads::Mutex m_memoryMapMutex;
+   mutable std::mutex m_memoryMapMutex;
    mutable std::vector<ossim_uint8> m_memoryMap;
    
    std::shared_ptr<ossimDtedVol> m_vol;
@@ -232,7 +233,7 @@ inline bool ossimDtedHandler::isOpen()const
 {
 
   if(!m_memoryMap.empty()) return true;
-  OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_fileStrMutex);
+  std::lock_guard<std::mutex> lock(m_fileStrMutex);
 
 
   return (m_fileStr != 0);

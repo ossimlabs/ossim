@@ -25,8 +25,8 @@
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <ossim/point_cloud/ossimPointCloudHandler.h>
 #include <ossim/util/ossimChipProcTool.h>
-#include <OpenThreads/ReadWriteMutex>
 #include <vector>
+#include <mutex>
 
 /*!
  *  Class for finding helicopter landing zones (HLZ) on a DEM given the final destination and max

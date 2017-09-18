@@ -543,7 +543,7 @@ void ossimHlzTool::writeSlopeImage()
    }
 }
 
-OpenThreads::ReadWriteMutex ossimHlzTool::PatchProcessorJob::m_bufMutex;
+std::mutex ossimHlzTool::PatchProcessorJob::m_bufMutex;
 
 ossimHlzTool::PatchProcessorJob::PatchProcessorJob(ossimHlzTool* hlzUtil, const ossimIpt& origin,
                                    ossim_uint32 /*chip_id*/)
@@ -561,7 +561,7 @@ void ossimHlzTool::PatchProcessorJob::start()
    bool passed = level1Test() && level2Test() && maskTest();
    ossimIpt p;
 
-   OpenThreads::ScopedWriteLock lock (m_bufMutex);
+   std::lock_guard<std::mutex> lock (m_bufMutex);
    for (p.y = m_demPatchUL.y; p.y < m_demPatchLR.y; ++p.y)
    {
       for (p.x = m_demPatchUL.x; p.x < m_demPatchLR.x; ++p.x)

@@ -25,7 +25,7 @@
 #include <ossim/base/ossimVisitor.h>
 #include <ossim/elevation/ossimElevSource.h>
 #include <ossim/elevation/ossimElevationDatabase.h>
-#include <OpenThreads/ReadWriteMutex>
+#include <mutex>
 
 class OSSIM_DLL ossimElevManager : public ossimElevSource
 {
@@ -190,7 +190,7 @@ protected:
     * and it seems to be much more stable across all platforms.  More testing needs to occur for the ReadWriteMutex.
     * For now we will use Mutex.
     */
-   mutable OpenThreads::Mutex m_mutex;
+   mutable std::mutex m_mutex;
 };
 
 #endif

@@ -144,7 +144,7 @@ ossimRefPtr<ossimElevCellHandler> ossimElevationCellDatabase::getOrCreateCellHan
   ossim_uint64 id = createId(gpt);
   
   {
-    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_cacheMapMutex);
+    std::lock_guard<std::mutex> lock(m_cacheMapMutex);
     CellMap::iterator iter = m_cacheMap.find(id);
     if(iter != m_cacheMap.end())
     {
@@ -158,7 +158,7 @@ ossimRefPtr<ossimElevCellHandler> ossimElevationCellDatabase::getOrCreateCellHan
   result = createCell(gpt);
   
   {
-    OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_cacheMapMutex);
+    std::lock_guard<std::mutex> lock(m_cacheMapMutex);
     if(result.valid())
     {
       m_cacheMap.insert(std::make_pair(id, new CellInfo(id, result.get())));

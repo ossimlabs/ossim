@@ -15,10 +15,9 @@
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/hdf5/ossimHdf5.h>
 #include <ossim/hdf5/ossimHdf5ImageDataset.h>
-#include <OpenThreads/Mutex>
 #include <vector>
 #include <string>
-
+#include <mutex>
 /**
  * This is the base class for all imagery using HDF5 as the file format. HDF5 is unique in that it
  * represents a variety of subformats for raster and projection information. The derived classes
@@ -221,7 +220,7 @@ protected:
    std::vector<ossimRefPtr<ossimHdf5ImageDataset> > m_entries;
    ossim_uint32                     m_currentEntry;
    ossimRefPtr<ossimImageData>      m_tile;
-   OpenThreads::Mutex               m_mutex;
+   std::mutex                       m_mutex;
 
    TYPE_DATA
 };

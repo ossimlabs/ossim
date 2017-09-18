@@ -29,8 +29,7 @@
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimGpt.h>
-#include <OpenThreads/Mutex>
-#include <OpenThreads/ScopedLock>
+#include <mutex>
 class ossimProjection;
 /**
  * @class ossimGeneralRasterElevHandler Elevation source for an srtm file.
@@ -157,7 +156,7 @@ private:
    virtual bool setFilename(const ossimFilename& file);
    
    ossimGeneralRasterElevHandler::GeneralRasterInfo theGeneralRasterInfo;
-   mutable OpenThreads::Mutex m_inputStreamMutex;
+   mutable std::mutex m_inputStreamMutex;
    std::ifstream m_inputStream;
 
    /** @brief true if stream is open. */

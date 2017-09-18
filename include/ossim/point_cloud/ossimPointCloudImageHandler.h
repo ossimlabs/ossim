@@ -244,7 +244,7 @@ protected:
    ossimDpt                     m_gsd;
    ossim_float64                m_gsdFactor;
    ossimRefPtr<ossimImageData>  m_tile;
-   OpenThreads::Mutex           m_mutex;
+   std::mutex                   m_mutex;
    Components                   m_activeComponent;
    std::vector<ossimString>     m_componentNames;
 

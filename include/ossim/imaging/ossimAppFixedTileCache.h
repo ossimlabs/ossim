@@ -18,7 +18,6 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIrect.h>
-#include <OpenThreads/ReadWriteMutex>
 
 class ossimFixedTileCache;
 class ossimImageData;
@@ -111,7 +110,7 @@ protected:
 
    std::map<ossimAppFixedCacheId, ossimFixedTileCache*> theAppCacheMap;
 
-   OpenThreads::Mutex theMutex;
+   std::mutex theMutex;
 };
 
 #endif

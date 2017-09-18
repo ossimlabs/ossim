@@ -158,7 +158,7 @@ ossimRefPtr<ossimImageData>
       return NULL;
 
    // The sole purpose of the adapter is this mutex lock around the actual handler getTile:
-   //OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+   //std::lock_guard<std::mutex> lock(m_mutex);
 
    ossimRefPtr<ossimImageData> tile = new ossimImageData();
    ossimRefPtr<ossimImageData> temp_tile = 0;
@@ -169,7 +169,7 @@ ossimRefPtr<ossimImageData>
    {
      std::cout << "WAIT LOCK: " << tile_rect << std::endl;
    }
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
 
    if (traceDebug())
    {
@@ -214,7 +214,7 @@ bool ossimImageHandlerMtAdaptor::getTile(ossimImageData* tile, ossim_uint32 rLev
       return false;
 
    // The sole purpose of the adapter is this mutex lock around the actual handler getTile:
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
 
    // This is effectively a copy of ossimImageSource::getTile(ossimImageData*). It is reimplemented 
    // here to save two additional function calls:
