@@ -80,6 +80,9 @@
 #include <ossim/support_data/ossimSrcRecord.h>
 #include <ossim/support_data/ossimWkt.h>
 
+#include <ossim/base/Block.h>
+#include <ossim/base/Thread.h>
+
 // Put your includes here:
 
 // System includes:
@@ -88,7 +91,17 @@
 #include <sstream>
 #include <iostream>
 using namespace std;
+std::shared_ptr<ossim::Block> block = std::make_shared<ossim::Block>();
+class TestThread : public ossim::Thread
+{
+public:
 
+protected:
+   virtual void run(){
+      block->block();
+      std::cout << "STARING!!!!!!!\n";
+   }
+};
 int main(int argc, char *argv[])
 {
    int returnCode = 0;
@@ -99,6 +112,13 @@ int main(int argc, char *argv[])
 
    try
    {
+      TestThread t1;
+      t1.start();
+
+      std::cout << "WAITING 2 SECOND to release block\n";
+      ossim::Thread::sleepInSeconds(2);
+      block->release();
+      ossim::Thread::sleepInSeconds(2);
       // Put your code here.
    }
    catch(const ossimException& e)

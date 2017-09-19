@@ -69,17 +69,19 @@ MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
    MARK_AS_ADVANCED(OSSIM_COMMON_COMPILER_FLAGS)
 ENDMACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
 
-#MACRO(USE_CXX11)
-#  if (CMAKE_VERSION VERSION_LESS "3.1")
-#    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-#      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
-#    elseif (APPLE)
-#      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
-#    endif()
-#  else ()
-#    set (CMAKE_CXX_STANDARD 11)
-#  endif ()
-#ENDMACRO(USE_CXX11)
+MACRO(USE_CXX11)
+  if (CMAKE_VERSION VERSION_LESS "3.1")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
+    elseif (APPLE)
+      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
+    endif()
+  else ()
+   set(CMAKE_CXX_STANDARD 11)
+   set(CMAKE_CXX_STANDARD_REQUIRED ON)
+   set(CMAKE_CXX_EXTENSIONS OFF)
+  endif ()
+ENDMACRO(USE_CXX11)
 
 MACRO(OSSIM_ADD_COMMON_SETTINGS)
    ###################################################################################
@@ -93,10 +95,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    # Seems like a good place to add version specific compiler flags too.
    ###################################################################################
 
-   set(CMAKE_CXX_STANDARD 11)
-   set(CMAKE_CXX_STANDARD_REQUIRED ON)
-   set(CMAKE_CXX_EXTENSIONS OFF)
-   #USE_CXX11()
+   USE_CXX11()
 
    IF(APPLE)
       # use, i.e. don't skip the full RPATH for the build tree
