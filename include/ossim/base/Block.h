@@ -8,7 +8,7 @@ namespace ossim{
 
    /**
    * This is a very simple block interface.  This allows one to control 
-   * how there threads are blocked
+   * how their threads are blocked
    *
    * There is a release state flag that tells the call to block to block the calling
    * thread or release the thread(s) that are currently blocked
