@@ -72,7 +72,7 @@ namespace ossim{
       class Interrupt : public std::exception{
       public:
          Interrupt(const std::string& what=""):m_what(what){}
-         virtual const char* what() const _NOEXCEPT{return m_what.c_str();}
+         virtual const char* what() const throw(){return m_what.c_str();}
       protected:
          std::string m_what;
       };
