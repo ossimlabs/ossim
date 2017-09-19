@@ -19,7 +19,7 @@
 #include <ossim/base/ossimReferenced.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimImageData.h>
-#include <OpenThreads/Mutex>
+#include <mutex>
 
 class  ossimFixedTileCacheInfo
 {
@@ -128,7 +128,7 @@ public:
    virtual void setTileSize(const ossimIpt& tileSize);
 protected:
    virtual ~ossimFixedTileCache();
-   OpenThreads::Mutex theMutex;
+   std::mutex theMutex;
    ossimIrect   theTileBoundaryRect;
    ossimIpt     theTileSize;
    ossimIpt     theBoundaryWidthHeight;

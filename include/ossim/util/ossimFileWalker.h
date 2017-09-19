@@ -20,9 +20,9 @@
 #include <ossim/base/ossimFilename.h>
 #include <ossim/parallel/ossimJob.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
-#include <OpenThreads/Mutex>
 #include <string>
 #include <vector>
+#include <mutex>
 
 class ossimFilename;
 class ossimFileProcessorInterface;
@@ -216,7 +216,7 @@ private:
    bool                                  m_recurseFlag;
    bool                                  m_waitOnDirFlag;
    bool                                  m_abortFlag;
-   OpenThreads::Mutex                    m_mutex;
+   std::mutex                            m_mutex;
 };
 
 #endif /* #ifndef ossimFileWalker_HEADER */

@@ -9,12 +9,13 @@
 #include <ossim/init/ossimInit.h>
 #include <ossim/imaging/ossimAppFixedTileCache.h>
 #include <ossim/imaging/ossimImageData.h>
-#include <OpenThreads/Mutex>
-#include <OpenThreads/Barrier>
-#include <OpenThreads/Thread>
-OpenThreads::Barrier* startBarrier = 0;
-OpenThreads::Barrier* endBarrier = 0;
-class TileCacheThread : public OpenThreads::Thread
+#include <ossim/base/Thread.h>
+#include <ossim/base/Barrier.h>
+#include <mutex>
+
+std::shared_ptr<ossim::Barrier> startBarrier;
+std::shared_ptr<ossim::Barrier> endBarrier;
+class TileCacheThread : public ossim::Thread
 {
 public:
    TileCacheThread(const ossimString& threadName="",
@@ -98,8 +99,8 @@ int main(int argc, char* argv[])
       threads = tempString.toUInt32();
    }
    std::vector<TileCacheThread*> threadList(threads);
-   startBarrier = new OpenThreads::Barrier(threads+1); // include the main thread for synching
-   endBarrier = new OpenThreads::Barrier(threads+1); //   include main thread for syncing end 
+   startBarrier = std::make_shared<ossim::Barrier>(threads+1); // include the main thread for synching
+   endBarrier   = std::make_shared<ossim::Barrier>(threads+1); // include the main thread for synching
    ossim_uint32 idx = 0;
    for(idx = 0; idx < threads; ++ idx)
    {
@@ -114,6 +115,5 @@ int main(int argc, char* argv[])
    std::cout << "All threads finished\n";
    ossimTimer::Timer_t t2 = ossimTimer::instance()->tick();
    std::cout << "Time elapsed:              " << ossimTimer::instance()->delta_s(t1, t2) << " seconds" << "\n";
-   delete endBarrier;
    return 0;
 }

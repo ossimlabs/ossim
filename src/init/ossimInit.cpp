@@ -61,7 +61,7 @@
 #include <ossim/projection/ossimProjectionViewControllerFactory.h>
 
 #include <algorithm>
-
+#include <mutex>
 
 static ossimTrace traceExec = ossimTrace("ossimInit:exec");
 static ossimTrace traceDebug = ossimTrace("ossimInit:debug");
@@ -85,8 +85,8 @@ ossimInit::ossimInit()
 
 ossimInit* ossimInit::instance()
 {
-   static OpenThreads::Mutex m;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
+   static std::mutex m;
+   std::lock_guard<std::mutex> lock(m);
    if (!theInstance)
    {
       theInstance = new ossimInit();
@@ -115,8 +115,8 @@ void ossimInit::addOptions(ossimArgumentParser& parser)
  *****************************************************************************/
 void ossimInit::initialize(int& argc, char** argv)
 {
-   static OpenThreads::Mutex m;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
+   static std::mutex m;
+   std::lock_guard<std::mutex> lock(m);
    if( !theInitializedFlag )
    {
       ossimArgumentParser argumentParser(&argc, argv);
@@ -126,8 +126,8 @@ void ossimInit::initialize(int& argc, char** argv)
 
 void ossimInit::initialize(ossimArgumentParser& parser)
 {
-   static OpenThreads::Mutex m;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
+   static std::mutex m;
+   std::lock_guard<std::mutex> lock(m);
    if(theInitializedFlag)
    {
       if (traceDebug())
@@ -207,8 +207,8 @@ void ossimInit::initialize()
    delete [] argv[0];
 
 #if 0   
-    static OpenThreads::Mutex m;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
+    static std::mutex m;
+   std::lock_guard<std::mutex> lock(m);
    if(theInitializedFlag)
    {
       if (traceDebug())

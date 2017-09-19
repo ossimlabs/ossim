@@ -26,6 +26,7 @@
 #include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/imaging/ossimIndexToRgbLutFilter.h>
 #include <ossim/util/ossimViewshedTool.h>
+#include <ossim/base/Thread.h>
 
 using namespace std;
 
@@ -529,7 +530,7 @@ bool ossimViewshedTool::computeViewshed()
       // Wait until all radials have been processed before proceeding:
       ossimNotify(ossimNotifyLevel_INFO) << "Waiting for job threads to finish..."<<endl;
       while (m_jobMtQueue->hasJobsToProcess() || m_jobMtQueue->numberOfBusyThreads())
-         OpenThreads::Thread::microSleep(250);
+         ossim::Thread::sleepInMicroSeconds(250);
    }
    else
    {
@@ -884,7 +885,7 @@ void RadialProcessorJob::start()
    RadialProcessor::doRadial(m_vsUtil, m_sector, m_radial);
 }
 
-OpenThreads::ReadWriteMutex RadialProcessor::m_bufMutex;
+std::mutex RadialProcessor::m_bufMutex;
 
 void RadialProcessor::doRadial(ossimViewshedTool* vsUtil,
                                ossim_uint32 sector_idx,
@@ -963,7 +964,6 @@ void RadialProcessor::doRadial(ossimViewshedTool* vsUtil,
       // Check if we passed beyong the visibilty radius, and exit loop if so:
       if (vsUtil->m_displayAsRadar && ((u*u + v*v) >= r2_max))
       {
-         //OpenThreads::ScopedWriteLock lock (m_bufMutex);
          vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_overlayValue);
          break;
       }
@@ -984,12 +984,10 @@ void RadialProcessor::doRadial(ossimViewshedTool* vsUtil,
             // point is visible, latch this line-of-sight as the new max elevation angle for this
             // radial, and mark the output pixel as visible:
             radial.elevation = elev_i;
-            //OpenThreads::ScopedWriteLock lock (m_bufMutex);
             vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_visibleValue);
          }
          else
          {
-            //OpenThreads::ScopedWriteLock lock (m_bufMutex);
             vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_hiddenValue);
          }
       }

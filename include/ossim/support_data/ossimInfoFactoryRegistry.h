@@ -15,9 +15,9 @@
 #include <ossim/base/ossimConstants.h> /* for OSSIM_DLL macro */
 #include <ossim/base/ossimIosFwd.h> 
 #include <ossim/support_data/ossimInfoBase.h> 
-#include <OpenThreads/Mutex>
 #include <memory>
 #include <vector>
+#include <mutex>
 
 // Forward class declarations.
 class ossimInfoFactoryInterface;
@@ -95,7 +95,7 @@ protected:
    
    std::vector<ossimInfoFactoryInterface*> m_factoryList;
 
-   OpenThreads::Mutex m_mutex;
+   std::mutex m_mutex;
 
    static ossimInfoFactoryRegistry* m_instance;
 };

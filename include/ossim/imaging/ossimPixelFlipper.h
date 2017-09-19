@@ -19,7 +19,7 @@
 
 #include <ossim/imaging/ossimImageSourceFilter.h>
 #include <ossim/base/ossimPolygon.h>
-#include <OpenThreads/ReentrantMutex>
+#include <mutex>
 
 /**
  *  Class to scan pixels and flip target dn value to a replacement dn
@@ -258,7 +258,7 @@ protected:
    ClipMode        theClipMode;
    
    /** For lock and unlock. */
-   mutable OpenThreads::ReentrantMutex      theMutex;
+   mutable std::recursive_mutex      theMutex;
 
    mutable std::vector<ossimPolygon> theValidVertices;
    mutable std::vector<ossimIrect>   theBoundingRects;

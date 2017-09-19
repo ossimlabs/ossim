@@ -12,7 +12,6 @@
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimGpt.h>
-#include <OpenThreads/ScopedLock>
 
 RTTI_DEF1(ossimGeneralRasterElevHandler, "ossimGeneralRasterElevHandler", ossimElevCellHandler);
 
@@ -206,7 +205,7 @@ double ossimGeneralRasterElevHandler::getPostValue(const ossimIpt& /* gridPt */)
 bool ossimGeneralRasterElevHandler::isOpen()const
 {
    if(!m_memoryMap.empty()) return true;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_inputStreamMutex);
+   std::lock_guard<std::mutex> lock(m_inputStreamMutex);
 
    //---
    // Change to use flag as is_open is non-const on some old compilers.
@@ -489,7 +488,7 @@ double ossimGeneralRasterElevHandler::getHeightAboveMSLFileTemplate(
    std::streampos offset = y0*bytesPerLine + x0*sizeof(T);
    
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_inputStreamMutex);
+      std::lock_guard<std::mutex> lock(m_inputStreamMutex);
       if(m_inputStream.fail())
       {
          m_inputStream.clear();

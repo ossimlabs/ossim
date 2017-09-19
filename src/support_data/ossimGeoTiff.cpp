@@ -50,7 +50,7 @@
 
 static const ossimGeoTiffCoordTransformsLut COORD_TRANS_LUT;
 static const ossimGeoTiffDatumLut DATUM_LUT;
-OpenThreads::Mutex ossimGeoTiff::theMutex;
+std::mutex ossimGeoTiff::theMutex;
 
 #ifdef OSSIM_ID_ENABLED
 static const char OSSIM_ID[] = "$Id: ossimGeoTiff.cpp 21024 2012-05-30 08:45:13Z dburken $";
@@ -239,7 +239,7 @@ bool ossimGeoTiff::writeTags(TIFF* tifPtr,
                              const ossimRefPtr<ossimMapProjectionInfo> projectionInfo,
                              bool imagineNad27Flag)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
 
    const ossimMapProjection* mapProj = projectionInfo->getProjection();
 
@@ -976,7 +976,7 @@ bool ossimGeoTiff::readTags(const ossimFilename& file, ossim_uint32 entryIdx)
 bool ossimGeoTiff::readTags(
    TIFF* tiff, ossim_uint32 entryIdx, bool ownTiffPtrFlag)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
 
    if ( !tiff )
    {

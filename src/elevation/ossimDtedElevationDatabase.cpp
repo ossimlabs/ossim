@@ -7,10 +7,8 @@
 #include <sstream>
 #include <iomanip>
 #include <cstdlib> /* for abs(int) */
-#include <OpenThreads/Thread> //### TODO: for debug, remove
 
 static ossimTrace traceDebug("ossimDtedElevationDatabase:debug");
-static OpenThreads::Mutex d_mutex; // for debug
 RTTI_DEF1(ossimDtedElevationDatabase, "ossimDtedElevationDatabase", ossimElevationCellDatabase);
 
 ossimDtedElevationDatabase::ossimDtedElevationDatabase()
@@ -45,9 +43,8 @@ double ossimDtedElevationDatabase::getHeightAboveMSL(const ossimGpt& gpt)
 {
    if(!isSourceEnabled())
       return ossim::nan();
-
+   std::lock_guard<std::mutex> lock(m_mutex);
    double result = ossim::nan();
-   m_mutex.lock();
    if(m_lastHandler.valid() && m_lastHandler->pointHasCoverage(gpt))
    {
       result = m_lastHandler->getHeightAboveMSL(gpt);
@@ -59,15 +56,6 @@ double ossimDtedElevationDatabase::getHeightAboveMSL(const ossimGpt& gpt)
          result = m_lastHandler->getHeightAboveMSL(gpt);
    }
 
-#if 0
-   d_mutex.lock();
-   cout << "THREAD ID: "<<OpenThreads::Thread::CurrentThread()->getThreadId()<<"  "
-         <<"ossimDtedElevationDatabase @ "<<(unsigned long)this<<"  m_lastHandler @ "
-         <<(unsigned long)m_lastHandler.get()<<endl; //### TODO: for debug, remove
-   d_mutex.unlock();
-#endif
-
-   m_mutex.unlock();
    return result;
 }
 

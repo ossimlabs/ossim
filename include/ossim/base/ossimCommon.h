@@ -627,11 +627,11 @@ namespace ossim
 	// REQUIRE(unbalancedQuotes != NULL);
 
    /**
-    * @brief Get the number threads to use from ossimPreferences or OpenThreads.
+    * @brief Get the number threads to use from ossimPreferences or ossim::Thread.
     *
     * Keyword searched for is:  "ossim_threads"
     *
-    * If keyword is not found OpenThreads::GetNumberOfProcessors() is used.
+    * If keyword is not found ossim::Thread::getNumberOfProcessors() is used.
     *
     * @return Number of threads. Default=1
     */

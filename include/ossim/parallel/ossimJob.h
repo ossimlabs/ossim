@@ -8,12 +8,10 @@
 #ifndef ossimJob_HEADER
 #define ossimJob_HEADER
 #include <ossim/base/ossimObject.h>
-#include <OpenThreads/Mutex>
-#include <OpenThreads/ScopedLock>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimString.h>
 #include <list>
-
+#include <mutex>
 class ossimJob;
 
 //*************************************************************************************************
@@ -77,7 +75,7 @@ public:
    
    void setPercentComplete(double value)
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       if(m_callback.valid())
       {
          m_callback->percentCompleteChanged(value, this);
@@ -86,7 +84,7 @@ public:
 
    void setPriority(double value)
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       m_priority = value;
    }
 
@@ -99,7 +97,7 @@ public:
 
    State state()const
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       return m_state;
    }
 
@@ -123,7 +121,7 @@ public:
 
    bool isCanceled()const
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       return (m_state & ossimJob_CANCEL);
    }
 
@@ -148,7 +146,7 @@ public:
       int newState = 0;
       {
          // maintain the cancel flag so we can indicate the job has now finished
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+         std::lock_guard<std::mutex> lock(m_jobMutex);
          newState = ((m_state & ossimJob_CANCEL) | 
             (ossimJob_FINISHED));
       }
@@ -158,31 +156,31 @@ public:
 
    bool isReady()const
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       return m_state & ossimJob_READY;
    }
 
    bool isStopped()const
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       return (m_state & ossimJob_FINISHED);
    }
 
    bool isFinished()const
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       return (m_state & ossimJob_FINISHED);
    }
 
    bool isRunning()const
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       return (m_state & ossimJob_RUNNING);
    }
 
    void setCallback(ossimJobCallback* callback)
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       m_callback = callback;
    }
 
@@ -191,7 +189,7 @@ public:
       bool changed = false;
       ossimRefPtr<ossimJobCallback> callback;
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+         std::lock_guard<std::mutex> lock(m_jobMutex);
          changed = value!=m_name;
          m_name = value;
          callback = m_callback;
@@ -204,7 +202,7 @@ public:
 
    const ossimString& name()const
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       return m_name;
    }
 
@@ -213,7 +211,7 @@ public:
       bool changed = false;
       ossimRefPtr<ossimJobCallback> callback;
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+         std::lock_guard<std::mutex> lock(m_jobMutex);
          changed = value!=m_id;
          m_id = value;
          callback = m_callback;
@@ -226,7 +224,7 @@ public:
 
    const ossimString& id()const
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       return m_id;
    }
 
@@ -235,7 +233,7 @@ public:
       bool changed = false;
       ossimRefPtr<ossimJobCallback> callback;
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+         std::lock_guard<std::mutex> lock(m_jobMutex);
          changed = value!=m_description;
          m_description = value;
          callback = m_callback;
@@ -248,13 +246,13 @@ public:
 
    const ossimString& description()const
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       return m_description;
    }
    ossimJobCallback* callback() {return m_callback.get();}
 
 protected:
-   mutable OpenThreads::Mutex m_jobMutex;
+   mutable std::mutex m_jobMutex;
    ossimString m_name;
    ossimString m_description;
    ossimString m_id;

@@ -20,8 +20,8 @@
 #include <ossim/base/ossimDirectory.h>
 #include <ossim/base/ossimFileProcessorInterface.h>
 #include <ossim/base/ossimTrace.h>
+#include <ossim/base/Thread.h>
 #include <ossim/parallel/ossimJobQueue.h>
-#include <OpenThreads/Thread>
 
 static ossimTrace traceDebug(ossimString("ossimFileWalker:debug"));
 
@@ -114,12 +114,10 @@ void ossimFileWalker::walk(const std::vector<ossimFilename>& files)
       // FOREVER loop until all jobs are completed.
       while (1)
       {
-         if ( OpenThreads::Thread::microSleep(250) == 0 )
+         ossim::Thread::sleepInMicroSeconds(250);
+         if ( m_jobQueue->hasJobsToProcess() == false )
          {
-            if ( m_jobQueue->hasJobsToProcess() == false )
-            {
-               break;
-            }
+            break;
          }
       }
 
@@ -152,12 +150,10 @@ void ossimFileWalker::walk(const ossimFilename& root)
             // FOREVER loop until all jobs are completed.
             while (1)
             {
-               if ( OpenThreads::Thread::microSleep(250) == 0 )
+               ossim::Thread::sleepInMicroSeconds(250);
+               if ( m_jobQueue->hasJobsToProcess() == false )
                {
-                  if ( m_jobQueue->hasJobsToProcess() == false )
-                  {
-                     break;
-                  }
+                  break;
                }
             }
          }
@@ -271,12 +267,10 @@ void ossimFileWalker::walkDir(const ossimFilename& dir)
          // FOREVER loop until all jobs are completed.
          while (1)
          {
-            if ( OpenThreads::Thread::microSleep(250) == 0 )
+            ossim::Thread::sleepInMicroSeconds(250);
+            if ( m_jobQueue->hasJobsToProcess() == false )
             {
-               if ( m_jobQueue->hasJobsToProcess() == false )
-               {
-                  break;
-               }
+               break;
             }
          }
       }

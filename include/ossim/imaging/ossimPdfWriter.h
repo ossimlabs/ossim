@@ -19,8 +19,8 @@
 #include <ossim/base/ossimRtti.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/imaging/ossimImageSource.h>
-#include <OpenThreads/Mutex>
 #include <iosfwd>
+#include <mutex>
 
 // Forward class declarations:
 class ossimImageData;
@@ -546,7 +546,7 @@ private:
    /** Holds all options in key, value pair map. */
    ossimRefPtr<ossimKeywordlist> m_kwl;
 
-   OpenThreads::Mutex m_mutex;
+   std::mutex m_mutex;
 
 TYPE_DATA
 };

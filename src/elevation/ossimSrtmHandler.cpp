@@ -138,7 +138,7 @@ double ossimSrtmHandler::getHeightAboveMSLFileTemplate(T /* dummy */, const ossi
    std::streampos offset = y0 * m_srtmRecordSizeInBytes + x0 * sizeof(T);
 
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_fileStrMutex);
+      std::lock_guard<std::mutex> lock(m_fileStrMutex);
 
       // lets a seek cur
       // 
@@ -406,7 +406,7 @@ bool ossimSrtmHandler::isOpen()const
 {
    if(!m_memoryMap.empty()) return true;
    
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_fileStrMutex);
+   std::lock_guard<std::mutex> lock(m_fileStrMutex);
    return m_streamOpen;
    // return (m_fileStr.is_open());
 }

@@ -2,7 +2,6 @@
 
 #include <algorithm> /* for std::find */
 
-
 ossimJobQueue::ossimJobQueue()
 {
 }
@@ -12,7 +11,7 @@ void ossimJobQueue::add(ossimJob* job, bool guaranteeUniqueFlag)
    ossimRefPtr<Callback> cb;
    {
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
          
          if(guaranteeUniqueFlag)
          {
@@ -44,7 +43,7 @@ ossimRefPtr<ossimJob> ossimJobQueue::removeByName(const ossimString& name)
    ossimRefPtr<Callback> cb;
    if(name.empty()) return result;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+      std::lock_guard<std::mutex> lock(m_jobQueueMutex);
       ossimJob::List::iterator iter = findByName(name);
       if(iter!=m_jobQueue.end())
       {
@@ -67,7 +66,7 @@ ossimRefPtr<ossimJob> ossimJobQueue::removeById(const ossimString& id)
    ossimRefPtr<Callback> cb;
    if(id.empty()) return result;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+      std::lock_guard<std::mutex> lock(m_jobQueueMutex);
       ossimJob::List::iterator iter = findById(id);
       if(iter!=m_jobQueue.end())
       {
@@ -89,7 +88,7 @@ void ossimJobQueue::remove(const ossimJob* Job)
    ossimRefPtr<ossimJob> removedJob;
    ossimRefPtr<Callback> cb;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+      std::lock_guard<std::mutex> lock(m_jobQueueMutex);
       ossimJob::List::iterator iter = std::find(m_jobQueue.begin(), m_jobQueue.end(), Job);
       if(iter!=m_jobQueue.end())
       {
@@ -109,7 +108,7 @@ void ossimJobQueue::removeStoppedJobs()
    ossimJob::List removedJobs;
    ossimRefPtr<Callback> cb;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+      std::lock_guard<std::mutex> lock(m_jobQueueMutex);
       cb = m_callback.get();
       ossimJob::List::iterator iter = m_jobQueue.begin();
       while(iter!=m_jobQueue.end())
@@ -145,7 +144,7 @@ void ossimJobQueue::clear()
    ossimJob::List removedJobs(m_jobQueue);
    ossimRefPtr<Callback> cb;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+      std::lock_guard<std::mutex> lock(m_jobQueueMutex);
       m_jobQueue.clear();
       cb = m_callback.get();
    }
@@ -170,7 +169,7 @@ ossimRefPtr<ossimJob> ossimJobQueue::nextJob(bool blockIfEmptyFlag)
    }
    
    ossimRefPtr<ossimJob> result;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+   std::lock_guard<std::mutex> lock(m_jobQueueMutex);
    
    if (m_jobQueue.empty())
    {
@@ -199,7 +198,7 @@ void ossimJobQueue::releaseBlock()
 }
 bool ossimJobQueue::isEmpty()const
 {
-   // OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+   // std::lock_guard<std::mutex> lock(m_jobQueueMutex);
    // return m_jobQueue.empty();
    m_jobQueueMutex.lock();
    bool result =  m_jobQueue.empty();
@@ -209,7 +208,7 @@ bool ossimJobQueue::isEmpty()const
 
 ossim_uint32 ossimJobQueue::size()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+   std::lock_guard<std::mutex> lock(m_jobQueueMutex);
    return (ossim_uint32) m_jobQueue.size();
 }
 
@@ -288,12 +287,12 @@ bool ossimJobQueue::hasJob(ossimJob* job)
 
 void ossimJobQueue::setCallback(Callback* c)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+   std::lock_guard<std::mutex> lock(m_jobQueueMutex);
    m_callback = c;
 }
 
 ossimJobQueue::Callback* ossimJobQueue::callback()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+   std::lock_guard<std::mutex> lock(m_jobQueueMutex);
    return m_callback.get();
 }

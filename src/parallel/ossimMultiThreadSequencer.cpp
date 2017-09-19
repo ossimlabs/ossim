@@ -16,7 +16,6 @@
 #include <ossim/parallel/ossimMtDebug.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimTimer.h>
-
 static const ossim_uint32 DEFAULT_MAX_TILE_CACHE_FACTOR = 8; // Must be > 1
 
 ossimMtDebug* ossimMtDebug::m_instance = NULL;
@@ -125,7 +124,6 @@ ossimMultiThreadSequencer::ossimMultiThreadSequencer(ossimImageSource* input,
 
    // The base-class' initialize() method should have been called by the base class constructor
    // unless somebody moved it!
-   OpenThreads::Thread::Init();
    m_nextJobBlock.release();
    m_getTileBlock.release();
    ossimTimer::instance()->setStartTick();
@@ -379,7 +377,7 @@ void ossimMultiThreadSequencer::setTileInCache(ossim_uint32 tile_id,
 {
    if (d_timeMetricsEnabled)
       d_t1 = ossimTimer::instance()->time_s(); 
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_cacheMutex);
+   std::lock_guard<std::mutex> lock(m_cacheMutex);
    if (d_timeMetricsEnabled)
       d_idleTime4 += ossimTimer::instance()->time_s() - d_t1; 
 
@@ -447,7 +445,7 @@ void ossimMultiThreadSequencer::nextJob(ossim_uint32 chain_id)
    // Job queue will receive pointer into ossimRefPtr so no leak here:
    if (d_timeMetricsEnabled)
       d_t1 = ossimTimer::instance()->time_s(); 
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+   std::lock_guard<std::mutex> lock(m_jobMutex);
    if (d_timeMetricsEnabled)
       d_idleTime6 += ossimTimer::instance()->time_s() - d_t1; 
 
@@ -461,7 +459,7 @@ void ossimMultiThreadSequencer::nextJob(ossim_uint32 chain_id)
 //*************************************************************************************************
 void ossimMultiThreadSequencer::print(ostringstream& msg) const
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(d_printMutex);
+   std::lock_guard<std::mutex> lock(d_printMutex);
    cerr << msg.str() << endl;
 }
 double ossimMultiThreadSequencer::handlerGetTileT() 

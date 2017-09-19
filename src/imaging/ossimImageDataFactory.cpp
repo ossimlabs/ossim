@@ -30,7 +30,7 @@
 static ossimTrace traceDebug("ossimImageDataFactory:debug");
 
 ossimImageDataFactory* ossimImageDataFactory::theInstance = 0;
-OpenThreads::Mutex ossimImageDataFactory::theInstanceMutex;
+std::mutex ossimImageDataFactory::theInstanceMutex;
 ossimImageDataFactory::ossimImageDataFactory() 
 {
    theInstance = 0;

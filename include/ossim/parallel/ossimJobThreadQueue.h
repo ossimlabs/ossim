@@ -1,11 +1,10 @@
 #ifndef ossimJobThreadQueue_HEADER
 #define ossimJobThreadQueue_HEADER
 #include <ossim/parallel/ossimJobQueue.h>
-#include <OpenThreads/Mutex>
-#include <OpenThreads/Thread>
-
+#include <ossim/base/Thread.h>
+#include <mutex>
 class OSSIM_DLL ossimJobThreadQueue : public ossimReferenced, 
-                                      public OpenThreads::Thread
+                                      public ossim::Thread
 {
 public:
    ossimJobThreadQueue(ossimJobQueue* jqueue=0);
@@ -25,7 +24,7 @@ public:
    void setDone(bool done);
    
    bool isDone()const;
-   virtual int cancel();
+   virtual void cancel();
    bool isEmpty()const;
    
    bool isProcessingJob()const;
@@ -39,7 +38,7 @@ protected:
    virtual ossimRefPtr<ossimJob> nextJob();
    
    bool                       m_doneFlag;
-   mutable OpenThreads::Mutex m_threadMutex;
+   mutable std::mutex m_threadMutex;
    ossimRefPtr<ossimJobQueue> m_jobQueue;
    ossimRefPtr<ossimJob>      m_currentJob;
    

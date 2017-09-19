@@ -23,13 +23,13 @@
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimTrace.h>
+#include <ossim/base/Thread.h>
 #include <ossim/matrix/newmat.h>
-#include <OpenThreads/Mutex>
-#include <OpenThreads/Thread>
 #include <ctime>
 #include <sstream>
+#include <mutex>
 
-static OpenThreads::Mutex timeMutex;
+static std::mutex timeMutex;
 static ossimTrace traceDebug("ossimCommon:debug");
 
 // stores a floating point nan value
@@ -1192,7 +1192,7 @@ ossim_uint32 ossim::getNumberOfThreads()
    }
    else
    {
-      result = static_cast<ossim_uint32>( OpenThreads::GetNumberOfProcessors() );
+      result = static_cast<ossim_uint32>( ossim::Thread::getNumberOfProcessors() );
    }
    if ( !result )
    {
@@ -1204,8 +1204,7 @@ ossim_uint32 ossim::getNumberOfThreads()
 void ossim::getFormattedTime(
    const std::string& format, bool gmtFlag, std::string& result )
 {
-   timeMutex.lock();
-   
+   std::lock_guard<std::mutex>   lock(timeMutex);
    time_t rawTime;
    time(&rawTime);
    
@@ -1239,16 +1238,14 @@ void ossim::getFormattedTime(
       result.clear();
    }
 
-   timeMutex.unlock();
 }
 
 ossim_int64 ossim::getTime()
 {
+   std::lock_guard<std::mutex>   lock(timeMutex);
    time_t rawTime;
    
-   timeMutex.lock();
    time(&rawTime);
-   timeMutex.unlock();
    
    return (ossim_int64)rawTime;
 }

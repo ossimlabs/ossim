@@ -570,7 +570,7 @@ void ossimElevManager::setRoundRobinMaxSize(ossim_uint32 new_size)
 
 inline ossimElevManager::ElevationDatabaseListType& ossimElevManager::getNextElevDbList() const
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock (m_mutex);
+   std::lock_guard<std::mutex> lock (m_mutex);
 
    // Quickly grab the DB to be used by this thread and increment DB index to be used by next thread
    // May need to grow the list round robin as it is dynamically set as needed):

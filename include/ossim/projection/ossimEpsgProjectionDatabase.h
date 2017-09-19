@@ -14,9 +14,8 @@
 #include <ossim/projection/ossimProjectionFactoryBase.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/projection/ossimMapProjection.h>
-#include <OpenThreads/Mutex>
 #include <fstream>
-
+#include <mutex>
 
 class ossimProjection;
 class ossimString;
@@ -124,7 +123,7 @@ protected:
    void initialize() const;
 
    mutable std::multimap<ossim_uint32, ossimRefPtr<ProjDbRecord> > m_projDatabase;
-   mutable OpenThreads::Mutex m_mutex;
+   mutable std::mutex m_mutex;
    //static ossimEpsgProjectionDatabase*  m_instance; //!< Singleton implementation
    
 };

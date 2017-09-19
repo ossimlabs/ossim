@@ -12,8 +12,7 @@
 
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimCacheTileSource.h>
-#include <OpenThreads/Thread>
-
+#include <mutex>
 //**************************************************************************************************
 //! Intended mainly to provide a mechanism for mutex-locking access to a shared resource during
 //! a getTile operation on an ossimImageHandler. This is needed for multi-threaded implementation.
@@ -83,7 +82,7 @@ protected:
 
    ossimRefPtr<ossimImageHandler>    m_adaptedHandler;
    ossimRefPtr<ossimCacheTileSource> m_cache;
-   mutable OpenThreads::Mutex        m_mutex;   
+   mutable std::mutex                m_mutex;   
 
    bool                        d_useCache;
    bool                        d_useFauxTile;

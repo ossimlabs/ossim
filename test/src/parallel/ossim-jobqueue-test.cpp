@@ -5,8 +5,9 @@
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/init/ossimInit.h>
-#include <OpenThreads/Thread>
 #include <iostream>
+#include <ossim/base/Thread.h>
+
 static const int INITIAL_THREADS = 10;
 static const int INITIAL_JOBS = 20;
 class ossimTestJob : public ossimJob
@@ -64,12 +65,10 @@ int main(int argc, char *argv[])
    // FOREVER loop until all jobs are completed.
    while(true)
    {
-      if ( OpenThreads::Thread::microSleep(250) == 0 )
+      ossim::Thread::sleepInMicroSeconds(250);
+      if ( threadQueue->hasJobsToProcess() == false )
       {
-         if ( threadQueue->hasJobsToProcess() == false )
-         {
-            break;
-         }
+         break;
       }
    }
    

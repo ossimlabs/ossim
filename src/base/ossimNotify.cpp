@@ -16,9 +16,7 @@
 #include <cstddef>
 
 #include <ossim/base/ossimNotify.h>
-#include <OpenThreads/Mutex>
-#include <OpenThreads/ScopedLock>
-
+#include <mutex>
 static std::ostream* theOssimFatalStream  = &std::cerr;
 static std::ostream* theOssimWarnStream   = &std::cerr;
 static std::ostream* theOssimInfoStream   = &std::cout;
@@ -26,7 +24,7 @@ static std::ostream* theOssimNoticeStream = &std::cout;
 static std::ostream* theOssimDebugStream  = &std::cout;
 static std::ostream* theOssimAlwaysStream = &std::cout;
 
-static OpenThreads::Mutex theMutex;
+static std::mutex theMutex;
 static ossimNotifyFlags theNotifyFlags     = ossimNotifyFlags_ALL;
 std::stack<ossimNotifyFlags> theNotifyFlagsStack;
 
@@ -66,10 +64,10 @@ public:
 
 protected:
    ossimFilename theLogFilename;
-   OpenThreads::Mutex fileMutex;
+   std::mutex fileMutex;
    virtual int overflow(int c)
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> scopedLock(fileMutex);
+         std::lock_guard<std::mutex> scopedLock(fileMutex);
          if(!traits::eq_int_type(c, traits::eof()))
          {
             tempString = tempString + ossimString((char)c);
@@ -80,7 +78,7 @@ protected:
 
    virtual std::streamsize xsputn(const charT * pChar, std::streamsize n)
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> scopedLock(fileMutex);
+         std::lock_guard<std::mutex> scopedLock(fileMutex);
          
          tempString = tempString + ossimString(pChar, pChar + n);
 
@@ -89,7 +87,7 @@ protected:
 
    virtual int sync()
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> scopedLock(fileMutex);
+         std::lock_guard<std::mutex> scopedLock(fileMutex);
          flushBuffer();
          return 0;
       }
@@ -164,7 +162,7 @@ static ossimLogFileStream theLogFileStream;
 
 void ossimSetDefaultNotifyHandlers()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    theOssimFatalStream  = &std::cerr;
    theOssimWarnStream   = &std::cout;
    theOssimInfoStream   = &std::cout;
@@ -176,7 +174,7 @@ void ossimSetDefaultNotifyHandlers()
 void ossimSetNotifyStream(std::ostream* outputStream,
                           ossimNotifyFlags whichLevelsToRedirect)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    if(whichLevelsToRedirect&ossimNotifyFlags_FATAL)
    {
       theOssimFatalStream = outputStream;
@@ -201,7 +199,7 @@ void ossimSetNotifyStream(std::ostream* outputStream,
 
 std::ostream* ossimGetNotifyStream(ossimNotifyLevel whichLevel)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    std::ostream* notifyStream = &theOssimNullStream;
 
    switch(whichLevel)
@@ -317,7 +315,7 @@ OSSIMDLLEXPORT std::ostream& ossimNotify(ossimNotifyLevel level)
 
 void ossimSetLogFilename(const ossimFilename& filename)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    theLogFileStream.setLogFilename(filename);
 }
 
@@ -350,32 +348,32 @@ ossimString ossimErrorV(const char *fmt, va_list args )
 
 void ossimEnableNotify(ossimNotifyFlags flags)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    theNotifyFlags = (ossimNotifyFlags)(theNotifyFlags | flags);
 }
 
 void ossimDisableNotify(ossimNotifyFlags flags)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    theNotifyFlags = (ossimNotifyFlags)((ossimNotifyFlags_ALL^flags)&
                                        theNotifyFlags);
 }
 
 void ossimSetNotifyFlag(ossimNotifyFlags notifyFlags)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    theNotifyFlags = notifyFlags;
 }
 
 void ossimPushNotifyFlags()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    theNotifyFlagsStack.push(theNotifyFlags);
 }
 
 void ossimPopNotifyFlags()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    if(theNotifyFlagsStack.empty())
    {
       return;
@@ -386,7 +384,7 @@ void ossimPopNotifyFlags()
 
 ossimNotifyFlags ossimGetNotifyFlags()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    return theNotifyFlags;
 }
 
@@ -394,7 +392,7 @@ ossimNotifyFlags ossimGetNotifyFlags()
 
 bool ossimIsReportingEnabled()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    return  (theNotifyFlags != ossimNotifyFlags_NONE);
 }
 
@@ -402,7 +400,7 @@ bool ossimIsReportingEnabled()
 void ossimNotify(ossimString msg,
                  ossimNotifyLevel notifyLevel)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   std::lock_guard<std::mutex> lock(theMutex);
    ossimNotify(notifyLevel) << msg << "\n";
 }
 
@@ -411,7 +409,7 @@ void ossimSetError( const char* /* className */,
                     const char *fmtString, ...)
 {
    // NOTE: This code has an infinite loop in it!!! (drb)
-   //OpenThreads::ScopedLock<OpenThreads::Mutex> lock(theMutex);
+   //std::lock_guard<std::mutex> lock(theMutex);
    theMutex.lock();
    va_list args;
    

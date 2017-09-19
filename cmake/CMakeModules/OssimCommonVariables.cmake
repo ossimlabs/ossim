@@ -1,4 +1,3 @@
-
 ##################################################################################
 # This currently sets up the options for the WARNING FLAGS for the compiler we are generating for.
 # Currently only have gnu
@@ -6,6 +5,10 @@
 MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
    OPTION(OSSIM_COMPILE_WITH_FULL_WARNING "OSSIM developers : Compilation with FULL warning (use only for ossim developers)." OFF)
    MARK_AS_ADVANCED(OSSIM_COMPILE_WITH_FULL_WARNING)
+   
+   set(CMAKE_CXX_STANDARD 11)
+   set(CMAKE_CXX_STANDARD_REQUIRED ON)
+   set(CMAKE_CXX_EXTENSIONS OFF)
 
    IF(OSSIM_COMPILE_WITH_FULL_WARNING)
      IF(CMAKE_COMPILER_IS_GNUCXX)
@@ -70,17 +73,17 @@ MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
    MARK_AS_ADVANCED(OSSIM_COMMON_COMPILER_FLAGS)
 ENDMACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
 
-MACRO(USE_CXX11)
-  if (CMAKE_VERSION VERSION_LESS "3.1")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
-    elseif (APPLE)
-      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
-    endif()
-  else ()
-    set (CMAKE_CXX_STANDARD 11)
-  endif ()
-ENDMACRO(USE_CXX11)
+#MACRO(USE_CXX11)
+#  if (CMAKE_VERSION VERSION_LESS "3.1")
+#    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+#      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
+#    elseif (APPLE)
+#      set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
+#    endif()
+#  else ()
+#    set (CMAKE_CXX_STANDARD 11)
+#  endif ()
+#ENDMACRO(USE_CXX11)
 
 MACRO(OSSIM_ADD_COMMON_SETTINGS)
    ###################################################################################
@@ -94,7 +97,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    # Seems like a good place to add version specific compiler flags too.
    ###################################################################################
 
-   USE_CXX11()
+   #USE_CXX11()
 
    IF(APPLE)
       # use, i.e. don't skip the full RPATH for the build tree

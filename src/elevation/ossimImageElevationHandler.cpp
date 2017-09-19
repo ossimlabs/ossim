@@ -21,7 +21,6 @@
 #include <ossim/base/ossimGpt.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
-#include <OpenThreads/ScopedLock>
 
 #include <iostream> // tmp drb
 using namespace std;
@@ -214,7 +213,7 @@ ossimImageData* ossimImageElevationHandler::getTile(ossim_uint32 x, ossim_uint32
    ossimRefPtr<ossimImageData> data = 0;
 
    // Search for this tile in the cache:
-   OpenThreads::ScopedWriteLock lock (m_mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
    vector<TileCacheEntry>::iterator iter = m_tileCache.begin();
    while ((iter != m_tileCache.end()) && (iter->id != tile_id))
       ++iter;

@@ -28,6 +28,7 @@
 #include <ossim/imaging/ossimIndexToRgbLutFilter.h>
 #include <ossim/point_cloud/ossimPointCloudHandlerRegistry.h>
 #include <ossim/util/ossimHlzTool.h>
+#include <ossim/base/Thread.h>
 #include <fstream>
 
 static const string MASK_EXCLUDE_KW = "exclude_regions";
@@ -515,7 +516,7 @@ bool ossimHlzTool::computeHLZ()
       {
          qsize = jobMtQueue->getJobQueue()->size();
          setPercentComplete(100*(numPatches-qsize)/numPatches);
-         OpenThreads::Thread::microSleep(10000);
+         ossim::Thread::sleepInMicroSeconds(10000);
       }
       jobMtQueue = 0;
    }
@@ -543,7 +544,7 @@ void ossimHlzTool::writeSlopeImage()
    }
 }
 
-OpenThreads::ReadWriteMutex ossimHlzTool::PatchProcessorJob::m_bufMutex;
+std::mutex ossimHlzTool::PatchProcessorJob::m_bufMutex;
 
 ossimHlzTool::PatchProcessorJob::PatchProcessorJob(ossimHlzTool* hlzUtil, const ossimIpt& origin,
                                    ossim_uint32 /*chip_id*/)
@@ -561,7 +562,7 @@ void ossimHlzTool::PatchProcessorJob::start()
    bool passed = level1Test() && level2Test() && maskTest();
    ossimIpt p;
 
-   OpenThreads::ScopedWriteLock lock (m_bufMutex);
+   std::lock_guard<std::mutex> lock (m_bufMutex);
    for (p.y = m_demPatchUL.y; p.y < m_demPatchLR.y; ++p.y)
    {
       for (p.x = m_demPatchUL.x; p.x < m_demPatchLR.x; ++p.x)
