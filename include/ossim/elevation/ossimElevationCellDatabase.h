@@ -1,6 +1,7 @@
 #ifndef ossimElevationCellDatabase_HEADER
 #define ossimElevationCellDatabase_HEADER 1
 #include <ossim/elevation/ossimElevationDatabase.h>
+#include <mutex>
 
 class OSSIM_DLL ossimElevationCellDatabase : public ossimElevationDatabase
 {
