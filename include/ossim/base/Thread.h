@@ -157,6 +157,10 @@ namespace ossim{
       static std::thread::id getCurrentThreadId();
 
       /**
+      * Utility to return the number of processors  (concurrent threads)
+      */
+      static ossim_uint64 getNumberOfProcessors();
+      /**
       * Will yield the current thread.
       */
       static void yieldCurrentThread();

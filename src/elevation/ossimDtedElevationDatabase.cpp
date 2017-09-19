@@ -7,7 +7,6 @@
 #include <sstream>
 #include <iomanip>
 #include <cstdlib> /* for abs(int) */
-#include <OpenThreads/Thread> //### TODO: for debug, remove
 
 static ossimTrace traceDebug("ossimDtedElevationDatabase:debug");
 RTTI_DEF1(ossimDtedElevationDatabase, "ossimDtedElevationDatabase", ossimElevationCellDatabase);
@@ -56,12 +55,6 @@ double ossimDtedElevationDatabase::getHeightAboveMSL(const ossimGpt& gpt)
       if(m_lastHandler.valid())
          result = m_lastHandler->getHeightAboveMSL(gpt);
    }
-
-#if 0
-   cout << "THREAD ID: "<<OpenThreads::Thread::CurrentThread()->getThreadId()<<"  "
-         <<"ossimDtedElevationDatabase @ "<<(unsigned long)this<<"  m_lastHandler @ "
-         <<(unsigned long)m_lastHandler.get()<<endl; //### TODO: for debug, remove
-#endif
 
    return result;
 }

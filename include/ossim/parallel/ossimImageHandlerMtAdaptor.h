@@ -12,7 +12,6 @@
 
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimCacheTileSource.h>
-#include <OpenThreads/Thread>
 #include <mutex>
 //**************************************************************************************************
 //! Intended mainly to provide a mechanism for mutex-locking access to a shared resource during

@@ -28,6 +28,7 @@
 #include <ossim/imaging/ossimIndexToRgbLutFilter.h>
 #include <ossim/point_cloud/ossimPointCloudHandlerRegistry.h>
 #include <ossim/util/ossimHlzTool.h>
+#include <ossim/base/Thread.h>
 #include <fstream>
 
 static const string MASK_EXCLUDE_KW = "exclude_regions";
@@ -515,7 +516,7 @@ bool ossimHlzTool::computeHLZ()
       {
          qsize = jobMtQueue->getJobQueue()->size();
          setPercentComplete(100*(numPatches-qsize)/numPatches);
-         OpenThreads::Thread::microSleep(10000);
+         ossim::Thread::sleepInMicroSeconds(10000);
       }
       jobMtQueue = 0;
    }

@@ -26,6 +26,7 @@
 #include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/imaging/ossimIndexToRgbLutFilter.h>
 #include <ossim/util/ossimViewshedTool.h>
+#include <ossim/base/Thread.h>
 
 using namespace std;
 
@@ -529,7 +530,7 @@ bool ossimViewshedTool::computeViewshed()
       // Wait until all radials have been processed before proceeding:
       ossimNotify(ossimNotifyLevel_INFO) << "Waiting for job threads to finish..."<<endl;
       while (m_jobMtQueue->hasJobsToProcess() || m_jobMtQueue->numberOfBusyThreads())
-         OpenThreads::Thread::microSleep(250);
+         ossim::Thread::sleepInMicroSeconds(250);
    }
    else
    {

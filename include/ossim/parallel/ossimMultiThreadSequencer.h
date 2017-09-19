@@ -15,7 +15,8 @@
 #include <ossim/base/ossimConnectableObjectListener.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <ossim/parallel/ossimImageChainMtAdaptor.h>
-#include <OpenThreads/Thread>
+#include <ossim/base/Thread.h>
+#include <ossim/base/Block.h>
 #include <mutex>
 
 //*************************************************************************************************
@@ -135,8 +136,8 @@ protected:
    mutable std::mutex                    m_cacheMutex;   
    mutable std::mutex                    m_jobMutex;   
    ossim_uint32                          m_totalNumberOfTiles;
-   OpenThreads::Block                    m_getTileBlock; //<! Blocks execution of main thread while waiting for tile to become available
-   OpenThreads::Block                    m_nextJobBlock; //<! Blocks execution of worker threads
+   ossim::Block                          m_getTileBlock; //<! Blocks execution of main thread while waiting for tile to become available
+   ossim::Block                          m_nextJobBlock; //<! Blocks execution of worker threads
 
    // FOR DEBUG:
    mutable std::mutex d_printMutex;

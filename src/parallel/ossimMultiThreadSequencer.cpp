@@ -124,7 +124,6 @@ ossimMultiThreadSequencer::ossimMultiThreadSequencer(ossimImageSource* input,
 
    // The base-class' initialize() method should have been called by the base class constructor
    // unless somebody moved it!
-   OpenThreads::Thread::Init();
    m_nextJobBlock.release();
    m_getTileBlock.release();
    ossimTimer::instance()->setStartTick();

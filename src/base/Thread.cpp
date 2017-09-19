@@ -57,6 +57,11 @@ void ossim::Thread::sleepInMicroSeconds(ossim_uint64 micros)
    std::this_thread::sleep_for(std::chrono::microseconds(micros));
 }
 
+ossim_uint64 ossim::Thread::getNumberOfProcessors()
+{
+   return std::thread::hardware_concurrency();
+}
+
 std::thread::id ossim::Thread::getCurrentThreadId()
 {
    return std::this_thread::get_id();

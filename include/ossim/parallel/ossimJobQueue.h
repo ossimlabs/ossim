@@ -9,7 +9,7 @@
 #define ossimJobQueue_HEADER
 
 #include <ossim/parallel/ossimJob.h>
-#include <OpenThreads/Block>
+#include <ossim/base/Block.h>
 #include <mutex>
 //*************************************************************************************************
 //! Class for maintaining an ordered list of jobs to be processed. As the jobs are completed and
@@ -50,7 +50,7 @@ protected:
    bool hasJob(ossimJob* job);
    
    mutable std::mutex m_jobQueueMutex;
-   OpenThreads::Block m_block;
+   ossim::Block m_block;
    ossimJob::List m_jobQueue;
    ossimRefPtr<Callback> m_callback;
 };

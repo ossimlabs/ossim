@@ -92,9 +92,7 @@ void ossimJobThreadQueue::run()
       
       if (firstTime)
       {
-         // do a yield to get round a peculiar thread hang when testCancel() is called 
-         // in certain cirumstances - of which there is no particular pattern.
-         YieldCurrentThread();
+         ossim::Thread::yieldCurrentThread();
          firstTime = false;
       }
    } while (!m_doneFlag&&validQueue);
@@ -149,7 +147,7 @@ bool ossimJobThreadQueue::isProcessingJob()const
    return m_currentJob.valid();
 }
 
-int ossimJobThreadQueue::cancel()
+void ossimJobThreadQueue::cancel()
 {
    
    if( isRunning() )
@@ -181,14 +179,9 @@ int ossimJobThreadQueue::cancel()
             }
          }
 #endif
-// RP - The extra cancel and join resolves a bug where threads were not being
-// closed out and OS thread limits are quickly hit
-         OpenThreads::Thread::YieldCurrentThread();
-	 OpenThreads::Thread::cancel();
+         ossim::Thread::yieldCurrentThread();
       }
    }
-   OpenThreads::Thread::join();
-   return OpenThreads::Thread::cancel();
 }
 
 bool ossimJobThreadQueue::isEmpty()const
@@ -211,7 +204,7 @@ void ossimJobThreadQueue::startThreadForQueue()
          start();
          while(!isRunning()) // wait for the thread to start running
          {
-            OpenThreads::Thread::YieldCurrentThread();
+            ossim::Thread::yieldCurrentThread();
          }
       }
    }

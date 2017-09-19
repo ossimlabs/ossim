@@ -23,8 +23,8 @@
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimTrace.h>
+#include <ossim/base/Thread.h>
 #include <ossim/matrix/newmat.h>
-#include <OpenThreads/Thread>
 #include <ctime>
 #include <sstream>
 #include <mutex>
@@ -1192,7 +1192,7 @@ ossim_uint32 ossim::getNumberOfThreads()
    }
    else
    {
-      result = static_cast<ossim_uint32>( OpenThreads::GetNumberOfProcessors() );
+      result = static_cast<ossim_uint32>( ossim::Thread::getNumberOfProcessors() );
    }
    if ( !result )
    {
