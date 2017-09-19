@@ -3,6 +3,7 @@
 #include <ossim/base/ossimConstants.h>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 
 namespace ossim{
 
