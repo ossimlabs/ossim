@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <exception>
 #include <vector>
+#include <mutex>
 
 class MyGeomFactory : public geos::geom::GeometryFactory
 {
