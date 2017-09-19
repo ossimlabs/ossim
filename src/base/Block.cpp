@@ -11,6 +11,13 @@ m_waitCount(0)
 ossim::Block::~Block()
 {
    release();
+   {
+      std::unique_lock<std::mutex> lock(m_mutex);
+      if(m_waitCount>0)
+      {
+         m_conditionalWait.wait(lock, [this]{return m_waitCount.load()<1;});
+      }
+   }
 }
 
 void ossim::Block::set(bool releaseFlag)
@@ -65,10 +72,6 @@ void ossim::Block::release()
          m_release = true;
       }
       m_conditionVariable.notify_all();
-      if(m_waitCount>0)
-      {
-         m_conditionalWait.wait(lock, [this]{return m_waitCount.load()<1;});
-      }
    }
 }
 
