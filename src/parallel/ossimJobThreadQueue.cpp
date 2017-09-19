@@ -66,6 +66,7 @@ void ossimJobThreadQueue::run()
    ossimRefPtr<ossimJob> job;
    do
    {
+      interrupt();
       // osg::notify(osg::NOTICE)<<"In thread loop "<<this<<std::endl;
       validQueue = isValidQueue();
       job = nextJob();
