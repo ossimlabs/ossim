@@ -7,6 +7,7 @@
 #include <ossim/base/ossimConstants.h>
 
 #include <atomic>
+#include <mutex>
 
 /**
 * ossimReferenced allows for shared object ref counting

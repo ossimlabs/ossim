@@ -18,6 +18,7 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIrect.h>
+#include <mutex>
 
 class ossimFixedTileCache;
 class ossimImageData;

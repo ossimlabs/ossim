@@ -16,6 +16,7 @@
 #include <ossim/base/ossimIrect.h>
 #include <ossim/point_cloud/ossimPointCloudHandler.h>
 #include <vector>
+#include <mutex>
 
 class ossimImageData;
 class ossimTiffOverviewTileSource;
