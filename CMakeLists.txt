@@ -178,6 +178,8 @@ else (BUILD_OSSIM_HDF5_SUPPORT)
 endif ( BUILD_OSSIM_HDF5_SUPPORT )
 
 
+find_package( Threads )
+set( ossimDependentLibs ${ossimDependentLibs} ${CMAKE_THREAD_LIBS_INIT} )
 
 #---
 # Call the OSSIM macros in OssimUtilities.cmake
@@ -190,6 +192,8 @@ GET_GIT_REVISION()
 if ( NOT ${Project_WC_REVISION} EQUAL 0 )
    set( OSSIM_GIT_REVISION_NUMBER ${Project_WC_REVISION} )
 endif()
+
+
 
 #####################################################################################
 # Call the configure files for ossimConfig and ossimVersion setup
