@@ -94,15 +94,6 @@ else( JPEG_FOUND )
    message( FATAL_ERROR "Could not find required jpeg package!" )
 endif( JPEG_FOUND )
 
-# OpenThreads - Required:
-find_package( OpenThreads )
-if( OPENTHREADS_FOUND )
-   include_directories( ${OPENTHREADS_INCLUDE_DIR} )
-   set( ossimDependentLibs ${ossimDependentLibs} ${OPENTHREADS_LIBRARY} )
-else( OPENTHREADS_FOUND )
-   message( FATAL_ERROR "Could not find required OpenThreads package!" )
-endif( OPENTHREADS_FOUND )
-
 # TIFF - Required:
 find_package( TIFF )
 if( TIFF_FOUND )
