@@ -6,10 +6,6 @@ MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
    OPTION(OSSIM_COMPILE_WITH_FULL_WARNING "OSSIM developers : Compilation with FULL warning (use only for ossim developers)." OFF)
    MARK_AS_ADVANCED(OSSIM_COMPILE_WITH_FULL_WARNING)
    
-   set(CMAKE_CXX_STANDARD 11)
-   set(CMAKE_CXX_STANDARD_REQUIRED ON)
-   set(CMAKE_CXX_EXTENSIONS OFF)
-
    IF(OSSIM_COMPILE_WITH_FULL_WARNING)
      IF(CMAKE_COMPILER_IS_GNUCXX)
        SET(OSSIM_COMMON_COMPILER_FLAGS "${OSSIM_COMMON_COMPILER_FLAGS} -Wall -Wunused  -Wunused-function  -Wunused-label  -Wunused-parameter -Wunused-value -Wunused-variable -Wuninitialized -Wsign-compare -Wparentheses -Wunknown-pragmas -Wswitch" CACHE STRING "List of compilation parameters.")
@@ -97,6 +93,9 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    # Seems like a good place to add version specific compiler flags too.
    ###################################################################################
 
+   set(CMAKE_CXX_STANDARD 11)
+   set(CMAKE_CXX_STANDARD_REQUIRED ON)
+   set(CMAKE_CXX_EXTENSIONS OFF)
    #USE_CXX11()
 
    IF(APPLE)
