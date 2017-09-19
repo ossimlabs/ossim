@@ -1,6 +1,10 @@
 PROJECT(ossim)
 SET(CMAKE_MODULE_PATH "${${PROJECT_NAME}_SOURCE_DIR}/cmake/CMakeModules;${CMAKE_MODULE_PATH}")
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 Message("################## Setting up OSSIM core library #########################")
 
 IF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
