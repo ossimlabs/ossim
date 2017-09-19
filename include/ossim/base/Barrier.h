@@ -82,7 +82,7 @@ namespace ossim{
       ~Barrier();
 
       /**
-      * block will block the thread based on a waint condition.  it will verify 
+      * block will block the thread based on a wait condition.  it will verify 
       * if the thread can be blocked by testing if the number
       * of blocked threads is less than the total number to blocked threads.  If 
       * the total is reached then all threads are notified and woken up and released  
