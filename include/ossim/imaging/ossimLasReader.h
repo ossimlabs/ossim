@@ -20,6 +20,7 @@
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/projection/ossimProjection.h>
+#include <mutex>
 
 class ossimLasHdr;
 class ossimLasPointRecordInterface;

@@ -13,7 +13,7 @@
 #include <ossim/parallel/ossimJob.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <ossim/util/ossimChipProcTool.h>
-
+#include <mutex>
 /*!
  *  Class for computing the viewshed on a DEM given the viewer location and max range of visibility
  */

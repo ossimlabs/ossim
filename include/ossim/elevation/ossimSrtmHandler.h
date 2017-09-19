@@ -19,6 +19,7 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/elevation/ossimElevCellHandler.h>
 #include <ossim/support_data/ossimSrtmSupportData.h>
+#include <mutex>
 
 class ossimEndian;
 
