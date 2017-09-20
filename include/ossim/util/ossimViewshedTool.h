@@ -100,7 +100,7 @@ protected:
    ossim_uint8 m_overlayValue;
    ossim_int32 m_reticleSize;
    bool m_simulation;
-   ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;
+   std::shared_ptr<ossimJobMultiThreadQueue> m_jobMtQueue;
    ossim_uint32 m_numThreads;
    double m_startFov;
    double m_stopFov;
@@ -122,10 +122,11 @@ protected:
 class SectorProcessorJob : public ossimJob
 {
    friend class ossimViewshedTool;
-
-private:
+public:
    SectorProcessorJob(ossimViewshedTool* vs_util, ossim_uint32 sector, ossim_uint32 numRadials)
    : m_vsUtil (vs_util), m_sector (sector), m_numRadials (numRadials)  {}
+
+private:
 
    virtual void start();
 
@@ -138,13 +139,14 @@ private:
 class RadialProcessorJob : public ossimJob
 {
    friend class ossimViewshedTool;
-
-private:
-   RadialProcessorJob(ossimViewshedTool* vs_util,
+public:
+  RadialProcessorJob(ossimViewshedTool* vs_util,
                       ossim_uint32 sector,
                       ossim_uint32 radial,
                       ossim_uint32 numRadials)
    : m_vsUtil (vs_util), m_sector (sector), m_radial (radial), m_numRadials (numRadials) {}
+
+private:
 
    virtual void start();
 

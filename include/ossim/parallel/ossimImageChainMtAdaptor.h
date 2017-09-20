@@ -1,7 +1,7 @@
 //*************************************************************************************************
 //                                            OSSIM
 //
-// License:  LGPL -- See LICENSE.txt file in the top level directory for more details.
+// License:  MIT -- See LICENSE.txt file in the top level directory for more details.
 //
 // Author: Oscar Kramer
 //

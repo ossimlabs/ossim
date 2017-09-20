@@ -1,6 +1,6 @@
 /*********************************************************************************************
  *
- * License: LGPL Please see the top level LICENSE.txt
+ * License: MIT Please see the top level LICENSE.txt
  *
  * Author: Garrett Potts
  * 

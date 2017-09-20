@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 // Copyright (c) 2005, Oscar Kramer, all rights reserved.
 //
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //

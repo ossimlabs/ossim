@@ -1,5 +1,5 @@
 /* -*-c++-*- libossim - Copyright (C) since 2004 Garrett Potts 
- * LICENSE: LGPL
+ * LICENSE: MIT
  * Author: Garrett Potts
 */
 #ifndef ossimReferenced_HEADER

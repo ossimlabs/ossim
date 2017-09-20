@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// LICENSE: LGPL  see top level LICENSE.txt
+// LICENSE: MIT  see top level LICENSE.txt
 // 
 // Author: Garrett Potts
 // Description: Nitf support class

@@ -2,7 +2,7 @@
 //
 // OSSIM (http://trac.osgeo.org/ossim/)
 //
-// License:  LGPL -- See LICENSE.txt file in the top level directory for more details.
+// License:  MIT -- See LICENSE.txt file in the top level directory for more details.
 //
 //**************************************************************************************************
 // $Id: ossimGenericPointCloudHandler.h 23654 2015-12-08 19:04:09Z gpotts $

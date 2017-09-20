@@ -2,7 +2,7 @@
 //
 // File: ossimLibLasInfo.h
 // 
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //

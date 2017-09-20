@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2005 Garrett Potts
 //
-// LGPL
+// MIT
 // 
 // Author:  Garrett Potts
 //

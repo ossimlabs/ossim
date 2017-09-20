@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc.
 //
-// LGPL
+// MIT
 // 
 // Author:  Garrett Potts (gpotts@imagelinks.com)
 //
