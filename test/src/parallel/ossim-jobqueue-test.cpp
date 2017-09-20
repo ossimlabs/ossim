@@ -52,12 +52,12 @@ int main(int argc, char *argv[])
    
    ossimRefPtr<ossimJobQueue> q = new ossimJobQueue();
    ossimRefPtr<ossimJobMultiThreadQueue> threadQueue = new ossimJobMultiThreadQueue(q.get(), INITIAL_THREADS);
-   ossimRefPtr<ossimTestJobCallback> callback = new ossimTestJobCallback();
+   std::shared_ptr<ossimTestJobCallback> callback = std::make_shared<ossimTestJobCallback>();
    ossim_uint32 idx = 0;
    for(idx = 0; idx < INITIAL_JOBS; ++idx)
    {
       ossimRefPtr<ossimTestJob> job = new ossimTestJob(ossimString::toString(idx+1));
-      job->setCallback(callback.get());
+      job->setCallback(callback);
       job->ready();
       q->add(job.get());
    }

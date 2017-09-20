@@ -80,7 +80,7 @@ void ossimFileWalker::walk(const std::vector<ossimFilename>& files)
                      
                      job->setName( ossimString( file.string() ) );
                      
-                     job->setCallback( new ossimFileWalkerJobCallback() );
+                     job->setCallback( std::make_shared<ossimFileWalkerJobCallback>() );
                      
                      // Set the state to ready:
                      job->ready();
@@ -241,7 +241,7 @@ void ossimFileWalker::walkDir(const ossimFilename& dir)
 
          job->setName( ossimString( (*i).string() ) );
 
-         job->setCallback( new ossimFileWalkerJobCallback() );
+         job->setCallback( std::make_shared<ossimFileWalkerJobCallback>() );
 
          // Set the state to ready:
          job->ready();
