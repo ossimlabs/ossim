@@ -11,6 +11,7 @@
 #include <ossim/parallel/ossimJob.h>
 #include <ossim/base/Block.h>
 #include <mutex>
+#include <memory>
 //*************************************************************************************************
 //! Class for maintaining an ordered list of jobs to be processed. As the jobs are completed and
 //! the product consumed, the jobs are removed from this list
@@ -18,7 +19,7 @@
 class OSSIM_DLL ossimJobQueue : public ossimReferenced
 {
 public:
-   class OSSIM_DLL Callback : public ossimReferenced
+   class OSSIM_DLL Callback
    {
    public:
       Callback(){}
@@ -39,8 +40,8 @@ public:
    virtual void releaseBlock();
    bool isEmpty()const;
    ossim_uint32 size();
-   void setCallback(Callback* c);
-   Callback* callback();
+   void setCallback(std::shared_ptr<Callback> c);
+   std::shared_ptr<Callback> callback();
    
 protected:
    ossimJob::List::iterator findById(const ossimString& id);
@@ -52,7 +53,7 @@ protected:
    mutable std::mutex m_jobQueueMutex;
    ossim::Block m_block;
    ossimJob::List m_jobQueue;
-   ossimRefPtr<Callback> m_callback;
+   std::shared_ptr<Callback> m_callback;
 };
 
 #endif

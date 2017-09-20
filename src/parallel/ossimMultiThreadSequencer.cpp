@@ -93,7 +93,7 @@ ossimMultiThreadSequencer::ossimMultiThreadSequencer(ossimImageSource* input,
    m_inputChain(0),
    m_jobMtQueue(0),
    m_numThreads (num_threads),
-   m_callback(new ossimGetTileCallback()),
+   m_callback(std::make_shared<ossimGetTileCallback>()),
    m_nextTileID (0),
    m_tileCache(),                       
    m_maxCacheSize (DEFAULT_MAX_TILE_CACHE_FACTOR * num_threads),
@@ -136,7 +136,7 @@ ossimMultiThreadSequencer::~ossimMultiThreadSequencer()
 {
    m_inputChain = 0; //!< Same as base class' theInputConnection
    m_jobMtQueue = 0;
-   m_callback = 0;
+   m_callback.reset();
 }
 
 //*************************************************************************************************
@@ -195,7 +195,7 @@ void ossimMultiThreadSequencer::setToStartOfSequence()
    for (ossim_uint32 i=0; i<m_numThreads; ++i)
    {
       ossimGetTileJob* job = new ossimGetTileJob(m_nextTileID++, i, *this);
-      job->setCallback(m_callback.get());
+      job->setCallback(m_callback);
       job->t_launchNewJob = false;
       job->start();
    }
@@ -213,7 +213,7 @@ void ossimMultiThreadSequencer::setToStartOfSequence()
       }
 
       ossimGetTileJob* job = new ossimGetTileJob(m_nextTileID++, chain_id, *this);
-      job->setCallback(m_callback.get());
+      job->setCallback(m_callback);
       jobQueue->add(job, false);
    }
 
@@ -450,7 +450,7 @@ void ossimMultiThreadSequencer::nextJob(ossim_uint32 chain_id)
       d_idleTime6 += ossimTimer::instance()->time_s() - d_t1; 
 
    ossimGetTileJob* job = new ossimGetTileJob(m_nextTileID++, chain_id, *this);
-   job->setCallback(m_callback.get());
+   job->setCallback(m_callback);
    m_jobMtQueue->getJobQueue()->add(job);
 }
 

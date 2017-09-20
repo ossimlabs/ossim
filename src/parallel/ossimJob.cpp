@@ -18,7 +18,7 @@ void ossimJob::setState(int value, bool on)
 
    int oldState     = 0;
    int currentState = 0;
-   ossimRefPtr<ossimJobCallback> callback;
+   std::shared_ptr<ossimJobCallback> callback;
 
    bool stateChangedFlag = false;
    {
@@ -28,33 +28,30 @@ void ossimJob::setState(int value, bool on)
       oldState = m_state;
       m_state = static_cast<State>(newState);
       currentState = m_state;
-      callback = m_callback.get();
+      callback = m_callback;
    }
    
-   if(stateChangedFlag&&callback.valid())
+   if(stateChangedFlag&&callback)
    {
-      if(callback.valid())
+      if(!(oldState&ossimJob_READY)&&
+         (currentState&ossimJob_READY))
       {
-         if(!(oldState&ossimJob_READY)&&
-            (currentState&ossimJob_READY))
-         {
-            callback->ready(this);
-         }
-         else if(!(oldState&ossimJob_RUNNING)&&
-                 (currentState&ossimJob_RUNNING))
-         {
-            callback->started(this);
-         }
-         else if(!(oldState&ossimJob_CANCEL)&&
-                 (currentState&ossimJob_CANCEL))
-         {
-            callback->canceled(this);
-         }
-         else if(!(oldState&ossimJob_FINISHED)&&
-                 (currentState&ossimJob_FINISHED))
-         {
-            callback->finished(this);
-         }
+         callback->ready(this);
+      }
+      else if(!(oldState&ossimJob_RUNNING)&&
+              (currentState&ossimJob_RUNNING))
+      {
+         callback->started(this);
+      }
+      else if(!(oldState&ossimJob_CANCEL)&&
+              (currentState&ossimJob_CANCEL))
+      {
+         callback->canceled(this);
+      }
+      else if(!(oldState&ossimJob_FINISHED)&&
+              (currentState&ossimJob_FINISHED))
+      {
+         callback->finished(this);
       }
    }
 }

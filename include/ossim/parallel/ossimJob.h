@@ -12,38 +12,39 @@
 #include <ossim/base/ossimString.h>
 #include <list>
 #include <mutex>
+#include <memory>
 class ossimJob;
 
 //*************************************************************************************************
 //! Generic callback class needed by ossimJob
 //*************************************************************************************************
-class OSSIM_DLL ossimJobCallback : public ossimReferenced
+class OSSIM_DLL ossimJobCallback
 {
 public:
-   ossimJobCallback(ossimJobCallback* nextCallback=0):m_nextCallback(nextCallback){}
+   ossimJobCallback(std::shared_ptr<ossimJobCallback> nextCallback=0):m_nextCallback(nextCallback){}
 
-   virtual void ready(ossimJob* job)    {if(m_nextCallback.valid()) m_nextCallback->ready(job);   }
-   virtual void started(ossimJob* job)  {if(m_nextCallback.valid()) m_nextCallback->started(job); }
-   virtual void finished(ossimJob* job) {if(m_nextCallback.valid()) m_nextCallback->finished(job);}
-   virtual void canceled(ossimJob* job) {if(m_nextCallback.valid()) m_nextCallback->canceled(job);}
+   virtual void ready(ossimJob* job)    {if(m_nextCallback) m_nextCallback->ready(job);   }
+   virtual void started(ossimJob* job)  {if(m_nextCallback) m_nextCallback->started(job); }
+   virtual void finished(ossimJob* job) {if(m_nextCallback) m_nextCallback->finished(job);}
+   virtual void canceled(ossimJob* job) {if(m_nextCallback) m_nextCallback->canceled(job);}
 
    virtual void nameChanged(const ossimString& name, ossimJob* job)
-   {if(m_nextCallback.valid()) m_nextCallback->nameChanged(name, job);}
+   {if(m_nextCallback) m_nextCallback->nameChanged(name, job);}
    
    virtual void descriptionChanged(const ossimString& description, ossimJob* job)
-   {if(m_nextCallback.valid()) m_nextCallback->descriptionChanged(description, job);}
+   {if(m_nextCallback) m_nextCallback->descriptionChanged(description, job);}
 
    virtual void idChanged(const ossimString& id, ossimJob* job)
-   {if(m_nextCallback.valid()) m_nextCallback->idChanged(id, job);}
+   {if(m_nextCallback) m_nextCallback->idChanged(id, job);}
 
    virtual void percentCompleteChanged(double percentValue, ossimJob* job)
-   {if(m_nextCallback.valid()) m_nextCallback->percentCompleteChanged(percentValue, job);}
+   {if(m_nextCallback) m_nextCallback->percentCompleteChanged(percentValue, job);}
 
-   void setCallback(ossimJobCallback* c){m_nextCallback = c;}
-   ossimJobCallback* callback(){return m_nextCallback.get();}
+   void setCallback(std::shared_ptr<ossimJobCallback> c){m_nextCallback = c;}
+   std::shared_ptr<ossimJobCallback> callback(){return m_nextCallback;}
 
 protected:
-   ossimRefPtr<ossimJobCallback> m_nextCallback;
+   std::shared_ptr<ossimJobCallback> m_nextCallback;
 };
 
 
@@ -76,7 +77,7 @@ public:
    void setPercentComplete(double value)
    {
       std::lock_guard<std::mutex> lock(m_jobMutex);
-      if(m_callback.valid())
+      if(m_callback)
       {
          m_callback->percentCompleteChanged(value, this);
       }
@@ -178,7 +179,7 @@ public:
       return (m_state & ossimJob_RUNNING);
    }
 
-   void setCallback(ossimJobCallback* callback)
+   void setCallback(std::shared_ptr<ossimJobCallback> callback)
    {
       std::lock_guard<std::mutex> lock(m_jobMutex);
       m_callback = callback;
@@ -187,14 +188,14 @@ public:
    void setName(const ossimString& value)
    {
       bool changed = false;
-      ossimRefPtr<ossimJobCallback> callback;
+      std::shared_ptr<ossimJobCallback> callback;
       {
          std::lock_guard<std::mutex> lock(m_jobMutex);
          changed = value!=m_name;
          m_name = value;
          callback = m_callback;
       }
-      if(changed&&callback.valid())
+      if(changed&&callback)
       {
          callback->nameChanged(value, this);
       }
@@ -209,14 +210,14 @@ public:
    void setId(const ossimString& value)
    {
       bool changed = false;
-      ossimRefPtr<ossimJobCallback> callback;
+      std::shared_ptr<ossimJobCallback> callback;
       {
          std::lock_guard<std::mutex> lock(m_jobMutex);
          changed = value!=m_id;
          m_id = value;
          callback = m_callback;
       }
-      if(changed&&callback.valid())
+      if(changed&&callback)
       {
          callback->idChanged(value, this);
       }
@@ -231,14 +232,14 @@ public:
    void setDescription(const ossimString& value)
    {
       bool changed = false;
-      ossimRefPtr<ossimJobCallback> callback;
+      std::shared_ptr<ossimJobCallback> callback;
       {
          std::lock_guard<std::mutex> lock(m_jobMutex);
          changed = value!=m_description;
          m_description = value;
          callback = m_callback;
       }
-      if(changed&&callback.valid())
+      if(changed&&callback)
       {
          callback->descriptionChanged(value, this);
       }
@@ -249,7 +250,7 @@ public:
       std::lock_guard<std::mutex> lock(m_jobMutex);
       return m_description;
    }
-   ossimJobCallback* callback() {return m_callback.get();}
+   std::shared_ptr<ossimJobCallback> callback() {return m_callback;}
 
 protected:
    mutable std::mutex m_jobMutex;
@@ -258,7 +259,7 @@ protected:
    ossimString m_id;
    State       m_state;
    double      m_priority;
-   ossimRefPtr<ossimJobCallback> m_callback;
+   std::shared_ptr<ossimJobCallback> m_callback;
 };
 
 #endif

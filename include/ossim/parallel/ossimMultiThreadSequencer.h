@@ -18,7 +18,6 @@
 #include <ossim/base/Thread.h>
 #include <ossim/base/Block.h>
 #include <mutex>
-
 //*************************************************************************************************
 //! This class manages the sequencing of tile requests across multiple threads. Note that multi-
 //! threading can only be achieved through the use of getNextTile() method for sequencing. 
@@ -128,7 +127,7 @@ protected:
    ossimRefPtr<ossimImageChainMtAdaptor> m_inputChain; //!< Same as base class' theInputConnection
    ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;
    ossim_uint32                          m_numThreads;
-   ossimRefPtr<ossimGetTileCallback>     m_callback;
+   std::shared_ptr<ossimGetTileCallback> m_callback;
    ossim_uint32                          m_nextTileID; //!< ID of next tile to be threaded, different from base class' theCurrentTileNumber
    TileCache                             m_tileCache;  //!< Saves tiles output by threaded jobs
    ossim_uint32                          m_maxCacheSize;
