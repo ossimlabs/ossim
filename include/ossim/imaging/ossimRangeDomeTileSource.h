@@ -2,7 +2,7 @@
 //
 // OSSIM (http://trac.osgeo.org/ossim/)
 //
-// License:  LGPL -- See LICENSE.txt file in the top level directory for more details.
+// License:  MIT -- See LICENSE.txt file in the top level directory for more details.
 //
 //**************************************************************************************************
 // $Id: ossimRangeDomeTileSource.h 23464 2015-08-07 18:39:47Z okramer $

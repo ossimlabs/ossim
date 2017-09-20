@@ -1,7 +1,7 @@
 /* -*-c++-*- ossim - Copyright (C) since 2004 Garrett Potts 
  *
  * This was taken directly from OpenSceneGraph and will retain OSGGPL license.
- * This is basically an LGPL.
+ * This is basically an MIT.
  * 
 */
 #ifndef ossimRefPtr_HEADER

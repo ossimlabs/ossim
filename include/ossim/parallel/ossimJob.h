@@ -8,7 +8,6 @@
 #ifndef ossimJob_HEADER
 #define ossimJob_HEADER
 #include <ossim/base/ossimObject.h>
-#include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimString.h>
 #include <list>
 #include <mutex>
@@ -23,21 +22,21 @@ class OSSIM_DLL ossimJobCallback
 public:
    ossimJobCallback(std::shared_ptr<ossimJobCallback> nextCallback=0):m_nextCallback(nextCallback){}
 
-   virtual void ready(ossimJob* job)    {if(m_nextCallback) m_nextCallback->ready(job);   }
-   virtual void started(ossimJob* job)  {if(m_nextCallback) m_nextCallback->started(job); }
-   virtual void finished(ossimJob* job) {if(m_nextCallback) m_nextCallback->finished(job);}
-   virtual void canceled(ossimJob* job) {if(m_nextCallback) m_nextCallback->canceled(job);}
+   virtual void ready(std::shared_ptr<ossimJob> job)    {if(m_nextCallback) m_nextCallback->ready(job);   }
+   virtual void started(std::shared_ptr<ossimJob> job)  {if(m_nextCallback) m_nextCallback->started(job); }
+   virtual void finished(std::shared_ptr<ossimJob> job) {if(m_nextCallback) m_nextCallback->finished(job);}
+   virtual void canceled(std::shared_ptr<ossimJob> job) {if(m_nextCallback) m_nextCallback->canceled(job);}
 
-   virtual void nameChanged(const ossimString& name, ossimJob* job)
+   virtual void nameChanged(const ossimString& name, std::shared_ptr<ossimJob> job)
    {if(m_nextCallback) m_nextCallback->nameChanged(name, job);}
    
-   virtual void descriptionChanged(const ossimString& description, ossimJob* job)
+   virtual void descriptionChanged(const ossimString& description, std::shared_ptr<ossimJob> job)
    {if(m_nextCallback) m_nextCallback->descriptionChanged(description, job);}
 
-   virtual void idChanged(const ossimString& id, ossimJob* job)
+   virtual void idChanged(const ossimString& id, std::shared_ptr<ossimJob> job)
    {if(m_nextCallback) m_nextCallback->idChanged(id, job);}
 
-   virtual void percentCompleteChanged(double percentValue, ossimJob* job)
+   virtual void percentCompleteChanged(double percentValue, std::shared_ptr<ossimJob> job)
    {if(m_nextCallback) m_nextCallback->percentCompleteChanged(percentValue, job);}
 
    void setCallback(std::shared_ptr<ossimJobCallback> c){m_nextCallback = c;}
@@ -51,10 +50,10 @@ protected:
 //*************************************************************************************************
 //! Pure virtual base class for all job types
 //*************************************************************************************************
-class OSSIM_DLL ossimJob : public ossimObject
+class OSSIM_DLL ossimJob : public std::enable_shared_from_this<ossimJob>
 {
 public:
-   typedef std::list<ossimRefPtr<ossimJob> > List;
+   typedef std::list<std::shared_ptr<ossimJob> > List;
 
    /** 
    * This is a Bit vector.  The only value that can be assigned as both active is FINISHED and CANCEL.
@@ -73,13 +72,19 @@ public:
    ossimJob() : m_state(ossimJob_READY),  m_priority(0.0) {}
 
    virtual void start()=0;
-   
+
+   std::shared_ptr<ossimJob> getSharedFromThis(){
+      return shared_from_this();
+   }
+   std::shared_ptr<const ossimJob> getSharedFromThis()const{
+      return shared_from_this();
+   }
    void setPercentComplete(double value)
    {
       std::lock_guard<std::mutex> lock(m_jobMutex);
       if(m_callback)
       {
-         m_callback->percentCompleteChanged(value, this);
+         m_callback->percentCompleteChanged(value, getSharedFromThis());
       }
    }
 
@@ -197,7 +202,7 @@ public:
       }
       if(changed&&callback)
       {
-         callback->nameChanged(value, this);
+         callback->nameChanged(value, getSharedFromThis());
       }
    }
 
@@ -219,7 +224,7 @@ public:
       }
       if(changed&&callback)
       {
-         callback->idChanged(value, this);
+         callback->idChanged(value, getSharedFromThis());
       }
    }
 
@@ -241,7 +246,7 @@ public:
       }
       if(changed&&callback)
       {
-         callback->descriptionChanged(value, this);
+         callback->descriptionChanged(value, getSharedFromThis());
       }
    }
 

@@ -501,7 +501,7 @@ bool ossimViewshedTool::computeViewshed()
 
    if (m_numThreads > 1)
    {
-      ossimRefPtr<ossimJobQueue> jobQueue = new ossimJobQueue();
+      std::shared_ptr<ossimJobQueue> jobQueue = std::make_shared<ossimJobQueue>();
       for (int sector=0; sector<8; ++sector)
       {
          if (m_radials[sector] == 0)
@@ -509,14 +509,14 @@ bool ossimViewshedTool::computeViewshed()
 
          if (m_threadBySector)
          {
-            SectorProcessorJob* job = new SectorProcessorJob(this, sector, m_halfWindow);
+            std::shared_ptr<SectorProcessorJob> job = std::make_shared<SectorProcessorJob>(this, sector, m_halfWindow);
             jobQueue->add(job, false);
          }
          else
          {
             for (ossim_uint32 r=0; r<=m_halfWindow; ++r)
             {
-               RadialProcessorJob* job = new RadialProcessorJob(this, sector, r, m_halfWindow);
+               std::shared_ptr<RadialProcessorJob> job = std::make_shared<RadialProcessorJob>(this, sector, r, m_halfWindow);
                jobQueue->add(job, false);
             }
          }
@@ -525,7 +525,7 @@ bool ossimViewshedTool::computeViewshed()
       }
 
       ossimNotify(ossimNotifyLevel_INFO) << "\nSubmitting "<<jobQueue->size()<<" jobs..."<<endl;
-      m_jobMtQueue = new ossimJobMultiThreadQueue(jobQueue.get(), m_numThreads);
+      m_jobMtQueue = std::make_shared<ossimJobMultiThreadQueue>(jobQueue, m_numThreads);
 
       // Wait until all radials have been processed before proceeding:
       ossimNotify(ossimNotifyLevel_INFO) << "Waiting for job threads to finish..."<<endl;

@@ -3,18 +3,18 @@
 #include <ossim/parallel/ossimJobQueue.h>
 #include <ossim/base/Thread.h>
 #include <mutex>
-class OSSIM_DLL ossimJobThreadQueue : public ossimReferenced, 
-                                      public ossim::Thread
+class OSSIM_DLL ossimJobThreadQueue : public ossim::Thread
 {
 public:
-   ossimJobThreadQueue(ossimJobQueue* jqueue=0);
-   void setJobQueue(ossimJobQueue* jqueue);
+   ossimJobThreadQueue(std::shared_ptr<ossimJobQueue> jqueue=0);
+   virtual ~ossimJobThreadQueue();
+   void setJobQueue(std::shared_ptr<ossimJobQueue> jqueue);
    
-   ossimJobQueue* getJobQueue();
+   std::shared_ptr<ossimJobQueue> getJobQueue();
    
-   const ossimJobQueue* getJobQueue() const; 
+   const std::shared_ptr<ossimJobQueue> getJobQueue() const; 
    
-   ossimRefPtr<ossimJob> currentJob();
+   std::shared_ptr<ossimJob> currentJob();
    
    void cancelCurrentJob();
    bool isValidQueue()const;
@@ -32,15 +32,14 @@ public:
    bool hasJobsToProcess()const;
    
 protected:
-   virtual ~ossimJobThreadQueue();
    
    void startThreadForQueue();
-   virtual ossimRefPtr<ossimJob> nextJob();
+   virtual std::shared_ptr<ossimJob> nextJob();
    
-   bool                       m_doneFlag;
-   mutable std::mutex m_threadMutex;
-   ossimRefPtr<ossimJobQueue> m_jobQueue;
-   ossimRefPtr<ossimJob>      m_currentJob;
+   bool                           m_doneFlag;
+   mutable std::mutex             m_threadMutex;
+   std::shared_ptr<ossimJobQueue> m_jobQueue;
+   std::shared_ptr<ossimJob>      m_currentJob;
    
 };
 
