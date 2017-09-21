@@ -65,6 +65,14 @@ else( GEOS_FOUND )
    message( FATAL_ERROR "Could not find geos package! Consider installing this as it will soon become a required package." )
 endif( GEOS_FOUND )
 
+find_package( JsonCpp QUIET)
+if( JSONCPP_FOUND )
+   include_directories( ${JSONCPP_INCLUDE_DIR} )
+   set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
+else( JSONCPP_FOUND )
+   message( FATAL_ERROR "Could not find JSONCPP package! Consider installing this as it will soon become a required package." )
+endif( JSONCPP_FOUND )
+
 # GEOFIFF - Required:
 set( OSSIM_HAS_GEOTIFF 0 )
 find_package( GEOTIFF )

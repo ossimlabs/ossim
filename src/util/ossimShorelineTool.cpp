@@ -5,7 +5,7 @@
 //
 //**************************************************************************************************
 
-#include <ossim/base/jsoncpp.h>
+#include <json/json.h>
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimCommon.h>
