@@ -18,6 +18,7 @@ find_path( JSONCPP_INCLUDE_DIR json/json.h
            PATHS 
            ${OSSIM_DEPENDENCIES}/include
            /usr/include
+           /usr/include/jsoncpp
            /usr/local/include )
 
 find_library( JSONCPP_LIBRARY
