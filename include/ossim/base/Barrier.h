@@ -64,7 +64,7 @@ namespace ossim{
    *    barrierFinished.block();
    * }
    *
-   * @endCode
+   * @endcode
    */
    class OSSIM_DLL Barrier 
    {

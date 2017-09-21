@@ -1,5 +1,16 @@
 #include <ossim/parallel/ossimJob.h>
 
+
+void ossimJob::start()
+{
+   setState(ossimJob_RUNNING);
+   run();
+   if(!(state() & ossimJob_CANCEL))
+   {
+      setState(ossimJob_FINISHED);
+   }
+}
+
 void ossimJob::setState(int value, bool on)
 {
    std::shared_ptr<ossimJob> thisShared = getSharedFromThis();
@@ -57,3 +68,4 @@ void ossimJob::setState(int value, bool on)
       }
    }
 }
+

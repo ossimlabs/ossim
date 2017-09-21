@@ -499,7 +499,7 @@ ossimFileWalker::ossimFileWalkerJob::ossimFileWalkerJob(
 {
 }
 
-void ossimFileWalker::ossimFileWalkerJob::start()
+void ossimFileWalker::ossimFileWalkerJob::run()
 {
    if ( m_fileProcessor && m_file.size() )
    {

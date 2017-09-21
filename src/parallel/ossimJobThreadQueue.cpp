@@ -81,15 +81,13 @@ void ossimJobThreadQueue::run()
          // if the job is ready to execute
          if(job->isReady())
          {
-            job->resetState(ossimJob::ossimJob_RUNNING);
             job->start();
          }
          {            
             std::lock_guard<std::mutex> lock(m_threadMutex);
             m_currentJob = 0;
          }
-         job->setState(ossimJob::ossimJob_FINISHED);
-         job = 0;
+         job.reset();
       }
       
       if (firstTime)
@@ -200,10 +198,6 @@ void ossimJobThreadQueue::startThreadForQueue()
       if(!isRunning())
       {
          start();
-         while(!isRunning()) // wait for the thread to start running
-         {
-            ossim::Thread::yieldCurrentThread();
-         }
       }
    }
 }
@@ -228,7 +222,7 @@ std::shared_ptr<ossimJob> ossimJobThreadQueue::nextJob()
    m_threadMutex.unlock();
    if(checkIfValid)
    {
-      return jobQueue->nextJob(true);
+      job = jobQueue->nextJob(true);
    }
-   return 0;
+   return job;
 }

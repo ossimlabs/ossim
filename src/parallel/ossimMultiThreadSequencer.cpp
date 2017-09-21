@@ -24,7 +24,7 @@ ossimMtDebug* ossimMtDebug::m_instance = NULL;
 // Job's start method performs actual getTile in a thread on cloned chain and saves the result
 // in the sequencer's results cache.
 //*************************************************************************************************
-void ossimMultiThreadSequencer::ossimGetTileJob::start()
+void ossimMultiThreadSequencer::ossimGetTileJob::run()
 {
    running();
    if (m_sequencer.d_debugEnabled)
@@ -217,10 +217,10 @@ void ossimMultiThreadSequencer::setToStartOfSequence()
       jobQueue->add(job, false);
    }
 
-   // Initialize the multi-thread queue. Note the setQueue is done after construction as it was 
+   // Initialize the multi-thread queue. Note the setJobQueue is done after construction as it was 
    // crashing do to jobs being launched during init:
    m_jobMtQueue = std::make_shared<ossimJobMultiThreadQueue>(nullptr, num_jobs_to_launch);
-   m_jobMtQueue->setQueue(jobQueue);
+   m_jobMtQueue->setJobQueue(jobQueue);
 }
 
 

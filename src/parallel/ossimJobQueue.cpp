@@ -24,7 +24,7 @@ void ossimJobQueue::add(std::shared_ptr<ossimJob> job,
          }
          cb = m_callback;
       }
-      if(cb) cb->adding(this, job);
+      if(cb) cb->adding(getSharedFromThis(), job);
       
       job->ready();
       m_jobQueueMutex.lock();
@@ -33,7 +33,7 @@ void ossimJobQueue::add(std::shared_ptr<ossimJob> job,
    }
    if(cb)
    {
-      cb->added(this, job);
+      cb->added(getSharedFromThis(), job);
    }
    m_block.set(true);
 }
@@ -57,7 +57,7 @@ std::shared_ptr<ossimJob> ossimJobQueue::removeByName(const ossimString& name)
    
    if(cb&&result)
    {
-      cb->removed(this, result);
+      cb->removed(getSharedFromThis(), result);
    }
    return result;
 }
@@ -79,7 +79,7 @@ std::shared_ptr<ossimJob> ossimJobQueue::removeById(const ossimString& id)
    }
    if(cb&&result)
    {
-      cb->removed(this, result);
+      cb->removed(getSharedFromThis(), result);
    }
    return result;
 }
@@ -100,7 +100,7 @@ void ossimJobQueue::remove(const std::shared_ptr<ossimJob> job)
    }
    if(cb&&removedJob)
    {
-      cb->removed(this, removedJob);
+      cb->removed(getSharedFromThis(), removedJob);
    }
 }
 
@@ -132,7 +132,7 @@ void ossimJobQueue::removeStoppedJobs()
          ossimJob::List::iterator iter = removedJobs.begin();
          while(iter!=removedJobs.end())
          {
-            cb->removed(this, (*iter));
+            cb->removed(getSharedFromThis(), (*iter));
             ++iter;
          }
       }
@@ -153,7 +153,7 @@ void ossimJobQueue::clear()
    {
       for(ossimJob::List::iterator iter=removedJobs.begin();iter!=removedJobs.end();++iter)
       {
-         cb->removed(this, (*iter));
+         cb->removed(getSharedFromThis(), (*iter));
       }
    }
 }

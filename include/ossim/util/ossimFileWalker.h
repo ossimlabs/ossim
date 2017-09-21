@@ -158,12 +158,14 @@ private:
        */
       ossimFileWalkerJob(ossimFileProcessorInterface* fpi,
                          const ossimFilename& file);
+
+protected:
       /**
        * @brief Defines pure virtual ossimJob::start.
        *
        * This executes the call to m_processFileCallBackPtr.
        */
-      virtual void start();
+      virtual void run();
       
    private:
       ossimFileProcessorInterface* m_fileProcessor;

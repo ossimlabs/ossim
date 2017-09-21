@@ -6,6 +6,15 @@ ossimJobMultiThreadQueue::ossimJobMultiThreadQueue(std::shared_ptr<ossimJobQueue
 {
    setNumberOfThreads(nThreads);
 }
+
+ossimJobMultiThreadQueue::~ossimJobMultiThreadQueue()
+{
+   setJobQueue(0);
+   cancel();
+   waitForCompletion();
+   m_threadQueueList.clear();
+}
+
 std::shared_ptr<ossimJobQueue> ossimJobMultiThreadQueue::getJobQueue()
 {
    std::lock_guard<std::mutex> lock(m_mutex);
@@ -16,7 +25,7 @@ const std::shared_ptr<ossimJobQueue> ossimJobMultiThreadQueue::getJobQueue()cons
    std::lock_guard<std::mutex> lock(m_mutex);
    return m_jobQueue;
 }
-void ossimJobMultiThreadQueue::setQueue(std::shared_ptr<ossimJobQueue> q)
+void ossimJobMultiThreadQueue::setJobQueue(std::shared_ptr<ossimJobQueue> q)
 {
    std::lock_guard<std::mutex> lock(m_mutex);
    ossim_uint32 idx = 0;
@@ -98,5 +107,21 @@ bool ossimJobMultiThreadQueue::hasJobsToProcess()const
    }
    
    return result;
+}
+
+void ossimJobMultiThreadQueue::cancel()
+{
+   for(auto thread:m_threadQueueList)
+   {
+      thread->cancel();
+   }
+}
+
+void ossimJobMultiThreadQueue::waitForCompletion()
+{
+   for(auto thread:m_threadQueueList)
+   {
+      thread->waitForCompletion();
+   }
 }
 

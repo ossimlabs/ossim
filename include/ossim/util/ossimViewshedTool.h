@@ -126,10 +126,10 @@ public:
    SectorProcessorJob(ossimViewshedTool* vs_util, ossim_uint32 sector, ossim_uint32 numRadials)
    : m_vsUtil (vs_util), m_sector (sector), m_numRadials (numRadials)  {}
 
+protected:
+   virtual void run();
+
 private:
-
-   virtual void start();
-
    ossimViewshedTool* m_vsUtil;
    ossim_uint32 m_sector;
    ossim_uint32 m_numRadials;
@@ -146,10 +146,11 @@ public:
                       ossim_uint32 numRadials)
    : m_vsUtil (vs_util), m_sector (sector), m_radial (radial), m_numRadials (numRadials) {}
 
+
+protected:
+   virtual void run();
+
 private:
-
-   virtual void start();
-
    ossimViewshedTool* m_vsUtil;
    ossim_uint32 m_sector;
    ossim_uint32 m_radial;
