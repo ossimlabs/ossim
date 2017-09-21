@@ -18,7 +18,8 @@ public:
    {
       setName(name);
    }
-   virtual void start()
+protected:
+   virtual void run()
    {
    }
 };
@@ -29,15 +30,15 @@ public:
    ossimTestJobCallback()
    {
    }
-   virtual void started(ossimJob* job)
+   virtual void started(std::shared_ptr<ossimJob> job)
    {
       std::cout << "I HAVE STARTED THE Job " << job->name() << "\n";
    }
-   virtual void finished(ossimJob* job)
+   virtual void finished(std::shared_ptr<ossimJob> job)
    {
       std::cout << "I HAVE FINISHED THE Job " << job->name() << "\n";
    }
-   virtual void canceled(ossimJob* job)
+   virtual void canceled(std::shared_ptr<ossimJob> job)
    {
       std::cout << "I HAVE CANCELED THE Job " << job->name() << "\n";
    }
@@ -50,16 +51,16 @@ int main(int argc, char *argv[])
    ossimInit::instance()->addOptions(ap);
    ossimInit::instance()->initialize(ap);
    
-   ossimRefPtr<ossimJobQueue> q = new ossimJobQueue();
-   ossimRefPtr<ossimJobMultiThreadQueue> threadQueue = new ossimJobMultiThreadQueue(q.get(), INITIAL_THREADS);
+   std::shared_ptr<ossimJobQueue> q = std::make_shared<ossimJobQueue>();
+   std::shared_ptr<ossimJobMultiThreadQueue> threadQueue = std::make_shared<ossimJobMultiThreadQueue>(q, INITIAL_THREADS);
    std::shared_ptr<ossimTestJobCallback> callback = std::make_shared<ossimTestJobCallback>();
    ossim_uint32 idx = 0;
    for(idx = 0; idx < INITIAL_JOBS; ++idx)
    {
-      ossimRefPtr<ossimTestJob> job = new ossimTestJob(ossimString::toString(idx+1));
+      std::shared_ptr<ossimTestJob> job = std::make_shared<ossimTestJob>(ossimString::toString(idx+1));
       job->setCallback(callback);
       job->ready();
-      q->add(job.get());
+      q->add(job);
    }
    
    // FOREVER loop until all jobs are completed.
@@ -70,6 +71,7 @@ int main(int argc, char *argv[])
       {
          break;
       }
+      ossim::Thread::yieldCurrentThread();
    }
    
    return 0;

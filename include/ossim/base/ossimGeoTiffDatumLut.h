@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2001 ImageLinks Inc.
 //
-// License:  LGPL
+// License:  MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //

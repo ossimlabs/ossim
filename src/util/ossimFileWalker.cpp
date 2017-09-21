@@ -27,7 +27,7 @@ static ossimTrace traceDebug(ossimString("ossimFileWalker:debug"));
 
 ossimFileWalker::ossimFileWalker()
    : m_fileProcessor(0),
-     m_jobQueue(new ossimJobMultiThreadQueue(new ossimJobQueue(), 1)),     
+     m_jobQueue(std::make_shared<ossimJobMultiThreadQueue>(std::make_shared<ossimJobQueue>(), 1)),     
      m_filteredExtensions(0),
      m_recurseFlag(true),
      m_waitOnDirFlag(false),
@@ -75,8 +75,8 @@ void ossimFileWalker::walk(const std::vector<ossimFilename>& files)
                      }
                      
                      // Make the job:
-                     ossimRefPtr<ossimFileWalkerJob> job =
-                        new ossimFileWalkerJob( m_fileProcessor, file );
+                     std::shared_ptr<ossimFileWalkerJob> job =
+                        std::make_shared<ossimFileWalkerJob>( m_fileProcessor, file );
                      
                      job->setName( ossimString( file.string() ) );
                      
@@ -86,7 +86,7 @@ void ossimFileWalker::walk(const std::vector<ossimFilename>& files)
                      job->ready();
                      
                      // Add job to the queue:
-                     m_jobQueue->getJobQueue()->add( job.get() );
+                     m_jobQueue->getJobQueue()->add( job );
                      
                      m_mutex.lock();
                      if ( m_abortFlag )
@@ -236,8 +236,8 @@ void ossimFileWalker::walkDir(const ossimFilename& dir)
          }
          
          // Make the job:
-         ossimRefPtr<ossimFileWalkerJob> job =
-            new ossimFileWalkerJob( m_fileProcessor, (*i) );
+         std::shared_ptr<ossimFileWalkerJob> job =
+            std::make_shared<ossimFileWalkerJob>( m_fileProcessor, (*i) );
 
          job->setName( ossimString( (*i).string() ) );
 
@@ -247,7 +247,7 @@ void ossimFileWalker::walkDir(const ossimFilename& dir)
          job->ready();
 
          // Add job to the queue:
-         m_jobQueue->getJobQueue()->add( job.get() );
+         m_jobQueue->getJobQueue()->add( job );
 
          m_mutex.lock();
          if ( m_abortFlag )
@@ -499,7 +499,7 @@ ossimFileWalker::ossimFileWalkerJob::ossimFileWalkerJob(
 {
 }
 
-void ossimFileWalker::ossimFileWalkerJob::start()
+void ossimFileWalker::ossimFileWalkerJob::run()
 {
    if ( m_fileProcessor && m_file.size() )
    {
@@ -512,17 +512,17 @@ ossimFileWalker::ossimFileWalkerJobCallback::ossimFileWalkerJobCallback()
 {
 }
 
-void ossimFileWalker::ossimFileWalkerJobCallback::started(ossimJob* job)
+void ossimFileWalker::ossimFileWalkerJobCallback::started(std::shared_ptr<ossimJob> job)
 {
    ossimJobCallback::started(job);
 }
 
-void ossimFileWalker::ossimFileWalkerJobCallback::finished(ossimJob* job)
+void ossimFileWalker::ossimFileWalkerJobCallback::finished(std::shared_ptr<ossimJob> job)
 {
    ossimJobCallback::finished(job);
 }
 
-void ossimFileWalker::ossimFileWalkerJobCallback::canceled(ossimJob* job)
+void ossimFileWalker::ossimFileWalkerJobCallback::canceled(std::shared_ptr<ossimJob> job)
 {
    ossimJobCallback::canceled(job);
 }

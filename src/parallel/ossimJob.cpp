@@ -1,7 +1,20 @@
 #include <ossim/parallel/ossimJob.h>
 
+
+void ossimJob::start()
+{
+   setState(ossimJob_RUNNING);
+   run();
+   if(!(state() & ossimJob_CANCEL))
+   {
+      setState(ossimJob_FINISHED);
+   }
+}
+
 void ossimJob::setState(int value, bool on)
 {
+   std::shared_ptr<ossimJob> thisShared = getSharedFromThis();
+
    // we will need to make sure that the state flags are set properly
    // so if you turn on running then you can't have finished or ready turned onturned on
    // but can stil have cancel turned on
@@ -36,22 +49,23 @@ void ossimJob::setState(int value, bool on)
       if(!(oldState&ossimJob_READY)&&
          (currentState&ossimJob_READY))
       {
-         callback->ready(this);
+         callback->ready(thisShared);
       }
       else if(!(oldState&ossimJob_RUNNING)&&
               (currentState&ossimJob_RUNNING))
       {
-         callback->started(this);
+         callback->started(thisShared);
       }
       else if(!(oldState&ossimJob_CANCEL)&&
               (currentState&ossimJob_CANCEL))
       {
-         callback->canceled(this);
+         callback->canceled(thisShared);
       }
       else if(!(oldState&ossimJob_FINISHED)&&
               (currentState&ossimJob_FINISHED))
       {
-         callback->finished(this);
+         callback->finished(thisShared);
       }
    }
 }
+

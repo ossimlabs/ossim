@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// License:  LGPL.  See top level LICENSE.txt file.
+// License:  MIT.  See top level LICENSE.txt file.
 //
 // Author:  Garrett Potts
 //

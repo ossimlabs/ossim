@@ -1,6 +1,6 @@
 //**************************************************************************************************
 //
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -27,7 +27,7 @@
  * Pseudo Code:
  * @code
  * someRegistry::instance()->addFactory(someFactory::instance());
- * @endCode
+ * @endcode
  */
 template <class T, class NativeType>
 class ossimFactoryListInterface

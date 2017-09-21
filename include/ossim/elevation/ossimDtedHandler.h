@@ -49,7 +49,7 @@
 * {
 *    h->getHeightAboveMSL(ossimGpt(28, -110));  
 * }
-* @endCode
+* @endcode
 * 
 * When a height is calculated it will use a weighted average of 4 neighboring
 * posts.

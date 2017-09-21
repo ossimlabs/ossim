@@ -83,8 +83,8 @@ protected:
             m_chainID(chain_id), 
             m_sequencer(sequencer),
             t_launchNewJob(true) {}
-
-      virtual void start();
+protected:
+      virtual void run();
 
    private:
       ossim_uint32                 m_tileID;
@@ -101,7 +101,7 @@ protected:
    {
    public:
       ossimGetTileCallback() {}
-      virtual void finished(ossimJob* job)
+      virtual void finished(std::shared_ptr<ossimJob> job)
       {
          if (job != NULL)
             job->finished();
@@ -125,7 +125,7 @@ protected:
    void print(ostringstream& msg) const;
 
    ossimRefPtr<ossimImageChainMtAdaptor> m_inputChain; //!< Same as base class' theInputConnection
-   ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;
+   std::shared_ptr<ossimJobMultiThreadQueue> m_jobMtQueue;
    ossim_uint32                          m_numThreads;
    std::shared_ptr<ossimGetTileCallback> m_callback;
    ossim_uint32                          m_nextTileID; //!< ID of next tile to be threaded, different from base class' theCurrentTileNumber

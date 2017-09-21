@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2005 SANZ Inc. 
 //
-// License:  LGPL
+// License:  MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //

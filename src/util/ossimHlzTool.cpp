@@ -30,6 +30,7 @@
 #include <ossim/util/ossimHlzTool.h>
 #include <ossim/base/Thread.h>
 #include <fstream>
+#include <cstddef>
 
 static const string MASK_EXCLUDE_KW = "exclude_regions";
 static const string MASK_INCLUDE_KW = "include_regions";
@@ -485,9 +486,9 @@ bool ossimHlzTool::computeHLZ()
          m_numThreads = ossim::getNumberOfThreads();
 
       // Loop over input DEM, creating a thread job for each filter window:
-      ossimRefPtr<ossimJobMultiThreadQueue> jobMtQueue =
-            new ossimJobMultiThreadQueue(0, m_numThreads);
-      ossimJobQueue* jobQueue = jobMtQueue->getJobQueue();
+      std::shared_ptr<ossimJobMultiThreadQueue> jobMtQueue =
+            std::make_shared<ossimJobMultiThreadQueue>(nullptr, m_numThreads);
+      std::shared_ptr<ossimJobQueue> jobQueue = jobMtQueue->getJobQueue();
 
       ossimNotify(ossimNotifyLevel_INFO) << "\nPreparing " << numPatches << " jobs..." << endl; // TODO: DEBUG
       setPercentComplete(0);
@@ -499,11 +500,11 @@ bool ossimHlzTool::computeHLZ()
          for (chip_origin.x = min_x; chip_origin.x <= max_x; ++chip_origin.x)
          {
             //ossimNotify(ossimNotifyLevel_INFO) << "Submitting " << chipId << endl;
-            ossimHlzTool::PatchProcessorJob* job = 0;
+            std::shared_ptr<ossimHlzTool::PatchProcessorJob> job = 0;
             if (m_useLsFitMethod)
-               job = new ossimHlzTool::LsFitPatchProcessorJob(this, chip_origin, chipId++);
+               job = std::make_shared<ossimHlzTool::LsFitPatchProcessorJob>(this, chip_origin, chipId++);
             else
-               job = new ossimHlzTool::NormPatchProcessorJob(this, chip_origin, chipId++);
+               job = std::make_shared<ossimHlzTool::NormPatchProcessorJob>(this, chip_origin, chipId++);
             jobQueue->add(job, false);
          }
          qsize = jobQueue->size();
@@ -557,7 +558,7 @@ ossimHlzTool::PatchProcessorJob::PatchProcessorJob(ossimHlzTool* hlzUtil, const 
    m_demPatchLR.y = m_demPatchUL.y + m_hlzUtil->m_demFilterSize.y;
 }
 
-void ossimHlzTool::PatchProcessorJob::start()
+void ossimHlzTool::PatchProcessorJob::run()
 {
    bool passed = level1Test() && level2Test() && maskTest();
    ossimIpt p;

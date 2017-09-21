@@ -2,7 +2,7 @@
 //
 // OSSIM (http://trac.osgeo.org/ossim/)
 //
-// License:  LGPL -- See LICENSE.txt file in the top level directory for more details.
+// License:  MIT -- See LICENSE.txt file in the top level directory for more details.
 //
 //**************************************************************************************************
 #ifndef ossimPointCloudSource_HEADER

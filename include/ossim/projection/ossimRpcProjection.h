@@ -1,7 +1,7 @@
 //*****************************************************************************
 // FILE: ossimRpcProjection.h
 //
-// LGPL
+// MIT
 //
 // DESCRIPTION: Contains declaration of class ossimRpcProjection.
 //   This is a replacement model utilizing the Rational Polynomial Coefficients

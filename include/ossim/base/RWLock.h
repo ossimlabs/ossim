@@ -41,7 +41,7 @@ namespace ossim {
     *  {
     *      ossim::ScopeWriteSleepLock  lock(mutex); 
     *  }
-    * @endCode
+    * @endcode
     */
     template <WaitGenre WAIT_GENRE>
     class RWLock {

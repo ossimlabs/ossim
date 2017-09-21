@@ -26,7 +26,7 @@
  *
  *
  * Auther: Garrett Potts
- * LICENSE: LGPL
+ * LICENSE: MIT
  */
 class OSSIM_DLL ossimSFIMFusion : public ossimFusionCombiner,
                                   public ossimAdjustableParameterInterface

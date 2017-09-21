@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2005 Garrett Potts
 //
-// LICENSE: LGPL See top level license file.
+// LICENSE: MIT See top level license file.
 // 
 // Author: Garrett Potts
 //
