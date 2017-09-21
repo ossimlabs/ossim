@@ -40,7 +40,7 @@ namespace ossim{
    *    block->release();
    *    ossim::Thread::sleepInSeconds(2);
    * }
-   * @endCode
+   * @endcode
    */
    class OSSIM_DLL Block
    {

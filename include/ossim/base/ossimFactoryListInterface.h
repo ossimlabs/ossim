@@ -27,7 +27,7 @@
  * Pseudo Code:
  * @code
  * someRegistry::instance()->addFactory(someFactory::instance());
- * @endCode
+ * @endcode
  */
 template <class T, class NativeType>
 class ossimFactoryListInterface

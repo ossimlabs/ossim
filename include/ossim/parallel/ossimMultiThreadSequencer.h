@@ -83,8 +83,8 @@ protected:
             m_chainID(chain_id), 
             m_sequencer(sequencer),
             t_launchNewJob(true) {}
-
-      virtual void start();
+protected:
+      virtual void run();
 
    private:
       ossim_uint32                 m_tileID;

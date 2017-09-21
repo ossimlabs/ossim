@@ -14,7 +14,7 @@
 * elevation_manager.elevation_source1.max_open_cells: 25
 * elevation_manager.elevation_source1.enabled: true
 * elevation_manager.elevation_source1.memory_map_cells: true
-* @endCode
+* @endcode
 * Note:  only use memory_map_cells to true if they are small files.  DTED0 is 
 * small so we set it to true.
 * Where the dted file tree has the form: <rootdir>/w056/n49.dt0
@@ -27,7 +27,7 @@
 * elevation_manager.elevation_source2.max_open_cells: 50 
 * elevation_manager.elevation_source2.enabled: false 
 * elevation_manager.elevation_source2.memory_map_cells: false
-* @endCode
+* @endcode
 * where the directory is a flat directory with general raster files
 *
 * Example SRTM directory:
@@ -38,7 +38,7 @@
 * elevation_manager.elevation_source10.max_open_cells: 50 
 * elevation_manager.elevation_source10.memory_map_cells: false
 * elevation_manager.elevation_source10.enabled: true
-* @endCode
+* @endcode
 * where the directory has files of the form N39W112.hgt and are 1x1 degree
 * cells
 *
@@ -50,7 +50,7 @@
 * elevation_manager.elevation_source20.max_open_cells: 50 
 * elevation_manager.elevation_source20.memory_map_cells: false
 * elevation_manager.elevation_source20.enabled: false 
-* @endCode
+* @endcode
 * 
 * where the directory can have any image the ossim supports and is a flat directory
 */

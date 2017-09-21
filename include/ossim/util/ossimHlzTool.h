@@ -100,7 +100,6 @@ protected:
    public:
       PatchProcessorJob(ossimHlzTool* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0);
 
-      virtual void start();
       virtual bool level1Test() = 0;
       bool level2Test();
       bool maskTest();
@@ -113,6 +112,10 @@ protected:
 
       // ossim_uint32 m_chipId; // for debug
       static std::mutex m_bufMutex;
+
+   protected:
+      virtual void run();
+
    };
 
    class LsFitPatchProcessorJob : public PatchProcessorJob

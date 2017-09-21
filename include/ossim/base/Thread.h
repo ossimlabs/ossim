@@ -60,7 +60,7 @@ namespace ossim{
    *      thread->waitForCompletion();
    *    }
    * }
-   * @endCode
+   * @endcode
    */ 
    class OSSIM_DLL Thread
    {

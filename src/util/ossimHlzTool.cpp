@@ -558,7 +558,7 @@ ossimHlzTool::PatchProcessorJob::PatchProcessorJob(ossimHlzTool* hlzUtil, const 
    m_demPatchLR.y = m_demPatchUL.y + m_hlzUtil->m_demFilterSize.y;
 }
 
-void ossimHlzTool::PatchProcessorJob::start()
+void ossimHlzTool::PatchProcessorJob::run()
 {
    bool passed = level1Test() && level2Test() && maskTest();
    ossimIpt p;

@@ -18,7 +18,8 @@ public:
    {
       setName(name);
    }
-   virtual void start()
+protected:
+   virtual void run()
    {
    }
 };

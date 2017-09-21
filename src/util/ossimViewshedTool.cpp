@@ -871,7 +871,7 @@ bool ossimViewshedTool::writeHorizonProfile()
    return true;
 }
 
-void SectorProcessorJob::start()
+void SectorProcessorJob::run()
 {
    // Loop over all the sector's radials and walk over each one.
    for (ossim_uint32 r=0; r<=m_numRadials; ++r)
@@ -880,7 +880,7 @@ void SectorProcessorJob::start()
    }
 }
 
-void RadialProcessorJob::start()
+void RadialProcessorJob::run()
 {
    RadialProcessor::doRadial(m_vsUtil, m_sector, m_radial);
 }
