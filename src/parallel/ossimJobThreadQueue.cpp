@@ -177,7 +177,7 @@ void ossimJobThreadQueue::cancel()
             
             if (m_jobQueue) 
             {
-               m_jobQueue->releaseOneBlock();
+               m_jobQueue->releaseBlock();
             }
          }
          ossim::Thread::yieldCurrentThread();
