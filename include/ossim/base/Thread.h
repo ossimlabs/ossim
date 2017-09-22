@@ -129,8 +129,20 @@ namespace ossim{
       */
       virtual void waitForCompletion();
 
+      /**
+      * Enables the thread to be paused.  If the interrupt is called
+      * it will block the thread
+      */
       void pause();
+
+      /**
+      * This will resume a blocked thread.
+      */
       void resume();
+
+      /**
+      * @return true if the thread is blocked and false otherwise
+      */
       bool isPaused()const;
 
       /**
