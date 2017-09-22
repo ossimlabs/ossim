@@ -25,7 +25,7 @@ void ossimJobThreadQueue::setJobQueue(std::shared_ptr<ossimJobQueue> jqueue)
       m_jobQueue = jqueue;
    }
    
-   startThreadForQueue();
+   if(m_jobQueue) startThreadForQueue();
 }
 
 std::shared_ptr<ossimJobQueue> ossimJobThreadQueue::getJobQueue() 
@@ -67,7 +67,7 @@ void ossimJobThreadQueue::run()
    std::shared_ptr<ossimJob> job;
    do
    {
-      interrupt();
+      //interrupt();
       // osg::notify(osg::NOTICE)<<"In thread loop "<<this<<std::endl;
       validQueue = isValidQueue();
       job = nextJob();
@@ -95,7 +95,7 @@ void ossimJobThreadQueue::run()
          ossim::Thread::yieldCurrentThread();
          firstTime = false;
       }
-   } while (!m_doneFlag&&validQueue);
+   } while (!m_doneFlag&&validQueue&&!isInterruptable());
    
    {            
       std::lock_guard<std::mutex> lock(m_threadMutex);
@@ -161,20 +161,25 @@ void ossimJobThreadQueue::cancel()
             m_jobQueue->releaseBlock();
          }
       }
-      
-      // then wait for the the thread to stop running.
+      // then wait for the the thread to stop running.  Because
+      // we can't release our thread we have to keep releasing until
+      // we get to our thread that is currently blocked waiting on the
+      // queue
+      // Because we are destructing and we don't know which
+      // order our thread is blocked, we will do a one thread at
+      // a time release instead of release all at once all the time
+      //
+      //
       while(isRunning())
       {
-#if 1
          {
             std::lock_guard<std::mutex> lock(m_threadMutex);
             
             if (m_jobQueue) 
             {
-               m_jobQueue->releaseBlock();
+               m_jobQueue->releaseOneBlock();
             }
          }
-#endif
          ossim::Thread::yieldCurrentThread();
       }
    }
