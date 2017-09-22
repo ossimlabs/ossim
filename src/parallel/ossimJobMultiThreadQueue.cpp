@@ -11,6 +11,8 @@ ossimJobMultiThreadQueue::~ossimJobMultiThreadQueue()
 {
    cancel();
    waitForCompletion();
+   m_threadQueueList.clear();
+   m_jobQueue = nullptr;
 }
 
 std::shared_ptr<ossimJobQueue> ossimJobMultiThreadQueue::getJobQueue()
