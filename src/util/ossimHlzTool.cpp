@@ -474,7 +474,7 @@ bool ossimHlzTool::computeHLZ()
             if (m_useLsFitMethod)
                job = std::make_shared<ossimHlzTool::LsFitPatchProcessorJob>(this, chip_origin, chipId++);
             else
-               job = std:make_shared<ossimHlzTool::NormPatchProcessorJob>(this, chip_origin, chipId++);
+               job = std::make_shared<ossimHlzTool::NormPatchProcessorJob>(this, chip_origin, chipId++);
             job->start();
          }
          setPercentComplete(100*chipId/numPatches);
