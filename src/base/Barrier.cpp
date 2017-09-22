@@ -2,7 +2,8 @@
 
 ossim::Barrier::Barrier(ossim_int32 maxCount)
 : m_maxCount(maxCount),
-  m_blockedCount(0)
+  m_blockedCount(0),
+  m_waitCount(0)
 {
 
 }

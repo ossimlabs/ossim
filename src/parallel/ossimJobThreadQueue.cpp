@@ -11,21 +11,15 @@ void ossimJobThreadQueue::setJobQueue(std::shared_ptr<ossimJobQueue> jqueue)
    
    if (m_jobQueue == jqueue) return;
    
-   if(isRunning())
+   pause();
+   while(isRunning()&&!isPaused())
    {
-      std::shared_ptr<ossimJobQueue> jobQueueTemp = m_jobQueue;
-      m_jobQueue = jqueue;
-      if(jobQueueTemp)
-      {
-         jobQueueTemp->releaseBlock();
-      }
+      m_jobQueue->releaseBlock();
    }
-   else 
-   {
-      m_jobQueue = jqueue;
-   }
-   
-   startThreadForQueue();
+   m_jobQueue = jqueue;
+   resume();
+
+   if(m_jobQueue) startThreadForQueue();
 }
 
 std::shared_ptr<ossimJobQueue> ossimJobThreadQueue::getJobQueue() 
