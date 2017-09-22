@@ -1,6 +1,7 @@
 #ifndef ossimThread_HEADER
 #define ossimThread_HEADER 1
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/Barrier.h>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -119,7 +120,7 @@ namespace ossim{
       * @param flag if true will enable the thread to be interruptable and if false
       *        the thread is not interruptable.
       */
-      virtual void setCancel(bool flag){setInterruptable(flag);}
+      virtual void setCancel(bool flag);
 
       /**
       * Convenience to allow one to wait for this thread to finish it's work.
@@ -127,6 +128,25 @@ namespace ossim{
       * Allow this to be overriden.
       */
       virtual void waitForCompletion();
+
+      /**
+      * Internally this adjusts the barrier so that if the 
+      * run loop calls interrupt it will pause the run loop and block
+      * the thread until resume is called.
+      */
+      void pause();
+
+      /**
+      * This will resume a paused thread by adjusting the barrier back 
+      * to 1.
+      */
+      void resume();
+
+      /**
+      * @return true if the wait count on the barrier is > 0 or
+      *         false otherwise.
+      */
+      bool isPaused()const;
 
       /**
       * Utility method to allow one to sleep in seconds
@@ -173,8 +193,10 @@ namespace ossim{
       virtual void run()=0;
 
       /**
-      * This is the interrupt interface and will cause an internal exception that
-      * is caught by @see runInternal
+      * This is the interrupt interfac.  If the Thread is in a paused state
+      * then it will pause the thread by blocking using a barrier.  If the thread
+      * is in a cancel state then it will throw an Interrupt exception to kick
+      * out of the thread loop.
       */
       virtual void interrupt();
 
@@ -194,6 +216,7 @@ namespace ossim{
       std::atomic<bool>             m_interrupt;
       std::condition_variable       m_runningCondition;
       mutable std::mutex            m_runningMutex;
+      mutable std::shared_ptr<ossim::Barrier> m_pauseBarrier;
 
       /**
       * @see cancel and @see setCancel

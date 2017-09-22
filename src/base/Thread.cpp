@@ -2,7 +2,8 @@
 
 ossim::Thread::Thread()
 :m_running(false),
- m_interrupt(false)
+ m_interrupt(false),
+ m_pauseBarrier(std::make_shared<ossim::Barrier>(1))
 {
 }
 
@@ -31,6 +32,15 @@ void ossim::Thread::start()
    }
 
    m_thread = std::make_shared<std::thread>(&Thread::runInternal, this);
+}
+
+void ossim::Thread::setCancel(bool flag)
+{
+   setInterruptable(flag);
+   if(flag&&isPaused())
+   {
+      resume();
+   }
 }
 
 void ossim::Thread::waitForCompletion()
@@ -78,12 +88,29 @@ void ossim::Thread::interrupt()
    {
       throw ossim::Thread::Interrupt();
    }
+   m_pauseBarrier->block();
 }
 
 void ossim::Thread::setInterruptable(bool flag)
 {
    m_interrupt.store(flag, std::memory_order_relaxed);
 }
+
+void ossim::Thread::pause()
+{
+   m_pauseBarrier->reset(2);   
+}
+
+void ossim::Thread::resume()
+{
+   m_pauseBarrier->reset(1);   
+}
+
+bool ossim::Thread::isPaused()const
+{
+   return m_pauseBarrier->getBlockedCount() > 0;
+}
+
 
 void ossim::Thread::runInternal()
 {

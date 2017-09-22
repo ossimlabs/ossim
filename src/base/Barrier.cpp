@@ -1,4 +1,5 @@
 #include <ossim/base/Barrier.h>
+#include <iostream>
 
 ossim::Barrier::Barrier(ossim_int32 maxCount)
 : m_maxCount(maxCount),
@@ -24,7 +25,7 @@ void ossim::Barrier::block()
    }
    else
    {
-      m_conditionalBlock.notify_all();
+      if(m_blockedCount>0) m_conditionalBlock.notify_all();
    }
    // always notify the conditional wait just in case anyone is waiting
    m_conditionalWait.notify_all();
@@ -35,7 +36,8 @@ void ossim::Barrier::reset()
    std::unique_lock<std::mutex> lock(m_mutex);
    // force the condition on any waiting threads
    m_blockedCount = m_maxCount;
-   if(m_waitCount.load() >= 1){
+   if(m_waitCount.load() > 0)
+   {
       m_conditionalBlock.notify_all(); 
       // wait until the wait count goes back to zero
       m_conditionalWait.wait(lock, [this]{return m_waitCount.load()<1;});
@@ -43,6 +45,23 @@ void ossim::Barrier::reset()
    // should be safe to reset everything at this point 
    m_blockedCount = 0;
    m_waitCount    = 0;
+}
+
+/**
+* @return the maximum count
+*/
+ossim_int32 ossim::Barrier::getMaxCount()const
+{
+   std::unique_lock<std::mutex> lock(m_mutex);
+   return m_maxCount;
+}
+
+/**
+*  @return block count
+*/
+ossim_int32 ossim::Barrier::getBlockedCount()const
+{
+   return m_blockedCount.load();
 }
 
 void ossim::Barrier::reset(ossim_int32 maxCount)

@@ -5,6 +5,7 @@ ossimJobThreadQueue::ossimJobThreadQueue(std::shared_ptr<ossimJobQueue> jqueue)
 {
    setJobQueue(jqueue);    
 }
+
 void ossimJobThreadQueue::setJobQueue(std::shared_ptr<ossimJobQueue> jqueue)
 {
    std::lock_guard<std::mutex> lock(m_threadMutex);
@@ -13,19 +14,25 @@ void ossimJobThreadQueue::setJobQueue(std::shared_ptr<ossimJobQueue> jqueue)
    
    if(isRunning())
    {
-      std::shared_ptr<ossimJobQueue> jobQueueTemp = m_jobQueue;
-      m_jobQueue = jqueue;
-      if(jobQueueTemp)
+      int idx= 0;
+      pause();
+      if(m_jobQueue)
       {
-         jobQueueTemp->releaseBlock();
+         while(isRunning()&&(!isPaused()))
+         {
+            m_jobQueue->releaseBlock();
+         }
       }
+      m_jobQueue = jqueue;
+      resume();
+      // we will use a barrier 
    }
    else 
    {
       m_jobQueue = jqueue;
    }
    
-   if(m_jobQueue) startThreadForQueue();
+   if(m_jobQueue&&!isRunning()) startThreadForQueue();
 }
 
 std::shared_ptr<ossimJobQueue> ossimJobThreadQueue::getJobQueue() 
@@ -67,7 +74,7 @@ void ossimJobThreadQueue::run()
    std::shared_ptr<ossimJob> job;
    do
    {
-      //interrupt();
+      interrupt();
       // osg::notify(osg::NOTICE)<<"In thread loop "<<this<<std::endl;
       validQueue = isValidQueue();
       job = nextJob();
@@ -95,7 +102,7 @@ void ossimJobThreadQueue::run()
          ossim::Thread::yieldCurrentThread();
          firstTime = false;
       }
-   } while (!m_doneFlag&&validQueue&&!isInterruptable());
+   } while (!m_doneFlag&&validQueue);
    
    {            
       std::lock_guard<std::mutex> lock(m_threadMutex);

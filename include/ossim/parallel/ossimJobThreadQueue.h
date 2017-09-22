@@ -144,6 +144,7 @@ public:
    */
    bool hasJobsToProcess()const;
    
+
 protected:
    /**
    * Internal method.  If setJobQueue is set on this thread
@@ -156,10 +157,10 @@ protected:
    */
    virtual std::shared_ptr<ossimJob> nextJob();
    
-   bool                           m_doneFlag;
-   mutable std::mutex             m_threadMutex;
-   std::shared_ptr<ossimJobQueue> m_jobQueue;
-   std::shared_ptr<ossimJob>      m_currentJob;
+   bool                                    m_doneFlag;
+   mutable std::mutex                      m_threadMutex;
+   std::shared_ptr<ossimJobQueue>          m_jobQueue;
+   std::shared_ptr<ossimJob>               m_currentJob;
    
 };
 
