@@ -192,14 +192,24 @@ public:
    *
    * @param blockIfEmptyFlag If true it will block the calling thread until more jobs appear
    *        on the queue.  If false, it will return without blocking
+   * @param waitTimeInMillis Optional wait time for block.  If not specified
+   *        it will block forever if the blockIfEmptyFlag is set true.  If this
+   *        value is >= 0 then it will wait for the specified time in 
+   *        milliseconds for a job to show up on the queue.
    * @return a shared pointer to a job
    */
-   virtual std::shared_ptr<ossimJob> nextJob(bool blockIfEmptyFlag=true);
+   virtual std::shared_ptr<ossimJob> nextJob(bool blockIfEmptyFlag=true,
+                                             ossim_int64 waitTimeInMillis=-1);
 
    /**
    * will release the block and have any blocked threads continue
    */
    virtual void releaseBlock();
+
+   /**
+   * will release one blocked thread
+   */
+   virtual void releaseOneBlock();
 
    /**
    * @return true if the queue is empty false otherwise

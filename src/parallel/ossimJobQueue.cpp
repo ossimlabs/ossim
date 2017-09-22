@@ -158,14 +158,22 @@ void ossimJobQueue::clear()
    }
 }
 
-std::shared_ptr<ossimJob> ossimJobQueue::nextJob(bool blockIfEmptyFlag)
+std::shared_ptr<ossimJob> ossimJobQueue::nextJob(bool blockIfEmptyFlag,
+                                                 ossim_int64 waitTimeInMillis)
 {
    m_jobQueueMutex.lock();
    bool emptyFlag = m_jobQueue.empty();
    m_jobQueueMutex.unlock();
    if (blockIfEmptyFlag && emptyFlag)
    {
-      m_block.block();
+      if(waitTimeInMillis < 0 )
+      {
+         m_block.block();
+      }
+      else
+      {
+         m_block.block(waitTimeInMillis);
+      }
    }
    
    std::shared_ptr<ossimJob> result;
@@ -197,6 +205,12 @@ void ossimJobQueue::releaseBlock()
 {
    m_block.release();
 }
+
+void ossimJobQueue::releaseOneBlock()
+{
+   m_block.releaseOne();
+}
+
 bool ossimJobQueue::isEmpty()const
 {
    // std::lock_guard<std::mutex> lock(m_jobQueueMutex);
