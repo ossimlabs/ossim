@@ -1,6 +1,7 @@
 #ifndef ossimThread_HEADER
 #define ossimThread_HEADER 1
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/Barrier.h>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -128,6 +129,10 @@ namespace ossim{
       */
       virtual void waitForCompletion();
 
+      void pause();
+      void resume();
+      bool isPaused()const;
+
       /**
       * Utility method to allow one to sleep in seconds
       *
@@ -189,11 +194,12 @@ namespace ossim{
       virtual void runInternal();
 
    private:
-      std::shared_ptr<std::thread>  m_thread;
-      std::atomic<bool>             m_running;
-      std::atomic<bool>             m_interrupt;
-      std::condition_variable       m_runningCondition;
-      mutable std::mutex            m_runningMutex;
+      std::shared_ptr<std::thread>    m_thread;
+      std::atomic<bool>               m_running;
+      std::atomic<bool>               m_interrupt;
+      std::shared_ptr<ossim::Barrier> m_pauseBarrier;
+      std::condition_variable         m_runningCondition;
+      mutable std::mutex              m_runningMutex;
 
       /**
       * @see cancel and @see setCancel
