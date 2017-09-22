@@ -20,4 +20,7 @@
 /* Enable cvs id strings for use with "ident" application. */
 #define OSSIM_ID_ENABLED @OSSIM_ID_ENABLED@
 
+/* Enable cvs id strings for use with "ident" application. */
+#define OSSIM_HAS_JSONCPP @OSSIM_HAS_JSONCPP@
+
 #endif /* End of "#ifndef ossimConfig_HEADER" */

@@ -414,8 +414,11 @@ bool ossimShorelineTool::execute()
    potrace->initialize(potrace_kwl);
 
    status =  potrace->execute();
+
+#if OSSIM_HAS_JSONCPP
    if (status)
       status =  addPropsToJSON();
+#endif
 
    if (status)
       ossimNotify(ossimNotifyLevel_INFO)<<"Wrote vector product to <"<<m_productFilename<<">"<<endl;
@@ -560,6 +563,7 @@ void ossimShorelineTool::autoComputeThreshold()
    cout<<"ossimShorelineUtil::autoComputeThreshold(): Using threshold = "<<m_threshold<<endl;
 }
 
+#if OSSIM_HAS_JSONCPP
 bool ossimShorelineTool::addPropsToJSON()
 {
    // Read existing JSON file as output by potrace:
@@ -626,6 +630,6 @@ bool ossimShorelineTool::addPropsToJSON()
 
    return true;
 }
-
+#endif
 
 

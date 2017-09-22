@@ -8,6 +8,7 @@
 #ifndef ossimShorelineUtil_HEADER
 #define ossimShorelineUtil_HEADER
 
+#include <ossim/ossimConfig.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimProcessInterface.h>
 #include <ossim/base/ossimFilename.h>
@@ -66,9 +67,12 @@ protected:
    /** @brief Initializes arg parser and outputs usage. */
    void usage(ossimArgumentParser& ap);
    void addArguments(ossimArgumentParser& ap);
-   bool addPropsToJSON();
    void doThreshold();
    void autoComputeThreshold();
+
+#if OSSIM_HAS_JSONCPP
+   bool addPropsToJSON();
+#endif
 
    ossim_uint8 m_waterValue;
    ossim_uint8 m_marginalValue;
