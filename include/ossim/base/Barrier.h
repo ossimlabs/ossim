@@ -105,12 +105,13 @@ namespace ossim{
       */
       void reset(ossim_int32 maxCount);
 
-
+      ossim_int32 getMaxCount()const;
+      ossim_int32 getBlockedCount()const;
    protected:
       ossim_int32              m_maxCount;
       ossim_int32              m_blockedCount;
       std::atomic<ossim_int32> m_waitCount;
-      std::mutex               m_mutex;
+      mutable std::mutex       m_mutex;
       std::condition_variable  m_conditionalBlock;
 
       /**

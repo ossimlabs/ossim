@@ -56,3 +56,16 @@ void ossim::Barrier::reset(ossim_int32 maxCount)
    }
 }
 
+ossim_int32 ossim::Barrier::getMaxCount()const
+{ 
+   std::lock_guard<std::mutex> lock(m_mutex);
+   return m_maxCount; 
+}
+
+ossim_int32 ossim::Barrier::getBlockedCount()const
+{
+   std::lock_guard<std::mutex> lock(m_mutex);
+   return m_blockedCount; 
+}
+
+
