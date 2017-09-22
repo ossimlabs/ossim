@@ -36,7 +36,7 @@ void ossim::Barrier::reset()
    std::unique_lock<std::mutex> lock(m_mutex);
    // force the condition on any waiting threads
    m_blockedCount = m_maxCount;
-   if(m_waitCount.load() >= 1){
+   if(m_waitCount.load() > 0){
       m_conditionalBlock.notify_all(); 
       // wait until the wait count goes back to zero
       m_conditionalWait.wait(lock, [this]{return m_waitCount.load()<1;});
