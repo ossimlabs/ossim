@@ -470,11 +470,11 @@ bool ossimHlzTool::computeHLZ()
       {
          for (chip_origin.x = min_x; chip_origin.x <= max_x; chip_origin.x += dem_step)
          {
-            ossimHlzTool::PatchProcessorJob* job = 0;
+            std::shared_ptr<ossimHlzTool::PatchProcessorJob> job = 0;
             if (m_useLsFitMethod)
-               job = new ossimHlzTool::LsFitPatchProcessorJob(this, chip_origin, chipId++);
+               job = std::make_shared<ossimHlzTool::LsFitPatchProcessorJob>(this, chip_origin, chipId++);
             else
-               job = new ossimHlzTool::NormPatchProcessorJob(this, chip_origin, chipId++);
+               job = std:make_shared<ossimHlzTool::NormPatchProcessorJob>(this, chip_origin, chipId++);
             job->start();
          }
          setPercentComplete(100*chipId/numPatches);
