@@ -10,6 +10,7 @@ ossimJobMultiThreadQueue::ossimJobMultiThreadQueue(std::shared_ptr<ossimJobQueue
 ossimJobMultiThreadQueue::~ossimJobMultiThreadQueue()
 {
    cancel();
+   waitForCompletion();
 }
 
 std::shared_ptr<ossimJobQueue> ossimJobMultiThreadQueue::getJobQueue()
