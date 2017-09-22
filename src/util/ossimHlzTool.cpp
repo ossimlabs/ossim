@@ -420,7 +420,6 @@ bool ossimHlzTool::execute()
 
 bool ossimHlzTool::computeHLZ()
 {
-
    // To help with multithreading, just load entire AOI of DEM into memory:
    m_demBuffer = m_combinedElevSource->getTile(m_aoiViewRect);
    if (!m_demBuffer.valid())
@@ -451,7 +450,6 @@ bool ossimHlzTool::computeHLZ()
    ossim_int32 max_y = m_aoiViewRect.lr().y - m_demFilterSize.y;
    ossimIpt chip_origin;
    ossim_uint32 numPatches = (max_x-min_x)*(max_y-min_y);
-
    // Determine the DEM step size as a fraction of the LZ radius:
    const double CHIP_STEP_FACTOR = 0.25; // chip position increment as fraction of chip width
    ossim_int32 dem_step =
@@ -470,11 +468,11 @@ bool ossimHlzTool::computeHLZ()
       {
          for (chip_origin.x = min_x; chip_origin.x <= max_x; chip_origin.x += dem_step)
          {
-            ossimHlzTool::PatchProcessorJob* job = 0;
+            std::shared_ptr<ossimHlzTool::PatchProcessorJob> job = 0;
             if (m_useLsFitMethod)
-               job = new ossimHlzTool::LsFitPatchProcessorJob(this, chip_origin, chipId++);
+               job = std::make_shared<ossimHlzTool::LsFitPatchProcessorJob>(this, chip_origin, chipId++);
             else
-               job = new ossimHlzTool::NormPatchProcessorJob(this, chip_origin, chipId++);
+               job = std::make_shared<ossimHlzTool::NormPatchProcessorJob>(this, chip_origin, chipId++);
             job->start();
          }
          setPercentComplete(100*chipId/numPatches);
@@ -484,7 +482,6 @@ bool ossimHlzTool::computeHLZ()
    {
       if (m_numThreads == 0)
          m_numThreads = ossim::getNumberOfThreads();
-
       // Loop over input DEM, creating a thread job for each filter window:
       std::shared_ptr<ossimJobMultiThreadQueue> jobMtQueue =
             std::make_shared<ossimJobMultiThreadQueue>(nullptr, m_numThreads);
@@ -519,6 +516,7 @@ bool ossimHlzTool::computeHLZ()
          setPercentComplete(100*(numPatches-qsize)/numPatches);
          ossim::Thread::sleepInMicroSeconds(10000);
       }
+
       jobMtQueue = 0;
    }
 
