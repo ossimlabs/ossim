@@ -135,6 +135,13 @@ public:
    */
    void waitForCompletion();
 
+   /**
+   * allows one to start the threads by calling start.  The threads are auto started
+   * if you set a new job queue.  You can also call this if you cancel the threads
+   * that are operating on a queue and want to start them again 
+   */
+   virtual void start();
+
 protected:
    mutable std::mutex             m_mutex;
    std::shared_ptr<ossimJobQueue> m_jobQueue;

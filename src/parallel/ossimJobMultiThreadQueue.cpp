@@ -24,6 +24,7 @@ const std::shared_ptr<ossimJobQueue> ossimJobMultiThreadQueue::getJobQueue()cons
    std::lock_guard<std::mutex> lock(m_mutex);
    return m_jobQueue;
 }
+
 void ossimJobMultiThreadQueue::setJobQueue(std::shared_ptr<ossimJobQueue> q)
 {
    std::lock_guard<std::mutex> lock(m_mutex);
@@ -34,6 +35,7 @@ void ossimJobMultiThreadQueue::setJobQueue(std::shared_ptr<ossimJobQueue> q)
       m_threadQueueList[idx]->setJobQueue(m_jobQueue);
    }
 }
+
 void ossimJobMultiThreadQueue::setNumberOfThreads(ossim_uint32 nThreads)
 {
    std::lock_guard<std::mutex> lock(m_mutex);
@@ -121,6 +123,14 @@ void ossimJobMultiThreadQueue::waitForCompletion()
    for(auto thread:m_threadQueueList)
    {
       thread->waitForCompletion();
+   }
+}
+
+void ossimJobMultiThreadQueue::start()
+{
+   for(auto thread:m_threadQueueList)
+   {
+      thread->start();
    }
 }
 
