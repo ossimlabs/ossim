@@ -79,9 +79,14 @@ namespace ossim{
       void block(ossim_uint64 waitTimeMillis);
 
       /**
-      * Releases the threads and will not return until all threads are released
+      * Releases all threads
       */
       void release();
+
+      /**
+      * Releases one thread
+      */
+      void releaseOne();
 
       /**
       * Simple reset the values.  Will not do any releasing

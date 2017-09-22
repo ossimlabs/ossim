@@ -63,6 +63,7 @@ void ossim::Block::block(ossim_uint64 waitTimeMillis)
    m_conditionVariable.notify_all();   
    m_conditionalWait.notify_all();
 }
+
 void ossim::Block::release()
 {
    {   
@@ -72,6 +73,18 @@ void ossim::Block::release()
          m_release = true;
       }
       m_conditionVariable.notify_all();
+   }
+}
+
+void ossim::Block::releaseOne()
+{
+   {   
+      std::unique_lock<std::mutex> lock(m_mutex);
+      if(!m_release)
+      {
+         m_release = true;
+      }
+      m_conditionVariable.notify_one();
    }
 }
 
