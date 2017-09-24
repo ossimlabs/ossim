@@ -120,7 +120,7 @@ namespace ossim{
       * @param flag if true will enable the thread to be interruptable and if false
       *        the thread is not interruptable.
       */
-      virtual void setCancel(bool flag){setInterruptable(flag);}
+      virtual void setCancel(bool flag);
 
       /**
       * Convenience to allow one to wait for this thread to finish it's work.
