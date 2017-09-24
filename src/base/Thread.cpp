@@ -34,6 +34,18 @@ void ossim::Thread::start()
    m_thread = std::make_shared<std::thread>(&Thread::runInternal, this);
 }
 
+void ossim::Thread::setCancel(bool flag)
+{
+   setInterruptable(flag);
+   if(flag)
+   {
+      // if it was paused we will resume.  Calling resume 
+      // will reset the barrier so we can cancel the process
+      //
+      resume();
+   }
+}
+
 void ossim::Thread::waitForCompletion()
 {
    if(m_thread)
@@ -57,7 +69,6 @@ bool ossim::Thread::isPaused()const
 {
    return (m_pauseBarrier->getBlockedCount()>0);
 }
-
 
 void ossim::Thread::sleepInSeconds(ossim_uint64 seconds)
 {
@@ -96,7 +107,6 @@ void ossim::Thread::interrupt()
       throw ossim::Thread::Interrupt();
    }
    m_pauseBarrier->block();
-
 }
 
 void ossim::Thread::setInterruptable(bool flag)
