@@ -20,7 +20,8 @@
 
 #include <memory>
 #include <vector>
-
+#include <mutex>
+#include <atomic>
 namespace ossim
 {
   /**
@@ -171,6 +172,12 @@ namespace ossim
       virtual bool exists(const std::string& connectionString,
                           bool& continueFlag) const;
    
+      /**
+      * This will load the buffer information from the 
+      * preferences.
+      */
+      void loadPreferences();
+
    protected:
       StreamFactoryRegistry();
       
@@ -197,12 +204,6 @@ namespace ossim
       StreamFactoryRegistry(const StreamFactoryRegistry&);
 
       /**
-      * This will load the buffer information from the 
-      * preferences.
-      */
-      void loadPreferences();
-
-      /**
       * @param bufferInfo Holds the result of the first buffer info 
       *        matching the connection string
       * @param connecitonString The connection string
@@ -214,6 +215,7 @@ namespace ossim
       std::vector<BufferInfo>  m_bufferInfoList;
       static StreamFactoryRegistry*   m_instance;
       mutable ossimRegExp m_patternMatcher;
+      mutable std::mutex m_mutex;
    };
    
 } // End: namespace ossim
