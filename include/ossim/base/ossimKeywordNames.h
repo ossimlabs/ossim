@@ -83,6 +83,7 @@ public:
    static const char* GEOM_FILE_KW;
    static const char* HEMISPHERE_KW;
    static const char* HORIZONTAL_SIZE_KW;
+   static const char* HAS_LUT_KW;
    static const char* ID_KW;
    static const char* IMAGE_CE90_KW;
    static const char* IMAGE_FILE_KW;
