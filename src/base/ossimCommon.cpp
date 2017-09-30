@@ -958,7 +958,6 @@ bool ossim::extractSimpleValues(std::vector<ossimString>& values,
    {
       c = (char)in.get();
       while((c!=')')&&
-            (c!= '\n')&&
             (in.good()))
       {
          if(c!= ',')
@@ -970,6 +969,7 @@ bool ossim::extractSimpleValues(std::vector<ossimString>& values,
             values.push_back(value);
             value = "";
          }
+         ossim::skipws(in);
          c = in.get();
       }
    }
