@@ -527,7 +527,7 @@ void ossimInit::initializeDefaultFactories()
 {
    ossim::StreamFactoryRegistry::instance();
    ossim::ImageHandlerStateRegistry::instance()->registerFactory(ossim::ImageHandlerStateFactory::instance());
-//   ossimObjectFactoryRegistry::instance()->registerFactory(ossimImageSourceFactoryRegistry::instance());
+   ossimObjectFactoryRegistry::instance()->registerFactory(ossimImageSourceFactoryRegistry::instance());
 
    //---
    // Because of how the imagehandlers work off a magic number make sure
