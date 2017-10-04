@@ -78,7 +78,7 @@ template<class T> class ossimRefPtr
     * Used in boolean expression. Example: "if (obj)" is same as "if (obj.valid())". This is
     * the same syntax as c++11 shared_ptr.
     */
-   inline operator bool() const { return m_ptr!=0L; }
+   explicit operator bool() const { return m_ptr == 0 ? false : true; }
 
    inline T* get() { return m_ptr; }
    
