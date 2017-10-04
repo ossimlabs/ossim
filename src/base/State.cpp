@@ -9,5 +9,5 @@ void ossim::State::load(const ossimKeywordlist& kwl,
 void ossim::State::save(ossimKeywordlist& kwl,
                         const ossimString& prefix)const
 {
-   kwl.add("type", getTypeName(), true);
+   kwl.add(prefix, "type", getTypeName(), true);
 }
