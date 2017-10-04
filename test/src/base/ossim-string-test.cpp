@@ -258,6 +258,14 @@ void testString()
    {
       std::cout<<"test of const char* == ossimString FAILED\n";
    }
+
+   ossimString s0;
+   ossimString s1 = "foo";
+   if (s0)
+      cout<<"bool operator (s) FAILED"<<endl;
+   if (!s1)
+      cout<<"bool operator (!s) FAILED"<<endl;
+
 }
 
 void testRegularExpression()

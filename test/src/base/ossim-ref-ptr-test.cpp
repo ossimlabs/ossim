@@ -52,6 +52,7 @@ static ossimRefPtr<Obj> getRefPtr()
 int main( /* int argc, char* argv[] */ )
 {
    ossimInit::instance()->initialize();
+   int rtn_status = 0;
 
    Foo* f = new Foo;
 
@@ -85,6 +86,32 @@ int main( /* int argc, char* argv[] */ )
       cout << "getRefPtr rp count(1): " << rp->referenceCount() << endl;
    }
    
-   
-   return 0;
+   // Test boolean operations:
+   ossimRefPtr<Obj> p0;
+   ossimRefPtr<Obj> p1 = new Obj;
+   ossimRefPtr<Obj> p1c = p1;
+   ossimRefPtr<Obj> p2 = new Obj;
+
+   if (p0)
+   {
+      cout<<"bool operator (p) FAILED"<<endl;
+      rtn_status++;
+   }
+   if (!p1)
+   {
+      cout<<"bool operator (!p) FAILED"<<endl;
+      rtn_status++;
+   }
+   if (p1 == p2)
+   {
+      cout<<"bool operator (p1 == p2) FAILED"<<endl;
+      rtn_status++;
+   }
+   if (p1 != p1c)
+   {
+      cout<<"bool operator (p1 != p2) FAILED"<<endl;
+      rtn_status++;
+   }
+
+   return rtn_status;
 }
