@@ -3,12 +3,6 @@ FILE(GLOB OSSIM_CONFIG_DIR "ossim-config*")
 LIST(REMOVE_ITEM OSSIM_APP_DIRS ${OSSIM_CONFIG_DIR})
 
 # FIND_PACKAGE(ossim)
-# FIND_PACKAGE( OpenThreads )
-# if( OPENTHREADS_FOUND )
-#    include_directories( ${OPENTHREADS_INCLUDE_DIR} )
-# else( OPENTHREADS_FOUND )
-#    message( FATAL_ERROR "Could not find required OpenThreads package!" )
-# endif( OPENTHREADS_FOUND )
 
 # if( OSSIM_FOUND )
 #    include_directories( ${OSSIM_INCLUDE_DIR} )

@@ -231,7 +231,7 @@ CONFIGURE_FILE("${OSSIM_VERSION_HEADER_CONFIG}"
 ##################################################################################################
 subdirs(src)
 
-set(TARGET_COMMON_LIBRARIES ossim ${OPENTHREADS_LIBRARY})
+set(TARGET_COMMON_LIBRARIES ossim)
 
 ##################################################################################################
 #
