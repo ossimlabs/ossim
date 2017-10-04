@@ -12,7 +12,7 @@
 namespace ossim
 { 
   /**
-  * This is the bae for all state objects.  We stated a new state
+  * This is the base for all state objects.  We stated a new state
   * object for our first step will be using this interface to cache 
   * the state of ImageHandlers.  It is very expensive to keep opening
   * a resource and then parsing all the meta information that descibes
