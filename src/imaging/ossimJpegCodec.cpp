@@ -1,13 +1,12 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Description: class declaration for base codec(encoder/decoder).
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
+
 #include <ossim/imaging/ossimJpegCodec.h>
 
 // we need to get rid of the jpedlib include in this header
@@ -21,8 +20,6 @@
 #include <ossim/imaging/ossimU8ImageData.h>
 #include <csetjmp>     /** for jmp_buf */
 #include <jpeglib.h>   /** for jpeg stuff */
-
-RTTI_DEF1(ossimJpegCodec, "ossimJpegCodec", ossimCodecBase);
 
 /** @brief Extended error handler struct. */
 struct ossimJpegErrorMgr
@@ -46,7 +43,8 @@ void ossimJpegErrorExit (jpeg_common_struct* cinfo)
 }
 
 ossimJpegCodec::ossimJpegCodec()
-:m_quality(100)
+   :m_quality(100),
+    m_ext("jpg")
 {
 }
 
@@ -56,7 +54,12 @@ ossimJpegCodec::~ossimJpegCodec()
 
 ossimString ossimJpegCodec::getCodecType()const
 {
-	return ossimString("jpeg");
+   return ossimString("jpeg");
+}
+
+const std::string& ossimJpegCodec::getExtension() const
+{
+   return m_ext; // "jpg"
 }
 
 bool ossimJpegCodec::encode( const ossimRefPtr<ossimImageData>& in,
@@ -491,13 +494,13 @@ void ossimJpegCodec::setProperty(ossimRefPtr<ossimProperty> property)
 ossimRefPtr<ossimProperty> ossimJpegCodec::getProperty(const ossimString& name)const
 {
    ossimRefPtr<ossimProperty> result;
-
+   
    if(name == ossimKeywordNames::QUALITY_KW)
    {
       result = new ossimNumericProperty(ossimKeywordNames::QUALITY_KW,
-                           ossimString::toString(m_quality),
-                           0,
-                           100);
+                                        ossimString::toString(m_quality),
+                                        0,
+                                        100);
    }
    else
    {
@@ -505,6 +508,7 @@ ossimRefPtr<ossimProperty> ossimJpegCodec::getProperty(const ossimString& name)c
    }
    return result;
 }
+
 void ossimJpegCodec::getPropertyNames(std::vector<ossimString>& propertyNames)const
 {
    ossimCodecBase::getPropertyNames(propertyNames);
@@ -513,20 +517,19 @@ void ossimJpegCodec::getPropertyNames(std::vector<ossimString>& propertyNames)co
 
 bool ossimJpegCodec::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
-	const char* quality = kwl.find(prefix, ossimKeywordNames::QUALITY_KW);
-
-	if(quality)
-	{
-		m_quality = ossimString(quality).toUInt32();
-	}
-
-	return ossimCodecBase::loadState(kwl, prefix);
+   const char* quality = kwl.find(prefix, ossimKeywordNames::QUALITY_KW);
+   
+   if(quality)
+   {
+      m_quality = ossimString(quality).toUInt32();
+   }
+   
+   return ossimCodecBase::loadState(kwl, prefix);
 }
 
 bool ossimJpegCodec::saveState(ossimKeywordlist& kwl, const char* prefix)const
 {
-	kwl.add(prefix, ossimKeywordNames::QUALITY_KW, m_quality);
-
-	return ossimCodecBase::saveState(kwl, prefix);
+   kwl.add(prefix, ossimKeywordNames::QUALITY_KW, m_quality);
+   
+   return ossimCodecBase::saveState(kwl, prefix);
 }
-

@@ -70,7 +70,7 @@ if( JSONCPP_FOUND )
    include_directories( ${JSONCPP_INCLUDE_DIR} )
    set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
 else( JSONCPP_FOUND )
-   message( FATAL_ERROR "Could not find JSONCPP package! Consider installing this as it will soon become a required package." )
+   message("Could not find JSONCPP package! Consider installing this as it will soon become a required package." )
 endif( JSONCPP_FOUND )
 
 # GEOFIFF - Required:
@@ -231,7 +231,7 @@ CONFIGURE_FILE("${OSSIM_VERSION_HEADER_CONFIG}"
 ##################################################################################################
 subdirs(src)
 
-set(TARGET_COMMON_LIBRARIES ossim ${OPENTHREADS_LIBRARY})
+set(TARGET_COMMON_LIBRARIES ossim)
 
 ##################################################################################################
 #
