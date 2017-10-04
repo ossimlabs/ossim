@@ -842,7 +842,6 @@ bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
 
       // Try to open:
       theOverview = ossimImageHandlerRegistry::instance()->openOverview( overview_file );
-
       if (theOverview.valid())
       {
          result = true;
@@ -872,7 +871,7 @@ bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
             theOverview->setMaxPixelValue(band, getMaxPixelValue(band));
             theOverview->setNullPixelValue(band, getNullPixelValue(band));
          }
-
+         if(m_state) m_state->setOverviewState(theOverview->getState());
          if (traceDebug())
          {
             ossimNotify(ossimNotifyLevel_DEBUG)
@@ -1097,6 +1096,21 @@ bool ossimImageHandler::open(const ossimFilename& imageFile,
 
    return result;
 }
+
+bool ossimImageHandler::open(std::shared_ptr<ossim::ImageHandlerState> state)
+{
+   bool result = false;
+   if(isOpen())
+   {
+      close();
+   }
+   setFilename(state->getConnectionString());
+   setState(state);
+   result = open();
+
+   return result;
+}
+
 
 bool ossimImageHandler::isValidRLevel(ossim_uint32 resLevel) const
 {
@@ -1361,8 +1375,9 @@ ossim_uint32 ossimImageHandler::getCurrentEntry()const
    return 0;
 }
 
-bool ossimImageHandler::setCurrentEntry(ossim_uint32 /* entryIdx */)
+bool ossimImageHandler::setCurrentEntry(ossim_uint32  entryIdx )
 {
+   if(m_state) m_state->setCurrentEntry(ossimString::toString(entryIdx));
    return true;
 }
 
