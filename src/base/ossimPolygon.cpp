@@ -434,6 +434,19 @@ bool ossimPolygon::isRectWithin(const ossimIrect &rect) const
     }
     return false;
 }
+
+bool ossimPolygon::rectIntersects(const ossimIrect &rect) const
+{
+   if (  isPointWithin(rect.ul()) ||
+         isPointWithin(rect.ur()) ||
+         isPointWithin(rect.ll()) ||
+         isPointWithin(rect.lr()))
+   {
+      return true;
+   }
+   return false;
+}
+
 /**
 * METHOD: isPolyWithin()
 * Returns true if all the vertices of the given polygon fit within.

@@ -140,6 +140,12 @@ public:
    bool isRectWithin(const ossimIrect &rect) const;
 
    /**
+   * METHOD: rectIntersects()
+   * Returns true if at least one corner points of the given rect is within.
+   */
+   bool rectIntersects(const ossimIrect &rect) const;
+
+   /**
    * METHOD: isPolyWithin()
    * Returns true if all the vertices of the given polygon fit within.
    */
