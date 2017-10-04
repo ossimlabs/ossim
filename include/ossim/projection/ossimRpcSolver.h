@@ -191,6 +191,8 @@ protected:
                double y,
                double z)const;
 
+   void evalPoint(const double& x, const double& y, const double& z, ossimDpt& ipt) const;
+
    /**
     * Inverts using the SVD method
     */
@@ -216,8 +218,9 @@ protected:
    ossimDpt      theImageScale;
    ossim_float64 theLatScale;
    ossim_float64 theLonScale;
-   ossim_float64 theHeightScale;
+   ossim_float64 theHgtScale;
    ossim_float64 theError;
+
    /**
     * there are 20 coefficients in the cubic RPC model
     */ 

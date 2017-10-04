@@ -27,24 +27,25 @@
 #include <ossim/support_data/ossimNitfRpcBTag.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/base/ossim2dTo2dIdentityTransform.h>
-ossimRpcSolver::ossimRpcSolver(bool useElevation,
-                               bool useHeightAboveMSLFlag)
+
+ossimRpcSolver::ossimRpcSolver(bool useElevation, bool useHeightAboveMSLFlag)
+:  theUseElevationFlag(useElevation),
+   theHeightAboveMSLFlag(useHeightAboveMSLFlag),
+   theLatScale(0),
+   theLonScale(0),
+   theHgtScale(0),
+   theError(0)
 {
-   theUseElevationFlag   = useElevation;
-   theHeightAboveMSLFlag = useHeightAboveMSLFlag;
    theXNumCoeffs.resize(20);
    theXDenCoeffs.resize(20);
    theYNumCoeffs.resize(20);
    theYDenCoeffs.resize(20);
 
-   std::fill(theXNumCoeffs.begin(),
-             theXNumCoeffs.end(), 0.0);
-   std::fill(theXDenCoeffs.begin(),
-             theXDenCoeffs.end(), 0.0);
-   std::fill(theYNumCoeffs.begin(),
-             theYNumCoeffs.end(), 0.0);
-   std::fill(theYDenCoeffs.begin(),
-             theYDenCoeffs.end(), 0.0);
+   std::fill(theXNumCoeffs.begin(), theXNumCoeffs.end(), 0.0);
+   std::fill(theXDenCoeffs.begin(), theXDenCoeffs.end(), 0.0);
+   std::fill(theYNumCoeffs.begin(), theYNumCoeffs.end(), 0.0);
+   std::fill(theYDenCoeffs.begin(), theYDenCoeffs.end(), 0.0);
+
    theXNumCoeffs[0] = 1.0;
    theXDenCoeffs[0] = 1.0;
    theYNumCoeffs[0] = 1.0;
@@ -75,14 +76,15 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
    ossim_float64 h = imageBounds.height();
    ossimGpt gpt;
    ossimGpt defaultGround;
-   if(ySamples < 1) ySamples = 12;
-   if(xSamples < 1) xSamples = 12;
+   if (ySamples < 1)
+      ySamples = 12;
+   if (xSamples < 1)
+      xSamples = 12;
    srand(time(0));
    double xnorm;
    double ynorm;
    ossimDpt ul = imageBounds.ul();
-   ossimDpt shiftTo0(-ul.x,
-                     -ul.y);
+   ossimDpt shiftTo0(-ul.x, -ul.y);
    for(y = 0; y < ySamples; ++y)
    {
       for(x = 0; x < xSamples; ++x)
@@ -172,9 +174,7 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    //
    ossimDrect rect(imagePoints);
 
-   // get the widtha dn height that will be used
-   // in data normalization
-   //
+   // get the width and height that will be used in data normalization
    ossim_float64 w = rect.width();
    ossim_float64 h = rect.height();
 
@@ -256,22 +256,26 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
       y[c] = deltaLat;
       z[c] = deltaHeight;
 
-      if(fabs(deltaLat) > maxDeltaLat) maxDeltaLat          = fabs(deltaLat);
-      if(fabs(deltaLon) > maxDeltaLon) maxDeltaLon          = fabs(deltaLon);
-      if(fabs(heightTest) > maxDeltaHeight) maxDeltaHeight  = fabs(heightTest);
+      if(fabs(deltaLat) > maxDeltaLat)
+         maxDeltaLat = fabs(deltaLat);
+      if(fabs(deltaLon) > maxDeltaLon)
+         maxDeltaLon = fabs(deltaLon);
+      if(fabs(heightTest) > maxDeltaHeight)
+         maxDeltaHeight = fabs(heightTest);
    }
-   bool elevationEnabled = theUseElevationFlag;
-   // always normalize, except if too small
-   //
-   // if max delta is less than a degree set it to 1 degree.
-   //
-   if(maxDeltaLat < 1.0)    maxDeltaLat = 1.0;
-   // if max delta is less than 1 degree then set it to 1.0 degree
-   if(maxDeltaLon < 1.0)    maxDeltaLon = 1.0;
 
-   if(fabs(maxDeltaHeight) < FLT_EPSILON) elevationEnabled = false;
-   // if max delta is less than a meter then set it to a meter.
-   if(maxDeltaHeight < 1.0) maxDeltaHeight = 1.0;
+   bool elevationEnabled = theUseElevationFlag;
+
+   // if max delta is less than a degree set it to 1 degree.
+   if(maxDeltaLat < 1.0)
+      maxDeltaLat = 1.0;
+   if(maxDeltaLon < 1.0)
+      maxDeltaLon = 1.0;
+
+   if(maxDeltaHeight < FLT_EPSILON)
+      elevationEnabled = false;
+   if(maxDeltaHeight < 1.0)
+      maxDeltaHeight = 1.0;
 
    // set the height scale to something pretty large
    if(!elevationEnabled)
@@ -289,43 +293,26 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
 
    theLatScale    = maxDeltaLat;
    theLonScale    = maxDeltaLon;
-   theHeightScale = maxDeltaHeight;
-
+   theHgtScale = maxDeltaHeight;
    theImageOffset = centerImagePoint;
-   theImageScale  = ossimDpt(w/2.0,
-                             h/2.0);
+   theImageScale  = ossimDpt(w/2.0, h/2.0);
    theGroundOffset = centerGround;
 
    if(ossim::isnan(theGroundOffset.height()))
-   {
       theGroundOffset.height(0.0);
-   }
 
-   // now lets solve the coefficients
-   //
    std::vector<double> coeffx;
    std::vector<double> coeffy;
-
    NEWMAT::ColumnVector coeffxVec;
    NEWMAT::ColumnVector coeffyVec;
+
    // perform a least squares fit for sample values found in f
    // given the world values with variables x, y, z
-   //
-   solveCoefficients(coeffxVec,
-                     f[0],
-                     x,
-                     y,
-                     z);
+   solveCoefficients(coeffxVec, f[0], x, y, z);
 
-   
    // perform a least squares fit for line values found in f
    // given the world values with variables x, y, z
-   //
-   solveCoefficients(coeffyVec,
-                     f[1],
-                     x,
-                     y,
-                     z);
+   solveCoefficients(coeffyVec, f[1], x, y, z);
 
    coeffx.resize(coeffxVec.Nrows());
    coeffy.resize(coeffyVec.Nrows());
@@ -335,30 +322,20 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
       coeffx[c] = coeffxVec[c];
       coeffy[c] = coeffyVec[c];
    }
+
    // there are 20 numerator coefficients
    // and 19 denominator coefficients
    // I believe that the very first one for the
    // denominator coefficients is fixed at 1.0
-   //
-   std::copy(coeffx.begin(),
-             coeffx.begin()+20,
-             theXNumCoeffs.begin());
-   std::copy(coeffx.begin()+20,
-             coeffx.begin()+39,
-             theXDenCoeffs.begin()+1);
-   std::copy(coeffy.begin(),
-             coeffy.begin()+20,
-             theYNumCoeffs.begin());
-   std::copy(coeffy.begin()+20,
-             coeffy.begin()+39,
-             theYDenCoeffs.begin()+1);
+   std::copy(coeffx.begin(),    coeffx.begin()+20, theXNumCoeffs.begin()  );
+   std::copy(coeffx.begin()+20, coeffx.begin()+39, theXDenCoeffs.begin()+1);
+   std::copy(coeffy.begin(),    coeffy.begin()+20, theYNumCoeffs.begin()  );
+   std::copy(coeffy.begin()+20, coeffy.begin()+39, theYDenCoeffs.begin()+1);
    theXDenCoeffs[0] = 1.0;
    theYDenCoeffs[0] = 1.0;
 
-
    // now lets compute the RMSE for the given control points by feeding it
    // back through the modeled RPC
-   //
    ossim_float64  sumSquareError = 0.0;
    ossim_uint32 idx = 0;
 
@@ -366,32 +343,21 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
 //              << "Height scale         = " << theHeightScale << std::endl;
    for (idx = 0; idx<imagePoints.size(); idx++)
    {
-      ossim_float64 x = (groundControlPoints[idx].lond() - theGroundOffset.lond())/theLonScale;
-      ossim_float64 y = (groundControlPoints[idx].latd() - theGroundOffset.latd())/theLatScale;
-      ossim_float64 z = (groundControlPoints[idx].height() - theGroundOffset.height())/theHeightScale;
+      ossim_float64 x = (groundControlPoints[idx].lon - theGroundOffset.lon)/theLonScale;
+      ossim_float64 y = (groundControlPoints[idx].lat - theGroundOffset.lat)/theLatScale;
+      ossim_float64 z = (groundControlPoints[idx].hgt - theGroundOffset.hgt)/theHgtScale;
       
       if(ossim::isnan(z))
-      {
          z = 0.0;
-      }
-      else
-      {
-         z = (z - theGroundOffset.height()/theHeightScale);
-      }
-       ossim_float64 imageX = ((eval(theXNumCoeffs, x, y, z)/
-                                eval(theXDenCoeffs, x, y, z))*theImageScale.x) + theImageOffset.x;
-      
-       ossim_float64 imageY = ((eval(theYNumCoeffs, x, y, z)/
-                                eval(theYDenCoeffs, x, y, z))*theImageScale.y) + theImageOffset.y;
-      
-      ossimDpt evalPt(imageX, imageY);
+
+      ossimDpt evalPt;
+      evalPoint(x, y, z, evalPt);
       ossim_float64 len = (evalPt - imagePoints[idx]).length();
       
       sumSquareError += (len*len);
    }
 
    // set the error
-   //
    theError = sqrt(sumSquareError/imagePoints.size());
 }
 
@@ -408,7 +374,7 @@ ossimImageGeometry* ossimRpcSolver::createRpcModel()const
                         theGroundOffset.height(),
                         theLatScale,
                         theLonScale,
-                        theHeightScale,
+                        theHgtScale,
                         theXNumCoeffs,
                         theXDenCoeffs,
                         theYNumCoeffs,
@@ -429,7 +395,7 @@ ossimImageGeometry* ossimRpcSolver::createRpcProjection()const
                        theGroundOffset.height(),
                        theLatScale,
                        theLonScale,
-                       theHeightScale,
+                       theHgtScale,
                        theXNumCoeffs,
                        theXDenCoeffs,
                        theYNumCoeffs,
@@ -504,7 +470,7 @@ double ossimRpcSolver::getLonScale()const
 
 double ossimRpcSolver::getHeightScale()const
 {
-   return theHeightScale;
+   return theHgtScale;
 }
 
 double ossimRpcSolver::getRmsError()const
@@ -573,11 +539,7 @@ void ossimRpcSolver::solveCoefficients(NEWMAT::ColumnVector& coeff,
 
       // sets up the matrix to hold the system of
       // equations
-      setupSystemOfEquations(m,
-                             r,
-                             x,
-                             y,
-                             z);
+      setupSystemOfEquations(m, r, x, y, z);
 
       // solve the least squares solution.  Note: the invert is used
       // to do a Singular Value Decomposition for the inverse since the
@@ -593,26 +555,18 @@ void ossimRpcSolver::solveCoefficients(NEWMAT::ColumnVector& coeff,
       }
       denominator[0] = 1.0;
       
-      setupWeightMatrix(weights,
-                        denominator,
-                        r,
-                        x,
-                        y,
-                        z);
+      setupWeightMatrix(weights, denominator, r, x, y, z);
 
       // compute the residual
-      //
       NEWMAT::ColumnVector residual = m.t()*w2*(m*tempCoeff-r);
 
       // now get the innerproduct
-      //
       NEWMAT::Matrix tempRes = (residual.t()*residual);
-      residualValue = tempRes[0][0];
+      residualValue = sqrt(tempRes[0][0]);
 
       ++iterations;
       
-   }while((residualValue >FLT_EPSILON)&&
-          (iterations < 10));
+   } while ((residualValue > FLT_EPSILON) && (iterations < 10));
    coeff = tempCoeff;
 
 }
@@ -761,6 +715,16 @@ double ossimRpcSolver::eval(const std::vector<double>& coeff,
           coeff[ 8]*y*y   + coeff[ 9]*z*z   + coeff[10]*x*y*z + coeff[11]*x*x*x +
           coeff[12]*x*y*y + coeff[13]*x*z*z + coeff[14]*x*x*y + coeff[15]*y*y*y +
           coeff[16]*y*z*z + coeff[17]*x*x*z + coeff[18]*y*y*z + coeff[19]*z*z*z;
+}
+
+void
+ossimRpcSolver::evalPoint(const double& x, const double& y, const double& z, ossimDpt& ipt) const
+{
+   ipt.x = ( (eval(theXNumCoeffs,x,y,z) / eval(theXDenCoeffs,x,y,z) )
+             * theImageScale.x ) + theImageOffset.x;
+
+   ipt.y = ( (eval(theYNumCoeffs,x,y,z) / eval(theYDenCoeffs,x,y,z) )
+             * theImageScale.y ) + theImageOffset.y;
 }
 
 
