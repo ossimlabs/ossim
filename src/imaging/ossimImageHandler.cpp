@@ -286,52 +286,29 @@ bool ossimImageHandler::initVertices(const char* file)
 
    // Clean out any old vertices...
    theValidImageVertices.clear();
-
-   ossim_uint32 number_of_points = kwl.numberOf("point", "x");
-
-   for (ossim_uint32 i=0; i<number_of_points; ++i)
+   std::vector<ossimString> indexedPrefixes;
+   kwl.getSortedList(indexedPrefixes, "point");
+   ossim_uint32 number_of_points = indexedPrefixes.size();
+   for (ossim_uint32 i=0; i<number_of_points; i++)
    {
       ossimIpt pt;
       const char* lookup;
-      ossimString p = "point";
-      p += ossimString::toString(i);
-      
-      ossimString px = p + ".x";
-      lookup = kwl.find(px.c_str());
+      lookup = kwl.find(indexedPrefixes[i], ".x");
       if (lookup)
       {
          pt.x = atoi(lookup);
+         lookup = kwl.find(indexedPrefixes[i], ".y");
+         if (lookup)
+            pt.y = atoi(lookup);
       }
-      else
+
+      if (!lookup)
       {
          if (traceDebug())
-         {
-            CLOG << " ERROR:"
-                 << "\nlookup failed for:  " << px.c_str()
-                 << "\nReturning..."
-                 << std::endl;
-         }
+            CLOG << " ERROR: lookup failed for: " << indexedPrefixes[i] << std::endl;
          return false;
       }
          
-      ossimString py = p + ".y";
-      lookup = kwl.find(py.c_str());
-      if (lookup)
-      {
-         pt.y = atoi(lookup);
-      }
-      else
-      {
-         if (traceDebug())
-         {
-            CLOG << " ERROR:"
-                 << "\nLookup failed for:  " << py.c_str()
-                 << "\nReturning..."
-                 << std::endl;
-         }
-         return false;
-      }
-
       theValidImageVertices.push_back(pt);
    }
 
