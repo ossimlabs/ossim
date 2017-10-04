@@ -18,32 +18,26 @@ namespace ossim
       virtual ~ImageHandlerState();
       virtual const ossimString& getTypeName()const override;
       static const ossimString& getStaticTypeName();
-
       virtual void load(const ossimKeywordlist& kwl,
                         const ossimString& prefix="") override;
       virtual void save(ossimKeywordlist& kwl,
                         const ossimString& prefix="")const override;
+      std::shared_ptr<ImageHandlerState> getOverviewState(){return m_overviewState;}
+      std::shared_ptr<const ImageHandlerState> getOverviewState()const{return m_overviewState;}
+      void setOverviewState(std::shared_ptr<ImageHandlerState> overviewState){m_overviewState=overviewState;}
+      void setConnectionString(const ossimString& connectionString){m_connectionString = connectionString;}
+      const ossimString& getConnectionString()const{return m_connectionString;}
+      void setImageHandlerType(const ossimString& typeName){m_imageHandlerType = typeName;}
+      const ossimString& getImageHandlerType()const{return m_imageHandlerType;}
+      void setCurrentEntry(const ossimString& entry){m_currentEntry = entry;}
+      const ossimString& getCurrentEntry()const{return m_currentEntry;}
+
     private:
       static const ossimString m_typeName;
-
-    protected:
-      ossimString   m_connectionString;
-      ossimString   m_overviewFile;
-      ossimFilename m_supplementaryDirectory;
-      std::shared_ptr<ossim::ImageHandlerState> m_overviewState;
-      std::vector<ossimIpt> m_validImageVertices;
-      // ossimImageMetaData m_metaData;
-      // ossimRefPtr<ossimImageGeometry> m_geometry;
-      // ossimRefPtr<ossimNBandLutDataObject> m_lut;
-      // std::vector<ossimDpt> m_decimationFactors;
-      ossimString m_imageID;
-      ossim_uint32 m_startingResLevel; // 0 being full or highest res.
-      bool m_openOverviewFlag;
-
-      /**
-      * pixel-is-point or pixel-is-area
-      */
-      ossimPixelType m_pixelType; 
+      std::shared_ptr<ImageHandlerState> m_overviewState;
+      ossimString                        m_connectionString;
+      ossimString                        m_imageHandlerType;
+      ossimString                        m_currentEntry;
    };
 };
 
