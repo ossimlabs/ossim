@@ -69,6 +69,10 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
                                        ossim_uint32 ySamples,
                                        bool shiftTo0Flag)
 {
+   if (!geom)
+      return;
+   theRefGeom = geom;
+
    std::vector<ossimGpt> theGroundPoints;
    std::vector<ossimDpt> theImagePoints;
    ossim_uint32 x,y;
@@ -361,7 +365,115 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    theError = sqrt(sumSquareError/imagePoints.size());
 }
 
-ossimImageGeometry* ossimRpcSolver::createRpcModel()const
+void ossimRpcSolver::solveCoefficients(ossimImageGeometry* geom, const double& tolerance)
+{
+   static const ossim_uint32 MAX_GRID_SIZE = 64;
+
+   if (!geom)
+      return;
+   theRefGeom = geom;
+   ossimDrect imageBounds;
+   geom->getBoundingRect(imageBounds);
+   ossim_float64 w = imageBounds.width();
+   ossim_float64 h = imageBounds.height();
+   ossimDpt gsd (geom->getMetersPerPixel());
+   double dxRms = 0;
+   double dyRms = 0;
+   ossimDpt ipt, irpc;
+   ossimGpt gpt;
+
+   // Start at the minimum grid size:
+   ossim_uint32 xSamples = 4;
+   ossim_uint32 ySamples = 4;
+
+   // Loop until error is below threshold:
+   bool converged = false;
+   while (converged)
+   {
+      double residual = 0;
+      double sumResiduals = 0;
+      int numResiduals = 0;
+      double maxResidual = 0;
+
+      converged = true; // hope for the best and get proved otherwise below
+      solveCoefficients(imageBounds, geom, xSamples, ySamples);
+
+      // Sample along x and y directions to accumulate errors:
+      double deltaX = w/(xSamples-1);
+      double deltaY = h/(ySamples-1);
+
+      // Sample the X-direction midpoints:
+      for (ossim_uint32 y=0; y<ySamples; ++y)
+      {
+         ipt.y = y*deltaY;
+         for (ossim_uint32 x=0; x<xSamples-1; ++x)
+         {
+            // Forward projection using input model, Sample halfway between grid points in X-dir:
+            ipt.x = deltaX*((double)x + 0.5);
+            geom->localToWorld(ipt, gpt);
+
+            // Reverse projection using RPC:
+            evalPoint(gpt.lon,  gpt.lat, gpt.hgt, irpc);
+
+            // Compute residual and accumulate:
+            residual = (ipt-irpc).length();
+            if (residual > maxResidual)
+               maxResidual = residual;
+            sumResiduals += residual;
+            ++numResiduals;
+         }
+      }
+
+      // if midpoint errors still too big, bump up the grid size in the X direction;
+      if (maxResidual > tolerance)
+      {
+         converged = false;
+         xSamples *= 2;
+      }
+
+      // Proceed with Y direction test:
+      maxResidual = 0;
+      for (ossim_uint32 y=0; y<ySamples-1; ++y)
+      {
+         // Sample halfway between grid points in Y-dir:
+         ipt.y = deltaY*((double)y + 0.5);
+
+         for (ossim_uint32 x=0; x<xSamples; ++x)
+         {
+            // Forward projection using input model:
+            ipt.x = x*deltaX;
+            geom->localToWorld(ipt, gpt);
+
+            // Reverse projection using RPC:
+            evalPoint(gpt.lon,  gpt.lat, gpt.hgt, irpc);
+
+            // Compute residual and accumulate:
+            residual = (ipt-irpc).length();
+            if (residual > maxResidual)
+               maxResidual = residual;
+            sumResiduals += residual;
+            ++numResiduals;
+         }
+      }
+      if (maxResidual > tolerance)
+      {
+         converged = false;
+         ySamples *= 2;
+      }
+
+      // Check if exceeded max grid size in both directions, otherwise, cap max in specific dir:
+      if ((xSamples > MAX_GRID_SIZE) && (ySamples > MAX_GRID_SIZE))
+         break;
+      if (xSamples > MAX_GRID_SIZE)
+         xSamples = MAX_GRID_SIZE;
+      else if (ySamples > MAX_GRID_SIZE)
+         ySamples = MAX_GRID_SIZE;
+
+      theError = sumResiduals/numResiduals;
+   }
+}
+
+ossimRpcModel* ossimRpcSolver::createRpcModel()const
 {
    ossimRpcModel* model = new ossimRpcModel;
    
@@ -379,10 +491,18 @@ ossimImageGeometry* ossimRpcSolver::createRpcModel()const
                         theXDenCoeffs,
                         theYNumCoeffs,
                         theYDenCoeffs);
-   return new ossimImageGeometry(new ossim2dTo2dIdentityTransform, model);
+
+   // If the reference geometry is available, assign additional members:
+   if (theRefGeom)
+   {
+      ossimDrect rect;
+      theRefGeom->getBoundingRect(rect);
+      model->setImageRect(rect);
+   }
+   return model;
 }
 
-ossimImageGeometry* ossimRpcSolver::createRpcProjection()const
+ossimRpcProjection* ossimRpcSolver::createRpcProjection()const
 {
    ossimRpcProjection* proj = new ossimRpcProjection;
    
@@ -400,7 +520,7 @@ ossimImageGeometry* ossimRpcSolver::createRpcProjection()const
                        theXDenCoeffs,
                        theYNumCoeffs,
                        theYDenCoeffs);
-   return new ossimImageGeometry(new ossim2dTo2dIdentityTransform, proj);
+   return proj;
 }
 
 const std::vector<double>& ossimRpcSolver::getImageXNumCoefficients()const
@@ -491,11 +611,7 @@ void ossimRpcSolver::solveInitialCoefficients(NEWMAT::ColumnVector& coeff,
    {
       r[idx] = f[idx];
    }
-   setupSystemOfEquations(m,
-                          r,
-                          x,
-                          y,
-                          z);
+   setupSystemOfEquations(m, r, x, y, z);
    
    coeff = invert(m.t()*m)*m.t()*r;
 }

@@ -1029,7 +1029,6 @@ ossimRpcProjection::getForwardDeriv(int parmIdx, const ossimGpt& gpos, double hd
 double
 ossimRpcProjection::optimizeFit(const ossimTieGptSet& tieSet, double* /* targetVariance */)
 {
-#if 1
    //NOTE : ignore targetVariance
    ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(false, false); //TBD : choices should be part of setupFromString
 
@@ -1038,7 +1037,7 @@ ossimRpcProjection::optimizeFit(const ossimTieGptSet& tieSet, double* /* targetV
    tieSet.getSlaveMasterPoints(imagePoints, groundPoints);
    solver->solveCoefficients(imagePoints, groundPoints);
 
-   ossimRefPtr< ossimImageGeometry > optProj = solver->createRpcProjection();
+   ossimRefPtr< ossimProjection > optProj = solver->createRpcProjection();
    if (!optProj)
    {
       ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimRpcProjection::optimizeFit(): error when optimizing the RPC with given tie points"
@@ -1046,141 +1045,11 @@ ossimRpcProjection::optimizeFit(const ossimTieGptSet& tieSet, double* /* targetV
       return -1.0;
    }
 
-   if(optProj->hasProjection())
-   {
       ossimKeywordlist kwl;
-      optProj->getProjection()->saveState(kwl);
+      optProj->saveState(kwl);
       this->loadState(kwl);
-   }
 
    return std::pow(solver->getRmsError(), 2); //variance in pixel^2
-#else
-   // COPIED from ossimRpcProjection
-   //
-   //
-   //use a simple Levenberg-Marquardt non-linear optimization
-   //note : please limit the number of tie points
-   //
-   //INPUTS: requires Jacobian matrix (partial derivatives with regards to parameters)
-   //OUTPUTS: will also compute parameter covariance matrix
-   //
-   //TBD: use targetVariance!
- 
-   int np = getNumberOfAdjustableParameters();
-   int nobs = tieSet.size();
-
-   //setup initail values
-   int iter=0;
-   int iter_max = 200;
-   double minResidue = 1e-10; //TBC
-   double minDelta = 1e-10; //TBC
-
-   //build Least Squares initial normal equation
-   // don't waste memory, add samples one at a time
-   NEWMAT::SymmetricMatrix A;
-   NEWMAT::ColumnVector residue;
-   NEWMAT::ColumnVector projResidue;
-   double deltap_scale = 1e-4; //step_Scale is 1.0 because we expect parameters to be between -1 and 1
-   buildNormalEquation(tieSet, A, residue, projResidue, deltap_scale);
-   double ki2=residue.SumSquare();
-
-   //get current adjustment (between -1 and 1 normally) and convert to ColumnVector
-   ossimAdjustmentInfo cadj;
-   getAdjustment(cadj);
-   std::vector< ossimAdjustableParameterInfo >& parmlist = cadj.getParameterList();
-   NEWMAT::ColumnVector cparm(np), nparm(np);
-   for(int n=0;n<np;++n)
-   {
-      cparm(n+1) = parmlist[n].getParameter();
-   }
-
-   double damping_speed = 2.0;
-   //find max diag element for A
-   double maxdiag=0.0;
-   for(int d=1;d<=np;++d) {
-      if (maxdiag < A(d,d)) maxdiag=A(d,d);
-   }
-   double damping = 1e-3 * maxdiag;
-   double olddamping = 0.0;
-   bool found = false;
-
-//DEBUG TBR
-cout<<"rms="<<sqrt(ki2/nobs)<<" ";
-cout.flush();
-
-   while ( (!found) && (iter < iter_max) ) //non linear optimization loop
-   {
-      bool decrease = false;
-
-      do
-      {
-         //add damping update to normal matrix
-         for(int d=1;d<=np;++d) A(d,d) += damping - olddamping;
-         olddamping = damping;
-
-         NEWMAT::ColumnVector deltap = solveLeastSquares(A, projResidue);
-
-         if (deltap.NormFrobenius() <= minDelta) 
-         {
-            found = true;
-         } else {
-            //update adjustment
-            nparm = cparm + deltap;
-            for(int n=0;n<np;++n)
-            {
-               setAdjustableParameter(n, nparm(n+1), false); //do not update now, wait
-            }
-            adjustableParametersChanged();
-
-            //check residue is reduced
-            NEWMAT::ColumnVector newresidue = getResidue(tieSet);
-            double newki2=newresidue.SumSquare();
-            double res_reduction = (ki2 - newki2) / (deltap.t()*(deltap*damping + projResidue)).AsScalar();
- //DEBUG TBR
-       cout<<sqrt(newki2/nobs)<<" ";
-       cout.flush();
-
-            if (res_reduction > 0)
-            {
-               //accept new parms
-               cparm = nparm;
-               ki2=newki2;
-
-               deltap_scale = max(1e-15, deltap.NormInfinity()*1e-4);
-
-               buildNormalEquation(tieSet, A, residue, projResidue, deltap_scale);
-               olddamping = 0.0;
-
-               found = ( projResidue.NormInfinity() <= minResidue );
-               //update damping factor
-               damping *= std::max( 1.0/3.0, 1.0-std::pow((2.0*res_reduction-1.0),3));
-               damping_speed = 2.0;
-               decrease = true;
-            } else {
-               //cancel parameter update
-               for(int n=0;n<np;++n)
-               {
-                  setAdjustableParameter(n, nparm(n+1), false); //do not update right now
-               }
-               adjustableParametersChanged();
-
-               damping *= damping_speed;
-               damping_speed *= 2.0;
-            }
-         }
-      } while (!decrease && !found);
-      ++iter;
-   }
-
-//DEBUG TBR
-cout<<endl;
-
-   //compute parameter correlation
-   // use normal matrix inverse
-   //TBD
-
-   return ki2/nobs;
-#endif
 }
 
 void

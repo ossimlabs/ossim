@@ -13,6 +13,7 @@
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimRpcSolver.h>
 #include <sstream>
+
 int main(int argc, char* argv[])
 {
    ossimString tempString1;
@@ -149,9 +150,11 @@ int main(int argc, char* argv[])
                                   rpcGridSize.x,
                                   rpcGridSize.y);
          
-         ossimRefPtr<ossimImageGeometry> outputProj = solver->createRpcProjection();
+         ossimRefPtr<ossimRpcModel> outputModel = solver->createRpcModel();
+         ossimRefPtr<ossimImageGeometry> outputGeom = new ossimImageGeometry(nullptr, outputModel.get());
+
          kwl.clear();
-         outputProj->saveState(kwl);
+         outputGeom->saveState(kwl);
          kwl.write(outputFile);
       }
       else if(cgFlag)
