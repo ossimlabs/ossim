@@ -40,31 +40,19 @@ ossimProjection*
 ossimTiffProjectionFactory::createProjection(const ossimFilename& filename,
                                               ossim_uint32 entryIdx)const
 {
-   if(!filename.exists())
-   {
-      return 0;
-   }
    std::shared_ptr<ossim::TiffHandlerState> state = std::make_shared<ossim::TiffHandlerState>();
    if(state->loadDefaults(filename))
    {
-      ossimRefPtr<ossimProjection> proj = state->createProjection(entryIdx);
-
-      return proj.release();
-   }
-
-#if 0
-   if(isTiff(filename))
-   {
-      ossimGeoTiff geotiff(filename, entryIdx);
+      ossimGeoTiff geotiff;
       ossimKeywordlist kwl;
-      
-      if(geotiff.addImageGeometry(kwl))
+      if(geotiff.readTags(state, entryIdx))
       {
-         return ossimProjectionFactoryRegistry::instance()->
-            createProjection(kwl);
+         if(geotiff.addImageGeometry(kwl))
+         {
+            return ossimProjectionFactoryRegistry::instance()->createProjection(kwl);
+         }
       }
    }
-#endif
    return 0;
 }
 
@@ -90,29 +78,28 @@ ossimProjection* ossimTiffProjectionFactory::createProjection(const ossimString&
 
 ossimProjection* ossimTiffProjectionFactory::createProjection(ossimImageHandler* handler)const
 {
-   std::cout << "ossimTiffProjectionFactory::createProjection(ossimImageHandler* handler): .......entered\n";
    ossimTiffTileSource* tiff = dynamic_cast<ossimTiffTileSource*> (handler);
    
    if(tiff)
    {
-      std::shared_ptr<ossim::TiffHandlerState> state = std::dynamic_pointer_cast<ossim::TiffHandlerState>(tiff->getState());
-
-      ossimRefPtr<ossimProjection> proj = state->createProjection(tiff->getCurrentEntry());
-
-      return proj.release();
-
-      // commenting old way out for now
-#if 0
       ossimGeoTiff geotiff;
       ossimKeywordlist kwl;
-      
-      geotiff.readTags(tiff->tiffPtr(), tiff->getCurrentEntry(), false);
-      
-      if(geotiff.addImageGeometry(kwl))
+      std::shared_ptr<ossim::TiffHandlerState> state = std::dynamic_pointer_cast<ossim::TiffHandlerState>(tiff->getState());
+      bool addGeometry = false;
+      if(state)
+      {
+         addGeometry = geotiff.readTags(state, 
+                                        tiff->getCurrentEntry());
+      }
+      else
+      {
+         addGeometry = geotiff.readTags(tiff->tiffPtr(), 
+                                        tiff->getCurrentEntry(), false);
+      }
+      if(addGeometry&&geotiff.addImageGeometry(kwl))
       {
          return ossimProjectionFactoryRegistry::instance()->createProjection(kwl);
       }
-#endif
    }
    
    return 0;
