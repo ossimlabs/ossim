@@ -492,18 +492,8 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
    // resolution.
    //***
    theImageDirectoryList.push_back(0);
-   ossim_uint32 sub_file_type;
 
-   if(!state->getValue(tempValue, theCurrentDirectory, "tifftag.sub_file_type"))
-   {
-      sub_file_type = 0;
-   }
-   else
-   {
-      sub_file_type = tempValue.toUInt32();
-   }
-
-   if (sub_file_type == FILETYPE_REDUCEDIMAGE)
+   if (state->isReduced(theCurrentDirectory))
    {
       theR0isFullRes = false;
    }
@@ -613,16 +603,8 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
       {
          theImageWidth[dir] = tempValue.toUInt32();
       }      
-      if(!state->getValue(tempValue, dir, "tifftag.sub_file_type"))
-      {
-         sub_file_type = 0;
-      }
-      else
-      {
-         sub_file_type = tempValue.toUInt32();
-      }
 
-      if (sub_file_type == FILETYPE_REDUCEDIMAGE)
+      if (state->isReduced(dir))
       {
          //---
          // Check for a thumbnail image.  If present don't use as it will mess with
@@ -680,7 +662,7 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
       theImageTileWidth[dir] = 0;
       theImageTileLength[dir] = 0;
 
-      if(state->checkBool(dir, "tiff_is_tiled"))
+      if(state->isTiled(dir))
       {
          if(state->getValue(tempValue, dir, "tifftag.tile_width"))
          {
@@ -2252,7 +2234,7 @@ void ossimTiffTileSource::setReadMethod()
          //---
          // Establish how this tiff directory will be read.
          //---
-         if (state->checkBool(dir, "tiff_is_tiled")) 
+         if (state->isTiled(dir)) 
          {
             if ( ( thePhotometric[dir] == PHOTOMETRIC_YCBCR ||
                    thePhotometric[dir] == PHOTOMETRIC_PALETTE ) &&
