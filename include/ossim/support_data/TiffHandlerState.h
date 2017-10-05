@@ -32,6 +32,7 @@ namespace ossim
     bool exists(const ossimString& key)const;
     bool checkBool(const ossimString& key)const;
     bool checkBool(ossim_uint32 directory, const ossimString& key)const;
+    bool loadDefaults(const ossimFilename& file);
     void loadDefaults(TIFF* tiffPtr);
 
     ossimRefPtr<ossimProjection> createProjection(ossim_int32 directory=0)const;

@@ -1,4 +1,4 @@
-#include <ossim/imaging/TiffStreamAdaptor.h>
+#include <ossim/support_data/TiffStreamAdaptor.h>
 
 
 tsize_t ossim::TiffIStreamAdaptor::tiffRead(thandle_t st,tdata_t buffer,tsize_t size)

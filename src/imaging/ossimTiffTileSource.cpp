@@ -37,7 +37,7 @@
 #include <geo_normalize.h>
 #include <cstdlib> /* for abs(int) */
 #include <ossim/base/ossimStreamFactoryRegistry.h>
-#include <ossim/imaging/TiffHandlerState.h>
+#include <ossim/support_data/TiffHandlerState.h>
 
 RTTI_DEF1(ossimTiffTileSource, "ossimTiffTileSource", ossimImageHandler)
 

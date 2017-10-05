@@ -1,4 +1,4 @@
-#include <ossim/imaging/TiffHandlerState.h>
+#include <ossim/support_data/TiffHandlerState.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/support_data/ossimGeoTiff.h>
 #include <ossim/base/ossimTieGptSet.h>
@@ -7,8 +7,11 @@
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimBilinearProjection.h>
 #include <ossim/projection/ossimEpsgProjectionFactory.h>
+#include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/base/ossimGeoTiffCoordTransformsLut.h>
 #include <ossim/base/ossimGeoTiffDatumLut.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+#include <ossim/support_data/TiffStreamAdaptor.h>
 #include <xtiffio.h>
 #include <geo_normalize.h>
 #include <geotiff.h>
@@ -98,6 +101,35 @@ bool ossim::TiffHandlerState::checkBool(const ossimString& key)const
   {
     result = ossimString(value).toBool();
   }
+  return result;
+}
+
+bool ossim::TiffHandlerState::loadDefaults(const ossimFilename& file)
+{
+  bool result = false;
+  std::shared_ptr<std::istream> tiffStream = ossim::StreamFactoryRegistry::instance()->createIstream(file);
+  if(tiffStream)
+  {
+     TIFF* tiffPtr = XTIFFClientOpen(file.c_str(), "rm", 
+                                  (thandle_t)tiffStream.get(),
+                                  ossim::TiffIStreamAdaptor::tiffRead, 
+                                  ossim::TiffIStreamAdaptor::tiffWrite, 
+                                  ossim::TiffIStreamAdaptor::tiffSeek, 
+                                  ossim::TiffIStreamAdaptor::tiffClose, 
+                                  ossim::TiffIStreamAdaptor::tiffSize,
+                                  ossim::TiffIStreamAdaptor::tiffMap, 
+                                  ossim::TiffIStreamAdaptor::tiffUnmap);
+
+     if(tiffPtr)
+     {
+       loadDefaults(tiffPtr);
+       result = true;
+       XTIFFClose(tiffPtr);
+       tiffPtr = 0;
+
+     }
+  }
+
   return result;
 }
 
@@ -412,142 +444,144 @@ ossimRefPtr<ossimProjection> ossim::TiffHandlerState::createProjection(ossim_int
   {
     ossimString epsg_spec ("EPSG:");
     epsg_spec += ossimString::toString(pcsCode);
-    result = ossimEpsgProjectionFactory::instance()->createProjection(epsg_spec);
+    ossimRefPtr<ossimProjection> tempProj = ossimEpsgProjectionFactory::instance()->createProjection(epsg_spec);
+    if(tempProj)
+    {
+      tempProj->saveState(kwl);      
+    }
   }
-  if(!result)
+  ossimString projName;
+  ossimString datumName;
+  if(getOssimProjectionName(projName, directory))
   {
-    ossimKeywordlist kwl;
-    ossimString projName;
-    ossimString datumName;
-    if(getOssimProjectionName(projName, directory))
+    kwl.add(ossimKeywordNames::TYPE_KW, projName);
+    if(getOssimDatumName(datumName, directory))
     {
-      kwl.add(ossimKeywordNames::TYPE_KW, projName);
-      if(getOssimDatumName(datumName, directory))
-      {
-        kwl.add(ossimKeywordNames::DATUM_KW, datumName);
-
-      }
-
+      kwl.add(ossimKeywordNames::DATUM_KW, datumName);
     }
-    ossim_int32 modelType    = getModelType(directory);
-    ossim_int32 angularUnits = getAngularUnits(directory);
+  }
+  ossim_int32 modelType    = getModelType(directory);
+  ossim_int32 angularUnits = getAngularUnits(directory);
 
-    ossim_float64 originLat = getOriginLat(directory);
-    ossim_float64 originLon = getOriginLon(directory);
+  ossim_float64 originLat = getOriginLat(directory);
+  ossim_float64 originLon = getOriginLon(directory);
 
-    if (modelType == ossimGeoTiff::MODEL_TYPE_GEOGRAPHIC)
+  if (modelType == ossimGeoTiff::MODEL_TYPE_GEOGRAPHIC)
+  {
+    if (angularUnits != ossimGeoTiff::ANGULAR_DEGREE)
     {
-      if (angularUnits != ossimGeoTiff::ANGULAR_DEGREE)
-      {
-         ossimNotify(ossimNotifyLevel_WARN)
-            << "WARNING ossim::TiffHandlerState::createProjection:"
-            << "\nNot coded yet for unit type:  "
-            << angularUnits << endl;
-         result = 0;
+       ossimNotify(ossimNotifyLevel_WARN)
+          << "WARNING ossim::TiffHandlerState::createProjection:"
+          << "\nNot coded yet for unit type:  "
+          << angularUnits << endl;
+       result = 0;
 
-         return result;
-      }        
+       return result;
+    }        
 
-      //---
-      // Tiepoint
-      // Have data with tie points -180.001389 so use ossimGpt::wrap() to handle:
-      //---
-      ossimGpt tieGpt(xTiePoint, yTiePoint, 0.0);
-      tieGpt.wrap();
-      ossimDpt tiepoint(tieGpt);
-      kwl.add(ossimKeywordNames::TIE_POINT_XY_KW, tiepoint.toString(), true);
-      kwl.add(ossimKeywordNames::TIE_POINT_UNITS_KW, "degrees", true);
-      ossim_uint64 h=getImageLength(directory);
-      ossim_uint64 w=getImageWidth(directory);
-      // scale or gsd
-      if (geoPixelScale.size() > 1)
-      {
-        ossimDpt scale (geoPixelScale[0], geoPixelScale[1]);
-        kwl.add(ossimKeywordNames::PIXEL_SCALE_XY_KW, scale.toString(), true);
-        kwl.add(ossimKeywordNames::PIXEL_SCALE_UNITS_KW, "degrees", true);
-        if(ossim::isnan(originLat))
-        {
-          double centerY = h/2.0;
-          originLat = tieGpt.lat - geoPixelScale[1]*centerY;
-
-        }
-        if (  ossim::isnan(originLon) )
-        {
-          originLon = 0.0;
-        }
-        if (!(ossim::isnan(originLat) || ossim::isnan(originLon)))
-        {
-           kwl.add(ossimKeywordNames::ORIGIN_LATITUDE_KW,  originLat, true);
-           kwl.add(ossimKeywordNames::CENTRAL_MERIDIAN_KW, originLon, true);
-        }
-      }
-    }
-    else // Projected
+    //---
+    // Tiepoint
+    // Have data with tie points -180.001389 so use ossimGpt::wrap() to handle:
+    //---
+    ossimGpt tieGpt(xTiePoint, yTiePoint, 0.0);
+    tieGpt.wrap();
+    ossimDpt tiepoint(tieGpt);
+    kwl.add(ossimKeywordNames::TIE_POINT_XY_KW, tiepoint.toString(), true);
+    kwl.add(ossimKeywordNames::TIE_POINT_UNITS_KW, "degrees", true);
+    ossim_uint64 h=getImageLength(directory);
+    ossim_uint64 w=getImageWidth(directory);
+    // scale or gsd
+    if (geoPixelScale.size() > 1)
     {
-      ossim_int32 linearUnits = getLinearUnits(directory);
-      if(linearUnits != ossimGeoTiff::UNDEFINED)
+      ossimDpt scale (geoPixelScale[0], geoPixelScale[1]);
+      kwl.add(ossimKeywordNames::PIXEL_SCALE_XY_KW, scale.toString(), true);
+      kwl.add(ossimKeywordNames::PIXEL_SCALE_UNITS_KW, "degrees", true);
+      if(ossim::isnan(originLat))
       {
-        linearUnits = tempStr.toInt32();
-        ossimDpt tiepoint (convert2meters(linearUnits, xTiePoint),
-                           convert2meters(linearUnits, yTiePoint));
-        kwl.add(ossimKeywordNames::TIE_POINT_XY_KW, tiepoint.toString(), true);
-        kwl.add(ossimKeywordNames::TIE_POINT_UNITS_KW, "meters", true);
+        double centerY = h/2.0;
+        originLat = tieGpt.lat - geoPixelScale[1]*centerY;
 
       }
-      else
+      if (  ossim::isnan(originLon) )
       {
-        result = 0;
-
-        return result;        
+        originLon = 0.0;
       }
-      if (geoPixelScale.size() > 1)
+      if (!(ossim::isnan(originLat) || ossim::isnan(originLon)))
       {
-         ossimDpt scale (convert2meters(linearUnits, geoPixelScale[0]), convert2meters(linearUnits, geoPixelScale[1]));
-         kwl.add(ossimKeywordNames::PIXEL_SCALE_XY_KW, scale.toString(), true);
-         kwl.add(ossimKeywordNames::PIXEL_SCALE_UNITS_KW, "meters", true);
-      }
-      // origin
-      if(!ossim::isnan(originLat))
-      {
-         kwl.add(ossimKeywordNames::ORIGIN_LATITUDE_KW, originLat);        
-      }
-      if(!ossim::isnan(originLon))
-      {
-        kwl.add(ossimKeywordNames::CENTRAL_MERIDIAN_KW, originLon);
-      }
-      kwl.add(ossimKeywordNames::STD_PARALLEL_1_KW, getStandardParallel1(directory));
-      kwl.add(ossimKeywordNames::STD_PARALLEL_2_KW, getStandardParallel2(directory));
-      
-      // false easting and northing.
-      kwl.add(ossimKeywordNames::FALSE_EASTING_KW, convert2meters(linearUnits, getFalseEasting(directory)));
-      kwl.add(ossimKeywordNames::FALSE_NORTHING_KW, convert2meters(linearUnits, getFalseNorthing(directory)));
-
-      ossimUtmpt utmPt(ossimGpt(originLat, originLon));
-      // Based on projection type, override/add the appropriate info.
-      if (projName == "ossimUtmProjection")
-      {
-         // Check the zone before adding...
-         kwl.add(ossimKeywordNames::ZONE_KW, ossimString::toString(utmPt.zone()), true);
-         kwl.add(ossimKeywordNames::HEMISPHERE_KW, utmPt.hemisphere(), true);
-
-         //---
-         // Must set the central meridian even though the zone should do it.
-         // (in decimal degrees)
-         //---
-         double centralMeridian = ( 6.0 * abs(utmPt.zone()) ) - 183.0;
-         kwl.add(ossimKeywordNames::CENTRAL_MERIDIAN_KW, centralMeridian, true);
-         kwl.add(ossimKeywordNames::ORIGIN_LATITUDE_KW, 0.0, true);
-
-      } // End of "if (UTM)"
-      else if (projName == "ossimTransMercatorProjection")
-      {
-        ossim_float64 scaleFactor = getScaleFactor(directory);
-        if(!ossim::isnan(scaleFactor))
-         kwl.add(ossimKeywordNames::SCALE_FACTOR_KW, scaleFactor, true); 
+         kwl.add(ossimKeywordNames::ORIGIN_LATITUDE_KW,  originLat, true);
+         kwl.add(ossimKeywordNames::CENTRAL_MERIDIAN_KW, originLon, true);
       }
     }
   }
+  else // Projected
+  {
+    ossim_int32 linearUnits = getLinearUnits(directory);
+    if(linearUnits != ossimGeoTiff::UNDEFINED)
+    {
+      linearUnits = tempStr.toInt32();
+      ossimDpt tiepoint (convert2meters(linearUnits, xTiePoint),
+                         convert2meters(linearUnits, yTiePoint));
+      kwl.add(ossimKeywordNames::TIE_POINT_XY_KW, tiepoint.toString(), true);
+      kwl.add(ossimKeywordNames::TIE_POINT_UNITS_KW, "meters", true);
 
+    }
+    else
+    {
+      result = 0;
+
+      return result;        
+    }
+    if (geoPixelScale.size() > 1)
+    {
+       ossimDpt scale (convert2meters(linearUnits, geoPixelScale[0]), convert2meters(linearUnits, geoPixelScale[1]));
+       kwl.add(ossimKeywordNames::PIXEL_SCALE_XY_KW, scale.toString(), true);
+       kwl.add(ossimKeywordNames::PIXEL_SCALE_UNITS_KW, "meters", true);
+    }
+    // origin
+    if(!ossim::isnan(originLat))
+    {
+       kwl.add(ossimKeywordNames::ORIGIN_LATITUDE_KW, originLat);        
+    }
+    if(!ossim::isnan(originLon))
+    {
+      kwl.add(ossimKeywordNames::CENTRAL_MERIDIAN_KW, originLon);
+    }
+    kwl.add(ossimKeywordNames::STD_PARALLEL_1_KW, getStandardParallel1(directory));
+    kwl.add(ossimKeywordNames::STD_PARALLEL_2_KW, getStandardParallel2(directory));
+    
+    // false easting and northing.
+    kwl.add(ossimKeywordNames::FALSE_EASTING_KW, convert2meters(linearUnits, getFalseEasting(directory)));
+    kwl.add(ossimKeywordNames::FALSE_NORTHING_KW, convert2meters(linearUnits, getFalseNorthing(directory)));
+
+    ossimUtmpt utmPt(ossimGpt(originLat, originLon));
+    // Based on projection type, override/add the appropriate info.
+    if (projName == "ossimUtmProjection")
+    {
+       // Check the zone before adding...
+       kwl.add(ossimKeywordNames::ZONE_KW, ossimString::toString(utmPt.zone()), true);
+       kwl.add(ossimKeywordNames::HEMISPHERE_KW, utmPt.hemisphere(), true);
+
+       //---
+       // Must set the central meridian even though the zone should do it.
+       // (in decimal degrees)
+       //---
+       double centralMeridian = ( 6.0 * abs(utmPt.zone()) ) - 183.0;
+       kwl.add(ossimKeywordNames::CENTRAL_MERIDIAN_KW, centralMeridian, true);
+       kwl.add(ossimKeywordNames::ORIGIN_LATITUDE_KW, 0.0, true);
+
+    } // End of "if (UTM)"
+    else if (projName == "ossimTransMercatorProjection")
+    {
+      ossim_float64 scaleFactor = getScaleFactor(directory);
+      if(!ossim::isnan(scaleFactor))
+       kwl.add(ossimKeywordNames::SCALE_FACTOR_KW, scaleFactor, true); 
+    }
+  }
+
+  if(kwl.getSize())
+  {
+    result = ossimProjectionFactoryRegistry::instance()->createProjection(kwl);
+  }
   return result;
 }
 

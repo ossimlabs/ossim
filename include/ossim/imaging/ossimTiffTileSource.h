@@ -22,7 +22,7 @@
 #include <ossim/base/ossimIrect.h>
 #include <vector>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
-#include <ossim/imaging/TiffStreamAdaptor.h>
+#include <ossim/support_data/TiffStreamAdaptor.h>
 /*
  * TIFF is defined as an incomplete type to hide the tiff library's internal
  * data structures from clients.

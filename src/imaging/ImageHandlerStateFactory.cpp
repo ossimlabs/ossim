@@ -1,7 +1,7 @@
 #include <ossim/imaging/ImageHandlerStateFactory.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimException.h>
-#include <ossim/imaging/TiffHandlerState.h>
+#include <ossim/support_data/TiffHandlerState.h>
 #include <mutex>
 
 

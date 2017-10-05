@@ -17,6 +17,7 @@
 #include <ossim/base/ossimFilename.h>
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/imaging/ossimTiffTileSource.h>
+#include <ossim/support_data/TiffHandlerState.h>
 #include <fstream>
 
 ossimTiffProjectionFactory* ossimTiffProjectionFactory::theInstance = 0;
@@ -43,7 +44,15 @@ ossimTiffProjectionFactory::createProjection(const ossimFilename& filename,
    {
       return 0;
    }
+   std::shared_ptr<ossim::TiffHandlerState> state = std::make_shared<ossim::TiffHandlerState>();
+   if(state->loadDefaults(filename))
+   {
+      ossimRefPtr<ossimProjection> proj = state->createProjection(entryIdx);
 
+      return proj.release();
+   }
+
+#if 0
    if(isTiff(filename))
    {
       ossimGeoTiff geotiff(filename, entryIdx);
@@ -55,7 +64,7 @@ ossimTiffProjectionFactory::createProjection(const ossimFilename& filename,
             createProjection(kwl);
       }
    }
-   
+#endif
    return 0;
 }
 
@@ -81,10 +90,19 @@ ossimProjection* ossimTiffProjectionFactory::createProjection(const ossimString&
 
 ossimProjection* ossimTiffProjectionFactory::createProjection(ossimImageHandler* handler)const
 {
+   std::cout << "ossimTiffProjectionFactory::createProjection(ossimImageHandler* handler): .......entered\n";
    ossimTiffTileSource* tiff = dynamic_cast<ossimTiffTileSource*> (handler);
    
    if(tiff)
    {
+      std::shared_ptr<ossim::TiffHandlerState> state = std::dynamic_pointer_cast<ossim::TiffHandlerState>(tiff->getState());
+
+      ossimRefPtr<ossimProjection> proj = state->createProjection(tiff->getCurrentEntry());
+
+      return proj.release();
+
+      // commenting old way out for now
+#if 0
       ossimGeoTiff geotiff;
       ossimKeywordlist kwl;
       
@@ -94,7 +112,7 @@ ossimProjection* ossimTiffProjectionFactory::createProjection(ossimImageHandler*
       {
          return ossimProjectionFactoryRegistry::instance()->createProjection(kwl);
       }
-      
+#endif
    }
    
    return 0;
