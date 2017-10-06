@@ -157,6 +157,10 @@ void ossim::TiffHandlerState::loadDefaults(TIFF* tiffPtr)
   ossim_int32   numberOfDirectories = TIFFNumberOfDirectories(tiffPtr);
 
   addValue("number_of_directories", ossimString::toString(numberOfDirectories));
+
+
+
+
   ossimString dirPrefix = "image"+ossimString::toString(TIFFCurrentDirectory(tiffPtr))+".";
 
   if(TIFFGetField(tiffPtr, TIFFTAG_COMPRESSION, &compressionType))
@@ -315,6 +319,11 @@ void ossim::TiffHandlerState::loadDefaults(TIFF* tiffPtr)
   TIFFSetDirectory(tiffPtr, currentDirectory);
 }
 
+void ossim::TiffHandlerState::loadCurrentDirectory(TIFF* tiffPtr)
+{
+
+}
+
 void ossim::TiffHandlerState::saveColorMap(const ossimString& dirPrefix,
                                             const ossim_uint16* red, 
                                             const ossim_uint16* green,
@@ -368,7 +377,8 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   double* doubleArray=0;
   ossimString doubleArrayStr;
 
-  if(!gtif){
+  if(!gtif)
+  {
     addValue(dirPrefix+"is_geotiff", "false");
     return;
   } 
@@ -379,8 +389,14 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   //
   std::shared_ptr<GTIFDefn> defs = std::make_shared<GTIFDefn>();
 
-  addValue(dirPrefix+"is_geotiff", "true");
-  GTIFGetDefn(gtif, defs.get());
+  if(GTIFGetDefn(gtif, defs.get()))
+  {
+    addValue(dirPrefix+"is_geotiff", "true");
+  }
+  else
+  {
+    addValue(dirPrefix+"is_geotiff", "false");
+  }
 
   addValue(dirPrefix+"tifftag.model_type", 
            ossimString::toString(defs->Model));

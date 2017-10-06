@@ -5,7 +5,7 @@
 //*****************************************************************************
 #ifndef ossimTiffHandlerState_HEADER
 #define ossimTiffHandlerState_HEADER 1
-#include <ossim/imaging/ImageHandlerState.h>
+#include <ossim/support_data/ImageHandlerState.h>
 #include <ossim/projection/ossimProjection.h>
 
 typedef struct tiff TIFF;  
@@ -33,6 +33,8 @@ namespace ossim
     bool checkBool(ossim_uint32 directory, const ossimString& key)const;
     bool loadDefaults(const ossimFilename& file);
     void loadDefaults(TIFF* tiffPtr);
+
+    void loadCurrentDirectory(TIFF* tiffPtr);
 
     bool isReduced(ossim_uint32 directory)const;
     bool isMask(ossim_uint32 directory)const;
