@@ -23,8 +23,8 @@
 #include <ossim/base/ossimNBandLutDataObject.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimFilterResampler.h>
-#include <ossim/imaging/ossimImageMetaData.h>
-#include <ossim/imaging/ImageHandlerState.h>
+#include <ossim/support_data/ossimImageMetaData.h>
+#include <ossim/support_data/ImageHandlerState.h>
 
 class ossimMultiResLevelHistogram;
 
