@@ -56,7 +56,7 @@ bool ossim::TiffHandlerState::getValue(ossimString& value,
                                         const ossimString& key)const
 {
   return getValue(value, 
-                  "image"+ossimString::toString(directory)+"."+key);
+                  "dir"+ossimString::toString(directory)+"."+key);
 }
 
 bool ossim::TiffHandlerState::getValue(ossimString& value,
@@ -76,7 +76,7 @@ bool ossim::TiffHandlerState::getValue(ossimString& value,
 
 bool ossim::TiffHandlerState::exists(ossim_uint32 directory, const ossimString& key)const
 {
-  return exists(ossimString("image")+
+  return exists("dir"+
                 ossimString::toString(directory)+
                 "."+key);
 
@@ -89,7 +89,7 @@ bool ossim::TiffHandlerState::exists(const ossimString& key)const
 
 bool ossim::TiffHandlerState::checkBool(ossim_uint32 directory, const ossimString& key)const
 {
-  return checkBool(ossimString("image")+ossimString::toString(directory)+"."+key);
+  return checkBool("dir"+ossimString::toString(directory)+"."+key);
 }
 
 bool ossim::TiffHandlerState::checkBool(const ossimString& key)const
@@ -135,6 +135,37 @@ bool ossim::TiffHandlerState::loadDefaults(const ossimFilename& file)
 
 void ossim::TiffHandlerState::loadDefaults(TIFF* tiffPtr)
 {
+  ossim_int64   currentDirectory = TIFFCurrentDirectory(tiffPtr);
+  TIFFSetDirectory(tiffPtr, 0);
+
+  ossim_int32   numberOfDirectories = TIFFNumberOfDirectories(tiffPtr);
+
+  addValue("number_of_directories", ossimString::toString(numberOfDirectories));
+
+  ossim_int32 idx=0;
+  for(;idx < numberOfDirectories;++idx)
+  {
+    if (!TIFFSetDirectory(tiffPtr, idx))
+    {
+       break;
+    }
+    loadCurrentDirectory(tiffPtr);
+  }
+  TIFFSetDirectory(tiffPtr, currentDirectory);
+}
+
+
+void ossim::TiffHandlerState::loadCurrentDirectory(TIFF* tiffPtr)
+{
+  if(tiffPtr) 
+  {
+    loadDirectory(tiffPtr, TIFFCurrentDirectory(tiffPtr));
+  }
+}
+
+void ossim::TiffHandlerState::loadDirectory(TIFF* tiffPtr, 
+                                            ossim_uint32 directory)
+{
   ossim_uint32  imageWidth=0;
   ossim_uint32  imageLength=0;
   ossim_int32   readMethod=0;
@@ -151,29 +182,22 @@ void ossim::TiffHandlerState::loadDefaults(TIFF* tiffPtr)
   ossim_uint16  sampleFormatUnit=0;
   ossim_float64 sampleValue=0;
   ossim_uint16  sampleUintValue = 0;
-  ossim_int64   currentDirectory = TIFFCurrentDirectory(tiffPtr);
-  TIFFSetDirectory(tiffPtr, 0);
 
   ossim_int32   numberOfDirectories = TIFFNumberOfDirectories(tiffPtr);
 
   addValue("number_of_directories", ossimString::toString(numberOfDirectories));
 
+  if(TIFFCurrentDirectory(tiffPtr) != directory)
+  {
+    TIFFSetDirectory(tiffPtr, directory);
+  }
 
-
-
-  ossimString dirPrefix = "image"+ossimString::toString(TIFFCurrentDirectory(tiffPtr))+".";
+  ossimString dirPrefix = "dir"+ossimString::toString(directory)+".";
 
   if(TIFFGetField(tiffPtr, TIFFTAG_COMPRESSION, &compressionType))
   {
     addValue(dirPrefix+"tifftag.compression", ossimString::toString(compressionType));
   } 
-
-  if (TIFFGetField(tiffPtr,
-                   TIFFTAG_SUBFILETYPE ,
-                   &subFileType ) )
-  {
-    addValue(dirPrefix+"tifftag.sub_file_type", ossimString::toString(subFileType));
-  }
 
   if( TIFFGetField(tiffPtr, TIFFTAG_BITSPERSAMPLE, &bitsPerSample) )
   {
@@ -226,103 +250,89 @@ void ossim::TiffHandlerState::loadDefaults(TIFF* tiffPtr)
     }
   }
 
-  ossim_int32 idx=0;
-  for(;idx < numberOfDirectories;++idx)
+    
+  // lines:
+  if ( TIFFGetField( tiffPtr,
+                      TIFFTAG_IMAGELENGTH,
+                      &imageLength ) )
   {
-    if (!TIFFSetDirectory(tiffPtr, idx))
-    {
-       break;
-    }
-    loadGeotiffTags(tiffPtr, dirPrefix);
-    ossimString dirPrefix = "image"+ossimString::toString(idx)+".";
+    addValue(dirPrefix+"tifftag.image_length", 
+             ossimString::toString(imageLength));
+  }
 
-      
-    // lines:
-    if ( TIFFGetField( tiffPtr,
-                        TIFFTAG_IMAGELENGTH,
-                        &imageLength ) )
-    {
-      addValue(dirPrefix+"tifftag.image_length", 
-               ossimString::toString(imageLength));
-    }
+  // samples:
+  if ( TIFFGetField( tiffPtr,
+                      TIFFTAG_IMAGEWIDTH,
+                      &imageWidth ) )
+  {
+    addValue(dirPrefix+"tifftag.image_width", 
+             ossimString::toString(imageWidth));
+  }
+  
+  if (TIFFGetField(tiffPtr,
+                   TIFFTAG_SUBFILETYPE ,
+                   &subFileType ) )
+  {
+    addValue(dirPrefix+"tifftag.sub_file_type", ossimString::toString(subFileType));
+  }
 
-    // samples:
-    if ( TIFFGetField( tiffPtr,
-                        TIFFTAG_IMAGEWIDTH,
-                        &imageWidth ) )
+  if( TIFFGetField( tiffPtr, TIFFTAG_PLANARCONFIG,
+                     &planarConfig ) )
+  {
+    addValue(dirPrefix+"tifftag.planar_config", 
+             ossimString::toString(planarConfig));
+  }
+  
+  if( TIFFGetField( tiffPtr, TIFFTAG_PHOTOMETRIC,
+                     &photometric ) )
+  {
+    addValue(dirPrefix+"tifftag.photometric", 
+             ossimString::toString(photometric));
+  }
+  // Check for palette.
+  ossim_uint16* red;
+  ossim_uint16* green;
+  ossim_uint16* blue;
+  if(TIFFGetField(tiffPtr, TIFFTAG_COLORMAP, &red, &green, &blue))
+  {
+    if(bitsPerSample)
     {
-      addValue(dirPrefix+"tifftag.image_width", 
-               ossimString::toString(imageWidth));
-    }
-    
-    if (TIFFGetField(tiffPtr,
-                     TIFFTAG_SUBFILETYPE ,
-                     &subFileType ) )
-    {
-      addValue(dirPrefix+"tifftag.sub_file_type", ossimString::toString(subFileType));
-    }
-
-    if( TIFFGetField( tiffPtr, TIFFTAG_PLANARCONFIG,
-                       &planarConfig ) )
-    {
-      addValue(dirPrefix+"tifftag.planar_config", 
-               ossimString::toString(planarConfig));
-    }
-    
-    if( TIFFGetField( tiffPtr, TIFFTAG_PHOTOMETRIC,
-                       &photometric ) )
-    {
-      addValue(dirPrefix+"tifftag.photometric", 
-               ossimString::toString(photometric));
-    }
-    // Check for palette.
-    ossim_uint16* red;
-    ossim_uint16* green;
-    ossim_uint16* blue;
-    if(TIFFGetField(tiffPtr, TIFFTAG_COLORMAP, &red, &green, &blue))
-    {
-      if(bitsPerSample)
-      {
-        saveColorMap(dirPrefix, red, green, blue, 1<<bitsPerSample);
-      }
-    }
-
-    if( TIFFIsTiled(tiffPtr))
-    {
-      addValue(dirPrefix+"is_tiled", "true");
-      if ( TIFFGetField( tiffPtr,
-                         TIFFTAG_TILEWIDTH,
-                         &imageTileWidth ) )
-      {
-        addValue(dirPrefix+"tifftag.tile_width", 
-                 ossimString::toString(imageTileWidth));
-      }
-      if ( TIFFGetField( tiffPtr,
-                         TIFFTAG_TILELENGTH,
-                         &imageTileLength ) )
-      {
-        addValue(dirPrefix+"tifftag.tile_length", 
-                 ossimString::toString(imageTileLength));
-      }
-    }
-    else
-    {
-      addValue(dirPrefix+"tiff_is_tiled", "false");
-      if( TIFFGetField( tiffPtr, TIFFTAG_ROWSPERSTRIP,
-                        &rowsPerStrip ) )
-      {
-        addValue(dirPrefix+"tifftag.rows_per_strip", 
-                 ossimString::toString(rowsPerStrip));
-      }
+      saveColorMap(dirPrefix, red, green, blue, 1<<bitsPerSample);
     }
   }
-  TIFFSetDirectory(tiffPtr, currentDirectory);
+
+  if( TIFFIsTiled(tiffPtr))
+  {
+    addValue(dirPrefix+"is_tiled", "true");
+    if ( TIFFGetField( tiffPtr,
+                       TIFFTAG_TILEWIDTH,
+                       &imageTileWidth ) )
+    {
+      addValue(dirPrefix+"tifftag.tile_width", 
+               ossimString::toString(imageTileWidth));
+    }
+    if ( TIFFGetField( tiffPtr,
+                       TIFFTAG_TILELENGTH,
+                       &imageTileLength ) )
+    {
+      addValue(dirPrefix+"tifftag.tile_length", 
+               ossimString::toString(imageTileLength));
+    }
+  }
+  else
+  {
+    addValue(dirPrefix+"tiff_is_tiled", "false");
+    if( TIFFGetField( tiffPtr, TIFFTAG_ROWSPERSTRIP,
+                      &rowsPerStrip ) )
+    {
+      addValue(dirPrefix+"tifftag.rows_per_strip", 
+               ossimString::toString(rowsPerStrip));
+    }
+  }
+
+  loadGeotiffTags(tiffPtr, dirPrefix);
 }
 
-void ossim::TiffHandlerState::loadCurrentDirectory(TIFF* tiffPtr)
-{
-
-}
 
 void ossim::TiffHandlerState::saveColorMap(const ossimString& dirPrefix,
                                             const ossim_uint16* red, 
@@ -376,14 +386,13 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   ossim_uint16 doubleArraySize = 0;
   double* doubleArray=0;
   ossimString doubleArrayStr;
-
+  bool loadedGeotiff = false;
   if(!gtif)
   {
     addValue(dirPrefix+"is_geotiff", "false");
     return;
   } 
 
-  // need to add tru for geotiff flag
 
   // now load tags
   //
@@ -391,34 +400,32 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
 
   if(GTIFGetDefn(gtif, defs.get()))
   {
-    addValue(dirPrefix+"is_geotiff", "true");
-  }
-  else
-  {
-    addValue(dirPrefix+"is_geotiff", "false");
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.model_type", 
+             ossimString::toString(defs->Model));
+    addValue(dirPrefix+"tifftag.gcs_code", 
+             ossimString::toString(defs->GCS));
+    addValue(dirPrefix+"tifftag.pcs_code", 
+             ossimString::toString(defs->PCS));
+    addValue(dirPrefix+"tifftag.datum_code", 
+             ossimString::toString(defs->Datum));
+    addValue(dirPrefix+"tifftag.angular_units", 
+             ossimString::toString(defs->UOMAngle));
+    addValue(dirPrefix+"tifftag.linear_units", 
+             ossimString::toString(defs->UOMLength));
   }
 
-  addValue(dirPrefix+"tifftag.model_type", 
-           ossimString::toString(defs->Model));
-  addValue(dirPrefix+"tifftag.gcs_code", 
-           ossimString::toString(defs->GCS));
-  addValue(dirPrefix+"tifftag.pcs_code", 
-           ossimString::toString(defs->PCS));
-  addValue(dirPrefix+"tifftag.datum_code", 
-           ossimString::toString(defs->Datum));
-  addValue(dirPrefix+"tifftag.angular_units", 
-           ossimString::toString(defs->UOMAngle));
-  addValue(dirPrefix+"tifftag.linear_units", 
-           ossimString::toString(defs->UOMLength));
   
   if(GTIFKeyGet(gtif, GTRasterTypeGeoKey, &rasterType, 0, 1))
   {
+    loadedGeotiff = true;
     addValue(dirPrefix+"tifftag.raster_type", 
              ossimString::toString(rasterType));
 
   }
   if (GTIFKeyGet(gtif, ProjectedCSTypeGeoKey, &pcsCode, 0, 1))
   {
+    loadedGeotiff = true;
     addValue(dirPrefix+"tifftag.pcs_code", 
              ossimString::toString(pcsCode));
   }
@@ -426,20 +433,26 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   if ( GTIFKeyGet(gtif, GTCitationGeoKey, &citationStrPtr ,
                   0, CITATION_STRING_SIZE))
   {
+    loadedGeotiff = true;
     addValue(dirPrefix+"tifftag.citation", 
              citationStrPtr);
   }
   if(GTIFKeyGet(gtif, PCSCitationGeoKey , &buf, 0, 1))
   {
+    loadedGeotiff = true;
     addValue(dirPrefix+"tifftag.pcs_citation", 
              buf);
   }
   if(GTIFKeyGet(gtif, ProjCoordTransGeoKey , &coordTransGeoCode, 0, 1))
   {
+    loadedGeotiff = true;
     addValue(dirPrefix+"tifftag.coord_trans_code", 
              ossimString::toString(coordTransGeoCode));
   }
-
+  if(defs->nParms > 0)
+  {
+    loadedGeotiff = true;
+  }
   for(idx = 0; idx < (ossim_uint32)(defs->nParms); ++idx)
   {
     switch(defs->ProjParmId[idx])
@@ -520,6 +533,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   }
   if(TIFFGetField(tiffPtr, TIFFTAG_GEOPIXELSCALE, &doubleArraySize, &doubleArray))
   {
+    loadedGeotiff = true;
     convertArrayToStringList(doubleArrayStr, doubleArray, doubleArraySize);
     if(!doubleArrayStr.empty())
     {
@@ -528,6 +542,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   }
   if(TIFFGetField(tiffPtr, TIFFTAG_GEOTIEPOINTS,  &doubleArraySize, &doubleArray))
   {
+    loadedGeotiff = true;
     convertArrayToStringList(doubleArrayStr, doubleArray, doubleArraySize);
     if(!doubleArrayStr.empty())
     {
@@ -536,6 +551,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   }
   if(TIFFGetField(tiffPtr, TIFFTAG_GEODOUBLEPARAMS, &doubleArraySize, &doubleArray))
   {
+    loadedGeotiff = true;
     convertArrayToStringList(doubleArrayStr, doubleArray, doubleArraySize);
     if(!doubleArrayStr.empty())
     {
@@ -544,6 +560,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   }
   if(TIFFGetField(tiffPtr, TIFFTAG_GEOTRANSMATRIX, &doubleArraySize, &doubleArray))
   {
+    loadedGeotiff = true;
     convertArrayToStringList(doubleArrayStr, doubleArray, doubleArraySize);
     if(!doubleArrayStr.empty())
     {
@@ -552,8 +569,11 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   }
   if(TIFFGetField(tiffPtr, TIFFTAG_GEOASCIIPARAMS, &buf))
   {
+    loadedGeotiff = true;
     addValue(dirPrefix+"tifftag.geo_ascii_params", buf);
   }
+  addValue(dirPrefix+"is_geotiff", ossimString::toString(loadedGeotiff));
+
   GTIFFree(gtif);
 }
 
@@ -770,7 +790,7 @@ void ossim::TiffHandlerState::load(const ossimKeywordlist& kwl,
   ossim::ImageHandlerState::load(kwl, prefix);
   m_tags.clear();
 
-  kwl.extractKeysThatMatch(m_tags, "^("+prefix+"image[0-9]+)");
+  kwl.extractKeysThatMatch(m_tags, "^("+prefix+"dir[0-9]+)");
   if(!prefix.empty())
   {
     m_tags.stripPrefixFromAll("^("+prefix+")");
