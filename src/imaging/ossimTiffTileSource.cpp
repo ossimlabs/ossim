@@ -402,10 +402,6 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
       close();
    }
 
-   // std::cout << "NOW DOING THE STREAM OPEN!!!!!!!!!!!!!!!!" << (ossim_int64)this 
-   //           << " for file:" 
-   //           << connectionString << "\n";
-   
    // Check for empty file name.
    if ( connectionString.empty() )
    {
@@ -457,7 +453,7 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
    // Get the number of directories.
    if(state->getValue(tempValue, "number_of_directories"))
    {
-      theNumberOfDirectories = tempValue.toUInt32();//TIFFNumberOfDirectories(theTiffPtr);
+      theNumberOfDirectories = tempValue.toUInt32();
    }
    else
    {
@@ -475,7 +471,6 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
    //***
    // Get the general tiff info.
    //***
-   ossimString dirPrefix = "image"+ossimString::toString(theCurrentDirectory)+".";
 
    if(!state->getValue(tempValue, theCurrentDirectory, "tifftag.compression"))
    {
@@ -869,20 +864,16 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
    
    setReadMethod();
   
-   // Establish raster pixel alignment type:
-   GTIF* gtif = GTIFNew(theTiffPtr);
-   ossim_uint16 raster_type;
-   if (GTIFKeyGet(gtif, GTRasterTypeGeoKey, &raster_type, 0, 1) && (raster_type == 1))
-   {
-      thePixelType = OSSIM_PIXEL_IS_AREA;
-   }
-   else
-   {
-      thePixelType = OSSIM_PIXEL_IS_POINT;
-   }
+  ossim_uint16 rasterType = state->getRasterType(theCurrentDirectory);
 
-   GTIFFree(gtif);
-   // Let base-class finish the rest:
+  if(rasterType == 1)
+  {
+      thePixelType = OSSIM_PIXEL_IS_AREA;
+  }
+  else
+  {
+      thePixelType = OSSIM_PIXEL_IS_POINT;
+  }
    completeOpen();
 
    if ( isBandSelector() && theOutputBandList.size() && ( isIdentityBandList( theOutputBandList ) == false ) )
