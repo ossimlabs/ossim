@@ -45,8 +45,8 @@
 
 #include <ossim/font/ossimFontFactoryRegistry.h>
 
-#include <ossim/imaging/ImageHandlerStateRegistry.h>
-#include <ossim/imaging/ImageHandlerStateFactory.h>
+#include <ossim/support_data/ImageHandlerStateRegistry.h>
+#include <ossim/support_data/ImageHandlerStateFactory.h>
 
 #include <ossim/imaging/ossimCodecFactoryRegistry.h>
 #include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
