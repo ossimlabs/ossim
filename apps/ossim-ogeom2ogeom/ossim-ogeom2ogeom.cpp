@@ -144,18 +144,20 @@ int main(int argc, char* argv[])
       if(rpcFlag)
       {
          ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(enableElevFlag);
-         
-         solver->solveCoefficients(imageRect,
-                                  geom.get(),
-                                  rpcGridSize.x,
-                                  rpcGridSize.y);
-         
-         ossimRefPtr<ossimRpcModel> outputModel = solver->createRpcModel();
-         ossimRefPtr<ossimImageGeometry> outputGeom = new ossimImageGeometry(nullptr, outputModel.get());
-
-         kwl.clear();
-         outputGeom->saveState(kwl);
-         kwl.write(outputFile);
+         bool converged = solver->solveCoefficients(geom.get());
+         if (converged)
+         {
+            ossimRefPtr<ossimRpcModel> rpc = solver->createRpcModel();
+            ossimRefPtr<ossimImageGeometry> rpcgeom = new ossimImageGeometry(nullptr, rpc.get());
+            ossimKeywordlist kwl;
+            rpcgeom->saveState(kwl);
+            kwl.write(outputFile);
+         }
+         else
+         {
+            ossimNotify(ossimNotifyLevel_FATAL) << "ERROR: Unable to converge on desired error tolerance." << std::endl;
+            exit(1);
+         }
       }
       else if(cgFlag)
       {

@@ -108,8 +108,9 @@ public:
     * The RPC computed covers the full image.
     * @param geom Represents the geometry of the input image
     * @param pixel_tolerance Maximum error in pixels (typically fraction of a pixel) to achieve.
+    * @return true if solution converged below pixel tolerance.
     */
-   void solveCoefficients(ossimImageGeometry* geom,
+   bool solveCoefficients(ossimImageGeometry* geom,
                           const double& error_tolerance=0.1);
 
    /**
@@ -197,11 +198,9 @@ protected:
                                   const std::vector<double>& z)const;
    
    double eval(const std::vector<double>& coeff,
-               double x,
-               double y,
-               double z)const;
+               const double& x, const double& y, const double& z)const;
 
-   void evalPoint(const double& x, const double& y, const double& z, ossimDpt& ipt) const;
+   void evalPoint(const ossimGpt& gpt, ossimDpt& ipt) const;
 
    /**
     * Inverts using the SVD method
