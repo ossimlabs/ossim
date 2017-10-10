@@ -261,14 +261,19 @@ bool ossimEllipsoid::nearestIntersection( const ossimEcefRay& ray,
       // sort t1 and t2 and take the nearest intersection if they
       // are in front of the ray.
       //***
-      if ( t2 < t1 )
-      {
-         double temp = t1;
-         t1 = t2;
-         t2 = temp;
-      }     
+//      if ( t2 < t1 )
+//      {
+//         double temp = t1;
+//         t1 = t2;
+//         t2 = temp;
+//      }
+//
+//      double tEstimate = ( t1 > 0.0 ) ? t1 : t2;
 
-      double tEstimate = ( t1 > 0.0 ) ? t1 : t2;
+      // OLK: Alternate means to find closest intersection, not necessarily "in front of" origin:
+      double tEstimate = t1;
+      if (fabs(t2) < fabs(t1))
+         tEstimate = t2;
 
       // Get estimated intersection point.
       ossimEcefPoint rayEcef = ray.extend( tEstimate );
