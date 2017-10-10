@@ -31,10 +31,20 @@ namespace ossim
     bool exists(const ossimString& key)const;
     bool checkBool(const ossimString& key)const;
     bool checkBool(ossim_uint32 directory, const ossimString& key)const;
+    
+    /**
+    * Will load everything
+    */
     bool loadDefaults(const ossimFilename& file);
+
+    /**
+    * Will load everything
+    */
     void loadDefaults(TIFF* tiffPtr);
 
+
     void loadCurrentDirectory(TIFF* tiffPtr);
+    void loadDirectory(TIFF* tiffPtr, ossim_uint32 directory);
 
     bool isReduced(ossim_uint32 directory)const;
     bool isMask(ossim_uint32 directory)const;
