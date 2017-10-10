@@ -34,7 +34,14 @@ ELSE (OSSIM_HAS_HDF5)
    message( STATUS "HDF5 components are being excluded from the build." )
 ENDIF (OSSIM_HAS_HDF5)
 
-ADD_DEFINITIONS("-DOSSIMMAKINGDLL")
+IF (WIN32)
+   IF (BUILD_SHARED)
+      ADD_DEFINITIONS("-DOSSIMMAKINGDLL")
+    ELSE (BUILD_SHARED)
+      ADD_DEFINITIONS("-DOSSIM_STATIC")
+   ENDIF (BUILD_SHARED)
+ENDIF (WIN32)
+
 ############################### GRAB HEADERS #####################################
 FILE(GLOB ossim_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/*.h")
 FILE(GLOB ossim_base_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/base/*.h")
