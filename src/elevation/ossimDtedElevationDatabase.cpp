@@ -336,6 +336,11 @@ bool ossimDtedElevationDatabase::inititializeExtension( const ossimFilename& dir
                   d2.getFirst(f, ossimDirectory::OSSIM_DIR_FILES);
                   do
                   {
+                     // The DTED directory may be polluted with cell statistics files and other
+                     // non-DEM items. Skip if not of the expected extension (OLK 10/2017):
+                     if (f.ext().match("[dD][tT][0-2]").empty())
+                        continue;
+
                      ossimRefPtr<ossimDtedHandler> dtedHandler = new ossimDtedHandler();
                      if(dtedHandler->open(f, false))
                      {
