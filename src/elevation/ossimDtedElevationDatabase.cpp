@@ -338,7 +338,7 @@ bool ossimDtedElevationDatabase::inititializeExtension( const ossimFilename& dir
                   {
                      // The DTED directory may be polluted with cell statistics files and other
                      // non-DEM items. Skip if not of the expected extension (OLK 10/2017):
-                     if (f.ext().match("[dD][tT][0-2]").empty())
+                     if (f.ext().match("[dD][tT][0-9]").empty())
                         continue;
 
                      ossimRefPtr<ossimDtedHandler> dtedHandler = new ossimDtedHandler();
