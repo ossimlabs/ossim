@@ -35,13 +35,13 @@ namespace ossim
     /**
     * Allows a state to be loaded from keywordlist.
     */
-    virtual void load(const ossimKeywordlist& kwl,
+    virtual bool load(const ossimKeywordlist& kwl,
                            const ossimString& prefix="")=0;
 
     /**
     * Allows a state to be saved to a keywordlist.
     */
-    virtual void save(ossimKeywordlist& kwl,
+    virtual bool save(ossimKeywordlist& kwl,
                            const ossimString& prefix="")const=0;
   };
 }

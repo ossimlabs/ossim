@@ -19,9 +19,9 @@ namespace ossim
       virtual ~ImageHandlerState();
       virtual const ossimString& getTypeName()const override;
       static const ossimString& getStaticTypeName();
-      virtual void load(const ossimKeywordlist& kwl,
+      virtual bool load(const ossimKeywordlist& kwl,
                         const ossimString& prefix="") override;
-      virtual void save(ossimKeywordlist& kwl,
+      virtual bool save(ossimKeywordlist& kwl,
                         const ossimString& prefix="")const override;
       std::shared_ptr<ImageHandlerState> getOverviewState(){return m_overviewState;}
       std::shared_ptr<const ImageHandlerState> getOverviewState()const{return m_overviewState;}
@@ -39,6 +39,12 @@ namespace ossim
       std::shared_ptr<ossimKeywordlist> getValidVertices(){return m_validVertices;}
       std::shared_ptr<const ossimKeywordlist> getValidVertices()const{return m_validVertices;}
       bool hasMetaData()const;
+
+      /**
+      * Overridable and loads the defaults given the main entry. 
+      */
+      bool virtual loadDefaults(const ossimFilename& filename, 
+                                ossim_uint32 entry=0);
     private:
       static const ossimString            m_typeName;
       std::shared_ptr<ImageHandlerState>  m_overviewState;
