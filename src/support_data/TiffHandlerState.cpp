@@ -103,31 +103,36 @@ bool ossim::TiffHandlerState::checkBool(const ossimString& key)const
   return result;
 }
 
-bool ossim::TiffHandlerState::loadDefaults(const ossimFilename& file)
+bool ossim::TiffHandlerState::loadDefaults(const ossimFilename& file, 
+                                           ossim_uint32 entry)
 {
-  bool result = false;
-  std::shared_ptr<std::istream> tiffStream = ossim::StreamFactoryRegistry::instance()->createIstream(file);
-  if(tiffStream)
+  bool result = ImageHandlerState::loadDefaults(file, entry);
+  
+  if(result)
   {
-     std::shared_ptr<ossim::TiffIStreamAdaptor> streamAdaptor = std::make_shared<ossim::TiffIStreamAdaptor>(tiffStream,
-                                                                 file.c_str());
-     TIFF* tiffPtr = XTIFFClientOpen(file.c_str(), "rm", 
-                                  (thandle_t)streamAdaptor.get(),
-                                  ossim::TiffIStreamAdaptor::tiffRead, 
-                                  ossim::TiffIStreamAdaptor::tiffWrite, 
-                                  ossim::TiffIStreamAdaptor::tiffSeek, 
-                                  ossim::TiffIStreamAdaptor::tiffClose, 
-                                  ossim::TiffIStreamAdaptor::tiffSize,
-                                  ossim::TiffIStreamAdaptor::tiffMap, 
-                                  ossim::TiffIStreamAdaptor::tiffUnmap);
+    std::shared_ptr<std::istream> tiffStream = ossim::StreamFactoryRegistry::instance()->createIstream(file);
+    if(tiffStream)
+    {
+       std::shared_ptr<ossim::TiffIStreamAdaptor> streamAdaptor = std::make_shared<ossim::TiffIStreamAdaptor>(tiffStream,
+                                                                   file.c_str());
+       TIFF* tiffPtr = XTIFFClientOpen(file.c_str(), "rm", 
+                                    (thandle_t)streamAdaptor.get(),
+                                    ossim::TiffIStreamAdaptor::tiffRead, 
+                                    ossim::TiffIStreamAdaptor::tiffWrite, 
+                                    ossim::TiffIStreamAdaptor::tiffSeek, 
+                                    ossim::TiffIStreamAdaptor::tiffClose, 
+                                    ossim::TiffIStreamAdaptor::tiffSize,
+                                    ossim::TiffIStreamAdaptor::tiffMap, 
+                                    ossim::TiffIStreamAdaptor::tiffUnmap);
 
-     if(tiffPtr)
-     {
-       loadDefaults(tiffPtr);
-       result = true;
-       XTIFFClose(tiffPtr);
-       tiffPtr = 0;
-     }
+       if(tiffPtr)
+       {
+         loadDefaults(tiffPtr);
+         result = true;
+         XTIFFClose(tiffPtr);
+         tiffPtr = 0;
+       }
+    }    
   }
 
   return result;
@@ -784,10 +789,10 @@ bool ossim::TiffHandlerState::getGeoTransMatrix(std::vector<ossim_float64>& resu
   return getDoubleArray(result, directory, "tifftag.geo_trans_matrix");
 }
 
-void ossim::TiffHandlerState::load(const ossimKeywordlist& kwl,
+bool ossim::TiffHandlerState::load(const ossimKeywordlist& kwl,
                                    const ossimString& prefix)
 {
-  ossim::ImageHandlerState::load(kwl, prefix);
+  bool result = ossim::ImageHandlerState::load(kwl, prefix);
   m_tags.clear();
 
   kwl.extractKeysThatMatch(m_tags, "^("+prefix+"dir[0-9]+)");
@@ -798,11 +803,16 @@ void ossim::TiffHandlerState::load(const ossimKeywordlist& kwl,
   ossimString numberOfDirectories = kwl.find(prefix, "number_of_directories");
 
   if(!numberOfDirectories.empty()) m_tags.add("number_of_directories", numberOfDirectories, true);
+
+  return result;
 }
 
-void ossim::TiffHandlerState::save(ossimKeywordlist& kwl,
+bool ossim::TiffHandlerState::save(ossimKeywordlist& kwl,
                                    const ossimString& prefix)const
 {
-   ossim::ImageHandlerState::save(kwl, prefix);
+   bool result = ossim::ImageHandlerState::save(kwl, prefix);
+   
    kwl.add(prefix.c_str(), m_tags);
+
+   return result;
 }
