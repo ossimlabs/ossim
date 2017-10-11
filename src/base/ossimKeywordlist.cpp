@@ -21,6 +21,10 @@
 #include <list>
 #include <sstream>
 #include <utility>
+#include <cstddef> // nullptr
+
+#include <ossim/base/BlockIStream.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 
 static ossimTrace traceDebug("ossimKeywordlist:debug");
 
@@ -722,20 +726,18 @@ ossimKeywordlist::getMapEntry(const ossimString& key)
 bool ossimKeywordlist::parseFile(const ossimFilename& file,
                                  bool ignoreBinaryChars)
 {
-   if(!file.exists())
-      return false;
-
    bool result = false;
-   std::ifstream is;
-   is.open(file.c_str(), std::ios::in | std::ios::binary);
 
-   if(!is.fail())
+   std::shared_ptr<ossim::ifstream> is = std::make_shared<ossim::ifstream>(file.c_str(), 
+                                                std::ios::in | std::ios::binary);
+   if(is&&is->is_open())
    {
+      std::shared_ptr<ossim::BlockIStream> blockedStream = std::make_shared<ossim::BlockIStream>(is, 4096);
       m_currentlyParsing = file;
-      result = parseStream(is, ignoreBinaryChars);
+      result = parseStream(*is, ignoreBinaryChars);
    }
 
-   is.close();
+   is = nullptr;
    return result;
 }
 

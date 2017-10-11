@@ -1,4 +1,4 @@
-#include <ossim/base/ossimBlockStreamBuffer.h>
+#include <ossim/base/BlockStreamBuffer.h>
 #include <ossim/base/ossimTrace.h>
 #include <cstring> /* for memcpy */
 

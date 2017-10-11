@@ -73,6 +73,7 @@ const char* ossimKeywordNames::GCS_CODE_KW = "gcs_code";
 const char* ossimKeywordNames::GEOM_FILE_KW = "geom_file";
 const char* ossimKeywordNames::HEMISPHERE_KW = "hemisphere";
 const char* ossimKeywordNames::HORIZONTAL_SIZE_KW = "horizontal_size";
+const char* ossimKeywordNames::HAS_LUT_KW = "has_lut";
 const char* ossimKeywordNames::ID_KW ="id";
 const char* ossimKeywordNames::IMAGE_CE90_KW  = "estimated_image_ce90";
 const char* ossimKeywordNames::IMAGE_FILE_KW = "image_file";
