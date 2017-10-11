@@ -267,13 +267,14 @@ bool ossimImageHandler::loadState(const ossimKeywordlist& kwl,
 bool ossimImageHandler::initVertices(const char* file)
 {
    static const char MODULE[] = "ossimImageHandler::initVertices";
-   bool loadFromFileFlag = false;
+   bool loadFromFileFlag = true;
    std::shared_ptr<ossimKeywordlist> kwl;
    if(m_state)
    {
       bool validVerticesFlag = false;
       if(m_state->getValidVertices())
       {
+         loadFromFileFlag = false;
          kwl = m_state->getValidVertices();
          if(kwl)
          {
@@ -293,6 +294,8 @@ bool ossimImageHandler::initVertices(const char* file)
          loadFromFileFlag = true;
       }
    }
+   if(!kwl) kwl = std::make_shared<ossimKeywordlist>();
+
    if(loadFromFileFlag)
    {
       kwl = std::make_shared<ossimKeywordlist>();
@@ -300,12 +303,12 @@ bool ossimImageHandler::initVertices(const char* file)
       kwl->add("connection_string", file, true);
       if (!instream)
       {
-         m_state->setValidVertices(kwl);
+         if(m_state) m_state->setValidVertices(kwl);
          return false; 
       } 
 
       kwl->parseStream(*instream);
-      m_state->setValidVertices(kwl);
+      if(m_state) m_state->setValidVertices(kwl);
    }
    
    if (kwl->getErrorStatus() != ossimErrorCodes::OSSIM_OK)
