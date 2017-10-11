@@ -12,6 +12,60 @@
 
 namespace ossim
 {
+  /**
+  * This is a Image handler state object.  This handles caching
+  * state of a ossimImageHandler.  The example code provided will 
+  * work for any Image handler that supports state caching.  Note,  
+  * if anything changes on the input image then the state will need 
+  * to be recalculated by opening the image without the state and 
+  * grabbing it's state again.
+  *
+  * Example code to get a state of an image source:
+  *
+  * @code
+  * #include <ossim/base/ossimKeywordlist.h>
+  * #include <ossim/imaging/ossimImageHandlerRegistry.h>
+  * #include <ossim/imaging/ossimImageHandler.h>
+  * #include <ossim/support_data/ImageHandlerState.h>
+  *
+  * ossimRefPtr<ossimImageHandler> h = ossimImageHandlerRegistry::instance()->open(filename);
+  *
+  * if(h)
+  * {
+  *   std::shared_ptr<ossim::ImageHandlerState> state = h->getState();
+  *   if(state)
+  *   {
+  *     ossimKeywordlist kwl;
+  *     state->save(kwl);
+  *     std::cout << kwl << "\n";
+  *   }
+  * }
+  * @endCode
+  *
+  * Example code using a state
+  *
+  * @code
+  * #include <ossim/base/ossimKeywordlist.h>
+  * #include <ossim/imaging/ossimImageHandlerRegistry.h>
+  * #include <ossim/imaging/ossimImageHandler.h>
+  * #include <ossim/support_data/ImageHandlerState.h>
+  *
+  * ossimRefPtr<ossimImageHandler> h = ossimImageHandlerRegistry::instance()->open(filename);
+  *
+  * if(h)
+  * {
+  *   std::shared_ptr<ossim::ImageHandlerState> state = h->getState();
+  *   if(state)
+  *   {
+  *      h = ossimImageHandlerRegistry::instance()->open(state);
+  *      if(h)
+  *      {
+  *         std::cout << "Successfully opened with a state\n";  
+  *      } 
+  *   }
+  * }
+  * @endCode
+  */
    class OSSIM_DLL ImageHandlerState : public ossim::State
    {
    public:
@@ -19,12 +73,39 @@ namespace ossim
       virtual ~ImageHandlerState();
       virtual const ossimString& getTypeName()const override;
       static const ossimString& getStaticTypeName();
+      
+      /**
+      * Loads the the state object from keywordlist.
+      *
+      * @param kwl keywordlist that olds the state of the object
+      * @param prefix optional prefix value that is used as a prefix 
+      *        for all keywords.
+      */
       virtual bool load(const ossimKeywordlist& kwl,
                         const ossimString& prefix="") override;
+      /**
+      * Saves the state of the object to a keyword list.
+      *
+      * @param kwl keywordlist that the state will be saved to
+      * @param prefix optional prefix value that is used as a prefix 
+      *        for all keywords.
+      */
       virtual bool save(ossimKeywordlist& kwl,
                         const ossimString& prefix="")const override;
+
+      /**
+      * @return if one exists it will have a valid overview state.
+      */
       std::shared_ptr<ImageHandlerState> getOverviewState(){return m_overviewState;}
+
+      /**
+      * @return if one exists it will have a valid overview state.
+      */
       std::shared_ptr<const ImageHandlerState> getOverviewState()const{return m_overviewState;}
+
+      /**
+      * Allows one to set the overview state object for this handler
+      */
       void setOverviewState(std::shared_ptr<ImageHandlerState> overviewState){m_overviewState=overviewState;}
       void setConnectionString(const ossimString& connectionString){m_connectionString = connectionString;}
       const ossimString& getConnectionString()const{return m_connectionString;}
@@ -38,6 +119,10 @@ namespace ossim
       void setValidVertices(std::shared_ptr<ossimKeywordlist> kwl){m_validVertices=kwl;}
       std::shared_ptr<ossimKeywordlist> getValidVertices(){return m_validVertices;}
       std::shared_ptr<const ossimKeywordlist> getValidVertices()const{return m_validVertices;}
+      
+      /**
+      * @return true if it has metadata
+      */
       bool hasMetaData()const;
 
       /**
