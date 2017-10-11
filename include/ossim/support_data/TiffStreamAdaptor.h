@@ -8,6 +8,27 @@
 
 namespace ossim
 {
+   /**
+   * This is the stream adaptor used by our tiff reader
+   * We use the adaptor so we can support direct S3 access or later be
+   * able to support blocked reads, ... etc
+   *
+   * Code snip for Input stream:
+   * @code
+   * m_streamAdaptor = std::make_shared<ossim::TiffIStreamAdaptor>(str,
+   *                                                               connectionString);
+   * 
+   * theTiffPtr = XTIFFClientOpen(connectionString.c_str(), "rm", 
+   *                              (thandle_t)m_streamAdaptor.get(),
+   *                              ossim::TiffIStreamAdaptor::tiffRead, 
+   *                              ossim::TiffIStreamAdaptor::tiffWrite, 
+   *                              ossim::TiffIStreamAdaptor::tiffSeek, 
+   *                              ossim::TiffIStreamAdaptor::tiffClose, 
+   *                              ossim::TiffIStreamAdaptor::tiffSize,
+   *                              ossim::TiffIStreamAdaptor::tiffMap, 
+   *                              ossim::TiffIStreamAdaptor::tiffUnmap);
+   * @endCode
+   */
    class OSSIM_DLL TiffIStreamAdaptor
    {
    public:
