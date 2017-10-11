@@ -42,10 +42,23 @@ bool ossim::ImageHandlerState::hasMetaData()const
   return false;
 }
 
-void ossim::ImageHandlerState::load(const ossimKeywordlist& kwl,
+bool ossim::ImageHandlerState::loadDefaults(const ossimFilename& filename, 
+                                            ossim_uint32 entry)
+{
+   m_connectionString = filename;
+   m_currentEntry     = entry;
+
+   // we still need to add initialization of the defaults for 
+   // valid vertices and overview detections, ... etc
+   //
+
+   return true;
+}
+
+bool ossim::ImageHandlerState::load(const ossimKeywordlist& kwl,
                                     const ossimString& prefix)
 {
-   ossim::State::load(kwl, prefix);
+   bool result = ossim::State::load(kwl, prefix);
    m_overviewState = ossim::ImageHandlerStateRegistry::instance()->createState(kwl, prefix+"overview.");
    m_connectionString = kwl.find(prefix, "connection_string");
    m_imageHandlerType = kwl.find(prefix, "image_handler_type");
@@ -74,12 +87,15 @@ void ossim::ImageHandlerState::load(const ossimKeywordlist& kwl,
       tempKwl.stripPrefixFromAll("^("+prefix+"valid_vertices.)");
       m_validVertices = std::make_shared<ossimKeywordlist>(tempKwl);
    }
+
+   return result;
 }
 
-void ossim::ImageHandlerState::save(ossimKeywordlist& kwl,
+bool ossim::ImageHandlerState::save(ossimKeywordlist& kwl,
                                     const ossimString& prefix)const
 {
-   ossim::State::save(kwl, prefix);
+   bool result = ossim::State::save(kwl, prefix);
+   
    if(m_overviewState)
    {
       ossimString tempPrefix = prefix + "overview.";
@@ -100,4 +116,6 @@ void ossim::ImageHandlerState::save(ossimKeywordlist& kwl,
       kwl.add(validVerticesPrefix.c_str(), *m_validVertices);
       kwl.add(validVerticesPrefix, "type", "ossimValidVertices");
    }
+
+   return result;
 }
