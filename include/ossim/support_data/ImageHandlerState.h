@@ -9,6 +9,7 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/support_data/ossimImageMetaData.h>
+#include <memory>
 
 namespace ossim
 {
