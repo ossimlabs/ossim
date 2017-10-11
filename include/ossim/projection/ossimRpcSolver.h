@@ -1,14 +1,9 @@
-//*****************************************************************************
-// FILE: ossimRpcModel.h
+//**************************************************************************************************
 //
-// License:  MIT
-// 
-// See LICENSE.txt file in the top level directory for more details.
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-// AUTHOR: Garrett Potts
-//
-//*****************************************************************************
-//  $Id: ossimRpcSolver.h 15766 2009-10-20 12:37:09Z gpotts $
+//**************************************************************************************************
 #ifndef ossimRpcSolver_HEADER
 #define ossimRpcSolver_HEADER
 
@@ -93,14 +88,12 @@ public:
    void solveCoefficients(const ossimDrect& imageBounds,
                           ossimProjection* imageProj,
                           ossim_uint32 xSamples=8,
-                          ossim_uint32 ySamples=8,
-                          bool shiftTo0Flag=true);
+                          ossim_uint32 ySamples=8);
    
    void solveCoefficients(const ossimDrect& imageBounds,
                           ossimImageGeometry* geom,
                           ossim_uint32 xSamples=8,
-                          ossim_uint32 ySamples=8,
-                          bool shiftTo0Flag=true);
+                          ossim_uint32 ySamples=8);
    
    /**
     * Similar to the other solve methods except that the final grid size is established
@@ -122,8 +115,7 @@ public:
     *       numerical robustness.
     */ 
    void solveCoefficients(const std::vector<ossimDpt>& imagePoints,
-                          const std::vector<ossimGpt>& groundControlPoints,
-                          const ossimDpt& imageShift = ossimDpt(0.0,0.0));
+                          const std::vector<ossimGpt>& groundControlPoints);
 
    /**
     * Creates and Rpc model from the coefficients
