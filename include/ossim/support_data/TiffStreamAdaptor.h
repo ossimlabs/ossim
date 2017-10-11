@@ -4,7 +4,7 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
-#include <xtiffio.h>
+#include <tiffio.h>
 
 namespace ossim
 {
