@@ -295,7 +295,7 @@ bool ossimImageHandler::initVertices(const char* file)
    }
    if(loadFromFileFlag)
    {
-      kwl =std::make_shared<ossimKeywordlist>();
+      kwl = std::make_shared<ossimKeywordlist>();
       std::shared_ptr<ossim::istream> instream = ossim::StreamFactoryRegistry::instance()->createIstream(file);
       kwl->add("connection_string", file, true);
       if (!instream)
