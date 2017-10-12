@@ -1397,7 +1397,6 @@ void ossimRpcModel::getRpcParameters(ossimRpcModel::rpcModelStruct& model) const
       model.type= 'B';
    }
 }
-
 #if OSSIM_HAS_JSONCPP
 bool ossimRpcModel::toJSON(Json::Value& topLevel) const
 {
@@ -1415,6 +1414,7 @@ bool ossimRpcModel::toJSON(Json::Value& topLevel) const
    IMAGE["LONGSCALE"]    = theLonScale;
    IMAGE["HEIGHTSCALE"]  = theHgtScale;
 
+   // Preferred way to output coeff arrays:
 //   Json::Value LINENUMCOEF(Json::arrayValue);
 //   Json::Value LINEDENCOEF(Json::arrayValue);
 //   Json::Value SAMPNUMCOEF(Json::arrayValue);
@@ -1427,6 +1427,7 @@ bool ossimRpcModel::toJSON(Json::Value& topLevel) const
 //      SAMPDENCOEF.append(theSampDenCoef[i]);
 //   }
 
+   // Write coeffs as string list for JSON to XML converter to output properly:
    ossimString LINENUMCOEF;
    ossimString LINEDENCOEF;
    ossimString SAMPNUMCOEF;
