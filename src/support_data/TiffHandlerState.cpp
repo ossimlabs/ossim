@@ -142,7 +142,6 @@ void ossim::TiffHandlerState::loadDefaults(TIFF* tiffPtr)
 {
   ossim_int64   currentDirectory = TIFFCurrentDirectory(tiffPtr);
   TIFFSetDirectory(tiffPtr, 0);
-
   ossim_int32   numberOfDirectories = TIFFNumberOfDirectories(tiffPtr);
 
   addValue("number_of_directories", ossimString::toString(numberOfDirectories));
@@ -196,7 +195,6 @@ void ossim::TiffHandlerState::loadDirectory(TIFF* tiffPtr,
   {
     TIFFSetDirectory(tiffPtr, directory);
   }
-
   ossimString dirPrefix = "dir"+ossimString::toString(directory)+".";
 
   if(TIFFGetField(tiffPtr, TIFFTAG_COMPRESSION, &compressionType))
@@ -294,6 +292,7 @@ void ossim::TiffHandlerState::loadDirectory(TIFF* tiffPtr,
     addValue(dirPrefix+"tifftag.photometric", 
              ossimString::toString(photometric));
   }
+
   // Check for palette.
   ossim_uint16* red;
   ossim_uint16* green;
@@ -334,7 +333,6 @@ void ossim::TiffHandlerState::loadDirectory(TIFF* tiffPtr,
                ossimString::toString(rowsPerStrip));
     }
   }
-
   loadGeotiffTags(tiffPtr, dirPrefix);
 }
 
@@ -385,8 +383,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   ossim_uint16 coordTransGeoCode = 0;
   ossim_uint32 idx = 0;
   GTIF* gtif = GTIFNew(tiffPtr);
-  std::vector<char> citationStr(CITATION_STRING_SIZE);
-  char* citationStrPtr = &citationStr.front();
+  char citationStrPtr[CITATION_STRING_SIZE];
   char* buf = 0;
   ossim_uint16 doubleArraySize = 0;
   double* doubleArray=0;
@@ -440,7 +437,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   {
     loadedGeotiff = true;
     addValue(dirPrefix+"tifftag.citation", 
-             citationStrPtr);
+             ossimString(citationStrPtr));
   }
   if(GTIFKeyGet(gtif, PCSCitationGeoKey , &buf, 0, 1))
   {
@@ -458,6 +455,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   {
     loadedGeotiff = true;
   }
+
   for(idx = 0; idx < (ossim_uint32)(defs->nParms); ++idx)
   {
     switch(defs->ProjParmId[idx])
@@ -536,6 +534,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
       }
     }
   }
+
   if(TIFFGetField(tiffPtr, TIFFTAG_GEOPIXELSCALE, &doubleArraySize, &doubleArray))
   {
     loadedGeotiff = true;
@@ -578,7 +577,6 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
     addValue(dirPrefix+"tifftag.geo_ascii_params", buf);
   }
   addValue(dirPrefix+"is_geotiff", ossimString::toString(loadedGeotiff));
-
   GTIFFree(gtif);
 }
 
