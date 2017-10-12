@@ -5,8 +5,10 @@
 static ossimTrace traceDebug("BlockStreamBuffer:debug");
 
 ossim::BlockStreamBuffer::BlockStreamBuffer(ossim::istream* adaptStream, ossim_uint64 blockSize)
-:  m_adaptStream(adaptStream),
-   m_currentPosValue(0)
+   :  m_blockBuffer(),
+      m_currentPosValue(0),
+      m_blockInfo(),
+      m_adaptStream(adaptStream)
 {
    m_blockInfo.m_blockSize = blockSize;
    if(m_blockInfo.m_blockSize)
@@ -74,9 +76,8 @@ void ossim::BlockStreamBuffer::loadBlock()
    setgPtrs();
 }
 
-std::streambuf::pos_type ossim::BlockStreamBuffer::seekoff(off_type offset, 
-                         std::ios_base::seekdir dir,
-                         std::ios_base::openmode mode)
+std::streambuf::pos_type ossim::BlockStreamBuffer::seekoff(
+   off_type offset, std::ios_base::seekdir dir, std::ios_base::openmode /* mode */)
 {
    // make sure we are in synch with current pos
    // gptr can be updated by other means
@@ -129,7 +130,6 @@ std::streambuf::pos_type ossim::BlockStreamBuffer::seekpos(pos_type pos,
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "BlockStreamBuffer::seekpos DEBUG: entered with absolute position: " << pos << "\n";
-
    }
    pos_type result = pos_type(off_type(-1));
 
