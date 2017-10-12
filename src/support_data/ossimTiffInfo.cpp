@@ -303,8 +303,8 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
    {
       // directory prefix for prints.
       std::string prefix = "tiff.";
-      out << prefix << "directory_offset: " << seekOffset << "\n";
       getDirPrefix(ifdIndex, prefix);
+      out << prefix << "directory_offset: " << seekOffset << "\n";
 
       // Seek to the image file directory.
       m_inputStream->seekg(seekOffset, std::ios_base::beg);  
