@@ -96,7 +96,7 @@ bool ossimDtedElevationDatabase::openDtedDirectory(const ossimFilename& dir)
       if ( m_extension.size() == 0 )
       {
          //---
-         // This sets extension by doing a directory scan and is now depricated.
+         // This sets extension by doing a directory scan for files ending in "dt*" or "DT*".
          // Use "extension" key in preferences to avoid this.  Example:
          // elevation_manager.elevation_source0.extension: dt2
          //---
@@ -338,7 +338,7 @@ bool ossimDtedElevationDatabase::inititializeExtension( const ossimFilename& dir
                   {
                      // The DTED directory may be polluted with cell statistics files and other
                      // non-DEM items. Skip if not of the expected extension (OLK 10/2017):
-                     if (f.ext().match("[dD][tT][0-2]").empty())
+                     if (f.ext().match("[dD][tT][0-9]").empty())
                         continue;
 
                      ossimRefPtr<ossimDtedHandler> dtedHandler = new ossimDtedHandler();

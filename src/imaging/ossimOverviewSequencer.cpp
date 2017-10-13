@@ -18,7 +18,7 @@
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/imaging/ossimImageHandler.h>
-#include <ossim/imaging/ossimImageMetaData.h>
+#include <ossim/support_data/ossimImageMetaData.h>
 #include <ossim/parallel/ossimMpi.h>
 
 

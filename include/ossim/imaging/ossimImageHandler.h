@@ -23,7 +23,8 @@
 #include <ossim/base/ossimNBandLutDataObject.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimFilterResampler.h>
-#include <ossim/imaging/ossimImageMetaData.h>
+#include <ossim/support_data/ossimImageMetaData.h>
+#include <ossim/support_data/ImageHandlerState.h>
 
 class ossimMultiResLevelHistogram;
 
@@ -176,6 +177,7 @@ public:
 
    virtual bool open(const ossimFilename& imageFile);
 
+   virtual bool open(std::shared_ptr<ossim::ImageHandlerState> state);
    /**
     *  Deletes the overview and clears the valid image vertices.  Derived
     *  classes should implement.
@@ -730,6 +732,14 @@ public:
     */
    virtual bool getRgbBandList(std::vector<ossim_uint32>& bandList) const;
 
+
+   template <class T>
+   std::shared_ptr<T> getStateAs(){return dynamic_pointer_cast<T> (m_state);}
+   template <class T>
+   std::shared_ptr<const T> getStateAs()const{return dynamic_pointer_cast<const T> (m_state);}
+   std::shared_ptr<ossim::ImageHandlerState> getState(){return m_state;}
+   std::shared_ptr<const ossim::ImageHandlerState> getState()const{return m_state;}
+   void setState(std::shared_ptr<ossim::ImageHandlerState> state){m_state = state;}
 protected:
    
    /**
@@ -842,7 +852,8 @@ protected:
     */
    bool theOpenOverviewFlag;
    mutable ossimPixelType thePixelType; // pixel-is-point or pixel-is-area
-   
+
+  std::shared_ptr<ossim::ImageHandlerState> m_state;   
 TYPE_DATA
 };
 

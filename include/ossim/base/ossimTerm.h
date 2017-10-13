@@ -6,8 +6,8 @@
  * 
  *        See top level LICENSE.txt file.
  */
-#ifndef OSSIM_FUNCTION_H
-#define OSSIM_FUNCTION_H
+#ifndef OSSIM_TERM_H
+#define OSSIM_TERM_H 1
 
 #include <ossim/base/ossimConstants.h>
 
@@ -32,74 +32,75 @@ enum termType : ossim_uint32 {
 /**
  * An abstract class to containing a multivariable function.
  */
-class OSSIMDLLEXPORT ossimTerm{
+class OSSIMDLLEXPORT ossimTerm
+{
 public:
 
 
-	/**
-	 * @brief      Virtual destructor for destroying tree from the top node.
-	 */
-	virtual ~ossimTerm() {}
+   /**
+    * @brief      Virtual destructor for destroying tree from the top node.
+    */
+   virtual ~ossimTerm() {}
 
 
-	/**
-	 * @brief      Evaluates a term at a given point PURE VIRTUAL
-	 *
-	 * @param[in]  point  The point to be evaluated
-	 *
-	 * @return     the value at a point
-	 */
-	virtual ossim_float64	evaluate(std::vector<ossim_float64> point) const = 0;
-	/**
-	 * @brief      Calculates the derivative of the term
-	 *
-	 * @param[in]  variable  The variable in which the derivative is with respect too
-	 *
-	 * @return     A pointer containing the derivative of the term.
-	 */
-	virtual ossimTerm*		derivative(const ossim_uint32& variable) const = 0;
+   /**
+    * @brief      Evaluates a term at a given point PURE VIRTUAL
+    *
+    * @param[in]  point  The point to be evaluated
+    *
+    * @return     the value at a point
+    */
+   virtual ossim_float64	evaluate(std::vector<ossim_float64> /* point */ ) const = 0;
+   /**
+    * @brief      Calculates the derivative of the term
+    *
+    * @param[in]  variable  The variable in which the derivative is with respect too
+    *
+    * @return     A pointer containing the derivative of the term.
+    */
+   virtual ossimTerm*		derivative(const ossim_uint32& variable) const = 0;
 
 
-	/**
-	 * @brief      Gets the type
-	 *
-	 * @return     The type
-	 */
-	virtual ossim_uint32	getType() const = 0;
-	/**
-	 * @brief      Returns a pointer to a copy of the term
-	 *
-	 * @return     A pointer to a copy of the term
-	 */
-	virtual ossimTerm*		copy() const = 0;
+   /**
+    * @brief      Gets the type
+    *
+    * @return     The type
+    */
+   virtual ossim_uint32	getType() const = 0;
+   /**
+    * @brief      Returns a pointer to a copy of the term
+    *
+    * @return     A pointer to a copy of the term
+    */
+   virtual ossimTerm*		copy() const = 0;
 
 
-	/**
-	 * @brief      Evaluates the function for a point
-	 *
-	 * @param      point   The point at which the function is being evaluated
-	 *
-	 * @return     The value at a point
-	 */
-	inline ossim_float64	operator()(std::vector<ossim_float64> point) const{ return this->evaluate(point); }
+   /**
+    * @brief      Evaluates the function for a point
+    *
+    * @param      point   The point at which the function is being evaluated
+    *
+    * @return     The value at a point
+    */
+   inline ossim_float64	operator()(std::vector<ossim_float64> point) const{ return this->evaluate(point); }
 
 
-	/**
-	 * @brief      Returns a copy of the two terms in a polynomial
-	 *
-	 * @param      rhs   The right hand term of the polynomial
-	 *
-	 * @return     A polynomial with !COPIES! of the two terms
-	 */
-	inline ossimTerm*	operator+(ossimTerm* rhs) const;
-	/**
-	 * @brief      Returns a copy of the two terms in a product
-	 *
-	 * @param      rhs   The right hand term of the product
-	 *
-	 * @return     A product with !COPIES! of the two terms
-	 */
-	inline ossimTerm*	operator*(ossimTerm* rhs) const;
+   /**
+    * @brief      Returns a copy of the two terms in a polynomial
+    *
+    * @param      rhs   The right hand term of the polynomial
+    *
+    * @return     A polynomial with !COPIES! of the two terms
+    */
+   inline ossimTerm*	operator+(ossimTerm* rhs) const;
+   /**
+    * @brief      Returns a copy of the two terms in a product
+    *
+    * @param      rhs   The right hand term of the product
+    *
+    * @return     A product with !COPIES! of the two terms
+    */
+   inline ossimTerm*	operator*(ossimTerm* rhs) const;
 
 };
 
@@ -368,64 +369,63 @@ private:
 /**
  * A constant class to hold a constant as a term.
  */
-class OSSIMDLLEXPORT ossimConst : public ossimTerm{
+class OSSIMDLLEXPORT ossimConst : public ossimTerm
+{
 public:
 
 
-	/**
-	 * @brief      Public Constructor
-	 *
-	 * @param[in]  value  The value of the constant
-	 */
-	ossimConst(const ossim_float64& value) : val(value) {}
-	/**
-	 * @brief      Public Copy Constructor
-	 *
-	 * @param[in]  src   The source to be copied
-	 */
-	ossimConst(const ossimConst& src) : val(src.val) {}
-	/**
-	 * @brief      Destroys the constant
-	 */
-	~ossimConst() {}
+   /**
+    * @brief      Public Constructor
+    *
+    * @param[in]  value  The value of the constant
+    */
+ossimConst(const ossim_float64& value) : val(value) {}
+   /**
+    * @brief      Public Copy Constructor
+    *
+    * @param[in]  src   The source to be copied
+    */
+ossimConst(const ossimConst& src) : val(src.val) {}
+   /**
+    * @brief      Destroys the constant
+    */
+   ~ossimConst() {}
 
 
-	/**
-	 * @brief      Evaluates a constant for a point
-	 *
-	 * @param[in]  point  The point to be evaluated
-	 *
-	 * @return     The value at a point.
-	 */
-	ossim_float64	evaluate(std::vector<ossim_float64> point) const{ return val; }
-	/**
-	 * @brief      Calculates the derivative for a constant
-	 *
-	 * @param[in]  variable  The variable in which the derivative is with respect too.
-	 *
-	 * @return     A pointer to that contains the derivative of the term.
-	 */
-	ossimTerm*		derivative(const ossim_uint32& variable) const;
+   /**
+    * @brief      Evaluates a constant for a point
+    *
+    * @param[in]  point  The point to be evaluated
+    *
+    * @return     The value at a point.
+    */
+   ossim_float64	evaluate(std::vector<ossim_float64> /* point */ ) const{ return val; }
+   /**
+    * @brief      Calculates the derivative for a constant
+    *
+    * @param[in]  variable  The variable in which the derivative is with respect too.
+    *
+    * @return     A pointer to that contains the derivative of the term.
+    */
+   ossimTerm*		derivative(const ossim_uint32& variable) const;
 
 
-	/**
-	 * @brief      Gets the type of a constant
-	 *
-	 * @return     The type of a constant
-	 */
-	ossim_uint32	getType() const { return termType::constant; }
-	/**
-	 * @brief      Creates a copy of the constant
-	 *
-	 * @return     A pointer to a copy of the constant
-	 */
-	ossimTerm*		copy() const;
+   /**
+    * @brief      Gets the type of a constant
+    *
+    * @return     The type of a constant
+    */
+   ossim_uint32	getType() const { return termType::constant; }
+   /**
+    * @brief      Creates a copy of the constant
+    *
+    * @return     A pointer to a copy of the constant
+    */
+   ossimTerm*		copy() const;
 
 private:
-	ossim_float64 val;	// The value of the constant
+   ossim_float64 val;	// The value of the constant
 
 };
 
-
-
-#endif // OSSIM_FUNCTION_H
+#endif // OSSIM_TERM_H

@@ -38,6 +38,7 @@
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimStringProperty.h>
+#include <ossim/base/ossimTimer.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimUrl.h>
 #include <ossim/base/ossimVisitor.h>
@@ -83,7 +84,8 @@
 #include <ossim/base/Barrier.h>
 #include <ossim/base/Block.h>
 #include <ossim/base/Thread.h>
-
+#include <ossim/support_data/TiffHandlerState.h>
+#include <ossim/support_data/ImageHandlerStateRegistry.h>
 // Put your includes here:
 
 // System includes:
@@ -91,6 +93,7 @@
 #include <memory>
 #include <sstream>
 #include <iostream>
+
 int main(int argc, char *argv[])
 {
    int returnCode = 0;
@@ -101,7 +104,7 @@ int main(int argc, char *argv[])
 
    try
    {
-      // Put your code here.
+    // add code
    }
    catch(const ossimException& e)
    {
