@@ -96,9 +96,9 @@ bool ossimDtedElevationDatabase::openDtedDirectory(const ossimFilename& dir)
       if ( m_extension.size() == 0 )
       {
          //---
-         // This sets extension by doing a directory scan for files ending in "dt*" or "DT*".
+         // This sets extension by doing a directory scan for files with "dt*".
          // Use "extension" key in preferences to avoid this.  Example:
-         // elevation_manager.elevation_source0.extension: dt2
+         // elevation_manager.elevation_source0.extension: dt2.
          //---
          result = inititializeExtension( dir );
          if ( !result && traceDebug() )
