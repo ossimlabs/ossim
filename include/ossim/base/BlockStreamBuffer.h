@@ -20,8 +20,8 @@ namespace ossim{
       BlockBufInfo():
       m_startByte(0),
       m_blockSize(0),
+      m_validSize(0),         
       m_blockBufferPtr(0),
-      m_validSize(0),
       m_blockLoaded(false){
 
       }

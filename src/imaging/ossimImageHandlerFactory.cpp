@@ -455,6 +455,30 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimKeywordlist& kwl,
    return result.release();
 }
 
+ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::open(std::shared_ptr<ossim::ImageHandlerState> state)const
+{
+   ossimRefPtr<ossimImageHandler> result = 0;
+   if(state)
+   {
+      ossimRefPtr<ossimObject> obj = createObject(state->getImageHandlerType());
+      if(obj)
+      {
+         result = dynamic_cast<ossimImageHandler*>(obj.get());
+         if(result)
+         {
+            if(!result->open(state))
+            {
+               result = 0;
+            }
+         }
+         obj = 0;
+      }
+      
+   }
+
+   return result; 
+}
+
 ossimRefPtr<ossimImageHandler> ossimImageHandlerFactory::openOverview(
    const ossimFilename& file ) const
 {

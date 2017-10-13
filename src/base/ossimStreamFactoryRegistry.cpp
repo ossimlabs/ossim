@@ -12,7 +12,7 @@
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimPreferences.h>
-#include <ossim/base/ossimBlockIStream.h>
+#include <ossim/base/BlockIStream.h>
 
 #include <fstream>
 #include <algorithm>
@@ -22,10 +22,9 @@
 ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::m_instance = 0;
 static const ossimString ISTREAM_BUFFER_KW = "ossim.stream.factory.registry.istream.buffer";
 static ossimTrace traceDebug("ossimStreamFactoryRegistry:debug");
-
+static std::mutex m_instanceMutex;
 ossim::StreamFactoryRegistry::StreamFactoryRegistry()
 {
-   loadPreferences();
 }
 
 
@@ -35,11 +34,23 @@ ossim::StreamFactoryRegistry::~StreamFactoryRegistry()
 
 ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::instance()
 {
+   // because of the loadPreferences for this factory and the fact that
+   // create stream could be recursive the lock and unlock are
+   // a little different here.  We will unlock as quickly as we can
+   // After the unlock then call load preferences
+   m_instanceMutex.lock();
    if(!m_instance)
    {
       m_instance = new ossim::StreamFactoryRegistry();
-
+      m_instance->registerFactory(ossim::StreamFactory::instance());
+      m_instanceMutex.unlock();
+      m_instance->loadPreferences();
    }
+   else
+   {
+      m_instanceMutex.unlock();
+   }
+
    return m_instance;
 }
 

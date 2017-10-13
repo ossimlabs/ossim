@@ -920,6 +920,10 @@ public:
     * Undefined until validate() is called.
     */
    ossim_float64 percentFull() const { return m_percentFull; }
+
+
+   virtual bool isEqualTo(const ossimDataObject& rhs,
+                          bool deepTest=false)const;
    
    virtual bool saveState(ossimKeywordlist& kwl, const char* prefix=0)const;
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
@@ -1193,8 +1197,6 @@ protected:
     */
    virtual void initializeNullDefault();
 
-   virtual bool isEqualTo(const ossimDataObject& rhs,
-                          bool deepTest=false)const;
    
    bool hasSameDimensionsAs(ossimImageData* data)const
    {
