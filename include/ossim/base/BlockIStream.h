@@ -1,6 +1,6 @@
 #ifndef ossimBlockStream_HEADER
 #define ossimBlockStream_HEADER 1
-#include <ossim/base/ossimBlockStreamBuffer.h>
+#include <ossim/base/BlockStreamBuffer.h>
 
 namespace ossim {
    /**

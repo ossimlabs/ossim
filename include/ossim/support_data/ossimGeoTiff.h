@@ -20,7 +20,7 @@
 #include <ossim/projection/ossimMapProjectionInfo.h>
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/base/ossimRefPtr.h>
-
+#include <ossim/support_data/TiffHandlerState.h>
 #include <vector>
 
 #include <tiffio.h>
@@ -156,6 +156,8 @@ public:
     */
    bool readTags(TIFF* tiff, ossim_uint32 entryIdx, bool ownTiffPtrFlag);
 
+   bool readTags(std::shared_ptr<ossim::TiffHandlerState> state, 
+                 ossim_uint32 entryIdx);
    /**
     *  Returns the map zone as an interger.
     */
@@ -180,6 +182,11 @@ public:
    void setOssimProjectionName();
 
    /**
+    *  Attempts to set the ossim projection name from keys read.
+    */
+   void setOssimProjectionName(std::shared_ptr<ossim::TiffHandlerState> state, ossim_int32 entryIdx=0);
+
+   /**
     *  Returns an ossimString representing the ossim datum name code.
     *  Returns "unknown" if it can't find a match.
     */
@@ -189,6 +196,8 @@ public:
     *  Attempts to set the ossim datum code.
     */
    void setOssimDatumName();
+
+   void setOssimDatumName(std::shared_ptr<ossim::TiffHandlerState> state, ossim_int32 entryIdx=0);
 
    void getScale(std::vector<double>& scale) const;
    void getTiePoint(std::vector<double>& tie_point) const;

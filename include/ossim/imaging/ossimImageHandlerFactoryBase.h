@@ -13,6 +13,7 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimImageHandler.h>
+#include <ossim/support_data/ImageHandlerState.h>
 #include <ossim/base/ossimObjectFactory.h>
 #include <ossim/base/ossimIosFwd.h>
 #include <algorithm>
@@ -100,6 +101,10 @@ public:
       std::shared_ptr<ossim::istream>& str,
       const std::string& connectionString,
       bool openOverview=true ) const;
+
+
+   virtual ossimRefPtr<ossimImageHandler> open(std::shared_ptr<ossim::ImageHandlerState> state)const;
+
 
    /**
     * @brief Open overview that takes a file name.

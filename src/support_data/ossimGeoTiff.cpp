@@ -973,6 +973,152 @@ bool ossimGeoTiff::readTags(const ossimFilename& file, ossim_uint32 entryIdx)
    return result;
 }
 
+bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossim_uint32 entryIdx)
+{
+   std::lock_guard<std::mutex> lock(theMutex);
+
+   if(!state) return false;
+
+   if(!state->checkBool(entryIdx, "is_geotiff"))
+   {
+      return false;
+   }
+   ossimString value;
+   theLength             = state->getImageLength(entryIdx);
+   theWidth              = state->getImageWidth(entryIdx);
+   theScaleFactor        = 0.0;
+   theModelType          = state->getModelType(entryIdx);
+   theGcsCode            = state->getGcsCode(entryIdx);
+   theDatumCode          = state->getDatumCode(entryIdx);
+   theAngularUnits       = state->getAngularUnits(entryIdx);
+   theLinearUnitsCode    = state->getLinearUnits(entryIdx);
+   theGeoKeysPresentFlag = true;
+
+   if (theAngularUnits == ANGULAR_DMS_HEMISPHERE || theAngularUnits == 9122)
+   {
+      //---
+      // Hack for bug, where the libgeotiff funtion GTIFGetDefn sets the angular units 
+      // incorrectly to ANGULAR_DMS_HEMISPHERE:
+      if ( traceDebug() )
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << " WARNING ossimGeoTiff::addImageGeometry:"           
+            << "The angular units (key 2054) is set to ANGULAR_DMS_HEMISPHERE!"  
+            << "\nAssuming \"Angular_Degree\"..." << std::endl;
+      }
+      theAngularUnits = ANGULAR_DEGREE;  
+   }
+
+  if (state->getValue(value, entryIdx, "tifftag.pcs_code"))
+  {
+    thePcsCode = value.toInt32();
+    parsePcsCode();    
+  }
+   //---
+   // ESH 2/2008 -- Handle geotiff's with state plane coordinate systems produced by ERDAS.
+   // They use the citation filed to specify the geometry (complete HACK by Erdas)
+   //---
+   else
+   {
+    ossimString gTCitation;
+    if(state->getValue(gTCitation, entryIdx, "tifftag.citation"))
+    {
+         // Extract state plane string from the citation key
+         ossimString projStrTemp =
+            gTCitation.afterRegExp( "Projection Name = " );
+         
+         ossimString projStr  = projStrTemp.beforeRegExp( "\n" );
+         if ( projStr.empty() == false )
+         {
+            ossimEpsgProjectionFactory* f = ossimEpsgProjectionFactory::instance();
+            ossimProjection* proj = f->createProjection(projStr);
+            ossimMapProjection* map_proj = PTR_CAST(ossimMapProjection, proj);
+            parseProjection(map_proj);
+         }
+      }  // End of "if(GTIFKeyGet(gtif, GTCitationGeoKey..."
+   }
+   
+   theOriginLon = ossim::nan();
+   theOriginLat = ossim::nan();
+   state->getValue(thePcsCitation, entryIdx, "tifftag.pcs_citation");
+   if(state->getValue(value, entryIdx, "tifftag.coord_trans_code"))
+   {
+      theCoorTransGeoCode = value.toInt32(); 
+   }
+   if(state->getValue(value, entryIdx, "tifftag.std_parallel_1"))
+   {
+      theStdPar1 = value.toDouble();
+   }
+   if(state->getValue(value, entryIdx, "tifftag.std_parallel_2"))
+   {
+      theStdPar2 = value.toDouble();
+   }
+   if(state->getValue(value, entryIdx, "tifftag.origin_lon"))
+   {
+      theOriginLon = value.toDouble();
+   }
+   else if(state->getValue(value, entryIdx, "tifftag.center_lon"))
+   {
+      theOriginLon = value.toDouble();
+   }
+   else if(state->getValue(value, entryIdx, "tifftag.false_origin_lon"))
+   {
+      theOriginLon = value.toDouble();
+   }
+   else if(state->getValue(value, entryIdx, "tifftag.straight_vert_pole_lon"))
+   {
+      theOriginLon = value.toDouble();
+   }
+
+   if(state->getValue(value, entryIdx, "tifftag.origin_lat"))
+   {
+      theOriginLat = value.toDouble();
+   }
+   else if(state->getValue(value, entryIdx, "tifftag.center_lat"))
+   {
+      theOriginLat = value.toDouble();
+   }
+   else if(state->getValue(value, entryIdx, "tifftag.false_origin_lat"))
+   {
+      theOriginLat = value.toDouble();
+   }
+
+   if(state->getValue(value, entryIdx, "tifftag.false_easting"))
+   {
+      theFalseEasting = value.toDouble();
+   }
+   if(state->getValue(value, entryIdx, "tifftag.false_northing"))
+   {
+      theFalseNorthing = value.toDouble();
+   }
+   if(state->getValue(value, entryIdx, "tifftag.scale_factor"))
+   {
+      theScaleFactor = value.toDouble();
+   }
+   theScale.clear();
+   if(state->getGeoPixelScale(theScale, entryIdx))
+   {
+      if ( theModelType == ModelTypeGeographic )
+      {
+         // The origin latitude must be computed so as to achieve the proper horizontal scaling:
+         theOriginLat = ossim::acosd(theScale[1]/theScale[0]);
+      }    
+   }
+   theTiePoint.clear();
+   state->getGeoTiePoints(theTiePoint, entryIdx);
+   theModelTransformation.clear();
+   state->getGeoTransMatrix(theModelTransformation, entryIdx);
+   theDoubleParam.clear();
+   state->getGeoDoubleParams(theDoubleParam, entryIdx);
+
+   state->getValue(theAsciiParam, entryIdx, "tifftag.geo_ascii_params");
+
+   setOssimProjectionName(state, entryIdx);
+   setOssimDatumName(state, entryIdx);
+
+   return true;
+}
+
 bool ossimGeoTiff::readTags(
    TIFF* tiff, ossim_uint32 entryIdx, bool ownTiffPtrFlag)
 {
@@ -1803,6 +1949,46 @@ void ossimGeoTiff::setOssimProjectionName()
    
 }
 
+void ossimGeoTiff::setOssimProjectionName(std::shared_ptr<ossim::TiffHandlerState> state, ossim_int32 entryIdx)
+{
+  ossimString value;
+   //---
+   // The "parsePcsCode" method can also set the projection name.  So check
+   // it prior to looking in the lookup table.
+   //---
+   if (theProjectionName == "unknown")
+   {
+      if(state->getValue(value, entryIdx, "tifftag.coord_trans_code"))
+      {
+        ossimString name =  COORD_TRANS_LUT.getEntryString(value.toInt32());
+        
+        if (name.size())
+        {
+           theProjectionName = name;
+        }
+      }
+   }
+
+   // If still unknown check for the model type.
+   if (theProjectionName == "unknown")
+   {
+      if (theModelType == ModelTypeGeographic)
+      {
+         theProjectionName = "ossimEquDistCylProjection";
+      }
+   }
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "DEBUG ossimGeoTiff::setOssimProjectionName: "
+         << "theProjectionName:  "
+         << theProjectionName
+         << std::endl;
+   }
+   
+}
+
 ossimString ossimGeoTiff::getOssimDatumName() const
 {
    return theDatumName;
@@ -1830,6 +2016,48 @@ void ossimGeoTiff::setOssimDatumName()
          {
             theDatumName = name;
          }
+      }
+   }
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "DEBUG ossimGeoTiff::setOssimDatumName: "
+         << "theDatumName:  "
+         << theDatumName
+         << std::endl;
+   } 
+}
+
+void ossimGeoTiff::setOssimDatumName(std::shared_ptr<ossim::TiffHandlerState> state, 
+                                     ossim_int32 entryIdx)
+{
+  ossimString value;
+   //---
+   // The "parsePcsCode" method can also set the datum name.  So check
+   // it prior to trying to assign.
+   //---
+   if (theDatumName == "unknown")
+   {
+      if(state->getValue(value, entryIdx, "tifftag.datum_code"))
+      {
+        ossimString name = DATUM_LUT.getEntryString(value.toInt32());
+        
+        if (!name.empty())
+        {
+           theDatumName = name;
+        }
+        else
+        {
+           // Try the GCS code.
+           if(state->getValue(value, entryIdx, "tifftag.gcs_code"))
+           {
+             name = DATUM_LUT.getEntryString(value.toInt32());
+             if (name.size())
+             {
+                theDatumName = name;
+             }
+           }
+        }        
       }
    }
    if (traceDebug())

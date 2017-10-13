@@ -242,6 +242,22 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open(
    return result; 
 }
 
+ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open(std::shared_ptr<ossim::ImageHandlerState> state)const
+{
+   ossimRefPtr<ossimImageHandler> result = 0;
+   vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+   while( (!result)&&(factory != m_factoryList.end()) )
+   {
+      result = (*factory)->open( state );
+      if ( result )
+      {
+         break;
+      }
+      ++factory;
+   }
+   return result; 
+}
+
 #if 0
 ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open( ossim::istream* str,
                                                                 std::streamoff restartPosition,

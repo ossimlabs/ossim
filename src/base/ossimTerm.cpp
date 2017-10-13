@@ -165,8 +165,9 @@ ossimTerm* ossimVar::copy() const{
  *
  * @return     A pointer to that contains the derivative of the term.
  */
-ossimTerm* ossimConst::derivative(const ossim_uint32& variable) const{
-	return new ossimConst(0);
+ossimTerm* ossimConst::derivative(const ossim_uint32& /* variable */ ) const
+{
+   return new ossimConst(0);
 }
 
 

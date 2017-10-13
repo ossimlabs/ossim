@@ -45,6 +45,11 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::open(
    return ossimRefPtr<ossimImageHandler>(0);
 }
 
+ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::open(std::shared_ptr<ossim::ImageHandlerState> state)const
+{
+   return ossimRefPtr<ossimImageHandler>(0);   
+}
+
 ossimRefPtr<ossimImageHandler> ossimImageHandlerFactoryBase::openOverview(
    std::shared_ptr<ossim::istream>& /* str */,
    const ossimString& /* connectionString */ ) const
