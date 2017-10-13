@@ -98,8 +98,9 @@ fi
 # Additional stuff for ECLIPSE CDT4 users:
 CMAKE_G_ARG="Unix Makefiles"
 if [ "$BUILD_TYPE_ARG" == "ECLIPSE" ]; then
-  CMAKE_ECLIPSE_VERSION=4.7.0
+  CMAKE_ECLIPSE_VERSION=4.7.1
   CMAKE_G_ARG="Eclipse CDT4 - Unix Makefiles"
+  CMAKE_CXX_FLAGS="-std=c++11"
   cp -f $CMAKE_DIR/CMakeLists.txt $OSSIM_DEV_HOME
   CMAKE_DIR=$OSSIM_DEV_HOME
   echo "Generating eclipse project files for Eclipse $CMAKE_ECLIPSE_VERSION."
@@ -240,6 +241,8 @@ echo "Generating Makefiles in" $OSSIM_BUILD_DIR
 
 # CMAKE command 
 cmake -G "$CMAKE_G_ARG" \
+-DCMAKE_CXX_FLAGS=$CMAKE_CXX_FLAGS \
+-DCMAKE_ECLIPSE_VERSION=$CMAKE_ECLIPSE_VERSION \
 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
 -DOSSIM_DEV_HOME=$OSSIM_DEV_HOME \
 -DCMAKE_OSX_ARCHITECTURES="x86_64" \

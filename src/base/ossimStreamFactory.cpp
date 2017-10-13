@@ -93,7 +93,7 @@ std::shared_ptr<ossim::ostream> ossim::StreamFactory::createOstream(
 
 std::shared_ptr<ossim::iostream> ossim::StreamFactory::createIOstream(
    const std::string& /*connectionString*/,
-   const ossimKeywordlist& options,
+   const ossimKeywordlist& /* options */,
    std::ios_base::openmode /*mode*/) const
 {
    return std::shared_ptr<ossim::iostream>(0);

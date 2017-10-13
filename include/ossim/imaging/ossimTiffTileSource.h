@@ -22,7 +22,7 @@
 #include <ossim/base/ossimIrect.h>
 #include <vector>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
-
+#include <ossim/support_data/TiffStreamAdaptor.h>
 /*
  * TIFF is defined as an incomplete type to hide the tiff library's internal
  * data structures from clients.
@@ -56,7 +56,7 @@ public:
     *  Returns true if the image_file can be opened and is a valid tiff file.
     */
    virtual bool open(const ossimFilename& image_file);
-
+   
    /**
     *  @brief This open takes a stream and stores/captures the shared pointer
     *  on success.
@@ -375,7 +375,8 @@ private:
    ossim_uint32              theCurrentTiffRlevel;
    ossim_int32               theCompressionType;
    std::vector<ossim_uint32> theOutputBandList;
-   shared_ptr<TiffStreamAdaptor> m_streamAdaptor;
+   std::shared_ptr<ossim::TiffIStreamAdaptor> m_streamAdaptor;
+
 TYPE_DATA
 };
 

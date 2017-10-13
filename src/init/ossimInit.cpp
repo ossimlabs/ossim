@@ -34,16 +34,19 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <ossim/base/ossimPreferences.h>
-#include <ossim/base/ossimStreamFactory.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimTraceManager.h>
 #include <ossim/base/ossimGeoidEgm96.h>
 #include <ossim/base/ossim2dTo2dTransformRegistry.h>
 
+
 #include <ossim/elevation/ossimElevManager.h>
 
 #include <ossim/font/ossimFontFactoryRegistry.h>
+
+#include <ossim/support_data/ImageHandlerStateRegistry.h>
+#include <ossim/support_data/ImageHandlerStateFactory.h>
 
 #include <ossim/imaging/ossimCodecFactoryRegistry.h>
 #include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
@@ -522,8 +525,8 @@ void ossimInit::removeOption(int& argc,
 
 void ossimInit::initializeDefaultFactories()
 {
-   ossim::StreamFactoryRegistry::instance()->registerFactory(ossim::StreamFactory::instance());
-
+   ossim::StreamFactoryRegistry::instance();
+   ossim::ImageHandlerStateRegistry::instance()->registerFactory(ossim::ImageHandlerStateFactory::instance());
    ossimObjectFactoryRegistry::instance()->registerFactory(ossimImageSourceFactoryRegistry::instance());
 
    //---

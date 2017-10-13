@@ -301,14 +301,14 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
    ossim_int32 ifdIndex = 0;
    while(seekOffset)
    {
-      out << "tiff.directory_offset: " << seekOffset << "\n";
+      // directory prefix for prints.
+      std::string prefix = "tiff.";
+      getDirPrefix(ifdIndex, prefix);
+      out << prefix << "directory_offset: " << seekOffset << "\n";
 
       // Seek to the image file directory.
       m_inputStream->seekg(seekOffset, std::ios_base::beg);  
 
-      // directory prefix for prints.
-      std::string prefix = "tiff.";
-      getDirPrefix(ifdIndex, prefix);
 
       //---
       // Things we need to save for printGeoKeys:
@@ -723,14 +723,15 @@ std::ostream& ossimTiffInfo::print(std::istream& inStr,
    ossim_int32 ifdIndex = 0;
    while(seekOffset)
    {
-      outStr << "tiff.directory_offset: " << seekOffset << "\n";
+      // directory prefix for prints.
+      std::string prefix = "tiff.";
+      getDirPrefix(ifdIndex, prefix);
+
+      outStr << prefix << "directory_offset: " << seekOffset << "\n";
 
       // Seek to the image file directory.
       inStr.seekg(startPosition+seekOffset, std::ios_base::beg);  
 
-      // directory prefix for prints.
-      std::string prefix = "tiff.";
-      getDirPrefix(ifdIndex, prefix);
 
       //---
       // Things we need to save for printGeoKeys:
