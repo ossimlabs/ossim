@@ -428,26 +428,31 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   ossim_uint16 tempUint16 = 0; 
    if(GTIFKeyGet(gtif, GTModelTypeGeoKey, &tempUint16, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.model_type", 
              ossimString::toString(tempUint16));
    }
    if(GTIFKeyGet(gtif, GeographicTypeGeoKey, &tempUint16, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.gcs_code", 
              ossimString::toString(tempUint16));
    }
    if(GTIFKeyGet(gtif, GeogGeodeticDatumGeoKey, &tempUint16, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.datum_code", 
              ossimString::toString(tempUint16));
    }
    if(GTIFKeyGet(gtif, GeogAngularUnitsGeoKey, &tempUint16, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.angular_units", 
              ossimString::toString(tempUint16));
    }
    if(GTIFKeyGet(gtif, GeogLinearUnitsGeoKey, &tempUint16, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.linear_units", 
              ossimString::toString(tempUint16));
    }
@@ -541,56 +546,67 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   double tempDouble=0.0;
    if(GTIFKeyGet(gtif, ProjStdParallel1GeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.std_parallel_1", 
               ossimString::toString(tempDouble));
    }
    if(GTIFKeyGet(gtif, ProjStdParallel2GeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.std_parallel_2", 
               ossimString::toString(tempDouble));
    }
    if(GTIFKeyGet(gtif, ProjNatOriginLongGeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.origin_lon", 
               ossimString::toString(tempDouble));
    }
    else if(GTIFKeyGet(gtif, ProjOriginLongGeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.origin_lon", 
               ossimString::toString(tempDouble));
    }
    if(GTIFKeyGet(gtif, ProjNatOriginLatGeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.origin_lat", 
               ossimString::toString(tempDouble));
    }
    else if(GTIFKeyGet(gtif, ProjOriginLatGeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.origin_lat", 
               ossimString::toString(tempDouble));
    }
    if(GTIFKeyGet(gtif, ProjFalseEastingGeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.false_easting", 
               ossimString::toString(tempDouble));
    }
    if(GTIFKeyGet(gtif, ProjFalseNorthingGeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.false_northing", 
               ossimString::toString(tempDouble));
    }
    if(GTIFKeyGet(gtif, ProjCenterLongGeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.center_lon", 
               ossimString::toString(tempDouble));
    }
    if(GTIFKeyGet(gtif, ProjCenterLatGeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.center_lat", 
               ossimString::toString(tempDouble));
    }
    if(GTIFKeyGet(gtif, ProjScaleAtNatOriginGeoKey, &tempDouble, 0, 1))
    {
+      loadedGeotiff = true;
       addValue(dirPrefix+"tifftag.scale_factor", 
               ossimString::toString(tempDouble));
    }
