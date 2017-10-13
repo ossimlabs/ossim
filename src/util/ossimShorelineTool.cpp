@@ -5,7 +5,7 @@
 //
 //**************************************************************************************************
 
-#include <json/json.h>
+#include <ossim/util/ossimShorelineTool.h>
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimCommon.h>
@@ -27,7 +27,6 @@
 #include <ossim/imaging/ossimErosionFilter.h>
 #include <ossim/imaging/ossimImageHistogramSource.h>
 #include <ossim/ossimVersion.h>
-#include <ossim/util/ossimShorelineTool.h>
 #include <ossim/util/ossimToolRegistry.h>
 #include <fstream>
 
@@ -564,6 +563,7 @@ void ossimShorelineTool::autoComputeThreshold()
 }
 
 #if OSSIM_HAS_JSONCPP
+#include <json/json.h>
 bool ossimShorelineTool::addPropsToJSON()
 {
    // Read existing JSON file as output by potrace:
