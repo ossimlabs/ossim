@@ -1,14 +1,9 @@
-//*****************************************************************************
-// FILE: ossimRpcModel.h
+//**************************************************************************************************
 //
-// License:  MIT
-// 
-// See LICENSE.txt file in the top level directory for more details.
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-// AUTHOR: Garrett Potts
-//
-//*****************************************************************************
-//  $Id: ossimRpcSolver.h 15766 2009-10-20 12:37:09Z gpotts $
+//**************************************************************************************************
 #ifndef ossimRpcSolver_HEADER
 #define ossimRpcSolver_HEADER
 
@@ -90,18 +85,27 @@ public:
    /**
     * This will convert any projector to an RPC model
     */
-   void solveCoefficients(const ossimDrect& imageBouunds,
+   void solveCoefficients(const ossimDrect& imageBounds,
                           ossimProjection* imageProj,
                           ossim_uint32 xSamples=8,
-                          ossim_uint32 ySamples=8,
-                          bool shiftTo0Flag=true);
+                          ossim_uint32 ySamples=8);
    
-   void solveCoefficients(const ossimDrect& imageBouunds,
+   void solveCoefficients(const ossimDrect& imageBounds,
                           ossimImageGeometry* geom,
                           ossim_uint32 xSamples=8,
-                          ossim_uint32 ySamples=8,
-                          bool shiftTo0Flag=true);
+                          ossim_uint32 ySamples=8);
    
+   /**
+    * Similar to the other solve methods except that the final grid size is established
+    * iteratively so that the error at the midpoints between grid nodes falls below tolerance.
+    * The RPC computed covers the full image.
+    * @param geom Represents the geometry of the input image
+    * @param pixel_tolerance Maximum error in pixels (typically fraction of a pixel) to achieve.
+    * @return true if solution converged below pixel tolerance.
+    */
+   bool solveCoefficients(ossimImageGeometry* geom,
+                          const double& error_tolerance=0.1);
+
    /**
     * takes associated image points and ground points
     * and solves the coefficents for the rational polynomial for
@@ -111,19 +115,18 @@ public:
     *       numerical robustness.
     */ 
    void solveCoefficients(const std::vector<ossimDpt>& imagePoints,
-                          const std::vector<ossimGpt>& groundControlPoints,
-                          const ossimDpt& imageShift = ossimDpt(0.0,0.0));
+                          const std::vector<ossimGpt>& groundControlPoints);
 
    /**
     * Creates and Rpc model from the coefficients
     */
-   ossimImageGeometry* createRpcModel()const;
+   ossimRpcModel* createRpcModel()const;
 
    /**
     * Create a simple rpc projection which is a dumbed down
     * rpc model.
     */
-   ossimImageGeometry* createRpcProjection()const;
+   ossimRpcProjection* createRpcProjection()const;
 
 
    /**
@@ -187,9 +190,9 @@ protected:
                                   const std::vector<double>& z)const;
    
    double eval(const std::vector<double>& coeff,
-               double x,
-               double y,
-               double z)const;
+               const double& x, const double& y, const double& z)const;
+
+   void evalPoint(const ossimGpt& gpt, ossimDpt& ipt) const;
 
    /**
     * Inverts using the SVD method
@@ -216,8 +219,10 @@ protected:
    ossimDpt      theImageScale;
    ossim_float64 theLatScale;
    ossim_float64 theLonScale;
-   ossim_float64 theHeightScale;
+   ossim_float64 theHgtScale;
    ossim_float64 theError;
+   ossimRefPtr<ossimImageGeometry> theRefGeom;
+
    /**
     * there are 20 coefficients in the cubic RPC model
     */ 

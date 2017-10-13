@@ -1397,3 +1397,77 @@ void ossimRpcModel::getRpcParameters(ossimRpcModel::rpcModelStruct& model) const
       model.type= 'B';
    }
 }
+#if OSSIM_HAS_JSONCPP
+bool ossimRpcModel::toJSON(Json::Value& topLevel) const
+{
+   Json::Value IMAGE;
+   IMAGE["ERRBIAS"]      = theBiasError;
+   IMAGE["ERRRAND"]      = theRandError;
+   IMAGE["LINEOFFSET"]   = (int)theLineOffset;
+   IMAGE["SAMPOFFSET"]   = (int)theSampOffset;
+   IMAGE["LATOFFSET"]    = theLatOffset;
+   IMAGE["LONGOFFSET"]   = theLonOffset;
+   IMAGE["HEIGHTOFFSET"] = theHgtOffset;
+   IMAGE["LINESCALE"]    = theLineScale;
+   IMAGE["SAMPSCALE"]    = theSampScale;
+   IMAGE["LATSCALE"]     = theLatScale;
+   IMAGE["LONGSCALE"]    = theLonScale;
+   IMAGE["HEIGHTSCALE"]  = theHgtScale;
+
+   // Preferred way to output coeff arrays:
+//   Json::Value LINENUMCOEF(Json::arrayValue);
+//   Json::Value LINEDENCOEF(Json::arrayValue);
+//   Json::Value SAMPNUMCOEF(Json::arrayValue);
+//   Json::Value SAMPDENCOEF(Json::arrayValue);
+//   for (int i=0; i<20; ++i)
+//   {
+//      LINENUMCOEF.append(theLineNumCoef[i]);
+//      LINEDENCOEF.append(theLineDenCoef[i]);
+//      SAMPNUMCOEF.append(theSampNumCoef[i]);
+//      SAMPDENCOEF.append(theSampDenCoef[i]);
+//   }
+
+   // Write coeffs as string list for JSON to XML converter to output properly:
+   ossimString LINENUMCOEF;
+   ossimString LINEDENCOEF;
+   ossimString SAMPNUMCOEF;
+   ossimString SAMPDENCOEF;
+   for (int i=0; i<20; ++i)
+   {
+      LINENUMCOEF += ossimString::toString(theLineNumCoef[i]) + " ";
+      LINEDENCOEF += ossimString::toString(theLineDenCoef[i]) + " ";
+      SAMPNUMCOEF += ossimString::toString(theSampNumCoef[i]) + " ";
+      SAMPDENCOEF += ossimString::toString(theSampDenCoef[i]) + " ";
+   }
+
+   Json::Value LINENUMCOEFList;
+   LINENUMCOEFList["LINENUMCOEF"] = LINENUMCOEF.string();
+   IMAGE["LINENUMCOEFList"] = LINENUMCOEFList;
+
+   Json::Value LINEDENCOEFList;
+   LINEDENCOEFList["LINEDENCOEF"] = LINEDENCOEF.string();
+   IMAGE["LINEDENCOEFList"] = LINEDENCOEFList;
+
+   Json::Value SAMPNUMCOEFList;
+   SAMPNUMCOEFList["SAMPNUMCOEF"] = SAMPNUMCOEF.string();
+   IMAGE["SAMPNUMCOEFList"] = SAMPNUMCOEFList;
+
+   Json::Value SAMPDENCOEFList;
+   SAMPDENCOEFList["SAMPDENCOEF"] = SAMPDENCOEF.string();
+   IMAGE["SAMPDENCOEFList"] = SAMPDENCOEFList;
+
+   Json::Value RPB;
+   RPB["SATID"] = "NOT_ASSIGNED";
+   RPB["BANDID"] = "NOT_ASSIGNED";
+   if (thePolyType == A)
+      RPB["SPECID"] = "RPC00A"; // Not sure this will work
+   else
+      RPB["SPECID"] = "RPC00B";
+   RPB["IMAGE"] = IMAGE;
+
+   Json::Value ISD;
+   ISD["RPB"] = RPB;
+   topLevel["isd"] = ISD;
+}
+#endif
+

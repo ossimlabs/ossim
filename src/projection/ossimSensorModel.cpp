@@ -537,6 +537,7 @@ void ossimSensorModel::setImageRect(const ossimDrect& imageRect)
 {
    theImageClipRect = imageRect;
    theRefImgPt = imageRect.midPoint();
+   theImageSize = imageRect.size();
 }
 void ossimSensorModel::setGroundRect(const ossimGpt& ul,
                                      const ossimGpt& ur,

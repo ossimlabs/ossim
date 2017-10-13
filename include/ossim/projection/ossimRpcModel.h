@@ -20,7 +20,10 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimDblGrid.h>
 #include <ossim/base/ossimFilename.h>
-
+#include <ossim/ossimConfig.h>
+#if OSSIM_HAS_JSONCPP
+#include <json/json.h>
+#endif
 
 /*!****************************************************************************
  *
@@ -209,6 +212,9 @@ public:
     */
    void getRpcParameters(ossimRpcModel::rpcModelStruct& model) const;
    
+#if OSSIM_HAS_JSONCPP
+   bool toJSON(Json::Value& jsonValue) const;
+#endif
 
 protected:
    enum AdjustParamIndex
