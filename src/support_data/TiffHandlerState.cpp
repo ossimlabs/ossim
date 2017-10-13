@@ -393,6 +393,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   char citationStrPtr[CITATION_STRING_SIZE];
   char* buf = 0;
   ossim_uint16 doubleArraySize = 0;
+  double tempDouble=0.0;
   double* doubleArray=0;
   ossimString doubleArrayStr;
   bool loadedGeotiff = false;
@@ -402,220 +403,110 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
     return;
   } 
 
-
-  // now load tags
+  // Note:  For some reason I am having troubles using
+  // GTIFGetDefn so I have to query them directly.  I was getting
+  // Core dumps in the JNI calls to the OSSIM core library.
+  // Until this is resolved I will use the direct method of getting
+  // the values I need.
   //
-  //GTIFDefn* defs = new GTIFDefn;
-
-  //std::shared_ptr<GTIFDefn> defs = std::make_shared<GTIFDefn>();
-
-  // if(GTIFGetDefn(gtif, defs))
-  // {
-  //   loadedGeotiff = true;
-  //   addValue(dirPrefix+"tifftag.model_type", 
-  //            ossimString::toString(defs->Model));
-  //   addValue(dirPrefix+"tifftag.gcs_code", 
-  //            ossimString::toString(defs->GCS));
-  //   addValue(dirPrefix+"tifftag.pcs_code", 
-  //            ossimString::toString(defs->PCS));
-  //   addValue(dirPrefix+"tifftag.datum_code", 
-  //            ossimString::toString(defs->Datum));
-  //   addValue(dirPrefix+"tifftag.angular_units", 
-  //            ossimString::toString(defs->UOMAngle));
-  //   addValue(dirPrefix+"tifftag.linear_units", 
-  //            ossimString::toString(defs->UOMLength));
-  // }
   ossim_uint16 tempUint16 = 0; 
-   if(GTIFKeyGet(gtif, GTModelTypeGeoKey, &tempUint16, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.model_type", 
-             ossimString::toString(tempUint16));
-   }
-   if(GTIFKeyGet(gtif, GeographicTypeGeoKey, &tempUint16, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.gcs_code", 
-             ossimString::toString(tempUint16));
-   }
-   if(GTIFKeyGet(gtif, GeogGeodeticDatumGeoKey, &tempUint16, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.datum_code", 
-             ossimString::toString(tempUint16));
-   }
-   if(GTIFKeyGet(gtif, GeogAngularUnitsGeoKey, &tempUint16, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.angular_units", 
-             ossimString::toString(tempUint16));
-   }
-   if(GTIFKeyGet(gtif, GeogLinearUnitsGeoKey, &tempUint16, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.linear_units", 
-             ossimString::toString(tempUint16));
-   }
-
-
-#if 0
-  if(defs->nParms > 0)
+  if(GTIFKeyGet(gtif, GTModelTypeGeoKey, &tempUint16, 0, 1))
   {
     loadedGeotiff = true;
-
-    for(idx = 0; idx < (ossim_uint32)(defs->nParms); ++idx)
-    {
-      switch(defs->ProjParmId[idx])
-      {
-        case ProjStdParallel1GeoKey:
-        {
-          addValue(dirPrefix+"tifftag.std_parallel_1", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjStdParallel2GeoKey:
-        {
-          addValue(dirPrefix+"tifftag.std_parallel_2", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjOriginLongGeoKey:
-        {
-          addValue(dirPrefix+"tifftag.origin_lon", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjOriginLatGeoKey:
-        {
-          addValue(dirPrefix+"tifftag.origin_lat", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjFalseEastingGeoKey:
-        {
-          addValue(dirPrefix+"tifftag.false_easting", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjFalseNorthingGeoKey:
-        {
-          addValue(dirPrefix+"tifftag.false_northing", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjCenterLongGeoKey:
-        {
-          addValue(dirPrefix+"tifftag.center_lon", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjCenterLatGeoKey:
-        {
-          addValue(dirPrefix+"tifftag.center_lat", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjFalseOriginLatGeoKey:
-        {
-          addValue(dirPrefix+"tifftag.false_origin_lat", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjFalseOriginLongGeoKey:
-        {
-          addValue(dirPrefix+"tifftag.false_origin_lon", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjStraightVertPoleLongGeoKey:
-        {
-          addValue(dirPrefix+"tifftag.straight_vert_pole_lon", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-        case ProjScaleAtNatOriginGeoKey:
-        {
-          addValue(dirPrefix+"tifftag.scale_factor", 
-                  ossimString::toString(defs->ProjParm[idx]));
-          break;
-        }
-      }
-    }
+    addValue(dirPrefix+"tifftag.model_type", 
+           ossimString::toString(tempUint16));
   }
-#else
-  double tempDouble=0.0;
-   if(GTIFKeyGet(gtif, ProjStdParallel1GeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.std_parallel_1", 
-              ossimString::toString(tempDouble));
-   }
-   if(GTIFKeyGet(gtif, ProjStdParallel2GeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.std_parallel_2", 
-              ossimString::toString(tempDouble));
-   }
-   if(GTIFKeyGet(gtif, ProjNatOriginLongGeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.origin_lon", 
-              ossimString::toString(tempDouble));
-   }
-   else if(GTIFKeyGet(gtif, ProjOriginLongGeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.origin_lon", 
-              ossimString::toString(tempDouble));
-   }
-   if(GTIFKeyGet(gtif, ProjNatOriginLatGeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.origin_lat", 
-              ossimString::toString(tempDouble));
-   }
-   else if(GTIFKeyGet(gtif, ProjOriginLatGeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.origin_lat", 
-              ossimString::toString(tempDouble));
-   }
-   if(GTIFKeyGet(gtif, ProjFalseEastingGeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.false_easting", 
-              ossimString::toString(tempDouble));
-   }
-   if(GTIFKeyGet(gtif, ProjFalseNorthingGeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.false_northing", 
-              ossimString::toString(tempDouble));
-   }
-   if(GTIFKeyGet(gtif, ProjCenterLongGeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.center_lon", 
-              ossimString::toString(tempDouble));
-   }
-   if(GTIFKeyGet(gtif, ProjCenterLatGeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.center_lat", 
-              ossimString::toString(tempDouble));
-   }
-   if(GTIFKeyGet(gtif, ProjScaleAtNatOriginGeoKey, &tempDouble, 0, 1))
-   {
-      loadedGeotiff = true;
-      addValue(dirPrefix+"tifftag.scale_factor", 
-              ossimString::toString(tempDouble));
-   }
-#endif
-  // if(defs)
-  // {
-  //   delete defs;
-  //   defs = 0;
-  // } 
+  if(GTIFKeyGet(gtif, GeographicTypeGeoKey, &tempUint16, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.gcs_code", 
+           ossimString::toString(tempUint16));
+  }
+  if(GTIFKeyGet(gtif, GeogGeodeticDatumGeoKey, &tempUint16, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.datum_code", 
+           ossimString::toString(tempUint16));
+  }
+  if(GTIFKeyGet(gtif, GeogAngularUnitsGeoKey, &tempUint16, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.angular_units", 
+           ossimString::toString(tempUint16));
+  }
+  if(GTIFKeyGet(gtif, GeogLinearUnitsGeoKey, &tempUint16, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.linear_units", 
+           ossimString::toString(tempUint16));
+  }
+
+  if(GTIFKeyGet(gtif, ProjStdParallel1GeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.std_parallel_1", 
+            ossimString::toString(tempDouble));
+  }
+  if(GTIFKeyGet(gtif, ProjStdParallel2GeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.std_parallel_2", 
+            ossimString::toString(tempDouble));
+  }
+  if(GTIFKeyGet(gtif, ProjNatOriginLongGeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.origin_lon", 
+            ossimString::toString(tempDouble));
+  }
+  else if(GTIFKeyGet(gtif, ProjOriginLongGeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.origin_lon", 
+            ossimString::toString(tempDouble));
+  }
+  if(GTIFKeyGet(gtif, ProjNatOriginLatGeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.origin_lat", 
+            ossimString::toString(tempDouble));
+  }
+  else if(GTIFKeyGet(gtif, ProjOriginLatGeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.origin_lat", 
+            ossimString::toString(tempDouble));
+  }
+  if(GTIFKeyGet(gtif, ProjFalseEastingGeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.false_easting", 
+            ossimString::toString(tempDouble));
+  }
+  if(GTIFKeyGet(gtif, ProjFalseNorthingGeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.false_northing", 
+            ossimString::toString(tempDouble));
+  }
+  if(GTIFKeyGet(gtif, ProjCenterLongGeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.center_lon", 
+            ossimString::toString(tempDouble));
+  }
+  if(GTIFKeyGet(gtif, ProjCenterLatGeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.center_lat", 
+            ossimString::toString(tempDouble));
+  }
+  if(GTIFKeyGet(gtif, ProjScaleAtNatOriginGeoKey, &tempDouble, 0, 1))
+  {
+    loadedGeotiff = true;
+    addValue(dirPrefix+"tifftag.scale_factor", 
+            ossimString::toString(tempDouble));
+  }
   if(GTIFKeyGet(gtif, GTRasterTypeGeoKey, &rasterType, 0, 1))
   {
     loadedGeotiff = true;
