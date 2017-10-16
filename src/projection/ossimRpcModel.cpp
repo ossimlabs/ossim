@@ -35,6 +35,10 @@ RTTI_DEF1(ossimRpcModel, "ossimRpcModel", ossimSensorModel);
 #include <sstream>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 
+#if OSSIM_HAS_JSONCPP
+#include <json/json.h>
+#endif
+
 //***
 // Define Trace flags for use within this file:
 //***
@@ -1397,9 +1401,10 @@ void ossimRpcModel::getRpcParameters(ossimRpcModel::rpcModelStruct& model) const
       model.type= 'B';
    }
 }
-#if OSSIM_HAS_JSONCPP
-bool ossimRpcModel::toJSON(Json::Value& topLevel) const
+
+bool ossimRpcModel::toJSON(std::string& jsonString) const
 {
+#if OSSIM_HAS_JSONCPP
    Json::Value IMAGE;
    IMAGE["ERRBIAS"]      = theBiasError;
    IMAGE["ERRRAND"]      = theRandError;
@@ -1467,7 +1472,15 @@ bool ossimRpcModel::toJSON(Json::Value& topLevel) const
 
    Json::Value ISD;
    ISD["RPB"] = RPB;
-   topLevel["isd"] = ISD;
-}
+
+   Json::Value root;
+   root["isd"] = ISD;
+   Json::StyledWriter writer;
+   jsonString = writer.write(root);
+
+#else
+   json.clear();
+   return false;
 #endif
+}
 
