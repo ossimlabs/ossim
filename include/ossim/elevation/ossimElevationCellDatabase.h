@@ -1,6 +1,7 @@
 #ifndef ossimElevationCellDatabase_HEADER
 #define ossimElevationCellDatabase_HEADER 1
 #include <ossim/elevation/ossimElevationDatabase.h>
+#include <mutex>
 
 class OSSIM_DLL ossimElevationCellDatabase : public ossimElevationDatabase
 {
@@ -160,7 +161,7 @@ protected:
    
    ossim_uint32               m_minOpenCells;
    ossim_uint32               m_maxOpenCells;
-   mutable OpenThreads::Mutex m_cacheMapMutex;
+   mutable std::mutex         m_cacheMapMutex;
    CellMap                    m_cacheMap;
    ossim_uint32               m_memoryMapCellsFlag;
    

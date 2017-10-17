@@ -1,16 +1,9 @@
-//----------------------------------------------------------------------------
+//**************************************************************************************************
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+//     OSSIM Open Source Geospatial Data Processing Library
+//     See top level LICENSE.txt file for license information
 //
-// Author:  David Burken
-//
-// Description: OSSIM Kakadu based nitf writer.
-//
-//----------------------------------------------------------------------------
-// $Id: ossimNitfWriterBase.cpp 2981 2011-10-10 21:14:02Z david.burken $
-
+//**************************************************************************************************
 #include <ossim/imaging/ossimNitfWriterBase.h>
 #include <ossim/base/ossimBooleanProperty.h>
 #include <ossim/base/ossimFilename.h>

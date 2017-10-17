@@ -2,7 +2,7 @@
 //
 // OSSIM (http://trac.osgeo.org/ossim/)
 //
-// License:  LGPL -- See LICENSE.txt file in the top level directory for more details.
+// License:  MIT -- See LICENSE.txt file in the top level directory for more details.
 //
 //**************************************************************************************************
 // $Id$
@@ -16,6 +16,7 @@
 #include <ossim/base/ossimIrect.h>
 #include <ossim/point_cloud/ossimPointCloudHandler.h>
 #include <vector>
+#include <mutex>
 
 class ossimImageData;
 class ossimTiffOverviewTileSource;
@@ -244,7 +245,7 @@ protected:
    ossimDpt                     m_gsd;
    ossim_float64                m_gsdFactor;
    ossimRefPtr<ossimImageData>  m_tile;
-   OpenThreads::Mutex           m_mutex;
+   std::mutex                   m_mutex;
    Components                   m_activeComponent;
    std::vector<ossimString>     m_componentNames;
 

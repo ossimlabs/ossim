@@ -26,6 +26,7 @@
 #include <ossim/imaging/ossimMemoryImageSource.h>
 #include <ossim/imaging/ossimIndexToRgbLutFilter.h>
 #include <ossim/util/ossimViewshedTool.h>
+#include <ossim/base/Thread.h>
 
 using namespace std;
 
@@ -500,7 +501,7 @@ bool ossimViewshedTool::computeViewshed()
 
    if (m_numThreads > 1)
    {
-      ossimRefPtr<ossimJobQueue> jobQueue = new ossimJobQueue();
+      std::shared_ptr<ossimJobQueue> jobQueue = std::make_shared<ossimJobQueue>();
       for (int sector=0; sector<8; ++sector)
       {
          if (m_radials[sector] == 0)
@@ -508,14 +509,14 @@ bool ossimViewshedTool::computeViewshed()
 
          if (m_threadBySector)
          {
-            SectorProcessorJob* job = new SectorProcessorJob(this, sector, m_halfWindow);
+            std::shared_ptr<SectorProcessorJob> job = std::make_shared<SectorProcessorJob>(this, sector, m_halfWindow);
             jobQueue->add(job, false);
          }
          else
          {
             for (ossim_uint32 r=0; r<=m_halfWindow; ++r)
             {
-               RadialProcessorJob* job = new RadialProcessorJob(this, sector, r, m_halfWindow);
+               std::shared_ptr<RadialProcessorJob> job = std::make_shared<RadialProcessorJob>(this, sector, r, m_halfWindow);
                jobQueue->add(job, false);
             }
          }
@@ -524,12 +525,12 @@ bool ossimViewshedTool::computeViewshed()
       }
 
       ossimNotify(ossimNotifyLevel_INFO) << "\nSubmitting "<<jobQueue->size()<<" jobs..."<<endl;
-      m_jobMtQueue = new ossimJobMultiThreadQueue(jobQueue.get(), m_numThreads);
+      m_jobMtQueue = std::make_shared<ossimJobMultiThreadQueue>(jobQueue, m_numThreads);
 
       // Wait until all radials have been processed before proceeding:
       ossimNotify(ossimNotifyLevel_INFO) << "Waiting for job threads to finish..."<<endl;
       while (m_jobMtQueue->hasJobsToProcess() || m_jobMtQueue->numberOfBusyThreads())
-         OpenThreads::Thread::microSleep(250);
+         ossim::Thread::sleepInMicroSeconds(250);
    }
    else
    {
@@ -870,7 +871,7 @@ bool ossimViewshedTool::writeHorizonProfile()
    return true;
 }
 
-void SectorProcessorJob::start()
+void SectorProcessorJob::run()
 {
    // Loop over all the sector's radials and walk over each one.
    for (ossim_uint32 r=0; r<=m_numRadials; ++r)
@@ -879,12 +880,12 @@ void SectorProcessorJob::start()
    }
 }
 
-void RadialProcessorJob::start()
+void RadialProcessorJob::run()
 {
    RadialProcessor::doRadial(m_vsUtil, m_sector, m_radial);
 }
 
-OpenThreads::ReadWriteMutex RadialProcessor::m_bufMutex;
+std::mutex RadialProcessor::m_bufMutex;
 
 void RadialProcessor::doRadial(ossimViewshedTool* vsUtil,
                                ossim_uint32 sector_idx,
@@ -963,7 +964,6 @@ void RadialProcessor::doRadial(ossimViewshedTool* vsUtil,
       // Check if we passed beyong the visibilty radius, and exit loop if so:
       if (vsUtil->m_displayAsRadar && ((u*u + v*v) >= r2_max))
       {
-         //OpenThreads::ScopedWriteLock lock (m_bufMutex);
          vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_overlayValue);
          break;
       }
@@ -984,12 +984,10 @@ void RadialProcessor::doRadial(ossimViewshedTool* vsUtil,
             // point is visible, latch this line-of-sight as the new max elevation angle for this
             // radial, and mark the output pixel as visible:
             radial.elevation = elev_i;
-            //OpenThreads::ScopedWriteLock lock (m_bufMutex);
             vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_visibleValue);
          }
          else
          {
-            //OpenThreads::ScopedWriteLock lock (m_bufMutex);
             vsUtil->m_outBuffer->setValue(ipt.x, ipt.y, vsUtil->m_hiddenValue);
          }
       }

@@ -28,7 +28,9 @@
 #include <ossim/imaging/ossimIndexToRgbLutFilter.h>
 #include <ossim/point_cloud/ossimPointCloudHandlerRegistry.h>
 #include <ossim/util/ossimHlzTool.h>
+#include <ossim/base/Thread.h>
 #include <fstream>
+#include <cstddef>
 
 static const string MASK_EXCLUDE_KW = "exclude_regions";
 static const string MASK_INCLUDE_KW = "include_regions";
@@ -468,11 +470,11 @@ bool ossimHlzTool::computeHLZ()
       {
          for (chip_origin.x = min_x; chip_origin.x <= max_x; chip_origin.x += dem_step)
          {
-            ossimHlzTool::PatchProcessorJob* job = 0;
+            std::shared_ptr<ossimHlzTool::PatchProcessorJob> job = 0;
             if (m_useLsFitMethod)
-               job = new ossimHlzTool::LsFitPatchProcessorJob(this, chip_origin, chipId++);
+               job = std::make_shared<ossimHlzTool::LsFitPatchProcessorJob>(this, chip_origin, chipId++);
             else
-               job = new ossimHlzTool::NormPatchProcessorJob(this, chip_origin, chipId++);
+               job = std::make_shared<ossimHlzTool::NormPatchProcessorJob>(this, chip_origin, chipId++);
             job->start();
          }
          setPercentComplete(100*chipId/numPatches);
@@ -484,9 +486,9 @@ bool ossimHlzTool::computeHLZ()
          m_numThreads = ossim::getNumberOfThreads();
 
       // Loop over input DEM, creating a thread job for each filter window:
-      ossimRefPtr<ossimJobMultiThreadQueue> jobMtQueue =
-            new ossimJobMultiThreadQueue(0, m_numThreads);
-      ossimJobQueue* jobQueue = jobMtQueue->getJobQueue();
+      std::shared_ptr<ossimJobMultiThreadQueue> jobMtQueue =
+            std::make_shared<ossimJobMultiThreadQueue>(nullptr, m_numThreads);
+      std::shared_ptr<ossimJobQueue> jobQueue = jobMtQueue->getJobQueue();
 
       ossimNotify(ossimNotifyLevel_INFO) << "\nPreparing " << numPatches << " jobs..." << endl; // TODO: DEBUG
       setPercentComplete(0);
@@ -498,11 +500,11 @@ bool ossimHlzTool::computeHLZ()
          for (chip_origin.x = min_x; chip_origin.x <= max_x; ++chip_origin.x)
          {
             //ossimNotify(ossimNotifyLevel_INFO) << "Submitting " << chipId << endl;
-            ossimHlzTool::PatchProcessorJob* job = 0;
+            std::shared_ptr<ossimHlzTool::PatchProcessorJob> job = 0;
             if (m_useLsFitMethod)
-               job = new ossimHlzTool::LsFitPatchProcessorJob(this, chip_origin, chipId++);
+               job = std::make_shared<ossimHlzTool::LsFitPatchProcessorJob>(this, chip_origin, chipId++);
             else
-               job = new ossimHlzTool::NormPatchProcessorJob(this, chip_origin, chipId++);
+               job = std::make_shared<ossimHlzTool::NormPatchProcessorJob>(this, chip_origin, chipId++);
             jobQueue->add(job, false);
          }
          qsize = jobQueue->size();
@@ -515,7 +517,7 @@ bool ossimHlzTool::computeHLZ()
       {
          qsize = jobMtQueue->getJobQueue()->size();
          setPercentComplete(100*(numPatches-qsize)/numPatches);
-         OpenThreads::Thread::microSleep(10000);
+         ossim::Thread::sleepInMicroSeconds(10000);
       }
       jobMtQueue = 0;
    }
@@ -543,7 +545,7 @@ void ossimHlzTool::writeSlopeImage()
    }
 }
 
-OpenThreads::ReadWriteMutex ossimHlzTool::PatchProcessorJob::m_bufMutex;
+std::mutex ossimHlzTool::PatchProcessorJob::m_bufMutex;
 
 ossimHlzTool::PatchProcessorJob::PatchProcessorJob(ossimHlzTool* hlzUtil, const ossimIpt& origin,
                                    ossim_uint32 /*chip_id*/)
@@ -556,12 +558,12 @@ ossimHlzTool::PatchProcessorJob::PatchProcessorJob(ossimHlzTool* hlzUtil, const 
    m_demPatchLR.y = m_demPatchUL.y + m_hlzUtil->m_demFilterSize.y;
 }
 
-void ossimHlzTool::PatchProcessorJob::start()
+void ossimHlzTool::PatchProcessorJob::run()
 {
    bool passed = level1Test() && level2Test() && maskTest();
    ossimIpt p;
 
-   OpenThreads::ScopedWriteLock lock (m_bufMutex);
+   std::lock_guard<std::mutex> lock (m_bufMutex);
    for (p.y = m_demPatchUL.y; p.y < m_demPatchLR.y; ++p.y)
    {
       for (p.x = m_demPatchUL.x; p.x < m_demPatchLR.x; ++p.x)

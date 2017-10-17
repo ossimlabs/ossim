@@ -16,7 +16,6 @@
 #include <ossim/parallel/ossimMtDebug.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimTimer.h>
-
 static const ossim_uint32 DEFAULT_MAX_TILE_CACHE_FACTOR = 8; // Must be > 1
 
 ossimMtDebug* ossimMtDebug::m_instance = NULL;
@@ -25,7 +24,7 @@ ossimMtDebug* ossimMtDebug::m_instance = NULL;
 // Job's start method performs actual getTile in a thread on cloned chain and saves the result
 // in the sequencer's results cache.
 //*************************************************************************************************
-void ossimMultiThreadSequencer::ossimGetTileJob::start()
+void ossimMultiThreadSequencer::ossimGetTileJob::run()
 {
    running();
    if (m_sequencer.d_debugEnabled)
@@ -94,7 +93,7 @@ ossimMultiThreadSequencer::ossimMultiThreadSequencer(ossimImageSource* input,
    m_inputChain(0),
    m_jobMtQueue(0),
    m_numThreads (num_threads),
-   m_callback(new ossimGetTileCallback()),
+   m_callback(std::make_shared<ossimGetTileCallback>()),
    m_nextTileID (0),
    m_tileCache(),                       
    m_maxCacheSize (DEFAULT_MAX_TILE_CACHE_FACTOR * num_threads),
@@ -125,7 +124,6 @@ ossimMultiThreadSequencer::ossimMultiThreadSequencer(ossimImageSource* input,
 
    // The base-class' initialize() method should have been called by the base class constructor
    // unless somebody moved it!
-   OpenThreads::Thread::Init();
    m_nextJobBlock.release();
    m_getTileBlock.release();
    ossimTimer::instance()->setStartTick();
@@ -138,7 +136,7 @@ ossimMultiThreadSequencer::~ossimMultiThreadSequencer()
 {
    m_inputChain = 0; //!< Same as base class' theInputConnection
    m_jobMtQueue = 0;
-   m_callback = 0;
+   m_callback.reset();
 }
 
 //*************************************************************************************************
@@ -196,15 +194,15 @@ void ossimMultiThreadSequencer::setToStartOfSequence()
    //// EXPERIMENTAL -- Fetch the first N tiles sequentially:
    for (ossim_uint32 i=0; i<m_numThreads; ++i)
    {
-      ossimGetTileJob* job = new ossimGetTileJob(m_nextTileID++, i, *this);
-      job->setCallback(m_callback.get());
+      std::shared_ptr<ossimGetTileJob> job = std::make_shared<ossimGetTileJob>(m_nextTileID++, i, *this);
+      job->setCallback(m_callback);
       job->t_launchNewJob = false;
       job->start();
    }
 
    // Set up the job queue and fill it with first N jobs:
    ossim_uint32 num_jobs_to_launch =  min<ossim_uint32>(m_numThreads, m_totalNumberOfTiles);
-   ossimRefPtr<ossimJobQueue> jobQueue = new ossimJobQueue();
+   std::shared_ptr<ossimJobQueue> jobQueue = std::make_shared<ossimJobQueue>();
    for (ossim_uint32 chain_id=0; chain_id<num_jobs_to_launch; ++chain_id)
    {
       if (d_debugEnabled)
@@ -214,15 +212,15 @@ void ossimMultiThreadSequencer::setToStartOfSequence()
          print(s);
       }
 
-      ossimGetTileJob* job = new ossimGetTileJob(m_nextTileID++, chain_id, *this);
-      job->setCallback(m_callback.get());
+      std::shared_ptr<ossimGetTileJob> job = std::make_shared<ossimGetTileJob>(m_nextTileID++, chain_id, *this);
+      job->setCallback(m_callback);
       jobQueue->add(job, false);
    }
 
-   // Initialize the multi-thread queue. Note the setQueue is done after construction as it was 
+   // Initialize the multi-thread queue. Note the setJobQueue is done after construction as it was 
    // crashing do to jobs being launched during init:
-   m_jobMtQueue = new ossimJobMultiThreadQueue(0, num_jobs_to_launch);
-   m_jobMtQueue->setQueue(jobQueue.get());
+   m_jobMtQueue = std::make_shared<ossimJobMultiThreadQueue>(nullptr, num_jobs_to_launch);
+   m_jobMtQueue->setJobQueue(jobQueue);
 }
 
 
@@ -338,7 +336,7 @@ void ossimMultiThreadSequencer::setNumberOfThreads(ossim_uint32 num_threads)
    if (m_inputChain.valid())
       m_inputChain->setNumberOfThreads(num_threads);
 
-   if (m_jobMtQueue.valid() && m_jobMtQueue->hasJobsToProcess())
+   if (m_jobMtQueue && m_jobMtQueue->hasJobsToProcess())
       m_jobMtQueue->getJobQueue()->clear();
 
    m_nextTileID = 0; // effectively resets this sequencer
@@ -379,7 +377,7 @@ void ossimMultiThreadSequencer::setTileInCache(ossim_uint32 tile_id,
 {
    if (d_timeMetricsEnabled)
       d_t1 = ossimTimer::instance()->time_s(); 
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_cacheMutex);
+   std::lock_guard<std::mutex> lock(m_cacheMutex);
    if (d_timeMetricsEnabled)
       d_idleTime4 += ossimTimer::instance()->time_s() - d_t1; 
 
@@ -447,12 +445,12 @@ void ossimMultiThreadSequencer::nextJob(ossim_uint32 chain_id)
    // Job queue will receive pointer into ossimRefPtr so no leak here:
    if (d_timeMetricsEnabled)
       d_t1 = ossimTimer::instance()->time_s(); 
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+   std::lock_guard<std::mutex> lock(m_jobMutex);
    if (d_timeMetricsEnabled)
       d_idleTime6 += ossimTimer::instance()->time_s() - d_t1; 
 
-   ossimGetTileJob* job = new ossimGetTileJob(m_nextTileID++, chain_id, *this);
-   job->setCallback(m_callback.get());
+   std::shared_ptr<ossimGetTileJob> job = std::make_shared<ossimGetTileJob>(m_nextTileID++, chain_id, *this);
+   job->setCallback(m_callback);
    m_jobMtQueue->getJobQueue()->add(job);
 }
 
@@ -461,7 +459,7 @@ void ossimMultiThreadSequencer::nextJob(ossim_uint32 chain_id)
 //*************************************************************************************************
 void ossimMultiThreadSequencer::print(ostringstream& msg) const
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(d_printMutex);
+   std::lock_guard<std::mutex> lock(d_printMutex);
    cerr << msg.str() << endl;
 }
 double ossimMultiThreadSequencer::handlerGetTileT() 

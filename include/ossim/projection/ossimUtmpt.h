@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc.
 //
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -39,7 +39,7 @@ public:
    /**
     * Return the zone for this utm point.
     */
-   long zone() const { return theZone; }
+   ossim_int32 zone() const { return theZone; }
 
    /**
     * Return the hemisphere ( Northern or Southern).

@@ -3,7 +3,7 @@
 //
 // Copyright (C) 2001 ImageLinks, Inc.
 //
-// License:  LGPL
+// License:  MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -138,6 +138,12 @@ public:
    * Returns true if all the corner points of the given rect fit within.
    */
    bool isRectWithin(const ossimIrect &rect) const;
+
+   /**
+   * METHOD: rectIntersects()
+   * Returns true if at least one corner points of the given rect is within.
+   */
+   bool rectIntersects(const ossimIrect &rect) const;
 
    /**
    * METHOD: isPolyWithin()

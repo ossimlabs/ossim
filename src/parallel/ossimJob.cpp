@@ -1,7 +1,20 @@
 #include <ossim/parallel/ossimJob.h>
 
+
+void ossimJob::start()
+{
+   setState(ossimJob_RUNNING);
+   run();
+   if(!(state() & ossimJob_CANCEL))
+   {
+      setState(ossimJob_FINISHED);
+   }
+}
+
 void ossimJob::setState(int value, bool on)
 {
+   std::shared_ptr<ossimJob> thisShared = getSharedFromThis();
+
    // we will need to make sure that the state flags are set properly
    // so if you turn on running then you can't have finished or ready turned onturned on
    // but can stil have cancel turned on
@@ -18,43 +31,41 @@ void ossimJob::setState(int value, bool on)
 
    int oldState     = 0;
    int currentState = 0;
-   ossimRefPtr<ossimJobCallback> callback;
+   std::shared_ptr<ossimJobCallback> callback;
 
    bool stateChangedFlag = false;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobMutex);
+      std::lock_guard<std::mutex> lock(m_jobMutex);
       
       stateChangedFlag = newState != m_state;
       oldState = m_state;
       m_state = static_cast<State>(newState);
       currentState = m_state;
-      callback = m_callback.get();
+      callback = m_callback;
    }
    
-   if(stateChangedFlag&&callback.valid())
+   if(stateChangedFlag&&callback)
    {
-      if(callback.valid())
+      if(!(oldState&ossimJob_READY)&&
+         (currentState&ossimJob_READY))
       {
-         if(!(oldState&ossimJob_READY)&&
-            (currentState&ossimJob_READY))
-         {
-            callback->ready(this);
-         }
-         else if(!(oldState&ossimJob_RUNNING)&&
-                 (currentState&ossimJob_RUNNING))
-         {
-            callback->started(this);
-         }
-         else if(!(oldState&ossimJob_CANCEL)&&
-                 (currentState&ossimJob_CANCEL))
-         {
-            callback->canceled(this);
-         }
-         else if(!(oldState&ossimJob_FINISHED)&&
-                 (currentState&ossimJob_FINISHED))
-         {
-            callback->finished(this);
-         }
+         callback->ready(thisShared);
+      }
+      else if(!(oldState&ossimJob_RUNNING)&&
+              (currentState&ossimJob_RUNNING))
+      {
+         callback->started(thisShared);
+      }
+      else if(!(oldState&ossimJob_CANCEL)&&
+              (currentState&ossimJob_CANCEL))
+      {
+         callback->canceled(thisShared);
+      }
+      else if(!(oldState&ossimJob_FINISHED)&&
+              (currentState&ossimJob_FINISHED))
+      {
+         callback->finished(thisShared);
       }
    }
 }
+

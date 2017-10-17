@@ -2,7 +2,7 @@
 //
 // File: ossimFileWalker.h
 // 
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -20,9 +20,10 @@
 #include <ossim/base/ossimFilename.h>
 #include <ossim/parallel/ossimJob.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
-#include <OpenThreads/Mutex>
 #include <string>
 #include <vector>
+#include <mutex>
+#include <memory>
 
 class ossimFilename;
 class ossimFileProcessorInterface;
@@ -157,12 +158,14 @@ private:
        */
       ossimFileWalkerJob(ossimFileProcessorInterface* fpi,
                          const ossimFilename& file);
+
+protected:
       /**
        * @brief Defines pure virtual ossimJob::start.
        *
        * This executes the call to m_processFileCallBackPtr.
        */
-      virtual void start();
+      virtual void run();
       
    private:
       ossimFileProcessorInterface* m_fileProcessor;
@@ -175,9 +178,9 @@ private:
    {
    public:
       ossimFileWalkerJobCallback();
-      virtual void started(ossimJob* job);
-      virtual void finished(ossimJob* job);
-      virtual void canceled(ossimJob* job);
+      virtual void started(std::shared_ptr<ossimJob> job);
+      virtual void finished(std::shared_ptr<ossimJob> job);
+      virtual void canceled(std::shared_ptr<ossimJob> job);
    };
 
    /**
@@ -211,12 +214,12 @@ private:
     * @param const ossimFilename& First parameter(argument) file to process.
     */
    ossimFileProcessorInterface*          m_fileProcessor;
-   ossimRefPtr<ossimJobMultiThreadQueue> m_jobQueue;
+   std::shared_ptr<ossimJobMultiThreadQueue> m_jobQueue;
    std::vector<std::string>              m_filteredExtensions;
    bool                                  m_recurseFlag;
    bool                                  m_waitOnDirFlag;
    bool                                  m_abortFlag;
-   OpenThreads::Mutex                    m_mutex;
+   std::mutex                            m_mutex;
 };
 
 #endif /* #ifndef ossimFileWalker_HEADER */

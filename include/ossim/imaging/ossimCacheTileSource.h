@@ -13,7 +13,7 @@
 #include <ossim/imaging/ossimImageSourceFilter.h>
 #include <ossim/imaging/ossimAppFixedTileCache.h>
 #include <ossim/base/ossimProcessProgressEvent.h>
-#include <OpenThreads/Mutex>
+#include <mutex>
 
 /** Cache Tile Source */
 class OSSIMDLLEXPORT ossimCacheTileSource : public ossimImageSourceFilter

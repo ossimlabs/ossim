@@ -1,4 +1,3 @@
-
 ##################################################################################
 # This currently sets up the options for the WARNING FLAGS for the compiler we are generating for.
 # Currently only have gnu
@@ -6,7 +5,7 @@
 MACRO(OSSIM_ADD_COMMON_LIBRARY_FLAGS)
    OPTION(OSSIM_COMPILE_WITH_FULL_WARNING "OSSIM developers : Compilation with FULL warning (use only for ossim developers)." OFF)
    MARK_AS_ADVANCED(OSSIM_COMPILE_WITH_FULL_WARNING)
-
+   
    IF(OSSIM_COMPILE_WITH_FULL_WARNING)
      IF(CMAKE_COMPILER_IS_GNUCXX)
        SET(OSSIM_COMMON_COMPILER_FLAGS "${OSSIM_COMMON_COMPILER_FLAGS} -Wall -Wunused  -Wunused-function  -Wunused-label  -Wunused-parameter -Wunused-value -Wunused-variable -Wuninitialized -Wsign-compare -Wparentheses -Wunknown-pragmas -Wswitch" CACHE STRING "List of compilation parameters.")
@@ -78,7 +77,9 @@ MACRO(USE_CXX11)
       set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
     endif()
   else ()
-    set (CMAKE_CXX_STANDARD 11)
+   set(CMAKE_CXX_STANDARD 11)
+   set(CMAKE_CXX_STANDARD_REQUIRED ON)
+   set(CMAKE_CXX_EXTENSIONS OFF)
   endif ()
 ENDMACRO(USE_CXX11)
 

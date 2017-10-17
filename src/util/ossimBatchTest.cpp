@@ -72,7 +72,7 @@ bool ossimBatchTest::initialize(ossimArgumentParser& ap)
    }
 
    // Initialize environment:
-#if defined(WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
+#if defined(_WIN32) || defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(__MWERKS__)
    _putenv("DEL_CMD=del /Q"); // For backwards compatiblity.
    _putenv("DIFF_CMD=fc /W");
    _putenv("COPY_CMD=copy /Y");

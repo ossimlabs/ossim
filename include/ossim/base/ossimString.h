@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License:  MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -93,6 +93,8 @@ public:
 
    /** @brief Reads a single line from the input stream is. */
    friend OSSIM_DLL std::istream& getline( std::istream& is, ossimString& str );
+
+   explicit operator bool() const { return m_str.empty() ? false : true; }
 
    const ossimString& operator=(const std::string& s)
    {

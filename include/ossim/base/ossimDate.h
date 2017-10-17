@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -14,8 +14,7 @@
 #include <iosfwd>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimXmlNode.h>
-#include <OpenThreads/Mutex>
-#include <OpenThreads/ScopedLock>
+#include <mutex>
 
 class OSSIM_DLL ossimLocalTm : public std::tm
 {
@@ -233,7 +232,7 @@ protected:
    void pYear(std::ostream & os, int fmt) const;
    
    void setTimezoneOffsetFromGmt();
-   static OpenThreads::Mutex m_mutex;
+   static std::mutex m_mutex;
    double theFractionalSecond;
    mutable int m_timezoneOffset;
 };

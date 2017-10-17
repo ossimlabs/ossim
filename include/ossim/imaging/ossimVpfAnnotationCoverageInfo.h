@@ -1,7 +1,7 @@
 //*************************************************************************
 // Copyright (C) 2004 Intelligence Data Systems, Inc.  All rights reserved.
 //
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //

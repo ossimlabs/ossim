@@ -14,7 +14,8 @@
 #include <iomanip>
 #include <sstream>
 #include <iostream>
-OpenThreads::Mutex ossimLocalTm::m_mutex;
+
+std::mutex ossimLocalTm::m_mutex;
 
 std::ostream& operator<< (std::ostream& out, const ossimDate& src)
 {
@@ -714,13 +715,13 @@ m_mutex.unlock();
 
 void ossimLocalTm::setTimeNoAdjustmentGivenEpoc(time_t ticks)
 {
-  OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> lock(m_mutex);
    *this = *gmtime(&ticks);
 }
 
 void ossimLocalTm::setTimeGivenEpoc(time_t ticks)
 {
-  OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> lock(m_mutex);
   *this = *localtime(&ticks);
 }
 

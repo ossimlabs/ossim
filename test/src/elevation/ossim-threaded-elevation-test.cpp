@@ -7,17 +7,17 @@
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimTimer.h>
 #include <ossim/init/ossimInit.h>
-#include <OpenThreads/Mutex>
-#include <OpenThreads/Barrier>
-#include <OpenThreads/Thread>
+#include <ossim/base/Thread.h>
+#include <ossim/base/Barrier.h>
+#include <mutex>
 
-OpenThreads::Barrier* startBarrier = 0;
-OpenThreads::Barrier* endBarrier = 0;
-OpenThreads::Mutex accumMutex;
+std::shared_ptr<ossim::Barrier> startBarrier;
+std::shared_ptr<ossim::Barrier> endBarrier;
+std::mutex accumMutex;
 ossimRefPtr<ossimDtedElevationDatabase> dtedDatabase = new ossimDtedElevationDatabase;
 double accumH = 0.0;
 
-class ElevationThread : public OpenThreads::Thread
+class ElevationThread : public ossim::Thread
 {
 public:
    ElevationThread(const ossimString& threadName="",
@@ -65,8 +65,12 @@ public:
          {
             h = ossimElevManager::instance()->getHeightAboveEllipsoid(gpt);
          }
+         std::cout << h << "\n";
 #endif
-         hs += h;
+         if(!ossim::isnan(h))
+         {
+            hs += h;
+         }
       }
 
       accumMutex.lock();
@@ -166,8 +170,8 @@ int main(int argc, char* argv[])
   // std::cout << "Loaded database? " << dtedDatabase->loadState(kwl) << std::endl;
    srand(randomSeed);
    std::vector<ElevationThread*> threadList(num_threads);
-   startBarrier = new OpenThreads::Barrier(num_threads); // include the main thread for synching
-   endBarrier = new OpenThreads::Barrier(num_threads+1); //   include main thread for syncing end
+   startBarrier = std::make_shared<ossim::Barrier>(num_threads+1); // include the main thread for synching
+   endBarrier   = std::make_shared<ossim::Barrier>(num_threads+1); // include the main thread for synching
    ossim_uint32 idx = 0;
    for(idx = 0; idx < num_threads; ++ idx)
    {
@@ -175,6 +179,7 @@ int main(int argc, char* argv[])
       threadList[idx]->setNumberOfPointsToQuery(num_posts);
       threadList[idx]->start();
    }
+   startBarrier->block();
    ossimTimer::Timer_t t1 = ossimTimer::instance()->tick();
 
    // synch all threads to start at the same time
@@ -186,7 +191,5 @@ int main(int argc, char* argv[])
    ossimTimer::Timer_t t2 = ossimTimer::instance()->tick();
    std::cout << "Time elapsed:              " << ossimTimer::instance()->delta_s(t1, t2) << " seconds" << "\n";
    std::cout << "mean elevation:              " << accumH/num_threads << "\n";
-   delete startBarrier;
-   delete endBarrier;
    return 0;
 }

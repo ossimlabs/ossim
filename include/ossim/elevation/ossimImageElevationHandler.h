@@ -2,7 +2,7 @@
 //
 // File: ossimImageElevationHandler.h
 // 
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -22,7 +22,7 @@
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimTileCache.h>
-#include <OpenThreads/ReadWriteMutex>
+#include <mutex>
 
 /**
  * @class ossimImageElevationHandler
@@ -124,7 +124,7 @@ private:
    ossimIpt                            m_tileSize;
    ossim_uint32                        m_numTilesPerRow;
 
-   mutable OpenThreads::ReadWriteMutex  m_mutex;
+   mutable std::mutex  m_mutex;
 
    TYPE_DATA
 };

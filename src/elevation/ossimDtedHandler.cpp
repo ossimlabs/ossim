@@ -351,7 +351,7 @@ double ossimDtedHandler::getHeightAboveMSL(const ossimGpt& gpt, bool readFromFil
 void ossimDtedHandler::readPostsFromFile( DtedHeight &postData, int offset)
 {
 
-  OpenThreads::ScopedLock <OpenThreads::Mutex> lock( m_fileStrMutex );
+  std::lock_guard<std::mutex> lock( m_fileStrMutex );
   ossim_sint16 ss;
   ossim_uint16 us;
   int postCount = 0;

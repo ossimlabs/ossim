@@ -1,33 +1,42 @@
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 
-ossimJobMultiThreadQueue::ossimJobMultiThreadQueue(ossimJobQueue* q, ossim_uint32 nThreads)
-:m_jobQueue(q?q:new ossimJobQueue())
+ossimJobMultiThreadQueue::ossimJobMultiThreadQueue(std::shared_ptr<ossimJobQueue> q, 
+                                                   ossim_uint32 nThreads)
+:m_jobQueue(q?q:std::make_shared<ossimJobQueue>())
 {
    setNumberOfThreads(nThreads);
 }
-ossimJobQueue* ossimJobMultiThreadQueue::getJobQueue()
+
+ossimJobMultiThreadQueue::~ossimJobMultiThreadQueue()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
-   return m_jobQueue.get();
+   cancel();
+   waitForCompletion();
+   m_threadQueueList.clear();
 }
-const ossimJobQueue* ossimJobMultiThreadQueue::getJobQueue()const
+
+std::shared_ptr<ossimJobQueue> ossimJobMultiThreadQueue::getJobQueue()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
-   return m_jobQueue.get();
+   std::lock_guard<std::mutex> lock(m_mutex);
+   return m_jobQueue;
 }
-void ossimJobMultiThreadQueue::setQueue(ossimJobQueue* q)
+const std::shared_ptr<ossimJobQueue> ossimJobMultiThreadQueue::getJobQueue()const
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
+   return m_jobQueue;
+}
+void ossimJobMultiThreadQueue::setJobQueue(std::shared_ptr<ossimJobQueue> q)
+{
+   std::lock_guard<std::mutex> lock(m_mutex);
    ossim_uint32 idx = 0;
    m_jobQueue = q;
    for(idx = 0; idx < m_threadQueueList.size(); ++idx)
    {
-      m_threadQueueList[idx]->setJobQueue(m_jobQueue.get());
+      m_threadQueueList[idx]->setJobQueue(m_jobQueue);
    }
 }
 void ossimJobMultiThreadQueue::setNumberOfThreads(ossim_uint32 nThreads)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
    ossim_uint32 idx = 0;
    ossim_uint32 queueSize = m_threadQueueList.size();
    
@@ -35,8 +44,8 @@ void ossimJobMultiThreadQueue::setNumberOfThreads(ossim_uint32 nThreads)
    {
       for(idx = queueSize; idx < nThreads;++idx)
       {
-         ossimRefPtr<ossimJobThreadQueue> threadQueue = new ossimJobThreadQueue();
-         threadQueue->setJobQueue(m_jobQueue.get());
+         std::shared_ptr<ossimJobThreadQueue> threadQueue = std::make_shared<ossimJobThreadQueue>();
+         threadQueue->setJobQueue(m_jobQueue);
          m_threadQueueList.push_back(threadQueue);
       }
    }
@@ -53,14 +62,14 @@ void ossimJobMultiThreadQueue::setNumberOfThreads(ossim_uint32 nThreads)
 
 ossim_uint32 ossimJobMultiThreadQueue::getNumberOfThreads() const
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
    return static_cast<ossim_uint32>( m_threadQueueList.size() );
 }
 
 ossim_uint32 ossimJobMultiThreadQueue::numberOfBusyThreads()const
 {
    ossim_uint32 result = 0;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
    ossim_uint32 idx = 0;
    ossim_uint32 queueSize = m_threadQueueList.size();
    for(idx = 0; idx < queueSize;++idx)
@@ -72,7 +81,7 @@ ossim_uint32 ossimJobMultiThreadQueue::numberOfBusyThreads()const
 
 bool ossimJobMultiThreadQueue::areAllThreadsBusy()const
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
    ossim_uint32 idx = 0;
    ossim_uint32 queueSize = m_threadQueueList.size();
    for(idx = 0; idx < queueSize;++idx)
@@ -87,7 +96,7 @@ bool ossimJobMultiThreadQueue::hasJobsToProcess()const
 {
    bool result = false;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_mutex);
+      std::lock_guard<std::mutex> lock(m_mutex);
       ossim_uint32 queueSize = m_threadQueueList.size();
       ossim_uint32 idx = 0;
       for(idx = 0; ((idx<queueSize)&&!result);++idx)
@@ -97,5 +106,21 @@ bool ossimJobMultiThreadQueue::hasJobsToProcess()const
    }
    
    return result;
+}
+
+void ossimJobMultiThreadQueue::cancel()
+{
+   for(auto thread:m_threadQueueList)
+   {
+      thread->cancel();
+   }
+}
+
+void ossimJobMultiThreadQueue::waitForCompletion()
+{
+   for(auto thread:m_threadQueueList)
+   {
+      thread->waitForCompletion();
+   }
 }
 

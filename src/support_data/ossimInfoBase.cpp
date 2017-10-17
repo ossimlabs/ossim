@@ -32,8 +32,8 @@ bool ossimInfoBase::open(const ossimFilename& file)
    return open(str, connectionString);
 }
 
-bool ossimInfoBase::open(std::shared_ptr<ossim::istream>& str,
-                         const std::string& connectionString)
+bool ossimInfoBase::open(std::shared_ptr<ossim::istream>& /* str */,
+                         const std::string& /* connectionString */)
 {
    return false;
 }

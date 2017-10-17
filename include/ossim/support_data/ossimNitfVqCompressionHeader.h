@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2004 Garrett Potts
 //
-// LICENSE: LGPL see top level LICENSE.txt for more details
+// LICENSE: MIT see top level LICENSE.txt for more details
 // 
 // Author: Garrett Potts
 // Description: Nitf support class

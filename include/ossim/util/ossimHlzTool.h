@@ -25,9 +25,9 @@
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <ossim/point_cloud/ossimPointCloudHandler.h>
 #include <ossim/util/ossimChipProcTool.h>
-#include <OpenThreads/ReadWriteMutex>
 #include <vector>
 
+#include <mutex>
 /*!
  *  Class for finding helicopter landing zones (HLZ) on a DEM given the final destination and max
  *  range from destination.
@@ -100,7 +100,6 @@ protected:
    public:
       PatchProcessorJob(ossimHlzTool* hlzUtil, const ossimIpt& origin, ossim_uint32 chip_id=0);
 
-      virtual void start();
       virtual bool level1Test() = 0;
       bool level2Test();
       bool maskTest();
@@ -112,7 +111,11 @@ protected:
       float m_nullValue;
 
       // ossim_uint32 m_chipId; // for debug
-      static OpenThreads::ReadWriteMutex m_bufMutex;
+      static std::mutex m_bufMutex;
+
+   protected:
+      virtual void run();
+
    };
 
    class LsFitPatchProcessorJob : public PatchProcessorJob

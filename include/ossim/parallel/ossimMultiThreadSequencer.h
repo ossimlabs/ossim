@@ -15,8 +15,9 @@
 #include <ossim/base/ossimConnectableObjectListener.h>
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <ossim/parallel/ossimImageChainMtAdaptor.h>
-#include <OpenThreads/Thread>
-
+#include <ossim/base/Thread.h>
+#include <ossim/base/Block.h>
+#include <mutex>
 //*************************************************************************************************
 //! This class manages the sequencing of tile requests across multiple threads. Note that multi-
 //! threading can only be achieved through the use of getNextTile() method for sequencing. 
@@ -82,8 +83,8 @@ protected:
             m_chainID(chain_id), 
             m_sequencer(sequencer),
             t_launchNewJob(true) {}
-
-      virtual void start();
+protected:
+      virtual void run();
 
    private:
       ossim_uint32                 m_tileID;
@@ -100,7 +101,7 @@ protected:
    {
    public:
       ossimGetTileCallback() {}
-      virtual void finished(ossimJob* job)
+      virtual void finished(std::shared_ptr<ossimJob> job)
       {
          if (job != NULL)
             job->finished();
@@ -124,22 +125,22 @@ protected:
    void print(ostringstream& msg) const;
 
    ossimRefPtr<ossimImageChainMtAdaptor> m_inputChain; //!< Same as base class' theInputConnection
-   ossimRefPtr<ossimJobMultiThreadQueue> m_jobMtQueue;
+   std::shared_ptr<ossimJobMultiThreadQueue> m_jobMtQueue;
    ossim_uint32                          m_numThreads;
-   ossimRefPtr<ossimGetTileCallback>     m_callback;
+   std::shared_ptr<ossimGetTileCallback> m_callback;
    ossim_uint32                          m_nextTileID; //!< ID of next tile to be threaded, different from base class' theCurrentTileNumber
    TileCache                             m_tileCache;  //!< Saves tiles output by threaded jobs
    ossim_uint32                          m_maxCacheSize;
    ossim_uint32                          m_maxTileCacheFactor;
-   mutable OpenThreads::Mutex            m_cacheMutex;   
-   mutable OpenThreads::Mutex            m_jobMutex;   
+   mutable std::mutex                    m_cacheMutex;   
+   mutable std::mutex                    m_jobMutex;   
    ossim_uint32                          m_totalNumberOfTiles;
-   OpenThreads::Block                    m_getTileBlock; //<! Blocks execution of main thread while waiting for tile to become available
-   OpenThreads::Block                    m_nextJobBlock; //<! Blocks execution of worker threads
+   ossim::Block                          m_getTileBlock; //<! Blocks execution of main thread while waiting for tile to become available
+   ossim::Block                          m_nextJobBlock; //<! Blocks execution of worker threads
 
    // FOR DEBUG:
-   mutable OpenThreads::Mutex d_printMutex;
-   mutable OpenThreads::Mutex d_timerMutex;
+   mutable std::mutex d_printMutex;
+   mutable std::mutex d_timerMutex;
    bool d_debugEnabled;
    ossim_uint32 d_timedBlocksDt;
    bool d_timeMetricsEnabled;

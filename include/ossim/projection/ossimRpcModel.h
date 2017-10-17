@@ -20,7 +20,7 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimDblGrid.h>
 #include <ossim/base/ossimFilename.h>
-
+#include <ossim/ossimConfig.h>
 
 /*!****************************************************************************
  *
@@ -209,6 +209,10 @@ public:
     */
    void getRpcParameters(ossimRpcModel::rpcModelStruct& model) const;
    
+   /**
+    * Serializes RPC to JSON format.
+    */
+   bool toJSON(std::string& json) const;
 
 protected:
    enum AdjustParamIndex

@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <exception>
 #include <vector>
+#include <mutex>
 
 class MyGeomFactory : public geos::geom::GeometryFactory
 {
@@ -76,10 +77,10 @@ ossimRefPtr<ossimGeometryFactoryWrapper> OssimPolyArea2dPrivate::m_globalFactory
 OssimPolyArea2dPrivate::OssimPolyArea2dPrivate(GeometryPtr geom)
 :m_geometry(geom)
 {
-   static OpenThreads::Mutex globalFactoryMutex;
+   static std::mutex globalFactoryMutex;
    
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(globalFactoryMutex);
+      std::lock_guard<std::mutex> lock(globalFactoryMutex);
       if(!m_globalFactory.valid())
       {
          m_globalFactory = new ossimGeometryFactoryWrapper();

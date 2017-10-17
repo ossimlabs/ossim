@@ -38,6 +38,7 @@ public:
    virtual ossimImageHandler* open(const ossimKeywordlist& kwl,
                                    const char* prefix=0)const;
    
+   virtual ossimRefPtr<ossimImageHandler> open(std::shared_ptr<ossim::ImageHandlerState> state)const;
    /**
     * @brief Open method that takes a stream.
     * @param str Open stream to image.

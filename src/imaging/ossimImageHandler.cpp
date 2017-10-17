@@ -267,13 +267,51 @@ bool ossimImageHandler::loadState(const ossimKeywordlist& kwl,
 bool ossimImageHandler::initVertices(const char* file)
 {
    static const char MODULE[] = "ossimImageHandler::initVertices";
+   bool loadFromFileFlag = true;
+   std::shared_ptr<ossimKeywordlist> kwl;
+   if(m_state)
+   {
+      bool validVerticesFlag = false;
+      if(m_state->getValidVertices())
+      {
+         loadFromFileFlag = false;
+         kwl = m_state->getValidVertices();
+         if(kwl)
+         {
+            ossimString connectionString = kwl->find("connection_string");
+            if(connectionString != file)
+            {
+               loadFromFileFlag = true;
+            }
+            else if(kwl->getSize()<=0)
+            {
+               return false;
+            }
+         }
+      }
+      else
+      {
+         loadFromFileFlag = true;
+      }
+   }
+   if(!kwl) kwl = std::make_shared<ossimKeywordlist>();
 
-   ossimFilename f = file;
-   if (!f.exists()) return false;
+   if(loadFromFileFlag)
+   {
+      kwl = std::make_shared<ossimKeywordlist>();
+      std::shared_ptr<ossim::istream> instream = ossim::StreamFactoryRegistry::instance()->createIstream(file);
+      kwl->add("connection_string", file, true);
+      if (!instream)
+      {
+         if(m_state) m_state->setValidVertices(kwl);
+         return false; 
+      } 
 
-   ossimKeywordlist kwl(file);
+      kwl->parseStream(*instream);
+      if(m_state) m_state->setValidVertices(kwl);
+   }
    
-   if (kwl.getErrorStatus() != ossimErrorCodes::OSSIM_OK)
+   if (kwl->getErrorStatus() != ossimErrorCodes::OSSIM_OK)
    {
       if (traceDebug())
       {
@@ -286,52 +324,29 @@ bool ossimImageHandler::initVertices(const char* file)
 
    // Clean out any old vertices...
    theValidImageVertices.clear();
-
-   ossim_uint32 number_of_points = kwl.numberOf("point", "x");
-
-   for (ossim_uint32 i=0; i<number_of_points; ++i)
+   std::vector<ossimString> indexedPrefixes;
+   kwl->getSortedList(indexedPrefixes, "point");
+   ossim_uint32 number_of_points = indexedPrefixes.size();
+   for (ossim_uint32 i=0; i<number_of_points; i++)
    {
       ossimIpt pt;
       const char* lookup;
-      ossimString p = "point";
-      p += ossimString::toString(i);
-      
-      ossimString px = p + ".x";
-      lookup = kwl.find(px.c_str());
+      lookup = kwl->find(indexedPrefixes[i], ".x");
       if (lookup)
       {
          pt.x = atoi(lookup);
+         lookup = kwl->find(indexedPrefixes[i], ".y");
+         if (lookup)
+            pt.y = atoi(lookup);
       }
-      else
+
+      if (!lookup)
       {
          if (traceDebug())
-         {
-            CLOG << " ERROR:"
-                 << "\nlookup failed for:  " << px.c_str()
-                 << "\nReturning..."
-                 << std::endl;
-         }
+            CLOG << " ERROR: lookup failed for: " << indexedPrefixes[i] << std::endl;
          return false;
       }
          
-      ossimString py = p + ".y";
-      lookup = kwl.find(py.c_str());
-      if (lookup)
-      {
-         pt.y = atoi(lookup);
-      }
-      else
-      {
-         if (traceDebug())
-         {
-            CLOG << " ERROR:"
-                 << "\nLookup failed for:  " << py.c_str()
-                 << "\nReturning..."
-                 << std::endl;
-         }
-         return false;
-      }
-
       theValidImageVertices.push_back(pt);
    }
 
@@ -339,7 +354,7 @@ bool ossimImageHandler::initVertices(const char* file)
    if (traceDebug())
    {
       CLOG << " DEBUG:"
-           << "\nVertices file:  " << f
+           << "\nVertices file:  " << file
            << "\nValid image vertices:"
            << std::endl;
       for (ossim_uint32 i=0; i<theValidImageVertices.size(); ++i)
@@ -828,7 +843,6 @@ bool ossimImageHandler::hasOverviews() const
 bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
 {
    bool result = false;
-   
    closeOverview();
 
    if (overview_file != theImageFile) // Make sure we don't open ourselves.
@@ -842,7 +856,6 @@ bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
 
       // Try to open:
       theOverview = ossimImageHandlerRegistry::instance()->openOverview( overview_file );
-
       if (theOverview.valid())
       {
          result = true;
@@ -872,7 +885,10 @@ bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
             theOverview->setMaxPixelValue(band, getMaxPixelValue(band));
             theOverview->setNullPixelValue(band, getNullPixelValue(band));
          }
-
+         if(m_state)
+         { 
+            m_state->setOverviewState(theOverview->getState());
+         }
          if (traceDebug())
          {
             ossimNotify(ossimNotifyLevel_DEBUG)
@@ -891,6 +907,14 @@ bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
          event.setObjectList(theOverview.get());
          fireEvent(event);
       }
+      else
+      {
+         if(m_state)
+         {
+            // create a null state to save the fact that we did not find any overviews
+            m_state->setOverviewState(std::make_shared<ossim::ImageHandlerState>());
+         }
+      }
    }
    
    return result;
@@ -907,7 +931,72 @@ bool ossimImageHandler::openOverview()
    bool result = false;
    
    closeOverview();
-   
+
+   if(m_state)
+   {
+      // check if we have an overview state
+      std::shared_ptr<ossim::ImageHandlerState> overviewState = m_state->getOverviewState();
+      if(overviewState)
+      {
+         // check to see if the overvies state was cached 
+         // to mark has checked but no overview
+         if(overviewState->getConnectionString().empty())
+         {
+            return false;
+         }
+         ossim_uint32 overviewStartingResLevel = getNumberOfDecimationLevels();
+         theOverview = ossimImageHandlerRegistry::instance()->open( overviewState );
+         if(theOverview)
+         {
+            result = true;
+
+            
+            //---
+            // Set the owner in case the overview reader needs to get something
+            // from the it like min/max/null.
+            //---
+            theOverview->changeOwner(this);
+            
+            // Set the starting res level of the overview.
+            theOverview->setStartingResLevel(overviewStartingResLevel);
+            
+            // Capture the file name.
+            theOverviewFile = overviewState->getConnectionString();
+
+            //---
+            // Some overview handlers cannot store what the null is.  Like dted
+            // null is -32767 not default -32768 so this allows passing this to the
+            // overview reader provided it overrides setMin/Max/NullPixel value
+            // methods. (drb)
+            //---
+            const ossim_uint32 BANDS = getNumberOfOutputBands();
+            for (ossim_uint32 band = 0; band < BANDS; ++band)
+            {
+               theOverview->setMinPixelValue(band, getMinPixelValue(band));
+               theOverview->setMaxPixelValue(band, getMaxPixelValue(band));
+               theOverview->setNullPixelValue(band, getNullPixelValue(band));
+            }
+            if (traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "overview starting res level: " << overviewStartingResLevel
+                  << "\noverview levels: "
+                  << theOverview->getNumberOfDecimationLevels()
+                  << "\nlevels: " << getNumberOfDecimationLevels()
+                  << endl;
+            }
+            
+            //---
+            // This is not really a container event; however, using for now.
+            //---
+            ossimContainerEvent event(this,
+                                      OSSIM_EVENT_ADD_OBJECT_ID);
+            event.setObjectList(theOverview.get());
+            fireEvent(event);
+            return result;
+         }
+      } 
+   }
    // 1) ESH 03/2009 -- Use the overview file set e.g. using a .spec file.
    ossimFilename overviewFilename = getOverviewFile();
 
@@ -1021,7 +1110,7 @@ bool ossimImageHandler::writeValidImageVertices(const std::vector<ossimIpt>& ver
                      "x",
                      theValidImageVertices[i].x,
                      true);
-	 tempKwl.add(prefix.c_str(),
+	      tempKwl.add(prefix.c_str(),
                      "y",
                      theValidImageVertices[i].y,
                      true);
@@ -1097,6 +1186,21 @@ bool ossimImageHandler::open(const ossimFilename& imageFile,
 
    return result;
 }
+
+bool ossimImageHandler::open(std::shared_ptr<ossim::ImageHandlerState> state)
+{
+   bool result = false;
+   if(isOpen())
+   {
+      close();
+   }
+   setFilename(state->getConnectionString());
+   setState(state);
+   result = open();
+
+   return result;
+}
+
 
 bool ossimImageHandler::isValidRLevel(ossim_uint32 resLevel) const
 {
@@ -1266,48 +1370,43 @@ bool ossimImageHandler::isImageTiled() const
 
 void ossimImageHandler::loadMetaData()
 {
-   ossimFilename filename = getFilenameWithThisExtension(ossimString(".omd"), false);
-   theMetaData.clear();
 
-   std::shared_ptr<ossim::istream> instream = ossim::StreamFactoryRegistry::instance()->createIstream(filename.c_str());
-
-   if(!instream)
+   if(m_state&&m_state->getMetaData())
    {
-      filename = getFilenameWithThisExtension(ossimString(".omd"), true);
-      instream = ossim::StreamFactoryRegistry::instance()->createIstream(filename.c_str());
-   }
-
-   if(instream)
-   {
-     ossimKeywordlist kwl;
-     
-     kwl.parseStream(*instream);
-     
-     theMetaData.loadState(kwl);
+      theMetaData = *m_state->getMetaData();
    }
    else
    {
-     theMetaData.setScalarType(getOutputScalarType());
+      ossimFilename filename = getFilenameWithThisExtension(ossimString(".omd"), false);
+      theMetaData.clear();
+
+      std::shared_ptr<ossim::istream> instream = ossim::StreamFactoryRegistry::instance()->createIstream(filename.c_str());
+
+      if(!instream)
+      {
+         filename = getFilenameWithThisExtension(ossimString(".omd"), true);
+         instream = ossim::StreamFactoryRegistry::instance()->createIstream(filename.c_str());
+      }
+
+      if(instream)
+      {
+        ossimKeywordlist kwl;
+        
+        kwl.parseStream(*instream);
+        
+        theMetaData.loadState(kwl);
+      }
+      else
+      {
+        theMetaData.setScalarType(getOutputScalarType());
+      }
+      if(m_state)
+      {
+         m_state->setMetaData(std::make_shared<ossimImageMetaData>(theMetaData));         
+      }
+
    }
-/*
-  ossimFilename filename = getFilenameWithThisExtension(ossimString(".omd"), false);
-  if ( filename.exists() == false )
-  {
-     filename = getFilenameWithThisExtension(ossimString(".omd"), true);
-  }
-  if(filename.exists())
-  {
-     ossimKeywordlist kwl;
-     
-     kwl.addFile(filename.c_str());
-     
-     theMetaData.loadState(kwl);
-  }
-  else
-  {
-     theMetaData.setScalarType(getOutputScalarType());
-  }
-  */
+
 }
 
 double ossimImageHandler::getMinPixelValue(ossim_uint32 band)const
@@ -1361,7 +1460,7 @@ ossim_uint32 ossimImageHandler::getCurrentEntry()const
    return 0;
 }
 
-bool ossimImageHandler::setCurrentEntry(ossim_uint32 /* entryIdx */)
+bool ossimImageHandler::setCurrentEntry(ossim_uint32  entryIdx )
 {
    return true;
 }

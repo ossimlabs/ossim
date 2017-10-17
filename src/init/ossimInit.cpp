@@ -34,16 +34,19 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <ossim/base/ossimPreferences.h>
-#include <ossim/base/ossimStreamFactory.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimTraceManager.h>
 #include <ossim/base/ossimGeoidEgm96.h>
 #include <ossim/base/ossim2dTo2dTransformRegistry.h>
 
+
 #include <ossim/elevation/ossimElevManager.h>
 
 #include <ossim/font/ossimFontFactoryRegistry.h>
+
+#include <ossim/support_data/ImageHandlerStateRegistry.h>
+#include <ossim/support_data/ImageHandlerStateFactory.h>
 
 #include <ossim/imaging/ossimCodecFactoryRegistry.h>
 #include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
@@ -61,7 +64,7 @@
 #include <ossim/projection/ossimProjectionViewControllerFactory.h>
 
 #include <algorithm>
-
+#include <mutex>
 
 static ossimTrace traceExec = ossimTrace("ossimInit:exec");
 static ossimTrace traceDebug = ossimTrace("ossimInit:debug");
@@ -85,8 +88,8 @@ ossimInit::ossimInit()
 
 ossimInit* ossimInit::instance()
 {
-   static OpenThreads::Mutex m;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
+   static std::mutex m;
+   std::lock_guard<std::mutex> lock(m);
    if (!theInstance)
    {
       theInstance = new ossimInit();
@@ -115,8 +118,8 @@ void ossimInit::addOptions(ossimArgumentParser& parser)
  *****************************************************************************/
 void ossimInit::initialize(int& argc, char** argv)
 {
-   static OpenThreads::Mutex m;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
+   static std::mutex m;
+   std::lock_guard<std::mutex> lock(m);
    if( !theInitializedFlag )
    {
       ossimArgumentParser argumentParser(&argc, argv);
@@ -126,8 +129,8 @@ void ossimInit::initialize(int& argc, char** argv)
 
 void ossimInit::initialize(ossimArgumentParser& parser)
 {
-   static OpenThreads::Mutex m;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
+   static std::mutex m;
+   std::lock_guard<std::mutex> lock(m);
    if(theInitializedFlag)
    {
       if (traceDebug())
@@ -207,8 +210,8 @@ void ossimInit::initialize()
    delete [] argv[0];
 
 #if 0   
-    static OpenThreads::Mutex m;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m);
+    static std::mutex m;
+   std::lock_guard<std::mutex> lock(m);
    if(theInitializedFlag)
    {
       if (traceDebug())
@@ -522,8 +525,8 @@ void ossimInit::removeOption(int& argc,
 
 void ossimInit::initializeDefaultFactories()
 {
-   ossim::StreamFactoryRegistry::instance()->registerFactory(ossim::StreamFactory::instance());
-
+   ossim::StreamFactoryRegistry::instance();
+   ossim::ImageHandlerStateRegistry::instance()->registerFactory(ossim::ImageHandlerStateFactory::instance());
    ossimObjectFactoryRegistry::instance()->registerFactory(ossimImageSourceFactoryRegistry::instance());
 
    //---

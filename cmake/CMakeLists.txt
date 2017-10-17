@@ -1,6 +1,7 @@
 PROJECT(ossimlabs)
 
 # Allows developer to customize compiler with their own flags (e.g., "-std=c++11")
+
 SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{OSSIM_CXX_FLAGS}" )
 
 IF ("${OSSIM_DEV_HOME}"  STREQUAL "")

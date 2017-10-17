@@ -19,6 +19,7 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/elevation/ossimElevCellHandler.h>
 #include <ossim/support_data/ossimSrtmSupportData.h>
+#include <mutex>
 
 class ossimEndian;
 
@@ -84,7 +85,7 @@ protected:
    /** destructor */
    virtual ~ossimSrtmHandler();
    ossimSrtmSupportData m_supportData;
-   mutable OpenThreads::Mutex m_fileStrMutex;
+   mutable std::mutex m_fileStrMutex;
    std::ifstream m_fileStr;
 
    /** @brief true if stream is open. */

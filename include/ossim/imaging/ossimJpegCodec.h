@@ -1,13 +1,12 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Description: class declaration for base codec(encoder/decoder).
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
+
 #ifndef ossimJpegCodec_HEADER
 #define ossimJpegCodec_HEADER 1
 #include <ossim/imaging/ossimCodecBase.h>
@@ -57,6 +56,8 @@ public:
     */
    virtual bool decode( const std::vector<ossim_uint8>& in,
                         ossimRefPtr<ossimImageData>& out ) const;
+
+   virtual const std::string& getExtension() const;
 
    /**
     * Ineterface to allow for specific properties to be set.
@@ -127,7 +128,7 @@ protected:
    ossim_int32 getColorSpace( const std::vector<ossim_uint8>& in ) const;
    
    ossim_uint32 m_quality;
-   TYPE_DATA;
+   std::string m_ext;
 };
 
 #endif

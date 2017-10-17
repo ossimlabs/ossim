@@ -8,6 +8,7 @@
 #ifndef ossimShorelineUtil_HEADER
 #define ossimShorelineUtil_HEADER
 
+#include <ossim/ossimConfig.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimProcessInterface.h>
 #include <ossim/base/ossimFilename.h>
@@ -25,8 +26,8 @@
 #include <ossim/parallel/ossimJobMultiThreadQueue.h>
 #include <ossim/point_cloud/ossimPointCloudHandler.h>
 #include <ossim/util/ossimChipProcTool.h>
-#include <OpenThreads/ReadWriteMutex>
 #include <vector>
+#include <mutex>
 
 /*!
  *  Class for finding helicopter landing zones (HLZ) on a DEM given the final destination and max
@@ -66,9 +67,12 @@ protected:
    /** @brief Initializes arg parser and outputs usage. */
    void usage(ossimArgumentParser& ap);
    void addArguments(ossimArgumentParser& ap);
-   bool addPropsToJSON();
    void doThreshold();
    void autoComputeThreshold();
+
+#if OSSIM_HAS_JSONCPP
+   bool addPropsToJSON();
+#endif
 
    ossim_uint8 m_waterValue;
    ossim_uint8 m_marginalValue;

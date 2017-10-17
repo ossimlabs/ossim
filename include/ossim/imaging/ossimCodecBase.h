@@ -59,8 +59,7 @@ public:
    virtual bool decode( const std::vector<ossim_uint8>& in,
                         ossimRefPtr<ossimImageData>& out ) const=0;
 
-TYPE_DATA;
-
+   virtual const std::string& getExtension() const=0;
 };
 
 #endif

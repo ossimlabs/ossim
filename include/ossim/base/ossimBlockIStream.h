@@ -1,5 +1,5 @@
-#ifndef ossimBlockReader_HEADER
-#define ossimBlockReader_HEADER 1
+#ifndef ossimBlockStream_HEADER
+#define ossimBlockStream_HEADER 1
 #include <ossim/base/ossimBlockStreamBuffer.h>
 
 namespace ossim {

@@ -12,7 +12,7 @@
 //*******************************************************************
 //  $Id: ossimImageMetaData.cpp 21745 2012-09-16 15:21:53Z dburken $
 
-#include <ossim/imaging/ossimImageMetaData.h>
+#include <ossim/support_data/ossimImageMetaData.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
@@ -241,6 +241,7 @@ bool ossimImageMetaData::loadState(const ossimKeywordlist& kwl, const char* pref
 bool ossimImageMetaData::saveState(ossimKeywordlist& kwl,
 				   const char* prefix)const
 {
+   kwl.add(prefix, "type", "ossimImageMetaData", true);
    if ( theNumberOfBands )
    {
       ossim_uint32 band = 0;

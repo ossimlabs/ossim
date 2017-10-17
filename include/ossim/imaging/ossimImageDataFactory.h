@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -16,7 +16,7 @@
 
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/base/ossimRefPtr.h>
-#include <OpenThreads/Mutex>
+#include <mutex>
 class ossimSource;
 class ossimImageSource;
 
@@ -57,7 +57,7 @@ protected:
    void operator = (ossimImageDataFactory&){}// hide
    
    static ossimImageDataFactory* theInstance;
-   static OpenThreads::Mutex theInstanceMutex;
+   static std::mutex theInstanceMutex;
 };
 
 #endif

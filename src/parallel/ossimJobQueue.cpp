@@ -2,17 +2,17 @@
 
 #include <algorithm> /* for std::find */
 
-
 ossimJobQueue::ossimJobQueue()
 {
 }
 
-void ossimJobQueue::add(ossimJob* job, bool guaranteeUniqueFlag)
+void ossimJobQueue::add(std::shared_ptr<ossimJob> job, 
+                        bool guaranteeUniqueFlag)
 {
-   ossimRefPtr<Callback> cb;
+   std::shared_ptr<Callback> cb;
    {
       {
-         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
          
          if(guaranteeUniqueFlag)
          {
@@ -22,95 +22,95 @@ void ossimJobQueue::add(ossimJob* job, bool guaranteeUniqueFlag)
                return;
             }
          }
-         cb = m_callback.get();
+         cb = m_callback;
       }
-      if(cb.valid()) cb->adding(this, job);
+      if(cb) cb->adding(getSharedFromThis(), job);
       
       job->ready();
       m_jobQueueMutex.lock();
       m_jobQueue.push_back(job);
       m_jobQueueMutex.unlock();
    }
-   if(cb.valid())
+   if(cb)
    {
-      cb->added(this, job);
+      cb->added(getSharedFromThis(), job);
    }
    m_block.set(true);
 }
 
-ossimRefPtr<ossimJob> ossimJobQueue::removeByName(const ossimString& name)
+std::shared_ptr<ossimJob> ossimJobQueue::removeByName(const ossimString& name)
 {
-   ossimRefPtr<ossimJob> result;
-   ossimRefPtr<Callback> cb;
+   std::shared_ptr<ossimJob> result;
+   std::shared_ptr<Callback> cb;
    if(name.empty()) return result;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+      std::lock_guard<std::mutex> lock(m_jobQueueMutex);
       ossimJob::List::iterator iter = findByName(name);
       if(iter!=m_jobQueue.end())
       {
          result = *iter;
          m_jobQueue.erase(iter);
       }
-      cb = m_callback.get();
+      cb = m_callback;
    }      
    m_block.set(!m_jobQueue.empty());
    
-   if(cb.valid()&&result.valid())
+   if(cb&&result)
    {
-      cb->removed(this, result.get());
+      cb->removed(getSharedFromThis(), result);
    }
    return result;
 }
-ossimRefPtr<ossimJob> ossimJobQueue::removeById(const ossimString& id)
+std::shared_ptr<ossimJob> ossimJobQueue::removeById(const ossimString& id)
 {
-   ossimRefPtr<ossimJob> result;
-   ossimRefPtr<Callback> cb;
+   std::shared_ptr<ossimJob> result;
+   std::shared_ptr<Callback> cb;
    if(id.empty()) return result;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+      std::lock_guard<std::mutex> lock(m_jobQueueMutex);
       ossimJob::List::iterator iter = findById(id);
       if(iter!=m_jobQueue.end())
       {
          result = *iter;
          m_jobQueue.erase(iter);
       }
-      cb = m_callback.get();
+      cb = m_callback;
       m_block.set(!m_jobQueue.empty());
    }
-   if(cb.valid()&&result.valid())
+   if(cb&&result)
    {
-      cb->removed(this, result.get());
+      cb->removed(getSharedFromThis(), result);
    }
    return result;
 }
 
-void ossimJobQueue::remove(const ossimJob* Job)
+void ossimJobQueue::remove(const std::shared_ptr<ossimJob> job)
 {
-   ossimRefPtr<ossimJob> removedJob;
-   ossimRefPtr<Callback> cb;
+   std::shared_ptr<ossimJob> removedJob;
+   std::shared_ptr<Callback> cb;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
-      ossimJob::List::iterator iter = std::find(m_jobQueue.begin(), m_jobQueue.end(), Job);
+      std::lock_guard<std::mutex> lock(m_jobQueueMutex);
+      ossimJob::List::iterator iter = std::find(m_jobQueue.begin(), m_jobQueue.end(), job);
       if(iter!=m_jobQueue.end())
       {
          removedJob = (*iter);
          m_jobQueue.erase(iter);
       }
-      cb = m_callback.get();
+      cb = m_callback;
    }
-   if(cb.valid()&&removedJob.valid())
+   if(cb&&removedJob)
    {
-      cb->removed(this, removedJob.get());
+      cb->removed(getSharedFromThis(), removedJob);
    }
 }
 
 void ossimJobQueue::removeStoppedJobs()
 {
    ossimJob::List removedJobs;
-   ossimRefPtr<Callback> cb;
+   std::shared_ptr<Callback> cb;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
-      cb = m_callback.get();
+      std::lock_guard<std::mutex> lock(m_jobQueueMutex);
+      cb = m_callback;
       ossimJob::List::iterator iter = m_jobQueue.begin();
       while(iter!=m_jobQueue.end())
       {
@@ -127,12 +127,12 @@ void ossimJobQueue::removeStoppedJobs()
    }
    if(!removedJobs.empty())
    {
-      if(cb.valid())
+      if(cb)
       {
          ossimJob::List::iterator iter = removedJobs.begin();
          while(iter!=removedJobs.end())
          {
-            cb->removed(this, (*iter).get());
+            cb->removed(getSharedFromThis(), (*iter));
             ++iter;
          }
       }
@@ -143,23 +143,22 @@ void ossimJobQueue::removeStoppedJobs()
 void ossimJobQueue::clear()
 {
    ossimJob::List removedJobs(m_jobQueue);
-   ossimRefPtr<Callback> cb;
+   std::shared_ptr<Callback> cb;
    {
-      OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+      std::lock_guard<std::mutex> lock(m_jobQueueMutex);
       m_jobQueue.clear();
-      cb = m_callback.get();
+      cb = m_callback;
    }
-   if(cb.valid())
+   if(cb)
    {
-      // ossim_uint32 idx = 0;
       for(ossimJob::List::iterator iter=removedJobs.begin();iter!=removedJobs.end();++iter)
       {
-         cb->removed(this, (*iter).get());
+         cb->removed(getSharedFromThis(), (*iter));
       }
    }
 }
 
-ossimRefPtr<ossimJob> ossimJobQueue::nextJob(bool blockIfEmptyFlag)
+std::shared_ptr<ossimJob> ossimJobQueue::nextJob(bool blockIfEmptyFlag)
 {
    m_jobQueueMutex.lock();
    bool emptyFlag = m_jobQueue.empty();
@@ -169,8 +168,8 @@ ossimRefPtr<ossimJob> ossimJobQueue::nextJob(bool blockIfEmptyFlag)
       m_block.block();
    }
    
-   ossimRefPtr<ossimJob> result;
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+   std::shared_ptr<ossimJob> result;
+   std::lock_guard<std::mutex> lock(m_jobQueueMutex);
    
    if (m_jobQueue.empty())
    {
@@ -191,6 +190,7 @@ ossimRefPtr<ossimJob> ossimJobQueue::nextJob(bool blockIfEmptyFlag)
       m_jobQueue.erase(iter);
    }
    m_block.set(!m_jobQueue.empty());
+
    return result;
 }
 void ossimJobQueue::releaseBlock()
@@ -199,7 +199,7 @@ void ossimJobQueue::releaseBlock()
 }
 bool ossimJobQueue::isEmpty()const
 {
-   // OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+   // std::lock_guard<std::mutex> lock(m_jobQueueMutex);
    // return m_jobQueue.empty();
    m_jobQueueMutex.lock();
    bool result =  m_jobQueue.empty();
@@ -209,7 +209,7 @@ bool ossimJobQueue::isEmpty()const
 
 ossim_uint32 ossimJobQueue::size()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+   std::lock_guard<std::mutex> lock(m_jobQueueMutex);
    return (ossim_uint32) m_jobQueue.size();
 }
 
@@ -243,40 +243,45 @@ ossimJob::List::iterator ossimJobQueue::findByName(const ossimString& name)
    return m_jobQueue.end();
 }
 
-ossimJob::List::iterator ossimJobQueue::findByPointer(const ossimJob* job)
+ossimJob::List::iterator ossimJobQueue::findByPointer(const std::shared_ptr<ossimJob> job)
 {
    return std::find(m_jobQueue.begin(),
                     m_jobQueue.end(),
                     job);
 }
 
-ossimJob::List::iterator ossimJobQueue::findByNameOrPointer(const ossimJob* job)
+ossimJob::List::iterator ossimJobQueue::findByNameOrPointer(const std::shared_ptr<ossimJob> job)
 {
    ossimString n = job->name();
-   ossimJob::List::iterator iter = m_jobQueue.begin();
-   while(iter != m_jobQueue.end())
-   {
-      if((*iter).get() == job)
-      {
-         return iter;
-      }
-      else if((!n.empty())&&
-              (job->name() == (*iter)->name()))
-      {
-         return iter;
-      }
-      ++iter;
-   }  
+   ossimJob::List::iterator iter = std::find_if(m_jobQueue.begin(), m_jobQueue.end(), [n, job](const std::shared_ptr<ossimJob> jobIter){
+      bool result = (jobIter == job);
+      if(!result&&!n.empty()) result = jobIter->name() == n;
+      return result;
+   });
+   // ossimJob::List::iterator iter = m_jobQueue.begin();
+   // while(iter != m_jobQueue.end())
+   // {
+   //    if((*iter) == job)
+   //    {
+   //       return iter;
+   //    }
+   //    else if((!n.empty())&&
+   //            (job->name() == (*iter)->name()))
+   //    {
+   //       return iter;
+   //    }
+   //    ++iter;
+//   }  
    
-   return m_jobQueue.end();
+   return iter;
 }
 
-bool ossimJobQueue::hasJob(ossimJob* job)
+bool ossimJobQueue::hasJob(std::shared_ptr<ossimJob> job)
 {
    ossimJob::List::const_iterator iter = m_jobQueue.begin();
    while(iter != m_jobQueue.end())
    {
-      if(job == (*iter).get())
+      if(job == (*iter))
       {
          return true;
       }
@@ -286,14 +291,14 @@ bool ossimJobQueue::hasJob(ossimJob* job)
    return false;
 }
 
-void ossimJobQueue::setCallback(Callback* c)
+void ossimJobQueue::setCallback(std::shared_ptr<Callback> c)
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
+   std::lock_guard<std::mutex> lock(m_jobQueueMutex);
    m_callback = c;
 }
 
-ossimJobQueue::Callback* ossimJobQueue::callback()
+std::shared_ptr<ossimJobQueue::Callback> ossimJobQueue::callback()
 {
-   OpenThreads::ScopedLock<OpenThreads::Mutex> lock(m_jobQueueMutex);
-   return m_callback.get();
+   std::lock_guard<std::mutex> lock(m_jobQueueMutex);
+   return m_callback;
 }

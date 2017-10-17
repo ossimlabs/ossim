@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc.
 //
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -23,7 +23,7 @@
 #include <ossim/base/ossimErrorContext.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimIrect.h>
-#include <ossim/imaging/ossimImageMetaData.h>
+#include <ossim/support_data/ossimImageMetaData.h>
 #include <vector>
 
 //---

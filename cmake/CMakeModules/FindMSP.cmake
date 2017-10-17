@@ -26,6 +26,7 @@ endmacro(FIND_MSP_LIBRARY LIBS_OK MYLIBRARYNAME)
 ##############################################################
 
 set(MSP_FOUND "NO")
+set(OSSIM_HAS_MSP 0)
 
 FIND_PATH(MSP_INCLUDE_DIRS Mensuration/MensurationService.h
         PATHS
@@ -96,6 +97,7 @@ if (MSP_INCLUDE_DIRS)
 
   if( LIBS_OK )
     set(MSP_FOUND "YES")
+    set(OSSIM_HAS_MSP 1)
     #message("-- MSP_INCLUDE_DIRS = ${MSP_INCLUDE_DIRS}")
     #message("-- MSP_LIBRARIES = ${MSP_LIBRARIES}")
   endif()

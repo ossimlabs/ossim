@@ -1,6 +1,10 @@
 PROJECT(ossim)
 SET(CMAKE_MODULE_PATH "${${PROJECT_NAME}_SOURCE_DIR}/cmake/CMakeModules;${CMAKE_MODULE_PATH}")
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 Message("################## Setting up OSSIM core library #########################")
 
 IF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
@@ -15,10 +19,6 @@ SET(CMAKE_MODULE_PATH
 include(CMakeDetermineSystem)
 INCLUDE(OssimVersion)
 INCLUDE(OssimCommonVariables)
-
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Expose some build options
 set(LIB_NAME ossim CACHE STRING "Name of ossim libray (default is ossim).")
@@ -65,6 +65,14 @@ else( GEOS_FOUND )
    message( FATAL_ERROR "Could not find geos package! Consider installing this as it will soon become a required package." )
 endif( GEOS_FOUND )
 
+find_package( JsonCpp QUIET)
+if( JSONCPP_FOUND )
+   include_directories( ${JSONCPP_INCLUDE_DIR} )
+   set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
+else( JSONCPP_FOUND )
+   message("Could not find JSONCPP package! Consider installing this as it will soon become a required package." )
+endif( JSONCPP_FOUND )
+
 # GEOFIFF - Required:
 set( OSSIM_HAS_GEOTIFF 0 )
 find_package( GEOTIFF )
@@ -93,15 +101,6 @@ if( JPEG_FOUND )
 else( JPEG_FOUND )
    message( FATAL_ERROR "Could not find required jpeg package!" )
 endif( JPEG_FOUND )
-
-# OpenThreads - Required:
-find_package( OpenThreads )
-if( OPENTHREADS_FOUND )
-   include_directories( ${OPENTHREADS_INCLUDE_DIR} )
-   set( ossimDependentLibs ${ossimDependentLibs} ${OPENTHREADS_LIBRARY} )
-else( OPENTHREADS_FOUND )
-   message( FATAL_ERROR "Could not find required OpenThreads package!" )
-endif( OPENTHREADS_FOUND )
 
 # TIFF - Required:
 find_package( TIFF )
@@ -187,6 +186,8 @@ else (BUILD_OSSIM_HDF5_SUPPORT)
 endif ( BUILD_OSSIM_HDF5_SUPPORT )
 
 
+find_package( Threads )
+set( ossimDependentLibs ${ossimDependentLibs} ${CMAKE_THREAD_LIBS_INIT} )
 
 #---
 # Call the OSSIM macros in OssimUtilities.cmake
@@ -199,6 +200,8 @@ GET_GIT_REVISION()
 if ( NOT ${Project_WC_REVISION} EQUAL 0 )
    set( OSSIM_GIT_REVISION_NUMBER ${Project_WC_REVISION} )
 endif()
+
+
 
 #####################################################################################
 # Call the configure files for ossimConfig and ossimVersion setup
@@ -228,7 +231,7 @@ CONFIGURE_FILE("${OSSIM_VERSION_HEADER_CONFIG}"
 ##################################################################################################
 subdirs(src)
 
-set(TARGET_COMMON_LIBRARIES ossim ${OPENTHREADS_LIBRARY})
+set(TARGET_COMMON_LIBRARIES ossim)
 
 ##################################################################################################
 #

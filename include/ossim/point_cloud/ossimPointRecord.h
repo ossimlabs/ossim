@@ -2,7 +2,7 @@
 //
 // OSSIM (http://trac.osgeo.org/ossim/)
 //
-// License:  LGPL -- See LICENSE.txt file in the top level directory for more details.
+// License:  MIT -- See LICENSE.txt file in the top level directory for more details.
 //
 //**************************************************************************************************
 // $Id: ossimPointRecord.h 23352 2015-05-29 17:38:12Z okramer $
