@@ -70,8 +70,10 @@ std::ostream& ossimNitfXmlDataContentDes::print(std::ostream& out,
        << pfx << std::setw(24) << "DESSHSD:" << ((typeinfo) ? "(string)" : "") << m_desshsd << "\n"
        << pfx << std::setw(24) << "DESSHTN:" << ((typeinfo) ? "(string)" : "") << m_desshtn << "\n"
        // Quick hack to print on one line, this will leave extra spaces in CDATA sections
-       << pfx << std::setw(24) << "XML:" << m_xmlString.substitute(ossimString("\n"), " ", true) << "\n"
-   ;
+       //<< pfx << std::setw(24) << "XML:" << m_xmlString.substitute(ossimString("\n"), " ", true) << "\n"
+       // because multi line is support with tripple quotes in the ossimKeywordlist
+       // we will not replace newlines just in case.
+       << pfx << std::setw(24) << "XML:\"\"\""<< m_xmlString << "\"\"\"\n";
    return out;
 }
 
