@@ -1479,7 +1479,7 @@ bool ossimRpcModel::toJSON(std::string& jsonString) const
    jsonString = writer.write(root);
 
 #else
-   json.clear();
+   jsonString.clear();
    return false;
 #endif
 }
