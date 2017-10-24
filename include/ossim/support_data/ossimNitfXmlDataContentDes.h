@@ -15,7 +15,12 @@ public:
       DESSHSI_SIZE = 60,
       DESSHSV_SIZE = 10,
       DESSHSD_SIZE = 20,
-      DESSHTN_SIZE = 120
+      DESSHTN_SIZE = 120,
+      DESSHLPG_SIZE = 125,
+      DESSHLPT_SIZE = 25,
+      DESSHLI_SIZE = 20,
+      DESSHLIN_SIZE = 120,
+      DESSHABS_SIZE = 200
    };
    ossimNitfXmlDataContentDes();
 
@@ -58,7 +63,12 @@ protected:
    char m_desshsv[DESSHSV_SIZE+1];
    char m_desshsd[DESSHSD_SIZE+1];
    char m_desshtn[DESSHTN_SIZE+1];
-
+   char m_desshlpg[DESSHLPG_SIZE+1];
+   char m_desshlpt[DESSHLPT_SIZE+1];
+   char m_desshli[DESSHLI_SIZE+1];
+   char m_desshlin[DESSHLIN_SIZE+1];
+   char m_desshabs[DESSHABS_SIZE+1];
+   
    ossimString m_xmlString;
    ossimRefPtr<ossimXmlDocument> m_xmlDocument;
 };
