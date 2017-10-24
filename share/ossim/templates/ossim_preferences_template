@@ -752,5 +752,5 @@ ossim.plugins.aws.s3.cacheInvalidLocations: true
 
 
 // Default the DES parser to true
-des_parser: false
+des_parser: true
 
