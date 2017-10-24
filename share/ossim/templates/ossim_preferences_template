@@ -749,3 +749,8 @@ ossim.plugins.aws.s3.cacheInvalidLocations: true
 //ossim.stream.factory.registry.istream.buffer1.enableBlocked: false
 //ossim.stream.factory.registry.istream.buffer1.includePattern: ^/
 //ossim.stream.factory.registry.istream.buffer1.size: 65536
+
+
+// Default the DES parser to true
+des_parser: true
+
