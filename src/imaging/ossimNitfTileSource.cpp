@@ -263,23 +263,29 @@ bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
          if(hdr->isValid())
          {
             if( !hdr->isCompressed() )
-            {
-               // Skip entries tagged NODISPLAY, e.g. cloud mask entries.
-               if (hdr->getRepresentation() != "NODISPLY")
                {
+               // GP:  I will remove the NODISPLYU check for if there is 
+               //      any kind of data OSSIM should allow it through.  
+               //      filterting for this data should be at a higher level.
+               //      SICD data is labeled as NODISPLY but we need to process
+               //      it in order for it to be used in other algorithms
+
+               // Skip entries tagged NODISPLAY, e.g. cloud mask entries.
+               // if (hdr->getRepresentation() != "NODISPLY")
+               // {
                   theEntryList.push_back(i);
                   theNitfImageHeader.push_back(hdr);
-               }
-               else 
-               {
-                  ossimString cat = hdr->getCategory().trim().downcase();
-                  // this is an NGA Highr Resoluion Digital Terrain Model NITF format
-                  if(cat == "dtem")
-                  {
-                     theEntryList.push_back(i);
-                     theNitfImageHeader.push_back(hdr);
-                  }
-               }
+               // }
+               // else 
+               // {
+               //    ossimString cat = hdr->getCategory().trim().downcase();
+               //    // this is an NGA Highr Resoluion Digital Terrain Model NITF format
+               //    if(cat == "dtem")
+               //    {
+               //       theEntryList.push_back(i);
+               //       theNitfImageHeader.push_back(hdr);
+               //    }
+               // }
 
             }
             else if ( canUncompress(hdr.get()) )
@@ -445,22 +451,28 @@ bool ossimNitfTileSource::parseFile()
       {
          if( !hdr->isCompressed() )
          {
+            // GP:  I will remove the NODISPLYU check for if there is 
+            //      any kind of data OSSIM should allow it through.  
+            //      filterting for this data should be at a higher level.
+            //      SICD data is labeled as NODISPLY but we need to process
+            //      it in order for it to be used in other algorithms
+            //
             // Skip entries tagged NODISPLAY, e.g. cloud mask entries.
-            if (hdr->getRepresentation() != "NODISPLY")
-            {
+            // if (hdr->getRepresentation() != "NODISPLY")
+            // {
                theEntryList.push_back(i);
                theNitfImageHeader.push_back(hdr);
-            }
-            else 
-            {
-               ossimString cat = hdr->getCategory().trim().downcase();
-               // this is an NGA Highr Resoluion Digital Terrain Model NITF format
-               if(cat == "dtem")
-               {
-                  theEntryList.push_back(i);
-                  theNitfImageHeader.push_back(hdr);
-               }
-            }
+            // }
+            // else 
+            // {
+            //    ossimString cat = hdr->getCategory().trim().downcase();
+            //    // this is an NGA Highr Resoluion Digital Terrain Model NITF format
+            //    if(cat == "dtem")
+            //    {
+            //       theEntryList.push_back(i);
+            //       theNitfImageHeader.push_back(hdr);
+            //    }
+            // }
 
          }
          else if ( canUncompress(hdr.get()) )
