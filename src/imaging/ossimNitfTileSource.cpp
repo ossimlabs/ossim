@@ -264,7 +264,7 @@ bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
          {
             if( !hdr->isCompressed() )
                {
-               // GP:  I will remove the NODISPLYU check for if there is 
+               // GP:  I will remove the NODISPLY check for if there is 
                //      any kind of data OSSIM should allow it through.  
                //      filterting for this data should be at a higher level.
                //      SICD data is labeled as NODISPLY but we need to process
@@ -296,6 +296,7 @@ bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
             }
             else
             {
+               //std::cout << "COMPRESSION CODE: "<< hdr->getCompressionCode() << "\n";
                if(traceDebug())
                {
                   ossimNotify(ossimNotifyLevel_DEBUG)
@@ -303,11 +304,14 @@ bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
                      <<" has an unsupported compression code = "
                      << hdr->getCompressionCode() << std::endl;
                }
+               theNitfImageHeader.clear();
+               theEntryList.clear();
+               // break out
+               break;
             }
          }   
          
       } // End: image header loop
-
       // Reset the number of images in case we skipped some, e.g. tagged "NODISPLAY"
       if ( theNitfImageHeader.size() )
       {
@@ -352,7 +356,6 @@ bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
       ossimNotify(ossimNotifyLevel_DEBUG)
          << MODULE << " exit status: " << (result?"true":"false") << "\n";
    }
-   
    return result;
 }
 
@@ -483,6 +486,8 @@ bool ossimNitfTileSource::parseFile()
          }
          else
          {
+            theEntryList.clear();
+            theNitfImageHeader.clear();
             if(traceDebug())
             {
                ossimNotify(ossimNotifyLevel_DEBUG)
@@ -490,7 +495,7 @@ bool ossimNitfTileSource::parseFile()
                   <<" has an unsupported compression code = "
                   << hdr->getCompressionCode() << std::endl;
             }
-            return false;
+            break;
          }
       }
       else
