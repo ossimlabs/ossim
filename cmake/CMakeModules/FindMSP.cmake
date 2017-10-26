@@ -13,7 +13,7 @@ function(FIND_MSP_LIBRARY LIBNAME LIBSOK)
         /usr/lib
         /usr/local/lib )
   if (TARGET_LIBRARY_${LIBNAME})
-    set (MSP_LIBRARIES ${MSP_LIBRARIES} ${TARGET_LIBRARY_${LIBNAME}})
+    set (MSP_LIBRARIES ${MSP_LIBRARIES} ${TARGET_LIBRARY_${LIBNAME}} PARENT_SCOPE)
   else()
     set(${LIBSOK} "NO" PARENT_SCOPE)
   endif()
