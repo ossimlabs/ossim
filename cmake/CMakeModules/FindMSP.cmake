@@ -8,7 +8,7 @@ SET(CMAKE_FIND_FRAMEWORK "LAST")
 
 function(FIND_MSP_LIBRARY LIBNAME LIBSOK)
   find_library( TARGET_LIBRARY_${LIBNAME} NAMES "${LIBNAME}" PATHS
-        $ENV{MSP_HOME}/lib 
+        ${MSP_HOME}/lib 
         /usr/lib64
         /usr/lib
         /usr/local/lib )
@@ -26,7 +26,7 @@ set(OSSIM_HAS_MSP 0)
 
 FIND_PATH(MSP_INCLUDE_DIRS Mensuration/MensurationService.h
         PATHS
-        $ENV{MSP_HOME}/include
+        ${MSP_HOME}/include
         /usr/include
 		    /usr/local/include)
 
