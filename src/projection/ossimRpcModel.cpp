@@ -1477,7 +1477,7 @@ bool ossimRpcModel::toJSON(std::string& jsonString) const
    root["isd"] = ISD;
    Json::StyledWriter writer;
    jsonString = writer.write(root);
-
+   return true;
 #else
    jsonString.clear();
    return false;
