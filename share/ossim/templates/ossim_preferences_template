@@ -340,6 +340,11 @@ plugin0.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.s
 plugin1.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
 plugin1.options:
 
+plugin2.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_csm_plugin.so
+plugin2.options:"""
+                projection_factory.location: back
+                """
+
 plugin3.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
 // plugin3.options:
 
