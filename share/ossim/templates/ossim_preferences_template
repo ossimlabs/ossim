@@ -342,7 +342,7 @@ plugin1.options:
 
 plugin2.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_csm_plugin.so
 plugin2.options:"""
-                projection_factory.location: back
+                projection_factory.location: front
                 """
 
 plugin3.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
