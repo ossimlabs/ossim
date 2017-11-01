@@ -342,7 +342,6 @@ plugin1.options:
 
 plugin2.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_csm_plugin.so
 plugin2.options:"""
-                projection_factory.location: front
                 """
 
 plugin3.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
@@ -759,3 +758,14 @@ ossim.plugins.aws.s3.cacheInvalidLocations: true
 // Default the DES parser to true
 des_parser: true
 
+ossim.plugins.csm.plugin_path: $(MSP_HOME)/plugins
+
+// Used to turn off plugins.  You can always do ossim-info --plugins
+// this will list all plugins loaded and will then list which are
+// enabled by this regualr expression
+//
+// example values:
+//   .*  will enable all plugins
+//   SIX|WV.* will enable all SIX library sicd and sidd plugins and 
+//            world view plugins
+ossim.plugins.csm.enable_plugins: .*
