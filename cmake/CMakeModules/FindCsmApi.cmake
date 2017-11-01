@@ -1,23 +1,28 @@
 # - Find csmApi library
 # Find the native csmApi includes and library
 # This module defines
-#  CSMAPI_INCLUDE_DIRS, where to find cam api headers, etc.
-#  CSMAPI_LIBRARIES, libraries to link against to use csmApi.
+#  CSMAPI_INCLUDE_DIR, where to find cam api headers, etc.
+#  CSMAPI_LIBRARY, where to find the CSMAPI library.
 #  CSMAPI_FOUND, If false, do not try to use csmApi.
 # also defined, but not for general use are
-#  CSMAPI_LIBRARY, where to find the CSMAPI library.
+#
+# NOTE: If MSP Distro is available, CSM can be found there.
+
 SET(CMAKE_FIND_FRAMEWORK "LAST")
-FIND_PATH(CSMAPI_INCLUDE_DIRS csm/csm.h
+FIND_PATH(CSMAPI_INCLUDE_DIR csm/csm.h
         PATHS
-        $ENV{MSP_HOME}/include/common
+        ${MSP_HOME}/include/common
+        ${CSM_HOME}/include
+        /usr/include
+        /usr/local/include
         ${OSSIM_DEPENDENCIES}/include
-		${OSSIM_INSTALL_PREFIX}/include
+		  ${OSSIM_INSTALL_PREFIX}/include
 )
 
-set(CSMAPI_NAMES ${CSMAPI_NAMES} MSPcsm csmapi )
-find_library(CSMAPI_LIBRARY NAMES ${CSMAPI_NAMES}
+find_library(CSMAPI_LIBRARY NAMES MSPcsmapi csmapi
    PATHS
-      $ENV{MSP_HOME}/lib
+      ${MSP_HOME}/lib
+      ${CSM_HOME}/lib
       ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX}
       ${OSSIM_DEPENDENCIES}/lib
       ${OSSIM_INSTALL_PREFIX}
@@ -29,20 +34,14 @@ find_library(CSMAPI_LIBRARY NAMES ${CSMAPI_NAMES}
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args( CSMAPI DEFAULT_MSG 
                                    CSMAPI_LIBRARY 
-                                   CSMAPI_INCLUDE_DIRS )
-
-if(CSMAPI_FOUND)
-   set( CSMAPI_LIBRARIES ${CSMAPI_LIBRARY} )
-   set( CSMAPI_INCLUDES  ${CSMAPI_INCLUDE_DIRS} )
-else( CSMAPI_FOUND )
+                                   CSMAPI_INCLUDE_DIR )
+if ( NOT CSMAPI_FOUND )
+   message( WARNING "Could not find CSMAPI" )
+else ()
    if( NOT CSMAPI_FIND_QUIETLY )
-      message( WARNING "Could not find CSMAPI" )
+      message( STATUS "CSMAPI_INCLUDE_DIR=${CSMAPI_INCLUDE_DIR}" )
+      message( STATUS "CSMAPI_LIBRARY=${CSMAPI_LIBRARY}" )
    endif( NOT CSMAPI_FIND_QUIETLY )
-endif(CSMAPI_FOUND)
+endif (NOT CSMAPI_FOUND)
 
-if( NOT CSMAPI_FIND_QUIETLY )
-   message( STATUS "CSMAPI_INCLUDE_DIRS=${CSMAPI_INCLUDE_DIRS}" )
-   message( STATUS "CSMAPI_LIBRARIES=${CSMAPI_LIBRARIES}" )
-endif( NOT CSMAPI_FIND_QUIETLY )
-
-mark_as_advanced(CSMAPI_INCLUDES CSMAPI_INCLUDE_DIRS CSMAPI_LIBRARIES)
+mark_as_advanced(CSMAPI_INCLUDE_DIR CSMAPI_LIBRARY)
