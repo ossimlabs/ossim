@@ -760,12 +760,23 @@ des_parser: true
 
 ossim.plugins.csm.plugin_path: $(MSP_HOME)/plugins
 
-// Used to turn off plugins.  You can always do ossim-info --plugins
-// this will list all plugins loaded and will then list which are
-// enabled by this regualr expression
+// Used to turn off plugins.  
 //
 // example values:
 //   .*  will enable all plugins
 //   SIX|WV.* will enable all SIX library sicd and sidd plugins and 
 //            world view plugins
 ossim.plugins.csm.enable_plugins: .*
+
+// Used to turn off plugins.
+//
+// example values:
+//   .*  will disable all plugins
+//   SIX|WV.* will disable SIX library sicd and sidd plugins and 
+//            world view plugins
+//ossim.plugins.csm.disable_plugins: .*
+
+// For CSM only builds you must specify the data directory in the keywordlist.
+// Uncomment this out and specify the values
+//
+//ossim.plugins.csm.data_dir:
