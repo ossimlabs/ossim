@@ -2363,6 +2363,10 @@ ossim_uint32 ossimNitfTileSource::getTileWidth() const
    if(!theCacheSize.hasNans()&& theCacheSize.x > 0)
    {
       result = theCacheSize.x;
+      if(result >= getBoundingRect().width())
+      {
+         result = 1024;
+      }
    }
    else
    {
@@ -2379,6 +2383,10 @@ ossim_uint32 ossimNitfTileSource::getTileHeight() const
    if(!theCacheSize.hasNans()&& theCacheSize.y > 0)
    {
       result = theCacheSize.y;
+      if(result >= getBoundingRect().height())
+      {
+         result = 1024;
+      }
    }
    else
    {
@@ -2386,6 +2394,7 @@ ossim_uint32 ossimNitfTileSource::getTileHeight() const
       ossim::defaultTileSize(tileSize);
       result = static_cast<ossim_uint32>(tileSize.y);
    }
+
    return result;
 }
 
@@ -2537,21 +2546,28 @@ bool ossimNitfTileSource::isVqCompressed(const ossimString& compressionCode)cons
 ossim_uint32 ossimNitfTileSource::getImageTileWidth() const
 {
    const ossimNitfImageHeader* hdr = getCurrentImageHeader();
+   ossim_uint32 tileSize = 0;
    if (!hdr)
    {
-      return 0;
+      return tileSize;
    }
-   return hdr->getNumberOfPixelsPerBlockHoriz();
+   tileSize = hdr->getNumberOfPixelsPerBlockHoriz();
+
+   if(tileSize >= getBoundingRect().width()) tileSize = 1024;
+   return tileSize;
 }
 
 ossim_uint32 ossimNitfTileSource::getImageTileHeight() const
 {
    const ossimNitfImageHeader* hdr = getCurrentImageHeader();
+   ossim_uint32 tileSize = 0;
    if (!hdr)
    {
-      return 0;
+      return tileSize;
    }
-   return hdr->getNumberOfPixelsPerBlockVert();
+   tileSize = hdr->getNumberOfPixelsPerBlockVert();
+   if(tileSize >= getBoundingRect().height()) tileSize = 1024;
+   return tileSize;
 }
 
 ossimString ossimNitfTileSource::getShortName()const
