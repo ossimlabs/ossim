@@ -2360,15 +2360,20 @@ ossimScalarType ossimNitfTileSource::getOutputScalarType() const
 ossim_uint32 ossimNitfTileSource::getTileWidth() const
 {
    ossim_uint32 result = 0;
+   bool needDefault = false;
    if(!theCacheSize.hasNans()&& theCacheSize.x > 0)
    {
       result = theCacheSize.x;
       if(result >= getBoundingRect().width())
       {
-         result = 1024;
+         needDefault = true;
       }
    }
    else
+   {
+      needDefault = true;
+   }
+   if(needDefault)
    {
       ossimIpt tileSize;
       ossim::defaultTileSize(tileSize);
@@ -2380,21 +2385,25 @@ ossim_uint32 ossimNitfTileSource::getTileWidth() const
 ossim_uint32 ossimNitfTileSource::getTileHeight() const
 {
    ossim_uint32 result = 0;
+   bool needDefault = false;
    if(!theCacheSize.hasNans()&& theCacheSize.y > 0)
    {
       result = theCacheSize.y;
       if(result >= getBoundingRect().height())
       {
-         result = 1024;
+         needDefault = true;
       }
    }
    else
+   {
+      needDefault = true;
+   }
+   if(needDefault)
    {
       ossimIpt tileSize;
       ossim::defaultTileSize(tileSize);
       result = static_cast<ossim_uint32>(tileSize.y);
    }
-
    return result;
 }
 
@@ -2553,7 +2562,7 @@ ossim_uint32 ossimNitfTileSource::getImageTileWidth() const
    }
    tileSize = hdr->getNumberOfPixelsPerBlockHoriz();
 
-   if(tileSize >= getBoundingRect().width()) tileSize = 1024;
+   if(tileSize >= getBoundingRect().width()) tileSize = 0;
    return tileSize;
 }
 
@@ -2566,7 +2575,7 @@ ossim_uint32 ossimNitfTileSource::getImageTileHeight() const
       return tileSize;
    }
    tileSize = hdr->getNumberOfPixelsPerBlockVert();
-   if(tileSize >= getBoundingRect().height()) tileSize = 1024;
+   if(tileSize >= getBoundingRect().height()) tileSize = 0;
    return tileSize;
 }
 
