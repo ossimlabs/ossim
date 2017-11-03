@@ -14,9 +14,10 @@
 #include <ossim/imaging/ossimImageData.h>
 
 RTTI_DEF1(ossimNullPixelFlip, "ossimNullPixelFlip", ossimImageSourceFilter);
-ossimNullPixelFlip::ossimNullPixelFlip()
-:m_clipMode(ClipMode_BOUNDING_RECT),
-m_replacementType(ReplacementType_MINPIX)
+ossimNullPixelFlip::ossimNullPixelFlip(ClipMode clipMode, 
+                                       ReplacementType replacementType)
+:m_clipMode(clipMode),
+m_replacementType(replacementType)
 {
 }
 

@@ -120,7 +120,8 @@ int main(int argc, char* argv[])
    }
 
    // Create a normal chain.
-   sic1 = new ossimSingleImageChain(true,  // addHistogramFlag
+   sic1 = new ossimSingleImageChain(false, // null flip
+                                    true,  // addHistogramFlag
                                     true,  // addResamplerCacheFlag
                                     true,  // addChainCacheFlag
                                     false, // remapToEightBitFlag

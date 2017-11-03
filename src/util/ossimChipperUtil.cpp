@@ -130,6 +130,7 @@ static const std::string UP_IS_UP_KW             = "up_is_up"; // bool
 static const std::string WRITER_KW               = "writer";
 static const std::string WRITER_PROPERTY_KW      = "writer_property";
 static const std::string COMBINER_TYPE_KW        = "combiner_type";
+static const std::string NULL_PIXEL_FLIP_KW      = "null_pixel_flip";
 
 static const std::string TWOCMV_OLD_INPUT_BAND_KW      = "2cmv_old_input_band";
 static const std::string TWOCMV_NEW_INPUT_BAND_KW      = "2cmv_new_input_band";
@@ -236,6 +237,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--degrees","<dpp_xy> | <dpp_x> <dpp_y>\nSpecifies an override for degrees per pixel. Takes either a single value applied equally to x and y directions, or two values applied correspondingly to x then y. This option takes precedence over the \"--meters\" option.");
 
+   au->addCommandLineOption("--enable-null-pixel-flip", "Will add to the start of the chain and will flip interior pixels that are null to valid.");
    au->addCommandLineOption("--elevation", "<elevation>\nhillshade option - Light source elevation angle for bumb shade.\nRange: 0 to 90, Default = 45.0");
 
    au->addCommandLineOption("-e or --entry", "<entry> For multi image handlers which entry do you wish to extract. For list of entries use: \"ossim-info -i <your_image>\" ");
@@ -537,6 +539,11 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    if ( ap.read("--histogram-aoi", stringParam1) )
    {
       m_kwl->addPair( HIST_AOI_KW, tempString1 );
+   }
+
+   if(ap.read("--enable-null-pixel-flip"))
+   {
+     m_kwl->addPair(NULL_PIXEL_FLIP_KW, TRUE_KW);
    }
 
    if ( ap.read( "--histogram-center-tile" ) )
@@ -1835,6 +1842,17 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
            }
         }
 
+        ossimString nullPixelFlip = m_kwl->find(NULL_PIXEL_FLIP_KW.c_str());
+        if(nullPixelFlip.toBool())
+        {
+          std::cout << "ADDING NULL PIXEL FLIP\n";
+          ic->setAddNullPixelFlipFlag(true);
+        }
+        else
+        {
+          std::cout << "NOT ADDING NULL PIXEL FLIP\n";
+
+        }
         //---
         // If multiple inputs and scaleToEightBit do it at the end of the processing
         // chain to alleviate un-even stretches between inputs.
