@@ -1845,13 +1845,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
         ossimString nullPixelFlip = m_kwl->find(NULL_PIXEL_FLIP_KW.c_str());
         if(nullPixelFlip.toBool())
         {
-          std::cout << "ADDING NULL PIXEL FLIP\n";
           ic->setAddNullPixelFlipFlag(true);
-        }
-        else
-        {
-          std::cout << "NOT ADDING NULL PIXEL FLIP\n";
-
         }
         //---
         // If multiple inputs and scaleToEightBit do it at the end of the processing
