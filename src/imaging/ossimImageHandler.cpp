@@ -1265,6 +1265,7 @@ void ossimImageHandler::close()
    theGeometry = 0;
    theValidImageVertices.clear();
    theDecimationFactors.clear();
+   setState(0);
 }
 
 bool ossimImageHandler::isBandSelector() const
