@@ -394,6 +394,7 @@ public:
    OSSIMDLLEXPORT friend std::ostream& operator<<(std::ostream& os,
                                                   const ossimKeywordlist& kwl);
    bool operator ==(ossimKeywordlist& kwl)const;
+   bool operator !=(ossimKeywordlist& kwl)const;
 
     /*!
      * Clear all contents out of the ossimKeywordlist.
