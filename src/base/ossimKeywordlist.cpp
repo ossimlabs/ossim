@@ -1541,7 +1541,7 @@ void ossimKeywordlist::replaceSpecialCharacters(ossimString& value)const
    }
 }
 
-void ossimKeywordlist::writeXmlToStream(std::ostream& out, const std::string& rootTag)const
+void ossimKeywordlist::toXML(std::ostream& out, const std::string& rootTag)const
 {
    std::string rootTagStr = rootTag;
    if (!isValidTag(rootTagStr))
@@ -1621,7 +1621,7 @@ void ossimKeywordlist::writeXmlToStream(std::ostream& out, const std::string& ro
 }
 
 
-void ossimKeywordlist::writeJsonToStream(std::ostream& out, const std::string& rootTag)const
+void ossimKeywordlist::toJSON(std::ostream& out, const std::string& rootTag)const
 {
    const std::string C   = ": "; // colon
    const std::string DQ  = "\""; // double Quote
