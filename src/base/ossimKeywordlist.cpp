@@ -26,6 +26,8 @@
 #include <sstream>
 #include <utility>
 
+#include <ossim/base/ossimStreamFactoryRegistry.h>
+
 static ossimTrace traceDebug("ossimKeywordlist:debug");
 
 #ifdef OSSIM_ID_ENABLED
@@ -564,8 +566,6 @@ void ossimKeywordlist::writeToStream(std::ostream& out) const
    }
 }
 
-
-
 bool ossimKeywordlist::hasKey( const std::string& key ) const
 {
    bool result = false;
@@ -740,24 +740,6 @@ bool ossimKeywordlist::parseFile(const ossimFilename& file,
    }
    
    return result;
-
-#if 0
-   if(!file.exists())
-      return false;
-
-   bool result = false;
-   std::ifstream is;
-   is.open(file.c_str(), std::ios::in | std::ios::binary);
-
-   if(!is.fail())
-   {
-      m_currentlyParsing = file;
-      result = parseStream(is, ignoreBinaryChars);
-   }
-
-   is.close();
-   return result;
-#endif
 }
 
 bool ossimKeywordlist::parseStream(ossim::istream& is, bool /* ignoreBinaryChars */)
@@ -1101,6 +1083,32 @@ bool ossimKeywordlist::parseStream(ossim::istream& is)
    return true;
 }
 
+void ossimKeywordlist::getSortedList(std::vector<ossimString>& prefixValues,
+                                     const ossimString &prefixKey)const
+{
+   ossimString regExpression     =  ossimString("^(") + prefixKey+ "[0-9]+)";
+   prefixValues.clear();
+   std::vector<ossimString> keys;
+   getSubstringKeyList(keys, regExpression);
+   ossim_uint32 nKeys = (long)keys.size();
+
+   ossim_uint32 offset = (int)ossimString(prefixKey).size();
+   ossim_uint32 idx = 0;
+   std::vector<ossim_uint32> numberList(nKeys);
+   for(idx = 0; idx < (ossim_uint32)numberList.size();++idx)
+   {
+    ossimString numberStr(keys[idx].begin() + offset,
+           keys[idx].end());
+    numberList[idx] = numberStr.toInt();
+   }
+   std::sort(numberList.begin(), numberList.end());
+
+   for(idx=0;idx < (ossim_uint32)numberList.size();++idx)
+   {
+      prefixValues.push_back(prefixKey+ossimString::toString(numberList[idx]));
+   }
+}
+
 std::vector<ossimString> ossimKeywordlist::findAllKeysThatContains(const ossimString &searchString)const
 {
    KeywordMap::const_iterator i;
@@ -1356,9 +1364,10 @@ OSSIMDLLEXPORT std::ostream& operator<<(std::ostream& os,
    return os;
 }
 
-
 bool ossimKeywordlist::operator ==(ossimKeywordlist& kwl)const
 {
+   return (m_map == kwl.m_map);
+   /*
    if(this==&kwl) return true;
    std::map<std::string, std::string>::const_iterator iter = m_map.begin();
    
@@ -1374,6 +1383,12 @@ bool ossimKeywordlist::operator ==(ossimKeywordlist& kwl)const
    }
    
    return true;
+   */
+}
+
+bool ossimKeywordlist::operator !=(ossimKeywordlist& kwl)const
+{
+   return (m_map != kwl.m_map);
 }
 
 ossimKeywordlist&  ossimKeywordlist::downcaseKeywords()

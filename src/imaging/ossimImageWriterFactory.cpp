@@ -20,7 +20,6 @@
 #include <ossim/imaging/ossimNitf20Writer.h>
 #include <ossim/imaging/ossimPdfWriter.h>
 #include <ossim/imaging/ossimTiffWriter.h>
-#include <ossim/imaging/ossimTmsWriter.h>
 #include <ossim/imaging/ossimWriter.h>
 
 ossimImageWriterFactory* ossimImageWriterFactory::theInstance = (ossimImageWriterFactory*)NULL;
@@ -211,22 +210,6 @@ ossimImageWriterFactory::createWriter(const ossimString& typeName)const
       }
    }
 
-   // Check for TMS ossim writer.
-   writer = new ossimTmsWriter;
-   if ( writer->getClassName() == typeName )
-   {
-      return writer.release();
-   }
-   else
-   {
-      // See if the type name is supported by the writer.
-      if ( writer->hasImageType(typeName) )
-      {
-         writer->setOutputImageType(typeName);
-         return writer.release();
-      }
-   }
-   
    // Check for nitf writer.
    writer = new ossimNitf20Writer;
    if ( writer->getClassName() == typeName )
@@ -337,7 +320,6 @@ void ossimImageWriterFactory::getTypeNameList(std::vector<ossimString>& typeList
    typeList.push_back(STATIC_TYPE_NAME(ossimNitfWriter));
    typeList.push_back(STATIC_TYPE_NAME(ossimNitf20Writer));
    typeList.push_back(STATIC_TYPE_NAME(ossimPdfWriter));
-   typeList.push_back(ossimString("ossimTmsWriter"));
    typeList.push_back(ossimString("ossimWriter"));
 }
 
@@ -402,10 +384,6 @@ void ossimImageWriterFactory::getImageTypeList( std::vector<ossimString>& imageT
    writer = new ossimPdfWriter;
    writer->getImageTypeList(imageTypeList);
    
-   // Add the tms ossim writer types.
-   writer = new ossimTmsWriter;
-   writer->getImageTypeList(imageTypeList);
-
    // Add the generic ossim writer types.
    writer = new ossimWriter;
    writer->getImageTypeList(imageTypeList);
