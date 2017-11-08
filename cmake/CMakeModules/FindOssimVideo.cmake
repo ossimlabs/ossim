@@ -31,7 +31,7 @@ FIND_LIBRARY(OSSIMVIDEO_LIBRARY NAMES ${OSSIMVIDEO_NAMES}
 		lib64
 		lib
 		Frameworks )
-)
+
 
 # handle the QUIETLY and REQUIRED arguments and set OSSIMVIDEO_FOUND to TRUE if 
 # all listed variables are TRUE
