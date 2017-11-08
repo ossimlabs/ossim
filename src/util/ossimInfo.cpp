@@ -1484,7 +1484,28 @@ bool ossimInfo::getImageInfo( const ossimFilename& file,
 
 void ossimInfo::openImage(const ossimFilename& file)
 {
-   m_img = openImageHandler( file );
+   if(file.ext().downcase()=="kwl")
+   {
+      openImageFromState(file);
+   }
+   else
+   {
+      m_img = openImageHandler( file );      
+   }
+}
+
+void ossimInfo::openImageFromState(const ossimFilename& file)
+{
+   std::shared_ptr<ossim::ImageHandlerState> state;
+   ossimKeywordlist kwl;
+   if(kwl.addFile(file))
+   {
+      state = ossim::ImageHandlerStateRegistry::instance()->createState(kwl);
+      if(state)
+      {
+         m_img = ossimImageHandlerRegistry::instance()->open(state);
+      }
+   }
 }
 
 ossimRefPtr<ossimImageHandler> ossimInfo::openImageHandler(const ossimFilename& file) const

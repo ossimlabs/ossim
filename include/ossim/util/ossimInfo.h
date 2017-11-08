@@ -139,6 +139,13 @@ public:
     */
    void openImage(const ossimFilename& file);
 
+   /**
+    * @brief Opens image handler and stores in m_img data member.
+    * @param Image to open.
+    * @note Throws ossimException if image cannot be opened.
+    */
+   void openImageFromState(const ossimFilename& file);
+
    /** @brief Closes image if open. */
    void closeImage();
 
