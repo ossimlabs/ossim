@@ -339,7 +339,7 @@ public:
     *  or an empty string if the key was not found.
     *  @param key e.g. "number_line"
     *  @param prefix e..g "image0."
-    *  @return Reference to string.  This will be emptry if not found or
+    *  @return Reference to string.  This will be empty if not found or
     *  if value is empty.
     */
    const std::string& findKey(const std::string& key) const;
@@ -390,11 +390,26 @@ public:
 
    virtual void writeToStream(std::ostream &out)const;
 
+   /**
+    * Outputs in xml format.
+    * @param out Stream to write to.
+    * @param rootTag name of the root XML element/tag
+    */
+   void writeXmlToStream(std::ostream &out,
+                         const std::string& rootTag="info")const;
+   
+   /**
+    * Outputs in json format.
+    * @param out Stream to write to.
+    * @param rootTag name of the root json element/tag
+    */
+   void writeJsonToStream(std::ostream &out,
+                          const std::string& rootTag="info")const;
+   
    virtual std::ostream& print(std::ostream& os) const;
    OSSIMDLLEXPORT friend std::ostream& operator<<(std::ostream& os,
                                                   const ossimKeywordlist& kwl);
    bool operator ==(ossimKeywordlist& kwl)const;
-   bool operator !=(ossimKeywordlist& kwl)const;
 
     /*!
      * Clear all contents out of the ossimKeywordlist.
@@ -420,26 +435,6 @@ public:
    virtual bool parseStream(ossim::istream& is);
    virtual bool parseString(const std::string& inString);
 
-   /**
-   * This return the sorted keys if you have a list.
-   * Example:
-   * @code
-   * // given a keywordlist called kwl with contents: 
-   * // my.list.element1.prop
-   * // my.list.element345.prop
-   * // my.list.element22.prop
-   * std::vector<ossimString> sortedPrefixValues;
-   * kwl.getSortedList(sortedPrefixValues, "my.list.element");
-   * if(sortedPrefixValues.size())
-   * {
-   * // contents should be my.list.element1, my.list.element22, my.list.element345
-   *
-   * }
-   * @endcode
-   *
-   */
-   void getSortedList(std::vector<ossimString>& prefixValues,
-                      const ossimString &prefixKey)const;
    /*!
     *  Will return a list of keys that contain the string passed in.
     *  Later we will need to allow a user to specify regular expresion
@@ -560,11 +555,24 @@ protected:
    KeywordlistParseState readValue(ossimString& sequence, ossim::istream& in)const;
    KeywordlistParseState readKeyAndValuePair(ossimString& key,
                                              ossimString& value, ossim::istream& in)const;
-   
+
+ 
+      
    // Method to see if keyword exists in list.
    KeywordMap::iterator getMapEntry(const std::string& key);
    KeywordMap::iterator getMapEntry(const ossimString& key);
    KeywordMap::iterator getMapEntry(const char* key);
+
+   // For writeXmlToStream method lifted from oms::DataInfo.
+   bool isSpecialXmlCharacters(const ossimString& value) const;
+   bool isValidTag(const std::string& value)const;
+   void replaceSpecialCharacters(ossimString& value)const;
+
+   /**
+    * @return true if a == b, false if not.
+    */
+   bool isSame( const std::vector<ossimString>& a,
+                const std::vector<ossimString>& b ) const;
 
    KeywordMap               m_map;
    char                     m_delimiter;

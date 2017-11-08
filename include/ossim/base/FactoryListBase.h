@@ -133,7 +133,7 @@ namespace ossim
         bool findFactory(T factory)const
         {
            if(!factory) return false;
-           ossim_uint32 idx = 0;
+           // ossim_uint32 idx = 0;
            for(const auto& testFactory:m_factoryList)
            {
               if(factory == testFactory)
