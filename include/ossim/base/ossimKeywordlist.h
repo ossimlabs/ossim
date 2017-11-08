@@ -580,7 +580,7 @@ protected:
    KeywordMap::iterator getMapEntry(const ossimString& key);
    KeywordMap::iterator getMapEntry(const char* key);
 
-   // For writeXmlToStream method lifted from oms::DataInfo.
+   // For toXML method lifted from oms::DataInfo.
    bool isSpecialXmlCharacters(const ossimString& value) const;
    bool isValidTag(const std::string& value)const;
    void replaceSpecialCharacters(ossimString& value)const;
