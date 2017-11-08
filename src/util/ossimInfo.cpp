@@ -1180,11 +1180,11 @@ bool ossimInfo::getInfo(std::ostream& out) const
          }
          else if ( outputFormat == ossimInfo::XML )
          {
-            okwl.writeXmlToStream( out );
+            okwl.toXML( out );
          }
          else if ( outputFormat == ossimInfo::JSON )
          {
-            okwl.writeJsonToStream( out );
+            okwl.toJSON( out );
          }
       }
       
