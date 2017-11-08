@@ -395,16 +395,14 @@ public:
     * @param out Stream to write to.
     * @param rootTag name of the root XML element/tag
     */
-   void writeXmlToStream(std::ostream &out,
-                         const std::string& rootTag="info")const;
+   void toXML(std::ostream &out, const std::string& rootTag="info")const;
    
    /**
     * Outputs in json format.
     * @param out Stream to write to.
     * @param rootTag name of the root json element/tag
     */
-   void writeJsonToStream(std::ostream &out,
-                          const std::string& rootTag="info")const;
+   void toJSON(std::ostream &out, const std::string& rootTag="info")const;
    
    virtual std::ostream& print(std::ostream& os) const;
    OSSIMDLLEXPORT friend std::ostream& operator<<(std::ostream& os,
