@@ -45,6 +45,7 @@
 #include <ossim/init/ossimInit.h>
 #include <ossim/plugin/ossimSharedPluginRegistry.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
+#include <ossim/support_data/ImageHandlerStateRegistry.h>
 #include <ossim/support_data/ossimInfoBase.h>
 #include <ossim/support_data/ossimInfoFactoryRegistry.h>
 #include <ossim/support_data/ossimSupportFilesList.h>
