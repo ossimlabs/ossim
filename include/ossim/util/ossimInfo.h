@@ -21,7 +21,7 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/util/ossimTool.h>
-#include <iosfwd>
+#include <ostream>
 
 class ossimGpt;
 
@@ -36,14 +36,6 @@ class ossimGpt;
 class OSSIM_DLL ossimInfo : public ossimTool
 {
 public:
-
-   enum FORMAT
-   {
-      TEXT = 0,
-      XML  = 1,
-      JSON = 2
-   };
-   
    /** Used by ossimUtilityFactory */
    static const char* DESCRIPTION;
 
@@ -81,7 +73,16 @@ public:
     */
    virtual bool execute();
 
-   virtual ossimString getClassName() const;
+   virtual ossimString getClassName() const { return "ossimInfo"; }
+
+   /**
+    * @brief handles image options.
+    *
+    * Handles image type info opions,  i.e. -i -p --dno and so on.
+    *
+    * @return Number of consumed options.
+    */
+   ossim_uint32 executeImageOptions(const ossimFilename& file);
 
    /**
     * @brief getImageInfo Method to open image "file" and get image info
@@ -124,13 +125,6 @@ public:
    bool getImageInfo( const ossimFilename& file,
                       ossim_uint32 entry,
                       ossimKeywordlist& kwl ) const;
-
-   /**
-    * @brief Writes info to stream.
-    * @param out Stream to write to.
-    * @return true on success, false on error.
-    */
-   bool getInfo(std::ostream& out) const;
    
    /**
     * @brief Opens image handler and stores in m_img data member.
@@ -175,15 +169,6 @@ public:
     * for each factory.
     * */
    void printFactories(bool keywordListFlag) const;
-
-   /**
-    * @brief Prints factories.
-    * @param keywordListFlag If true the result of a saveState will be output
-    * for each factory.
-    * @param out Output to write to.
-    * @return stream
-    */
-   std::ostream& printFactories(bool keywordListFlag, std::ostream& out) const;
 
    /**
     * @brief Populates keyword list with metadata.
@@ -396,12 +381,6 @@ public:
     */
    std::ostream& printConfiguration(std::ostream& out) const;
 
-   /**
-    * @brief Populates keyword list with configuration(ossim preferences).
-    * @param kwl Keyword list to populate.
-    */
-   void getConfiguration( ossimKeywordlist& kwl ) const;
-
    /** @brief Dumps datum list to stdout. */
    void printDatums() const;
 
@@ -490,12 +469,6 @@ public:
     */
    std::ostream& outputHeight(const ossimGpt& gpt, std::ostream& out) const;
 
-   /**
-    * @brief Gets the height for ground point (latitude, longitude).
-    * @param kwl Initialized by this with height.
-    */
-   void getHeight(const ossimGpt& gpt, ossimKeywordlist& kwl ) const;
-   
    /** @brief Prints loaded plugins to stdout. */
    void printPlugins() const;
 

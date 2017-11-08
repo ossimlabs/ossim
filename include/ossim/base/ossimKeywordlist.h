@@ -339,7 +339,7 @@ public:
     *  or an empty string if the key was not found.
     *  @param key e.g. "number_line"
     *  @param prefix e..g "image0."
-    *  @return Reference to string.  This will be empty if not found or
+    *  @return Reference to string.  This will be emptry if not found or
     *  if value is empty.
     */
    const std::string& findKey(const std::string& key) const;
@@ -390,20 +390,6 @@ public:
 
    virtual void writeToStream(std::ostream &out)const;
 
-   /**
-    * Outputs in xml format.
-    * @param out Stream to write to.
-    * @param rootTag name of the root XML element/tag
-    */
-   void toXML(std::ostream &out, const std::string& rootTag="info")const;
-   
-   /**
-    * Outputs in json format.
-    * @param out Stream to write to.
-    * @param rootTag name of the root json element/tag
-    */
-   void toJSON(std::ostream &out, const std::string& rootTag="info")const;
-   
    virtual std::ostream& print(std::ostream& os) const;
    OSSIMDLLEXPORT friend std::ostream& operator<<(std::ostream& os,
                                                   const ossimKeywordlist& kwl);
@@ -579,17 +565,6 @@ protected:
    KeywordMap::iterator getMapEntry(const std::string& key);
    KeywordMap::iterator getMapEntry(const ossimString& key);
    KeywordMap::iterator getMapEntry(const char* key);
-
-   // For toXML method lifted from oms::DataInfo.
-   bool isSpecialXmlCharacters(const ossimString& value) const;
-   bool isValidTag(const std::string& value)const;
-   void replaceSpecialCharacters(ossimString& value)const;
-
-   /**
-    * @return true if a == b, false if not.
-    */
-   bool isSame( const std::vector<ossimString>& a,
-                const std::vector<ossimString>& b ) const;
 
    KeywordMap               m_map;
    char                     m_delimiter;

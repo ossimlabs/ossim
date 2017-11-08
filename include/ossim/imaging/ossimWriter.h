@@ -2,6 +2,8 @@
 //
 // License: MIT
 // 
+// See LICENSE.txt file in the top level directory for more details.
+//
 // Author:  David Burken
 //
 // Description: Generic image writer class.
@@ -12,13 +14,9 @@
 #define ossimWriter_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
-#include <ossim/base/ossimIpt.h>
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <iosfwd>
 #include <vector>
-
-class ossimKeywordlist;
-class ossimProperty;
 
 /**
  * @brief ossimWriter - Generic image writer.
@@ -103,56 +101,6 @@ public:
     */
    virtual bool setOutputStream(std::ostream& str);
 
-   /**
-    * @brief Sets the output tile size for tiled formats.
-    * @param tileSize Must be a multiple of 16.
-    */
-   virtual void setTileSize(const ossimIpt& tileSize);
-
-   /**
-    * @brief Gets the tile size.
-    * @return Reference to tile size.
-    */
-   virtual const ossimIpt& getOutputTileSize() const;
-
-   /**
-    * @brief Saves the state of the object.
-    */
-   virtual bool saveState(ossimKeywordlist& kwl,
-                          const char* prefix=0)const;
-   
-   /**
-    * Method to the load (recreate) the state of an object from a keyword
-    * list.  Return true if ok or false on error.
-    */
-   virtual bool loadState(const ossimKeywordlist& kwl,
-                          const char* prefix=0);
-
-   /**
-    * Will set the property whose name matches the argument
-    * "property->getName()".
-    *
-    * @param property Object containing property to set.
-    */
-   virtual void setProperty(ossimRefPtr<ossimProperty> property);
-   
-   /**
-    * @param name Name of property to return.
-    * 
-    * @returns A pointer to a property object which matches "name".  Returns
-    * NULL if no match is found.
-    */
-   virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name) const;
-
-   /**
-    * Pushes this's names onto the list of property names.
-    *
-    * @param propertyNames array to add this's property names to.
-    */
-   virtual void getPropertyNames(std::vector<ossimString>& propertyNames) const;
-
- 
-   
 protected:
    
    /**
@@ -162,7 +110,7 @@ protected:
    virtual bool writeFile();
 
 private:
-   
+
    /**
     * @brief Writes a tiled tiff band separate to stream.
     * @return true on success, false on error.
@@ -192,9 +140,13 @@ private:
     * @brief Writes tags TIFFTAG_MINSAMPLEVALUE(280) and
     * TIFFTAG_MAXSAMPLEVALUE(281).  Only written if scalar type is an unsigned
     * byte or short.
+    * @param minBands Array of min values from image write.
+    * @param maxBands Array of max values from image write.
     * @return true on success, false on error.
     */
-   bool writeMinMaxTiffTags( std::streamoff& arrayWritePos  );
+   bool writeMinMaxTiffTags( const std::vector<ossim_float64>& minBands,
+                             const std::vector<ossim_float64>& maxBands,
+                             std::streamoff& arrayWritePos  );
 
 
    /**
@@ -203,9 +155,7 @@ private:
     * unsigned byte or short.
     * @param minBands Array of min values from image write.
     * @param maxBands Array of max values from image write.
-    * @return true if tags are written, false if not.
-    * A false return is not necessarily an error, just means the
-    * tags were not written due to the scalar type.
+    * @return true on success, false on error.
     */
    bool writeSMinSMaxTiffTags( const std::vector<ossim_float64>& minBands,
                              const std::vector<ossim_float64>& maxBands,
@@ -249,50 +199,9 @@ private:
     * @return TIFF sample format or 0 if not mapped to a scalar type.
     */
    ossim_uint16 getTiffSampleFormat() const;
-
-   /**
-    *  @return true if the output type is tiled, false if not.
-    */
-   bool isTiled() const;
-
-   /**
-    * @return Value of options key: "align_tiles".
-    * If true, aligns tile addresses to 4096 boundary.
-    * default=true
-    */
-   bool getAlignTilesFlag() const;
-
-   /**
-    * @return Value of options key: "flush_tiles".
-    * If true, aligns tile addresses to block boundary.
-    * default=true
-    */
-   ossim_int64 getBlockSize() const;
-
-   /**
-    * @return Value of options key: "flush_tiles".
-    * If true, ostream::flush() is called after each tile write.
-    * default=true
-    */
-   bool getFlushTilesFlag() const;
-  
-   /**
-    * @return Value of options key: "include_blank_tiles".
-    * If true, empty/blank tiles will be written; if false, the tile will not
-    * be written, the tile offset and byte count will be set to zero.
-    * default=true (write blanks).
-    */
-   bool getWriteBlanksFlag() const;
-
-   bool needsMinMax() const;
   
    std::ostream* m_str;
-   bool          m_ownsStreamFlag;
-
-   /** Hold all options. */
-   ossimRefPtr<ossimKeywordlist> m_kwl;
-   
-   ossimIpt      m_outputTileSize;
+   bool          m_ownsStreamFlag; 
    
 }; // End: class ossimWriter
 
