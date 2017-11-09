@@ -18,39 +18,13 @@
 #---
 
 # Find include path:
-find_path( HDF5_INCLUDE_DIR hdf5.h
-	PATHS 
-		$ENV{HDF5_DIR}/include
-		${CMAKE_INSTALL_PREFIX}/include
-		/usr/include
-		/usr/local/include
-		/usr/local/ossim/include )
+find_path( HDF5_INCLUDE_DIR hdf5.h PATHS $ENV{HDF5_DIR}/include)
 
 # Find HDF5 library:
-find_library( HDF5_LIB NAMES hdf5
-	PATHS
-		$ENV{HDF5_DIR}
-		${CMAKE_INSTALL_PREFIX}
-		/usr
-		/usr/local
-		/usr/local/ossim
-	PATH_SUFFIXES
-		lib
-		lib64
-		 )
+find_library( HDF5_LIB NAMES hdf5 PATHS $ENV{HDF5_DIR})
 
 # Find HDF5 CPP library:
-find_library( HDF5_CPP_LIB NAMES hdf5_cpp
-	PATHS
-		$ENV{HDF5_DIR}
-		${CMAKE_INSTALL_PREFIX}
-		/usr
-		/usr/local
-		/usr/local/ossim
-	PATH_SUFFIXES
-		lib
-		lib64
-		 )
+find_library( HDF5_CPP_LIB NAMES hdf5_cpp PATHS $ENV{HDF5_DIR})
 
 # Set the HDF5_LIBRARIES:
 if( HDF5_LIB AND HDF5_CPP_LIB )

@@ -29,36 +29,20 @@
 
 find_path( GEOS_INCLUDE_DIR geos/geom/Geometry.h
            PATHS 
-           ${CMAKE_INSTALL_PREFIX}/include
            $ENV{GEOS_DIR}/include
-           ${GEOS_DIR}/include
-           /usr/include
-           /usr/local/include
-           /usr/local/ossim/include )
+           ${GEOS_DIR}/include)
 
 # Find GEOS library:
 find_library( GEOS_LIB NAMES geos 
               PATHS
-              ${CMAKE_INSTALL_PREFIX}/lib
-              ${OSSIM_DEPENCIES}/lib
               $ENV{GEOS_DIR}/lib
-              ${GEOS_DIR}/lib
-              /usr/lib64 
-              /usr/lib
-              /usr/local/lib
-              /usr/local/ossim/lib )
+              ${GEOS_DIR}/lib)
 
 # Find GEOS C library:
 find_library( GEOS_C_LIB NAMES geos_c 
               PATHS 
-              ${CMAKE_INSTALL_PREFIX}/lib
-              ${OSSIM_DEPENCIES}/lib
               $ENV{GEOS_DIR}/lib
-              ${GEOS_DIR}/lib
-              /usr/lib64 
-              /usr/lib 
-              /usr/local/lib
-              /usr/local/ossim/lib )
+              ${GEOS_DIR}/lib)
 
 # Set the GEOS_LIBRARY:
 if( GEOS_LIB AND GEOS_C_LIB )

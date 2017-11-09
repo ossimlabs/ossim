@@ -26,24 +26,10 @@
 # Note: Version < 3.3.0 do not have geos.h in the geos sub directory; hence,
 # the check for both "geos/geos.h" and "geos.h".
 #---
-find_path( GEOTRANS_INCLUDE_DIR geotrans/geotrans_config.h
-           PATHS 
-           ${CMAKE_INSTALL_PREFIX}/include
-           /usr/include
-           /usr/local/include
-           /usr/local/ossim/include )
+find_path( GEOTRANS_INCLUDE_DIR geotrans/geotrans_config.h)
 
 # Find Geotrans library:
-find_library( Geotrans_LIB NAMES geotrans 
-	PATHS
-		${CMAKE_INSTALL_PREFIX}
-		/usr
-		/usr/local
-		/usr/lib
-	PATH_SUFFIXES
-		lib64
-		lib
-		x86_64-linux-gnu )
+find_library( Geotrans_LIB NAMES geotrans )
 
 # Set the Geotrans_LIBRARY:
 if( Geotrans_LIB )

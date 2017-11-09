@@ -25,23 +25,15 @@
 # Find include path:
 #---
 find_path( AWS_CORE_INCLUDE_DIR aws/core/Aws.h
-           PATHS 
-           ${CMAKE_INSTALL_PREFIX}/include
-           $ENV{AWS_DIR}/include
-           ${AWS_DIR}/include
-           /usr/include
-           /usr/local/include
-           /usr/local/ossim/include )
+         PATHS 
+            $ENV{AWS_DIR}/include
+            ${AWS_DIR}/include)
 
 # We need this so check for it:
 find_path( AWS_S3_INCLUDE_DIR aws/s3/S3Client.h
-           PATHS 
-           ${CMAKE_INSTALL_PREFIX}/include
-           $ENV{AWS_DIR}/include
-           ${AWS_DIR}/include
-           /usr/include
-           /usr/local/include
-           /usr/local/ossim/include )
+          PATHS 
+            $ENV{AWS_DIR}/include
+            ${AWS_DIR}/include)
 
 # Set the AWS_INCLUDE_DIR:
 if( AWS_CORE_INCLUDE_DIR AND AWS_S3_INCLUDE_DIR )
@@ -49,20 +41,10 @@ if( AWS_CORE_INCLUDE_DIR AND AWS_S3_INCLUDE_DIR )
 endif( AWS_CORE_INCLUDE_DIR AND AWS_S3_INCLUDE_DIR )
 
 # Find AWS CPP SDK CORE library:
-find_library( AWS_CORE_LIB NAMES aws-cpp-sdk-core 
-              PATHS
-              ${CMAKE_INSTALL_PREFIX}/lib64
-              ${CMAKE_INSTALL_PREFIX}/lib
-              /usr/lib64 
-              /usr/lib )
+find_library( AWS_CORE_LIB NAMES aws-cpp-sdk-core )
 
 # Find AWS CPP SDK S3 library:
-find_library( AWS_S3_LIB NAMES aws-cpp-sdk-s3
-              PATHS 
-              ${CMAKE_INSTALL_PREFIX}/lib64
-              ${CMAKE_INSTALL_PREFIX}/lib
-              /usr/lib64 
-              /usr/lib )
+find_library( AWS_S3_LIB NAMES aws-cpp-sdk-s3)
 
 # Set the AWS_LIBRARY:
 if( AWS_CORE_LIB AND AWS_S3_LIB )

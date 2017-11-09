@@ -29,29 +29,12 @@
 # $Id$
 
 # Find include path:
-find_path(OPENCV_INCLUDE_DIR opencv/cv.hpp 
-          PATHS
-          ${OPENCV_HOME}/include
-         ${CMAKE_INSTALL_PREFIX}/include
-          /usr/local/opencv-3.2/include
-          /usr/include
-          /usr/local/include)
+find_path(OPENCV_INCLUDE_DIR opencv/cv.hpp  PATHS ${OPENCV_HOME}/include)
 
 macro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
-
    find_library( ${MYLIBRARY}
-      NAMES "${MYLIBRARYNAME}${OPENCV_RELEASE_POSTFIX}"
-	PATHS
-		${OPENCV_HOME}
-		${CMAKE_INSTALL_PREFIX}
-		/usr
-		/usr/local
-		/usr/lib
-	PATH_SUFFIXES
-		lib64
-		lib
-		x86_64-linux-gnu )
-
+        NAMES "${MYLIBRARYNAME}${OPENCV_RELEASE_POSTFIX}"
+   	  PATHS ${OPENCV_HOME}/lib)
 endmacro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
 
 # Required

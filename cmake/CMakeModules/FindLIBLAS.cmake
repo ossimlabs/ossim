@@ -34,15 +34,11 @@ macro(FIND_LIBLAS_LIBRARY MYLIBRARY MYLIBRARYNAME)
     PATHS
     ~/Library/Frameworks
     /Library/Frameworks
-    /usr/local/lib
-    /usr/local/lib64
-    /usr/lib
-    /usr/lib64
     /sw/lib
     /opt/local/lib
     /opt/csw/lib
     /opt/lib
-    [HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session\ Manager\\Environment;LIBLAS_ROOT]/lib
+     [HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session\ Manager\\Environment;LIBLAS_ROOT]/lib
     /usr/freeware/lib64
   )
     
@@ -73,10 +69,6 @@ macro(FIND_LIBLAS_LIBRARY MYLIBRARY MYLIBRARYNAME)
     PATHS
     ~/Library/Frameworks
     /Library/Frameworks
-    /usr/local/lib
-    /usr/local/lib64
-    /usr/lib
-    /usr/lib64
     /sw/lib
     /opt/local/lib
     /opt/csw/lib

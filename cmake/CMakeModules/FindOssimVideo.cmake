@@ -8,29 +8,10 @@
 #  OSSIMVIDEO_LIBRARY, where to find the ossimPredator library.
 SET(CMAKE_FIND_FRAMEWORK "LAST")
 FIND_PATH(OSSIMVIDEO_INCLUDE_DIR ossimPredator/ossimPredatorExport.h
-	HINTS 
-		$ENV{OSSIM_DEV_HOME}/ossim-video/include
-		$ENV{OSSIM_DEV_HOME}/ossim-video/lib
-		$ENV{OSSIM_INSTALL_PREFIX}/include
-	PATHS
-		$ENV{OSSIM_DEV_HOME}/ossim
-		${CMAKE_INSTALL_PREFIX}
-    	PATH_SUFFIXES 
-		lib
-		include
-)
+	PATHS ${OSSIM_DEV_HOME}/ossim-video/include)
+		
 SET(OSSIMVIDEO_NAMES ${OSSIMVIDEO_NAMES} ossim-video )
-FIND_LIBRARY(OSSIMVIDEO_LIBRARY NAMES ${OSSIMVIDEO_NAMES}
-	PATHS
-		$ENV{OSSIM_DEV_HOME}/ossim-video
-		${CMAKE_INSTALL_PREFIX}
-		/usr
-		/usr/local
-		/usr/lib
-	PATH_SUFFIXES
-		lib64
-		lib
-		Frameworks )
+FIND_LIBRARY(OSSIMVIDEO_LIBRARY NAMES ${OSSIMVIDEO_NAMES})
 
 
 # handle the QUIETLY and REQUIRED arguments and set OSSIMVIDEO_FOUND to TRUE if 

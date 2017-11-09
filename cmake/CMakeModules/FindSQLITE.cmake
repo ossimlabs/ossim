@@ -20,23 +20,10 @@
 #---
 # Find include path:
 #---
-find_path( SQLITE_INCLUDE_DIR sqlite3.h
-           PATHS 
-          ${CMAKE_INSTALL_PREFIX}/include
-           /usr/include
-           /usr/local/include )
+find_path( SQLITE_INCLUDE_DIR sqlite3.h)
 
 # Find SQLITE library:
-find_library( SQLITE_LIB NAMES sqlite3
-	PATHS
-		${CMAKE_INSTALL_PREFIX}
-		/usr
-		/usr/local
-		/usr/lib
-	PATH_SUFFIXES
-		lib64
-		lib
-		x86_64-linux-gnu )
+find_library( SQLITE_LIB NAMES sqlite3)
 
 # Set the SQLITE_LIBRARY:
 if( SQLITE_LIB )

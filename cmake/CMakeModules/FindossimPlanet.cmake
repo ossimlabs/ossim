@@ -7,27 +7,10 @@
 # also defined, but not for general use are
 #  OSSIMPLANET_LIBRARY, where to find the OSSIM library.
 SET(CMAKE_FIND_FRAMEWORK "LAST")
-FIND_PATH(OSSIMPLANET_INCLUDE_DIR ossimPlanet/ossimPlanetExport.h ossimPlanetExport.h
-	PATHS
-		$ENV{OSSIM_DEV_HOME}
-		${CMAKE_INSTALL_PREFIX}
-    	PATH_SUFFIXES 
-		lib
-		include
-)
+FIND_PATH(OSSIMPLANET_INCLUDE_DIR ossimPlanet/ossimPlanetExport.h ossimPlanetExport.h)
 
 SET(OSSIMPLANET_NAMES ${OSSIMPLANET_NAMES} ossimPlanet )
-FIND_LIBRARY(OSSIMPLANET_LIBRARY NAMES ${OSSIMPLANET_NAMES}
-	PATHS
-		$ENV{OSSIM_BUILD_DIR}
-		$ENV{OSSIM_DEV_HOME}/ossimPlanet
-		${CMAKE_INSTALL_PREFIX}
-		/usr
-		/usr/local
-	PATH_SUFFIXES
-		lib64
-		lib
-		Frameworks )
+FIND_LIBRARY(OSSIMPLANET_LIBRARY NAMES ${OSSIMPLANET_NAMES})
 
 # handle the QUIETLY and REQUIRED arguments and set OSSIMPLANET_FOUND to TRUE if 
 # all listed variables are TRUE

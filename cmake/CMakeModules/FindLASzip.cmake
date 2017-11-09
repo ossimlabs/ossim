@@ -36,30 +36,15 @@ IF(WIN32)
 ENDIF()
 
 
-FIND_PATH(LASZIP_INCLUDE_DIR
-  laszip.hpp
+FIND_PATH(LASZIP_INCLUDE_DIR laszip.hpp
   PATH_PREFIXES laszip
-  PATHS
-  ${CMAKE_INSTALL_PREFIX}/include
-  /usr/include
-  /usr/local/include
-  /tmp/lasjunk/include
-  ${OSGEO4W_ROOT_DIR}/include)
+  PATHS ${OSGEO4W_ROOT_DIR}/include)
 
 SET(LASZIP_NAMES ${OSGEO4W_IMPORT_LIBRARY} laszip)
 
 FIND_LIBRARY(LASZIP_LIBRARY
-  NAMES ${LASZIP_NAMES}
-	PATHS
-		${OSGEO4W_ROOT_DIR}
-		${CMAKE_INSTALL_PREFIX}
-		/usr
-		/usr/local
-		/usr/lib
-	PATH_SUFFIXES
-		lib64
-		lib
-		x86_64-linux-gnu )
+   NAMES ${LASZIP_NAMES}
+	PATHS	${OSGEO4W_ROOT_DIR})
 
 IF(LASZIP_INCLUDE_DIR)
   SET(LASZIP_VERSION 0)

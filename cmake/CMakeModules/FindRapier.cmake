@@ -14,25 +14,9 @@
 #---
 
 find_path(RAPIER_INCLUDE_DIR rapier/common/rapierConstants.h
-   PATHS
-      $ENV{OSSIM_DEV_HOME}/Rapier
-      ${CMAKE_INSTALL_PREFIX}
-   PATH_SUFFIXES 
-      include
-)
+   PATHS $ENV{OSSIM_DEV_HOME}/Rapier/include)
 
-find_library(RAPIER_LIBRARY
-   NAMES rapier
-   HINTS 
-   PATHS
-     $ENV{OSSIM_DEV_HOME}/Rapier
-     $ENV{OSSIM_BUILD_DIR}
-     ${CMAKE_INSTALL_PREFIX}
-      /usr
-      /usr/local
-   PATH_SUFFIXES
-      lib64
-      lib )
+find_library(RAPIER_LIBRARY NAMES rapier)
 
 #---
 # This function sets RAPIER_FOUND if variables are valid.
