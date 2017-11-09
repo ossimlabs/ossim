@@ -20,7 +20,7 @@
 #---
 find_path( PDAL_INCLUDE_DIR pdal/pdal.hpp
            PATHS 
-           ${OSSIM_DEPENDENCIES}/include
+           ${CMAKE_INSTALL_PREFIX}/include
            /usr/include
            /usr/local/include
            /usr/local/ossim/include )
@@ -29,13 +29,15 @@ macro(FIND_PDAL_LIBRARY MYLIBRARY MYLIBRARYNAME)
 
    find_library( ${MYLIBRARY}
       NAMES "${MYLIBRARYNAME}"
-      PATHS
-      ${OSSIM_DEPENDENCIES}/lib
-      /usr/lib64
-      /usr/lib
-     /usr/local/lib
-   )
-
+	PATHS
+		${CMAKE_INSTALL_PREFIX}
+		/usr
+		/usr/local
+		/usr/lib
+	PATH_SUFFIXES
+		lib64
+		lib )
+ 
 endmacro(FIND_PDAL_LIBRARY MYLIBRARY MYLIBRARYNAME)
 
 FIND_PDAL_LIBRARY(PDAL_CPP_LIBRARY pdalcpp)
