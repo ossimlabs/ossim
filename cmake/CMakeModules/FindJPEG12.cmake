@@ -39,11 +39,14 @@ set( JPEG12_NAMES ${JPEG12_NAMES} jpeg12 libjpeg12 )
 
 find_library( JPEG12_LIBRARY
               NAMES ${JPEG12_NAMES}
-              PATHS
-              /usr/lib64
-              /usr/local/lib64
-              /usr/lib
-              /usr/local/lib )
+	PATHS
+		${CMAKE_INSTALL_PREFIX}
+		/usr
+		/usr/local
+	PATH_SUFFIXES
+		lib64
+		lib
+ )
 
 #---
 # This function sets JPEG12_FOUND if variables are valid.

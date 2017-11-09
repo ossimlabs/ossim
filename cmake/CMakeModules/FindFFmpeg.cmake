@@ -31,6 +31,7 @@ MACRO(FFMPEG_FIND varname shortname headername)
         PATHS
         ${FFMPEG_ROOT}/include
         $ENV{FFMPEG_DIR}/include
+        ${CMAKE_INSTALL_PREFIX}/include
         ~/Library/Frameworks
         /Library/Frameworks
         /usr/local/include
@@ -49,6 +50,7 @@ MACRO(FFMPEG_FIND varname shortname headername)
           PATHS
           ${FFMPEG_ROOT}/include
           $ENV{FFMPEG_DIR}/include
+          ${CMAKE_INSTALL_PREFIX}/include
           ~/Library/Frameworks
           /Library/Frameworks
           /usr/local/include
@@ -65,22 +67,18 @@ MACRO(FFMPEG_FIND varname shortname headername)
 
     FIND_LIBRARY(FFMPEG_${varname}_LIBRARIES
         NAMES ${shortname}
-        PATHS
-        ${FFMPEG_ROOT}/lib
-        $ENV{FFMPEG_DIR}/lib
-        ~/Library/Frameworks
-        /Library/Frameworks
-        /usr/local/lib
-        /usr/local/lib64
-        /usr/lib
-        /usr/lib64
-        /sw/lib
-        /opt/local/lib
-        /opt/csw/lib
-        /opt/lib
-        /usr/freeware/lib64
-        DOC "Location of FFMPEG Libraries"
-    )
+	PATHS
+		${FFMPEG_ROOT}
+		$ENV{FFMPEG_DIR}
+		${CMAKE_INSTALL_PREFIX}
+		~/Library
+		/Library
+		/usr
+		/usr/local
+	PATH_SUFFIXES
+		lib64
+		lib
+		Frameworks )
 
     IF (FFMPEG_${varname}_LIBRARIES AND FFMPEG_${varname}_INCLUDE_DIRS)
         SET(FFMPEG_${varname}_FOUND 1)

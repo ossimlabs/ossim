@@ -20,12 +20,12 @@
 
 FIND_PATH(OPENJPEG_INCLUDE_DIR openjpeg.h
   PATHS
-    /usr/local/include/openjpeg
-    /usr/local/include/openjpeg-1.5
+    ${CMAKE_INSTALL_PREFIX}/include
     /usr/local/include
-    /usr/include/openjpeg
     /usr/include
   PATH_SUFFIXES
+    openjpeg
+    openjpeg-1.5
     openjpeg-2.1
   DOC "Location of OpenJPEG Headers"
 )
@@ -36,9 +36,16 @@ SET(OPENJPEG_NAMES ${OPENJPEG_NAMES} openjp2)
 SET(OPENJPEG_NAMES ${OPENJPEG_NAMES} openjpeg)
 FIND_LIBRARY(OPENJPEG_LIBRARY
   NAMES ${OPENJPEG_NAMES}
-  PATHS /usr/lib /usr/local/lib
-  )
-
+	PATHS
+		${CMAKE_INSTALL_PREFIX}
+		/usr
+		/usr/local
+		/usr/lib
+	PATH_SUFFIXES
+		lib64
+		lib
+		x86_64-linux-gnu )
+  
 IF (OPENJPEG_LIBRARY AND OPENJPEG_INCLUDE_DIR)
     SET(OPENJPEG_LIBRARIES ${OPENJPEG_LIBRARY})
     SET(OPENJPEG_FOUND "YES")
