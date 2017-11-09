@@ -57,7 +57,6 @@ find_path(
   HINTS
     ENV FREETYPE_DIR
   PATHS
-    ${CMAKE_INSTALL_PREFIX}
     /usr/X11R6
     /usr/local/X11R6
     /usr/local/X11
@@ -79,7 +78,6 @@ find_path(
   HINTS
     ENV FREETYPE_DIR
   PATHS
-    ${CMAKE_INSTALL_PREFIX}
     /usr/X11R6
     /usr/local/X11R6
     /usr/local/X11
@@ -101,7 +99,6 @@ find_library(FREETYPE_LIBRARY
   HINTS
     ENV FREETYPE_DIR
   PATHS
-    ${CMAKE_INSTALL_PREFIX}
     /usr/X11R6
     /usr/local/X11R6
     /usr/local/X11
@@ -111,7 +108,6 @@ find_library(FREETYPE_LIBRARY
     [HKEY_LOCAL_MACHINE\\SOFTWARE\\gtkmm\\2.4;Path]
   PATH_SUFFIXES
     lib
-    lib64
 )
 
 # set the user variables

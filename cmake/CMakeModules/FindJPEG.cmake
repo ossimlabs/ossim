@@ -21,25 +21,21 @@
 #  License text for the above reference.)
 
 FIND_PATH(JPEG_INCLUDE_DIR jpeglib.h
-	PATHS
-		${CMAKE_INSTALL_PREFIX}/include
-		/usr/local/include
-		/usr/include )
+           PATHS
+           ${CMAKE_INSTALL_PREFIX}/include
+           /usr/local/include
+           /usr/include )
 
 SET(JPEG_NAMES ${JPEG_NAMES} jpeg libjpeg)
 
 # Added x86_64-linux-gnu path for Ubuntu install
 FIND_LIBRARY(JPEG_LIBRARY
-	NAMES ${JPEG_NAMES}
-	PATHS
-		${CMAKE_INSTALL_PREFIX}
-		/usr/local
-		/usr
-		/usr/lib
-	PATH_SUFFIXES
-		lib
-		lib64
-		x86_64-linux-gnu)
+             NAMES ${JPEG_NAMES}
+             PATHS
+             ${CMAKE_INSTALL_PREFIX}/include
+             /usr/local/lib
+             /usr/lib
+             /usr/lib/x86_64-linux-gnu)
 
 # handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to TRUE if
 # all listed variables are TRUE

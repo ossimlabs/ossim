@@ -11,25 +11,22 @@
 SET(CMAKE_FIND_FRAMEWORK "LAST")
 FIND_PATH(CSMAPI_INCLUDE_DIR csm/csm.h
         PATHS
-		${CMAKE_INSTALL_PREFIX}/include
-		${MSP_HOME}/include/common
-		${CSM_HOME}/include
-		/usr/include
-		/usr/local/include
+        ${MSP_HOME}/include/common
+        ${CSM_HOME}/include
+        /usr/include
+        /usr/local/include
+        ${OSSIM_DEPENDENCIES}/include
+		  ${OSSIM_INSTALL_PREFIX}/include
 )
 
 find_library(CSMAPI_LIBRARY NAMES MSPcsmapi csmapi
-	PATHS
-		${MSP_HOME}
-		${CSM_HOME}
-		${CMAKE_INSTALL_PREFIX}
-		/usr
-		/usr/local
-		/usr/lib
-	PATH_SUFFIXES
-		lib64
-		lib
-		x86_64-linux-gnu )
+   PATHS
+      ${MSP_HOME}/lib
+      ${CSM_HOME}/lib
+      ${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX}
+      ${OSSIM_DEPENDENCIES}/lib
+      ${OSSIM_INSTALL_PREFIX}
+)
 
 #---
 # This function sets CSMAPI_FOUND if variables are valid.
