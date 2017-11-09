@@ -212,13 +212,7 @@ public:
    /**
     * Serializes RPC to JSON format.
     */
-   bool toJSON(std::ostream& json) const;
-
-   /**
-    * Serialize to WorldView-style .RPB file to the stream provided.
-    * Returns TRUE on successful write.
-    * */
-   bool toRPB(std::ostream& out) const;
+   bool toJSON(std::string& json) const;
 
 protected:
    enum AdjustParamIndex
