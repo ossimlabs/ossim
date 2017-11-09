@@ -166,6 +166,7 @@ public:
    double getHeightScale()const;
 
    double getRmsError()const;
+   double getMaxError()const;
 
    /**
     * @return ossimRefPtr<ossimNitfRegisteredTag>
@@ -220,7 +221,8 @@ protected:
    ossim_float64 theLatScale;
    ossim_float64 theLonScale;
    ossim_float64 theHgtScale;
-   ossim_float64 theError;
+   ossim_float64 theMeanResidual;
+   ossim_float64 theMaxResidual;
    ossimRefPtr<ossimImageGeometry> theRefGeom;
 
    /**

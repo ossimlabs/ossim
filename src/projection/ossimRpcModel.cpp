@@ -1402,7 +1402,7 @@ void ossimRpcModel::getRpcParameters(ossimRpcModel::rpcModelStruct& model) const
    }
 }
 
-bool ossimRpcModel::toJSON(std::string& jsonString) const
+bool ossimRpcModel::toJSON(std::ostream& jsonStream) const
 {
 #if OSSIM_HAS_JSONCPP
    Json::Value IMAGE;
@@ -1476,11 +1476,55 @@ bool ossimRpcModel::toJSON(std::string& jsonString) const
    Json::Value root;
    root["isd"] = ISD;
    Json::StyledWriter writer;
-   jsonString = writer.write(root);
+   jsonStream << writer.write(root);
    return true;
 #else
    jsonString.clear();
    return false;
 #endif
+}
+
+bool ossimRpcModel::toRPB(ostream& out) const
+{
+   out<<"satId = \"NOT_ASSIGNED\";\n";
+   out<<"bandId = \"NOT_ASSIGNED\";\n";
+   out<<"SpecId = \"RPC00B\";\n";
+
+   out<<"BEGIN_GROUP = IMAGE\n";
+   out<<"\terrBias = "<<theBiasError<<";\n";
+   out<<"\terrRand = "<<theRandError<<";\n";
+   out<<"\tlineOffset = "<<(int)theLineOffset<<";\n";
+   out<<"\tsampOffset = "<<(int)theSampOffset<<";\n";
+   out<<"\tlatOffset = "<<theLatOffset<<";\n";
+   out<<"\tlongOffset = "<<theLonOffset<<";\n";
+   out<<"\theightOffset = "<<theHgtOffset<<";\n";
+   out<<"\tlineScale = "<<theLineScale<<";\n";
+   out<<"\tsampScale = "<<theSampScale<<";\n";
+   out<<"\tlatScale = "<<theLatScale<<";\n";
+   out<<"\tlongScale = "<<theLonScale<<";\n";
+   out<<"\theightScale = "<<theHgtScale<<";\n";
+
+   out<<"\tlineNumCoef = (\n";
+   for (int i=0; i<19; ++i)
+      out<<"\t\t\t"<<std::scientific<<theLineNumCoef[i]<<",\n";
+   out<<"\t\t\t"<<std::scientific<<theLineNumCoef[19]<<");\n";
+
+   out<<"\tlineDenCoef = (\n";
+   for (int i=0; i<19; ++i)
+      out<<"\t\t\t"<<std::scientific<<theLineDenCoef[i]<<",\n";
+   out<<"\t\t\t"<<std::scientific<<theLineDenCoef[19]<<");\n";
+
+   out<<"\tsampNumCoef = (\n";
+   for (int i=0; i<19; ++i)
+      out<<"\t\t\t"<<std::scientific<<theSampNumCoef[i]<<",\n";
+   out<<"\t\t\t"<<std::scientific<<theSampNumCoef[19]<<");\n";
+
+   out<<"\tsampDenCoef = (\n";
+   for (int i=0; i<19; ++i)
+      out<<"\t\t\t"<<std::scientific<<theSampDenCoef[i]<<",\n";
+   out<<"\t\t\t"<<std::scientific<<theSampDenCoef[19]<<");\n";
+
+   out<<"END_GROUP = IMAGE\n";
+   out<<"END;";
 }
 
