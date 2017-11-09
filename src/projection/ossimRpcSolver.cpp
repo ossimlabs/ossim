@@ -31,7 +31,8 @@ ossimRpcSolver::ossimRpcSolver(bool useElevation, bool useHeightAboveMSLFlag)
    theLatScale(0),
    theLonScale(0),
    theHgtScale(0),
-   theError(0)
+   theMeanResidual(0),
+   theMaxResidual(0)
 {
    theXNumCoeffs.resize(20);
    theXDenCoeffs.resize(20);
@@ -68,8 +69,6 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
       return;
    theRefGeom = geom;
 
-   cout<<"ossimRpcSolver: Using input projection of type "<<geom->getProjection()->getClassName()<<endl;
-
    std::vector<ossimGpt> groundPoints;
    std::vector<ossimDpt> imagePoints;
    ossim_uint32 x,y;
@@ -89,8 +88,11 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
       {
          ossimDpt dpt(x*Dx, y*Dy);
          geom->localToWorld(dpt+ul, gpt);
-         if (gpt.hasNans())
+         if (gpt.isLatLonNan())
             continue;
+
+         if(gpt.isHgtNan())
+            gpt.height(0.0);
 
          gpt.changeDatum(defaultGround.datum());
          if(theHeightAboveMSLFlag)
@@ -99,8 +101,6 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
             if(ossim::isnan(h) == false)
                gpt.height(h);
          }
-         if(gpt.isHgtNan())
-            gpt.height(0.0);
 
          imagePoints.push_back(dpt);
          groundPoints.push_back(gpt);
@@ -292,22 +292,25 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    ossim_float64  sumSquareError = 0.0;
    ossim_uint32 idx = 0;
 
+   theMaxResidual = 0;
    for (idx = 0; idx<imagePoints.size(); idx++)
    {
       ossimDpt evalPt;
       evalPoint(groundControlPoints[idx], evalPt);
       ossim_float64 len = (evalPt - imagePoints[idx]).length();
+      if (len > theMaxResidual)
+         theMaxResidual = len;
       sumSquareError += (len*len);
    }
 
    // set the error
-   theError = sqrt(sumSquareError/imagePoints.size());
+   theMeanResidual = sqrt(sumSquareError/imagePoints.size());
 }
 
 bool ossimRpcSolver::solveCoefficients(ossimImageGeometry* geom, const double& tolerance)
 {
    static const char* MODULE = "ossimRpcSolver::solveCoefficients()  ";
-   static const ossim_uint32 MAX_GRID_SIZE = 128;
+   static const ossim_uint32 MAX_GRID_SIZE = 64;
 
    if (!geom)
       return false;
@@ -336,7 +339,7 @@ bool ossimRpcSolver::solveCoefficients(ossimImageGeometry* geom, const double& t
       double residual = 0;
       double sumResiduals = 0;
       int numResiduals = 0;
-      double maxResidual = 0;
+      theMaxResidual = 0;
 
       converged = true; // hope for the best and get proved otherwise below
       solveCoefficients(imageBounds, geom, xSamples, ySamples);
@@ -361,22 +364,23 @@ bool ossimRpcSolver::solveCoefficients(ossimImageGeometry* geom, const double& t
 
             // Compute residual and accumulate:
             residual = (ipt-irpc).length();
-            if (residual > maxResidual)
-               maxResidual = residual;
+            if (residual > theMaxResidual)
+               theMaxResidual = residual;
             sumResiduals += residual;
             ++numResiduals;
          }
       }
 
-      theError = sumResiduals/numResiduals;
-      if (maxResidual > tolerance)
+      theMeanResidual = sumResiduals/numResiduals;
+      if (theMaxResidual > tolerance)
          converged = false;
 
-#if 0
+#if 1
       { //### DEBUG BLOCK ###
-         cout<<MODULE<<"\n        mean residual: "<<theError
-               <<"\n         max residual: "<<maxResidual
+         ossimNotify(ossimNotifyLevel_INFO)<<MODULE
                <<"\n   sampling grid size: ("<<xSamples<<", "<<ySamples<<")"
+               <<"\n        mean residual: "<<theMeanResidual
+               <<"\n         max residual: "<<theMaxResidual
                <<"\n            converged: "<<converged<<endl;
       }
 #endif
@@ -395,6 +399,24 @@ bool ossimRpcSolver::solveCoefficients(ossimImageGeometry* geom, const double& t
       }
    }
 
+   // Was testing the max residual. But use the mean for final test:
+   if (theMeanResidual <= tolerance)
+         converged = true;
+
+   if (!converged)
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+            << "WARNING: Unable to converge on desired error tolerance ("<<tolerance<<" p).\n"
+            <<"    RMS residual error: " << theMeanResidual << "\n"
+            <<"    Max residual error: " << theMaxResidual<<std::endl;
+   }
+   else if (theMaxResidual > tolerance)
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+            << "WARNING: While the RPC solution did converge, at least one residual ("
+            <<theMaxResidual<<") is larger than the desired error tolerance ("<<tolerance<<" p)."
+            << std::endl;
+   }
    return converged;
 }
 
@@ -520,7 +542,12 @@ double ossimRpcSolver::getHeightScale()const
 
 double ossimRpcSolver::getRmsError()const
 {
-   return theError;
+   return theMeanResidual;
+}
+
+double ossimRpcSolver::getMaxError()const
+{
+   return theMaxResidual;
 }
 
 void ossimRpcSolver::solveInitialCoefficients(NEWMAT::ColumnVector& coeff,
