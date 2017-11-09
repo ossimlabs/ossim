@@ -8,13 +8,9 @@
 #  WMS_LIBRARY, where to find the WMS library.
 SET(CMAKE_FIND_FRAMEWORK "LAST")
 FIND_PATH(OSSIMWMS_INCLUDE_DIR wms/wms.h
-	HINTS 
-		$ENV{OSSIM_DEV_HOME}/ossim-wms/include
-		$ENV{OSSIM_DEV_HOME}/ossim-wms/lib
-		$ENV{OSSIM_INSTALL_PREFIX}/include
 	PATHS
 		$ENV{OSSIM_DEV_HOME}/ossim-wms
-		$ENV{OSSIM_INSTALL_PREFIX}
+		${CMAKE_INSTALL_PREFIX}
     	PATH_SUFFIXES 
 		lib
 		include
@@ -23,18 +19,16 @@ FIND_PATH(OSSIMWMS_INCLUDE_DIR wms/wms.h
 
 SET(OSSIMWMS_NAMES ${OSSIMWMS_NAMES} wms ossim-wms)
 FIND_LIBRARY(OSSIMWMS_LIBRARY NAMES ${OSSIMWMS_NAMES} 
-	HINTS 
-		$ENV{OSSIM_DEV_HOME}/ossim-wms/lib
-		$ENV{OSSIM_DEV_HOME}/ossim-wms
-		$ENV{OSSIM_INSTALL_PREFIX}
 	PATHS
-		$ENV{OSSIM_DEV_HOME}/ossim-wms/lib
 		$ENV{OSSIM_DEV_HOME}/ossim-wms
-		$ENV{OSSIM_INSTALL_PREFIX}
-    	PATH_SUFFIXES 
+		${CMAKE_INSTALL_PREFIX}
+		/usr
+		/usr/local
+		/usr/lib
+	PATH_SUFFIXES
+		lib64
 		lib
-		Frameworks
-)
+		Frameworks )
 
 # handle the QUIETLY and REQUIRED arguments and set OSSIMWMS_FOUND to TRUE if 
 # all listed variables are TRUE

@@ -28,17 +28,22 @@
 #---
 find_path( GEOTRANS_INCLUDE_DIR geotrans/geotrans_config.h
            PATHS 
+           ${CMAKE_INSTALL_PREFIX}/include
            /usr/include
            /usr/local/include
            /usr/local/ossim/include )
 
 # Find Geotrans library:
 find_library( Geotrans_LIB NAMES geotrans 
-              PATHS 
-              /usr/lib64 
-              /usr/lib 
-              /usr/local/lib
-              /usr/local/ossim/lib )
+	PATHS
+		${CMAKE_INSTALL_PREFIX}
+		/usr
+		/usr/local
+		/usr/lib
+	PATH_SUFFIXES
+		lib64
+		lib
+		x86_64-linux-gnu )
 
 # Set the Geotrans_LIBRARY:
 if( Geotrans_LIB )

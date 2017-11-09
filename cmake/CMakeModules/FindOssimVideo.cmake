@@ -14,22 +14,24 @@ FIND_PATH(OSSIMVIDEO_INCLUDE_DIR ossimPredator/ossimPredatorExport.h
 		$ENV{OSSIM_INSTALL_PREFIX}/include
 	PATHS
 		$ENV{OSSIM_DEV_HOME}/ossim
-		$ENV{OSSIM_INSTALL_PREFIX}
+		${CMAKE_INSTALL_PREFIX}
     	PATH_SUFFIXES 
 		lib
 		include
 )
 SET(OSSIMVIDEO_NAMES ${OSSIMVIDEO_NAMES} ossim-video )
 FIND_LIBRARY(OSSIMVIDEO_LIBRARY NAMES ${OSSIMVIDEO_NAMES}
-	HINTS 
-		$ENV{OSSIM_DEV_HOME}/ossim-video/lib
 	PATHS
-		$ENV{OSSIM_DEV_HOME}/ossim-video/lib
-		$ENV{OSSIM_INSTALL_PREFIX}
-    	PATH_SUFFIXES 
+		$ENV{OSSIM_DEV_HOME}/ossim-video
+		${CMAKE_INSTALL_PREFIX}
+		/usr
+		/usr/local
+		/usr/lib
+	PATH_SUFFIXES
+		lib64
 		lib
-		Frameworks
-)
+		Frameworks )
+
 
 # handle the QUIETLY and REQUIRED arguments and set OSSIMVIDEO_FOUND to TRUE if 
 # all listed variables are TRUE

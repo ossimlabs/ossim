@@ -40,6 +40,7 @@ FIND_PATH(LASZIP_INCLUDE_DIR
   laszip.hpp
   PATH_PREFIXES laszip
   PATHS
+  ${CMAKE_INSTALL_PREFIX}/include
   /usr/include
   /usr/local/include
   /tmp/lasjunk/include
@@ -49,12 +50,16 @@ SET(LASZIP_NAMES ${OSGEO4W_IMPORT_LIBRARY} laszip)
 
 FIND_LIBRARY(LASZIP_LIBRARY
   NAMES ${LASZIP_NAMES}
-  PATHS
-  /usr/lib64
-  /usr/lib
-  /usr/local/lib
-  /tmp/lasjunk/lib
-  ${OSGEO4W_ROOT_DIR}/lib)
+	PATHS
+		${OSGEO4W_ROOT_DIR}
+		${CMAKE_INSTALL_PREFIX}
+		/usr
+		/usr/local
+		/usr/lib
+	PATH_SUFFIXES
+		lib64
+		lib
+		x86_64-linux-gnu )
 
 IF(LASZIP_INCLUDE_DIR)
   SET(LASZIP_VERSION 0)
