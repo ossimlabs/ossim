@@ -1479,7 +1479,7 @@ bool ossimRpcModel::toJSON(std::ostream& jsonStream) const
    jsonStream << writer.write(root);
    return true;
 #else
-   jsonStream<<"Error: JSON format not supported."endl;
+   jsonStream<<"Error: JSON format not supported."<<endl;
    return false;
 #endif
 }
