@@ -12,11 +12,10 @@
 #---
 
 # Find include path:
-find_path(PODOFO_INCLUDE_DIR podofo/podofo.h PATHS /usr/include /usr/local/include
-)
+find_path(PODOFO_INCLUDE_DIR podofo/podofo.h )
 
 # Find library:
-find_library(PODOFO_LIBRARY NAMES podofo PATHS /usr/lib64 /usr/lib /usr/local/lib)
+find_library(PODOFO_LIBRARY NAMES podofo )
 
 #---
 # This function sets PODOFO_FOUND if variables are valid.

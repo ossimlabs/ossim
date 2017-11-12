@@ -56,12 +56,9 @@ find_path(
   ft2build.h
   HINTS
     ENV FREETYPE_DIR
-  PATHS
-    /usr/X11R6
-    /usr/local/X11R6
-    /usr/local/X11
-    /usr/freeware
     ENV GTKMM_BASEPATH
+  PATHS
+    /usr/freeware
     [HKEY_CURRENT_USER\\SOFTWARE\\gtkmm\\2.4;Path]
     [HKEY_LOCAL_MACHINE\\SOFTWARE\\gtkmm\\2.4;Path]
   PATH_SUFFIXES
@@ -70,19 +67,15 @@ find_path(
     freetype2
 )
 
-find_path(
-  FREETYPE_INCLUDE_DIR_freetype2
+find_path(FREETYPE_INCLUDE_DIR_freetype2
   NAMES
     freetype/config/ftheader.h
     config/ftheader.h
   HINTS
     ENV FREETYPE_DIR
-  PATHS
-    /usr/X11R6
-    /usr/local/X11R6
-    /usr/local/X11
-    /usr/freeware
     ENV GTKMM_BASEPATH
+  PATHS
+    /usr/freeware
     [HKEY_CURRENT_USER\\SOFTWARE\\gtkmm\\2.4;Path]
     [HKEY_LOCAL_MACHINE\\SOFTWARE\\gtkmm\\2.4;Path]
   PATH_SUFFIXES
@@ -99,15 +92,13 @@ find_library(FREETYPE_LIBRARY
   HINTS
     ENV FREETYPE_DIR
   PATHS
-    /usr/X11R6
-    /usr/local/X11R6
-    /usr/local/X11
     /usr/freeware
     ENV GTKMM_BASEPATH
     [HKEY_CURRENT_USER\\SOFTWARE\\gtkmm\\2.4;Path]
     [HKEY_LOCAL_MACHINE\\SOFTWARE\\gtkmm\\2.4;Path]
   PATH_SUFFIXES
     lib
+    lib64
 )
 
 # set the user variables

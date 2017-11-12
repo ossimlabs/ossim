@@ -10,7 +10,6 @@
 FIND_PATH(GEOTIFF_INCLUDE_DIR geotiff.h 
           PATHS 
           $ENV{GEOTIFF_DIR}/include
-          ${CMAKE_INSTALL_PREFIX}/include
           /usr/include/geotiff 
           /usr/include/libgeotiff 
           /usr/local/include/libgeotiff 
@@ -21,11 +20,7 @@ FIND_LIBRARY(GEOTIFF_LIBRARY
              NAMES ${GEOTIFF_NAMES}
              PATHS 
              $ENV{GEOTIFF_DIR}/lib
-             $ENV{GEOTIFF_DIR}/lib64
-             ${CMAKE_INSTALL_PREFIX}/lib 
-             /usr/local/lib 
-             /usr/lib 
-             /usr/lib/x86_64-linux-gnu)
+             $ENV{GEOTIFF_DIR}/lib64)
 
 # handle the QUIETLY and REQUIRED arguments and set GEOTIFF_FOUND to TRUE if 
 # all listed variables are TRUE

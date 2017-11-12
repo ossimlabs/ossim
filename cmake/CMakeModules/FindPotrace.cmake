@@ -9,25 +9,13 @@
 # POTRACE_LIBRARIES, libraries to link against to use Potrace and rialto.
 # POTRACE_FOUND, True if found, false if one of the above are not found.
 # 
-find_path( POTRACE_INCLUDE_DIR potracelib.h
-           PATHS 
-           ${OSSIM_DEPENDENCIES}/include
-           /usr/include
-           /usr/local/include
-           /usr/local/ossim/include )
+find_path( POTRACE_INCLUDE_DIR potracelib.h)
 
-find_library( POTRACE_LIBRARY
-      NAMES "potrace"
-      PATHS
-      ${OSSIM_DEPENDENCIES}/lib
-      /usr/lib64
-      /usr/lib
-     /usr/local/lib
-   )
+find_library( POTRACE_LIBRARY NAMES "potrace")
 
 
-message( STATUS "POTRACE_INCLUDE_DIR             = ${POTRACE_INCLUDE_DIR}" )
-message( STATUS "POTRACE_LIBRARY                 = ${POTRACE_LIBRARY}" )
+message( STATUS "POTRACE_INCLUDE_DIR = ${POTRACE_INCLUDE_DIR}" )
+message( STATUS "POTRACE_LIBRARY     = ${POTRACE_LIBRARY}" )
 
 set(POTRACE_FOUND "NO")
 

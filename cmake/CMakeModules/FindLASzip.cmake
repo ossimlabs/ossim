@@ -36,25 +36,15 @@ IF(WIN32)
 ENDIF()
 
 
-FIND_PATH(LASZIP_INCLUDE_DIR
-  laszip.hpp
+FIND_PATH(LASZIP_INCLUDE_DIR laszip.hpp
   PATH_PREFIXES laszip
-  PATHS
-  /usr/include
-  /usr/local/include
-  /tmp/lasjunk/include
-  ${OSGEO4W_ROOT_DIR}/include)
+  PATHS ${OSGEO4W_ROOT_DIR}/include)
 
 SET(LASZIP_NAMES ${OSGEO4W_IMPORT_LIBRARY} laszip)
 
 FIND_LIBRARY(LASZIP_LIBRARY
-  NAMES ${LASZIP_NAMES}
-  PATHS
-  /usr/lib64
-  /usr/lib
-  /usr/local/lib
-  /tmp/lasjunk/lib
-  ${OSGEO4W_ROOT_DIR}/lib)
+   NAMES ${LASZIP_NAMES}
+	PATHS	${OSGEO4W_ROOT_DIR})
 
 IF(LASZIP_INCLUDE_DIR)
   SET(LASZIP_VERSION 0)
