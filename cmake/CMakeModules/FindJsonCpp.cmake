@@ -15,7 +15,8 @@
 set(JSONCPP_FOUND "NO")
 set(OSSIM_HAS_JSONCPP 0)
 
-find_path( JSONCPP_INCLUDE_DIR json/json.h)
+find_path( JSONCPP_INCLUDE_DIR json/json.h
+          PATHS /usr/include/jsoncpp )
 
 find_library( JSONCPP_LIBRARY NAMES "jsoncpp")
 
