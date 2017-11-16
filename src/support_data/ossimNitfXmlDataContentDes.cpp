@@ -15,28 +15,35 @@ ossimNitfXmlDataContentDes::ossimNitfXmlDataContentDes()
 
 void ossimNitfXmlDataContentDes::parseStream(std::istream& in)
 {
-   in.read(m_descrc, DESCRC_SIZE);
-   in.read(m_desshft, DESSHFT_SIZE);
-   in.read(m_desshdt, DESSHDT_SIZE);
-   in.read(m_desshrp, DESSHRP_SIZE);
-   in.read(m_desshsi, DESSHSI_SIZE);
-   in.read(m_desshsv, DESSHSV_SIZE);
-   in.read(m_desshsd, DESSHSD_SIZE);
-   in.read(m_desshtn, DESSHTN_SIZE);
+  clearFields();
 
-   if(getSizeInBytes())
-   {
-     char* c = new char[getSizeInBytes()+1];
-     in.read(c, getSizeInBytes());
-     c[getSizeInBytes()] = '\0';
-     m_xmlString.string().resize(getSizeInBytes());
-     m_xmlString = c;
-     m_xmlDocument = new ossimXmlDocument;;
-     std::istringstream xmlStringStream(m_xmlString.string());
-     m_xmlDocument->read(xmlStringStream);
-     delete [] c;
-     c = 0;
-   }
+  in.read(m_descrc, DESCRC_SIZE);
+  in.read(m_desshft, DESSHFT_SIZE);
+  in.read(m_desshdt, DESSHDT_SIZE);
+  in.read(m_desshrp, DESSHRP_SIZE);
+  in.read(m_desshsi, DESSHSI_SIZE);
+  in.read(m_desshsv, DESSHSV_SIZE);
+  in.read(m_desshsd, DESSHSD_SIZE);
+  in.read(m_desshtn, DESSHTN_SIZE);
+  in.read(m_desshlpg, DESSHLPG_SIZE);
+  in.read(m_desshlpt, DESSHLPT_SIZE);
+  in.read(m_desshli, DESSHLI_SIZE);
+  in.read(m_desshlin, DESSHLIN_SIZE);
+  in.read(m_desshabs, DESSHABS_SIZE);
+
+  if(getSizeInBytes())
+  {
+    char* c = new char[getSizeInBytes()+1];
+    in.read(c, getSizeInBytes());
+    c[getSizeInBytes()] = '\0';
+    m_xmlString.string().resize(getSizeInBytes());
+    m_xmlString = c;
+    m_xmlDocument = new ossimXmlDocument;;
+    std::istringstream xmlStringStream(m_xmlString.string());
+    m_xmlDocument->read(xmlStringStream);
+    delete [] c;
+    c = 0;
+  }
 }
 
 void ossimNitfXmlDataContentDes::writeStream(std::ostream& out)
@@ -50,6 +57,11 @@ void ossimNitfXmlDataContentDes::writeStream(std::ostream& out)
    out.write(m_desshsv, DESSHSV_SIZE);
    out.write(m_desshsd, DESSHSD_SIZE);
    out.write(m_desshtn, DESSHTN_SIZE);
+   out.write(m_desshlpg, DESSHLPG_SIZE);
+   out.write(m_desshlpt, DESSHLPT_SIZE);
+   out.write(m_desshli, DESSHLI_SIZE);
+   out.write(m_desshlin, DESSHLIN_SIZE);
+   out.write(m_desshabs, DESSHABS_SIZE);
 }
 
 std::ostream& ossimNitfXmlDataContentDes::print(std::ostream& out,
@@ -69,7 +81,11 @@ std::ostream& ossimNitfXmlDataContentDes::print(std::ostream& out,
        << pfx << std::setw(24) << "DESSHSV:" << ((typeinfo) ? "(string)" : "") << m_desshsv << "\n"
        << pfx << std::setw(24) << "DESSHSD:" << ((typeinfo) ? "(string)" : "") << m_desshsd << "\n"
        << pfx << std::setw(24) << "DESSHTN:" << ((typeinfo) ? "(string)" : "") << m_desshtn << "\n"
-       // Quick hack to print on one line, this will leave extra spaces in CDATA sections
+       << pfx << std::setw(24) << "DESSHLPG:" << ((typeinfo) ? "(string)" : "") <<  m_desshlpg << "\n"
+       << pfx << std::setw(24) << "DESSHLPT:" << ((typeinfo) ? "(string)" : "") <<  m_desshlpt << "\n"
+       << pfx << std::setw(24) << "DESSHLI:" << ((typeinfo) ? "(string)" : "") <<  m_desshli << "\n"
+       << pfx << std::setw(24) << "DESSHABS:" << ((typeinfo) ? "(string)" : "") <<  m_desshabs << "\n"
+        // Quick hack to print on one line, this will leave extra spaces in CDATA sections
        << pfx << std::setw(24) << "XML:" << m_xmlString.substitute(ossimString("\n"), " ", true) << "\n"
    ;
    return out;
@@ -93,6 +109,16 @@ void ossimNitfXmlDataContentDes::clearFields()
    m_desshsd[DESSHSD_SIZE] = '\0';
    memset(m_desshtn, ' ', DESSHTN_SIZE);
    m_desshtn[DESSHTN_SIZE] = '\0';
+   memset(m_desshlpg, ' ', DESSHLPG_SIZE);
+   m_desshlpg[DESSHLPG_SIZE] = '\0';
+   memset(m_desshlpt, ' ', DESSHLPT_SIZE);
+   m_desshlpt[DESSHLPT_SIZE] = '\0';
+   memset(m_desshli, ' ', DESSHLI_SIZE);
+   m_desshli[DESSHLI_SIZE] = '\0';
+   memset(m_desshlin, ' ', DESSHLIN_SIZE);
+   m_desshlin[DESSHLIN_SIZE] = '\0';
+   memset(m_desshabs, ' ', DESSHABS_SIZE);
+   m_desshabs[DESSHABS_SIZE] = '\0';
 }
 
 bool ossimNitfXmlDataContentDes::loadState(const ossimKeywordlist& kwl, const char* prefix)

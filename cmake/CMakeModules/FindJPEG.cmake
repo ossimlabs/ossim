@@ -20,22 +20,12 @@
 # (To distributed this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-FIND_PATH(JPEG_INCLUDE_DIR jpeglib.h
-           PATHS
-           ${CMAKE_INSTALL_PREFIX}/include
-           /usr/local/include
-           /usr/include )
+FIND_PATH(JPEG_INCLUDE_DIR jpeglib.h)
 
 SET(JPEG_NAMES ${JPEG_NAMES} jpeg libjpeg)
 
 # Added x86_64-linux-gnu path for Ubuntu install
-FIND_LIBRARY(JPEG_LIBRARY
-             NAMES ${JPEG_NAMES}
-             PATHS
-             ${CMAKE_INSTALL_PREFIX}/include
-             /usr/local/lib
-             /usr/lib
-             /usr/lib/x86_64-linux-gnu)
+FIND_LIBRARY(JPEG_LIBRARY NAMES ${JPEG_NAMES})
 
 # handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to TRUE if
 # all listed variables are TRUE

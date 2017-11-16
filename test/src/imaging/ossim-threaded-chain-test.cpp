@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
    
    // Create original chain:
    ossimRefPtr<ossimSingleImageChain> singleImageChain =
-      new ossimSingleImageChain(false, chainCacheEnabled, false, false, false, false);
+      new ossimSingleImageChain(false, false, chainCacheEnabled, false, false, false, false);
    if (!singleImageChain->open(image_file))
    {
       cout<<"\nUnable to open image file at <"<<image_file<<">. Aborting..."<<endl;

@@ -1363,9 +1363,10 @@ OSSIMDLLEXPORT std::ostream& operator<<(std::ostream& os,
    return os;
 }
 
-
 bool ossimKeywordlist::operator ==(ossimKeywordlist& kwl)const
 {
+   return (m_map == kwl.m_map);
+   /*
    if(this==&kwl) return true;
    std::map<std::string, std::string>::const_iterator iter = m_map.begin();
    
@@ -1381,6 +1382,12 @@ bool ossimKeywordlist::operator ==(ossimKeywordlist& kwl)const
    }
    
    return true;
+   */
+}
+
+bool ossimKeywordlist::operator !=(ossimKeywordlist& kwl)const
+{
+   return (m_map != kwl.m_map);
 }
 
 ossimKeywordlist&  ossimKeywordlist::downcaseKeywords()

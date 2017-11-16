@@ -21,6 +21,7 @@
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimImageRenderer.h>
 #include <ossim/imaging/ossimImageSharpenFilter.h>
+#include <ossim/imaging/ossimNullPixelFlip.h>
 #include <ossim/imaging/ossimScalarRemapper.h>
 #include <vector>
 
@@ -62,7 +63,8 @@ public:
    ossimSingleImageChain();
 
    /** Constructor that takes flags.*/
-   ossimSingleImageChain(bool addHistogramFlag,
+   ossimSingleImageChain(bool addNullPixelFlipFlag,
+                         bool addHistogramFlag,
                          bool addResamplerCacheFlag,
                          bool addChainCacheFlag,
                          bool remapToEightBitFlag,
@@ -240,6 +242,11 @@ public:
 
 
    /**
+   * Adds the null pixel flip just after the band selection
+   */
+   void addNullPixelFlip();
+   void addNullPixelFlip(const ossimSrcRecord& src);
+   /**
    *
    * @brief Adds a geo polycutter to allow for cropping imagery or nulling out
    * regions.  This has no affect on modification of the bounds
@@ -267,6 +274,11 @@ public:
     * @note Can contain a null pointer so callers should validate.
     */
    ossimRefPtr<const ossimBandSelector> getBandSelector() const;
+
+   /**
+   *  @return the null pixel flip
+   */
+   ossimRefPtr<const ossimNullPixelFlip> getNullPixelFlip() const;
 
    /**
     * @return ossimRefPtr containing  the band selector.
@@ -358,6 +370,20 @@ public:
     * @note Can contain a null pointer so callers should validate.
     */
    ossimRefPtr<ossimCacheTileSource> getChainCache();
+
+   /**
+    * @brief If flag is true a null pixel flip will be added to the chain at create time.
+    * @param flag
+    */
+   void setAddNullPixelFlipFlag(bool flag);
+
+   /**
+    * @brief Gets the add histogram flag.
+    * @return true or false.
+    */
+   bool getNullPixelFlipFlag() const;
+
+ 
 
    /**
     * @brief If flag is true a histogram will be added to the chain at create time.
@@ -537,6 +563,7 @@ private:
    /**  Pointers to links in chain. */
    ossimRefPtr<ossimImageHandler>             m_handler;
    ossimRefPtr<ossimBandSelector>             m_bandSelector;
+   ossimRefPtr<ossimNullPixelFlip>            m_nullPixelFlip;
    ossimRefPtr<ossimHistogramRemapper>        m_histogramRemapper;
    ossimRefPtr<ossimBrightnessContrastSource> m_brightnessContrast;
    ossimRefPtr<ossimImageSharpenFilter>       m_sharpen;   
@@ -545,8 +572,8 @@ private:
    ossimRefPtr<ossimImageRenderer>            m_resampler;
    ossimRefPtr<ossimGeoPolyCutter>            m_geoPolyCutter;
    ossimRefPtr<ossimCacheTileSource>          m_chainCache;
-
    /** control flags */
+   bool m_addNullPixelFlipFlag;
    bool m_addHistogramFlag;
    bool m_addResamplerCacheFlag;
    bool m_addChainCacheFlag;

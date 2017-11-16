@@ -45,7 +45,10 @@ bool ossimDynamicLibrary::load(const ossimString& name)
 #  if defined(__WIN32__) || defined(_WIN32)
    theLibrary = LoadLibrary(libraryName.c_str());
 #  else 
-   theLibrary = dlopen(libraryName.c_str(), RTLD_LAZY);
+   //theLibrary = dlopen(libraryName.c_str(), RTLD_LAZY|RTLD_LOCAL);
+   // Use of RTLD_GLOBAL fixes CSM3 plugin with MSP loading CSM plugins, but requires unique
+   // variable and method names in all *PluginInit.cpp code.
+   theLibrary = dlopen(libraryName.c_str(), RTLD_LAZY|RTLD_GLOBAL);
 #endif
 
    if (isLoaded())

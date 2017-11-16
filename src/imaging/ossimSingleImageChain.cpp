@@ -31,6 +31,7 @@ ossimSingleImageChain::ossimSingleImageChain()
    m_resamplerCache(0),
    m_resampler(0),
    m_chainCache(0),
+   m_addNullPixelFlipFlag(false),
    m_addHistogramFlag(false),
    m_addResamplerCacheFlag(false),
    m_addChainCacheFlag(false),
@@ -43,7 +44,8 @@ ossimSingleImageChain::ossimSingleImageChain()
 {
 }
 
-ossimSingleImageChain::ossimSingleImageChain(bool addHistogramFlag,
+ossimSingleImageChain::ossimSingleImageChain(bool addNullPixelFlipFlag,
+                                             bool addHistogramFlag,
                                              bool addResamplerCacheFlag,
                                              bool addChainCacheFlag,
                                              bool remapToEightBitFlag,
@@ -63,6 +65,7 @@ ossimSingleImageChain::ossimSingleImageChain(bool addHistogramFlag,
    m_resamplerCache(0),
    m_resampler(0),
    m_chainCache(0),
+   m_addNullPixelFlipFlag(addNullPixelFlipFlag),
    m_addHistogramFlag(addHistogramFlag),
    m_addResamplerCacheFlag(addResamplerCacheFlag),
    m_addChainCacheFlag(addChainCacheFlag),
@@ -78,6 +81,7 @@ ossimSingleImageChain::ossimSingleImageChain(bool addHistogramFlag,
 ossimSingleImageChain::~ossimSingleImageChain()
 {
    m_handler            = 0;
+   m_nullPixelFlip      = 0;
    m_bandSelector       = 0;
    m_histogramRemapper  = 0;
    m_brightnessContrast = 0;
@@ -100,6 +104,7 @@ void ossimSingleImageChain::reset()
 
    m_handler                = 0;
    m_bandSelector           = 0;
+   m_nullPixelFlip          = 0;
    m_histogramRemapper      = 0;
    m_brightnessContrast     = 0;
    m_sharpen                = 0;
@@ -110,6 +115,7 @@ void ossimSingleImageChain::reset()
    m_chainCache             = 0;
 
    m_addHistogramFlag       = false;
+   m_addNullPixelFlipFlag   = false;
    m_addResamplerCacheFlag  = false;
    m_addChainCacheFlag      = false;
    m_remapToEightBitFlag    = false;
@@ -175,7 +181,6 @@ void ossimSingleImageChain::createRenderedChain()
    {
       addBandSelector();
    }
-   
    // histogram:
    if ( m_addHistogramFlag )
    {
@@ -210,6 +215,13 @@ void ossimSingleImageChain::createRenderedChain()
          // Just add...
          addScalarRemapper(); 
       }
+   }
+
+   // cheaper operation to put the flip after the remapper
+   //
+   if(m_addNullPixelFlipFlag)
+   {
+      addNullPixelFlip();
    }
 
    // resampler cache
@@ -316,6 +328,10 @@ void ossimSingleImageChain::createRenderedChain(const ossimSrcRecord& src)
       addBandSelector(src);
    }
    
+   if(m_addNullPixelFlipFlag)
+   {
+      addNullPixelFlip();
+   }
    // histogram
    if ( m_addHistogramFlag || src.getHistogramOp().size() )
    {
@@ -510,6 +526,23 @@ void ossimSingleImageChain::addBandSelector(const ossimSrcRecord& src)
    if ( src.getBands().size() )
    {
       m_bandSelector->setOutputBandList( src.getBands() );
+   }
+}
+
+void ossimSingleImageChain::addNullPixelFlip()
+{
+   if(!m_nullPixelFlip)
+   {
+      m_nullPixelFlip = new ossimNullPixelFlip();
+      addFirst(m_nullPixelFlip.get());
+   }
+}
+void ossimSingleImageChain::addNullPixelFlip(const ossimSrcRecord& src)
+{
+   if(!m_nullPixelFlip)
+   {
+      m_nullPixelFlip = new ossimNullPixelFlip();
+      addFirst(m_nullPixelFlip.get());
    }
 }
 
@@ -732,6 +765,12 @@ ossimRefPtr<const ossimBandSelector> ossimSingleImageChain::getBandSelector() co
    return ossimRefPtr<const ossimBandSelector>( m_bandSelector.get() );
 }
 
+ossimRefPtr<const ossimNullPixelFlip> ossimSingleImageChain::getNullPixelFlip() const
+{
+   return ossimRefPtr<const ossimNullPixelFlip>( m_nullPixelFlip.get() );
+}
+
+
 ossimRefPtr<ossimBandSelector> ossimSingleImageChain::getBandSelector()
 {
    return m_bandSelector;
@@ -807,6 +846,17 @@ ossimRefPtr<const ossimCacheTileSource> ossimSingleImageChain::getChainCache() c
 ossimRefPtr<ossimCacheTileSource> ossimSingleImageChain::getChainCache()
 {
    return m_chainCache;
+}
+
+
+void ossimSingleImageChain::setAddNullPixelFlipFlag(bool flag)
+{
+   m_addNullPixelFlipFlag = true;
+}
+
+bool ossimSingleImageChain::getNullPixelFlipFlag() const
+{
+   return m_addNullPixelFlipFlag;
 }
 
 void ossimSingleImageChain::setAddHistogramFlag(bool flag)

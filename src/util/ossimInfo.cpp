@@ -48,6 +48,7 @@
 #include <ossim/support_data/ossimInfoBase.h>
 #include <ossim/support_data/ossimInfoFactoryRegistry.h>
 #include <ossim/support_data/ossimSupportFilesList.h>
+#include <ossim/support_data/ImageHandlerStateRegistry.h>
 
 #include <iomanip>
 #include <sstream>
@@ -55,6 +56,7 @@
 #include <memory>
 
 static const char BUILD_DATE_KW[]           = "build_date";
+static const char CAN_OPEN_KW[]             = "can_open";
 static const char CENTER_GROUND_KW[]        = "center_ground";
 static const char CENTER_IMAGE_KW[]         = "center_image";
 static const char CONFIGURATION_KW[]        = "configuration";
@@ -102,6 +104,8 @@ static const char WRITERS_KW[]              = "writers_kw";
 static const char WRITER_PROPS_KW[]         = "writer_props";
 static const char ZOOM_LEVEL_GSDS_KW[]      = "zoom_level_gsds";
 static const char ECEF2LLH_KW[]             = "ecef2llh";
+static const char DUMP_STATE_KW[]           = "dump_state";
+static const char STATE_KW[]                = "state";
 
 const char* ossimInfo::DESCRIPTION =
       "Dumps metadata information about input image and OSSIM in general.";
@@ -126,7 +130,7 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " [options] <optional-image>";
+   usageString += " [options] <optional-image | optional-state>";
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
@@ -135,6 +139,8 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--build-date", "Build date of code.");
 
    au->addCommandLineOption("-c", "Will print ground and image center.");
+   
+   au->addCommandLineOption("--can-open", "return can_open: true or can_open: false");
 
    au->addCommandLineOption("--cg", "Will print out ground center.");
 
@@ -146,11 +152,13 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
 
    au->addCommandLineOption("-d", "A generic dump if one is available.");
 
-   au->addCommandLineOption("--datums", "Prints datum list.");   
+   au->addCommandLineOption("--datums", "Prints datum list.");
 
    au->addCommandLineOption("--deg2rad", "<degrees> Gives radians from degrees.");
 
    au->addCommandLineOption("--dno", "A generic dump if one is available.  This option ignores overviews.");
+
+   au->addCommandLineOption("--dump-state", "If the image supports a state object then the state object will be dumped.");
 
    au->addCommandLineOption("--ecef2llh", "<X> <Y> <Z> in ECEF coordinates and returns latitude longitude height position.");
 
@@ -315,6 +323,17 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          }
       }
 
+      if( ap.read("--can-open") )
+      {
+         m_kwl.add( CAN_OPEN_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+
       if( ap.read("--cg") )
       {
          m_kwl.add( CENTER_GROUND_KW, TRUE_KW );
@@ -373,6 +392,16 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       if( ap.read("-d") )
       {
          m_kwl.add( DUMP_KW, TRUE_KW );
+         requiresInputImage = true;
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+
+      if( ap.read("--dump-state") )
+      {
+         m_kwl.add( DUMP_STATE_KW, TRUE_KW );
          requiresInputImage = true;
          if ( ap.argc() < 2 )
          {
@@ -771,6 +800,7 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
       setUsage(ap);
       ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
       result = false;
+
    }
 
    if ( traceDebug() )
@@ -1172,6 +1202,16 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
    bool upIsUpFlag        = false;
    bool imageToGroundFlag = false;
    bool groundToImageFlag = false;
+   bool dumpState         = false;
+   bool canOpenFlag       = false;
+
+   lookup = m_kwl.find( DUMP_STATE_KW );
+   if ( lookup )
+   {
+      ++consumedKeys;
+      value     = lookup;
+      dumpState = value.toBool();
+   }
 
    // Center Ground:
    lookup = m_kwl.find( CENTER_GROUND_KW );
@@ -1292,6 +1332,15 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       upIsUpFlag = value.toBool();
    }
 
+   // Up is up:
+   lookup = m_kwl.find( CAN_OPEN_KW );
+   if ( lookup )
+   {
+      ++consumedKeys;
+      value = lookup;
+      canOpenFlag = value.toBool();
+   }
+
    // If no options consumed default is image info and geom info:
    if ( consumedKeys == 0 )
    {
@@ -1301,13 +1350,25 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
 
    if ( centerGroundFlag || centerImageFlag || imageBoundsFlag || imageCenterFlag ||
         imageRectFlag || img2grdFlag || grd2imgFlag || metaDataFlag || paletteFlag ||
-        imageInfoFlag || imageGeomFlag || northUpFlag || upIsUpFlag || 
-        imageToGroundFlag || groundToImageFlag)
+        imageInfoFlag || imageGeomFlag || northUpFlag || upIsUpFlag || dumpState ||
+        imageToGroundFlag || groundToImageFlag || canOpenFlag)
    {
       // Requires open image.
-      if ( m_img.valid() == false )
+      if ( ! m_img )
       {
          openImage(file);
+      }
+      
+      if( canOpenFlag )
+      {
+         if(m_img)
+         {
+            okwl.add("can_open", "true", true);
+         }
+         else
+         {
+            okwl.add("can_open", "false", true);
+         }
       }
 
       if ( centerGroundFlag )
@@ -1381,6 +1442,17 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
          getUpIsUpAngle( okwl );
       }
 
+      if(dumpState)
+      {
+         if(m_img)
+         {
+            if(m_img->getState())
+            {
+               m_img->getState()->save(okwl);               
+            }
+         }
+      }
+
    } // if ( metaDataFlag || paletteFlag || imageInfoFlag || imageGeomFlag )
 
    if ( okwl.getSize() ) // Output section:
@@ -1422,6 +1494,7 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
       }
 
    } // if ( okwl )
+
 
    if ( traceDebug() )
    {
@@ -1506,16 +1579,58 @@ bool ossimInfo::getImageInfo( const ossimFilename& file,
 
 void ossimInfo::openImage(const ossimFilename& file)
 {
-   m_img = openImageHandler( file );
+   if(file.ext().downcase()=="kwl")
+   {
+      openImageFromState(file);
+   }
+   else
+   {
+      m_img = openImageHandler( file );      
+   }
 }
+
+void ossimInfo::openImageFromState(const ossimFilename& file)
+{
+   std::shared_ptr<ossim::ImageHandlerState> state;
+   ossimKeywordlist kwl;
+   if(kwl.addFile(file))
+   {
+      state = ossim::ImageHandlerStateRegistry::instance()->createState(kwl);
+      if(state)
+      {
+         m_img = ossimImageHandlerRegistry::instance()->open(state);
+      }
+   }
+}
+
 
 ossimRefPtr<ossimImageHandler> ossimInfo::openImageHandler(const ossimFilename& file) const
 {
-   // Go through new interface that passes a stream around. (drb 10 Nov. 2016)
-   // ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->open(file);
-   ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->
-      openConnection(file);
-   if ( result.valid() == false )
+   ossimRefPtr<ossimImageHandler> result;
+   if(file.ext().downcase()=="kwl")
+   {
+      std::shared_ptr<ossim::ImageHandlerState> state;
+      ossimKeywordlist kwl;
+      if(kwl.addFile(file))
+      {
+         state = ossim::ImageHandlerStateRegistry::instance()->createState(kwl);
+         if(state)
+         {
+            result = ossimImageHandlerRegistry::instance()->open(state);
+         }
+      }
+   }
+   else
+   {
+      // Go through new interface that passes a stream around. (drb 10 Nov. 2016)
+      // ossimRefPtr<ossimImageHandler> result = ossimImageHandlerRegistry::instance()->open(file);
+      result = ossimImageHandlerRegistry::instance()->
+         openConnection(file);
+   }
+   // only throw an exception if the can-open option
+   // is not specified
+   ossimString canOpenFlag = m_kwl.find("can_open");
+   if ( !result.valid() && !canOpenFlag.toBool())
    {
       std::string errMsg = "ossimInfo::openImage ERROR:\nCould not open: ";
       errMsg += file.string();

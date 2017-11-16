@@ -123,6 +123,7 @@ void ossimBandSelector::setOutputBandList( const vector<ossim_uint32>& outputBan
    if ( outputBandList.size() )
    {
       m_outputBandList = outputBandList;  // Assign the new list.
+      m_passThroughFlag = false; // Assume no pass thru first
       if ( !disablePassThru )
       {
          bool setBands = false;
@@ -460,7 +461,8 @@ void ossimBandSelector::checkPassThrough()
    m_passThroughFlag = ((theInputConnection == 0)||!outputBandsWithinInputRange());
    
    // check if marked with improper bands
-   if(m_passThroughFlag) return;
+   if(m_passThroughFlag)
+      return;
    
    if(theInputConnection)
    {
@@ -469,8 +471,7 @@ void ossimBandSelector::checkPassThrough()
 
       if ( inputList.size() == m_outputBandList.size() )
       {
-         const std::vector<ossim_uint32>::size_type SIZE =
-            m_outputBandList.size();
+         const std::vector<ossim_uint32>::size_type SIZE = m_outputBandList.size();
       
          std::vector<ossim_uint32>::size_type i = 0;
          while (i < SIZE)
@@ -491,9 +492,8 @@ void ossimBandSelector::checkPassThrough()
    {
       if(traceDebug())
       {
-         ossimNotify(ossimNotifyLevel_WARN)
-         << "ossimBandSelector::isOrderedCorrectly() ERROR:"
-         << "Method called prior to initialization!\n";
+         ossimNotify(ossimNotifyLevel_WARN) << "ossimBandSelector::isOrderedCorrectly() ERROR: "
+               "Method called prior to initialization!\n";
       }
    }
 

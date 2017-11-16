@@ -19,13 +19,9 @@
 #  OPENJPEG_LIBRARY, where to find the OpenJPEG library.
 
 FIND_PATH(OPENJPEG_INCLUDE_DIR openjpeg.h
-  PATHS
-    /usr/local/include/openjpeg
-    /usr/local/include/openjpeg-1.5
-    /usr/local/include
-    /usr/include/openjpeg
-    /usr/include
   PATH_SUFFIXES
+    openjpeg
+    openjpeg-1.5
     openjpeg-2.1
   DOC "Location of OpenJPEG Headers"
 )
@@ -34,11 +30,8 @@ MARK_AS_ADVANCED( MINIZIP_LIBRARY MINIZIP_INCLUDE_DIR )
 
 SET(OPENJPEG_NAMES ${OPENJPEG_NAMES} openjp2)
 SET(OPENJPEG_NAMES ${OPENJPEG_NAMES} openjpeg)
-FIND_LIBRARY(OPENJPEG_LIBRARY
-  NAMES ${OPENJPEG_NAMES}
-  PATHS /usr/lib /usr/local/lib
-  )
-
+FIND_LIBRARY(OPENJPEG_LIBRARY NAMES ${OPENJPEG_NAMES})
+  
 IF (OPENJPEG_LIBRARY AND OPENJPEG_INCLUDE_DIR)
     SET(OPENJPEG_LIBRARIES ${OPENJPEG_LIBRARY})
     SET(OPENJPEG_FOUND "YES")

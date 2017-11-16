@@ -257,6 +257,18 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
       GET_FILENAME_COMPONENT(OSSIM_DEPENDENCIES "${OSSIM_DEPENDENCIES}" ABSOLUTE)
    ENDIF(NOT OSSIM_DEPENDENCIES)
 
+   # Define paths used by package finders defined in this directory:
+   IF(OSSIM_INSTALL_PREFIX)
+      SET(CMAKE_LIBRARY_PATH "${CMAKE_LIBRARY_PATH};${OSSIM_INSTALL_PREFIX}/lib${LIBSUFFIX}")
+      SET(CMAKE_INCLUDE_PATH "${CMAKE_INCLUDE_PATH};${OSSIM_INSTALL_PREFIX}/include")
+   ENDIF()
+   IF(OSSIM_DEPENDENCIES)
+      SET(CMAKE_LIBRARY_PATH "${CMAKE_LIBRARY_PATH};${OSSIM_DEPENDENCIES}/lib${LIBSUFFIX}")
+      SET(CMAKE_INCLUDE_PATH "${CMAKE_INCLUDE_PATH};${OSSIM_DEPENDENCIES}/include")
+   ENDIF()
+   SET(CMAKE_LIBRARY_PATH "${CMAKE_LIBRARY_PATH};/usr/lib;/usr/local/lib;/usr/lib64;/usr/lib/x86_64-linux-gnu")
+   SET(CMAKE_INCLUDE_PATH "${CMAKE_INCLUDE_PATH};${OSSIM_DEV_HOME}/ossim/include;/usr/include;/usr/local/include")
+   
    #################################### ADd some common options for all modules to use ###################################
    OPTION(BUILD_OSSIM_VIDEO "Set to ON to build the video decoding library.  Use OFF to skip this module." OFF)
    OPTION(BUILD_OSSIM_PLANET "Set to ON to build the 3-D visualization module.  Use OFF to skip this module." OFF)

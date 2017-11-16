@@ -9,28 +9,10 @@
 
 SET(CMAKE_FIND_FRAMEWORK "LAST")
 FIND_PATH(OMS_INCLUDE_DIR oms/ossimVersion.h
-	HINTS 
-		$ENV{OSSIM_DEV_HOME}/oms/coms/include
-		$ENV{OSSIM_DEV_HOME}/oms/lib
-		$ENV{OSSIM_INSTALL_PREFIX}/include
-	PATHS
-		$ENV{OSSIM_DEV_HOME}/oms/coms
-		$ENV{OSSIM_INSTALL_PREFIX}
-    	PATH_SUFFIXES 
-		lib
-		include
-)
+	PATHS $ENV{OSSIM_DEV_HOME}/ossim-oms/coms/include)
+
 SET(OSSIM_NAMES ${OSSIM_NAMES} oms )
-FIND_LIBRARY(OSSIM_LIBRARY NAMES ${OSSIM_NAMES}
-	HINTS 
-		$ENV{OSSIM_DEV_HOME}/ossim/lib
-	PATHS
-		$ENV{OSSIM_DEV_HOME}/ossim/lib
-		$ENV{OSSIM_INSTALL_PREFIX}
-    	PATH_SUFFIXES 
-		lib
-		Frameworks
-)
+FIND_LIBRARY(OSSIM_LIBRARY NAMES ${OSSIM_NAMES})
 
 # handle the QUIETLY and REQUIRED arguments and set OSSIM_FOUND to TRUE if 
 # all listed variables are TRUE

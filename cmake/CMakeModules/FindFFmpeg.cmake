@@ -29,17 +29,15 @@ MACRO(FFMPEG_FIND varname shortname headername)
 
     FIND_PATH(FFMPEG_${varname}_INCLUDE_DIRS lib${shortname}/${headername}
         PATHS
-        ${FFMPEG_ROOT}/include
-        $ENV{FFMPEG_DIR}/include
-        ~/Library/Frameworks
-        /Library/Frameworks
-        /usr/local/include
-        /usr/include
-        /sw/include # Fink
-        /opt/local/include # DarwinPorts
-        /opt/csw/include # Blastwave
-        /opt/include
-        /usr/freeware/include
+           ${FFMPEG_ROOT}/include
+           $ENV{FFMPEG_DIR}/include
+           ~/Library/Frameworks
+           /Library/Frameworks
+           /sw/include # Fink
+           /opt/local/include # DarwinPorts
+           /opt/csw/include # Blastwave
+           /opt/include
+           /usr/freeware/include
         PATH_SUFFIXES ffmpeg
         DOC "Location of FFMPEG Headers"
     )
@@ -47,40 +45,31 @@ MACRO(FFMPEG_FIND varname shortname headername)
     if( FFMPEG_${varname}_INCLUDE_DIRS-NOTFOUND )
        FIND_PATH(FFMPEG_${varname}_INCLUDE_DIRS ${headername}
           PATHS
-          ${FFMPEG_ROOT}/include
-          $ENV{FFMPEG_DIR}/include
-          ~/Library/Frameworks
-          /Library/Frameworks
-          /usr/local/include
-          /usr/include
-          /sw/include # Fink
-          /opt/local/include # DarwinPorts
-          /opt/csw/include # Blastwave
-          /opt/include
-          /usr/freeware/include
+             ${FFMPEG_ROOT}/include
+             $ENV{FFMPEG_DIR}/include
+             ~/Library/Frameworks
+             /Library/Frameworks
+             /sw/include # Fink
+             /opt/local/include # DarwinPorts
+             /opt/csw/include # Blastwave
+             /opt/include
+             /usr/freeware/include
           PATH_SUFFIXES ffmpeg
           DOC "Location of FFMPEG Headers"
        )
     endif ( FFMPEG_${varname}_INCLUDE_DIRS-NOTFOUND )
 
     FIND_LIBRARY(FFMPEG_${varname}_LIBRARIES
-        NAMES ${shortname}
-        PATHS
-        ${FFMPEG_ROOT}/lib
-        $ENV{FFMPEG_DIR}/lib
-        ~/Library/Frameworks
-        /Library/Frameworks
-        /usr/local/lib
-        /usr/local/lib64
-        /usr/lib
-        /usr/lib64
-        /sw/lib
-        /opt/local/lib
-        /opt/csw/lib
-        /opt/lib
-        /usr/freeware/lib64
-        DOC "Location of FFMPEG Libraries"
-    )
+         NAMES ${shortname}
+      	PATHS
+      		${FFMPEG_ROOT}
+      		$ENV{FFMPEG_DIR}
+      		~/Library
+      		/Library
+      	PATH_SUFFIXES
+      		lib64
+      		lib
+      		Frameworks )
 
     IF (FFMPEG_${varname}_LIBRARIES AND FFMPEG_${varname}_INCLUDE_DIRS)
         SET(FFMPEG_${varname}_FOUND 1)

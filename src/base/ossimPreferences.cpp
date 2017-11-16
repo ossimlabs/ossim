@@ -105,12 +105,16 @@ bool ossimPreferences::loadPreferences()
        */
       if (!parsed_ok)
       {
-         ossimNotify(ossimNotifyLevel_WARN)
+        if(traceDebug())
+        {
+          ossimNotify(ossimNotifyLevel_WARN)
             << "WARNING: " << MODULE
             << ", an error was encountered loading the prefererences "
             << "file at \"" << thePrefFilename << "\" as specified by the "
             << "environment variable \"" << PREF_FILE_ENV_VAR_NAME << "\"."
             << "Preferences were not loaded.\n";
+          
+        }
       }
    }
    if (traceExec())

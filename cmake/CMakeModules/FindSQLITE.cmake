@@ -20,17 +20,10 @@
 #---
 # Find include path:
 #---
-find_path( SQLITE_INCLUDE_DIR sqlite3.h
-           PATHS 
-           /usr/include
-           /usr/local/include )
+find_path( SQLITE_INCLUDE_DIR sqlite3.h)
 
 # Find SQLITE library:
-find_library( SQLITE_LIB NAMES sqlite3
-              PATHS 
-              /usr/lib64 
-              /usr/lib 
-              /usr/local/lib )
+find_library( SQLITE_LIB NAMES sqlite3)
 
 # Set the SQLITE_LIBRARY:
 if( SQLITE_LIB )

@@ -27,7 +27,8 @@ public:
       ReplacementType_MAXPIX = 1
    };
    
-   ossimNullPixelFlip();
+   ossimNullPixelFlip(ClipMode clipMode = ClipMode_BOUNDING_RECT, 
+                      ReplacementType replacementType=ReplacementType_MINPIX);
    virtual void initialize();
    virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& tile_rect,
                                                ossim_uint32 resLevel=0);

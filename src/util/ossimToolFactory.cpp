@@ -16,6 +16,7 @@
 #include <ossim/util/ossimToolRegistry.h>
 #include <ossim/util/ossimVerticesFinderTool.h>
 #include <ossim/util/ossimViewshedTool.h>
+#include <ossim/util/ossimSubImageTool.h>
 #if OSSIM_HAS_HDF5
 #include <ossim/hdf5/ossimHdf5Tool.h>
 #endif
@@ -70,6 +71,9 @@ ossimTool* ossimToolFactory::createTool(const std::string& argName) const
    if ((utilName == "bandmerge") || (argName == "ossimBandMergeTool"))
       return new ossimBandMergeTool;
 
+   if ((utilName == "subimage") || (argName == "ossimSubImageTool"))
+      return new ossimSubImageTool;
+
 #if OSSIM_HAS_HDF5
    if ((utilName == "hdf5") || (argName == "ossimHdf5Tool"))
       return new ossimHdf5Tool;
@@ -89,6 +93,7 @@ void ossimToolFactory::getCapabilities(std::map<std::string, std::string>& capab
    capabilities.insert(pair<string, string>("ortho", ossimOrthoTool::DESCRIPTION));
    capabilities.insert(pair<string, string>("vertices", ossimVerticesFinderTool::DESCRIPTION));
    capabilities.insert(pair<string, string>("bandmerge", ossimBandMergeTool::DESCRIPTION));
+   capabilities.insert(pair<string, string>("subimage", ossimSubImageTool::DESCRIPTION));
 #if OSSIM_HAS_HDF5
    capabilities.insert(pair<string, string>("hdf5", ossimHdf5Tool::DESCRIPTION));
 #endif
@@ -112,6 +117,7 @@ void ossimToolFactory::getTypeNameList(vector<ossimString>& typeList) const
    typeList.push_back("ossimOrthoUtil");
    typeList.push_back("ossimVerticesFinderUtil");
    typeList.push_back("ossimBandMergeUtil");
+   typeList.push_back("ossimSubImageTool");
 #if OSSIM_HAS_HDF5
    typeList.push_back("ossimHdf5Tool");
 #endif
