@@ -231,7 +231,7 @@ public:
     */
    bool operator==(const ossimString& rhs) const
    {
-      return (m_str.compare( rhs.m_str ) == 0);
+      return (m_str == rhs.m_str);
    }
 
    /**
@@ -274,6 +274,23 @@ public:
          result = !(m_str.compare(std::string(rhs)) == 0);
       }
       return result;
+   }
+
+   bool operator<(const ossimString& rhs) const
+   {
+      return m_str < rhs.m_str;
+   }
+   bool operator<=(const ossimString& rhs) const
+   {
+      return m_str <= rhs.m_str;
+   }
+   bool operator>(const ossimString& rhs) const
+   {
+      return m_str > rhs.m_str;
+   }
+   bool operator>=(const ossimString& rhs) const
+   {
+      return m_str >= rhs.m_str;
    }
 
    char& operator[](std::string::size_type i)
