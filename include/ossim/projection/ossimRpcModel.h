@@ -295,6 +295,8 @@ protected:
    double theSampNumCoef[20];
    double theSampDenCoef[20];
  
+   friend class ossimRpcSolver;
+   friend class ossimNitfRpcBase;
 
    TYPE_DATA
 };

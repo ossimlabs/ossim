@@ -170,8 +170,8 @@ bool ossimSubImageTool::execute()
       throw ossimException( errMsg.str() );
    }
    ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(true);
-   bool converged = solver->solveCoefficients(inputGeom.get());
-   ossimRefPtr<ossimRpcModel> rpc = solver->createRpcModel();
+   bool converged = solver->solve(m_aoiViewRect, inputGeom.get());
+   ossimRefPtr<ossimRpcModel> rpc = solver->getRpcModel();
    m_geom = new ossimImageGeometry(nullptr, rpc.get());
    m_geom->setImageSize(m_aoiViewRect.size());
 

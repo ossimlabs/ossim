@@ -94,17 +94,21 @@ public:
                           ossimImageGeometry* geom,
                           ossim_uint32 xSamples=8,
                           ossim_uint32 ySamples=8);
-   
+
    /**
     * Similar to the other solve methods except that the final grid size is established
     * iteratively so that the error at the midpoints between grid nodes falls below tolerance.
-    * The RPC computed covers the full image.
+    * The RPC is computed for the specified image bounds range only, not the full image. The
+    * expectation here (when the imageBounds is less than the full valid image rect) is to
+    * generate an RPC to accompany a subimage that will be written to disk.
+    * @param imageBounds The AOI in image space for the RPC computation.
     * @param geom Represents the geometry of the input image
     * @param pixel_tolerance Maximum error in pixels (typically fraction of a pixel) to achieve.
     * @return true if solution converged below pixel tolerance.
     */
-   bool solveCoefficients(ossimImageGeometry* geom,
-                          const double& error_tolerance=0.1);
+   bool solve(const ossimDrect& aoiBounds,
+              ossimImageGeometry* geom,
+              const double& pixel_tolerance=0.1);
 
    /**
     * takes associated image points and ground points
@@ -120,50 +124,7 @@ public:
    /**
     * Creates and Rpc model from the coefficients
     */
-   ossimRpcModel* createRpcModel()const;
-
-   /**
-    * Create a simple rpc projection which is a dumbed down
-    * rpc model.
-    */
-   ossimRpcProjection* createRpcProjection()const;
-
-
-   /**
-    * Gives access to the solved coefficients.  For the image
-    * X numerator
-    */
-   const std::vector<double>& getImageXNumCoefficients()const;
-
-   /**
-    * Gives access to the solved coefficients.  For the image
-    * X denominator
-    */
-   const std::vector<double>& getImageXDenCoefficients()const;
-
-   /**
-    * Gives access to the solved coefficients.  For the image
-    * Y numerator
-    */
-   const std::vector<double>& getImageYNumCoefficients()const;
-
-   /**
-    * Gives access to the solved coefficients. For the image
-    * Y denominator
-    */
-   const std::vector<double>& getImageYDenCoefficients()const;
-
-   
-   double getImageXOffset()const;
-   double getImageYOffset()const;
-   double getLatOffset()const;
-   double getLonOffset()const;
-   double getHeightOffset()const;
-   double getImageXScale()const;
-   double getImageYScale()const;
-   double getLatScale()const;
-   double getLonScale()const;
-   double getHeightScale()const;
+   const ossimRefPtr<ossimRpcModel> getRpcModel() const { return theRpcModel; }
 
    double getRmsError()const;
    double getMaxError()const;
@@ -175,6 +136,11 @@ public:
     */
    ossimRefPtr<ossimNitfRegisteredTag> getNitfRpcBTag() const;
    
+   /**
+    * Sets the image rect over which to compute the RPCs. The Resulting RPC will only be valid
+    * over that range of image space. */
+   void setValidImageRect(const ossimIrect& imageRect);
+
 protected:
 	virtual ~ossimRpcSolver(){}
    
@@ -215,36 +181,12 @@ protected:
 
    bool theUseElevationFlag;
    bool theHeightAboveMSLFlag;
-   ossimDpt      theImageOffset;
-   ossimGpt      theGroundOffset;
-   ossimDpt      theImageScale;
-   ossim_float64 theLatScale;
-   ossim_float64 theLonScale;
-   ossim_float64 theHgtScale;
    ossim_float64 theMeanResidual;
    ossim_float64 theMaxResidual;
    ossimRefPtr<ossimImageGeometry> theRefGeom;
+   ossimRefPtr<ossimRpcModel> theRpcModel;
 
-   /**
-    * there are 20 coefficients in the cubic RPC model
-    */ 
-   std::vector<ossim_float64> theXNumCoeffs;
 
-   /**
-    * there are 20 coefficients in the cubic RPC model
-    */ 
-   std::vector<ossim_float64> theXDenCoeffs;
-
-   /**
-    * there are 20 coefficients in the cubic RPC model
-    */ 
-   std::vector<ossim_float64> theYNumCoeffs;
-
-   /**
-    * there are 20 coefficients in the cubic RPC model
-    */ 
-   std::vector<ossim_float64> theYDenCoeffs;
-   
 };
 
 #endif

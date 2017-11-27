@@ -40,7 +40,6 @@ static ossimTrace traceDebug = ossimTrace("ossimSensorModelFactory:debug");
 //***
 #include <ossim/projection/ossimCoarseGridModel.h>
 #include <ossim/projection/ossimRpcModel.h>
-#include <ossim/projection/ossimRpcProjection.h>
 #include <ossim/projection/ossimIkonosRpcModel.h>
 #include <ossim/projection/ossimNitfRpcModel.h>
 #include <ossim/projection/ossimQuickbirdRpcModel.h>
@@ -182,9 +181,9 @@ ossimSensorModelFactory::createProjection(const ossimString &name) const
    {
       return new ossimNitfRpcModel;
    }
-   if(name == STATIC_TYPE_NAME(ossimRpcProjection))
+   if(name == STATIC_TYPE_NAME(ossimRpcModel))
    {
-      return new ossimRpcProjection;
+      return new ossimRpcModel;
    }
    if(name == STATIC_TYPE_NAME(ossimFcsiModel))
    {

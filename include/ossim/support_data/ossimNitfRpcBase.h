@@ -17,6 +17,7 @@
 #ifndef ossimNitfRpcBase_HEADER
 #define ossimNitfRpcBase_HEADER 1
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
+#include <ossim/projection/ossimRpcModel.h>
 
 class OSSIM_DLL ossimNitfRpcBase : public ossimNitfRegisteredTag
 {
@@ -69,6 +70,11 @@ class OSSIM_DLL ossimNitfRpcBase : public ossimNitfRegisteredTag
    * Clears all string fields within the record to some default nothingness.
    */
   virtual void clearFields();
+
+  /**
+   * For generating the RPC tag from existing RPC Model.
+   */
+  virtual void setRpcModelParams(ossimRefPtr<ossimRpcModel> rpc);
 
   /**
    * @return The success record as a boolean.
@@ -500,7 +506,7 @@ protected:
    *
    * Line Numerator Coefficients.
    *
-   * required 12 byte field ranging ±0.999999E±9 Twenty coefficients for the
+   * required 12 byte field ranging ï¿½0.999999Eï¿½9 Twenty coefficients for the
    * polynomial
    *
    */     
@@ -511,7 +517,7 @@ protected:
    *
    * Line Denominato Coefficients.
    *
-   * required 12 byte field ranging ±0.999999E±9 Twenty coefficients for the
+   * required 12 byte field ranging ï¿½0.999999Eï¿½9 Twenty coefficients for the
    * polynomial
    *
    */     
@@ -522,7 +528,7 @@ protected:
    *
    * samp Numerator Coefficients.
    *
-   * required 12 byte field ranging ±0.999999E±9 Twenty coefficients for the
+   * required 12 byte field ranging ï¿½0.999999Eï¿½9 Twenty coefficients for the
    * polynomial
    *
    */     
@@ -533,7 +539,7 @@ protected:
    *
    * samp Denominator Coefficients.
    *
-   * required 12 byte field ranging ±0.999999E±9 Twenty coefficients for the
+   * required 12 byte field ranging ï¿½0.999999Eï¿½9 Twenty coefficients for the
    * polynomial
    *
    */     

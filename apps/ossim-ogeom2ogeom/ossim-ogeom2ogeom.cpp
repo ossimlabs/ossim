@@ -144,10 +144,12 @@ int main(int argc, char* argv[])
       if(rpcFlag)
       {
          ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(enableElevFlag);
-         bool converged = solver->solveCoefficients(geom.get());
+         ossimDrect imageBounds;
+         geom->getBoundingRect(imageBounds);
+         bool converged = solver->solve(imageBounds, geom.get());
          if (converged)
          {
-            ossimRefPtr<ossimRpcModel> rpc = solver->createRpcModel();
+            ossimRefPtr<ossimRpcModel> rpc = solver->getRpcModel();
             ossimRefPtr<ossimImageGeometry> rpcgeom = new ossimImageGeometry(nullptr, rpc.get());
             ossimKeywordlist kwl;
             rpcgeom->saveState(kwl);

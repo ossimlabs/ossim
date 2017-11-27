@@ -190,6 +190,45 @@ void ossimNitfRpcBase::clearFields()
    }
 }
 
+void ossimNitfRpcBase::setRpcModelParams(ossimRefPtr<ossimRpcModel> rpc)
+{
+   theSuccess[0] = '0';
+   if (!rpc)
+      return;
+
+   theSuccess[0] = '1';
+   setErrorBias(rpc->theBiasError);
+   setErrorRand(rpc->theRandError);
+   setLineOffset((int) rpc->theLineOffset);
+   setSampleOffset((int) rpc->theSampOffset);
+   setGeodeticLatOffset(rpc->theLatOffset);
+   setGeodeticLonOffset(rpc->theLonOffset);
+   setGeodeticHeightOffset(rpc->theHgtOffset);
+   setLineScale((int) rpc->theLineScale);
+   setSampleScale((int) rpc->theSampScale);
+   setGeodeticLatScale(rpc->theLatScale);
+   setGeodeticLonScale(rpc->theLonScale);
+   setGeodeticHeightScale(rpc->theHgtScale);
+
+   int idx;
+   vector<double> coef (20);
+   for(idx = 0; idx < 20; ++idx)
+      coef.push_back(rpc->theLineNumCoef[idx]);
+   setLineNumeratorCoeff(coef);
+
+   for(idx = 0; idx < 20; ++idx)
+      coef[idx] = rpc->theLineDenCoef[idx];
+   setLineDenominatorCoeff(coef);
+
+   for(idx = 0; idx < 20; ++idx)
+      coef[idx] = rpc->theSampNumCoef[idx];
+   setSampleNumeratorCoeff(coef);
+
+   for(idx = 0; idx < 20; ++idx)
+      coef[idx] = rpc->theSampDenCoef[idx];
+   setSampleDenominatorCoeff(coef);
+}
+
 bool ossimNitfRpcBase::getSuccess()const
 {
    return (theSuccess[0] == '1');

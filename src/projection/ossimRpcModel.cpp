@@ -89,11 +89,11 @@ static const ossimString PARAM_UNITS[] ={"pixel",
 ossimRpcModel::ossimRpcModel()
    :  ossimSensorModel(),
       thePolyType     (A),
-      theLineScale    (0.0),
-      theSampScale    (0.0),
-      theLatScale     (0.0),
-      theLonScale     (0.0),
-      theHgtScale     (0.0),
+      theLineScale    (1.0),
+      theSampScale    (1.0),
+      theLatScale     (1.0),
+      theLonScale     (1.0),
+      theHgtScale     (1.0),
       theLineOffset   (0.0),
       theSampOffset   (0.0),
       theLatOffset    (0.0),
@@ -103,7 +103,7 @@ ossimRpcModel::ossimRpcModel()
       theCrtrackOffset(0.0),
       theIntrackScale (0.0),
       theCrtrackScale (0.0),
-      theCosMapRot    (0.0),
+      theCosMapRot    (1.0),
       theSinMapRot    (0.0),
       theBiasError    (0.0),
       theRandError    (0.0)
@@ -298,12 +298,12 @@ void ossimRpcModel::worldToLineSample(const ossimGpt& ground_point,
    //***
    // Compute the adjusted, normalized line (U) and sample (V):
    //***
-   double Pu = polynomial(nlat, nlon, nhgt, theLineNumCoef);
-   double Qu = polynomial(nlat, nlon, nhgt, theLineDenCoef);
    double Pv = polynomial(nlat, nlon, nhgt, theSampNumCoef);
    double Qv = polynomial(nlat, nlon, nhgt, theSampDenCoef);
-   double U_rot  = Pu / Qu;
    double V_rot  = Pv / Qv;
+   double Pu = polynomial(nlat, nlon, nhgt, theLineNumCoef);
+   double Qu = polynomial(nlat, nlon, nhgt, theLineDenCoef);
+   double U_rot  = Pu / Qu;
 
    //***
    // U, V are normalized quantities. Need now to establish the image file
