@@ -23,7 +23,8 @@
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/base/ossim2dTo2dIdentityTransform.h>
 
-static const ossim_uint32 STARTING_GRID_SIDE_SIZE = 8;
+static const ossim_uint32 STARTING_GRID_SIZE = 8;
+static const ossim_uint32 ENDING_GRID_SIZE = 64;
 
 ossimRpcSolver::ossimRpcSolver(bool useElevation, bool useHeightAboveMSLFlag)
 :  theUseElevationFlag(useElevation),
@@ -58,9 +59,9 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
    ossimGpt gpt;
    ossimGpt defaultGround;
    if (ySamples <= 1)
-      ySamples = STARTING_GRID_SIDE_SIZE;
+      ySamples = STARTING_GRID_SIZE;
    if (xSamples <= 1)
-      xSamples = STARTING_GRID_SIDE_SIZE;
+      xSamples = STARTING_GRID_SIZE;
    srand(time(0));
    double Dx = imageBounds.width()/(xSamples-1);
    double Dy = imageBounds.height()/(ySamples-1);
@@ -294,7 +295,6 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
                            const double& tolerance)
 {
    static const char* MODULE = "ossimRpcSolver::solve()  ";
-   static const ossim_uint32 MAX_GRID_SIZE = 64;
 
    if (!geom)
       return false;
@@ -311,8 +311,8 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
    ossimGpt gpt;
 
    // Start at the minimum grid size:
-   ossim_uint32 xSamples = STARTING_GRID_SIDE_SIZE;
-   ossim_uint32 ySamples = STARTING_GRID_SIDE_SIZE;
+   ossim_uint32 xSamples = STARTING_GRID_SIZE;
+   ossim_uint32 ySamples = STARTING_GRID_SIZE;
 
    // Loop until error is below threshold:
    bool converged = false;
@@ -342,7 +342,7 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
 
             // Reverse projection using RPC:
             evalPoint(gpt, irpc);
-            irpc += ul;
+//            irpc += ul;
 
             // Compute residual and accumulate:
             residual = (ipt-irpc).length();
@@ -363,21 +363,21 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
                <<"\n   sampling grid size: ("<<xSamples<<", "<<ySamples<<")"
                <<"\n        mean residual: "<<theMeanResidual
                <<"\n         max residual: "<<theMaxResidual
-               <<"\n            converged: "<<converged<<endl;
+               <<"\n            converged: "<<ossimString::toString(converged)<<endl;
       }
 #endif
 
-      if ((xSamples >= MAX_GRID_SIZE) && (ySamples >= MAX_GRID_SIZE))
+      if ((xSamples >= ENDING_GRID_SIZE) && (ySamples >= ENDING_GRID_SIZE))
          break;
 
       if (!converged)
       {
          xSamples *= 2;
-         if (xSamples > MAX_GRID_SIZE)
-            xSamples = MAX_GRID_SIZE;
+         if (xSamples > ENDING_GRID_SIZE)
+            xSamples = ENDING_GRID_SIZE;
          ySamples *= 2;
-         if (ySamples > MAX_GRID_SIZE)
-            ySamples = MAX_GRID_SIZE;
+         if (ySamples > ENDING_GRID_SIZE)
+            ySamples = ENDING_GRID_SIZE;
       }
    }
 
