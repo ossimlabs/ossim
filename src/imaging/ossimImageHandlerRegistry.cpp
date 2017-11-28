@@ -13,6 +13,8 @@
 
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimTrace.h>
+#include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimString.h>
@@ -22,6 +24,9 @@
 #include <ossim/imaging/ossimImageHandlerFactoryBase.h>
 #include <algorithm>
 
+static ossimTrace traceDebug("ossimImageHandlerRegistry:debug");
+
+
 RTTI_DEF1(ossimImageHandlerRegistry, "ossimImageHandlerRegistry", ossimObjectFactory);
 
 //ossimImageHandlerRegistry* ossimImageHandlerRegistry::theInstance = 0;
@@ -30,6 +35,7 @@ ossimImageHandlerRegistry::ossimImageHandlerRegistry()
 {
    ossimObjectFactoryRegistry::instance()->registerFactory(this);
    registerFactory(ossimImageHandlerFactory::instance());
+   initializeStateCache();
 }
 
 ossimImageHandlerRegistry* ossimImageHandlerRegistry::instance()
@@ -141,9 +147,33 @@ void ossimImageHandlerRegistry::getSupportedExtensions(
    
 }
 
+
+std::shared_ptr<ossim::ImageHandlerState> ossimImageHandlerRegistry::getState(const ossimString& connectionString, 
+                                                                              ossim_uint32 entry)const
+{
+   return getState(connectionString + "_e" + ossimString::toString(entry));
+}
+
+std::shared_ptr<ossim::ImageHandlerState> ossimImageHandlerRegistry::getState(const ossimString& id)const
+{
+   std::shared_ptr<ossim::ImageHandlerState> result;
+
+   if(m_stateCache)
+   {
+      result = m_stateCache->getItem(id);
+   }
+
+   return result;
+}
+
+
 ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openConnection(
    const ossimString& connectionString, bool openOverview )const
 {
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::openConnection: entered.........." << std::endl;
+   }
    ossimRefPtr<ossimImageHandler> result(0);
 
    std::string myConnectionString = connectionString.downcase().string();
@@ -157,7 +187,18 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openConnection(
    {
       myConnectionString = connectionString.string();
    }
-   
+ 
+   // add entry 0
+   std::shared_ptr<ossim::ImageHandlerState> state = getState(myConnectionString, 0);
+   if(state)
+   {
+      if(traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::openConnection: leaving with open(state).........." << std::endl;;
+      }
+      return open(state);
+   }  
+
    std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
       createIstream( myConnectionString, std::ios_base::in|std::ios_base::binary);
 
@@ -166,27 +207,60 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openConnection(
       result = open( str, myConnectionString, openOverview );
    }
 
-   if ( result.valid() == false )
+   if ( !result.valid() )
    {
       ossimFilename f = myConnectionString;
       if ( f.exists() )
       {
-         result = this->open( f, true, openOverview );
+         result = open( f, true, openOverview );
       }
+   }
+
+   if(result)
+   {
+      addToStateCache(result.get());
+   }
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::openConnection: leaving.........." << std::endl;
    }
    
    return result;
 }
 
-ossimImageHandler* ossimImageHandlerRegistry::open(const ossimFilename& fileName,
+ossimImageHandler* ossimImageHandlerRegistry::open(const ossimFilename& filename,
                                                    bool trySuffixFirst,
                                                    bool openOverview)const
 {
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::open(file, trySuffix,openOverview): entered.........." << std::endl;
+   }
+   std::shared_ptr<ossim::ImageHandlerState> state = getState(filename, 0);
+
+   if(state)
+   {
+      ossimRefPtr<ossimImageHandler> h = open(state);
+      if(h)
+      {
+         if(traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::open(file, trySuffix,openOverview): returning with state open.........." << std::endl;;
+         }
+         return h.release();
+      }
+   }
+
    if(trySuffixFirst)
    {
-      ossimRefPtr<ossimImageHandler> h = openBySuffix(fileName, openOverview);
+      ossimRefPtr<ossimImageHandler> h = openBySuffix(filename, openOverview);
       if(h.valid())
       {
+         addToStateCache(h.get());
+         if(traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::open(file, trySuffix,openOverview): leaving.........." << std::endl;
+         }
          return h.release();
       }
    }
@@ -197,10 +271,18 @@ ossimImageHandler* ossimImageHandlerRegistry::open(const ossimFilename& fileName
    vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
    while((factory != m_factoryList.end()) && !result)
    {
-      result = (*factory)->open(fileName, openOverview);
+      result = (*factory)->open(filename, openOverview);
       ++factory;
    }
-   
+ 
+   if(result)
+   {
+      addToStateCache(result);
+   }  
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::open(file, trySuffix,openOverview): leaving.........." << std::endl;
+   }
    return result;
 }
 
@@ -216,6 +298,11 @@ ossimImageHandler* ossimImageHandlerRegistry::open(const ossimKeywordlist& kwl,
       result = (*factory)->open(kwl, prefix);
       ++factory;
    }
+
+   if(result)
+   {
+      addToStateCache(result);
+   }  
    
    return result;
 }
@@ -225,7 +312,26 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open(
    const std::string& connectionString,
    bool openOverview ) const
 {
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::open(stream,connectionString,openOverview): entered.........." << std::endl;
+   }
    ossimRefPtr<ossimImageHandler> result = 0;
+   std::shared_ptr<ossim::ImageHandlerState> state = getState(connectionString, 0);
+   
+   if(state)
+   {
+      result = open(state);
+      if(result)
+      {
+         if(traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::open(stream,connectionString,openOverview): leaving with state open..........Valid? " 
+                                               << result.valid() <<std::endl;
+         }
+         return result;
+      }
+   }
    if ( str )
    {
       vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
@@ -239,6 +345,15 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open(
          ++factory;
       }
    }
+   if(result)
+   {
+      addToStateCache(result.get());
+   }  
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::open(stream,connectionString,openOverview): leaving..........Valid? " 
+                                         << result.valid()<<std::endl;
+   }
    return result; 
 }
 
@@ -246,6 +361,10 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open(std::shared_ptr<o
 {
    ossimRefPtr<ossimImageHandler> result = 0;
    vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::open(state): Entered......." << std::endl;
+   }
    while( (!result)&&(factory != m_factoryList.end()) )
    {
       result = (*factory)->open( state );
@@ -254,6 +373,10 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::open(std::shared_ptr<o
          break;
       }
       ++factory;
+   }
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::open(state): Leaving.......valid?" << result.valid()<<std::endl;
    }
    return result; 
 }
@@ -283,38 +406,64 @@ ossimRefPtr<ossimImageHandler> ossimImageHandlerRegistry::openOverview(
 {
    ossimRefPtr<ossimImageHandler> result = 0;
 
-   // See if we can open via the stream interface:
-   std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
-      createIstream( file, std::ios_base::in|std::ios_base::binary);
-   
-   if ( str )
+   if(traceDebug())
    {
-      std::vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
-      while( factory != m_factoryList.end() )
-      {
-         result = (*factory)->openOverview( str, file );
-         if ( result.valid() )
-         {
-            break;
-         }
-         ++factory;
-      }
-
-      str = 0;
+      ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::openOverview: Entered......." << std::endl;
    }
 
-   if ( (result.valid() == false) && file.exists() )
-   {  
-      vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
-      while( factory != m_factoryList.end() )
+   std::shared_ptr<ossim::ImageHandlerState> state = getState(file, 0);
+
+   if(state)
+   {
+      result = open(state);
+
+   }
+
+   if(!result)
+   {
+      // See if we can open via the stream interface:
+      std::shared_ptr<ossim::istream> str = ossim::StreamFactoryRegistry::instance()->
+         createIstream( file, std::ios_base::in|std::ios_base::binary);
+      
+      if ( str )
       {
-         result = (*factory)->openOverview( file );
-         if ( result.valid() )
+         std::vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+         while( factory != m_factoryList.end() )
          {
-            break;
+            result = (*factory)->openOverview( str, file );
+            if ( result.valid() )
+            {
+               break;
+            }
+            ++factory;
          }
-         ++factory;
+
+         str = 0;
       }
+
+      if ( (result.valid() == false) && file.exists() )
+      {  
+         vector<ossimImageHandlerFactoryBase*>::const_iterator factory = m_factoryList.begin();
+         while( factory != m_factoryList.end() )
+         {
+            result = (*factory)->openOverview( file );
+            if ( result.valid() )
+            {
+               break;
+            }
+            ++factory;
+         }
+      }
+
+      if(result)
+      {
+         addToStateCache(result.get());
+      }
+   }
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::openOverview: Leaving.......Valid? " 
+                                         << result.valid() << std::endl;
    }
    return result;
 }
@@ -393,6 +542,62 @@ std::ostream& ossimImageHandlerRegistry::printReaderProps(std::ostream& out) con
 ossimImageHandlerRegistry::ossimImageHandlerRegistry(const ossimImageHandlerRegistry& /* rhs */)
    :  ossimObjectFactory()
 {}
+
+void ossimImageHandlerRegistry::initializeStateCache()const
+{
+   m_stateCache = 0;
+   ossimString enabledString = ossimPreferences::instance()->findPreference("ossim.imaging.handler.registry.state_cache.enabled");
+   ossimString minSizeString = ossimPreferences::instance()->findPreference("ossim.imaging.handler.registry.state_cache.min_size");
+   ossimString maxSizeString = ossimPreferences::instance()->findPreference("ossim.imaging.handler.registry.state_cache.max_size");
+
+   ossim_uint32 maxSize = 0;
+   ossim_uint32 minSize = 0;
+
+   if(!enabledString.empty())
+   {
+      if(enabledString.toBool())
+      {
+         m_stateCache = std::make_shared<ossim::ItemCache<ossim::ImageHandlerState> >();
+         if(!maxSizeString.empty())
+         {
+            maxSize = maxSizeString.toUInt32();
+         }
+         if(!minSizeString.empty())
+         {
+            minSize = minSizeString.toUInt32();
+         }
+         else if(maxSize)
+         {
+            minSize = ossim::round<ossim_uint32, ossim_float32>(maxSize*.8);
+         }
+
+         if(minSize < maxSize)
+         {
+            m_stateCache->setMinAndMaxItemsToCache(minSize, maxSize);
+         }
+      }
+
+   }
+}
+
+void ossimImageHandlerRegistry::addToStateCache(ossimImageHandler* handler)const
+{
+   if(handler)
+   {
+      std::shared_ptr<ossim::ImageHandlerState> state = handler->getState();
+      if(state&&m_stateCache)
+      {
+         ossimString id = handler->getFilename()+"_e"+ossimString::toString(state->getCurrentEntry());
+         if(traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)<< "ossimImageHandlerRegistry::addToStateCache: " << id << std::endl;
+         }
+         m_stateCache->addItem(id, state);
+      }
+   }
+}
+
+
 
 const ossimImageHandlerRegistry&
 ossimImageHandlerRegistry::operator=(const ossimImageHandlerRegistry& rhs)
