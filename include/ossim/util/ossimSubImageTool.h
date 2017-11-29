@@ -22,6 +22,8 @@
 class OSSIMDLLEXPORT ossimSubImageTool : public ossimChipProcTool
 {
 public:
+   enum RpcGeomFormat { OGEOM, DG, JSON, XML };
+
    ossimSubImageTool();
    ~ossimSubImageTool();
 
@@ -59,6 +61,8 @@ public:
 
 protected:
    virtual void initProcessingChain() {}
+
+   RpcGeomFormat m_geomFormat;
 };
 
 #endif

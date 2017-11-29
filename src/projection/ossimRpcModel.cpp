@@ -317,8 +317,15 @@ void ossimRpcModel::worldToLineSample(const ossimGpt& ground_point,
    // Now back out skew, scale, and offset adjustments:
    //***
    img_pt.line = U*(theLineScale+theIntrackScale) + theLineOffset + theIntrackOffset;
-   
    img_pt.samp = V*(theSampScale+theCrtrackScale) + theSampOffset + theCrtrackOffset;
+
+   // If the image is a chip from a full-image RPC, the full-image points need to be adjusted to the
+   // chip's local coord system:
+   if (theImageXform)
+   {
+      ossimDpt input (img_pt);
+      theImageXform->inverse(input, img_pt);
+   }
 
    // if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimRpcModel::worldToLineSample(): returning..." << std::endl;
    return;
@@ -332,7 +339,6 @@ void ossimRpcModel::worldToLineSample(const ossimGpt& ground_point,
 void  ossimRpcModel::lineSampleToWorld(const ossimDpt& imagePoint,
                                        ossimGpt&       worldPoint) const
 {
-
 //---
 // Under debate... (drb 20130610)
 // this seems to be more accurate for the round trip
@@ -441,7 +447,7 @@ void ossimRpcModel::imagingRay(const ossimDpt& imagePoint,
 //  NOTE: U = line, V = sample -- this differs from the convention.
 //
 //*****************************************************************************
-void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
+void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& ipt,
                                             const double&   ellHeight,
                                             ossimGpt&       gpt) const
 {
@@ -457,12 +463,17 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    //***
    // Extrapolate if point is outside image:
    //***
-   // if (!insideImage(image_point))
+   // if (!insideImage(ipt))
    // {
-   //    gpt = extrapolate(image_point, ellHeight);
+   //    gpt = extrapolate(ipt, ellHeight);
    //    if (traceExec())  CLOG << "returning..." << endl;
    //    return;
    // }
+
+   // If the image is a chip from a full-image RPC, the image points need to be adjusted:
+   ossimDpt image_point (ipt);
+   if (theImageXform)
+      theImageXform->forward(ipt, image_point);
 
    //***
    // Constants for convergence tests:

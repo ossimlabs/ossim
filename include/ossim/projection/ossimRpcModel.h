@@ -21,6 +21,7 @@
 #include <ossim/base/ossimDblGrid.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/ossimConfig.h>
+#include <ossim/base/ossim2dTo2dTransform.h>
 
 /*!****************************************************************************
  *
@@ -295,6 +296,10 @@ protected:
    double theSampNumCoef[20];
    double theSampDenCoef[20];
  
+   /** 2D transform permits using a full-image RPC with a subimage chip.
+    * NOTE: This really should be handled by ossimImageGeometry's transform. */
+   ossimRefPtr<ossim2dTo2dTransform> theImageXform;
+
    friend class ossimRpcSolver;
    friend class ossimNitfRpcBase;
 

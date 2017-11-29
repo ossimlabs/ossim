@@ -72,7 +72,11 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
       for(x = 0; x < xSamples; ++x)
       {
          dpt.x = x*Dx + imageBounds.ul().x;
-         geom->localToWorld(dpt, gpt);
+         if (theUseElevationFlag)
+            geom->localToWorld(dpt, gpt);
+         else
+            geom->localToWorld(dpt, 0, gpt);
+
          if (gpt.isLatLonNan())
             continue;
 
@@ -338,7 +342,16 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
          {
             // Forward projection using input model:
             ipt.x = deltaX*((double)x + 0.5) + ul.x;
-            geom->localToWorld(ipt, gpt);
+            if (theUseElevationFlag)
+               geom->localToWorld(ipt, gpt);
+            else
+               geom->localToWorld(ipt, 0, gpt);
+            if(theHeightAboveMSLFlag)
+            {
+               double h = ossimElevManager::instance()->getHeightAboveMSL(gpt);
+               if(ossim::isnan(h) == false)
+                  gpt.height(h);
+            }
 
             // Reverse projection using RPC:
             evalPoint(gpt, irpc);

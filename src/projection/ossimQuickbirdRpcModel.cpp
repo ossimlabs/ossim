@@ -15,6 +15,7 @@
 #include <ossim/projection/ossimQuickbirdRpcModel.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossim2dTo2dShiftTransform.h>
 #include <ossim/support_data/ossimQuickbirdRpcHeader.h>
 #include <ossim/support_data/ossimQuickbirdTile.h>
 #include <ossim/support_data/ossimNitfFile.h>
@@ -22,12 +23,14 @@
 #include <ossim/support_data/ossimNitfImageHeader.h>
 #include <ossim/support_data/ossimNitfRpcBase.h>
 #include <ossim/support_data/ossimNitfUse00aTag.h>
+#include <ossim/support_data/ossimNitfIchipbTag.h>
 #include <ossim/support_data/ossimNitfPiaimcTag.h>
 #include <ossim/imaging/ossimTiffTileSource.h>
 #include <ossim/imaging/ossimQbTileFilesHandler.h>
 
 static const char* RPC00A_TAG = "RPC00A";
 static const char* RPC00B_TAG = "RPC00B";
+static const char* ICHIPB_TAG = "ICHIPB";
 static const char* PIAIMC_TAG = "PIAIMC";
 static const char* USE00A_TAG = "USE00A";
 
@@ -145,13 +148,16 @@ bool ossimQuickbirdRpcModel::parseNitfFile(const ossimFilename& file)
 
    theImageClipRect = ih->getImageRect();
  
-   // Give preference to external RPC data file:
-   bool useInternalRpcTags = false;
-   if(!parseRpcData(file))
-      useInternalRpcTags = true;
-   if (!parseTileData(file))
-      return false;
- 
+   // Give preference to external RPC data file. Only consider external tiling data if RPC is 
+   // provided externally, otherwise expect ICHIPB in NITF:
+   bool useInternalRpcTags = true;
+   if (parseRpcData(file))
+   {
+      useInternalRpcTags = false;
+      if (!parseTileData(file))
+         return false;
+   }
+
    // Check for IMD (metadata) file:
    parseMetaData(file);
 
@@ -234,6 +240,17 @@ bool ossimQuickbirdRpcModel::parseNitfFile(const ossimFilename& file)
       theLonOffset  = rpcTag->getGeodeticLonOffset().toFloat64();
       theHgtOffset  = rpcTag->getGeodeticHeightOffset().toFloat64();
       theImageID    = ih->getImageId();
+
+      // Now consider the ICHIPB tag (if present) indicating this is a subimage of the full model
+      tag = ih->getTagData(ICHIPB_TAG);
+      ossimNitfIchipbTag* ichipbTag = 0;
+      if (tag.valid())
+      {
+         ichipbTag = PTR_CAST(ossimNitfIchipbTag, tag.get());
+         if (!ichipbTag)
+            return false;
+         theImageXform = ichipbTag->newTransform();
+      }
    }
 
    finishConstruction();
@@ -262,9 +279,11 @@ bool ossimQuickbirdRpcModel::parseTiffFile(const ossimFilename& file)
 
    parseMetaData(file);
 
+   // TIFF format expects the RPC and TILE info to be provided externally:
    if (!parseRpcData(file))
       return false;
 
+   // If no TIL data present, assumes full image:
    if (!parseTileData(file))
       return false;
 
@@ -358,8 +377,11 @@ bool ossimQuickbirdRpcModel::parseTileData(const ossimFilename& image_file)
 {
    ossimFilename tileFile (image_file);
    tileFile.setExtension("TIL");
-  if (!findSupportFile(tileFile))
-      return false;
+
+   // The TIL file is optional. Consider the image to be the full image if not present:
+   if (!findSupportFile(tileFile))
+      return true;
+
    ossimQuickbirdTile tileHdr;
    if(!tileHdr.open(tileFile))
       return false;
@@ -367,23 +389,30 @@ bool ossimQuickbirdRpcModel::parseTileData(const ossimFilename& image_file)
    ossimQuickbirdTileInfo info;
    if(!tileHdr.getInfo(info, image_file.file()))
       return false;
-   if((info.theUlXOffset != OSSIM_INT_NAN) && (info.theUlYOffset != OSSIM_INT_NAN) &&
-      (info.theLrXOffset != OSSIM_INT_NAN) && (info.theLrYOffset != OSSIM_INT_NAN) &&
-      (info.theLlXOffset != OSSIM_INT_NAN) && (info.theLlYOffset != OSSIM_INT_NAN) &&
-      (info.theUrXOffset != OSSIM_INT_NAN) && (info.theUrYOffset != OSSIM_INT_NAN))
-   {
-      theImageClipRect = ossimIrect(ossimIpt(info.theUlXOffset, info.theUlYOffset),
-                                    ossimIpt(info.theUrXOffset, info.theUrYOffset),
-                                    ossimIpt(info.theLrXOffset, info.theLrYOffset),
-                                    ossimIpt(info.theLlXOffset, info.theLlYOffset));
-   }
-   else if ((info.theUlXOffset != OSSIM_INT_NAN) && (info.theUlYOffset != OSSIM_INT_NAN) &&
-      (theImageClipRect.width() != OSSIM_INT_NAN) && (theImageClipRect.height() != OSSIM_INT_NAN))
-   {
-      theImageClipRect = ossimIrect(info.theUlXOffset, info.theUlYOffset,
-                                    info.theUlXOffset+theImageClipRect.width()-1, 
-                                    info.theUlYOffset+theImageClipRect.height()-1);
-   }
+
+//   if((info.theUlXOffset != OSSIM_INT_NAN) && (info.theUlYOffset != OSSIM_INT_NAN) &&
+//      (info.theLrXOffset != OSSIM_INT_NAN) && (info.theLrYOffset != OSSIM_INT_NAN) &&
+//      (info.theLlXOffset != OSSIM_INT_NAN) && (info.theLlYOffset != OSSIM_INT_NAN) &&
+//      (info.theUrXOffset != OSSIM_INT_NAN) && (info.theUrYOffset != OSSIM_INT_NAN))
+//   {
+//      theImageClipRect = ossimIrect(ossimIpt(info.theUlXOffset, info.theUlYOffset),
+//                                    ossimIpt(info.theUrXOffset, info.theUrYOffset),
+//                                    ossimIpt(info.theLrXOffset, info.theLrYOffset),
+//                                    ossimIpt(info.theLlXOffset, info.theLlYOffset));
+//   }
+//   else if ((info.theUlXOffset != OSSIM_INT_NAN) && (info.theUlYOffset != OSSIM_INT_NAN) &&
+//      (theImageClipRect.width() != OSSIM_INT_NAN) && (theImageClipRect.height() != OSSIM_INT_NAN))
+//   {
+//      theImageClipRect = ossimIrect(info.theUlXOffset, info.theUlYOffset,
+//                                    info.theUlXOffset+theImageClipRect.width()-1,
+//                                    info.theUlYOffset+theImageClipRect.height()-1);
+//   }
+
+   // Define the RPC model's 2D transform for chipped imagery. Note that the TIL file will only
+   // define an offset, not a full affine.  Can only use the tile's UL corner:
+   ossimDpt ul (info.theUlXOffset, info.theUlYOffset);
+   if (!ul.hasNans())
+      theImageXform = new ossim2dTo2dShiftTransform(ul);
 
    return true;
 }

@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
    argumentParser.getApplicationUsage()->addCommandLineOption(
          "--xml","Output the RPC in XML format.");
    argumentParser.getApplicationUsage()->addCommandLineOption(
-         "--bbox <ulx> <uly> <width> <height>","Subimage rectangle in image space for constraining "
+         "--bbox <ulx> <uly> <lrx> <lry>","Subimage rectangle in image space for constraining "
          "RPC computation over the AOI only.");
    argumentParser.getApplicationUsage()->addCommandLineOption(
          "--tolerance <double>","Used as an RMS error tolerance in meters between original model "
@@ -80,17 +80,24 @@ int main(int argc, char* argv[])
 
    if(argumentParser.read("--bbox", tempParam1,tempParam2,tempParam3,tempParam4 ))
    {
-      double x,y,w,h;
-      x = tempString1.toDouble();
-      y = tempString2.toDouble();
-      w = tempString3.toDouble();
-      h = tempString4.toDouble();
+      double ulx,uly,lrx,lry,flip;
+      ulx = tempString1.toDouble();
+      uly = tempString2.toDouble();
+      lrx = tempString3.toDouble();
+      lry = tempString4.toDouble();
 
-      if(w < 1) w = 1;
-      if(h < 1) h = 1;
-      imageRect = ossimDrect(x,y,x+(w-1), y+(h-1));
+      if (lrx < ulx)
+      {
+         flip = ulx; ulx = lrx; lrx = flip;
+      }
+      if (lry < uly)
+      {
+         flip = uly; uly = lry; lry = flip;
+      }
+
+      imageRect = ossimDrect(ulx,uly,lrx,lry);
       ostringstream s;
-      s<<"_bbox-"<<x<<"-"<<y<<"-"<<w<<"-"<<h;
+      s<<"_bbox-"<<ulx<<"-"<<uly<<"-"<<lrx<<"-"<<lry;
       suffix = s.str();
    }
 

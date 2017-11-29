@@ -108,7 +108,7 @@ public:
     */
    bool solve(const ossimDrect& aoiBounds,
               ossimImageGeometry* geom,
-              const double& pixel_tolerance=0.1);
+              const double& pixel_tolerance=0.5);
 
    /**
     * takes associated image points and ground points

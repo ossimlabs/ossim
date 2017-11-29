@@ -181,10 +181,6 @@ ossimSensorModelFactory::createProjection(const ossimString &name) const
    {
       return new ossimNitfRpcModel;
    }
-   if(name == STATIC_TYPE_NAME(ossimRpcModel))
-   {
-      return new ossimRpcModel;
-   }
    if(name == STATIC_TYPE_NAME(ossimFcsiModel))
    {
       return new ossimFcsiModel;
@@ -422,6 +418,24 @@ ossimProjection* ossimSensorModelFactory::createProjection(
       qbModel = 0;
    }
    
+//   ossimRefPtr<ossimRpcModel> qbModel = new ossimQuickbirdRpcModel;
+//   if(qbModel->parseFile(filename))
+//   {
+//      if(traceDebug())
+//      {
+//         ossimNotify(ossimNotifyLevel_DEBUG)
+//            << MODULE << " DEBUG: returning ossimQuickbirdRpcModel"
+//            << std::endl;
+//      }
+//      model = qbModel.get();
+//      qbModel = 0;
+//      return model.release();
+//   }
+//   else
+//   {
+//      qbModel = 0;
+//   }
+//
    //---
    // Test for ikonos rpc.  Could be tiff or nitf which is handled in
    // parseFile method.
