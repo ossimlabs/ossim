@@ -38,14 +38,11 @@ class ossimNitfRegisteredTag;
  *       where coeff is one of XNum, XDen, YNum, and YDen.  So there are 80
  *       coefficients all together.
  *
- *       
  * Currently we use a linear least squares fit to solve the coefficients.
  * This is the simplest to implement.  We probably relly need a nonlinear
  * minimizer to fit the coefficients but I don't have time to experiment.
  * Levenberg Marquardt might be a solution to look into.
  *
- *
- * 
  * HOW TO USE:
  * 
  *        ossimRpcSolver solver;
@@ -59,10 +56,16 @@ class ossimNitfRegisteredTag;
  *        solver.solveCoefficients(imagePoints,
  *                                 groundPoints);
  *                                 
- *                                 
  * Once you call solveCoefficients you can create the projector:
  *                                 
  *        ossimRefPtr<ossimRpcProjection> rpc = solver.createRpcProjection();
+ *
+ * Note that a sub-image bounding rect can be passed into the solve methods. This
+ * constrains the solution fit to cover only that rectangle in the original image space,
+ * but the image coordinates used are still based on the full image. If the intent is to
+ * generate an RPC that will work for an image chip in that chip's local image coordinate
+ * system (i.e., the UL corner of the chip is 0, 0), then you'll need to call
+ * rpcModel->setImageOffset(chip_offset) on the output RPC model.
  *
  * </pre>
  * 
@@ -122,7 +125,8 @@ public:
                           const std::vector<ossimGpt>& groundControlPoints);
 
    /**
-    * Creates and Rpc model from the coefficients
+    * Fetches the solved-for RPC model. See note in header above on setting the image offset
+    * if this model will be applied to a sub-image chip.
     */
    const ossimRefPtr<ossimRpcModel> getRpcModel() const { return theRpcModel; }
 

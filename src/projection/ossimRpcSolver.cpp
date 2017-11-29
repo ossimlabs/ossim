@@ -221,6 +221,7 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    if(!elevationEnabled)
    {
       maxDeltaHeight = 1.0/DBL_EPSILON;
+      maxDeltaHeight = 10000;
       centerGround.height(0.0);
    }
    // normalize the ground points
@@ -355,7 +356,6 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
 
             // Reverse projection using RPC:
             evalPoint(gpt, irpc);
-//            irpc += ul;
 
             // Compute residual and accumulate:
             residual = (ipt-irpc).length();

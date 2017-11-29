@@ -49,14 +49,17 @@ void ossimSubImageTool::setUsage(ossimArgumentParser& ap)
    // specific stuff not used in this tool:
    ossimTool::setUsage(ap);
 
-   au->addCommandLineOption("--bbox <ulx> <uly> <lrx> <lry>",
-                            "Specify upper-left and lower-right bounds the image rect (in pixels).");
-   au->addCommandLineOption("-e | --entry <N> ",
-                            "For multi image entries which entry do you wish to extract. For list "
-                            "of entries use: \"ossim-info -i <your_image>\" ");
-   au->addCommandLineOption("--geom <format>", "Specifies format of the subimage RPC geometry file."
-                            " Possible values are: \"ogeom\" (default), \"dg\", \"json\", or "
-                            "\"xml\".");
+   au->addCommandLineOption(
+         "--bbox <ulx> <uly> <lrx> <lry>",
+         "Specify upper-left and lower-right bounds the image rect (in pixels).");
+   au->addCommandLineOption(
+         "-e | --entry <N> ",
+         "For multi image entries which entry do you wish to extract. For list "
+         "of entries use: \"ossim-info -i <your_image>\" ");
+   au->addCommandLineOption(
+         "--geom <format>", "Specifies format of the subimage RPC geometry file."
+         " Possible values are: \"OGEOM\" (OSSIM geometry, default), \"DG\" (DigitalGlobe WV/QB "
+         ".RPB format), \"JSON\" (MSP-style JSON), or \"XML\". Case insensitive.");
 }
 
 bool ossimSubImageTool::initialize(ossimArgumentParser& ap)
@@ -99,7 +102,7 @@ bool ossimSubImageTool::initialize(ossimArgumentParser& ap)
       formatStr.upcase();
       if (formatStr == "OGEOM")
          m_geomFormat = OGEOM;
-      else if (formatStr == "RPB")
+      else if (formatStr == "DG")
          m_geomFormat = DG;
       else if (formatStr == "JSON")
          m_geomFormat = JSON;
@@ -200,31 +203,21 @@ bool ossimSubImageTool::execute()
 
    ossimRefPtr<ossimProjection> inputProj = inputGeom->getProjection();
    ossimRefPtr<ossimRpcModel> rpc;
-   ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver;
+   ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(false);
    bool converged = false;
 
-   // The DG format will save the AOI in a TIL file, and the RPC will be computed over the entire
-   // full-image space of the input image:
-   if (m_geomFormat == DG)
-   {
-      // If the input projection itself is an RPC, just copy it. No solving required:
-      ossimRpcModel* inputRpc = dynamic_cast<ossimRpcModel*>(inputGeom->getProjection());
-      if (inputRpc)
-         rpc = inputRpc;
-      else
-      {
-         ossimIrect fullImageRect;
-         inputGeom->getBoundingRect(fullImageRect)
-         converged = solver->solve(fullImageRect, inputGeom.get());
-         rpc = solver->getRpcModel();
-      }
-   }
+   // If the input projection itself is an RPC, just copy it. No solving required:
+   ossimRpcModel* inputRpc = dynamic_cast<ossimRpcModel*>(inputGeom->getProjection());
+   if (inputRpc)
+      rpc = inputRpc;
    else
    {
       converged = solver->solve(m_aoiViewRect, inputGeom.get());
       rpc = solver->getRpcModel();
    }
 
+   // The RPC needs to be shifted in image space so that it will work in the subimage coordinates:
+   rpc->setImageOffset(m_aoiViewRect.ul());
    m_geom = new ossimImageGeometry(nullptr, rpc.get());
    m_geom->setImageSize(m_aoiViewRect.size());
    ossimKeywordlist kwl;
@@ -249,6 +242,9 @@ bool ossimSubImageTool::execute()
       ofstream jsonStream (geomFile.string());
       if (!jsonStream.fail())
       {
+         // Note that only the model/projection is saved here, not the full ossimImageGeometry that
+         // contains the subimage shift transform. So need to cheat and add the shift to the RPC
+         // line and sample offsets:
          write_ok = rpc->toJSON(jsonStream);
          jsonStream.close();
       }

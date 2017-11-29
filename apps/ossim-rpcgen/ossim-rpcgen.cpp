@@ -37,40 +37,40 @@ int main(int argc, char* argv[])
    double error = 0.1;
 
    imageRect.makeNan();
-   argumentParser.getApplicationUsage()->setApplicationName(argumentParser.getApplicationName());
-   argumentParser.getApplicationUsage()->setDescription(
+   ossimApplicationUsage* au = argumentParser.getApplicationUsage();
+
+   au->setApplicationName(argumentParser.getApplicationName());
+   au->setDescription(
          argumentParser.getApplicationName() + " takes an input image and generates a "
          "corresponding RPC geometry in a variety of formats. If a bounding box is specified, the "
          "default output filename (based on the input filename) will be appended with the bbox spec"
          ", unless an output filename is explicitely provided.");
-   argumentParser.getApplicationUsage()->setCommandLineUsage(
+   au->setCommandLineUsage(
          argumentParser.getApplicationName() + " [options] <input-file> [<output-file>]");
-   argumentParser.getApplicationUsage()->addCommandLineOption(
+   au->addCommandLineOption(
          "-h | --help","Display this information");
-   argumentParser.getApplicationUsage()->addCommandLineOption(
-         "--geom","[default] Outputs the RPC to an OSSIM geometry file.");
-   argumentParser.getApplicationUsage()->addCommandLineOption(
-         "--json","Outputs the RPC in JSON format.");
-   argumentParser.getApplicationUsage()->addCommandLineOption(
-         "--rpb","Output WorldView-style RPB format.");
-   argumentParser.getApplicationUsage()->addCommandLineOption(
-         "--xml","Output the RPC in XML format.");
-   argumentParser.getApplicationUsage()->addCommandLineOption(
+   au->addCommandLineOption(
          "--bbox <ulx> <uly> <lrx> <lry>","Subimage rectangle in image space for constraining "
-         "RPC computation over the AOI only.");
-   argumentParser.getApplicationUsage()->addCommandLineOption(
+         "RPC computation over the AOI only. Note that the RPC image space UL corner will "
+         "correspond to (0,0), i.e., the model will be shifted from the original full-image model.");
+   au->addCommandLineOption(
          "--tolerance <double>","Used as an RMS error tolerance in meters between original model "
          "and RPC.");
+   au->addCommandLineOption(
+         "--geom <format>", "Specifies format of the subimage RPC geometry file."
+         " Possible values are: \"OGEOM\" (OSSIM geometry, default), \"DG\" (DigitalGlobe WV/QB "
+         ".RPB format), \"JSON\" (MSP-style JSON), or \"XML\". Case insensitive.");
    
    int numArgs = argumentParser.argc();
    if (argumentParser.read("-h") || argumentParser.read("--help") || (numArgs == 1))
    {
-      argumentParser.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
+      au->write(ossimNotify(ossimNotifyLevel_INFO));
       ossimInit::instance()->finalize();
       exit(0);
    }
 
-   bool doGeom=false, doJson=false, doRpb=false, doXml=false;
+   enum RpcGeomFormat { OGEOM, DG, JSON, XML } rpcGeomFormat=OGEOM;
+
    ossimFilename geomFile, jsonFile, xmlFile, rpbFile;
    ossimString suffix;
    ossimIpt rpcGridSize(10,10);
@@ -101,15 +101,26 @@ int main(int argc, char* argv[])
       suffix = s.str();
    }
 
-   if (argumentParser.read("--geom"))
-      doGeom = true;
-   if(argumentParser.read("--json"))
-      doJson = true;
-   if (argumentParser.read("--rpb"))
-      doRpb = true;
-   if (argumentParser.read("--xml"))
-      doXml = true;
-
+   if ( argumentParser.read("--geom", tempParam1))
+   {
+      ossimString formatStr (tempString1);
+      formatStr.upcase();
+      if (formatStr == "OGEOM")
+         rpcGeomFormat = OGEOM;
+      else if (formatStr == "DG")
+         rpcGeomFormat = DG;
+      else if (formatStr == "JSON")
+         rpcGeomFormat = JSON;
+      else if (formatStr == "XML")
+         rpcGeomFormat = XML;
+      else
+      {
+         ostringstream errMsg;
+         errMsg << " ERROR: ossimSubImageTool ["<<__LINE__<<"] Unknown geometry format <"
+               <<formatStr<<"> specified. Aborting." << endl;
+         throw ossimException( errMsg.str() );
+      }
+   }
    argumentParser.reportRemainingOptionsAsUnrecognized();
    if (argumentParser.errors())
    {
@@ -121,7 +132,7 @@ int main(int argc, char* argv[])
    if (argumentParser.argc() < 2)
    {
       ossimNotify(ossimNotifyLevel_WARN)<<"ERROR: Need an input filename."<<endl;
-      argumentParser.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
+      au->write(ossimNotify(ossimNotifyLevel_INFO));
       ossimInit::instance()->finalize();
       exit(0);
    }
@@ -130,7 +141,7 @@ int main(int argc, char* argv[])
    if (argumentParser.argc() > 2)
       outputFile = argumentParser[2];
 
-   // Establish input geometry::
+   // Establish input geometry:
    ossimRefPtr<ossimImageHandler> h = ossimImageHandlerRegistry::instance()->open(inputFile);
    ossimRefPtr<ossimProjection> inputProj = 0;
    ossim_int32 minSpacing = 100;
@@ -144,7 +155,7 @@ int main(int argc, char* argv[])
    else
    {
       ossimNotify(ossimNotifyLevel_FATAL) << "ERROR: Unable to open the image file <"<<inputFile<<">" << std::endl;
-      argumentParser.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_INFO));
+      au->write(ossimNotify(ossimNotifyLevel_INFO));
       exit(1);
    }
    if (!geom || !geom->getProjection())
@@ -160,12 +171,13 @@ int main(int argc, char* argv[])
 
    // Solve for replacement RPC:
    ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(enableElevFlag);
-
    bool converged = solver->solve(imageRect, geom.get(), error);
    double meanResidual = solver->getRmsError();
    double maxResidual = solver->getMaxError();
-
    ossimRefPtr<ossimRpcModel> rpc = solver->getRpcModel();
+
+   // Apply the offset to the bbox so that the RPC image-space coordinates will start at 0,0:
+   rpc->setImageOffset(imageRect.ul());
    ossimRefPtr<ossimImageGeometry> rpcgeom = new ossimImageGeometry(nullptr, rpc.get());
    rpcgeom->setImageSize(imageRect.size());
    ossimKeywordlist kwl;
@@ -173,18 +185,9 @@ int main(int argc, char* argv[])
 
    // Write output file(s):
    bool write_ok = false;
-   if (doGeom || !(doJson || doRpb || doXml)) // Default case if none specified
+   switch (rpcGeomFormat)
    {
-      if (outputFile)
-         geomFile = outputFile;
-      else
-         geomFile = inputFile.fileNoExtension()+suffix;
-      geomFile.setExtension("geom");
-      ossimNotify(ossimNotifyLevel_INFO) << "\nWriting RPC geometry file to <"<<geomFile<<">." << endl;
-      write_ok = kwl.write(geomFile);
-   }
-
-   if (doJson)
+   case JSON:
    {
 #if OSSIM_HAS_JSONCPP
       if (outputFile)
@@ -204,9 +207,10 @@ int main(int argc, char* argv[])
             "available in this build! <"<< std::endl;
       exit(1);
 #endif
+      break;
    }
 
-   if (doRpb)
+   case DG:
    {
       if (outputFile)
          rpbFile = outputFile;
@@ -220,9 +224,10 @@ int main(int argc, char* argv[])
          write_ok = rpc->toRPB(rpbStream);
          rpbStream.close();
       }
+      break;
    }
 
-   if (doXml)
+   case XML:
    {
       if (outputFile)
          xmlFile = outputFile;
@@ -233,6 +238,21 @@ int main(int argc, char* argv[])
       ossimXmlDocument xmlDocument;
       xmlDocument.fromKwl(kwl);
       write_ok = xmlDocument.write(xmlFile);
+      break;
+   }
+
+   case OGEOM:
+   default:
+   {
+      if (outputFile)
+         geomFile = outputFile;
+      else
+         geomFile = inputFile.fileNoExtension()+suffix;
+      geomFile.setExtension("geom");
+      ossimNotify(ossimNotifyLevel_INFO) << "\nWriting RPC geometry file to <"<<geomFile<<">." << endl;
+      write_ok = kwl.write(geomFile);
+      break;
+   }
    }
 
    if (write_ok)

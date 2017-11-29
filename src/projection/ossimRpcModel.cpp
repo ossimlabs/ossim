@@ -1413,6 +1413,18 @@ void ossimRpcModel::getRpcParameters(ossimRpcModel::rpcModelStruct& model) const
    }
 }
 
+void ossimRpcModel::setImageOffset(const ossimDpt& offset)
+{
+   theLineOffset -= offset.line;
+   theSampOffset -= offset.samp;
+
+   if (theImageClipRect.hasNans())
+      theImageClipRect = ossimDrect(0, 0, theImageSize.x-offset.x-1, theImageSize.y-offset.y-1);
+   else
+      theImageClipRect -= offset;
+}
+
+
 bool ossimRpcModel::toJSON(std::ostream& jsonStream) const
 {
 #if OSSIM_HAS_JSONCPP

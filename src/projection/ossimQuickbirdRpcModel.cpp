@@ -412,7 +412,8 @@ bool ossimQuickbirdRpcModel::parseTileData(const ossimFilename& image_file)
    // define an offset, not a full affine.  Can only use the tile's UL corner:
    ossimDpt ul (info.theUlXOffset, info.theUlYOffset);
    if (!ul.hasNans())
-      theImageXform = new ossim2dTo2dShiftTransform(ul);
+      setImageOffset(ul);
+      //theImageXform = new ossim2dTo2dShiftTransform(ul);
 
    return true;
 }
