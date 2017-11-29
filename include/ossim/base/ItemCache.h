@@ -95,16 +95,46 @@ namespace ossim
       *         null otherwise
       */
       std::shared_ptr<ItemType> getItem(const ossimString& key);
-      std::shared_ptr<ItemType> getItem(const ossimString& key)const;
+      std::shared_ptr<const ItemType> getItem(const ossimString& key)const;
 
+      /**
+      * Add an item to the cache given the key or id
+      *
+      * @param key Is the identifier for the Item
+      * @param item Is the item to cache
+      */ 
       void addItem(const ossimString& key, 
                    std::shared_ptr<ItemType> item);
 
+      /**
+      * Will remove an item from the cache
+      *
+      * @param key is the identifier for the item to remove
+      * @return the removed item from the cache
+      */ 
       std::shared_ptr<ItemType> removeItem(const ossimString& key);
 
+      /**
+      * will reset the cache back to empty clearing both the LRU 
+      * map and the cache map.
+      */
       void reset();
+
+      /**
+      * Sets the min and max cavche size.  If the cache reaches max size
+      * it uses the min setting to flush values based on an LRU back to the
+      * minimum size
+      */
       void setMinAndMaxItemsToCache(ossim_uint32 minItemsToCache, ossim_uint32 maxItemsToCache);
+      
+      /**
+      * @return the setting for the max items to cache
+      */
       ossim_uint32 getMaxItemsToCache()const;
+
+      /**
+      * @return the setting for the min items to cache
+      */
       ossim_uint32 getMinItemsToCache()const;
       
    protected:
@@ -116,13 +146,53 @@ namespace ossim
       ossim_uint32         m_maxItemsToCache{100};
       ossim_uint32         m_minItemsToCache{80};
 
+      /**
+      * The public methods locks the cache down to a read 
+      * or write access.  This will not lock and will assume
+      * that a lock has already been done for the Cache
+      *
+      * @param key identifies the item to cache
+      * @param item the item to cache.
+      */ 
       void protectedAddItem(const ossimString& key, 
                              std::shared_ptr<ItemType> item);
 
+      /**
+      * Will shrink the cache based on an LRU back to 
+      * the min cache size.
+      */
       void shrinkCache();
+
+      /**
+      * Will bump the LRU id so that the node is marked
+      * newest
+      *
+      *  @param node the node to mark as new for LRU
+      */
       void touchNode(std::shared_ptr<Node> node)const;
+      
+      /**
+      * Removes a node from the item cache
+      *
+      * @param key the identifier for the node to remove
+      * @return shared ptr to the node removed
+      */
       std::shared_ptr<Node> removeItemFromCache(const ossimString& key);
+
+      /**
+      * Removes a node from the LRU cache
+      *
+      * @param key the identifier for the node to remove
+      * @return shared ptr to the node removed
+      */
       std::shared_ptr<Node> removeItemFromLruCache(ossim_uint64 key)const;
+      
+      /**
+      * This is an LRU id generator.  It will bump the id and return the
+      * value
+      *
+      * @return the next LRU id for a node to use.
+      */
       ossim_uint64 nextId()const;
    };
 
@@ -141,10 +211,10 @@ namespace ossim
    }
 
    template<class ItemType>
-   typename std::shared_ptr<ItemType> ItemCache<ItemType>::getItem(const ossimString& key)const
+   typename std::shared_ptr<const ItemType> ItemCache<ItemType>::getItem(const ossimString& key)const
    {
       ossim::ScopeReadLock lock(m_itemCacheMutex);
-      std::shared_ptr<ItemType> result;
+      std::shared_ptr<const ItemType> result;
       typename CacheType::const_iterator iter = m_cache.find(key);
       if(iter != m_cache.end())
       {
