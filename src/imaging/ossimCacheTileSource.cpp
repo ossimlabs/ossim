@@ -83,7 +83,7 @@ ossimRefPtr<ossimImageData> ossimCacheTileSource::getTile(
 {
    if(traceDebug())
    {
-      std::cout << "CACHE TILE START: " << tileRect << std::endl;
+      ossimNotify(ossimNotifyLevel_DEBUG) << "CACHE TILE START: " << tileRect << std::endl;
    }
    ossimRefPtr<ossimImageData> result = 0;
    
@@ -118,7 +118,7 @@ ossimRefPtr<ossimImageData> ossimCacheTileSource::getTile(
    } // End:  if ( theInputConnection )
    if(traceDebug())
    {
-     std::cout << "CACHE TILE END: " << tileRect << std::endl;
+     ossimNotify(ossimNotifyLevel_DEBUG) << "CACHE TILE END: " << tileRect << std::endl;
    }
 
    return result;

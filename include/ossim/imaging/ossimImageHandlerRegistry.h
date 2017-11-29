@@ -20,11 +20,24 @@
 #include <iosfwd>
 #include <vector>
 #include <memory>
+#include <ossim/base/ItemCache.h>
+#include <ossim/support_data/ImageHandlerState.h>
 
 class ossimImageHandler;
 class ossimFilename;
 class ossimKeywordlist;
 
+/**
+* ossimImageHandlerRegistry supports the new state cache. During initialization the properties are
+* read from the global preferences.  The keywords are:
+*
+* ossim.imaging.handler.registry.state_cache.enabled: true or false
+* ossim.imaging.handler.registry.state_cache.min_size: min number of items
+* ossim.imaging.handler.registry.state_cache.max_size: max number of items
+*
+* On open if the state cache is enabled it will determine if a state exists when a file is passed 
+* in to be open and if a state exists it will try to open the handler based on the state.
+*/
 class OSSIMDLLEXPORT ossimImageHandlerRegistry : public ossimObjectFactory,
                                                 public ossimFactoryListInterface<ossimImageHandlerFactoryBase, ossimImageHandler>
 {
@@ -32,6 +45,10 @@ public:
    virtual ~ossimImageHandlerRegistry();
    
    static ossimImageHandlerRegistry* instance();
+
+
+   std::shared_ptr<ossim::ImageHandlerState> getState(const ossimString& connectionString, ossim_uint32 entry)const;
+   std::shared_ptr<ossim::ImageHandlerState> getState(const ossimString& id)const;
 
    ossimRefPtr<ossimImageHandler> openConnection(
       const ossimString& connectionString, bool openOverview=true  )const;
@@ -162,7 +179,13 @@ protected:
    ossimImageHandlerRegistry(const ossimImageHandlerRegistry& rhs);
    const ossimImageHandlerRegistry&
       operator=(const ossimImageHandlerRegistry& rhs);
-   
+
+   void initializeStateCache()const;
+
+   void addToStateCache(ossimImageHandler* handler)const;
+
+   mutable std::shared_ptr<ossim::ItemCache<ossim::ImageHandlerState> > m_stateCache;
+
    //static ossimImageHandlerRegistry*            theInstance;
    
 TYPE_DATA

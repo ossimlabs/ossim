@@ -1497,7 +1497,6 @@ bool ossimTiffTileSource::loadFromRgbaU8Strip(const ossimIrect& tile_rect,
    ossim_uint32 output_tile_offset = (clip_rect.ul().y - tile_rect.ul().y) *
                                 OUTPUT_TILE_WIDTH + clip_rect.ul().x -
                                 tile_rect.ul().x;
-
 #if 0 /* Please keep for debug: */
    CLOG << "DEBUG:"
         << "\nsamples:         " << theSamplesPerPixel
@@ -1592,9 +1591,21 @@ bool ossimTiffTileSource::loadFromRgbaU8Strip(const ossimIrect& tile_rect,
                  sample<=clip_rect.lr().x;
                  sample++)
             {
-               d[0][i] = OSSIM_TIFF_UNPACK_R4(*s);
-               d[1][i] = OSSIM_TIFF_UNPACK_G4(*s);
-               d[2][i] = OSSIM_TIFF_UNPACK_B4(*s);
+               //We had a single band strip image that is coming into this method
+               // Will add a sanity check on the samples per pixel.  If it's == 1 for now
+               // we will assign the value and if it has atleast the 3 samples then we will 
+               // extract as usual.
+               //
+               if(theSamplesPerPixel >=3)
+               {
+                  d[0][i] = OSSIM_TIFF_UNPACK_R4(*s);
+                  d[1][i] = OSSIM_TIFF_UNPACK_G4(*s);
+                  d[2][i] = OSSIM_TIFF_UNPACK_B4(*s);                  
+               }
+               else if(theSamplesPerPixel == 1)
+               {
+                  d[0][i] = *s;
+               }
                ++i;
                ++s;
             }
