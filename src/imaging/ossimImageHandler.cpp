@@ -724,7 +724,6 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getImageGeometry()
 ossimRefPtr<ossimImageGeometry> ossimImageHandler::getExternalImageGeometry() const
 {
    ossimRefPtr<ossimImageGeometry> geom = 0;
-
    // No geometry object has been set up yet. Check for external geometry file.
    // Try "foo.geom" if image is "foo.tif":
    ossimFilename filename;
@@ -736,7 +735,8 @@ ossimRefPtr<ossimImageGeometry> ossimImageHandler::getExternalImageGeometry() co
       filename = getFilenameWithThisExtension(ossimString(".geom"), true);
    }
 
-#if 0 /* getgetFilenameWithThisExt... methods tack on sup dir if set. drb */
+#if 0 
+/* getgetFilenameWithThisExt... methods tack on sup dir if set. drb */
    if(!filename.exists())
    {
       // Try supplementary data directory for remote geometry:
@@ -1516,12 +1516,20 @@ void ossimImageHandler::getEntryName( ossim_uint32 entryIdx, std::string& name )
 
 void ossimImageHandler::completeOpen()
 {
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << "ossimImageHandler::completeOpen(): Entered........" << std::endl;
+   }
    loadMetaData();
    if ( theOpenOverviewFlag )
    {
       openOverview();
    }
    establishDecimationFactors();
+   if(traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << "ossimImageHandler::completeOpen(): Leaving......." << std::endl;
+   }
    openValidVertices();
 }
 

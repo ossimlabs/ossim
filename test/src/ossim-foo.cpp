@@ -68,6 +68,7 @@
 #include <ossim/imaging/ossimTwoColorView.h>
 #include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/support_data/ImageHandlerState.h>
 
 #include <ossim/init/ossimInit.h>
 
