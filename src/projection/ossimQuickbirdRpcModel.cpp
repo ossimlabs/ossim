@@ -240,17 +240,6 @@ bool ossimQuickbirdRpcModel::parseNitfFile(const ossimFilename& file)
       theLonOffset  = rpcTag->getGeodeticLonOffset().toFloat64();
       theHgtOffset  = rpcTag->getGeodeticHeightOffset().toFloat64();
       theImageID    = ih->getImageId();
-
-      // Now consider the ICHIPB tag (if present) indicating this is a subimage of the full model
-      tag = ih->getTagData(ICHIPB_TAG);
-      ossimNitfIchipbTag* ichipbTag = 0;
-      if (tag.valid())
-      {
-         ichipbTag = PTR_CAST(ossimNitfIchipbTag, tag.get());
-         if (!ichipbTag)
-            return false;
-         theImageXform = ichipbTag->newTransform();
-      }
    }
 
    finishConstruction();

@@ -44,7 +44,6 @@ static const char* RPC00B_TAG = "RPC00B";
 static const char* PIAIMC_TAG = "PIAIMC";
 static const char* STDIDC_TAG = "STDIDC";
 static const char* USE00A_TAG = "USE00A";
-static const char* ICHIPB_TAG = "ICHIPB";
 
 ossimNitfRpcModel::ossimNitfRpcModel()
    :
@@ -431,17 +430,6 @@ bool ossimNitfRpcModel::getRpcData(const ossimNitfImageHeader* ih)
             << std::endl;
       }
       return false;
-   }
-
-   // Now consider the ICHIPB tag (if present) indicating this is a subimage of the full model
-   tag = ih->getTagData(ICHIPB_TAG);
-   ossimNitfIchipbTag* ichipbTag = 0;
-   if (tag.valid())
-   {
-      ichipbTag = PTR_CAST(ossimNitfIchipbTag, tag.get());
-      if (!ichipbTag)
-         return false;
-      theImageXform = ichipbTag->newTransform();
    }
 
    // Set the polynomial type.
