@@ -215,7 +215,7 @@ bool ossimAlphaSensorSupportData::readHdrFile(const ossimEnviHeader& hdr)
       }
 
       // Set the hsi flag:
-      if ( m_sensorType.contains("HSI") || (hdr.getBands() > 63 ) ) // arbitrary...
+      if ( m_sensorType.contains("HSI") || (hdr.getBands() > 7 ) ) // arbitrary...
       {
          m_isHSI = true;
       }
@@ -449,7 +449,7 @@ bool ossimAlphaSensorSupportData::readInsGpsFile(const ossimFilename& file)
          {
             ossimNotify(ossimNotifyLevel_DEBUG)
                << "\n SA  poly deg, rms error = "
-               << SCAN_ANGLE_DEG << ", " << ossim::radiansToDegrees(rms) << " deg";
+               << SCAN_ANGLE_DEG << ", " << ossim::radiansToDegrees(rms) << " deg\n";
          }
       }
       if (result)
@@ -459,7 +459,7 @@ bool ossimAlphaSensorSupportData::readInsGpsFile(const ossimFilename& file)
          {
             ossimNotify(ossimNotifyLevel_DEBUG)
                << "\n R   poly deg, rms error = "
-               << ROLL_DEG << ", " << ossim::radiansToDegrees(rms) << " deg";
+               << ROLL_DEG << ", " << ossim::radiansToDegrees(rms) << " deg\n";
          }
 
          if (result)
@@ -469,7 +469,7 @@ bool ossimAlphaSensorSupportData::readInsGpsFile(const ossimFilename& file)
             {
                ossimNotify(ossimNotifyLevel_DEBUG)
                   << "\n P   poly deg, rms error = "
-                  << PITCH_DEG << ", " << ossim::radiansToDegrees(rms) << " deg";
+                  << PITCH_DEG << ", " << ossim::radiansToDegrees(rms) << " deg\n";
             }
 
             if (result)
@@ -479,7 +479,7 @@ bool ossimAlphaSensorSupportData::readInsGpsFile(const ossimFilename& file)
                {
                   ossimNotify(ossimNotifyLevel_DEBUG)
                      << "\n H   poly deg, rms error = "
-                     << HEADING_DEG << ", " << ossim::radiansToDegrees(rms) << " deg";
+                     << HEADING_DEG << ", " << ossim::radiansToDegrees(rms) << " deg\n";
                }
 
                if (result)
@@ -489,7 +489,7 @@ bool ossimAlphaSensorSupportData::readInsGpsFile(const ossimFilename& file)
                   {
                      ossimNotify(ossimNotifyLevel_DEBUG)
                         << "\n Lon poly deg, rms error = "
-                        << LON_DEG << ", " << ossim::radiansToDegrees(rms) << " deg";
+                        << LON_DEG << ", " << ossim::radiansToDegrees(rms) << " deg\n";
                   }
 
                   if (result)
@@ -499,7 +499,7 @@ bool ossimAlphaSensorSupportData::readInsGpsFile(const ossimFilename& file)
                      {
                         ossimNotify(ossimNotifyLevel_DEBUG)
                            << "\n Lat poly deg, rms error = "
-                           << LAT_DEG << ", " << ossim::radiansToDegrees(rms) << " deg";
+                           << LAT_DEG << ", " << ossim::radiansToDegrees(rms) << " deg\n";
                      }
 
                      if (result)
@@ -509,7 +509,7 @@ bool ossimAlphaSensorSupportData::readInsGpsFile(const ossimFilename& file)
                         {
                            ossimNotify(ossimNotifyLevel_DEBUG)
                               << "\n Alt poly deg, rms error = "
-                              << ALT_DEG << ", " << rms << " mtr";
+                              << ALT_DEG << ", " << rms << " mtr" << std::endl;
                         }
                      }
                   }
