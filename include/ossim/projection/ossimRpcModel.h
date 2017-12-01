@@ -21,6 +21,7 @@
 #include <ossim/base/ossimDblGrid.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/ossimConfig.h>
+#include <ossim/base/ossim2dTo2dTransform.h>
 
 /*!****************************************************************************
  *
@@ -209,6 +210,13 @@ public:
     */
    void getRpcParameters(ossimRpcModel::rpcModelStruct& model) const;
    
+   /** Allows setting an offset to a subimage while using the coefficients of a full-image model.
+    * This adds a shift to the line and sample offsets so they corresond to the local subimage
+    * image space coordinates. Note thatthe base class' theImageRect will be adjusted to reflect the
+    * shift, even though the chip's LR corner will probably be wrong.
+    */
+   void setImageOffset(const ossimDpt& offset_to_chip_ul);
+
    /**
     * Serializes RPC to JSON format.
     */
@@ -295,6 +303,8 @@ protected:
    double theSampNumCoef[20];
    double theSampDenCoef[20];
  
+   friend class ossimRpcSolver;
+   friend class ossimNitfRpcBase;
 
    TYPE_DATA
 };

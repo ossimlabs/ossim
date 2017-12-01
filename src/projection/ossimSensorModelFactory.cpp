@@ -40,7 +40,6 @@ static ossimTrace traceDebug = ossimTrace("ossimSensorModelFactory:debug");
 //***
 #include <ossim/projection/ossimCoarseGridModel.h>
 #include <ossim/projection/ossimRpcModel.h>
-#include <ossim/projection/ossimRpcProjection.h>
 #include <ossim/projection/ossimIkonosRpcModel.h>
 #include <ossim/projection/ossimNitfRpcModel.h>
 #include <ossim/projection/ossimQuickbirdRpcModel.h>
@@ -181,10 +180,6 @@ ossimSensorModelFactory::createProjection(const ossimString &name) const
    if(name == STATIC_TYPE_NAME(ossimNitfRpcModel))
    {
       return new ossimNitfRpcModel;
-   }
-   if(name == STATIC_TYPE_NAME(ossimRpcProjection))
-   {
-      return new ossimRpcProjection;
    }
    if(name == STATIC_TYPE_NAME(ossimFcsiModel))
    {
@@ -423,6 +418,24 @@ ossimProjection* ossimSensorModelFactory::createProjection(
       qbModel = 0;
    }
    
+//   ossimRefPtr<ossimRpcModel> qbModel = new ossimQuickbirdRpcModel;
+//   if(qbModel->parseFile(filename))
+//   {
+//      if(traceDebug())
+//      {
+//         ossimNotify(ossimNotifyLevel_DEBUG)
+//            << MODULE << " DEBUG: returning ossimQuickbirdRpcModel"
+//            << std::endl;
+//      }
+//      model = qbModel.get();
+//      qbModel = 0;
+//      return model.release();
+//   }
+//   else
+//   {
+//      qbModel = 0;
+//   }
+//
    //---
    // Test for ikonos rpc.  Could be tiff or nitf which is handled in
    // parseFile method.

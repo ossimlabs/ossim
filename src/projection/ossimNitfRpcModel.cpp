@@ -30,6 +30,7 @@ RTTI_DEF1(ossimNitfRpcModel, "ossimNitfRpcModel", ossimRpcModel);
 #include <ossim/support_data/ossimNitfPiaimcTag.h>
 #include <ossim/support_data/ossimNitfStdidcTag.h>
 #include <ossim/support_data/ossimNitfRpcBase.h>
+#include <ossim/support_data/ossimNitfIchipbTag.h>
 
 //***
 // Define Trace flags for use within this file:
@@ -471,7 +472,6 @@ bool ossimNitfRpcModel::getRpcData(const ossimNitfImageHeader* ih)
 
    // Parse coefficients:
    ossim_uint32 i;
-   
    for (i=0; i<20; ++i)
    {
       theLineNumCoef[i] = rpcTag->getLineNumeratorCoeff(i).toFloat64();

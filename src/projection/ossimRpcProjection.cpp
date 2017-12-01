@@ -13,6 +13,7 @@
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/projection/ossimRpcProjection.h>
 #include <ossim/projection/ossimRpcSolver.h>
+#include <ossim/projection/ossimRpcModel.h>
 #include <ossim/base/ossimEcefPoint.h>
 #include <ossim/base/ossimEcefVector.h>
 #include <ossim/base/ossimTieGptSet.h>
@@ -897,13 +898,6 @@ bool ossimRpcProjection::loadState(const ossimKeywordlist& kwl,
       theSampDenCoef[i] = ossimString(value).toDouble();
    }
 
-   loadAdjustments(kwl, prefix);
-
-   if(getNumberOfAdjustableParameters() < 1)
-   {
-      initAdjustableParameters();
-   }
-      
    if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimRpcProjection::loadState(): returning..." << std::endl;
 
    return true;
@@ -1037,7 +1031,7 @@ ossimRpcProjection::optimizeFit(const ossimTieGptSet& tieSet, double* /* targetV
    tieSet.getSlaveMasterPoints(imagePoints, groundPoints);
    solver->solveCoefficients(imagePoints, groundPoints);
 
-   ossimRefPtr< ossimProjection > optProj = solver->createRpcProjection();
+   const ossimRefPtr< ossimRpcModel > optProj = solver->getRpcModel();
    if (!optProj)
    {
       ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimRpcProjection::optimizeFit(): error when optimizing the RPC with given tie points"

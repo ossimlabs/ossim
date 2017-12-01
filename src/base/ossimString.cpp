@@ -907,7 +907,10 @@ double ossimString::toDouble(const ossimString& aString)
 ossimString ossimString::toString(bool aValue)
 {
    std::ostringstream s;
-   s << aValue;
+   if (aValue)
+      s << "true";
+   else
+      s << "false";
    ossimString result(s.str());
    return result;
 }

@@ -15,14 +15,18 @@
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/projection/ossimRpcSolver.h>
+#include <ossim/base/ossimXmlDocument.h>
 #include <iostream>
 
 using namespace std;
 
-const char* ossimSubImageTool::DESCRIPTION  = "Tool for extracting a sub-image from a full image.";
+const char* ossimSubImageTool::DESCRIPTION  = "Tool for extracting a sub-image from a full image."
+      " No reprojection is done. Presently, the subimage geometry is represented by an RPC "
+      "replacement model until generic models can support subimage chipping.";
 const char* BBOX_KW = "bbox";
 
 ossimSubImageTool::ossimSubImageTool()
+:  m_geomFormat (OGEOM)
 {
 }
 
@@ -45,10 +49,17 @@ void ossimSubImageTool::setUsage(ossimArgumentParser& ap)
    // specific stuff not used in this tool:
    ossimTool::setUsage(ap);
 
-   au->addCommandLineOption("--bbox <ulx> <uly> <lrx> <lry>",
-                            "Specify upper-left and lower-right bounds the image rect (in pixels).");
-   au->addCommandLineOption("-e | --entry <N> ",
-                            "For multi image entries which entry do you wish to extract. For list of entries use: \"ossim-info -i <your_image>\" ");
+   au->addCommandLineOption(
+         "--bbox <ulx> <uly> <lrx> <lry>",
+         "Specify upper-left and lower-right bounds the image rect (in pixels).");
+   au->addCommandLineOption(
+         "-e | --entry <N> ",
+         "For multi image entries which entry do you wish to extract. For list "
+         "of entries use: \"ossim-info -i <your_image>\" ");
+   au->addCommandLineOption(
+         "--geom <format>", "Specifies format of the subimage RPC geometry file."
+         " Possible values are: \"OGEOM\" (OSSIM geometry, default), \"DG\" (DigitalGlobe WV/QB "
+         ".RPB format), \"JSON\" (MSP-style JSON), or \"XML\". Case insensitive.");
 }
 
 bool ossimSubImageTool::initialize(ossimArgumentParser& ap)
@@ -85,6 +96,26 @@ bool ossimSubImageTool::initialize(ossimArgumentParser& ap)
    if ( ap.read("-e", stringParam1) || ap.read("--entry", stringParam1) )
       m_kwl.addPair( string(ossimKeywordNames::ENTRY_KW), tempString1 );
 
+   if ( ap.read("--geom", stringParam1))
+   {
+      ossimString formatStr (tempString1);
+      formatStr.upcase();
+      if (formatStr == "OGEOM")
+         m_geomFormat = OGEOM;
+      else if (formatStr == "DG")
+         m_geomFormat = DG;
+      else if (formatStr == "JSON")
+         m_geomFormat = JSON;
+      else if (formatStr == "XML")
+         m_geomFormat = XML;
+      else
+      {
+         ostringstream errMsg;
+         errMsg << " ERROR: ossimSubImageTool ["<<__LINE__<<"] Unknown geometry format <"
+               <<formatStr<<"> specified. Aborting." << endl;
+         throw ossimException( errMsg.str() );
+      }
+   }
    processRemainingArgs(ap);
 
    return true;
@@ -169,12 +200,88 @@ bool ossimSubImageTool::execute()
             "image!" << endl;
       throw ossimException( errMsg.str() );
    }
-   ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(true);
-   bool converged = solver->solveCoefficients(inputGeom.get());
-   ossimRefPtr<ossimRpcModel> rpc = solver->createRpcModel();
+
+   ossimRefPtr<ossimProjection> inputProj = inputGeom->getProjection();
+   ossimRefPtr<ossimRpcModel> rpc;
+   ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(false);
+   bool converged = false;
+
+   // If the input projection itself is an RPC, just copy it. No solving required:
+   ossimRpcModel* inputRpc = dynamic_cast<ossimRpcModel*>(inputGeom->getProjection());
+   if (inputRpc)
+      rpc = inputRpc;
+   else
+   {
+      converged = solver->solve(m_aoiViewRect, inputGeom.get());
+      rpc = solver->getRpcModel();
+   }
+
+   // The RPC needs to be shifted in image space so that it will work in the subimage coordinates:
+   rpc->setImageOffset(m_aoiViewRect.ul());
    m_geom = new ossimImageGeometry(nullptr, rpc.get());
    m_geom->setImageSize(m_aoiViewRect.size());
+   ossimKeywordlist kwl;
+   m_geom->saveState(kwl);
 
-   return ossimChipProcTool::execute();
+   bool success = ossimChipProcTool::execute();
+   if (!success)
+      return false;
+
+   // Need to save the subimage RPC data:
+   bool write_ok = false;
+   ossimFilename geomFile (m_productFilename);
+   if (m_geomFormat == OGEOM) // Default case if none specified
+   {
+      geomFile.setExtension("geom");
+      write_ok = kwl.write(geomFile);
+   }
+   else if (m_geomFormat == JSON)
+   {
+#if OSSIM_HAS_JSONCPP
+      geomFile.setExtension("json");
+      ofstream jsonStream (geomFile.string());
+      if (!jsonStream.fail())
+      {
+         // Note that only the model/projection is saved here, not the full ossimImageGeometry that
+         // contains the subimage shift transform. So need to cheat and add the shift to the RPC
+         // line and sample offsets:
+         write_ok = rpc->toJSON(jsonStream);
+         jsonStream.close();
+      }
+#else
+      ostringstream errMsg;
+      errMsg << " ERROR: ossimSubImageTool ["<<__LINE__<<"] JSON geometry output requested but JSON is not "
+            "available in this build! <" << endl;
+      throw ossimException( errMsg.str() );
+#endif
+   }
+   else if (m_geomFormat == DG)
+   {
+      geomFile.setExtension("RPB");
+      ofstream rpbStream (geomFile.string());
+      if (!rpbStream.fail())
+      {
+         write_ok = rpc->toRPB(rpbStream);
+         rpbStream.close();
+      }
+   }
+   else if (m_geomFormat == XML)
+   {
+      geomFile.setExtension("xml");
+      ossimXmlDocument xmlDocument;
+      xmlDocument.fromKwl(kwl);
+      write_ok = xmlDocument.write(geomFile);
+   }
+
+   if (write_ok)
+      ossimNotify(ossimNotifyLevel_INFO) << "Wrote geometry file to <"<<geomFile<<">.\n" << endl;
+   else
+   {
+      ossimNotify(ossimNotifyLevel_FATAL) << "Error encountered writing output RPC geometry file."
+            << std::endl;
+      return false;
+   }
+
+   return true;
 }
 
