@@ -31,8 +31,6 @@ int main(int argc, char* argv[])
    ossimInit::instance()->initialize(argumentParser);
    bool rpcFlag       = false;
    bool cgFlag       = false;
-   bool enableElevFlag = true;
-   bool enableAdjustmentFlag = true;
    ossimDrect imageRect;
    double error = 0.1;
 
@@ -169,12 +167,25 @@ int main(int argc, char* argv[])
       exit(1);
    }
 
-   // Solve for replacement RPC:
-   ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(enableElevFlag);
-   bool converged = solver->solve(imageRect, geom.get(), error);
-   double meanResidual = solver->getRmsError();
-   double maxResidual = solver->getMaxError();
-   ossimRefPtr<ossimRpcModel> rpc = solver->getRpcModel();
+   // First consider if the input is already an RPC (type B), and if so, simply copy it:
+   ossimRefPtr<ossimRpcModel> rpc;
+   ossimRpcModel* inputRpc = dynamic_cast<ossimRpcModel*>(geom->getProjection());
+   if (inputRpc)
+   {
+      ossimNotify(ossimNotifyLevel_INFO) << "\nThe input image is already using RPC. Simply copying "
+            "the coefficients to the output with offset (if any) applied..." << std::endl;
+      rpc = inputRpc;
+   }
+   else
+   {
+      // Solve for replacement RPC:
+      ossimNotify(ossimNotifyLevel_INFO) << "\nSolving for RPC coefficients..." << std::endl;
+      ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(true, false);
+      bool converged = solver->solve(imageRect, geom.get(), error);
+      double meanResidual = solver->getRmsError();
+      double maxResidual = solver->getMaxError();
+      rpc = solver->getRpcModel();
+   }
 
    // Apply the offset to the bbox so that the RPC image-space coordinates will start at 0,0:
    rpc->setImageOffset(imageRect.ul());

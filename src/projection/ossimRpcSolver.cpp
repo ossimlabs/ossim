@@ -207,10 +207,10 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    bool elevationEnabled = theUseElevationFlag;
 
    // if max delta is less than a degree set it to 1 degree.
-   if(maxDeltaLat < 1.0)
-      maxDeltaLat = 1.0;
-   if(maxDeltaLon < 1.0)
-      maxDeltaLon = 1.0;
+//   if(maxDeltaLat < 1.0)
+//      maxDeltaLat = 1.0;
+//   if(maxDeltaLon < 1.0)
+//      maxDeltaLon = 1.0;
 
    if(maxDeltaHeight < FLT_EPSILON)
       elevationEnabled = false;

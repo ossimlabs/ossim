@@ -97,6 +97,28 @@ class ossimFactoryListInterface
       }
       
       /**
+       * Will remove the factory from the registry by name.
+       * @param factoryTypeName  The class name of the factory, (e.g. "ossimCsmProjectionFactory")
+       */
+      void unregisterFactory(const ossimString& factoryTypeName)
+      {
+         std::lock_guard<std::mutex> lock(m_factoryListMutex);
+         ossim_uint32 idx = 0;
+         for(idx = 0; idx < m_factoryList.size(); ++idx)
+         {
+            if (m_factoryList[idx])
+            {
+               ossimString mangledName (typeid(*(m_factoryList[idx])).name());
+               if (mangledName.contains(factoryTypeName))
+               {
+                  m_factoryList.erase(m_factoryList.begin() + idx);
+                  return;
+               }
+            }
+         }
+      }
+
+      /**
        * Will remove all factories from the registry.
        */
       void unregisterAllFactories()
