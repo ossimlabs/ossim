@@ -796,14 +796,12 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
     
     // get the model centers for the mid upper left right bottom
     m_transform->viewToImage(vCenter, testCenter);
-
     if(testCenter.hasNans())
     {
        return false;
     }
-
     m_transform->viewToImage(vUpper, testUpper);
-    if(testCenter.hasNans())
+    if(testUpper.hasNans())
     {
        return false;
     }
