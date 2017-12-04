@@ -298,12 +298,12 @@ void ossimRpcModel::worldToLineSample(const ossimGpt& ground_point,
    //***
    // Compute the adjusted, normalized line (U) and sample (V):
    //***
-   double Pv = polynomial(nlat, nlon, nhgt, theSampNumCoef);
-   double Qv = polynomial(nlat, nlon, nhgt, theSampDenCoef);
-   double V_rot  = Pv / Qv;
    double Pu = polynomial(nlat, nlon, nhgt, theLineNumCoef);
    double Qu = polynomial(nlat, nlon, nhgt, theLineDenCoef);
+   double Pv = polynomial(nlat, nlon, nhgt, theSampNumCoef);
+   double Qv = polynomial(nlat, nlon, nhgt, theSampDenCoef);
    double U_rot  = Pu / Qu;
+   double V_rot  = Pv / Qv;
 
    //***
    // U, V are normalized quantities. Need now to establish the image file
