@@ -277,90 +277,92 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitAll(std::vector<ossimRen
 
 void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRendererSubRectInfo>& result)const
 {
-  ossim_uint16 splitFlags = getSplitFlags();
-  // just do horizontal split for test
-
-  ossimIrect vrect(m_Vul,
-                  m_Vur,
-                  m_Vlr,
-                  m_Vll);
-  ossim_int32 w  = vrect.width();
-  ossim_int32 h  = vrect.height();
-  ossim_int32 w2 = w>>1;
-  ossim_int32 h2 = h>>1;
-  if(!splitFlags)
-  {
-    return;
-  }
-  else if((w2 <2)&&(h2<2))
-  {
-    if(splitFlags)
-    {
-      ossimRendererSubRectInfo rect(m_transform.get(),m_Vul, 
-                              m_Vul, 
-                              m_Vul, 
-                              m_Vul);
-      rect.m_viewBounds = m_viewBounds;
-      rect.transformViewToImage();
-
-      if(rect.imageHasNans())
+   ossim_uint16 splitFlags = getSplitFlags();
+   if(!splitFlags)
+   {
+      return;
+   } 
+  
+   // just do horizontal split for test
+   ossimIrect vrect(m_Vul,
+                    m_Vur,
+                    m_Vlr,
+                    m_Vll);
+   ossim_int32 w  = vrect.width();
+   ossim_int32 h  = vrect.height();
+   ossim_int32 w2 = w>>1;
+   ossim_int32 h2 = h>>1;
+   
+   if((w2 <2)&&(h2<2))
+   {
+      if(splitFlags)
       {
-        if(rect.m_viewBounds->intersects(rect.getViewRect()))
-        {
-          result.push_back(rect);
-        }
-      }
-      // if(rect.imageIsNan())
-      // {
-      //   if(rect.m_viewBounds->intersects(rect.getViewRect()))
-      //   {
-      //     result.push_back(rect);
-      //   }
-      // }
-      // else
-      // {
-      //   result.push_back(rect);
-      // }
-    }
-  }
-  // horizontal split if only the upper left and lower left 
-  // vertices need splitting 
-  else if((splitFlags==(UPPER_LEFT_SPLIT_FLAG|LOWER_LEFT_SPLIT_FLAG))||
-          (splitFlags==(UPPER_RIGHT_SPLIT_FLAG|LOWER_RIGHT_SPLIT_FLAG)))
-  {
-   // std::cout << "Horizontal Split\n" << std::endl;    
-    if(w > 1)
-    {
-      splitHorizontal(result);
-    }
-  }  
-  // check vertical only split
-  else if((splitFlags==(UPPER_LEFT_SPLIT_FLAG|UPPER_RIGHT_SPLIT_FLAG))||
-          (splitFlags==(LOWER_RIGHT_SPLIT_FLAG|LOWER_LEFT_SPLIT_FLAG)))
-  {
-    //std::cout << "Vertical Split\n" << std::endl;
+         ossimRendererSubRectInfo rect(m_transform.get(),m_Vul, 
+                                       m_Vul, 
+                                       m_Vul, 
+                                       m_Vul);
+         rect.m_viewBounds = m_viewBounds;
+         rect.transformViewToImage();
 
-    if(h>1)
-    {
-      splitVertical(result);
-    }
-  }
-  else//if((w>1)&&(h>1)&&(splitFlags))
-  {
-    if((w<2)&&(h>1))
-    {
-      splitVertical(result);
-    }
-    else if((w>1)&&(h<2))
-    {
-      splitHorizontal(result);
-    }
-    else
-    {
-      splitAll(result);
-    }
-  }
+         if(rect.imageHasNans())
+         {
+            if(rect.m_viewBounds->intersects(rect.getViewRect()))
+            {
+               result.push_back(rect);
+            }
+         }
+         // if(rect.imageIsNan())
+         // {
+         //   if(rect.m_viewBounds->intersects(rect.getViewRect()))
+         //   {
+         //     result.push_back(rect);
+         //   }
+         // }
+         // else
+         // {
+         //   result.push_back(rect);
+         // }
+      }
+   }
+   // horizontal split if only the upper left and lower left 
+   // vertices need splitting 
+   else if((splitFlags==(UPPER_LEFT_SPLIT_FLAG|LOWER_LEFT_SPLIT_FLAG))||
+           (splitFlags==(UPPER_RIGHT_SPLIT_FLAG|LOWER_RIGHT_SPLIT_FLAG)))
+   {
+      // std::cout << "Horizontal Split\n" << std::endl;    
+      if(w > 1)
+      {
+         splitHorizontal(result);
+      }
+   }  
+   // check vertical only split
+   else if((splitFlags==(UPPER_LEFT_SPLIT_FLAG|UPPER_RIGHT_SPLIT_FLAG))||
+           (splitFlags==(LOWER_RIGHT_SPLIT_FLAG|LOWER_LEFT_SPLIT_FLAG)))
+   {
+      //std::cout << "Vertical Split\n" << std::endl;
+
+      if(h>1)
+      {
+         splitVertical(result);
+      }
+   }
+   else//if((w>1)&&(h>1)&&(splitFlags))
+   {
+      if((w<2)&&(h>1))
+      {
+         splitVertical(result);
+      }
+      else if((w>1)&&(h<2))
+      {
+         splitHorizontal(result);
+      }
+      else
+      {
+         splitAll(result);
+      }
+   }
 }
+
 void ossimImageRenderer::ossimRendererSubRectInfo::transformImageToView()
 {
    ossimDpt vul;
@@ -391,87 +393,97 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::tooBig()const
 
 ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
 {
-  ossim_uint16 result = SPLIT_NONE;
-  ossimDrect vRect = getViewRect();
+   ossim_uint16 result = SPLIT_NONE;
+   ossimDrect vRect = getViewRect();
 
-  if(imageHasNans())
-  {
-    if(m_viewBounds->intersects(getViewRect()))
-    {
-      result = SPLIT_ALL;
-    }
-    else
-    {
+   //---
+   // Don't allow splits beyond 8x8 pixel. ossim2dBilinearTransform was core dumping with
+   // very small rectangles in canBilinearInterpolate(...) method.
+   // DRB 05 Dec. 2017
+   //---
+   if ( vRect.width() < 8 && vRect.height() < 8 )
+   {
       return result;
-    }
-  }
-  /*
-  if(result != SPLIT_ALL)
-  {
-    if(m_ulRoundTripError.hasNans()&&m_urRoundTripError.hasNans()&&
-        m_lrRoundTripError.hasNans()&&m_llRoundTripError.hasNans())
-    {
-      if(m_viewBounds->intersects(getViewRect()))
+   }
+  
+   if(imageHasNans())
+   {
+      if(m_viewBounds->intersects(vRect))
       {
-        result = SPLIT_ALL;
+         result = SPLIT_ALL;
       }
-      return result;
-    }
-    else if(tooBig())
-    {
-      result = SPLIT_ALL;
-    }
-  }
+      else
+      {
+         return result;
+      }
+   }
+   /*
+     if(result != SPLIT_ALL)
+     {
+     if(m_ulRoundTripError.hasNans()&&m_urRoundTripError.hasNans()&&
+     m_lrRoundTripError.hasNans()&&m_llRoundTripError.hasNans())
+     {
+     if(m_viewBounds->intersects(getViewRect()))
+     {
+     result = SPLIT_ALL;
+     }
+     return result;
+     }
+     else if(tooBig())
+     {
+     result = SPLIT_ALL;
+     }
+     }
 
-  if(result != SPLIT_ALL)
-  {
-    if(m_ulRoundTripError.hasNans()) result |= UPPER_LEFT_SPLIT_FLAG;
-    if(m_urRoundTripError.hasNans()) result |= UPPER_RIGHT_SPLIT_FLAG;
-    if(m_lrRoundTripError.hasNans()) result |= LOWER_RIGHT_SPLIT_FLAG;
-    if(m_llRoundTripError.hasNans()) result |= LOWER_LEFT_SPLIT_FLAG;
-  }
-*/
-  if(result != SPLIT_ALL)
-  {
-    ossim_float64 bias = m_ImageToViewScale.length();
-    if(bias < 1.0) bias = 1.0/bias;
-    bias = std::sqrt(bias);
+     if(result != SPLIT_ALL)
+     {
+     if(m_ulRoundTripError.hasNans()) result |= UPPER_LEFT_SPLIT_FLAG;
+     if(m_urRoundTripError.hasNans()) result |= UPPER_RIGHT_SPLIT_FLAG;
+     if(m_lrRoundTripError.hasNans()) result |= LOWER_RIGHT_SPLIT_FLAG;
+     if(m_llRoundTripError.hasNans()) result |= LOWER_LEFT_SPLIT_FLAG;
+     }
+   */
+   if(result != SPLIT_ALL)
+   {
+      ossim_float64 bias = m_ImageToViewScale.length();
+      if(bias < 1.0) bias = 1.0/bias;
+      bias = std::sqrt(bias);
 
-    if(bias < 1) bias = 1.0;
+      if(bias < 1) bias = 1.0;
 
-     // if((m_ulRoundTripError.length() > bias)||
-     //    (m_urRoundTripError.length() > bias)||
-     //    (m_lrRoundTripError.length() > bias)||
-     //    (m_llRoundTripError.length() > bias))
-     // {
-       // std::cout << "________________\n";
+      // if((m_ulRoundTripError.length() > bias)||
+      //    (m_urRoundTripError.length() > bias)||
+      //    (m_lrRoundTripError.length() > bias)||
+      //    (m_llRoundTripError.length() > bias))
+      // {
+      // std::cout << "________________\n";
 
-       // std::cout << "Bias:  " << bias << "\n"
-       //           << "View:  " << getViewRect() << "\n"
-       //           << "UL:    " << m_ulRoundTripError.length() << "\n"
-       //           << "UR:   " << m_urRoundTripError.length() << "\n"
-       //           << "LR:   " << m_lrRoundTripError.length() << "\n"
-       //           << "LL:   " << m_llRoundTripError.length() << "\n";
+      // std::cout << "Bias:  " << bias << "\n"
+      //           << "View:  " << getViewRect() << "\n"
+      //           << "UL:    " << m_ulRoundTripError.length() << "\n"
+      //           << "UR:   " << m_urRoundTripError.length() << "\n"
+      //           << "LR:   " << m_lrRoundTripError.length() << "\n"
+      //           << "LL:   " << m_llRoundTripError.length() << "\n";
 //     }
-   // if(m_ulRoundTripError.length() > sensitivityScale) result |= UPPER_LEFT_SPLIT_FLAG;
-   // if(m_urRoundTripError.length() > sensitivityScale) result |= UPPER_RIGHT_SPLIT_FLAG;
-   // if(m_lrRoundTripError.length() > sensitivityScale) result |= LOWER_RIGHT_SPLIT_FLAG;
-   // if(m_llRoundTripError.length() > sensitivityScale) result |= LOWER_LEFT_SPLIT_FLAG;
-       // std::cout << result << " == " << SPLIT_ALL << "\n";
+      // if(m_ulRoundTripError.length() > sensitivityScale) result |= UPPER_LEFT_SPLIT_FLAG;
+      // if(m_urRoundTripError.length() > sensitivityScale) result |= UPPER_RIGHT_SPLIT_FLAG;
+      // if(m_lrRoundTripError.length() > sensitivityScale) result |= LOWER_RIGHT_SPLIT_FLAG;
+      // if(m_llRoundTripError.length() > sensitivityScale) result |= LOWER_LEFT_SPLIT_FLAG;
+      // std::cout << result << " == " << SPLIT_ALL << "\n";
 
-    if((result!=SPLIT_ALL)&&!canBilinearInterpolate(bias))
-    {
-      // std::cout << "TESTING BILINEAR!!!!\n";
-      result = SPLIT_ALL;
+      if((result!=SPLIT_ALL)&&!canBilinearInterpolate(bias))
+      {
+         // std::cout << "TESTING BILINEAR!!!!\n";
+         result = SPLIT_ALL;
 
-    }
-    else
-    {
-      // std::cout << "CAN BILINEAR!!!!\n";
-    }
-  }
+      }
+      else
+      {
+         // std::cout << "CAN BILINEAR!!!!\n";
+      }
+   }
 
-  return result;
+   return result;
 }
 
 void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
