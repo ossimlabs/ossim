@@ -80,8 +80,8 @@ static const ossim_uint32   OSSIM_NITF_VQ_BLOCKSIZE = 6144;
 /** @brief Extended error handler struct for jpeg code. */
 struct ossimJpegErrorMgr
 {
-   struct jpeg_error_mgr pub;	/* "public" fields */
-   jmp_buf setjmp_buffer;	/* for return to caller */
+   struct jpeg_error_mgr pub; /* "public" fields */
+   jmp_buf setjmp_buffer;  /* for return to caller */
 };
 
 
@@ -1396,6 +1396,21 @@ void ossimNitfTileSource::initializeCacheSize()
       case READ_BIR:
          theCacheSize.x = hdr->getNumberOfPixelsPerBlockHoriz();
          theCacheSize.y = hdr->getNumberOfPixelsPerBlockVert();
+         if(getNumberOfBlocks() == 1)
+         {
+            // is it larger than 4kx4k then we will for now error out so
+            // we can't continue
+            if((theCacheSize.x*theCacheSize.y) > 16777216)
+            {
+               if(traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_WARN) << "We currently do not support single blocks with block sizes larger than 4kx4k";
+                  ossimNotify(ossimNotifyLevel_WARN) << "Current size is: " << theCacheSize << std::endl;
+               }
+               theCacheSize.x = 0;
+               theCacheSize.y = 0;
+            }
+         }
 //          theCacheSize.x = getNumberOfSamples(0);
 //          theCacheSize.y = getTileHeight();
 //          if(theCacheSize.y > hdr->getNumberOfPixelsPerBlockVert())
