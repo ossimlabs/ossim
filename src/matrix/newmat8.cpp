@@ -94,6 +94,7 @@ void CroutMatrix::ludcmp()
    }
 }
 
+
 void CroutMatrix::lubksb(Real* B, int mini)
 {
    REPORT
@@ -102,8 +103,9 @@ void CroutMatrix::lubksb(Real* B, int mini)
    // copyright remains. However there is not much opportunity for
    // variation in the code, so it is still similar to the NR code.
    // I follow the NR code in skipping over initial zeros in the B vector.
-
    Tracer trace("Crout(lubksb)");
+   sing = false;
+   // if ((this->LogDeterminant()).Value() != 0) sing = false;
    if (sing) Throw(SingularException(*this));
    int i, j, ii = nrows;            // ii initialised : B might be all zeros
 
