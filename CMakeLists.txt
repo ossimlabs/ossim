@@ -56,22 +56,14 @@ set( ossimDependentLibs )
 # Find required and optional packages and add their include paths and libraries:
 #---
 
-# GEOS - Currently optional until it is actually called.:
-find_package( GEOS QUIET)
+# GEOS - Required:
+find_package( GEOS )
 if( GEOS_FOUND )
    include_directories( ${GEOS_INCLUDE_DIR} )
    set( ossimDependentLibs ${ossimDependentLibs} ${GEOS_LIBRARY} )
 else( GEOS_FOUND )
-   message( FATAL_ERROR "Could not find geos package! Consider installing this as it will soon become a required package." )
+   message( FATAL_ERROR "Could not find required geos package!" )
 endif( GEOS_FOUND )
-
-find_package( JsonCpp QUIET)
-if( JSONCPP_FOUND )
-   include_directories( ${JSONCPP_INCLUDE_DIR} )
-   set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
-else( JSONCPP_FOUND )
-   message("Could not find JSONCPP package! Consider installing this as it will soon become a required package." )
-endif( JSONCPP_FOUND )
 
 # GEOFIFF - Required:
 set( OSSIM_HAS_GEOTIFF 0 )
@@ -132,6 +124,17 @@ endif() # if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 #   endif( DL_LIBRARY )
 #endif( UNIX )
 
+# JSONCPP - Optional:
+set( OSSIM_HAS_JSONCPP 0 )
+find_package( JsonCpp )
+if( JSONCPP_FOUND )
+   include_directories( ${JSONCPP_INCLUDE_DIR} )
+   set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
+   set( OSSIM_HAS_JSONCPP 1 )
+else( JSONCPP_FOUND )
+   message("Could not find optional JSONCPP package! Consider installing this as it will soon become a required package." )
+endif( JSONCPP_FOUND )
+
 # FREETYPE - Optional:
 set( OSSIM_HAS_FREETYPE 0 )
 if( BUILD_OSSIM_FREETYPE_SUPPORT )
@@ -169,7 +172,7 @@ else ( ZLIB_FOUND )
    message( WARNING "Could not find optional zlib package!" )
 endif ( ZLIB_FOUND )
 
-# HDF5 - Optional
+# HDF5 - Optional:
 set( OSSIM_HAS_HDF5 0 )
 if (BUILD_OSSIM_HDF5_SUPPORT)
   message( STATUS "Native HDF5 support requested. Searching for HDF5 library..." )
@@ -200,8 +203,6 @@ GET_GIT_REVISION()
 if ( NOT ${Project_WC_REVISION} EQUAL 0 )
    set( OSSIM_GIT_REVISION_NUMBER ${Project_WC_REVISION} )
 endif()
-
-
 
 #####################################################################################
 # Call the configure files for ossimConfig and ossimVersion setup
@@ -265,14 +266,13 @@ MESSAGE( STATUS "JPEG_LIBRARY                    = ${JPEG_LIBRARIES}" )
 MESSAGE( STATUS "JPEG_INCLUDE                    = ${JPEG_INCLUDE_DIR}" )
 MESSAGE( STATUS "OSSIM DEPENDENT LIBRARIES       = ${ossimDependentLibs}" )
 MESSAGE( STATUS "OSSIM_HAS_HDF5                  = ${OSSIM_HAS_HDF5}" )
+MESSAGE( STATUS "OSSIM_HAS_JSONCPP               = ${OSSIM_HAS_JSONCPP}" )
 
 
 #-----------------------------------------------------------------------------
 # uninstall target
 #-----------------------------------------------------------------------------
 #OSSIM_ADD_COMMON_MAKE_UNINSTALL()
-
-message("################## end of OSSIM core library setup #########################")
 
 IF(BUILD_OSSIM_APPS)
    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/apps ${CMAKE_CURRENT_BINARY_DIR}/apps)
@@ -288,3 +288,5 @@ endif()
 IF(BUILD_OSSIM_TESTS)
    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test/src ${CMAKE_CURRENT_BINARY_DIR}/test/src)
 ENDIF()
+
+message("################## end of OSSIM core library setup #########################\n")
