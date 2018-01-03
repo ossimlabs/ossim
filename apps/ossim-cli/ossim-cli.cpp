@@ -19,6 +19,11 @@ using namespace std;
 #include <ossim/base/ossimString.h>
 #include <ossim/util/ossimToolRegistry.h>
 #include <ossim/base/ossimException.h>
+#include <ossim/base/ossimNotify.h>
+
+#define CINFO  ossimNotify(ossimNotifyLevel_INFO)
+#define CWARN  ossimNotify(ossimNotifyLevel_WARN)
+#define CFATAL ossimNotify(ossimNotifyLevel_FATAL)
 
 void showAvailableCommands()
 {
@@ -26,20 +31,20 @@ void showAvailableCommands()
    map<string, string> capabilities;
    factory->getCapabilities(capabilities);
    map<string, string>::iterator iter = capabilities.begin();
-   cout<<"\nAvailable commands:\n"<<endl;
+   CINFO<<"\nAvailable commands:\n"<<endl;
    for (;iter != capabilities.end(); ++iter)
-      cout<<"  "<<iter->first<<" -- "<<iter->second<<endl;
-   cout<<endl;
+      CINFO<<"  "<<iter->first<<" -- "<<iter->second<<endl;
+   CINFO<<endl;
 
 }
 
 void usage(char* appName)
 {
-   cout << "\nUsages: "<<endl;
-   cout << "    "<<appName<<" <command> [command options and parameters]"<<endl;
-   cout << "    "<<appName<<" --spec <command-spec-file>"<<endl;
-   cout << "    "<<appName<<" --version"<<endl;
-   cout << "    "<<appName<<" help <command> -- To get help on specific command."<<endl;
+   CINFO << "\nUsages: \n"
+         << "    "<<appName<<" <command> [command options and parameters]\n"
+         << "    "<<appName<<" --spec <command-spec-file>\n"
+         << "    "<<appName<<" --version\n"
+         << "    "<<appName<<" help <command> -- To get help on specific command."<<endl;
 
    showAvailableCommands();
 }
@@ -53,14 +58,17 @@ bool runCommand(ossimArgumentParser& ap)
 
    if (!utility.valid())
    {
-      cout << "\nDid not understand command <"<<command<<">"<<endl;
+      CWARN << "\nDid not understand command <"<<command<<">"<<endl;
       showAvailableCommands();
       return false;
    }
 
+   ossimTimer* timer = ossimTimer::instance();
+   timer->setStartTick();
+
    if (!utility->initialize(ap))
    {
-      cout << "\nCould not execute command <"<<command<<"> with arguments and options "
+      CWARN << "\nCould not execute command <"<<command<<"> with arguments and options "
             "provided."<<endl;
       return false;
    }
@@ -70,10 +78,11 @@ bool runCommand(ossimArgumentParser& ap)
 
    if (!utility->execute())
    {
-      cout << "\nAn error was encountered executing the command. Check options."<<endl;
+      CWARN << "\nAn error was encountered executing the command. Check options."<<endl;
       return false;
    }
 
+   CINFO << "\nElapsed time after initialization: "<<timer->time_s()<<" s.\n"<<endl;
    return true;
 }
 
@@ -105,7 +114,7 @@ int main(int argc, char *argv[])
             ifstream ifs (argv[2]);
             if (ifs.fail())
             {
-               cout<<"\nCould not open the spec file at <"<<argv[2]<<">\n"<<endl;
+               CWARN<<"\nCould not open the spec file at <"<<argv[2]<<">\n"<<endl;
                status_ok = false;
                break;
             }
@@ -158,7 +167,7 @@ int main(int argc, char *argv[])
    }
    catch( ... )
    {
-      cerr << "Caught unknown exception!" << endl;
+      CFATAL << "Caught unknown exception!" << endl;
    }
 
    if (status_ok)
