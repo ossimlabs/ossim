@@ -2327,62 +2327,76 @@ void ossimChipperUtil::createIdentityProjection()
 
          if ( m_geom.valid() )
          {
-            // Get the image projection.
-            ossimRefPtr<ossimProjection> proj = m_geom->getProjection();
-            if ( proj.valid() )
+            ossim_float64 rotation = 0.0;
+            
+            if ( upIsUp() )
             {
-               ossim_float64 rotation = 0.0;
-               if ( upIsUp() )
+               ossimRefPtr<ossimProjection> proj = m_geom->getProjection();
+               if ( proj.valid() )
                {
                   rotation = m_geom->upIsUpAngle();
                }
-               else if ( northUp() )
+               else
+               {
+                  ossimNotify(ossimNotifyLevel_WARN)
+                     << "WARNING: No projection to compute the up is up angle!" << std::endl;
+               }
+            }
+            else if ( northUp() )
+            {
+               ossimRefPtr<ossimProjection> proj = m_geom->getProjection();
+               if ( proj.valid() )
                {
                   rotation = m_geom->northUpAngle();
                }
-               else if ( hasRotation() )
+               else
                {
-                  rotation = getRotation();
+                  ossimNotify(ossimNotifyLevel_WARN)
+                     << "WARNING: No projection to compute the North up angle!" << std::endl;
                }
-
-               if ( ossim::isnan( rotation ) )
-               {
-                  rotation = 0.0;
-               }
-
-               ossimDpt imageSpaceScale;
-               getImageSpaceScale( imageSpaceScale );
-
-               ossimDrect rect;
-               m_geom->getBoundingRect(rect);
-               ossimDpt midPt = rect.midPoint();
-
-               if ( traceDebug() )
-               {
-                  ossimNotify(ossimNotifyLevel_DEBUG)
-                     << MODULE
-                     << "\nAffine transform parameters:"
-                     << "\nrotation:  " << rotation
-                     << "\nmid point: " << midPt << std::endl;
-               }
-
-               m_ivt = new ossimImageViewAffineTransform(-rotation,
-                                                         imageSpaceScale.x, // image space scale x
-                                                         imageSpaceScale.y, // image space scale y
-                                                         1.0,1.0,  //scale x and y
-                                                         0.0, 0.0, // translate x,y
-                                                         midPt.x, midPt.y); // pivot point
-
-               if ( m_kwl->hasKey( METERS_KW )    ||
-                    m_kwl->hasKey( DEGREES_X_KW ) ||
-                    m_kwl->hasKey( RRDS_KW ) )
-               {
-                  // Set the image view transform scale.
-                  initializeIvtScale();
-               }
-
-               resampler->setImageViewTransform( m_ivt.get() );
             }
+            else if ( hasRotation() )
+            {
+               rotation = getRotation();
+            }
+
+            if ( ossim::isnan( rotation ) )
+            {
+               rotation = 0.0;
+            }
+
+            ossimDpt imageSpaceScale;
+            getImageSpaceScale( imageSpaceScale );
+            
+            ossimDrect rect;
+            m_geom->getBoundingRect(rect);
+            ossimDpt midPt = rect.midPoint();
+            
+            if ( traceDebug() )
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << MODULE
+                  << "\nAffine transform parameters:"
+                  << "\nrotation:  " << rotation
+                  << "\nmid point: " << midPt << std::endl;
+            }
+            
+            m_ivt = new ossimImageViewAffineTransform(-rotation,
+                                                      imageSpaceScale.x, // image space scale x
+                                                      imageSpaceScale.y, // image space scale y
+                                                      1.0,1.0,  //scale x and y
+                                                      0.0, 0.0, // translate x,y
+                                                      midPt.x, midPt.y); // pivot point
+            
+            if ( m_kwl->hasKey( METERS_KW )    ||
+                 m_kwl->hasKey( DEGREES_X_KW ) ||
+                 m_kwl->hasKey( RRDS_KW ) )
+            {
+               // Set the image view transform scale.
+               initializeIvtScale();
+            }
+            
+            resampler->setImageViewTransform( m_ivt.get() );
 
          } // Matches: if ( m_geom.valid() )
 
@@ -4637,13 +4651,6 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                }
             }
 
-            // If no user defined rect set to scene bounding rect.
-            if ( rect.hasNans() )
-            {
-               // Get the rectangle from the input chain:
-               rect = source->getBoundingRect(0);
-            }
-
          } // if ( m_getOutputGeometry.valid() )
          else
          {
@@ -4658,6 +4665,13 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                errMsg += " output projection null!";
             }
             throw( ossimException(errMsg) );
+         }
+
+         // If no user defined rect set to scene bounding rect.
+         if ( rect.hasNans() )
+         {
+            // Get the rectangle from the input chain:
+            rect = source->getBoundingRect(0);
          }
 
       } // if ( rect.hasNans() )
