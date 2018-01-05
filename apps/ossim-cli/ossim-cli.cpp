@@ -82,7 +82,7 @@ bool runCommand(ossimArgumentParser& ap)
       return false;
    }
 
-   CINFO << "\nElapsed time after initialization: "<<timer->time_s()<<" s.\n"<<endl;
+   //CINFO << "\nElapsed time after initialization: "<<timer->time_s()<<" s.\n"<<endl;
    return true;
 }
 
