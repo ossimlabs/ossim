@@ -122,8 +122,8 @@ IF(BUILD_OSSIM_VIDEO AND EXISTS ${OSSIM_DEV_HOME}/ossim-video)
   add_subdirectory(${OSSIM_DEV_HOME}/ossim-video ${CMAKE_CURRENT_BINARY_DIR}/ossim-video)
 ENDIF()
 
-IF(BUILD_ISA_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-isa-plugin)
-  add_subdirectory(${OSSIM_DEV_HOME}/ossim-isa-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-isa-plugin)
+IF(BUILD_MSP_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-msp-plugin)
+  add_subdirectory(${OSSIM_DEV_HOME}/ossim-msp-plugin ${CMAKE_CURRENT_BINARY_DIR}/ossim-msp-plugin)
 ENDIF()
 
 IF(BUILD_CSM_PLUGIN AND EXISTS ${OSSIM_DEV_HOME}/ossim-csm-plugin)

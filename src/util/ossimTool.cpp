@@ -97,11 +97,6 @@ void ossimTool::initialize(const ossimKeywordlist& kwl)
    m_kwl = kwl;
 }
 
-void ossimTool::initialize(const std::string& request)
-{
-   m_helpRequested = false;
-}
-
 void ossimTool::getKwlTemplate(ossimKeywordlist& kwl)
 {
    ossimFilename share_dir = ossimPreferences::instance()->
