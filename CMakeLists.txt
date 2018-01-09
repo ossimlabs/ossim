@@ -103,6 +103,16 @@ else( TIFF_FOUND )
    message( FATAL_ERROR "Could not find required tiff package!" )
 endif( TIFF_FOUND )
 
+# JSONCPP - Required:
+find_package( JsonCpp )
+if( JSONCPP_FOUND )
+   include_directories( ${JSONCPP_INCLUDE_DIR} )
+   set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
+   message("Found JsonCpp" )
+else( JSONCPP_FOUND )
+   message( FATAL_ERROR "Could not find required JsonCpp package!" )
+endif( JSONCPP_FOUND )
+
 # This caused a core dump on ossim executables running in jenins pipeline (ossim-test-dev)
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
   find_library( DL_LIBRARY dl )
