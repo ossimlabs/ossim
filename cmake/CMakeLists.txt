@@ -188,6 +188,10 @@ IF(BUILD_DSMG AND EXISTS ${OSSIM_DEV_HOME}/ossim-dsmg)
   add_subdirectory(${OSSIM_DEV_HOME}/ossim-dsmg ${CMAKE_CURRENT_BINARY_DIR}/ossim-dsmg)
 ENDIF()
 
+IF(BUILD_OSSIM_ISA AND EXISTS ${OSSIM_DEV_HOME}/ossim-isa)
+  add_subdirectory(${OSSIM_DEV_HOME}/ossim-isa ${CMAKE_CURRENT_BINARY_DIR}/ossim-isa)
+ENDIF()
+
 
 ############################## Doxygen installation for current ossim core module ###########################################
 FIND_PACKAGE(Doxygen)
@@ -365,6 +369,6 @@ MESSAGE( STATUS "BUILD_OSSIM_WMS                 = ${BUILD_OSSIM_WMS}" )
 MESSAGE( STATUS "BUILD_LIBRARY_DIR               = ${BUILD_LIBRARY_DIR}" )
 MESSAGE( STATUS "BUILD_RUNTIME_DIR               = ${BUILD_RUNTIME_DIR}" )
 MESSAGE( STATUS "BUILD_DSMG                      = ${BUILD_DSMG}" )
-MESSAGE( STATUS "BUILD_ISA_PLUGIN                = ${BUILD_ISA_PLUGIN}" )
+MESSAGE( STATUS "BUILD_MSP_PLUGIN                = ${BUILD_MSP_PLUGIN}" )
 MESSAGE( STATUS "BUILD_CSM_PLUGIN                = ${BUILD_CSM_PLUGIN}" )
 MESSAGE( STATUS "Use OSSIM_BUILD_ADDITIONAL_DIRECTORIES to add other cmake builds." )
