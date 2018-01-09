@@ -12,13 +12,15 @@
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimKeywordlist.h>
+#include <ossim/base/JsonInterface.h>
 #include <iostream>
 
 /*!
  *  Base class for all OSSIM tool applications. These are utilities providing high-level
  *  functionality via the OSSIM library.
  */
-class OSSIM_DLL ossimTool : public ossimObject
+class OSSIM_DLL ossimTool : public ossimObject, public ossim::JsonInterface
+
 {
 public:
    ossimTool();
@@ -43,12 +45,18 @@ public:
    virtual void initialize(const ossimKeywordlist& kwl);
 
    /**
-    * Reads processing params from string provided (usually JSON-formatted, though that's up to the
-    * derived class to implement and contract with consumer). If all good, the object is ready for
+    * Reads processing params from JSON object provided. If all good, the object is ready for
     * subsequent call to execute().
     * @note Throws ossimException on error.
     */
-   virtual void initialize(const std::string& request);
+   virtual void loadJSON(const Json::Value& json_request) {};
+
+   /**
+    * Fetch product as JSON object when applicable
+    * Always returns true since using exception on error.
+    * @param json Returns non-empty object if valid response available.
+    */
+   virtual void saveJSON(Json::Value& json) const { json.clear(); }
 
    /**
     * Writes product to output file if applicable. The product may also beAlways returns true since using exception on error.
