@@ -7,7 +7,7 @@
 # This script will create a tarball, e.g. ossim-1.9.0.tar.gz 
 # from a the top level set of ossim git modules, i.e. ossim_labs_dev_root.
 #---
-pushd `dirname $0` >/dev/null
+pushd `dirname ${BASH_SOURCE[0]}` >/dev/null
 export SCRIPT_DIR=$PWD
 popd >/dev/null
 pushd $SCRIPT_DIR/../.. > /dev/null
