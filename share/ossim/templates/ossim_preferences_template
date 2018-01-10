@@ -355,7 +355,10 @@ plugin5.file:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kakadu_plugi
 plugin15.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin.so
 // plugin15 .options:
 
-plugin16.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_isa_plugin.so
+plugin16.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_msp_plugin.so
+// plugin15 .options:
+
+plugin17.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_atp_plugin.so
 // plugin15 .options:
 
 plugin20.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_cnes_plugin.so
