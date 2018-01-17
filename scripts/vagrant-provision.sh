@@ -19,9 +19,8 @@ installPackages() {
 }
 
 cloneSources() {
-    ls -l
     mkdir -p $HOME/ossimlabs
-    sudo chown vagrant:vagrant $HOME/ossimlabs/
+    sudo chown vagrant:vagrant $HOME/ossimlabs/ # Owning in case file sync has the directory owned by root.
 
     cd $HOME/ossimlabs/
     # We assume ossim is already synced into the ossimlabs directory.
