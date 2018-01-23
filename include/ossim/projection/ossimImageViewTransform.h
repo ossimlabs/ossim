@@ -107,7 +107,13 @@ public:
   
   virtual ossimDpt getRoundTripErrorImage(const ossimDpt& imagePt)const;
 
-  virtual ossimDrect getImageToViewBounds(const ossimDrect& imageRect)const;
+  /** Computes the bounding rect in view space of the quad formed by the transformed image points
+   * of the input rect corners. */
+  virtual ossimDrect getImageToViewBounds(const ossimDrect& imageRect) const;
+
+  /** Computes the bounding rect in image space of the quad formed by the transformed view points
+   * of the input rect corners. */
+  virtual ossimDrect getViewToImageBounds(const ossimDrect& viewRect) const;
   
   virtual bool loadState(const ossimKeywordlist& kwl,
                          const char* prefix =0);

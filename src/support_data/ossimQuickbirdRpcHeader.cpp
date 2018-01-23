@@ -53,6 +53,18 @@ std::ostream& operator << (std::ostream& out,
 
 
 ossimQuickbirdRpcHeader::ossimQuickbirdRpcHeader()
+:  theErrBias(0),
+   theErrRand(0),
+   theLineOffset(0),
+   theSampOffset(0),
+   theLatOffset(0),
+   theLonOffset(0),
+   theHeightOffset(0),
+   theLineScale(0),
+   theSampScale(0),
+   theLatScale(0),
+   theLonScale(0),
+   theHeightScale(0)
 {
 }
 

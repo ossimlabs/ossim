@@ -306,6 +306,21 @@ ossimDrect ossimImageViewTransform::getImageToViewBounds(const ossimDrect& image
    return ossimDrect(p1, p2, p3, p4);
 }
 
+ossimDrect ossimImageViewTransform::getViewToImageBounds(const ossimDrect& viewRect)const
+{
+   ossimDpt p1;
+   ossimDpt p2;
+   ossimDpt p3;
+   ossimDpt p4;
+
+   viewToImage(viewRect.ul(), p1);
+   viewToImage(viewRect.ur(), p2);
+   viewToImage(viewRect.lr(), p3);
+   viewToImage(viewRect.ll(), p4);
+
+   return ossimDrect(p1, p2, p3, p4);
+}
+
 std::ostream& ossimImageViewTransform::print(std::ostream& out) const
 {
    return out;

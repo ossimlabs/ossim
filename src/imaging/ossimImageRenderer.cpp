@@ -1873,19 +1873,26 @@ void ossimImageRenderer::getValidImageVertices(vector<ossimIpt>& validVertices,
 //*************************************************************************************************
 ossimRefPtr<ossimImageGeometry> ossimImageRenderer::getImageGeometry()
 {
-   // Make sure the IVT was properly initialized
-   if (m_ImageViewTransform.valid() && !m_ImageViewTransform->isValid())
-      checkIVT();
-
-   ossimImageViewProjectionTransform* ivpt = 
-                   dynamic_cast<ossimImageViewProjectionTransform*>(m_ImageViewTransform.get()); 
-   if (ivpt)
+   ossimRefPtr<ossimImageGeometry> geom = 0;
+   if (isSourceEnabled())
    {
-      // we need to return the right side since the geometry changed to a view geometry
-      return ivpt->getViewGeometry();
-   }
+      // Make sure the IVT was properly initialized
+      if (m_ImageViewTransform.valid() && !m_ImageViewTransform->isValid())
+         checkIVT();
 
-   return ossimRefPtr<ossimImageGeometry>();
+      ossimImageViewProjectionTransform* ivpt =
+            dynamic_cast<ossimImageViewProjectionTransform*>(m_ImageViewTransform.get());
+      if (ivpt)
+      {
+         // we need to return the right side since the geometry changed to a view geometry
+         geom = ivpt->getViewGeometry();
+      }
+   }
+   else if (theInputConnection)
+   {
+      geom = theInputConnection->getImageGeometry();
+   }
+   return geom;
 }
 
 void ossimImageRenderer::connectInputEvent(ossimConnectionEvent& /* event */)
