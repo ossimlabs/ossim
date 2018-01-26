@@ -1647,33 +1647,39 @@ void ossimChipperUtil::addDemSource(const ossimSrcRecord& rec)
 
 void ossimChipperUtil::addImgSources()
 {
+   std::cout << "DOING THIS FOR IMAGES!!!!!!!!!!\n";
    static const char MODULE[] = "ossimChipperUtil::addImgSources";
 
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
-
-   ossim_uint32 imgCount = m_kwl->numberOf( IMG_KW.c_str() );
-   ossim_uint32 maxIndex = imgCount + 100; // Allow for skippage in numbering.
-   ossim_uint32 foundRecords = 0;
-   ossim_uint32 i = 0;
-   while ( foundRecords < imgCount )
+   std::vector<ossimString> sortedList;
+   m_kwl->getSortedList(sortedList, IMG_KW);
+   for(auto record:sortedList)
    {
-      ossimString key = IMG_KW;
-      key += ossimString::toString(i);
-      key += ".";
-      key += FILE_KW;
-      ossimFilename f = m_kwl->findKey( key.string() );
+      ossimString fileKey  = record + "." + FILE_KW;
+      ossimString entryKey = record + "." + ossimKeywordNames::ENTRY_KW;
+//   ossim_uint32 imgCount = m_kwl->numberOf( IMG_KW.c_str() );
+//   ossim_uint32 maxIndex = imgCount + 100; // Allow for skippage in numbering.
+//   ossim_uint32 foundRecords = 0;
+//   ossim_uint32 i = 0;
+//   while ( foundRecords < imgCount )
+//   {
+//      ossimString key = IMG_KW;
+//      key += ossimString::toString(i);
+//      key += ".";
+//      key += FILE_KW;
+      ossimFilename f = m_kwl->findKey( fileKey.string() );
       if ( f.size() )
       {
          // Look for the entry key, e.g. image0.entry: 10
          ossim_uint32 entryIndex = 0;
-         key = IMG_KW;
-         key += ossimString::toString(i);
-         key += ".";
-         key += ossimKeywordNames::ENTRY_KW;
-         std::string value = m_kwl->findKey( key.string() );
+//         key = IMG_KW;
+//         key += ossimString::toString(i);
+//         key += ".";
+//         key += ossimKeywordNames::ENTRY_KW;
+         std::string value = m_kwl->findKey( entryKey.string() );
          if ( value.size() )
          {
             entryIndex = ossimString(value).toUInt32();
@@ -1685,32 +1691,32 @@ void ossimChipperUtil::addImgSources()
          }
          // Add it:
          addImgSource(f, entryIndex );
-         ++foundRecords;
+//         ++foundRecords;
       }
-      ++i;
-      if ( i >= maxIndex ) break;
    }
-
+   sortedList.clear();
    if ( m_srcKwl.valid() )
    {
+      m_srcKwl->getSortedList(sortedList, IMG_KW);
       // Add stuff from src keyword list.
-      imgCount = m_srcKwl->numberOf( IMG_KW.c_str() );
-      maxIndex = imgCount + 100;
-      foundRecords = 0;
-      i = 0;
-      while ( foundRecords < imgCount )
+//      imgCount = m_srcKwl->numberOf( IMG_KW.c_str() );
+//      maxIndex = imgCount + 100;
+//      foundRecords = 0;
+//      i = 0;
+//      while ( foundRecords < imgCount )
+      for(auto record:sortedList)
       {
-         ossimString prefix = IMG_KW;
-         prefix += ossimString::toString(i);
-         prefix += ".";
+         //ossimString prefix = IMG_KW;
+         //prefix += ossimString::toString(i);
+         //prefix += ".";
          ossimSrcRecord src;
-         if ( src.loadState( *(m_srcKwl.get()), prefix ) )
+         if ( src.loadState( *(m_srcKwl.get()), record ) )
          {
             addImgSource(src);
-            ++foundRecords;
+//            ++foundRecords;
          }
-         ++i;
-         if ( i >= maxIndex ) break;
+//         ++i;
+//         if ( i >= maxIndex ) break;
       }
    }
 
