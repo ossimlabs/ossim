@@ -7,7 +7,7 @@
 # DO NOT RELOCATE THIS SCRIPT. Its location is used to resolve relative
 # directory paths.
 #
-# Usage: <this_script_name> [<build_type>] 
+# Usage: <this_script_name> [<build_type>] [<eclipse-version>]
 #
 # where the optional <build_type> is one of the following literals 
 # (case-insensitive):
@@ -16,11 +16,11 @@
 #     "debug", 
 #     "relWithDebInfo", 
 #     "minSizeRel",
-#     "eclipse"
+#     "eclipse" 
 #
 # If a build type = "eclipse" is specified, cmake will generate a Debug
 # build environment along with Eclipse CDT4 project files (in the build
-# directory) for importing as existing project.
+# directory) for importing as existing project. 
 #
 # Instructions: Run this script to build the repository. This script can be
 # run from any directory, but will assume a default relative directory
@@ -254,7 +254,6 @@ cmake -G "$CMAKE_G_ARG" \
 -DCMAKE_OSX_ARCHITECTURES="x86_64" \
 -DCMAKE_OSX_SYSROOT=$CMAKE_OSX_SYSROOT \
 -DCMAKE_OSX_DEPLOYMENT_TARGET=$CMAKE_OSX_DEPLOYMENT_TARGET \
--DCMAKE_ECLIPSE_VERSION=$CMAKE_ECLIPSE_VERSION \
 -DBUILD_OSSIM_FRAMEWORKS=${BUILD_OSSIM_FRAMEWORKS} \
 -DBUILD_OMS=$BUILD_OMS \
 -DBUILD_OSSIM_PLANET_GUI=${BUILD_OSSIM_PLANET_GUI} \
