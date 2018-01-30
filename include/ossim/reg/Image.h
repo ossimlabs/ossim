@@ -16,6 +16,7 @@
 #include <ossim/matrix/newmat.h>
 #include <ossim/base/JsonInterface.h>
 #include <ossim/projection/ossimSensorModel.h>
+#include <string>
 
 namespace ossim
 {
@@ -53,7 +54,7 @@ public:
     * Returns all available sensor model plugins and model names for this image:
     * @param availableModels List of <plugin-name, model-name> pairs.
     */
-    void getAvailableModels(std::vector< pair<std::string, std::string> >& availableModels) const;
+    virtual void getAvailableModels(std::vector< pair<std::string, std::string> >& availableModels) const;
 
     /**
     * Refer to <a href="https://docs.google.com/document/d/1DXekmYm7wyo-uveM7mEu80Q7hQv40fYbtwZq-g0uKBs/edit?usp=sharing">3DISA API document</a>
@@ -67,7 +68,7 @@ public:
     */
     virtual void saveJSON(Json::Value& json) const;
 
-private:
+protected:
    std::string m_imageId;
    ossimFilename m_filename;
    unsigned int m_entryIndex;
@@ -76,6 +77,8 @@ private:
    std::vector< pair<std::string, std::string> > m_availableModel;
    ossimRefPtr<ossimSensorModel> m_sensorModel;
 };
+
+typedef std::vector< std::shared_ptr<Image> > ImageList;
 
 } // End namespace ATP
 

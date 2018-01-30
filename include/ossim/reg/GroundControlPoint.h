@@ -76,5 +76,8 @@ private:
    ossimEcefPoint m_gcp;
    NEWMAT::SymmetricMatrix m_covariance; //> X, Y, Z (ECF)
 };
+
+typedef std::vector< std::shared_ptr<GroundControlPoint> > GcpList;
+
 } // end namespace ossimMsp
 #endif /* #ifndef GroundControlPoint_HEADER */

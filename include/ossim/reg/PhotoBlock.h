@@ -22,7 +22,7 @@ namespace ossim
 /**
  * Class for representing MSP PhotoBlock.
  */
-class PhotoBlock : public ossim::JsonInterface,
+class PhotoBlock : public JsonInterface,
                    public std::enable_shared_from_this<PhotoBlock>
 {
 public:
@@ -42,8 +42,8 @@ public:
    std::shared_ptr<TiePoint> getTiePoint(unsigned int tpId);
    std::shared_ptr<GroundControlPoint> getGroundPoint(const std::string& gpId);
 
-   std::vector<std::shared_ptr<Image> >&              getImageList()       { return m_imageList; }
-   std::vector<std::shared_ptr<TiePoint> >&           getTiePointList()    { return m_tiePointList; }
+   ImageList&              getImageList()       { return m_imageList; }
+   TiePointList&           getTiePointList()    { return m_tiePointList; }
    std::vector<std::shared_ptr<GroundControlPoint> >& getGroundPointList() { return m_gcpList; }
 
    // TODO: Add of individual components not valid until proper management of the JCM can be
@@ -88,7 +88,7 @@ public:
    */
    virtual void saveJSON(Json::Value& json) const;
 
-private:
+protected:
    std::vector<std::shared_ptr<Image> > m_imageList;
    std::vector<std::shared_ptr<TiePoint> > m_tiePointList;
    std::vector<std::shared_ptr<GroundControlPoint> > m_gcpList;
