@@ -11,7 +11,6 @@
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimDirectory.h>
-#include <opencv2/features2d/features2d.hpp>
 #include <memory>
 
 using namespace std;
