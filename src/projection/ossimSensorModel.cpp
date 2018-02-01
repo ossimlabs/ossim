@@ -1160,7 +1160,9 @@ void ossimSensorModel::imagingRay(const ossimDpt& image_point,
 //  
 //*****************************************************************************
 ossimSensorModel::CovMatStatus ossimSensorModel::getObsCovMat(
-   const ossimDpt& /* ipos */ , NEWMAT::SymmetricMatrix& Cov, const ossim_float64 defPointingSigma)
+      const ossimDpt& /* ipos */ ,
+      NEWMAT::SymmetricMatrix& Cov,
+      const ossim_float64 defPointingSigma) const
 {
    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    // Mensuration error contribution

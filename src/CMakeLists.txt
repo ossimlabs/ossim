@@ -13,6 +13,7 @@ FILE(GLOB ossim_SRCS  RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}
         "${CMAKE_CURRENT_SOURCE_DIR}/point_cloud/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/point_cloud/*.c"
         "${CMAKE_CURRENT_SOURCE_DIR}/projection/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/projection/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/support_data/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/support_data/*.c" 
+        "${CMAKE_CURRENT_SOURCE_DIR}/reg/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/reg/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/util/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/util/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/vec/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/vec/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/video/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/video/*.c" 

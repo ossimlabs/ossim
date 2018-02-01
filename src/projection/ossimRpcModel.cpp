@@ -1485,8 +1485,7 @@ bool ossimRpcModel::toJSON(std::ostream& jsonStream) const
 
    Json::Value root;
    root["isd"] = ISD;
-   Json::StyledWriter writer;
-   jsonStream << writer.write(root);
+   jsonStream << root;
    return true;
 #else
    jsonStream<<"Error: JSON format not supported."<<endl;

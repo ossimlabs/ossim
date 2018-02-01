@@ -8,6 +8,7 @@
 #define ossimRpcSolver_HEADER
 
 #include <vector>
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimGpt.h>
@@ -16,10 +17,8 @@
 #include <ossim/matrix/newmat.h>
 #include <ossim/projection/ossimRpcModel.h>
 #include <ossim/projection/ossimRpcProjection.h>
-
-class ossimProjection;
-class ossimImageGeometry;
-class ossimNitfRegisteredTag;
+#include <ossim/support_data/ossimNitfRegisteredTag.h>
+#include <ossim/imaging/ossimImageGeometry.h>
 
 /**
  * This currently only support Rational poilynomial B format.  This can be

@@ -143,7 +143,7 @@ public:
    void getRpcPqeInputs(ossimRpcPqeInputs& obj) const;
 
 private:
-   std::vector<ossimSensorModel*> theImages;
+   mutable std::vector<ossimRefPtr<ossimSensorModel> > theImages;
 
    ossim_int32    theNumImages;
    
