@@ -7,7 +7,7 @@
 # DO NOT RELOCATE THIS SCRIPT. Its location is used to resolve relative
 # directory paths.
 #
-# Usage: <this_script_name> [<build_type>] [<eclipse-version>]
+# Usage: <this_script_name> [<build_type>]
 #
 # where the optional <build_type> is one of the following literals 
 # (case-insensitive):
