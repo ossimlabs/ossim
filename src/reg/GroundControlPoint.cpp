@@ -36,6 +36,8 @@ void GroundControlPoint::loadJSON(const Json::Value& json_node)
    xmsg<<__FILE__<<": ";
 
    m_id = json_node["gcpId"].asString();
+   if (m_id.empty())
+      m_id = json_node["pointId"].asString();
 
    if (json_node.isMember("lat") && json_node.isMember("lon") && json_node.isMember("hgt"))
    {
@@ -45,11 +47,11 @@ void GroundControlPoint::loadJSON(const Json::Value& json_node)
       refGpt.hgt = json_node["hgt"].asDouble();
       m_gcp = ossimEcefPoint(refGpt);
    }
-   else if (json_node.isMember("X") && json_node.isMember("Y") && json_node.isMember("Z"))
+   else if (json_node.isMember("x") && json_node.isMember("y") && json_node.isMember("z"))
    {
-      m_gcp.x() = json_node["X"].asDouble();
-      m_gcp.y() = json_node["Y"].asDouble();
-      m_gcp.z() = json_node["Z"].asDouble();
+      m_gcp.x() = json_node["x"].asDouble();
+      m_gcp.y() = json_node["y"].asDouble();
+      m_gcp.z() = json_node["z"].asDouble();
    }
    else
    {
@@ -58,26 +60,41 @@ void GroundControlPoint::loadJSON(const Json::Value& json_node)
    }
 
    const Json::Value& covariance = json_node["covariance"];
-   if (!covariance || (covariance.size() != 6))
+   unsigned int covSize = covariance.size();
+   if ((covSize != 6) || (covSize != 9))
    {
-      xmsg<<"No covariance information in JSON or not correctly formatted (must be 6-element array)";
+      xmsg<<"No covariance information in JSON or not correctly formatted (must be 6 or 9 element array)";
       throw ossimException(xmsg.str());
    }
 
    // TODO: Covariance in proper coordinate system. ENU -> ECF conversion needed here?
-   m_covariance(1,1) = covariance[0].asDouble();
-   m_covariance(2,2) = covariance[1].asDouble();
-   m_covariance(3,3) = covariance[2].asDouble();
-   m_covariance(1,2) = covariance[3].asDouble();
-   m_covariance(1,3) = covariance[4].asDouble();
-   m_covariance(2,3) = covariance[5].asDouble();
+   if (covSize == 6)
+   {
+      m_covariance(0,0) = covariance[0].asDouble();
+      m_covariance(1,1) = covariance[1].asDouble();
+      m_covariance(2,2) = covariance[2].asDouble();
+      m_covariance(0,1) = covariance[3].asDouble();
+      m_covariance(0,2) = covariance[4].asDouble();
+      m_covariance(1,2) = covariance[5].asDouble();
+   }
+   else
+   {
+      m_covariance(0,0) = covariance[0].asDouble();
+      m_covariance(0,1) = covariance[1].asDouble();
+      m_covariance(0,2) = covariance[2].asDouble();
+      m_covariance(1,0) = covariance[3].asDouble();
+      m_covariance(1,1) = covariance[4].asDouble();
+      m_covariance(1,2) = covariance[5].asDouble();
+      m_covariance(2,0) = covariance[6].asDouble();
+      m_covariance(2,1) = covariance[7].asDouble();
+      m_covariance(2,2) = covariance[8].asDouble();
+   }
 
    // TODO: Implement GCP cross-correlation
-   if (json_node.isMember("crossCovariances"))
+   if (json_node.isMember("crossCovariances") || json_node.isMember("gpCrossCovList"))
    {
-      xmsg<<"GCP cross covariances are specified in the JSON, but the capability is not yet "
-            "implemented!";
-      throw ossimException(xmsg.str());
+      ossimNotify(ossimNotifyLevel_WARN)<<"GCP cross covariances are specified in the JSON, but the"
+         " capability is not yet implemented!"<<endl;
    }
 }
 

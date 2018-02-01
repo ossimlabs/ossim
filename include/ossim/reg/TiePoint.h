@@ -104,11 +104,6 @@ public:
    */
    virtual void saveJSON(Json::Value& json) const;
 
-   /**
-    * Hack for MSP's picky imageID requirements
-    */
-   void fixTpImageIds(const std::vector<std::shared_ptr<Image> >& imageList);
-
    virtual std::ostream& print(std::ostream& out) const;
    friend std::ostream& operator << (std::ostream& out, const TiePoint& tp)
    { return tp.print(out); }

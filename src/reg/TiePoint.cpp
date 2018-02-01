@@ -240,25 +240,4 @@ std::ostream& TiePoint::print(std::ostream& out) const
    return out;
 }
 
-void TiePoint::fixTpImageIds(const std::vector<shared_ptr<Image> >& imageList)
-{
-   // Loop over all images represented in this tiepoint:
-   for (int t=0; t<m_images.size(); ++t)
-   {
-      string pbiid = m_images[t]->getImageId();
-
-      // For this image, fix the ID to reflect the ID in the photoblock's image list:
-      for (int i=0; i<imageList.size(); ++i)
-      {
-         // Do a "contains"
-         string iid = imageList[i]->getImageId();
-         if (iid.find(pbiid) != string::npos)
-         {
-            m_images[t]->setImageId(iid);
-            break;
-         }
-      }
-   }
-}
-
 } // end namespace ISA
