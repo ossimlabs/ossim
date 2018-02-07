@@ -843,6 +843,11 @@ bool ossimImageHandler::hasOverviews() const
 bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
 {
    bool result = false;
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimImageHandler::openOverview(overview_file): ...entered!";
+   }
    closeOverview();
 
    if (overview_file != theImageFile) // Make sure we don't open ourselves.
@@ -907,14 +912,11 @@ bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
          event.setObjectList(theOverview.get());
          fireEvent(event);
       }
-      else
-      {
-         if(m_state)
-         {
-            // create a null state to save the fact that we did not find any overviews
-            m_state->setOverviewState(std::make_shared<ossim::ImageHandlerState>());
-         }
-      }
+   }
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimImageHandler::openOverview(overview_file): ...leaving!";
    }
    
    return result;
@@ -949,8 +951,6 @@ bool ossimImageHandler::openOverview()
          if(theOverview)
          {
             result = true;
-
-            
             //---
             // Set the owner in case the overview reader needs to get something
             // from the it like min/max/null.
@@ -1019,7 +1019,6 @@ bool ossimImageHandler::openOverview()
             << "\n";
       }
    }
-
    if ( !result )
    {
       if (overviewFilename.empty() || (overviewFilename.exists() == false) )
@@ -1045,6 +1044,7 @@ bool ossimImageHandler::openOverview()
             {
                overviewFilename = theSupplementaryDirectory;
                overviewFilename = overviewFilename.dirCat( getFilename().file() );
+   
             }
 
             if ( getNumberOfEntries() > 1 )
@@ -1560,7 +1560,6 @@ void ossimImageHandler::setSupplementaryDirectory(const ossimFilename& dir)
       theSupplementaryDirectory = dir;
    else
       theSupplementaryDirectory = dir.path();
-
    // A change in supplementary directory presents an opportunity to find the OVR that could not be
    // opened previously, as well as other support data items:
    if (!theOverview.valid())
