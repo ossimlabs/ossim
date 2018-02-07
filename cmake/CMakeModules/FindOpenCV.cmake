@@ -120,6 +120,8 @@ else()
    message( "Could not find optional OpenCV Image Codecs Library" )
 endif()
 
+set(OPENCV_LIBRARIES ${OPENCV_LIBRARIES} ${OPENCV_LIBRARIES} )
+
 if(OPENCV_FOUND)
    message( STATUS "OPENCV_INCLUDE_DIR = ${OPENCV_INCLUDE_DIR}" )
    message( STATUS "OPENCV_LIBRARIES   = ${OPENCV_LIBRARIES}" )
