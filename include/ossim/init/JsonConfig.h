@@ -164,20 +164,19 @@ public:
 
    bool operator==(const JsonParam& p) const { return (p._name == _name); }
 
-   void setValue(const Json::Value& json_node);
-   void setValue(void* value);
-   void resetValue();
-
    /** Outputs JSON to output stream provided */
    friend std::ostream& operator<<(std::ostream& out, const JsonParam& obj);
 
 private:
+   void setValue(void* value);
+   void resetValue();
 
    ossimString _name;
    ossimString _label;
    ossimString _descr;
    ParamType   _type;
    void*       _value;
+   std::vector<ossimString> _allowedValues; // only used for multiple-choice string parameters
 };
 
 
