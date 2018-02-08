@@ -38,7 +38,8 @@ JsonParam::JsonParam(const JsonParam& copy)
    _name (copy._name),
    _descr (copy._descr),
    _type (copy._type),
-   _value (0)
+   _value (0),
+   _allowedValues (copy._allowedValues)
 {
    setValue(copy._value);
 }
@@ -115,6 +116,7 @@ bool JsonParam::loadJSON(const Json::Value& paramNode)
       _label = paramNode["label"].asString();
       _descr = paramNode["descr"].asString();
       Json::Value value = paramNode["value"];
+      Json::Value allowedValues = paramNode["allowedValues"];
 
       ossimString ptype = paramNode["type"].asString();
       if (ptype.empty() || _name.empty())
@@ -170,6 +172,11 @@ bool JsonParam::loadJSON(const Json::Value& paramNode)
             _type = JsonParam::STRING;
             string v = value.asString();
             setValue(&v);
+            if (!allowedValues.empty() && allowedValues.isArray())
+            {
+               for (const auto &allowedValue : allowedValues)
+                  _allowedValues.emplace_back(allowedValue.asString());
+            }
          }
       }
    }
@@ -225,6 +232,13 @@ void JsonParam::saveJSON(Json::Value& paramNode) const
       paramNode["type"] = "string";
       s = *(string*)_value;
       paramNode["value"] = s;
+      if (!_allowedValues.empty())
+      {
+         Json::Value allowedValues(Json::arrayValue);
+         for (const auto &allowedValue : _allowedValues)
+            allowedValues.append(allowedValue.c_str());
+         paramNode["allowedValues"] = allowedValues;
+      }
       break;
 
    case JsonParam::VECTOR:
@@ -234,6 +248,7 @@ void JsonParam::saveJSON(Json::Value& paramNode) const
          paramNode["value"][j] = v[j];
       break;
 
+   case UNASSIGNED:
    default:
       break;
    }
@@ -379,7 +394,7 @@ void JsonConfig::setParameter(const JsonParam& p)
 
 bool JsonConfig::paramExists(const char* paramName) const
 {
-   map<string, JsonParam>::const_iterator i = m_paramsMap.find(string(paramName));
+   auto i = m_paramsMap.find(string(paramName));
    if (i != m_paramsMap.end())
       return true;
    return false;
@@ -387,17 +402,14 @@ bool JsonConfig::paramExists(const char* paramName) const
 
 void JsonConfig::loadJSON(const Json::Value& json_node)
 {
-   Json::Value paramNode;
-
    // Support two forms: long (with full param descriptions and types), or short (just name: value)
    if (json_node.isArray())
    {
       // Long form:
-      for (unsigned int i=0; i<json_node.size(); ++i)
+      for (const auto &i : json_node)
       {
-         paramNode = json_node[i];
          JsonParam p;
-         if (p.loadJSON(paramNode))
+         if (p.loadJSON(i))
             setParameter(p);
       }
    }
@@ -405,13 +417,13 @@ void JsonConfig::loadJSON(const Json::Value& json_node)
    {
       // Short form expects a prior entry in the params map whose value will be overriden here:
       Json::Value::Members members = json_node.getMemberNames();
-      for (size_t i=0; i<members.size(); ++i)
+      for (auto &member : members)
       {
-         JsonParam& p = getParameter(members[i].c_str());
+         JsonParam& p = getParameter(member.c_str());
          if (p.name().empty())
          {
             ossimNotify(ossimNotifyLevel_WARN)<<"JsonConfig::loadJSON():  Attempted to override "
-                  "nonexistent parameter <"<< members[i] << ">. Ignoring request."<<endl;
+                  "nonexistent parameter <"<< member << ">. Ignoring request."<<endl;
             continue;
          }
          if (p.descr().contains("DEPRECATED"))
@@ -423,6 +435,7 @@ void JsonConfig::loadJSON(const Json::Value& json_node)
 
          // Create a full JSON representation of the named parameter from the default list, replace
          // its value, and recreate the parameter from the updated full JSON:
+         Json::Value paramNode;
          p.saveJSON(paramNode);
          paramNode["value"] = json_node[p.name().string()];
          p.loadJSON(paramNode);
@@ -433,12 +446,12 @@ void JsonConfig::loadJSON(const Json::Value& json_node)
 
 void JsonConfig::saveJSON(Json::Value& json_node) const
 {
-   Json::Value paramNode;
 
    map<string, JsonParam>::const_iterator param = m_paramsMap.begin();
    int entry = 0;
    while (param != m_paramsMap.end())
    {
+      Json::Value paramNode;
       param->second.saveJSON(paramNode);
       json_node[entry++] = paramNode;
       ++param;
