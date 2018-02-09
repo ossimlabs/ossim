@@ -10,7 +10,7 @@
 //*******************************************************************
 //  $Id$
 
-#include <ossim/util/ossimPointCloudUtil.h>
+#include <ossim/util/ossimPointCloudTool.h>
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimCommon.h>
@@ -24,20 +24,20 @@
 
 using namespace std;
 
-ossimPointCloudUtil::ossimPointCloudUtil()
+ossimPointCloudTool::ossimPointCloudTool()
 :  m_operation (LOWEST_DEM),
    m_gsd (0)
 {
 }
 
-ossimPointCloudUtil::~ossimPointCloudUtil()
+ossimPointCloudTool::~ossimPointCloudTool()
 {
    m_pcHandler = 0;
    m_prodGeom = 0;
    m_pcuFilter = 0;
 }
 
-void ossimPointCloudUtil::addArguments(ossimArgumentParser& ap)
+void ossimPointCloudTool::addArguments(ossimArgumentParser& ap)
 {
    // Set the general usage:
    ossimApplicationUsage* au = ap.getApplicationUsage();
@@ -61,7 +61,7 @@ void ossimPointCloudUtil::addArguments(ossimArgumentParser& ap)
          "in the ossimIndexToRgbLutFilter format and must handle the three output "
          "viewshed values (see --values option).");
    au->addCommandLineOption(
-         "--op",
+         "--method",
          "Specify the desired operation. Possible values are:\n"
          "  \"highest-dem\", \"lowest-dem\" (default), or \"highest-lowest\". \n"
          "Alternatively can be specified in shorthand as \"h-d\", \"l-d\", or \"h-l\", "
@@ -76,7 +76,7 @@ void ossimPointCloudUtil::addArguments(ossimArgumentParser& ap)
          "For engineering/debug purposes ");
 }
 
-void ossimPointCloudUtil::usage(ossimArgumentParser& ap)
+void ossimPointCloudTool::usage(ossimArgumentParser& ap)
 {
    // Add global usage options.
    ossimInit::instance()->addOptions(ap);
@@ -92,7 +92,7 @@ void ossimPointCloudUtil::usage(ossimArgumentParser& ap)
    << std::endl;
 }
 
-bool ossimPointCloudUtil::initialize(ossimArgumentParser& ap)
+bool ossimPointCloudTool::initialize(ossimArgumentParser& ap)
 {
    if ( (ap.argc() == 1) || ap.read("-h") || ap.read("--help") )
    {
@@ -112,7 +112,7 @@ bool ossimPointCloudUtil::initialize(ossimArgumentParser& ap)
    if ( ap.read("--lut", sp1) )
       m_lutFile = ts1;
 
-   if ( ap.read("--op", sp1) )
+   if ( ap.read("--method", sp1) )
    {
       if (ts1.contains("highest-dem") || ts1.contains("h-d"))
          m_operation = HIGHEST_DEM;
@@ -151,12 +151,17 @@ bool ossimPointCloudUtil::initialize(ossimArgumentParser& ap)
    return initialize();
 }
 
-bool ossimPointCloudUtil::initialize()
+void ossimPointCloudTool::loadJSON(const Json::Value &json_request)
+{
+
+}
+
+bool ossimPointCloudTool::initialize()
 {
    if (loadPC())
    {
       ossimNotify(ossimNotifyLevel_WARN)
-              << "ossimPointCloudUtil::initialize ERR: Cannot open PC file at <"<<m_pcFile
+              << "ossimPointCloudTool::initialize ERR: Cannot open PC file at <"<<m_pcFile
               <<">\n"<< endl;
       return false;
    }
@@ -168,14 +173,14 @@ bool ossimPointCloudUtil::initialize()
    return true;
 }
 
-bool ossimPointCloudUtil::loadPC()
+bool ossimPointCloudTool::loadPC()
 {
    // DEM provided as file on command line, reset the elev manager to use only this:
    m_pcHandler = ossimPointCloudHandlerRegistry::instance()->open(m_pcFile);
    if(!m_pcHandler.valid())
    {
       ossimNotify(ossimNotifyLevel_WARN)
-            << "ossimPointCloudUtil::initialize ERR: Cannot open PC file at <"<<m_pcFile
+            << "ossimPointCloudTool::initialize ERR: Cannot open PC file at <"<<m_pcFile
             <<">\n" << std::endl;
       return false;
    }
@@ -193,7 +198,7 @@ bool ossimPointCloudUtil::loadPC()
    return true;
 }
 
-bool ossimPointCloudUtil::loadDem()
+bool ossimPointCloudTool::loadDem()
 {
    // DEM provided as file on command line, reset the elev manager to use only this:
    ossimElevManager* elevMgr = ossimElevManager::instance();
@@ -217,7 +222,7 @@ bool ossimPointCloudUtil::loadDem()
    return true;
 }
 
-void ossimPointCloudUtil::setGSD(const double& meters_per_pixel)
+void ossimPointCloudTool::setGSD(const double& meters_per_pixel)
 {
    if (m_prodGeom->getAsMapProjection() && (meters_per_pixel > 0))
    {
@@ -226,7 +231,7 @@ void ossimPointCloudUtil::setGSD(const double& meters_per_pixel)
    }
 }
 
-bool ossimPointCloudUtil::execute()
+bool ossimPointCloudTool::execute()
 {
    // See if an LUT is requested:
    ossimImageSource* last_source = m_pcuFilter.get();
@@ -238,7 +243,7 @@ bool ossimPointCloudUtil::execute()
       lutSource = new ossimIndexToRgbLutFilter;
       if (!lutSource->loadState(lut_kwl))
       {
-         ossimNotify(ossimNotifyLevel_WARN) << "ossimViewshedUtil::writeFile() ERROR: The LUT "
+         ossimNotify(ossimNotifyLevel_WARN) << "ossimPointCloudTool::writeFile() ERROR: The LUT "
                "file <"<<m_lutFile<<"> could not be read. Ignoring remap request.\n"<< std::endl;
          lutSource = 0;
       }
@@ -263,4 +268,9 @@ bool ossimPointCloudUtil::execute()
    return success;
 }
 
+
+void ossimPointCloudTool::saveJSON(Json::Value &json_request) const
+{
+
+}
 

@@ -10,10 +10,8 @@
 #ifndef ossimPointCloudUtil_HEADER
 #define ossimPointCloudUtil_HEADER
 
-#include <ossim/base/ossimObject.h>
+#include <ossim/util/ossimTool.h>
 #include <ossim/base/ossimRefPtr.h>
-#include <ossim/base/ossimProcessInterface.h>
-#include <ossim/base/ossimListenerManager.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimArgumentParser.h>
@@ -25,41 +23,22 @@
 /**
  * Utility class for generating point-cloud-derived image products
  */
-class OSSIMDLLEXPORT ossimPointCloudUtil : public ossimObject,
-                                           public ossimProcessInterface,
-                                           public ossimListenerManager
+class OSSIMDLLEXPORT ossimPointCloudTool : public ossimTool
 {
    friend class ossimPointCloudUtilityFilter;
 
 public:
-   ossimPointCloudUtil();
-   virtual ~ossimPointCloudUtil();
+   ossimPointCloudTool();
+   ~ossimPointCloudTool();
 
-   /**
-    * Initializes from command line arguments.
-    */
-   bool initialize(ossimArgumentParser& ap);
-
-   /*
-    * Initializes after parameter set-methods have been called (in lieu of argument parser init)
-    */
-   bool initialize();
-
-   /**
-    * Returns true if successful
-    */
-   virtual bool execute();
-
-   /**
-    * Sets the nominal output resolution in meters
-    */
-   void setGSD(const double& meters_per_pixel);
-
-   virtual ossimObject* getObject() { return this; }
-   virtual const ossimObject* getObject() const  { return this; }
-   virtual ossimListenerManager* getManager()  { return this; };
+   bool initialize(ossimArgumentParser& ap) override;
+   void loadJSON(const Json::Value& json_request) override;
+   void saveJSON(Json::Value& json) const override;
+   virtual bool execute() override;
 
 protected:
+   bool initialize();
+   void setGSD(const double& meters_per_pixel);
    void usage(ossimArgumentParser& ap);
    void addArguments(ossimArgumentParser& ap);
    bool loadPC();
