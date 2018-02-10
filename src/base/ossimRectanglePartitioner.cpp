@@ -19,7 +19,7 @@
 #include <ossim/base/ossimTrace.h>
 using namespace std;
 
-static ossimTrace traceDebug("ossimRectanglePartitioner:degug");
+static ossimTrace traceDebug("ossimRectanglePartitioner:debug");
 
 ossimRectanglePartitioner::ossimRectanglePartitioner()
 {

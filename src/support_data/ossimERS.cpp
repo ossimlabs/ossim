@@ -23,7 +23,7 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimNotifyContext.h>
 
-static ossimTrace traceDebug("ossimERS:degug");
+static ossimTrace traceDebug("ossimERS:debug");
 
 
 ossimERS::ossimERS()
