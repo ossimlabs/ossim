@@ -14,12 +14,12 @@
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/elevation/ossimElevManager.h>
-#include <ossim/util/ossimPointCloudUtil.h>
+#include <ossim/util/ossimPointCloudTool.h>
 
-RTTI_DEF1(ossimPointCloudUtilityFilter, "ossimPointCloudUtilityFilter", ossimImageSourceFilter);
+RTTI_DEF1(ossimPointCloudUtilityFilter, "ossimPointCloudUtilityFilter", ossimImageSourceFilter); // NOLINT
 
 
-ossimPointCloudUtilityFilter::ossimPointCloudUtilityFilter( ossimPointCloudUtil* pc_util)
+ossimPointCloudUtilityFilter::ossimPointCloudUtilityFilter( ossimPointCloudTool* pc_util)
 :  m_util (pc_util)
 {
 }
@@ -38,14 +38,14 @@ bool ossimPointCloudUtilityFilter::getTile(ossimImageData* result, ossim_uint32 
    ossimRefPtr<ossimImageData> lowest = 0;
 
    // Fetch tile from inputs as needed:
-   if ((m_util->m_operation == ossimPointCloudUtil::HIGHEST_DEM) ||
-         (m_util->m_operation == ossimPointCloudUtil::HIGHEST_LOWEST))
+   if ((m_util->m_operation == ossimPointCloudTool::HIGHEST_DEM) ||
+         (m_util->m_operation == ossimPointCloudTool::HIGHEST_LOWEST))
    {
       m_util->m_pciHandler->setCurrentEntry(ossimPointCloudImageHandler::HIGHEST);
       highest = m_util->m_pciHandler->getTile(irect, resLevel);
    }
-   if ((m_util->m_operation == ossimPointCloudUtil::LOWEST_DEM) ||
-         (m_util->m_operation == ossimPointCloudUtil::HIGHEST_LOWEST))
+   if ((m_util->m_operation == ossimPointCloudTool::LOWEST_DEM) ||
+         (m_util->m_operation == ossimPointCloudTool::HIGHEST_LOWEST))
    {
       m_util->m_pciHandler->setCurrentEntry(ossimPointCloudImageHandler::LOWEST);
       lowest = m_util->m_pciHandler->getTile(irect, resLevel);
@@ -60,13 +60,13 @@ bool ossimPointCloudUtilityFilter::getTile(ossimImageData* result, ossim_uint32 
          pt_l0 = ipt * (resLevel + 1);
          switch (m_util->m_operation)
          {
-         case ossimPointCloudUtil::HIGHEST_DEM:
+         case ossimPointCloudTool::HIGHEST_DEM:
             m_util->m_prodGeom->localToWorld(pt_l0, gpt);
             h = elevation->getHeightAboveEllipsoid(gpt);
             dh = highest->getPix(ipt) - h;
             break;
 
-         case ossimPointCloudUtil::HIGHEST_LOWEST:
+         case ossimPointCloudTool::HIGHEST_LOWEST:
             dh = highest->getPix(ipt) - lowest->getPix(ipt);
             break;
 

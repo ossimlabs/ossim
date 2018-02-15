@@ -226,7 +226,7 @@ public:
     * Serialize to WorldView-style .RPB file to the stream provided.
     * Returns TRUE on successful write.
     * */
-   bool toRPB(std::ostream& out) const;
+   bool toRPB(std::ostream &out) const;
 
 protected:
    enum AdjustParamIndex

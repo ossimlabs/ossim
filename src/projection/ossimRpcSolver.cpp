@@ -5,23 +5,15 @@
 //
 //**************************************************************************************************
 
-#include <cstdlib>
-#include <ctime>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-
 #include <ossim/projection/ossimRpcSolver.h>
-#include <ossim/projection/ossimRpcModel.h>
-#include <ossim/projection/ossimProjection.h>
-#include <ossim/matrix/newmatap.h>
-#include <ossim/matrix/newmatio.h>
 #include <ossim/matrix/newmatnl.h>
-#include <ossim/matrix/newmatio.h>
 #include <ossim/elevation/ossimElevManager.h>
 #include <ossim/support_data/ossimNitfRpcBTag.h>
-#include <ossim/imaging/ossimImageGeometry.h>
-#include <ossim/base/ossim2dTo2dIdentityTransform.h>
+#include <ossim/imaging/ossimImageHandler.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
+
+using namespace ossim;
+using namespace std;
 
 static const ossim_uint32 STARTING_GRID_SIZE = 8;
 static const ossim_uint32 ENDING_GRID_SIZE = 64;
@@ -55,7 +47,7 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
 
    std::vector<ossimGpt> groundPoints;
    std::vector<ossimDpt> imagePoints;
-   ossim_uint32 x,y,img_x, img_y;
+   ossim_uint32 x,y;
    ossimGpt gpt;
    ossimGpt defaultGround;
    if (ySamples <= 1)
@@ -308,10 +300,6 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
    ossimDpt ul = imageBounds.ul();
    ossim_float64 w = imageBounds.width();
    ossim_float64 h = imageBounds.height();
-   ossimDpt gsd (geom->getMetersPerPixel());
-
-   double dxRms = 0;
-   double dyRms = 0;
    ossimDpt ipt, irpc;
    ossimGpt gpt;
 
@@ -414,6 +402,21 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
    }
    return converged;
 }
+
+bool ossimRpcSolver::solve(const ossimFilename& imageFilename,
+                             const double& pixel_tolerance)
+{
+   // Establish input geometry:
+   ossimRefPtr<ossimImageHandler> h = ossimImageHandlerRegistry::instance()->open(imageFilename);
+   if(!h.valid())
+      return false;
+
+   ossimRefPtr<ossimImageGeometry> geom = h->getImageGeometry();
+   ossimDrect imageRect (h->getBoundingRect());
+
+   return solve(imageRect, geom.get(), pixel_tolerance);
+}
+
 
 double ossimRpcSolver::getRmsError()const
 {

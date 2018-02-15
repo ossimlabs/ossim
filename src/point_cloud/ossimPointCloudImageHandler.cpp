@@ -94,11 +94,11 @@ ossimPointCloudImageHandler::ossimPointCloudImageHandler()
    //---
    m_gsd.makeNan();
 
-   m_componentNames.push_back(INTENSITY_KW);
-   m_componentNames.push_back(HIGHEST_KW);
-   m_componentNames.push_back(LOWEST_KW);
-   m_componentNames.push_back(RETURNS_KW);
-   m_componentNames.push_back(RGB_KW);
+   m_componentNames.emplace_back(INTENSITY_KW);
+   m_componentNames.emplace_back(HIGHEST_KW);
+   m_componentNames.emplace_back(LOWEST_KW);
+   m_componentNames.emplace_back(RETURNS_KW);
+   m_componentNames.emplace_back(RGB_KW);
 }
 
 ossimPointCloudImageHandler::~ossimPointCloudImageHandler()
@@ -167,8 +167,8 @@ ossimRefPtr<ossimImageGeometry> ossimPointCloudImageHandler::getImageGeometry()
 
    theGeometry = new ossimImageGeometry();
    ossimString epsgCode ("EPSG:4326");
-   ossimMapProjection* proj = dynamic_cast<ossimMapProjection*>(
-         ossimEpsgProjectionFactory::instance()->createProjection(epsgCode));
+   ossimMapProjection* proj = dynamic_cast<ossimMapProjection*>( // NOLINT
+           ossimEpsgProjectionFactory::instance()->createProjection(epsgCode));
    if (!proj)
       return 0;
    theGeometry->setProjection(proj);
@@ -208,7 +208,7 @@ ossimRefPtr<ossimImageData> ossimPointCloudImageHandler::getTile(const ossimIrec
 
    // Image rectangle must be set prior to calling getTile.
    m_tile->setImageRectangle(tile_rect);
-   if (getTile(m_tile.get(), resLevel) == false)
+   if (!getTile(m_tile.get(), resLevel))
    {
       if (m_tile->getDataObjectStatus() != OSSIM_NULL)
          m_tile->makeBlank();
@@ -315,7 +315,7 @@ bool ossimPointCloudImageHandler::getTile(ossimImageData* result, ossim_uint32 r
    // Finished accumulating, need to normalize and fill the tile.
    // We must always blank out the tile as we may not have a point for every pixel.
    normalize(accumulator);
-   ossim_float32** buf = new ossim_float32*[numBands];
+   auto buf = new ossim_float32*[numBands];
    std::map<ossim_int32, PcrBucket*>::iterator accum_iter;
    ossim_float32 null_pixel = OSSIM_DEFAULT_NULL_PIX_FLOAT;
    result->setNullPix(null_pixel);
@@ -340,7 +340,7 @@ bool ossimPointCloudImageHandler::getTile(ossimImageData* result, ossim_uint32 r
    delete [] buf;
    buf = 0;
 
-   std::map<ossim_int32, PcrBucket*>::iterator pcr_iter = accumulator.begin();
+   auto pcr_iter = accumulator.begin();
    while (pcr_iter != accumulator.end())
    {
       delete pcr_iter->second;
@@ -361,7 +361,7 @@ void ossimPointCloudImageHandler::addSample(std::map<ossim_int32, PcrBucket*>& a
    //cout << "sample: "<<*sample<<endl;//TODO: REMOVE DEBUG
 
    // Search map for exisiting point in that location:
-   std::map<ossim_int32, PcrBucket*>::iterator iter = accumulator.find(index);
+   auto iter = accumulator.find(index);
    if (iter == accumulator.end())
    {
       // First hit. Initialize location with current sample:
@@ -420,7 +420,7 @@ void ossimPointCloudImageHandler::normalize(std::map<ossim_int32, PcrBucket*>& a
    if (m_activeComponent == RGB)
       numBands = 3;
 
-   std::map<ossim_int32, PcrBucket*>::iterator iter = accumulator.begin();
+   auto iter = accumulator.begin();
    ossim_float32 avg;
    while (iter != accumulator.end())
    {
@@ -510,7 +510,7 @@ void ossimPointCloudImageHandler::getEntryList(std::vector<ossim_uint32>& entryL
    entryList.clear();
    for (ossim_uint32 i = 0; i < m_componentNames.size(); i++)
    {
-      entryList.push_back(i);
+      entryList.emplace_back(i);
    }
 }
 
@@ -716,18 +716,18 @@ void ossimPointCloudImageHandler::getValidImageVertices(std::vector<ossimIpt>& v
    ossimGrect bounds;
    m_pch->getBounds(bounds);
    theGeometry->worldToLocal(bounds.ul(), r0Pt);
-   validVertices.push_back(r0Pt);
+   validVertices.emplace_back(r0Pt);
    theGeometry->worldToLocal(bounds.ur(), r0Pt);
-   validVertices.push_back(r0Pt);
+   validVertices.emplace_back(r0Pt);
    theGeometry->worldToLocal(bounds.lr(), r0Pt);
-   validVertices.push_back(r0Pt);
+   validVertices.emplace_back(r0Pt);
    theGeometry->worldToLocal(bounds.ll(), r0Pt);
-   validVertices.push_back(r0Pt);
+   validVertices.emplace_back(r0Pt);
 
    if (ordering == OSSIM_COUNTERCLOCKWISE_ORDER)
    {
       for (int i=3; i>=0; i--)
-         validVertices.push_back(validVertices[i]/divisor);
+         validVertices.emplace_back(validVertices[i]/divisor);
       validVertices.erase(validVertices.begin(), validVertices.begin()+4);
    }
 }
