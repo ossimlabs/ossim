@@ -64,6 +64,7 @@ static const char DATUMS_KW[]               = "datums";
 static const char DEG2RAD_KW[]              = "deg2rad";
 static const char DUMP_KW[]                 = "dump";
 static const char DUMP_NO_OVERVIEWS_KW[]    = "dump_no_overviews";
+static const char EXTENSIONS_KW[]           = "extensions";
 static const char FACTORIES_KW[]            = "factories";
 static const char FACTORY_KEYWORD_LIST_KW[] = "factory_keyword_list";
 static const char FONTS_KW[]                = "fonts";
@@ -162,7 +163,9 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--ecef2llh", "<X> <Y> <Z> in ECEF coordinates and returns latitude longitude height position.");
 
-   au->addCommandLineOption("-f", "<format> Will output the information specified format [KWL | XML].  Default is KWL.");   
+   au->addCommandLineOption("--extensions", "Prints list of supported image extensions.");
+
+   au->addCommandLineOption("-f", "<format> Will output the information specified format [KWL | XML].  Default is KWL.");
 
    au->addCommandLineOption("--factories", "<keyword_list_flag> Prints factory list.  If keyword_list_flag is true, the result of a saveState will be output for each object.");
 
@@ -418,6 +421,13 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          {
             break;
          }
+      }
+
+      if( ap.read("--extensions") )
+      {
+         m_kwl.add( EXTENSIONS_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+            break;
       }
 
       if( ap.read("-f", sp1) )
@@ -882,6 +892,7 @@ bool ossimInfo::execute()
             value = lookup;
             deg2rad( value.toFloat64() );
          }
+
          lookup = m_kwl.find(ECEF2LLH_KW);
          if(lookup)
          {
@@ -890,6 +901,17 @@ bool ossimInfo::execute()
             ecefPoint.toPoint(lookup);
 
             ecef2llh(ecefPoint, ossimNotify(ossimNotifyLevel_INFO));
+         }
+
+         lookup = m_kwl.find(EXTENSIONS_KW);
+         if ( lookup )
+         {
+            ++consumedKeys;
+            value = lookup;
+            if ( value.toBool() )
+            {
+               printExtensions();
+            }
          }
 
          lookup = m_kwl.find(FACTORIES_KW);
@@ -3026,6 +3048,31 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
    // Reset flags.
    out.setf(f);
 
+   return out;
+}
+
+void ossimInfo::printExtensions() const
+{
+   printExtensions(ossimNotify(ossimNotifyLevel_INFO));
+}
+
+std::ostream& ossimInfo::printExtensions(std::ostream& out) const
+{
+   ossimImageHandlerFactoryBase::UniqueStringList extList;
+   ossimImageHandlerRegistry::instance()->getSupportedExtensions(extList);
+   const vector<ossimString>& list = extList.getList();
+
+   if (list.empty())
+   {
+      out << "No image file extensions handled. This should never happen!" << std::endl;
+      return out;
+   }
+
+   out<<"\nImage Entensions Supported:"<< endl;
+   for (const auto& extension : list)
+      out<<"  "<<extension<<endl;
+
+   out<<endl;
    return out;
 }
 

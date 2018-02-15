@@ -469,6 +469,16 @@ public:
     */
    std::ostream& outputHeight(const ossimGpt& gpt, std::ostream& out) const;
 
+   /** @brief Prints supported image file extensions to stdout. */
+   void printExtensions() const;
+
+   /**
+    * @brief Prints supported image file extensions to stream.
+    * @param out Output to write to out.
+    * @return stream
+    */
+   std::ostream& printExtensions(std::ostream& out) const;
+
    /** @brief Prints loaded plugins to stdout. */
    void printPlugins() const;
 
