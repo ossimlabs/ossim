@@ -454,12 +454,12 @@ void ossimResampler::resamplePartialTile(T,// not used
    ossim_int32 kernelHorizontalShift = (ossim_int32)(-theKernelWidth/2.0+evenKernelW);
    ossim_int32 kernelVerticalShift   = (ossim_int32)(-theKernelHeight/2.0+evenKernelH);
    
-   for (k = 0; k < maxOutputSize; k++)
+   for (k = 0; k < maxOutputSize; ++k)
    {
       Lx[k] = (ossim_int32)(scaledOriginShift.x+((k+origin.x)/
                                            theOutputToInputRatio.x));
    }
-   for (k = 0; k < maxOutputSize; k++)
+   for (k = 0; k < maxOutputSize; ++k)
    {
       Ly[k] = (ossim_int32)(scaledOriginShift.y+((k+origin.y)/
                                            theOutputToInputRatio.y));
@@ -472,17 +472,17 @@ void ossimResampler::resamplePartialTile(T,// not used
       T        maxPix    = static_cast<T>(input->getMaxPix(band));
       T        np        = static_cast<T>(input->getNullPix(band));
       
-      for (k = 0; k < out_height; k++)
+      for (k = 0; k < out_height; ++k)
       {
          ossim_int32 indexMod = (ossim_int32)fmod((k+origin.y), theOutputToInputRatio.y);
          if(indexMod >= theTableWidthY) indexMod = theTableWidthY - 1;
          if(indexMod <0) indexMod = 0;
-         for (j = 0; j < in_width; j++)
+         for (j = 0; j < in_width; ++j)
          {
             h[j] = 0.0;
             ossim_int32 count = 0;
             double lastValue = ossim::nan();
-            for (l = 0; l < theKernelHeight; l++)
+            for (l = 0; l < theKernelHeight; ++l)
             {
                ossim_int32 index = Ly[k] + l + kernelVerticalShift;
                if ((index >= 0) && (index < in_height))
@@ -530,7 +530,7 @@ void ossimResampler::resamplePartialTile(T,// not used
                h[j] = ossim::nan();
             }
          }
-         for (ossim_int32 m = 0; m < out_width; m++)
+         for (ossim_int32 m = 0; m < out_width; ++m)
          {
             double x = 0.0;
             ossim_int32 indexMod = (ossim_int32)fmod((m+origin.x), theOutputToInputRatio.x);
@@ -543,7 +543,7 @@ void ossimResampler::resamplePartialTile(T,// not used
             }
             else
             {
-               for (l = 0; l < theKernelWidth; l++)
+               for (l = 0; l < theKernelWidth; ++l)
                {
                   ossim_int32 index = Lx[m] + l + kernelHorizontalShift;
                   if ((index >= 0) && (index < in_width))
@@ -623,12 +623,12 @@ void ossimResampler::resampleFullTile(T,// not used
    ossim_int32 kernelHorizontalShift = (ossim_int32)(-theKernelWidth/2.0+evenKernelW);
    ossim_int32 kernelVerticalShift   = (ossim_int32)(-theKernelHeight/2.0+evenKernelH);
    
-   for (k = 0; k < maxOutputSize; k++)
+   for (k = 0; k < maxOutputSize; ++k)
    {
       Lx[k] = (ossim_int32)(scaledOriginShift.x+((k+origin.x)/
                                            theOutputToInputRatio.x));
    }
-   for (k = 0; k < maxOutputSize; k++)
+   for (k = 0; k < maxOutputSize; ++k)
    {
       Ly[k] = (ossim_int32)(scaledOriginShift.y+((k+origin.y)/
                                            theOutputToInputRatio.y));
@@ -640,15 +640,15 @@ void ossimResampler::resampleFullTile(T,// not used
       double  minPix    = static_cast<T>(input->getMinPix()[band]);
       double  maxPix    = static_cast<T>(input->getMaxPix()[band]);
       
-      for (k = 0; k < out_height; k++)
+      for (k = 0; k < out_height; ++k)
       {
          int indexMod = (int)fmod((k+origin.y), theOutputToInputRatio.y);
          if(indexMod >= theTableWidthY) indexMod = theTableWidthY - 1;
          if(indexMod <0) indexMod = 0;
-         for (j = 0; j < in_width; j++)
+         for (j = 0; j < in_width; ++j)
          {
             h[j] = 0.0;
-            for (l = 0; l < theKernelHeight; l++)
+            for (l = 0; l < theKernelHeight; ++l)
             {
                ossim_int32 index = Ly[k] + l + kernelVerticalShift;
                if ((index >= 0) && (index < in_height))
@@ -658,14 +658,14 @@ void ossimResampler::resampleFullTile(T,// not used
                }
             }
          }
-         for (ossim_int32 m = 0; m < out_width; m++)
+         for (ossim_int32 m = 0; m < out_width; ++m)
          {
             double x = 0.0;
             int indexMod = (int)fmod((m+origin.x), theOutputToInputRatio.x);
             if(indexMod >= theTableWidthX) indexMod = theTableWidthX-1;
             if(indexMod <0) indexMod = 0;
             
-            for (l = 0; l < theKernelWidth; l++)
+            for (l = 0; l < theKernelWidth; ++l)
             {
                ossim_int32 index = Lx[m] + l + kernelHorizontalShift;
                if ((index >= 0) && (index < in_width))
@@ -769,7 +769,7 @@ void ossimResampler::resampleTile(T,// not used
    long outputRectW         = outputRect.width();
    long resultOffset = (subRectUl.y - outputRectUl.y)*outputRectW + (subRectUl.x - outputRectUl.x);
 
-   for(ossim_uint32 band = 0; band < input->getNumberOfBands(); band++)
+   for(ossim_uint32 band = 0; band < input->getNumberOfBands(); ++band)
    {
       T* resultBuf       = static_cast<T*>(output->getBuf(band))+resultOffset;
       const T *sourceBuf = static_cast<T*>(dupIn->getBuf(band));
@@ -777,13 +777,13 @@ void ossimResampler::resampleTile(T,// not used
       ossimDpt end   = endSave;
       T np = (T)output->getNullPix(band);
                         
-      for(long y = 0; y < subRectH; y++)
+      for(long y = 0; y < subRectH; ++y)
       {
          double deltaX = (end.x - start.x)*stepSizeWidth;
          double deltaY = (end.y - start.y)*stepSizeHeight;
          ossimDpt pointXY = start;
          
-         for(long x = 0; x < subRectW; x++)
+         for(long x = 0; x < subRectW; ++x)
          {
             int xPixel = pointXY.x<0?(int)floor(pointXY.x):(int)pointXY.x;
             int yPixel = pointXY.y<0?(int)floor(pointXY.y):(int)pointXY.y;
@@ -868,7 +868,7 @@ void ossimResampler::resampleTileNearestNeighbor(T, // dummy template variable
    long outputRectW         = outputRect.width();
 
    long resultOffset = (subRectUl.y - outputRectUl.y)*outputRectW + (subRectUl.x - outputRectUl.x);
-   for(ossim_uint32 band = 0; band < input->getNumberOfBands(); band++)
+   for(ossim_uint32 band = 0; band < input->getNumberOfBands(); ++band)
    {
       T* resultBuf       = static_cast<T*>(output->getBuf(band))+resultOffset;
       const T *sourceBuf = static_cast<T*>(input->getBuf(band));
@@ -877,13 +877,13 @@ void ossimResampler::resampleTileNearestNeighbor(T, // dummy template variable
       T inNp  = (T)input->getNullPix(band);
       T outNp = (T)output->getNullPix(band);
                         
-      for(long y = 0; y < subRectH; y++)
+      for(long y = 0; y < subRectH; ++y)
       {
          double deltaX = (end.x - start.x)*stepSizeWidth;
          double deltaY = (end.y - start.y)*stepSizeHeight;
          ossimDpt pointXY = start;
          
-         for(long x = 0; x < subRectW; x++)
+         for(long x = 0; x < subRectW; ++x)
          {
             int xPixel = pointXY.x<0?(int)floor(pointXY.x):(int)pointXY.x;
             int yPixel = pointXY.y<0?(int)floor(pointXY.y):(int)pointXY.y;
@@ -1025,11 +1025,11 @@ void ossimResampler::generateWeightTable()
    case ossimResampler_NONE:
      {
        theResamplerType = ossimResampler_NEAREST_NEIGHBOR;
-       for (i = 0; i < theTableWidthY; i++)
+       for (i = 0; i < theTableWidthY; ++i)
          {
 	   theWeightTableY[0][i] = 1;
          }
-       for (i = 0; i < theTableWidthX; i++)
+       for (i = 0; i < theTableWidthX; ++i)
          {
 	   theWeightTableX[0][i] = 1;
          }
@@ -1037,11 +1037,11 @@ void ossimResampler::generateWeightTable()
      }
       case ossimResampler_NEAREST_NEIGHBOR:
       {         
-         for (i = 0; i < theTableWidthY; i++)
+         for (i = 0; i < theTableWidthY; ++i)
          {
             theWeightTableY[0][i] = 1;
          }
-         for (i = 0; i < theTableWidthX; i++)
+         for (i = 0; i < theTableWidthX; ++i)
          {
             theWeightTableX[0][i] = 1;
          }
@@ -1049,13 +1049,13 @@ void ossimResampler::generateWeightTable()
       }
       case ossimResampler_BILINEAR:
       {
-         for (i = 0; i < theTableWidthX; i++)
+         for (i = 0; i < theTableWidthX; ++i)
          {
             x = (double)i/(double)(theTableWidthX);
             theWeightTableX[0][i] = x;
             theWeightTableX[1][i] = 1-x;
          }
-         for (i = 0; i < theTableWidthY; i++)
+         for (i = 0; i < theTableWidthY; ++i)
          {
             x = (double)i/(double)(theTableWidthY);
             theWeightTableY[0][i] = x;
@@ -1065,7 +1065,7 @@ void ossimResampler::generateWeightTable()
       }
       case ossimResampler_BICUBIC:
       {         
-         for (i = 0; i < theTableWidthX; i++)
+         for (i = 0; i < theTableWidthX; ++i)
          {
             x = (double)i/(double)(theTableWidthX);
             theWeightTableX[0][i] = getCubicC0(x);
@@ -1073,7 +1073,7 @@ void ossimResampler::generateWeightTable()
             theWeightTableX[2][i] = getCubicC2(x);
             theWeightTableX[3][i] = getCubicC3(x);               
          }
-         for (i = 0; i < theTableWidthY; i++)
+         for (i = 0; i < theTableWidthY; ++i)
          {
             x = (double)i/(double)(theTableWidthY);
             theWeightTableY[0][i] = getCubicC0(x);
