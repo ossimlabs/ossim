@@ -69,8 +69,8 @@ public:
     *  corner of the tile to grab from the image.
     *  Satisfies pure virtual from TileSource class.
     */
-   virtual ossimRefPtr<ossimImageData> getTile(const  ossimIrect& rect,
-                                               ossim_uint32 resLevel=0);
+   ossimRefPtr<ossimImageData> getTile(const  ossimIrect& rect,
+                                       ossim_uint32 resLevel=0) override;
    
    /**
     * Method to get a tile.   
@@ -82,14 +82,14 @@ public:
     *  is undefined so caller should handle appropriately with makeBlank or
     * whatever.
     */
-   virtual bool getTile(ossimImageData* result, ossim_uint32 resLevel=0);
+   bool getTile(ossimImageData* result, ossim_uint32 resLevel=0) override;
    
    /**
     * @brief Gets bands.
     * Satisfies ossimImageSource::getNumberOfInputBands pure virtual.
     * @retrun Number of bands.
     */
-   virtual ossim_uint32 getNumberOfInputBands() const;
+   ossim_uint32 getNumberOfInputBands() const override;
 
    /**
     * @brief Gets lines.
@@ -98,7 +98,7 @@ public:
     * Default = 0
     * @return The number of lines for specified reduced resolution level.
     */
-   virtual ossim_uint32 getNumberOfLines(ossim_uint32 resLevel = 0) const;
+   ossim_uint32 getNumberOfLines(ossim_uint32 resLevel = 0) const override;
 
    /**
     * @brief Gets samples.
@@ -107,7 +107,7 @@ public:
     * Default = 0
     * @return The number of samples for specified reduced resolution level.
     */
-   virtual ossim_uint32 getNumberOfSamples(ossim_uint32 resLevel = 0) const;
+   ossim_uint32 getNumberOfSamples(ossim_uint32 resLevel = 0) const override;
 
    /**
     * @brief Gets tile width.
@@ -117,7 +117,7 @@ public:
     * returns the output tile width which can be different than the internal
     * image tile width on disk.
     */
-   virtual ossim_uint32 getImageTileWidth() const;
+   ossim_uint32 getImageTileWidth() const  override;
 
    /**
     * @brief Gets tile height.
@@ -127,16 +127,16 @@ public:
     * returns the output tile width which can be different than the internal
     * image tile width on disk.
     */
-   virtual ossim_uint32 getImageTileHeight() const;
+   ossim_uint32 getImageTileHeight() const override;
 
    /** @return The width of the output tile. */
-   virtual ossim_uint32 getTileWidth() const;
+   ossim_uint32 getTileWidth() const override;
    
    /** @returns The height of the output tile. */
-   virtual ossim_uint32 getTileHeight() const;
+   ossim_uint32 getTileHeight() const override;
 
    /** @return The output pixel type of the tile source. */
-   ossimScalarType getOutputScalarType() const;
+   ossimScalarType getOutputScalarType() const override;
 
    /**
     * @brief Gets entry list.
@@ -146,51 +146,51 @@ public:
     * will be needed to rasterize that data channel as well.
     * @param entryList This is the list to initialize with entry indexes.
     */
-   virtual void getEntryList(std::vector<ossim_uint32>& entryList) const;
+   void getEntryList(std::vector<ossim_uint32>& entryList) const override;
 
-   virtual void getEntryNames(std::vector<ossimString>& entryNames) const;
+   void getEntryNames(std::vector<ossimString>& entryNames) const override;
 
    /** @return The current entry number. */
-   virtual ossim_uint32 getCurrentEntry() const;
+   ossim_uint32 getCurrentEntry() const override;
 
    /**
     * @param entryIdx Entry number to select.
     * @return true if it was able to set the current entry and false otherwise.
     */
-   virtual bool setCurrentEntry(ossim_uint32 entryIdx);
+   bool setCurrentEntry(ossim_uint32 entryIdx) override;
 
    /** @return "point-cloud" */
-   virtual ossimString getShortName() const;
+   ossimString getShortName() const override;
    
    /** @return "ossim point cloud to image renderer" */
-   virtual ossimString getLongName()  const;
+   ossimString getLongName()  const override;
 
    /**
     * Returns the image geometry object associated with this tile source or
     * NULL if non defined.  The geometry contains full-to-local image
     * transform as well as projection (image-to-world).
     */
-   virtual ossimRefPtr<ossimImageGeometry> getImageGeometry();
+   ossimRefPtr<ossimImageGeometry> getImageGeometry() override;
 
    /** @return Min pixel value. */
-   virtual double getMinPixelValue(ossim_uint32 band=0) const;
+   double getMinPixelValue(ossim_uint32 band) const override;
 
    /** @return Min pixel value. */
-   virtual double getMaxPixelValue(ossim_uint32 band=0) const;
+   double getMaxPixelValue(ossim_uint32 band) const override;
 
    /** @return Min pixel value. */
-   virtual double getNullPixelValue(ossim_uint32 band=0) const;
+   double getNullPixelValue(ossim_uint32 band) const override;
 
    /** @return The total number of decimation levels. */
-   virtual ossim_uint32 getNumberOfDecimationLevels() const;
+   ossim_uint32 getNumberOfDecimationLevels() const override;
 
-   virtual bool saveState(ossimKeywordlist& kwl, const char* prefix=0) const;
+   bool saveState(ossimKeywordlist& kwl, const char* prefix) const override;
 
-   virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
+   bool loadState(const ossimKeywordlist& kwl, const char* prefix) override;
 
-   virtual void getValidImageVertices(std::vector<ossimIpt>& validVertices,
-                                      ossimVertexOrdering ordering=OSSIM_CLOCKWISE_ORDER,
-                                      ossim_uint32 resLevel=0) const;
+   void getValidImageVertices(std::vector<ossimIpt>& validVertices,
+                              ossimVertexOrdering ordering,
+                              ossim_uint32 resLevel) const override;
 
    /**
     * The reader properties are:
@@ -201,8 +201,8 @@ public:
     * -- the active component ("component") as string with possible values
     *    "intensity", "highest", "lowest", "returns", or "rgb", respectively (case insensitive)
     */
-   void setProperty(ossimRefPtr<ossimProperty> property);
-   ossimRefPtr<ossimProperty> getProperty(const ossimString& name) const;
+   void setProperty(ossimRefPtr<ossimProperty> property) override;
+   ossimRefPtr<ossimProperty> getProperty(const ossimString& name) const override;
 
    /**
     * Permits backdoor for setting the input point cloud handler object. Useful for debug
@@ -223,7 +223,9 @@ protected:
       PcrBucket() : m_bucket(0), m_numSamples(0) {}
       PcrBucket(const ossim_float32* init_value, ossim_uint32 numBands);
       PcrBucket(const ossim_float32& R, const ossim_float32& G, const ossim_float32& B);
-      PcrBucket(const ossim_float32& init_value);
+
+      explicit PcrBucket(const ossim_float32& init_value);
+
       ~PcrBucket();
       ossim_float32* m_bucket;
       int m_numSamples;

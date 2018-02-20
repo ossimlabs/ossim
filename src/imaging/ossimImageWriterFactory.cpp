@@ -8,7 +8,7 @@
 // Author:  Garrett Potts
 //
 //*******************************************************************
-// $Id: ossimImageWriterFactory.cpp 22242 2013-04-20 02:16:06Z gpotts $
+// $Id$
 
 #include <ossim/imaging/ossimImageWriterFactory.h>
 #include <ossim/base/ossimImageTypeLut.h>
@@ -148,7 +148,6 @@ ossimImageWriterFactory::createWriter(const ossimString& typeName)const
    }
 
    writer = new ossimTiffWriter;
-   
    if (STATIC_TYPE_NAME(ossimTiffWriter) == typeName )
    {
       return writer.release();
@@ -321,7 +320,7 @@ void ossimImageWriterFactory::getTypeNameList(std::vector<ossimString>& typeList
    typeList.push_back(STATIC_TYPE_NAME(ossimNitfWriter));
    typeList.push_back(STATIC_TYPE_NAME(ossimNitf20Writer));
    typeList.push_back(STATIC_TYPE_NAME(ossimPdfWriter));
-   typeList.push_back(STATIC_TYPE_NAME(ossimWriter));
+   typeList.push_back(ossimString("ossimWriter"));
 }
 
 void ossimImageWriterFactory::getImageFileWritersBySuffix(

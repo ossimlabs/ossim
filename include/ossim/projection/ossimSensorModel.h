@@ -253,7 +253,7 @@ public:
     */
    virtual ossimSensorModel::CovMatStatus getObsCovMat(
       const ossimDpt& ipos, NEWMAT::SymmetricMatrix& Cov,
-      const ossim_float64 defPointingSigma = 0.5);
+      const ossim_float64 defPointingSigma = 0.5) const;
 
    /**
     * @brief Implementation of pure virtual

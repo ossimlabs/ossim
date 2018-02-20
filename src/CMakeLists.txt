@@ -4,6 +4,7 @@ FILE(GLOB ossim_SRCS  RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}
         "${CMAKE_CURRENT_SOURCE_DIR}/ossimConfig*.cpp" 
         "${CMAKE_CURRENT_SOURCE_DIR}/ossimVer*.cpp" 
         "${CMAKE_CURRENT_SOURCE_DIR}/init/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/init/*.c" 
+        "${CMAKE_CURRENT_SOURCE_DIR}/reg/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/reg/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/base/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/base/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/elevation/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/elevation/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/font/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/font/*.c" 
@@ -13,6 +14,7 @@ FILE(GLOB ossim_SRCS  RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}
         "${CMAKE_CURRENT_SOURCE_DIR}/point_cloud/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/point_cloud/*.c"
         "${CMAKE_CURRENT_SOURCE_DIR}/projection/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/projection/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/support_data/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/support_data/*.c" 
+        "${CMAKE_CURRENT_SOURCE_DIR}/reg/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/reg/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/util/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/util/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/vec/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/vec/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/video/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/video/*.c" 
@@ -49,6 +51,7 @@ FILE(GLOB ossim_elevation_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_C
 FILE(GLOB ossim_font_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/font/*.h")
 FILE(GLOB ossim_imaging_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/imaging/*.h")
 FILE(GLOB ossim_init_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/init/*.h")
+FILE(GLOB ossim_reg_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/reg/*.h")
 FILE(GLOB ossim_matrix_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/matrix/*.h")
 FILE(GLOB ossim_parallel_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/parallel/*.h")
 FILE(GLOB ossim_plugin_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/plugin/*.h")
@@ -72,7 +75,7 @@ MESSAGE( "${ossim_HDRS}" )
 SET(OSSIM_HEADER_FILES 
   ${ossim_HDRS}
   ${ossim_base_HDRS} ${ossim_elevation_HDRS} ${ossim_font_HDRS}  ${ossim_imaging_HDRS} 
-  ${ossim_init_HDRS} ${ossim_matrix_HDRS} ${ossim_parallel_HDRS} ${ossim_plugin_HDRS} 
+  ${ossim_init_HDRS} ${ossim_reg_HDRS} ${ossim_matrix_HDRS} ${ossim_parallel_HDRS} ${ossim_plugin_HDRS} 
   ${ossim_point_cloud_HDRS} ${ossim_projection_HDRS} ${ossim_support_data_HDRS} ${ossim_util_HDRS} 
   ${ossim_vec_HDRS} ${ossim_video_HDRS} ${ossim_vpfutil_HDRS} ${ossim_sockets_HDRS} ${ossim_hdf5_HDRS} )
 
@@ -96,6 +99,9 @@ IF(APPLE)
   ENDFOREACH(f)
   FOREACH(f  ${ossim_init_HDRS} )
       SET_SOURCE_FILES_PROPERTIES( ${f} PROPERTIES MACOSX_PACKAGE_LOCATION Headers/init )
+  ENDFOREACH(f)
+  FOREACH(f  ${ossim_reg_HDRS} )
+      SET_SOURCE_FILES_PROPERTIES( ${f} PROPERTIES MACOSX_PACKAGE_LOCATION Headers/reg )
   ENDFOREACH(f)
   FOREACH(f  ${ossim_matrix_HDRS} )
       SET_SOURCE_FILES_PROPERTIES( ${f} PROPERTIES MACOSX_PACKAGE_LOCATION Headers/matrix )
@@ -158,6 +164,7 @@ IF(NOT OSSIM_BUILD_FRAMEWORKS OR NOT APPLE)
    install(FILES ${ossim_font_HDRS} DESTINATION include/ossim/font COMPONENT ossim)
    install(FILES ${ossim_imaging_HDRS} DESTINATION include/ossim/imaging COMPONENT ossim) 
    install(FILES ${ossim_init_HDRS} DESTINATION include/ossim/init COMPONENT ossim) 
+   install(FILES ${ossim_reg_HDRS} DESTINATION include/ossim/reg COMPONENT ossim) 
    install(FILES ${ossim_matrix_HDRS} DESTINATION include/ossim/matrix COMPONENT ossim) 
    install(FILES ${ossim_parallel_HDRS} DESTINATION include/ossim/parallel COMPONENT ossim) 
    install(FILES ${ossim_plugin_HDRS} DESTINATION include/ossim/plugin COMPONENT ossim) 

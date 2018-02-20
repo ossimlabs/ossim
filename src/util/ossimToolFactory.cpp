@@ -17,6 +17,7 @@
 #include <ossim/util/ossimVerticesFinderTool.h>
 #include <ossim/util/ossimViewshedTool.h>
 #include <ossim/util/ossimSubImageTool.h>
+#include <ossim/util/ossimPointCloudTool.h>
 #if OSSIM_HAS_HDF5
 #include <ossim/hdf5/ossimHdf5Tool.h>
 #endif
@@ -73,6 +74,9 @@ ossimTool* ossimToolFactory::createTool(const std::string& argName) const
 
    if ((utilName == "subimage") || (argName == "ossimSubImageTool"))
       return new ossimSubImageTool;
+
+   if ((utilName == "pointcloud") || (argName == "ossimPointCloudTool"))
+      return new ossimPointCloudTool;
 
 #if OSSIM_HAS_HDF5
    if ((utilName == "hdf5") || (argName == "ossimHdf5Tool"))

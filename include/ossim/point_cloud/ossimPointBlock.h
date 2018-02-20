@@ -26,9 +26,9 @@ class OSSIMDLLEXPORT ossimPointBlock: public ossimDataObject
 public:
    typedef std::vector< ossimRefPtr<ossimPointRecord> > PointList;
 
-   ossimPointBlock(ossimSource* owner=0, ossim_uint32 fields=0);
+   explicit ossimPointBlock(ossimSource* owner=0, ossim_uint32 fields=0);
 
-   virtual ~ossimPointBlock();
+   ~ossimPointBlock();
 
    /** Returns allocated size. The pointList may contain only null points if not assigned */
    virtual ossim_uint32 size() const { return (ossim_uint32)m_pointList.size(); }
@@ -80,7 +80,7 @@ public:
    virtual void initialize() {};
 
 protected:
-   ossimPointBlock(const ossimPointBlock& rhs);
+   ossimPointBlock(const ossimPointBlock& rhs) {}
    void scanForMinMax() const;
 
    ossimPointRecord m_nullPCR;

@@ -8,6 +8,7 @@
 #define ossimRpcSolver_HEADER
 
 #include <vector>
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimGpt.h>
@@ -16,10 +17,8 @@
 #include <ossim/matrix/newmat.h>
 #include <ossim/projection/ossimRpcModel.h>
 #include <ossim/projection/ossimRpcProjection.h>
-
-class ossimProjection;
-class ossimImageGeometry;
-class ossimNitfRegisteredTag;
+#include <ossim/support_data/ossimNitfRegisteredTag.h>
+#include <ossim/imaging/ossimImageGeometry.h>
 
 /**
  * This currently only support Rational poilynomial B format.  This can be
@@ -84,7 +83,8 @@ public:
    ossimRpcSolver(bool useElevation=false,
                   bool useHeightAboveMSLFlag=false);
 
-   
+   virtual ~ossimRpcSolver(){}
+
    /**
     * This will convert any projector to an RPC model
     */
@@ -111,6 +111,13 @@ public:
     */
    bool solve(const ossimDrect& aoiBounds,
               ossimImageGeometry* geom,
+              const double& pixel_tolerance=0.5);
+
+   /**
+    * Performs iterative solve using the other solve method, but uses an image filename to
+    * initialize, and computes RPC over entire image rect.
+    */
+   bool solve(const ossimFilename& imageFilename,
               const double& pixel_tolerance=0.5);
 
    /**
@@ -146,8 +153,6 @@ public:
    void setValidImageRect(const ossimIrect& imageRect);
 
 protected:
-	virtual ~ossimRpcSolver(){}
-   
    virtual void solveInitialCoefficients(NEWMAT::ColumnVector& coeff,
                                          const std::vector<double>& f,
                                          const std::vector<double>& x,
@@ -189,7 +194,6 @@ protected:
    ossim_float64 theMaxResidual;
    ossimRefPtr<ossimImageGeometry> theRefGeom;
    ossimRefPtr<ossimRpcModel> theRpcModel;
-
 
 };
 

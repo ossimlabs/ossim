@@ -13,17 +13,19 @@
 #include <ossim/base/ossimIoStream.h>
 
 #include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimRegExp.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimTrace.h>
+#include <ossim/base/ossimXmlNode.h>
 
 #include <algorithm>
 #include <fstream>
 #include <list>
+#include <memory>
 #include <sstream>
 #include <utility>
-#include <cstddef> // nullptr
 
-#include <ossim/base/BlockIStream.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 
 static ossimTrace traceDebug("ossimKeywordlist:debug");
@@ -728,16 +730,15 @@ bool ossimKeywordlist::parseFile(const ossimFilename& file,
 {
    bool result = false;
 
-   std::shared_ptr<ossim::ifstream> is = std::make_shared<ossim::ifstream>(file.c_str(), 
-                                                std::ios::in | std::ios::binary);
-   if(is&&is->is_open())
+   std::shared_ptr<ossim::istream> is = ossim::StreamFactoryRegistry::instance()->
+      createIstream( file.string() );
+   if ( is )
    {
-      std::shared_ptr<ossim::BlockIStream> blockedStream = std::make_shared<ossim::BlockIStream>(is, 4096);
       m_currentlyParsing = file;
       result = parseStream(*is, ignoreBinaryChars);
+      is.reset();
    }
-
-   is = nullptr;
+   
    return result;
 }
 
@@ -1094,7 +1095,7 @@ void ossimKeywordlist::getSortedList(std::vector<ossimString>& prefixValues,
    ossim_uint32 offset = (int)ossimString(prefixKey).size();
    ossim_uint32 idx = 0;
    std::vector<ossim_uint32> numberList(nKeys);
-   for(idx = 0; idx < (int)numberList.size();++idx)
+   for(idx = 0; idx < (ossim_uint32)numberList.size();++idx)
    {
     ossimString numberStr(keys[idx].begin() + offset,
            keys[idx].end());
@@ -1102,7 +1103,7 @@ void ossimKeywordlist::getSortedList(std::vector<ossimString>& prefixValues,
    }
    std::sort(numberList.begin(), numberList.end());
 
-   for(idx=0;idx < (int)numberList.size();++idx)
+   for(idx=0;idx < (ossim_uint32)numberList.size();++idx)
    {
       prefixValues.push_back(prefixKey+ossimString::toString(numberList[idx]));
    }
@@ -1473,3 +1474,407 @@ bool ossimKeywordlist::getBoolKeywordValue(bool& rtn_val,
    return found;
 }
 
+bool ossimKeywordlist::isSpecialXmlCharacters(const ossimString& value)const
+{
+   for(ossimString::const_iterator it = value.begin(); it != value.end();++it)
+   {
+      switch(*it)
+      {
+         case '&':
+         case '<':
+         case '>':
+         case '"':
+         case '\'':
+         {
+            return true;
+         }
+         default:
+         {
+            break;
+         }
+      }
+      
+   }
+   return false;
+}
+
+bool ossimKeywordlist::isValidTag(const std::string& value)const
+{
+   std::string::const_iterator textChars = value.begin();
+   bool result = true;
+   if(!isalpha(*(textChars) ))
+   {
+      result = false;
+   }
+   else if(!value.empty())
+   {
+      for(++textChars;textChars!=value.end();++textChars)
+      {
+         if(!isalnum(*(textChars) ))
+         {
+            result = false;
+            break;
+         }
+      }
+   }
+   else
+   {
+      result = false;
+   }
+   
+   return result;
+}
+
+void ossimKeywordlist::replaceSpecialCharacters(ossimString& value)const
+{
+   ossimString::iterator iter = value.begin();
+   
+   while(iter!=value.end())
+   {
+      if(!(isdigit(*iter) ||
+           isalpha(*iter)||
+           (*iter=='/')))
+      {
+         *iter = '_';
+      }
+      ++iter;
+   }
+}
+
+void ossimKeywordlist::toXML(std::ostream& out, const std::string& rootTag)const
+{
+   std::string rootTagStr = rootTag;
+   if (!isValidTag(rootTagStr))
+   {
+      rootTagStr = "info";
+   }
+
+   ossimRefPtr<ossimXmlNode> metadata = new ossimXmlNode;
+   metadata->setTag("metadata");
+   ossimKeywordlist::KeywordMap::const_iterator iter = m_map.begin();
+   while(iter != m_map.end())
+   {
+      ossimString path = iter->first;
+      bool outputValue = true;
+      ossimString value = iter->second;
+      if(path.contains("unformatted_tag_data"))
+      {
+         ossimString temp = value.trim();
+         if(ossimString(temp.begin(), temp.begin()+5) == "<?xml")
+         {
+            value = "XML not converted";
+            outputValue = false;
+         }
+      }
+      
+      if(outputValue)
+      {
+         bool tagOk = true;
+         path = path.substitute(".", "/", true);
+         replaceSpecialCharacters(path);
+         std::vector<ossimString> splitValues;
+         path.split(splitValues,"/");
+         if(splitValues.size())
+         {
+            splitValues[splitValues.size()-1] = splitValues[splitValues.size()-1].downcase();
+            ossim_uint32 idx = 0;
+            for(idx = 0; ((idx < splitValues.size()-1)&&tagOk);++idx)
+            {
+               if(!isValidTag(splitValues[idx]))
+               {
+                  tagOk = false;
+               }
+               splitValues[idx] = splitValues[idx].upcase();
+            }
+         }
+         if(tagOk)
+         {
+            path.join(splitValues, "/");
+            ossimRefPtr<ossimXmlNode> node = metadata->addNode(path.c_str(), value);
+            if(isSpecialXmlCharacters(value))
+            {
+               node->setCDataFlag(true);
+            }
+         }
+      }
+      ++iter;
+   }
+   
+   if( 1 ) // tmp dbr !m_includeMetadataTagName)
+   {
+      out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl
+          << "<" << rootTagStr << ">\n";
+      
+      const ossimXmlNode::ChildListType& children = metadata->getChildNodes();
+      ossimXmlNode::ChildListType::const_iterator iter = children.begin();
+      while(iter != children.end())
+      {
+         out << *(iter->get());
+         ++iter;
+      }
+      out << "\n</" << rootTagStr << ">" << std::endl;
+   }
+   else 
+   {
+      out << *(metadata.get()) << std::endl;
+   }   
+}
+
+
+void ossimKeywordlist::toJSON(std::ostream& out, const std::string& rootTag)const
+{
+   const std::string C   = ": "; // colon
+   const std::string DQ  = "\""; // double Quote
+   const std::string LB  = "{"; // left bracket
+   const std::string CNL = ",\n"; // coma, new line
+   const std::string NL  = "\n"; // new line   
+   const std::string RB  = "}"; // left bracket
+   const std::string S   = " ";  // space
+   ossim_uint32 nameCount = 0;
+   ossimString lastObject;
+   ossim_uint32 indentCount = 3;
+   ossim_uint32 indentOffset = 3;
+   
+   bool stringify = true;
+   bool closeObject = false;
+   std::vector<ossimString> objectStack;
+
+   // Opening bracket:
+   out << LB;
+   
+   if( rootTag.size() )
+   {
+      if ( stringify )
+      {
+         indentOffset = indentCount;
+         std::string indent(indentCount, ' ');
+         out << NL << indent;
+      }
+      else
+      {
+         out << NL;
+      }
+      // Note: not adding rootTag to object stack
+      out << DQ << rootTag << DQ << C << LB << NL;
+   }
+
+   ossimKeywordlist::KeywordMap::const_iterator iter = m_map.begin();
+   while(iter != m_map.end())
+   {
+      bool outputValue  = true;
+      ossimString key   = iter->first;
+      ossimString value = iter->second;
+      value = value.trim(); // remove spaces
+
+#if 0
+      if(key.contains("unformatted_tag_data"))
+      {
+         ossimString temp = value.trim();
+         if(ossimString(temp.begin(), temp.begin()+5) == "<?xml")
+         {
+            value = "data not converted";
+            outputValue = false;
+         }
+      }
+#endif
+      
+      if ( outputValue && key.size() )
+      {
+         std::vector<ossimString> keys;
+         key.split(keys,".");
+         
+         if ( keys.size() )
+         {
+            // The last key is the name so grab it now and pop it off the stack:
+            ossimString name = keys[keys.size()-1];
+            keys.pop_back();
+
+            bool sameObject = isSame( keys, objectStack );
+            if ( !sameObject && keys.size() )
+            {
+               for ( ossim_uint32 i = 0; i < keys.size(); ++i )
+               {
+                  if ( i < objectStack.size() )
+                  {
+                     if ( keys[i] == objectStack[i] )
+                     {
+                        // On stack already. Nothng to do. Go to next key.
+                        continue;
+                     }
+                     else
+                     {
+                        // Different object:
+                        while ( i <  objectStack.size() )
+                        {
+                           // Write bracket, then pop:
+                           if ( stringify )
+                           {
+                              std::string indent(indentOffset+(indentCount*objectStack.size()), ' ');
+                              out << NL << indent << RB;
+                           }
+                           else
+                           {
+                              out << NL << RB;
+                           }
+                           objectStack.pop_back();
+                           nameCount = 0;
+                           closeObject = true;
+                           if ( objectStack.size() )
+                           {
+                              lastObject = objectStack[objectStack.size()-1];
+                           }
+                           else
+                           {
+                              lastObject.clear();
+                           }
+                        }
+                     }
+                  }
+                  
+                  //---
+                  // New object:
+                  // If we had written a key:value for previos object, do a
+                  // newline and zero it out.
+                  //---
+                  if ( nameCount )
+                  {
+                     out << CNL;
+                     nameCount = 0;
+                  }
+                        
+                  objectStack.push_back( keys[i] );
+
+                  if ( closeObject )
+                  {
+                     out << CNL;
+                     closeObject = false;
+                  }
+
+                  if ( stringify )
+                  {
+                     std::string indent(indentOffset+(indentCount*objectStack.size()), ' ');
+                     out << indent;
+                  }
+                  out << DQ << keys[i] << DQ << C << LB << NL;
+               }
+
+               // Final check if keys shrunk, pop objects off the object stack.
+               while ( keys.size() <  objectStack.size() )
+               {
+                  // Write bracket then pop:
+                  if ( stringify )
+                  {
+                     std::string indent(indentOffset+(indentCount*objectStack.size()), ' ');
+                     out << NL << indent << RB;
+                  }
+                  else
+                  {
+                     out << NL << RB;
+                  }
+                  objectStack.pop_back();
+                  nameCount = 0;
+                  closeObject = true;
+                  if ( objectStack.size() )
+                  {
+                     lastObject = objectStack[objectStack.size()-1];
+                  }
+                  else
+                  {
+                     lastObject.clear();
+                  }
+               }
+            }
+
+            if ( objectStack.size() )
+            {       
+               if ( lastObject == objectStack[objectStack.size()-1] )
+               {
+                  out << CNL;
+                  closeObject = false;
+               }
+            }
+            else if ( nameCount ) // No objects loaded on the stack.
+            {
+               out << CNL;
+            }  
+
+            // Output "key": "value"
+            if ( stringify )
+            {
+               std::string indent(indentOffset+indentCount*(objectStack.size()+1), ' ');
+               out << indent;
+            }
+            out << DQ << name << DQ << C << DQ << value << DQ;
+
+            if ( objectStack.size() )
+            {
+               lastObject = objectStack[objectStack.size()-1];
+            }
+            else
+            {
+               lastObject.clear();
+            }
+            
+            ++nameCount;
+         }
+      }
+      ++iter;
+      
+   } // Matches: while(iter != m_map.end())
+
+   // Close out brackets:
+   ossim_uint32 stackSize = objectStack.size();
+   if ( stackSize )
+   {
+      for ( ossim_uint32 i = stackSize; i > 0; --i )
+      {
+         if ( stringify )
+         {
+            std::string indent(indentOffset+indentCount*i, ' ');
+            out << NL << indent << RB;
+         }
+         else
+         {
+            out << NL << RB;
+         }
+      }
+   }
+
+   if( rootTag.size() )
+   {
+      if ( stringify )
+      {
+         std::string indent(indentCount, ' ');
+         out << NL << indent << RB;
+      }
+      else
+      {
+         out << NL << RB;
+      }
+   }
+   
+   // Closing bracket, newline with flush:
+   out << NL << RB << std::endl;
+}
+
+bool ossimKeywordlist::isSame( const std::vector<ossimString>& a,
+                               const std::vector<ossimString>& b ) const
+{
+   bool result = true;
+   if ( a.size() == b.size() )
+   {
+      for ( ossim_uint32 i = 0; i < a.size(); ++i )
+      {
+         if ( a[i] != b[i] )
+         {
+            result = false;
+            break;
+         }
+      }
+   }
+   else
+   {
+      result = false;
+   }
+   return result;
+}

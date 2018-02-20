@@ -103,7 +103,7 @@ ossimRpcModel::ossimRpcModel()
       theCrtrackOffset(0.0),
       theIntrackScale (0.0),
       theCrtrackScale (0.0),
-      theCosMapRot    (0.0),
+      theCosMapRot    (1.0),
       theSinMapRot    (0.0),
       theBiasError    (0.0),
       theRandError    (0.0)
@@ -1485,8 +1485,7 @@ bool ossimRpcModel::toJSON(std::ostream& jsonStream) const
 
    Json::Value root;
    root["isd"] = ISD;
-   Json::StyledWriter writer;
-   jsonStream << writer.write(root);
+   jsonStream << root;
    return true;
 #else
    jsonStream<<"Error: JSON format not supported."<<endl;
@@ -1494,7 +1493,7 @@ bool ossimRpcModel::toJSON(std::ostream& jsonStream) const
 #endif
 }
 
-bool ossimRpcModel::toRPB(ostream& out) const
+bool ossimRpcModel::toRPB(ostream &out) const
 {
    out<<"satId = \"NOT_ASSIGNED\";\n";
    out<<"bandId = \"NOT_ASSIGNED\";\n";
@@ -1536,5 +1535,7 @@ bool ossimRpcModel::toRPB(ostream& out) const
 
    out<<"END_GROUP = IMAGE\n";
    out<<"END;";
+
+   return true;
 }
 

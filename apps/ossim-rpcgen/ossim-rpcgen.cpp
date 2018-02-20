@@ -2,16 +2,12 @@
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
-#include <ossim/base/ossimTrace.h>
-#include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
-#include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimRpcSolver.h>
-#include <sstream>
 #include <ossim/base/ossimXmlDocument.h>
 
 using namespace std;
@@ -182,8 +178,6 @@ int main(int argc, char* argv[])
       ossimNotify(ossimNotifyLevel_INFO) << "\nSolving for RPC coefficients..." << std::endl;
       ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(true, false);
       bool converged = solver->solve(imageRect, geom.get(), error);
-      double meanResidual = solver->getRmsError();
-      double maxResidual = solver->getMaxError();
       rpc = solver->getRpcModel();
    }
 
