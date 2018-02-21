@@ -303,12 +303,14 @@ bool ossimImageHandler::initVertices(const char* file)
       kwl->add("connection_string", file, true);
       if (!instream)
       {
-         if(m_state) m_state->setValidVertices(kwl);
+         //if(m_state)
+         //   m_state->setValidVertices(kwl);
          return false; 
       } 
 
       kwl->parseStream(*instream);
-      if(m_state) m_state->setValidVertices(kwl);
+      if(m_state && kwl->getSize())
+         m_state->setValidVertices(kwl);
    }
    
    if (kwl->getErrorStatus() != ossimErrorCodes::OSSIM_OK)
