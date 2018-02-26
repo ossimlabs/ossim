@@ -1642,29 +1642,15 @@ void ossimChipperUtil::addImgSources()
    for(auto record:sortedList)
    {
       ossimString fileKey  = record + "." + FILE_KW;
-      ossimString entryKey = record + "." + ossimKeywordNames::ENTRY_KW;
       ossimFilename f = m_kwl->findKey( fileKey.string() );
       if ( !f.empty())
       {
-         ossimSrcRecord srcRecord;
-
-         // Look for the entry key, e.g. image0.entry: 10
-         ossim_uint32 entryIndex = 0;
-         std::string value = m_kwl->findKey( entryKey.string() );
-         if ( value.size() )
+         ossimString imagePrefix = record+".";
+         std::shared_ptr<ossimSrcRecord> srcRecord = std::make_shared<ossimSrcRecord>();
+         if(srcRecord->loadState(*m_kwl, imagePrefix.c_str()))
          {
-            entryIndex = ossimString(value).toUInt32();
+            addImgSource(*srcRecord);
          }
-         else
-         {
-            // Get global entry.  Set by "-e" on command line apps.
-            entryIndex = getEntryNumber();
-         }
-         srcRecord.setFilename(f);
-         srcRecord.setEntryIndex(entryIndex);
-         addImgSource(srcRecord);
-         // Add it:
-         //addImgSource(f, entryIndex );
       }
    }
    sortedList.clear();
@@ -1674,10 +1660,10 @@ void ossimChipperUtil::addImgSources()
       for(auto record:sortedList)
       {
          ossimString prefix = record+".";
-         ossimSrcRecord src;
-         if ( src.loadState( *(m_srcKwl.get()), prefix ) )
+         std::shared_ptr<ossimSrcRecord> src = std::make_shared<ossimSrcRecord>();
+         if ( src->loadState( *(m_srcKwl.get()), prefix ) )
          {
-            addImgSource(src);
+            addImgSource(*src);
          }
       }
    }
@@ -2049,7 +2035,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       // Histogram setup.
       if ( hasHistogramOperation() )
       {
-         setupChainHistogram( ic );
+         setupChainHistogram( ic , std::make_shared<ossimSrcRecord>(rec));
       }
       
       // Brightness constrast setup:
@@ -4192,7 +4178,8 @@ void ossimChipperUtil::addCrossHairAnnotation(
 
 } // End: ossimChipperUtil::addCrossHairAnnotations( ... )
 
-bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& chain) const
+bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& chain, 
+                                            std::shared_ptr<ossimSrcRecord> srcRecordPtr) const
 {
    static const char MODULE[] = "ossimChipperUtil::setupChainHistogram(chain)";
    if ( traceDebug() )
@@ -4227,15 +4214,24 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
             bool openedHistogram = false;
             if ( remapper->getHistogramFile() == ossimFilename::NIL )
             {
-               // Open histogram file.
-               ossimFilename f = ih->getFilenameWithThisExtension( ossimString("his") );
-               if ( f.empty() || (f.exists() == false) )
+               ossimFilename f;
+              if(srcRecordPtr)
                {
-                  // For backward compatibility check if single entry and _e0.his
-                  f = ih->getFilenameWithThisExtension( ossimString("his"), true );
+                  f = srcRecordPtr->getHistogramPath();
+               }
+               // Open histogram file.
+               if(f.empty() || !f.exists())
+               {
+                 f = ih->getFilenameWithThisExtension( ossimString("his") );
+                 if ( f.empty() || (f.exists() == false) )
+                 {
+                     // For backward compatibility check if single entry and _e0.his
+                     f = ih->getFilenameWithThisExtension( ossimString("his"), true );
+                     if(!f.exists()) f.clear();
+                 }
                }
 
-               if ( f.exists() )
+               if ( !f.empty() )
                {
                   openedHistogram = remapper->openHistogram( f );
                   if ( !openedHistogram && traceDebug() )
