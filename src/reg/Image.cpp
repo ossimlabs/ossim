@@ -30,7 +30,8 @@ Image::Image(const std::string& imageId,
 }
 
 Image::Image(const Json::Value& json_node)
-:  m_entryIndex (0)
+:  m_entryIndex (0),
+   m_activeBand (1)
 {
    loadJSON(json_node);
 }

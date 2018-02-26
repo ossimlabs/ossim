@@ -472,7 +472,7 @@ bool ossimViewshedTool::computeViewshed()
    // Allocate the output image buffer:
    m_outBuffer = ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, m_aoiViewRect.width(),
                                                            m_aoiViewRect.height());
-   cerr<<"ossimViewshedUtil:"<<__LINE__<<endl;//TODO:remove debug
+
    ostringstream xmsg;
    if (!m_outBuffer.valid() || !m_memSource.valid())
    {

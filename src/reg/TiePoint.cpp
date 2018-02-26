@@ -81,7 +81,8 @@ void TiePoint::getImagePoint(unsigned int index,
 
    imageId = m_images[index]->getImageId();
    imagePoint = m_imagePoints[index];
-   cov = m_covariances[index];
+   if (m_covariances.size() > index)
+      cov = m_covariances[index];
 }
 
 void TiePoint::setImagePoint(std::shared_ptr<Image> image,
@@ -164,7 +165,7 @@ void TiePoint::loadJSON(const Json::Value& json_node)
    for (int i=0; i<imagePoints.size(); ++i)
    {
       const Json::Value& p = imagePoints[i];
-      if (!p || !(p["imageId"].isString()) || !(p["x"]) || !(p["y"]) || (p["covariance"].size()!=3))
+      if (!p || !(p["imageId"].isString()) || !(p["x"]) || !(p["y"]))
       {
          xmsg<<"Tiepoint JSON field \"imagePoints\" entry is ill-formed or not complete:\n"
                <<p.toStyledString()<<endl;
@@ -180,11 +181,14 @@ void TiePoint::loadJSON(const Json::Value& json_node)
       m_imagePoints.push_back(xy);
 
       const Json::Value& covariance = p["covariance"];
-      NEWMAT::SymmetricMatrix c (2);
-      c(1,1) = covariance[0].asDouble();
-      c(2,2) = covariance[1].asDouble();
-      c(1,2) = covariance[2].asDouble();
-      m_covariances.push_back(c);
+      if (covariance.size() == 3)
+      {
+         NEWMAT::SymmetricMatrix c(2);
+         c(1, 1) = covariance[0].asDouble();
+         c(2, 2) = covariance[1].asDouble();
+         c(1, 2) = covariance[2].asDouble();
+         m_covariances.push_back(c);
+      }
    }
 }
 
