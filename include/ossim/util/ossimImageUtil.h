@@ -141,7 +141,7 @@ public:
    /**
     * @brief Sets key OVERVIEW_TYPE_KW.
     *
-    * Available types depens on plugins.  Know types:
+    * Available types depends on plugins.  Known types:
     * ossim_tiff_box ( defualt )
     * ossim_tiff_nearest
     * ossim_kakadu_nitf_j2k ( kakadu plugin )

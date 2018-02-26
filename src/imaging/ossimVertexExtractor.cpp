@@ -17,7 +17,7 @@ using namespace std;
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimNotifyContext.h>
 
-static ossimTrace traceDebug("ossimVertexExtractor:degug");
+static ossimTrace traceDebug("ossimVertexExtractor:debug");
 
 RTTI_DEF2(ossimVertexExtractor, "ossimVertexExtractor",
           ossimSource, ossimProcessInterface);

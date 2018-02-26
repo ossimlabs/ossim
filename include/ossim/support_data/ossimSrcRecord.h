@@ -107,6 +107,7 @@ public:
    const ossimFilename& getOverviewPath()  const { return m_overviewPath; }
    const ossimFilename& getHistogramPath() const { return m_histogramPath; }
    const ossimFilename& getMaskPath() const { return m_maskPath; }
+   const ossimFilename& getGeomPath() const { return m_geomPath; }
    
    void setFilename(const ossimFilename& f);          
    void setEntryIndex(ossim_int32 i);                 
@@ -114,8 +115,9 @@ public:
    void setMask(const ossimFilename& f)              { m_maskPath = f; }
    void setHistogram(const ossimFilename& f)         { m_histogramPath = f; }
    void setHistogramOp(const ossimString& s)         { m_histogramOp = s; }
+   void setGeom(const ossimFilename& f);
    void setBands(const std::vector<ossim_uint32>& v) { m_bandList = v; }
-   void setWeight(const double& weight)              {m_weight = weight; }
+   void setWeight(const double& weight)              { m_weight = weight; }
    void setRgbDataBool(bool isRgbData)               { m_isRgbData = isRgbData; }
 
    //! Sets supplementary data files dir. If the OVR and/or hist dirs are undefined, they are also
@@ -152,6 +154,7 @@ private:
    ossimFilename m_overviewPath;
    ossimFilename m_histogramPath;
    ossimFilename m_maskPath;
+   ossimFilename m_geomPath;
 
    //! The following data members allow users to render vector data
    bool m_isVectorData;

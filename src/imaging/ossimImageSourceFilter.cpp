@@ -17,7 +17,7 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimProperty.h>
  
-static ossimTrace traceDebug("ossimImageSourceFilter:degug");
+static ossimTrace traceDebug("ossimImageSourceFilter:debug");
 
 RTTI_DEF2(ossimImageSourceFilter, "ossimImageSourceFilter", ossimImageSource, ossimConnectableObjectListener)
 
