@@ -431,7 +431,25 @@ bool ossimSingleImageChain::addImageHandler(const ossimFilename& file, bool open
 
 bool ossimSingleImageChain::addImageHandler(const ossimSrcRecord& src)
 {
-   bool result = addImageHandler( src.getFilename() );
+   bool result = false;
+
+   close();
+   
+   // m_handler = ossimImageHandlerRegistry::instance()->open(file, true, openOverview);
+   m_handler = ossimImageHandlerRegistry::instance()->open(src.getAttributesKwl());
+   
+   if ( m_handler.valid() )
+   {
+      // Add to the chain.  Note: last is really first.
+      addLast( m_handler.get() );
+      
+      result = true;
+   }
+
+   return result;
+
+//   bool result = addImageHandler( src.getFilename() );
+#if 0  
    if (result)
    {
       //---
@@ -500,6 +518,7 @@ bool ossimSingleImageChain::addImageHandler(const ossimSrcRecord& src)
          }
       }
    }
+   #endif
    return result;
 }
 
