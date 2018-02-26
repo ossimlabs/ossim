@@ -1536,27 +1536,19 @@ void ossimChipperUtil::addDemSources()
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
 
-   // Add the images from the options keyword list.
-   ossim_uint32 demCount = m_kwl->numberOf( DEM_KW.c_str() );
-   ossim_uint32 maxIndex = demCount + 100; // Allow for skippage in numbering.
-   ossim_uint32 foundRecords = 0;
-   ossim_uint32 i = 0;
-   while ( foundRecords < demCount )
+   std::vector<ossimString> sortedList;
+   m_kwl->getSortedList(sortedList, DEM_KW);
+   for(auto record:sortedList)
    {
-      ossimString key = DEM_KW;
-      key += ossimString::toString(i);
-      key += ".";
-      key += FILE_KW;
-      ossimFilename f = m_kwl->findKey( key.string() );
+      ossimString key   = record + ".";
+      ossimString file  = key + FILE_KW;
+      ossimString entry = key + ossimKeywordNames::ENTRY_KW;
+      ossimFilename f   = m_kwl->findKey( file.string() );
       if ( f.size() )
       {
          // Look for the entry key, e.g. dem0.entry: 10
          ossim_uint32 entryIndex = 0;
-         key = DEM_KW;
-         key += ossimString::toString(i);
-         key += ".";
-         key += ossimKeywordNames::ENTRY_KW;
-         std::string value = m_kwl->findKey( key.string() );
+         std::string value = m_kwl->findKey( entry.string() );
          if ( value.size() )
          {
             entryIndex = ossimString(value).toUInt32();
@@ -1566,34 +1558,26 @@ void ossimChipperUtil::addDemSources()
             // Get global entry.  Set by "-e" on command line apps.
             entryIndex = getEntryNumber();
          }
-
-         addDemSource( f, entryIndex );
-         ++foundRecords;
+         ossimSrcRecord srcRecord;
+         srcRecord.setFilename(f);
+         srcRecord.setEntryIndex(entryIndex);
+         // addDemSource( f, entryIndex );
+         addDemSource( srcRecord );
       }
-      ++i;
-      if ( i >= maxIndex ) break;
    }
-
+   sortedList.clear();
    if ( m_srcKwl.valid() )
    {
       // Add stuff from src keyword list.
-      demCount = m_srcKwl->numberOf( DEM_KW.c_str() );
-      maxIndex = demCount + 100;
-      foundRecords = 0;
-      i = 0;
-      while ( foundRecords < demCount )
+      m_srcKwl->getSortedList(sortedList, DEM_KW);
+      for(auto record:sortedList)
       {
-         ossimString prefix = DEM_KW;
-         prefix += ossimString::toString(i);
-         prefix += ".";
+         ossimString prefix = record+".";
          ossimSrcRecord src;
          if ( src.loadState( *(m_srcKwl.get()), prefix ) )
          {
             addDemSource(src);
-            ++foundRecords;
          }
-         ++i;
-         if ( i >= maxIndex ) break;
       }
    }
 
@@ -1653,64 +1637,34 @@ void ossimChipperUtil::addImgSources()
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
    }
-
-   ossim_uint32 imgCount = m_kwl->numberOf( IMG_KW.c_str() );
-   ossim_uint32 maxIndex = imgCount + 100; // Allow for skippage in numbering.
-   ossim_uint32 foundRecords = 0;
-   ossim_uint32 i = 0;
-   while ( foundRecords < imgCount )
+   std::vector<ossimString> sortedList;
+   m_kwl->getSortedList(sortedList, IMG_KW);
+   for(auto record:sortedList)
    {
-      ossimString key = IMG_KW;
-      key += ossimString::toString(i);
-      key += ".";
-      key += FILE_KW;
-      ossimFilename f = m_kwl->findKey( key.string() );
-      if ( f.size() )
+      ossimString fileKey  = record + "." + FILE_KW;
+      ossimFilename f = m_kwl->findKey( fileKey.string() );
+      if ( !f.empty())
       {
-         // Look for the entry key, e.g. image0.entry: 10
-         ossim_uint32 entryIndex = 0;
-         key = IMG_KW;
-         key += ossimString::toString(i);
-         key += ".";
-         key += ossimKeywordNames::ENTRY_KW;
-         std::string value = m_kwl->findKey( key.string() );
-         if ( value.size() )
+         ossimString imagePrefix = record+".";
+         std::shared_ptr<ossimSrcRecord> srcRecord = std::make_shared<ossimSrcRecord>();
+         if(srcRecord->loadState(*m_kwl, imagePrefix.c_str()))
          {
-            entryIndex = ossimString(value).toUInt32();
+            addImgSource(*srcRecord);
          }
-         else
-         {
-            // Get global entry.  Set by "-e" on command line apps.
-            entryIndex = getEntryNumber();
-         }
-         // Add it:
-         addImgSource(f, entryIndex );
-         ++foundRecords;
       }
-      ++i;
-      if ( i >= maxIndex ) break;
    }
-
+   sortedList.clear();
    if ( m_srcKwl.valid() )
    {
-      // Add stuff from src keyword list.
-      imgCount = m_srcKwl->numberOf( IMG_KW.c_str() );
-      maxIndex = imgCount + 100;
-      foundRecords = 0;
-      i = 0;
-      while ( foundRecords < imgCount )
+      m_srcKwl->getSortedList(sortedList, IMG_KW);
+      for(auto record:sortedList)
       {
-         ossimString prefix = IMG_KW;
-         prefix += ossimString::toString(i);
-         prefix += ".";
-         ossimSrcRecord src;
-         if ( src.loadState( *(m_srcKwl.get()), prefix ) )
+         ossimString prefix = record+".";
+         std::shared_ptr<ossimSrcRecord> src = std::make_shared<ossimSrcRecord>();
+         if ( src->loadState( *(m_srcKwl.get()), prefix ) )
          {
-            addImgSource(src);
-            ++foundRecords;
+            addImgSource(*src);
          }
-         ++i;
-         if ( i >= maxIndex ) break;
       }
    }
 
@@ -2081,7 +2035,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       // Histogram setup.
       if ( hasHistogramOperation() )
       {
-         setupChainHistogram( ic );
+         setupChainHistogram( ic , std::make_shared<ossimSrcRecord>(rec));
       }
       
       // Brightness constrast setup:
@@ -4224,7 +4178,8 @@ void ossimChipperUtil::addCrossHairAnnotation(
 
 } // End: ossimChipperUtil::addCrossHairAnnotations( ... )
 
-bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& chain) const
+bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& chain, 
+                                            std::shared_ptr<ossimSrcRecord> srcRecordPtr) const
 {
    static const char MODULE[] = "ossimChipperUtil::setupChainHistogram(chain)";
    if ( traceDebug() )
@@ -4259,15 +4214,24 @@ bool ossimChipperUtil::setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& 
             bool openedHistogram = false;
             if ( remapper->getHistogramFile() == ossimFilename::NIL )
             {
-               // Open histogram file.
-               ossimFilename f = ih->getFilenameWithThisExtension( ossimString("his") );
-               if ( f.empty() || (f.exists() == false) )
+               ossimFilename f;
+              if(srcRecordPtr)
                {
-                  // For backward compatibility check if single entry and _e0.his
-                  f = ih->getFilenameWithThisExtension( ossimString("his"), true );
+                  f = srcRecordPtr->getHistogramPath();
+               }
+               // Open histogram file.
+               if(f.empty() || !f.exists())
+               {
+                 f = ih->getFilenameWithThisExtension( ossimString("his") );
+                 if ( f.empty() || (f.exists() == false) )
+                 {
+                     // For backward compatibility check if single entry and _e0.his
+                     f = ih->getFilenameWithThisExtension( ossimString("his"), true );
+                     if(!f.exists()) f.clear();
+                 }
                }
 
-               if ( f.exists() )
+               if ( !f.empty() )
                {
                   openedHistogram = remapper->openHistogram( f );
                   if ( !openedHistogram && traceDebug() )

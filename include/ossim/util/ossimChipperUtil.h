@@ -489,7 +489,8 @@ private:
     * @param chain Chain to set up.
     * @return true on success, false on error.
     */
-   bool setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& chain) const;
+   bool setupChainHistogram( ossimRefPtr<ossimSingleImageChain>& chain, 
+                             std::shared_ptr<ossimSrcRecord> srcRecordPtr=0) const;
 
    /**
     * @brief Sets entry for a chain.

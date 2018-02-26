@@ -45,7 +45,7 @@ RTTI_DEF1(ossimTiffOverviewBuilder,
           "ossimTiffOverviewBuilder",
           ossimOverviewBuilderBase)
 
-static ossimTrace traceDebug("ossimTiffOverviewBuilder:degug");
+static ossimTrace traceDebug("ossimTiffOverviewBuilder:debug");
 
 // Property keywords.
 static const char COPY_ALL_KW[]           = "copy_all_flag";

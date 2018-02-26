@@ -27,7 +27,7 @@ RTTI_DEF3(ossimMetadataFileWriter,
           ossimProcessInterface,
           ossimConnectableObjectListener);
 
-static ossimTrace traceDebug("ossimMetadataFileWriter:degug");
+static ossimTrace traceDebug("ossimMetadataFileWriter:debug");
 
 ossimMetadataFileWriter::ossimMetadataFileWriter()
    :ossimConnectableObject(0),

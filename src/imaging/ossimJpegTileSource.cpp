@@ -53,7 +53,7 @@ extern "C"
 
 RTTI_DEF1_INST(ossimJpegTileSource, "ossimJpegTileSource", ossimImageHandler)
 
-static ossimTrace traceDebug("ossimJpegTileSource:degug");  
+static ossimTrace traceDebug("ossimJpegTileSource:debug");  
 
 class ossimJpegTileSource::PrivateData
 {
