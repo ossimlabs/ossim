@@ -120,12 +120,20 @@ bool ossimSrcRecord::loadState(const ossimKeywordlist& kwl, const char* prefix)
    lookup = kwl.find(prefix, "ovr");
    if (!lookup.empty()) 
    {
-      m_overviewPath = ossimFilename(lookup);
-      m_attributesKwl.add(ossimKeywordNames::OVERVIEW_FILE_KW, m_overviewPath.chars());
+      setOverview(ossimFilename(lookup));
    }
    else
    {
       m_overviewPath.clear();
+   }
+   lookup = kwl.find(prefix, "geom");
+   if (!lookup.empty()) 
+   {
+      setGeom(ossimFilename(lookup));
+   }
+   else
+   {
+      m_geomPath.clear();
    }
 
    lookup = kwl.find(prefix, "mask");
@@ -266,12 +274,15 @@ bool ossimSrcRecord::loadState(const ossimKeywordlist& kwl, const char* prefix)
 void ossimSrcRecord::setSupportDir(const ossimFilename& f)
 {
    m_supportDir = f;
-   if (m_overviewPath.empty()) 
-      setOverview(m_supportDir);
+   m_attributesKwl.add("supplementary_directory", f.c_str());
+   // if (m_overviewPath.empty()) 
+   //    setOverview(m_supportDir);
    if (m_histogramPath.empty())
       m_histogramPath = m_supportDir;
    if (m_maskPath.empty())
       m_maskPath = m_supportDir;
+   // if(m_geomPath.empty())
+   //    m_geomPath = m_supportDir;
 }
 
 //*************************************************************************************************
@@ -299,5 +310,13 @@ void ossimSrcRecord::setOverview(const ossimFilename& f)
 { 
    m_overviewPath = f; 
    m_attributesKwl.add(ossimKeywordNames::OVERVIEW_FILE_KW, m_overviewPath.chars());
+}
+//*************************************************************************************************
+// METHOD
+//*************************************************************************************************
+void ossimSrcRecord::setGeom(const ossimFilename& f)          
+{ 
+   m_geomPath = f; 
+   m_attributesKwl.add(ossimKeywordNames::GEOM_FILE_KW, m_overviewPath.chars());
 }
 
