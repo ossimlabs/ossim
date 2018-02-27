@@ -16,10 +16,8 @@ using namespace std;
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimTimer.h>
 #include <ossim/base/ossimKeywordlist.h>
-#include <ossim/base/ossimString.h>
 #include <ossim/util/ossimToolRegistry.h>
 #include <ossim/base/ossimException.h>
-#include <ossim/base/ossimNotify.h>
 
 #define CINFO  ossimNotify(ossimNotifyLevel_INFO)
 #define CWARN  ossimNotify(ossimNotifyLevel_WARN)
@@ -162,12 +160,13 @@ int main(int argc, char *argv[])
    }
    catch  (const ossimException& e)
    {
-      ossimNotify(ossimNotifyLevel_FATAL)<<e.what()<<endl;
+      CFATAL<<e.what()<<endl;
       exit(1);
    }
    catch( ... )
    {
       CFATAL << "Caught unknown exception!" << endl;
+      exit(1);
    }
 
    if (status_ok)
