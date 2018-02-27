@@ -543,8 +543,8 @@ bool ossimViewshedTool::computeViewshed()
          if (m_radials[sector] == 0)
             continue;
 
-         SectorProcessorJob spj (this, sector, m_halfWindow);
-         spj.start();
+         std::shared_ptr<SectorProcessorJob> spj = std::make_shared<SectorProcessorJob>(this, sector, m_halfWindow);
+         spj->start();
 
          if (needsAborting())
             return false;
