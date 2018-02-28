@@ -158,14 +158,9 @@ int main(int argc, char *argv[])
 
       } while (false);
    }
-   catch  (const ossimException& e)
+   catch  (const exception& e)
    {
       CFATAL<<e.what()<<endl;
-      exit(1);
-   }
-   catch( ... )
-   {
-      CFATAL << "Caught unknown exception!" << endl;
       exit(1);
    }
 
