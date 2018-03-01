@@ -915,18 +915,16 @@ bool ossimFilterResampler::loadState(const ossimKeywordlist& kwl,
       theScaleFactor.y = ossimString(lookup).toDouble();
    }
 
-   ossimString minify;
    lookup = kwl.find(prefix, "minify_type");
    if (lookup)
    {
-      minify = lookup;
+      setMinifyFilterType(lookup);
    }
 
-   ossimString magnify;
    lookup = kwl.find(prefix, "magnify_type");
    if (lookup)
    {
-      magnify = lookup;
+      setMagnifyFilterType(lookup);
    }
 
    if(fabs(theScaleFactor.x) <= FLT_EPSILON)
@@ -941,9 +939,6 @@ bool ossimFilterResampler::loadState(const ossimKeywordlist& kwl,
    theInverseScaleFactor.x = 1.0/theScaleFactor.x;
    theInverseScaleFactor.y = 1.0/theScaleFactor.y;
    
-   setFilterType(getFilterType(minify),
-                 getFilterType(magnify));
-
    return true;
 }
 
