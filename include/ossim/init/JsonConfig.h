@@ -64,9 +64,9 @@ class JsonParam;
 class OSSIM_DLL JsonConfig : public ossim::JsonInterface
 {
 public:
+   /** Default Ctor loads all default .json files in the share/ossim system dir */
    JsonConfig();
 
-   /** Default Ctor loads all default .json files in the share/ossim system dir */
    JsonConfig(const ossimFilename& configFile);
 
    //! Destructor
