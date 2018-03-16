@@ -760,6 +760,11 @@ ossim.plugins.aws.s3.cacheInvalidLocations: true
 //ossim.stream.factory.registry.istream.buffer1.size: 65536
 
 
+// State cache settings
+// ossim.imaging.handler.registry.state_cache.enabled: true or false
+// ossim.imaging.handler.registry.state_cache.min_size: min number of items
+// ossim.imaging.handler.registry.state_cache.max_size: max number of items
+
 // Default the DES parser to true
 des_parser: true
 
