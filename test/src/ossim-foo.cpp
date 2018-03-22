@@ -93,10 +93,10 @@
 #include <ossim/base/Thread.h>
 #include <ossim/support_data/TiffHandlerState.h>
 #include <ossim/support_data/ImageHandlerStateRegistry.h>
+#include <ossim/projection/ossimNitfRpcModel.h>
+#include <ossim/projection/ossimQuickbirdRpcModel.h>
 
 // Put your includes here:
-#include<ossim/projection/ossimNitfRpcModel.h>
-#include<ossim/projection/ossimQuickbirdRpcModel.h>
 
 int main(int argc, char *argv[])
 {
@@ -110,54 +110,6 @@ int main(int argc, char *argv[])
 
    try
    {
-      ossimImageHandlerRegistry* handlerReg = ossimImageHandlerRegistry::instance();
-      ossimProjectionFactoryRegistry* projReg = ossimProjectionFactoryRegistry::instance();
-
-      // Open the image and fetch the geometry via the plugin:
-      ossimRefPtr<ossimImageHandler> pluginHandler = handlerReg->open(fname, true, false);
-      ossimRefPtr<ossimImageGeometry> pluginGeom = pluginHandler->getImageGeometry();
-      cout<<"pluginGeom's projection: "<<pluginGeom->getProjection()->getClassName()<<endl;
-
-      // NITF:
-      ossimRefPtr<ossimNitfRpcModel> nitfProj = new ossimNitfRpcModel(fname);
-      ossimRefPtr<ossimImageGeometry> nitfGeom = new ossimImageGeometry(0, nitfProj.get());
-      cout<<"NITF projection: "<<nitfProj->getClassName()<<endl;
-
-      // QB:
-      ossimRefPtr<ossimQuickbirdRpcModel> dgqbProj = new ossimQuickbirdRpcModel();
-      dgqbProj->parseFile(fname);
-      ossimRefPtr<ossimImageGeometry> dgqbGeom = new ossimImageGeometry(0, dgqbProj.get());
-      cout<<"DG/QB projection: "<<dgqbProj->getClassName()<<endl;
-
-      // Establish even image point distribution:
-      ossimIrect imageRect;
-      pluginGeom->getBoundingRect(imageRect);
-      int dx = (imageRect.width()-1)/2;
-      int dy = (imageRect.height()-1)/2;
-      ossimGpt pluginGpt, nitfGpt, dgqbGpt;
-      ossimDpt ip0;
-      double nitfDist, dgqbDist;
-
-      // Compute residual error between models:
-      for (int Y=0; Y<3; Y++)
-      {
-         ip0.y = dy*Y;
-         for (int X=0; X<3; X++)
-         {
-            ip0.x = dx*X;
-            pluginGeom->localToWorld(ip0, 0, pluginGpt);
-
-            nitfGeom->localToWorld(ip0, 0, nitfGpt);
-            nitfDist = pluginGpt.distanceTo(nitfGpt);
-
-            dgqbGeom->localToWorld(ip0, 0, dgqbGpt);
-            dgqbDist = pluginGpt.distanceTo(dgqbGpt);
-
-            cout  <<"\nGround residuals for image point "<<ip0<<":"
-                  <<"\n  NITF: "<<nitfDist<<" m"
-                  <<"\n  DGQB: "<<dgqbDist<<" m"<<endl;
-         }
-      }
    }
    catch(const ossimException& e)
    {
