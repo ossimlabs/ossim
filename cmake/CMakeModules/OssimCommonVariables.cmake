@@ -218,7 +218,6 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    SET(INSTALL_FRAMEWORK_DIR "Frameworks")
    SET(INSTALL_RUNTIME_DIR   "bin")
    SET(INSTALL_INCLUDE_DIR   "include")
-
    set(INSTALL_LIBRARY_DIR lib${LIBSUFFIX} CACHE PATH "Installation directory for libraries")
    set(INSTALL_ARCHIVE_DIR lib${LIBSUFFIX} CACHE PATH "Installation directory for archive")
    mark_as_advanced(LIBSUFFIX)
@@ -280,6 +279,8 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    OPTION(BUILD_OMS "Set to ON to build the oms api library." ON)
    OPTION(BUILD_OSSIM_WMS "Set to ON to build the wms api library." ON)
 
+   SET(CMAKE_INCLUDE_DIRS_FILE "${CMAKE_BINARY_DIR}/CMakeIncludeDirs.txt")
+   SET(CMAKE_FILENAMES_FILE "${CMAKE_BINARY_DIR}/CMakeFileNames.txt")
 
 ENDMACRO(OSSIM_ADD_COMMON_SETTINGS)
 

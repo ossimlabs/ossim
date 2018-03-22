@@ -200,6 +200,9 @@ MACRO(OSSIM_SETUP_APPLICATION)
 
     SETUP_LINK_LIBRARIES() 
 
+    OSSIM_SAVE_INCLUDE_DIRECTORIES()
+    OSSIM_SAVE_FILENAMES()
+
     IF(APPLICATION_INSTALL)  
         IF(APPLE) 
             INSTALL(TARGETS ${TARGET_TARGETNAME} RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR} BUNDLE DESTINATION ${INSTALL_RUNTIME_DIR} COMPONENT ${APPLICATION_COMPONENT_NAME})
@@ -210,6 +213,7 @@ MACRO(OSSIM_SETUP_APPLICATION)
 
    SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES 
      RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${BUILD_RUNTIME_DIR}")
+
 
 ENDMACRO(OSSIM_SETUP_APPLICATION)
 
@@ -337,6 +341,10 @@ MACRO(OSSIM_LINK_LIBRARY)
                    ARCHIVE             DESTINATION         ${INSTALL_ARCHIVE_DIR} COMPONENT ${LINK_COMPONENT_NAME}-dev)
         ENDIF(LINK_INSTALL_HEADERS)
     ENDIF(LINK_INSTALL_LIB)
+
+   OSSIM_SAVE_INCLUDE_DIRECTORIES()
+   OSSIM_SAVE_FILENAMES()
+
 ENDMACRO(OSSIM_LINK_LIBRARY)
 
 MACRO(OSSIM_ADD_COMMON_MAKE_UNINSTALL)
@@ -358,3 +366,33 @@ MACRO(OSSIM_ADD_COMMON_MAKE_UNINSTALL)
       ENDIF(EXISTS ${OSSIM_CMAKE_UNINSTALL_CONFIG})
 #   ENDIF(NOT TEST_UNINSTALL)
 ENDMACRO(OSSIM_ADD_COMMON_MAKE_UNINSTALL)
+
+####################################################################################################
+#   Writes all include directory paths to a central file for later parsing dependencies
+####################################################################################################
+MACRO(OSSIM_SAVE_INCLUDE_DIRECTORIES)
+   GET_DIRECTORY_PROPERTY(include_dir_list INCLUDE_DIRECTORIES)
+   FOREACH(item ${include_dir_list})
+      FILE(APPEND ${CMAKE_INCLUDE_DIRS_FILE} "${item}\n" )
+   ENDFOREACH()
+ENDMACRO(OSSIM_SAVE_INCLUDE_DIRECTORIES)
+
+
+####################################################################################################
+#   Caches all source file names to a central file for later parsing dependencies
+####################################################################################################
+MACRO(OSSIM_SAVE_FILENAMES)
+   #GET_DIRECTORY_PROPERTY(lib_sources LINK_SOURCES)
+   FOREACH(item ${LINK_SOURCE_FILES})
+      FILE(APPEND ${CMAKE_FILENAMES_FILE} "${item}\n" )
+   ENDFOREACH()
+
+   #GET_DIRECTORY_PROPERTY(app_sources APPLICATION_SOURCES)
+   FOREACH(item ${APPLICATION_SOURCE_FILES})
+      FILE(APPEND ${CMAKE_FILENAMES_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/${item}\n" )
+   ENDFOREACH()
+
+   FOREACH(item ${LINK_HEADERS})
+      FILE(APPEND ${CMAKE_FILENAMES_FILE} "${item}\n" )
+   ENDFOREACH()
+ENDMACRO(OSSIM_SAVE_FILENAMES)
