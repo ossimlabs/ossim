@@ -58,11 +58,21 @@ private:
 };
 
 
+void usage(char* appname)
+{
+   cout<<"\nUsage:  " << appname << " <path/to/OSSIM_BUILD_DIR> <path-to-output-dir>\n" << endl;
+   cout<<"  Utility app to copy all external header files on a system that are referenced by the \n"
+       <<"  OSSIM build. The headers are copied into a \"sandbox\" directory (usually appended with \n"
+       <<"  \"include\"), preserving namespaces. This is to enable sandbox builds. See the script in\n"
+       <<"  ossim/scripts/ocpld.sh for copying the external libraries needed.\n"<<endl;
+   return;
+}
+
 int main(int argc, char** argv)
 {
    if (argc < 3)
    {
-      cout << "\nUsage:  " << argv[0] << " <path/to/OSSIM_BUILD_DIR> <path-to-output-dir>\n" << endl;
+      usage(argv[0]);
       return 1;
    }
 
@@ -286,6 +296,7 @@ bool CppHeaderCrawler::copyHeaders(const ossimFilename& outputDir)
       existingLocation.copyFileTo(newLocation);
       cout << "Copied <" << header.first << ">"<< endl;
    }
+   return true;
 }
 
 ossimFilename CppHeaderCrawler::findPath(const ossimFilename &file)
