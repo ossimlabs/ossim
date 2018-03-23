@@ -45,11 +45,11 @@ ossimCodecBase* ossimNitfCodecFactory::createCodec(ossimRefPtr<ossimNitfImageHea
    {
       ossimKeywordlist kwl;
 
-      // init keywordlist from NITF TREs and other information about compression
+      imageHeader->saveState(kwl);
+      // rename the type to be a NITF IC compression type
+      // J2K should be C8
       //
-      // CODE HERE
-      //
-      //
+      kwl.add("type", imageHeader->getCompressionCode().c_str(), true);
       result = ossimCodecFactoryRegistry::instance()->createCodec(kwl);
    }
 

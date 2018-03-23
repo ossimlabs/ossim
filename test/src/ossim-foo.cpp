@@ -86,6 +86,7 @@
 #include <ossim/projection/ossimUtmProjection.h>
 
 #include <ossim/support_data/ossimSrcRecord.h>
+#include <ossim/support_data/ossimNitfFile.h>
 #include <ossim/support_data/ossimWkt.h>
 
 #include <ossim/base/Barrier.h>
@@ -93,8 +94,10 @@
 #include <ossim/base/Thread.h>
 #include <ossim/support_data/TiffHandlerState.h>
 #include <ossim/support_data/ImageHandlerStateRegistry.h>
+#include <ossim/imaging/ossimNitfCodecFactory.h>
 #include <ossim/projection/ossimNitfRpcModel.h>
 #include <ossim/projection/ossimQuickbirdRpcModel.h>
+#include <ossim/imaging/ossimNitfCodecFactory.h>
 
 // Put your includes here:
 
@@ -110,6 +113,24 @@ int main(int argc, char *argv[])
 
    try
    {
+      ossimRefPtr<ossimNitfFile> file = new ossimNitfFile();
+
+
+      if(file->parseFile(ossimFilename(argv[1])))
+      {
+         ossimRefPtr<ossimNitfImageHeader> imageHeader = file->getNewImageHeader(0);
+      
+         if(imageHeader.valid())
+         {
+            ossimRefPtr<ossimCodecBase> codec = ossimNitfCodecFactory::instance()->createCodec(imageHeader);
+            if(codec.valid())
+            {
+               std::cout << "WE WERE ABLE TO ALLOCATE A CODEC!!!!!!\n";
+            }
+         }
+      }
+
+
    }
    catch(const ossimException& e)
    {
