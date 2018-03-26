@@ -52,6 +52,16 @@
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/support_data/ossimSupportFilesList.h>
 #include <ossim/util/ossimFileWalker.h>
+#include <ossim/imaging/ossimBandSelector.h>
+#include <ossim/imaging/ossimImageHistogramSource.h>
+#include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
+#include <ossim/imaging/ossimImageRenderer.h>
+#include <ossim/imaging/ossimScaleFilter.h>
+#include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
+#include <ossim/imaging/ossimHistogramRemapper.h>
+#include <ossim/imaging/ossimScalarRemapper.h>
+#include <ossim/imaging/ossimRectangleCutFilter.h>
+#include <ossim/projection/ossimImageViewAffineTransform.h>
 
 #include <cstdlib>
 #include <iomanip>
@@ -66,6 +76,7 @@ static std::string CREATE_HISTOGRAM_KW         = "create_histogram";
 static std::string CREATE_HISTOGRAM_FAST_KW    = "create_histogram_fast";
 static std::string CREATE_HISTOGRAM_R0_KW      = "create_histogram_r0";
 static std::string CREATE_OVERVIEWS_KW         = "create_overviews";
+static std::string CREATE_THUMBNAILS_KW        = "create_thumbnails";
 static std::string DUMP_FILTERED_IMAGES_KW     = "dump_filter_image";
 static std::string FALSE_KW                    = "false";
 static std::string FILE_KW                     = "file";
@@ -81,6 +92,9 @@ static std::string REBUILD_OVERVIEWS_KW        = "rebuild_overviews";
 static std::string SCAN_MIN_MAX_KW             = "scan_for_min_max";
 static std::string SCAN_MIN_MAX_NULL_KW        = "scan_for_min_max_null";
 static std::string THREADS_KW                  = "threads";
+static std::string THUMBNAIL_SIZE_KW           = "thumbnail_size";
+static std::string THUMBNAIL_STRETCH_TYPE_KW   = "thumbnail_stretch_type";
+static std::string THUMBNAIL_TYPE_KW           = "thumbnail_type";
 static std::string TILE_SIZE_KW                = "tile_size";
 static std::string TRUE_KW                     = "true";
 static std::string WRITER_PROP_KW              = "writer_prop";
@@ -115,9 +129,12 @@ void ossimImageUtil::addOptions(ossimApplicationUsage* au)
    au->addCommandLineOption("-a or --include-fullres", "Copy full res dataset to overview file as well as building reduced res sets. Option only valid with tiff overview builder. Requires -o option.");
  
    au->addCommandLineOption("--ch or --create-histogram", "Computes full histogram alongside overview.");
- 
+
    au->addCommandLineOption("--chf or --create-histogram-fast", "Computes a histogram in fast mode which samples partial tiles.");
- 
+   au->addCommandLineOption("--ct or --create-thumbnail", "computes a thumbnail of the image");
+   au->addCommandLineOption("--tt or --thumbnail-type", "Can be of of values png or jpeg");
+   au->addCommandLineOption("--tst or --thumbnail-stretch-type", "Can be of values none,auto-minmax,auto-percentile,std-stretch-1,std-stretch-2,std-stretch-3");
+
    au->addCommandLineOption("--compression-quality", "Compression quality for TIFF JPEG takes values from 0 to 100, where 100 is best.  For J2K plugin, numerically_lossless, visually_lossless, lossy");
  
    au->addCommandLineOption("--compute-min-max", "Turns on min, max scanning when reading tiles and writes a dot omd file. This option assumes the null is known.");
@@ -261,7 +278,7 @@ bool ossimImageUtil::initialize(ossimArgumentParser& ap)
                break;
             }
          }
- 
+
          if( ap.read("--compute-min-max") )
          {
             setScanForMinMax( true );
@@ -371,17 +388,41 @@ bool ossimImageUtil::initialize(ossimArgumentParser& ap)
                break;
             }
          }
- 
-         if( ap.read("-o") )
+
+         if (ap.read("-o"))
          {
-            setCreateOverviewsFlag( true );
-            if ( ap.argc() < 2 )
+            setCreateOverviewsFlag(true);
+            if (ap.argc() < 2)
             {
                break;
             }
-         }        
- 
-         if( ap.read("--ot", sp1) )
+         }
+         if (ap.read("--ct"))
+         {
+            setCreateThumbnailsFlag(true);
+            if (ap.argc() < 2)
+            {
+               break;
+            }
+         }
+         if (ap.read("--tt", sp1) || ap.read("--thumbnail-type", sp1))
+         {
+            setThumbnailType(ts1);
+            if (ap.argc() < 2)
+            {
+               break;
+            }
+         }
+         if (ap.read("--tst", sp1) || ap.read("--thumbnail-stretch-type", sp1))
+         {
+            setThumbnailStretchType(ts1);
+            if (ap.argc() < 2)
+            {
+               break;
+            }
+         }
+
+         if (ap.read("--ot", sp1))
          {
             setOverviewType( ts1 );
             if ( ap.argc() < 2 )
@@ -712,7 +753,19 @@ void ossimImageUtil::processFile(const ossimFilename& file)
                createOverview(ih, consumedHistogramOptions, consumedCmmOptions);
             }
          }
- 
+         if(createThumbnails())
+         {
+            for(ossim_uint32 idx = 0; idx < ih->getNumberOfEntries();++idx)
+            {
+               ih->setCurrentEntry(idx);
+               if(ih->getNumberOfDecimationLevels() <=1)
+               {
+                  ih->getState()->setOverviewState(0);
+                  ih->openOverview();
+               }
+            }
+            createThumbnail(ih);
+         }
          // Build stand alone histogram.  Note the overview sequencer may have computed for us.
          if ( hasHistogramOption() && !consumedHistogramOptions)
          {
@@ -952,7 +1005,102 @@ void ossimImageUtil::createOverview(ossimRefPtr<ossimImageHandler>& ih,
       ossimNotify(ossimNotifyLevel_DEBUG) << M << " exited...\n";
    }
 }
- 
+void ossimImageUtil::createThumbnail(ossimRefPtr<ossimImageHandler> &ih)
+{
+   ossimKeywordlist bandsKeywordList;
+   bandsKeywordList.add("type", "ossimBandSelector");
+   bandsKeywordList.add(ossimKeywordNames::BANDS_KW, "default");
+   ossimRefPtr<ossimImageSource> bs = ossimImageSourceFactoryRegistry::instance()->createImageSource(bandsKeywordList);
+   if (!bs)
+      return;
+   ossimIrect cutRect;
+   ossimRefPtr<ossimImageRenderer> renderer = new ossimImageRenderer();
+   ossimRefPtr<ossimScalarRemapper> scalarRemapper = new ossimScalarRemapper();
+   ossimRefPtr<ossimRectangleCutFilter> cutFilter = new ossimRectangleCutFilter();
+   ossimRefPtr<ossimImageViewAffineTransform> trans = new ossimImageViewAffineTransform();
+   ossimDrect bounds = ih->getBoundingRect();
+   ossim_float64 maxSize = ossim::max(bounds.width(), bounds.height());
+   ossim_float64 thumbnailSize = getThumbnailSize();
+   ossim_float64 scale = thumbnailSize / maxSize;
+   ossimFilename thumbnailFilename = getThumbnailFilename(ih.get());
+   ossimHistogramRemapper::StretchMode thumbnailStretchType = static_cast<ossimHistogramRemapper::StretchMode> (getThumbnailStretchType());
+   if (scale > 1.0)
+   {
+      scale = 1.0;
+      cutRect = bounds;
+   }
+   else
+   {
+      cutRect = bounds * scale;
+   }
+   cutFilter->setRectangle(cutRect);
+   if ((scale < .5) && (ih->getNumberOfDecimationLevels() < 2))
+   {
+      return;
+   }
+
+   trans->scale(scale, scale);
+   renderer->setImageViewTransform(trans.get());
+   if (!bs.valid())
+      return;
+   bs->connectMyInputTo(ih.get());
+   bs->initialize();
+   ossim_uint32 bandCount = bs->getNumberOfInputBands();
+   if ((bandCount == 2) || (bandCount > 3))
+   {
+      ossimBandSelector *tempBs = dynamic_cast<ossimBandSelector *>(bs.get());
+      if (tempBs)
+      {
+         tempBs->setThreeBandRgb();
+      }
+   }
+
+   ossimRefPtr<ossimHistogramRemapper> stretch = new ossimHistogramRemapper();
+   stretch->setStretchMode(thumbnailStretchType);
+   ossimFilename histogramFilename = ih->createDefaultHistogramFilename();
+
+   std::cout << "histogramFilename: " << histogramFilename << "\n";
+   //if (!histogramFilename.empty())
+   //{
+   //   histogramFile = m_histogramFilename;
+   // }
+   stretch->connectMyInputTo(bs.get());
+   stretch->openHistogram(histogramFilename);
+   renderer->connectMyInputTo(stretch.get());
+
+   scalarRemapper->connectMyInputTo(renderer.get());
+   cutFilter->connectMyInputTo(scalarRemapper.get());
+   ossimKeywordlist writerKwl;
+   ossimString ext = thumbnailFilename.ext();
+   ext = ext.downcase();
+   writerKwl.add("type", "image/" + ext);
+   writerKwl.add("filename", thumbnailFilename.c_str());
+   writerKwl.add("create_external_geometry", "false");
+   if (ext == "png")
+   {
+      writerKwl.add("add_alpha_channel", "true");
+   }
+   ossimRefPtr<ossimImageFileWriter> writer = ossimImageWriterFactoryRegistry::instance()->createWriter(writerKwl);
+
+   if (writer)
+   {
+      writer->connectMyInputTo(cutFilter.get());
+
+      writer->execute();
+
+      writer->disconnect();
+      writer = 0;
+   }
+   scalarRemapper->disconnect();
+   scalarRemapper = 0;
+   renderer->disconnect();
+   renderer = 0;
+   stretch->disconnect();
+   stretch = 0;
+   bs->disconnect();
+   bs = 0;
+}
+
 bool ossimImageUtil::hasRequiredOverview( ossimRefPtr<ossimImageHandler>& ih,
                                           ossimRefPtr<ossimOverviewBuilderBase>& ob )
 {
@@ -1512,6 +1660,15 @@ bool ossimImageUtil::createOverviews() const
 {
    return  keyIsTrue( CREATE_OVERVIEWS_KW );
 }
+void ossimImageUtil::setCreateThumbnailsFlag(bool flag)
+{
+   addOption(CREATE_THUMBNAILS_KW, (flag ? TRUE_KW : FALSE_KW));
+}
+
+bool ossimImageUtil::createThumbnails() const
+{
+   return keyIsTrue(CREATE_THUMBNAILS_KW);
+}
 
 void ossimImageUtil::setRebuildOverviewsFlag( bool flag )
 {
@@ -1924,10 +2081,106 @@ ossim_uint32 ossimImageUtil::getNextReaderPropIndex() const
    }
    return result;
 }
-
-void ossimImageUtil::addOption( const std::string& key, ossim_uint32 value )
+ossim_uint32 ossimImageUtil::getThumbnailSize() const
 {
-   addOption( key, ossimString::toString( value ).string() );
+   ossim_uint32 result;
+   std::string lookup = m_kwl->findKey(THUMBNAIL_SIZE_KW);
+   if (lookup.size())
+   {
+      result = ossimString(lookup).toUInt32();
+   }
+   else
+   {
+      result = 256;
+   }
+   return result;
+}
+void ossimImageUtil::setThumbnailStretchType(const std::string &value)
+{
+   addOption(THUMBNAIL_STRETCH_TYPE_KW, value);
+}
+
+int ossimImageUtil::getThumbnailStretchType()const
+{
+   int result = ossimHistogramRemapper::LINEAR_AUTO_MIN_MAX;
+   
+   ossimString typeString = m_kwl->findKey(THUMBNAIL_STRETCH_TYPE_KW);
+
+   if (typeString.empty())
+   {
+      typeString = "auto-minmax";
+   }
+
+   typeString = typeString.downcase();
+
+   if ((typeString == "auto-minmax"))
+   {
+      result = ossimHistogramRemapper::StretchMode::LINEAR_AUTO_MIN_MAX;
+   }
+   else if ((typeString == "auto-percentile"))
+   {
+      result = ossimHistogramRemapper::StretchMode::LINEAR_AUTO_PERCENTILE;
+   }
+   else if ((typeString == "std-stretch-1") || (typeString == "std-stretch 1"))
+   {
+      result = ossimHistogramRemapper::StretchMode::LINEAR_1STD_FROM_MEAN;
+   }
+   else if ((typeString == "std-stretch-2") || (typeString == "std-stretch 2"))
+   {
+      result = ossimHistogramRemapper::StretchMode::LINEAR_2STD_FROM_MEAN;
+   }
+   else if ((typeString == "std-stretch-3") || (typeString == "std-stretch 3"))
+   {
+      result = ossimHistogramRemapper::StretchMode::LINEAR_3STD_FROM_MEAN;
+   }
+   else if (typeString == "auto-minmax")
+   {
+      result = ossimHistogramRemapper::StretchMode::STRETCH_UNKNOWN;
+   }
+   return result;
+}
+
+void ossimImageUtil::setThumbnailType(const std::string& value)
+{
+   addOption(THUMBNAIL_TYPE_KW, value);
+}
+
+std::string ossimImageUtil::getThumbnailType() const
+{
+   ossimString typeString = m_kwl->findKey(THUMBNAIL_TYPE_KW);
+   std::string result = "jpeg";
+
+   typeString = typeString.downcase();
+
+   if(typeString != "png" && typeString != "jpeg")
+   {
+      typeString = "jpeg";
+   }
+
+   result = typeString.string();
+
+   return result;
+}
+
+std::string ossimImageUtil::getThumbnailFilename(ossimImageHandler* ih) const
+{
+   ossimFilename thumbnailFilename = ih->getFilenameWithThisExtension("");
+   std::string thumbnailType = getThumbnailType();
+   if (thumbnailType == "png")
+   {
+      thumbnailFilename = ossimFilename(thumbnailFilename + "thumb.png");
+   }
+   else
+   {
+      thumbnailFilename = ossimFilename(thumbnailFilename + "thumb.jpg");
+   }
+
+   return thumbnailFilename.string();
+}
+
+void ossimImageUtil::addOption(const std::string &key, ossim_uint32 value)
+{
+   addOption(key, ossimString::toString(value).string());
 }
 
 void ossimImageUtil::addOption(  const std::string& key, const std::string& value )
