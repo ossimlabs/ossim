@@ -33,6 +33,7 @@ class ossimFileWalker;
 class ossimGpt;
 class ossimPropertyInterface;
 class ossimApplicationUsage;
+class ossimImageHandler;
 /**
  * @brief ossimImageUtil class.
  *
@@ -107,11 +108,34 @@ public:
     * @note Number of required overviews is controlled by the ossim preferences
     * keyword overview_stop_dimension.
     */
-   void setCreateOverviewsFlag( bool flag );
+   void setCreateOverviewsFlag(bool flag);
 
    /** @return true if CREATE_OVERVIEWS_KW is found and set to true. */
    bool createOverviews() const;
-   
+
+   /**
+    * @brief Sets create thumbnails flag keyword CREATE_THUMBNAILS_KW used by
+    * processFile method.
+    *
+    * @param flag If true thumbnail will be created if image does not already.
+    *
+    * @note Overviews must be created before this works
+    */
+   void setCreateThumbnailsFlag(bool flag);
+
+   /**
+    *  @param value can be of values png or jpeg
+    */
+   void setThumbnailType(const std::string& value);
+
+   /**
+    * @param value can be of values none,auto-minmax,auto-percentile,std-stretch-1,std-stretch-2,std-stretch-3
+    */
+   void setThumbnailStretchType(const std::string& value);
+
+   /** @return true if CREATE_THUMBNAILS_KW is found and set to true. */
+   bool createThumbnails() const;
+
    /**
     * @brief Sets the rebuild overview flag keyword REBUILD_OVERVIEWS_KW used by
     * processFile method.
@@ -405,6 +429,8 @@ private:
                        bool useEntryIndex,
                        bool& consumedHistogramOptions);
 
+   void createThumbnail(ossimRefPtr<ossimImageHandler> &ih);
+
    /** @return true if entry has required overviews. */
    bool hasRequiredOverview( ossimRefPtr<ossimImageHandler>& ih,
                              ossimRefPtr<ossimOverviewBuilderBase>& ob );
@@ -452,15 +478,21 @@ private:
    /** @return the next writer prop index. */
    ossim_uint32 getNextWriterPropIndex() const;
 
-   /** @return the next reader prop index. */   
+   /** @return the next reader prop index. */
    ossim_uint32 getNextReaderPropIndex() const;
 
+   /** @return the next reader prop index. */
+   ossim_uint32 getThumbnailSize() const;
+
+   int getThumbnailStretchType()const;
+   std::string getThumbnailType()const;
+   std::string getThumbnailFilename(ossimImageHandler *ih) const;
    /**
     * @brief Adds option to m_kwl with mutex lock.
     * @param key
     * @param value
     */
-   void addOption( const std::string& key, ossim_uint32 value );
+   void addOption(const std::string &key, ossim_uint32 value);
    void addOption( const std::string& key, const std::string& value );
 
    /**

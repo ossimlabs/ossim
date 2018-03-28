@@ -80,7 +80,7 @@ public:
    virtual void initialize() {};
 
 protected:
-   ossimPointBlock(const ossimPointBlock& rhs) {}
+   ossimPointBlock(const ossimPointBlock& /* rhs */) {}
    void scanForMinMax() const;
 
    ossimPointRecord m_nullPCR;

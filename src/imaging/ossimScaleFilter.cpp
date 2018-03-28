@@ -251,10 +251,6 @@ ossimIrect ossimScaleFilter::getBoundingRect(ossim_uint32 resLevel)const
 
    if(!result.hasNans())
    {
-      result = ossimIrect(result.ul().x,
-                          result.ul().y,
-                          result.lr().x+1,
-                          result.lr().y+1);
       result *= m_ScaleFactor;
    }
    

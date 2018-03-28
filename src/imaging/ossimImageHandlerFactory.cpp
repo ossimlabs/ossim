@@ -417,10 +417,6 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimKeywordlist& kwl,
       result = new ossimQbTileFilesHandler;
       if (result->loadState(kwl, prefix))  break;
 
-      if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<<"trying ossimQbTileFilesHandler...\n"<<std::endl;
-      result = new ossimQbTileFilesHandler;
-      if (result->loadState(kwl, prefix))  break;
-
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying band-separated files...\n";
       result = new ossimBandSeparateHandler();
       if (result->loadState(kwl, prefix))  break;
