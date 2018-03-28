@@ -1092,6 +1092,8 @@ void ossimImageUtil::createThumbnail(ossimRefPtr<ossimImageHandler> &ih)
    }
    scalarRemapper->disconnect();
    scalarRemapper = 0;
+   cutFilter->disconnect();
+   cutFilter = 0;
    renderer->disconnect();
    renderer = 0;
    stretch->disconnect();
