@@ -1059,7 +1059,6 @@ void ossimImageUtil::createThumbnail(ossimRefPtr<ossimImageHandler> &ih)
    stretch->setStretchMode(thumbnailStretchType);
    ossimFilename histogramFilename = ih->createDefaultHistogramFilename();
 
-   std::cout << "histogramFilename: " << histogramFilename << "\n";
    //if (!histogramFilename.empty())
    //{
    //   histogramFile = m_histogramFilename;
