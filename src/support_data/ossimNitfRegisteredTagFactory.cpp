@@ -22,9 +22,10 @@
 #include <ossim/support_data/ossimNitfCsexraTag.h>
 #include <ossim/support_data/ossimNitfEngrdaTag.h>
 #include <ossim/support_data/ossimNitfGeoPositioningTag.h>
+#include <ossim/support_data/ossimNitfGeolobTag.h>
 #include <ossim/support_data/ossimNitfIchipbTag.h>
 #include <ossim/support_data/ossimNitfJ2klraTag.h>
-#include <ossim/support_data/ossimNitfLocalGeographicTag.h>
+// #include <ossim/support_data/ossimNitfLocalGeographicTag.h>
 #include <ossim/support_data/ossimNitfLocalCartographicTag.h>
 #include <ossim/support_data/ossimNitfMstgtaTag.h>
 #include <ossim/support_data/ossimNitfPiaimcTag.h>
@@ -54,6 +55,7 @@ static const char CSCRNA_TAG[]               = "CSCRNA";
 static const char CSDIDA_TAG[]               = "CSDIDA";
 static const char CSEXRA_TAG[]               = "CSEXRA";
 static const char ENGRDA_TAG[]               = "ENGRDA";
+static const char GEOLOB_TAG[]               = "GEOLOB";
 static const char GEO_POSITIONING_TAG[]      = "GEOPSB";
 static const char ICHIPB_TAG[]               = "ICHIPB";
 static const char J2KLRA_TAG[]               = "J2KLRA";
@@ -123,6 +125,10 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    {
       return new ossimNitfEngrdaTag;
    }
+   else if(tagName == GEOLOB_TAG)
+   {
+      return new ossimNitfGeolobTag;
+   }
    else if(tagName == GEO_POSITIONING_TAG)
    {
       return new ossimNitfGeoPositioningTag;
@@ -135,10 +141,12 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    {
       return new ossimNitfJ2klraTag;
    }
+#if 0 /* ossimNitfGeolobTag */
    else if(tagName == LOCAL_GEOGRAPHIC_TAG)
    {
       return new ossimNitfLocalGeographicTag;
    }
+#endif
    else if(tagName == LOCAL_CARTOGRAPHIC_TAG)
    {
       return new ossimNitfLocalCartographicTag;

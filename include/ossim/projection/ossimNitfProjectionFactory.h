@@ -1,6 +1,5 @@
-//----------------------------------------------------------------------------
-//
-// License:  See top level LICENSE.txt file.
+//---
+// License: MIT
 //
 // Author:  Matt Revelle
 //          David Burken
@@ -8,9 +7,9 @@
 // Description:
 //
 // Contains class declaration for ossimNitfProjectionFactory.
-//
-// $Id: ossimNitfProjectionFactory.h 18905 2011-02-16 13:30:11Z dburken $
-//----------------------------------------------------------------------------
+//---
+// $Id$
+
 #ifndef ossimNitfProjectionFactory_HEADER
 #define ossimNitfProjectionFactory_HEADER 1
 
@@ -236,9 +235,19 @@ private:
     * @return true if BLOCKA tag was parsed.
     */
    bool getBlockaPoints(const ossimNitfImageHeader* hdr,
-                        std::vector<ossimGpt>& gpts)const;//,
-                        //const ossimFilename& filename) const;
-   
+                        std::vector<ossimGpt>& gpts)const;
+
+   /**
+    * @param hdr The nitf image header from the currently opened nitf file.
+    * 
+    * @param gpts Ground points to initialize from GEOLOB tag. This should
+    * be an empty vector.
+    *
+    * @return true if GEOLOB tag was parsed.
+    */
+   bool getGeolobPoints(const ossimNitfImageHeader* hdr,
+                        std::vector<ossimGpt>& gpts)const;
+
    /**
     * Private constructor, users must go through instance() method.
     */

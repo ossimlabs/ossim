@@ -30,12 +30,12 @@
 #include <ossim/base/ossimBooleanProperty.h>
 #include <ossim/base/ossimVisitor.h>
 #include <ossim/support_data/ossimNitfCommon.h>
-#include <ossim/support_data/ossimNitfGeoPositioningTag.h>
-#include <ossim/support_data/ossimNitfLocalGeographicTag.h>
-#include <ossim/support_data/ossimNitfLocalCartographicTag.h>
-#include <ossim/support_data/ossimNitfProjectionParameterTag.h>
-#include <ossim/support_data/ossimNitfNameConversionTables.h>
-#include <ossim/support_data/ossimNitfBlockaTag.h>
+// #include <ossim/support_data/ossimNitfGeoPositioningTag.h>
+// #include <ossim/support_data/ossimNitfLocalGeographicTag.h>
+// #include <ossim/support_data/ossimNitfLocalCartographicTag.h>
+// #include <ossim/support_data/ossimNitfProjectionParameterTag.h>
+// #include <ossim/support_data/ossimNitfNameConversionTables.h>
+// #include <ossim/support_data/ossimNitfBlockaTag.h>
 #include <tiffio.h>
 #include <fstream>
 #include <algorithm>
