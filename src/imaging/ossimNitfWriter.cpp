@@ -62,7 +62,9 @@ ossimNitfWriter::ossimNitfWriter(const ossimFilename& filename,
    // geometry out as default behavior.  Users can disable this via the
    // property interface or keyword list.
    //---
-   setWriteExternalGeometryFlag(true);
+   // Added GEOLOB tag for geographic output. UTM is good with BLOCKA.
+   // No longer needed. (drb - 30 March 2018)
+   // setWriteExternalGeometryFlag(true);
    
    m_fileHeader       = new ossimNitfFileHeaderV2_1;
    m_imageHeader      = new ossimNitfImageHeaderV2_1;
@@ -887,10 +889,10 @@ void ossimNitfWriter::addDataExtensionSegment(const ossimNitfDataExtensionSegmen
    if (allowTreOverflow == false)
    {
       ossimRefPtr<ossimProperty> pId = des.getProperty(ossimNitfDataExtensionSegmentV2_1::DESID_KW);
-      if (  !pId ||
-            (pId->valueToString() == "TRE_OVERFLOW") ||
-            (pId->valueToString() == "REGISTERED EXTENSIONS") ||
-            (pId->valueToString() == "CONTROLLED EXTENSIONS"))
+      if ( !pId.valid() ||
+           pId->valueToString() == "TRE_OVERFLOW" ||
+           pId->valueToString() == "REGISTERED EXTENSIONS" ||
+           pId->valueToString() == "CONTROLLED EXTENSIONS")
       {
          return;
       }

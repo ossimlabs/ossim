@@ -1,18 +1,16 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  MIT
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
 // Description: OSSIM nitf writer base class to hold methods common to
 // all nitf writers.
 //
-//----------------------------------------------------------------------------
-// $Id: ossimNitfWriterBase.h 2981 2011-10-10 21:14:02Z david.burken $
+//---
+// $Id$
 #ifndef ossimNitfWriterBase_HEADER
-#define ossimNitfWriterBase_HEADER
+#define ossimNitfWriterBase_HEADER 1
 
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
@@ -148,6 +146,19 @@ protected:
                      ossimNitfImageHeaderV2_X* hdr);
 
    /**
+    * @brief Adds the GEOLOB tag.
+    *
+    * This will only be added if projection is geographic.
+    *
+    * @param mapInfo ossimMapProjectionInfo to use to set tag with.
+    * @param hdr The header to write to.
+    *
+    * @note Currently only used with map projected images.
+    */
+   void addGeolobTag(const ossimMapProjection* mapProj,
+                     ossimNitfImageHeaderV2_X* hdr);
+   
+   /**
     * @brief Adds the RPC00B tag.
     *
     * @param rect Requested rectangle of image to write.
@@ -185,6 +196,11 @@ protected:
     */
    bool theEnableBlockaTagFlag;
 
+   /**
+    * @brief If true user wants to set GEOLOG tag. (DEFAULT = true)
+    * This will only be set if a geographic projection.
+    */
+   bool theEnableGeolobTagFlag;
    
 
 private:

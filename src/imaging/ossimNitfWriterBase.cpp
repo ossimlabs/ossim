@@ -1,9 +1,15 @@
-//**************************************************************************************************
+//---
 //
-//     OSSIM Open Source Geospatial Data Processing Library
-//     See top level LICENSE.txt file for license information
+// License: MIT
+// 
+// Author:  David Burken
 //
-//**************************************************************************************************
+// Description: OSSIM nitf writer base class to hold methods common to
+// all nitf writers.
+//
+//---
+// $Id$
+
 #include <ossim/imaging/ossimNitfWriterBase.h>
 #include <ossim/base/ossimBooleanProperty.h>
 #include <ossim/base/ossimFilename.h>
@@ -23,6 +29,7 @@
 #include <ossim/support_data/ossimNitfBlockaTag.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
 #include <ossim/support_data/ossimNitfFileHeaderV2_X.h>
+#include <ossim/support_data/ossimNitfGeolobTag.h>
 #include <ossim/support_data/ossimNitfImageHeader.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_X.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
@@ -30,6 +37,7 @@
 
 static const char ENABLE_BLOCKA_KW[] = "enable_blocka_tag";
 static const char ENABLE_RPCB_KW[]   = "enable_rpcb_tag";
+static const char ENABLE_GEOLOB_KW[] = "enable_geolob_tag";
 
 RTTI_DEF1(ossimNitfWriterBase, "ossimNitfWriterBase", ossimImageFileWriter)
    
@@ -38,7 +46,8 @@ static ossimTrace traceDebug(ossimString("ossimNitfWriterBase:debug"));
 ossimNitfWriterBase::ossimNitfWriterBase()
    : ossimImageFileWriter(),
      theEnableRpcbTagFlag(false),
-     theEnableBlockaTagFlag(true)
+     theEnableBlockaTagFlag(true),
+     theEnableGeolobTagFlag(true)
 {
 }
 
@@ -46,7 +55,8 @@ ossimNitfWriterBase::ossimNitfWriterBase(const ossimFilename& filename,
                                          ossimImageSource* inputSource)
    : ossimImageFileWriter(filename, inputSource, 0),
      theEnableRpcbTagFlag(false),
-     theEnableBlockaTagFlag(true)
+     theEnableBlockaTagFlag(true),
+     theEnableGeolobTagFlag(true)
 {
 }
 
@@ -68,6 +78,10 @@ void ossimNitfWriterBase::setProperty(ossimRefPtr<ossimProperty> property)
       {
          theEnableBlockaTagFlag = property->valueToString().toBool();
       }
+      else if (name == ENABLE_GEOLOB_KW)
+      {
+         theEnableGeolobTagFlag = property->valueToString().toBool();
+      }
       else
       {
          ossimImageFileWriter::setProperty(property);
@@ -80,14 +94,18 @@ ossimRefPtr<ossimProperty> ossimNitfWriterBase::getProperty(
 {
    ossimRefPtr<ossimProperty> result = 0;
    
-   if(name == ENABLE_RPCB_KW)
-   {
-      result = new ossimBooleanProperty(name, theEnableRpcbTagFlag);
-   }   
-   else if(name == ENABLE_BLOCKA_KW)
+   if(name == ENABLE_BLOCKA_KW)
    {
       result = new ossimBooleanProperty(name, theEnableBlockaTagFlag);
-   }   
+   }
+   else if (name == ENABLE_GEOLOB_KW)
+   {
+      result = new ossimBooleanProperty(name, theEnableGeolobTagFlag);
+   }
+   else if(name == ENABLE_RPCB_KW)
+   {
+      result = new ossimBooleanProperty(name, theEnableRpcbTagFlag);
+   }
    else
    {
       result = ossimImageFileWriter::getProperty(name);
@@ -102,6 +120,7 @@ void ossimNitfWriterBase::getPropertyNames(
    ossimImageFileWriter::getPropertyNames(propertyNames);
 
    propertyNames.push_back(ENABLE_BLOCKA_KW);
+   propertyNames.push_back(ENABLE_GEOLOB_KW);
    propertyNames.push_back(ENABLE_RPCB_KW);
 }
 
@@ -109,8 +128,9 @@ void ossimNitfWriterBase::getPropertyNames(
 bool ossimNitfWriterBase::saveState(ossimKeywordlist& kwl,
                                     const char* prefix) const
 {
-   kwl.add(prefix, ENABLE_RPCB_KW, theEnableRpcbTagFlag, true);
    kwl.add(prefix, ENABLE_BLOCKA_KW, theEnableBlockaTagFlag, true);
+   kwl.add(prefix, ENABLE_GEOLOB_KW, theEnableGeolobTagFlag, true);
+   kwl.add(prefix, ENABLE_RPCB_KW, theEnableRpcbTagFlag, true);   
 
    return ossimImageFileWriter::saveState(kwl, prefix);
 }
@@ -119,19 +139,29 @@ bool ossimNitfWriterBase::loadState(const ossimKeywordlist& kwl,
                                     const char* prefix)
 {
    // Look for the rpcb enable flag keyword.
-   const char* lookup = kwl.find(prefix, ENABLE_RPCB_KW);
-   if(lookup)
-   {
-      ossimString os = lookup;
-      theEnableRpcbTagFlag = os.toBool();
-   }
+
 
    // Look for the blocka enable flag keyword.
-   lookup = kwl.find(prefix, ENABLE_BLOCKA_KW);
+   const char* lookup = kwl.find(prefix, ENABLE_BLOCKA_KW);
    if(lookup)
    {
       ossimString os = lookup;
       theEnableBlockaTagFlag = os.toBool();
+   }
+
+   // Look for the geolob enable flag keyword.
+   lookup = kwl.find(prefix, ENABLE_GEOLOB_KW);
+   if(lookup)
+   {
+      ossimString os = lookup;
+      theEnableGeolobTagFlag = os.toBool();
+   }
+
+   lookup = kwl.find(prefix, ENABLE_RPCB_KW);
+   if(lookup)
+   {
+      ossimString os = lookup;
+      theEnableRpcbTagFlag = os.toBool();
    }
 
    return ossimImageFileWriter::loadState(kwl, prefix);
@@ -190,6 +220,11 @@ void ossimNitfWriterBase::writeGeometry(ossimNitfImageHeaderV2_X* hdr,
             if (theEnableBlockaTagFlag)
             {
                addBlockaTag(mapInfo, hdr);
+            }
+
+            if ( theEnableGeolobTagFlag )
+            {
+               addGeolobTag( mapProj, hdr );
             }
          }
          else
@@ -261,6 +296,52 @@ void ossimNitfWriterBase::addBlockaTag(ossimMapProjectionInfo& mapInfo,
       mapInfo.setPixelType(originalPixelType);
       
    } // matches: if (hdr)
+}
+
+void ossimNitfWriterBase::addGeolobTag(const ossimMapProjection* mapProj,
+                                       ossimNitfImageHeaderV2_X* hdr)
+{
+   if (hdr && mapProj)
+   {
+      if ( mapProj->isGeographic() == true )
+      {
+         ossimRefPtr<ossimNitfGeolobTag> geolobTag = new ossimNitfGeolobTag();
+
+         // Get the scale:
+         ossimDpt gsd = mapProj->getDecimalDegreesPerPixel();
+         if ( (gsd.hasNans() == false) && (gsd.x > 0.0) && (gsd.y > 0.0) )
+         {
+            ossimGpt tie = mapProj->getUlGpt();
+            if ( tie.hasNans() == false )
+            {
+               // Shift the tie to edge of pixel:
+               tie.lat = tie.lat + gsd.y*0.5;
+               tie.lon = tie.lon - gsd.x*0.5;
+               if ( (tie.lat <= 90.0) && (tie.lon >= -180.0) )
+               {
+                  ossimRefPtr<ossimNitfGeolobTag> geolobTag = new ossimNitfGeolobTag();
+                  geolobTag->setDegreesPerPixelLon( gsd.x );
+                  geolobTag->setDegreesPerPixelLat( gsd.y );
+                  geolobTag->setLso( tie.lon ); // Origin Longitude
+                  geolobTag->setPso( tie.lat ); // Origin Latitude
+
+                  // Add the tag to the header.
+                  ossimRefPtr<ossimNitfRegisteredTag> geolobTagRp = geolobTag.get();
+                  ossimNitfTagInformation geolobTagInfo(geolobTagRp);
+                  hdr->addTag(geolobTagInfo);
+
+                  if (traceDebug())
+                  {
+                     ossimNotify(ossimNotifyLevel_DEBUG)
+                        << "ossimNitfWriterBase::addGeolobTag DEBUG:"
+                        << "\nAdded GEOLOB Tag:\n" << *(geolobTag.get())
+                        << "\n";
+                  }
+               }
+            }
+         }
+      }
+   }
 }
 
 void ossimNitfWriterBase::addRpcbTag(const ossimIrect& rect,

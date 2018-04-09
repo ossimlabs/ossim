@@ -1,13 +1,11 @@
-//----------------------------------------------------------------------------
-//
-// License:  See top level LICENSE.txt file.
+//---
+// License: MIT
 //
 // Description:
 //
 // Contains class definition for ossimNitfProjectionFactory.
-//
-// $Id: ossimNitfProjectionFactory.cpp 23671 2015-12-19 01:07:26Z gpotts $
-//----------------------------------------------------------------------------
+//---
+// $Id$
 
 #include <ossim/projection/ossimNitfProjectionFactory.h>
 #include <ossim/base/ossimDms.h>
@@ -26,6 +24,7 @@
 #include <ossim/support_data/ossimNitfBlockaTag.h>
 #include <ossim/support_data/ossimNitfFile.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
+#include <ossim/support_data/ossimNitfGeolobTag.h>
 #include <ossim/support_data/ossimNitfImageHeader.h>
 #include <fstream>
 #include <cmath>
@@ -214,18 +213,34 @@ ossimProjection* ossimNitfProjectionFactory::makeGeographic(
    if (hdr)
    {
       // To hold corner points.
-      std::vector<ossimGpt> gpts;
-      
+      std::vector<ossimGpt> gpts(0);
+      std::vector<ossimGpt> geolobPts(0);
+      std::vector<ossimGpt> blockaPts(0);
+      std::vector<ossimGpt> igeoloPts(0);      
+
       //---
-      // Get the corner points.
-      // 
+      // Look for points from the GEOLOB tag if geographic coordinate
+      // system. This has an origin and scale with good precision.
+      //
+      // NOTES:
+      // 1) More precise than the BLOCKA
+      // 2) Making an assumption this is not present if rotated.
+      //    Might need to test for rotation in BLOCKA and IGEOLO
+      // 3) GEOLOB points are always rectangular as they are derived
+      //    from a single origin.
+      //---
+      getGeolobPoints(hdr, geolobPts);
+
+      //---
       // Look for points from the BLOCKA tag.  This may or may not be present.
       // If present since it has six digit precision use it for the points.
       //---
-      if ( getBlockaPoints(hdr, gpts) == false )
+      getBlockaPoints(hdr, blockaPts);
+            
+      if ( blockaPts.empty() )
       {
+         // Least precise IGEOLO field:
          ossimString geographicLocation = hdr->getGeographicLocation();
-
          if ( geographicLocation.size() )
          {
             if (traceDebug())
@@ -247,7 +262,7 @@ ossimProjection* ossimNitfProjectionFactory::makeGeographic(
                //       where d is degrees and m is minutes
                //       and s is seconds and X is either N (North) or S (South).
                //---
-               parseGeographicString(geographicLocation, gpts);
+               parseGeographicString(geographicLocation, igeoloPts);
             }
             else if (coordinateSysetm == "D")
             {
@@ -257,19 +272,49 @@ ossimProjection* ossimNitfProjectionFactory::makeGeographic(
                // - is souther hemisphere for lat and longitude
                // + is easting and - is westing.
                //---
-               parseDecimalDegreesString(geographicLocation, gpts);
+               parseDecimalDegreesString(geographicLocation, igeoloPts);
             }
             
          } // matches: if ( geographicLocation.size() )
          
       } // matches: if ( getBlockaPoints(hdr, gpts) == false )
+
+      bool isSkewedFlag = false;      
+      if ( blockaPts.size() )
+      {
+         isSkewedFlag = isSkewed(blockaPts);
+         if ( (isSkewedFlag == false) && geolobPts.size() )
+         {
+            gpts = geolobPts; // Not skewed and have more accurate geolob points.
+         }
+         else
+         {
+            gpts = blockaPts;
+         }
+      }
+      else if ( igeoloPts.size() )
+      {
+         isSkewedFlag = isSkewed(igeoloPts);
+         if ( (isSkewedFlag == false) && geolobPts.size() )
+         {
+            gpts = geolobPts; // Not skewed and have more accurate geolob points.
+         }
+         else
+         {
+            gpts = igeoloPts;
+         }
+      }
          
       if (gpts.size() == 4)
       {   
          ossimDpt scaleTest;
          computeScaleInDecimalDegrees(hdr, gpts, scaleTest);
 
-         if (!isSkewed(gpts)&&(ossim::abs(scaleTest.y/scaleTest.x) <= 1.0))
+         //---
+         // Getting very small value above 1.0 when dividing; hence the .000001.
+         // Code calling arc cosine function in makeEquDistant(...) clamps to 1.0.
+         //---
+         if ( !isSkewedFlag && (ossim::abs(scaleTest.y/scaleTest.x) <= 1.000001))
          {
             proj = makeEuiDistant(hdr, gpts);
          }
@@ -548,7 +593,9 @@ ossimProjection* ossimNitfProjectionFactory::makeEuiDistant(
       // computation.  So is not set in tiff tags, compute to achieve the proper
       // horizontal scaling.
       //---
-      origin.lat = ossim::acosd(scale.y/scale.x);
+      ossim_float64 x = (scale.y/scale.x);
+      if ( x > 1.0 ) x = 1.0; // Limit to domain of arc cosine function.
+      origin.lat = ossim::acosd(x);
 
       proj->setOrigin(origin);
    }
@@ -695,6 +742,87 @@ bool ossimNitfProjectionFactory::getBlockaPoints(
    }
    
    return true;
+}
+
+bool ossimNitfProjectionFactory::getGeolobPoints(
+   const ossimNitfImageHeader* hdr,
+   std::vector<ossimGpt>& gpts) const
+{
+   static const char MODULE[] = "ossimNitfProjectionFactory::getGeolobPoints";
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " entered...\n";
+   }
+   bool result = false;
+
+   gpts.clear();
+   
+   if ( hdr )
+   {
+      ossimRefPtr<ossimNitfRegisteredTag> tag = hdr->getTagData(ossimString("GEOLOB"));
+      if ( tag.valid() )
+      {
+         ossimNitfGeolobTag* geolob = dynamic_cast<ossimNitfGeolobTag*>(tag.get());
+         if ( geolob )
+         {
+            ossimDpt gsd( geolob->getDegreesPerPixelLon(), geolob->getDegreesPerPixelLat() );
+            if ( (gsd.x > 0.0 ) && (gsd.y > 0.0) )
+            {
+               ossim_int32 rows = hdr->getNumberOfRows();
+               ossim_int32 cols = hdr->getNumberOfCols();
+               if ( (rows > 0) && (cols > 0) )
+               {
+                  ossimGpt gpt(0.0, 0.0, 0.0);
+                  ossimDpt origin( geolob->getLso(), geolob->getPso() );
+
+                  if (traceDebug())
+                  {
+                     ossimNotify(ossimNotifyLevel_DEBUG)
+                        << "origin: " << origin
+                        << "\ngsd:    " << gsd << "\n";
+                  }
+
+                  // Note: Edge to edge here as origin is shifted makeEuiDistant method.
+                  // UL:
+                  gpt.latd(origin.y);
+                  gpt.lond(origin.x);
+                  gpts.push_back(gpt);
+
+                  // UR:
+                  gpt.latd(origin.y);
+                  gpt.lond(origin.x + cols*gsd.x);
+                  gpts.push_back(gpt);
+                               
+                  // LR:
+                  gpt.latd(origin.y - rows*gsd.y);
+                  gpt.lond(origin.x + cols*gsd.x);
+                  gpts.push_back(gpt);
+
+                  // LL:
+                  gpt.latd(origin.y - rows*gsd.y);
+                  gpt.lond(origin.x);
+                  gpts.push_back(gpt);
+                 
+                  result = true;
+               }
+            }
+         }
+      }
+      else if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "No GEOLOB tag found.\n";
+      }
+   }
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " exit status: " << (result?"true":"false") << "\n";
+   }
+   
+   return result;
 }
 
 void ossimNitfProjectionFactory::computeScaleInDecimalDegrees(
