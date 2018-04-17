@@ -190,7 +190,6 @@ void ossimNitfImageBandV2_0::clearFields()
    memset(theBandSignificance, ' ', 6);
    memset(theBandImageFilterCondition, 'N', 1);
    memset(theBandStandardImageFilterCode, ' ', 3);
-   memset(theBandNumberOfLuts, 0, 1);
    memset(theBandNumberOfLutEntries, ' ', 5);
    
    theLookupTables.clear();
@@ -198,6 +197,7 @@ void ossimNitfImageBandV2_0::clearFields()
    theBandSignificance[6] = '\0';
    theBandImageFilterCondition[1] = '\0';
    theBandStandardImageFilterCode[3] = '\0';
+   theBandNumberOfLuts[0] = 0x30;
    theBandNumberOfLuts[1] = '\0';
    theBandNumberOfLutEntries[5] = '\0';
 }
