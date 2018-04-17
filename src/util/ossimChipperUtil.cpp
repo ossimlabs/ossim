@@ -1975,6 +1975,11 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
             }
          }
       }
+      ossimString nullPixelFlip = m_kwl->find(NULL_PIXEL_FLIP_KW.c_str());
+      if (nullPixelFlip.toBool())
+      {
+            ic->setAddNullPixelFlipFlag(true);
+      }
 
       //---
       // If multiple inputs and scaleToEightBit do it at the end of the processing
