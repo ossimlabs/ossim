@@ -181,6 +181,14 @@ void ossimSingleImageChain::createRenderedChain()
    {
       addBandSelector();
    }
+
+   // will do this here.  Not sure if we want flipped just before the resampler or if we want to do it here.
+   // I think this is a better place for you can now manipulate the flipped pixel   
+   if (m_addNullPixelFlipFlag)
+   {
+         addNullPixelFlip();
+   }
+
    // histogram:
    if ( m_addHistogramFlag )
    {
@@ -215,13 +223,6 @@ void ossimSingleImageChain::createRenderedChain()
          // Just add...
          addScalarRemapper(); 
       }
-   }
-
-   // cheaper operation to put the flip after the remapper
-   //
-   if(m_addNullPixelFlipFlag)
-   {
-      addNullPixelFlip();
    }
 
    // resampler cache
