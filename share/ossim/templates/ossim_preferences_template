@@ -394,9 +394,18 @@ plugin55.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_geopdf_plugi
 //---
 // Always put gdal last as it has duplicate readers and need to pick ours up
 // first.
+//
+//  The enable and disable is a regular expression.  a REgular expression with
+//  the value of ".*" will match all and a regular expression with the value of
+//  "NITF|HFA" will match HFA or NITF drivers.
 //---
-//plugin85.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
-// plugin85.options:
+plugin85.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
+plugin85.options:"""
+                 reader_factory.location:back
+                 writer_factory.location:back
+                 enable_drivers: .*
+                 //disable_drivers:
+"""
 
 //---
 // Old style with no options keyword:
