@@ -763,8 +763,8 @@ void ossimImageUtil::processFile(const ossimFilename& file)
                            ih->setState(0);
                            ih->openOverview();
                      }
+                     createThumbnail(ih);
                }
-               createThumbnail(ih);
          }
          // Build stand alone histogram.  Note the overview sequencer may have computed for us.
          if ( hasHistogramOption() && !consumedHistogramOptions)
