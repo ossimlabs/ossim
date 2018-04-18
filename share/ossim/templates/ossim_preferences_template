@@ -398,6 +398,10 @@ plugin55.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_geopdf_plugi
 //  The enable and disable is a regular expression.  a REgular expression with
 //  the value of ".*" will match all and a regular expression with the value of
 //  "NITF|HFA" will match HFA or NITF drivers.
+//
+//  The plugin also support environment variables:
+//    GDAL_ENABLE_DRIVERS=
+//    GDAL_DISABLE_DRIVERS=
 //---
 plugin85.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_gdal_plugin.so
 plugin85.options:"""
