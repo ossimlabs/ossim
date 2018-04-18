@@ -753,25 +753,25 @@ void ossimImageUtil::processFile(const ossimFilename& file)
                createOverview(ih, consumedHistogramOptions, consumedCmmOptions);
             }
          }
-         if(createThumbnails())
+         if (createThumbnails())
          {
-            for(ossim_uint32 idx = 0; idx < ih->getNumberOfEntries();++idx)
-            {
-               ih->setCurrentEntry(idx);
-               if(ih->getNumberOfDecimationLevels() <=1)
+               for (ossim_uint32 idx = 0; idx < ih->getNumberOfEntries(); ++idx)
                {
-                  ih->getState()->setOverviewState(0);
-                  ih->openOverview();
+                     ih->setCurrentEntry(idx);
+                     if (ih->getNumberOfDecimationLevels() <= 1)
+                     {
+                           ih->setState(0);
+                           ih->openOverview();
+                     }
                }
-            }
-            createThumbnail(ih);
+               createThumbnail(ih);
          }
          // Build stand alone histogram.  Note the overview sequencer may have computed for us.
          if ( hasHistogramOption() && !consumedHistogramOptions)
          {
             createHistogram( ih );
          }
- 
+
          // Launch any file system commands.
          executeFileCommands( file );
       }
