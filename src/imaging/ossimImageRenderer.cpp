@@ -281,7 +281,8 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRe
    if(!splitFlags)
    {
       return;
-   } 
+   }
+
   
    // just do horizontal split for test
    ossimIrect vrect(m_Vul,
@@ -295,33 +296,19 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRe
    
    if((w2 <2)&&(h2<2))
    {
-      if(splitFlags)
-      {
-         ossimRendererSubRectInfo rect(m_transform.get(),m_Vul, 
-                                       m_Vul, 
-                                       m_Vul, 
-                                       m_Vul);
-         rect.m_viewBounds = m_viewBounds;
-         rect.transformViewToImage();
+      ossimRendererSubRectInfo rect(m_transform.get(),m_Vul, 
+                                    m_Vul, 
+                                    m_Vul, 
+                                    m_Vul);
+      rect.m_viewBounds = m_viewBounds;
+      rect.transformViewToImage();
 
-         if(rect.imageHasNans())
-         {
-            if(rect.m_viewBounds->intersects(rect.getViewRect()))
-            {
-               result.push_back(rect);
-            }
-         }
-         // if(rect.imageIsNan())
-         // {
-         //   if(rect.m_viewBounds->intersects(rect.getViewRect()))
-         //   {
-         //     result.push_back(rect);
-         //   }
-         // }
-         // else
-         // {
-         //   result.push_back(rect);
-         // }
+      if(rect.imageHasNans())
+      {
+        if(rect.m_viewBounds->intersects(rect.getViewRect()))
+        {
+            result.push_back(rect);
+        }
       }
    }
    // horizontal split if only the upper left and lower left 
@@ -393,6 +380,7 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::tooBig()const
 
 ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
 {
+  #if 0
    ossim_uint16 result = SPLIT_NONE;
    ossimDrect vRect = getViewRect();
 
@@ -401,7 +389,7 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
    // very small rectangles in canBilinearInterpolate(...) method.
    // DRB 05 Dec. 2017
    //---
-   if ( vRect.width() < 8 && vRect.height() < 8 )
+   if ( imageHasNans()||(vRect.width() < 8 && vRect.height() < 8) )
    {
       return result;
    }
@@ -484,6 +472,88 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
    }
 
    return result;
+#else
+  ossim_uint16 result = SPLIT_NONE;
+  ossimDrect vRect = getViewRect();
+
+  if(imageHasNans()||tooBig())
+  {
+     if(m_viewBounds->intersects(getViewRect()))
+     {
+      result = SPLIT_ALL;
+     }
+     else
+     {
+        return result;
+     }
+  }
+  /*
+  if(result != SPLIT_ALL)
+  {
+    if(m_ulRoundTripError.hasNans()&&m_urRoundTripError.hasNans()&&
+        m_lrRoundTripError.hasNans()&&m_llRoundTripError.hasNans())
+    {
+      if(m_viewBounds->intersects(getViewRect()))
+      {
+        result = SPLIT_ALL;
+      }
+      return result;
+    }
+    else if(tooBig())
+    {
+      result = SPLIT_ALL;
+    }
+  }
+
+  if(result != SPLIT_ALL)
+  {
+    if(m_ulRoundTripError.hasNans()) result |= UPPER_LEFT_SPLIT_FLAG;
+    if(m_urRoundTripError.hasNans()) result |= UPPER_RIGHT_SPLIT_FLAG;
+    if(m_lrRoundTripError.hasNans()) result |= LOWER_RIGHT_SPLIT_FLAG;
+    if(m_llRoundTripError.hasNans()) result |= LOWER_LEFT_SPLIT_FLAG;
+  }
+*/
+  if(result != SPLIT_ALL)
+  {
+    ossim_float64 sensitivityScale = m_ImageToViewScale.length();
+    //std::cout << sensitivityScale << std::endl;
+    if(sensitivityScale < 1.0) sensitivityScale = 1.0/sensitivityScale;
+
+
+     // if((m_ulRoundTripError.length() > sensitivityScale)||
+     //    (m_urRoundTripError.length() > sensitivityScale)||
+     //    (m_lrRoundTripError.length() > sensitivityScale)||
+     //    (m_llRoundTripError.length() > sensitivityScale))
+     // {
+     //   std::cout << "________________\n";
+
+     //   std::cout << "Sens:  " << sensitivityScale << "\n"
+     //             << "View:  " << getViewRect() << "\n"
+     //             << "UL:    " << m_ulRoundTripError.length() << "\n"
+     //             << "UR:   " << m_urRoundTripError.length() << "\n"
+     //             << "LR:   " << m_lrRoundTripError.length() << "\n"
+     //             << "LL:   " << m_llRoundTripError.length() << "\n";
+     // }
+   // if(m_ulRoundTripError.length() > sensitivityScale) result |= UPPER_LEFT_SPLIT_FLAG;
+   // if(m_urRoundTripError.length() > sensitivityScale) result |= UPPER_RIGHT_SPLIT_FLAG;
+   // if(m_lrRoundTripError.length() > sensitivityScale) result |= LOWER_RIGHT_SPLIT_FLAG;
+   // if(m_llRoundTripError.length() > sensitivityScale) result |= LOWER_LEFT_SPLIT_FLAG;
+       // std::cout << result << " == " << SPLIT_ALL << "\n";
+
+    if((result!=SPLIT_ALL)&&!canBilinearInterpolate(sensitivityScale))
+    {
+      // std::cout << "TESTING BILINEAR!!!!\n";
+      result = SPLIT_ALL;
+
+    }
+    else
+    {
+      // std::cout << "CAN BILINEAR!!!!\n";
+    }
+  }
+
+  return result;
+#endif
 }
 
 void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
@@ -692,51 +762,50 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
 {
   bool result = false;
 
-      // now check point placement
+  // now check point placement
   ossimDpt imageToViewScale = getAbsValueImageToViewScales();
 
   double testScale = imageToViewScale.length();
 
-//  ossimDpt errorUl = transform->getRoundTripErrorView(m_Vul);
-//  ossimDpt errorUr = transform->getRoundTripErrorView(m_Vur);
-//  ossimDpt errorLr = transform->getRoundTripErrorView(m_Vlr);
-//  ossimDpt errorLl = transform->getRoundTripErrorView(m_Vll);
+  //  ossimDpt errorUl = transform->getRoundTripErrorView(m_Vul);
+  //  ossimDpt errorUr = transform->getRoundTripErrorView(m_Vur);
+  //  ossimDpt errorLr = transform->getRoundTripErrorView(m_Vlr);
+  //  ossimDpt errorLl = transform->getRoundTripErrorView(m_Vll);
 
-//  if((errorUl.length() > 2 )||
-//     (errorUr.length() > 2 )||
-//     (errorLr.length() > 2 )||
-//     (errorLl.length() > 2))
-//     {
-//        return result;
-//     }
-//  std::cout << "_______________________\n"
-//            << "errorUl: " << errorUl << "\n"
-//            << "errorUr: " << errorUr << "\n"
-//            << "errorLr: " << errorLr << "\n"
-//            << "errorLl: " << errorLl << "\n";
+  //  if((errorUl.length() > 2 )||
+  //     (errorUr.length() > 2 )||
+  //     (errorLr.length() > 2 )||
+  //     (errorLl.length() > 2))
+  //     {
+  //        return result;
+  //     }
+  //  std::cout << "_______________________\n"
+  //            << "errorUl: " << errorUl << "\n"
+  //            << "errorUr: " << errorUr << "\n"
+  //            << "errorLr: " << errorLr << "\n"
+  //            << "errorLl: " << errorLl << "\n";
 
   // if there is a large shrink or expansion then just return true.
   // You are probably not worried about error in bilinear interpolation
   //
-  if((testScale > 256)||
-     (testScale < 1.0/256.0))
+  if ((testScale > 256) ||
+      (testScale < 1.0 / 256.0))
   {
-     return true;
+    return true;
   }
 
-  if(m_VulScale.hasNans()||
-     m_VurScale.hasNans()||
-     m_VlrScale.hasNans()||
-     m_VllScale.hasNans())
+  if (m_VulScale.hasNans() ||
+      m_VurScale.hasNans() ||
+      m_VlrScale.hasNans() ||
+      m_VllScale.hasNans())
   {
     return result;
   }
 
-//  std::cout << "ulScale: " << m_VulScale << "\n"
-//            << "urScale: " << m_VurScale << "\n"
-//            << "lrScale: " << m_VlrScale << "\n"
-//            << "llScale: " << m_VllScale << "\n";
-
+  //  std::cout << "ulScale: " << m_VulScale << "\n"
+  //            << "urScale: " << m_VurScale << "\n"
+  //            << "lrScale: " << m_VlrScale << "\n"
+  //            << "llScale: " << m_VllScale << "\n";
 
   // check overage power of 2 variance
   // If there is a variance of 1 resolution level
@@ -753,84 +822,64 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
   // std::cout << log(averageLrScale)/(log(2)) << "\n";
   // std::cout << log(averageLlScale)/(log(2)) << "\n";
 
-
-  ossim_float64 ratio1 = averageUlScale/averageUrScale;
-  ossim_float64 ratio2 = averageUlScale/averageLrScale;
-  ossim_float64 ratio3 = averageUlScale/averageLlScale;
+  ossim_float64 ratio1 = averageUlScale / averageUrScale;
+  ossim_float64 ratio2 = averageUlScale / averageLrScale;
+  ossim_float64 ratio3 = averageUlScale / averageLlScale;
 
   // std::cout << "_________________________\n";
   // std::cout << "ratio1: " << ratio1 << "\n";
   // std::cout << "ratio2: " << ratio2 << "\n";
   // std::cout << "ratio3: " << ratio3 << "\n";
 
-  
   // make sure all are within a power of 2 shrink or expand
-  // which means the range of each ratio should be 
+  // which means the range of each ratio should be
   // between .5 and 2
-  result = (((ratio1 < 2) && (ratio1 > 0.5))&&
-            ((ratio2 < 2) && (ratio2 > 0.5))&&
-            ((ratio3 < 2) && (ratio3 > 0.5))); 
+  result = (((ratio1 < 2) && (ratio1 > 0.5)) &&
+            ((ratio2 < 2) && (ratio2 > 0.5)) &&
+            ((ratio3 < 2) && (ratio3 > 0.5)));
 
   //result = ((diff1<=2)&&(diff2<=2)&&(diff3<=2));
   //std::cout << "DIFF1: " << diff1 << std::endl;
   //std::cout << "DIFF2: " << diff2 << std::endl;
   //std::cout << "DIFF3: " << diff3 << std::endl;
 
-
-  if(result)
+  if (result)
   {
 #if 1
     ossimDpt vUpper, vRight, vBottom, vLeft, vCenter;
     ossimDpt iUpper, iRight, iBottom, iLeft, iCenter;
     ossimDpt testUpper, testRight, testBottom, testLeft, testCenter;
 
-    ossim2dBilinearTransform viewToImageTransform(m_Vul, m_Vur, m_Vlr, m_Vll
-                                                 ,m_Iul, m_Iur, m_Ilr, m_Ill);
-
-//    std::cout << "vMid:  " << testMid << "\n";
-//    std::cout << "testMid:  " << testMid << "\n";
-//    std::cout << "testCenter:  " << testCenter << "\n";
-    
     getViewMids(vUpper, vRight, vBottom, vLeft, vCenter);
-    
-    // do a bilinear transform of some test points
-    viewToImageTransform.forward(vUpper, iUpper);
-    viewToImageTransform.forward(vRight, iRight);
-    viewToImageTransform.forward(vBottom, iBottom);
-    viewToImageTransform.forward(vLeft, iLeft);
-    viewToImageTransform.forward(vCenter, iCenter);
+    getImageMids(iUpper, iRight, iBottom, iLeft, iCenter);
 
-
-   // viewToImageTransform.forward(vMid, iTestMid);
-    //m_transform->viewToImage(vMid, testCenter);
-
-    //getImageMids(iUpper, iRight, iBottom, iLeft, iCenter);
-    
     // get the model centers for the mid upper left right bottom
     m_transform->viewToImage(vCenter, testCenter);
-    if(testCenter.hasNans())
+
+    if (testCenter.hasNans())
     {
-       return false;
+      return false;
     }
+
     m_transform->viewToImage(vUpper, testUpper);
-    if(testUpper.hasNans())
+    if (testCenter.hasNans())
     {
-       return false;
+      return false;
     }
     m_transform->viewToImage(vRight, testRight);
-    if(testRight.hasNans())
+    if (testRight.hasNans())
     {
-       return false;
+      return false;
     }
     m_transform->viewToImage(vBottom, testBottom);
-    if(testBottom.hasNans())
+    if (testBottom.hasNans())
     {
-       return false;
+      return false;
     }
     m_transform->viewToImage(vLeft, testLeft);
-    if(testLeft.hasNans())
+    if (testLeft.hasNans())
     {
-       return false;
+      return false;
     }
 
     // now get the model error to bilinear estimate of those points
@@ -839,23 +888,18 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
     double errorCheck3 = (testRight - iRight).length();
     double errorCheck4 = (testBottom - iBottom).length();
     double errorCheck5 = (testLeft - iLeft).length();
-    result = ((errorCheck1 < error)&&
-              (errorCheck2 < error)&&
-              (errorCheck3 < error)&&
-              (errorCheck4 < error)&&
+    result = ((errorCheck1 < error) &&
+              (errorCheck2 < error) &&
+              (errorCheck3 < error) &&
+              (errorCheck4 < error) &&
               (errorCheck5 < error));
-    // if(!result)
-    // {
-       // std::cout <<"__________________________\n"
-       //       << "ERROR1:" <<errorCheck1 << "\n" 
-       //       << "ERROR2:" <<errorCheck2 << "\n" 
-       //       << "ERROR3:" <<errorCheck3 << "\n" 
-       //       << "ERROR4:" <<errorCheck4 << "\n" 
-       //       << "ERROR5:" <<errorCheck5 << "\n"
-       //       << "SENS:  " << error <<  "\n"; 
-
-    //   std::cout << "Can't bilinear!!\n";
-    // }
+    // std::cout <<"__________________________\n"
+    //       << "ERROR1:" <<errorCheck1 << "\n"
+    //       << "ERROR2:" <<errorCheck2 << "\n"
+    //       << "ERROR3:" <<errorCheck3 << "\n"
+    //       << "ERROR4:" <<errorCheck4 << "\n"
+    //       << "ERROR5:" <<errorCheck5 << "\n"
+    //       << "SENS:  " << error <<  "\n";
 
 #else
     ossimDpt vUpper, vRight, vBottom, vLeft, vCenter;
@@ -865,82 +909,81 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
     getViewMids(vUpper, vRight, vBottom, vLeft, vCenter);
     getImageMids(iUpper, iRight, iBottom, iLeft, iCenter);
 
-    ossimDpt iFullRes(iCenter.x*imageToViewScale.x,
-          iCenter.y*imageToViewScale.y);
+    ossimDpt iFullRes(iCenter.x * imageToViewScale.x,
+                      iCenter.y * imageToViewScale.y);
 
     m_transform->viewToImage(vCenter, testCenter);
 
-    if(testCenter.hasNans())
+    if (testCenter.hasNans())
     {
-       return false;
+      return false;
     }
-    ossimDpt testFullRes(testCenter.x*imageToViewScale.x,
-             testCenter.y*imageToViewScale.y);
+    ossimDpt testFullRes(testCenter.x * imageToViewScale.x,
+                         testCenter.y * imageToViewScale.y);
 
     double errorCheck1 = (testFullRes - iFullRes).length();
 
-    iFullRes = ossimDpt(iUpper.x*imageToViewScale.x,
-            iUpper.y*imageToViewScale.y);
+    iFullRes = ossimDpt(iUpper.x * imageToViewScale.x,
+                        iUpper.y * imageToViewScale.y);
 
     m_transform->viewToImage(vUpper, testCenter);
-    if(testCenter.hasNans())
+    if (testCenter.hasNans())
     {
-       return false;
+      return false;
     }
-    testFullRes = ossimDpt(testCenter.x*imageToViewScale.x,
-         testCenter.y*imageToViewScale.y);
+    testFullRes = ossimDpt(testCenter.x * imageToViewScale.x,
+                           testCenter.y * imageToViewScale.y);
     double errorCheck2 = (testFullRes - iFullRes).length();
 
-    iFullRes = ossimDpt(iRight.x*imageToViewScale.x,
-            iRight.y*imageToViewScale.y);
+    iFullRes = ossimDpt(iRight.x * imageToViewScale.x,
+                        iRight.y * imageToViewScale.y);
 
     m_transform->viewToImage(vRight, testCenter);
-    if(testCenter.hasNans())
+    if (testCenter.hasNans())
     {
-       return false;
+      return false;
     }
-    testFullRes = ossimDpt(testCenter.x*imageToViewScale.x,
-         testCenter.y*imageToViewScale.y);
+    testFullRes = ossimDpt(testCenter.x * imageToViewScale.x,
+                           testCenter.y * imageToViewScale.y);
     double errorCheck3 = (testFullRes - iFullRes).length();
 
-    iFullRes = ossimDpt(iBottom.x*imageToViewScale.x,
-            iBottom.y*imageToViewScale.y);
+    iFullRes = ossimDpt(iBottom.x * imageToViewScale.x,
+                        iBottom.y * imageToViewScale.y);
 
     m_transform->viewToImage(vBottom, testCenter);
-    if(testCenter.hasNans())
+    if (testCenter.hasNans())
     {
-       return false;
+      return false;
     }
-    testFullRes = ossimDpt(testCenter.x*imageToViewScale.x,
-         testCenter.y*imageToViewScale.y);
+    testFullRes = ossimDpt(testCenter.x * imageToViewScale.x,
+                           testCenter.y * imageToViewScale.y);
     double errorCheck4 = (testFullRes - iFullRes).length();
 
-    iFullRes = ossimDpt(iLeft.x*imageToViewScale.x,
-            iLeft.y*imageToViewScale.y);
+    iFullRes = ossimDpt(iLeft.x * imageToViewScale.x,
+                        iLeft.y * imageToViewScale.y);
 
     m_transform->viewToImage(vLeft, testCenter);
-    testFullRes = ossimDpt(testCenter.x*imageToViewScale.x,
-         testCenter.y*imageToViewScale.y);
+    testFullRes = ossimDpt(testCenter.x * imageToViewScale.x,
+                           testCenter.y * imageToViewScale.y);
     double errorCheck5 = (testFullRes - iFullRes).length();
 
-   std::cout <<"__________________________\n"
-         << "ERROR1:" <<errorCheck1 << "\n" 
-         << "ERROR2:" <<errorCheck2 << "\n" 
-         << "ERROR3:" <<errorCheck3 << "\n" 
-         << "ERROR4:" <<errorCheck4 << "\n" 
-         << "ERROR5:" <<errorCheck5 << "\n"
-         << "SENS:  " << error <<  "\n"; 
+    std::cout << "__________________________\n"
+              << "ERROR1:" << errorCheck1 << "\n"
+              << "ERROR2:" << errorCheck2 << "\n"
+              << "ERROR3:" << errorCheck3 << "\n"
+              << "ERROR4:" << errorCheck4 << "\n"
+              << "ERROR5:" << errorCheck5 << "\n"
+              << "SENS:  " << error << "\n";
 
-    result = ((errorCheck1 < error)&&
-      (errorCheck2 < error)&&
-      (errorCheck3 < error)&&
-      (errorCheck4 < error)&&
-      (errorCheck5 < error));
+    result = ((errorCheck1 < error) &&
+              (errorCheck2 < error) &&
+              (errorCheck3 < error) &&
+              (errorCheck4 < error) &&
+              (errorCheck5 < error));
     // std::cout << "CAN INTERPOLATE? " << result <<"\n";
 #endif
   }
   return result;
-
 }
 
 void ossimImageRenderer::ossimRendererSubRectInfo::getViewMids(ossimDpt& upperMid,
@@ -1063,7 +1106,6 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
          << MODULE << " Requesting view rect = "
          << tileRect << endl;
    }
-
    // long w = tileRect.width();
    // long h = tileRect.height();
    // ossimIpt origin = tileRect.ul();
