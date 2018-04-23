@@ -98,6 +98,7 @@ static const std::string CUT_WIDTH_KW            = "cut_width";   // pixels
 static const std::string DEM_KW                  = "dem";
 static const std::string GAIN_KW                 = "gain";
 static const std::string FILE_KW                 = "file";
+static const std::string FULLRES_XYS_KW          = "fullres_xys"; 
 static const std::string HIST_AOI_KW             = "hist_aoi";
 static const std::string HIST_CENTER_KW          = "hist_center";
 static const std::string HIST_LLWH_KW            = "hist_llwh";
@@ -222,7 +223,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption("--cut-width", "<width>\nSpecify the cut width in pixel");
 
    au->addCommandLineOption("--cut-height", "<height>\nSpecify the cut height in pixel");
-
+   
    au->addCommandLineOption("--clip-wms-bbox-ll", "<minx>,<miny>,<maxx>,<maxy>\nSpecify a comma separated list in the format of a WMS BBOX.\nThe units are always decimal degrees");
 
    au->addCommandLineOption("--clip-poly-lat-lon", "Polygon in the form of a string: (lat,lon),(lat,lon),...(lat,lon)");
@@ -243,6 +244,8 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
    au->addCommandLineOption("-e or --entry", "<entry> For multi image handlers which entry do you wish to extract. For list of entries use: \"ossim-info -i <your_image>\" ");
 
    au->addCommandLineOption("--exaggeration", "<factor>\nMultiplier for elevation values when computing surface normals. Has the effect of lengthening shadows for oblique lighting.\nRange: .0001 to 50000, Default = 1.0");
+
+   au->addCommandLineOption("--fullres-xys", "<full res center x>,<full res center y>,<scale>[,<scale>]\nSpecify a full resolution x,y point and scale, comma seperated with no spaces.  If two scales are specified then first is x and second is y");
 
    au->addCommandLineOption("-h or --help", "Display this help and exit.");
 
@@ -526,9 +529,16 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
       m_kwl->addPair( std::string(ossimKeywordNames::ENTRY_KW), tempString1 );
    }
 
-   if ( ap.read("--exaggeration", stringParam1) )
+   if (ap.read("--exaggeration", stringParam1))
    {
-      m_kwl->addPair( GAIN_KW, tempString1 );
+         m_kwl->addPair(GAIN_KW, tempString1);
+   }
+
+   if (ap.read("--fullres-xys", stringParam1))
+   {
+         m_kwl->addPair(FULLRES_XYS_KW, tempString1 + " " +
+                                     tempString2 + " " + 
+                                     tempString3);
    }
 
    if ( ap.read("--hemisphere", stringParam1) )
@@ -2349,7 +2359,8 @@ void ossimChipperUtil::createIdentityProjection()
             
             if ( m_kwl->hasKey( METERS_KW )    ||
                  m_kwl->hasKey( DEGREES_X_KW ) ||
-                 m_kwl->hasKey( RRDS_KW ) )
+                 m_kwl->hasKey( RRDS_KW ) ||
+                 m_kwl->hasKey(FULLRES_XYS_KW) )
             {
                // Set the image view transform scale.
                initializeIvtScale();
@@ -2442,6 +2453,21 @@ void ossimChipperUtil::initializeIvtScale()
                scale.x = 1.0 / std::pow(2.0, d);
             }
             scale.y = scale.x;
+         }
+      }
+      if(scale.hasNans())
+      {
+         lookup = m_kwl->findKey(FULLRES_XYS_KW);
+         std::vector<ossimString> values;
+         lookup.trim().split(values, ",");
+         if(values.size() >2 )
+         {
+            scale.x = values[2].toDouble();
+            scale.y = scale.x;
+            if(values.size() > 3)
+            {
+                  scale.y = values[3].toDouble();
+            }
          }
       }
 
@@ -4367,7 +4393,47 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
          std::string cutBbox = m_kwl->findKey( CUT_BBOX_XYWH_KW );
          getIrect( cutBbox, rect );
       }
+      if( rect.hasNans() &&
+          m_kwl->hasKey( FULLRES_XYS_KW) && 
+          m_kwl->hasKey(CUT_WIDTH_KW) &&
+          m_kwl->hasKey(CUT_HEIGHT_KW))
+      {
+            ossimString tempFullXys = m_kwl->findKey(FULLRES_XYS_KW);
+            ossimString tempWidth   = m_kwl->findKey(CUT_WIDTH_KW);
+            ossimString tempHeight  = m_kwl->findKey(CUT_HEIGHT_KW);
 
+
+            if(tempFullXys&&tempWidth&&tempHeight)
+            {
+                  std::vector<ossimString> values;
+                  tempFullXys.split(values, ",");
+                  ossimDpt scale;
+                  ossimDpt location;
+                  scale.makeNan();
+                  location.makeNan();
+                  double w = tempWidth.toDouble();
+                  double h = tempHeight.toDouble();
+                  if (values.size() > 2)
+                  {
+                        location.x = values[0].toDouble();
+                        location.y = values[1].toDouble();
+                        scale.x = values[2].toDouble();
+                        scale.y = scale.x;
+                        if (values.size() > 3)
+                        {
+                              scale.y = values[3].toDouble();
+                        }
+                        location.x*=scale.x;
+                        location.y*=scale.y;
+                        ossimIpt ul(ossim::round<int>(location.x - (w / 2)),
+                                    ossim::round<int>(location.y - (h / 2)));
+                        ossimIpt lr((ul.x + w - 1), ul.y + h - 1);
+                        rect = ossimIrect(ul, lr);
+                  }
+                  
+            }
+
+      }
       if ( rect.hasNans() )
       {
          if ( m_geom.valid() )
