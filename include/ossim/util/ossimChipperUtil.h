@@ -646,11 +646,25 @@ private:
     * Keys: 
     * IMAGE_SPACE_SCALE_X_KW
     * IMAGE_SPACE_SCALE_Y_KW
+    * FULLRES_XYS
     *
     * Scale will be 1.0, 1.0 if keys not found. 
     */
-   void getImageSpaceScale( ossimDpt& imageSpaceScale ) const;
-   
+   void getImageSpaceScale(ossimDpt &imageSpaceScale) const;
+
+   /**
+    * @brief Gets the image space pivot.
+    *
+    * This is a "chip" operation only.  Will extract the center
+    * from the FULLRES keyword
+    *
+    * Keys: 
+    * FULLRES_XYS
+    *
+    * This will return NaN if not set 
+    */
+   void getImageSpacePivot(ossimDpt &imageSpacePivot) const;
+
    /**
     * @brief Gets rotation.
     *

@@ -536,9 +536,7 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
 
    if (ap.read("--fullres-xys", stringParam1))
    {
-         m_kwl->addPair(FULLRES_XYS_KW, tempString1 + " " +
-                                     tempString2 + " " + 
-                                     tempString3);
+         m_kwl->addPair(FULLRES_XYS_KW, tempString1);
    }
 
    if ( ap.read("--hemisphere", stringParam1) )
@@ -2337,10 +2335,13 @@ void ossimChipperUtil::createIdentityProjection()
             ossimDpt imageSpaceScale;
             getImageSpaceScale( imageSpaceScale );
             
-            ossimDrect rect;
-            m_geom->getBoundingRect(rect);
-            ossimDpt midPt = rect.midPoint();
+
+            //ossimDrect rect;
+            //m_geom->getBoundingRect(rect);
+            ossimDpt midPt;// = rect.midPoint();
             
+            getImageSpacePivot(midPt);
+
             if ( traceDebug() )
             {
                ossimNotify(ossimNotifyLevel_DEBUG)
@@ -2355,16 +2356,17 @@ void ossimChipperUtil::createIdentityProjection()
                                                       imageSpaceScale.y, // image space scale y
                                                       1.0,1.0,  //scale x and y
                                                       0.0, 0.0, // translate x,y
-                                                      midPt.x, midPt.y); // pivot point
+                                                      midPt.x*imageSpaceScale.x, 
+                                                      midPt.y*imageSpaceScale.y); // pivot point
             
             if ( m_kwl->hasKey( METERS_KW )    ||
                  m_kwl->hasKey( DEGREES_X_KW ) ||
-                 m_kwl->hasKey( RRDS_KW ) ||
-                 m_kwl->hasKey(FULLRES_XYS_KW) )
+                 m_kwl->hasKey( RRDS_KW ) )
             {
                // Set the image view transform scale.
                initializeIvtScale();
             }
+            
             
             resampler->setImageViewTransform( m_ivt.get() );
 
@@ -2453,21 +2455,6 @@ void ossimChipperUtil::initializeIvtScale()
                scale.x = 1.0 / std::pow(2.0, d);
             }
             scale.y = scale.x;
-         }
-      }
-      if(scale.hasNans())
-      {
-         lookup = m_kwl->findKey(FULLRES_XYS_KW);
-         std::vector<ossimString> values;
-         lookup.trim().split(values, ",");
-         if(values.size() >2 )
-         {
-            scale.x = values[2].toDouble();
-            scale.y = scale.x;
-            if(values.size() > 3)
-            {
-                  scale.y = values[3].toDouble();
-            }
          }
       }
 
@@ -4393,48 +4380,79 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
          std::string cutBbox = m_kwl->findKey( CUT_BBOX_XYWH_KW );
          getIrect( cutBbox, rect );
       }
-      if( rect.hasNans() &&
-          m_kwl->hasKey( FULLRES_XYS_KW) && 
+      if (rect.hasNans() &&
+          m_kwl->hasKey(FULLRES_XYS_KW) &&
           m_kwl->hasKey(CUT_WIDTH_KW) &&
           m_kwl->hasKey(CUT_HEIGHT_KW))
       {
-            ossimString tempFullXys = m_kwl->findKey(FULLRES_XYS_KW);
-            ossimString tempWidth   = m_kwl->findKey(CUT_WIDTH_KW);
-            ossimString tempHeight  = m_kwl->findKey(CUT_HEIGHT_KW);
-
-
-            if(tempFullXys&&tempWidth&&tempHeight)
+         ossimString tempFullXys = m_kwl->findKey(FULLRES_XYS_KW);
+         ossimString tempWidth = m_kwl->findKey(CUT_WIDTH_KW);
+         ossimString tempHeight = m_kwl->findKey(CUT_HEIGHT_KW);
+         double w = tempWidth.toDouble();
+         double h = tempHeight.toDouble();
+         if (m_geom && m_ivt)
+         {
+            std::vector<ossimString> values;
+            tempFullXys.split(values, ",");
+            ossimDpt scale;
+            ossimDpt location;
+            scale.makeNan();
+            location.makeNan();
+            double w = tempWidth.toDouble();
+            double h = tempHeight.toDouble();
+            if (values.size() > 2)
             {
-                  std::vector<ossimString> values;
-                  tempFullXys.split(values, ",");
-                  ossimDpt scale;
-                  ossimDpt location;
-                  scale.makeNan();
-                  location.makeNan();
-                  double w = tempWidth.toDouble();
-                  double h = tempHeight.toDouble();
-                  if (values.size() > 2)
-                  {
-                        location.x = values[0].toDouble();
-                        location.y = values[1].toDouble();
-                        scale.x = values[2].toDouble();
-                        scale.y = scale.x;
-                        if (values.size() > 3)
-                        {
-                              scale.y = values[3].toDouble();
-                        }
-                        location.x*=scale.x;
-                        location.y*=scale.y;
-                        ossimIpt ul(ossim::round<int>(location.x - (w / 2)),
-                                    ossim::round<int>(location.y - (h / 2)));
-                        ossimIpt lr((ul.x + w - 1), ul.y + h - 1);
-                        rect = ossimIrect(ul, lr);
-                  }
-                  
+               location.x = values[0].toDouble();
+               location.y = values[1].toDouble();
+               // ossimDrect r;
+               // m_geom->getBoundingRect(r);
+               // r = m_ivt->getImageToViewBounds(r);
+               ossimDpt mid;
+               m_ivt->imageToView(location, mid);
+               ossimIpt ul(ossim::round<int>(mid.x - (w / 2)),
+                           ossim::round<int>(mid.y - (h / 2)));
+               ossimIpt lr((ul.x + w - 1), ul.y + h - 1);
+               //rect = resampler->getBoundingRect();
+               rect = ossimIrect(ul, lr);
             }
+               std::cout << "BOUNDS: " << rect << "\n";
+         }
+         #if 0
+         ossimString tempFullXys = m_kwl->findKey(FULLRES_XYS_KW);
+         ossimString tempWidth = m_kwl->findKey(CUT_WIDTH_KW);
+         ossimString tempHeight = m_kwl->findKey(CUT_HEIGHT_KW);
 
+         if (tempFullXys && tempWidth && tempHeight)
+         {
+            std::vector<ossimString> values;
+            tempFullXys.split(values, ",");
+            ossimDpt scale;
+            ossimDpt location;
+            scale.makeNan();
+            location.makeNan();
+            double w = tempWidth.toDouble();
+            double h = tempHeight.toDouble();
+            if (values.size() > 2)
+            {
+               location.x = values[0].toDouble();
+               location.y = values[1].toDouble();
+               scale.x = values[2].toDouble();
+               scale.y = scale.x;
+               if (values.size() > 3)
+               {
+                  scale.y = values[3].toDouble();
+               }
+               location.x *= scale.x;
+               location.y *= scale.y;
+               ossimIpt ul(ossim::round<int>(location.x - (w / 2)),
+                           ossim::round<int>(location.y - (h / 2)));
+               ossimIpt lr((ul.x + w - 1), ul.y + h - 1);
+               rect = ossimIrect(ul, lr);
+            }
+         }
+         #endif
       }
-      if ( rect.hasNans() )
+      if (rect.hasNans())
       {
          if ( m_geom.valid() )
          {
@@ -5225,23 +5243,72 @@ bool ossimChipperUtil::snapTieToOrigin() const
 
 void ossimChipperUtil::getImageSpaceScale( ossimDpt& imageSpaceScale ) const
 {
-   std::string value = m_kwl->findKey( IMAGE_SPACE_SCALE_X_KW );
-   if ( value.size() )
+   imageSpaceScale.x = 1.0;
+   imageSpaceScale.y = 1.0;
+   ossimString lookup;
+
+   if (m_kwl->hasKey(FULLRES_XYS_KW))
    {
-      imageSpaceScale.x = ossimString(value).toFloat64();
+      lookup = m_kwl->findKey(FULLRES_XYS_KW);
+      std::vector<ossimString> values;
+      lookup.trim().split(values, ",");
+      if (values.size() > 2)
+      {
+         imageSpaceScale.x = values[2].toDouble();
+         imageSpaceScale.y = imageSpaceScale.x;
+         if (values.size() > 3)
+         {
+            imageSpaceScale.y = values[3].toDouble();
+         }
+      }
    }
    else
    {
-      imageSpaceScale.x = 1.0;
+      std::string value = m_kwl->findKey(IMAGE_SPACE_SCALE_X_KW);
+      if (value.size())
+      {
+         imageSpaceScale.x = ossimString(value).toFloat64();
+      }
+      else
+      {
+         imageSpaceScale.x = 1.0;
+      }
+      value = m_kwl->findKey(IMAGE_SPACE_SCALE_Y_KW);
+      if (value.size())
+      {
+         imageSpaceScale.y = ossimString(value).toFloat64();
+      }
+      else
+      {
+         imageSpaceScale.y = 1.0;
+      }
    }
-   value = m_kwl->findKey( IMAGE_SPACE_SCALE_Y_KW );
-   if ( value.size() )
+}
+
+void ossimChipperUtil::getImageSpacePivot(ossimDpt &imageSpacePivot) const
+{
+   ossimString lookup;
+   imageSpacePivot.makeNan();
+   if (m_kwl->hasKey(FULLRES_XYS_KW))
    {
-      imageSpaceScale.y = ossimString(value).toFloat64();
+      lookup = m_kwl->findKey(FULLRES_XYS_KW);
+      std::vector<ossimString> values;
+      lookup.trim().split(values, ",");
+
+      if(values.size() > 1)
+      {
+         imageSpacePivot.x = values[0].toDouble();
+         imageSpacePivot.y = values[1].toDouble();
+      }
    }
    else
    {
-      imageSpaceScale.y = 1.0;
+      if (m_geom)
+      {
+         ossimDrect rect;
+         m_geom->getBoundingRect(rect);
+         imageSpacePivot = rect.midPoint();
+      }
    }
 }
 
