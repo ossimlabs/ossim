@@ -4415,42 +4415,7 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource* source, ossimIrect& r
                //rect = resampler->getBoundingRect();
                rect = ossimIrect(ul, lr);
             }
-               std::cout << "BOUNDS: " << rect << "\n";
          }
-         #if 0
-         ossimString tempFullXys = m_kwl->findKey(FULLRES_XYS_KW);
-         ossimString tempWidth = m_kwl->findKey(CUT_WIDTH_KW);
-         ossimString tempHeight = m_kwl->findKey(CUT_HEIGHT_KW);
-
-         if (tempFullXys && tempWidth && tempHeight)
-         {
-            std::vector<ossimString> values;
-            tempFullXys.split(values, ",");
-            ossimDpt scale;
-            ossimDpt location;
-            scale.makeNan();
-            location.makeNan();
-            double w = tempWidth.toDouble();
-            double h = tempHeight.toDouble();
-            if (values.size() > 2)
-            {
-               location.x = values[0].toDouble();
-               location.y = values[1].toDouble();
-               scale.x = values[2].toDouble();
-               scale.y = scale.x;
-               if (values.size() > 3)
-               {
-                  scale.y = values[3].toDouble();
-               }
-               location.x *= scale.x;
-               location.y *= scale.y;
-               ossimIpt ul(ossim::round<int>(location.x - (w / 2)),
-                           ossim::round<int>(location.y - (h / 2)));
-               ossimIpt lr((ul.x + w - 1), ul.y + h - 1);
-               rect = ossimIrect(ul, lr);
-            }
-         }
-         #endif
       }
       if (rect.hasNans())
       {
