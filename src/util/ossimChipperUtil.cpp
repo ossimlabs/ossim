@@ -537,6 +537,21 @@ bool ossimChipperUtil::initialize(ossimArgumentParser& ap)
    if (ap.read("--fullres-xys", stringParam1))
    {
          m_kwl->addPair(FULLRES_XYS_KW, tempString1);
+
+         std::vector<ossimString> values;
+         ossimString(tempString1).split(values, ",");
+         double sx,sy;
+         if(values.size() > 2)
+         {
+            sx = values[2].toDouble();
+            sy = sx;
+            if(values.size() > 3)
+            {
+               sy = values[3].toDouble();
+            }
+            m_kwl->add(IMAGE_SPACE_SCALE_X_KW.c_str(), sx);
+            m_kwl->add(IMAGE_SPACE_SCALE_Y_KW.c_str(), sy);
+         }
    }
 
    if ( ap.read("--hemisphere", stringParam1) )
