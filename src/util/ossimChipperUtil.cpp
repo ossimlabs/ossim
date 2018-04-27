@@ -245,7 +245,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser& ap)
 
    au->addCommandLineOption("--exaggeration", "<factor>\nMultiplier for elevation values when computing surface normals. Has the effect of lengthening shadows for oblique lighting.\nRange: .0001 to 50000, Default = 1.0");
 
-   au->addCommandLineOption("--fullres-xys", "<full res center x>,<full res center y>,<scale>[,<scale>]\nSpecify a full resolution x,y point and scale, comma seperated with no spaces.  If two scales are specified then first is x and second is y");
+   au->addCommandLineOption("--fullres-xys", "<full res center x>,<full res center y>,<scale>[,<scale>]\nSpecify a full resolution x,y point (Used as pivot and center cut) and scale, comma seperated with no spaces.  If two scales are specified then first is x and second is y else x and y are set to equal scales");
 
    au->addCommandLineOption("-h or --help", "Display this help and exit.");
 
