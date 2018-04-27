@@ -35,6 +35,9 @@ INCLUDE(OssimVersion)
 INCLUDE(OssimUtilities)
 INCLUDE(OssimCommonVariables)
 
+FILE(REMOVE ${CMAKE_INCLUDE_DIRS_FILE})
+FILE(REMOVE ${CMAKE_FILENAMES_FILE})
+
 IF(NOT APPLE)
   cmake_minimum_required(VERSION 2.6)
 ELSE(NOT APPLE)
