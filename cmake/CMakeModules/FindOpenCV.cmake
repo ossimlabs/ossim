@@ -93,7 +93,7 @@ if (OPENCV_FOUND)
     if ( OPENCV_LIBTIFF_LIBRARY )
         set( OPENCV_LIBRARIES ${OPENCV_LIBRARIES} ${OPENCV_LIBTIFF_LIBRARY} )
     else()
-        message( WARNING "Could not find libtiff needed by OpenCV." )
+       message( WARNING "Could not find libtiff needed by OpenCV." )
     endif()
 
     # Optional
