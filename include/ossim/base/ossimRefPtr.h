@@ -8,6 +8,7 @@
 #define ossimRefPtr_HEADER
 #include <ossim/base/ossimConstants.h>
 #include <stddef.h>
+#include <cstddef>
 
 template<class T> class ossimRefPtr
 {
@@ -100,20 +101,20 @@ template<typename _Tp1, typename _Tp2> inline bool
   operator==(const ossimRefPtr<_Tp1>& __a, const ossimRefPtr<_Tp2>& __b) noexcept
   { return __a.get() == __b.get(); }
 
-template<typename _Tp> inline bool operator==(const ossimRefPtr<_Tp>& __a, nullptr_t) noexcept
+template<typename _Tp> inline bool operator==(const ossimRefPtr<_Tp>& __a, std::nullptr_t) noexcept
   { return !__a; }
 
-template<typename _Tp> inline bool operator==(nullptr_t, const ossimRefPtr<_Tp>& __a) noexcept
+template<typename _Tp> inline bool operator==(std::nullptr_t, const ossimRefPtr<_Tp>& __a) noexcept
   { return !__a; }
 
 template<typename _Tp1, typename _Tp2>  inline bool
   operator!=(const ossimRefPtr<_Tp1>& __a, const ossimRefPtr<_Tp2>& __b) noexcept
   { return __a.get() != __b.get(); }
 
-template<typename _Tp> inline bool operator!=(const ossimRefPtr<_Tp>& __a, nullptr_t) noexcept
+template<typename _Tp> inline bool operator!=(const ossimRefPtr<_Tp>& __a, std::nullptr_t) noexcept
   { return (bool)__a; }
 
-template<typename _Tp> inline bool operator!=(nullptr_t, const ossimRefPtr<_Tp>& __a) noexcept
+template<typename _Tp> inline bool operator!=(std::nullptr_t, const ossimRefPtr<_Tp>& __a) noexcept
   { return (bool)__a; }
 
 
