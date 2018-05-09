@@ -23,6 +23,7 @@ FIND_PATH(OPENJPEG_INCLUDE_DIR openjpeg.h
     openjpeg
     openjpeg-1.5
     openjpeg-2.1
+    openjpeg-2.3
   DOC "Location of OpenJPEG Headers"
 )
 FIND_LIBRARY(MINIZIP_LIBRARY NAMES ${MINIZIP_NAMES} )
