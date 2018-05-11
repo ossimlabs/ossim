@@ -86,6 +86,7 @@ if (MSP_INCLUDE_DIRS)
 # These are optional. Include only if present:
   FIND_MSP_LIBRARY(MSPsupportdata DUMMY_ARG) 
   FIND_MSP_LIBRARY(MSPHardCopyService DUMMY_ARG)
+  FIND_MSP_LIBRARY(MSPmiisd DUMMY_ARG)
 
   if( LIBS_OK )
     set(MSP_FOUND "YES")
