@@ -10,6 +10,7 @@
 #include <ossim/ossimConfig.h>  /* to pick up platform defines */
 
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimFileInfoInterface.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimDirectory.h>
@@ -1041,31 +1042,45 @@ ossimFilename ossimFilename::dirCat(const ossimFilename& file) const
 
 ossim_int64 ossimFilename::fileSize() const
 {
-   struct stat sbuf;
+   ossim_int64 size = 0;
 
-#ifndef __BORLANDC__
-   if (stat(c_str(), &sbuf) == 0)
+   if ( isUrl() == false )
    {
-      return (ossim_int64)sbuf.st_size;
+      struct stat sbuf;
+      if ( stat( this->c_str(), &sbuf ) == 0 )
+      {
+         size = (ossim_int64)sbuf.st_size;
+      }
+      else
+      {
+         ifstream in(c_str());
+         if(in)
+         {
+            in.seekg(0, std::ios_base::end);
+            size = (ossim_int64)in.tellg();
+         }
+      }
    }
    else
    {
-      ifstream in(c_str());
-      if(in)
+      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
+         createIstream( this->string() );
+      if ( in )
       {
-         in.seekg(SEEK_END);
-         return (ossim_int64)in.tellg();
+         ossimFileInfoInterface* intf = dynamic_cast<ossimFileInfoInterface*>( in.get() );
+         if ( intf )
+         {
+            size = intf->getFileSize();
+         }
+         else
+         {
+            in->seekg(0, std::ios_base::end);
+            size = (ossim_int64)in->tellg();
+         }
       }
    }
-#else
-   ifstream in(c_str());
-   if(in)
-   {
-      in.seekg(SEEK_END);
-      return (ossim_int64)in.tellg();
-   }
-#endif
-   return 0;
+
+   return size;
 }
 
 bool ossimFilename::createDirectory( bool recurseFlag,
