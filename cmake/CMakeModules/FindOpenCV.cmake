@@ -32,9 +32,12 @@
 find_path(OPENCV_INCLUDE_DIR opencv/cv.hpp  PATHS ${OPENCV_HOME}/include)
 
 macro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
+    # Force first look in OPENCV_HOME, then use CMAKE paths if not found
    find_library( ${MYLIBRARY}
-        NAMES "${MYLIBRARYNAME}${OPENCV_RELEASE_POSTFIX}"
-   	  PATHS ${OPENCV_HOME}/lib ${OPENCV_HOME}/share/OpenCV/3rdparty/lib )
+         NAMES "${MYLIBRARYNAME}${OPENCV_RELEASE_POSTFIX}"
+         PATHS ${OPENCV_HOME}/lib ${OPENCV_HOME}/share/OpenCV/3rdparty/lib
+         NO_DEFAULT_PATHS)
+   find_library( ${MYLIBRARY} NAMES "${MYLIBRARYNAME}${OPENCV_RELEASE_POSTFIX}")
 endmacro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
 
 # Required

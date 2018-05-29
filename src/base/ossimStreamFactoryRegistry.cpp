@@ -20,7 +20,7 @@
 
 
 ossim::StreamFactoryRegistry* ossim::StreamFactoryRegistry::m_instance = 0;
-static const ossimString ISTREAM_BUFFER_KW = "ossim.stream.factory.registry.istream.buffer";
+static const char* ISTREAM_BUFFER_KW = "ossim.stream.factory.registry.istream.buffer";
 static ossimTrace traceDebug("ossimStreamFactoryRegistry:debug");
 static std::mutex m_instanceMutex;
 ossim::StreamFactoryRegistry::StreamFactoryRegistry()

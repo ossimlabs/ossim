@@ -4838,7 +4838,9 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
          ossim_float64 thumbSize = thumbRes.toFloat64();
          ossim_float64 maxRectDimension =
             ossim::max( originalRect.width(), originalRect.height() );
-
+         ossim_uint32 tw = originalRect.width();
+         ossim_uint32 th = originalRect.height();
+         ossim_float64 scale = 1.0;      
          if ( maxRectDimension > thumbSize )
          {
             // Need to adjust scale:
@@ -4852,7 +4854,7 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
 
             if ( isChipMode()  && m_ivt.valid() ) // Chipping in image space.)
             {
-               ossim_float64 scale = thumbSize / maxRectDimension;
+               scale = thumbSize / maxRectDimension;
                if ( m_ivt->getScale().hasNans() )
                {
                   m_ivt->scale( scale, scale );
@@ -4864,7 +4866,7 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
             }
             else
             {
-               ossim_float64 scale = maxRectDimension / thumbSize;
+               scale = maxRectDimension / thumbSize;
 
                //---
                // Adjust the projection scale.  Note the "true" is to recenter
@@ -4874,7 +4876,10 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
                //---
                m_geom->applyScale(ossimDpt(scale, scale), true);
             }
-
+            tw *= scale;
+            th *= scale;
+            if(tw < 1) tw = 1;
+            if(th < 1) th = 1;
             // Must call to reset the ossimImageRenderer's bounding rect for each input.
             propagateOutputProjectionToChains();
 
@@ -4893,14 +4898,15 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect& originalR
             //---
             ossim_int32 ts = thumbSize;
             bool pad = padThumbnail();
-
-            if ( ( (lr.x - ul.x + 1) > ts ) || pad )
+            if(pad)
             {
                lr.x = ul.x + ts - 1;
-            }
-            if ( ( (lr.y - ul.y + 1) > ts ) || pad )
-            {
                lr.y = ul.y + ts - 1;
+            }
+            else // let it vary
+            {
+               lr.x = ul.x + tw - 1;
+               lr.y = ul.y + th - 1;
             }
 
             adjustedRect = ossimIrect(ul, lr);
