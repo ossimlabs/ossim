@@ -206,15 +206,18 @@ public:
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
    
-   //! This object can be used outside of an image chain for offline processing of existing tile.
-   template <class T> void flipPixels(T dummy, ossimImageData* inpuTile, ossim_uint32 resLevel);
 
 protected:
    /** destructor */
    virtual ~ossimPixelFlipper();
-   template <class T> void clipTile(T dummy,
-                                    ossimImageData* inpuTile,
-                                    ossim_uint32 resLevel);
+   //! This object can be used outside of an image chain for offline processing of existing tile.
+   template <class T>
+   void flipPixels(T dummy, ossimImageData *inpuTile, ossim_uint32 resLevel);
+
+   template <class T>
+   void clipTile(T dummy,
+                 ossimImageData *inpuTile,
+                 ossim_uint32 resLevel);
 
    /**
     * Verifies pixel is in range.

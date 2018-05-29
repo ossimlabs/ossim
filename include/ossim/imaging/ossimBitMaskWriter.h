@@ -16,6 +16,7 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimOutputSource.h>
 #include <ossim/imaging/ossimPixelFlipper.h>
+#include <ossim/imaging/ossimMemoryImageSource.h>
 #include <vector>
 
 class ossimFilename;
@@ -123,7 +124,8 @@ protected:
    ossimIpt computeImageSize(ossim_uint32 rlevel, ossimImageData* tile) const;
 
    ossimRefPtr<ossimPixelFlipper>  m_flipper;
-   vector<ossim_uint8*>            m_buffers;
+   ossimRefPtr<ossimMemoryImageSource> m_memoryImage;
+   vector<ossim_uint8 *> m_buffers;
    vector<ossimIpt>                m_bufferSizes;
    ossim_uint32                    m_startingResLevel;
    ossimIpt                        m_imageSize; //!< Size of full res source image
