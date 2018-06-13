@@ -14,36 +14,13 @@
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimConnectableObject.h>
-#include <ossim/base/ossimCsvFile.h>
-#include <ossim/base/ossimDate.h>
-#include <ossim/base/ossimDpt.h>
-#include <ossim/base/ossimDrect.h>
 #include <ossim/base/ossimException.h>
-#include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
-#include <ossim/base/ossimScalarTypeLut.h>
-#include <ossim/base/ossimStdOutProgress.h>
-#include <ossim/base/ossimStreamFactoryRegistry.h>
-#include <ossim/base/ossimVisitor.h>
-#include <ossim/base/ossimEcefPoint.h>
-#include <ossim/base/ossimEcefVector.h>
-#include <ossim/base/ossim2dBilinearTransform.h>
-#include <ossim/imaging/ossimNitfTileSource.h>
-#include <ossim/imaging/ossimBrightnessContrastSource.h>
-#include <ossim/imaging/ossimImageFileWriter.h>
-#include <ossim/imaging/ossimImageRenderer.h>
-#include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
-#include <ossim/imaging/ossimIndexToRgbLutFilter.h>
-#include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
-#include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/init/ossimInit.h>
-#include <ossim/projection/ossimEquDistCylProjection.h>
-#include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/base/Thread.h>
-#include <ossim/projection/ossimNitfRpcModel.h>
-#include <ossim/projection/ossimQuickbirdRpcModel.h>
 #include <ossim/projection/ossimEnviCgModel.h>
+#include <ossim/imaging/ossimImageGeometry.h>
 
 // Put your includes here:
 
@@ -64,15 +41,16 @@ int main(int argc, char *argv[])
 
    try
    {
-      ossimEnviCgModel model;
-      if (model.loadEnviGeocFile(fname))
+      ossimRefPtr<ossimEnviCgModel> model = new ossimEnviCgModel;
+      if (model->loadEnviGeocFile(fname))
       {
          ossimFilename geomFname(fname);
          geomFname.setExtension("geom");
-         model.saveCoarseGrid(geomFname);
+         model->saveCoarseGrid(geomFname);
          ossimKeywordlist kwl;
-         model.saveState(kwl);
-         kwl.add("type", "ossimCoarseGridModel");
+         ossimImageGeometry geom;
+         geom.setProjection(model.get());
+         geom.saveState(kwl);
          kwl.write(geomFname);
       }
    }

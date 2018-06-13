@@ -126,9 +126,9 @@ bool ossimEnviCgModel::loadEnviGeocFile(const ossimFilename& geoc_file)
 
 bool ossimEnviCgModel::saveState(ossimKeywordlist& kwl, const char* prefix) const
 {
-   bool status = ossimCoarseGridModel::saveState(kwl);
+   bool status = ossimCoarseGridModel::saveState(kwl, prefix);
    if (status)
-      kwl.add("type", prefix, "ossimCoarseGridModel");
+      kwl.add(prefix, "type", "ossimCoarseGridModel");
    return status;
 }
 
