@@ -521,7 +521,7 @@ bool ossimTiffOverviewBuilder::writeR0(TIFF* tif)
       //***
       // Tile loop in the sample (width) direction.
       //***
-      for(int j = 0; j < tilesWide; ++j)
+      for(int j = 0; (j < tilesWide)&&(!needsAborting()); ++j)
       {
          origin.x = j * m_tileWidth;
 
@@ -547,7 +547,7 @@ bool ossimTiffOverviewBuilder::writeR0(TIFF* tif)
          // Band loop.
          //***
          for (uint32 band=0;
-              band < m_imageHandler->getNumberOfOutputBands();
+              (band < m_imageHandler->getNumberOfOutputBands())&&!needsAborting();
               ++band)
          {
             tdata_t data;
@@ -775,7 +775,7 @@ bool ossimTiffOverviewBuilder::writeRn( ossimImageHandler* imageHandler,
    {
       // Tile loop in the sample (width) direction.
       ossim_uint32 x = 0;
-      for(ossim_uint32 j = 0; j < outputTilesWide; ++j)
+      for(ossim_uint32 j = 0; (j < outputTilesWide)&&!needsAborting(); ++j)
       {
          // Grab the resampled tile.
          ossimRefPtr<ossimImageData> t = sequencer->getNextTile();
@@ -792,7 +792,7 @@ bool ossimTiffOverviewBuilder::writeRn( ossimImageHandler* imageHandler,
          if ( t.valid() && ( t->getDataObjectStatus() != OSSIM_NULL ) )
          {
             // Write it to the tiff.
-            for (ossim_uint32 band = 0; band < t->getNumberOfBands(); ++band)
+            for (ossim_uint32 band = 0; (band < t->getNumberOfBands())&&!needsAborting(); ++band)
             {
                // Write the tile.
                int bytesWritten = 0;
