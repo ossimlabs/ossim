@@ -41,6 +41,8 @@ static const string VISIBILITY_RADIUS_KW = "visibility_radius";
 static const string RETICLE_SIZE_KW      = "reticle_size";
 static const string VIEWSHED_CODING_KW   = "viewshed_coding";
 static const string AOI_SIZE_METERS_KW   = "aoi_size_meters";
+static const string THREADS_KW            = "threads";
+
 
 ossimViewshedTool::ossimViewshedTool()
 :   m_obsHgtAbvTer (1.5),
@@ -185,6 +187,11 @@ bool ossimViewshedTool::initialize(ossimArgumentParser& ap)
       m_kwl.addPair( VIEWSHED_CODING_KW, value.str() );
    }
 
+   if ( ap.read("--threads", sp1) )
+   {
+      m_kwl.addPair( THREADS_KW, ts1 );
+   }
+
    // The remaining options are available only via command line (i.e., no KWL entries defined)
    if ( ap.read("--tbs") )
       m_threadBySector = true;
@@ -192,8 +199,9 @@ bool ossimViewshedTool::initialize(ossimArgumentParser& ap)
    if ( ap.read("--simulation") )
       m_simulation = true;
 
-   if ( ap.read("--threads", sp1) )
-      m_numThreads = ossimString(ts1).toUInt32();
+   // Moved to: ossimViewshedTool::initialize(const ossimKeywordlist& kwl)
+   // if ( ap.read("--threads", sp1) )
+   //    m_numThreads = ossimString(ts1).toUInt32();
 
    if ( ap.argc() < numArgsExpected )
    {
@@ -218,6 +226,14 @@ void ossimViewshedTool::initialize(const ossimKeywordlist& kwl)
 {
    ossimString value;
 
+   value = kwl.findKey(THREADS_KW);
+   {
+      if ( value.size() )
+      {
+         m_numThreads = ossimString(value).toUInt32();
+      }
+   }
+   
    value = kwl.findKey(FOV_KW);
    if (!value.empty())
    {

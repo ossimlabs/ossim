@@ -258,7 +258,7 @@ bool ossimChipProcTool::initialize(ossimArgumentParser& ap)
 
 void ossimChipProcTool::processRemainingArgs(ossimArgumentParser& ap)
 {
-   ossim_uint32 inputIdx = 0;
+   // ossim_uint32 inputIdx = 0;
 
    bool dumpKwl = false;
    if ( ap.read("--dump-options") )
@@ -925,6 +925,16 @@ void ossimChipProcTool::initializeAOI()
    m_aoiGroundRect.makeNan();
    ossimString lookup;
 
+   // Image size:
+   ossimIpt imageSize(0,0);
+   if (m_kwl.hasKey(AOI_SIZE_PIXELS_KW))
+   {
+      lookup = m_kwl.findKey( AOI_SIZE_PIXELS_KW );
+      lookup.trim();
+      imageSize.x = lookup.before(" ").toUInt32();
+      imageSize.y = lookup.after(" ").toUInt32();
+   }
+
    // The AOI rect can be specified in different ways:
    if ( m_kwl.hasKey( AOI_GEO_CENTER_KW.c_str() ) )
    {
@@ -944,9 +954,20 @@ void ossimChipProcTool::initializeAOI()
       }
       else if (m_kwl.hasKey(AOI_SIZE_PIXELS_KW))
       {
-         lookup = m_kwl.findKey( AOI_SIZE_PIXELS_KW );
-         lookup.trim();
-         ossimIpt imageSize (lookup.before(" ").toUInt32(), lookup.after(" ").toUInt32());
+         if ( (imageSize.x > 0)&& (imageSize.y > 0 ) )
+         {
+            sizeMeters.x = imageSize.x*m_gsd.x;
+            sizeMeters.y = imageSize.y*m_gsd.y;
+         }
+      }
+      if (!sizeMeters.hasNans())
+      {
+         ossimDpt metersPerDegree (centerGpt.metersPerDegree());
+         double dlat = sizeMeters.y/metersPerDegree.y/2.0;
+         double dlon = sizeMeters.x/metersPerDegree.x/2.0;
+         ossimGpt ulgpt (centerGpt.lat + dlat, centerGpt.lon - dlon);
+         ossimGpt lrgpt (centerGpt.lat - dlat, centerGpt.lon + dlon);
+         m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
          sizeMeters.x = imageSize.x*m_gsd.x;
          sizeMeters.y = imageSize.y*m_gsd.y;
       }
@@ -995,6 +1016,19 @@ void ossimChipProcTool::initializeAOI()
       ossimGpt lrgpt (minLatF , maxLonF);
       m_aoiGroundRect = ossimGrect(ulgpt, lrgpt);
       m_needCutRect = true;
+
+      if ( (imageSize.x > 0) && (imageSize.y > 0) )
+      {
+         ossimRefPtr<ossimMapProjection> mapProj =
+            dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
+         if (mapProj.valid())
+         {
+            ossimDpt gsd;
+            gsd.x = std::fabs( maxLonF - minLonF ) / imageSize.x;
+            gsd.y = std::fabs( maxLatF - minLatF ) / imageSize.y;
+            mapProj->setDecimalDegreesPerPixel(gsd);
+         }
+      }
    }
 
    else if ( m_kwl.hasKey( AOI_MAP_RECT_KW ) )
@@ -1039,6 +1073,19 @@ void ossimChipProcTool::initializeAOI()
          ossimGpt lrGeo = mapProj->inverse(lrMap);
          m_aoiGroundRect = ossimGrect(ulGeo, lrGeo);
          m_needCutRect = true;
+
+         if ( (imageSize.x > 0) && (imageSize.y > 0) )
+         {
+            ossimRefPtr<ossimMapProjection> mapProj =
+               dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
+            if (mapProj.valid())
+            {
+               ossimDpt gsd;
+               gsd.x = std::fabs( maxX - minX ) / imageSize.x;
+               gsd.y = std::fabs( maxY - minY ) / imageSize.y;
+               mapProj->setMetersPerPixel(gsd);
+            }
+         }
       }
    }
 
