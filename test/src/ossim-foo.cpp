@@ -109,28 +109,9 @@ int main(int argc, char *argv[])
    ossimInit::instance()->addOptions(ap);
    ossimInit::instance()->initialize(ap);
 
-   ossimFilename fname (argv[1]);
-
    try
    {
-      ossimRefPtr<ossimNitfFile> file = new ossimNitfFile();
-
-
-      if(file->parseFile(ossimFilename(argv[1])))
-      {
-         ossimRefPtr<ossimNitfImageHeader> imageHeader = file->getNewImageHeader(0);
-      
-         if(imageHeader.valid())
-         {
-            ossimRefPtr<ossimCodecBase> codec = ossimNitfCodecFactory::instance()->createCodec(imageHeader);
-            if(codec.valid())
-            {
-               std::cout << "WE WERE ABLE TO ALLOCATE A CODEC!!!!!!\n";
-            }
-         }
-      }
-
-
+      // Put your code here.
    }
    catch(const ossimException& e)
    {
