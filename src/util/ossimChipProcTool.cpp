@@ -512,6 +512,16 @@ ossimRefPtr<ossimImageData> ossimChipProcTool::getChip(const ossimIrect& boundin
    return m_procChain->getTile( m_aoiViewRect, 0 );
 }
 
+ossimRefPtr<ossimImageData> ossimChipProcTool::getChip()
+{
+   ossimRefPtr<ossimImageData> chip = 0;
+   if(m_procChain.valid())
+   {
+      chip = m_procChain->getTile( m_aoiViewRect, 0 );
+   }
+   return chip;
+}
+
 ossimListenerManager* ossimChipProcTool::getManager()
 {
    return this;

@@ -98,6 +98,13 @@ public:
    virtual ossimRefPtr<ossimImageData> getChip(const ossimGrect& gnd_rect);
    ossimRefPtr<ossimImageData> getChip(const ossimDrect& map_bounding_rect, const ossimDpt& gsd);
 
+   /**
+    * @brief getChip chip that assumes pre-initialized state.
+    * @return ossimImageData object. This can be null/not-valid if not
+    * initialized.
+    */
+   ossimRefPtr<ossimImageData> getChip();
+
    const ossimFilename& getProductFilename() const { return m_productFilename; }
 
 protected:
