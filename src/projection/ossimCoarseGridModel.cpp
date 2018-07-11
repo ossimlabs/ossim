@@ -143,6 +143,7 @@ ossimCoarseGridModel::ossimCoarseGridModel(const ossimFilename& geom_file)
    if(geom_file.exists()&&kwl.addFile(geom_file))
    {
       loadState(kwl);
+      theGridFilename = geom_file.path();
    }
    else
    {
@@ -393,8 +394,6 @@ void ossimCoarseGridModel::buildGrid(const ossimDrect& imageBounds,
       }
    }
    getAdjustment(theInitialAdjustment);
-
-
 }
 
 void ossimCoarseGridModel::setInterpolationError(double error)
