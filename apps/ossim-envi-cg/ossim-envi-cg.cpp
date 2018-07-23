@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
          ossimKeywordlist kwl;
          ossimImageGeometry geom;
          geom.setProjection(model.get());
+         ossimIpt size (model->imageSize());
+         geom.setImageSize(size);
          geom.saveState(kwl);
          kwl.write(geomFname);
       }

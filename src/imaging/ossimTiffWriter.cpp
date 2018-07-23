@@ -241,7 +241,16 @@ MODULE);
    }
    else
    {
-      TIFFSetField(tiffPtr, TIFFTAG_ROWSPERSTRIP, ossim_uint32(1));
+         // GP: Shouldn't this be theOutputTileSize.y ?
+         //TIFFSetField(tiffPtr, TIFFTAG_ROWSPERSTRIP, ossim_uint32(1));
+      if(theOutputTileSize.hasNans())
+      {
+            TIFFSetField(tiffPtr, TIFFTAG_ROWSPERSTRIP, ossim_uint32(1));
+      }
+      else
+      {
+            TIFFSetField(tiffPtr, TIFFTAG_ROWSPERSTRIP, ossim_uint32(theOutputTileSize.y));
+      }
    }
 
    ossim_uint32 numberOfBands = theInputConnection->getNumberOfOutputBands();
