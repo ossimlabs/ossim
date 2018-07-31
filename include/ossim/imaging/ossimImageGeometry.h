@@ -166,6 +166,13 @@ public:
    ossimProjection*       getProjection()       { return m_projection.get(); }
 
    /**
+    * @brief Returns true if underlying projection is derived from
+    * ossimMapProjection.
+    * @return true if map projected; false, if not.
+    */
+   bool isMapProjected() const;
+   
+   /**
     * @return const ossimMapProjection* or NULL if projection not set or not
     * derived from ossimMapProjection.
     */

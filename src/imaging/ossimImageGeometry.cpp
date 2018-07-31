@@ -1079,6 +1079,10 @@ void ossimImageGeometry::getImageEdgePoints(std::vector<ossimDpt>& result, ossim
       // error out
       return;
    }
+
+   // Make edge to edge.
+   imageRect.expand( ossimDpt(0.5, 0.5) );
+   
    result.clear();
    // First get the image points we will be transforming
    if(partitions > 2)
@@ -1151,7 +1155,7 @@ void ossimImageGeometry::calculatePolyBounds(ossimPolyArea2d& result, ossim_uint
                         ossimDpt(180,90),
                         ossimDpt(180,-90));
    getBoundingRect(imageRect);
-   bool affectedByElevation = isAffectedByElevation();
+   // bool affectedByElevation = isAffectedByElevation();
    bool crossesDateline     = getCrossesDateline();
    result.clear();
    if(imageRect.hasNans())
@@ -1221,7 +1225,6 @@ void ossimImageGeometry::calculatePolyBounds(ossimPolyArea2d& result, ossim_uint
    }
    else
    {
-      ossim_uint32 idx=0;
       for(std::vector<ossimDpt>::const_iterator iter=points.begin(); 
           iter != points.end();++iter)
       {
@@ -1674,3 +1677,9 @@ ossim_float64 ossimImageGeometry::northUpAngle()const
    return result;
    
 } // End: ossimImageGeometry::northUpAngle()
+
+bool ossimImageGeometry::isMapProjected() const
+{
+   return dynamic_cast<const ossimMapProjection*>( m_projection.get() ) != 0;
+}
+
