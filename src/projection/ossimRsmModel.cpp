@@ -338,11 +338,14 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    gpt.lon = ossim::radiansToDegrees(nlon*m_pca[pcaIndex].m_xnrmsf + m_pca[pcaIndex].m_xnrmo);
    gpt.hgt = (nhgt * m_pca[pcaIndex].m_znrmsf) + m_pca[pcaIndex].m_znrmo; //ellHeight;
 
+   if(!(ossim::isNan(gpt.lat) || ossim::isNan(gpt.lon)))
+   {
+      gpt.wrap();
+   }
    //---
    // Note: See above note. Added in wrap call. Longitude was coming out 242
    // when should have been -118. (drb - 22 May 2015)
    //---
-   gpt.wrap();
    
 } // End: ossimRsmModel::lineSampleHeightToWorld( ... )
 
