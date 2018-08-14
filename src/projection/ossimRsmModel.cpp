@@ -338,7 +338,7 @@ void ossimRsmModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    gpt.lon = ossim::radiansToDegrees(nlon*m_pca[pcaIndex].m_xnrmsf + m_pca[pcaIndex].m_xnrmo);
    gpt.hgt = (nhgt * m_pca[pcaIndex].m_znrmsf) + m_pca[pcaIndex].m_znrmo; //ellHeight;
 
-   if(!(ossim::isNan(gpt.lat) || ossim::isNan(gpt.lon)))
+   if(!(ossim::isnan(gpt.lat) || ossim::isnan(gpt.lon)))
    {
       gpt.wrap();
    }
