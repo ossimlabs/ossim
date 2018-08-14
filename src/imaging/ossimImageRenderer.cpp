@@ -389,7 +389,7 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
    // very small rectangles in canBilinearInterpolate(...) method.
    // DRB 05 Dec. 2017
    //---
-   if ( imageHasNans()||(vRect.width() < 8 && vRect.height() < 8) )
+   if ( imageIsNan()||(vRect.width() < 8 && vRect.height() < 8) )
    {
       return result;
    }
