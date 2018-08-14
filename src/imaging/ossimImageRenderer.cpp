@@ -380,7 +380,7 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::tooBig()const
 
 ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
 {
-  #if 0
+  #if 1
    ossim_uint16 result = SPLIT_NONE;
    ossimDrect vRect = getViewRect();
 
