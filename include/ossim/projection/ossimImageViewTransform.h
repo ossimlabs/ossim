@@ -57,7 +57,7 @@ public:
    */
   virtual void getImageToViewScale(ossimDpt& resultScale,
 				   const ossimDpt& imagePoint,
-				   const ossimDpt& deltaImagePointXY)const;
+				   const ossimDpt& deltaImagePointXY=ossimDpt(1.0,1.0))const;
 
   /*!
    * If it needs to it will use the information passed in to get the
@@ -70,10 +70,10 @@ public:
    * of one.  We have to see how this works before we actually keep this
    * implementation.
    */
-  virtual void getViewToImageScale(ossimDpt& resultScale,
-				   const ossimDpt& imagePoint,
-				   const ossimDpt& deltaImagePointXY)const;
-  
+  virtual void getViewToImageScale(ossimDpt &resultScale,
+                                   const ossimDpt &imagePoint,
+                                   const ossimDpt &deltaImagePointXY = ossimDpt(1.0, 1.0)) const;
+
   virtual void imageToView(const ossimDpt& imagePoint,
                            ossimDpt&       viewPoint)const;
   
@@ -114,7 +114,7 @@ public:
   /** Computes the bounding rect in image space of the quad formed by the transformed view points
    * of the input rect corners. */
   virtual ossimDrect getViewToImageBounds(const ossimDrect& viewRect) const;
-  
+
   virtual bool loadState(const ossimKeywordlist& kwl,
                          const char* prefix =0);
   

@@ -211,85 +211,6 @@ void ossimImageViewTransform::getScaleChangeViewToImage(ossimDpt& result,
    }
 }
 
-void ossimImageViewTransform::getImageToViewScale(ossimDpt& resultScale,
-						  const ossimDpt& imagePoint,
-						  const ossimDpt& deltaImagePointXY)const
-{
-  ossimDpt p1 = imagePoint;
-  ossimDpt p2(imagePoint.x + deltaImagePointXY.x,
-	      imagePoint.y);
-  ossimDpt p3(imagePoint.x,
-	      imagePoint.y + deltaImagePointXY.y);
-  
-  ossimDpt transformedP1;
-  ossimDpt transformedP2;
-  ossimDpt transformedP3;
-
-  imageToView(p1, transformedP1);
-  imageToView(p2, transformedP2);
-  imageToView(p3, transformedP3);
-
-  ossimDpt deltaP1P2 = transformedP1 - transformedP2;
-  ossimDpt deltaP1P3 = transformedP1 - transformedP3;
- 
-  // now compute the distances.
-  double sumSquaredSqrtP1P2 = sqrt((deltaP1P2.x*deltaP1P2.x) +
-			       (deltaP1P2.y*deltaP1P2.y));
-  double sumSquaredSqrtP1P3 = sqrt((deltaP1P3.x*deltaP1P3.x) +
-			       (deltaP1P3.y*deltaP1P3.y));
-
-  resultScale.x = 0;
-  resultScale.y = 0;
-
-  if(sumSquaredSqrtP1P2 > FLT_EPSILON)
-    {
-      resultScale.x = sumSquaredSqrtP1P2/deltaImagePointXY.x;
-    }
-  if(sumSquaredSqrtP1P3 > FLT_EPSILON)
-    {
-      resultScale.y = sumSquaredSqrtP1P3/deltaImagePointXY.y;
-    }
-}
-
-void ossimImageViewTransform::getViewToImageScale(ossimDpt& resultScale,
-						  const ossimDpt& viewPoint,
-						  const ossimDpt& deltaViewPointXY)const
-{
-  ossimDpt p1 = viewPoint;
-  ossimDpt p2(viewPoint.x + deltaViewPointXY.x,
-	      viewPoint.y);
-  ossimDpt p3(viewPoint.x,
-	      viewPoint.y + deltaViewPointXY.y);
-
-  ossimDpt transformedP1;
-  ossimDpt transformedP2;
-  ossimDpt transformedP3;
-
-  viewToImage(p1, transformedP1);
-  viewToImage(p2, transformedP2);
-  viewToImage(p3, transformedP3);
-
-  ossimDpt deltaP1P2 = transformedP1 - transformedP2;
-  ossimDpt deltaP1P3 = transformedP1 - transformedP3;
-
-  // now compute the distances.
-  double sumSquaredSqrtP1P2 = sqrt((deltaP1P2.x*deltaP1P2.x) +
-                                   (deltaP1P2.y*deltaP1P2.y));
-  double sumSquaredSqrtP1P3 = sqrt((deltaP1P3.x*deltaP1P3.x) +
-                                   (deltaP1P3.y*deltaP1P3.y));
-
-  resultScale.x = 0;
-  resultScale.y = 0;
-
-  if(sumSquaredSqrtP1P2 > FLT_EPSILON)
-    {
-      resultScale.x = sumSquaredSqrtP1P2/deltaViewPointXY.x;
-    }
-  if(sumSquaredSqrtP1P3 > FLT_EPSILON)
-    {
-      resultScale.y = sumSquaredSqrtP1P3/deltaViewPointXY.y;
-    }
-}
 
 ossimDrect ossimImageViewTransform::getImageToViewBounds(const ossimDrect& imageRect)const
 {
@@ -321,6 +242,215 @@ ossimDrect ossimImageViewTransform::getViewToImageBounds(const ossimDrect& viewR
    return ossimDrect(p1, p2, p3, p4);
 }
 
+#if 0
+void ossimImageViewTransform::getViewToImageScale(ossimDpt &resultScale,
+                                                  const ossimDpt &viewPoint,
+                                                  const ossimDpt &deltaViewPointXY) const
+{
+  ossimDpt p1 = viewPoint;
+  ossimDpt p2(viewPoint.x + deltaViewPointXY.x,
+              viewPoint.y);
+  ossimDpt p3(viewPoint.x,
+              viewPoint.y + deltaViewPointXY.y);
+
+  ossimDpt transformedP1;
+  ossimDpt transformedP2;
+  ossimDpt transformedP3;
+
+  viewToImage(p1, transformedP1);
+  viewToImage(p2, transformedP2);
+  viewToImage(p3, transformedP3);
+
+  ossimDpt deltaP1P2 = transformedP1 - transformedP2;
+  ossimDpt deltaP1P3 = transformedP1 - transformedP3;
+
+  // now compute the distances.
+  double sumSquaredSqrtP1P2 = sqrt((deltaP1P2.x * deltaP1P2.x) +
+                                   (deltaP1P2.y * deltaP1P2.y));
+  double sumSquaredSqrtP1P3 = sqrt((deltaP1P3.x * deltaP1P3.x) +
+                                   (deltaP1P3.y * deltaP1P3.y));
+
+  resultScale.x = 0;
+  resultScale.y = 0;
+
+  if (sumSquaredSqrtP1P2 > FLT_EPSILON)
+  {
+    resultScale.x = sumSquaredSqrtP1P2 / deltaViewPointXY.x;
+  }
+  if (sumSquaredSqrtP1P3 > FLT_EPSILON)
+  {
+    resultScale.y = sumSquaredSqrtP1P3 / deltaViewPointXY.y;
+  }
+}
+#else
+void ossimImageViewTransform::getViewToImageScale(ossimDpt &result,
+                                                  const ossimDpt &viewSeedPoint,
+                                                  const ossimDpt &dxdy) const
+{
+  result.makeNan();
+
+  ossimDpt dxdyHalf(dxdy.x / 2.0, dxdy.y / 2.0);
+  ossimDpt iptdx1 = viewSeedPoint - ossimDpt(dxdyHalf.x, 0.0);
+  ossimDpt iptdx2 = iptdx1 + ossimDpt(dxdy.x, 0.0);
+  ossimDpt iptdy1 = viewSeedPoint - ossimDpt(dxdyHalf.y, 0.0);
+  ossimDpt iptdy2 = iptdx1 + ossimDpt(0.0, dxdy.y);
+  ossimDpt dx1;
+  ossimDpt dx2;
+  ossimDpt dy1;
+  ossimDpt dy2;
+
+  viewToImage(iptdx1, dx1);
+  viewToImage(iptdx2, dx2);
+
+  viewToImage(iptdy1, dy1);
+  viewToImage(iptdy2, dy2);
+
+  if (!(dx1.hasNans() || dx2.hasNans()))
+  {
+    ossimDpt delta = dx1 - dx2;
+
+    // now compute the distances.
+    ossim_float64 sumSquared = sqrt((delta.x * delta.x) +
+                                    (delta.y * delta.y));
+
+    if (sumSquared > FLT_EPSILON)
+    {
+      result.x = sumSquared / dxdy.x;
+    }
+    else
+    {
+      result.x = ossim::nan();
+    }
+  }
+  if (!(dy1.hasNans() || dy2.hasNans()))
+  {
+    ossimDpt delta = dy1 - dy2;
+
+    // now compute the distances.
+    ossim_float64 sumSquared = sqrt((delta.x * delta.x) +
+                                    (delta.y * delta.y));
+
+    if (sumSquared > FLT_EPSILON)
+    {
+      result.y = sumSquared / dxdy.y;
+    }
+    else
+    {
+      result.y = ossim::nan();
+    }
+  }
+
+  if (result.hasNans())
+  {
+    result.makeNan();
+  }
+}
+#endif
+
+#if 0
+void ossimImageViewTransform::getImageToViewScale(ossimDpt &resultScale,
+                                                  const ossimDpt &imagePoint,
+                                                  const ossimDpt &deltaImagePointXY) const
+{
+  ossimDpt p1 = imagePoint;
+  ossimDpt p2(imagePoint.x + deltaImagePointXY.x,
+              imagePoint.y);
+  ossimDpt p3(imagePoint.x,
+              imagePoint.y + deltaImagePointXY.y);
+
+  ossimDpt transformedP1;
+  ossimDpt transformedP2;
+  ossimDpt transformedP3;
+
+  imageToView(p1, transformedP1);
+  imageToView(p2, transformedP2);
+  imageToView(p3, transformedP3);
+
+  ossimDpt deltaP1P2 = transformedP1 - transformedP2;
+  ossimDpt deltaP1P3 = transformedP1 - transformedP3;
+
+  // now compute the distances.
+  double sumSquaredSqrtP1P2 = sqrt((deltaP1P2.x * deltaP1P2.x) +
+                                   (deltaP1P2.y * deltaP1P2.y));
+  double sumSquaredSqrtP1P3 = sqrt((deltaP1P3.x * deltaP1P3.x) +
+                                   (deltaP1P3.y * deltaP1P3.y));
+
+  resultScale.x = 0;
+  resultScale.y = 0;
+
+  if (sumSquaredSqrtP1P2 > FLT_EPSILON)
+  {
+    resultScale.x = sumSquaredSqrtP1P2 / deltaImagePointXY.x;
+  }
+  if (sumSquaredSqrtP1P3 > FLT_EPSILON)
+  {
+    resultScale.y = sumSquaredSqrtP1P3 / deltaImagePointXY.y;
+  }
+}
+#else
+void ossimImageViewTransform::getImageToViewScale(ossimDpt &result,
+                                                  const ossimDpt &imageSeedPoint,
+                                                  const ossimDpt &dxdy) const
+{
+  result.makeNan();
+
+  ossimDpt dxdyHalf(dxdy.x / 2.0, dxdy.y / 2.0);
+  ossimDpt iptdx1 = imageSeedPoint - ossimDpt(dxdyHalf.x, 0.0);
+  ossimDpt iptdx2 = iptdx1 + ossimDpt(dxdy.x,0.0);
+  ossimDpt iptdy1 = imageSeedPoint - ossimDpt(dxdyHalf.y, 0.0);
+  ossimDpt iptdy2 = iptdx1 + ossimDpt(0.0,dxdy.y);
+  ossimDpt dx1;
+  ossimDpt dx2;
+  ossimDpt dy1;
+  ossimDpt dy2;
+
+  imageToView(iptdx1, dx1);
+  imageToView(iptdx2, dx2);
+
+  imageToView(iptdy1, dy1);
+  imageToView(iptdy2, dy2);
+
+  if (!(dx1.hasNans() || dx2.hasNans()))
+  {
+    ossimDpt delta = dx1 - dx2;
+
+    // now compute the distances.
+    ossim_float64 sumSquared = sqrt((delta.x * delta.x) +
+                                    (delta.y * delta.y));
+
+    if (sumSquared > FLT_EPSILON)
+    {
+      result.x = sumSquared / dxdy.x;
+    }
+    else
+    {
+      result.x = ossim::nan();
+    }
+  }
+  if (!(dy1.hasNans() || dy2.hasNans()))
+  {
+    ossimDpt delta = dy1 - dy2;
+
+    // now compute the distances.
+    ossim_float64 sumSquared = sqrt((delta.x * delta.x) +
+                                    (delta.y * delta.y));
+
+    if (sumSquared > FLT_EPSILON)
+    {
+      result.y = sumSquared / dxdy.y;
+    }
+    else
+    {
+      result.y = ossim::nan();
+    }
+  }
+
+  if (result.hasNans())
+  {
+    result.makeNan();
+  }
+}
+#endif
 std::ostream& ossimImageViewTransform::print(std::ostream& out) const
 {
    return out;

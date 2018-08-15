@@ -321,7 +321,7 @@ private:
     * renderers together.  So if we have one
     * renderer doing a scale and they pass an r-level
     * down and we have another renderer within the
-    * chain he will be starting at a different r-level.
+    * chain we will be starting at a different r-level.
     * The default will be r-level 0 request coming
     * from the right.
     */
@@ -338,8 +338,11 @@ private:
 
    ossimPolyArea2d          m_viewArea;
    bool                     m_crossesDateline;
-   
-TYPE_DATA
+
+   double                   m_averageViewToImageScale;
+   double                   m_averageViewToImageRLevelScale;
+
+   TYPE_DATA
 };
 
 inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(ossimImageViewTransform* transform)
