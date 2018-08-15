@@ -214,7 +214,8 @@ private:
       ossimDpt computeRoundTripErrorViewPt(const ossimDpt& dpt)const;
       bool isViewAPoint()const;
       bool isIdentity()const;
-      bool canBilinearInterpolate(double error)const;
+      //bool canBilinearInterpolate(double error) const;
+      bool canBilinearInterpolate() const;
 
       ossimDpt getParametricCenter(const ossimDpt& ul, const ossimDpt& ur, 
 				    const ossimDpt& lr, const ossimDpt& ll)const;

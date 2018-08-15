@@ -434,7 +434,10 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
    if(result != SPLIT_ALL)
    {
       ossim_float64 bias = m_ImageToViewScale.length();
-      if(bias < 1.0) bias = 1.0/bias;
+      //ossim_float64 bias = (m_ImageToViewScale.x+m_ImageToViewScale.y)/2.0;
+      //std::cout << "SCALE BIAS = " << bias << "\n";
+      if (bias < 1.0)
+        bias = 1.0 / bias;
       bias = std::sqrt(bias);
 
       if(bias < 1) bias = 1.0;
@@ -459,11 +462,9 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
       // if(m_llRoundTripError.length() > sensitivityScale) result |= LOWER_LEFT_SPLIT_FLAG;
       // std::cout << result << " == " << SPLIT_ALL << "\n";
 
-      if((result!=SPLIT_ALL)&&!canBilinearInterpolate(bias))
+      if(!canBilinearInterpolate())
       {
-         // std::cout << "TESTING BILINEAR!!!!\n";
          result = SPLIT_ALL;
-
       }
       else
       {
@@ -575,19 +576,24 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
 //  m_llRoundTripError = m_transform->getRoundTripErrorView(m_Vll);
 
 #if 1
-   m_VulScale = computeViewToImageScale(m_Vul, ossimDpt( w, h));
-   m_VurScale = computeViewToImageScale(m_Vur, ossimDpt(-w, h));
-   m_VlrScale = computeViewToImageScale(m_Vlr, ossimDpt(-w,-h));
-   m_VllScale = computeViewToImageScale(m_Vll, ossimDpt( w,-h));
+   m_transform->getViewToImageScale(m_VulScale, m_Vul);
+   m_transform->getViewToImageScale(m_VurScale, m_Vur);
+   m_transform->getViewToImageScale(m_VlrScale, m_Vlr);
+   m_transform->getViewToImageScale(m_VllScale, m_Vll);
+
+   //  m_VulScale = computeViewToImageScale(m_Vul, ossimDpt( w, h));
+   //  m_VurScale = computeViewToImageScale(m_Vur, ossimDpt(-w, h));
+   //  m_VlrScale = computeViewToImageScale(m_Vlr, ossimDpt(-w,-h));
+   //  m_VllScale = computeViewToImageScale(m_Vll, ossimDpt( w,-h));
 
    ossim_int32 n = 0;
    m_ViewToImageScale.x = 0.0;
    m_ViewToImageScale.y = 0.0;
 
-   if(!m_VulScale.hasNans())
+   if (!m_VulScale.hasNans())
    {
-      m_ViewToImageScale += m_VulScale; 
-      ++n;
+     m_ViewToImageScale += m_VulScale;
+     ++n;
    }
    if(!m_VurScale.hasNans())
    {
@@ -757,16 +763,16 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::isIdentity()const
             (illDelta <= FLT_EPSILON));
 }
 
-
-bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double error)const
+bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate() const
+//bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double error) const
 {
   bool result = false;
 
   // now check point placement
   ossimDpt imageToViewScale = getAbsValueImageToViewScales();
 
-  double testScale = imageToViewScale.length();
-
+//  double testScale = imageToViewScale.length();
+    double testScale = ossim::max<ossim_float64>(imageToViewScale.x, imageToViewScale.y);
   //  ossimDpt errorUl = transform->getRoundTripErrorView(m_Vul);
   //  ossimDpt errorUr = transform->getRoundTripErrorView(m_Vur);
   //  ossimDpt errorLr = transform->getRoundTripErrorView(m_Vlr);
@@ -888,6 +894,67 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate(double
     double errorCheck3 = (testRight - iRight).length();
     double errorCheck4 = (testBottom - iBottom).length();
     double errorCheck5 = (testLeft - iLeft).length();
+    double error = 1.0;
+    if (testScale >= 1)
+    {
+      //  std::cout <<"testScale MUL: " << testScale << "\n";
+      // std::cout << "errorCheck1: " << errorCheck1 << "\n";
+      // std::cout << "errorCheck2: " << errorCheck2 << "\n";
+      // std::cout << "errorCheck3: " << errorCheck3 << "\n";
+      // std::cout << "errorCheck4: " << errorCheck4 << "\n";
+      // std::cout << "errorCheck5: " << errorCheck5 << "\n";
+      // std::cout << "AFTER\n";
+      // errorCheck1 *= testScale;
+      // errorCheck2 *= testScale;
+      // errorCheck3 *= testScale;
+      // errorCheck4 *= testScale;
+      // errorCheck5 *= testScale;
+      // error*=testScale;
+      // std::cout << "errorCheck1: " << errorCheck1 << "\n";
+      // std::cout << "errorCheck2: " << errorCheck2 << "\n";
+      // std::cout << "errorCheck3: " << errorCheck3 << "\n";
+      // std::cout << "errorCheck4: " << errorCheck4 << "\n";
+      // std::cout << "errorCheck5: " << errorCheck5 << "\n";
+    }
+    else if (testScale >= FLT_EPSILON)
+    {
+      //  std::cout << "testScale DIV: " << testScale << "\n";
+      // std::cout << "errorCheck1: " << errorCheck1 << "\n";
+      // std::cout << "errorCheck2: " << errorCheck2 << "\n";
+      // std::cout << "errorCheck3: " << errorCheck3 << "\n";
+      // std::cout << "errorCheck4: " << errorCheck4 << "\n";
+      // std::cout << "errorCheck5: " << errorCheck5 << "\n";
+      // errorCheck1 /= testScale;
+      // errorCheck2 /= testScale;
+      // errorCheck3 /= testScale;
+      // errorCheck4 /= testScale;
+      // errorCheck5 /= testScale;
+      // std::cout << "AFTER\n";
+      // std::cout << "errorCheck1: " << errorCheck1 << "\n";
+      // std::cout << "errorCheck2: " << errorCheck2 << "\n";
+      // std::cout << "errorCheck3: " << errorCheck3 << "\n";
+      // std::cout << "errorCheck4: " << errorCheck4 << "\n";
+      // std::cout << "errorCheck5: " << errorCheck5 << "\n";
+      // error /= testScale;
+    }
+    else
+    {
+      errorCheck1 = 0.0;
+      errorCheck2 = 0.0;
+      errorCheck3 = 0.0;
+      errorCheck4 = 0.0;
+      errorCheck5 = 0.0;
+    }
+  
+    //std::cout << "errorCheck1:" << errorCheck1 << " ?????? " << error << "\n";
+    //std::cout << "DIV:" << (errorCheck1 / error) << " ?????? " << error << "\n";
+    //std::cout << "MULT:" << (errorCheck1 * error) << " ?????? " << error << "\n";
+    // result = ((errorCheck1 < error) &&
+    //           (errorCheck2 < error) &&
+    //           (errorCheck3 < error) &&
+    //           (errorCheck4 < error) &&
+    //           (errorCheck5 < error));
+    // std::cout << "error: " << error << "\n";
     result = ((errorCheck1 < error) &&
               (errorCheck2 < error) &&
               (errorCheck3 < error) &&
@@ -1102,7 +1169,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    const  ossimIrect& tileRect,
    ossim_uint32 resLevel)
 {
-   // std::cout << "_________________________\n";
+  // std::cout << "_________________________\n";
    static const char MODULE[] = "ossimImageRenderer::getTile";
    if(traceDebug())
    {
