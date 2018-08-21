@@ -897,20 +897,26 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate() cons
     }
     else if(testScale > 1.0)
     {
-      errorCheck1 *= testScale;
-      errorCheck2 *= testScale;
-      errorCheck3 *= testScale;
-      errorCheck4 *= testScale;
-      errorCheck5 *= testScale;
+      // errorCheck1 *= testScale;
+      // errorCheck2 *= testScale;
+      // errorCheck3 *= testScale;
+      // errorCheck4 *= testScale;
+      // errorCheck5 *= testScale;
     }
     else if(testScale > FLT_EPSILON)
     {
-      errorCheck1 /= testScale;
-      errorCheck2 /= testScale;
-      errorCheck3 /= testScale;
-      errorCheck4 /= testScale;
-      errorCheck5 /= testScale;
+      // errorCheck1 /= testScale;
+      // errorCheck2 /= testScale;
+      // errorCheck3 /= testScale;
+      // errorCheck4 /= testScale;
+      // errorCheck5 /= testScale;
     }
+    // errorCheck1 = sqrt(errorCheck1);
+    // errorCheck2 = sqrt(errorCheck2);
+    // errorCheck3 = sqrt(errorCheck3);
+    // errorCheck4 = sqrt(errorCheck4);
+    // errorCheck5 = sqrt(errorCheck5);
+
     // std::cout << "SCALE BIAS: " << testScale << "\n";
 
     // std::cout << "errorCheck1:" << errorCheck1 << "\n";
