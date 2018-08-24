@@ -583,6 +583,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
     addValue(dirPrefix+"tifftag.geo_ascii_params", buf);
   }
 
+#if 0
   if(gtif)
   {
     GTIFDefn *defs = new GTIFDefn;
@@ -626,7 +627,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
 
     delete defs;
   }
-
+#endif
 
   addValue(dirPrefix+"is_geotiff", ossimString::toString(loadedGeotiff));
   GTIFFree(gtif);
