@@ -15,6 +15,7 @@
 #include <xtiffio.h>
 #include <geo_normalize.h>
 #include <geotiff.h>
+#include <geo_tiffp.h>
 #include <cpl_serv.h>
 #include <geovalues.h>
 #include <cstddef> //nullptr
