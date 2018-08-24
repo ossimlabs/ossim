@@ -582,6 +582,52 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
     loadedGeotiff = true;
     addValue(dirPrefix+"tifftag.geo_ascii_params", buf);
   }
+
+  if(gtif)
+  {
+    GTIFDefn *defs = new GTIFDefn;
+    GTIFGetDefn(gtif, defs);
+    if (!exists(dirPrefix + "tifftag.angular_units"))
+    {
+      loadedGeotiff = true;
+      addValue(dirPrefix + "tifftag.angular_units",
+               ossimString::toString(defs->UOMAngle));
+    }
+    if (!exists(dirPrefix + "tifftag.linear_units"))
+    {
+      loadedGeotiff = true;
+      addValue(dirPrefix + "tifftag.linear_units",
+               ossimString::toString(defs->UOMLength));
+    }
+    if (!exists(dirPrefix + "tifftag.datum_code"))
+    {
+      loadedGeotiff = true;
+      addValue(dirPrefix + "tifftag.datum_code",
+               ossimString::toString(defs->Datum));
+    }
+    if (!exists(dirPrefix + "tifftag.pcs_code"))
+    {
+      loadedGeotiff = true;
+      addValue(dirPrefix + "tifftag.pcs_code",
+               ossimString::toString(defs->PCS));
+    }
+    if (!exists(dirPrefix + "tifftag.gcs_code"))
+    {
+      loadedGeotiff = true;
+      addValue(dirPrefix + "tifftag.gcs_code",
+               ossimString::toString(defs->GCS));
+    }
+    if (!exists(dirPrefix + "tifftag.model_type"))
+    {
+      loadedGeotiff = true;
+      addValue(dirPrefix + "tifftag.model_type",
+               ossimString::toString(defs->Model));
+    }
+
+    delete defs;
+  }
+
+
   addValue(dirPrefix+"is_geotiff", ossimString::toString(loadedGeotiff));
   GTIFFree(gtif);
 }
