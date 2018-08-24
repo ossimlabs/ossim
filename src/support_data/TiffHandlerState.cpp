@@ -583,10 +583,10 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
     addValue(dirPrefix+"tifftag.geo_ascii_params", buf);
   }
 
-#if 0
+#if 1
   if(gtif)
   {
-    GTIFDefn *defs = new GTIFDefn;
+    GTIFDefn *defs = GTIFAllocDefn();
     GTIFGetDefn(gtif, defs);
     if (!exists(dirPrefix + "tifftag.angular_units"))
     {
@@ -625,7 +625,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
                ossimString::toString(defs->Model));
     }
 
-    delete defs;
+    GTIFFreeDefn(defs);
   }
 #endif
 
