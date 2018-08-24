@@ -625,8 +625,8 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
       addValue(dirPrefix + "tifftag.model_type",
                ossimString::toString(defs->Model));
     }
-
-    GTIFFreeDefn(defs);
+    VSIFree(defs);
+    // GTIFFreeDefn(defs);
   }
 #endif
 
