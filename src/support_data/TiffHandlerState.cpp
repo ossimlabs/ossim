@@ -585,7 +585,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
     addValue(dirPrefix+"tifftag.geo_ascii_params", buf);
   }
 
-#if 1
+#if 0
   if(gtif)
   {
     GTIFDefn *defs = (GTIFDefn *)CPLCalloc(sizeof(GTIFDefn), 1); //GTIFAllocDefn();
