@@ -15,6 +15,7 @@
 #include <xtiffio.h>
 #include <geo_normalize.h>
 #include <geotiff.h>
+#include <cpl_serv.h>
 #include <geovalues.h>
 #include <cstddef> //nullptr
 #include <sstream>
@@ -586,7 +587,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
 #if 1
   if(gtif)
   {
-    GTIFDefn *defs = GTIFAllocDefn();
+    GTIFDefn *defs = (GTIFDefn *)CPLCalloc(sizeof(GTIFDefn), 1); //GTIFAllocDefn();
     GTIFGetDefn(gtif, defs);
     if (!exists(dirPrefix + "tifftag.angular_units"))
     {
