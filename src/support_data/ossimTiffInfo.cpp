@@ -40,15 +40,18 @@ static ossimTrace traceDebug("ossimTiffInfo:debug");
 static ossimTrace traceDump("ossimTiffInfo:dump"); // This will dump offsets.
 
 static const std::string PHOTO_INTERP[] =
-{
-   "MINISWHITE",
-   "MINISBLACK",
-   "RGB",
-   "PALETTE",
-   "MASK",
-   "SEPARATED",
-   "YCBCR",
-   "CIELAB"
+    {
+        "MINISWHITE",
+        "MINISBLACK",
+        "RGB",
+        "PALETTE",
+        "MASK",
+        "SEPARATED",
+        "YCBCR",
+        "CIELAB",
+        "ICCLAB",
+        "ITULAB"
+
 };
 
 static const std::string ANGULAR_UNITS_KW = "angular_units";
@@ -160,6 +163,7 @@ bool ossimTiffInfo::open( std::shared_ptr<ossim::istream>& str,
          m_endian = 0;
       }
    }
+
    return result;   
 }
 
@@ -167,6 +171,7 @@ bool ossimTiffInfo::open( std::shared_ptr<ossim::istream>& str,
 std::ostream& ossimTiffInfo::print(std::ostream& out) const
 {
    static const char MODULE[] = "ossimTiffInfo::print";
+   std::cout << "-------------------------------\n";
 
    if (traceDebug())
    {
@@ -519,12 +524,19 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
       //---
       if (geoKeyBlock)
       {
-         printGeoKeys(out, prefix, geoKeyLength, geoKeyBlock,
-                      geoDoubleLength,geoDoubleBlock,
-                      geoAsciiLength,geoAsciiBlock);
+            out << prefix << "is_geotiff: " << "true" << "\n";
+            printGeoKeys(out, prefix, geoKeyLength, geoKeyBlock,
+                         geoDoubleLength, geoDoubleBlock,
+                         geoAsciiLength, geoAsciiBlock);
 
-         delete [] geoKeyBlock;
-         geoKeyBlock = 0;
+            delete[] geoKeyBlock;
+            geoKeyBlock = 0;
+      }
+      else
+      {
+            out << prefix << "is_geotiff: "
+                << "false"
+                << "\n";
       }
 
       if (geoDoubleBlock)
@@ -578,7 +590,8 @@ std::ostream& ossimTiffInfo::print(std::ostream& out) const
       }
       
    } // End of loop through the IFD's.
-   
+   out << "tiff.number_of_directories: " << ifdIndex << "\n";
+
    out << std::endl;
     
    m_inputStream.reset();
@@ -718,7 +731,6 @@ std::ostream& ossimTiffInfo::print(std::istream& inStr,
    // Capture the original flags then set float output to full precision.
    std::ios_base::fmtflags f = outStr.flags();
    outStr << std::setprecision(15);
-   
    // Image File Directory (IFD) loop.
    ossim_int32 ifdIndex = 0;
    while(seekOffset)
@@ -931,14 +943,18 @@ std::ostream& ossimTiffInfo::print(std::istream& inStr,
       //---
       if (geoKeyBlock)
       {
-         printGeoKeys(outStr, prefix, geoKeyLength, geoKeyBlock,
-                      geoDoubleLength,geoDoubleBlock,
-                      geoAsciiLength,geoAsciiBlock);
+            outStr << prefix << "is_geotiff: " << "true" << "\n";
+            printGeoKeys(outStr, prefix, geoKeyLength, geoKeyBlock,
+                         geoDoubleLength, geoDoubleBlock,
+                         geoAsciiLength, geoAsciiBlock);
 
-         delete [] geoKeyBlock;
-         geoKeyBlock = 0;
+            delete[] geoKeyBlock;
+            geoKeyBlock = 0;
       }
-
+      else
+      {
+            outStr << prefix << "is_geotiff: " << "false" << "\n";
+      }
       if (geoDoubleBlock)
       {
          delete [] geoDoubleBlock;
@@ -989,7 +1005,8 @@ std::ostream& ossimTiffInfo::print(std::istream& inStr,
       }
       
    } // End of loop through the IFD's.
-   
+   outStr << "tiff.number_of_directories: " << ifdIndex << "\n";
+
    outStr << std::endl;
     
    // Reset flags.
@@ -1132,7 +1149,6 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist& gtiffKwl,
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << "tiffinfo dump to kwl:\n" << gtiffKwl << "\n";
    }
-   
    ossimString gtiffPrefix = "tiff.image";
    gtiffPrefix += ossimString::toString(entryIndex);
    gtiffPrefix += ".";
@@ -1666,6 +1682,9 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
             
             ossim_uint16 s;
             getArrayValue(s, valueArray, 0);
+
+            out << s << "\n";
+            out << prefix << "compression_flag: ";
             if (s == 1)
             {
                out << "false\n";
@@ -1686,9 +1705,17 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          {
             ossim_uint16 s;
             getArrayValue(s, valueArray, 0);
-            if (s <= ossim::OPHOTO_CIELAB)
+            if (s < ossim::OPHOTO_LAST)
             {
                out << PHOTO_INTERP[s] << "\n";
+            }
+            else if (s == ossim::OPHOTO_LOGL)
+            {
+                  out << "LOGL\n";
+            }
+            else if (s == ossim::OPHOTO_LOGLUV)
+            {
+                  out << "LOGLUV \n";
             }
             else
             {
@@ -1896,11 +1923,17 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
 
       case ossim::OTIFFTAG_PREDICTOR: // tag 317
       {
-         out << prefix << "predictor: ";
-         printValue(out, type, valueArray);
-         break;
+            out << prefix << "predictor: ";
+            printValue(out, type, valueArray);
+            break;
       }
-      
+      case ossim::OTIFFTAG_COLORMAP: // tag 320
+      {
+            out << prefix << "colormap: ";
+            printArray(out, type, count, valueArray);
+            break;
+      }
+
       case ossim::OTIFFTAG_TILEWIDTH: // tag 322
       {
          out << prefix << "tile_width: ";
@@ -2046,7 +2079,24 @@ std::ostream& ossimTiffInfo::print(std::ostream& out,
          printValue(out, type, valueArray);
          break;
       }
-
+      case ossim::OTIFFTAG_YCBCRSUBSAMPLING:
+      {
+            out << prefix << "ycbcr_sub_sampling: ";
+            printValue(out, type, valueArray);
+            break;
+      }
+      case ossim::OTIFFTAG_YCBCRPOSITIONING:
+      {
+            out << prefix << "ycbcr_positioning: ";
+            printValue(out, type, valueArray);
+            break;
+      }
+      case ossim::OTIFFTAG_REFERENCEBLACKWHITE:
+      {
+            out << prefix << "reference_black_white: ";
+            printValue(out, type, valueArray);
+            break;
+      }
       case ossim::OTIFFTAG_XMLPACKET: // tag 700
       {
          if (traceDebug())
