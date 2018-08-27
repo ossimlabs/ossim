@@ -441,8 +441,9 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
    if(!state)
    {
       state = std::make_shared<ossim::TiffHandlerState>();
-      setState(state); 
-      state->loadDefaults(theTiffPtr);
+      setState(state);
+      state->loadDefaults(str, connectionString); 
+      //state->loadDefaults(theTiffPtr);
       state->setImageHandlerType(getClassName());
    }
    state->setConnectionString(connectionString);
@@ -450,12 +451,9 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
    // Current dir.
    theCurrentDirectory = TIFFCurrentDirectory(theTiffPtr);
    ossimString tempValue;
+   theNumberOfDirectories = state->getNumberOfDirectories();
    // Get the number of directories.
-   if(state->getValue(tempValue, "number_of_directories"))
-   {
-      theNumberOfDirectories = tempValue.toUInt32();
-   }
-   else
+   if (!theNumberOfDirectories)
    {
       if (traceDebug())
       {
@@ -466,19 +464,15 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
       return false;      
    }
 
-   theCompressionType = COMPRESSION_NONE;
+   theCompressionType = state->getCompressionType(theCurrentDirectory);
 
    //***
    // Get the general tiff info.
    //***
 
-   if(!state->getValue(tempValue, theCurrentDirectory, "tifftag.compression"))
+   if(!theCompressionType)
    {
      theCompressionType = COMPRESSION_NONE; 
-   }
-   else
-   {
-      theCompressionType = tempValue.toInt32();
    }
    //***
    // See if the first directory is of FILETYPE_REDUCEDIMAGE; if not,
@@ -496,32 +490,12 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
    {
       theR0isFullRes = true;
    }
+
+   theBitsPerSample = state->getBitsPerSample(theCurrentDirectory);
+   theSamplesPerPixel = state->getSamplesPerPixel(theCurrentDirectory);
+   if (!theSamplesPerPixel) theSamplesPerPixel = 1;
+   theSampleFormatUnit = state->getSampleFormat();
    
-   if(!state->getValue(tempValue, theCurrentDirectory, "tifftag.bits_per_sample"))
-   {
-      theBitsPerSample = 8;
-   }
-   else
-   {
-      theBitsPerSample = tempValue.toUInt16();
-   }
-   if(!state->getValue(tempValue, theCurrentDirectory, "tifftag.samples_per_pixel"))
-   {
-      theSamplesPerPixel = 1;
-   }
-   else
-   {
-      theSamplesPerPixel = tempValue.toUInt16();
-   }
-   
-   if(!state->getValue(tempValue, theCurrentDirectory, "tifftag.sample_format"))
-   {
-      theSampleFormatUnit = 0;
-   }
-   else
-   {
-      theSampleFormatUnit = tempValue.toUInt16();;
-   }
    if ( theSampleFormatUnit == SAMPLEFORMAT_COMPLEXINT )
    {
       //---
@@ -531,21 +505,14 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
       theSamplesPerPixel = 2;
    }
 
-   if(!state->getValue(tempValue, theCurrentDirectory, "tifftag.max_sample_value"))
+   if (!state->getMaxSampleValue(theMaxSampleValue, theCurrentDirectory))
    {
       theMaxSampleValue = ossim::nan();
    }
-   else
-   {
-      theMaxSampleValue = tempValue.toFloat32();
-   }
-   if(!state->getValue(tempValue, theCurrentDirectory, "tifftag.min_sample_value"))
+
+   if (!state->getMinSampleValue(theMinSampleValue, theCurrentDirectory))
    {
       theMinSampleValue = ossim::nan();
-   }
-   else
-   {
-      theMinSampleValue = tempValue.toFloat32();
    }
 
    if (traceDebug())
@@ -573,31 +540,25 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
       // }
 
       // Note: Need lines, samples before acceptAsRrdsLayer check.
-      
+      theImageLength[dir] = state->getImageLength(dir);
+      theImageWidth[dir]  = state->getImageWidth(dir);
       // lines:
-      if(!state->getValue(tempValue, dir, "tifftag.image_length"))
+      if (!theImageLength[dir])
       {
          theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
          ossimNotify(ossimNotifyLevel_WARN)
             << MODULE << " Cannot determine image length."
             << endl;
       }
-      else
-      {
-         theImageLength[dir] = tempValue.toUInt32();
-      }
+
       // samples:
-      if(!state->getValue(tempValue, dir, "tifftag.image_width"))
+      if (!theImageWidth[dir])
       {
          theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
          ossimNotify(ossimNotifyLevel_WARN)
             << MODULE << " Cannot determine image width."
             << endl;
       }
-      else
-      {
-         theImageWidth[dir] = tempValue.toUInt32();
-      }      
 
       if (state->isReduced(dir))
       {
@@ -623,28 +584,17 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
             }
          }
       }
-      
-      if(!state->getValue(tempValue, dir, "tifftag.planar_config"))
+
+      thePlanarConfig[dir] = state->getPlanarConfig(dir);
+
+      if (!thePlanarConfig[dir])
       {
          thePlanarConfig[dir] = PLANARCONFIG_CONTIG;
       }
-      else
-      {
-         thePlanarConfig[dir] = tempValue.toUInt16();
-      }
-      
-      if(!state->getValue(tempValue, dir, "tifftag.photometric"))
-      {
-         thePhotometric[dir] = PHOTOMETRIC_MINISBLACK;
-      }
-      else
-      {
-         thePhotometric[dir] = tempValue.toUInt16();
-      }
+
+      thePhotometric[dir] = state->getPhotoInterpretation(dir);
       theLut = 0;
-      if(state->exists(dir, "tifftag.colormap.red")&&
-         state->exists(dir, "tifftag.colormap.green")&&
-         state->exists(dir, "tifftag.colormap.blue"))
+      if(state->hasColorMap(dir))
       {
          if(theApplyColorPaletteFlag)
          {
@@ -656,14 +606,13 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
       theRowsPerStrip[dir] = 0;
       theImageTileWidth[dir] = 0;
       theImageTileLength[dir] = 0;
+      theImageTileWidth[dir] = state->getTileWidth(dir);
+      theImageTileLength[dir] = state->getTileLength(dir);
 
       if(state->isTiled(dir))
       {
-         if(state->getValue(tempValue, dir, "tifftag.tile_width"))
-         {
-            theImageTileWidth[dir] = tempValue.toUInt32();
-         }
-         else
+
+         if (!theImageTileWidth[dir])
          {
             theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
             ossimNotify(ossimNotifyLevel_WARN)
@@ -671,11 +620,7 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
                << "\nCannot determine tile width." << endl;
 
          }
-         if(state->getValue(tempValue, dir, "tifftag.tile_length"))
-         {
-            theImageTileLength[dir] = tempValue.toUInt32();
-         }
-         else
+         if (!theImageTileLength[dir])
          {
             theErrorStatus = ossimErrorCodes::OSSIM_ERROR;   
             ossimNotify(ossimNotifyLevel_WARN)
@@ -686,11 +631,8 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
       }
       else
       {
-         if(state->getValue(tempValue, dir, "tifftag.rows_per_strip"))
-         {
-            theRowsPerStrip[dir] = tempValue.toUInt32();
-         }
-         else
+         theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
+         if (!theRowsPerStrip[dir] )
          {
             theRowsPerStrip[dir] = 1;
          }
@@ -2218,8 +2160,7 @@ bool ossimTiffTileSource::isColorMapped() const
    std::shared_ptr<const ossim::TiffHandlerState> state = getStateAs<ossim::TiffHandlerState>();
    if(state)
    {
-      result = state->exists(TIFFCurrentDirectory(theTiffPtr),
-                             "tifftag.colormap.red");
+      result = state->hasColorMap(TIFFCurrentDirectory(theTiffPtr));
    }
 
    return result;
@@ -2377,60 +2318,47 @@ bool ossimTiffTileSource::setTiffDirectory(ossim_uint16 directory)
 
 void ossimTiffTileSource::populateLut()
 {
-   std:shared_ptr<ossim::TiffHandlerState> state = getStateAs<ossim::TiffHandlerState>();
-   ossimString red;
-   ossimString green;
-   ossimString blue;
-   ossim_uint32 currentDir = TIFFCurrentDirectory(theTiffPtr);
-   if(state->getValue(red, currentDir, "tifftag.colormap.red")&&
-      state->getValue(green, currentDir, "tifftag.colormap.green")&&
-      state->getValue(blue, currentDir, "tifftag.colormap.blue"))
-   {
+      std::shared_ptr<ossim::TiffHandlerState> state = getStateAs<ossim::TiffHandlerState>();
+      ossim_uint32 currentDir = TIFFCurrentDirectory(theTiffPtr);
       std::vector<ossim_uint16> redValues;
       std::vector<ossim_uint16> greenValues;
       std::vector<ossim_uint16> blueValues;
-      if(ossim::toSimpleVector(redValues, red)&&
-         ossim::toSimpleVector(greenValues, green)&&
-         ossim::toSimpleVector(blueValues, blue))
-      {
-         if(((redValues.size()==greenValues.size())&&(redValues.size()==blueValues.size()))&&
-            (redValues.size()==256||redValues.size()==65536))
 
-         {
-            ossim_uint16* r = &redValues.front();
-            ossim_uint16* g = &greenValues.front();
-            ossim_uint16* b = &blueValues.front();
+      if (state->getColorMap(redValues, greenValues, blueValues, currentDir))
+      {
+            ossim_uint16 *r = &redValues.front();
+            ossim_uint16 *g = &greenValues.front();
+            ossim_uint16 *b = &blueValues.front();
             ossim_uint32 numEntries = redValues.size();
             ossimScalarType scalarType = OSSIM_UINT8;
-            if(theBitsPerSample == 16)
+            if (theBitsPerSample == 16)
             {
-               scalarType = OSSIM_UINT16;
+                  scalarType = OSSIM_UINT16;
             }
             theLut = new ossimNBandLutDataObject(numEntries,
-                                                 3,
-                                                 scalarType,
-                                                 0);
+                                                      3,
+                                                      scalarType,
+                                                      0);
             ossim_uint32 entryIdx = 0;
-            for(entryIdx = 0; entryIdx < numEntries; ++entryIdx)
+            for (entryIdx = 0; entryIdx < numEntries; ++entryIdx)
             {
-               if(scalarType == OSSIM_UINT8)
-               {
-                  (*theLut)[entryIdx][0] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(((*r)/65535.0)*255.0);
-                  (*theLut)[entryIdx][1] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(((*g)/65535.0)*255.0);
-                  (*theLut)[entryIdx][2] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(((*b)/65535.0)*255.0);
-               }
-               else
-               {
-                  (*theLut)[entryIdx][0] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(*r);
-                  (*theLut)[entryIdx][1] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(*g);
-                  (*theLut)[entryIdx][2] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(*b);
-               }
-               ++r;++g;++b;
+                  if (scalarType == OSSIM_UINT8)
+                  {
+                        (*theLut)[entryIdx][0] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(((*r) / 65535.0) * 255.0);
+                        (*theLut)[entryIdx][1] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(((*g) / 65535.0) * 255.0);
+                        (*theLut)[entryIdx][2] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(((*b) / 65535.0) * 255.0);
+                  }
+                  else
+                  {
+                        (*theLut)[entryIdx][0] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(*r);
+                        (*theLut)[entryIdx][1] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(*g);
+                        (*theLut)[entryIdx][2] = (ossimNBandLutDataObject::LUT_ENTRY_TYPE)(*b);
+                  }
+                  ++r;
+                  ++g;
+                  ++b;
             }
-
-         }
       }
-   }
 }
 
 void ossimTiffTileSource::validateMinMaxNull()
