@@ -1032,8 +1032,7 @@ ossim_int32 ossim::TiffHandlerState::getPlanarConfig(ossim_int32 directory) cons
       result = PLANARCONFIG_CONTIG;
     }
   }
-
-  return 0;
+  return result;
 }
 
 ossim_int32 ossim::TiffHandlerState::getPhotoInterpretation(ossim_int32 directory) const {
@@ -1098,48 +1097,51 @@ ossim_int32 ossim::TiffHandlerState::getPhotoInterpretation(ossim_int32 director
 ossim_int64 ossim::TiffHandlerState::getTileLength(ossim_int32 directory) const
 {
   ossimString tempStr;
-
+  ossim_int64 result = 0;
   if (getValue(tempStr, directory, "tile_length"))
   {
-    return tempStr.toInt64();
+    result = tempStr.toInt64();
   }
 
-  return 0;
+  return result;
 }
 ossim_int64 ossim::TiffHandlerState::getImageLength(ossim_int32 directory) const
 {
   ossimString tempStr;
+  ossim_int64 result = 0;
 
   if (getValue(tempStr, directory, "image_length"))
   {
-    return tempStr.toInt64();
+    result = tempStr.toInt64();
   }
 
-  return 0;
+  return result;
 }
 
 ossim_int64 ossim::TiffHandlerState::getTileWidth(ossim_int32 directory) const
 {
   ossimString tempStr;
+  ossim_int64 result = 0;
 
   if (getValue(tempStr, directory, "tile_width"))
   {
-    return tempStr.toInt64();
+    result = tempStr.toInt64();
   }
 
-  return 0;
+  return result;
 }
 
 ossim_int64 ossim::TiffHandlerState::getImageWidth(ossim_int32 directory) const
 {
   ossimString tempStr;
+  ossim_int64 result = 0;
 
   if (getValue(tempStr, directory, "image_width"))
   {
-    return tempStr.toInt64();
+    result = tempStr.toInt64();
   }
 
-  return 0;
+  return result;
 }
 
 bool ossim::TiffHandlerState::getDoubleArray(std::vector<ossim_float64>& result, 
