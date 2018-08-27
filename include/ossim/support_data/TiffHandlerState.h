@@ -450,6 +450,7 @@ namespace ossim
     bool getGeoTiePoints(std::vector<ossim_float64>& result,
                          ossim_int32 directory)const;
 
+    bool getCitation(ossimString& citation, ossim_int32 directory)const;
     /**
     * Convenience method to get a Geo trans matrix array.  
     *

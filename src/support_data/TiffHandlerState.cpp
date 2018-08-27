@@ -1188,6 +1188,18 @@ bool ossim::TiffHandlerState::getGeoTransMatrix(std::vector<ossim_float64>& resu
   return getDoubleArray(result, directory, "model_transform");
 }
 
+bool ossim::TiffHandlerState::getCitation(ossimString &citation, ossim_int32 directory) const
+{
+  bool result = true;
+
+  if(!getValue(citation, directory, "citation"))
+  {
+    result = false;
+  }
+
+  return result;
+}
+
 bool ossim::TiffHandlerState::load(const ossimKeywordlist& kwl,
                                    const ossimString& prefix)
 {
