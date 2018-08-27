@@ -222,7 +222,10 @@ private:
 
    //! Initializes data members given a projection code. Returns TRUE if valid PCS code specified.
    //! Resets the PCS code to 0 if invalid.
-   bool  parsePcsCode();
+   bool parsePcsCode();
+
+   
+   bool parseGcsCode();
 
    //! Initializes data members given a projection. Returns TRUE if successful.
    bool parseProjection(ossimMapProjection* map_proj);

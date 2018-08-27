@@ -1009,9 +1009,17 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
       }
       theAngularUnits = ANGULAR_DEGREE;  
    }
-   if(theGcsCode||thePcsCode)
+   bool parsedPcs = false;
+   if(thePcsCode)
    {
-      parsePcsCode();
+      if(parsePcsCode())
+      {
+            parsedPcs = true;
+      }
+   }
+   if(!parsedPcs&&theGcsCode)
+   {
+      parseGcsCode();
    }
 
    //---
@@ -2069,26 +2077,43 @@ void ossimGeoTiff::setOssimDatumName(std::shared_ptr<ossim::TiffHandlerState> st
 //*************************************************************************************************
 bool ossimGeoTiff::parsePcsCode()
 {
+      bool result = true;
 
-   // key 3072 Section 6.3.3.1 codes
-   ossimString epsg_spec (ossimString("EPSG:") + ossimString::toString(thePcsCode));
-   ossimRefPtr<ossimProjection> proj = 
-      ossimEpsgProjectionFactory::instance()->createProjection(epsg_spec);
-   ossimMapProjection* map_proj = PTR_CAST(ossimMapProjection, proj.get());
-   if (!parseProjection(map_proj))
-   {
-         thePcsCode = 0;
-      //    epsg_spec = (ossimString("EPSG:") + ossimString::toString(theGcsCode));
-      //    proj =
-      //        ossimEpsgProjectionFactory::instance()->createProjection(epsg_spec);
-      //    map_proj = PTR_CAST(ossimMapProjection, proj.get());
-      //    if (!parseProjection(map_proj))
-      //    {
-      //          theGcsCode = 0;
-      //    }
-   }
+      // key 3072 Section 6.3.3.1 codes
+      ossimString epsg_spec(ossimString("EPSG:") + ossimString::toString(thePcsCode));
+      ossimRefPtr<ossimProjection> proj =
+          ossimEpsgProjectionFactory::instance()->createProjection(epsg_spec);
+      ossimMapProjection *map_proj = PTR_CAST(ossimMapProjection, proj.get());
+      if (!parseProjection(map_proj))
+      {
+            result = false;
+      }
 
-   return (thePcsCode != 0);
+      return (thePcsCode != 0);
+}
+
+//*************************************************************************************************
+//! Initializes data members given a projection code. Returns TRUE if valid PCS code specified.
+//*************************************************************************************************
+bool ossimGeoTiff::parseGcsCode()
+{
+      bool result = true;
+
+      // right now just support WGS84 GCS
+      if(theGcsCode == 4326)
+      {
+            // key 3072 Section 6.3.3.1 codes
+            ossimString epsg_spec(ossimString("EPSG:") + ossimString::toString(theGcsCode));
+            ossimRefPtr<ossimProjection> proj =
+                ossimEpsgProjectionFactory::instance()->createProjection(epsg_spec);
+            ossimMapProjection *map_proj = PTR_CAST(ossimMapProjection, proj.get());
+            if (!parseProjection(map_proj))
+            {
+                  result = false;
+            }
+      }
+
+      return result;
 }
 
 //*************************************************************************************************
