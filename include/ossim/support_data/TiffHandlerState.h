@@ -72,35 +72,35 @@ namespace ossim
   * @code
   * connection_string:  /data/sanfran_utm.tif
   * current_entry:  0
-  * dir0.is_geotiff:  1
-  * dir0.is_tiled:  true
-  * dir0.tifftag.angular_units:  9108
-  * dir0.tifftag.bits_per_sample:  8
-  * dir0.tifftag.compression:  1
-  * dir0.tifftag.datum_code:  6326
-  * dir0.tifftag.false_easting:  500000
-  * dir0.tifftag.false_northing:  0
-  * dir0.tifftag.gcs_code:  4326
-  * dir0.tifftag.geo_double_params:  (6378137,6356752.3141999999061)
-  * dir0.tifftag.geo_pixel_scale:  (5,5,0)
-  * dir0.tifftag.geo_tie_points:  (0,0,0,538185,4208785,0)
-  * dir0.tifftag.image_length:  8000
-  * dir0.tifftag.image_width:  8000
-  * dir0.tifftag.linear_units:  9001
-  * dir0.tifftag.max_sample_value:  255
-  * dir0.tifftag.min_sample_value:  1
-  * dir0.tifftag.model_type:  1
-  * dir0.tifftag.origin_lat:  0
-  * dir0.tifftag.origin_lon:  -123
-  * dir0.tifftag.pcs_code:  32610
-  * dir0.tifftag.photometric:  2
-  * dir0.tifftag.planar_config:  1
-  * dir0.tifftag.raster_type:  2
-  * dir0.tifftag.sample_format:  1
-  * dir0.tifftag.samples_per_pixel:  3
-  * dir0.tifftag.scale_factor:  0.9996
-  * dir0.tifftag.tile_length:  64
-  * dir0.tifftag.tile_width:  64
+  * tiff.image0.is_geotiff:  1
+  * tiff.image0.is_tiled:  true
+  * tiff.image0.tifftag.angular_units:  9108
+  * tiff.image0.tifftag.bits_per_sample:  8
+  * tiff.image0.tifftag.compression:  1
+  * tiff.image0.tifftag.datum_code:  6326
+  * tiff.image0.tifftag.false_easting:  500000
+  * tiff.image0.tifftag.false_northing:  0
+  * tiff.image0.tifftag.gcs_code:  4326
+  * tiff.image0.tifftag.geo_double_params:  (6378137,6356752.3141999999061)
+  * tiff.image0.tifftag.geo_pixel_scale:  (5,5,0)
+  * tiff.image0.tifftag.geo_tie_points:  (0,0,0,538185,4208785,0)
+  * tiff.image0.tifftag.image_length:  8000
+  * tiff.image0.tifftag.image_width:  8000
+  * tiff.image0.tifftag.linear_units:  9001
+  * tiff.image0.tifftag.max_sample_value:  255
+  * tiff.image0.tifftag.min_sample_value:  1
+  * tiff.image0.tifftag.model_type:  1
+  * tiff.image0.tifftag.origin_lat:  0
+  * tiff.image0.tifftag.origin_lon:  -123
+  * tiff.image0.tifftag.pcs_code:  32610
+  * tiff.image0.tifftag.photometric:  2
+  * tiff.image0.tifftag.planar_config:  1
+  * tiff.image0.tifftag.raster_type:  2
+  * tiff.image0.tifftag.sample_format:  1
+  * tiff.image0.tifftag.samples_per_pixel:  3
+  * tiff.image0.tifftag.scale_factor:  0.9996
+  * tiff.image0.tifftag.tile_length:  64
+  * tiff.image0.tifftag.tile_width:  64
   * image_handler_type:
   * number_of_directories:  1
   * type:  ossim::TiffHandlerState
@@ -151,7 +151,7 @@ namespace ossim
     * Convenience method to return the value of a key given the 
     * directory.  It will construct a new key from the directory.  If 
     * the directory is 0 and the key is sub_file_type then the key that
-    * is actually queried internally is "dir0.sub_file_type"
+    * is actually queried internally is "tiff.image0.sub_file_type"
     * 
     * @param value returns the value
     * @param directory is the directory to return the key
@@ -199,12 +199,14 @@ namespace ossim
     */
     void loadDefaults(TIFF* tiffPtr);
 
-    /**
+    void loadDefaults(std::shared_ptr<ossim::istream> &str,
+                      const std::string &connectionString);
+        /**
     * Will load only value for the current directory
     *
     * @param tiffPtr tiff pointer
     */
-    void loadCurrentDirectory(TIFF* tiffPtr);
+    void loadCurrentDirectory(TIFF *tiffPtr);
 
     /**
     * Will change and load the directory provided
@@ -312,11 +314,25 @@ namespace ossim
     ossim_int32 getLinearUnits(ossim_int32 directory=0)const;
 
     /**
+    * Convenience method to get tile height.  
+    *
+    * This does not supply a way to check if a value existed or not.
+    */
+    ossim_int64 getTileLength(ossim_int32 directory = 0) const;
+
+    /**
     * Convenience method to get image length.  
     *
     * This does not supply a way to check if a value existed or not.
     */
-    ossim_int64 getImageLength(ossim_int32 directory=0)const;
+    ossim_int64 getImageLength(ossim_int32 directory = 0) const;
+
+    /**
+    * Convenience method to get tile width.  
+    *
+    * This does not supply a way to check if a value existed or not.
+    */
+    ossim_int64 getTileWidth(ossim_int32 directory = 0) const;
 
     /**
     * Convenience method to get image width.  
@@ -373,6 +389,28 @@ namespace ossim
     * This does not supply a way to check if a value existed or not.
     */
     ossim_float64 getScaleFactor(ossim_int32 directory=0)const;
+
+    ossim_int32 getPlanarConfig(ossim_int32 directory = 0) const;
+    ossim_int32 getPhotoInterpretation(ossim_int32 directory = 0) const;
+    ossim_int32 getCompressionType(ossim_int32 directory = 0) const;
+    ossim_uint16 getBitsPerSample(ossim_int32 directory = 0) const;
+    ossim_uint16 getSamplesPerPixel(ossim_int32 directory = 0) const;
+    ossim_uint16 getSampleFormat(ossim_int32 directory = 0) const;
+  
+    ossim_uint32 getRowsPerStrip(ossim_int32 directory = 0) const;
+    
+    bool getMinSampleValue(ossim_float64 &minSampleValue, ossim_int32 directory = 0) const;
+    bool getMaxSampleValue(ossim_float64 &maxSampleValue, ossim_int32 directory = 0) const;
+    bool hasColorMap(ossim_int32 dir)const;
+    bool isReduced(ossim_int32 directory = 0) const;
+    bool isPage(ossim_int32 directory = 0) const;
+    bool isMask(ossim_int32 directory = 0) const;
+    ossim_int32 getSubFileType(ossim_int32 directory = 0) const;
+    ossim_uint32 getNumberOfDirectories()const;
+    bool getColorMap(std::vector<ossim_uint16> &red,
+                     std::vector<ossim_uint16> &green,
+                     std::vector<ossim_uint16> &blue,
+                     ossim_int32 directory = 0) const;
 
     /**
     * Convenience method to get a double array.  
