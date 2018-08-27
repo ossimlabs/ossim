@@ -677,17 +677,17 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
 
 bool ossim::TiffHandlerState::isReduced(ossim_uint32 directory)const
 {
-  return getInt32Value("sub_file_type", directory)&FILETYPE_REDUCEDIMAGE;
+  return getSubFileType(directory)&FILETYPE_REDUCEDIMAGE;
 }
 
 bool ossim::TiffHandlerState::isMask(ossim_uint32 directory)const
 {
-  return getInt32Value("sub_file_type", directory)&FILETYPE_MASK;
+  return getSubFileType(directory) & FILETYPE_MASK;
 }
 
 bool ossim::TiffHandlerState::isPage(ossim_uint32 directory)const
 {
-  return getInt32Value("sub_file_type", directory)&FILETYPE_PAGE;
+  return getSubFileType(directory) & FILETYPE_PAGE;
 }
 
 bool ossim::TiffHandlerState::isTiled(ossim_uint32 directory)const
@@ -941,6 +941,7 @@ bool ossim::TiffHandlerState::hasColorMap(ossim_int32 directory)const
 
 bool ossim::TiffHandlerState::isReduced(ossim_int32 directory) const
 {
+  
   return getSubFileType(directory) == FILETYPE_REDUCEDIMAGE;
 }
 

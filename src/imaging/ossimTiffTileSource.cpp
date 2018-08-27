@@ -495,8 +495,7 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
    theSamplesPerPixel = state->getSamplesPerPixel(theCurrentDirectory);
    if (!theSamplesPerPixel) theSamplesPerPixel = 1;
    theSampleFormatUnit = state->getSampleFormat();
-   
-   if ( theSampleFormatUnit == SAMPLEFORMAT_COMPLEXINT )
+   if (theSampleFormatUnit == SAMPLEFORMAT_COMPLEXINT)
    {
       //---
       // Override the samples per pixel set above as sample data has set to
@@ -611,7 +610,6 @@ bool ossimTiffTileSource::open( std::shared_ptr<ossim::istream>& str,
 
       if(state->isTiled(dir))
       {
-
          if (!theImageTileWidth[dir])
          {
             theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
