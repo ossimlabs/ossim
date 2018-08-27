@@ -171,7 +171,7 @@ bool ossimTiffInfo::open( std::shared_ptr<ossim::istream>& str,
 std::ostream& ossimTiffInfo::print(std::ostream& out) const
 {
    static const char MODULE[] = "ossimTiffInfo::print";
-   std::cout << "-------------------------------\n";
+   // std::cout << "-------------------------------\n";
 
    if (traceDebug())
    {
