@@ -22,6 +22,30 @@ public:
   {
     return theSpecId.contains("B");
   }
+  bool isQuickbird() const
+  {
+    return theSatId.upcase().contains("QB");
+  }
+  bool isWorldView() const
+  {
+    return theSatId.upcase().contains("WV");
+  }
+  bool isWorldView1() const
+  {
+    return theSatId.upcase().contains("WV01");
+  }
+  bool isWorldView2() const
+  {
+    return theSatId.upcase().contains("WV02");
+  }
+  bool isWorldView3() const
+  {
+    return theSatId.upcase().contains("WV03");
+  }
+  bool isWorldView4() const
+  {
+    return theSatId.upcase().contains("WV04");
+  }
   ossimString theFilename;
 
   ossimString theSatId;
