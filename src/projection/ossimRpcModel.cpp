@@ -455,12 +455,12 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    //***
    // Extrapolate if point is outside image:
    //***
-   // if (!insideImage(image_point))
-   // {
-   //    gpt = extrapolate(image_point, ellHeight);
-   //    if (traceExec())  CLOG << "returning..." << endl;
-   //    return;
-   // }
+//    if (!insideImage(image_point))
+//    {
+//       gpt = extrapolate(image_point, ellHeight);
+// //       if (traceExec())  CLOG << "returning..." << endl;
+//       return;
+//    }
 
    //***
    // Constants for convergence tests:
@@ -876,7 +876,7 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
          << "DEBUG ossimRpcModel::loadState(): entering..." << std::endl;
    }
 
-   const char* value;
+   ossimString value;
    const char* keyword;
 
    //***
@@ -931,7 +931,7 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   theLineScale = atof(value);
+   theLineScale = value.toDouble();
    
    keyword = SAMP_SCALE_KW;
    value = kwl.find(prefix, keyword);
@@ -942,7 +942,7 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   theSampScale = atof(value);
+   theSampScale = value.toDouble();
    
    keyword = LAT_SCALE_KW;
    value = kwl.find(prefix, keyword);
@@ -953,8 +953,8 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   theLatScale = atof(value);
-   
+   theLatScale = value.toDouble();
+
    keyword = LON_SCALE_KW;
    value = kwl.find(prefix, keyword);
    if (!value)
@@ -964,8 +964,8 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   theLonScale = atof(value);
-   
+   theLonScale = value.toDouble();
+
    keyword = HGT_SCALE_KW;
    value = kwl.find(prefix, keyword);
    if (!value)
@@ -975,8 +975,8 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   theHgtScale = atof(value);
-   
+   theHgtScale = value.toDouble();
+
    keyword = LINE_OFFSET_KW;
    value = kwl.find(prefix, keyword);
    if (!value)
@@ -986,8 +986,8 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   theLineOffset = atof(value);
-   
+   theLineOffset = value.toDouble();
+
    keyword = SAMP_OFFSET_KW;
    value = kwl.find(prefix, keyword);
    if (!value)
@@ -997,8 +997,8 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   theSampOffset = atof(value);
-   
+   theSampOffset = value.toDouble();
+
    keyword = LAT_OFFSET_KW;
    value = kwl.find(prefix, keyword);
    if (!value)
@@ -1008,8 +1008,8 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   theLatOffset = atof(value);
-   
+   theLatOffset = value.toDouble();
+
    keyword = LON_OFFSET_KW;
    value = kwl.find(prefix, keyword);
    if (!value)
@@ -1019,8 +1019,8 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   theLonOffset = atof(value);
-   
+   theLonOffset = value.toDouble();
+
    keyword = HGT_OFFSET_KW;
    value = kwl.find(prefix, keyword);
    if (!value)
@@ -1030,7 +1030,7 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   theHgtOffset = atof(value);
+   theHgtOffset = value.toDouble();
 
    for (int i=0; i<NUM_COEFFS; i++)
    {
@@ -1049,7 +1049,7 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
             << std::endl;
          return false;
       }
-      theLineNumCoef[i] = atof(value);
+      theLineNumCoef[i] = value.toDouble();
 
       keyword = LINE_DEN_COEF_KW;
       keyword += os.str();
@@ -1061,8 +1061,8 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                              << std::endl;
          return false;
       }
-      theLineDenCoef[i] = atof(value);
-   
+      theLineDenCoef[i] = value.toDouble();
+
       keyword = SAMP_NUM_COEF_KW;
       keyword += os.str();
       value = kwl.find(prefix, keyword.c_str());
@@ -1073,7 +1073,7 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                              << std::endl;
          return false;
       }
-      theSampNumCoef[i] = atof(value);
+      theSampNumCoef[i] = value.toDouble();
 
       keyword = SAMP_DEN_COEF_KW;
       keyword += os.str();
@@ -1085,7 +1085,7 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                              << std::endl;
          return false;
       }
-      theSampDenCoef[i] = atof(value);
+      theSampDenCoef[i] = value.toDouble();
    }
       
    //***
@@ -1404,9 +1404,8 @@ void ossimRpcModel::setImageOffset(const ossimDpt& offset)
 {
    theLineOffset -= offset.line;
    theSampOffset -= offset.samp;
-
    if (theImageClipRect.hasNans())
-      theImageClipRect = ossimDrect(0, 0, theImageSize.x-offset.x-1, theImageSize.y-offset.y-1);
+           theImageClipRect = ossimDrect(0, 0, theImageSize.x - offset.x - 1, theImageSize.y - offset.y - 1);
    else
       theImageClipRect -= offset;
 }
