@@ -8,6 +8,7 @@
 // $Id: ossimQuickbirdRpcHeader.cpp 9094 2006-06-13 19:12:40Z dburken $
 
 #include <ossim/support_data/ossimQuickbirdRpcHeader.h>
+#include <ossim/base/ossimRegExp.h>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -158,6 +159,12 @@ bool ossimQuickbirdRpcHeader::readCoeff(std::istream& in,
       coeff.push_back(line.toDouble());
    }
    return done;
+}
+bool ossimQuickbirdRpcHeader::isGlobal() const
+{
+	ossimRegExp regex("R[0-9]*C[0-9]*");
+
+	return !regex.find(theFilename.c_str());
 }
 
 bool ossimQuickbirdRpcHeader::parseNameValue(const ossimString& line)

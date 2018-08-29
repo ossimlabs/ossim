@@ -410,10 +410,9 @@ bool ossimQuickbirdRpcModel::parseTileData(const ossimFilename &image_file)
    //
    if (m_qbRpcHeader)
    {
-      //if (m_qbRpcHeader->isQuickbird() && (!ul.hasNans()))
-         if ((!ul.hasNans()))
-         {
-            setImageOffset(ul);
+      if (m_qbRpcHeader->isGlobal() && (!ul.hasNans()))
+      {
+         setImageOffset(ul);
       }
    }
 
