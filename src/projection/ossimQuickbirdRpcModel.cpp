@@ -399,10 +399,15 @@ bool ossimQuickbirdRpcModel::parseTileData(const ossimFilename& image_file)
 
    // Define the RPC model's 2D transform for chipped imagery. Note that the TIL file will only
    // define an offset, not a full affine.  Can only use the tile's UL corner:
-   ossimDpt ul (info.theUlXOffset, info.theUlYOffset);
-   if (!ul.hasNans())
-      setImageOffset(ul);
-      //theImageXform = new ossim2dTo2dShiftTransform(ul);
+   //ossimDpt ul (info.theUlXOffset, info.theUlYOffset);
+
+   //********************************************
+   // gpotts: I am not confident that the TIL is needed for the RPC.  The
+   // RPC has a line  and offset and what I have seen they are for the local
+   // image not it's tile location.  I am commenting this out for now.
+   // 
+   //if (!ul.hasNans())
+      //setImageOffset(ul);
 
    return true;
 }
