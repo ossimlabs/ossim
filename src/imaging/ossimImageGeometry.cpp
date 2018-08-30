@@ -1081,7 +1081,7 @@ void ossimImageGeometry::getImageEdgePoints(std::vector<ossimDpt>& result, ossim
    }
 
    // Make edge to edge.
-   imageRect.expand( ossimDpt(0.5, 0.5) );
+   //imageRect.expand( ossimDpt(0.5, 0.5) );
    
    result.clear();
    // First get the image points we will be transforming
