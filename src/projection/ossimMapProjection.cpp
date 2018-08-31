@@ -1486,14 +1486,17 @@ bool ossimMapProjection::operator==(const ossimProjection& projection) const
    // Verify that derived types match:
    if (getClassName() != projection.getClassName())
       return false;
-
    // If both PCS codes are non-zero, that's all we need to check:
-   const ossimMapProjection* mapProj = dynamic_cast<const ossimMapProjection*>(&projection);
+   // unless there are model transforms
+	//
+	const ossimMapProjection* mapProj = dynamic_cast<const ossimMapProjection*>(&projection);
+	if(!mapProj) return false;
    if (thePcsCode && mapProj->thePcsCode && (thePcsCode != 32767) && 
        (thePcsCode == mapProj->thePcsCode) )
    {
-      return true;
-   }
+		if(!(hasModelTransform()||mapProj->hasModelTransform()))
+      	return true;
+	}
 
    if ( *theDatum != *(mapProj->theDatum) )
       return false;
@@ -1526,10 +1529,21 @@ bool ossimMapProjection::operator==(const ossimProjection& projection) const
        (theProjectionUnits != mapProj->theProjectionUnits))
        return false;
 
-   // Check transform if present and compare it also:
-   if (hasModelTransform() && mapProj->hasModelTransform() &&
-      (theModelTransform.getData() != mapProj->theModelTransform.getData()))
+   if(mapProj->hasModelTransform())
+   {
+		if (!hasModelTransform())
+		{
+			return false;
+		}
+		if((theModelTransform.getData() != mapProj->theModelTransform.getData()))
+		{
+			return false;
+		}
+	}
+	else if(hasModelTransform())
+   {
       return false;
+   }
 
    return true;
 }
