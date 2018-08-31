@@ -2186,8 +2186,7 @@ void ossimChipperUtil::createOutputProjection()
 		}
 	}
 
-	ossimKeywordlist tempKwl;
-	proj->saveState(tempKwl);
+
 	// Check for identity projection:
 	ossimRefPtr<ossimMapProjection> inputProj = getFirstInputProjection();
 	if (proj.valid() && inputProj.valid())
