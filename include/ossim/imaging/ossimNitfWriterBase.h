@@ -13,9 +13,11 @@
 #define ossimNitfWriterBase_HEADER 1
 
 #include <ossim/imaging/ossimImageFileWriter.h>
+#include <ossim/base/ossimRefPtr.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 #include <ossim/support_data/ossimNitfFileHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
+#include <vector>
 
 class ossimFilename;
 class ossimImageSourceSequencer;
@@ -68,7 +70,6 @@ public:
     *  enable_blocka_tag
     */
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
- 
 
    /**
     * Saves the state of the writer to kwl with prefix then calls
@@ -155,7 +156,7 @@ protected:
     *
     * @note Currently only used with map projected images.
     */
-   void addGeolobTag(const ossimMapProjection* mapProj,
+   void addGeolobTag(ossimMapProjectionInfo& mapInfo,
                      ossimNitfImageHeaderV2_X* hdr);
    
    /**
@@ -201,7 +202,6 @@ protected:
     * This will only be set if a geographic projection.
     */
    bool theEnableGeolobTagFlag;
-   
 
 private:
 
