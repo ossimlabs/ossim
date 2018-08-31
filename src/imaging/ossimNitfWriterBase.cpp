@@ -224,7 +224,7 @@ void ossimNitfWriterBase::writeGeometry(ossimNitfImageHeaderV2_X* hdr,
 
             if ( theEnableGeolobTagFlag )
             {
-               addGeolobTag( mapProj, hdr );
+               addGeolobTag( mapInfo, hdr );
             }
          }
          else
@@ -243,7 +243,7 @@ void ossimNitfWriterBase::writeGeometry(ossimNitfImageHeaderV2_X* hdr,
          }
          
       } // matches:  if (proj.valid())
-      
+
    } // matches: if (hdr && seq)
 }
 
@@ -298,25 +298,23 @@ void ossimNitfWriterBase::addBlockaTag(ossimMapProjectionInfo& mapInfo,
    } // matches: if (hdr)
 }
 
-void ossimNitfWriterBase::addGeolobTag(const ossimMapProjection* mapProj,
+void ossimNitfWriterBase::addGeolobTag(ossimMapProjectionInfo& mapInfo,
                                        ossimNitfImageHeaderV2_X* hdr)
 {
-   if (hdr && mapProj)
+   if ( hdr && mapInfo.getProjection() )
    {
-      if ( mapProj->isGeographic() == true )
+      if ( mapInfo.getProjection()->isGeographic() == true )
       {
-         ossimRefPtr<ossimNitfGeolobTag> geolobTag = new ossimNitfGeolobTag();
+         // This tag wants corners as area:
+         mapInfo.setPixelType(OSSIM_PIXEL_IS_AREA);
 
          // Get the scale:
-         ossimDpt gsd = mapProj->getDecimalDegreesPerPixel();
+         ossimDpt gsd = mapInfo.getDecimalDegreesPerPixel();
          if ( (gsd.hasNans() == false) && (gsd.x > 0.0) && (gsd.y > 0.0) )
          {
-            ossimGpt tie = mapProj->getUlGpt();
+            ossimGpt tie = mapInfo.ulGroundPt();
             if ( tie.hasNans() == false )
             {
-               // Shift the tie to edge of pixel:
-               tie.lat = tie.lat + gsd.y*0.5;
-               tie.lon = tie.lon - gsd.x*0.5;
                if ( (tie.lat <= 90.0) && (tie.lon >= -180.0) )
                {
                   ossimRefPtr<ossimNitfGeolobTag> geolobTag = new ossimNitfGeolobTag();
@@ -475,4 +473,3 @@ void ossimNitfWriterBase::initializeDefaultsFromConfigFile( ossimNitfFileHeaderV
       }
    }
 }
-
