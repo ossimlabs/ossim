@@ -63,7 +63,7 @@ fi
 # Try running the CMake config script (sourcing here to capture OSSIM_BUILD_DIR var 
 # possibly initialized in cmake config script)
 if [ -x $CMAKE_CONFIG_SCRIPT ]; then
-  . /opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin/sourceanalyzer -b ossim $CMAKE_CONFIG_SCRIPT $CMAKE_BUILD_TYPE
+  . $CMAKE_CONFIG_SCRIPT $CMAKE_BUILD_TYPE
 else
   echo; echo "Error: Cannot locate the cmake config script expected at $CMAKE_CONFIG_SCRIPT. Cannot continue."
   exit 1
