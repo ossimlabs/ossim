@@ -76,7 +76,7 @@ fi
 # CMake successful, now run make in the build directory (OSSIM_BUILD_DIR 
 # exported by cmake config script):
 pushd $OSSIM_BUILD_DIR >/dev/null
-make $MAKE_VERBOSE -j $OSSIM_MAKE_JOBS
+/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin/sourceanalyzer -b ossim make $MAKE_VERBOSE -j $OSSIM_MAKE_JOBS
 if [ $? -ne 0 ]; then
   echo; echo "Error encountered during make. Check the console log and correct."
   popd>/dev/null
