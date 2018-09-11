@@ -4,6 +4,11 @@ PROJECT(ossimlabs)
 
 SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{OSSIM_CXX_FLAGS}" )
 
+# Inject HP Fortify into C++ compilation if requested
+IF ( ${BUILD_WITH_FORTIFY} OR $ENV{BUILD_WITH_FORTIFY} OR ($ENV{BUILD_WITH_FORTIFY} STREQUAL "true"))
+   set( CMAKE_CXX_COMPILER "sourceanalyzer -b ossimlabs ${CMAKE_CXX_COMPILER}" )
+ENDIF() 
+
 IF ("${OSSIM_DEV_HOME}"  STREQUAL "")
   IF ("$ENV{OSSIM_DEV_HOME}"  STREQUAL "")
     SET(OSSIM_DEV_HOME "${CMAKE_CURRENT_SOURCE_DIR}/../.." CACHE STRING "Cache the OSSIM dev home" FORCE)
