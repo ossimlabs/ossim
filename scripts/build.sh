@@ -1,10 +1,10 @@
-#!/bin/bash 
+#!/bin/bash
 ###############################################################################
 #
 # Build script for all OSSIM repositories
 #
 # This script can be run from anywhere. It performs three functions:
-# 
+#
 #   1. If running in an interactive shell, it queries for user for a build type
 #      (Release, Debug, etc.),
 #   2. It invokes the cmake configuration script to generate Makefiles in the
@@ -30,7 +30,7 @@ popd >/dev/null
 # source variables used during the builds
 . $SCRIPT_DIR/env.sh
 
-# Consider whether running in interactive shell or batch for possible 
+# Consider whether running in interactive shell or batch for possible
 # prompting on build configuration:
 if [ "$(ps -o stat= -p $PPID)" == "Ss" ]; then
   echo
@@ -39,17 +39,17 @@ if [ "$(ps -o stat= -p $PPID)" == "Ss" ]; then
   echo "  <2> Debug,"
   echo "  <3> RelWithDebInfo,"
   echo "  <4> MinSizeRel"
-  while 
+  while
     read -p "Enter 1-4 [1]: " buildtype
     if [ -z $buildtype ]; then
       buildtype=1
     fi
-    [ $buildtype -lt 1 ] || [ $buildtype -gt 4 ] 
+    [ $buildtype -lt 1 ] || [ $buildtype -gt 4 ]
   do
     continue
   done
   case $buildtype in
-    1) CMAKE_BUILD_TYPE="Release";; 
+    1) CMAKE_BUILD_TYPE="Release";;
     2) CMAKE_BUILD_TYPE="Debug";;
     3) CMAKE_BUILD_TYPE="RelWithDebInfo";;
     4) CMAKE_BUILD_TYPE="MinSizeRel";;
@@ -58,9 +58,9 @@ else
   if [ -z $CMAKE_BUILD_TYPE ] ; then
     CMAKE_BUILD_TYPE="Release"
   fi
-fi 
+fi
 
-# Try running the CMake config script (sourcing here to capture OSSIM_BUILD_DIR var 
+# Try running the CMake config script (sourcing here to capture OSSIM_BUILD_DIR var
 # possibly initialized in cmake config script)
 if [ -x $CMAKE_CONFIG_SCRIPT ]; then
   . $CMAKE_CONFIG_SCRIPT $CMAKE_BUILD_TYPE
@@ -73,10 +73,10 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# CMake successful, now run make in the build directory (OSSIM_BUILD_DIR 
+# CMake successful, now run make in the build directory (OSSIM_BUILD_DIR
 # exported by cmake config script):
 pushd $OSSIM_BUILD_DIR >/dev/null
-/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin/sourceanalyzer -b ossim make $MAKE_VERBOSE -j $OSSIM_MAKE_JOBS
+make $MAKE_VERBOSE -j $OSSIM_MAKE_JOBS
 if [ $? -ne 0 ]; then
   echo; echo "Error encountered during make. Check the console log and correct."
   popd>/dev/null
@@ -87,4 +87,3 @@ popd # out of $OSSIM_BUILD_DIR
 
 
 exit 0
-
