@@ -65,29 +65,18 @@ esac
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $SCRIPT_DIR/.. >/dev/null
 CMAKE_DIR=$PWD
-#echo "@@@@@ CMAKE_DIR=$CMAKE_DIR"
 popd >/dev/null
 
 # Establish the top-level directory above repo containing this script
-#echo "@@@@@ BEFORE OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
 if [ -z $OSSIM_DEV_HOME ]; then
   pushd $CMAKE_DIR/../.. >/dev/null
   export OSSIM_DEV_HOME=$PWD
-  #echo "@@@@@ NEW OSSIM_DEV_HOME=$OSSIM_DEV_HOME"
   popd >/dev/null
-#else
-  #echo "@@@@@ OSSIM_DEV_HOME UNCHANGED!"
-fi 
+fi
 
 # Establish CMake's output build directory:
 if [ -z "$OSSIM_BUILD_DIR" ]; then
-  if [ "$BUILD_TYPE_ARG" == "ECLIPSE" ]; then
-     pushd $OSSIM_DEV_HOME/..
-     OSSIM_BUILD_DIR=$PWD/ossimlabs_eclipse_build
-     popd
-  else
     OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/build
-  fi
 fi
 
 # Establish CMAKE's install directory:
@@ -95,18 +84,9 @@ if [ -z "$OSSIM_INSTALL_PREFIX" ]; then
   OSSIM_INSTALL_PREFIX=$OSSIM_DEV_HOME/install
 fi
 
-# Additional stuff for ECLIPSE CDT4 users:
 CMAKE_G_ARG="Unix Makefiles"
-if [ "$BUILD_TYPE_ARG" == "ECLIPSE" ]; then
-  CMAKE_ECLIPSE_VERSION=4.7.1
-  CMAKE_G_ARG="Eclipse CDT4 - Unix Makefiles"
-  CMAKE_CXX_FLAGS="-std=c++11"
-  cp -f $CMAKE_DIR/CMakeLists.txt $OSSIM_DEV_HOME
-  CMAKE_DIR=$OSSIM_DEV_HOME
-  echo "Generating eclipse project files for Eclipse $CMAKE_ECLIPSE_VERSION."
-fi
 
-echo "@@@@@ OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
+echo "OSSIM_BUILD_DIR=$OSSIM_BUILD_DIR"
 mkdir -p $OSSIM_BUILD_DIR
 pushd $OSSIM_BUILD_DIR >/dev/null
 rm -f CMakeCache.txt
@@ -242,13 +222,14 @@ elif [ -d /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/D
   export CMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
 fi
 
-echo "Generating Makefiles in" $OSSIM_BUILD_DIR
+if [ "${BUILD_WITH_FORTIFY}" == "true" ] ; then
+  INSERT_FORTIFY_TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=${CMAKE_DIR}/fortify/fortify_linux_toolchain.cmake
+  echo;echo "Building with fortify toolchain"; echo
+fi
 
-
-# CMAKE command 
-cmake -G "$CMAKE_G_ARG" \
+# CMAKE command
+cmake -G "$CMAKE_G_ARG" "$INSERT_FORTIFY_TOOLCHAIN" \
 -DCMAKE_CXX_FLAGS=$CMAKE_CXX_FLAGS \
--DCMAKE_ECLIPSE_VERSION=$CMAKE_ECLIPSE_VERSION \
 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
 -DOSSIM_DEV_HOME=$OSSIM_DEV_HOME \
 -DCMAKE_OSX_ARCHITECTURES="x86_64" \
@@ -300,5 +281,6 @@ cmake -G "$CMAKE_G_ARG" \
 -DOSSIM_BUILD_ADDITIONAL_PLUGIN_DIRECTORIES=$OSSIM_BUILD_ADDITIONAL_PLUGIN_DIRECTORIES \
 $CMAKE_DIR
 
+echo CMAKE_COMMAND: $CMAKE_COMMAND
 popd >/dev/null
 

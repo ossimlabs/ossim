@@ -10,16 +10,12 @@
 //              The input formats can be different -- the pixels are compared after any 
 //              unpacking and decompression. Only R0 is compared.
 //
-// $Id: ossim-image-compare.cpp 19753 2011-06-13 15:20:31Z dburken $
 //----------------------------------------------------------------------------
 
 #include <ossim/base/ossimArgumentParser.h>
-#include <ossim/base/ossimApplicationUsage.h>
-#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/init/ossimInit.h>
-#include <iostream>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/imaging/ossimImageSourceSequencer.h>
 
@@ -67,6 +63,7 @@ int main(int argc, char *argv[])
       ossimFilename f1 (argv[1]);
       ossimFilename f2 (argv[2]);
       cout << "\nComparing <"<<f1<<"> to <"<<f2<<">..."<<endl;
+
       // Establish input image handlers:
       ossimImageHandlerRegistry* registry = ossimImageHandlerRegistry::instance();
       ossimRefPtr<ossimImageHandler> h1 = registry->open(ossimFilename(argv[1]));
