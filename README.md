@@ -1,10 +1,10 @@
 ### Jenkins Build Status 
 Resource | *master* | *dev* | 
 ------------ | ------------- | -------------
-OSSIM Build Centos7 | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-master&style=plastic) | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-dev&style=plastic)
-Batch Test| ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-test-master&style=plastic) | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=ossim-test-dev&style=plastic)
-RPMS Build Centos7 | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=rpm-master&style=plastic) | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=rpm-dev&style=plastic)
-RPMS Publish Centos7 | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=rpm-publish-master&style=plastic) | ![centos7 Status](https://jenkins.radiantbluecloud.com/buildStatus/icon/?job=rpm-publish-dev&style=plastic)
+OSSIM Build Centos7 | ![centos7 Status](https://jenkins.ossim.io/buildStatus/icon/?job=ossim-master&style=plastic) | ![centos7 Status](https://jenkins.ossim.io/buildStatus/icon/?job=ossim-dev&style=plastic)
+Batch Test| ![centos7 Status](https://jenkins.ossim.io/buildStatus/icon/?job=ossim-test-master&style=plastic) | ![centos7 Status](https://jenkins.ossim.io/buildStatus/icon/?job=ossim-test-dev&style=plastic)
+RPMS Build Centos7 | ![centos7 Status](https://jenkins.ossim.io/buildStatus/icon/?job=rpm-master&style=plastic) | ![centos7 Status](https://jenkins.ossim.io/buildStatus/icon/?job=rpm-dev&style=plastic)
+RPMS Publish Centos7 | ![centos7 Status](https://jenkins.ossim.io/buildStatus/icon/?job=rpm-publish-master&style=plastic) | ![centos7 Status](https://jenkins.ossim.io/buildStatus/icon/?job=rpm-publish-dev&style=plastic)
 
  
 <a href="https://scan.coverity.com/projects/ossimlabs">
