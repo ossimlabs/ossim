@@ -749,11 +749,6 @@ ossim_int32 ossim::TiffHandlerState::getLinearUnits(ossim_int32 directory)const
   return getInt32Value("linear_units", directory);
 }
 
-ossim_int32 ossim::TiffHandlerState::getRasterType(ossim_int32 directory)const
-{
-  return getInt32Value("raster_type", directory);
-}
-
 ossim_int32 ossim::TiffHandlerState::getDatumCode(ossim_int32 directory)const
 {
   return getInt32Value("datum_code", directory);
@@ -1030,6 +1025,20 @@ ossim_int32 ossim::TiffHandlerState::getPlanarConfig(ossim_int32 directory) cons
     else if(tempStr.contains("contig"))
     {
       result = PLANARCONFIG_CONTIG;
+    }
+  }
+  return result;
+}
+
+ossim_int32 ossim::TiffHandlerState::getRasterType(ossim_int32 directory) const
+{
+  ossimString tempStr;
+  ossimPixelType result = OSSIM_PIXEL_IS_POINT;
+  if (getValue(tempStr, directory, "raster_type"))
+  {
+    if (tempStr.contains("area"))
+    {
+      result = OSSIM_PIXEL_IS_AREA;
     }
   }
   return result;

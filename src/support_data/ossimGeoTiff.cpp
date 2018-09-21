@@ -991,29 +991,30 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
       return false;
    }
 
-   theLength = state->getImageLength(entryIdx);
-   theWidth = state->getImageWidth(entryIdx);
-   theScaleFactor = 0.0;
-   theModelType = state->getModelType(entryIdx);
-   theGcsCode = state->getGcsCode(entryIdx);
-   thePcsCode = state->getPcsCode(entryIdx);
-   theDatumCode = state->getDatumCode(entryIdx);
-   theAngularUnits = state->getAngularUnits(entryIdx);
-   theLinearUnitsCode = state->getLinearUnits(entryIdx);
-   theGeoKeysPresentFlag = true;
-   if (theAngularUnits == ANGULAR_DMS_HEMISPHERE || theAngularUnits == 9122)
-   {
-      //---
-      // Hack for bug, where the libgeotiff funtion GTIFGetDefn sets the angular units
-      // incorrectly to ANGULAR_DMS_HEMISPHERE:
-      if (traceDebug())
-      {
-         ossimNotify(ossimNotifyLevel_WARN)
-             << " WARNING ossimGeoTiff::addImageGeometry:"
-             << "The angular units (key 2054) is set to ANGULAR_DMS_HEMISPHERE!"
-             << "\nAssuming \"Angular_Degree\"..." << std::endl;
-      }
-      theAngularUnits = ANGULAR_DEGREE;
+theLength = state->getImageLength(entryIdx);
+theWidth = state->getImageWidth(entryIdx);
+theScaleFactor = 0.0;
+theModelType = state->getModelType(entryIdx);
+theGcsCode = state->getGcsCode(entryIdx);
+thePcsCode = state->getPcsCode(entryIdx);
+theDatumCode = state->getDatumCode(entryIdx);
+theAngularUnits = state->getAngularUnits(entryIdx);
+theLinearUnitsCode = state->getLinearUnits(entryIdx);
+theRasterType = state->getRasterType(entryIdx);
+theGeoKeysPresentFlag = true;
+if (theAngularUnits == ANGULAR_DMS_HEMISPHERE || theAngularUnits == 9122)
+{
+    //---
+    // Hack for bug, where the libgeotiff funtion GTIFGetDefn sets the angular units
+    // incorrectly to ANGULAR_DMS_HEMISPHERE:
+    if (traceDebug())
+    {
+        ossimNotify(ossimNotifyLevel_WARN)
+            << " WARNING ossimGeoTiff::addImageGeometry:"
+            << "The angular units (key 2054) is set to ANGULAR_DMS_HEMISPHERE!"
+            << "\nAssuming \"Angular_Degree\"..." << std::endl;
+    }
+    theAngularUnits = ANGULAR_DEGREE;
    }
    bool parsedCode = false;
    if (thePcsCode)
