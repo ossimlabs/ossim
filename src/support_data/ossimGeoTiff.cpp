@@ -1135,6 +1135,14 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
    setOssimProjectionName(state, entryIdx);
    setOssimDatumName(state, entryIdx);
 
+   if(theModelType == MODEL_TYPE_GEOGRAPHIC)
+   {
+      if (theAngularUnits == 0) 
+      {
+         theAngularUnits = ANGULAR_DEGREE;
+      }
+   }
+
    return true;
 }
 
@@ -1706,11 +1714,7 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
    // Now set the image-specific projection info (scale and image tiepoint):
    if (theModelType == MODEL_TYPE_GEOGRAPHIC)
    {
-      if(theAngularUnits == 0)
-      {
-         theAngularUnits = ANGULAR_DEGREE;
-      }
-      else if (theAngularUnits != ANGULAR_DEGREE)
+      if (theAngularUnits != ANGULAR_DEGREE)
       {
          ossimNotify(ossimNotifyLevel_WARN)
              << "WARNING ossimGeoTiff::addImageGeometry:"
