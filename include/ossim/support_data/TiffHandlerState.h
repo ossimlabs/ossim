@@ -404,6 +404,7 @@ namespace ossim
     bool isReduced(ossim_int32 directory = 0) const;
     bool isPage(ossim_int32 directory = 0) const;
     bool isMask(ossim_int32 directory = 0) const;
+    bool isDigitalGlobe()const;
     ossim_int32 getSubFileType(ossim_int32 directory = 0) const;
     ossim_uint32 getNumberOfDirectories()const;
     bool getColorMap(std::vector<ossim_uint16> &red,
@@ -429,7 +430,7 @@ namespace ossim
     * @param directory to use
     */
     bool getGeoDoubleParams(std::vector<ossim_float64>& result,
-                            ossim_int32 directory)const;
+                            ossim_int32 directory=0)const;
 
     /**
     * Convenience method to get a Geo double params array.  
@@ -447,9 +448,10 @@ namespace ossim
     * @param directory to use
     */
     bool getGeoTiePoints(std::vector<ossim_float64>& result,
-                         ossim_int32 directory)const;
+                         ossim_int32 directory=0)const;
 
-    bool getCitation(ossimString& citation, ossim_int32 directory)const;
+    bool getCitation(ossimString& citation, ossim_int32 directory=0)const;
+    bool getCopyright(ossimString &copyright, ossim_int32 directory = 0) const;
     /**
     * Convenience method to get a Geo trans matrix array.  
     *

@@ -162,12 +162,12 @@ void ossim::TiffHandlerState::loadDefaults(TIFF* tiffPtr)
     }
   }
   TIFFSetDirectory(tiffPtr, currentDirectory);
-
 }
 
 void ossim::TiffHandlerState::loadDefaults(std::shared_ptr<ossim::istream> &str,
                                          const std::string &connectionString)
 {
+  setConnectionString(connectionString);
   ossim_int64 offset = str->tellg();
   ossimTiffInfo info;
   std::ostringstream out;
@@ -673,6 +673,19 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
 
   addValue(dirPrefix+"is_geotiff", ossimString::toString(loadedGeotiff));
   GTIFFree(gtif);
+}
+
+bool ossim::TiffHandlerState::isDigitalGlobe() const
+{
+  ossimString value;
+  bool result = false;
+
+  if(getValue(value, "tiff.is_digital_globe"))
+  {
+    result = value.toBool();
+  }
+
+  return result;
 }
 
 bool ossim::TiffHandlerState::isReduced(ossim_uint32 directory)const
@@ -1204,7 +1217,19 @@ bool ossim::TiffHandlerState::getCitation(ossimString &citation, ossim_int32 dir
 {
   bool result = true;
 
-  if(!getValue(citation, directory, "citation"))
+  if (!getValue(citation, directory, "citation"))
+  {
+    result = false;
+  }
+
+  return result;
+}
+
+bool ossim::TiffHandlerState::getCopyright(ossimString &copyright, ossim_int32 directory) const
+{
+  bool result = true;
+
+  if (!getValue(copyright, directory, "copyright"))
   {
     result = false;
   }
