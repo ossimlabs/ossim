@@ -126,7 +126,15 @@ private:
    ossimString         theBandNameList;
    ossimIpt            theImageSize;
 
-TYPE_DATA
+   /**
+    * PNIIRS
+    * cloudCover
+    * satID --- > mission_id
+   ossim_float64       thePNiirs;
+**/
+   ossim_float64 thePNiirs;
+   ossim_float64 theCloudCoverage;
+   TYPE_DATA
 };
 
 #endif /* #ifndef ossimQuickbirdMetaData_HEADER */

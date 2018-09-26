@@ -30,20 +30,21 @@ static ossimTrace traceExec  ("ossimQuickbirdMetaData:exec");
 static ossimTrace traceDebug ("ossimQuickbirdMetaData:debug");
 
 ossimQuickbirdMetaData::ossimQuickbirdMetaData()
-   :
-   theGenerationDate("Unknown"),
-   theBandId("Unknown"),
-   theBitsPerPixel(0),
-   theSatID("Unknown"),
-   theTLCDate("Unknown"),
-   theSunAzimuth(0.0),
-   theSunElevation(0.0),
-   theSatAzimuth(0.0),
-   theSatElevation(0.0),
-   theTDILevel(0),
-   theAbsCalFactors(),
-   theBandNameList("Unknown"),
-   theImageSize()
+    : theGenerationDate("Unknown"),
+      theBandId("Unknown"),
+      theBitsPerPixel(0),
+      theSatID("Unknown"),
+      theTLCDate("Unknown"),
+      theSunAzimuth(0.0),
+      theSunElevation(0.0),
+      theSatAzimuth(0.0),
+      theSatElevation(0.0),
+      theTDILevel(0),
+      theAbsCalFactors(),
+      theBandNameList("Unknown"),
+      theImageSize(),
+      thePNiirs(-1),
+      theCloudCoverage(0.0)
 {
    theImageSize.makeNan();
    theAbsCalFactors.clear();
@@ -152,6 +153,11 @@ bool ossimQuickbirdMetaData::saveState(ossimKeywordlist& kwl,
            "sat_id",
            theSatID,
            true);
+   
+   kwl.add(prefix,
+           "mission_id",
+           theSatID,
+           true);
 
    kwl.add(prefix,
            "tlc_date",
@@ -186,6 +192,20 @@ bool ossimQuickbirdMetaData::saveState(ossimKeywordlist& kwl,
            "band_name_list",
            theBandNameList,
            true);
+
+   if(thePNiirs > -1 )
+   {
+      kwl.add(prefix,
+              "niirs",
+              thePNiirs,
+              true);
+   }
+
+   kwl.add(prefix,
+      "cloud_cover",
+      theCloudCoverage,
+      true
+   );
 
    if( theBandId=="Multi" )
    {
@@ -349,10 +369,10 @@ bool ossimQuickbirdMetaData::parseMetaData(const ossimFilename& data_file)
    {
       if (traceDebug())
       {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-	    << "ossimQuickbirdRpcModel::parseMetaData(data_file) DEBUG:"
-	    << "\nCould not open Meta data file:  " << data_file
-	    << "\nreturning with error..." << std::endl;
+              ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "ossimQuickbirdMetaData::parseMetaData(data_file) DEBUG:"
+                  << "\nCould not open Meta data file:  " << data_file
+                  << "\nreturning with error..." << std::endl;
       }
       return false;
    }
@@ -379,13 +399,13 @@ bool ossimQuickbirdMetaData::parseMetaData(const ossimFilename& data_file)
    {
       if(traceDebug())
       {
-         ossimNotify(ossimNotifyLevel_FATAL)
-	    << "FATAL ossimQuickbirdRpcModel::parseMetaData(data_file): "
-	    << "\n\tAborting construction. Error encountered parsing "
-	    << "presumed meta-data file." << std::endl;
+              ossimNotify(ossimNotifyLevel_FATAL)
+                  << "FATAL ossimQuickbirdMetaData::parseMetaData(data_file): "
+                  << "\n\tAborting construction. Error encountered parsing "
+                  << "presumed meta-data file." << std::endl;
 
-         delete [] filebuf;
-         return false;
+              delete[] filebuf;
+              return false;
       }
    }
 
@@ -405,13 +425,13 @@ bool ossimQuickbirdMetaData::parseMetaData(const ossimFilename& data_file)
    {
       if(traceDebug())
       {
-         ossimNotify(ossimNotifyLevel_FATAL)
-	    << "FATAL ossimQuickbirdRpcModel::parseMetaData(data_file): "
-	    << "\n\tAborting construction. Error encountered parsing "
-	    << "presumed meta-data file." << std::endl;
+              ossimNotify(ossimNotifyLevel_FATAL)
+                  << "FATAL ossimQuickbirdMetaData::parseMetaData(data_file): "
+                  << "\n\tAborting construction. Error encountered parsing "
+                  << "presumed meta-data file." << std::endl;
 
-         delete [] filebuf;
-         return false;
+              delete[] filebuf;
+              return false;
       }
    }
     
@@ -434,7 +454,7 @@ bool ossimQuickbirdMetaData::parseMetaData(const ossimFilename& data_file)
          return false;
       }
    }
-     
+
    //---
    // absCalFactors:
    //---
@@ -725,7 +745,14 @@ bool ossimQuickbirdMetaData::parseMetaData(const ossimFilename& data_file)
          return false;
       }
    }
-
+   if (getEndOfLine(strptr, ossimString("\n\tPNIIRS = "), "%10c %s", temp))
+   {
+      thePNiirs = ossimString(temp).before(";").toFloat64();
+   }
+   if (getEndOfLine(strptr, ossimString("\n\tcloudCover = "), "%14c %s", temp))
+   {
+      theCloudCoverage = ossimString(temp).before(";").toFloat64();
+   }
 
    delete [] filebuf;
    filebuf = 0;
