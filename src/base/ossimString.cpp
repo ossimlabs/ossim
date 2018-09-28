@@ -97,6 +97,20 @@ ossimString ossimString::downcase()const
    return result;
 }
 
+bool ossimString::endsWith(const ossimString &pattern) const
+{
+   ossimString endsPattern = pattern + "$";
+   ossimRegExp regex(endsPattern.c_str());
+   return regex.find(c_str());
+}
+
+bool ossimString::startsWith(const ossimString &pattern) const
+{
+   ossimString startsPattern = "^"+pattern;
+   ossimRegExp regex(startsPattern.c_str());
+   return regex.find(c_str());
+}
+
 char* ossimString::stringDup()const
 {
    char *result = 0;

@@ -3308,10 +3308,10 @@ std::ostream &ossimTiffInfo::printDigitalGlobe(std::ostream &out,
          if(connection.exists())
          {
            ossimQuickbirdMetaData md;
-           if(md.open(connection))
+           if (md.open(connection, ossimQuickbirdMetaData::QB_PARSE_TYPE_IMD))
            {
               ossimKeywordlist kwl;
-              ossimString tempPrefix = (prefix + "imd.");
+              ossimString tempPrefix = (prefix);
 
               md.saveState(kwl, tempPrefix.c_str());
               ossimString generationDate = kwl.find(tempPrefix+"generation_date");
