@@ -493,6 +493,10 @@ bool ossimQuickbirdMetaData::saveState(ossimKeywordlist& kwl,
    {
       kwl.add(ossimString(prefix) + "til.", *m_tilKwl);
    }
+   kwl.add(prefix,
+           "organization",
+           "DigitalGlobe",
+           true);
 
    return true;
 }
