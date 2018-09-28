@@ -383,6 +383,15 @@ bool ossimQuickbirdMetaData::saveState(ossimKeywordlist& kwl,
               true);
 
       kwl.add(prefix,
+              "sun_azimuth",
+              theSunAzimuth,
+              true);
+      kwl.add(prefix,
+              "sun_elevation",
+              theSunElevation,
+              true);
+
+      kwl.add(prefix,
               ossimKeywordNames::AZIMUTH_ANGLE_KW,
               theSunAzimuth,
               true);
