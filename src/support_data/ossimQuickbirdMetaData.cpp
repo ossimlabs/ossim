@@ -346,6 +346,12 @@ bool ossimQuickbirdMetaData::saveState(ossimKeywordlist& kwl,
               theGenerationDate,
               true);
 
+      // will use generation date as the acquisition
+      kwl.add(prefix,
+              "acquisition_date",
+              theGenerationDate,
+              true);
+
       kwl.add(prefix,
               "bits_per_pixel",
               theBitsPerPixel,
