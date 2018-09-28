@@ -581,6 +581,20 @@ bool ossimQuickbirdMetaData::loadState(const ossimKeywordlist& kwl,
       theSatElevation = s.toFloat64();
    }
 
+   lookup = kwl.find(prefix, "sun_azimuth");
+   if (lookup)
+   {
+      s = lookup;
+      theSunAzimuth = s.toFloat64();
+   }
+
+   lookup = kwl.find(prefix, "sun_elevation");
+   if (lookup)
+   {
+      s = lookup;
+      theSunElevation = s.toFloat64();
+   }
+
    lookup = kwl.find(prefix, "band_name_list");
    if (lookup)
    {
