@@ -368,6 +368,11 @@ bool ossimQuickbirdMetaData::saveState(ossimKeywordlist& kwl,
               true);
 
       kwl.add(prefix,
+              "sensor_id",
+              theSatID,
+              true);
+
+      kwl.add(prefix,
               "mission_id",
               theSatID,
               true);
@@ -436,6 +441,22 @@ bool ossimQuickbirdMetaData::saveState(ossimKeywordlist& kwl,
                  "absCalFactor",
                  theAbsCalFactors[0],
                  true);
+      }
+      ossimString testBandId = theBandId;
+      testBandId = testBandId.upcase();
+      if (testBandId == "MULTI")
+      {
+         kwl.add(prefix, "irep", "MULTI");
+         kwl.add(prefix, "icat", "MS");
+      }
+      else if (testBandId == "P")
+      {
+         kwl.add(prefix, "irep", "MONO");
+         kwl.add(prefix, "icat", "VIS");
+      }
+      else if( !testBandId.empty())
+      {
+         kwl.add(prefix, "irep", testBandId);
       }
       kwl.add(ossimString(prefix) + "imd.", *m_imdKwl);
    }
