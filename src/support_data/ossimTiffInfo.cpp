@@ -3314,11 +3314,6 @@ std::ostream &ossimTiffInfo::printDigitalGlobe(std::ostream &out,
               ossimString tempPrefix = (prefix);
 
               md.saveState(kwl, tempPrefix.c_str());
-              ossimString generationDate = kwl.find(tempPrefix+"generation_date");
-              if(!generationDate.empty())
-              {
-                 kwl.add(tempPrefix+"acquistion_date", generationDate);
-              }
               out << kwl << "\n";
            }
          }
