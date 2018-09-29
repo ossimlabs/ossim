@@ -102,7 +102,8 @@ public:
    void clearAttributes();
    
    void toKwl(ossimKeywordlist& kwl,
-              const ossimString& prefix="")const;
+              const ossimString& prefix="",
+              bool includeTag=true)const;
    void fromKwl(const ossimKeywordlist& kwlToConvert);
   
 protected:

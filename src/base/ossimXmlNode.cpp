@@ -955,23 +955,44 @@ void ossimXmlNode::clearAttributes()
    theAttributes.clear();
 }
 
+
 void ossimXmlNode::toKwl(ossimKeywordlist& kwl,
-                         const ossimString& prefix)const
+                         const ossimString& prefix,
+								 bool includeTag)const
 {
-   ossimString name = getTag();
+   class ChildNodeMapInfo{
+   public:
+	  ChildNodeMapInfo(ossim_int32 count=1, ossim_int32 idx=0) : m_count(count),
+	                                                             m_idx(idx) {}
+	  ossim_int32 m_count;
+	  ossim_int32 m_idx;
+	};
+	ossimString name = getTag();
    ossimString value = getText();
    
    ossimString copyPrefix = prefix;
    
    if(name != "")
    {
-      copyPrefix += (name+".");
-   }
+		if(includeTag)
+		{
+			copyPrefix += (name + ".");
+		}
+	}
    if(theChildNodes.size() < 1)
    {
-      kwl.add(prefix+name,
-              value,
-              true);
+		if(includeTag)
+		{
+			kwl.add(prefix + name,
+					  value,
+					  true);
+		}
+		else
+		{
+			kwl.add(prefix,
+					  value,
+					  true);
+		}
    }
 
    ossimString attributePrefix = copyPrefix + "@";
@@ -982,13 +1003,39 @@ void ossimXmlNode::toKwl(ossimKeywordlist& kwl,
               theAttributes[attributeIdx]->getValue(), 
               true);
    }
-
+	std::map<ossimString, std::shared_ptr<ChildNodeMapInfo> > mapInfo;
+	for(auto childNode:theChildNodes)
+	{
+		ossimString tagName = childNode->getTag();
+		if (mapInfo.find(childNode->getTag()) == mapInfo.end())
+		{
+			mapInfo[childNode->getTag()] = std::make_shared<ChildNodeMapInfo>();
+		}
+		else
+		{
+			mapInfo[childNode->getTag()]->m_count++;
+		}
+	}
    ossim_uint32 idx = 0;
    for(idx = 0; idx < theChildNodes.size();++idx)
    {
-      theChildNodes[idx]->toKwl(kwl,
-                                copyPrefix);
-   }
+		ossimString tagName = theChildNodes[idx]->getTag();
+		std::shared_ptr<ChildNodeMapInfo> mapInfoChild = mapInfo[tagName];
+		if (mapInfoChild->m_count > 1)
+		{
+			ossimString newPrefix = (name + "." + tagName + ossimString::toString(mapInfoChild->m_idx) + ".");
+			mapInfoChild->m_idx++;
+			theChildNodes[idx]->toKwl(kwl,
+											  newPrefix,
+											  false);
+		}
+		else
+		{
+			theChildNodes[idx]->toKwl(kwl,
+											  copyPrefix,
+											  true);
+		}
+	}
 }
 
 bool ossimXmlNode::readTag(std::istream& in,
