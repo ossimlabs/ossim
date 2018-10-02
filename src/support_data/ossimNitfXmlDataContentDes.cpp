@@ -86,8 +86,7 @@ std::ostream& ossimNitfXmlDataContentDes::print(std::ostream& out,
        << pfx << std::setw(24) << "DESSHLI:" << ((typeinfo) ? "(string)" : "") <<  m_desshli << "\n"
        << pfx << std::setw(24) << "DESSHABS:" << ((typeinfo) ? "(string)" : "") <<  m_desshabs << "\n"
         // Quick hack to print on one line, this will leave extra spaces in CDATA sections
-       << pfx << std::setw(24) << "XML:" << m_xmlString.substitute(ossimString("\n"), " ", true) << "\n"
-   ;
+       << pfx << std::setw(24) << "XML: \"\"\"" << m_xmlString << "\"\"\"\n";
    return out;
 }
 
