@@ -18,8 +18,9 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimString.h>
-
+#include <ossim/base/ossimKeywordlist.h>
 #include <iosfwd>
+#include <memory>
 
 class ossimFilename;
 class ossimKeywordlist;
