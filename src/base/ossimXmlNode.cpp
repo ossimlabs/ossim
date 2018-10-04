@@ -17,7 +17,7 @@
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimTrace.h>
-
+#include <memory>
 namespace
 { // Anonymous namespace
 // Constants
