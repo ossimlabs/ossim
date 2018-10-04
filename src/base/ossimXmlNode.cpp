@@ -1020,7 +1020,7 @@ void ossimXmlNode::toKwl(ossimKeywordlist &kwl,
 				  theAttributes[attributeIdx]->getValue(),
 				  true);
 	}
-	std::map<ossimString, std::shared_ptr<ChildNodeMapInfo>> mapInfo;
+	std::map<ossimString, std::shared_ptr<ChildNodeMapInfo> > mapInfo;
 	for (auto childNode : theChildNodes)
 	{
 		ossimString tagName = childNode->getTag();
