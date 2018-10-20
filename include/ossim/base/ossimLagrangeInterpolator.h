@@ -39,8 +39,10 @@ public:
 private:
    std::vector<double> theTeeArray;
    std::vector<NEWMAT::ColumnVector> theDataArray;
-   std::vector<double> theNormalizer;
-   ossim_uint32 theNumElements;
+   mutable std::vector<double> theNormalizer;
+   mutable ossim_uint32 theNumElements;
+
+   void initializeNormalizer()const;
 };
 
 #endif

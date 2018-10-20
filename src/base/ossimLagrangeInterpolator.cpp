@@ -47,27 +47,8 @@ ossimLagrangeInterpolator::ossimLagrangeInterpolator(const std::vector<double>& 
 {
    static const char MODULE[]="ossimLagrangeInterpolator(int, double, Vector) CONSTRUCTOR";
    if (traceDebug())  CLOG << "entering..." << endl;
-
-   // Assign data members:
-   ossim_uint32 numPoints = (ossim_uint32) theTeeArray.size();
-   if (theDataArray.size() > 0)
-      theNumElements = theDataArray[0].Nrows();
-
-   ossim_uint32 i;
-   double n;
-   for (i=0; i<numPoints; i++)
-   {
-      // Compute the normalizer value at this data point:
-      n = 1.0;
-      for (ossim_uint32 j=0; j<numPoints; j++)
-      {
-         if (i != j) 
-            n *= (theTeeArray[i] - theTeeArray[j]);
-      }
-      theNormalizer.push_back(n);
-   }
-
-   if (traceDebug())  CLOG << "returning..." << endl;
+   initializeNormalizer();
+   if (traceDebug()) CLOG << "returning..." << endl;
 }
 
 
@@ -96,8 +77,11 @@ bool ossimLagrangeInterpolator::interpolate(const double& t, NEWMAT::ColumnVecto
    if (traceDebug())  CLOG << "entering..." << endl;
 
    // Prepare to sum:
-   double weight;
-
+   double weight=0.0;
+   if(theNormalizer.size() != theTeeArray.size())
+   {
+      initializeNormalizer();
+   }
    // Perform interpolation:
    ossim_uint32 numPoints = (ossim_uint32) theTeeArray.size();
    for (ossim_uint32 i=0; i<numPoints; i++)
@@ -188,4 +172,28 @@ istream& operator >> (istream& stream, ossimLagrangeInterpolator& interpolator)
    }
 
    return stream;
+}
+
+void ossimLagrangeInterpolator::initializeNormalizer()const
+{
+   theNormalizer.clear();
+   theNumElements = 0;
+   // Assign data members:
+   ossim_uint32 numPoints = (ossim_uint32)theTeeArray.size();
+   if (theDataArray.size() > 0)
+      theNumElements = theDataArray[0].Nrows();
+
+   ossim_uint32 i;
+   double n;
+   for (i = 0; i < numPoints; i++)
+   {
+      // Compute the normalizer value at this data point:
+      n = 1.0;
+      for (ossim_uint32 j = 0; j < numPoints; j++)
+      {
+            if (i != j)
+                  n *= (theTeeArray[i] - theTeeArray[j]);
+      }
+      theNormalizer.push_back(n);
+   }
 }
