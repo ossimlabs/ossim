@@ -218,6 +218,9 @@ public:
 
    const ossimNitfFileHeader* getFileHeader()const;
    ossimNitfFileHeader* getFileHeader();
+   ossimNitfFile *getNitfFile();
+   const ossimNitfFile *getNitfFile()const;
+
    /**
     * @return The image header for the current entry.
     */
