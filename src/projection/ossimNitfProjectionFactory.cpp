@@ -13,6 +13,7 @@
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimKeywordlist.h>
+#include <ossim/base/ossimXmlDocument.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/imaging/ossimNitfTileSource.h>
 #include <ossim/projection/ossimBilinearProjection.h>
@@ -26,11 +27,12 @@
 #include <ossim/support_data/ossimNitfFileHeader.h>
 #include <ossim/support_data/ossimNitfGeolobTag.h>
 #include <ossim/support_data/ossimNitfImageHeader.h>
+#include <ossim/support_data/ossimNitfDataExtensionSegment.h>
 #include <fstream>
 #include <cmath>
 
-// Define Trace flags for use within this file:
-static ossimTrace traceDebug(ossimString("ossimNitfProjectionFactory:debug"));
+    // Define Trace flags for use within this file:
+    static ossimTrace traceDebug(ossimString("ossimNitfProjectionFactory:debug"));
 
 ossimNitfProjectionFactory* ossimNitfProjectionFactory::theInstance = 0;
 
@@ -98,7 +100,8 @@ ossimNitfProjectionFactory::createProjection(const ossimFilename& filename,
       }
    }
 
-   result = createProjectionFromHeaders(nitf->getHeader(),
+   result = createProjectionFromHeaders(nitf.get(),
+                                        nitf->getHeader(),
                                         imageHeader.get());
    if (traceDebug())
    {
@@ -155,7 +158,7 @@ ossimProjection* ossimNitfProjectionFactory::createProjection(ossimImageHandler*
          ossimNitfImageHeader* imageHeader = nitfTileSource->getCurrentImageHeader();
          if(imageHeader)
          {
-            result = createProjectionFromHeaders(nitfTileSource->getFileHeader(),imageHeader);
+            result = createProjectionFromHeaders(nitfTileSource->getNitfFile(), nitfTileSource->getFileHeader(),imageHeader);
          }
       }
    }
@@ -185,11 +188,47 @@ bool ossimNitfProjectionFactory::isNitf(const ossimFilename& filename)const
 }
 
 ossimProjection* ossimNitfProjectionFactory::createProjectionFromHeaders(
-   ossimNitfFileHeader* fileHeader, ossimNitfImageHeader* imageHeader)const
+   ossimNitfFile* nitfFile, ossimNitfFileHeader* fileHeader, ossimNitfImageHeader* imageHeader)const
 {
    ossimProjection* result = 0;
    ossimString version = fileHeader->getVersion();
    ossimString coordinateSystem = imageHeader->getCoordinateSystem();
+
+   ossimNitfDesInformation desInfo;
+   if(fileHeader->getDesInformation(desInfo, "XML"))
+   {
+      ossimRefPtr<ossimNitfRegisteredDes> regDes = desInfo.getDesData();
+      if(regDes)
+      {
+         const std::vector<ossim_int8> dataBuffer = regDes->getDesDataBuffer();
+
+         if(!dataBuffer.empty())
+         {
+            const char* buf = static_cast<const char*>(&dataBuffer.front());
+            ossimString buffer(buf, buf + dataBuffer.size());
+
+            if(buffer.startsWith("<SICD"))
+            {
+               //
+               // will probably have a SICD opbject that parses
+               // the XML and then has methods for creating a projection
+               // model from the SICD XML spec
+               //
+               ossimXmlDocument xmlDoc;
+               if (xmlDoc.readString(buffer))
+               {
+                  // Future home for SICD SAR model loaders
+                  if(traceDebug())
+                  {
+                     ossimNotify(ossimNotifyLevel_DEBUG)
+                         << "ossimNitfProjectionFactory::createProjectionFromHeaders DEBUG:"
+                         << "\nFound SICD XML.  Future home for the SICD Model Loader\n";
+                  }
+               }
+            }
+         }
+      }
+   }
 
    // Note in version 2.0 ICORDS with 'N' == NONE.  In 2.1 it is UTM North:
    if (coordinateSystem == "G" || coordinateSystem == "D")
