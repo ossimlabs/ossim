@@ -168,34 +168,33 @@ ossimString ossimNitfDesInformation::getDesId()const
    return ossimString(m_desid).trim();
 }
 
-std::ostream& ossimNitfDesInformation::print(std::ostream& out, const std::string& prefix)const
+std::ostream& ossimNitfDesInformation::print(std::ostream& out, 
+                                             const std::string& prefix)const
 {
-   bool typeinfo = ossimString(ossimPreferences::instance()->findPreference("kwl_type_info")).toBool();
-
-   std::string pfx = prefix + getDesId() + ".";
-
-   out << setiosflags(ios::left)
-       << pfx << std::setw(24) << "DE:" << ((typeinfo) ? "(string)" : "") << m_de << "\n"
-       << pfx << std::setw(24) << "DESID:" << ((typeinfo) ? "(string)" : "") << m_desid << "\n"
-       << pfx << std::setw(24) << "DESVER:" << ((typeinfo) ? "(string)" : "") << m_desver << "\n"
-       << pfx << std::setw(24) << "DECLAS:" << ((typeinfo) ? "(string)" : "") << m_declas << "\n"
-       << pfx << std::setw(24) << "DESCLSY:" << ((typeinfo) ? "(string)" : "") << m_desclsy << "\n"
-       << pfx << std::setw(24) << "DESCODE:" << ((typeinfo) ? "(string)" : "") << m_descode << "\n"
-       << pfx << std::setw(24) << "DESCTLH:" << ((typeinfo) ? "(string)" : "") << m_desctlh << "\n"
-       << pfx << std::setw(24) << "DESREL:" << ((typeinfo) ? "(string)" : "") << m_desrel << "\n"
-       << pfx << std::setw(24) << "DESDCTP:" << ((typeinfo) ? "(string)" : "") << m_desdctp << "\n"
-       << pfx << std::setw(24) << "DESDCDT:" << ((typeinfo) ? "(string)" : "") << m_desdcdt << "\n"
-       << pfx << std::setw(24) << "DESDCXM:" << ((typeinfo) ? "(string)" : "") << m_desdcxm << "\n"
-       << pfx << std::setw(24) << "DESDG:" << ((typeinfo) ? "(string)" : "") << m_desdg << "\n"
-       << pfx << std::setw(24) << "DESDGDT:" << ((typeinfo) ? "(string)" : "") << m_desdgdt << "\n"
-       << pfx << std::setw(24) << "DESCLTX:" << ((typeinfo) ? "" : "") << m_descltx << "\n"
-       << pfx << std::setw(24) << "DESCATP:" << ((typeinfo) ? "(string)" : "") << m_descatp << "\n"
-       << pfx << std::setw(24) << "DESCAUT:" << ((typeinfo) ? "(string)" : "") << m_descaut << "\n"
-       << pfx << std::setw(24) << "DESCRSN:" << ((typeinfo) ? "(string)" : "") << m_descrsn << "\n"
-       << pfx << std::setw(24) << "DESSRDT:" << ((typeinfo) ? "(string)" : "") << m_dessrdt << "\n"
-       << pfx << std::setw(24) << "DESCTLN:" << ((typeinfo) ? "(string)" : "") << m_desctln << "\n"
-   ;
-   if (getDesId() == "TRE_OVERFLOW")
+    ossimString pfx = prefix;
+    bool typeinfo = ossimString(ossimPreferences::instance()->findPreference("kwl_type_info")).toBool();
+    out
+           << pfx << "DE:" << ((typeinfo) ? "(string)" : "") << m_de << "\n"
+           << pfx << std::setw(24) << "DESID:" << ((typeinfo) ? "(string)" : "") << m_desid << "\n"
+           << pfx << std::setw(24) << "DESVER:" << ((typeinfo) ? "(string)" : "") << m_desver << "\n"
+           << pfx << std::setw(24) << "DECLAS:" << ((typeinfo) ? "(string)" : "") << m_declas << "\n"
+           << pfx << std::setw(24) << "DESCLSY:" << ((typeinfo) ? "(string)" : "") << m_desclsy << "\n"
+           << pfx << std::setw(24) << "DESCODE:" << ((typeinfo) ? "(string)" : "") << m_descode << "\n"
+           << pfx << std::setw(24) << "DESCTLH:" << ((typeinfo) ? "(string)" : "") << m_desctlh << "\n"
+           << pfx << std::setw(24) << "DESREL:" << ((typeinfo) ? "(string)" : "") << m_desrel << "\n"
+           << pfx << std::setw(24) << "DESDCTP:" << ((typeinfo) ? "(string)" : "") << m_desdctp << "\n"
+           << pfx << std::setw(24) << "DESDCDT:" << ((typeinfo) ? "(string)" : "") << m_desdcdt << "\n"
+           << pfx << std::setw(24) << "DESDCXM:" << ((typeinfo) ? "(string)" : "") << m_desdcxm << "\n"
+           << pfx << std::setw(24) << "DESDG:" << ((typeinfo) ? "(string)" : "") << m_desdg << "\n"
+           << pfx << std::setw(24) << "DESDGDT:" << ((typeinfo) ? "(string)" : "") << m_desdgdt << "\n"
+           << pfx << std::setw(24) << "DESCLTX:" << ((typeinfo) ? "" : "") << m_descltx << "\n"
+           << pfx << std::setw(24) << "DESCATP:" << ((typeinfo) ? "(string)" : "") << m_descatp << "\n"
+           << pfx << std::setw(24) << "DESCAUT:" << ((typeinfo) ? "(string)" : "") << m_descaut << "\n"
+           << pfx << std::setw(24) << "DESCRSN:" << ((typeinfo) ? "(string)" : "") << m_descrsn << "\n"
+           << pfx << std::setw(24) << "DESSRDT:" << ((typeinfo) ? "(string)" : "") << m_dessrdt << "\n"
+           << pfx << std::setw(24) << "DESCTLN:" << ((typeinfo) ? "(string)" : "") << m_desctln << "\n"
+        ;
+  if (getDesId() == "TRE_OVERFLOW")
    {
      out
          << pfx << std::setw(24) << "DESOFLW:" << ((typeinfo) ? "(string)" : "") << m_desoflw << "\n"
@@ -209,9 +208,8 @@ std::ostream& ossimNitfDesInformation::print(std::ostream& out, const std::strin
 
    if (getDesData().valid())
    {
-     getDesData()->print(out, prefix);
+      getDesData()->print(out, prefix);
    }
-
    return out;
 }
 
