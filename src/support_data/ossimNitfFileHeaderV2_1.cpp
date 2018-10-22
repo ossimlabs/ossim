@@ -880,13 +880,8 @@ std::ostream& ossimNitfFileHeaderV2_1::print(std::ostream& out,
        << theExtendedHeaderDataOverflow
        << "\n";
 
-   // Call DES PRINT
-   for (int i=0; i<theDesList.size(); ++i)
-   {
-      theDesList[i].print(out, prefix);
-   }
 
-   return ossimNitfFileHeader::print(out, prefix);
+   return ossimNitfFileHeaderV2_X::print(out, prefix);
 }
 
 ossimNitfImageHeader* ossimNitfFileHeaderV2_1::allocateImageHeader()const
