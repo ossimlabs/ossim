@@ -155,7 +155,9 @@ public:
 
    virtual bool getTag(ossimNitfTagInformation& tagInfo,
                        const ossimString& tagName)const;
-   
+   virtual bool getDesInformation(ossimNitfDesInformation& desInfo,
+                                  const ossimString& desId,
+                                  bool exactMatch=false);
    virtual ossim_int64 getFileSize()const=0;
    virtual const char* getVersion()const=0;
    virtual const char* getDateTime()const=0;
@@ -190,8 +192,9 @@ public:
    virtual ossimNitfLabelHeader*    allocateLabelHeader()const=0;
    virtual ossimNitfTextHeader*     allocateTextHeader()const=0;
    virtual ossimNitfDataExtensionSegment *allocateDataExtSegment()const=0;
+   virtual const std::vector<ossimNitfDesInformation>& getDesInfoList()const;
 
-   virtual ossim_uint32 getTotalTagLength()const;
+    virtual ossim_uint32 getTotalTagLength() const;
 
    /** @brief Sets file length (FL) field. */
    virtual void setFileLength(ossim_uint64 fileLength) = 0;
