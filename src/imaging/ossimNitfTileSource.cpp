@@ -2727,6 +2727,15 @@ ossimNitfFileHeader* ossimNitfTileSource::getFileHeader()
    
    return 0;
 }
+ossimNitfFile* ossimNitfTileSource::getNitfFile()
+{
+   return theNitfFile.get();
+}
+
+const ossimNitfFile *ossimNitfTileSource::getNitfFile() const
+{
+   return theNitfFile.get();
+}
 
 const ossimNitfImageHeader* ossimNitfTileSource::getCurrentImageHeader() const
 {
