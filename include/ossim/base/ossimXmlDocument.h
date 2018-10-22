@@ -34,8 +34,9 @@ public:
    virtual ~ossimXmlDocument();
 
    bool write(const ossimFilename& file);
-   bool openFile(const ossimFilename& filename);
-   bool read(std::istream& in);
+   bool openFile(const ossimFilename &filename);
+   bool readString(const ossimString& xmlString);
+   bool read(std::istream &in);
    /**
     * Appends any matching nodes to the list supplied (should be empty):
     */

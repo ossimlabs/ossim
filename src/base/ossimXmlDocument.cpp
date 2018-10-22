@@ -22,8 +22,8 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <stack>
 #include <iostream>
+#include <sstream>
 #include <fstream>
-
 
 // Static trace for debugging
 #include <ossim/base/ossimTrace.h>
@@ -116,6 +116,12 @@ bool ossimXmlDocument::openFile(const ossimFilename& filename)
    }
 
    return read(xml_stream);
+}
+bool ossimXmlDocument::readString(const ossimString &xmlString)
+{
+   std::istringstream xmlInStream(xmlString.string());
+
+   return read(xmlInStream);
 }
 
 bool ossimXmlDocument::read(std::istream& in)
