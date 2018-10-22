@@ -16,19 +16,23 @@ void ossimNitfSicdXmlDataContentDes::parseStream(std::istream& in)
 {
   clearFields();
 
-  in.read(m_descrc, DESCRC_SIZE);
-  in.read(m_desshft, DESSHFT_SIZE);
-  in.read(m_desshdt, DESSHDT_SIZE);
-  in.read(m_desshrp, DESSHRP_SIZE);
-  in.read(m_desshsi, DESSHSI_SIZE);
-  in.read(m_desshsv, DESSHSV_SIZE);
-  in.read(m_desshsd, DESSHSD_SIZE);
-  in.read(m_desshtn, DESSHTN_SIZE);
-  in.read(m_desshlpg, DESSHLPG_SIZE);
-  in.read(m_desshlpt, DESSHLPT_SIZE);
-  in.read(m_desshli, DESSHLI_SIZE);
-  in.read(m_desshlin, DESSHLIN_SIZE);
-  in.read(m_desshabs, DESSHABS_SIZE);
+  if (m_desName.contains("XML_DATA_CONTENT"))
+  {
+
+	  in.read(m_descrc, DESCRC_SIZE);
+	  in.read(m_desshft, DESSHFT_SIZE);
+	  in.read(m_desshdt, DESSHDT_SIZE);
+	  in.read(m_desshrp, DESSHRP_SIZE);
+	  in.read(m_desshsi, DESSHSI_SIZE);
+	  in.read(m_desshsv, DESSHSV_SIZE);
+	  in.read(m_desshsd, DESSHSD_SIZE);
+	  in.read(m_desshtn, DESSHTN_SIZE);
+	  in.read(m_desshlpg, DESSHLPG_SIZE);
+	  in.read(m_desshlpt, DESSHLPT_SIZE);
+	  in.read(m_desshli, DESSHLI_SIZE);
+	  in.read(m_desshlin, DESSHLIN_SIZE);
+	  in.read(m_desshabs, DESSHABS_SIZE);
+  }
 
   if(getSizeInBytes())
   {
@@ -40,21 +44,23 @@ void ossimNitfSicdXmlDataContentDes::parseStream(std::istream& in)
 
 void ossimNitfSicdXmlDataContentDes::writeStream(std::ostream& out)
 {
-   out.write(m_desshl, DESSHL_SIZE);
-   out.write(m_descrc, DESCRC_SIZE);
-   out.write(m_desshft, DESSHFT_SIZE);
-   out.write(m_desshdt, DESSHDT_SIZE);
-   out.write(m_desshrp, DESSHRP_SIZE);
-   out.write(m_desshsi, DESSHSI_SIZE);
-   out.write(m_desshsv, DESSHSV_SIZE);
-   out.write(m_desshsd, DESSHSD_SIZE);
-   out.write(m_desshtn, DESSHTN_SIZE);
-   out.write(m_desshlpg, DESSHLPG_SIZE);
-   out.write(m_desshlpt, DESSHLPT_SIZE);
-   out.write(m_desshli, DESSHLI_SIZE);
-   out.write(m_desshlin, DESSHLIN_SIZE);
-   out.write(m_desshabs, DESSHABS_SIZE);
-
+	if (m_desName.contains("XML_DATA_CONTENT"))
+	{
+		out.write(m_desshl, DESSHL_SIZE);
+		out.write(m_descrc, DESCRC_SIZE);
+		out.write(m_desshft, DESSHFT_SIZE);
+		out.write(m_desshdt, DESSHDT_SIZE);
+		out.write(m_desshrp, DESSHRP_SIZE);
+		out.write(m_desshsi, DESSHSI_SIZE);
+		out.write(m_desshsv, DESSHSV_SIZE);
+		out.write(m_desshsd, DESSHSD_SIZE);
+		out.write(m_desshtn, DESSHTN_SIZE);
+		out.write(m_desshlpg, DESSHLPG_SIZE);
+		out.write(m_desshlpt, DESSHLPT_SIZE);
+		out.write(m_desshli, DESSHLI_SIZE);
+		out.write(m_desshlin, DESSHLIN_SIZE);
+		out.write(m_desshabs, DESSHABS_SIZE);
+	}
 	if (!m_desData.empty())
 	{
 		out.write(&m_desData.front(), m_desData.size());
