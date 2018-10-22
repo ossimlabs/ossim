@@ -88,7 +88,7 @@ private:
 
    char           m_de[DE_SIZE+1];
    char           m_desid[DESID_SIZE+1];
-   char 	        m_desver[DESVER_SIZE+1];
+   char 	         m_desver[DESVER_SIZE+1];
    char           m_declas[DECLAS_SIZE+1];
    char           m_desclsy[DESCLSY_SIZE+1];
    char           m_descode[DESCODE_SIZE+1];
