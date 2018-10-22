@@ -33,7 +33,6 @@ public:
 
    /** @brief destructor */
    virtual ~ossimNitfRegisteredDes();
-   
    /**
     * @brief This will return the name of the registered des for this user
     * defined header.
@@ -65,17 +64,17 @@ public:
     * @return Length of REDATA or CEDATA.
     */
    virtual ossim_uint32 getSizeInBytes()const;
-
-  /**
+   const std::vector<ossim_int8>& getDesDataBuffer()const;
+       /**
     * @brief Returns the length in bytes of the des from the CEL or REL field.
     *
     * The entire TRE length is 11 plus this(the size of the CEL or REL field).
     *
     * @return Length of REDATA or CEDATA.
     */
-   virtual ossim_uint32 getDesLength()const;
+       virtual ossim_uint32 getDesLength() const;
 
-  /**
+   /**
     * @brief Set the des length.
     *
     * @param length Length of des.
@@ -115,8 +114,9 @@ public:
    virtual bool saveState(ossimKeywordlist& kwl, const ossimString& prefix)const;
    
 protected:
-   std::string  m_desName;
+   ossimString  m_desName;
    ossim_uint32 m_desLength;
+   std::vector<ossim_int8> m_desData;
    
 TYPE_DATA
 };
