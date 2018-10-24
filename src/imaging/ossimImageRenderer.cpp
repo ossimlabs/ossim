@@ -857,7 +857,7 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate() cons
     }
 
     m_transform->viewToImage(vUpper, testUpper);
-    if (testCenter.hasNans())
+    if (testUpper.hasNans())
     {
       return false;
     }
