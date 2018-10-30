@@ -1,7 +1,5 @@
 //*******************************************************************
 //
-// License:  LGPL
-// 
 // See LICENSE.txt file in the top level directory for more details.
 //
 // Author:  David Burken
@@ -10,7 +8,7 @@
 //
 // Contains class definition for ossimGeneralRasterTileSource.
 //*******************************************************************
-//  $Id: ossimGeneralRasterTileSource.cpp 22763 2014-05-06 14:07:51Z dburken $
+
 
 #include <ossim/imaging/ossimGeneralRasterTileSource.h>
 #include <ossim/base/ossimConstants.h>

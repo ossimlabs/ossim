@@ -249,6 +249,14 @@ class OSSIM_DLL ossimMatrix4x4
    bool isEqualTo(const ossimMatrix4x4& rhs,
                   ossimCompareType compareType=OSSIM_COMPARE_FULL)const;
 
+   bool isIdentity() const
+   {
+      return ((theData[0][0]==1.0)&&(theData[0][1]==0.0)&&(theData[0][2]==0.0)&&(theData[0][3]==0.0)&&
+              (theData[1][0]==0.0)&&(theData[1][1]==1.0)&&(theData[1][2]==0.0)&&(theData[1][3]==0.0)&&
+              (theData[2][0]==0.0)&&(theData[2][1]==0.0)&&(theData[2][2]==1.0)&&(theData[2][3]==0.0)&&
+              (theData[3][0]==0.0)&&(theData[3][1]==0.0)&&(theData[3][2]==0.0)&&(theData[3][3]==1.0));
+   }
+
    void setZero();
    void setIdentity();
    static NEWMAT::Matrix createIdentity();

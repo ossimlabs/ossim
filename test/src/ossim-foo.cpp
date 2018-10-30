@@ -98,6 +98,7 @@
 #include <ossim/projection/ossimNitfRpcModel.h>
 #include <ossim/projection/ossimQuickbirdRpcModel.h>
 #include <ossim/imaging/ossimNitfCodecFactory.h>
+#include <ossim/imaging/ossimTiffTileSource.h>
 
 // Put your includes here:
 
@@ -111,7 +112,8 @@ int main(int argc, char *argv[])
 
    try
    {
-      // Put your code here.
+      ossimFilename fname (argv[1]);
+      ossimRefPtr<ossimTiffTileSource> handler = ossimImageHandlerRegistry::instance()->open(fname);
    }
    catch(const ossimException& e)
    {

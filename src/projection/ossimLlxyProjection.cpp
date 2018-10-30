@@ -27,21 +27,22 @@ static const ossim_float64 DEFAULT_DEGREES_PER_PIXEL = 8.9831528412e-006;
 
 ossimLlxyProjection::ossimLlxyProjection()
 {
-  // set to about 1 meter per pixel
+   theProjectionUnits = OSSIM_DEGREES;
+
+   // set to about 1 meter per pixel
    theDegreesPerPixel.y = DEFAULT_DEGREES_PER_PIXEL;
    theDegreesPerPixel.x = DEFAULT_DEGREES_PER_PIXEL;
    theUlEastingNorthing.y = ossim::nan();
    theUlEastingNorthing.x = ossim::nan();
-   computeMetersPerPixel(theOrigin, 
-			 theDegreesPerPixel.y,
-			 theDegreesPerPixel.x,
-			 theMetersPerPixel);
+   computeMetersPerPixel(theOrigin, theDegreesPerPixel.y, theDegreesPerPixel.x, theMetersPerPixel);
+   updateTransform();
 }
 
 ossimLlxyProjection::ossimLlxyProjection(const ossimLlxyProjection& rhs)
    :
       ossimMapProjection(rhs)
 {
+   theProjectionUnits = OSSIM_DEGREES;
    theOrigin              = rhs.theOrigin;
    theUlGpt               = rhs.theUlGpt;
    theUlEastingNorthing.y = ossim::nan();
@@ -50,10 +51,8 @@ ossimLlxyProjection::ossimLlxyProjection(const ossimLlxyProjection& rhs)
    theEllipsoid           = *(theDatum->ellipsoid());
    theDegreesPerPixel.y    = rhs.theDegreesPerPixel.y;
    theDegreesPerPixel.x    = rhs.theDegreesPerPixel.x;
-   computeMetersPerPixel(theOrigin, 
-			 theDegreesPerPixel.y,
-			 theDegreesPerPixel.x,
-			 theMetersPerPixel);
+   computeMetersPerPixel(theOrigin, theDegreesPerPixel.y, theDegreesPerPixel.x, theMetersPerPixel);
+   updateTransform();
 }
 
 ossimLlxyProjection::ossimLlxyProjection(const ossimGpt& origin,
@@ -62,6 +61,7 @@ ossimLlxyProjection::ossimLlxyProjection(const ossimGpt& origin,
    :
       ossimMapProjection()
 {
+   theProjectionUnits = OSSIM_DEGREES;
    theOrigin              = origin;
    theUlGpt               = origin;
    theUlEastingNorthing.y = 0.0;
@@ -70,24 +70,21 @@ ossimLlxyProjection::ossimLlxyProjection(const ossimGpt& origin,
    theEllipsoid           = *(theDatum->ellipsoid());
    theDegreesPerPixel.y    = latSpacing;
    theDegreesPerPixel.x    = lonSpacing;
-   computeMetersPerPixel(theOrigin, 
-			 theDegreesPerPixel.y,
-			 theDegreesPerPixel.x,
-			 theMetersPerPixel);
+   computeMetersPerPixel(theOrigin,  theDegreesPerPixel.y, theDegreesPerPixel.x, theMetersPerPixel);
+   updateTransform();
 }
 
 ossimLlxyProjection::ossimLlxyProjection(const ossimEllipsoid& ellipsoid,
 					 const ossimGpt& origin)
   :ossimMapProjection(ellipsoid, origin)
 {
+   theProjectionUnits = OSSIM_DEGREES;
    theDegreesPerPixel.y = 1.0;
    theDegreesPerPixel.x = 1.0;
    theUlEastingNorthing.y = ossim::nan();
    theUlEastingNorthing.x = ossim::nan();
-   computeMetersPerPixel(theOrigin, 
-			 theDegreesPerPixel.y,
-			 theDegreesPerPixel.x,
-			 theMetersPerPixel);
+   computeMetersPerPixel(theOrigin, theDegreesPerPixel.y, theDegreesPerPixel.x, theMetersPerPixel);
+   updateTransform();
 }
 
 ossimLlxyProjection::~ossimLlxyProjection()
@@ -99,10 +96,29 @@ ossimObject* ossimLlxyProjection::dup()const
    return new ossimLlxyProjection(*this);
 }
 
-//*****************************************************************************
-//  METHOD: ossimMapProjection::computeDegreesPerPixel
-//  
-//*****************************************************************************
+void ossimLlxyProjection::updateTransform ()
+{
+   theModelTransform.setIdentity();
+   auto m = theModelTransform.getData();
+
+   // Scale and rotation:
+   double cosAz = 1.0, sinAz = 0.0;
+   if (theImageToModelAzimuth != 0)
+   {
+      cosAz = ossim::cosd(theImageToModelAzimuth);
+      sinAz = ossim::sind(theImageToModelAzimuth);
+   }
+   m[0][0] =  theDegreesPerPixel.lon * cosAz;   m[0][1] =  theDegreesPerPixel.lat * sinAz;
+   m[1][0] = -theDegreesPerPixel.lon * sinAz;   m[1][1] =  theDegreesPerPixel.lat * cosAz;
+
+   // Offset:
+   m[0][3] = theOrigin.lond();
+   m[1][3] = theOrigin.latd();
+
+   theInverseModelTransform = theModelTransform;
+   theInverseModelTransform.i();
+}
+
 void ossimLlxyProjection::computeDegreesPerPixel(const ossimGpt& ground,
                                                 const ossimDpt& metersPerPixel,
                                                 double &deltaLat,
@@ -115,10 +131,6 @@ void ossimLlxyProjection::computeDegreesPerPixel(const ossimGpt& ground,
    deltaLon = metersPerPixel.x*dpm.x;
 }
 
-//*****************************************************************************
-//  METHOD: ossimMapProjection::computeMetersPerPixel
-//  
-//*****************************************************************************
 void ossimLlxyProjection::computeMetersPerPixel(const ossimGpt& center,
 						  double deltaDegreesPerPixelLat,
 						  double deltaDegreesPerPixelLon,
@@ -132,55 +144,32 @@ void ossimLlxyProjection::computeMetersPerPixel(const ossimGpt& center,
 void ossimLlxyProjection::worldToLineSample(const ossimGpt& worldPoint,
                                             ossimDpt&       lineSampPt) const
 {
+   // Differs from the base class in that no call to inverse() is needed since modelToImage is enough
    ossimGpt gpt = worldPoint;
-   
    if (*theOrigin.datum() != *gpt.datum())
    {
       // Apply datum shift if it's not the same.
       gpt.changeDatum(theOrigin.datum());
    }
 
-   lineSampPt.line = (theUlGpt.latd() - gpt.latd()) / theDegreesPerPixel.y;
-   lineSampPt.samp = (gpt.lond() - theUlGpt.lond()) / theDegreesPerPixel.x;
+   ossimDpt modelPt(gpt.lon, gpt.lat);
+   modelToImage(modelPt, lineSampPt);
 }
 
-void ossimLlxyProjection::lineSampleToWorld(const ossimDpt& lineSampPt,
-                                            ossimGpt&       worldPt) const
+void ossimLlxyProjection::lineSampleHeightToWorld(const ossimDpt &lineSample,
+                                                 const double&  hgtEllipsoid,
+                                                 ossimGpt&      gpt) const
 {
-   worldPt.makeNan();
+   gpt.makeNan();
    // Start with the origin.  This will keep the origin's datum.
-   worldPt.datum(theOrigin.datum());
-   
-   double lat = theUlGpt.latd() - (lineSampPt.line * theDegreesPerPixel.y);
-   double lon = theUlGpt.lond() + (lineSampPt.samp * theDegreesPerPixel.x);
+   gpt.datum(theOrigin.datum());
 
-   //---
-   // Assuming the origin had a lon between -180 and 180 and lat between -90
-   // and 90.
-   //---
-//    if (lon > 180.0)
-//    {
-//       lon -= 360.0;
-//    }
-//    else if (lon < -180.0)
-//    {
-//       lon += 360.0;
-//    }
-//    if (lat > 90.0)
-//    {
-//       lat -= 90.0;
-//    }
-//    else if (lat < -90.0)
-//    {
-//       lat = -180.0 - lat;
-//    }
+   ossimDpt modelPt; // The model coordinates here are x=lon, y=lat
+   imageToModel(lineSample, modelPt);
 
-   worldPt.latd(lat);
-   worldPt.lond(lon);
-   if(theElevationLookupFlag)
-   {
-      worldPt.hgt = ossimElevManager::instance()->getHeightAboveEllipsoid(worldPt);
-   }
+   gpt.latd(modelPt.y);
+   gpt.lond(modelPt.lon);
+   gpt.hgt = hgtEllipsoid;
 }
 
 std::ostream& ossimLlxyProjection::print(std::ostream& out) const

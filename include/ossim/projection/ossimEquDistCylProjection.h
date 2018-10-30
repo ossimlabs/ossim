@@ -13,11 +13,11 @@
 #ifndef ossimEquDistCylProjection_HEADER
 #define ossimEquDistCylProjection_HEADER
 
-#include <ossim/projection/ossimLlxyProjection.h>
+#include <ossim/projection/ossimMapProjection.h>
 
 class ossimIpt;
 
-class OSSIMDLLEXPORT ossimEquDistCylProjection : public ossimMapProjection//public ossimLlxyProjection
+class OSSIMDLLEXPORT ossimEquDistCylProjection : public ossimMapProjection
 {
 public:
    ossimEquDistCylProjection(const ossimEllipsoid& ellipsoid = ossimEllipsoid(),
@@ -71,7 +71,8 @@ public:
 
    double getFalseEasting()const{return Eqcy_False_Easting;}
    double getFalseNorthing()const{return Eqcy_False_Northing;}
-   
+
+#if 0
    virtual void lineSampleHeightToWorld(const ossimDpt& lineSampPt,
                                         const double&   heightAboveEllipsoid,
                                         ossimGpt&       worldPt) const;
@@ -92,7 +93,8 @@ public:
    void worldToLineSample( const ossimGpt& worldPoint,
                            const ossimIpt& imageSize,
                            ossimDpt&       lineSample ) const;
-   
+#endif
+
    virtual bool isGeographic()const
    {
       return true;

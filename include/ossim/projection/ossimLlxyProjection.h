@@ -70,12 +70,11 @@ public:
                                   ossimDpt&       lineSampPt) const;
 
    /*!
-    *  METHOD: lineSampleToWorld()
     * Performs the inverse projection from line, sample to ground (world):
     */
-   virtual void lineSampleToWorld(const ossimDpt& lineSampPt,
-                                  ossimGpt&       worldPt) const;
-
+   virtual void lineSampleHeightToWorld(const ossimDpt& lineSampPt,
+                                        const double&  hgtEllipsoid,
+                                        ossimGpt&       worldPt) const;
    
    /*!
     * Method to save the state of an object to a keyword list.
@@ -119,6 +118,7 @@ public:
                                       ossimDpt &metersPerPixel);
    
 private:
+   void updateTransform() override;
 
 TYPE_DATA
 };
