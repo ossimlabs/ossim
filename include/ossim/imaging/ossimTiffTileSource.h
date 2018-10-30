@@ -266,7 +266,17 @@ private:
     *  directory + 1.
     */
    ossim_uint32 getCurrentTiffRLevel() const;
-   
+
+   /**
+    * @brief Convenience method to get the zero based rgb output band list.
+    *
+    * 
+    * @param bandList Initialized by this.
+    * @return true on success, false if number of bands is less than 3 or if
+    * rgb bands could not be derived.
+    */
+   virtual bool getRgbBandList(std::vector<ossim_uint32> &bandList) const;
+
    ossimString getReadMethod(ossim_uint32 directory) const;
    
    bool loadTile(const ossimIrect& tile_rect,

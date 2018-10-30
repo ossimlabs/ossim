@@ -162,12 +162,12 @@ void ossim::TiffHandlerState::loadDefaults(TIFF* tiffPtr)
     }
   }
   TIFFSetDirectory(tiffPtr, currentDirectory);
-
 }
 
 void ossim::TiffHandlerState::loadDefaults(std::shared_ptr<ossim::istream> &str,
                                          const std::string &connectionString)
 {
+  setConnectionString(connectionString);
   ossim_int64 offset = str->tellg();
   ossimTiffInfo info;
   std::ostringstream out;
@@ -675,6 +675,19 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   GTIFFree(gtif);
 }
 
+bool ossim::TiffHandlerState::isDigitalGlobe() const
+{
+  ossimString value;
+  bool result = false;
+
+  if(getValue(value, "tiff.is_digital_globe"))
+  {
+    result = value.toBool();
+  }
+
+  return result;
+}
+
 bool ossim::TiffHandlerState::isReduced(ossim_uint32 directory)const
 {
   return getSubFileType(directory)&FILETYPE_REDUCEDIMAGE;
@@ -747,11 +760,6 @@ ossim_int32 ossim::TiffHandlerState::getAngularUnits(ossim_int32 directory)const
 ossim_int32 ossim::TiffHandlerState::getLinearUnits(ossim_int32 directory)const
 {
   return getInt32Value("linear_units", directory);
-}
-
-ossim_int32 ossim::TiffHandlerState::getRasterType(ossim_int32 directory)const
-{
-  return getInt32Value("raster_type", directory);
 }
 
 ossim_int32 ossim::TiffHandlerState::getDatumCode(ossim_int32 directory)const
@@ -1035,6 +1043,20 @@ ossim_int32 ossim::TiffHandlerState::getPlanarConfig(ossim_int32 directory) cons
   return result;
 }
 
+ossim_int32 ossim::TiffHandlerState::getRasterType(ossim_int32 directory) const
+{
+  ossimString tempStr;
+  ossimPixelType result = OSSIM_PIXEL_IS_POINT;
+  if (getValue(tempStr, directory, "raster_type"))
+  {
+    if (tempStr.contains("area"))
+    {
+      result = OSSIM_PIXEL_IS_AREA;
+    }
+  }
+  return result;
+}
+
 ossim_int32 ossim::TiffHandlerState::getPhotoInterpretation(ossim_int32 directory) const {
 
   ossimString tempStr;
@@ -1195,7 +1217,19 @@ bool ossim::TiffHandlerState::getCitation(ossimString &citation, ossim_int32 dir
 {
   bool result = true;
 
-  if(!getValue(citation, directory, "citation"))
+  if (!getValue(citation, directory, "citation"))
+  {
+    result = false;
+  }
+
+  return result;
+}
+
+bool ossim::TiffHandlerState::getCopyright(ossimString &copyright, ossim_int32 directory) const
+{
+  bool result = true;
+
+  if (!getValue(copyright, directory, "copyright"))
   {
     result = false;
   }

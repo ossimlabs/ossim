@@ -390,6 +390,16 @@ public:
    ossimString downcase()const;
 
    /**
+    * @return true if the string ends in the pattern specified
+    */
+   bool endsWith(const ossimString &pattern) const;
+
+   /**
+    * @return true if the string starts with the pattern specified
+    */
+   bool startsWith(const ossimString &pattern) const;
+
+   /**
     * @brief Returns a pointer to a null-terminated array of characters
     * representing the string's contents.
     */

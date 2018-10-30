@@ -1000,6 +1000,7 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
    theDatumCode = state->getDatumCode(entryIdx);
    theAngularUnits = state->getAngularUnits(entryIdx);
    theLinearUnitsCode = state->getLinearUnits(entryIdx);
+   theRasterType = state->getRasterType(entryIdx);
    theGeoKeysPresentFlag = true;
    if (theAngularUnits == ANGULAR_DMS_HEMISPHERE || theAngularUnits == 9122)
    {
@@ -1133,6 +1134,14 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
 
    setOssimProjectionName(state, entryIdx);
    setOssimDatumName(state, entryIdx);
+
+   if(theModelType == MODEL_TYPE_GEOGRAPHIC)
+   {
+      if (theAngularUnits == 0) 
+      {
+         theAngularUnits = ANGULAR_DEGREE;
+      }
+   }
 
    return true;
 }
@@ -1714,7 +1723,7 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
       {
          ossimNotify(ossimNotifyLevel_WARN)
              << "WARNING ossimGeoTiff::addImageGeometry:"
-             << "\nNot coded yet for unit type:  "
+             << "\nNot coded yet for angular unit type:  "
              << theAngularUnits << endl;
          return false;
       }

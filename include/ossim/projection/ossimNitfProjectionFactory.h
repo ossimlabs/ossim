@@ -22,6 +22,7 @@ class ossimGpt;
 class ossimNitfTileSource;
 class ossimNitfImageHeader;
 class ossimNitfFileHeader;
+class ossimNitfFile;
 class ossimDpt;
 
 class OSSIMDLLEXPORT ossimNitfProjectionFactory : public ossimProjectionFactoryBase
@@ -95,7 +96,7 @@ public:
 
 private:
    
-   ossimProjection* createProjectionFromHeaders(
+   ossimProjection* createProjectionFromHeaders(ossimNitfFile* nitfFile,
       ossimNitfFileHeader* fileHeader,
       ossimNitfImageHeader* imageHeader)const;
    

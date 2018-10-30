@@ -160,9 +160,6 @@ void ossimSICDToDetectedImage::allocate()
    if( isSourceEnabled() && theInputConnection )
    {
       theTile = ossimImageDataFactory::instance()->create(this, this);
-      if(theTile.valid())
-      {
-      }
 	   if(theTile.valid())
       {
          theTile->initialize();

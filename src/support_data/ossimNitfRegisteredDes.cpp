@@ -58,6 +58,10 @@ ossim_uint32 ossimNitfRegisteredDes::getSizeInBytes() const
    // Deprecated:
    return getDesLength();
 }
+const std::vector<ossim_int8> &ossimNitfRegisteredDes::getDesDataBuffer() const
+{
+   return m_desData;
+}
 
 ossim_uint32 ossimNitfRegisteredDes::getDesLength() const
 {

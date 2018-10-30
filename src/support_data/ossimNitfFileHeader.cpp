@@ -53,6 +53,33 @@ bool ossimNitfFileHeader::getTag(ossimNitfTagInformation& tagInfo,
 
    return false;
 }
+bool ossimNitfFileHeader::getDesInformation(ossimNitfDesInformation &desInfo,
+                                            const ossimString &desId,
+                                            bool exactMatch)
+{
+   if (theDesList.size())
+   {
+      for (ossim_uint32 i = 0; i < theDesList.size(); ++i)
+      {
+         if(exactMatch)
+         {
+            if (theDesList[i].getDesId() == desId)
+            {
+               desInfo = theDesList[i];
+               return true;
+            }
+         }
+         else
+         {
+            if(theDesList[i].getDesId().contains(desId))
+            {
+               desInfo = theDesList[i];
+               return true;
+            }
+         }
+      }
+   }
+}
 
 bool  ossimNitfFileHeader::hasImages()const
 {
@@ -123,7 +150,12 @@ int ossimNitfFileHeader::getNumberOfTags()const
    return (int)theTagList.size();
 }
 
-ossim_uint32 ossimNitfFileHeader::getTotalTagLength()const
+const std::vector<ossimNitfDesInformation> &ossimNitfFileHeader::getDesInfoList() const 
+{
+    return theDesList;
+}
+
+ossim_uint32 ossimNitfFileHeader::getTotalTagLength() const
 {
    ossim_uint32 tagLength = 0;
    
@@ -192,7 +224,8 @@ bool ossimNitfFileHeader::saveState(ossimKeywordlist& kwl, const ossimString& pr
    
    bool result = true;
    ossimString tagsPrefix = prefix;
-   for(ossim_uint32 i = 0; i < theTagList.size(); ++i)
+   ossim_uint32 i = 0;
+   for(; i < theTagList.size(); ++i)
    {
       ossimRefPtr<ossimNitfRegisteredTag> tag = theTagList[i].getTagData();
       if (tag.valid())
@@ -203,7 +236,12 @@ bool ossimNitfFileHeader::saveState(ossimKeywordlist& kwl, const ossimString& pr
          tag->saveState(kwl, tagsPrefix);
       }
    }
-   
+   i = 0;
+   ossimString desPrefix = prefix + "des";
+   for (auto des : theDesList)
+   {
+      des.saveState(kwl, desPrefix+ossimString(i) + ".");
+   }
    return result;
 }
 
@@ -216,13 +254,19 @@ std::ostream& ossimNitfFileHeader::print(std::ostream& out,
 std::ostream& ossimNitfFileHeader::printTags(std::ostream& out,
                                              const std::string& prefix) const
 {
-   for(ossim_uint32 i = 0; i < theTagList.size(); ++i)
+   ossim_uint32 i = 0;
+   for (; i < theTagList.size(); ++i)
    {
       ossimRefPtr<ossimNitfRegisteredTag> tag = theTagList[i].getTagData();
       if (tag.valid())
       {
          tag->print(out, prefix);
       }
+   }
+   ossimString desPrefix = prefix + "des";
+   for (i = 0; i < theDesList.size(); ++i)
+   {
+      theDesList[i].print(out, desPrefix + ossimString::toString(i) + ".");
    }
 
    return out;
