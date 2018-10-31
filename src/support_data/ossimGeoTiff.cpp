@@ -1560,7 +1560,8 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
    // NOTE: It takes six doubles to make one tie point ie:
    // x,y,z,longitude,latitude,height or x,y,z,easting,northing,height
    //---
-   if (theErrorStatus || (!usingModelTransform())) //need at least 3 ties if no scale.
+   if (theErrorStatus || (!usingModelTransform() && ((theScale.size() < 2) &&     // no scale
+                                                     (theTiePoint.size() < 24)))) //need at least 3 ties if no scale.
    {
       if (traceDebug())
       {

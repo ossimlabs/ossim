@@ -284,9 +284,11 @@ void ossimMapProjection::updateTransform()
       sinAz = ossim::sind(theImageToModelAzimuth);
    }
 
+   // Note that northing in the map projection is positive up, while in image space the y-axis
+   // is positive is down, so apply that inversion by forcing theMetersPerPixel.y to be negative:
    // Scale and rotation:
-   m[0][0] =  theMetersPerPixel.x * cosAz;   m[0][1] =  theMetersPerPixel.y * sinAz;
-   m[1][0] = -theMetersPerPixel.x * sinAz;   m[1][1] =  theMetersPerPixel.y * cosAz;
+   m[0][0] =  theMetersPerPixel.x * cosAz;   m[0][1] = -theMetersPerPixel.y * sinAz;
+   m[1][0] = -theMetersPerPixel.x * sinAz;   m[1][1] = -theMetersPerPixel.y * cosAz;
 
    // Offset:
    m[0][3] = theUlEastingNorthing.x;
@@ -303,7 +305,7 @@ void ossimMapProjection::updateFromTransform()
    theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
    theMetersPerPixel.y = sqrt(m[1][0]*m[1][0] + m[1][1]*m[1][1]);
    theUlEastingNorthing.x = m[0][3];
-   theUlEastingNorthing.x = m[1][3];
+   theUlEastingNorthing.y = m[1][3];
    theImageToModelAzimuth = ossim::acosd(m[0][0]/theMetersPerPixel.x);
    computeDegreesPerPixel();
 }
@@ -417,6 +419,7 @@ void ossimMapProjection::lineSampleHeightToWorld(const ossimDpt &lineSample,
 
    // Transform model coordinates to world point using concrete map projection equations:
    gpt = inverse(modelPoint);
+   gpt.hgt = hgtEllipsoid;
 }
 
 void ossimMapProjection::lineSampleToWorld (const ossimDpt& lineSampPt,
@@ -1017,6 +1020,36 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
       }
    }
 
+   ossimString transformElems = kwl.find(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW);
+   if (!transformElems.empty())
+   {
+      vector<ossimString> elements = transformElems.split(" ");
+      NEWMAT::Matrix& m = theModelTransform.getData(); // At this scope for IDE debugging
+      if (elements.size() != 16)
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+               << __FILE__ << ": " << __LINE__<< "\nossimMapProjection::loadState ERROR: Model "
+               "Transform matrix must have 16 elements!"<< std::endl;
+      }
+      else
+      {
+         int i = 0;
+         for (auto &e : elements)
+         {
+            m[i / 4][i % 4] = e.toDouble();
+            ++i;
+         }
+      }
+      theInverseModelTransform = theModelTransform;
+      theInverseModelTransform.i();
+      updateFromTransform();
+   }
+   else
+   {
+      // No model transform matrix was provided, so calculate it given scale rotation and offset:
+      update();
+   }
+
 #if 0
    //---
    // Final sanity check:
@@ -1028,9 +1061,6 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
       theOrigin.lat = m[1][3];
    }
 #endif
-
-   // This computes the model transform matrix:
-   update();
 
    return true;
 }
