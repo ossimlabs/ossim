@@ -32,6 +32,8 @@
 #include <ossim/base/ossimUnitTypeLut.h>
 #include <ossim/base/ossimTrace.h>
 
+#define USE_MODEL_TRANSFORM 1
+
 static ossimTrace traceDebug("ossimMapProjection:debug");
 
 // RTTI information for the ossimMapProjection
@@ -273,7 +275,7 @@ void ossimMapProjection::updateTransform()
 {
    // Assumes model coordinates in meters:
    theModelTransform.setIdentity();
-   auto m = theModelTransform.getData();
+   NEWMAT::Matrix& m = theModelTransform.getData();
 
    double cosAz = 1.0, sinAz = 0.0;
    if (theImageToModelAzimuth != 0)
@@ -306,8 +308,7 @@ void ossimMapProjection::updateFromTransform()
    computeDegreesPerPixel();
 }
 
-void ossimMapProjection::applyScale(const ossimDpt& scale,
-                                    bool recenterTiePoint)
+void ossimMapProjection::applyScale(const ossimDpt& scale, bool recenterTiePoint)
 {
    ossimDpt mapTieDpt;
    ossimGpt mapTieGpt;
@@ -353,16 +354,11 @@ void ossimMapProjection::applyScale(const ossimDpt& scale,
 
 void ossimMapProjection::applyRotation(const double& azimuthDeg)
 {
-   double cosAz = ossim::cosd(azimuthDeg);
-   double sinAz = ossim::sind(azimuthDeg);
-
-   auto m = theModelTransform.getData();
-   m[0][0] =  cosAz*m[0][0] + sinAz*m[1][0];   m[0][1] =  cosAz*m[0][1] + sinAz*m[1][1];
-   m[1][0] = -sinAz*m[0][0] + cosAz*m[1][0];   m[1][1] = -sinAz*m[0][1] + cosAz*m[1][1];
-
    theImageToModelAzimuth += azimuthDeg;
    if (theImageToModelAzimuth >= 360.0)
       theImageToModelAzimuth -= 360.0;
+
+   updateTransform();
 }
 
 ossimDpt ossimMapProjection::worldToLineSample(const ossimGpt &worldPoint)const
@@ -400,7 +396,7 @@ void ossimMapProjection::worldToLineSample(const ossimGpt &worldPoint,
    ossimDpt modelPoint = forward(gpt);
 
    // Now convert map model coordinates to image line/sample space:
-   modelToImage(modelPoint, lineSample);
+   eastingNorthingToLineSample(modelPoint, lineSample);
 }
 
 void ossimMapProjection::lineSampleHeightToWorld(const ossimDpt &lineSample,
@@ -417,7 +413,7 @@ void ossimMapProjection::lineSampleHeightToWorld(const ossimDpt &lineSample,
 
    // Transform image coordinates (line, sample) to model coordinates (easting, northing):
    ossimDpt modelPoint;
-   imageToModel(lineSample, modelPoint);
+   lineSampleToEastingNorthing(lineSample, modelPoint);
 
    // Transform model coordinates to world point using concrete map projection equations:
    gpt = inverse(modelPoint);
@@ -434,7 +430,7 @@ void ossimMapProjection::lineSampleToWorld (const ossimDpt& lineSampPt,
 void ossimMapProjection::lineSampleToEastingNorthing(const ossimDpt& lineSample,
                                                      ossimDpt&       eastingNorthing)const
 {
-#ifdef OSSIM_USE_TRANSFORM
+#ifdef USE_MODEL_TRANSFORM
    imageToModel(lineSample, eastingNorthing);
 #else
    /** Performs image to model coordinate transformation. This implementation bypasses
@@ -467,7 +463,7 @@ void ossimMapProjection::lineSampleToEastingNorthing(const ossimDpt& lineSample,
 void ossimMapProjection::eastingNorthingToLineSample(const ossimDpt& eastingNorthing,
                                                      ossimDpt&       lineSample)const
 {
-#ifdef OSSIM_USE_TRANSFORM
+#ifdef USE_MODEL_TRANSFORM
    modelToImage(eastingNorthing, lineSample);
 #else
    /** Performs model to image coordinate transformation. This implementation bypasses
@@ -482,14 +478,11 @@ void ossimMapProjection::eastingNorthingToLineSample(const ossimDpt& eastingNort
    // check the final result to make sure there were no
    // problems.
    //
-   if(!eastingNorthing.isNan())
-   {
-      lineSample.x = (eastingNorthing.x - theUlEastingNorthing.x)/theMetersPerPixel.x;
+   lineSample.x = (eastingNorthing.x - theUlEastingNorthing.x)/theMetersPerPixel.x;
 
-      // We must remember that the Northing is negative since the positive
-      // axis for an image is assumed to go down since it's image space.
-      lineSample.y = (-(eastingNorthing.y-theUlEastingNorthing.y))/theMetersPerPixel.y;
-   }
+   // We must remember that the Northing is negative since the positive
+   // axis for an image is assumed to go down since it's image space.
+   lineSample.y = (-(eastingNorthing.y-theUlEastingNorthing.y))/theMetersPerPixel.y;
 #endif
 }
 void ossimMapProjection::imageToModel(const ossimDpt& imagePt, ossimDpt&  modelPt) const
@@ -498,63 +491,10 @@ void ossimMapProjection::imageToModel(const ossimDpt& imagePt, ossimDpt&  modelP
    auto m = theModelTransform.getData();
    modelPt.x = m[0][0]*imagePt.x + m[0][1]*imagePt.y + m[0][3];
    modelPt.y = m[1][0]*imagePt.x + m[1][1]*imagePt.y + m[1][3];
-
-   // The model (i.e., GeoTrans map projection) may operate in a strange space, convert to needed:
-   ossimUnitConversionTool ut;
-   switch(theProjectionUnits)
-   {
-   case OSSIM_UNIT_UNKNOWN:
-   case OSSIM_DEGREES:
-   case OSSIM_METERS:
-      // This is the native units, so nothing to do:
-      break;
-   case OSSIM_MINUTES:
-   case OSSIM_SECONDS:
-   case OSSIM_RADIANS:
-      ut.setValue(modelPt.x, OSSIM_DEGREES);
-      modelPt.x = ut.getValue(theProjectionUnits);
-      ut.setValue(modelPt.y, OSSIM_DEGREES);
-      modelPt.y = ut.getValue(theProjectionUnits);
-      break;
-   default:
-      ossimUnitConversionTool ut;
-      ut.setValue(modelPt.x, OSSIM_METERS);
-      modelPt.x = ut.getValue(theProjectionUnits);
-      ut.setValue(modelPt.y, OSSIM_METERS);
-      modelPt.y = ut.getValue(theProjectionUnits);
-      break;
-   }
 }
 
-void ossimMapProjection::modelToImage(const ossimDpt& rawModelPt, ossimDpt& imagePt) const
+void ossimMapProjection::modelToImage(const ossimDpt& modelPt, ossimDpt& imagePt) const
 {
-   // The model (i.e., GeoTrans map projection) may operate in a strange space, convert to native:
-   ossimDpt modelPt (rawModelPt);
-   ossimUnitConversionTool ut;
-   switch(theProjectionUnits)
-   {
-   case OSSIM_UNIT_UNKNOWN:
-   case OSSIM_DEGREES:
-   case OSSIM_METERS:
-      // This is the native units, so nothing to do:
-      break;
-   case OSSIM_MINUTES:
-   case OSSIM_SECONDS:
-   case OSSIM_RADIANS:
-      ut.setValue(modelPt.x, theProjectionUnits);
-      modelPt.x = ut.getValue(OSSIM_DEGREES);
-      ut.setValue(modelPt.y, theProjectionUnits);
-      modelPt.y = ut.getValue(OSSIM_DEGREES);
-      break;
-   default:
-      ossimUnitConversionTool ut;
-      ut.setValue(modelPt.x, theProjectionUnits);
-      modelPt.x = ut.getValue(OSSIM_METERS);
-      ut.setValue(modelPt.y, theProjectionUnits);
-      modelPt.y = ut.getValue(OSSIM_METERS);
-      break;
-   }
-
    // Transform according to 4x4 transform embedded in the projection:
    auto m = theInverseModelTransform.getData();
    imagePt.x = m[0][0]*modelPt.x + m[0][1]*modelPt.y + m[0][3];
@@ -651,6 +591,10 @@ bool ossimMapProjection::saveState(ossimKeywordlist& kwl, const char* prefix) co
               ossimKeywordNames::PIXEL_SCALE_XY_KW,
               theDegreesPerPixel.toString().c_str(),
               true);
+      kwl.add(prefix,
+              ossimKeywordNames::PIXEL_SCALE_UNITS_KW,
+              ossimUnitTypeLut::instance()->getEntryString(OSSIM_DEGREES),
+              true);
    }
    else
    {
@@ -680,28 +624,10 @@ bool ossimMapProjection::saveState(ossimKeywordlist& kwl, const char* prefix) co
    kwl.add(prefix, ossimKeywordNames::ELEVATION_LOOKUP_FLAG_KW,
            ossimString::toString(theElevationLookupFlag), true);
 
-   if (!theModelTransform.isIdentity())
-   {
-      const NEWMAT::Matrix &m = theModelTransform.getData();
-      ostringstream out;
-      ossim_uint32 row, col;
-      for (row = 0; row < 4; ++row)
-      {
-         for (col = 0; col < 4; ++col)
-         {
-            out << std::setprecision(20) << m[row][col] << " ";
-         }
-      }
-      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, out.str().c_str(), true);
-   }
+   kwl.add(prefix, ossimKeywordNames::ORIGINAL_MAP_UNITS_KW,
+           ossimUnitTypeLut::instance()->getEntryString(theProjectionUnits), true);
 
-   if(theProjectionUnits != OSSIM_UNIT_UNKNOWN)
-   {
-      kwl.add(prefix,
-              ossimKeywordNames::ORIGINAL_MAP_UNITS_KW,
-              ossimUnitTypeLut::instance()->getEntryString(theProjectionUnits),
-              true);
-   }
+   kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_ROTATION_KW, theImageToModelAzimuth, true);
 
    return true;
 }
@@ -1049,34 +975,15 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
    lookup = kwl.find(prefix, ossimKeywordNames::ORIGINAL_MAP_UNITS_KW);
    if (lookup)
    {
-      theProjectionUnits = static_cast<ossimUnitType>(ossimUnitTypeLut::instance()->
-                                                      getEntryNumber(lookup));
+      theProjectionUnits =
+            static_cast<ossimUnitType>(ossimUnitTypeLut::instance()->getEntryNumber(lookup));
    }
 
-   // The model transform is initialized with current tiepoint and scale, then possibly overwritten
-   // if a transform has been provided.
-   updateTransform();
-   ossimString transformElems = kwl.find(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW);
-   if (!transformElems.empty())
+   // Possible map-to-image rotation handled by theModelTransform:
+   lookup = kwl.find(prefix, ossimKeywordNames::IMAGE_MODEL_ROTATION_KW);
+   if (lookup)
    {
-      vector<ossimString> elements = transformElems.split(" ");
-      if (elements.size() != 16)
-      {
-         ossimNotify(ossimNotifyLevel_WARN)
-               << __FILE__ << ": " << __LINE__<< "\nossimMapProjection::loadState ERROR: Model "
-               "Transform matrix must have 16 elements!"<< std::endl;
-      }
-      else
-      {
-         int i = 0;
-         auto m = theModelTransform.getData();
-         for (auto &e : elements)
-            m[i/4][i%4] = e.toDouble();
-      }
-      theInverseModelTransform = theModelTransform;
-      theInverseModelTransform.i();
-
-      updateFromTransform();
+      theImageToModelAzimuth = ossimString(lookup).toFloat64();
    }
 
 #if 0
@@ -1089,17 +996,16 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
    // Set the datum of the origin and tie point.
    // Use method that does NOT perform a shift.
    //---
-   if(theDatum)
+   if (theDatum)
    {
       theOrigin.datum(theDatum);
       theUlGpt.datum(theDatum);
    }
 
-   if(theMetersPerPixel.hasNans() &&
-      theDegreesPerPixel.hasNans())
+   if (theMetersPerPixel.hasNans() && theDegreesPerPixel.hasNans())
    {
       ossimDpt mpd = ossimGpt().metersPerDegree();
-      if(isGeographic())
+      if (isGeographic())
       {
          theDegreesPerPixel.lat = 1.0/mpd.y;
          theDegreesPerPixel.lon = 1.0/mpd.y;
@@ -1111,6 +1017,7 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
       }
    }
 
+#if 0
    //---
    // Final sanity check:
    //---
@@ -1120,6 +1027,10 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
       theOrigin.lon = m[0][3];
       theOrigin.lat = m[1][3];
    }
+#endif
+
+   // This computes the model transform matrix:
+   update();
 
    return true;
 }
@@ -1265,26 +1176,9 @@ bool ossimMapProjection::operator==(const ossimProjection& projection) const
 
 #if 0
    THIS SECTION IGNORED SINCE IT DEALS WITH IMAGE GEOMETRY, NOT MAP PROJECTION
-   if (isGeographic())
-   {
-      if ((theDegreesPerPixel != mapProj->theDegreesPerPixel) ||
-          (theUlGpt != mapProj->theUlGpt))
-         return false;
-   }
-   else
-   {
-      if ((theMetersPerPixel != mapProj->theMetersPerPixel) ||
-         (theUlEastingNorthing != mapProj->theUlEastingNorthing))
-         return false;
-   }
-#endif
-
-   // Units must match:
-   if ((theProjectionUnits==OSSIM_UNIT_UNKNOWN) || (theProjectionUnits!=mapProj->theProjectionUnits))
-       return false;
-
    if((theModelTransform.getData() != mapProj->theModelTransform.getData()))
       return false;
+#endif
 
    return true;
 }
@@ -1305,8 +1199,7 @@ bool ossimMapProjection::isEqualTo(const ossimObject& obj, ossimCompareType comp
                 theFalseEastingNorthing.isEqualTo(mapProj->theFalseEastingNorthing, compareType)&&             
                 (thePcsCode == mapProj->thePcsCode)&&
                 (theElevationLookupFlag == mapProj->theElevationLookupFlag)&&
-                (theModelTransform.isEqualTo(mapProj->theModelTransform))&&
-                (theProjectionUnits == mapProj->theProjectionUnits));
+                (theModelTransform.isEqualTo(mapProj->theModelTransform)));
       
       if(result)
       {

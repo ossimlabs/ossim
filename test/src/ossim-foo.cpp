@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
    try
    {
       ossimFilename fname (argv[1]);
-      ossimRefPtr<ossimTiffTileSource> handler = ossimImageHandlerRegistry::instance()->open(fname);
+      ossimRefPtr<ossimImageHandler> handler = ossimImageHandlerRegistry::instance()->open(fname);
    }
    catch(const ossimException& e)
    {

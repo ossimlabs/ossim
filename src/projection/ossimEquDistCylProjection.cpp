@@ -408,9 +408,7 @@ bool ossimEquDistCylProjection::loadState(const ossimKeywordlist& kwl, const cha
       ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimEquDistCylProjection::loadState: Input keyword list is \n" << kwl << endl;
    }
 
-   //   ossimLlxyProjection::loadState(kwl, prefix);
    ossimMapProjection::loadState(kwl, prefix);
-   theProjectionUnits = OSSIM_DEGREES;
 
    // Make sure the origin.lat is defined since it is needed to relate degrees/meter:
    if (ossim::isnan(theOrigin.lat))

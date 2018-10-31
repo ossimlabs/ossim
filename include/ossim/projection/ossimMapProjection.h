@@ -372,7 +372,9 @@ protected:
    ossimMatrix4x4 theModelTransform; // goes from image to model
    ossimMatrix4x4 theInverseModelTransform; //goes from model back to image
 
-   //! Linear units of the projection as indicated in the projection's specification:
+   //! Linear units of the projection as indicated in the projection's specification. All projections
+   //! internal to OSSIM use meters. The EPSG spec may indicate otherwise so users can check if
+   //! they need to convert original map coordinates to meters by checking this:
    ossimUnitType theProjectionUnits;
 
    /** Image azimuth relative to map model coordinates. Applies to image-to-model transform */

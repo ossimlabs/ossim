@@ -1249,35 +1249,13 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
          units = "degrees";
    }
 
-   // Get the pixel scale.
    ossimDpt scale;
-   bool hasScale = getPixelScale(gtiffPrefix, gtiffKwl, scale);
-
-   // Get the tie point.
-   std::vector<ossim_float64> ties;
-   getTiePoint(gtiffPrefix, gtiffKwl, ties);
-
-   //---
-   // Tie count:
-   // NOTE: It takes six doubles to make one tie point ie:
-   // x,y,z,longitude,latitude,height or x,y,z,easting,northing,height
-   //---
-   ossim_uint32 tieCount = (ossim_uint32)ties.size() / 6;
+   bool hasScale = false;
 
    // Get the model transform.
    std::vector<ossim_float64> xfrm;
    getModelTransform(gtiffPrefix, gtiffKwl, xfrm);
-
-   bool useXfrm = false;
    if (xfrm.size() == 16)
-   {
-      // Need at least 24 (which is four ties) to use bilinear.
-      if (!hasScale && ties.size() < 24)
-      {
-         useXfrm = true;
-      }
-   }
-   if (useXfrm)
    {
       std::ostringstream out;
       out << std::setprecision(15); // To avoid truncating.
@@ -1293,8 +1271,20 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
                   ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
                   units.c_str(), true);
    }
-   else // Use tie points.
+   else // Use tie points and scale.
    {
+      // Get the pixel scale.
+      hasScale = getPixelScale(gtiffPrefix, gtiffKwl, scale);
+
+      // Get the tie point.
+      std::vector<ossim_float64> ties;
+      getTiePoint(gtiffPrefix, gtiffKwl, ties);
+
+      // Tie count:
+      // NOTE: It takes six doubles to make one tie point ie:
+      // x,y,z,longitude,latitude,height or x,y,z,easting,northing,height
+      ossim_uint32 tieCount = (ossim_uint32)ties.size() / 6;
+
       if (hasScale && (tieCount == 1))
       {
          // Shift the tile to 0,0 pixel of image if not already there.
