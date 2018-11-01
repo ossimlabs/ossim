@@ -207,10 +207,12 @@ public:
     */
    virtual std::ostream& print(std::ostream& out) const;
 
-   //! Compares this to arg projection and returnstheModelUnitType TRUE if the same.
-   //! NOTE: As currently implemented in OSSIM, map projections also contain image geometry 
-   //! information like tiepoint and scale. This operator is only concerned with the map 
-   //! specification and ignores image geometry differences.
+   /**
+    * Compares this to arg projection and returns TRUE if the same. NOTE: As currently implemented,
+    * in OSSIM, map projections also contain image geometry information like tiepoint and scale.
+    * This operator is only concerned with the map specification and ignores image geometry
+    * differences. I.e., theModelTransform is not compared.
+    */
    virtual bool operator==(const ossimProjection& projection) const;
 
    /**
@@ -344,13 +346,14 @@ protected:
 
    bool              theElevationLookupFlag;
 
-   // Will always be a 4x4 matrix. Provides affine scaling, rotation, and offset to the image line,
-   // sample (x, y) to arrive at the map coordinates (u, v). The latter are then projected to the
-   // ground given specific map projection equations.
-   // note:  only the first 2 rows are used.
-   // if the size is 0 then it will not be used
-   // [u,v]t = M * [x, y, 0, 1]t
-   //
+   /**
+    * Will always be a 4x4 matrix. Provides affine scaling, rotation, and offset to the image line,
+    * sample (x, y) to arrive at the map coordinates (easting, northing). The latter are then
+    * projected to the ground given specific map projection equations. Note: only the first 2 rows
+    * are used as follows.
+    *                      [ e, n ]t = M(4-cols x 2-rows) * [ x, y, 0, 1 ]t   (t = transpose)
+    * See GeoTIFF tag 34264 specification.
+    */
    ossimMatrix4x4 theModelTransform; // goes from image to model
    ossimMatrix4x4 theInverseModelTransform; //goes from model back to image
 
