@@ -802,7 +802,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
    if (mapProj->isRotated())
    {
       double transform[16];
-      auto m = mapProj->getModelTransform().getData();
+      const NEWMAT::Matrix& m = mapProj->getModelTransform().getData();
       for (int i=0; i<16; ++i)
          transform[i] = m[i/4][i%4];
 
@@ -1666,7 +1666,7 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
    else if (usingModelTransform())
    {
       ostringstream s;
-      for (auto m : theModelTransformation)
+      for (const double& m : theModelTransformation)
          s << std::setprecision(20) << m << " ";
 
       kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, s.str().c_str());
@@ -2298,17 +2298,19 @@ std::ostream &ossimGeoTiff::print(std::ostream &out) const
       out << "theTiePoint is empty..." << endl;
    }
 
-   if (theModelTransformation.size())
+   if (usingModelTransform())
    {
-      std::vector<double>::const_iterator i = theModelTransformation.begin();
-      ossim_uint32 index = 0;
-      while (i < theModelTransformation.end())
+      ossim_uint32 i = 0;
+      out << "theModelTransformation: "<<endl;
+      for (ossim_uint32 rows=0; rows<4; ++rows)
       {
-         out << "theModelTransformation[" << index << "]: "
-             << (*i) << std::endl;
-         ++index;
-         ++i;
+         for (ossim_uint32 cols=0; cols<4; ++cols)
+         {
+            out << "    " << theModelTransformation[i++];
+         }
+         out<<"\n";
       }
+      out<<endl;
    }
    else
    {
@@ -2323,10 +2325,6 @@ std::ostream &ossimGeoTiff::print(std::ostream &out) const
 
 bool ossimGeoTiff::usingModelTransform() const
 {
-   // The model transform is a 4x4 matrix but currently only scale, rotation, and offset are
-   // represented as a 3x2 transform of image point to projection model point. This tag should never
-   // appear if a scale or tiepoints are specified. Give priority to the latter:
-   //---
    return (theModelTransformation.size()==16);
 }
 

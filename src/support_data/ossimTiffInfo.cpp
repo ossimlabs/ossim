@@ -1252,23 +1252,21 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
    ossimDpt scale;
    bool hasScale = false;
 
-   // Get the model transform.
+   // Get the model transform if provided.
    std::vector<ossim_float64> xfrm;
    getModelTransform(gtiffPrefix, gtiffKwl, xfrm);
    if (xfrm.size() == 16)
    {
       std::ostringstream out;
       out << std::setprecision(15); // To avoid truncating.
-      ossim_uint32 idx = 0;
-      for (idx = 0; idx < 16; ++idx)
-      {
-         out << xfrm[idx] << " ";
-      }
+      for (const double& m : xfrm)
+         out << m << " ";
+
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW,
                   out.str().c_str(), true);
       geomKwl.add(geomPrefix.c_str(),
-                  ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
+                  ossimKeywordNames::ORIGINAL_MAP_UNITS_KW,
                   units.c_str(), true);
    }
    else // Use tie points and scale.

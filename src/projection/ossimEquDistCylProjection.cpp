@@ -111,7 +111,6 @@ void ossimEquDistCylProjection::setOrigin(const ossimGpt& origin)
    ossimDpt gsd = getMetersPerPixel();
    gsd.x = gsd.y; // reset X (longitude) direction GSD
    setMetersPerPixel(gsd);
-   update();
 }
 
 void ossimEquDistCylProjection::setFalseEasting(double falseEasting)
@@ -147,6 +146,7 @@ void ossimEquDistCylProjection::setDefaults()
 
 #if 0
 // The base class ossimMapProjection can handle this. No need for special implementation
+
 void ossimEquDistCylProjection::lineSampleHeightToWorld(const ossimDpt &lineSample,
                                                         const double&  hgtEllipsoid,
                                                         ossimGpt&      gpt)const

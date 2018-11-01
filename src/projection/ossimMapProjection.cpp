@@ -440,7 +440,7 @@ void ossimMapProjection::lineSampleToEastingNorthing(const ossimDpt& lineSample,
    eastingNorthing.y = m[1][0]*lineSample.x + m[1][1]*lineSample.y + m[1][3];
 #else
    /** Performs image to model coordinate transformation. This implementation bypasses
-    *  theModelTransform. Probably should eventually switch to use equivalent imageToModel()
+    *  theModelTransform. Probably should eventually switch to use theModelTransform
     *  because this cannot handle map rotation. */
 
    // make sure that the passed in lineSample is good and
@@ -476,7 +476,7 @@ void ossimMapProjection::eastingNorthingToLineSample(const ossimDpt& eastingNort
    lineSample.y = m[1][0]*eastingNorthing.x + m[1][1]*eastingNorthing.y + m[1][3];
 #else
    /** Performs model to image coordinate transformation. This implementation bypasses
-    *  theModelTransform. Probably should eventually switch to use equivalent modelToImage()
+    *  theModelTransform. Probably should eventually switch to use equivalent theModelTransform
     *  because this cannot handle map rotation. */
 
    if(eastingNorthing.hasNans())

@@ -74,15 +74,14 @@ ossimLlxyProjection::ossimLlxyProjection(const ossimGpt& origin,
    updateTransform();
 }
 
-ossimLlxyProjection::ossimLlxyProjection(const ossimEllipsoid& ellipsoid,
-					 const ossimGpt& origin)
-  :ossimMapProjection(ellipsoid, origin)
+ossimLlxyProjection::ossimLlxyProjection(const ossimEllipsoid& ellipsoid, const ossimGpt& origin)
+:  ossimMapProjection(ellipsoid, origin)
 {
    theProjectionUnits = OSSIM_DEGREES;
    theDegreesPerPixel.y = 1.0;
    theDegreesPerPixel.x = 1.0;
-   theUlEastingNorthing.y = ossim::nan();
-   theUlEastingNorthing.x = ossim::nan();
+   theUlEastingNorthing.y = 0.0;
+   theUlEastingNorthing.x = 0.0;
    computeMetersPerPixel(theOrigin, theDegreesPerPixel.y, theDegreesPerPixel.x, theMetersPerPixel);
    updateTransform();
 }
