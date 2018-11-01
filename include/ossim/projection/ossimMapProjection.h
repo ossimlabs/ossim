@@ -41,8 +41,8 @@ public:
    /**
     * This method will convert the world coordinate to  model coordinates (easting,
     * northing in meters). It will be necessary then to transform the map coordinates returned by
-    * this method into to line, sample by calling modelToImage(). Alternatively, just use
-    * worldToLineSample() to skip the intermediate model coordinates.
+    * this method into to line, sample by calling eastingNorthingToLineSample(). Alternatively,
+    * just use worldToLineSample() to skip the intermediate model coordinates.
     */
    virtual ossimDpt forward(const ossimGpt &worldPoint) const = 0;
 
@@ -50,8 +50,9 @@ public:
     * Will take a point in meters and convert it to ground.
     * This methid will convert the model coordinates (easting, northing in meters) to world
     * coordinates. Note that the projectedPoint is not line, sample on the image. It is necessary to
-    * first transform the image coordinates into to map easting, northing by calling imageToModel().
-    * Alternatively, just use lineSampleToWorld() to skip the intermediate model coordinates.
+    * first transform the image coordinates into to map easting, northing by calling
+    * lineSampleToEastingNorthing(). Alternatively, just use lineSampleToWorld() to skip the
+    * intermediate model coordinates.
     */
    virtual ossimGpt inverse(const ossimDpt &projectedPoint)const = 0;
 
