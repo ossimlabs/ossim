@@ -153,7 +153,7 @@ void ossimLlxyProjection::worldToLineSample(const ossimGpt& worldPoint,
    }
 
    ossimDpt modelPt(gpt.lon, gpt.lat);
-   modelToImage(modelPt, lineSampPt);
+   eastingNorthingToLineSample(modelPt, lineSampPt);
 }
 
 void ossimLlxyProjection::lineSampleHeightToWorld(const ossimDpt &lineSample,
@@ -165,7 +165,7 @@ void ossimLlxyProjection::lineSampleHeightToWorld(const ossimDpt &lineSample,
    gpt.datum(theOrigin.datum());
 
    ossimDpt modelPt; // The model coordinates here are x=lon, y=lat
-   imageToModel(lineSample, modelPt);
+   lineSampleToEastingNorthing(lineSample, modelPt);
 
    gpt.latd(modelPt.y);
    gpt.lond(modelPt.lon);

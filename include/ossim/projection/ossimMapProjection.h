@@ -71,32 +71,13 @@ public:
                                         const double&   heightAboveEllipsoid,
                                         ossimGpt&       worldPt) const;
 
-   /** Performs image to model coordinate transformation. This implementation bypasses
-    *  theModelTransform. TODO: Probably should eventually switch to use equivalent imageToModel()
-    *  because this cannot handle map rotation. */
+   /** Performs image to model coordinate transformation. */
    virtual void lineSampleToEastingNorthing(const ossimDpt& lineSample,
-                                            ossimDpt& eastingNorthing)const;
+                                            ossimDpt& eastingNorthing) const;
 
-   /** Performs model to image coordinate transformation. This implementation bypasses
-    *  theModelTransform. TODO: Probably should eventually switch to use equivalent modelToImage()
-    *  because this cannot handle map rotation. */
+   /** Performs model to image coordinate transformation. */
    virtual void eastingNorthingToLineSample(const ossimDpt& eastingNorthing,
-                                            ossimDpt&       lineSample)const;
-   /**
-    * Similar to lineSampleToEastingNorthing() except this uses the model transform 4x4 matrix to
-    * perform the transform. THIS IS THE WAY IT SHOULD BE DONE.
-    * @param imagePt Input sample and line on the image.
-    * @param modelPt Output easting, northing in projection's model units
-    */
-   void imageToModel(const ossimDpt& imagePt, ossimDpt& modelPt) const;
-
-   /**
-    * Similar to eastingNorthingToLineSample() except this uses the model transform 4x4 matrix to
-    * perform the transform. THIS IS THE WAY IT SHOULD BE DONE.
-    * @param modelPt Input easting, northing in projection's model units
-    * @param imagePt Output sample and line on the image.
-    */
-   void modelToImage(const ossimDpt& modelPt, ossimDpt&  imagePt) const;
+                                            ossimDpt& lineSample) const;
 
    /** @return The false easting. */
    virtual double getFalseEasting() const;

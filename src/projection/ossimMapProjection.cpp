@@ -301,7 +301,7 @@ void ossimMapProjection::updateTransform()
 void ossimMapProjection::updateFromTransform()
 {
    // Extract scale, rotation and offset from the transform matrix:
-   auto m = theModelTransform.getData();
+   const NEWMAT::Matrix& m = theModelTransform.getData();
    theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
    theMetersPerPixel.y = sqrt(m[1][0]*m[1][0] + m[1][1]*m[1][1]);
    theUlEastingNorthing.x = m[0][3];
@@ -434,7 +434,10 @@ void ossimMapProjection::lineSampleToEastingNorthing(const ossimDpt& lineSample,
                                                      ossimDpt&       eastingNorthing)const
 {
 #ifdef USE_MODEL_TRANSFORM
-   imageToModel(lineSample, eastingNorthing);
+   // Transform according to 4x4 transform embedded in the projection:
+   const NEWMAT::Matrix& m = theModelTransform.getData();
+   eastingNorthing.x = m[0][0]*lineSample.x + m[0][1]*lineSample.y + m[0][3];
+   eastingNorthing.y = m[1][0]*lineSample.x + m[1][1]*lineSample.y + m[1][3];
 #else
    /** Performs image to model coordinate transformation. This implementation bypasses
     *  theModelTransform. Probably should eventually switch to use equivalent imageToModel()
@@ -467,7 +470,10 @@ void ossimMapProjection::eastingNorthingToLineSample(const ossimDpt& eastingNort
                                                      ossimDpt&       lineSample)const
 {
 #ifdef USE_MODEL_TRANSFORM
-   modelToImage(eastingNorthing, lineSample);
+   // Transform according to 4x4 transform embedded in the projection:
+   const NEWMAT::Matrix& m = theInverseModelTransform.getData();
+   lineSample.x = m[0][0]*eastingNorthing.x + m[0][1]*eastingNorthing.y + m[0][3];
+   lineSample.y = m[1][0]*eastingNorthing.x + m[1][1]*eastingNorthing.y + m[1][3];
 #else
    /** Performs model to image coordinate transformation. This implementation bypasses
     *  theModelTransform. Probably should eventually switch to use equivalent modelToImage()
@@ -487,21 +493,6 @@ void ossimMapProjection::eastingNorthingToLineSample(const ossimDpt& eastingNort
    // axis for an image is assumed to go down since it's image space.
    lineSample.y = (-(eastingNorthing.y-theUlEastingNorthing.y))/theMetersPerPixel.y;
 #endif
-}
-void ossimMapProjection::imageToModel(const ossimDpt& imagePt, ossimDpt&  modelPt) const
-{
-   // Transform according to 4x4 transform embedded in the projection:
-   auto m = theModelTransform.getData();
-   modelPt.x = m[0][0]*imagePt.x + m[0][1]*imagePt.y + m[0][3];
-   modelPt.y = m[1][0]*imagePt.x + m[1][1]*imagePt.y + m[1][3];
-}
-
-void ossimMapProjection::modelToImage(const ossimDpt& modelPt, ossimDpt& imagePt) const
-{
-   // Transform according to 4x4 transform embedded in the projection:
-   auto m = theInverseModelTransform.getData();
-   imagePt.x = m[0][0]*modelPt.x + m[0][1]*modelPt.y + m[0][3];
-   imagePt.y = m[1][0]*modelPt.x + m[1][1]*modelPt.y + m[1][3];
 }
 
 void ossimMapProjection::setMetersPerPixel(const ossimDpt& resolution)
@@ -1034,7 +1025,7 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
       else
       {
          int i = 0;
-         for (auto &e : elements)
+         for (ossimString &e : elements)
          {
             m[i / 4][i % 4] = e.toDouble();
             ++i;
