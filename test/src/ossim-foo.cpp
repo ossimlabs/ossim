@@ -110,9 +110,101 @@ int main(int argc, char *argv[])
    ossimInit::instance()->addOptions(ap);
    ossimInit::instance()->initialize(ap);
 
+   char osl2Line[1024];
+   char of15Line[1024];
+   ossimString osl2Str, of15Str, fname;
+   vector<ossimString> osl2Split;
+   vector<ossimString> of15Split;
+   double v1, v2, delta1, delta2;
    try
    {
-      ossimFilename fname (argv[1]);
+
+      ifstream osl2 (argv[1]);
+      ifstream of15 (argv[2]);
+
+      while (!osl2.eof() && !of15.eof())
+      {
+         osl2Split.clear();
+         of15Split.clear();
+         osl2.getline(osl2Line, 1024);
+         of15.getline(of15Line, 1024);
+         osl2Str = osl2Line;
+         of15Str = of15Line;
+         osl2Split = osl2Str.split(" ");
+         of15Split = of15Str.split(" ");
+
+         if (osl2Split.size() < 2)
+            continue;
+         if (of15Split.size() < 2)
+         {
+            cout << "Out of sync! (001)"<<endl;
+            break;
+         }
+
+         if (osl2Split[0].contains("File:"))
+         {
+            if (!of15Split[0].contains("File:"))
+            {
+               cout << "Out of sync! (002)"<<endl;
+               break;
+            }
+            fname = osl2Split[1];
+            if (of15Split[1] != fname)
+            {
+               cout <<fname<< "Filename mismatch! ("<<of15Split[1]<<")"<<endl;
+               break;
+            }
+
+            for (int i=0; i<8; ++i)
+            {
+               osl2Split.clear();
+               of15Split.clear();
+               osl2.getline(osl2Line, 1024);
+               of15.getline(of15Line, 1024);
+               osl2Str = osl2Line;
+               of15Str = of15Line;
+               osl2Str.trim();
+               of15Str.trim();
+               osl2Split = osl2Str.split(":(,");
+               of15Split = of15Str.split(":(,");
+
+               if ((osl2Split.size() < 4) || (of15Split.size() < 4))
+               {
+                  cout << fname<<"  Bad line! (003)"<<endl;
+                  break;
+               }
+               osl2Split[2].trim(",");
+               of15Split[2].trim(",");
+               osl2Split[3].trim(",");
+               of15Split[3].trim(",");
+               if (((osl2Split[2] == "nan") && (of15Split[2] == "nan")) ||
+                   ((osl2Split[3] == "nan") && (of15Split[3] == "nan")))
+               {
+                  continue;
+               }
+               else if ((osl2Split[2] == "nan") || (of15Split[2] == "nan") ||
+                        (osl2Split[3] == "nan") || (of15Split[3] == "nan"))
+               {
+                  cout << fname << "  NAN mismatch!" << endl;
+                  continue;
+               }
+
+               v1 = osl2Split[2].toDouble();
+               v2 = of15Split[2].toDouble();
+               delta1 = fabs(v1 - v2);
+
+               v1 = osl2Split[3].toDouble();
+               v2 = of15Split[3].toDouble();
+               delta2 = fabs(v1 - v2);
+
+               if ((delta1 > 0.0000001) || (delta2 > 0.0000001))
+               {
+                  cout << "##### Large difference detected for file " << fname << " #####"<<endl;
+                  break;
+               }
+            }
+         }
+      }
       ossimRefPtr<ossimImageHandler> handler = ossimImageHandlerRegistry::instance()->open(fname);
    }
    catch(const ossimException& e)

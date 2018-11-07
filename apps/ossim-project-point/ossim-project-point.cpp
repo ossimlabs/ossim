@@ -92,8 +92,8 @@ int main(int argc, char *argv[])
    ossimDpt gsd (geom->getMetersPerPixel());
 
    cout<<"\nFile: "<<fname<<endl;
-   cout<<"\n  Image UL corner: "<<gndUL<<endl;
-   cout<<  "        Image GSD: "<<gsd<<endl;
+   cout<<"  Image_UL_corner: "<<gndUL<<endl;
+   cout<<"        Image_GSD: "<<gsd<<endl;
 
    ossimRefPtr<ossimMapProjection> proj;
    if (doGeographic)
@@ -117,17 +117,17 @@ int main(int argc, char *argv[])
    ossimDpt testMapPt, testImgPt2;
 
    geom->localToWorld(testImgPt, testGndPt);
-   cout<<"Using image point: "<<testImgPt<<endl;
-   cout<<"  Image to Ground: "<<testGndPt<<endl;
+   cout<<"Using_image_point: "<<testImgPt<<endl;
+   cout<<"  Image-to-Ground: "<<testGndPt<<endl;
 
    testMapPt = proj->worldToLineSample(testGndPt);
-   cout<<"    Ground to Map: "<<testMapPt<<endl;
+   cout<<"    Ground-to-Map: "<<testMapPt<<endl;
 
    testGndPt = proj->lineSampleToWorld(testMapPt);
-   cout<<"    Map to Ground: "<<testGndPt<<endl;
+   cout<<"    Map-to-Ground: "<<testGndPt<<endl;
 
    geom->worldToLocal(testGndPt, testImgPt2);
-   cout<<"  Ground to Image: "<<testImgPt2<<endl;
+   cout<<"  Ground-to-Image: "<<testImgPt2<<endl;
 
    cout<<"       Difference: "<<testImgPt2-testImgPt<<endl;
    cout <<endl;

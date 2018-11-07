@@ -2150,7 +2150,11 @@ bool ossimGeoTiff::parseProjection(ossimMapProjection *map_proj)
       theLinearUnitsCode = ANGULAR_DEGREE;
    }
    else
+   {
       theModelType = ModelTypeProjected;
+      theAngularUnits = ANGULAR_DEGREE;
+      theLinearUnitsCode = LINEAR_METER;
+   }
 
    theProjectionName = map_proj->getProjectionName();
    theFalseEasting = map_proj->getFalseEasting();

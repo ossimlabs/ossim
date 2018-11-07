@@ -260,7 +260,13 @@ private:
     * @note All chains should be constructed prior to calling this.
     */
    void createOutputProjection();
-   
+
+   /**
+    * @brief Rotates the view map projection to align with the top row in the input image.
+    * @note Omly available with ortho operation on single image.
+    */
+   void rotateMapToInput ();
+
    /**
     * @brief Sets the single image chain for identity operations view to
     * a ossimImageViewAffineTransform.  This will have a rotation if
