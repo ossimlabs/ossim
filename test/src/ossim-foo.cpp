@@ -104,7 +104,7 @@
 int main(int argc, char *argv[])
 {
    int returnCode = 0;
-   
+
    ossimArgumentParser ap(&argc, argv);
    ossimInit::instance()->addOptions(ap);
    ossimInit::instance()->initialize(ap);
@@ -121,9 +121,9 @@ int main(int argc, char *argv[])
    catch( ... )
    {
       ossimNotify(ossimNotifyLevel_WARN)
-         << "ossim-foo caught unhandled exception!" << std::endl;
+            << "ossim-foo caught unhandled exception!" << std::endl;
       returnCode = 1;
    }
-   
+
    return returnCode;
 }

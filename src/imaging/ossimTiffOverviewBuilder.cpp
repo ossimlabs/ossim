@@ -1007,17 +1007,14 @@ bool ossimTiffOverviewBuilder::setGeotiffTags(const ossimImageGeometry* geom,
          ossimMapProjection* mapProj = PTR_CAST(ossimMapProjection, obj);
          if ( mapProj )
          {
-            if ( mapProj->hasModelTransform() == false )
+            if (resLevel)
             {
-               if (resLevel)
-               {
-                  ossim_float64 factor = (ossim_float64)(1 << resLevel);
-                  mapProj->applyScale(ossimDpt(factor, factor), true);
-               }
-               ossimRefPtr<ossimMapProjectionInfo> projInfo =
-                  new ossimMapProjectionInfo(mapProj, boundingRect);
-               result = ossimGeoTiff::writeTags(tif, projInfo);
+               ossim_float64 factor = (ossim_float64)(1 << resLevel);
+               mapProj->applyScale(ossimDpt(factor, factor), true);
             }
+            ossimRefPtr<ossimMapProjectionInfo> projInfo =
+               new ossimMapProjectionInfo(mapProj, boundingRect);
+            result = ossimGeoTiff::writeTags(tif, projInfo);
          }
          delete obj; // Cleanup from dup.
          obj = 0;

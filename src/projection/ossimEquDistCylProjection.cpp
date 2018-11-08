@@ -23,11 +23,8 @@
 
 static ossimTrace traceDebug("ossimEquDistCylProjection:debug");
 
-RTTI_DEF1(ossimEquDistCylProjection,
-          "ossimEquDistCylProjection",
-	  ossimMapProjection);
-	  //          ossimLlxyProjection)
-   
+RTTI_DEF1(ossimEquDistCylProjection, "ossimEquDistCylProjection", ossimMapProjection);
+
 /***************************************************************************/
 /*
  *                               DEFINES
@@ -55,7 +52,6 @@ RTTI_DEF1(ossimEquDistCylProjection,
 
 ossimEquDistCylProjection::ossimEquDistCylProjection(const ossimEllipsoid& ellipsoid,
                                                      const ossimGpt& origin)
-//  :ossimLlxyProjection(ellipsoid, origin)
   :ossimMapProjection(ellipsoid, origin)
 {
    setDefaults();
@@ -66,7 +62,6 @@ ossimEquDistCylProjection::ossimEquDistCylProjection(const ossimEllipsoid& ellip
                                                      const ossimGpt& origin,
                                                      double falseEasting,
                                                      double falseNorthing)
-//  :ossimLlxyProjection(ellipsoid, origin)
   :ossimMapProjection(ellipsoid, origin)
 {
    Eqcy_False_Easting  = falseEasting;
@@ -135,7 +130,6 @@ void ossimEquDistCylProjection::setFalseEastingNorthing(double falseEasting,
 {
    Eqcy_False_Easting  = falseEasting;
    Eqcy_False_Northing = falseNorthing;
-   
    update();
 }
 
@@ -147,7 +141,11 @@ void ossimEquDistCylProjection::setDefaults()
    Eqcy_Delta_Northing = 10007555.0;
    Eqcy_Max_Easting    = 20015110.0;
    Eqcy_Min_Easting    = -20015110.0;
+   update();
 }
+
+#if 0
+// The base class ossimMapProjection can handle this. No need for special implementation
 
 void ossimEquDistCylProjection::lineSampleHeightToWorld(const ossimDpt &lineSample,
                                                         const double&  hgtEllipsoid,
@@ -177,24 +175,24 @@ void ossimEquDistCylProjection::lineSampleHeightToWorld(const ossimDpt &lineSamp
          return;
       }
       ossimDpt eastingNorthing;
-      
+
       eastingNorthing = (theUlEastingNorthing);
-      
+
       eastingNorthing.x += (lineSample.x*theMetersPerPixel.x);
-      
+
       //
       // Note:  the Northing is positive up.  In image space
       // the positive axis is down so we must multiply by
       // -1
       //
       eastingNorthing.y += (-lineSample.y*theMetersPerPixel.y);
-      
+
       //
       // now invert the meters into a ground point.
       //
       gpt = inverse(eastingNorthing);
       gpt.datum(theDatum);
-      
+
       if(gpt.isLatNan() && gpt.isLonNan())
       {
          gpt.makeNan();
@@ -219,7 +217,7 @@ void ossimEquDistCylProjection::worldToLineSample(const ossimGpt &worldPoint,
       ossimMapProjection::worldToLineSample(worldPoint, lineSample);
       return;
    }
-   
+
    // make sure our tie point is good and world point is good.
    if(theUlEastingNorthing.isNan() || worldPoint.isLatNan() || worldPoint.isLonNan())
    {
@@ -274,15 +272,15 @@ void ossimEquDistCylProjection::worldToLineSample( const ossimGpt& worldPoint,
 
          // Convert to easting northing.
          ossimDpt gptEastingNorthing = forward(gpt);
-        
+
          if( !gptEastingNorthing.isNan() )
          {
-#if 0            
+//#if 0
             if ( imageSize.x > 0.0 )
             {
                ossimGpt edge(gpt.lat, -180.0, 0.0);
                ossimDpt leftProjectionEdge = forward(edge);
-               
+
                edge.lon = 180;
                ossimDpt rightProjectionEdge = forward(edge);
 
@@ -321,7 +319,7 @@ void ossimEquDistCylProjection::worldToLineSample( const ossimGpt& worldPoint,
                      // Point in between normalized right x and tie:
                      ossim_float64 deltaToLeft  = theUlEastingNorthing.x - gptEastingNorthing.x;
                      ossim_float64 deltaToRight = gptEastingNorthing.x - normRightX;
-                     
+
                      // Make relative to the closest edge.
                      if ( deltaToRight < deltaToLeft )
                      {
@@ -331,20 +329,20 @@ void ossimEquDistCylProjection::worldToLineSample( const ossimGpt& worldPoint,
                      {
                         lineSample.x = -(deltaToLeft/theMetersPerPixel.x );
                      }
-                  }  
+                  }
                }
-              
+
             } // Matches: if ( ( imageSize.x > 0.0 ) && ( imageSize.y > 0.0 ) )
             else
             {
                lineSample.x = (gptEastingNorthing.x - theUlEastingNorthing.x)/theMetersPerPixel.x;
             }
- #endif
+ //#endif
             lineSample.x = (gptEastingNorthing.x - theUlEastingNorthing.x)/theMetersPerPixel.x;
             // We must remember that the Northing is negative since the positive
             // axis for an image is assumed to go down since it's image space.
             lineSample.y = (theUlEastingNorthing.y - gptEastingNorthing.y) / theMetersPerPixel.y;
-            
+
          } // Matches: if( !lineSample.isNan() )
       }
       else // Some point we need has nans...
@@ -352,13 +350,14 @@ void ossimEquDistCylProjection::worldToLineSample( const ossimGpt& worldPoint,
          lineSample.makeNan();
       }
    } // Matches: if( theModelTransformUnitType == OSSIM_UNIT_UNKNOWN )
-   else 
+   else
    {
       // Has transform:
       ossimMapProjection::worldToLineSample(worldPoint, lineSample);
    }
 
 } // End: ossimEquDistCylProjection::worldToLineSample(worldPoint, lineSample, imageSize)
+#endif
 
 ossimGpt ossimEquDistCylProjection::inverse(const ossimDpt &eastingNorthing)const
 {
@@ -409,9 +408,7 @@ bool ossimEquDistCylProjection::loadState(const ossimKeywordlist& kwl, const cha
       ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimEquDistCylProjection::loadState: Input keyword list is \n" << kwl << endl;
    }
 
-   //   ossimLlxyProjection::loadState(kwl, prefix);
    ossimMapProjection::loadState(kwl, prefix);
-   theProjectionUnits = OSSIM_DEGREES;
 
    // Make sure the origin.lat is defined since it is needed to relate degrees/meter:
    if (ossim::isnan(theOrigin.lat))

@@ -88,6 +88,7 @@ public:
    static const char* IMAGE_CE90_KW;
    static const char* IMAGE_FILE_KW;
    static const char* IMAGE_ID_KW;
+   static const char* IMAGE_MODEL_ROTATION_KW;
    static const char* IMAGE_MODEL_TRANSFORM_MATRIX_KW;
    static const char* IMAGE_MODEL_TRANSFORM_UNIT_KW;
    static const char* IMAGE_PATH_KW;

@@ -2176,7 +2176,7 @@ void ossimImageRenderer::checkIVT()
       //---
       const ossimProjection*  inputProj = inputGeom->getProjection();
       const ossimMapProjection* mapProj = PTR_CAST(ossimMapProjection, inputProj);
-      if (mapProj && !mapProj->hasModelTransform() )
+      if (mapProj)
       {
          ossimProjection* my_proj = PTR_CAST(ossimProjection, mapProj->dup());
          myOutGeom->setProjection(my_proj);

@@ -39,13 +39,20 @@ public:
    virtual ossimGpt origin()const;
 
    /**
-    * All map projections will convert the world coordinate to an easting
-    * northing (Meters).
+    * This method will convert the world coordinate to  model coordinates (easting,
+    * northing in meters). It will be necessary then to transform the map coordinates returned by
+    * this method into to line, sample by calling eastingNorthingToLineSample(). Alternatively,
+    * just use worldToLineSample() to skip the intermediate model coordinates.
     */
    virtual ossimDpt forward(const ossimGpt &worldPoint) const = 0;
 
    /**
     * Will take a point in meters and convert it to ground.
+    * This methid will convert the model coordinates (easting, northing in meters) to world
+    * coordinates. Note that the projectedPoint is not line, sample on the image. It is necessary to
+    * first transform the image coordinates into to map easting, northing by calling
+    * lineSampleToEastingNorthing(). Alternatively, just use lineSampleToWorld() to skip the
+    * intermediate model coordinates.
     */
    virtual ossimGpt inverse(const ossimDpt &projectedPoint)const = 0;
 
@@ -57,7 +64,7 @@ public:
    virtual void     lineSampleToWorld(const ossimDpt &projectedPoint,
                                       ossimGpt& gpt)const;
    /**
-    * This is the pure virtual that projects the image point to the given
+    * This is the virtual that projects the image point to the given
     * elevation above ellipsoid, thereby bypassing reference to a DEM. Useful
     * for projections that are sensitive to elevation.
     */
@@ -65,16 +72,14 @@ public:
                                         const double&   heightAboveEllipsoid,
                                         ossimGpt&       worldPt) const;
 
-   virtual void lineSampleToEastingNorthing(const ossimDpt& liineSample,
-                                            ossimDpt& eastingNorthing)const;
+   /** Performs image to model coordinate transformation. */
+   virtual void lineSampleToEastingNorthing(const ossimDpt& lineSample,
+                                            ossimDpt& eastingNorthing) const;
 
+   /** Performs model to image coordinate transformation. */
    virtual void eastingNorthingToLineSample(const ossimDpt& eastingNorthing,
-                                            ossimDpt&       lineSample)const;
+                                            ossimDpt& lineSample) const;
 
-   virtual void eastingNorthingToWorld(const ossimDpt& eastingNorthing,
-                                       ossimGpt&       worldPt)const;
-
-   
    /** @return The false easting. */
    virtual double getFalseEasting() const;
 
@@ -132,8 +137,8 @@ public:
    virtual bool isGeographic()const;
 
    /**
-    * Applies scale to theDeltaLonPerPixel, theDeltaLatPerPixel and
-    * theMetersPerPixel data members (eg: theDeltaLonPerPixel *= scale.x).
+    * Applies scale to theDeltaLonPerPixel, theDeltaLatPerPixel and theMetersPerPixel data members
+    * (eg: theDeltaLonPerPixel *= scale.x). The image-to-model transform is recomputed.
     *
     * @param scale Multiplier to be applied to theDeltaLonPerPixel,
     * theDeltaLatPerPixel and theMetersPerPixel
@@ -145,7 +150,13 @@ public:
     * isGeographic.
     */
    virtual void applyScale(const ossimDpt& scale, bool recenterTiePoint);
-   
+
+   /**
+    * Applies clockwise rotation to the image-to-map coordinates. Scale and offset are preserved.
+    */
+   virtual void applyRotation(const double& azimuth_degrees);
+   bool isRotated() const { return (theImageToModelAzimuth != 0.0); }
+   const double& getRotation() const { return theImageToModelAzimuth; }
    /**
     * SET METHODS: 
     */
@@ -196,32 +207,13 @@ public:
     */
    virtual std::ostream& print(std::ostream& out) const;
 
-   //! Compares this to arg projection and returns TRUE if the same. 
-   //! NOTE: As currently implemented in OSSIM, map projections also contain image geometry 
-   //! information like tiepoint and scale. This operator is only concerned with the map 
-   //! specification and ignores image geometry differences.
-   virtual bool operator==(const ossimProjection& projection) const;
-
-   //! Computes the approximate resolution in degrees/pixel
-   virtual void computeDegreesPerPixel();
-
-   
    /**
-    * This will go from the ground point and give
-    * you an approximate meters per pixel. the Delta Lat
-    * and delta lon will be in degrees.
+    * Compares this to arg projection and returns TRUE if the same. NOTE: As currently implemented,
+    * in OSSIM, map projections also contain image geometry information like tiepoint and scale.
+    * This operator is only concerned with the map specification and ignores image geometry
+    * differences. I.e., theModelTransform is not compared.
     */
-   virtual void computeMetersPerPixel();
-
-   void setMatrix(double rotation,
-                  const ossimDpt& scale,
-                  const ossimDpt& translation);
-   
-   void setMatrixScale(const ossimDpt& scale);
-   
-   void setMatrixRotation(double rotation);
-
-   void setMatrixTranslation(const ossimDpt& translation);
+   virtual bool operator==(const ossimProjection& projection) const;
 
    /**
     * Utility method to snap the tie point to some multiple.
@@ -252,18 +244,8 @@ public:
                       
    void setElevationLookupFlag(bool flag);
    bool getElevationLookupFlag()const;
-   ossimUnitType getModelTransformUnitType()const
-   {
-      return theModelTransformUnitType;
-   }
-   void setModelTransformUnitType(ossimUnitType unit)
-   {
-      theModelTransformUnitType = unit;
-   }
-   bool hasModelTransform()const
-   {
-      return (theModelTransformUnitType != OSSIM_UNIT_UNKNOWN);
-   }
+
+   const ossimMatrix4x4& getModelTransform() const { return theModelTransform; }
 
    /**
     * @brief Implementation of pure virtual
@@ -289,17 +271,25 @@ public:
 
 
 protected:
-   
-   virtual ~ossimMapProjection();
+   //! Computes the approximate resolution in degrees/pixel
+   virtual void computeDegreesPerPixel();
 
-   //---
-   // If theModelTransform is set this updates:
-   // theDegreesPerPixel
-   // theMetersPerPixel
-   // theUlEastingNorthing
-   // theUlGpt
-   //---
-   void updateFromTransform();
+   /**
+    * This will go from the ground point and give
+    * you an approximate meters per pixel. the Delta Lat
+    * and delta lon will be in degrees.
+    */
+   virtual void computeMetersPerPixel();
+
+   /**
+    * Recomputes the image-to-model transform given GSD and UL corner parameters
+    */
+   virtual void updateTransform();
+
+   /** Extracts tiepoint and scale info from transform */
+   virtual void updateFromTransform();
+
+   virtual ~ossimMapProjection();
 
    /**
     * This method verifies that the projection parameters match the current
@@ -356,19 +346,24 @@ protected:
 
    bool              theElevationLookupFlag;
 
-   // Will always be a 4x4 matrix.
-   // note:  only the first 2 dimensions will be used.
-   // if the size is 0 then it will not be used
-   //
+   /**
+    * Will always be a 4x4 matrix. Provides affine scaling, rotation, and offset to the image line,
+    * sample (x, y) to arrive at the map coordinates (easting, northing). The latter are then
+    * projected to the ground given specific map projection equations. Note: only the first 2 rows
+    * are used as follows.
+    *                      [ e, n ]t = M(4-cols x 2-rows) * [ x, y, 0, 1 ]t   (t = transpose)
+    * See GeoTIFF tag 34264 specification.
+    */
    ossimMatrix4x4 theModelTransform; // goes from image to model
    ossimMatrix4x4 theInverseModelTransform; //goes from model back to image
 
-   // Output Units of the transform
-   //
-   ossimUnitType theModelTransformUnitType;
-
-   //! Linear units of the projection as indicated in the projection's specification:
+   //! Linear units of the projection as indicated in the projection's specification. All projections
+   //! internal to OSSIM use meters. The EPSG spec may indicate otherwise so users can check if
+   //! they need to convert original map coordinates to meters by checking this:
    ossimUnitType theProjectionUnits;
+
+   /** Image azimuth relative to map model coordinates. Applies to image-to-model transform */
+   double theImageToModelAzimuth;
 
 TYPE_DATA
 };

@@ -32,6 +32,7 @@
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimVisitor.h>
+#include <ossim/base/ossimGrect.h>
 
 #include <ossim/imaging/ossimAnnotationFontObject.h>
 #include <ossim/imaging/ossimAnnotationLineObject.h>
@@ -117,6 +118,7 @@ static const std::string PAD_THUMBNAIL_KW = "pad_thumbnail"; // bool
 static const std::string READER_PROPERTY_KW = "reader_property";
 static const std::string RESAMPLER_FILTER_KW = "resampler_filter";
 static const std::string ROTATION_KW = "rotation";
+static const std::string ROTATE_TO_INPUT = "rotate_to_input";
 static const std::string RRDS_KW = "rrds";
 static const std::string SCALE_2_8_BIT_KW = "scale_2_8_bit";
 static const std::string SHARPEN_MODE_KW = "sharpen_mode";
@@ -288,6 +290,8 @@ void ossimChipperUtil::addArguments(ossimArgumentParser &ap)
    au->addCommandLineOption("-r or --rotate", "<degrees>\nRotate image by degrees. \"chip\" operation only.");
 
    au->addCommandLineOption("--reader-prop", "<string>Adds a property to send to the reader. format is name=value");
+
+   au->addCommandLineOption("--rotate-to-input", "\nOnly if the operation is \"ortho\", output a rotated map so that the top edge is oriented with the input image top edge. Only available for single-image products in GeoTIFF output format.");
 
    au->addCommandLineOption("--rrds", "<rrds> Reduced resolution data set where 0 is full resolution. \"chip\" operation only.");
 
@@ -681,6 +685,11 @@ bool ossimChipperUtil::initialize(ossimArgumentParser &ap)
    if (ap.read("-r", stringParam1) || ap.read("--rotate", stringParam1))
    {
       m_kwl->addPair(ROTATION_KW, tempString1);
+   }
+
+   if (ap.read("--rotate-to-input"))
+   {
+      m_kwl->addPair(ROTATE_TO_INPUT, "true");
    }
 
    while (ap.read("--reader-prop", stringParam1))
@@ -2260,6 +2269,14 @@ void ossimChipperUtil::createOutputProjection()
       proj->snapTiePointToOrigin();
    }
 
+   // May need to rotate the output map if requested:
+   bool rotateMap=false;
+   m_kwl->getBoolKeywordValue(rotateMap, ROTATE_TO_INPUT.c_str());
+   if (rotateMap)
+   {
+      rotateMapToInput();
+   }
+
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
@@ -2272,6 +2289,71 @@ void ossimChipperUtil::createOutputProjection()
    }
 
 } // End: ossimChipperUtil::createOutputProjection()
+
+void ossimChipperUtil::rotateMapToInput()
+{
+   static const char MODULE[] = "ossimChipperUtil::rotateMapToInput";
+   if (traceDebug())
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+
+   try
+   {
+      if (!m_geom)
+         throw ossimException("Null projection geometry encountered.");
+      ossimRefPtr<ossimMapProjection> mapProj =
+            dynamic_cast<ossimMapProjection*>(m_geom->getProjection());
+      if (!mapProj)
+         throw ossimException("Output projection must be a map projection.");
+      if (m_imgLayer.size() != 1)
+         throw ossimException("Optimal rotation output requested but this feature is not avaliable for mosaics.");
+      ossimRefPtr<ossimImageHandler> ih = m_imgLayer[0]->getImageHandler();
+      if (!ih)
+         throw ossimException("Null image handler encountered.");
+      ossimRefPtr<ossimImageGeometry> inputGeom = ih->getImageGeometry();
+      if (!inputGeom)
+         throw ossimException("Null image geometry encountered.");
+
+      // Determine azimuth of +X axis:
+      ossimIpt inputImgSize (inputGeom->getImageSize());
+      if (inputImgSize.x == 0)
+         throw ossimException("Image size is zero.");
+
+      ossimDpt pUL (0,0);
+      ossimDpt pUR (inputImgSize.x-1, 0);
+      ossimDpt pLR (inputImgSize.x-1, inputImgSize.y-1);
+      ossimDpt pLL (0, inputImgSize.y-1);
+      ossimGpt gUL, gUR, gLR, gLL;
+      inputGeom->localToWorld(pUL, gUL);
+      inputGeom->localToWorld(pUR, gUR);
+      inputGeom->localToWorld(pLR, gLR);
+      inputGeom->localToWorld(pLL, gLL);
+
+      // The -y axis relative to North is the number we need to rotate, so subtract 90 deg from
+      // x-axis orientation.
+      double mapRotation = gLL.azimuthTo(gUL);
+      cout << "\n Rotating map by "<<mapRotation<<" deg\n"<<endl; //###
+      mapProj->applyRotation(mapRotation);
+
+      // Not sure where the UL of the rotated map will be, so assume it will coincide with the image
+      // UL for now, then scan for corners outside:
+      mapProj->setUlGpt(gUL);
+      mapProj->worldToLineSample(gUR, pUR);
+      mapProj->worldToLineSample(gLR, pLR);
+      mapProj->worldToLineSample(gLL, pLL);
+      ossimDrect drect (pUL, pUR, pLR, pLL);
+
+      // A new output image rect has been established, find the corresponding UL ground point
+      // and set projection's tiepoint:
+      mapProj->lineSampleToWorld(drect.ul(), gUL);
+      mapProj->setUlGpt(gUL);
+   }
+   catch (ossimException& e)
+   {
+      ossimNotify(ossimNotifyLevel_WARN) << "ossimChipperUtil::rotateMapToInput() -- Exception: "
+                                         << e.what() <<" Ignoring request.\n";
+   }
+   return;
+}
 
 void ossimChipperUtil::createIdentityProjection()
 {

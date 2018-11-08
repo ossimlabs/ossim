@@ -797,57 +797,57 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
       GTIFKeySet(gtif, GTRasterTypeGeoKey, TYPE_SHORT, 1, RasterPixelIsArea);
    }
 
-   //---
-   // Set the tie point and scale.
-   //---
-   double tiePoints[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-   double pixScale[3] = {0.0, 0.0, 0.0};
-   switch (units)
+   // Need to decide whether to specify scale and offset tag pair, or the full 4x4 transform if
+   // available, but not both:
+   if (mapProj->isRotated())
    {
-   case LINEAR_FOOT:
-   {
-      tiePoints[3] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().x);
-      tiePoints[4] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().y);
-      pixScale[0] = ossim::mtrs2ft(projectionInfo->getMetersPerPixel().x);
-      pixScale[1] = ossim::mtrs2ft(projectionInfo->getMetersPerPixel().y);
-      falseEasting = ossim::mtrs2ft(falseEasting);
-      falseNorthing = ossim::mtrs2ft(falseNorthing);
+      double transform[16];
+      const NEWMAT::Matrix& m = mapProj->getModelTransform().getData();
+      for (int i=0; i<16; ++i)
+         transform[i] = m[i/4][i%4];
 
-      break;
+      TIFFSetField(tifPtr, TIFFTAG_GEOTRANSMATRIX, 16, transform);
    }
-   case LINEAR_FOOT_US_SURVEY:
+   else
    {
-      tiePoints[3] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().x);
-      tiePoints[4] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().y);
-      pixScale[0] = ossim::mtrs2usft(projectionInfo->getMetersPerPixel().x);
-      pixScale[1] = ossim::mtrs2usft(projectionInfo->getMetersPerPixel().y);
-      falseEasting = ossim::mtrs2usft(falseEasting);
-      falseNorthing = ossim::mtrs2usft(falseNorthing);
-      break;
-   }
-   case ANGULAR_DEGREE:
-   {
-      tiePoints[3] = projectionInfo->ulGroundPt().lond();
-      tiePoints[4] = projectionInfo->ulGroundPt().latd();
-      pixScale[0] = projectionInfo->getDecimalDegreesPerPixel().x;
-      pixScale[1] = projectionInfo->getDecimalDegreesPerPixel().y;
-      break;
-   }
-   case LINEAR_METER:
-   default:
-   {
-      tiePoints[3] = projectionInfo->ulEastingNorthingPt().x;
-      tiePoints[4] = projectionInfo->ulEastingNorthingPt().y;
-      pixScale[0] = projectionInfo->getMetersPerPixel().x;
-      pixScale[1] = projectionInfo->getMetersPerPixel().y;
-      break;
-   }
+      // Set the tie point and scale.
+      double tiePoints[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+      double pixScale[3] = {0.0, 0.0, 0.0};
+      switch (units)
+      {
+      case LINEAR_FOOT:
+         tiePoints[3] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().x);
+         tiePoints[4] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().y);
+         pixScale[0] = ossim::mtrs2ft(projectionInfo->getMetersPerPixel().x);
+         pixScale[1] = ossim::mtrs2ft(projectionInfo->getMetersPerPixel().y);
+         falseEasting = ossim::mtrs2ft(falseEasting);
+         falseNorthing = ossim::mtrs2ft(falseNorthing);
+         break;
+      case LINEAR_FOOT_US_SURVEY:
+         tiePoints[3] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().x);
+         tiePoints[4] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().y);
+         pixScale[0] = ossim::mtrs2usft(projectionInfo->getMetersPerPixel().x);
+         pixScale[1] = ossim::mtrs2usft(projectionInfo->getMetersPerPixel().y);
+         falseEasting = ossim::mtrs2usft(falseEasting);
+         falseNorthing = ossim::mtrs2usft(falseNorthing);
+         break;
+      case ANGULAR_DEGREE:
+         tiePoints[4] = projectionInfo->ulGroundPt().latd();
+         pixScale[0] = projectionInfo->getDecimalDegreesPerPixel().x;
+         pixScale[1] = projectionInfo->getDecimalDegreesPerPixel().y;
+         break;
+      case LINEAR_METER:
+      default:
+         tiePoints[3] = projectionInfo->ulEastingNorthingPt().x;
+         tiePoints[4] = projectionInfo->ulEastingNorthingPt().y;
+         pixScale[0] = projectionInfo->getMetersPerPixel().x;
+         pixScale[1] = projectionInfo->getMetersPerPixel().y;
+         break;
+      } // End of "switch (units)"
 
-   } // End of "switch (units)"
-
-   TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, 6, tiePoints);
-   TIFFSetField(tifPtr, TIFFTAG_GEOPIXELSCALE, 3, pixScale);
-
+      TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, 6, tiePoints);
+      TIFFSetField(tifPtr, TIFFTAG_GEOPIXELSCALE, 3, pixScale);
+   }
    GTIFWriteKeys(gtif); // Write out geotiff tags.
    GTIFFree(gtif);
 
@@ -1441,6 +1441,7 @@ bool ossimGeoTiff::readTags(
    //       theTiePoint.push_back(theModelTransformation[7]);
    //       theTiePoint.push_back(0.0);
    //    }
+
    ossim_uint16 doubleParamSize = 0;
    double *tempDoubleParam = 0;
    theDoubleParam.clear();
@@ -1664,12 +1665,17 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
    }
    else if (usingModelTransform())
    {
+      ostringstream s;
+      for (const double& m : theModelTransformation)
+         s << std::setprecision(20) << m << " ";
+
+      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, s.str().c_str());
+
       if (traceDebug())
       {
-         ossimNotify(ossimNotifyLevel_WARN)
-             << "ossimGeoTiff::addImageGeometry: Do not support rotated "
-             << "map models yet.  You should provide the image as a sample "
-             << "and we will fix it" << std::endl;
+         ossimNotify(ossimNotifyLevel_DEBUG)
+               << "ossimGeoTiff::addImageGeometry: "
+               << "Creating an affine transform in support of Model Transform tag." << std::endl;
       }
    }
 
@@ -2144,7 +2150,11 @@ bool ossimGeoTiff::parseProjection(ossimMapProjection *map_proj)
       theLinearUnitsCode = ANGULAR_DEGREE;
    }
    else
+   {
       theModelType = ModelTypeProjected;
+      theAngularUnits = ANGULAR_DEGREE;
+      theLinearUnitsCode = LINEAR_METER;
+   }
 
    theProjectionName = map_proj->getProjectionName();
    theFalseEasting = map_proj->getFalseEasting();
@@ -2292,17 +2302,19 @@ std::ostream &ossimGeoTiff::print(std::ostream &out) const
       out << "theTiePoint is empty..." << endl;
    }
 
-   if (theModelTransformation.size())
+   if (usingModelTransform())
    {
-      std::vector<double>::const_iterator i = theModelTransformation.begin();
-      ossim_uint32 index = 0;
-      while (i < theModelTransformation.end())
+      ossim_uint32 i = 0;
+      out << "theModelTransformation: "<<endl;
+      for (ossim_uint32 rows=0; rows<4; ++rows)
       {
-         out << "theModelTransformation[" << index << "]: "
-             << (*i) << std::endl;
-         ++index;
-         ++i;
+         for (ossim_uint32 cols=0; cols<4; ++cols)
+         {
+            out << "    " << theModelTransformation[i++];
+         }
+         out<<"\n";
       }
+      out<<endl;
    }
    else
    {
@@ -2317,23 +2329,7 @@ std::ostream &ossimGeoTiff::print(std::ostream &out) const
 
 bool ossimGeoTiff::usingModelTransform() const
 {
-   //---
-   // If we have 16 model points do we always use them? (drb)
-   //
-   // In other word should the check just be if size == 16?
-   //---
-   if (getModelTransformation().size() == 16)
-   {
-      if (theScale.size() == 0)
-      {
-         // Need at least 24 (which is four ties) to use bilinear.
-         if (theTiePoint.size() < 24)
-         {
-            return true;
-         }
-      }
-   }
-   return false;
+   return (theModelTransformation.size()==16);
 }
 
 void ossimGeoTiff::getTieSet(ossimTieGptSet &tieSet) const

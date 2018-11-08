@@ -78,6 +78,7 @@ const char* ossimKeywordNames::ID_KW ="id";
 const char* ossimKeywordNames::IMAGE_CE90_KW  = "estimated_image_ce90";
 const char* ossimKeywordNames::IMAGE_FILE_KW = "image_file";
 const char* ossimKeywordNames::IMAGE_ID_KW = "image_id";
+const char* ossimKeywordNames::IMAGE_MODEL_ROTATION_KW = "image_model_rotation";
 const char* ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW = "image_model_transform_matrix";
 const char* ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW = "image_model_transform_unit";
 const char* ossimKeywordNames::IMAGE_PATH_KW = "image_path";

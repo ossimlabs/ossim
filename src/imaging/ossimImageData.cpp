@@ -34,17 +34,14 @@
 RTTI_DEF1(ossimImageData, "ossimImageData", ossimRectilinearDataObject)
 
 ossimImageData::ossimImageData()
-: ossimRectilinearDataObject(2,            // 2d
-                             0,         // owner
-                             1,            // bands
-                             OSSIM_UINT8), // scalar
-                             m_nullPixelValue(0),
-                             m_minPixelValue(0),
-                             m_maxPixelValue(0),
-                             m_alpha(0),
-                             m_origin(0, 0),
-                             m_indexedFlag(false),
-			     m_histogram(NULL)
+:  ossimRectilinearDataObject(2, 0, 1, OSSIM_UINT8), // scalar
+   m_nullPixelValue(0),
+   m_minPixelValue(0),
+   m_maxPixelValue(0),
+   m_alpha(0),
+   m_origin(0, 0),
+   m_indexedFlag(false),
+   m_histogram(NULL)
 {
    ossimIpt tileSize;
    ossim::defaultTileSize(tileSize);
@@ -56,17 +53,14 @@ ossimImageData::ossimImageData()
 ossimImageData::ossimImageData(ossimSource*    owner,
                                ossimScalarType scalar,
                                ossim_uint32    bands)
-: ossimRectilinearDataObject(2,
-                             owner,
-                             bands,
-                             scalar),
-                             m_nullPixelValue(0),
-                             m_minPixelValue(0),
-                             m_maxPixelValue(0),
-                             m_alpha(0),
-                             m_origin(0, 0),
-                             m_indexedFlag(false),
-			     m_histogram(NULL)
+:  ossimRectilinearDataObject(2, owner, bands, scalar),
+   m_nullPixelValue(0),
+   m_minPixelValue(0),
+   m_maxPixelValue(0),
+   m_alpha(0),
+   m_origin(0, 0),
+   m_indexedFlag(false),
+   m_histogram(NULL)
 {
    ossimIpt tileSize;
    ossim::defaultTileSize(tileSize);
@@ -80,19 +74,15 @@ ossimImageData::ossimImageData(ossimSource* owner,
                                ossim_uint32 bands,
                                ossim_uint32 width,
                                ossim_uint32 height)
-: ossimRectilinearDataObject(owner,
-                             bands,
-                             width, // 2-D array
-                             height,
-                             scalar),
-                             m_nullPixelValue(0),
-                             m_minPixelValue(0),
-                             m_maxPixelValue(0),
-                             m_alpha(0),
-                             m_origin(0, 0),
-                             m_indexedFlag(false),
-			     m_histogram(NULL),
-                             m_percentFull(0)
+:  ossimRectilinearDataObject(owner, bands, width, height, scalar),
+   m_nullPixelValue(0),
+   m_minPixelValue(0),
+   m_maxPixelValue(0),
+   m_alpha(0),
+   m_origin(0, 0),
+   m_indexedFlag(false),
+   m_histogram(NULL),
+   m_percentFull(0)
 {   
    m_spatialExtents[0] = width;
    m_spatialExtents[1] = height;
@@ -100,14 +90,14 @@ ossimImageData::ossimImageData(ossimSource* owner,
 }
 
 ossimImageData::ossimImageData(const ossimImageData &rhs)
-: ossimRectilinearDataObject(rhs),
-  m_nullPixelValue(rhs.m_nullPixelValue),
-  m_minPixelValue(rhs.m_minPixelValue),
-  m_maxPixelValue(rhs.m_maxPixelValue),
-  m_alpha(rhs.m_alpha),
-  m_origin(rhs.m_origin),
-  m_indexedFlag(rhs.m_indexedFlag),
-  m_percentFull(0)
+:  ossimRectilinearDataObject(rhs),
+   m_nullPixelValue(rhs.m_nullPixelValue),
+   m_minPixelValue(rhs.m_minPixelValue),
+   m_maxPixelValue(rhs.m_maxPixelValue),
+   m_alpha(rhs.m_alpha),
+   m_origin(rhs.m_origin),
+   m_indexedFlag(rhs.m_indexedFlag),
+   m_percentFull(0)
 {
 }
 
@@ -229,12 +219,12 @@ const ossim_uint8* ossimImageData::getUcharBuf() const
 
 const ossim_uint16* ossimImageData::getUshortBuf() const
 {
-   if (m_scalarType == OSSIM_UINT16 ||
+   if (  m_scalarType == OSSIM_UINT16   ||
          m_scalarType == OSSIM_USHORT11 ||
-	 m_scalarType == OSSIM_USHORT12 ||
-	 m_scalarType == OSSIM_USHORT13 ||
-	 m_scalarType == OSSIM_USHORT14 ||
-	 m_scalarType == OSSIM_USHORT15)
+         m_scalarType == OSSIM_USHORT12 ||
+         m_scalarType == OSSIM_USHORT13 ||
+         m_scalarType == OSSIM_USHORT14 ||
+         m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<const ossim_uint16*>(getBuf());
    }
@@ -281,12 +271,12 @@ ossim_uint8* ossimImageData::getUcharBuf()
 
 ossim_uint16* ossimImageData::getUshortBuf() 
 {
-   if (m_scalarType == OSSIM_UINT16 ||
+   if (  m_scalarType == OSSIM_UINT16   ||
          m_scalarType == OSSIM_USHORT11 ||
-	 m_scalarType == OSSIM_USHORT12 ||
-	 m_scalarType == OSSIM_USHORT13 ||
-	 m_scalarType == OSSIM_USHORT14 ||
-	 m_scalarType == OSSIM_USHORT15)
+         m_scalarType == OSSIM_USHORT12 ||
+         m_scalarType == OSSIM_USHORT13 ||
+         m_scalarType == OSSIM_USHORT14 ||
+         m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<ossim_uint16*>(getBuf());
    }
@@ -333,12 +323,12 @@ const ossim_uint8* ossimImageData::getUcharBuf(ossim_uint32 band) const
 
 const ossim_uint16* ossimImageData::getUshortBuf(ossim_uint32 band) const
 {
-   if (m_scalarType == OSSIM_UINT16 ||
+   if (  m_scalarType == OSSIM_UINT16   ||
          m_scalarType == OSSIM_USHORT11 ||
-	 m_scalarType == OSSIM_USHORT12 ||
-	 m_scalarType == OSSIM_USHORT13 ||
-	 m_scalarType == OSSIM_USHORT14 ||
-	 m_scalarType == OSSIM_USHORT15)
+         m_scalarType == OSSIM_USHORT12 ||
+         m_scalarType == OSSIM_USHORT13 ||
+         m_scalarType == OSSIM_USHORT14 ||
+         m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<const ossim_uint16*>(getBuf(band));
    }
@@ -385,12 +375,12 @@ ossim_uint8* ossimImageData::getUcharBuf(ossim_uint32 band)
 
 ossim_uint16* ossimImageData::getUshortBuf(ossim_uint32 band) 
 {
-   if (m_scalarType == OSSIM_UINT16 ||
+   if (  m_scalarType == OSSIM_UINT16   ||
          m_scalarType == OSSIM_USHORT11 ||
-	 m_scalarType == OSSIM_USHORT12 ||
-	 m_scalarType == OSSIM_USHORT13 ||
-	 m_scalarType == OSSIM_USHORT14 ||
-	 m_scalarType == OSSIM_USHORT15)
+         m_scalarType == OSSIM_USHORT12 ||
+         m_scalarType == OSSIM_USHORT13 ||
+         m_scalarType == OSSIM_USHORT14 ||
+         m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<ossim_uint16*>(getBuf(band));
    }
@@ -1442,8 +1432,7 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            unsigned char* buf = static_cast<unsigned char*>(getBuf(band))+
-                  offset;
+            unsigned char* buf = static_cast<unsigned char*>(getBuf(band))+offset;
             *buf = (unsigned char)color;
          }
          break;
@@ -1452,8 +1441,7 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            ossim_sint8* buf = static_cast<ossim_sint8*>(getBuf(band))+
-                  offset;
+            ossim_sint8* buf = static_cast<ossim_sint8*>(getBuf(band))+offset;
             *buf = (ossim_sint8)color;
          }
          break;
@@ -1467,8 +1455,7 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            ossim_uint16* buf = static_cast<ossim_uint16*>(getBuf(band))+
-                  offset;
+            ossim_uint16* buf = static_cast<ossim_uint16*>(getBuf(band))+offset;
             *buf = (ossim_uint16)color;
          }
          break;
@@ -1477,8 +1464,7 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            signed short* buf = static_cast<signed short*>(getBuf(band))+
-                  offset;
+            signed short* buf = static_cast<signed short*>(getBuf(band))+offset;
             *buf = (signed short)color;
          }
          break;
@@ -1487,8 +1473,7 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            ossim_uint32* buf = static_cast<ossim_uint32*>(getBuf(band))+
-                  offset;
+            ossim_uint32* buf = static_cast<ossim_uint32*>(getBuf(band))+offset;
             *buf = (ossim_uint32)color;
          }
          break;
@@ -1497,8 +1482,7 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            ossim_sint32* buf = static_cast<ossim_sint32*>(getBuf(band))+
-                  offset;
+            ossim_sint32* buf = static_cast<ossim_sint32*>(getBuf(band))+offset;
             *buf = (ossim_sint32)color;
          }
          break;
@@ -1528,11 +1512,90 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          //ERROR
          ossimNotify(ossimNotifyLevel_WARN)
-         << "ossimImageData::setValue Unsupported scalar type!"
-         << std::endl;
-
+               << "ossimImageData::setValue Unsupported scalar type!"
+               << std::endl;
       }
+      } // End of:  switch (getScalarType())
+   }
+}
+void ossimImageData::setValue(ossim_int32 x, ossim_int32 y,
+                              ossim_float64 color, ossim_uint32 band)
+{
+   if(m_dataBuffer.size() > 0 && isWithin(x, y))
+   {
+      //***
+      // Compute the offset into the buffer for (x,y).  This should always
+      // come out positive.
+      //***
+      ossim_uint32 ux = static_cast<ossim_uint32>(x - m_origin.x);
+      ossim_uint32 uy = static_cast<ossim_uint32>(y - m_origin.y);
+      ossim_uint32 offset = uy * m_spatialExtents[0] + ux;
 
+      switch (getScalarType())
+      {
+      case OSSIM_UINT8:
+      {
+         unsigned char* buf = static_cast<unsigned char*>(getBuf(band))+offset;
+         *buf = (unsigned char)color;
+         break;
+      }
+      case OSSIM_SINT8:
+      {
+         ossim_sint8* buf = static_cast<ossim_sint8*>(getBuf(band))+offset;
+         *buf = (ossim_sint8)color;
+         break;
+      }
+      case OSSIM_UINT16:
+      case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
+      {
+         ossim_uint16* buf = static_cast<ossim_uint16*>(getBuf(band))+offset;
+         *buf = (ossim_uint16)color;
+         break;
+      }
+      case OSSIM_SINT16:
+      {
+         signed short* buf = static_cast<signed short*>(getBuf(band))+offset;
+         *buf = (signed short)color;
+         break;
+      }
+      case OSSIM_UINT32:
+      {
+         ossim_uint32* buf = static_cast<ossim_uint32*>(getBuf(band))+offset;
+         *buf = (ossim_uint32)color;
+         break;
+      }
+      case OSSIM_SINT32:
+      {
+         ossim_sint32* buf = static_cast<ossim_sint32*>(getBuf(band))+offset;
+         *buf = (ossim_sint32)color;
+         break;
+      }
+      case OSSIM_NORMALIZED_FLOAT:
+      case OSSIM_FLOAT32:
+      {
+         ossim_float32* buf = static_cast<ossim_float32*>(getBuf(band))+offset;
+         *buf = (ossim_float32)color;
+         break;
+      }
+      case OSSIM_FLOAT64:
+      case OSSIM_NORMALIZED_DOUBLE:
+      {
+         ossim_float64* buf = static_cast<ossim_float64*>(getBuf(band))+offset;
+         *buf = color;
+         break;
+      }
+      case OSSIM_SCALAR_UNKNOWN:
+      default:
+      {
+         //ERROR
+         ossimNotify(ossimNotifyLevel_WARN)
+               << "ossimImageData::setValue Unsupported scalar type!"
+               << std::endl;
+      }
       } // End of:  switch (getScalarType())
    }
 }

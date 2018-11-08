@@ -496,31 +496,50 @@ bool ossimWriter::writeTiffTags( const std::vector<ossim_uint64>& tile_offsets,
          mapProj->lineSampleToEastingNorthing( theAreaOfInterest.ul(), tie );
          scale = mapProj->getMetersPerPixel();
       }
-      
-      // model pixel scale tag 33550:
-      tag   = ossim::OMODEL_PIXEL_SCALE_TAG;
-      count = 3; // x, y, z
-      type  = ossim::OTIFF_DOUBLE;
-      vf.resize( count );
-      vf[0] = scale.x;
-      vf[1] = scale.y;
-      vf[2] = 0.0;
-      writeTiffTag<ossim_float64>( tag, type, count, &vf.front(), arrayWritePos );
-      ++tagCount;
 
-      // model tie point tag 33992:
-      tag   = ossim::OMODEL_TIE_POINT_TAG;
-      count = 6; // x, y, z
-      type  = ossim::OTIFF_DOUBLE;
-      vf.resize( count );
-      vf[0] = 0.0;   // x image point
-      vf[1] = 0.0;   // y image point
-      vf[2] = 0.0;   // z image point
-      vf[3] = tie.x; // longitude or easting
-      vf[4] = tie.y; // latitude of northing
-      vf[5] = 0.0;
-      writeTiffTag<ossim_float64>( tag, type, count, &vf.front(), arrayWritePos );
-      ++tagCount;
+      // Need to decide whehter to specify the full 4x4 model transform (in the case of a rotated
+      // image), or simply use scale and offset tags:
+      if (mapProj->isRotated())
+      {
+         // Model transform needed -- tag 34264:
+         auto transform = mapProj->getModelTransform();
+         count = 16; // 4x4 transform matrix
+         tag   = ossim::OMODEL_TRANSFORM_TAG;
+         type  = ossim::OTIFF_DOUBLE;
+         vf.resize( count );
+         auto m = transform.getData();
+         for (int i=0; i<(int)count; ++i)
+            vf.emplace_back(m[i/4][i%4]);
+         writeTiffTag<ossim_float64>( tag, type, count, &vf.front(), arrayWritePos );
+         ++tagCount;
+      }
+      else
+      {
+         // model pixel scale tag 33550:
+         tag = ossim::OMODEL_PIXEL_SCALE_TAG;
+         count = 3; // x, y, z
+         type = ossim::OTIFF_DOUBLE;
+         vf.resize(count);
+         vf[0] = scale.x;
+         vf[1] = scale.y;
+         vf[2] = 0.0;
+         writeTiffTag<ossim_float64>(tag, type, count, &vf.front(), arrayWritePos);
+         ++tagCount;
+
+         // model tie point tag 33992:
+         tag = ossim::OMODEL_TIE_POINT_TAG;
+         count = 6; // x, y, z
+         type = ossim::OTIFF_DOUBLE;
+         vf.resize(count);
+         vf[0] = 0.0;   // x image point
+         vf[1] = 0.0;   // y image point
+         vf[2] = 0.0;   // z image point
+         vf[3] = tie.x; // longitude or easting
+         vf[4] = tie.y; // latitude of northing
+         vf[5] = 0.0;
+         writeTiffTag<ossim_float64>(tag, type, count, &vf.front(), arrayWritePos);
+         ++tagCount;
+      }
 
       // geo key directory tag 34735:
       tag   = ossim::OGEO_KEY_DIRECTORY_TAG;
