@@ -80,6 +80,9 @@ public:
    virtual void eastingNorthingToLineSample(const ossimDpt& eastingNorthing,
                                             ossimDpt& lineSample) const;
 
+   virtual void eastingNorthingToWorld(const ossimDpt& eastingNorthing,
+                                       ossimGpt&       worldPt)const;
+
    /** @return The false easting. */
    virtual double getFalseEasting() const;
 

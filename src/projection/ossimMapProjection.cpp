@@ -495,6 +495,14 @@ void ossimMapProjection::eastingNorthingToLineSample(const ossimDpt& eastingNort
 #endif
 }
 
+void ossimMapProjection::eastingNorthingToWorld(const ossimDpt& eastingNorthing,
+                                                ossimGpt&       worldPt)const
+{
+   ossimDpt lineSample;
+   eastingNorthingToLineSample(eastingNorthing, lineSample);
+   lineSampleToWorld(lineSample, worldPt);
+}
+
 void ossimMapProjection::setMetersPerPixel(const ossimDpt& resolution)
 {
    theMetersPerPixel = resolution;
