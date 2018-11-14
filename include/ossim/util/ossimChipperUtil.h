@@ -329,7 +329,7 @@ private:
     * @brief Sets the projection tie point to the scene bounding rect corner.
     * @note Throws ossimException on error.
     */
-   void intiailizeProjectionTiePoint();
+   void initializeProjectionTiePoint ();
 
    /**
     * @brief Initializes the projection gsd.

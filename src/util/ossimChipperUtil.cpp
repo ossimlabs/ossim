@@ -2261,7 +2261,7 @@ void ossimChipperUtil::createOutputProjection()
    }
 
    // Set the tie.
-   intiailizeProjectionTiePoint();
+   initializeProjectionTiePoint();
 
    if (snapTieToOrigin())
    {
@@ -2569,7 +2569,7 @@ void ossimChipperUtil::initializeIvtScale()
 
 } // End: ossimChipperUtil::initializeIvtScale()
 
-void ossimChipperUtil::intiailizeProjectionTiePoint()
+void ossimChipperUtil::initializeProjectionTiePoint ()
 {
    static const char MODULE[] = "ossimChipperUtil::initializeProjectionTiePoint()";
    if (traceDebug())
