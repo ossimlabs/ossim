@@ -832,6 +832,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
          falseNorthing = ossim::mtrs2usft(falseNorthing);
          break;
       case ANGULAR_DEGREE:
+         tiePoints[3] = projectionInfo->ulGroundPt().lond();
          tiePoints[4] = projectionInfo->ulGroundPt().latd();
          pixScale[0] = projectionInfo->getDecimalDegreesPerPixel().x;
          pixScale[1] = projectionInfo->getDecimalDegreesPerPixel().y;
