@@ -83,6 +83,7 @@ public:
     * @return The false northing.
     */
    virtual double getFalseNorthing() const;
+   virtual double getScaleFactor() const;
 
    //! Returns TRUE if principal parameters are within epsilon tolerance.
    virtual bool operator==(const ossimProjection& projection) const;

@@ -893,6 +893,11 @@ double ossimUtmProjection::getFalseNorthing() const
    return theTranMerc_False_Northing;
 }
 
+double ossimUtmProjection::getScaleFactor() const
+{
+   return theTranMerc_Scale_Factor;
+}
+
 //*************************************************************************************************
 //! Returns TRUE if principal parameters are within epsilon tolerance.
 //*************************************************************************************************
