@@ -30,8 +30,10 @@ if [[ $# < 2 ]]; then
 fi
 
 if [ ! -d $1 ]; then
-   echo; echo "<$1> is not a valid input directory. Aborting..."; echo
-   exit 1
+   if [ ! -f $1 ] ; then
+     echo; echo "<$1> is not a valid input directory or file. Aborting..."; echo
+     exit 1
+   fi
 fi
 
 if [ ! -d $2 ]; then
@@ -39,6 +41,9 @@ if [ ! -d $2 ]; then
    mkdir -p $2
 fi
 
-find $1 -type f -name "*.so" -exec bash -c "do_cpld {} $2" \;
-
+if [ -f $1 ] ; then
+   do_cpld $1 $2
+else
+  find $1 -type f -name "*.so*" -exec bash -c "do_cpld {} $2" \;
+fi
 echo; echo "All dependencies were copied to $2. Done!"; echo
