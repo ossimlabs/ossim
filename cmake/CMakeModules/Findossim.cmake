@@ -4,7 +4,7 @@
 # Find OSSIM(Open Source Software Image Map) includes and libraries.
 #
 # This module defines:
-# 
+#
 #  OSSIM_INCLUDE_DIR, Where to find ossimVersion.h, etc.
 #  OSSIM_LIBRARIES, Libraries to link against to use OSSIM.
 #  OSSIM_FOUND,  True if found, false if one of the above are not found.
@@ -16,17 +16,23 @@
 # Find include path:
 #---
 set(CMAKE_FIND_FRAMEWORK "LAST")
-find_path(OSSIM_INCLUDE_DIR ossim/ossimVersion.h ossimVersion.h)
+find_path(OSSIM_INCLUDE_DIR ossim/ossimVersion.h ossimVersion.h
+          PATHS
+          $ENV{OSSIM_DEV_HOME}/ossim/include
+          $ENV{OSSIM_INSTALL_PREFIX}/include )
 
 set(OSSIM_NAMES ${OSSIM_NAMES} ossim libossim)
-find_library(OSSIM_LIBRARY NAMES ${OSSIM_NAMES})
+find_library(OSSIM_LIBRARY NAMES ${OSSIM_NAMES}
+             PATHS
+             $ENV{OSSIM_BUILD_DIR}/lib
+             $ENV{OSSIM_INSTALL_PREFIX}/lib)
 
 #---
 # This function sets OSSIM_FOUND if variables are valid.
-#--- 
+#---
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args( OSSIM DEFAULT_MSG 
-                                   OSSIM_LIBRARY 
+find_package_handle_standard_args( OSSIM DEFAULT_MSG
+                                   OSSIM_LIBRARY
                                    OSSIM_INCLUDE_DIR )
 
 if(OSSIM_FOUND)
