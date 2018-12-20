@@ -400,6 +400,9 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
             <<theMaxResidual<<") is larger than the desired error tolerance ("<<tolerance<<" p)."
             << std::endl;
    }
+
+   // Initialize metadata:
+   theRpcModel->setMetersPerPixel(geom->getMetersPerPixel());
    return converged;
 }
 

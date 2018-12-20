@@ -271,6 +271,14 @@ void ossimMapProjection::update()
    updateTransform();
 }
 
+void ossimMapProjection::setModelTransform (const ossimMatrix4x4& transform)
+{
+   theModelTransform = transform;
+   theInverseModelTransform = theModelTransform;
+   theInverseModelTransform.i();
+   updateFromTransform();
+}
+
 void ossimMapProjection::updateTransform()
 {
    // Assumes model coordinates in meters:

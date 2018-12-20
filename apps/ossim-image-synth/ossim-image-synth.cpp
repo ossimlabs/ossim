@@ -21,10 +21,11 @@
 #include <cmath>
 #include <sstream>
 #include <iostream>
+#include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
 
 using namespace std;
 
-#define USE_UINT8 false
+#define USE_UINT8 true
 
 int main(int argc, char *argv[])
 {
@@ -34,19 +35,16 @@ int main(int argc, char *argv[])
    ossimInit::instance()->addOptions(ap);
    ossimInit::instance()->initialize(ap);
    
-   if ( (ap.argc() < 4) || ap.read("-h") || ap.read("--help") )
+   if ( (ap.argc() < 2) || ap.read("-h") || ap.read("--help") )
    {
-      cout << "\nUsage: "<<ap[0]<<" <dx> <dy> <filename>\n"<<endl;
+      cout << "\nUsage: "<<ap[0]<<" <filename>\n"<<endl;
       return 0;
    }
 
-   int dx = atoi(ap[1]);
-   int dy = atoi(ap[2]);
-   ossimFilename filename = ap[3];
-   filename.setExtension(".tif");
+   ossimFilename filename = ap[1];
 
    // Establish the image geometry's map projection:
-   ossimIpt image_size (256, 256);
+   ossimIpt image_size (32, 32);
    ossimGpt observerGpt (0, 0, 0);
    ossimDpt gsd (1.0, 1.0); // must be same value in both directions
    ossimRefPtr<ossimEquDistCylProjection> mapProj = new ossimEquDistCylProjection();
@@ -80,46 +78,47 @@ int main(int argc, char *argv[])
       outImage->initialize();
    else
       return -1;
-   double A = (max - min)/2.0;
+
    outImage->fill(min);
+
+   PIXEL_TYPE step = 8;
+   PIXEL_TYPE value = 0;
    PIXEL_TYPE* buffer = ( PIXEL_TYPE*) outImage->getBuf(0);
 
-   if ((dx != 0) || (dy != 0))
+   ossim_uint32 i = 0;
+   for (int y=0; y<image_size.y; y++)
    {
-      // Allocate image buffer:
-      ossim_uint32 i = 0;
-      double phase = 0;
-
-      double dpx = 0;
-      if (dx != 0)
-         dpx = 2*M_PI/dx; // phase rate (radians per pixel)
-      double dpy = 0;
-      if (dy != 0)
-         dpy = 2*M_PI/dy; // phase rate (radians per pixel)
-
-      for (int y=0; y<image_size.y; y++)
+      for (int x=0; x<image_size.x; x++)
       {
-         phase = y*dpy;
-         for (int x=0; x<image_size.x; x++)
-         {
-            // Loops to fill one n x n chip with a single freq (1/lambda) component:
-            buffer[i++] = (PIXEL_TYPE) (A * (cos(phase) + 1.0));
-            phase += dpx;
-         }
+         buffer[i++] = value;
+         if (value == 248)
+            value = 0;
+         else
+            value += step;
       }
    }
 
+   outImage->write("tile.tif");
+   
    // Create output image chain:
    ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
    memSource->setImage(outImage);
    memSource->setImageGeometry(geometry.get());
 
-   ossimRefPtr<ossimTiffWriter> writer = new ossimTiffWriter();
+   // Create TIFF writer:
+   ossimRefPtr<ossimImageFileWriter> writer =
+      ossimImageWriterFactoryRegistry::instance()->createWriterFromExtension(filename.ext());
+   if (!writer)
+      throw runtime_error( "Unable to create writer given filename extension." );
    writer->connectMyInputTo(0, memSource.get());
    writer->setFilename(filename);
-   writer->setGeotiffFlag(true);
    bool success = writer->execute();
    //writer->writeExternalGeometryFile();
 
-   return 0;
+   if (success)
+      cout<<"Wrote "<<filename<<"\n"<<endl;
+   else
+      cout<<"Error encountered writing "<<filename<<"\n"<<endl;
+
+   return (int)success;
 }

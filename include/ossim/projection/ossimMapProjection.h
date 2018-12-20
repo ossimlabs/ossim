@@ -249,6 +249,7 @@ public:
    bool getElevationLookupFlag()const;
 
    const ossimMatrix4x4& getModelTransform() const { return theModelTransform; }
+   void setModelTransform(const ossimMatrix4x4& transform);
 
    /**
     * @brief Implementation of pure virtual

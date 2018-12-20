@@ -57,14 +57,22 @@ class OSSIM_DLL ossimMatrix4x4
      void setRotate( const ossim::Quaternion& quat);
      ossim::Quaternion getRotate()const;
      void getRotate(ossim::Quaternion& quat)const;
-     
-  ossimMatrix4x4 operator+ (const ossimMatrix4x4& rhs)const
-    {
+
+   ossimMatrix4x4 operator=(const ossimMatrix4x4& rhs)
+   {
+      theData[0][0]=rhs.theData[0][0]; theData[0][1]=rhs.theData[0][1]; theData[0][2]=rhs.theData[0][2]; theData[0][3]=rhs.theData[0][3];
+      theData[1][0]=rhs.theData[1][0]; theData[1][1]=rhs.theData[1][1]; theData[1][2]=rhs.theData[1][2]; theData[1][3]=rhs.theData[1][3];
+      theData[2][0]=rhs.theData[2][0]; theData[2][1]=rhs.theData[2][1]; theData[2][2]=rhs.theData[2][2]; theData[2][3]=rhs.theData[2][3];
+      theData[3][0]=rhs.theData[3][0]; theData[3][1]=rhs.theData[3][1]; theData[3][2]=rhs.theData[3][2]; theData[3][3]=rhs.theData[3][3];
+      return *this;
+   }
+   ossimMatrix4x4 operator+ (const ossimMatrix4x4& rhs)const
+   {
       return ossimMatrix4x4(theData[0][0] + rhs.theData[0][0], theData[0][1] + rhs.theData[0][1], theData[0][2] + rhs.theData[0][2], theData[0][3] + rhs.theData[0][3],
                             theData[1][0] + rhs.theData[1][0], theData[1][1] + rhs.theData[1][1], theData[1][2] + rhs.theData[1][2], theData[1][3] + rhs.theData[1][3],
                             theData[2][0] + rhs.theData[2][0], theData[2][1] + rhs.theData[2][1], theData[2][2] + rhs.theData[2][2], theData[2][3] + rhs.theData[2][3],
                             theData[3][0] + rhs.theData[3][0], theData[3][1] + rhs.theData[3][1], theData[3][2] + rhs.theData[3][2], theData[3][3] + rhs.theData[3][3]);
-    }
+   }
   ossimMatrix4x4 operator- (const ossimMatrix4x4& rhs)const
     {
       return ossimMatrix4x4(theData[0][0] - rhs.theData[0][0], theData[0][1] - rhs.theData[0][1], theData[0][2] - rhs.theData[0][2], theData[0][3] - rhs.theData[0][3],

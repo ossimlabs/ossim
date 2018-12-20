@@ -655,12 +655,16 @@ long ossimEquDistCylProjection::Convert_Equidistant_Cyl_To_Geodetic(double Easti
   {
     dy = Northing - Eqcy_False_Northing;
     dx = Easting - Eqcy_False_Easting;
-    *Latitude = dy / Ra;
+    double RaInv = 1.0/Ra;
+    *Latitude = dy *RaInv;
 
     if (Ra_Cos_Eqcy_Std_Parallel == 0)
       *Longitude = 0;
     else
-      *Longitude = Eqcy_Origin_Long + dx / Ra_Cos_Eqcy_Std_Parallel;
+    {
+       double RaCosLatInv = 1.0/Ra_Cos_Eqcy_Std_Parallel;
+      *Longitude = Eqcy_Origin_Long + dx*RaCosLatInv;
+    }
 
 //     if (*Latitude > PI_OVER_2)  /* force distorted values to 90, -90 degrees */
 //       *Latitude = PI_OVER_2;

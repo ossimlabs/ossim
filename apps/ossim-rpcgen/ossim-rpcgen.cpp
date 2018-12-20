@@ -23,8 +23,11 @@ int main(int argc, char* argv[])
    ossimArgumentParser::ossimParameter tempParam3(tempString3);
    ossimArgumentParser::ossimParameter tempParam4(tempString4);
    ossimArgumentParser argumentParser(&argc, argv);
-   ossimInit::instance()->addOptions(argumentParser);
-   ossimInit::instance()->initialize(argumentParser);
+   ossimInit* init = ossimInit::instance();
+   init->addOptions(argumentParser);
+   init->initialize(argumentParser);
+   bool useElevation = init->getElevEnabledFlag();
+
    bool rpcFlag       = false;
    bool cgFlag       = false;
    ossimDrect imageRect;
@@ -176,7 +179,7 @@ int main(int argc, char* argv[])
    {
       // Solve for replacement RPC:
       ossimNotify(ossimNotifyLevel_INFO) << "\nSolving for RPC coefficients..." << std::endl;
-      ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(true, false);
+      ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(useElevation, false);
       bool converged = solver->solve(imageRect, geom.get(), error);
       rpc = solver->getRpcModel();
    }
