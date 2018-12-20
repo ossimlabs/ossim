@@ -79,6 +79,7 @@ bool ossimNitfFileHeader::getDesInformation(ossimNitfDesInformation &desInfo,
          }
       }
    }
+   return false
 }
 
 bool  ossimNitfFileHeader::hasImages()const
