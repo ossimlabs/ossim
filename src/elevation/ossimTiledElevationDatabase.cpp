@@ -342,7 +342,7 @@ double ossimTiledElevationDatabase::getHeightAboveMSL(const ossimGpt& gpt)
 double ossimTiledElevationDatabase::getHeightAboveEllipsoid(const ossimGpt& gpt)
 {
    double h = getHeightAboveMSL(gpt);
-   if(h != ossim::nan())
+   if(!ossim::isnan(h))
    {
       h += getOffsetFromEllipsoid(gpt);
    }
