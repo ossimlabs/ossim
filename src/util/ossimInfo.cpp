@@ -2065,18 +2065,14 @@ bool ossimInfo::getImageGeometryInfo( ossimImageHandler* ih,
                {
                   kwl.add(prefix, ossimKeywordNames::TIE_POINT_LAT_KW, ulg.latd(), true);
                   kwl.add(prefix, ossimKeywordNames::TIE_POINT_LON_KW, ulg.lond(), true);
+               }
 
-                  if ( outputRect.height()-1.0 > DBL_EPSILON )
-                  {
-                     kwl.add(prefix, ossimKeywordNames::DECIMAL_DEGREES_PER_PIXEL_LAT,
-                             fabs(ulg.latd()-llg.latd())/(outputRect.height()-1.0), true);
-                  }
-
-                  if ( outputRect.width()-1.0 > DBL_EPSILON )
-                  {
-                     kwl.add(prefix, ossimKeywordNames::DECIMAL_DEGREES_PER_PIXEL_LON,
-                             fabs(ulg.lond()-urg.lond())/(outputRect.width()-1.0), true);
-                  }
+               ossimDpt dpp;
+               geom->getDegreesPerPixel( dpp );
+               if ( dpp.hasNans() == false )
+               {
+                  kwl.add(prefix, ossimKeywordNames::DECIMAL_DEGREES_PER_PIXEL_LAT, dpp.lat, true);
+                  kwl.add(prefix, ossimKeywordNames::DECIMAL_DEGREES_PER_PIXEL_LON, dpp.lon, true);
                }
 
                ossimDpt gsd = geom->getMetersPerPixel();
