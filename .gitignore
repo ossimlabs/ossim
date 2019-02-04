@@ -7,4 +7,4 @@ doc/html
 cmake_install*
 *.swp
 CMakeCache.txt
-
+.gradle
