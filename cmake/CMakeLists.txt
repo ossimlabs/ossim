@@ -198,7 +198,11 @@ IF(BUILD_DSMG AND EXISTS ${OSSIM_DEV_HOME}/ossim-dsmg)
 ENDIF()
 
 IF(BUILD_OSSIM_ISA AND EXISTS ${OSSIM_DEV_HOME}/ossim-isa)
-  add_subdirectory(${OSSIM_DEV_HOME}/ossim-isa ${CMAKE_CURRENT_BINARY_DIR}/ossim-isa)
+   add_subdirectory(${OSSIM_DEV_HOME}/ossim-isa ${CMAKE_CURRENT_BINARY_DIR}/ossim-isa)
+ENDIF()
+
+IF(BUILD_OSSIM_FPGA AND EXISTS ${OSSIM_DEV_HOME}/ossim-fpga)
+   add_subdirectory(${OSSIM_DEV_HOME}/ossim-fpga ${CMAKE_CURRENT_BINARY_DIR}/ossim-fpga)
 ENDIF()
 
 
@@ -380,4 +384,5 @@ MESSAGE( STATUS "BUILD_RUNTIME_DIR               = ${BUILD_RUNTIME_DIR}" )
 MESSAGE( STATUS "BUILD_DSMG                      = ${BUILD_DSMG}" )
 MESSAGE( STATUS "BUILD_MSP_PLUGIN                = ${BUILD_MSP_PLUGIN}" )
 MESSAGE( STATUS "BUILD_CSM_PLUGIN                = ${BUILD_CSM_PLUGIN}" )
+MESSAGE( STATUS "BUILD_OSSIM_FPGA                = ${BUILD_OSSIM_FPGA}" )
 MESSAGE( STATUS "Use OSSIM_BUILD_ADDITIONAL_DIRECTORIES to add other cmake builds." )
