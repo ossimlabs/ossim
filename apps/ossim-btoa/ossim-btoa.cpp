@@ -218,30 +218,36 @@ int main(int argc, char** argv)
       mode = ASCII;
    }
 
-   if ( argumentParser.read("-h") || argumentParser.read("--help") ||
-        (argumentParser.argc() != 2) )
+   if ( argumentParser.read("-h") || argumentParser.read("--help"))
    {
-      std::cout << "\nBinary to ascii usage: btoa [options] <binary_file>\n"
-                << "Options:\n"
-                << "-e Indicates text characters are ebcdic and should be"
-                << " converted to ascii.\n"
-                << "-h or --help usage\n"
-                << "-a Ascii mode, prints 64 characters wide with no offset or hex data.\n"
-                << "-w Wide mode, prints offset and 64 characters wide with no hex data.\n"
-                << "Notes:\n"
-                << "  1) Non-ascii characters are printed as dot in ascii output.\n"
-                << "  2) Default mode prints offsets, hex and ascii data."
+      std::cout << "\nDisplays a binary file as ASCII/hexadecimal. If no input file is provided, then\n"
+                << "input is taken from stdin. Non-ascii characters are printed as dot in ascii output.\n"
+                << "Default mode prints offsets, hex and ascii data.\n\n"
+                << "Usage: btoa [options] [<binary_file>]\n\n"
+                << "Options:\n\n"
+                << "  -e          Indicates text characters are ebcdic and should be"
+                << "              converted to ascii.\n"
+                << "  -h, --help  Shows this usage\n"
+                << "  -a          Ascii mode, prints 64 characters wide with no offset or hex data.\n"
+                << "  -w          Wide mode, prints offset and 64 characters wide with no hex data.\n"
                 << std::endl;
       return 0;
    }
    
-   FILE* fptr = fopen(argv[argumentParser.argc()-1], "rb");
-   if (fptr == 0)
+   FILE* fptr = 0;
+   if (argumentParser.argc() > 1)
    {
-      std::cout << "\nError opening file " << argv[argumentParser.argc()-1] 
-                << std::endl << std::endl;
-      return -1;
+      fptr = fopen(argv[argumentParser.argc() - 1], "rb");
+      if (fptr == 0)
+      {
+         std::cout << "\nError opening file " << argv[argumentParser.argc() - 1]
+                   << std::endl << std::endl;
+         return -1;
+      }
    }
+   else
+      fptr = stdin;
+
 
    if ( mode == WIDE )
    {
