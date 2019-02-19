@@ -1159,6 +1159,11 @@ void ossimMapProjection::computeMetersPerPixel()
    ossimDpt metersPerDegree (theOrigin.metersPerDegree());
    theMetersPerPixel.x = metersPerDegree.x * theDegreesPerPixel.lon;
    theMetersPerPixel.y = metersPerDegree.y * theDegreesPerPixel.lat;
+#elif USE_MODEL_TRANSFORM
+   // Transform according to 4x4 transform embedded in the projection:
+   const NEWMAT::Matrix& m = theModelTransform.getData();
+   theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
+   theMetersPerPixel.y = sqrt(m[0][1]*m[0][1] + m[1][1]*m[1][1]);
 #else
    ossimGpt right=theOrigin;
    ossimGpt down=theOrigin;
@@ -1172,9 +1177,9 @@ void ossimMapProjection::computeMetersPerPixel()
 
    theMetersPerPixel.x = (rightMeters - centerMeters).length();
    theMetersPerPixel.y = (downMeters  - centerMeters).length();
+   updateTransform();
 #endif
 
-   updateTransform();
 }
 
 //**************************************************************************************************

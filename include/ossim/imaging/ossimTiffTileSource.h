@@ -249,8 +249,11 @@ protected:
    bool open();
 
    // Must be protected for derived ossimTerraSarTiffReader.
-   TIFF* theTiffPtr; 
+   TIFF* theTiffPtr;
 
+   /** Returns false if image is stripped, even though the input tile size is non-zero. In the case
+    * of stripped format, the image tile size is set to numColsInImage X numRowsPerStrip. */
+   virtual bool isImageTiled() const;
 
 private:
 
