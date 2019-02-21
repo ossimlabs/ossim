@@ -126,7 +126,7 @@ if [ -z $BUILD_OSSIM_ISA ] ; then
    export BUILD_OSSIM_ISA=OFF
 fi
 if [ -z $BUILD_OSSIM_FPGA ] ; then
-   export $BUILD_OSSIM_FPGA=OFF
+   export BUILD_OSSIM_FPGA=OFF
 fi
 
 # Plugins:
