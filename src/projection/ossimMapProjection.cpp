@@ -1057,18 +1057,6 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
       update();
    }
 
-#if 0
-   //---
-   // Final sanity check:
-   //---
-   if ( theOrigin.hasNans() )
-   {
-      const NEWMAT::Matrix& m = theModelTransform.getData();
-      theOrigin.lon = m[0][3];
-      theOrigin.lat = m[1][3];
-   }
-#endif
-
    return true;
 }
 
@@ -1159,7 +1147,7 @@ void ossimMapProjection::computeMetersPerPixel()
    ossimDpt metersPerDegree (theOrigin.metersPerDegree());
    theMetersPerPixel.x = metersPerDegree.x * theDegreesPerPixel.lon;
    theMetersPerPixel.y = metersPerDegree.y * theDegreesPerPixel.lat;
-#elif USE_MODEL_TRANSFORM
+#elif USE_MODEL_TRANSFORM_XXX  // Not working so hide
    // Transform according to 4x4 transform embedded in the projection:
    const NEWMAT::Matrix& m = theModelTransform.getData();
    theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);

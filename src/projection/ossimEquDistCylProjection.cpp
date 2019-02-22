@@ -103,8 +103,13 @@ void ossimEquDistCylProjection::update()
 
 void ossimEquDistCylProjection::setOrigin(const ossimGpt& origin)
 {
-   ossimMapProjection::setOrigin(origin); // breaks the projection
-   setUlTiePoints(theUlGpt); // needed to reset easting northing
+   theOrigin = origin;
+   Set_Equidistant_Cyl_Parameters(theEllipsoid.getA(),
+                                  theEllipsoid.getFlattening(),
+                                  theOrigin.latr(),
+                                  theOrigin.lonr(),
+                                  Eqcy_False_Easting,
+                                  Eqcy_False_Northing);
 
    // Changing the projection origin from the equator implies a scale change in the longitude
    // direction to maintain GSD (meters) square at origin:
