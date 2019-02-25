@@ -112,13 +112,6 @@ int main(int argc, char *argv[])
    try
    {
       // Put your code here.
-      ossimFilename fame (argv[1]);
-      ossimRefPtr<ossimImageHandler> ih = ossimImageHandlerRegistry::instance()->open(fame);
-      bool isTiled = ih->isImageTiled();
-      isTiled ? cout<<"IS TILED."<<endl : cout<<"IS NOT TILED."<<endl;
-      cout<<"Tile Width: "<<ih->getImageTileWidth()<<endl;
-      cout<<"Tile Height: "<<ih->getImageTileHeight()<<endl;
-      ih->print(cout);
    }
    catch(const ossimException& e)
    {
