@@ -281,6 +281,12 @@ void ossimMapProjection::setModelTransform (const ossimMatrix4x4& transform)
 
 void ossimMapProjection::updateTransform()
 {
+   // The transform contains the map rotation, GSD, and tiepoint. These individual parameters are
+   // also saved in members theImageToModelAzimuth, theMetersPerPixel, and theUlEastingNorthing.
+   // Any one of those may have changed requiring a new transform to be computed from the new
+   // values. All calls to update() will also call this, so the rotation, scale and offset need
+   // to be preserved to avoid blowing them away by resetting theModelTransform to identity.
+
    // Assumes model coordinates in meters:
    theModelTransform.setIdentity();
    NEWMAT::Matrix& m = theModelTransform.getData();
@@ -522,6 +528,7 @@ void ossimMapProjection::setDecimalDegreesPerPixel(const ossimDpt& resolution)
 {
    theDegreesPerPixel = resolution;
    computeMetersPerPixel(); // this method will update the transform
+   updateTransform();
 }
 
 void ossimMapProjection::setUlTiePoints(const ossimGpt& gpt)
@@ -645,6 +652,10 @@ bool ossimMapProjection::saveState(ossimKeywordlist& kwl, const char* prefix) co
 bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
    ossimProjection::loadState(kwl, prefix);
+
+   // Initialize the image-to-map transform to identity (no scale, rotation, or offset):
+   theModelTransform.setIdentity();
+   theInverseModelTransform.setIdentity();
 
    const char* elevLookupFlag = kwl.find(prefix, ossimKeywordNames::ELEVATION_LOOKUP_FLAG_KW);
    if(elevLookupFlag)
@@ -1030,6 +1041,7 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
    ossimString transformElems = kwl.find(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW);
    if (!transformElems.empty())
    {
+      // The model transform trumps settings for scale, rotation, and map offset:
       vector<ossimString> elements = transformElems.split(" ");
       NEWMAT::Matrix& m = theModelTransform.getData(); // At this scope for IDE debugging
       if (elements.size() != 16)
@@ -1165,7 +1177,6 @@ void ossimMapProjection::computeMetersPerPixel()
 
    theMetersPerPixel.x = (rightMeters - centerMeters).length();
    theMetersPerPixel.y = (downMeters  - centerMeters).length();
-   updateTransform();
 #endif
 
 }

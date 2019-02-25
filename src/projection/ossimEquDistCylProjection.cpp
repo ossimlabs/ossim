@@ -86,7 +86,9 @@ void ossimEquDistCylProjection::update()
    theFalseEastingNorthing.x = Eqcy_False_Easting;
    theFalseEastingNorthing.y = Eqcy_False_Northing;
 
-   theMetersPerPixel.makeNan(); // force recompute by base class
+   ossimMatrix4x4 identity;
+   if (theModelTransform.isEqualTo(identity))
+      theMetersPerPixel.makeNan(); // force recompute by base class
 
    ossimMapProjection::update();
 
