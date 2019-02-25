@@ -249,6 +249,12 @@ public:
    bool getElevationLookupFlag()const;
 
    const ossimMatrix4x4& getModelTransform() const { return theModelTransform; }
+
+   /**
+    * Sets the map-to-image rotation, scale and offset. In other words, converts easting, northing
+    * in meters to x, y pixels on the image. 
+    * @param transform
+    */
    void setModelTransform(const ossimMatrix4x4& transform);
 
    /**
@@ -290,7 +296,7 @@ protected:
     */
    virtual void updateTransform();
 
-   /** Extracts tiepoint and scale info from transform */
+   /** Extracts tiepoint, scale and rotation info from transform */
    virtual void updateFromTransform();
 
    virtual ~ossimMapProjection();

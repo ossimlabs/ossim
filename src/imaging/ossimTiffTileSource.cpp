@@ -628,34 +628,9 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       }
       else // Stripped
       {
-         theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
          if (!theRowsPerStrip[dir])
             theRowsPerStrip[dir] = 1;
 
-         //---
-         // Let's default the tile size to something efficient.
-         //
-         // NOTE:
-         //
-         // This is not used by the strip reader method.  Only by the getImageTileHeight
-         // and getImageTileHeight methods.
-         //---
-         //if (theImageTileWidth[dir] > 256)
-         //{
-         //   theImageTileWidth[dir] = 256;
-         //}
-         //else if (theImageTileWidth[dir] < 64)
-         //{
-         //   theImageTileWidth[dir] = 64;
-         //}
-         //if (theImageTileLength[dir] > 256)
-         //{
-         //   theImageTileLength[dir] = 256;
-         //}
-         //else if (theImageTileLength[dir] < 64)
-         //{
-         //   theImageTileLength[dir] = 64;
-         //}
          theImageTileWidth[dir] = theImageWidth[dir];
          theImageTileLength[dir] = theRowsPerStrip[dir];
       }
@@ -2097,7 +2072,7 @@ std::ostream &ossimTiffTileSource::print(std::ostream &os) const
       os << endl;
    }
 
-   if (!theTile.valid())
+   if (theTile.valid())
    {
       os << "\nOutput tile dump:\n"
          << *theTile << endl;

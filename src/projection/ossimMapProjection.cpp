@@ -314,7 +314,9 @@ void ossimMapProjection::updateTransform()
 
 void ossimMapProjection::updateFromTransform()
 {
-   // Extract scale, rotation and offset from the transform matrix:
+   // Extract scale, rotation and offset from the transform matrix. Note that with scale, rotation,
+   // and offset preserved in theMetersPerPixel, theImageToModelAzimuth, and theUlEastingNorthing,
+   // respectively, the transform can be regenerated with a call to update().
    const NEWMAT::Matrix& m = theModelTransform.getData();
    theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
    theMetersPerPixel.y = sqrt(m[1][0]*m[1][0] + m[1][1]*m[1][1]);
@@ -1041,7 +1043,7 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
    ossimString transformElems = kwl.find(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW);
    if (!transformElems.empty())
    {
-      // The model transform trumps settings for scale, rotation, and map offset:
+      // The model transform trumps (I hate that word) settings for scale, rotation, and map offset:
       vector<ossimString> elements = transformElems.split(" ");
       NEWMAT::Matrix& m = theModelTransform.getData(); // At this scope for IDE debugging
       if (elements.size() != 16)
