@@ -323,6 +323,7 @@ void ossimMapProjection::updateFromTransform()
    theUlEastingNorthing.x = m[0][3];
    theUlEastingNorthing.y = m[1][3];
    theImageToModelAzimuth = ossim::acosd(m[0][0]/theMetersPerPixel.x);
+   theUlGpt = inverse(theUlEastingNorthing);
    computeDegreesPerPixel();
 }
 
@@ -1101,7 +1102,13 @@ std::ostream& ossimMapProjection::print(std::ostream& out) const
        << theFalseEastingNorthing.toString().c_str()
        << "\n" << ossimKeywordNames::FALSE_EASTING_NORTHING_UNITS_KW << ": "
        << ossimUnitTypeLut::instance()->getEntryString(OSSIM_METERS)
-       << "\n" << ossimKeywordNames::PCS_CODE_KW << ": " << thePcsCode;
+       << "\n" << ossimKeywordNames::PCS_CODE_KW << ": " << thePcsCode
+       << "\n" << ossimKeywordNames::IMAGE_MODEL_ROTATION_KW  << ": " << theImageToModelAzimuth;
+
+   const NEWMAT::Matrix& m = theModelTransform.getData();
+   out << "\nImageModelTransform [2x3]: "<<m[0][0]<<"  "<<m[0][1]<<"  "<<m[0][3]
+       << "\n                           "<<m[1][0]<<"  "<<m[1][1]<<"  "<<m[1][3];
+
 
    if(isGeographic())
    {
