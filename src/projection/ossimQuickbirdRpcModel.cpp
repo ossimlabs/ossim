@@ -288,14 +288,23 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
 {
    ossimFilename rpcFile(base_name);
 
-   // There are two possibilities for RPC data files: either each image file has its own RPC data
+   // There are three possibilities for RPC data files: either each image file has its own RPC data
    // file, or a single RPC file is provided for a multi-tile scene.
-   rpcFile.setExtension("RPB");
-   if (!findSupportFile(rpcFile))
+   while (1)
    {
+      rpcFile.setExtension("RPB");
+      if (findSupportFile(rpcFile))
+         break;
+
       rpcFile.setExtension("RPA");
-      if (!findSupportFile(rpcFile))
-         return false;
+      if (findSupportFile(rpcFile))
+         break;
+
+      rpcFile.setExtension("XML");
+      if (findSupportFile(rpcFile))
+         break;
+
+      return false;
    }
 
    // An RPC file was located, open it:
@@ -522,7 +531,7 @@ bool ossimQuickbirdRpcModel::findSupportFile(ossimFilename &filename) const
       return true;
    }
 
-   // None found so far, search for mosaic-global support file:
+      // None found so far, search for mosaic-global support file:
    f = f.replaceAllThatMatch("_R[0-9]+C[0-9]+");
    if (f.exists())
    {

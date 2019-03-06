@@ -1,10 +1,10 @@
 #ifndef ossimQuickbirdRpcHeader_HEADER
 #define ossimQuickbirdRpcHeader_HEADER
+
 #include <iostream>
-
 #include <ossim/base/ossimErrorStatusInterface.h>
-
 #include <ossim/base/ossimFilename.h>
+
 class OSSIM_DLL ossimQuickbirdRpcHeader : public ossimErrorStatusInterface
 {
 public:
@@ -47,8 +47,10 @@ public:
     return theSatId.upcase().contains("WV04");
   }
   bool isGlobal()const;
-  
-  ossimString theFilename;
+
+  bool parseXml();
+
+  ossimFilename theFilename;
 
   ossimString theSatId;
   ossimString theBandId;
