@@ -516,6 +516,7 @@ bool ossimQuickbirdRpcModel::findSupportFile(ossimFilename &filename) const
       return true;
    }
    extension.downcase();
+   f.setExtension(extension);
    if (f.exists())
    {
       filename = f;
