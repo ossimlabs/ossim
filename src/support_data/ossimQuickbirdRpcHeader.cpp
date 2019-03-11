@@ -74,9 +74,6 @@ bool ossimQuickbirdRpcHeader::open(const ossimFilename& file)
 {
    theFilename = file;
 
-   if (theFilename.ext().upcase() == "XML")
-      return parseXml();
-
    std::ifstream in(file.c_str(), std::ios::in|std::ios::binary);
    
    char test[64];
@@ -140,117 +137,6 @@ bool ossimQuickbirdRpcHeader::open(const ossimFilename& file)
       setErrorStatus();
    }
    return (theErrorStatus == ossimErrorCodes::OSSIM_OK);
-}
-
-bool ossimQuickbirdRpcHeader::parseXml ()
-{
-   ossimXmlDocument document;
-   if (!document.openFile(theFilename))
-      return false;
-
-   ossimRefPtr<ossimXmlNode> root = document.getRoot();
-   ossimRefPtr<ossimXmlNode> rpcNode = root->findFirstNode("RPB");
-   if (!rpcNode)
-      return false;
-
-   ossimString dataString;
-   bool success = false; // Assume we're gonna screw this up...
-   while (1)
-   {
-      theSatId = rpcNode->getChildTextValue("SATID");
-      if (theSatId.empty())
-         break;
-
-      theBandId = rpcNode->getChildTextValue("BANDID");
-      if (theBandId.empty())
-         break;
-
-      theSpecId = rpcNode->getChildTextValue("SPECID");
-      if (theSpecId.empty())
-         break;
-
-      rpcNode = rpcNode->findFirstNode("IMAGE");
-      if (!rpcNode)
-         break;
-
-      dataString = rpcNode->getChildTextValue("ERRBIAS");
-      if (dataString.empty())
-         break;
-      theErrBias = dataString.toDouble();
-
-      dataString = rpcNode->getChildTextValue("ERRRAND");
-      if (dataString.empty())
-         break;
-      theErrRand = dataString.toDouble();
-
-      dataString = rpcNode->getChildTextValue("LINEOFFSET");
-      if (dataString.empty())
-         break;
-      theLineOffset = dataString.toInt();
-
-      dataString = rpcNode->getChildTextValue("SAMPOFFSET");
-      if (dataString.empty())
-         break;
-      theSampOffset = dataString.toInt();
-
-      dataString = rpcNode->getChildTextValue("LATOFFSET");
-      if (dataString.empty())
-         break;
-      theLatOffset = dataString.toDouble();
-
-      dataString = rpcNode->getChildTextValue("LONGOFFSET");
-      if (dataString.empty())
-         break;
-      theLonOffset = dataString.toDouble();
-
-      dataString = rpcNode->getChildTextValue("HEIGHTOFFSET");
-      if (dataString.empty())
-         break;
-      theHeightOffset = dataString.toDouble();
-
-      dataString = rpcNode->getChildTextValue("LINESCALE");
-      if (dataString.empty())
-         break;
-      theLineScale = dataString.toDouble();
-
-      dataString = rpcNode->getChildTextValue("SAMPSCALE");
-      if (dataString.empty())
-         break;
-      theSampScale = dataString.toDouble();
-
-      dataString = rpcNode->getChildTextValue("LATSCALE");
-      if (dataString.empty())
-         break;
-      theLatScale = dataString.toDouble();
-
-      dataString = rpcNode->getChildTextValue("LONGSCALE");
-      if (dataString.empty())
-         break;
-      theLonScale = dataString.toDouble();
-
-      dataString = rpcNode->getChildTextValue("HEIGHTSCALE");
-      if (dataString.empty())
-         break;
-      theHeightScale = dataString.toDouble();
-
-      vector<ossimString> ln, ld, sn, sd;
-      rpcNode->getChildTextValue("LINENUMCOEFList/LINENUMCOEF").split(ln, " ", true);
-      rpcNode->getChildTextValue("LINEDENCOEFList/LINEDENCOEF").split(ld, " ", true);
-      rpcNode->getChildTextValue("SAMPNUMCOEFList/SAMPNUMCOEF").split(sn, " ", true);
-      rpcNode->getChildTextValue("SAMPDENCOEFList/SAMPDENCOEF").split(sd, " ", true);
-      if ( (ln.size() != 20) || (ld.size() != 20) || (sn.size() != 20) || (sd.size() != 20))
-         break;
-
-      for (int i=0; i<20; ++i)
-      {
-         theLineNumCoeff.emplace_back(ln[i].toDouble());
-         theLineDenCoeff.emplace_back(ld[i].toDouble());
-         theSampNumCoeff.emplace_back(sn[i].toDouble());
-         theSampDenCoeff.emplace_back(sd[i].toDouble());
-      }
-      success = true; // Well waddaya know!
-   }
-   return success;
 }
 
 bool ossimQuickbirdRpcHeader::readCoeff(std::istream& in,
