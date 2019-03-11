@@ -38,11 +38,13 @@ ossimMultiBandHistogram::ossimMultiBandHistogram(const ossimMultiBandHistogram& 
 ossimMultiBandHistogram::ossimMultiBandHistogram(ossim_int32 numberOfBands,
                                                  ossim_int32 numberOfBuckets,
                                                  float minValue,
-                                                 float maxValue)
+                                                 float maxValue,
+                                                 float nullValue,
+                                                 ossimScalarType scalar)
 {
    if(numberOfBands > 0)
    {
-      create(numberOfBands, numberOfBuckets, minValue, maxValue);
+      create(numberOfBands, numberOfBuckets, minValue, maxValue, nullValue, scalar);
    }
 }
 
@@ -50,108 +52,27 @@ void ossimMultiBandHistogram::create(const ossimImageSource* input)
 {
    if (input)
    {
-      ossim_uint32 bands = input->getNumberOfOutputBands();;
       ossim_uint32 numberOfBins = 0;
-      ossim_float64 minValue = 0.0;
-      ossim_float64 maxValue = 0.0;
-      
-      switch(input->getOutputScalarType())
-      {
-         case OSSIM_UINT8:
-         {
-            minValue     = 0;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_UCHAR;
-            numberOfBins = 256;
-            break;
-         }
-         case OSSIM_USHORT11:
-         {
-            minValue     = 0;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT11;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT11 + 1;
-            break;
-         }
-         case OSSIM_USHORT12:
-         {
-            minValue     = 0;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT12;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT12 + 1;
-            break;
-         }
-         case OSSIM_USHORT13:
-         {
-            minValue     = 0;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT13;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT13 + 1;
-            break;
-         }
-         case OSSIM_USHORT14:
-         {
-            minValue     = 0;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT14;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT14 + 1;
-            break;
-         }
-         case OSSIM_USHORT15:
-         {
-            minValue     = 0;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT15;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT15 + 1;
-            break;
-         }
-         case OSSIM_UINT16:
-         case OSSIM_UINT32:
-         {
-            minValue     = 0;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT16;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT16 + 1;
-            break;
-         }
-         case OSSIM_SINT16:
-         case OSSIM_SINT32:
-         case OSSIM_FLOAT32:
-         case OSSIM_FLOAT64:
-         {
-            //---
-            // Special case to handle DTED which has a null of -32767 and SRTM
-            // which has null of -32768.  Set the min to -32766 which is OK for
-            // both types.  Basically we don't want to count the null values as
-            // a valid pixel. drb - 04 Feb. 2016
-            //
-            // NOTE: OSSIM_DEFAULT_MIN_PIX_SINT16 = -32767
-            //---
-            minValue     = OSSIM_DEFAULT_MIN_PIX_SINT16+1;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_SINT16;
-            numberOfBins = (OSSIM_DEFAULT_MAX_PIX_SINT16-OSSIM_DEFAULT_MIN_PIX_SINT16);
-            break;
-         }
-         case OSSIM_NORMALIZED_FLOAT:
-         case OSSIM_NORMALIZED_DOUBLE:
-         {
-            minValue     = 0;
-            maxValue     = 1.0;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT16+1;
-            break;
-         }
-         default:
-         {
-            ossimNotify(ossimNotifyLevel_WARN)
-               << "Unsupported scalar type in ossimMultiBandHistogram::create()"
-               << std::endl;
-            return;
-         }
-         
-      }  // switch(input->getOutputScalarType())
+      ossim_float32 minValue = 0.0;
+      ossim_float32 maxValue = 0.0;
+      ossim_float32 nullValue = 0.0;
 
-      create(bands, numberOfBins, minValue, maxValue);
-      
-   } // if (input)
+      if ( ossim::getBinInformation( input, 0, numberOfBins,
+                                     minValue, maxValue, nullValue ) )
+      {
+         create( input->getNumberOfOutputBands(),
+                 numberOfBins, minValue, maxValue, nullValue,
+                 input->getOutputScalarType() );
+      }
+   }
 }
 
 void ossimMultiBandHistogram::create(ossim_int32 numberOfBands,
                                      ossim_int32 numberOfBuckets,
                                      float minValue,
-                                     float maxValue)
+                                     float maxValue,
+                                     float nullValue,
+                                     ossimScalarType scalar)
 {
    // Make sure we clear our internal lists before we start.
    deleteHistograms();
@@ -162,9 +83,11 @@ void ossimMultiBandHistogram::create(ossim_int32 numberOfBands,
 
       for(ossim_int32 bands = 0; bands < numberOfBands; ++bands)
       {
-         theHistogramList.push_back(new ossimHistogram(numberOfBuckets,
-                                                       minValue,
-                                                       maxValue));
+         theHistogramList.push_back( new ossimHistogram(numberOfBuckets,
+                                                        minValue,
+                                                        maxValue,
+                                                        nullValue,
+                                                        scalar) );
       }
    }
 }

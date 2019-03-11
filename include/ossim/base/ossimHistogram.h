@@ -1,6 +1,8 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
+//
+// See top level LICENSE.txt file for more.
 //
 // Author: Ken Melero 
 //         Orginally developed by:
@@ -14,12 +16,13 @@
 // segments of some value axis, along with a corresponding array of
 // frequency m_counts for each of these buckets.
 //
-//********************************************************************
-// $Id: ossimHistogram.h 19799 2011-06-30 18:41:26Z gpotts $
+//---
+// $Id$
 //
 
 #ifndef ossimHistogram_HEADER
-#define ossimHistogram_HEADER
+#define ossimHistogram_HEADER 1
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimFilename.h>
@@ -38,7 +41,7 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
    
     float * m_vals;            // histogram x array
                              // (value = midpoint of each bucket)
-    float * m_counts;          // histogram y array ie. count[i] is
+    ossim_int64* m_counts;   // histogram y array ie. count[i] is
                              // the number of pixels with value within range
                              // of bucket i
 
@@ -47,9 +50,22 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
     float m_delta;             // "Width" of each bucket on value axis
     float m_vmin, m_vmax;        // Maximum and minimum values on plot
     mutable float m_mean;               // Mean value of the distribution
-    mutable float m_standardDev;       // 
-  protected:
+    mutable float m_standardDev;       //
 
+    //---
+    // For counting nulls only.
+    // Nulls counted separately, i.e. not stored in a m_counts bin, as they are
+    // not used in any computations.
+    //---
+    ossim_float64 m_nullValue;
+    ossim_uint64  m_nullCount;
+
+    //---
+    // This was added to determine if pixel values are integers.
+    // If so save the state in this form for each bin: "(pixelValue,count)"
+    // else: "(binIndex,count)"
+    //---
+    ossimScalarType m_scalarType;
 
    class ossimProprietaryHeaderInformation
    {
@@ -83,8 +99,8 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
    };
 // Constructors
     ossimHistogram();
-    ossimHistogram(int xres, float min, float max);
-    ossimHistogram(float*, float*, int);
+    ossimHistogram(int xres, float min, float max, float nullValue, ossimScalarType scalar);
+    // ossimHistogram(float*, float*, int);
     ossimHistogram(const ossimHistogram& his); // Copy constructor
     ossimHistogram(const ossimHistogram*, float width); // Resampling constructor
 
@@ -102,6 +118,8 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
     //Suppress non-peak values.
    ossimHistogram* NonMaximumSupress(int radius = 1, bool cyclic = false);
    void create(int xres, float val1, float val2);
+   void create(int bins, float minValue, float maxValue,
+               ossim_float64 nullValue, ossimScalarType scalar);
   
 // Attribute accessors
     void UpCount(float newval, float occurences=1);
@@ -131,13 +149,13 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
       return m_vals; 
     }
 
-    float * GetCounts()
+    ossim_int64 * GetCounts()
     { 
       m_statsConsistent = 0; // m_counts might change.
       return m_counts; 
     }
 
-   const float * GetCounts()const
+   const ossim_int64 * GetCounts()const
     { 
       //m_statsConsistent = 0; // m_counts might change.
       return m_counts; 
@@ -151,13 +169,13 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
     float * GetMinValAddr()
     { return m_vals+GetIndex(GetMinVal());  }
 
-    float * GetMinCountAddr()
+    ossim_int64 * GetMinCountAddr()
     { return m_counts+GetIndex(GetMinVal());  }
 
     const float * GetMinValAddr()const
     { return m_vals+GetIndex(GetMinVal());  }
 
-    const float * GetMinCountAddr()const
+    const ossim_int64 * GetMinCountAddr()const
     { return m_counts+GetIndex(GetMinVal());  }
 
     float ComputeArea(float low, float high)const;// bounded area
@@ -203,6 +221,21 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
                           const char* prefix=0);
    virtual bool saveState(ossimRefPtr<ossimXmlNode> xmlNode)const;
    virtual bool loadState(const ossimRefPtr<ossimXmlNode> xmlNode);
+
+   ossimScalarType getScalarType() const;
+   void setScalarType( ossimScalarType scalar );
+
+   const ossim_float64& getNullValue() const;
+   void setNullValue(const ossim_float64& nullValue);
+   const ossim_uint64& getNullCount() const;
+   void upNullCount( const ossim_uint64& count );
+
+   // Inlined for pixel loops.
+   void upNullCount()
+   {
+      ++m_nullCount;
+   }
+
 TYPE_DATA   
 };
 

@@ -274,21 +274,25 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
       // bool hasHistoOutput = true;
       ossim_uint32 numberOfBands = 1;
       ossim_uint32 numberOfBins  = 0;
-      ossim_float64 minValue     = 0;
-      ossim_float64 maxValue     = 0;
-      ossimScalarType stype;
+      ossim_float32 minValue     = 0;
+      ossim_float32 maxValue     = 0;
+      ossim_float32 nullValue    = 0;
       ossimRefPtr<ossimMultiResLevelHistogram> histogram = 0;
 
       if (theCreateHistogram)
       {
-       stype = tile->getScalarType();
-       histogram = new ossimMultiResLevelHistogram;
-       histogram->create(1);
-       numberOfBands = tile->getNumberOfBands();
-
-       getBinInformation(numberOfBins, minValue, maxValue, stype);
-       histogram->getMultiBandHistogram(0)->create(numberOfBands, numberOfBins, minValue, maxValue);
-
+         // ossimScalarType stype = tile->getScalarType();
+         histogram = new ossimMultiResLevelHistogram;
+         histogram->create(1);
+         numberOfBands = tile->getNumberOfBands();
+         
+         if ( ossim::getBinInformation(theInputConnection, 0, numberOfBins,
+                                       minValue, maxValue, nullValue) )
+         {
+            histogram->getMultiBandHistogram(0)->create(
+               numberOfBands, numberOfBins, minValue, maxValue, nullValue,
+               theInputConnection->getOutputScalarType() );
+         }
       }
       for (ossim_uint32 tile_idx=0; tile_idx<num_tiles; ++tile_idx)
       {
@@ -296,10 +300,13 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
        //tile->setDataObjectStatus(imagedata->getDataObjectStatus());
        if(imagedata->getBuf() && (imagedata->getDataObjectStatus()!=OSSIM_EMPTY))
        {
-         tile->loadTile(imagedata.get());
-         if (theCreateHistogram)
+          tile->loadTile(imagedata.get());
+          if (theCreateHistogram)
          {
-           imagedata->populateHistogram(histogram->getMultiBandHistogram(0));
+            ossimIrect tileRect = tile->getImageRectangle();
+            ossimIrect clipRect = tileRect.clipToRect( theAreaOfInterest );
+            imagedata->populateHistogram(
+               histogram->getMultiBandHistogram(0), clipRect);
          }
        }
        if (traceDebug())

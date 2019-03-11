@@ -6,7 +6,7 @@
 //
 // Author: Garrett Potts
 //
-//*************************************************************************
+//*******************************************************************
 // $Id$
 
 #include <ossim/base/ossimConstants.h>
@@ -34,14 +34,17 @@
 RTTI_DEF1(ossimImageData, "ossimImageData", ossimRectilinearDataObject)
 
 ossimImageData::ossimImageData()
-:  ossimRectilinearDataObject(2, 0, 1, OSSIM_UINT8), // scalar
-   m_nullPixelValue(0),
-   m_minPixelValue(0),
-   m_maxPixelValue(0),
-   m_alpha(0),
-   m_origin(0, 0),
-   m_indexedFlag(false),
-   m_histogram(NULL)
+: ossimRectilinearDataObject(2,            // 2d
+                             0,         // owner
+                             1,            // bands
+                             OSSIM_UINT8), // scalar
+                             m_nullPixelValue(0),
+                             m_minPixelValue(0),
+                             m_maxPixelValue(0),
+                             m_alpha(0),
+                             m_origin(0, 0),
+                             m_indexedFlag(false),
+			     m_histogram(NULL)
 {
    ossimIpt tileSize;
    ossim::defaultTileSize(tileSize);
@@ -53,14 +56,17 @@ ossimImageData::ossimImageData()
 ossimImageData::ossimImageData(ossimSource*    owner,
                                ossimScalarType scalar,
                                ossim_uint32    bands)
-:  ossimRectilinearDataObject(2, owner, bands, scalar),
-   m_nullPixelValue(0),
-   m_minPixelValue(0),
-   m_maxPixelValue(0),
-   m_alpha(0),
-   m_origin(0, 0),
-   m_indexedFlag(false),
-   m_histogram(NULL)
+: ossimRectilinearDataObject(2,
+                             owner,
+                             bands,
+                             scalar),
+                             m_nullPixelValue(0),
+                             m_minPixelValue(0),
+                             m_maxPixelValue(0),
+                             m_alpha(0),
+                             m_origin(0, 0),
+                             m_indexedFlag(false),
+			     m_histogram(NULL)
 {
    ossimIpt tileSize;
    ossim::defaultTileSize(tileSize);
@@ -74,15 +80,19 @@ ossimImageData::ossimImageData(ossimSource* owner,
                                ossim_uint32 bands,
                                ossim_uint32 width,
                                ossim_uint32 height)
-:  ossimRectilinearDataObject(owner, bands, width, height, scalar),
-   m_nullPixelValue(0),
-   m_minPixelValue(0),
-   m_maxPixelValue(0),
-   m_alpha(0),
-   m_origin(0, 0),
-   m_indexedFlag(false),
-   m_histogram(NULL),
-   m_percentFull(0)
+: ossimRectilinearDataObject(owner,
+                             bands,
+                             width, // 2-D array
+                             height,
+                             scalar),
+                             m_nullPixelValue(0),
+                             m_minPixelValue(0),
+                             m_maxPixelValue(0),
+                             m_alpha(0),
+                             m_origin(0, 0),
+                             m_indexedFlag(false),
+			     m_histogram(NULL),
+                             m_percentFull(0)
 {   
    m_spatialExtents[0] = width;
    m_spatialExtents[1] = height;
@@ -90,14 +100,14 @@ ossimImageData::ossimImageData(ossimSource* owner,
 }
 
 ossimImageData::ossimImageData(const ossimImageData &rhs)
-:  ossimRectilinearDataObject(rhs),
-   m_nullPixelValue(rhs.m_nullPixelValue),
-   m_minPixelValue(rhs.m_minPixelValue),
-   m_maxPixelValue(rhs.m_maxPixelValue),
-   m_alpha(rhs.m_alpha),
-   m_origin(rhs.m_origin),
-   m_indexedFlag(rhs.m_indexedFlag),
-   m_percentFull(0)
+: ossimRectilinearDataObject(rhs),
+  m_nullPixelValue(rhs.m_nullPixelValue),
+  m_minPixelValue(rhs.m_minPixelValue),
+  m_maxPixelValue(rhs.m_maxPixelValue),
+  m_alpha(rhs.m_alpha),
+  m_origin(rhs.m_origin),
+  m_indexedFlag(rhs.m_indexedFlag),
+  m_percentFull(0)
 {
 }
 
@@ -219,12 +229,12 @@ const ossim_uint8* ossimImageData::getUcharBuf() const
 
 const ossim_uint16* ossimImageData::getUshortBuf() const
 {
-   if (  m_scalarType == OSSIM_UINT16   ||
+   if (m_scalarType == OSSIM_UINT16 ||
          m_scalarType == OSSIM_USHORT11 ||
-         m_scalarType == OSSIM_USHORT12 ||
-         m_scalarType == OSSIM_USHORT13 ||
-         m_scalarType == OSSIM_USHORT14 ||
-         m_scalarType == OSSIM_USHORT15)
+	 m_scalarType == OSSIM_USHORT12 ||
+	 m_scalarType == OSSIM_USHORT13 ||
+	 m_scalarType == OSSIM_USHORT14 ||
+	 m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<const ossim_uint16*>(getBuf());
    }
@@ -271,12 +281,12 @@ ossim_uint8* ossimImageData::getUcharBuf()
 
 ossim_uint16* ossimImageData::getUshortBuf() 
 {
-   if (  m_scalarType == OSSIM_UINT16   ||
+   if (m_scalarType == OSSIM_UINT16 ||
          m_scalarType == OSSIM_USHORT11 ||
-         m_scalarType == OSSIM_USHORT12 ||
-         m_scalarType == OSSIM_USHORT13 ||
-         m_scalarType == OSSIM_USHORT14 ||
-         m_scalarType == OSSIM_USHORT15)
+	 m_scalarType == OSSIM_USHORT12 ||
+	 m_scalarType == OSSIM_USHORT13 ||
+	 m_scalarType == OSSIM_USHORT14 ||
+	 m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<ossim_uint16*>(getBuf());
    }
@@ -323,12 +333,12 @@ const ossim_uint8* ossimImageData::getUcharBuf(ossim_uint32 band) const
 
 const ossim_uint16* ossimImageData::getUshortBuf(ossim_uint32 band) const
 {
-   if (  m_scalarType == OSSIM_UINT16   ||
+   if (m_scalarType == OSSIM_UINT16 ||
          m_scalarType == OSSIM_USHORT11 ||
-         m_scalarType == OSSIM_USHORT12 ||
-         m_scalarType == OSSIM_USHORT13 ||
-         m_scalarType == OSSIM_USHORT14 ||
-         m_scalarType == OSSIM_USHORT15)
+	 m_scalarType == OSSIM_USHORT12 ||
+	 m_scalarType == OSSIM_USHORT13 ||
+	 m_scalarType == OSSIM_USHORT14 ||
+	 m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<const ossim_uint16*>(getBuf(band));
    }
@@ -375,12 +385,12 @@ ossim_uint8* ossimImageData::getUcharBuf(ossim_uint32 band)
 
 ossim_uint16* ossimImageData::getUshortBuf(ossim_uint32 band) 
 {
-   if (  m_scalarType == OSSIM_UINT16   ||
+   if (m_scalarType == OSSIM_UINT16 ||
          m_scalarType == OSSIM_USHORT11 ||
-         m_scalarType == OSSIM_USHORT12 ||
-         m_scalarType == OSSIM_USHORT13 ||
-         m_scalarType == OSSIM_USHORT14 ||
-         m_scalarType == OSSIM_USHORT15)
+	 m_scalarType == OSSIM_USHORT12 ||
+	 m_scalarType == OSSIM_USHORT13 ||
+	 m_scalarType == OSSIM_USHORT14 ||
+	 m_scalarType == OSSIM_USHORT15)
    {
       return static_cast<ossim_uint16*>(getBuf(band));
    }
@@ -839,186 +849,536 @@ template <class T> ossim_float64 ossimImageData::computeMeanSquaredError(
 //       area of the image.
 //
 //******************************************************************
+/* Method repalace by populateHistogram(...) that takes a clip rect.
+ * drb - 20190218 */
+#if 0
 void ossimImageData::populateHistogram(ossimRefPtr<ossimMultiBandHistogram> histo)
 {
-   ossim_uint32 numberOfBands = getNumberOfBands();
+   if ( (getDataObjectStatus() != OSSIM_NULL) && histo.valid() )
+   {
+      ossim_uint32 numberOfBands = getNumberOfBands();
+      ossim_uint32 upperBound = getWidth()*getHeight();
 
-   if( (getDataObjectStatus() == OSSIM_NULL) ||
-         (getDataObjectStatus() == OSSIM_EMPTY)||
-         (!histo))
-   {
-      return;
-   }
-   switch(getScalarType())
-   {
-   case OSSIM_UINT8:
-   {
-      for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+      if (getDataObjectStatus() != OSSIM_EMPTY)
       {
-         ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
-         if(currentHisto.valid())
+         switch(getScalarType())
          {
-            ossim_uint8 nullpix = (ossim_uint8)getNullPix(band);
-            float* histoBins = currentHisto->GetCounts();
-            int binCount = currentHisto->GetRes();
-            ossim_uint8* buffer = (ossim_uint8*)getBuf(band);
-            ossim_uint32 upperBound = getWidth()*getHeight();
-            if ( binCount == 256 )
+            case OSSIM_UINT8:
             {
-               for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
+               for(ossim_uint32 band = 0; band < numberOfBands; ++band)
                {
-                  if (buffer[offset] != nullpix)
-                     ++histoBins[ buffer[offset] ];
+                  ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                  if(currentHisto.valid())
+                  {
+                     ossim_uint8 nullpix = (ossim_uint8)getNullPix(band);
+                     float* histoBins = currentHisto->GetCounts();
+                     int binCount = currentHisto->GetRes();
+                     ossim_uint8* buffer = (ossim_uint8*)getBuf(band);
+                     ossim_uint32 upperBound = getWidth()*getHeight();
+                     if ( binCount == 256 )
+                     {
+                        for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
+                        {
+                           if (buffer[offset] != nullpix)
+                           {
+                              ++histoBins[ buffer[offset] ];
+                           }
+                           else
+                           {
+                              currentHisto->upNullCount();
+                           }
+                        }
+                     }
+                     else
+                     {
+                        for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
+                        {
+                           if (buffer[offset] != nullpix)
+                           {
+                              currentHisto->UpCount((float)buffer[offset]);
+                           }
+                           else
+                           {
+                              currentHisto->upNullCount();
+                           }
+                        }
+                     }
+                  }
+               }
+               break;
+            }
+            case OSSIM_UINT9:
+            case OSSIM_UINT10:               
+            case OSSIM_UINT11:
+            case OSSIM_UINT12:
+            case OSSIM_UINT13:
+            case OSSIM_UINT14:
+            case OSSIM_UINT15:
+            case OSSIM_UINT16:
+            {
+               for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+               {
+                  ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                  if(currentHisto.valid())
+                  {
+                     ossim_uint16 nullpix = (ossim_uint16)getNullPix(band);
+                     ossim_uint16* buffer = (ossim_uint16*)getBuf(band);
+                     for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
+                     {
+                        if (buffer[offset] != nullpix)
+                        {
+                           currentHisto->UpCount((float)buffer[offset]);
+                        }
+                        else
+                        {
+                           currentHisto->upNullCount();
+                        }
+                     }
+                  }
+               }
+               break;
+            }
+            case OSSIM_SINT16:
+            {
+               for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+               {
+                  ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                  if(currentHisto.valid())
+                  {
+                     ossim_sint16 nullpix = (ossim_sint16)getNullPix(band);
+                     ossim_sint16* buffer = (ossim_sint16*)getBuf(band);
+                     for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
+                     {
+                        if (buffer[offset] != nullpix)
+                        {
+                           currentHisto->UpCount((float)buffer[offset]);
+                        }
+                        else
+                        {
+                           currentHisto->upNullCount();
+                        }
+                     }
+                  }
+               }
+               break;
+            }
+            case OSSIM_SINT32:
+            {
+               for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+               {
+                  ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                  if(currentHisto.valid())
+                  {
+                     ossim_sint32 nullpix = (ossim_sint32)getNullPix(band);
+                     ossim_sint32* buffer = (ossim_sint32*)getBuf(band);
+                     for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
+                     {
+                        if (buffer[offset] != nullpix)
+                        {
+                           currentHisto->UpCount((float)buffer[offset]);
+                        }
+                        else
+                        {
+                           currentHisto->upNullCount();
+                        }
+                     }
+                  }
+               }
+               break;
+            }
+            case OSSIM_UINT32:
+            {
+               for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+               {
+                  ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                  if(currentHisto.valid())
+                  {
+                     ossim_uint32 nullpix = (ossim_uint32)getNullPix(band);
+                     ossim_uint32* buffer = (ossim_uint32*)getBuf(band);
+                     for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
+                     {
+                        if (buffer[offset] != nullpix)
+                        {
+                           currentHisto->UpCount((float)buffer[offset]);
+                        }
+                        else
+                        {
+                           currentHisto->upNullCount();
+                        }
+                     }
+                  }
+               }
+               break;
+            }
+            case OSSIM_NORMALIZED_DOUBLE:
+            case OSSIM_FLOAT64:
+            {
+               ossim_float64 epsilon = 2*DBL_EPSILON;
+               for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+               {
+                  ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                  if(currentHisto.valid())
+                  {
+                     ossim_float64 nullpix = (ossim_float64)getNullPix(band);
+                     if (nullpix == 0.0)
+                        epsilon = 0;
+                     ossim_float64* buffer = (ossim_float64*)getBuf(band);
+                     for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
+                     {
+                        if (!ossim::almostEqual<ossim_float64>(buffer[offset], nullpix, epsilon))
+                        {
+                           currentHisto->UpCount((float)buffer[offset]);
+                        }
+                        else
+                        {
+                           currentHisto->upNullCount();
+                        }
+                     }
+                  }
+               }
+               break;
+            }
+            case OSSIM_NORMALIZED_FLOAT:
+            case OSSIM_FLOAT32:
+            {
+               ossim_float32 epsilon = 2*FLT_EPSILON;
+               for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+               {
+                  ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                  if(currentHisto.valid())
+                  {
+                     ossim_float32 nullpix = (ossim_float32)getNullPix(band);
+                     if (nullpix == 0.0)
+                        epsilon = 0;
+                     ossim_float32* buffer = (ossim_float32*)getBuf(band);
+                     for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
+                     {
+                        if (!ossim::almostEqual<ossim_float32>(buffer[offset], nullpix, epsilon))
+                        {
+                           currentHisto->UpCount((float)buffer[offset]);
+                        }
+                        else
+                        {
+                           currentHisto->upNullCount();
+                        }
+                     }
+                  }
+               }
+               break;
+            }
+            case OSSIM_SCALAR_UNKNOWN:
+            default:
+            {
+               //ERROR
+               ossimNotify(ossimNotifyLevel_WARN)
+                  << "ossimImageData::populateHistogram\n"
+                  << "Unknown scalar type." << std::endl;
+            }
+         }  // end of switch
+      }
+      else // Tile is empty.
+      {
+         for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+         {
+            ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+            if(currentHisto.valid())
+            {
+               currentHisto->upNullCount( upperBound );
+            }
+         }
+      }
+   }
+}
+#endif
+
+void ossimImageData::populateHistogram(ossimRefPtr<ossimMultiBandHistogram> histo,
+                                       const ossimIrect& clip_rect)
+{
+   if ( (getDataObjectStatus() != OSSIM_NULL) && histo.valid() )
+   {
+      const ossimIrect img_rect = getImageRectangle();
+      ossimIrect tile_clip_rect = img_rect.clipToRect( clip_rect );
+
+      // Check the clip rect.
+      if ( tile_clip_rect.completely_within(img_rect) )
+      {
+         ossim_uint32 numberOfBands = getNumberOfBands();
+         ossim_uint32 imgWidth = getWidth();
+         ossim_uint32 clipHeight = tile_clip_rect.height();
+         ossim_uint32 clipWidth  = tile_clip_rect.width();
+
+         if (getDataObjectStatus() != OSSIM_EMPTY)
+         {
+            switch(getScalarType())
+            {
+               case OSSIM_UINT8:
+               {
+                  for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+                  {
+                     ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                     if(currentHisto.valid())
+                     {
+                        ossim_uint8 nullpix = (ossim_uint8)getNullPix(band);
+                        ossim_uint8* buffer = (ossim_uint8*)getBuf(band);
+
+                        // Move the pointer to the first valid pixel.
+                        buffer += (tile_clip_rect.ul().y - img_rect.ul().y) * imgWidth
+                           + tile_clip_rect.ul().x - img_rect.ul().x;
+
+                        for (ossim_uint32 line = 0; line < clipHeight; ++line)
+                        {
+                           for (ossim_uint32 sample = 0; sample < clipWidth; ++sample)
+                           {
+                              if ( buffer[sample] != nullpix )
+                              {
+                                 currentHisto->UpCount((float)buffer[sample]);
+                              }
+                              else
+                              {
+                                 currentHisto->upNullCount();
+                              }
+                           }
+                           buffer += imgWidth;
+                        }
+                     }
+                  }
+                  break;
+               }
+               case OSSIM_UINT9:
+               case OSSIM_UINT10:
+               case OSSIM_UINT11:
+               case OSSIM_UINT12:
+               case OSSIM_UINT13:
+               case OSSIM_UINT14:
+               case OSSIM_UINT15:
+               case OSSIM_UINT16:
+               {
+                  for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+                  {
+                     ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                     if(currentHisto.valid())
+                     {
+                        ossim_uint16 nullpix = (ossim_uint16)getNullPix(band);
+                        ossim_uint16* buffer = (ossim_uint16*)getBuf(band);
+
+                        // Move the pointer to the first valid pixel.
+                        buffer += (tile_clip_rect.ul().y - img_rect.ul().y) * imgWidth
+                           + tile_clip_rect.ul().x - img_rect.ul().x;
+
+                        for (ossim_uint32 line = 0; line < clipHeight; ++line)
+                        {
+                           for (ossim_uint32 sample = 0; sample < clipWidth; ++sample)
+                           {
+                              if ( buffer[sample] != nullpix )
+                              {
+                                 currentHisto->UpCount((float)buffer[sample]);
+                              }
+                              else
+                              {
+                                 currentHisto->upNullCount();
+                              }
+                           }
+                           buffer += imgWidth;
+                        }
+                     }
+                  }
+                  break;
+               }
+               case OSSIM_SINT16:
+               {
+                  for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+                  {
+                     ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                     if(currentHisto.valid())
+                     {
+                        ossim_sint16 nullpix = (ossim_sint16)getNullPix(band);
+                        ossim_sint16* buffer = (ossim_sint16*)getBuf(band);
+
+                        // Move the pointer to the first valid pixel.
+                        buffer += (tile_clip_rect.ul().y - img_rect.ul().y) * imgWidth
+                           + tile_clip_rect.ul().x - img_rect.ul().x;
+
+                        for (ossim_uint32 line = 0; line < clipHeight; ++line)
+                        {
+                           for (ossim_uint32 sample = 0; sample < clipWidth; ++sample)
+                           {
+                              if ( buffer[sample] != nullpix )
+                              {
+                                 currentHisto->UpCount((float)buffer[sample]);
+                              }
+                              else
+                              {
+                                 currentHisto->upNullCount();
+                              }
+                           }
+                           buffer += imgWidth;
+                        }
+                     }
+                  }
+                  break;
+               }
+               case OSSIM_SINT32:
+               {
+                  for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+                  {
+                     ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                     if(currentHisto.valid())
+                     {
+                        ossim_sint32 nullpix = (ossim_sint32)getNullPix(band);
+                        ossim_sint32* buffer = (ossim_sint32*)getBuf(band);
+
+                        // Move the pointer to the first valid pixel.
+                        buffer += (tile_clip_rect.ul().y - img_rect.ul().y) * imgWidth
+                           + tile_clip_rect.ul().x - img_rect.ul().x;
+
+                        for (ossim_uint32 line = 0; line < clipHeight; ++line)
+                        {
+                           for (ossim_uint32 sample = 0; sample < clipWidth; ++sample)
+                           {
+                              if ( buffer[sample] != nullpix )
+                              {
+                                 currentHisto->UpCount((float)buffer[sample]);
+                              }
+                              else
+                              {
+                                 currentHisto->upNullCount();
+                              }
+                           }
+                           buffer += imgWidth;
+                        }
+                     }
+                  }
+                  break;
+               }
+               case OSSIM_UINT32:
+               {
+                  for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+                  {
+                     ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                     if(currentHisto.valid())
+                     {
+                        ossim_uint32 nullpix = (ossim_uint32)getNullPix(band);
+                        ossim_uint32* buffer = (ossim_uint32*)getBuf(band);
+
+                        // Move the pointer to the first valid pixel.
+                        buffer += (tile_clip_rect.ul().y - img_rect.ul().y) * imgWidth
+                           + tile_clip_rect.ul().x - img_rect.ul().x;
+
+                        for (ossim_uint32 line = 0; line < clipHeight; ++line)
+                        {
+                           for (ossim_uint32 sample = 0; sample < clipWidth; ++sample)
+                           {
+                              if ( buffer[sample] != nullpix )
+                              {
+                                 currentHisto->UpCount((float)buffer[sample]);
+                              }
+                              else
+                              {
+                                 currentHisto->upNullCount();
+                              }
+                           }
+                           buffer += imgWidth;
+                        }
+                     }
+                  }
+                  break;
+               }
+               case OSSIM_NORMALIZED_FLOAT:
+               case OSSIM_FLOAT32:
+               {
+                  ossim_float32 epsilon = 2*FLT_EPSILON;
+                  for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+                  {
+                     ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                     if(currentHisto.valid())
+                     {
+                        ossim_float32 nullpix = (ossim_float32)getNullPix(band);
+                        if (nullpix == 0.0) epsilon = 0;
+                        ossim_float32* buffer = (ossim_float32*)getBuf(band);
+
+                        // Move the pointer to the first valid pixel.
+                        buffer += (tile_clip_rect.ul().y - img_rect.ul().y) * imgWidth
+                           + tile_clip_rect.ul().x - img_rect.ul().x;
+
+                        for (ossim_uint32 line = 0; line < clipHeight; ++line)
+                        {
+                           for (ossim_uint32 sample = 0; sample < clipWidth; ++sample)
+                           {
+                              if ( !ossim::almostEqual<ossim_float32>(
+                                      buffer[sample], nullpix, epsilon) )
+                              {
+                                 currentHisto->UpCount((float)buffer[sample]);
+                              }
+                              else
+                              {
+                                 currentHisto->upNullCount();
+                              }
+                           }
+                        }
+                     }
+                  }
+                  break;
+               }
+               case OSSIM_NORMALIZED_DOUBLE:
+               case OSSIM_FLOAT64:
+               {
+                  ossim_float64 epsilon = 2*DBL_EPSILON;
+                  for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+                  {
+                     ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+                     if(currentHisto.valid())
+                     {
+                        ossim_float64 nullpix = (ossim_float64)getNullPix(band);
+                        if (nullpix == 0.0)
+                           epsilon = 0;
+                        ossim_float64* buffer = (ossim_float64*)getBuf(band);
+
+                        // Move the pointer to the first valid pixel.
+                        buffer += (tile_clip_rect.ul().y - img_rect.ul().y) * imgWidth
+                           + tile_clip_rect.ul().x - img_rect.ul().x;
+
+                        for (ossim_uint32 line = 0; line < clipHeight; ++line)
+                        {
+                           for (ossim_uint32 sample = 0; sample < clipWidth; ++sample)
+                           {
+                              if ( !ossim::almostEqual<ossim_float64>(
+                                      buffer[sample], nullpix, epsilon) )
+                              {
+                                 currentHisto->UpCount((float)buffer[sample]);
+                              }
+                              else
+                              {
+                                 currentHisto->upNullCount();
+                              }
+                           }
+                        }
+                     }
+                  }
+                  break;
+               }
+               case OSSIM_SCALAR_UNKNOWN:
+               default:
+               {
+                  //ERROR
+                  ossimNotify(ossimNotifyLevel_WARN)
+                     << "ossimImageData::populateHistogram\n"
+                     << "Unknown scalar type." << std::endl;
+               }
+            }  // end of switch
+         }
+         else // Tile is empty.
+         {
+            for(ossim_uint32 band = 0; band < numberOfBands; ++band)
+            {
+               ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
+               if(currentHisto.valid())
+               {
+                  currentHisto->upNullCount( tile_clip_rect.area() );
                }
             }
-            else
-            {
-               for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
-               {
-                  if (buffer[offset] != nullpix)
-                     currentHisto->UpCount((float)buffer[offset]);
-               }
-            }
          }
       }
-      break;
    }
-   case OSSIM_UINT16:
-   case OSSIM_USHORT11:
-   case OSSIM_USHORT12:
-   case OSSIM_USHORT13:
-   case OSSIM_USHORT14:
-   case OSSIM_USHORT15:
-   {
-      for(ossim_uint32 band = 0; band < numberOfBands; ++band)
-      {
-         ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
-         if(currentHisto.valid())
-         {
-            ossim_uint16 nullpix = (ossim_uint16)getNullPix(band);
-            ossim_uint16* buffer = (ossim_uint16*)getBuf(band);
-            ossim_uint32 upperBound = getWidth()*getHeight();
-            for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
-            {
-               if (buffer[offset] != nullpix)
-                  currentHisto->UpCount((float)buffer[offset]);
-            }
-         }
-      }
-      break;
-   }
-   case OSSIM_SINT16:
-   {
-      for(ossim_uint32 band = 0; band < numberOfBands; ++band)
-      {
-         ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
-         if(currentHisto.valid())
-         {
-            ossim_sint16 nullpix = (ossim_sint16)getNullPix(band);
-            ossim_sint16* buffer = (ossim_sint16*)getBuf(band);
-            ossim_uint32 upperBound = getWidth()*getHeight();
-            for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
-            {
-               if (buffer[offset] != nullpix)
-                  currentHisto->UpCount((float)buffer[offset]);
-            }
-         }
-      }
-      break;
-   }
-   case OSSIM_SINT32:
-   {
-      for(ossim_uint32 band = 0; band < numberOfBands; ++band)
-      {
-         ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
-         if(currentHisto.valid())
-         {
-            ossim_sint32 nullpix = (ossim_sint32)getNullPix(band);
-            ossim_sint32* buffer = (ossim_sint32*)getBuf(band);
-            ossim_uint32 upperBound = getWidth()*getHeight();
-            for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
-            {
-               if (buffer[offset] != nullpix)
-                  currentHisto->UpCount((float)buffer[offset]);
-            }
-         }
-      }
-      break;
-   }
-   case OSSIM_UINT32:
-   {
-      for(ossim_uint32 band = 0; band < numberOfBands; ++band)
-      {
-         ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
-         if(currentHisto.valid())
-         {
-            ossim_uint32 nullpix = (ossim_uint32)getNullPix(band);
-            ossim_uint32* buffer = (ossim_uint32*)getBuf(band);
-            ossim_uint32 upperBound = getWidth()*getHeight();
-            for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
-            {
-               if (buffer[offset] != nullpix)
-                  currentHisto->UpCount((float)buffer[offset]);
-            }
-         }
-      }
-      break;
-   }
-   case OSSIM_NORMALIZED_DOUBLE:
-   case OSSIM_FLOAT64:
-   {
-      ossim_float64 epsilon = 2*DBL_EPSILON;
-      for(ossim_uint32 band = 0; band < numberOfBands; ++band)
-      {
-         ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
-         if(currentHisto.valid())
-         {
-            ossim_float64 nullpix = (ossim_float64)getNullPix(band);
-            if (nullpix == 0.0)
-               epsilon = 0;
-            ossim_float64* buffer = (ossim_float64*)getBuf(band);
-            ossim_uint32 upperBound = getWidth()*getHeight();
-            for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
-            {
-               if (!ossim::almostEqual<ossim_float64>(buffer[offset], nullpix, epsilon))
-                  currentHisto->UpCount((float)buffer[offset]);
-            }
-         }
-      }
-      break;
-   }
-   case OSSIM_NORMALIZED_FLOAT:
-   case OSSIM_FLOAT32:
-   {
-      ossim_float32 epsilon = 2*FLT_EPSILON;
-      for(ossim_uint32 band = 0; band < numberOfBands; ++band)
-      {
-         ossimRefPtr<ossimHistogram> currentHisto = histo->getHistogram(band);
-         if(currentHisto.valid())
-         {
-            ossim_float32 nullpix = (ossim_float32)getNullPix(band);
-            if (nullpix == 0.0)
-               epsilon = 0;
-            ossim_float32* buffer = (ossim_float32*)getBuf(band);
-            ossim_uint32 upperBound = getWidth()*getHeight();
-            for(ossim_uint32 offset = 0; offset < upperBound; ++offset)
-            {
-               if (!ossim::almostEqual<ossim_float32>(buffer[offset], nullpix, epsilon))
-                  currentHisto->UpCount((float)buffer[offset]);
-            }
-         }
-      }
-      break;
-   }
-   case OSSIM_SCALAR_UNKNOWN:
-   default:
-   {
-      //ERROR
-      ossimNotify(ossimNotifyLevel_WARN)
-      << "ossimImageData::populateHistogram\n"
-      << "Unknown scalar type." << std::endl;
-   }
-   }  // end of switch
 }
 
 ossim_float64 ossimImageData::computeAverageBandValue(ossim_uint32 bandNumber) const
@@ -1432,7 +1792,8 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            unsigned char* buf = static_cast<unsigned char*>(getBuf(band))+offset;
+            unsigned char* buf = static_cast<unsigned char*>(getBuf(band))+
+                  offset;
             *buf = (unsigned char)color;
          }
          break;
@@ -1441,7 +1802,8 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            ossim_sint8* buf = static_cast<ossim_sint8*>(getBuf(band))+offset;
+            ossim_sint8* buf = static_cast<ossim_sint8*>(getBuf(band))+
+                  offset;
             *buf = (ossim_sint8)color;
          }
          break;
@@ -1455,7 +1817,8 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            ossim_uint16* buf = static_cast<ossim_uint16*>(getBuf(band))+offset;
+            ossim_uint16* buf = static_cast<ossim_uint16*>(getBuf(band))+
+                  offset;
             *buf = (ossim_uint16)color;
          }
          break;
@@ -1464,7 +1827,8 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            signed short* buf = static_cast<signed short*>(getBuf(band))+offset;
+            signed short* buf = static_cast<signed short*>(getBuf(band))+
+                  offset;
             *buf = (signed short)color;
          }
          break;
@@ -1473,7 +1837,8 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            ossim_uint32* buf = static_cast<ossim_uint32*>(getBuf(band))+offset;
+            ossim_uint32* buf = static_cast<ossim_uint32*>(getBuf(band))+
+                  offset;
             *buf = (ossim_uint32)color;
          }
          break;
@@ -1482,7 +1847,8 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          for(band = 0; band < m_numberOfDataComponents; band++)
          {
-            ossim_sint32* buf = static_cast<ossim_sint32*>(getBuf(band))+offset;
+            ossim_sint32* buf = static_cast<ossim_sint32*>(getBuf(band))+
+                  offset;
             *buf = (ossim_sint32)color;
          }
          break;
@@ -1512,90 +1878,11 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
       {
          //ERROR
          ossimNotify(ossimNotifyLevel_WARN)
-               << "ossimImageData::setValue Unsupported scalar type!"
-               << std::endl;
-      }
-      } // End of:  switch (getScalarType())
-   }
-}
-void ossimImageData::setValue(ossim_int32 x, ossim_int32 y,
-                              ossim_float64 color, ossim_uint32 band)
-{
-   if(m_dataBuffer.size() > 0 && isWithin(x, y))
-   {
-      //***
-      // Compute the offset into the buffer for (x,y).  This should always
-      // come out positive.
-      //***
-      ossim_uint32 ux = static_cast<ossim_uint32>(x - m_origin.x);
-      ossim_uint32 uy = static_cast<ossim_uint32>(y - m_origin.y);
-      ossim_uint32 offset = uy * m_spatialExtents[0] + ux;
+         << "ossimImageData::setValue Unsupported scalar type!"
+         << std::endl;
 
-      switch (getScalarType())
-      {
-      case OSSIM_UINT8:
-      {
-         unsigned char* buf = static_cast<unsigned char*>(getBuf(band))+offset;
-         *buf = (unsigned char)color;
-         break;
       }
-      case OSSIM_SINT8:
-      {
-         ossim_sint8* buf = static_cast<ossim_sint8*>(getBuf(band))+offset;
-         *buf = (ossim_sint8)color;
-         break;
-      }
-      case OSSIM_UINT16:
-      case OSSIM_USHORT11:
-      case OSSIM_USHORT12:
-      case OSSIM_USHORT13:
-      case OSSIM_USHORT14:
-      case OSSIM_USHORT15:
-      {
-         ossim_uint16* buf = static_cast<ossim_uint16*>(getBuf(band))+offset;
-         *buf = (ossim_uint16)color;
-         break;
-      }
-      case OSSIM_SINT16:
-      {
-         signed short* buf = static_cast<signed short*>(getBuf(band))+offset;
-         *buf = (signed short)color;
-         break;
-      }
-      case OSSIM_UINT32:
-      {
-         ossim_uint32* buf = static_cast<ossim_uint32*>(getBuf(band))+offset;
-         *buf = (ossim_uint32)color;
-         break;
-      }
-      case OSSIM_SINT32:
-      {
-         ossim_sint32* buf = static_cast<ossim_sint32*>(getBuf(band))+offset;
-         *buf = (ossim_sint32)color;
-         break;
-      }
-      case OSSIM_NORMALIZED_FLOAT:
-      case OSSIM_FLOAT32:
-      {
-         ossim_float32* buf = static_cast<ossim_float32*>(getBuf(band))+offset;
-         *buf = (ossim_float32)color;
-         break;
-      }
-      case OSSIM_FLOAT64:
-      case OSSIM_NORMALIZED_DOUBLE:
-      {
-         ossim_float64* buf = static_cast<ossim_float64*>(getBuf(band))+offset;
-         *buf = color;
-         break;
-      }
-      case OSSIM_SCALAR_UNKNOWN:
-      default:
-      {
-         //ERROR
-         ossimNotify(ossimNotifyLevel_WARN)
-               << "ossimImageData::setValue Unsupported scalar type!"
-               << std::endl;
-      }
+
       } // End of:  switch (getScalarType())
    }
 }
@@ -3778,6 +4065,73 @@ __LINE__);
    }
 }
 
+void ossimImageData::loadTileFromBsqAlpha(const void* src,
+                                          const ossimIrect& src_rect,
+                                          const ossimIrect& clip_rect)
+{
+   switch ( getScalarType() )
+   {
+      case OSSIM_UINT8:
+      {
+         loadTileFromBsqAlphaTemplate(ossim_uint8(0), src, src_rect, clip_rect);
+         return;
+      }
+      case OSSIM_SINT8:
+      {
+         loadTileFromBsqAlphaTemplate(ossim_sint8(0), src, src_rect, clip_rect);
+         return;
+      }
+      case OSSIM_UINT16:
+      case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
+      {
+         loadTileFromBsqAlphaTemplate(ossim_uint16(0), src, src_rect, clip_rect);
+         return;
+      }
+      case OSSIM_SINT16:
+      {
+         loadTileFromBsqAlphaTemplate(ossim_sint16(0), src, src_rect, clip_rect);
+         return;
+      }
+      case OSSIM_UINT32:
+      {
+         loadTileFromBsqAlphaTemplate(ossim_uint32(0), src, src_rect, clip_rect);
+         return;
+      }
+      case OSSIM_SINT32:
+      {
+         loadTileFromBsqAlphaTemplate(ossim_sint32(0), src, src_rect, clip_rect);
+         return;
+      }
+      case OSSIM_NORMALIZED_FLOAT:
+      case OSSIM_FLOAT32:
+      {
+         loadTileFromBsqAlphaTemplate(ossim_float32(0), src, src_rect, clip_rect);
+         return;
+      }
+      case OSSIM_NORMALIZED_DOUBLE:
+      case OSSIM_FLOAT64:
+      {
+         loadTileFromBsqAlphaTemplate(ossim_float64(0), src, src_rect, clip_rect);
+         return;
+      }
+      case OSSIM_SCALAR_UNKNOWN:
+      default:
+      {
+         ossimSetError(getClassName(),
+                       ossimErrorCodes::OSSIM_ERROR,
+                       "ossimImageData::loadTileFromBsqAlpha\n\
+File %s line %d\nUnsupported scalar type for method!",
+                       __FILE__,
+                       __LINE__);
+         return;
+      }
+   }
+}
+
 void ossimImageData::computeMinMaxPix(vector<ossim_float64>& minBands,
                                       vector<ossim_float64>& maxBands) const
 {
@@ -4461,6 +4815,98 @@ void ossimImageData::loadTileFromBsqTemplate(T, // dummy template variable
                             = s[sourceIndex+sample];
          }
          sourceIndex += s_width;
+         destinationIndex += d_width;
+      }
+   }
+}
+
+template <class T>
+void ossimImageData::loadTileFromBsqAlphaTemplate(T, // dummy template variable
+                                                  const void* src,
+                                                  const ossimIrect& src_rect,
+                                                  const ossimIrect& clip_rect)
+{
+   static const char  MODULE[] = "ossimImageData::loadTileFromBsqAlphaTemplate";
+   
+   // Check the pointer.
+   if (!src)
+   {
+      // Set the error...
+      ossimSetError(getClassName(),
+                    ossimErrorCodes::OSSIM_ERROR,
+                    "%s File %s line %d\nNULL pointer passed to method!",
+                    MODULE,
+                    __FILE__,
+                    __LINE__);
+      return;
+   }
+
+   const ossimIrect img_rect = getImageRectangle();
+
+   // Check for intersect.
+   if ( ! img_rect.intersects(src_rect) )
+   {
+      return; // Nothing to do here.
+   }
+
+   // Check the clip rect.
+   if (!clip_rect.completely_within(img_rect))
+   {
+      return;
+   }
+
+   // Check the status and allocate memory if needed.
+   if (getDataObjectStatus() == OSSIM_NULL) initialize();
+
+   // Get the width of the buffers.
+   ossim_uint32 num_bands = getNumberOfBands();
+   ossim_uint32 s_width = src_rect.width();
+   ossim_uint32 d_width = getWidth();
+   ossim_uint32 s_band_offset = s_width * src_rect.height();
+
+   const T* s = static_cast<const T*>(src);
+
+   // Pointer to the alpha band:
+   const T* a = s + (s_band_offset*num_bands);
+
+   ossim_uint32 band;
+   ossim_uint32 destinationOffset = (clip_rect.ul().y - img_rect.ul().y) * d_width +
+         (clip_rect.ul().x - img_rect.ul().x);
+   ossim_uint32 destinationIndex = destinationOffset;
+   ossim_uint32 sourceOffset = (clip_rect.ul().y - src_rect.ul().y) * s_width +
+         (clip_rect.ul().x - src_rect.ul().x);
+   ossim_uint32 sourceIndex = sourceOffset;
+   ossim_uint32 clipHeight = clip_rect.height();
+   ossim_uint32 clipWidth = clip_rect.width();
+
+   // Copy the data.
+   for (band=0; band<num_bands; ++band)
+   {
+      //---
+      // Get the mid range pix for the alpha clamp.
+      // Alpha clamp(AC):
+      // Any alpha pixel below that implies output pixel should be null.
+      //---
+      const T AC = (T)(getMaxPix(band)*0.5);
+      const T NP = (T)getNullPix(band);
+      const T MP = (T)getMinPix(band); 
+     
+      T* destinationBand = static_cast<T*>(getBuf(band));
+      destinationIndex = destinationOffset;
+      sourceIndex = sourceOffset + s_band_offset*band;
+
+      ossim_uint32 alphaIndex = sourceOffset;
+      
+      for (ossim_uint32 line = 0; line < clipHeight; ++line)
+      {
+         for (ossim_uint32 sample = 0; sample < clipWidth; ++sample)
+         {
+            T pix = s[sourceIndex+sample];
+            destinationBand[destinationIndex + sample] = (a[alphaIndex+sample] >= AC) ?
+               ( (pix > MP) ? pix : MP ) : NP;
+         }
+         sourceIndex      += s_width;
+         alphaIndex       += s_width;
          destinationIndex += d_width;
       }
    }
@@ -7616,4 +8062,14 @@ void ossimImageData::setHistogram(ossimRefPtr<ossimMultiResLevelHistogram> histo
 ossimRefPtr<ossimMultiResLevelHistogram> ossimImageData::getHistogram()
 {
   return m_histogram;
+}
+
+ossim_float64 ossimImageData::percentFull() const
+{
+   return m_percentFull;
+}
+
+void ossimImageData::setPercentFull( const ossim_float64& percentFull )
+{
+   m_percentFull = percentFull;
 }
