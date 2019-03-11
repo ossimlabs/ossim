@@ -525,13 +525,14 @@ bool ossimQuickbirdRpcModel::findSupportFile(ossimFilename &filename) const
       return true;
    }
    extension.downcase();
+   f.setExtension(extension);
    if (f.exists())
    {
       filename = f;
       return true;
    }
 
-      // None found so far, search for mosaic-global support file:
+   // None found so far, search for mosaic-global support file:
    f = f.replaceAllThatMatch("_R[0-9]+C[0-9]+");
    if (f.exists())
    {
