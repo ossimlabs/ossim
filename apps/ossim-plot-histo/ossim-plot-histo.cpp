@@ -90,10 +90,10 @@ void plotHistogram(const ossimFilename& histoFile, const ossimString& plotWith,
    ossimRefPtr<ossimHistogram> histogram = h->getHistogram(band);
    int numBins = histogram->GetRes();
    const float* x = histogram->GetVals();
-   const float* y = histogram->GetCounts();
+   const ossim_int64* y = histogram->GetCounts();
    for (int i=0; i<numBins; ++i)
    {
-      fprintf(gnuplotPipe, "%f %f \n", x[i], y[i]);
+      fprintf(gnuplotPipe, "%f %i \n", x[i], y[i]);
    }
    fprintf(gnuplotPipe, "e");
    fclose(gnuplotPipe);

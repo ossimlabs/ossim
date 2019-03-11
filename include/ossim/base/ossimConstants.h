@@ -278,41 +278,44 @@ enum ossimPixelType
 enum ossimScalarType
 {
    OSSIM_SCALAR_UNKNOWN    =  0, 
-   OSSIM_UINT8             =  1, /**< 8 bit unsigned integer        */
-   OSSIM_SINT8             =  2, /**< 8 bit signed integer          */
-   OSSIM_UINT16            =  3, /**< 16 bit unsigned integer       */
-   OSSIM_SINT16            =  4, /**< 16 bit signed integer         */
-   OSSIM_UINT32            =  5, /**< 32 bit unsigned integer       */
-   OSSIM_SINT32            =  6, /**< 32 bit signed integer         */
-   OSSIM_UINT64            =  7, /**< 64 bit unsigned integer       */
-   OSSIM_SINT64            =  8, /**< 64 bit signed integer         */
-   OSSIM_FLOAT32           =  9, /**< 32 bit floating point         */
-   OSSIM_FLOAT64           = 10, /**< 64 bit floating point         */
-   OSSIM_CINT16            = 11, /**< 16 bit complex integer        */
-   OSSIM_CINT32            = 12, /**< 32 bit complex integer        */
-   OSSIM_CFLOAT32          = 13, /**< 32 bit complex floating point */
-   OSSIM_CFLOAT64          = 14, /**< 64 bit complex floating point */
-   OSSIM_NORMALIZED_FLOAT  = 15, /**< 32 bit normalized floating point */
-   OSSIM_NORMALIZED_DOUBLE = 16, /**< 64 bit normalized floating point */
-   OSSIM_UINT11            = 17, /**< 16 bit unsigned integer (11 bits used) */
-   OSSIM_UINT12            = 18, /**< 16 bit unsigned integer (12 bits used) */
-   OSSIM_UINT13            = 19, /**< 16 bit unsigned integer (13 bits used) */
-   OSSIM_UINT14            = 20, /**< 16 bit unsigned integer (14 bits used) */
-   OSSIM_UINT15            = 21, /**< 16 bit unsigned integer (15 bits used) */
+   OSSIM_UINT8             =  1, /**<  8 bit unsigned integer */
+   OSSIM_UINT9             =  2, /**< 16 bit unsigned integer (9 bits used) */
+   OSSIM_UINT10            =  3, /**< 16 bit unsigned integer (10 bits used) */
+   OSSIM_UINT11            =  4, /**< 16 bit unsigned integer (11 bits used) */   
+   OSSIM_UINT12            =  5, /**< 16 bit unsigned integer (12 bits used) */
+   OSSIM_UINT13            =  6, /**< 16 bit unsigned integer (13 bits used) */
+   OSSIM_UINT14            =  7, /**< 16 bit unsigned integer (14 bits used) */
+   OSSIM_UINT15            =  8, /**< 16 bit unsigned integer (15 bits used) */  
+   OSSIM_UINT16            =  9, /**< 16 bit unsigned integer       */
+   OSSIM_UINT32            = 10, /**< 32 bit unsigned integer       */
+   OSSIM_UINT64            = 11, /**< 64 bit unsigned integer       */
+   OSSIM_SINT8             = 12, /**<  8 bit signed integer         */
+   OSSIM_SINT16            = 13, /**< 16 bit signed integer         */
+   OSSIM_SINT32            = 14, /**< 32 bit signed integer         */
+   OSSIM_SINT64            = 15, /**< 64 bit signed integer         */
+   OSSIM_FLOAT32           = 16, /**< 32 bit floating point         */
+   OSSIM_FLOAT64           = 17, /**< 64 bit floating point         */
+   OSSIM_CINT16            = 18, /**< 16 bit complex integer        */
+   OSSIM_CINT32            = 19, /**< 32 bit complex integer        */
+   OSSIM_CFLOAT32          = 20, /**< 32 bit complex floating point */
+   OSSIM_CFLOAT64          = 21, /**< 64 bit complex floating point */
+   OSSIM_NORMALIZED_FLOAT  = 22, /**< 32 bit normalized floating point */
+   OSSIM_NORMALIZED_DOUBLE = 23, /**< 64 bit normalized floating point */
+
    //---
    // Below for backward compatibility only.  Please use above enums in
    // conjunction with null, min, max settings to determine bit depth.
    //---
-   OSSIM_USHORT11          = 17, /**< 16 bit unsigned integer (11 bits used) */
-   OSSIM_USHORT12          = 18, /**< 16 bit unsigned integer (12 bits used) */
-   OSSIM_USHORT13          = 19, /**< 16 bit unsigned integer (13 bits used) */
-   OSSIM_USHORT14          = 20, /**< 16 bit unsigned integer (14 bits used) */
-   OSSIM_USHORT15          = 21, /**< 16 bit unsigned integer (15 bits used) */
-   OSSIM_UCHAR             = 1,  /**< 8 bit unsigned iteger  */
-   OSSIM_USHORT16          = 3,  /**< 16 bit unsigned iteger */
-   OSSIM_SSHORT16          = 4,  /**< 16 bit signed integer  */
-   OSSIM_FLOAT             = 9,  /**< 32 bit floating point  */
-   OSSIM_DOUBLE            = 10, /**< 64 bit floating point  */
+   OSSIM_UCHAR             =  1, /**<  8 bit unsigned integer */
+   OSSIM_USHORT11          =  4, /**< 16 bit unsigned integer (11 bits used) */
+   OSSIM_USHORT12          =  5, /**< 16 bit unsigned integer (12 bits used) */
+   OSSIM_USHORT13          =  6, /**< 16 bit unsigned integer (13 bits used) */
+   OSSIM_USHORT14          =  7, /**< 16 bit unsigned integer (14 bits used) */
+   OSSIM_USHORT15          =  8, /**< 16 bit unsigned integer (15 bits used) */
+   OSSIM_USHORT16          =  9, /**< 16 bit unsigned integer */
+   OSSIM_SSHORT16          = 13, /**< 16 bit signed integer  */
+   OSSIM_FLOAT             = 16, /**< 32 bit floating point  */
+   OSSIM_DOUBLE            = 17  /**< 64 bit floating point  */
 };
 
 /*
@@ -487,46 +490,35 @@ enum ossimCompareType
 #endif
 
 //---
-// Integer nan kept for ossimIpt.
-// This should be the most negative int: -2147483648
+// Integer nan kept for ossimIpt and templated ossim::Pt
+// This should be the most negative int.
+// 32 bit: -2147483648
+// 64 bit: -9223372036854775808
 //---
 #define OSSIM_INT_NAN ((ossim_sint32)0x80000000)
+#define OSSIM_INT32_NAN ((ossim_sint32)0x80000000)
+#define OSSIM_INT64_NAN ((ossim_sint64)0x8000000000000000)
 
+// UCHAR for backwards compatibility. */
 #define OSSIM_DEFAULT_NULL_PIX_UCHAR  ((ossim_uint8)0)
 #define OSSIM_DEFAULT_MIN_PIX_UCHAR   ((ossim_uint8)1)
 #define OSSIM_DEFAULT_MAX_PIX_UCHAR   ((ossim_uint8)255)
-
-#define OSSIM_DEFAULT_NULL_PIX_UINT8  ((ossim_uint8)0)
-#define OSSIM_DEFAULT_MIN_PIX_UINT8   ((ossim_uint8)1)
-#define OSSIM_DEFAULT_MAX_PIX_UINT8   ((ossim_uint8)255)
 
 #define OSSIM_DEFAULT_NULL_PIX_SINT8  ((ossim_sint8)0x80)
 #define OSSIM_DEFAULT_MIN_PIX_SINT8   ((ossim_sint8)0x81)
 #define OSSIM_DEFAULT_MAX_PIX_SINT8   ((ossim_sint8)0x7F)
 
-#define OSSIM_DEFAULT_NULL_PIX_SINT16 ((ossim_sint16)0x8000)
-#define OSSIM_DEFAULT_MIN_PIX_SINT16  ((ossim_sint16)0x8001)
-#define OSSIM_DEFAULT_MAX_PIX_SINT16  ((ossim_sint16)0x7FFF)
+#define OSSIM_DEFAULT_NULL_PIX_UINT8  ((ossim_uint8)0)
+#define OSSIM_DEFAULT_MIN_PIX_UINT8   ((ossim_uint8)1)
+#define OSSIM_DEFAULT_MAX_PIX_UINT8   ((ossim_uint8)255)
 
-#define OSSIM_DEFAULT_NULL_PIX_UINT16 ((ossim_uint16)0)
-#define OSSIM_DEFAULT_MIN_PIX_UINT16  ((ossim_uint16)1)
-#define OSSIM_DEFAULT_MAX_PIX_UINT16  ((ossim_uint16)0xFFFF)
+#define OSSIM_DEFAULT_NULL_PIX_UINT9 ((ossim_uint16)0)
+#define OSSIM_DEFAULT_MIN_PIX_UINT9  ((ossim_uint16)1)
+#define OSSIM_DEFAULT_MAX_PIX_UINT9  ((ossim_uint16)0x01FF)
 
-#define OSSIM_DEFAULT_NULL_PIX_SINT32 ((ossim_sint32)0x80000000)
-#define OSSIM_DEFAULT_MIN_PIX_SINT32  ((ossim_sint32)0x80000001)
-#define OSSIM_DEFAULT_MAX_PIX_SINT32  ((ossim_sint32)0x7FFFFFFF)
-
-#define OSSIM_DEFAULT_NULL_PIX_UINT32 ((ossim_uint32)0)
-#define OSSIM_DEFAULT_MIN_PIX_UINT32  ((ossim_uint32)1)
-#define OSSIM_DEFAULT_MAX_PIX_UINT32  ((ossim_uint32)0xFFFFFFFF)
-
-#define OSSIM_DEFAULT_NULL_PIX_SINT64 ((ossim_sint32)0x8000000000000000)
-#define OSSIM_DEFAULT_MIN_PIX_SINT64  ((ossim_sint32)0x8000000000000001)
-#define OSSIM_DEFAULT_MAX_PIX_SINT64  ((ossim_sint32)0x7FFFFFFFFFFFFFFF)
-
-#define OSSIM_DEFAULT_NULL_PIX_UINT64 ((ossim_uint32)0)
-#define OSSIM_DEFAULT_MIN_PIX_UINT64  ((ossim_uint32)1)
-#define OSSIM_DEFAULT_MAX_PIX_UINT64  ((ossim_uint32)0xFFFFFFFFFFFFFFFF)
+#define OSSIM_DEFAULT_NULL_PIX_UINT10 ((ossim_uint16)0)
+#define OSSIM_DEFAULT_MIN_PIX_UINT10  ((ossim_uint16)1)
+#define OSSIM_DEFAULT_MAX_PIX_UINT10  ((ossim_uint16)0x03FF)
 
 #define OSSIM_DEFAULT_NULL_PIX_UINT11 ((ossim_uint16)0)
 #define OSSIM_DEFAULT_MIN_PIX_UINT11  ((ossim_uint16)1)
@@ -547,6 +539,30 @@ enum ossimCompareType
 #define OSSIM_DEFAULT_NULL_PIX_UINT15 ((ossim_uint16)0)
 #define OSSIM_DEFAULT_MIN_PIX_UINT15  ((ossim_uint16)1)
 #define OSSIM_DEFAULT_MAX_PIX_UINT15  ((ossim_uint16)0x7FFF)
+
+#define OSSIM_DEFAULT_NULL_PIX_SINT16 ((ossim_sint16)0x8000)
+#define OSSIM_DEFAULT_MIN_PIX_SINT16  ((ossim_sint16)0x8001)
+#define OSSIM_DEFAULT_MAX_PIX_SINT16  ((ossim_sint16)0x7FFF)
+
+#define OSSIM_DEFAULT_NULL_PIX_UINT16 ((ossim_uint16)0)
+#define OSSIM_DEFAULT_MIN_PIX_UINT16  ((ossim_uint16)1)
+#define OSSIM_DEFAULT_MAX_PIX_UINT16  ((ossim_uint16)0xFFFF)
+
+#define OSSIM_DEFAULT_NULL_PIX_SINT32 ((ossim_sint32)0x80000000)
+#define OSSIM_DEFAULT_MIN_PIX_SINT32  ((ossim_sint32)0x80000001)
+#define OSSIM_DEFAULT_MAX_PIX_SINT32  ((ossim_sint32)0x7FFFFFFF)
+
+#define OSSIM_DEFAULT_NULL_PIX_UINT32 ((ossim_uint32)0)
+#define OSSIM_DEFAULT_MIN_PIX_UINT32  ((ossim_uint32)1)
+#define OSSIM_DEFAULT_MAX_PIX_UINT32  ((ossim_uint32)0xFFFFFFFF)
+
+#define OSSIM_DEFAULT_NULL_PIX_SINT64 ((ossim_sint64)0x8000000000000000)
+#define OSSIM_DEFAULT_MIN_PIX_SINT64  ((ossim_sint64)0x8000000000000001)
+#define OSSIM_DEFAULT_MAX_PIX_SINT64  ((ossim_sint64)0x7FFFFFFFFFFFFFFF)
+
+#define OSSIM_DEFAULT_NULL_PIX_UINT64 ((ossim_uint64)0)
+#define OSSIM_DEFAULT_MIN_PIX_UINT64  ((ossim_uint64)1)
+#define OSSIM_DEFAULT_MAX_PIX_UINT64  ((ossim_uint64)0xFFFFFFFFFFFFFFFF)
 
 #define OSSIM_DEFAULT_NULL_PIX_FLOAT  ((ossim_float32)-1.0/FLT_EPSILON)
 #define OSSIM_DEFAULT_MIN_PIX_FLOAT   ((ossim_float32)((-1.0/FLT_EPSILON) + 1))

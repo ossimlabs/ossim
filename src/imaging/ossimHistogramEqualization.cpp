@@ -405,7 +405,7 @@ void ossimHistogramEqualization::initializeLuts()
             theInverseLut.push_back(new double[numberOfIndices]);
             
             // let's grab the counts array
-            const float* histoCounts = h->GetCounts();
+            const ossim_int64* histoCounts = h->GetCounts();
 
 //         double maxIntensity      = h2->GetMaxVal();
             double maxIntensity      = h2->GetRangeMax();

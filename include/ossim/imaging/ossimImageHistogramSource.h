@@ -78,9 +78,10 @@ public:
 protected:
    virtual ~ossimImageHistogramSource();
 
-   void getBinInformation(ossim_uint32& numberOfBins,
-                          ossim_float64& minValue,
-                          ossim_float64& maxValue,
+   bool getBinInformation(ossim_uint32& numberOfBins,
+                          ossim_float32& minValue,
+                          ossim_float32& maxValue,
+                          ossim_float32& nullValue,
                           ossim_uint32 band)const;
    virtual void computeNormalModeHistogram();
    virtual void computeFastModeHistogram();

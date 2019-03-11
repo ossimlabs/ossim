@@ -79,9 +79,12 @@ int main( int argc, char* argv[] )
       destTile->loadTile( srcTile.get() );
       destTile->validate();
 
-      ossimRefPtr<ossimMultiBandHistogram> his = new ossimMultiBandHistogram( 1, 256, 0, 255 );
+      ossimRefPtr<ossimMultiBandHistogram> his = new ossimMultiBandHistogram(
+         1, 255, 1, 255, 0, OSSIM_UINT8);
 
-      destTile->populateHistogram( his );
+      ossimIrect clipRect(0,0,255,255);
+      cout << "clipRect: " << clipRect << endl;
+      destTile->populateHistogram( his, clipRect );
 
       const ossimRefPtr<ossimHistogram> h = his->getHistogram( 0 );
       if ( h.valid() )
@@ -90,16 +93,33 @@ int main( int argc, char* argv[] )
 
          // Skipping NULL pixel (i=0) since those are no longer being counted in the histogram
          // (OLK 04/2016)
-         for( ossim_uint32 i = 1; i < LINES; ++i )
+         int bins = h->GetRes();
+
+         cout << "histogram:"
+              << "\nbins: " << bins
+              << "\nnull value: " << h->getNullValue()
+              << "\nnull count: " << h->getNullCount() << "\n";
+
+         ossim_uint32 pixelValue = 0;
+         ossim_int32 valIndex;
+
+         for( ossim_uint32 i = 0; i < bins; ++i )
          {
-            count = h->GetCount( static_cast<float>(i) );
-            if ( count != 256.0 )
+            pixelValue = h->GetValFromIndex( i );
+            valIndex = h->GetIndex( pixelValue );
+            count = h->GetCount( static_cast<float>(pixelValue) );
+
+            cout << "pixelValueFromIndex: " << pixelValue
+                 << " indexFromPixelValue: " << valIndex
+                 << " bin[" << pixelValue << "] count: " << count << "\n";
+
+            if ( 0 ) // count != clipRect.width() )
             {
                status = FAILED;
  
-               cerr << "bin[254]: " << h->GetCount( 254.0)
+               cerr << "bin[" << i << "]: " << h->GetCount( i )
                     << "\nbin[" << i << "]: count = " << count
-                    << "\nShould be 256..."
+                    << "\nShould be: " << clipRect.width()
                     << "\nhistogram bin count: " << h->GetRes()
                     << endl;
 

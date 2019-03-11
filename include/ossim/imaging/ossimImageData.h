@@ -9,12 +9,9 @@
 // Description: Container class for a tile of image data.
 //
 //*******************************************************************
-// $Id: ossimImageData.h 23371 2015-06-12 13:08:34Z gpotts $
+// $Id$
 #ifndef ossimImageData_HEADER
 #define ossimImageData_HEADER 1
-
-#include <vector>
-#include <iosfwd> /* for ostream */
 
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimRectilinearDataObject.h>
@@ -22,6 +19,10 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimMultiResLevelHistogram.h>
+
+#include <vector>
+#include <iosfwd> /* for ostream */
+
 
 class ossimMultiBandHistogram;
 
@@ -370,8 +371,17 @@ public:
    virtual ossim_float64 computeMeanSquaredError(
       ossim_float64 meanValue,
       ossim_uint32 bandNumber = 0) const;
-  
-   virtual void populateHistogram(ossimRefPtr<ossimMultiBandHistogram> histo);
+
+   /**
+    * @brief Populates the histogram with data from this tile.
+    * @param histo Populated by this.
+    * @param clip_rect Should be the rectangle of valid data so as to not
+    * count pixels outside of image area on edge tiles. This will be clipped
+    * to the tile rectangle so callers can simply pass the full image rectangle
+    * in.
+    */
+   virtual void populateHistogram(ossimRefPtr<ossimMultiBandHistogram> histo,
+                                  const ossimIrect& clip_rect);
 
    virtual void setHistogram(ossimRefPtr<ossimMultiResLevelHistogram> histo);
    ossimRefPtr<ossimMultiResLevelHistogram> getHistogram();
@@ -644,12 +654,6 @@ public:
                                            ossim_float32* buf);
 
    virtual bool isWithin(ossim_int32 x, ossim_int32 y);
-
-    /** Sets band of specified pixel to color */
-   virtual void setValue(ossim_int32 x, ossim_int32 y,
-                         ossim_float64 color, ossim_uint32 band);
-
-   /** Sets all bands of specified pixel to color */
    virtual void setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color);
 
    virtual void loadBand(const void* src,
@@ -696,6 +700,23 @@ public:
 
    virtual void loadTileFrom1Band(const void* src,
                                   const ossimIrect& src_rect);
+
+   /**
+    * @brief Loads a tile from a tile.
+    * This assumes last band of src is an alpha channel.
+    *
+    * Written for compressed data where alpha channel may have been compressed
+    * lossy, e.g. 0s flipped to 1s.
+    *
+    * Alpha is applied in the following manner:
+    * if alpha pixel is less than half of bit depth the input pixel is assumed
+    * null; else, valid. If alpha is valid and input is null, output pixel is
+    * set to min pixel value.
+    */
+   void loadTileFromBsqAlpha(const void* src,
+                             const ossimIrect& src_rect,
+                             const ossimIrect& clip_rect);
+   
    /**
     * Specialized to load a tile from a short (16 bit scalar type) buffer.
     * Performs byte swapping if swap_bytes is set to true.
@@ -922,14 +943,16 @@ public:
    bool getIndexedFlag() const;
    
    /**
-    * Returns the percentage (0-100) of data buffer containing non-null (valid) entries.
-    * Undefined until validate() is called.
+    * @brief Returns the percentage (0-100) of data buffer containing non-null
+    * (valid) entries. Undefined until validate() is called.
     */
-   ossim_float64 percentFull() const { return m_percentFull; }
+   ossim_float64 percentFull() const;
 
-
-   virtual bool isEqualTo(const ossimDataObject& rhs,
-                          bool deepTest=false)const;
+   /**
+    * @brief External means to set percent full.
+    * @param percent full.
+    */
+   void setPercentFull( const ossim_float64& percentFull );
    
    virtual bool saveState(ossimKeywordlist& kwl, const char* prefix=0)const;
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
@@ -1137,6 +1160,11 @@ protected:
                                                    const void* src,
                                                    const ossimIrect& src_rect,
                                                    const ossimIrect& clip_rect);
+
+   template <class T> void loadTileFromBsqAlphaTemplate(T, // dummy template variable
+                                                        const void* src,
+                                                        const ossimIrect& src_rect,
+                                                        const ossimIrect& clip_rect);
    
    template <class T> void unloadTileToBipTemplate(T, // dummy template variable
                                                    void* dest,
@@ -1203,6 +1231,8 @@ protected:
     */
    virtual void initializeNullDefault();
 
+   virtual bool isEqualTo(const ossimDataObject& rhs,
+                          bool deepTest=false)const;
    
    bool hasSameDimensionsAs(ossimImageData* data)const
    {

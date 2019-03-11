@@ -378,7 +378,9 @@ ossimRefPtr<ossimImageData> ossimOverviewSequencer::getNextTile()
                << "\npopulating histogram for tile: " << m_currentTileNumber
                << "\n";
          }
-         inputTile->populateHistogram(m_histogram);
+         ossimIrect tileRect = inputTile->getImageRectangle();
+         ossimIrect clipRect = tileRect.clipToRect( m_areaOfInterest );
+         inputTile->populateHistogram(m_histogram, clipRect);
       }
       
       if ( (inputTile->getDataObjectStatus() == OSSIM_PARTIAL) ||
