@@ -228,9 +228,6 @@ public:
     * */
    bool toRPB(std::ostream &out) const;
 
-   /** Catch-all for non-standard RPC file formats */
-   virtual bool parseFile(const ossimFilename &file);
-
 protected:
    enum AdjustParamIndex
    {
@@ -265,10 +262,7 @@ protected:
                      const double& nlon,
                      const double& nhgt,
                      const double* coeffs) const;
-
-   bool parseXmlForm1(const ossimFilename &file);
-   bool parseXmlForm2(const ossimFilename &file);
-
+   
    PolynomialType thePolyType;
 
    //***
