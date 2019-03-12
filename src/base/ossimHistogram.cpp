@@ -1562,7 +1562,7 @@ bool ossimHistogram::saveState(ossimKeywordlist& kwl,
       ossim_int64 count = 0;
       for(ossim_int32 index = 0; index < m_num; ++index)
       {
-         if(fabs(m_counts[index]) > FLT_EPSILON)
+         if( m_counts[index] > 0 )
          {
             if(!firstValue)
             {
@@ -1584,7 +1584,7 @@ bool ossimHistogram::saveState(ossimKeywordlist& kwl,
       ossim_int64 count = 0;
       for(ossim_int32 index = 0; index < m_num; ++index)
       {
-         if(fabs(m_counts[index]) > FLT_EPSILON)
+         if( m_counts[index] > 0 )
          {
             if(!firstValue)
             {
