@@ -1680,14 +1680,6 @@ bool ossimRpcModel::parseXmlForm2(const ossimFilename &file)
    bool success = false; // Assume we're gonna screw this up...
    while (1)
    {
-      dataString = rpcNode->getChildTextValue("SPECID");
-      if (dataString.empty())
-         break;
-
-      rpcNode = rpcNode->findFirstNode("IMAGE");
-      if (!rpcNode)
-         break;
-
       dataString = rpcNode->getChildTextValue("biasError");
       if (dataString.empty())
          break;
