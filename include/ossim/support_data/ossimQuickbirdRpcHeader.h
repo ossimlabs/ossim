@@ -48,8 +48,6 @@ public:
   }
   bool isGlobal()const;
 
-  bool parseXml();
-
   ossimFilename theFilename;
 
   ossimString theSatId;
