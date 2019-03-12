@@ -34,6 +34,7 @@ RTTI_DEF1(ossimRpcModel, "ossimRpcModel", ossimSensorModel);
 #include <iomanip>
 #include <sstream>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
+#include <ossim/base/ossimXmlDocument.h>
 
 #if OSSIM_HAS_JSONCPP
 #include <json/json.h>
@@ -1538,3 +1539,260 @@ bool ossimRpcModel::toRPB(ostream &out) const
    return true;
 }
 
+bool ossimRpcModel::parseFile(const ossimFilename &file)
+{
+   bool success = false;
+
+   // Fetch basename of image:
+   ossimFilename sdFile = file.fileNoExtension();
+
+   // Try XML format. Two known formats exist:
+   sdFile.setExtension("XML");
+   if (!sdFile.isReadable())
+      sdFile.setExtension("xml");
+   if (sdFile.isReadable())
+   {
+      if (parseXmlForm1(sdFile))
+         success = true;
+
+      else if (parseXmlForm2(sdFile))
+         success = true;
+   }
+
+   if (success)
+   {
+      theImageSize = ossimIpt(2*theSampOffset, 2*theLineOffset);
+      theImageClipRect = ossimIrect(0.0, 0.0, theImageSize.x-1, theImageSize.y-1);
+      theRefImgPt = ossimDpt(theSampOffset, theLineOffset);
+      theRefGndPt.lat  = theLatOffset;
+      theRefGndPt.lon  = theLonOffset;
+      theRefGndPt.hgt  = theHgtOffset;
+      ossimGpt v0, v1, v2, v3;
+      ossimDpt ip0 (0.0, 0.0);
+      ossimRpcModel::lineSampleHeightToWorld(ip0, theHgtOffset, v0);
+      ossimDpt ip1 (theImageSize.samp-1.0, 0.0);
+      ossimRpcModel::lineSampleHeightToWorld(ip1, theHgtOffset, v1);
+      ossimDpt ip2 (theImageSize.samp-1.0, theImageSize.line-1.0);
+      ossimRpcModel::lineSampleHeightToWorld(ip2, theHgtOffset, v2);
+      ossimDpt ip3 (0.0, theImageSize.line-1.0);
+      ossimRpcModel::lineSampleHeightToWorld(ip3, theHgtOffset, v3);
+      theBoundGndPolygon = ossimPolygon(ossimDpt(v0), ossimDpt(v1), ossimDpt(v2), ossimDpt(v3));
+      updateModel();
+      if (theGSD.hasNans())
+      {
+         try
+         {
+            // This will set theGSD and theMeanGSD. Method throws ossimException.
+            computeGsd();
+         }
+         catch (const ossimException &e)
+         {
+            ossimNotify(ossimNotifyLevel_WARN)<<"ossimRpcModel::finishConstruction -- caught exception:\n"
+               << e.what() << std::endl;
+         }
+      }
+   }
+
+   // Only the two XML formats are handled for the moment...
+   return success;
+}
+
+bool ossimRpcModel::parseXmlForm1(const ossimFilename &file)
+{
+   ossimXmlDocument document;
+   if (!document.openFile(file))
+      return false;
+
+   ossimRefPtr<ossimXmlNode> root = document.getRoot();
+   ossimRefPtr<ossimXmlNode> rpcNode = root->findFirstNode("RPB");
+   if (!rpcNode)
+      return false;
+
+   ossimString dataString;
+   bool success = false; // Assume we're gonna screw this up...
+   while (1)
+   {
+      dataString = rpcNode->getChildTextValue("SPECID");
+      if (dataString.empty())
+         break;
+
+      rpcNode = rpcNode->findFirstNode("IMAGE");
+      if (!rpcNode)
+         break;
+
+      dataString = rpcNode->getChildTextValue("ERRBIAS");
+      if (dataString.empty())
+         break;
+      theBiasError = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("ERRRAND");
+      if (dataString.empty())
+         break;
+      theRandError = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("LINEOFFSET");
+      if (dataString.empty())
+         break;
+      theLineOffset = dataString.toInt();
+
+      dataString = rpcNode->getChildTextValue("SAMPOFFSET");
+      if (dataString.empty())
+         break;
+      theSampOffset = dataString.toInt();
+
+      dataString = rpcNode->getChildTextValue("LATOFFSET");
+      if (dataString.empty())
+         break;
+      theLatOffset = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("LONGOFFSET");
+      if (dataString.empty())
+         break;
+      theLonOffset = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("HEIGHTOFFSET");
+      if (dataString.empty())
+         break;
+      theHgtOffset = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("LINESCALE");
+      if (dataString.empty())
+         break;
+      theLineScale = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("SAMPSCALE");
+      if (dataString.empty())
+         break;
+      theSampScale = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("LATSCALE");
+      if (dataString.empty())
+         break;
+      theLatScale = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("LONGSCALE");
+      if (dataString.empty())
+         break;
+      theLonScale = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("HEIGHTSCALE");
+      if (dataString.empty())
+         break;
+      theHgtScale = dataString.toDouble();
+
+      vector<ossimString> ln, ld, sn, sd;
+      rpcNode->getChildTextValue("LINENUMCOEFList/LINENUMCOEF").split(ln, " ", true);
+      rpcNode->getChildTextValue("LINEDENCOEFList/LINEDENCOEF").split(ld, " ", true);
+      rpcNode->getChildTextValue("SAMPNUMCOEFList/SAMPNUMCOEF").split(sn, " ", true);
+      rpcNode->getChildTextValue("SAMPDENCOEFList/SAMPDENCOEF").split(sd, " ", true);
+      if ( (ln.size() != 20) || (ld.size() != 20) || (sn.size() != 20) || (sd.size() != 20))
+         break;
+
+      for (int i=0; i<20; ++i)
+      {
+         theLineNumCoef[i] = ln[i].toDouble();
+         theLineDenCoef[i] = ld[i].toDouble();
+         theSampNumCoef[i] = sn[i].toDouble();
+         theSampDenCoef[i] = sd[i].toDouble();
+      }
+      success = true; // Well waddaya know!
+   }
+   return success;
+}
+
+bool ossimRpcModel::parseXmlForm2(const ossimFilename &file)
+{
+   ossimXmlDocument document;
+   if (!document.openFile(file))
+      return false;
+
+   ossimRefPtr<ossimXmlNode> root = document.getRoot();
+   ossimRefPtr<ossimXmlNode> rpcNode =
+      root->findFirstNode("imageAttributes/geographicInformation/rationalFunctions");
+   if (!rpcNode)
+      return false;
+
+   ossimString dataString;
+   bool success = false; // Assume we're gonna screw this up...
+   while (1)
+   {
+      dataString = rpcNode->getChildTextValue("biasError");
+      if (dataString.empty())
+         break;
+      theBiasError = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("randomError");
+      if (dataString.empty())
+         break;
+      theRandError = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("lineOffset");
+      if (dataString.empty())
+         break;
+      theLineOffset = dataString.toInt();
+
+      dataString = rpcNode->getChildTextValue("pixelOffset");
+      if (dataString.empty())
+         break;
+      theSampOffset = dataString.toInt();
+
+      dataString = rpcNode->getChildTextValue("latitudeOffset");
+      if (dataString.empty())
+         break;
+      theLatOffset = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("longitudeOffset");
+      if (dataString.empty())
+         break;
+      theLonOffset = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("heightOffset");
+      if (dataString.empty())
+         break;
+      theHgtOffset = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("lineScale");
+      if (dataString.empty())
+         break;
+      theLineScale = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("pixelScale");
+      if (dataString.empty())
+         break;
+      theSampScale = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("latitudeScale");
+      if (dataString.empty())
+         break;
+      theLatScale = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("longitudeScale");
+      if (dataString.empty())
+         break;
+      theLonScale = dataString.toDouble();
+
+      dataString = rpcNode->getChildTextValue("heightScale");
+      if (dataString.empty())
+         break;
+      theHgtScale = dataString.toDouble();
+
+      vector<ossimString> ln, ld, sn, sd;
+      rpcNode->getChildTextValue("lineNumeratorCoefficients").split(ln, " ", true);
+      rpcNode->getChildTextValue("lineDenominatorCoefficients").split(ld, " ", true);
+      rpcNode->getChildTextValue("pixelNumeratorCoefficients").split(sn, " ", true);
+      rpcNode->getChildTextValue("pixelDenominatorCoefficients").split(sd, " ", true);
+      if ( (ln.size() != 20) || (ld.size() != 20) || (sn.size() != 20) || (sd.size() != 20))
+         break;
+
+      for (int i=0; i<20; ++i)
+      {
+         theLineNumCoef[i] = ln[i].toDouble();
+         theLineDenCoef[i] = ld[i].toDouble();
+         theSampNumCoef[i] = sn[i].toDouble();
+         theSampDenCoef[i] = sd[i].toDouble();
+      }
+      success = true;
+      break;
+   }
+   return success;
+}
