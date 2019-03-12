@@ -1541,6 +1541,8 @@ bool ossimRpcModel::toRPB(ostream &out) const
 
 bool ossimRpcModel::parseFile(const ossimFilename &file)
 {
+   bool success = false;
+
    // Fetch basename of image:
    ossimFilename sdFile = file.fileNoExtension();
 
@@ -1551,14 +1553,48 @@ bool ossimRpcModel::parseFile(const ossimFilename &file)
    if (sdFile.isReadable())
    {
       if (parseXmlForm1(sdFile))
-         return true;
+         success = true;
 
-      if (parseXmlForm2(sdFile))
-         return true;
+      else if (parseXmlForm2(sdFile))
+         success = true;
+   }
+
+   if (success)
+   {
+      theImageSize = ossimIpt(2*theSampOffset, 2*theLineOffset);
+      theImageClipRect = ossimIrect(0.0, 0.0, theImageSize.x-1, theImageSize.y-1);
+      theRefImgPt = ossimDpt(theSampOffset, theLineOffset);
+      theRefGndPt.lat  = theLatOffset;
+      theRefGndPt.lon  = theLonOffset;
+      theRefGndPt.hgt  = theHgtOffset;
+      ossimGpt v0, v1, v2, v3;
+      ossimDpt ip0 (0.0, 0.0);
+      ossimRpcModel::lineSampleHeightToWorld(ip0, theHgtOffset, v0);
+      ossimDpt ip1 (theImageSize.samp-1.0, 0.0);
+      ossimRpcModel::lineSampleHeightToWorld(ip1, theHgtOffset, v1);
+      ossimDpt ip2 (theImageSize.samp-1.0, theImageSize.line-1.0);
+      ossimRpcModel::lineSampleHeightToWorld(ip2, theHgtOffset, v2);
+      ossimDpt ip3 (0.0, theImageSize.line-1.0);
+      ossimRpcModel::lineSampleHeightToWorld(ip3, theHgtOffset, v3);
+      theBoundGndPolygon = ossimPolygon(ossimDpt(v0), ossimDpt(v1), ossimDpt(v2), ossimDpt(v3));
+      updateModel();
+      if (theGSD.hasNans())
+      {
+         try
+         {
+            // This will set theGSD and theMeanGSD. Method throws ossimException.
+            computeGsd();
+         }
+         catch (const ossimException &e)
+         {
+            ossimNotify(ossimNotifyLevel_WARN)<<"ossimRpcModel::finishConstruction -- caught exception:\n"
+               << e.what() << std::endl;
+         }
+      }
    }
 
    // Only the two XML formats are handled for the moment...
-   return false;
+   return success;
 }
 
 bool ossimRpcModel::parseXmlForm1(const ossimFilename &file)
@@ -1672,7 +1708,7 @@ bool ossimRpcModel::parseXmlForm2(const ossimFilename &file)
 
    ossimRefPtr<ossimXmlNode> root = document.getRoot();
    ossimRefPtr<ossimXmlNode> rpcNode =
-      root->findFirstNode("product/imageAttributes/geographicInformation/rationalFunctions");
+      root->findFirstNode("imageAttributes/geographicInformation/rationalFunctions");
    if (!rpcNode)
       return false;
 
@@ -1742,9 +1778,9 @@ bool ossimRpcModel::parseXmlForm2(const ossimFilename &file)
 
       vector<ossimString> ln, ld, sn, sd;
       rpcNode->getChildTextValue("lineNumeratorCoefficients").split(ln, " ", true);
-      rpcNode->getChildTextValue("lineDenomenatorCoefficients").split(ld, " ", true);
+      rpcNode->getChildTextValue("lineDenominatorCoefficients").split(ld, " ", true);
       rpcNode->getChildTextValue("pixelNumeratorCoefficients").split(sn, " ", true);
-      rpcNode->getChildTextValue("pixelDenomenatorCoefficients").split(sd, " ", true);
+      rpcNode->getChildTextValue("pixelDenominatorCoefficients").split(sd, " ", true);
       if ( (ln.size() != 20) || (ld.size() != 20) || (sn.size() != 20) || (sd.size() != 20))
          break;
 
@@ -1756,6 +1792,7 @@ bool ossimRpcModel::parseXmlForm2(const ossimFilename &file)
          theSampDenCoef[i] = sd[i].toDouble();
       }
       success = true;
+      break;
    }
    return success;
 }
