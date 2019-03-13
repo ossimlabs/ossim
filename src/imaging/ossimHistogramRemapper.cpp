@@ -388,6 +388,40 @@ void ossimHistogramRemapper::setHighClipPoint(const ossim_float64& clip,
    }
 }
 
+void ossimHistogramRemapper::setMidPoint(const ossim_float64& value)
+{
+   const ossim_uint32 BANDS = getNumberOfInputBands();
+   for (ossim_uint32 band = 0; band < BANDS; ++band)
+   {
+      setMidPoint(value, band);
+   }
+}
+
+void ossimHistogramRemapper::setMidPoint(const ossim_float64& value,
+                                         ossim_uint32 zero_based_band)
+{
+   const ossim_uint32 BANDS = getNumberOfInputBands();
+
+   if (zero_based_band >= BANDS)
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+         << "ossimHistogramRemapper::setMidPoint ERROR:"
+         << "\nband " << zero_based_band << " is out of range!"
+         << "\nhighest band:  " << (BANDS-1) << endl;
+   }
+
+   if (theMidPoint.size() != BANDS)
+   {
+      initializeClips();
+   }
+
+   if (theMidPoint[zero_based_band] != value)
+   {
+      theDirtyFlag = true;
+      theMidPoint[zero_based_band] = value;
+   }
+}
+
 void ossimHistogramRemapper::setMinOutputValue(const ossim_float64& value)
 {
    const ossim_uint32 BANDS = getNumberOfInputBands();
@@ -625,6 +659,44 @@ ossim_float64 ossimHistogramRemapper::getHighClipPoint() const
    return (d / BANDS);
 }
 
+ossim_float64 ossimHistogramRemapper::getMidPoint(ossim_uint32 zero_based_band) const
+{
+   if (theMidPoint.size() == 0 ||
+       zero_based_band >= getNumberOfInputBands())
+   {
+      return ossim::nan();
+   }
+
+   if (zero_based_band >= theMidPoint.size())
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+         << "ossimHistogramRemapper::getMidPoint ERROR:"
+         << "\nband " << zero_based_band << " is out of range!"
+         << "\nhighest band:  " << (theMidPoint.size()-1)
+         << endl;
+      return ossim::nan();
+   }
+
+   return theMidPoint[zero_based_band];
+}
+
+ossim_float64 ossimHistogramRemapper::getMidPoint() const
+{
+   if (theMidPoint.size() == 0)
+   {
+      return ossim::nan();
+   }
+
+   ossim_float64 d = 0.0;
+   const ossim_uint32 BANDS = (ossim_uint32)theMidPoint.size();
+   for (ossim_uint32 band = 0; band < BANDS; ++band)
+   {
+      d += getMidPoint(band);
+   }
+
+   return (d / BANDS);
+}
+
 ossim_float64 ossimHistogramRemapper::getMinOutputValue(ossim_uint32 zero_based_band) const
 {
    if (theMinOutputValue.size() == 0 ||
@@ -789,7 +861,18 @@ bool ossimHistogramRemapper::loadState(const ossimKeywordlist& kwl,
             {
                theNormalizedHighClipPoint[band] = atof(lookup);
             }
-            
+
+            // Get the mid point.
+            keyword = MID_POINT_KW;
+            keyword += ".";
+            keyword += ossimKeywordNames::BAND_KW;
+            keyword += ossimString::toString(band+1);
+            lookup = kwl.find(prefix, keyword);
+            if(lookup)
+            {
+               theMidPoint[band] = atof(lookup);
+            }
+
             // Get the min output value.
             keyword = MIN_OUTPUT_VALUE_KW;
             keyword += ".";
@@ -928,7 +1011,17 @@ bool ossimHistogramRemapper::saveState(ossimKeywordlist& kwl,
               keyword,
               theNormalizedHighClipPoint[band],
               true);
-      
+
+      // Save the mid point.
+      keyword = MID_POINT_KW;
+      keyword += ".";
+      keyword += ossimKeywordNames::BAND_KW;
+      keyword += ossimString::toString(band+1);
+      kwl.add(prefix,
+              keyword,
+              theMidPoint[band],
+              true);
+
       // Save the min output value.
       keyword = MIN_OUTPUT_VALUE_KW;
       keyword += ".";
@@ -1593,6 +1686,7 @@ void ossimHistogramRemapper::initializeClips(ossim_uint32 bands)
    {
       theNormalizedLowClipPoint.resize(bands);
       theNormalizedHighClipPoint.resize(bands);
+      theMidPoint.resize(bands);
       theMinOutputValue.resize(bands);
       theMaxOutputValue.resize(bands);
       
@@ -1600,7 +1694,8 @@ void ossimHistogramRemapper::initializeClips(ossim_uint32 bands)
       {
          theNormalizedLowClipPoint[band]  = 0.0;
          theNormalizedHighClipPoint[band] = 1.0;
-         
+         theMidPoint[band] = 0.0;
+
          switch(theOutputScalarType)
          {
             case OSSIM_FLOAT32:
@@ -1710,6 +1805,8 @@ ostream& ossimHistogramRemapper::print(ostream& os) const
          << theNormalizedLowClipPoint[band]
          << "\ntheNormalizedHighClipPoint[" << band << "]:  "
          << theNormalizedHighClipPoint[band]
+         << "\ntheMidPoint[" << band << "]:                 "
+         << theMidPoint[band]
          << "\ntheMinOutputValue[" << band << "]:           "
          << theMinOutputValue[band]
          << "\ntheMaxOutputValue[" << band << "]:           "
