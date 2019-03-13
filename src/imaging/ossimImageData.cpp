@@ -1887,6 +1887,88 @@ void ossimImageData::setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color)
    }
 }
 
+void ossimImageData::setValue(ossim_int32 x, ossim_int32 y,
+                              ossim_float64 color, ossim_uint32 band)
+{
+   if (m_dataBuffer.size() > 0 && isWithin(x, y))
+   {
+      //***
+      // Compute the offset into the buffer for (x,y).  This should always
+      // come out positive.
+      //***
+      ossim_uint32 ux = static_cast<ossim_uint32>(x - m_origin.x);
+      ossim_uint32 uy = static_cast<ossim_uint32>(y - m_origin.y);
+      ossim_uint32 offset = uy * m_spatialExtents[0] + ux;
+
+      switch (getScalarType())
+      {
+      case OSSIM_UINT8:
+      {
+         unsigned char *buf = static_cast<unsigned char *>(getBuf(band)) + offset;
+         *buf = (unsigned char)color;
+         break;
+      }
+      case OSSIM_SINT8:
+      {
+         ossim_sint8 *buf = static_cast<ossim_sint8 *>(getBuf(band)) + offset;
+         *buf = (ossim_sint8)color;
+         break;
+      }
+      case OSSIM_UINT16:
+      case OSSIM_USHORT11:
+      case OSSIM_USHORT12:
+      case OSSIM_USHORT13:
+      case OSSIM_USHORT14:
+      case OSSIM_USHORT15:
+      {
+         ossim_uint16 *buf = static_cast<ossim_uint16 *>(getBuf(band)) + offset;
+         *buf = (ossim_uint16)color;
+         break;
+      }
+      case OSSIM_SINT16:
+      {
+         signed short *buf = static_cast<signed short *>(getBuf(band)) + offset;
+         *buf = (signed short)color;
+         break;
+      }
+      case OSSIM_UINT32:
+      {
+         ossim_uint32 *buf = static_cast<ossim_uint32 *>(getBuf(band)) + offset;
+         *buf = (ossim_uint32)color;
+         break;
+      }
+      case OSSIM_SINT32:
+      {
+         ossim_sint32 *buf = static_cast<ossim_sint32 *>(getBuf(band)) + offset;
+         *buf = (ossim_sint32)color;
+         break;
+      }
+      case OSSIM_NORMALIZED_FLOAT:
+      case OSSIM_FLOAT32:
+      {
+         ossim_float32 *buf = static_cast<ossim_float32 *>(getBuf(band)) + offset;
+         *buf = (ossim_float32)color;
+         break;
+      }
+      case OSSIM_FLOAT64:
+      case OSSIM_NORMALIZED_DOUBLE:
+      {
+         ossim_float64 *buf = static_cast<ossim_float64 *>(getBuf(band)) + offset;
+         *buf = color;
+         break;
+      }
+      case OSSIM_SCALAR_UNKNOWN:
+      default:
+      {
+         //ERROR
+         ossimNotify(ossimNotifyLevel_WARN)
+             << "ossimImageData::setValue Unsupported scalar type!"
+             << std::endl;
+      }
+      } // End of:  switch (getScalarType())
+   }
+}
+
 void ossimImageData::initializeDefaults()
 {
    initializeMinDefault();
