@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -27,8 +27,8 @@
 //   all bands.  This really only makes sense if all bands are the same
 //   but is provided for convenience.
 //   
-//*************************************************************************
-// $Id: ossimHistogramRemapper.h 22746 2014-04-23 16:16:28Z gpotts $
+//---
+// $Id$
 #ifndef ossimHistogramRemapper_HEADER
 #define ossimHistogramRemapper_HEADER 1
 
@@ -57,7 +57,7 @@ public:
    virtual ossimString getLongName()  const;
    virtual ossimString getShortName() const;
 
-   virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& tile_rect,
+   virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& tileRect,
                                                ossim_uint32 resLevel=0);
 
    virtual void initialize();
@@ -69,29 +69,22 @@ public:
    void reset();
    
    /**
-    * Sets remap mode to mode.  If rebuildTableFlag is true, the table will
-    * be built at this time; else just the dirty flag is set.
-    *
+    * @brief Sets remap mode to mode.
     * @param mode The stretch mode.
-    * 
-    * @param rebuildTableFlag If the true the table will be rebuilt; else,
-    * just the dirty flag will be set.
     */
-   void setStretchMode(StretchMode mode, bool rebuildTableFlag=false);
+   void setStretchMode(StretchMode mode);
+
+   // For backwards compatibility only...
+   void setStretchMode(StretchMode mode, bool rebuildTableFlag);
+   void setStretchModeAsString(const ossimString& mode,
+                               bool rebuildTableFlag);
 
    /**
-    * Stretch mode values can be linear_one_piece, linear_1std_from_mean,
+    * @brief Stretch mode values can be linear_one_piece, linear_1std_from_mean,
     * linear_2std_from_mean, linear_3std_from_mean, linear_auto_min_max,
-    * If rebuildTableFlag is true, the table will
-    * be built at this time; else just the dirty flag is set.
-    *
     * @param mode The stretch mode.
-    * 
-    * @param rebuildTableFlag If the true the table will be rebuilt; else,
-    * just the dirty flag will be set.
     */
-   void setStretchModeAsString(const ossimString& mode,
-                               bool rebuildTableFlag=false);
+   void setStretchModeAsString(const ossimString& mode);
    
    /**
     * Returns the current enumerated node.
@@ -220,21 +213,6 @@ public:
                          ossim_uint32 zero_based_band);
 
    /**
-    * Sets the mid clip point.
-    * 
-    * Notes on clip points:
-    * - If input chip source is mutiband this will set all band to same
-    *   percentage of clip.
-    */
-   void setMidPoint(const ossim_float64& value);
-
-   /**
-    * Sets the mid clip point for band.
-    */
-   void setMidPoint(const ossim_float64& value,
-                    ossim_uint32 zero_based_band);
-
-   /**
     * Sets the min output value.
     * 
     * Notes on clip points:
@@ -343,27 +321,6 @@ public:
     * - Histogram has not been set.
     */
    ossim_float64 getHighClipPoint() const;
-
-   
-   /**
-    * Returns the mid point for band
-    * 
-    * Will return OSSIM_DBL_NAN if:
-    * - Band is out of range.
-    * - Connection is not complete.
-    * - Histogram has not been set.
-    */
-   ossim_float64 getMidPoint(ossim_uint32 zero_based_band) const;
-   
-   /**
-    * Returns the mid clip point which is the average of all bands.
-    * 
-    * Will return OSSIM_DBL_NAN if:
-    * - Band is out of range.
-    * - Connection is not complete.
-    * - Histogram has not been set.
-    */
-   ossim_float64 getMidPoint() const;
    
    /**
     * Returns the minimum output value for band.
@@ -494,18 +451,18 @@ private:
 
    void buildTable();
    void buildLinearTable();
+
+   /**
+    * @brief All of these build methods, set the clip points, then call
+    * the buildLinearTable method.
+    */
+   void buildLinearTableStdFromMean();
    void buildAutoLinearMinMaxTable();
    void buildAutoLinearPercentileTable();
    template <class T> void buildLinearTable(T dummy);
    template <class T> void buildAutoLinearMinMaxTableTemplate(T dummy);
    template <class T> void buildAutoLinearPercentileTableTemplate(T dummy);
 
-   /**
-    * Sets clip points using mean and standard deviations then calls
-    * buildLinearTable method.
-    */
-   void buildLinearTableStdFromMean();
-   
    /**
     * Uses getNumberOfInputBands() to determine BANDS then calls
     * initializeClips(BANDS)
@@ -559,17 +516,11 @@ private:
    */
    void makeClean();
 
-   template <class T> void applyLinearStretch(
-      T dummy,
-      ossimRefPtr<ossimImageData>& inputTile);
-
-
    StretchMode                   theStretchMode;
    bool                          theDirtyFlag;
    mutable ossimRefPtr<ossimMultiResLevelHistogram>  theHistogram;
    vector<ossim_float64>         theNormalizedLowClipPoint;
    vector<ossim_float64>         theNormalizedHighClipPoint;
-   vector<ossim_float64>         theMidPoint;
    vector<ossim_float64>         theMinOutputValue;
    vector<ossim_float64>         theMaxOutputValue;
 

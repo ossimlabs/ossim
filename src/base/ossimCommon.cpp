@@ -24,6 +24,7 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/Thread.h>
+#include <ossim/imaging/ossimImageSource.h>
 #include <ossim/matrix/newmat.h>
 #include <ctime>
 #include <sstream>
@@ -365,6 +366,30 @@ ossim_uint32 ossim::scalarSizeInBytes(ossimScalarType scalarType)
   }
   
   return 1;
+}
+
+bool ossim::isInteger(ossimScalarType scalarType)
+{
+   bool result = true;
+   switch(scalarType)
+   {
+      case OSSIM_FLOAT32:
+      case OSSIM_FLOAT64:
+      case OSSIM_CFLOAT32:
+      case OSSIM_CFLOAT64:
+      case OSSIM_NORMALIZED_FLOAT:
+      case OSSIM_NORMALIZED_DOUBLE:
+      case OSSIM_SCALAR_UNKNOWN:
+      {
+         result = false;
+         break;
+      }
+      default:
+      {
+         break;
+      }
+  }
+  return result;
 }
 
 bool ossim::isSigned(ossimScalarType scalarType)
@@ -1280,5 +1305,139 @@ ossim_uint32 ossim::computeLevels(const ossimIrect& rect)
       ++result;
    }
    
+   return result;
+}
+
+bool ossim::getBinInformation( const ossimImageSource* imageSource,
+                               ossim_uint32 band,
+                               ossim_uint32& numberOfBins,
+                               ossim_float32& minValue,
+                               ossim_float32& maxValue,
+                               ossim_float32& nullValue )
+{
+   bool result = false;
+   if ( imageSource )
+   {
+      if ( band < imageSource->getNumberOfOutputBands() )
+      {
+         result       = true;
+         numberOfBins = 0;
+         minValue     = (ossim_float32)imageSource->getMinPixelValue(band);
+         maxValue     = (ossim_float32)imageSource->getMaxPixelValue(band);
+         nullValue    = (ossim_float32)imageSource->getNullPixelValue(band);
+
+         switch( imageSource->getOutputScalarType() )
+         {
+            case OSSIM_UINT8:
+            {
+               minValue     = OSSIM_DEFAULT_MIN_PIX_UINT8;
+               maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT8;
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT8;
+               break;
+            }
+            case OSSIM_UINT9:
+            {
+               minValue     = OSSIM_DEFAULT_MIN_PIX_UINT9;
+               maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT9;
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT9;
+               break;
+            }
+            case OSSIM_UINT10:
+            {
+               minValue     = OSSIM_DEFAULT_MIN_PIX_UINT10;
+               maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT10;
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT10;
+               break;
+            }
+            case OSSIM_UINT11:
+            {
+               minValue     = OSSIM_DEFAULT_MIN_PIX_UINT11;
+               maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT11;
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT11;
+               break;
+            }
+            case OSSIM_UINT12:
+            {
+               minValue     = OSSIM_DEFAULT_MIN_PIX_UINT12;
+               maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT12;
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT12;
+               break;
+            }
+            case OSSIM_UINT13:
+            {
+               minValue     = OSSIM_DEFAULT_MIN_PIX_UINT13;
+               maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT13;
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT13;
+               break;
+            }
+            case OSSIM_UINT14:
+            {
+               minValue     = OSSIM_DEFAULT_MIN_PIX_UINT14;
+               maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT14;
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT14;
+               break;
+            }
+            case OSSIM_UINT15:
+            {
+               minValue     = OSSIM_DEFAULT_MIN_PIX_UINT15;
+               maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT15;
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT15;
+               break;
+            }
+            case OSSIM_UINT16:
+            {
+               minValue     = OSSIM_DEFAULT_MIN_PIX_UINT16;
+               maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT16;
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT16;
+               break;
+            }
+            case OSSIM_SINT16:
+            {
+               //---
+               // Special case to handle DTED which has a null of -32767 and SRTM
+               // which has null of -32768.  Set the min to -32766 which is OK for
+               // both types.  Basically we don't want to count the null values as
+               // a valid pixel. drb - 04 Feb. 2016
+               //
+               // NOTE: OSSIM_DEFAULT_MIN_PIX_SINT16 = -32767
+               //---
+               minValue     = OSSIM_DEFAULT_MIN_PIX_SINT16 + 1;
+               maxValue     = OSSIM_DEFAULT_MAX_PIX_SINT16;
+               numberOfBins = (maxValue-minValue) + 1;
+               break;
+            }
+            case OSSIM_SINT32:
+            case OSSIM_UINT32:
+            {
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT16+1;
+               break;
+            }
+            case OSSIM_FLOAT32:
+            case OSSIM_FLOAT64:
+            {
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT16+1;
+               break;
+            }
+            case OSSIM_NORMALIZED_FLOAT:
+            case OSSIM_NORMALIZED_DOUBLE:
+            {
+               minValue     = 0;
+               maxValue     = 1.0;
+               numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT16+1;
+               break;
+            }
+            default:
+            {
+               if(traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_WARN)
+                     << "Unsupported scalar type in ossim::getBinInformation()" << endl;
+               }
+               result = false;
+               break;
+            }
+         }
+      }
+   }
    return result;
 }

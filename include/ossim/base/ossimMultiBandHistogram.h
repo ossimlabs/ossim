@@ -1,6 +1,8 @@
 //*******************************************************************
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
+//
+// See top level LICENSE.txt file.
 //
 // Author: Garrett Potts (gpotts@imagelinks.com)
 //
@@ -11,6 +13,7 @@
 #ifndef ossimMultiBandHistogram_HEADER
 #define ossimMultiBandHistogram_HEADER
 #include <vector>
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimHistogram.h>
 #include <ossim/base/ossimRefPtr.h>
@@ -28,14 +31,18 @@ public:
    ossimMultiBandHistogram(ossim_int32 numberOfBands,
                            ossim_int32 numberOfBuckets,
                            float minValue,
-                           float maxValue);
+                           float maxValue,
+                           float nullValue,
+                           ossimScalarType scalar);
 
    void create(const ossimImageSource* input);
    
    void create(ossim_int32 numberOfBands,
                ossim_int32 numberOfBuckets,
                float minValue,
-               float maxValue);
+               float maxValue,
+               float nullValue,
+               ossimScalarType scalar);
    
    ossim_uint32 getNumberOfBands() const;
 
