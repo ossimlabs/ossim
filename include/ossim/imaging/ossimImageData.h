@@ -654,6 +654,9 @@ public:
                                            ossim_float32* buf);
 
    virtual bool isWithin(ossim_int32 x, ossim_int32 y);
+   /** Sets band of specified pixel to color */
+   virtual void setValue(ossim_int32 x, ossim_int32 y,
+                         ossim_float64 color, ossim_uint32 band);
    virtual void setValue(ossim_int32 x, ossim_int32 y, ossim_float64 color);
 
    virtual void loadBand(const void* src,
