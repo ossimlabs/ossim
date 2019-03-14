@@ -1037,7 +1037,7 @@ int ossimHistogram::GetValIndex(float pixelval)const
    return idx;
 }
 
-float ossimHistogram::GetCount(float pixelval)const
+ossim_int64 ossimHistogram::GetCount(float pixelval)const
 {
    int index = GetIndex(pixelval);
 
@@ -1071,7 +1071,7 @@ float ossimHistogram::GetMaxVal()const
 }
 
 
-float ossimHistogram::GetMaxCount()const
+ossim_int64 ossimHistogram::GetMaxCount()const
 {
    int i=0;
    float max;
@@ -1085,7 +1085,7 @@ float ossimHistogram::GetMaxCount()const
 
 
 
-float ossimHistogram::SetCount(float pixelval, float count)
+ossim_int64 ossimHistogram::SetCount(float pixelval, ossim_int64 count)
 {
    m_statsConsistent = 0;
 
