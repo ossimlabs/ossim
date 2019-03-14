@@ -72,8 +72,6 @@ ossimTiffTileSource::ossimTiffTileSource()
       theBufferSize(0),
       theBufferRect(0, 0, 0, 0),
       theBufferRLevel(0),
-      theCurrentTileWidth(0),
-      theCurrentTileHeight(0),
       theSamplesPerPixel(0),
       theBitsPerSample(0),
       theSampleFormatUnit(0),
@@ -92,8 +90,6 @@ ossimTiffTileSource::ossimTiffTileSource()
       thePlanarConfig(0),
       thePhotometric(0),
       theRowsPerStrip(0),
-      theImageTileWidth(0),
-      theImageTileLength(0),
       theImageDirectoryList(0),
       theCurrentTiffRlevel(0),
       theCompressionType(0),
@@ -198,12 +194,12 @@ bool ossimTiffTileSource::getTile(ossimImageData *result,
             }
 
             bool reallocateBuffer = false;
-            if ((tile_rect.width() != theCurrentTileWidth) ||
-                (tile_rect.height() != theCurrentTileHeight))
+            if ((tile_rect.width() != theOutputTileSize[theCurrentDirectory].x) ||
+                (tile_rect.height() != theOutputTileSize[theCurrentDirectory].y))
             {
                // Current tile size must be set prior to allocatBuffer call.
-               theCurrentTileWidth = tile_rect.width();
-               theCurrentTileHeight = tile_rect.height();
+               theOutputTileSize[theCurrentDirectory].x = tile_rect.width();
+               theOutputTileSize[theCurrentDirectory].y = tile_rect.height();
 
                reallocateBuffer = true;
             }
@@ -381,8 +377,7 @@ void ossimTiffTileSource::close()
    thePlanarConfig.clear();
    thePhotometric.clear();
    theRowsPerStrip.clear();
-   theImageTileWidth.clear();
-   theImageTileLength.clear();
+   theInputTileSize.clear();
    if (theBuffer)
    {
       delete[] theBuffer;
@@ -529,8 +524,8 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
    thePlanarConfig.resize(theNumberOfDirectories);
    thePhotometric.resize(theNumberOfDirectories);
    theRowsPerStrip.resize(theNumberOfDirectories);
-   theImageTileWidth.resize(theNumberOfDirectories);
-   theImageTileLength.resize(theNumberOfDirectories);
+   theInputTileSize.resize(theNumberOfDirectories);
+   theOutputTileSize.resize(theNumberOfDirectories);
 
    for (ossim_uint32 dir = 0; dir < theNumberOfDirectories; ++dir)
    {
@@ -607,32 +602,38 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
 
       if (state->isTiled(dir))
       {
-         theImageTileWidth[dir] = state->getTileWidth(dir);
-         theImageTileLength[dir] = state->getTileLength(dir);
+         theInputTileSize[dir].x  = state->getTileWidth(dir);
+         theInputTileSize[dir].y = state->getTileLength(dir);
+         theOutputTileSize[dir] = theInputTileSize[dir];
          theRowsPerStrip[dir] = 0;
-         if (!theImageTileWidth[dir])
+         if (!theInputTileSize[dir].x)
          {
             theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
             ossimNotify(ossimNotifyLevel_WARN)
                 << "ossimTiffTileSource::getTiffTileWidth ERROR:"
                 << "\nCannot determine tile width." << endl;
          }
-         if (!theImageTileLength[dir])
+         if (!theInputTileSize[dir].y)
          {
             theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
             ossimNotify(ossimNotifyLevel_WARN)
                 << "ossimTiffTileSource::getTiffTileLength ERROR:"
                 << "\nCannot determine tile length." << endl;
-            theImageTileLength[dir] = 0;
+            theInputTileSize[dir].y = 0;
          }
       }
       else // Stripped
       {
-         if (!theRowsPerStrip[dir])
-            theRowsPerStrip[dir] = 1;
+         ossimIpt tileSize;
+         ossim::defaultTileSize(tileSize);
+         if (theRowsPerStrip[dir] < (uint32_t) tileSize.line)
+            theRowsPerStrip[dir] = tileSize.line;
 
-         theImageTileWidth[dir] = theImageWidth[dir];
-         theImageTileLength[dir] = theRowsPerStrip[dir];
+         theInputTileSize[dir].x = theImageWidth[dir];
+         theInputTileSize[dir].y = theRowsPerStrip[dir];
+
+         theOutputTileSize[dir].x  = tileSize.x;
+         theOutputTileSize[dir].y = theRowsPerStrip[dir];
       }
    } // End of "for (ossim_uint32 dir=0; dir<theNumberOfDirectories; dir++)"
 
@@ -654,7 +655,7 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       {
          // this is currently causing pixel problems.  I am going to comment this out until we figure out a better solution
          //
-#if 0         
+#if 0
          if (theMinSampleValue == 0) //  && (theMaxSampleValue > 36535) )
          {
             //---
@@ -838,7 +839,7 @@ bool ossimTiffTileSource::isImageTiled() const
    if (theRowsPerStrip.empty())
       return false;
 
-   if ((theRowsPerStrip[0] == 0) && (theImageTileLength[0] > 1))
+   if ((theRowsPerStrip[0] == 0) && (theInputTileSize[0].y > 1))
       return true;
 
    return false;
@@ -1011,8 +1012,7 @@ bool ossimTiffTileSource::loadFromScanLine(const ossimIrect &clip_rect,
    ossimInterleaveType type =
        (thePlanarConfig[theCurrentDirectory] == PLANARCONFIG_CONTIG) ? OSSIM_BIP : OSSIM_BIL;
 
-   if (theBufferRLevel != getCurrentTiffRLevel() ||
-       !clip_rect.completely_within(theBufferRect))
+   if (theBufferRLevel != getCurrentTiffRLevel() || !clip_rect.completely_within(theBufferRect))
    {
       //***
       // Must reload the buffer.  Grab enough lines to fill the depth of the
@@ -1116,15 +1116,13 @@ bool ossimTiffTileSource::loadFromTile(const ossimIrect &clip_rect,
    // Calculate the number of tiles needed in the line/sample directions.
    //---
    ossim_uint32 tiles_in_v_dir = (clip_rect.lr().x - tileOrigin.x + 1) /
-                                 theImageTileWidth[theCurrentDirectory];
+      theInputTileSize[theCurrentDirectory].x;
    ossim_uint32 tiles_in_u_dir = (clip_rect.lr().y - tileOrigin.y + 1) /
-                                 theImageTileLength[theCurrentDirectory];
+                                 theInputTileSize[theCurrentDirectory].y;
 
-   if ((clip_rect.lr().x - tileOrigin.x + 1) %
-       theImageTileWidth[theCurrentDirectory])
+   if ((clip_rect.lr().x - tileOrigin.x + 1) % theInputTileSize[theCurrentDirectory].x)
       ++tiles_in_v_dir;
-   if ((clip_rect.lr().y - tileOrigin.y + 1) %
-       theImageTileLength[theCurrentDirectory])
+   if ((clip_rect.lr().y - tileOrigin.y + 1) % theInputTileSize[theCurrentDirectory].y)
       ++tiles_in_u_dir;
 
    // Tile loop in line direction.
@@ -1138,9 +1136,9 @@ bool ossimTiffTileSource::loadFromTile(const ossimIrect &clip_rect,
          ossimIrect tiff_tile_rect(ulTilePt.x,
                                    ulTilePt.y,
                                    ulTilePt.x +
-                                       theImageTileWidth[theCurrentDirectory] - 1,
+                                       theInputTileSize[theCurrentDirectory].x - 1,
                                    ulTilePt.y +
-                                       theImageTileLength[theCurrentDirectory] - 1);
+                                       theInputTileSize[theCurrentDirectory].y - 1);
 
          if (tiff_tile_rect.intersects(clip_rect))
          {
@@ -1226,11 +1224,11 @@ bool ossimTiffTileSource::loadFromTile(const ossimIrect &clip_rect,
 
          } // End of if (tiff_tile_rect.intersects(clip_rect))
 
-         ulTilePt.x += theImageTileWidth[theCurrentDirectory];
+         ulTilePt.x += theInputTileSize[theCurrentDirectory].x;
 
       } // End of tile loop in the sample direction.
 
-      ulTilePt.y += theImageTileLength[theCurrentDirectory];
+      ulTilePt.y += theInputTileSize[theCurrentDirectory].y;
 
    } // End of tile loop in the line direction.
 
@@ -1262,15 +1260,15 @@ bool ossimTiffTileSource::loadFromRgbaU8Tile(const ossimIrect &tile_rect,
    // to fill the tile.
    //---
    ossim_uint32 tiles_in_v_dir = (clip_rect.lr().x - tileOrigin.x + 1) /
-                                 theImageTileWidth[theCurrentDirectory];
+                                 theInputTileSize[theCurrentDirectory].x;
    ossim_uint32 tiles_in_u_dir = (clip_rect.lr().y - tileOrigin.y + 1) /
-                                 theImageTileLength[theCurrentDirectory];
+                                 theInputTileSize[theCurrentDirectory].y;
 
    if ((clip_rect.lr().x - tileOrigin.x + 1) %
-       theImageTileWidth[theCurrentDirectory])
+       theInputTileSize[theCurrentDirectory].x)
       ++tiles_in_v_dir;
    if ((clip_rect.lr().y - tileOrigin.y + 1) %
-       theImageTileLength[theCurrentDirectory])
+       theInputTileSize[theCurrentDirectory].y)
       ++tiles_in_u_dir;
 
    ossimIpt ulTilePt = tileOrigin;
@@ -1298,9 +1296,9 @@ bool ossimTiffTileSource::loadFromRgbaU8Tile(const ossimIrect &tile_rect,
          ossimIrect tiff_tile_rect = ossimIrect(ulTilePt.x,
                                                 ulTilePt.y,
                                                 ulTilePt.x +
-                                                    theImageTileWidth[theCurrentDirectory] - 1,
+                                                    theInputTileSize[theCurrentDirectory].x - 1,
                                                 ulTilePt.y +
-                                                    theImageTileLength[theCurrentDirectory] - 1);
+                                                    theInputTileSize[theCurrentDirectory].y - 1);
 
          if (getCurrentTiffRLevel() != theBufferRLevel ||
              tiff_tile_rect != theBufferRect)
@@ -1335,7 +1333,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Tile(const ossimIrect &tile_rect,
          //***
          ossim_uint32 in_buf_offset =
              (tiff_tile_rect.lr().y - tile_clip_rect.ul().y) *
-                 theImageTileWidth[theCurrentDirectory] * 4 +
+                 theInputTileSize[theCurrentDirectory].x * 4 +
              ((tile_clip_rect.ul().x - ulTilePt.x) * 4);
 
          ossim_uint32 out_buf_offset =
@@ -1381,14 +1379,14 @@ bool ossimTiffTileSource::loadFromRgbaU8Tile(const ossimIrect &tile_rect,
             r += OUTPUT_TILE_WIDTH;
             g += OUTPUT_TILE_WIDTH;
             b += OUTPUT_TILE_WIDTH;
-            s -= theImageTileWidth[theCurrentDirectory];
+            s -= theInputTileSize[theCurrentDirectory].x;
          }
 
-         ulTilePt.x += theImageTileWidth[theCurrentDirectory];
+         ulTilePt.x += theInputTileSize[theCurrentDirectory].x;
 
       } // End of tile loop in the sample direction.
 
-      ulTilePt.y += theImageTileLength[theCurrentDirectory];
+      ulTilePt.y += theInputTileSize[theCurrentDirectory].y;
 
    } // End of tile loop in the line direction.
 
@@ -1798,10 +1796,8 @@ void ossimTiffTileSource::adjustToStartOfTile(ossimIpt &pt) const
    // - Assumes an origin of (0,0)
    // - Shifts in to the upper left direction.
    //***
-   ossim_int32 tw =
-       static_cast<ossim_int32>(theImageTileWidth[theCurrentDirectory]);
-   ossim_int32 th =
-       static_cast<ossim_int32>(theImageTileLength[theCurrentDirectory]);
+   ossim_int32 tw = static_cast<ossim_int32>(theInputTileSize[theCurrentDirectory].x);
+   ossim_int32 th = static_cast<ossim_int32>(theInputTileSize[theCurrentDirectory].y);
 
    if (pt.x > 0)
    {
@@ -1946,9 +1942,9 @@ ossim_uint32 ossimTiffTileSource::getImageTileWidth() const
    ossim_uint32 result = 0;
    if (isOpen())
    {
-      if (theCurrentDirectory < theImageTileWidth.size())
+      if (theCurrentDirectory < theInputTileSize.size())
       {
-         result = theImageTileWidth[theCurrentDirectory];
+         result = theInputTileSize[theCurrentDirectory].x;
       }
    }
    return result;
@@ -1959,9 +1955,9 @@ ossim_uint32 ossimTiffTileSource::getImageTileHeight() const
    ossim_uint32 result = 0;
    if (isOpen())
    {
-      if (theCurrentDirectory < theImageTileLength.size())
+      if (theCurrentDirectory < theInputTileSize.size())
       {
-         result = theImageTileLength[theCurrentDirectory];
+         result = theInputTileSize[theCurrentDirectory].y;
       }
    }
    return result;
@@ -1969,7 +1965,10 @@ ossim_uint32 ossimTiffTileSource::getImageTileHeight() const
 
 ossim_uint32 ossimTiffTileSource::getTileWidth() const
 {
-   ossim_uint32 result = getImageTileWidth();
+   ossim_uint32 result;
+   if (theCurrentDirectory < theOutputTileSize.size())
+      result = theOutputTileSize[theCurrentDirectory].x;
+
    if (!result)
    {
       ossimIpt tileSize;
@@ -1981,7 +1980,10 @@ ossim_uint32 ossimTiffTileSource::getTileWidth() const
 
 ossim_uint32 ossimTiffTileSource::getTileHeight() const
 {
-   ossim_uint32 result = getImageTileHeight();
+   ossim_uint32 result;
+   if (theCurrentDirectory < theOutputTileSize.size())
+      result = theOutputTileSize[theCurrentDirectory].y;
+
    if (!result)
    {
       ossimIpt tileSize;
@@ -2061,13 +2063,13 @@ std::ostream &ossimTiffTileSource::print(std::ostream &os) const
       {
          os << "\nrows per strip:  " << theRowsPerStrip[i];
       }
-      if (theImageTileWidth[i])
+      if (theInputTileSize[i].x)
       {
-         os << "\ntile_width:      " << theImageTileWidth[i];
+         os << "\ntile_width:      " << theInputTileSize[i].x;
       }
-      if (theImageTileLength[i])
+      if (theInputTileSize[i].y)
       {
-         os << "\ntile_length:     " << theImageTileLength[i];
+         os << "\ntile_length:     " << theInputTileSize[i].y;
       }
       os << endl;
    }
@@ -2565,9 +2567,12 @@ void ossimTiffTileSource::allocateTile()
       {
          theTile->initialize();
 
-         // The width and height mus be set prior to call to allocateBuffer.
-         theCurrentTileWidth = theTile->getWidth();
-         theCurrentTileHeight = theTile->getHeight();
+         // The width and height must be set prior to call to allocateBuffer.
+         if (theCurrentDirectory >= theOutputTileSize.size())
+            theOutputTileSize.resize(theCurrentDirectory + 1);
+
+         theOutputTileSize[theCurrentDirectory].x = theTile->getWidth();
+         theOutputTileSize[theCurrentDirectory].y = theTile->getHeight();
       }
    }
 }
@@ -2581,22 +2586,22 @@ bool ossimTiffTileSource::allocateBuffer()
    {
    case READ_RGBA_U8_TILE:
    {
-      buffer_size = theImageTileWidth[theCurrentDirectory] *
-                    theImageTileWidth[theCurrentDirectory] * theBytesPerPixel * 4;
+      buffer_size = theInputTileSize[theCurrentDirectory].x *
+                    theInputTileSize[theCurrentDirectory].x * theBytesPerPixel * 4;
       break;
    }
    case READ_TILE:
    {
       if (thePlanarConfig[theCurrentDirectory] == PLANARCONFIG_CONTIG)
       {
-         buffer_size = theImageTileWidth[theCurrentDirectory] *
-                       theImageTileLength[theCurrentDirectory] *
+         buffer_size = theInputTileSize[theCurrentDirectory].x *
+                       theInputTileSize[theCurrentDirectory].y *
                        theBytesPerPixel * theSamplesPerPixel;
       }
       else
       {
-         buffer_size = theImageTileWidth[theCurrentDirectory] *
-                       theImageTileLength[theCurrentDirectory] *
+         buffer_size = theInputTileSize[theCurrentDirectory].x *
+                       theInputTileSize[theCurrentDirectory].y *
                        theBytesPerPixel;
       }
       break;
@@ -2628,7 +2633,7 @@ bool ossimTiffTileSource::allocateBuffer()
 #if OSSIM_BUFFER_SCAN_LINE_READS
       // Buffer a image width by tile height.
       buffer_size = theImageWidth[0] * theBytesPerPixel *
-                    theSamplesPerPixel * theCurrentTileHeight;
+                    theSamplesPerPixel * theOutputTileSize[theCurrentDirectory].y;
 #else
       buffer_size = theImageWidth[0] * theBytesPerPixel * theSamplesPerPixel;
 #endif

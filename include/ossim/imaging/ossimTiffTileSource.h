@@ -356,8 +356,6 @@ private:
    ossim_uint32         theBufferSize;
    ossimIrect           theBufferRect;
    ossim_uint32         theBufferRLevel;
-   ossim_uint32         theCurrentTileWidth;
-   ossim_uint32         theCurrentTileHeight;
 
    ossim_uint16         theSamplesPerPixel;
    ossim_uint16         theBitsPerSample;
@@ -381,10 +379,16 @@ private:
    std::vector<ossim_uint16> thePlanarConfig;
    std::vector<ossim_uint16> thePhotometric;
    std::vector<ossim_uint32> theRowsPerStrip;
-   std::vector<ossim_uint32> theImageTileWidth;
-   std::vector<ossim_uint32> theImageTileLength;
    std::vector<ossim_uint32> theImageDirectoryList;
-   
+
+   /** theInputTileSize reflects the most efficient tiling scheme for reading from disk. If the
+    * image is tiled, then the output tile size will match the tiling on disk. If it is stripped,
+    * then the input "tile" size will be the size of the strip, while the output tile size will
+    * be different and equal to the ossim default tile size. Strips are cached internally to
+    * speed up output tiling. */
+   std::vector<ossimIpt>     theInputTileSize;
+   std::vector<ossimIpt>     theOutputTileSize;
+
    ossim_uint32              theCurrentTiffRlevel;
    ossim_int32               theCompressionType;
    std::vector<ossim_uint32> theOutputBandList;
