@@ -600,6 +600,7 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       theRowsPerStrip[dir] = 0;
       theInputTileSize[dir].x = state->getTileWidth(dir);
       theInputTileSize[dir].y = state->getTileLength(dir);
+      theOutputTileSize = theInputTileSize[dir];
 
       if (state->isTiled(dir))
       {
@@ -618,45 +619,30 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
                 << "\nCannot determine tile length." << endl;
             theInputTileSize[dir].y = 0;
          }
-         theOutputTileSize = theInputTileSize[dir];
       }
       else
       {
          theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
          if (!theRowsPerStrip[dir])
-         {
             theRowsPerStrip[dir] = 1;
-         }
-         //---
+
          // Let's default the tile size to something efficient.
-         //
-         // NOTE: This is not used by the strip reader method.  Only by the getImageTileHeight
-         // and getImageTileHeight methods.
-         //---
+         // NOTE: This is not used by the strip reader method.  Only by the getTileWidth
+         // and getTileHeight methods.
          if (theInputTileSize[dir].x > 256)
-         {
             theOutputTileSize.x = 256;
-         }
          else if (theInputTileSize[dir].x < 64)
-         {
             theOutputTileSize.x = 64;
-         }
          if (theInputTileSize[dir].y > 256)
-         {
             theOutputTileSize.y = 256;
-         }
          else if (theInputTileSize[dir].y < 64)
-         {
             theOutputTileSize.y = 64;
-         }
       }
    } // End of "for (ossim_uint32 dir=0; dir<theNumberOfDirectories; dir++)"
 
    // Reset the directory back to "0".
    if (setTiffDirectory(0) == false)
-   {
       return false;
-   }
 
    //---
    // Get the scalar type.
