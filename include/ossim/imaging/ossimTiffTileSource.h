@@ -387,7 +387,7 @@ private:
     * be different and equal to the ossim default tile size. Strips are cached internally to
     * speed up output tiling. */
    std::vector<ossimIpt>     theInputTileSize;
-   std::vector<ossimIpt>     theOutputTileSize;
+   mutable ossimIpt          theOutputTileSize; // Formerly known as theCurrentTileWidth/Length
 
    ossim_uint32              theCurrentTiffRlevel;
    ossim_int32               theCompressionType;
