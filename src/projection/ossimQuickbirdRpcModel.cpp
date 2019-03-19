@@ -101,11 +101,18 @@ ossimObject *ossimQuickbirdRpcModel::dup() const
 //*************************************************************************************************
 bool ossimQuickbirdRpcModel::parseFile(const ossimFilename &file)
 {
-   bool result = parseNitfFile(file);
-   if (!result)
+   bool result = true;
+   while (1)
    {
-      result = parseTiffFile(file);
+      if (parseNitfFile(file))
+         break;
+      if (parseTiffFile(file))
+         break;
+
+      result = false;
+      break;
    }
+
    return result;
 }
 
@@ -292,7 +299,7 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
    // file, or a single RPC file is provided for a multi-tile scene.
    while (1)
    {
-      rpcFile.setExtension("RPB");
+   rpcFile.setExtension("RPB");
       if (findSupportFile(rpcFile))
          break;
 
@@ -304,7 +311,7 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
       if (findSupportFile(rpcFile))
          break;
 
-      return false;
+         return false;
    }
 
    // An RPC file was located, open it:
@@ -335,6 +342,8 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
    theLatOffset = m_qbRpcHeader->theLatOffset;
    theLonOffset = m_qbRpcHeader->theLonOffset;
    theHgtOffset = m_qbRpcHeader->theHeightOffset;
+   theBiasError  = m_qbRpcHeader->theErrBias;
+   theRandError  = m_qbRpcHeader->theErrRand;
    theImageID = rpcFile.fileNoExtension();
 
    return true;

@@ -47,7 +47,7 @@ public:
     return theSatId.upcase().contains("WV04");
   }
   bool isGlobal()const;
-
+  
   bool parseXml();
 
   ossimFilename theFilename;
