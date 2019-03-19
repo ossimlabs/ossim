@@ -101,11 +101,18 @@ ossimObject *ossimQuickbirdRpcModel::dup() const
 //*************************************************************************************************
 bool ossimQuickbirdRpcModel::parseFile(const ossimFilename &file)
 {
-   bool result = parseNitfFile(file);
-   if (!result)
+   bool result = true;
+   while (1)
    {
-      result = parseTiffFile(file);
+      if (parseNitfFile(file))
+         break;
+      if (parseTiffFile(file))
+         break;
+
+      result = false;
+      break;
    }
+
    return result;
 }
 
@@ -288,13 +295,22 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
 {
    ossimFilename rpcFile(base_name);
 
-   // There are two possibilities for RPC data files: either each image file has its own RPC data
+   // There are three possibilities for RPC data files: either each image file has its own RPC data
    // file, or a single RPC file is provided for a multi-tile scene.
-   rpcFile.setExtension("RPB");
-   if (!findSupportFile(rpcFile))
+   while (1)
    {
+      rpcFile.setExtension("RPB");
+      if (findSupportFile(rpcFile))
+         break;
+
       rpcFile.setExtension("RPA");
-      if (!findSupportFile(rpcFile))
+      if (findSupportFile(rpcFile))
+         break;
+
+      rpcFile.setExtension("XML");
+      if (findSupportFile(rpcFile))
+         break;
+
          return false;
    }
 
@@ -316,17 +332,19 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
    std::copy(m_qbRpcHeader->theSampNumCoeff.begin(), m_qbRpcHeader->theSampNumCoeff.end(), theSampNumCoef);
    std::copy(m_qbRpcHeader->theSampDenCoeff.begin(), m_qbRpcHeader->theSampDenCoeff.end(), theSampDenCoef);
 
-   theLineScale = m_qbRpcHeader->theLineScale;
-   theSampScale = m_qbRpcHeader->theSampScale;
-   theLatScale = m_qbRpcHeader->theLatScale;
-   theLonScale = m_qbRpcHeader->theLonScale;
-   theHgtScale = m_qbRpcHeader->theHeightScale;
+   theLineScale  = m_qbRpcHeader->theLineScale;
+   theSampScale  = m_qbRpcHeader->theSampScale;
+   theLatScale   = m_qbRpcHeader->theLatScale;
+   theLonScale   = m_qbRpcHeader->theLonScale;
+   theHgtScale   = m_qbRpcHeader->theHeightScale;
    theLineOffset = m_qbRpcHeader->theLineOffset;
    theSampOffset = m_qbRpcHeader->theSampOffset;
-   theLatOffset = m_qbRpcHeader->theLatOffset;
-   theLonOffset = m_qbRpcHeader->theLonOffset;
-   theHgtOffset = m_qbRpcHeader->theHeightOffset;
-   theImageID = rpcFile.fileNoExtension();
+   theLatOffset  = m_qbRpcHeader->theLatOffset;
+   theLonOffset  = m_qbRpcHeader->theLonOffset;
+   theHgtOffset  = m_qbRpcHeader->theHeightOffset;
+   theBiasError  = m_qbRpcHeader->theErrBias;
+   theRandError  = m_qbRpcHeader->theErrRand;
+   theImageID    = rpcFile.fileNoExtension();
 
    return true;
 }
