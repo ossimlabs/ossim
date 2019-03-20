@@ -32,6 +32,8 @@
 static ossimTrace traceExec  = ossimTrace("ossimSensorModelFactory:exec");
 static ossimTrace traceDebug = ossimTrace("ossimSensorModelFactory:debug");
 
+#define TRACE_DEBUG if(traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<MODULE<<" DEBUG: "
+
 //***
 // Note to programmer: To add a new model, search this file for "ADD_MODEL"
 // to locate places requiring editing. Functional example below...
@@ -103,9 +105,9 @@ ossimProjection* ossimSensorModelFactory::createProjection(const ossimKeywordlis
    {
       result = createProjection(ossimFilename(value), 0);
    }
-   //
-   // Search for occurence of "type" keyword:
-   //
+      //
+      // Search for occurence of "type" keyword:
+      //
    else
    {
       value = keywordList.find(prefix, ossimKeywordNames::TYPE_KW);
@@ -118,10 +120,10 @@ ossimProjection* ossimSensorModelFactory::createProjection(const ossimKeywordlis
             {
                result = 0;
             }
-        }
+         }
       }
    }
-   
+
    return result.release();
 }
 
@@ -151,7 +153,7 @@ ossimSensorModelFactory::createProjection(const ossimString &name) const
    {
       return new ossimBuckeyeSensor;
    }
-   
+
    if (name ==  STATIC_TYPE_NAME(ossimRpcModel))
    {
       return new ossimRpcModel;
@@ -171,10 +173,10 @@ ossimSensorModelFactory::createProjection(const ossimString &name) const
    {
       return new ossimQuickbirdRpcModel;
    }
-   
+
    if(name == STATIC_TYPE_NAME(ossimIkonosRpcModel))
    {
-     return new ossimIkonosRpcModel;
+      return new ossimIkonosRpcModel;
    }
 
    if(name == STATIC_TYPE_NAME(ossimNitfRpcModel))
@@ -225,7 +227,7 @@ ossimSensorModelFactory::createProjection(const ossimString &name) const
    {
       return new ossimSpectraboticsRedEdgeModel();
    }
-   
+
 
    //***
    // ADD_MODEL: (Please leave this comment for the next programmer)
@@ -254,13 +256,13 @@ ossimSensorModelFactory::createObject(const ossimKeywordlist& kwl,
 {
    return createProjection(kwl, prefix);
 }
-   
+
 //*****************************************************************************
 //  METHOD
 //*****************************************************************************
 void
 ossimSensorModelFactory::getTypeNameList(std::vector<ossimString>& typeList)
-   const
+const
 {
    typeList.push_back(STATIC_TYPE_NAME(ossimApplanixEcefModel));
    typeList.push_back(STATIC_TYPE_NAME(ossimApplanixUtmModel));
@@ -287,7 +289,7 @@ ossimSensorModelFactory::getTypeNameList(std::vector<ossimString>& typeList)
    // ADD_MODEL: Please leave this comment for the next programmer. Add above.
    //***
    //typeList.push_back(ossimString(MY_NEW_MODEL));
-   
+
 }
 
 ossimProjection* ossimSensorModelFactory::createProjection(const ossimFilename& filename,
@@ -300,24 +302,20 @@ ossimProjection* ossimSensorModelFactory::createProjection(const ossimFilename& 
 
    if(filename.empty())
       return 0;
-   
+
    ossimKeywordlist kwl;
    ossimRefPtr<ossimProjection> model = 0;
 
    ossimFilename geomFile = filename;
    geomFile = geomFile.setExtension("geom");
-   
+
    do
    {
-      if (traceDebug())
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << MODULE << " DEBUG: Testing ossimCoarsGridModel" << std::endl;
-      }
+      TRACE_DEBUG<<"Testing ossimCoarsGridModel" << std::endl;
       if (geomFile.exists() && kwl.addFile(filename.c_str()))
-   {
-      ossimFilename coarseGrid;
-      const char* type = kwl.find(ossimKeywordNames::TYPE_KW);
+      {
+         ossimFilename coarseGrid;
+         const char* type = kwl.find(ossimKeywordNames::TYPE_KW);
          if (type && (ossimString(type)==ossimString(STATIC_TYPE_NAME(ossimCoarseGridModel))))
          {
             findCoarseGrid(coarseGrid, filename);
@@ -330,241 +328,200 @@ ossimProjection* ossimSensorModelFactory::createProjection(const ossimFilename& 
                model = 0;
             }
          }
-      kwl.clear();
-   }
+         kwl.clear();
+      }
 
-   // See if there is an external geomtry.
+      // See if there is an external geomtry.
       model = createProjectionFromGeometryFile(filename, entryIdx);
-   if(model.valid())
-         break;
-   
-   // first check for override
-   if(geomFile.exists()&&kwl.addFile(geomFile.c_str()))
-   {
-      model =  createProjection(kwl);
       if(model.valid())
+         break;
+
+      // first check for override
+      if(geomFile.exists()&&kwl.addFile(geomFile.c_str()))
+      {
+         model =  createProjection(kwl);
+         if(model.valid())
             break;
-   }
-   
-   ifstream input(geomFile.c_str());
-   char ecgTest[4] = { 0 };
-   input.read(ecgTest, 3); // even if `read()` fails, it will be initialized thanks to `= { 0 };`
-   input.close();
-   if(std::string(ecgTest) == "eCG")
-   {
-      ossimKeywordlist kwlTemp;
+      }
+
+      ifstream input(geomFile.c_str());
+      char ecgTest[4] = { 0 };
+      input.read(ecgTest, 3); // even if `read()` fails, it will be initialized thanks to `= { 0 };`
+      input.close();
+      if(std::string(ecgTest) == "eCG")
+      {
+         ossimKeywordlist kwlTemp;
          kwlTemp.add("type", "ossimCoarseGridModel", true);
          kwlTemp.add("geom_file", geomFile.c_str(), true);
          model = createProjection(kwlTemp);
          break;
-   }
+      }
 
-   //---
-   // Test for quick bird rpc.  Could be either a tiff or nitf so not wrapped
-   // around "isNitf()" anymore.
-   //---
-   if(traceDebug())
-   {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << MODULE << " DEBUG: testing ossimQuickbirdRpcModel"
-         << std::endl;
-   }
-   ossimRefPtr<ossimQuickbirdRpcModel> qbModel = new ossimQuickbirdRpcModel;
-   if(qbModel->parseFile(filename))
-   {
-      if(traceDebug())
+      //---
+      // Test for quick bird rpc.  Could be either a tiff or nitf so not wrapped
+      // around "isNitf()" anymore.
+      //---
+      TRACE_DEBUG<<"testing ossimQuickbirdRpcModel"<< std::endl;
+      ossimRefPtr<ossimQuickbirdRpcModel> qbModel = new ossimQuickbirdRpcModel;
+      if(qbModel->parseFile(filename))
       {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << MODULE << " DEBUG: returning ossimQuickbirdRpcModel"
-            << std::endl;
-      }
-      model = qbModel.get();
+         model = qbModel.get();
          break;
-   }
-   
-      // Test for ikonos rpc.  Could be tiff or nitf which is handled in parseFile method.
-      if(traceDebug())
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << MODULE << " DEBUG testing ossimIkonosRpcModel"
-            << std::endl;
       }
+
+      // Test for ikonos rpc.  Could be tiff or nitf which is handled in parseFile method.
+      TRACE_DEBUG<<"testing ossimIkonosRpcModel" << std::endl;
       ossimRefPtr<ossimIkonosRpcModel> ikModel = new ossimIkonosRpcModel;
       if (ikModel->parseFile(filename))
       {
-      model = ikModel.get();
+         model = ikModel.get();
          break;
-   }
+      }
 
-   if(isNitf(filename))
-   {
-     if(traceDebug())
-     {
-        ossimNotify(ossimNotifyLevel_DEBUG)
-           << MODULE << " DEBUG: testing ossimNitfRsmModel" << std::endl;
-     }
-     ossimRefPtr<ossimNitfRsmModel> rsmModel = new ossimNitfRsmModel();
-     if(rsmModel->parseFile(filename, entryIdx))
-     {
-         model = rsmModel.get();
+      if(isNitf(filename))
+      {
+         TRACE_DEBUG<<"testing ossimNitfRsmModel" << std::endl;
+         ossimRefPtr<ossimNitfRsmModel> rsmModel = new ossimNitfRsmModel();
+         if(rsmModel->parseFile(filename, entryIdx))
+         {
+            model = rsmModel.get();
             break;
-     }
+         }
 
-     if(traceDebug())
-     {
-        ossimNotify(ossimNotifyLevel_DEBUG)
-               << MODULE << " DEBUG: testing ossimNitfRpcModel" << std::endl;
-     }
-     ossimRefPtr<ossimNitfRpcModel> rpcModel = new ossimNitfRpcModel();
-     if ( rpcModel->parseFile(filename, entryIdx) ) // filename = NITF_file
-     {
-        model = rpcModel.get();
+         TRACE_DEBUG<<"testing ossimNitfRpcModel" << std::endl;
+         ossimRefPtr<ossimNitfRpcModel> rpcModel = new ossimNitfRpcModel();
+         if ( rpcModel->parseFile(filename, entryIdx) ) // filename = NITF_file
+         {
+            model = rpcModel.get();
             break;
-     }
-     }
-     
-   else if(isLandsat(filename))
-   {
-      model = new ossimLandSatModel(filename);
-      if(!model->getErrorStatus())
+         }
+      }
+
+      TRACE_DEBUG<<"testing ossimLandSatModel" << std::endl;
+      if(isLandsat(filename))
+      {
+         model = new ossimLandSatModel(filename);
+         if(!model->getErrorStatus())
             break;
-   }
-   
-   model = new ossimRS1SarModel(filename);
-   if(model->getErrorStatus()!= ossimErrorCodes::OSSIM_OK)
+      }
+
+      TRACE_DEBUG<<"testing ossimRS1SarModel" << std::endl;
+      model = new ossimRS1SarModel(filename);
+      if(model->getErrorStatus()!= ossimErrorCodes::OSSIM_OK)
          break;
 
-   // SPOT:
-   ossimFilename spot5Test = geomFile;
-   if(!spot5Test.exists())
-   {
-      spot5Test = geomFile.path();
-      spot5Test = spot5Test.dirCat(ossimFilename("METADATA.DIM"));
-      if (spot5Test.exists() == false)
+      // SPOT:
+      TRACE_DEBUG<<"testing ossimSpot5Model" << std::endl;
+      ossimFilename spot5Test = geomFile;
+      if(!spot5Test.exists())
       {
          spot5Test = geomFile.path();
-         spot5Test = spot5Test.dirCat(ossimFilename("metadata.dim"));
-      }
-   }
-   if(spot5Test.exists())
-   {
-      //---
-      // Check the basename of the input file. So we don't create a projection
-      // for ancillary files, icon.jpg amd preview.jpg.
-      //---
-      ossimFilename baseName = filename.file();
-      baseName.downcase();
-      if ( (baseName != "icon.jpg" ) && ( baseName != "preview.jpg" ) )
-      {
-            ossimRefPtr<ossimSpotDimapSupportData> meta = new ossimSpotDimapSupportData;
-         if(meta->loadXmlFile(spot5Test))
+         spot5Test = spot5Test.dirCat(ossimFilename("METADATA.DIM"));
+         if (spot5Test.exists() == false)
          {
-            model = new ossimSpot5Model(meta.get());
-            if(!model->getErrorStatus())
+            spot5Test = geomFile.path();
+            spot5Test = spot5Test.dirCat(ossimFilename("metadata.dim"));
+         }
+      }
+      if(spot5Test.exists())
+      {
+         //---
+         // Check the basename of the input file. So we don't create a projection
+         // for ancillary files, icon.jpg amd preview.jpg.
+         //---
+         ossimFilename baseName = filename.file();
+         baseName.downcase();
+         if ( (baseName != "icon.jpg" ) && ( baseName != "preview.jpg" ) )
+         {
+            ossimRefPtr<ossimSpotDimapSupportData> meta = new ossimSpotDimapSupportData;
+            if(meta->loadXmlFile(spot5Test))
+            {
+               model = new ossimSpot5Model(meta.get());
+               if(!model->getErrorStatus())
                   break;
             }
          }
       }
-            
-   if(traceDebug())
-   {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << MODULE << " DEBUG: testing ossimPpjFrameSensor" << std::endl;
-   }
+
+      TRACE_DEBUG<<"testing ossimPpjFrameSensor" << std::endl;
       ossimFilename ppjFilename = filename;
       ppjFilename = ppjFilename.setExtension("ppj");
-   if(ppjFilename.exists())
-   {
-      ossimRefPtr<ossimPpjFrameSensorFile> ppjFile = new ossimPpjFrameSensorFile();
-      if(ppjFile->readFile(ppjFilename))
+      if(ppjFilename.exists())
       {
-         ossimRefPtr<ossimPpjFrameSensor> sensor = new ossimPpjFrameSensor();
-         ossimDpt imageSize = ppjFile->getImageSize();
-         sensor->setFocalLength(ppjFile->getIntrinsic()[0][0], ppjFile->getIntrinsic()[1][1]);
-         sensor->setPrincipalPoint(ppjFile->getPrincipalPoint());
-         sensor->setecef2CamMatrix(ppjFile->getExtrinsic().SymSubMatrix(1,3));
-         sensor->setCameraPosition(ppjFile->getPlatformPosition());
-         sensor->setImageSize(imageSize);
-         sensor->setImageRect(ossimDrect(0,0,imageSize.x-1, imageSize.y-1));
-         sensor->setRefImgPt(ossimDpt(imageSize.x*.5, imageSize.y*.5));
-         sensor->setAveragePrjectedHeight(ppjFile->getAverageProjectedHeight());
-         sensor->updateModel();
+         ossimRefPtr<ossimPpjFrameSensorFile> ppjFile = new ossimPpjFrameSensorFile();
+         if(ppjFile->readFile(ppjFilename))
+         {
+            ossimRefPtr<ossimPpjFrameSensor> sensor = new ossimPpjFrameSensor();
+            ossimDpt imageSize = ppjFile->getImageSize();
+            sensor->setFocalLength(ppjFile->getIntrinsic()[0][0], ppjFile->getIntrinsic()[1][1]);
+            sensor->setPrincipalPoint(ppjFile->getPrincipalPoint());
+            sensor->setecef2CamMatrix(ppjFile->getExtrinsic().SymSubMatrix(1,3));
+            sensor->setCameraPosition(ppjFile->getPlatformPosition());
+            sensor->setImageSize(imageSize);
+            sensor->setImageRect(ossimDrect(0,0,imageSize.x-1, imageSize.y-1));
+            sensor->setRefImgPt(ossimDpt(imageSize.x*.5, imageSize.y*.5));
+            sensor->setAveragePrjectedHeight(ppjFile->getAverageProjectedHeight());
+            sensor->updateModel();
             model = sensor.get();
             break;
-      }
-   }
-   
-   ossimFilename hdrFilename = filename;
-   hdrFilename = hdrFilename.setExtension("hdr"); // image.hdr
-   if ( !hdrFilename.exists() )   
-   {     
-      hdrFilename = filename;
-      hdrFilename.string() += ".hdr"; // image.ras.hdr
-   }
-   if(traceDebug())
-   {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-            << MODULE << " DEBUG: testing ossimAlphaSensor\nheader file: " << hdrFilename
-            << std::endl;
-   }
-   if(hdrFilename.exists())
-   {
-      ossimRefPtr<ossimAlphaSensorSupportData> supData = new ossimAlphaSensorSupportData();
-      if(supData->readSupportFiles(hdrFilename))
-      {
-         if (supData->isHSI())
-         {
-            if(traceDebug())
-            {
-               ossimNotify(ossimNotifyLevel_DEBUG)
-                  << MODULE << " DEBUG: loading ossimAlphaSensorHSI" << std::endl;
-            }
-            ossimRefPtr<ossimAlphaSensorHSI> sensor = new ossimAlphaSensorHSI();
-            if ( sensor->initialize( *(supData.get()) ) )
-            {
-                  model = sensor.get();
-                  break;
-            }
-         }
-         else
-         {
-            if(traceDebug())
-            {
-               ossimNotify(ossimNotifyLevel_DEBUG)
-                  << MODULE << " DEBUG: loading ossimAlphaSensorHRI" << std::endl;
-            }
-            ossimRefPtr<ossimAlphaSensorHRI> sensor = new ossimAlphaSensorHRI();
-            if ( sensor->initialize( *(supData.get()) ) )
-            {
-                  model = sensor.get();
-                  break;
-            }
          }
       }
-   }
 
-   model = new ossimCoarseGridModel(geomFile);
-      if(!model->getErrorStatus())
-         break;
+      ossimFilename hdrFilename = filename;
+      hdrFilename = hdrFilename.setExtension("hdr"); // image.hdr
+      if ( !hdrFilename.exists() )
+      {
+         hdrFilename = filename;
+         hdrFilename.string() += ".hdr"; // image.ras.hdr
+      }
+      TRACE_DEBUG<<"testing ossimAlphaSensor\nheader file: " << hdrFilename << std::endl;
+      if(hdrFilename.exists())
+      {
+         ossimRefPtr<ossimAlphaSensorSupportData> supData = new ossimAlphaSensorSupportData();
+         if(supData->readSupportFiles(hdrFilename))
+         {
+            if (supData->isHSI())
+            {
+               TRACE_DEBUG<<"loading ossimAlphaSensorHSI" << std::endl;
+               ossimRefPtr<ossimAlphaSensorHSI> sensor = new ossimAlphaSensorHSI();
+               if ( sensor->initialize( *(supData.get()) ) )
+               {
+                  model = sensor.get();
+                  break;
+               }
+            }
+            else
+            {
+               TRACE_DEBUG<<"loading ossimAlphaSensorHRI" << std::endl;
+               ossimRefPtr<ossimAlphaSensorHRI> sensor = new ossimAlphaSensorHRI();
+               if ( sensor->initialize( *(supData.get()) ) )
+               {
+                  model = sensor.get();
+                  break;
+               }
+            }
+         }
+      }
 
       // Nothing found:
+      TRACE_DEBUG<<"No sensor model found."<< std::endl;
       model = 0;
 
    } while (false);
 
    return model.release();
 }
-   
+
 bool ossimSensorModelFactory::isNitf(const ossimFilename& filename)const
 {
    std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
       createIstream( filename, std::ios_base::in | std::ios_base::binary );
-   
+
    if( in )
    {
       char nitfFile[4];
       in->read((char*)nitfFile, 4);
-      
+
       return (ossimString(nitfFile, nitfFile+4) == "NITF");
    }
 
@@ -578,11 +535,11 @@ bool ossimSensorModelFactory::isLandsat(const ossimFilename& filename)const
    ossimRefPtr<ossimFfL7> ff_headerp;
    if (temp.contains("header.dat"))
    {
-       ff_headerp = new ossimFfL5(filename);
-   } 
-   else 
+      ff_headerp = new ossimFfL5(filename);
+   }
+   else
    {
-       ff_headerp = new ossimFfL7(filename);
+      ff_headerp = new ossimFfL7(filename);
    }
    bool r = !(ff_headerp->getErrorStatus());
    ff_headerp = 0;
@@ -595,13 +552,13 @@ void ossimSensorModelFactory::findCoarseGrid(ossimFilename& result,
    result = geomFile;
    result.setFile(result.fileNoExtension()+"_ocg");
    result.setExtension("dat");
-   
+
    if(!result.exists())
    {
       result = geomFile;
       result.setExtension("dat");
    }
-   
+
    // let's find a .dat file in the current directory
    //
    if(!result.exists())
@@ -628,7 +585,7 @@ void ossimSensorModelFactory::findCoarseGrid(ossimFilename& result,
                      result = file;
                   }
                }
-               
+
             }
          }while((directoryList.getNext(file))&&(result == ""));
       }

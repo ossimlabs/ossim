@@ -235,17 +235,19 @@ bool ossimQuickbirdRpcModel::parseNitfFile(const ossimFilename &file)
       }
 
       // Initialize other items in tags:
-      theLineScale = rpcTag->getLineScale().toFloat64();
-      theSampScale = rpcTag->getSampleScale().toFloat64();
-      theLatScale = rpcTag->getGeodeticLatScale().toFloat64();
-      theLonScale = rpcTag->getGeodeticLonScale().toFloat64();
-      theHgtScale = rpcTag->getGeodeticHeightScale().toFloat64();
+      theLineScale  = rpcTag->getLineScale().toFloat64();
+      theSampScale  = rpcTag->getSampleScale().toFloat64();
+      theLatScale   = rpcTag->getGeodeticLatScale().toFloat64();
+      theLonScale   = rpcTag->getGeodeticLonScale().toFloat64();
+      theHgtScale   = rpcTag->getGeodeticHeightScale().toFloat64();
       theLineOffset = rpcTag->getLineOffset().toFloat64();
       theSampOffset = rpcTag->getSampleOffset().toFloat64();
-      theLatOffset = rpcTag->getGeodeticLatOffset().toFloat64();
-      theLonOffset = rpcTag->getGeodeticLonOffset().toFloat64();
-      theHgtOffset = rpcTag->getGeodeticHeightOffset().toFloat64();
-      theImageID = ih->getImageId();
+      theLatOffset  = rpcTag->getGeodeticLatOffset().toFloat64();
+      theLonOffset  = rpcTag->getGeodeticLonOffset().toFloat64();
+      theHgtOffset  = rpcTag->getGeodeticHeightOffset().toFloat64();
+      theBiasError  = rpcTag->getErrorBias().toFloat64();
+      theRandError  = rpcTag->getErrorRand().toFloat64();
+      theImageID    = ih->getImageId();
    }
 
    finishConstruction();
