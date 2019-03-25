@@ -48,7 +48,9 @@ public:
   }
   bool isGlobal()const;
   
-  ossimString theFilename;
+  bool parseXml();
+
+  ossimFilename theFilename;
 
   ossimString theSatId;
   ossimString theBandId;

@@ -452,9 +452,7 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    // causing issues so commenting out.  drb - 17 Dec. 2015
    //---
 
-   //***
    // Extrapolate if point is outside image:
-   //***
 //    if (!insideImage(image_point))
 //    {
 //       gpt = extrapolate(image_point, ellHeight);
@@ -462,33 +460,22 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
 //       return;
 //    }
 
-   //***
    // Constants for convergence tests:
-   //***
    static const int    MAX_NUM_ITERATIONS  = 10;
    static const double CONVERGENCE_EPSILON = 0.1;  // pixels
    
-   //***
    // The image point must be adjusted by the adjustable parameters as well
    // as the scale and offsets given as part of the RPC param normalization.
-   //
-   //      NOTE: U = line, V = sample
-   //***
+   // NOTE: U = line, V = sample
    double U    = (image_point.y-theLineOffset - theIntrackOffset) / (theLineScale+theIntrackScale);
    double V    = (image_point.x-theSampOffset - theCrtrackOffset) / (theSampScale+theCrtrackScale);
 
-   //***
    // Rotate the normalized U, V by the map rotation error (adjustable param):
-   //***
    double U_rot = theCosMapRot*U - theSinMapRot*V;
    double V_rot = theSinMapRot*U + theCosMapRot*V;
    U = U_rot; V = V_rot;
 
-
-   // now apply adjust intrack and cross track
-   //***
    // Initialize quantities to be used in the iteration for ground point:
-   //***
    double nlat      = 0.0;  // normalized latitude
    double nlon      = 0.0;  // normalized longitude
    
@@ -507,7 +494,6 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    double epsilonV = CONVERGENCE_EPSILON/(theSampScale+theCrtrackScale);
    int    iteration = 0;
 
-   //***
    // Declare variables only once outside the loop. These include:
    // * polynomials (numerators Pu, Pv, and denominators Qu, Qv),
    // * partial derivatives of polynomials wrt X, Y,
@@ -515,7 +501,6 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    // * residuals of normalized image point: deltaU, deltaV,
    // * partial derivatives of Uc and Vc wrt X, Y,
    // * corrections to normalized lat, lon: deltaLat, deltaLon.
-   //***
    double Pu, Qu, Pv, Qv;
    double dPu_dLat, dQu_dLat, dPv_dLat, dQv_dLat;
    double dPu_dLon, dQu_dLon, dPv_dLon, dQv_dLon;
@@ -524,37 +509,32 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
    double dU_dLat, dU_dLon, dV_dLat, dV_dLon, W;
    double deltaLat, deltaLon;
    
-   //***
    // Now iterate until the computed Uc, Vc is within epsilon of the desired
    // image point U, V:
-   //***
    do
    {
-      //***
       // Calculate the normalized line and sample Uc, Vc as ratio of
       // polynomials Pu, Qu and Pv, Qv:
-      //***
       Pu = polynomial(nlat, nlon, nhgt, theLineNumCoef);
       Qu = polynomial(nlat, nlon, nhgt, theLineDenCoef);
       Pv = polynomial(nlat, nlon, nhgt, theSampNumCoef);
       Qv = polynomial(nlat, nlon, nhgt, theSampDenCoef);
+      if (ossim::isnan(Pu) || ossim::isnan(Pv) || (Qu == 0.0) || (Qv == 0.0))
+      {
+         gpt.makeNan();
+         break;
+      }
       Uc = Pu/Qu;
       Vc = Pv/Qv;
       
-      //***
       // Compute residuals between desired and computed line, sample:
-      //***
       deltaU = U - Uc;
       deltaV = V - Vc;
       
-      //***
       // Check for convergence and skip re-linearization if converged:
-      //***
       if ((fabs(deltaU) > epsilonU) || (fabs(deltaV) > epsilonV))
       {
-         //***
          // Analytically compute the partials of each polynomial wrt lat, lon:
-         //***
          dPu_dLat = dPoly_dLat(nlat, nlon, nhgt, theLineNumCoef);
          dQu_dLat = dPoly_dLat(nlat, nlon, nhgt, theLineDenCoef);
          dPv_dLat = dPoly_dLat(nlat, nlon, nhgt, theSampNumCoef);
@@ -564,9 +544,7 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
          dPv_dLon = dPoly_dLon(nlat, nlon, nhgt, theSampNumCoef);
          dQv_dLon = dPoly_dLon(nlat, nlon, nhgt, theSampDenCoef);
          
-         //***
-         // Analytically compute partials of quotients U and V wrt lat, lon: 
-         //***
+         // Analytically compute partials of quotients U and V wrt lat, lon:
          dU_dLat = (Qu*dPu_dLat - Pu*dQu_dLat)/(Qu*Qu);
          dU_dLon = (Qu*dPu_dLon - Pu*dQu_dLon)/(Qu*Qu);
          dV_dLat = (Qv*dPv_dLat - Pv*dQv_dLat)/(Qv*Qv);
@@ -574,9 +552,7 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
          
          W = dU_dLon*dV_dLat - dU_dLat*dV_dLon;
          
-         //***
          // Now compute the corrections to normalized lat, lon:
-         //***
          deltaLat = (dU_dLon*deltaV - dV_dLon*deltaU) / W;
          deltaLon = (dV_dLat*deltaU - dU_dLat*deltaV) / W;
          nlat += deltaLat;
@@ -593,23 +569,28 @@ void ossimRpcModel::lineSampleHeightToWorld(const ossimDpt& image_point,
       
    } while (((fabs(deltaU)>epsilonU) || (fabs(deltaV)>epsilonV))
             && (iteration < MAX_NUM_ITERATIONS));
-      
-   //***
-   // Test for exceeding allowed number of iterations. Flag error if so:
-   //***
-   if (iteration == MAX_NUM_ITERATIONS)
-   {
-      ossimNotify(ossimNotifyLevel_WARN) << "WARNING ossimRpcModel::lineSampleHeightToWorld: \nMax number of iterations reached in ground point "
-                                         << "solution. Results are inaccurate." << endl;
-   }
 
-   //***
-   // Now un-normalize the ground point lat, lon and establish return quantity:
-   //***
-   gpt.lat = nlat*theLatScale + theLatOffset;
-   gpt.lon = nlon*theLonScale + theLonOffset;
-   gpt.hgt = ellHeight;
-   
+
+   if (gpt.hasNans())
+   {
+      ossimNotify(ossimNotifyLevel_WARN) << "WARNING ossimRpcModel::lineSampleHeightToWorld: \n"
+                                         <<"NaN detected computing RPC polynomials. Results are invalid." << endl;
+   }
+   else
+   {
+      // Test for exceeding allowed number of iterations. Flag error if so:
+      if (iteration == MAX_NUM_ITERATIONS)
+      {
+         ossimNotify(ossimNotifyLevel_WARN) << "WARNING ossimRpcModel::lineSampleHeightToWorld: \n"
+                                            << "Max number of iterations reached in ground point "
+                                            << "solution. Results are inaccurate." << endl;
+      }
+
+      // Now un-normalize the ground point lat, lon and establish return quantity:
+      gpt.lat = nlat * theLatScale + theLatOffset;
+      gpt.lon = nlon * theLonScale + theLonOffset;
+      gpt.hgt = ellHeight;
+   }
 }
 
 //*****************************************************************************
