@@ -629,11 +629,14 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       }
       else
       {
-         theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
-         if (!theRowsPerStrip[dir])
-         {
-            theRowsPerStrip[dir] = 1;
-         }
+         //For strip NITF files let's set to a fixed 256x256 tile size
+         theRowsPerStrip[dir] = 256;
+         theImageTileWidth[dir] = 256;
+         // theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
+         // if (!theRowsPerStrip[dir])
+         // {
+         //    theRowsPerStrip[dir] = 1;
+         // }
          //---
          // Let's default the tile size to something efficient.
          //
@@ -642,22 +645,23 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
          // This is not used by the strip reader method.  Only by the getImageTileHeight
          // and getImageTileHeight methods.
          //---
-         if (theImageTileWidth[dir] > 256)
-         {
-            theImageTileWidth[dir] = 256;
-         }
-         else if (theImageTileWidth[dir] < 64)
-         {
-            theImageTileWidth[dir] = 64;
-         }
-         if (theImageTileLength[dir] > 256)
-         {
-            theImageTileLength[dir] = 256;
-         }
-         else if (theImageTileLength[dir] < 64)
-         {
-            theImageTileLength[dir] = 64;
-         }
+
+         // if (theImageTileWidth[dir] > 256)
+         // {
+         //    theImageTileWidth[dir] = 256;
+         // }
+         // else if (theImageTileWidth[dir] < 64)
+         // {
+         //    theImageTileWidth[dir] = 64;
+         // }
+         // if (theImageTileLength[dir] > 256)
+         // {
+         //    theImageTileLength[dir] = 256;
+         // }
+         // else if (theImageTileLength[dir] < 64)
+         // {
+         //    theImageTileLength[dir] = 64;
+         // }
       }
    } // End of "for (ossim_uint32 dir=0; dir<theNumberOfDirectories; dir++)"
 
