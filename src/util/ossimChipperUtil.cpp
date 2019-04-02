@@ -210,11 +210,11 @@ void ossimChipperUtil::addArguments(ossimArgumentParser &ap)
 
    au->addCommandLineOption("--central-meridian", "<central_meridian_in_decimal_degrees>\nNote if set this will be used for the central meridian of the projection.  This can be used to lock the utm zone.");
 
-   au->addCommandLineOption("--color", "<r> <g> <b>\nhillshade option - Set the red, green and blue color values to be used with hillshade.\nThis option can be used with or without an image source for color.\nRange 0 to 255, Defualt r=255, g=255, b=255");
+   au->addCommandLineOption("--color", "<r> <g> <b>\nhillshade option - Set the red, green and blue color values to be used with hillshade.\nThis option can be used with or without an image source for color.\nRange 0 to 255, Default r=255, g=255, b=255");
 
    au->addCommandLineOption("--color-table", "<color-table.kwl>\nhillshade or color-relief option - Keyword list containing color table for color-relief option.");
 
-   au->addCommandLineOption("--contrast", "<constrast>\nApply constrast to input image(s). Valid range: -1.0 to 1.0");
+   au->addCommandLineOption("--contrast", "<contrast>\nApply contrast to input image(s). Valid range: -1.0 to 1.0");
 
    au->addCommandLineOption("--cut-bbox-xywh", "<x>,<y>,<width>,<height>\nSpecify a comma separated bounding box.");
 
@@ -247,7 +247,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser &ap)
 
    au->addCommandLineOption("--exaggeration", "<factor>\nMultiplier for elevation values when computing surface normals. Has the effect of lengthening shadows for oblique lighting.\nRange: .0001 to 50000, Default = 1.0");
 
-   au->addCommandLineOption("--fullres-xys", "<full res center x>,<full res center y>,<scale>[,<scale>]\nSpecify a full resolution x,y point (Used as pivot and center cut) and scale, comma seperated with no spaces.  If two scales are specified then first is x and second is y else x and y are set to equal scales");
+   au->addCommandLineOption("--fullres-xys", "<full res center x>,<full res center y>,<scale>[,<scale>]\nSpecify a full resolution x,y point (Used as pivot and center cut) and scale, comma separated with no spaces.  If two scales are specified then first is x and second is y else x and y are set to equal scales");
 
    au->addCommandLineOption("-h or --help", "Display this help and exit.");
 
@@ -1890,7 +1890,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
             setupChainHistogram(ic);
          }
 
-         // Brightness constrast setup:
+         // Brightness contrast setup:
          if (hasBrightnesContrastOperation())
          {
             // Assumption bright contrast filter in chain:
@@ -2076,7 +2076,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
          setupChainHistogram(ic, std::make_shared<ossimSrcRecord>(rec));
       }
 
-      // Brightness constrast setup:
+      // Brightness contrast setup:
       if (hasBrightnesContrastOperation())
       {
          // Assumption bright contrast filter in chain:
@@ -2305,7 +2305,7 @@ void ossimChipperUtil::rotateMapToInput()
       if (!mapProj)
          throw ossimException("Output projection must be a map projection.");
       if (m_imgLayer.size() != 1)
-         throw ossimException("Optimal rotation output requested but this feature is not avaliable for mosaics.");
+         throw ossimException("Optimal rotation output requested but this feature is not available for mosaics.");
       ossimRefPtr<ossimImageHandler> ih = m_imgLayer[0]->getImageHandler();
       if (!ih)
          throw ossimException("Null image handler encountered.");

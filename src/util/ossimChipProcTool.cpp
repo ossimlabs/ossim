@@ -1111,7 +1111,7 @@ void ossimChipProcTool::initializeAOI()
       // Geo-scaled projection needs to know the reference latitude:
       if (m_geoScaled)
       {
-         // The origin may have ben explicitely specified,or just use midpoint of AOI:
+         // The origin may have ben explicitly specified,or just use midpoint of AOI:
          ossimGpt origin;
          if (!getProjectionOrigin(origin))
             origin = m_aoiGroundRect.midPoint();

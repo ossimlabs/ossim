@@ -388,7 +388,7 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
    {
       if(traceDebug())
       {
-         CLOG << "No input connection so returing NULL" << endl;
+         CLOG << "No input connection so returning NULL" << endl;
       }
    }
    if(traceDebug())

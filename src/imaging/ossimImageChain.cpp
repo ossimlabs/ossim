@@ -1505,7 +1505,7 @@ void ossimImageChain::initialize()
    {
       if(traceDebug())
       {
-         CLOG << "initilizing source: "
+         CLOG << "initializing source: "
               << imageChainList()[index]->getClassName()
               << std::endl;
       }

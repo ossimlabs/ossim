@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
          argumentParser.getApplicationName() + " takes an input image and generates a "
          "corresponding RPC geometry in a variety of formats. If a bounding box is specified, the "
          "default output filename (based on the input filename) will be appended with the bbox spec"
-         ", unless an output filename is explicitely provided.");
+         ", unless an output filename is explicitly provided.");
    au->setCommandLineUsage(
          argumentParser.getApplicationName() + " [options] <input-file> [<output-file>]");
    au->addCommandLineOption(
