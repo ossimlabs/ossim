@@ -1273,7 +1273,7 @@ bool ossimTiffOverviewBuilder::setInputSource(ossimImageHandler* imageSource)
             setErrorStatus();
             ossimNotify(ossimNotifyLevel_WARN)
                << MODULE << " ERROR:"
-               << "\nUnknow pixel type:  "
+               << "\nUnknown pixel type:  "
                << (ossimScalarTypeLut::instance()->
                    getEntryString(m_imageHandler->getOutputScalarType()))
                << std::endl;

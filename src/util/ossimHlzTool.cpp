@@ -104,7 +104,7 @@ void ossimHlzTool::setUsage(ossimArgumentParser& ap)
          "Number of threads. Defaults to use single core. For engineering/debug purposes.");
    au->addCommandLineOption("--use-slope",
          "Slope is computed from the normal vector using neighboring posts instead of "
-         "least-squares fit to a plane (prefered). For engineering/debug purposes.");
+         "least-squares fit to a plane (preferred). For engineering/debug purposes.");
 }
 
 bool ossimHlzTool::initialize(ossimArgumentParser& ap)

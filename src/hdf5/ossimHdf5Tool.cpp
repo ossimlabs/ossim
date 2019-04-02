@@ -221,7 +221,7 @@ void ossimHdf5Tool::loadImageFiles()
    }
    else
    {
-      // Use explicitely-provided dataset names:
+      // Use explicitly-provided dataset names:
       handler = new ossimHdf5ImageHandler;
       handler->addRenderable(m_imageDataPath);
       handler->setFilename(ossimFilename(value));

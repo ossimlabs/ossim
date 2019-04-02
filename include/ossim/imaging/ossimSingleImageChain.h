@@ -473,7 +473,7 @@ public:
    void setBrightnessContrastFlag(bool flag);
 
    /**
-    * @brief Get the brightness constrast flag.
+    * @brief Get the brightness contrast flag.
     * @return true or false.
     */
    bool getBrightnessContrastFlag() const;
