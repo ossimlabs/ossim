@@ -385,7 +385,7 @@ void usage()
       << "\nThis is a good Landsat7 edge fixer..."
       << "\n"
       << "\nIf mode is \"replace_full_targets\":"
-      << "\nTarget will be repaced only if all subpixels(bands) have the "
+      << "\nTarget will be replaced only if all subpixels(bands) have the "
       << "target."
       << "\n"
       << "\n Example:"

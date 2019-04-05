@@ -334,7 +334,7 @@ std::ostream &ossimTiffInfo::print(std::ostream &out) const
          if (traceDebug())
          {
             ossimNotify(ossimNotifyLevel_WARN)
-                << MODULE << " FATAL error reading number of direcories."
+                << MODULE << " FATAL error reading number of directories."
                 << std::endl;
          }
          m_inputStream.reset();
@@ -767,7 +767,7 @@ std::ostream &ossimTiffInfo::print(std::istream &inStr,
          if (traceDebug())
          {
             ossimNotify(ossimNotifyLevel_WARN)
-                << MODULE << " FATAL error reading number of direcories."
+                << MODULE << " FATAL error reading number of directories."
                 << std::endl;
          }
          return outStr;

@@ -233,7 +233,7 @@ void ossimHillshadeTool::setUsage(ossimArgumentParser& ap)
 
    // Add arguments.
    au->addCommandLineOption("--azimuth", "<azimuth>\nLight source azimuth angle for bump shade.\nRange: 0 to 360, Default = 180.0");
-   au->addCommandLineOption("--color","<r> <g> <b>\nSet the red, green and blue color values to be used with hillshade.\nRange 0 to 255, Defualt r=255, g=255, b=255");
+   au->addCommandLineOption("--color","<r> <g> <b>\nSet the red, green and blue color values to be used with hillshade.\nRange 0 to 255, Default r=255, g=255, b=255");
    au->addCommandLineOption("--color-source","<file>\nSpecifies the image file to use as a color source instead of a fixed RGB value.");
    au->addCommandLineOption("--elevation", "<elevation>\nhillshade option - Light source elevation angle for bumb shade.\nRange: 0 to 90, Default = 45.0");
 

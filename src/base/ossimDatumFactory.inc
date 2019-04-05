@@ -153,7 +153,7 @@ static ossimThreeParamDatumType threeParamDatum[] = {
 {"LCF", "L.C. 5 ASTRO 1961, Cayman Brac", "CC", 25, 25, 25, -81, -78, 18, 21, 42, 124, 147},
 {"LEH", "LEIGON, Ghana", "CD", 2, 3, 2, -9, 7, -1, 17, -130, 29, 364},
 {"LIB", "LIBERIA 1964", "CD", 15, 15, 15, -17, -1, -1, 14, -90, 40, 88},
-{"LUZ-A", "LUZON, Phillipines", "CC", 8, 11, 9, 115, 128, 3, 23, -133, -77, -51},
+{"LUZ-A", "LUZON, Philippines", "CC", 8, 11, 9, 115, 128, 3, 23, -133, -77, -51},
 {"LUZ-B", "LUZON, Mindanao Island", "CC", 25, 25, 25, 120, 128, 4, 12, -133, -79, -72},
 {"MAS", "MASSAWA, Ethiopia", "BR", 25, 25, 25, 37, 53, 7, 25, 639, 405, 60},
 {"MER", "MERCHICH, Morocco", "CD", 5, 3, 3, -19, 5, 22, 42, 31, 146, 47},

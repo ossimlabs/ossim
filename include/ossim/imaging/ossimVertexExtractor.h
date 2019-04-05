@@ -145,8 +145,8 @@ protected:
    ossimFilename    theFilename;
    std::ofstream    theFileStream;
    vector<ossimIpt> theVertice;
-   ossim_int32*     theLeftEdge;
-   ossim_int32*     theRightEdge;
+   std::vector<ossim_int32>     theLeftEdge;
+   std::vector<ossim_int32>     theRightEdge;
 
    //! Disallow copy constructor and operator=
    ossimVertexExtractor(const ossimVertexExtractor&) : theLeftEdge(0), theRightEdge(0) {}

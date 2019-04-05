@@ -525,7 +525,7 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
    thePhotometric.resize(theNumberOfDirectories);
    theRowsPerStrip.resize(theNumberOfDirectories);
    theInputTileSize.resize(theNumberOfDirectories);
-   
+
    for (ossim_uint32 dir = 0; dir < theNumberOfDirectories; ++dir)
    {
       // if (setTiffDirectory(dir) == false)
@@ -622,6 +622,21 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       }
       else
       {
+         //For strip NITF files let's set to a fixed 256x256 tile size
+         // There is a bug in the TIF to support this.
+         // I am commenting it out for now and will have to address this later
+         // Can't hard coce to 256
+         //
+         // theRowsPerStrip[dir] = 256;
+         // if(theImageTileWidth[dir] < 256)
+         // {
+         //    theImageTileWidth[dir] = 256;
+         // }
+
+         // we get core dumps if this is less so just set it if greater
+         if (state->getRowsPerStrip(dir) > theRowsPerStrip[dir])
+            theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
+
          theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
          if (!theRowsPerStrip[dir])
             theRowsPerStrip[dir] = 1;
@@ -656,7 +671,7 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       {
          // this is currently causing pixel problems.  I am going to comment this out until we figure out a better solution
          //
-#if 0
+#if 0         
          if (theMinSampleValue == 0) //  && (theMaxSampleValue > 36535) )
          {
             //---
@@ -1751,6 +1766,7 @@ bool ossimTiffTileSource::loadFromU16Strip(const ossimIrect &clip_rect, ossimIma
                                                          bandStrip,
                                                          theBuffer + bufferOffsetInBytes,
                                                          bytesToRead);
+            std::cout << "bytesRead" << bytesRead << " ?? " << bytesToRead << "\n";
             if (bytesRead != bytesToRead)
             {
                if (traceDebug())
@@ -1971,7 +1987,7 @@ ossim_uint32 ossimTiffTileSource::getTileWidth() const
    {
       ossim::defaultTileSize(theOutputTileSize);
       result = theOutputTileSize.x;
-  }
+   }
    return result;
 }
 

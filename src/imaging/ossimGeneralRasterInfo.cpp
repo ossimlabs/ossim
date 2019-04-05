@@ -72,7 +72,7 @@ SET_NULLS("set_fill_to_nulls_mode",
 
 static const ossimKeyword
 PIXELS_TO_CHOP("pixels_to_chop",
-               "Ammount of pixels to chop from edge.");
+               "Amount of pixels to chop from edge.");
 
 static const ossimInterleaveTypeLut INTERLEAVE_TYPE_LUT;
 
