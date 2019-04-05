@@ -631,7 +631,17 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       {
          //For strip NITF files let's set to a fixed 256x256 tile size
          theRowsPerStrip[dir] = 256;
-         theImageTileWidth[dir] = 256;
+         if(theImageTileWidth[dir] < 256)
+         {
+            theImageTileWidth[dir] = 256;
+         }
+
+         // we get core dumps if this is less so just set it if greater
+         if (state->getRowsPerStrip(dir) > theRowsPerStrip[dir])
+         {
+            theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
+         }
+
          // theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
          // if (!theRowsPerStrip[dir])
          // {
