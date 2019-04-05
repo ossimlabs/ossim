@@ -104,6 +104,8 @@ static const std::string HIST_AOI_KW = "hist_aoi";
 static const std::string HIST_CENTER_KW = "hist_center";
 static const std::string HIST_LLWH_KW = "hist_llwh";
 static const std::string HIST_OP_KW = "hist_op";
+static const std::string HIST_LINEAR_CLIP_KW = "hist_linear_clip";
+static const std::string HIST_LINEAR_NORM_CLIP_KW = "hist_linear_norm_clip";
 static const std::string IMAGE_SPACE_SCALE_X_KW = "image_space_scale_x";
 static const std::string IMAGE_SPACE_SCALE_Y_KW = "image_space_scale_y";
 static const std::string IMG_KW = "image";
@@ -259,7 +261,10 @@ void ossimChipperUtil::addArguments(ossimArgumentParser &ap)
 
    au->addCommandLineOption("--histogram-llwh", "<latitude>,<longitude>,<width>,<height>\nSpecify the region of interest(roi) to compute histogram from. Latitude and longitude will be roi center space with width and height in pixels. Comma separated, no spaces.");
 
-   au->addCommandLineOption("--histogram-op", "<operation>\nHistogram operation to perform. Valid operations are \"auto-minmax\", \"auto-percentile\", \"std-stretch-1\", \"std-stretch-2\" and \"std-stretch-3\".");
+   au->addCommandLineOption("--histogram-op", "<operation>\nHistogram operation to perform. Valid operations are \"linear\" \"auto-minmax\", \"auto-percentile\", \"std-stretch-1\", \"std-stretch-2\" and \"std-stretch-3\".");
+
+   au->addCommandLineOption("--histogram-linear-clip", "<low>,<high> in actual DN value.  If it's 8 bit then it will be values between 0 and 255");
+   au->addCommandLineOption("--histogram-linear-norm-clip", "<low>,<high> normalized value that range from 0 to 1. Example .2,.85");
 
    au->addCommandLineOption("--image-space-scale", "<x> <y>\nSpecifies an image space scale for x and y direction. \"chip\" operation only.");
 
@@ -588,6 +593,14 @@ bool ossimChipperUtil::initialize(ossimArgumentParser &ap)
       m_kwl->addPair(HIST_OP_KW, tempString1);
    }
 
+   if (ap.read("--histogram-linear-clip", stringParam1))
+   {
+      m_kwl->addPair(HIST_LINEAR_CLIP_KW, tempString1);
+   }
+   if (ap.read("--histogram-linear-norm-clip", stringParam1))
+   {
+      m_kwl->addPair(HIST_LINEAR_NORM_CLIP_KW, tempString1);
+   }
    if (ap.read("--image-space-scale", doubleParam1, doubleParam2))
    {
       m_kwl->add(IMAGE_SPACE_SCALE_X_KW.c_str(), tempDouble1);
@@ -4428,6 +4441,35 @@ bool ossimChipperUtil::setupChainHistogram(ossimRefPtr<ossimSingleImageChain> &c
          {
             remapper->setEnableFlag(false);
          }
+         if(mode == ossimHistogramRemapper::LINEAR_ONE_PIECE)
+         {
+            ossimString value = m_kwl->findKey(HIST_LINEAR_CLIP_KW);
+            std::vector<ossimString> splitValues;
+            if (!value.empty())
+            {
+                splitValues = value.split(",");
+                if(splitValues.size() == 2)
+                {
+                   remapper->setLowClipPoint(splitValues[0].toFloat32());
+                   remapper->setHighClipPoint(splitValues[1].toFloat32());
+                }
+            }
+            else
+            {
+               value = m_kwl->findKey(HIST_LINEAR_NORM_CLIP_KW);
+               if(!value.empty())
+               {
+                  splitValues = value.split(",");
+                  if (splitValues.size() == 2)
+                  {
+                     ossim_float32 low = splitValues[0].toFloat32();
+                     ossim_float32 high = splitValues[1].toFloat32();
+                     remapper->setLowNormalizedClipPoint(low);
+                     remapper->setHighNormalizedClipPoint(high);
+                  }
+               }
+            }
+         }
 
       } // Matches: if ( ih.valid() && remapper.valid() && mode... )
 
@@ -5763,6 +5805,10 @@ int ossimChipperUtil::getHistoMode() const
    else if ((op == "std-stretch-3") || (op == "std-stretch 3"))
    {
       result = ossimHistogramRemapper::LINEAR_3STD_FROM_MEAN;
+   }
+   else if((op == "linear"))
+   {
+      result = ossimHistogramRemapper::LINEAR_ONE_PIECE;
    }
    else if (traceDebug())
    {
