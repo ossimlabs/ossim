@@ -51,16 +51,7 @@ ossimVertexExtractor::ossimVertexExtractor(ossimImageSource* inputSource)
 
 ossimVertexExtractor::~ossimVertexExtractor()
 {
-   if (theLeftEdge)
-   {
-      delete [] theLeftEdge;
-      theLeftEdge = 0;
-   }
-   if (theRightEdge)
-   {
-      delete [] theRightEdge;
-      theRightEdge = 0;
-   }
+
 }
 
 bool ossimVertexExtractor::execute()
@@ -128,10 +119,8 @@ bool ossimVertexExtractor::scanForEdges()
    }
    
    // Allocate the arrays to hold the edges.
-   if (theLeftEdge)  delete [] theLeftEdge;
-   if (theRightEdge) delete [] theRightEdge;
-   theLeftEdge  = new ossim_int32[theAreaOfInterest.height()];
-   theRightEdge = new ossim_int32[theAreaOfInterest.height()];
+   theLeftEdge.resize(theAreaOfInterest.height());
+   theRightEdge.resize(theAreaOfInterest.height());
    for (ossim_int32 i=0; i<(int)theAreaOfInterest.height(); ++i)
    {
       theLeftEdge[i]  = OSSIM_INT_NAN;
@@ -320,7 +309,7 @@ bool ossimVertexExtractor::extractVertices()
 
    if (traceDebug()) CLOG << " Entered..." << endl;
 
-   if (!theLeftEdge || !theRightEdge)
+   if (theLeftEdge.empty() || theRightEdge.empty())
    {
       ossimNotify(ossimNotifyLevel_WARN) << "ERROR ossimVertexExtractor::extractVertices():"
                                          << "\nEdges not initialized!" << std::endl;
@@ -407,7 +396,7 @@ bool ossimVertexExtractor::extractVertices()
    ossim_int32 start = first_non_null_line;
    ossim_int32 end = last_non_null_line;
    ossim_int32 sizeDeltaSlope = last_non_null_line - first_non_null_line;
-   double* rightSlope = new double[sizeDeltaSlope];
+   std::vector<double> rightSlope(sizeDeltaSlope);
   
    for(ossim_int32 i = start; i <= (end - 100); i += 100)
    {
@@ -436,7 +425,7 @@ bool ossimVertexExtractor::extractVertices()
 
    // Record the slope searching from the left edge
    k = 0;
-   double* leftSlope = new double[sizeDeltaSlope];
+   std::vector<double> leftSlope(sizeDeltaSlope);
   
    for(ossim_int32 i = start; i <= (end - 100); i += 100)
    {
@@ -1792,17 +1781,6 @@ bool ossimVertexExtractor::extractVertices()
    
    theVertice[2].x = rightCorner_B;
    theVertice[2].y = rightCornerLine_B;
-   
-   if (leftSlope)
-   {
-      delete [] leftSlope;
-      leftSlope = 0;
-   }
-   if (rightSlope)
-   {
-      delete [] rightSlope;
-      rightSlope = 0;
-   }
    
    if(traceDebug())
    {
