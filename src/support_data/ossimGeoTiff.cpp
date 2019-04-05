@@ -797,6 +797,11 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
       GTIFKeySet(gtif, GTRasterTypeGeoKey, TYPE_SHORT, 1, RasterPixelIsArea);
    }
 
+   GTIFKeySet(gtif, ProjOriginLongGeoKey, TYPE_DOUBLE, 1, origin.lon);
+   GTIFKeySet(gtif, ProjOriginLatGeoKey, TYPE_DOUBLE, 1, origin.lat);
+
+   GTIFWriteKeys(gtif); // Write out geotiff tags.
+
    // Need to decide whether to specify scale and offset tag pair, or the full 4x4 transform if
    // available, but not both:
    if (mapProj->isRotated())
@@ -810,46 +815,59 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
    }
    else
    {
-      // Set the tie point and scale.
-      double tiePoints[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+      // Set the scale since not implicitely provided in a model transform:
       double pixScale[3] = {0.0, 0.0, 0.0};
       switch (units)
       {
       case LINEAR_FOOT:
-         tiePoints[3] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().x);
-         tiePoints[4] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().y);
          pixScale[0] = ossim::mtrs2ft(projectionInfo->getMetersPerPixel().x);
          pixScale[1] = ossim::mtrs2ft(projectionInfo->getMetersPerPixel().y);
-         falseEasting = ossim::mtrs2ft(falseEasting);
-         falseNorthing = ossim::mtrs2ft(falseNorthing);
          break;
       case LINEAR_FOOT_US_SURVEY:
-         tiePoints[3] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().x);
-         tiePoints[4] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().y);
          pixScale[0] = ossim::mtrs2usft(projectionInfo->getMetersPerPixel().x);
          pixScale[1] = ossim::mtrs2usft(projectionInfo->getMetersPerPixel().y);
          falseEasting = ossim::mtrs2usft(falseEasting);
          falseNorthing = ossim::mtrs2usft(falseNorthing);
          break;
       case ANGULAR_DEGREE:
-         tiePoints[3] = projectionInfo->ulGroundPt().lond();
-         tiePoints[4] = projectionInfo->ulGroundPt().latd();
          pixScale[0] = projectionInfo->getDecimalDegreesPerPixel().x;
          pixScale[1] = projectionInfo->getDecimalDegreesPerPixel().y;
          break;
       case LINEAR_METER:
       default:
-         tiePoints[3] = projectionInfo->ulEastingNorthingPt().x;
-         tiePoints[4] = projectionInfo->ulEastingNorthingPt().y;
          pixScale[0] = projectionInfo->getMetersPerPixel().x;
          pixScale[1] = projectionInfo->getMetersPerPixel().y;
          break;
       } // End of "switch (units)"
 
-      TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, 6, tiePoints);
       TIFFSetField(tifPtr, TIFFTAG_GEOPIXELSCALE, 3, pixScale);
    }
-   GTIFWriteKeys(gtif); // Write out geotiff tags.
+
+   // Set the tie point.
+   double tiePoints[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+   switch (units)
+   {
+   case LINEAR_FOOT:
+      tiePoints[3] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().x);
+      tiePoints[4] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().y);
+      break;
+   case LINEAR_FOOT_US_SURVEY:
+      tiePoints[3] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().x);
+      tiePoints[4] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().y);
+      break;
+   case ANGULAR_DEGREE:
+      tiePoints[3] = projectionInfo->ulGroundPt().lond();
+      tiePoints[4] = projectionInfo->ulGroundPt().latd();
+      break;
+   case LINEAR_METER:
+   default:
+      tiePoints[3] = projectionInfo->ulEastingNorthingPt().x;
+      tiePoints[4] = projectionInfo->ulEastingNorthingPt().y;
+      break;
+   } // End of "switch (units)"
+
+   TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, 6, tiePoints);
+
    GTIFFree(gtif);
 
    return true;
@@ -1429,8 +1447,7 @@ bool ossimGeoTiff::readTags(
 
    if (TIFFGetField(theTiffPtr, TIFFTAG_GEOTRANSMATRIX, &transSize, &trans))
    {
-      theModelTransformation.insert(theModelTransformation.begin(),
-                                    trans, trans + transSize);
+      theModelTransformation.insert(theModelTransformation.begin(), trans, trans + transSize);
    }
    //    if(!theTiePoint.size()&&(theModelTransform.size()==16))
    //    {
@@ -1588,8 +1605,8 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
       return false;
    }
 
-   double x_tie_point = 0.0;
-   double y_tie_point = 0.0;
+   double x_tie_point = theTiePoint[3];
+   double y_tie_point = theTiePoint[4];
    ossim_uint32 tieCount = (ossim_uint32)theTiePoint.size() / 6;
 
    if ((theScale.size() == 3) && (tieCount == 1))
@@ -1662,21 +1679,6 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
                 << std::endl;
          }
          return false;
-      }
-   }
-   else if (usingModelTransform())
-   {
-      ostringstream s;
-      for (const double& m : theModelTransformation)
-         s << std::setprecision(20) << m << " ";
-
-      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, s.str().c_str());
-
-      if (traceDebug())
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-               << "ossimGeoTiff::addImageGeometry: "
-               << "Creating an affine transform in support of Model Transform tag." << std::endl;
       }
    }
 
@@ -1757,18 +1759,15 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
             double centerY = theLength / 2.0;
             theOriginLat = tieGpt.lat - theScale[1] * centerY;
          }
-
-         if (ossim::isnan(theOriginLon))
-         {
-            theOriginLon = 0.0;
-         }
       }
 
-      if (!(ossim::isnan(theOriginLat) || ossim::isnan(theOriginLon)))
-      {
-         kwl.add(prefix, ossimKeywordNames::ORIGIN_LATITUDE_KW, theOriginLat, true);
-         kwl.add(prefix, ossimKeywordNames::CENTRAL_MERIDIAN_KW, theOriginLon, true);
-      }
+      if (ossim::isnan(theOriginLon))
+         theOriginLon = x_tie_point;
+      if (ossim::isnan(theOriginLat))
+         theOriginLat = y_tie_point;
+
+      kwl.add(prefix, ossimKeywordNames::ORIGIN_LATITUDE_KW, theOriginLat, true);
+      kwl.add(prefix, ossimKeywordNames::CENTRAL_MERIDIAN_KW, theOriginLon, true);
    }
    else // Projected
    {

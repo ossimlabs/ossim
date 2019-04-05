@@ -213,6 +213,20 @@ public:
                          ossim_uint32 zero_based_band);
 
    /**
+   * Sets the mid clip point.
+   *
+   * Notes on clip points:
+      * - If input chip source is mutiband this will set all band to same
+   *   percentage of clip.
+   */
+   void setMidPoint(const ossim_float64& value);
+
+   /**
+    * Sets the mid clip point for band.
+    */
+   void setMidPoint(const ossim_float64& value, ossim_uint32 zero_based_band);
+
+   /**
     * Sets the min output value.
     * 
     * Notes on clip points:
@@ -321,7 +335,27 @@ public:
     * - Histogram has not been set.
     */
    ossim_float64 getHighClipPoint() const;
-   
+
+   /**
+    * Returns the mid point for band
+    *
+    * Will return OSSIM_DBL_NAN if:
+    * - Band is out of range.
+    * - Connection is not complete.
+    * - Histogram has not been set.
+    */
+   ossim_float64 getMidPoint(ossim_uint32 zero_based_band) const;
+
+   /**
+    * Returns the mid clip point which is the average of all bands.
+    *
+    * Will return OSSIM_DBL_NAN if:
+    * - Band is out of range.
+    * - Connection is not complete.
+    * - Histogram has not been set.
+    */
+   ossim_float64 getMidPoint() const;
+
    /**
     * Returns the minimum output value for band.
     * 
@@ -521,6 +555,7 @@ private:
    mutable ossimRefPtr<ossimMultiResLevelHistogram>  theHistogram;
    vector<ossim_float64>         theNormalizedLowClipPoint;
    vector<ossim_float64>         theNormalizedHighClipPoint;
+   vector<ossim_float64>         theMidPoint;
    vector<ossim_float64>         theMinOutputValue;
    vector<ossim_float64>         theMaxOutputValue;
 

@@ -123,12 +123,12 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
   
 // Attribute accessors
     void UpCount(float newval, float occurences=1);
-    float GetCount(float uval)const;
-    float SetCount(float pixelval, float count);
+    ossim_int64 GetCount(float uval)const;
+    ossim_int64 SetCount(float pixelval, ossim_int64 count);
 
     float GetMinVal()const;
     float GetMaxVal()const;
-    float GetMaxCount()const;
+    ossim_int64 GetMaxCount()const;
 
     float GetRangeMin()const
     {

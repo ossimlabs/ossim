@@ -65,9 +65,10 @@ public:
                    const ossimIpt& origin);
    
    const ossimIpt& getTileSize(ossimAppFixedCacheId cacheId);
-   
+
    virtual void setMaxCacheSize(ossim_uint32 cacheSize);
-   
+   virtual ossim_uint32 getMaxCacheSize() const { return theMaxCacheSize; }
+
 protected:
 //    struct ossimAppFixedCacheTileInfo
 //    {

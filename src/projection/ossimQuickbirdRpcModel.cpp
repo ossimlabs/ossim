@@ -301,7 +301,7 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
    // file, or a single RPC file is provided for a multi-tile scene.
    while (1)
    {
-      rpcFile.setExtension("RPB");
+   rpcFile.setExtension("RPB");
       if (findSupportFile(rpcFile))
          break;
 
@@ -334,19 +334,19 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
    std::copy(m_qbRpcHeader->theSampNumCoeff.begin(), m_qbRpcHeader->theSampNumCoeff.end(), theSampNumCoef);
    std::copy(m_qbRpcHeader->theSampDenCoeff.begin(), m_qbRpcHeader->theSampDenCoeff.end(), theSampDenCoef);
 
-   theLineScale  = m_qbRpcHeader->theLineScale;
-   theSampScale  = m_qbRpcHeader->theSampScale;
-   theLatScale   = m_qbRpcHeader->theLatScale;
-   theLonScale   = m_qbRpcHeader->theLonScale;
-   theHgtScale   = m_qbRpcHeader->theHeightScale;
+   theLineScale = m_qbRpcHeader->theLineScale;
+   theSampScale = m_qbRpcHeader->theSampScale;
+   theLatScale = m_qbRpcHeader->theLatScale;
+   theLonScale = m_qbRpcHeader->theLonScale;
+   theHgtScale = m_qbRpcHeader->theHeightScale;
    theLineOffset = m_qbRpcHeader->theLineOffset;
    theSampOffset = m_qbRpcHeader->theSampOffset;
-   theLatOffset  = m_qbRpcHeader->theLatOffset;
-   theLonOffset  = m_qbRpcHeader->theLonOffset;
-   theHgtOffset  = m_qbRpcHeader->theHeightOffset;
+   theLatOffset = m_qbRpcHeader->theLatOffset;
+   theLonOffset = m_qbRpcHeader->theLonOffset;
+   theHgtOffset = m_qbRpcHeader->theHeightOffset;
    theBiasError  = m_qbRpcHeader->theErrBias;
    theRandError  = m_qbRpcHeader->theErrRand;
-   theImageID    = rpcFile.fileNoExtension();
+   theImageID = rpcFile.fileNoExtension();
 
    return true;
 }

@@ -119,7 +119,7 @@ void vpf_dump_table( char *tablename, char *outname )
 		 table.header[i].name,table.header[i].type,
 		 table.header[i].description);
       else
-	 fprintf(fp,"%s (%c,%ld)  %s\n",
+	 fprintf(fp,"%s (%c,%d)  %s\n",
 		 table.header[i].name,table.header[i].type,
 		 table.header[i].count,table.header[i].description);
    }
@@ -153,14 +153,14 @@ void vpf_dump_table( char *tablename, char *outname )
 	       if (table.header[j].count==1) {
 		  get_table_element(j,row,table,&lval,&n);
 		  if (lval != MAXFLOAT)
-		     fprintf(fp,"%ld\n",lval);
+		     fprintf(fp,"%d\n",lval);
 		  else
 		     fprintf(fp,"(null)\n");
 	       } else {
 		  lptr = (ossim_int32*)get_table_element(j,row,table,NULL,&n);
 		  for (k=0;k<n;k++) {
 		     if (lptr[k] != MAXFLOAT)
-			fprintf(fp,"%ld ",lptr[k]);
+			fprintf(fp,"%d ",lptr[k]);
 		     else
 			fprintf(fp,"(null) ");
 		  }
@@ -221,12 +221,12 @@ void vpf_dump_table( char *tablename, char *outname )
 	    case 'K':
 	       if (table.header[j].count==1) {
 		  get_table_element(j,row,table,&kval,&n);
-		  fprintf(fp,"(%ld,%ld,%ld)\n",
+		  fprintf(fp,"(%d,%d,%d)\n",
 			  kval.id,kval.tile,kval.exid);
 	       } else {
 		  kptr = (id_triplet_type*)get_table_element(j,row,table,NULL,&n);
 		  for (k=0;k<n;k++)
-		     fprintf(fp,"(%ld,%ld,%ld)  ",
+		     fprintf(fp,"(%d,%d,%d)  ",
 			     kptr[k].id,kptr[k].tile,kptr[k].exid);
 		  fprintf(fp,"\n");
 		  free(kptr);

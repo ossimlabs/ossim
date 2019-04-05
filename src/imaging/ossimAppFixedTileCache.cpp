@@ -109,9 +109,9 @@ ossimAppFixedTileCache *ossimAppFixedTileCache::instance(ossim_uint32  maxSize)
    {
       theInstance = new ossimAppFixedTileCache;
       if(maxSize)
-	{
-	  theInstance->setMaxCacheSize(maxSize);
-	}
+      {
+        theInstance->setMaxCacheSize(maxSize);
+      }
    }
    return theInstance;
 }

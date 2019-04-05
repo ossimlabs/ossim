@@ -36,6 +36,7 @@
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <iostream>
 #include <stack>
+#include <ossim/base/ossimPreferences.h>
 // using namespace std;
 
 #ifdef OSSIM_ID_ENABLED
@@ -46,7 +47,7 @@ static ossimTrace traceDebug("ossimImageRenderer:debug");
 
 RTTI_DEF2(ossimImageRenderer, "ossimImageRenderer", ossimImageSourceFilter, ossimViewInterface);
 
-
+double ossimImageRenderer::m_interpErrorThreshold = 1.0;
 
 void ossimImageRenderer::ossimRendererSubRectInfo::splitHorizontal(std::vector<ossimRendererSubRectInfo>& result)const
 {
@@ -920,11 +921,11 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate() cons
     // std::cout << "SCALE BIAS: " << testScale << "\n";
 
     // std::cout << "errorCheck1:" << errorCheck1 << "\n";
-    result = ((errorCheck1 < 1.0) &&
-              (errorCheck2 < 1.0) &&
-              (errorCheck3 < 1.0) &&
-              (errorCheck4 < 1.0) &&
-              (errorCheck5 < 1.0));
+    result = ((errorCheck1 < ossimImageRenderer::m_interpErrorThreshold) &&
+              (errorCheck2 < ossimImageRenderer::m_interpErrorThreshold) &&
+              (errorCheck3 < ossimImageRenderer::m_interpErrorThreshold) &&
+              (errorCheck4 < ossimImageRenderer::m_interpErrorThreshold) &&
+              (errorCheck5 < ossimImageRenderer::m_interpErrorThreshold));
     // std::cout <<"__________________________\n"
     //       << "ERROR1:" <<errorCheck1 << "\n"
     //       << "ERROR2:" <<errorCheck2 << "\n"
@@ -1068,6 +1069,8 @@ ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::getParametricCenter(const
   return centerBottom + (centerBottom - centerTop)*.5;
 }
 
+
+
 ossimImageRenderer::ossimImageRenderer()
     : ossimImageSourceFilter(),
       ossimViewInterface(0),
@@ -1089,6 +1092,8 @@ ossimImageRenderer::ossimImageRenderer()
   ossimViewInterface::theObject = this;
   m_Resampler = new ossimFilterResampler();
   m_ImageViewTransform = new ossimImageViewProjectionTransform;
+
+  loadState(ossimPreferences::instance()->preferencesKWL(), "renderer.");
 }
 
 ossimImageRenderer::ossimImageRenderer(ossimImageSource *inputSource,
@@ -1106,10 +1111,10 @@ ossimImageRenderer::ossimImageRenderer(ossimImageSource *inputSource,
       m_rectsDirty(true),
       m_MaxRecursionLevel(5),
       m_AutoUpdateInputTransform(true),
-      m_MaxLevelsToCompute(999999),
+      m_MaxLevelsToCompute(999999),  // something large so it will always compute
       m_averageViewToImageScale(1.0),
       m_averageViewToImageRLevelScale(0.0)
-// something large so it will always compute
+
 {
    ossimViewInterface::theObject = this;
    m_Resampler = new ossimFilterResampler();
@@ -1117,6 +1122,8 @@ ossimImageRenderer::ossimImageRenderer(ossimImageSource *inputSource,
    {
       m_ImageViewTransform = new ossimImageViewProjectionTransform;
    }
+
+   loadState(ossimPreferences::instance()->preferencesKWL(), "renderer.");
 }
 
 ossimImageRenderer::~ossimImageRenderer()
@@ -1878,15 +1885,13 @@ bool ossimImageRenderer::saveState(ossimKeywordlist& kwl,
       m_Resampler->saveState(kwl,
                               (ossimString(prefix)+"resampler.").c_str());
    }
-   kwl.add(prefix,
-           "max_levels_to_compute",
-           m_MaxLevelsToCompute);
-   
+   kwl.add(prefix, "max_levels_to_compute", m_MaxLevelsToCompute);
+   kwl.add(prefix, "interpolation_error_threshold", m_interpErrorThreshold);
+
    return ossimImageSource::saveState(kwl, prefix);
 }
 
-bool ossimImageRenderer::loadState(const ossimKeywordlist& kwl,
-                                   const char* prefix)
+bool ossimImageRenderer::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
    if (traceDebug())
    {
@@ -1904,8 +1909,7 @@ bool ossimImageRenderer::loadState(const ossimKeywordlist& kwl,
    
    if(m_Resampler)
    {
-      m_Resampler->loadState(kwl,
-                              (ossimString(prefix)+"resampler.").c_str());
+      m_Resampler->loadState(kwl, (ossimString(prefix)+"resampler.").c_str());
    }
    m_ImageViewTransform = 0;
    m_ImageViewTransform = ossimImageViewTransformFactory::instance()->createTransform(kwl, newPrefix.c_str());
@@ -1913,13 +1917,18 @@ bool ossimImageRenderer::loadState(const ossimKeywordlist& kwl,
    {
       m_ImageViewTransform = new ossimImageViewProjectionTransform;
    }
-   const char* maxLevelsToCompute = kwl.find(prefix,
-                                             "max_levels_to_compute");
+   const char* maxLevelsToCompute = kwl.find(prefix, "max_levels_to_compute");
    if(maxLevelsToCompute)
    {
       m_MaxLevelsToCompute = ossimString(maxLevelsToCompute).toUInt32();
    }
-   
+
+   const ossimString threshold = kwl.find(prefix, "interpolation_error_threshold");
+   if(!threshold.empty())
+   {
+      m_interpErrorThreshold = threshold.toDouble();
+   }
+
    return result;
 }
 

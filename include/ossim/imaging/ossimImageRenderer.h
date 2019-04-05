@@ -252,10 +252,6 @@ private:
       ossimDpt m_VlrScale;
       ossimDpt m_VllScale;
 
-      ossimDpt m_ulRoundTripError;
-      ossimDpt m_urRoundTripError;
-      ossimDpt m_lrRoundTripError;
-      ossimDpt m_llRoundTripError;
 
       mutable ossimRefPtr<ossimImageViewTransform> m_transform;
       mutable const ossimPolyArea2d* m_viewBounds;
@@ -342,6 +338,7 @@ private:
 
    double                   m_averageViewToImageScale;
    double                   m_averageViewToImageRLevelScale;
+   static double            m_interpErrorThreshold;
 
    TYPE_DATA
 };

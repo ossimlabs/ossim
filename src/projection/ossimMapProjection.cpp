@@ -281,6 +281,12 @@ void ossimMapProjection::setModelTransform (const ossimMatrix4x4& transform)
 
 void ossimMapProjection::updateTransform()
 {
+   // The transform contains the map rotation, GSD, and tiepoint. These individual parameters are
+   // also saved in members theImageToModelAzimuth, theMetersPerPixel, and theUlEastingNorthing.
+   // Any one of those may have changed requiring a new transform to be computed from the new
+   // values. All calls to update() will also call this, so the rotation, scale and offset need
+   // to be preserved to avoid blowing them away by resetting theModelTransform to identity.
+
    // Assumes model coordinates in meters:
    theModelTransform.setIdentity();
    NEWMAT::Matrix& m = theModelTransform.getData();
@@ -308,13 +314,16 @@ void ossimMapProjection::updateTransform()
 
 void ossimMapProjection::updateFromTransform()
 {
-   // Extract scale, rotation and offset from the transform matrix:
+   // Extract scale, rotation and offset from the transform matrix. Note that with scale, rotation,
+   // and offset preserved in theMetersPerPixel, theImageToModelAzimuth, and theUlEastingNorthing,
+   // respectively, the transform can be regenerated with a call to update().
    const NEWMAT::Matrix& m = theModelTransform.getData();
    theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
    theMetersPerPixel.y = sqrt(m[1][0]*m[1][0] + m[1][1]*m[1][1]);
    theUlEastingNorthing.x = m[0][3];
    theUlEastingNorthing.y = m[1][3];
    theImageToModelAzimuth = ossim::acosd(m[0][0]/theMetersPerPixel.x);
+   theUlGpt = inverse(theUlEastingNorthing);
    computeDegreesPerPixel();
 }
 
@@ -522,6 +531,7 @@ void ossimMapProjection::setDecimalDegreesPerPixel(const ossimDpt& resolution)
 {
    theDegreesPerPixel = resolution;
    computeMetersPerPixel(); // this method will update the transform
+   updateTransform();
 }
 
 void ossimMapProjection::setUlTiePoints(const ossimGpt& gpt)
@@ -645,6 +655,10 @@ bool ossimMapProjection::saveState(ossimKeywordlist& kwl, const char* prefix) co
 bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
    ossimProjection::loadState(kwl, prefix);
+
+   // Initialize the image-to-map transform to identity (no scale, rotation, or offset):
+   theModelTransform.setIdentity();
+   theInverseModelTransform.setIdentity();
 
    const char* elevLookupFlag = kwl.find(prefix, ossimKeywordNames::ELEVATION_LOOKUP_FLAG_KW);
    if(elevLookupFlag)
@@ -1030,6 +1044,7 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
    ossimString transformElems = kwl.find(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW);
    if (!transformElems.empty())
    {
+      // The model transform trumps (I hate that word) settings for scale, rotation, and map offset:
       vector<ossimString> elements = transformElems.split(" ");
       NEWMAT::Matrix& m = theModelTransform.getData(); // At this scope for IDE debugging
       if (elements.size() != 16)
@@ -1056,18 +1071,6 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
       // No model transform matrix was provided, so calculate it given scale rotation and offset:
       update();
    }
-
-#if 0
-   //---
-   // Final sanity check:
-   //---
-   if ( theOrigin.hasNans() )
-   {
-      const NEWMAT::Matrix& m = theModelTransform.getData();
-      theOrigin.lon = m[0][3];
-      theOrigin.lat = m[1][3];
-   }
-#endif
 
    return true;
 }
@@ -1099,7 +1102,13 @@ std::ostream& ossimMapProjection::print(std::ostream& out) const
        << theFalseEastingNorthing.toString().c_str()
        << "\n" << ossimKeywordNames::FALSE_EASTING_NORTHING_UNITS_KW << ": "
        << ossimUnitTypeLut::instance()->getEntryString(OSSIM_METERS)
-       << "\n" << ossimKeywordNames::PCS_CODE_KW << ": " << thePcsCode;
+       << "\n" << ossimKeywordNames::PCS_CODE_KW << ": " << thePcsCode
+       << "\n" << ossimKeywordNames::IMAGE_MODEL_ROTATION_KW  << ": " << theImageToModelAzimuth;
+
+   const NEWMAT::Matrix& m = theModelTransform.getData();
+   out << "\nImageModelTransform [2x3]: "<<m[0][0]<<"  "<<m[0][1]<<"  "<<m[0][3]
+       << "\n                           "<<m[1][0]<<"  "<<m[1][1]<<"  "<<m[1][3];
+
 
    if(isGeographic())
    {
@@ -1159,6 +1168,11 @@ void ossimMapProjection::computeMetersPerPixel()
    ossimDpt metersPerDegree (theOrigin.metersPerDegree());
    theMetersPerPixel.x = metersPerDegree.x * theDegreesPerPixel.lon;
    theMetersPerPixel.y = metersPerDegree.y * theDegreesPerPixel.lat;
+#elif USE_MODEL_TRANSFORM_XXX  // Not working so hide
+   // Transform according to 4x4 transform embedded in the projection:
+   const NEWMAT::Matrix& m = theModelTransform.getData();
+   theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
+   theMetersPerPixel.y = sqrt(m[0][1]*m[0][1] + m[1][1]*m[1][1]);
 #else
    ossimGpt right=theOrigin;
    ossimGpt down=theOrigin;
@@ -1174,7 +1188,6 @@ void ossimMapProjection::computeMetersPerPixel()
    theMetersPerPixel.y = (downMeters  - centerMeters).length();
 #endif
 
-   updateTransform();
 }
 
 //**************************************************************************************************

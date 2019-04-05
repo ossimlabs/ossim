@@ -194,7 +194,7 @@ int is_vpf_null_double( double num );
 #define 	NULLCHAR	' '
 #define		NULLTEXT	" "
 #define		NULLSHORT	-MAXSHORT
-#define         NULLINT         -MAXLONG
+#define         NULLINT         -MAXINT
 #define		NULLDATE	"                    "
 /* #if UNIX */
 #define		NULLFLOAT	((float) quiet_nan (0))

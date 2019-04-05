@@ -561,7 +561,7 @@ ossim_int32 put_table_element( ossim_int32              field,
 
    if ((count != table.header[field].count) &&
        (table.header[field].count > 0)) {
-      printf("Invalid element count! (%ld, %ld)\n",
+      printf("Invalid element count! (%d, %d)\n",
 	     count,table.header[field].count);
       return -1;
    }
