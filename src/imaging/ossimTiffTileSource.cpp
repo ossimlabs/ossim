@@ -630,11 +630,15 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       else
       {
          //For strip NITF files let's set to a fixed 256x256 tile size
-         theRowsPerStrip[dir] = 256;
-         if(theImageTileWidth[dir] < 256)
-         {
-            theImageTileWidth[dir] = 256;
-         }
+         // There is a bug in the TIF to support this.
+         // I am commenting it out for now and will have to address this later
+         // Can't hard coce to 256
+         //
+         // theRowsPerStrip[dir] = 256;
+         // if(theImageTileWidth[dir] < 256)
+         // {
+         //    theImageTileWidth[dir] = 256;
+         // }
 
          // we get core dumps if this is less so just set it if greater
          if (state->getRowsPerStrip(dir) > theRowsPerStrip[dir])
@@ -642,11 +646,11 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
             theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
          }
 
-         // theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
-         // if (!theRowsPerStrip[dir])
-         // {
-         //    theRowsPerStrip[dir] = 1;
-         // }
+         theRowsPerStrip[dir] = state->getRowsPerStrip(dir);
+         if (!theRowsPerStrip[dir])
+         {
+            theRowsPerStrip[dir] = 1;
+         }
          //---
          // Let's default the tile size to something efficient.
          //
@@ -656,22 +660,22 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
          // and getImageTileHeight methods.
          //---
 
-         // if (theImageTileWidth[dir] > 256)
-         // {
-         //    theImageTileWidth[dir] = 256;
-         // }
-         // else if (theImageTileWidth[dir] < 64)
-         // {
-         //    theImageTileWidth[dir] = 64;
-         // }
-         // if (theImageTileLength[dir] > 256)
-         // {
-         //    theImageTileLength[dir] = 256;
-         // }
-         // else if (theImageTileLength[dir] < 64)
-         // {
-         //    theImageTileLength[dir] = 64;
-         // }
+         if (theImageTileWidth[dir] > 256)
+         {
+            theImageTileWidth[dir] = 256;
+         }
+         else if (theImageTileWidth[dir] < 64)
+         {
+            theImageTileWidth[dir] = 64;
+         }
+         if (theImageTileLength[dir] > 256)
+         {
+            theImageTileLength[dir] = 256;
+         }
+         else if (theImageTileLength[dir] < 64)
+         {
+            theImageTileLength[dir] = 64;
+         }
       }
    } // End of "for (ossim_uint32 dir=0; dir<theNumberOfDirectories; dir++)"
 
@@ -1778,7 +1782,8 @@ bool ossimTiffTileSource::loadFromU16Strip(const ossimIrect &clip_rect, ossimIma
                                                          bandStrip,
                                                          theBuffer + bufferOffsetInBytes,
                                                          bytesToRead);
-            if (bytesRead != bytesToRead)
+            std::cout << "bytesRead" << bytesRead << " ?? " << bytesToRead << "\n";
+            if(bytesRead != bytesToRead)
             {
                if (traceDebug())
                {
