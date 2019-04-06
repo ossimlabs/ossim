@@ -254,6 +254,14 @@ private:
     */
    bool hasOneBasedTiePoints() const;
 
+   /**
+    * In the case when tie points are not explicitely provided, this method assigns them given
+    * the image-model transform.
+    * @return true if properly assigned, false if not.
+    */
+   bool initTiePointsFromImageModelTransform();
+
+
    TIFF*                 theTiffPtr;
    ossim_uint32          theGeoKeyOffset;
    int                   theGeoKeyLength;

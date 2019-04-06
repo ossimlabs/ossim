@@ -1142,6 +1142,9 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
    state->getGeoTiePoints(theTiePoint, entryIdx);
    theModelTransformation.clear();
    state->getGeoTransMatrix(theModelTransformation, entryIdx);
+   if (!theTiePoint.size())
+      initTiePointsFromImageModelTransform();
+
    theDoubleParam.clear();
    state->getGeoDoubleParams(theDoubleParam, entryIdx);
 
@@ -1165,8 +1168,7 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
    return true;
 }
 
-bool ossimGeoTiff::readTags(
-    TIFF *tiff, ossim_uint32 entryIdx, bool ownTiffPtrFlag)
+bool ossimGeoTiff::readTags( TIFF *tiff, ossim_uint32 entryIdx, bool ownTiffPtrFlag)
 {
    std::lock_guard<std::mutex> lock(theMutex);
 
@@ -1449,16 +1451,8 @@ bool ossimGeoTiff::readTags(
    {
       theModelTransformation.insert(theModelTransformation.begin(), trans, trans + transSize);
    }
-   //    if(!theTiePoint.size()&&(theModelTransform.size()==16))
-   //    {
-   //       // for now we will stuff the tie point with the model transform tie points.
-   //       theTiePoint.push_back(0.0);
-   //       theTiePoint.push_back(0.0);
-   //       theTiePoint.push_back(0.0);
-   //       theTiePoint.push_back(theModelTransformation[3]);
-   //       theTiePoint.push_back(theModelTransformation[7]);
-   //       theTiePoint.push_back(0.0);
-   //    }
+   if (!theTiePoint.size())
+      initTiePointsFromImageModelTransform();
 
    ossim_uint16 doubleParamSize = 0;
    double *tempDoubleParam = 0;
@@ -2409,6 +2403,20 @@ bool ossimGeoTiff::hasOneBasedTiePoints() const
 
    return result;
 }
+
+bool ossimGeoTiff::initTiePointsFromImageModelTransform()
+{
+   if (!usingModelTransform())
+      return false;
+
+   theTiePoint.push_back(0.0);
+   theTiePoint.push_back(0.0);
+   theTiePoint.push_back(0.0);
+   theTiePoint.push_back(theModelTransformation[3]);
+   theTiePoint.push_back(theModelTransformation[7]);
+   theTiePoint.push_back(0.0);
+}
+
 
 //*************************************************************************************************
 // ArcMAP 9.2 bug workaround.
