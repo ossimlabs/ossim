@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
    ossimRefPtr<ossimKMeansClustering> classifier = new ossimKMeansClustering;
    classifier->setNumClusters(2);
-   const float* x = band_histo->GetVals();
+   const double* x = band_histo->GetVals();
    const ossim_int64* y = band_histo->GetCounts();
    ossim_uint32 N = (ossim_uint32) band_histo->GetRes();
    classifier->setSamples(x, N);

@@ -32,40 +32,45 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
 {
   private:
 
-    mutable int m_statsConsistent; // A 2 bit state flag  Mean =1 | StandDev = 2
+   mutable int m_statsConsistent; // A 2 bit state flag  Mean =1 | StandDev = 2
 
   protected:
 
-   
+   /**
+    * @brief Updates m_vmin and m_vmax. This will be the value for the first
+    * and last bin with a count in it.
+    */
+   void updateMinMax();
+
    virtual void deleteAll();
    
-    float * m_vals;            // histogram x array
-                             // (value = midpoint of each bucket)
-    ossim_int64* m_counts;   // histogram y array ie. count[i] is
+   double * m_vals;            // histogram x array
+   // (value = midpoint of each bucket)
+   ossim_int64* m_counts;   // histogram y array ie. count[i] is
                              // the number of pixels with value within range
                              // of bucket i
 
-    int m_num;                 // number of indices
+   int m_num;                 // number of indices
 
-    float m_delta;             // "Width" of each bucket on value axis
-    float m_vmin, m_vmax;        // Maximum and minimum values on plot
-    mutable float m_mean;               // Mean value of the distribution
-    mutable float m_standardDev;       //
+   double m_delta;             // "Width" of each bucket on value axis
+   double m_vmin, m_vmax;        // Maximum and minimum values on plot
+   mutable double m_mean;               // Mean value of the distribution
+   mutable double m_standardDev;       //
 
-    //---
-    // For counting nulls only.
-    // Nulls counted separately, i.e. not stored in a m_counts bin, as they are
-    // not used in any computations.
-    //---
-    ossim_float64 m_nullValue;
-    ossim_uint64  m_nullCount;
+   //---
+   // For counting nulls only.
+   // Nulls counted separately, i.e. not stored in a m_counts bin, as they are
+   // not used in any computations.
+   //---
+   double        m_nullValue;
+   ossim_uint64  m_nullCount;
 
-    //---
-    // This was added to determine if pixel values are integers.
-    // If so save the state in this form for each bin: "(pixelValue,count)"
-    // else: "(binIndex,count)"
-    //---
-    ossimScalarType m_scalarType;
+   //---
+   // This was added to determine if pixel values are integers.
+   // If so save the state in this form for each bin: "(pixelValue,count)"
+   // else: "(binIndex,count)"
+   //---
+   ossimScalarType m_scalarType;
 
    class ossimProprietaryHeaderInformation
    {
@@ -97,121 +102,146 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
       HISTOGRAM_FILL_DEFAULT    = 0,
       HISTOGRAM_FILL_THIN_PLATE = 1
    };
-// Constructors
-    ossimHistogram();
-    ossimHistogram(int xres, float min, float max, float nullValue, ossimScalarType scalar);
-    // ossimHistogram(float*, float*, int);
-    ossimHistogram(const ossimHistogram& his); // Copy constructor
-    ossimHistogram(const ossimHistogram*, float width); // Resampling constructor
 
-    /**
-     * Uses samples array to establish a histogram with numBins:
-     */
-    ossimHistogram(const double* samples, ossim_uint32 size, ossim_uint32 numBins);
+   // Constructors
+   ossimHistogram();
+   ossimHistogram(int xres, double min, double max, double nullValue, ossimScalarType scalar);
+   // ossimHistogram(double*, double*, int);
+   ossimHistogram(const ossimHistogram& his); // Copy constructor
+   ossimHistogram(const ossimHistogram*, double width); // Resampling constructor
 
-    virtual int GetIndex(float)const;
-// Other histogram formation operations    
-   ossimHistogram* fillInteriorEmptyBins(int type=HISTOGRAM_FILL_THIN_PLATE)const;
-    ossimHistogram* Scale(float scale_factor); // Scale Transformation
-    ossimHistogram* CumulativeGreaterThanEqual()const;// From density to cumulative
-    ossimHistogram* CumulativeLessThanEqual()const;// From density to cumulative
-    //Suppress non-peak values.
+   /**
+    * Uses samples array to establish a histogram with numBins:
+    */
+   ossimHistogram(const double* samples,
+                  ossim_uint32 size,
+                  ossim_uint32 numBins);
+
+   virtual int GetIndex(double)const;
+
+   // Other histogram formation operations
+
+   /**
+    * @brief Fill empty bins.
+    *
+    * This is used for code that does not like holes. The ossim-gui
+    * HistogramWidget being one of them.
+    *
+    * @param interiorOnly If true only bins between first bin with a
+    * count, and last bin with a count will be filled. If false, any
+    * bins with a zero count will be set to a count of one.
+    *
+    * @param type Fill type. Currently thin plate spline is the only
+    * type used regardless of setting.
+    *
+    * @return A new histogram from the this.
+    */
+   ossimHistogram* fillEmptyBins(bool interiorOnly,
+                                 int type=HISTOGRAM_FILL_THIN_PLATE)const;
+
+   ossimHistogram* Scale(double scale_factor); // Scale Transformation
+
+   // From density to cumulative
+   ossimHistogram* CumulativeGreaterThanEqual()const;
+   ossimHistogram* CumulativeLessThanEqual()const;
+
+   //Suppress non-peak values.
    ossimHistogram* NonMaximumSupress(int radius = 1, bool cyclic = false);
-   void create(int xres, float val1, float val2);
-   void create(int bins, float minValue, float maxValue,
-               ossim_float64 nullValue, ossimScalarType scalar);
-  
-// Attribute accessors
-    void UpCount(float newval, float occurences=1);
-    ossim_int64 GetCount(float uval)const;
-    ossim_int64 SetCount(float pixelval, ossim_int64 count);
 
-    float GetMinVal()const;
-    float GetMaxVal()const;
-    ossim_int64 GetMaxCount()const;
+   // void create(int xres, float val1, float val2);
+   void create(int bins, double minValue, double maxValue,
+               double nullValue, ossimScalarType scalar);
 
-    float GetRangeMin()const
-    {
-       return m_vmin;
-    }
-    float GetRangeMax()const
-    {
-       return m_vmax;
-    }
-    float * GetVals()
-    {
+   // Attribute accessors
+   void UpCount(double newval, double occurences=1);
+   double GetCount(double uval)const;
+   double SetCount(double pixelval, double count);
+
+   double GetMinVal()const;
+   double GetMaxVal()const;
+   double GetMaxCount()const;
+
+   double GetRangeMin()const
+   {
+      return m_vmin;
+   }
+   double GetRangeMax()const
+   {
+      return m_vmax;
+   }
+   double * GetVals()
+   {
       m_statsConsistent = 0; // Values might change.
       return m_vals; 
-    }
-    const float * GetVals()const
-    {
+   }
+   const double * GetVals()const
+   {
       m_statsConsistent = 0; // Values might change.
       return m_vals; 
-    }
+   }
 
-    ossim_int64 * GetCounts()
-    { 
+   ossim_int64 * GetCounts()
+   {
       m_statsConsistent = 0; // m_counts might change.
       return m_counts; 
-    }
+   }
 
    const ossim_int64 * GetCounts()const
-    { 
+   {
       //m_statsConsistent = 0; // m_counts might change.
       return m_counts; 
-    }
+   }
 
-    int GetRes()const
-    { return m_num; }
+   int GetRes()const
+   { return m_num; }
 
-    float GetBucketSize()const { return m_delta; }
+   double GetBucketSize()const { return m_delta; }
 
-    float * GetMinValAddr()
-    { return m_vals+GetIndex(GetMinVal());  }
+   double * GetMinValAddr()
+   { return m_vals+GetIndex(GetMinVal());  }
 
-    ossim_int64 * GetMinCountAddr()
-    { return m_counts+GetIndex(GetMinVal());  }
+   ossim_int64 * GetMinCountAddr()
+   { return m_counts+GetIndex(GetMinVal());  }
 
-    const float * GetMinValAddr()const
-    { return m_vals+GetIndex(GetMinVal());  }
+   const double * GetMinValAddr()const
+   { return m_vals+GetIndex(GetMinVal());  }
 
-    const ossim_int64 * GetMinCountAddr()const
-    { return m_counts+GetIndex(GetMinVal());  }
+   const ossim_int64 * GetMinCountAddr()const
+   { return m_counts+GetIndex(GetMinVal());  }
 
-    float ComputeArea(float low, float high)const;// bounded area
-    float ComputeArea()const;//total area
+   double ComputeArea(double low, double high)const;// bounded area
+   double ComputeArea()const;//total area
 
-    /*!
-     * Returns the fraction of accumulation up to and including "val" bucket
-     * from min divided by the total accumulation.
-     * returns OSSIM_FLT_NAN if "val" is not between GetMinVal and GetMaxVal.
-     */
-    float getLowFractionFromValue(float val) const;
-    
-    /*!
-     * Returns the fraction of accumulation down to and including "val" bucket
-     * from max divided by the total accumulation.
-     * returns OSSIM_FLT_NAN if "val" is not between GetMin() and GetMax().
-     */
-    float getHighFractionFromValue(float val) const;
-    
-    //Find bounds that clip off a given percent of the area
-    float LowClipVal(float clip_fraction)const;
-    float HighClipVal(float clip_fraction)const;
+   /*!
+    * Returns the fraction of accumulation up to and including "val" bucket
+    * from min divided by the total accumulation.
+    * returns OSSIM_FLT_NAN if "val" is not between GetMinVal and GetMaxVal.
+    */
+   double getLowFractionFromValue(double val) const;
 
-    float GetValFromIndex(ossim_uint32 idx)const;
-    float GetMinValFromIndex(ossim_uint32 idx)const;
-    float GetMaxValFromIndex(ossim_uint32 idx)const;
-    int GetValIndex(float val)const;
+   /*!
+    * Returns the fraction of accumulation down to and including "val" bucket
+    * from max divided by the total accumulation.
+    * returns OSSIM_FLT_NAN if "val" is not between GetMin() and GetMax().
+    */
+   double getHighFractionFromValue(double val) const;
 
-    float GetMean()const;
-    float GetStandardDev()const;
+   //Find bounds that clip off a given percent of the area
+   double LowClipVal(double clip_fraction)const;
+   double HighClipVal(double clip_fraction)const;
 
-    void Print()const;
-    void Dump(char *)const;
-    int  WritePlot(const char* fname)const;
+   double GetValFromIndex(ossim_uint32 idx)const;
+   double GetMinValFromIndex(ossim_uint32 idx)const;
+   double GetMaxValFromIndex(ossim_uint32 idx)const;
+   int GetValIndex(double val)const;
+
+   double GetMean()const;
+   double GetStandardDev()const;
+
+   void Print()const;
+   void Dump(char *)const;
+   int  WritePlot(const char* fname)const;
    virtual ~ossimHistogram();
-
 
    virtual bool importHistogram(const ossimFilename& inputFile);
    virtual bool importHistogram(istream& in);
@@ -225,8 +255,8 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
    ossimScalarType getScalarType() const;
    void setScalarType( ossimScalarType scalar );
 
-   const ossim_float64& getNullValue() const;
-   void setNullValue(const ossim_float64& nullValue);
+   const double& getNullValue() const;
+   void setNullValue(const double& nullValue);
    const ossim_uint64& getNullCount() const;
    void upNullCount( const ossim_uint64& count );
 

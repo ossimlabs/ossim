@@ -45,7 +45,7 @@ RTTI_DEF1(ossimHistogram, "ossimHistogram", ossimObject);
 ossimHistogram::ossimHistogram()
    :
    m_statsConsistent(MEAN_FLAG | SD_FLAG),
-   m_vals(new float [1]),
+   m_vals(new double [1]),
    m_counts(new ossim_int64 [1]),
    m_num(0),
    m_delta(0.0),
@@ -61,10 +61,10 @@ ossimHistogram::ossimHistogram()
    m_counts[0] = 0.0;
 }
 
-ossimHistogram::ossimHistogram(int xres, float val1, float val2, float nullValue, ossimScalarType scalar)
+ossimHistogram::ossimHistogram(int xres, double val1, double val2, double nullValue, ossimScalarType scalar)
    :
    m_statsConsistent(MEAN_FLAG | SD_FLAG),
-   m_vals(new float [xres]),
+   m_vals(new double [xres]),
    m_counts(new ossim_int64 [xres]),
    m_num(xres),
    m_delta(0.0),
@@ -90,11 +90,18 @@ ossimHistogram::ossimHistogram(int xres, float val1, float val2, float nullValue
    }
    else
    {
-      m_delta = (m_vmax - m_vmin) / xres;
+      if ( ossim::isInteger(scalar) )
+      {
+         m_delta = (m_vmax - m_vmin + 1) / xres;
+      }
+      else
+      {
+         m_delta = (m_vmax - m_vmin) / xres;
+      }
    }
 
-   m_mean = (float)((m_vmax + m_vmin)/2.0);
-   m_standardDev = (float)((m_vmax - m_vmin)/(2.0*sqrt(3.0)));
+   m_mean = (double)((m_vmax + m_vmin)/2.0);
+   m_standardDev = (double)((m_vmax - m_vmin)/(2.0*sqrt(3.0)));
    int i = 0;
 
    if (m_vals == NULL || m_counts == NULL)
@@ -109,12 +116,11 @@ ossimHistogram::ossimHistogram(int xres, float val1, float val2, float nullValue
    }
    else
    {
-      //std::cout << std::setprecision(15) << m_vmin << ", " << m_vmax <<  ", " <<m_delta <<", "<< xres << std::endl;
       if ( ossim::isInteger( m_scalarType ) )
       {
          for(i = 0; i < xres; i++)
          {
-            m_vals[i] = m_vmin + m_delta * (float)i;
+            m_vals[i] = m_vmin + m_delta * (double)i;
             m_counts[i] = 0;
          }
       }
@@ -122,7 +128,7 @@ ossimHistogram::ossimHistogram(int xres, float val1, float val2, float nullValue
       {
          for(i = 0; i < xres; i++)
          {
-            m_vals[i] = m_vmin + m_delta * (float)(i + 0.5);
+            m_vals[i] = m_vmin + m_delta * (double)(i + 0.5);
             m_counts[i] = 0;
          }
       }
@@ -130,7 +136,7 @@ ossimHistogram::ossimHistogram(int xres, float val1, float val2, float nullValue
 }
 
 #if 0
-ossimHistogram::ossimHistogram(float* uvals, float* ucounts, int xres)
+ossimHistogram::ossimHistogram(double* uvals, double* ucounts, int xres)
    :
    m_statsConsistent(MEAN_FLAG | SD_FLAG),
    m_vals(uvals),
@@ -177,14 +183,14 @@ ossimHistogram::ossimHistogram(const double* data, ossim_uint32 size, ossim_uint
       return;
 
    // scan the dataset for min/max:
-   m_vmin=(float)(data[0]);
-   m_vmax=(float)(data[0]);
+   m_vmin=(double)(data[0]);
+   m_vmax=(double)(data[0]);
    for (ossim_uint32 i=1; i<size; ++i)
    {
-      if ((float)(data[i]) < m_vmin)
-         m_vmin = (float)(data[i]);
-      else if ((float)(data[i]) > m_vmax)
-         m_vmax = (float)(data[i]);
+      if ((double)(data[i]) < m_vmin)
+         m_vmin = (double)(data[i]);
+      else if ((double)(data[i]) > m_vmax)
+         m_vmax = (double)(data[i]);
    }
 
    // Allocate histogram:
@@ -203,7 +209,7 @@ ossimHistogram::ossimHistogram(const double* data, ossim_uint32 size, ossim_uint
       m_delta = (m_vmax - m_vmin) / xres;
    }
 
-   m_vals = new float [m_num];
+   m_vals = new double [m_num];
    m_counts = new ossim_int64 [m_num];
    for (ossim_int32 i=0; i<m_num; ++i)
    {
@@ -213,7 +219,7 @@ ossimHistogram::ossimHistogram(const double* data, ossim_uint32 size, ossim_uint
 
    // compute histogram:
    for (ossim_uint32 i=0; i<size; i++)
-      UpCount((float)(data[i]));
+      UpCount((double)(data[i]));
 
    GetMean();
    GetStandardDev();
@@ -239,8 +245,8 @@ m_scalarType(his.m_scalarType)
    int i = 0;
    m_num = his.GetRes();
 
-   m_vals = new float[m_num];
-   const float* his_vals = his.GetVals();
+   m_vals = new double[m_num];
+   const double* his_vals = his.GetVals();
 
    m_counts = new ossim_int64[m_num];
    const ossim_int64* his_counts = his.GetCounts();
@@ -277,7 +283,7 @@ m_scalarType(his.m_scalarType)
 
 //---------------------------------------
 // -- Resample a histogram
-ossimHistogram::ossimHistogram(const ossimHistogram* his, float width)
+ossimHistogram::ossimHistogram(const ossimHistogram* his, double width)
 :
 m_statsConsistent(0),
 m_vals(0),
@@ -297,10 +303,10 @@ m_scalarType(OSSIM_SCALAR_UNKNOWN)
       m_statsConsistent =0;
 
       // Attributes of original histogram
-      float del = his->GetBucketSize();
+      double del = his->GetBucketSize();
       int max_index = his->GetRes() - 1;
-      float minvalue = his->GetVals()[0] - del*.5f;
-      float maxvalue = his->GetVals()[max_index] + del*.5f;
+      double minvalue = his->GetVals()[0] - del*.5f;
+      double maxvalue = his->GetVals()[max_index] + del*.5f;
 
       // Intialize a new histogram
       m_nullValue = his->getNullValue();
@@ -319,11 +325,11 @@ m_scalarType(OSSIM_SCALAR_UNKNOWN)
       else
          m_num = 1; // This shouldn't happen anyway.
 
-      m_vals = new float [m_num];
+      m_vals = new double [m_num];
       m_counts = new ossim_int64 [m_num];
       m_delta = width;
-      float mean_val = (maxvalue + minvalue)/2.0f;
-      float half_range = (m_num * m_delta)/2.0f;
+      double mean_val = (maxvalue + minvalue)/2.0f;
+      double half_range = (m_num * m_delta)/2.0f;
       m_vmax =  mean_val + half_range;
       m_vmin =  mean_val - half_range;
       int i = 0;
@@ -375,42 +381,42 @@ m_scalarType(OSSIM_SCALAR_UNKNOWN)
 
 // Boundary conditions:
 //    Start
-         float his_start = minvalue + .5f*del;
-         float start = m_vmin + .5f*m_delta;
-         float c0 = his->GetCount(his_start);
-         float c1 = his->GetCount(his_start + del);
-         float s0 = (c1 - c0)/del;
+         double his_start = minvalue + .5f*del;
+         double start = m_vmin + .5f*m_delta;
+         double c0 = his->GetCount(his_start);
+         double c1 = his->GetCount(his_start + del);
+         double s0 = (c1 - c0)/del;
 
-         for(float x = start; x <= (his_start + del + m_delta);)
+         for(double x = start; x <= (his_start + del + m_delta);)
          {
-            float interp = s0 * (x - his_start) + c0;
+            double interp = s0 * (x - his_start) + c0;
             if(interp < 0) interp = 0; //Can be negative
             SetCount(x,interp);
             x += width;
          }
 //    End
-         float his_end = maxvalue - .5f*del;
-         float end = m_vmax - .5f*m_delta;
-         float cn = his->GetCount(his_end);
-         float cn_1 = his->GetCount(his_end - del);
-         float sn = (cn_1 - cn)/del;
+         double his_end = maxvalue - .5f*del;
+         double end = m_vmax - .5f*m_delta;
+         double cn = his->GetCount(his_end);
+         double cn_1 = his->GetCount(his_end - del);
+         double sn = (cn_1 - cn)/del;
 
-         for(float y = end; y >= (his_end - del + m_delta);)
+         for(double y = end; y >= (his_end - del + m_delta);)
          {
-            float interp = sn * (his_end - y) + cn;
+            double interp = sn * (his_end - y) + cn;
             if(interp < 0) interp = 0; //Can be negative
             SetCount(y, interp);
             y -= m_delta;
          }
 // Interior Loop
 
-         for(float z = his_start + del; z <= (his_end - del);)
+         for(double z = his_start + del; z <= (his_end - del);)
          {
-            float ci = his->GetCount(z);
-            float ci_1 = his->GetCount(z-del);
-            float cip1 = his->GetCount(z+del);
-            float deriv = (cip1 - ci_1)/(2.0f*del);
-            float second_drv =
+            double ci = his->GetCount(z);
+            double ci_1 = his->GetCount(z-del);
+            double cip1 = his->GetCount(z+del);
+            double deriv = (cip1 - ci_1)/(2.0f*del);
+            double second_drv =
                ((cip1 + ci_1)/2.0f - ci)/(del*del);
             int fine_x_index = GetIndex(z);
             if (fine_x_index < 0)
@@ -418,10 +424,10 @@ m_scalarType(OSSIM_SCALAR_UNKNOWN)
                if (z<m_vmin) fine_x_index = 0;
                else fine_x_index = m_num-1;
             }
-            float fine_x = m_vals[fine_x_index];
-            for(float xfine = fine_x; xfine < z + del;)
+            double fine_x = m_vals[fine_x_index];
+            for(double xfine = fine_x; xfine < z + del;)
             {
-               float interp = ci + deriv*(xfine -z) +
+               double interp = ci + deriv*(xfine -z) +
                   second_drv*(xfine - z)*(xfine - z);
 
                if(interp < 0) interp = 0; //Can be negative
@@ -436,9 +442,9 @@ m_scalarType(OSSIM_SCALAR_UNKNOWN)
       if(del < width)    //Just accumulate samples from his into larger bins
       {
          if( del != 0.0){
-            float his_start = minvalue + .5f*del;
-            float his_end = maxvalue - .5f*del;
-            for(float x = his_start; x <= his_end;)
+            double his_start = minvalue + .5f*del;
+            double his_end = maxvalue - .5f*del;
+            for(double x = his_start; x <= his_end;)
             {
                SetCount(x, (GetCount(x) + his->GetCount(x)));
                x += del;
@@ -452,7 +458,8 @@ m_scalarType(OSSIM_SCALAR_UNKNOWN)
    }
 }
 
-void ossimHistogram::create(int xres, float val1, float val2)
+#if 0
+void ossimHistogram::create(int xres, double val1, double val2)
 {
    // clear all the data
    deleteAll();
@@ -460,7 +467,7 @@ void ossimHistogram::create(int xres, float val1, float val2)
    // now set it up and initialize;
    xres = xres >0? xres:1;
    
-   m_vals   = new float [xres];
+   m_vals   = new double [xres];
    m_counts = new ossim_int64 [xres];
    m_num = xres;
    m_vmax = MAX(val1, val2);
@@ -475,8 +482,8 @@ void ossimHistogram::create(int xres, float val1, float val2)
       m_delta = (m_vmax - m_vmin) / xres;
    }
 
-   m_mean = (float)((m_vmax + m_vmin)/2.0);
-   m_standardDev = (float)((m_vmax - m_vmin)/(2.0*sqrt(3.0)));
+   m_mean = (double)((m_vmax + m_vmin)/2.0);
+   m_standardDev = (double)((m_vmax - m_vmin)/(2.0*sqrt(3.0)));
    m_statsConsistent = 0;
    m_statsConsistent |= (MEAN_FLAG | SD_FLAG);
    int i = 0;
@@ -494,23 +501,80 @@ void ossimHistogram::create(int xres, float val1, float val2)
    {
       for(i = 0; i < xres; i++)
       {
-         m_vals[i] = m_vmin + m_delta * (float)(i + 0.5);
+         m_vals[i] = m_vmin + m_delta * (double)(i + 0.5);
          m_counts[i] = 0;
       }
    }   
 }
+#endif
 
 void ossimHistogram::create(
-   int bins, float minValue, float maxValue, ossim_float64 nullValue, ossimScalarType scalar)
+   int bins, double minValue, double maxValue, ossim_float64 nullValue, ossimScalarType scalar)
 {
-   create( bins, minValue, maxValue);
+   // create( bins, minValue, maxValue);
+
+   // clear all the data
+   deleteAll();
 
    // Must set null value after create call.
    m_nullValue = nullValue;
    m_scalarType = scalar;
+
+   // now set it up and initialize;
+   bins = bins >0? bins:1;
+
+   m_vals   = new double [bins];
+   m_counts = new ossim_int64 [bins];
+   m_num = bins;
+   m_vmax = MAX(minValue, maxValue);
+   m_vmin = MIN(minValue, maxValue);
+
+   if ( (m_vmax - m_vmin + 1) == bins )
+   {
+      m_delta = 1.0;
+   }
+   else
+   {
+      m_delta = (m_vmax - m_vmin) / bins;
+   }
+
+   m_mean = (double)((m_vmax + m_vmin)/2.0);
+   m_standardDev = (double)((m_vmax - m_vmin)/(2.0*sqrt(3.0)));
+   m_statsConsistent = 0;
+   m_statsConsistent |= (MEAN_FLAG | SD_FLAG);
+   // int i = 0;
+   if (m_vals == NULL || m_counts == NULL)
+   {
+      ossimNotify(ossimNotifyLevel_FATAL) << "Histogram : Ran out of memory for arrays.\n";
+      m_vals = NULL;
+      m_counts = NULL;
+      m_num = 0;
+      m_vmin = 0;
+      m_vmax = 0;
+      m_delta = 0.0;
+   }
+   else
+   {
+      if (ossim::isInteger( m_scalarType ) )
+      {
+         for(int i = 0; i < bins; ++i)
+         {
+            m_vals[i] = m_vmin + m_delta * i;
+            m_counts[i] = 0;
+         }
+      }
+      else
+      {
+         for(int i = 0; i < bins; ++i)
+         {
+            m_vals[i] = m_vmin + m_delta * (double)(i + 0.5);
+            m_counts[i] = 0;
+         }
+      }
+   }
 }
 
-ossimHistogram* ossimHistogram::fillInteriorEmptyBins(int type)const
+ossimHistogram* ossimHistogram::fillEmptyBins(bool interiorOnly, int type) const
 {
    if(m_num < 1) return 0;
    ossimHistogram* result = new ossimHistogram(*this);
@@ -555,6 +619,15 @@ ossimHistogram* ossimHistogram::fillInteriorEmptyBins(int type)const
             {
             }
          }
+
+         if (interiorOnly == false )
+         {
+            for ( ossim_int32 idx = 0; idx < m_num; ++idx )
+            {
+               if ( new_counts[idx] == 0 ) new_counts[idx] = 1;
+            }
+            result->updateMinMax();
+         }
          
          break;
       }
@@ -567,13 +640,13 @@ ossimHistogram* ossimHistogram::fillInteriorEmptyBins(int type)const
 //    translation, transl, and a scale factor, scale.
 //    The new histogram has the same resolution as his.
 
-ossimHistogram* ossimHistogram::Scale(float scale_factor)
+ossimHistogram* ossimHistogram::Scale(double scale_factor)
 {
 
 // Extract attributes of self
 
-//    float lowvalue = m_vals[0];
-   float highvalue = m_vals[m_num-1];
+//    double lowvalue = m_vals[0];
+   double highvalue = m_vals[m_num-1];
 
 // Construct a new histogram
 
@@ -586,20 +659,20 @@ ossimHistogram* ossimHistogram::Scale(float scale_factor)
 // Compute scaled values
 // We assume that the new histogram is to be scaled down from his
 
-   float scale = scale_factor;
+   double scale = scale_factor;
    if(scale_factor > 1.0) scale = 1.0;
 
-   for(float x = highvalue; x > m_vmin;)
+   for(double x = highvalue; x > m_vmin;)
    {
-      float trans_x = (x-m_vmin)*scale + m_vmin; // Scaled x.
+      double trans_x = (x-m_vmin)*scale + m_vmin; // Scaled x.
       int index = GetIndex(trans_x);
       if (index < 0)
       {
          if (trans_x<m_vmin) index = 0;
          else index = m_num-1;
       }
-      float fraction = (trans_x - m_vals[index])/m_delta;
-      float abs_fraction = (float)fabs(fraction);
+      double fraction = (trans_x - m_vals[index])/m_delta;
+      double abs_fraction = (double)fabs(fraction);
       int x_index = GetIndex(x);
       if (x_index < 0)
       {
@@ -688,7 +761,7 @@ ossimHistogram* ossimHistogram::CumulativeLessThanEqual()const
 //permits easy array access logic for the NonMaximumSuppression algorithm.
 //The cyclic flag indicates that the m_counts array index is circular, i.e,
 //cnts[0] equivalent to cnts[n_bins-1]
-inline float GetExtendedCount(int bin, int n_bins, ossim_int64* cnts, bool cyclic)
+inline double GetExtendedCount(int bin, int n_bins, ossim_int64* cnts, bool cyclic)
 {
    int nbm = n_bins-1;
    if(!cyclic)
@@ -728,7 +801,7 @@ inline void RemoveFlatPeaks(int nbins, ossim_int64* cnts, bool cyclic)
    //The scan of the state machine
    for(i = 0; i < nbins; i++)
    {
-      float v = GetExtendedCount(i, nbins, cnts, cyclic);
+      double v = GetExtendedCount(i, nbins, cnts, cyclic);
 
       //State init: a string of non-zeroes at the begining.
       if(init&&v!=0)
@@ -852,12 +925,12 @@ ossimHistogram* ossimHistogram::NonMaximumSupress(int radius, bool cyclic)
    for( i = 0; i<  n_buckets; i++)
    {
       //find the maxium value in the current kernel
-      float max_count = counts_old[i];
+      double max_count = counts_old[i];
       int k = 0;
       for(k = -radius; k <= radius ;k++)
       {
          int index = i+k;
-         float c = GetExtendedCount(index, n_buckets, counts_old, cyclic);
+         double c = GetExtendedCount(index, n_buckets, counts_old, cyclic);
          if( c > max_count)
 	    max_count = c;
       }
@@ -870,20 +943,20 @@ ossimHistogram* ossimHistogram::NonMaximumSupress(int radius, bool cyclic)
 }
 //----------------------------------------------------------
 // -- Compute the m_mean of the histogram population
-float ossimHistogram::GetMean()const
+double ossimHistogram::GetMean()const
 {
-   float xsum = 0.0;
+   double xsum = 0.0;
 
    if(MEAN_FLAG&m_statsConsistent)
       return m_mean;
    else
    {
       if( this->GetBucketSize() > 0.0){
-         for(float x=this->GetMinVal(); x<= this->GetMaxVal(); x +=this->GetBucketSize())
+         for(double x=this->GetMinVal(); x<= this->GetMaxVal(); x +=this->GetBucketSize())
             xsum += x*GetCount(x);
       }
 
-      float area = ComputeArea(m_vmin, m_vmax);
+      double area = ComputeArea(m_vmin, m_vmax);
       if(area <= 0.0)
       {
          //	      fprintf(stderr, "Histogram : Area <= 0.0\n");
@@ -900,25 +973,25 @@ float ossimHistogram::GetMean()const
 
 
 
-float ossimHistogram::GetStandardDev()const
+double ossimHistogram::GetStandardDev()const
 {
-   float sum = 0.0;
+   double sum = 0.0;
 
    if(SD_FLAG&m_statsConsistent)
       return m_standardDev;
    else
    {
-      float xm = this -> GetMean(); // Force an Update of m_mean
+      double xm = this -> GetMean(); // Force an Update of m_mean
 
       if( this->GetBucketSize() > 0.0){
-         for(float x=this->GetMinVal();
+         for(double x=this->GetMinVal();
              x<= this->GetMaxVal();
              x +=this->GetBucketSize())
 
             sum += (x-xm)*(x-xm)*GetCount(x);
       }
 
-      float area = ComputeArea(m_vmin, m_vmax);
+      double area = ComputeArea(m_vmin, m_vmax);
       if(area <= 0.0)
       {
          //	      fprintf(stderr, "Histogram : Area <= 0.0\n");
@@ -927,20 +1000,20 @@ float ossimHistogram::GetStandardDev()const
       else
       {
          m_statsConsistent |= 2;
-         m_standardDev = (float)sqrt(sum/area);
+         m_standardDev = (double)sqrt(sum/area);
          return m_standardDev;
       }
    }
 }
 
-int ossimHistogram::GetIndex(float pixelval)const
+int ossimHistogram::GetIndex(double pixelval)const
 {
 #if 1
    if ((pixelval > m_vmax) || (pixelval < m_vmin) || (m_num==0) )
    {
       return -1;
    }
-//   ossim_float32 d = m_vmax-m_vmin;
+//   ossim_float64 d = m_vmax-m_vmin;
    int bandIdx = (ossim_int32)((pixelval-m_vmin)/m_delta);
    return bandIdx<m_num?bandIdx:-1;
 //    if(bandIdx == m_num)
@@ -979,9 +1052,9 @@ int ossimHistogram::GetIndex(float pixelval)const
    return idx;
 #endif
 }
-float ossimHistogram::GetMinValFromIndex(ossim_uint32 idx)const
+double ossimHistogram::GetMinValFromIndex(ossim_uint32 idx)const
 {
-   float result = 0.0;
+   double result = 0.0;
    
    if((int)idx < m_num)
    {
@@ -992,9 +1065,9 @@ float ossimHistogram::GetMinValFromIndex(ossim_uint32 idx)const
    return result;
 }
 
-float ossimHistogram::GetMaxValFromIndex(ossim_uint32 idx)const
+double ossimHistogram::GetMaxValFromIndex(ossim_uint32 idx)const
 {
-   float result = 0.0;
+   double result = 0.0;
    
    if((int)idx < m_num)
    {
@@ -1005,9 +1078,9 @@ float ossimHistogram::GetMaxValFromIndex(ossim_uint32 idx)const
    return result;  
 }
 
-float ossimHistogram::GetValFromIndex(ossim_uint32 idx)const
+double ossimHistogram::GetValFromIndex(ossim_uint32 idx)const
 {
-   float result = 0.0;
+   double result = 0.0;
    if((int)idx < m_num)
    {
       result = m_vals[idx];
@@ -1016,28 +1089,25 @@ float ossimHistogram::GetValFromIndex(ossim_uint32 idx)const
    return result;
 }
 
-int ossimHistogram::GetValIndex(float pixelval)const
+int ossimHistogram::GetValIndex(double pixelval)const
 {
-   if ((pixelval > m_vmax) || (pixelval < m_vmin))
-      return -1;
-
-   int idx = 0;
-   int i = 0;
-
-   for(i = 0; i < m_num; i++)
+   int idx = -1;
+   if ( (pixelval >= m_vmin) && (pixelval <= m_vmax) )
    {
-      if ((pixelval > (m_vals[i] - 0.5 * m_delta)) &&
-          (pixelval <= (m_vals[i] + 0.5 * m_delta)))
+      for(int i = 0; i < m_num; ++i)
       {
-         idx = i;
-         break;
+         if ((pixelval > (m_vals[i] - 0.5 * m_delta)) &&
+             (pixelval <= (m_vals[i] + 0.5 * m_delta)))
+         {
+            idx = i;
+            break;
+         }
       }
    }
-
    return idx;
 }
 
-ossim_int64 ossimHistogram::GetCount(float pixelval)const
+double ossimHistogram::GetCount(double pixelval)const
 {
    int index = GetIndex(pixelval);
 
@@ -1047,7 +1117,7 @@ ossim_int64 ossimHistogram::GetCount(float pixelval)const
       return m_counts[index];
 }
 
-float ossimHistogram::GetMinVal()const
+double ossimHistogram::GetMinVal()const
 {
    int i=0;
 
@@ -1057,7 +1127,7 @@ float ossimHistogram::GetMinVal()const
    return m_vals[i];
 }
 
-float ossimHistogram::GetMaxVal()const
+double ossimHistogram::GetMaxVal()const
 {
    int i=m_num-1;
 
@@ -1071,10 +1141,10 @@ float ossimHistogram::GetMaxVal()const
 }
 
 
-ossim_int64 ossimHistogram::GetMaxCount()const
+double ossimHistogram::GetMaxCount()const
 {
    int i=0;
-   float max;
+   double max;
    max = 0.0;
    for (i=0; i < m_num; i++)
       if (m_counts[i] > max)
@@ -1085,7 +1155,7 @@ ossim_int64 ossimHistogram::GetMaxCount()const
 
 
 
-ossim_int64 ossimHistogram::SetCount(float pixelval, ossim_int64 count)
+double ossimHistogram::SetCount(double pixelval, double count)
 {
    m_statsConsistent = 0;
 
@@ -1101,7 +1171,7 @@ ossim_int64 ossimHistogram::SetCount(float pixelval, ossim_int64 count)
 }
 
 
-void ossimHistogram::UpCount(float pixelval, float occurences)
+void ossimHistogram::UpCount(double pixelval, double occurences)
 {
 
    m_statsConsistent = 0;
@@ -1112,11 +1182,11 @@ void ossimHistogram::UpCount(float pixelval, float occurences)
    }
 }
 
-float ossimHistogram::ComputeArea(float low, float high)const
+double ossimHistogram::ComputeArea(double low, double high)const
 {
-   float sum = 0.0;
-   float maxval = GetMaxVal();
-   float minval = GetMinVal();
+   double sum = 0.0;
+   double maxval = GetMaxVal();
+   double minval = GetMinVal();
 
    if (low < minval) low = minval;
    if (high > maxval) high = maxval;
@@ -1150,29 +1220,28 @@ float ossimHistogram::ComputeArea(float low, float high)const
 //----------------------------------------------------------------------
 // --Compute the total area under the histogram
 //
-float ossimHistogram::ComputeArea()const
+double ossimHistogram::ComputeArea()const
 {
-   float m_vmin = this->GetMinVal();
-   float m_vmax = this->GetMaxVal();
+   double m_vmin = this->GetMinVal();
+   double m_vmax = this->GetMaxVal();
    if(m_vmin>m_vmax)
    {
-      float temp = m_vmin;
+      double temp = m_vmin;
       m_vmin = m_vmax;
       m_vmax = temp;
    }
    return this->ComputeArea(m_vmin, m_vmax);
 }
 
-float ossimHistogram::getLowFractionFromValue(float val) const
+double ossimHistogram::getLowFractionFromValue(double val) const
 {
-   ossim_float32 result = ossim::nan();
+   ossim_float64 result = ossim::nan();
    int cutoff_bucket = GetValIndex(val);
    if ( cutoff_bucket > -1 )
    {
       int total_buckets = GetRes();
-      float partial_sum = 0.0;
-      float total_sum   = 0.0;
-      // std::cout << "CUTOFF BUCKET ===" << cutoff_bucket << "\n";
+      double partial_sum = 0.0;
+      double total_sum   = 0.0;
       for(int i = 0; i < total_buckets; ++i)
       {
          total_sum += m_counts[i];
@@ -1182,21 +1251,27 @@ float ossimHistogram::getLowFractionFromValue(float val) const
          }
       }
       result = partial_sum/total_sum;
-      // std::cout << "FRACTION ==== " << result << "\n";      
    }
+
+#if 0 /* Please leave for debug. */
+   std::cout << "ossimHistogram::getLowFractionFromValue debug:\n"
+             << "val: " << val
+             << " cutoff_bucket" << cutoff_bucket
+             << " result: " << result << "\n";
+#endif
+
    return result;
 }
 
-float ossimHistogram::getHighFractionFromValue(float val) const
+double ossimHistogram::getHighFractionFromValue(double val) const
 {
-   ossim_float32 result = ossim::nan();
+   ossim_float64 result = ossim::nan();
    int cutoff_bucket = GetValIndex(val);
    if ( cutoff_bucket > -1 )
    {
       int total_buckets = GetRes();
-      float partial_sum = 0.0;
-      float total_sum   = 0.0;
-      
+      double partial_sum = 0.0;
+      double total_sum   = 0.0;
       for(int i = (total_buckets-1); i >= 0; --i)
       {
          total_sum += m_counts[i];
@@ -1207,6 +1282,14 @@ float ossimHistogram::getHighFractionFromValue(float val) const
       }
       result = partial_sum/total_sum;
    }
+
+#if 0 /* Please leave for debug. */
+   std::cout << "ossimHistogram::getHighFractionFromValue debug:\n"
+             << "val: " << val
+             << " cutoff_bucket" << cutoff_bucket
+             << " result: " << result << "\n";
+#endif
+   
    return result;
 }
 
@@ -1214,19 +1297,19 @@ float ossimHistogram::getHighFractionFromValue(float val) const
 //  -- Finds the lower bound value which elminates a given fraction of
 //     histogram area.
 //
-float ossimHistogram::LowClipVal(float clip_fraction)const
+double ossimHistogram::LowClipVal(double clip_fraction)const
 {
    if(clip_fraction<0) clip_fraction=0.0;
    if(clip_fraction>1.0) clip_fraction=1.0;
-   float area = this->ComputeArea();
+   double area = this->ComputeArea();
    if(area==0.0) return this->GetMinVal();
    if(clip_fraction==0.0) return this->GetMinVal();
    if(clip_fraction==1.0) return this->GetMaxVal();
-   float clip_area = area*clip_fraction;
+   double clip_area = area*clip_fraction;
    const ossim_int64* m_counts = this->GetCounts();
-   const float* m_vals = this->GetVals();
+   const double* m_vals = this->GetVals();
    int res = this->GetRes();
-   float sum = 0;
+   double sum = 0;
    int i=0;
 
    for(; i<res; i++)
@@ -1243,19 +1326,19 @@ float ossimHistogram::LowClipVal(float clip_fraction)const
 //  -- Finds the lower bound value which elminates a given fraction of
 //     histogram area.
 //
-float ossimHistogram::HighClipVal(float clip_fraction)const
+double ossimHistogram::HighClipVal(double clip_fraction)const
 {
    if(clip_fraction<0) clip_fraction=0.0;
    if(clip_fraction>1.0) clip_fraction=1.0;
-   float area = this->ComputeArea();
+   double area = this->ComputeArea();
    if(area==0.0) return this->GetMaxVal();
    if(clip_fraction==0.0) return this->GetMaxVal();
    if(clip_fraction==1.0) return this->GetMinVal();
-   float clip_area = area*clip_fraction;
+   double clip_area = area*clip_fraction;
    const ossim_int64* m_counts = this->GetCounts();
-   const float* m_vals = this->GetVals();
+   const double* m_vals = this->GetVals();
    int res = this->GetRes();
-   float sum = 0;
+   double sum = 0;
    int i = (res-1);
    for(; i>=0; i--)
    {
@@ -1271,7 +1354,7 @@ float ossimHistogram::HighClipVal(float clip_fraction)const
 void ossimHistogram::Print()const
 {
    ostream& out = ossimNotify(ossimNotifyLevel_INFO);
-   const float* m_vals = this->GetVals();
+   const double* m_vals = this->GetVals();
    const ossim_int64* m_counts = this->GetCounts();
    int res = this->GetRes();
    int width = 0;
@@ -1285,13 +1368,16 @@ void ossimHistogram::Print()const
       }
       out << m_vals[i] << " " << m_counts[i] << " | " ;
    }
-   out << "\n MaxVal " << this->GetMaxVal() << "\n";
-   out << " MinVal " << this->GetMinVal() << "\n";
-   out << " BucketSize " << this->GetBucketSize() << "\n";
-   out << " Resolution " << this->GetRes() << "\n";
-   out << " Area "
-       << this->ComputeArea(this->GetMinVal(),this->GetMaxVal()) << "\n";
-   out << "------------------------------------------------\n\n";
+   out << "\n MaxVal " << this->GetMaxVal() << "\n"
+       << " MinVal " << this->GetMinVal() << "\n"
+       << " BucketSize " << this->GetBucketSize() << "\n"
+       << " Resolution " << this->GetRes() << "\n"
+       << " Area "
+       << this->ComputeArea(this->GetMinVal(),this->GetMaxVal()) << "\n"
+       << " Scalar type "
+       << ossimScalarTypeLut::instance()->getEntryString( m_scalarType ).c_str()
+       << "\n"
+       << "------------------------------------------------\n\n";
 }
 
 //---------------------------------------------------------------------------
@@ -1369,7 +1455,8 @@ bool ossimHistogram::importHistogram(istream& in)
       
       if(numberOfBins)
       {
-         create(numberOfBins, 0, numberOfBins - 1);
+         // create(numberOfBins, 0, numberOfBins - 1);
+         create(numberOfBins, 0, numberOfBins - 1, m_nullValue, m_scalarType);
          binsCreated = true;
 
          if(binsCreated)
@@ -1390,8 +1477,8 @@ bool ossimHistogram::importHistogram(istream& in)
                s >> binNumber >> count;
                if(*binNumber.c_str() != (char)'.')
                {
-                  SetCount((float)binNumber.toDouble(),
-                           (float)count.toDouble());
+                  SetCount((double)binNumber.toDouble(),
+                           (double)count.toDouble());
                }
             }
          }
@@ -1624,22 +1711,20 @@ bool ossimHistogram::loadState(const ossimKeywordlist& kwl,
       if(bins > 0)
       {
          // setup some defaults
-         float minValue = 0;
-         float maxValue = bins - 1;
+         double minValue = 0;
+         double maxValue = bins - 1;
 
          // see if there is a range set for the data
          const char* min_value = kwl.find(prefix, "min_value");
          const char* max_value = kwl.find(prefix, "max_value");
          if(min_value)
          {
-            minValue = (ossim_float32)ossimString(min_value).toDouble();
+            minValue = (ossim_float64)ossimString(min_value).toDouble();
          }
          if(max_value)
          {
-            maxValue = (ossim_float32)ossimString(max_value).toDouble();
+            maxValue = (ossim_float64)ossimString(max_value).toDouble();
          }
-
-         create((int)bins, minValue, maxValue);
 
          // Must do null stuff after create.
          const char* null_value = kwl.find(prefix, "null_value");
@@ -1667,6 +1752,8 @@ bool ossimHistogram::loadState(const ossimKeywordlist& kwl,
             indexesArePixelValues = ossim::isInteger( m_scalarType );
          }
 
+         create((int)bins, minValue, maxValue, m_nullValue, m_scalarType);
+
          ossim_int64* countsPtr = GetCounts();
          memset(countsPtr, '\0', bins*sizeof(ossim_int64));
 
@@ -1684,7 +1771,7 @@ bool ossimHistogram::loadState(const ossimKeywordlist& kwl,
                   for(idx = 0; idx < (ossim_int32)result.size();++idx)
                   {
                      // Get index from pixel value.
-                     binIdx = GetIndex( (float)result[idx].x );
+                     binIdx = GetIndex( (double)result[idx].x );
                      if( (binIdx >= 0) && (binIdx < (ossim_int32)bins) )
                      {
                         countsPtr[binIdx] = result[idx].y;
@@ -1744,12 +1831,12 @@ bool ossimHistogram::loadState(const ossimKeywordlist& kwl,
 
          }
          
-         float* countsPtr = GetCounts();
-         memset(countsPtr, '\0', bins*sizeof(float));
+         double* countsPtr = GetCounts();
+         memset(countsPtr, '\0', bins*sizeof(double));
          for(idx = 0; idx < numberOfBins;++idx)
          {
             const char* binCount = kwl.find(prefix, ossimString("bin") + ossimString::toString(theNumberList[idx]));
-            countsPtr[theNumberList[idx]] = (float)ossimString(binCount).toDouble();
+            countsPtr[theNumberList[idx]] = (double)ossimString(binCount).toDouble();
          }
 #endif
       }
@@ -1766,9 +1853,9 @@ bool ossimHistogram::loadState(const ossimRefPtr<ossimXmlNode> xmlNode)
    if(binValues.valid())
    {
       ossim_uint32 count = 0;
-      float minValue = 0.0;
-      float maxValue = 0.0;
-      std::vector<float> floatValues;
+      double minValue = 0.0;
+      double maxValue = 0.0;
+      std::vector<double> doubleValues;
       std::istringstream in(binValues->getText());
       ossimString vString;
       while(!in.fail())
@@ -1776,10 +1863,10 @@ bool ossimHistogram::loadState(const ossimRefPtr<ossimXmlNode> xmlNode)
          in>>vString;
          if(!in.fail())
          {
-            floatValues.push_back(vString.toFloat32());
+            doubleValues.push_back(vString.toFloat64());
          }
       }
-      count = (ossim_uint32)floatValues.size();
+      count = (ossim_uint32)doubleValues.size();
      
       if(count)
       {
@@ -1788,19 +1875,20 @@ bool ossimHistogram::loadState(const ossimRefPtr<ossimXmlNode> xmlNode)
 
          if(minValueNode.valid())
          {
-            minValue = minValueNode->getText().toFloat32();
+            minValue = minValueNode->getText().toFloat64();
          }
          if(maxValueNode.valid())
          {
-            maxValue = maxValueNode->getText().toFloat32();
+            maxValue = maxValueNode->getText().toFloat64();
          }
 
-         create(count, minValue, maxValue);
+         // Fix to add/get null and scalar from xml.
+         create(count, minValue, maxValue, m_nullValue, m_scalarType);
          ossim_int64* countsPtr = GetCounts();
          ossim_uint32 idx = 0;
          for(idx = 0; idx < count; ++idx)
          {
-            countsPtr[idx] = (ossim_int64)floatValues[idx];
+            countsPtr[idx] = (ossim_int64)doubleValues[idx];
          }
          return true;
       }
@@ -1845,12 +1933,12 @@ void ossimHistogram::setScalarType( ossimScalarType scalar )
    m_scalarType = scalar;
 }
 
-const ossim_float64& ossimHistogram::getNullValue() const
+const double& ossimHistogram::getNullValue() const
 {
    return m_nullValue;
 }
 
-void ossimHistogram::setNullValue(const ossim_float64& nullValue)
+void ossimHistogram::setNullValue(const double& nullValue)
 {
    m_nullValue = nullValue;
 }
@@ -1863,4 +1951,10 @@ const ossim_uint64& ossimHistogram::getNullCount() const
 void ossimHistogram::upNullCount( const ossim_uint64& count )
 {
    m_nullCount += count;
+}
+
+void ossimHistogram::updateMinMax()
+{
+   m_vmin = GetMinVal();
+   m_vmax = GetMaxVal();
 }
