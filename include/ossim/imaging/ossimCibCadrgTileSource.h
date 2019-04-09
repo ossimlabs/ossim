@@ -167,7 +167,7 @@ public:
     * To see what is in the keywordlist after a save state then do:
     *
     * @code
-    * cout << kwl << endl;
+    * cout << kwl << std::endl;
     * @endcode
     *
     * There is only 1 keyword for this object:
@@ -357,7 +357,7 @@ public:
     *
     * @return The prduct list as a vector of strings.
     */
-   vector<ossimString> getProductScaleList()const;
+   std::vector<ossimString> getProductScaleList()const;
 
    /**
     * Using the product scales from getProductScaleList() you can pass each string
@@ -365,7 +365,7 @@ public:
     * 
     * @return Entry indices for a passed in product scale.
     */
-   vector<ossim_int32>      getProductEntryList(const ossimString& productScale)const;
+   std::vector<ossim_int32>      getProductEntryList(const ossimString& productScale)const;
 
    ossimString getSecurityClassification()const;
    
@@ -469,7 +469,7 @@ protected:
     * @param rect the current region to render.
     * @return The list of entry data objects found for this rect.
     */
-   vector<ossimFrameEntryData> getIntersectingEntries(const ossimIrect& rect);
+   std::vector<ossimFrameEntryData> getIntersectingEntries(const ossimIrect& rect);
 
    /**
     * This is a wrapper for the fill cib and fill cadrg.  It takes the frames
@@ -482,7 +482,7 @@ protected:
     * @param framesInvolved All intersecting frames used to render the region.
     */
    void fillTile(const ossimIrect& tileRect,
-                 const vector<ossimFrameEntryData>& framesInvolved,
+                 const std::vector<ossimFrameEntryData>& framesInvolved,
                  ossimImageData* tile);
 
    /**

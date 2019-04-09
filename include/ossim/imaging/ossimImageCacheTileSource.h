@@ -133,7 +133,7 @@ protected:
     * @param framesInvolved All intersecting frames used to render the region.
     */
    void fillTile(const ossimIrect& tileRect,
-                 const vector<ossimFrameEntryData>& framesInvolved,
+                 const std::vector<ossimFrameEntryData>& framesInvolved,
                  ossimImageData* tile);
 
    bool buildFrameEntryArray(ossimFilename imageFile);

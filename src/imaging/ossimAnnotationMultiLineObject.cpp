@@ -15,6 +15,8 @@ RTTI_DEF1(ossimAnnotationMultiLineObject,
           "ossimAnnotationMultiLineObject",
           ossimAnnotationObject);
 
+using namespace std;
+
 void ossimAnnotationMultiLineObject::draw(ossimRgbImage& anImage)const
 {
    if(anImage.getImageData().valid())

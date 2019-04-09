@@ -93,7 +93,7 @@ public:
    virtual const ossimObject* getView()const;
 
    virtual void getDecimationFactor(ossim_uint32 resLevel, ossimDpt& result)const;
-  virtual void getDecimationFactors(vector<ossimDpt>& decimations)const;
+  virtual void getDecimationFactors(std::vector<ossimDpt>& decimations)const;
   virtual ossim_uint32 getNumberOfDecimationLevels()const;
   
    virtual void setAutoUpdateInputTransformFlag(bool flag){ m_AutoUpdateInputTransform = flag; }
@@ -108,7 +108,7 @@ public:
     * We need to make sure that the resampler overrides this method.
     * it needs to transform the vertices to the view's side.
     */
-   virtual void getValidImageVertices(vector<ossimIpt>& validVertices,
+   virtual void getValidImageVertices(std::vector<ossimIpt>& validVertices,
                                       ossimVertexOrdering ordering=OSSIM_CLOCKWISE_ORDER,
                                       ossim_uint32 resLevel=0)const;
 
@@ -167,15 +167,15 @@ private:
    public:
       friend std::ostream& operator <<(std::ostream& out, const ossimRendererSubRectInfo& rhs)
       {
-         return out << "vul:   " << rhs.m_Vul << endl
-            << "vur:   " << rhs.m_Vur << endl
-            << "vlr:   " << rhs.m_Vlr << endl
-            << "vll:   " << rhs.m_Vll << endl
-            << "iul:   " << rhs.m_Iul << endl
-            << "iur:   " << rhs.m_Iur << endl
-            << "ilr:   " << rhs.m_Ilr << endl
-            << "ill:   " << rhs.m_Ill << endl
-            << "scale: " << rhs.m_ViewToImageScale << endl;
+         return out << "vul:   " << rhs.m_Vul << std::endl
+            << "vur:   " << rhs.m_Vur << std::endl
+            << "vlr:   " << rhs.m_Vlr << std::endl
+            << "vll:   " << rhs.m_Vll << std::endl
+            << "iul:   " << rhs.m_Iul << std::endl
+            << "iur:   " << rhs.m_Iur << std::endl
+            << "ilr:   " << rhs.m_Ilr << std::endl
+            << "ill:   " << rhs.m_Ill << std::endl
+            << "scale: " << rhs.m_ViewToImageScale << std::endl;
 
       }
 

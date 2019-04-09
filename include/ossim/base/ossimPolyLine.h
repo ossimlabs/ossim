@@ -17,8 +17,6 @@
 #define ossimPolyLine_HEADER
 #include <iostream>
 #include <vector>
-using namespace std;
-
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimDrect.h>
 #include <ossim/base/ossimIrect.h>
@@ -37,8 +35,8 @@ public:
    ossimPolyLine()
       :theCurrentVertex(0)
       {}
-   ossimPolyLine(const vector<ossimIpt>& polygon);
-   ossimPolyLine(const vector<ossimDpt>& polygon);
+   ossimPolyLine(const std::vector<ossimIpt>& polygon);
+   ossimPolyLine(const std::vector<ossimDpt>& polygon);
    ossimPolyLine(int numVertices, const ossimDpt* vertex_array);
    
    ossimPolyLine(const ossimPolyLine& copy_this);
@@ -132,21 +130,21 @@ public:
   {
     theVertexList.resize(newSize);
   }
-   const vector<ossimDpt>& getVertexList()const
+   const std::vector<ossimDpt>& getVertexList()const
       {
          return theVertexList;
       }
 
-   vector<ossimDpt>& getVertexList()
+   std::vector<ossimDpt>& getVertexList()
       {
          return theVertexList;
       }
-   vector<ossimString>& getAttributeList()
+   std::vector<ossimString>& getAttributeList()
       {
          return theAttributeList;
       }
       
-   bool clipToRect(vector<ossimPolyLine>& result,
+   bool clipToRect(std::vector<ossimPolyLine>& result,
                    const ossimDrect& rect)const;
 
    /*!
@@ -188,8 +186,8 @@ public:
     * OPERATORS: (Some are inlined at bottom) 
     */
    const ossimPolyLine& operator= (const ossimPolyLine& copy_this);
-   const ossimPolyLine& operator= (const vector<ossimDpt>& vertexList);
-   const ossimPolyLine& operator= (const vector<ossimIpt>& vertexList);
+   const ossimPolyLine& operator= (const std::vector<ossimDpt>& vertexList);
+   const ossimPolyLine& operator= (const std::vector<ossimIpt>& vertexList);
    const ossimPolyLine& operator= (const ossimIrect& rect);
    const ossimPolyLine& operator= (const ossimPolygon& polygon);
    const ossimPolyLine& operator= (const ossimDrect& rect);
@@ -211,8 +209,8 @@ public:
    /*!
     * METHOD: print()
     */
-   void print(ostream& os) const;
-   friend ostream& operator<<(ostream&, const ossimPolyLine&);
+   void print(std::ostream& os) const;
+   friend std::ostream& operator<<(std::ostream&, const ossimPolyLine&);
 
 
    bool saveState(ossimKeywordlist& kwl,
@@ -221,8 +219,8 @@ public:
    bool loadState(const ossimKeywordlist& kwl,
                   const char* prefix=0);
 protected:
-   vector<ossimDpt> theVertexList;
-   vector<ossimString> theAttributeList;
+   std::vector<ossimDpt> theVertexList;
+   std::vector<ossimString> theAttributeList;
    
    mutable ossim_int32 theCurrentVertex;
 };
@@ -232,7 +230,7 @@ inline bool ossimPolyLine::operator!=(const ossimPolyLine& compare_this) const
    return !(*this == compare_this);
 }
 
-inline ostream& operator<<(ostream& os, const ossimPolyLine& polyLine)
+inline std::ostream& operator<<(std::ostream& os, const ossimPolyLine& polyLine)
 {
    polyLine.print(os);
    return os;

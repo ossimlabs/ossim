@@ -8,7 +8,6 @@ class ossimPropertyInterface;
 #include <ossim/base/ossimRtti.h>
 
 #include <vector>
-using namespace std;
 
 class OSSIMDLLEXPORT ossimPropertyInterfaceRegistry : public ossimObjectFactory
 {
@@ -49,7 +48,7 @@ protected:
       {}
    void operator =(const ossimPropertyInterfaceRegistry&){}
    static ossimPropertyInterfaceRegistry* theInstance;
-   vector<ossimPropertyInterfaceFactory*> theFactoryList;
+   std::vector<ossimPropertyInterfaceFactory*> theFactoryList;
 
 TYPE_DATA
 };

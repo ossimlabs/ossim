@@ -68,13 +68,13 @@ protected:
     * We will create a LUT for each band that directly maps
     * an input value to an equalized output.
     */
-   vector<double*> theForwardLut;
+   std::vector<double*> theForwardLut;
    
    /*!
     * We will create a LUT for each band that directly maps
     * an input value to an un-equalized output.
     */
-   vector<double*> theInverseLut;
+   std::vector<double*> theInverseLut;
 
    
   std::vector<ossim_uint32> theBandList;

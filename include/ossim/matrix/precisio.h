@@ -13,8 +13,6 @@ namespace NEWMAT {
 
 #ifdef _STANDARD_                 // standard library available
 
-using namespace std;
-	
 class FloatingPointPrecision
 {
 public:

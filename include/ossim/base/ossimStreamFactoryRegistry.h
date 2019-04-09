@@ -103,7 +103,7 @@ namespace ossim
       void unregisterFactory(StreamFactoryBase* factory);
 
       /**
-      * Will try to creates an istream interface to the connectionString 
+      * Will try to creates an std::istream interface to the connectionString
       * passed in
       * 
       * @param connectionString Is the connection string used to create
@@ -112,7 +112,7 @@ namespace ossim
       * @param options If a stream is found then this holds specific options 
       *                for the stream. Defaults to empty options
       * @param mode Is the mode to be used.  Defaults to a binary input stream.
-      * @return A shared pointer to an istream if successful.   
+      * @return A shared pointer to an std::istream if successful.
       */
       virtual std::shared_ptr<ossim::istream>
          createIstream(const std::string& connectionString,
@@ -121,7 +121,7 @@ namespace ossim
                        std::ios_base::in|std::ios_base::binary) const;
       
       /**
-      * Will try to creates an ostream interface to the connectionString 
+      * Will try to creates an std::ostream interface to the connectionString
       * passed in
       * 
       * @param connectionString Is the connection string used to create the
@@ -130,7 +130,7 @@ namespace ossim
       *                for the stream. Defaults to empty options
       * @param mode Is the mode to be used.  Defaults to a binary output
       *             stream.
-      * @return A shared pointer to an ostream if successful.   
+      * @return A shared pointer to an std::ostream if successful.
       */
       virtual std::shared_ptr<ossim::ostream>
          createOstream(const std::string& connectionString,
@@ -148,7 +148,7 @@ namespace ossim
       *                for the stream. Defaults to empty options
       * @param mode Is the mode to be used.  Defaults to a binary output
       *             stream.
-      * @return A shared pointer to an ostream if successful.   
+      * @return A shared pointer to an std::ostream if successful.
       */
       virtual std::shared_ptr<ossim::iostream>
          createIOstream(const std::string& connectionString,

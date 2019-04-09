@@ -15,8 +15,6 @@
 #define ossimAppTileCache_HEADER
 #include <map>
 #include <list>
-using namespace std;
-
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimDpt3d.h>
 #include <ossim/base/ossimRefPtr.h>
@@ -33,7 +31,7 @@ public:
 
    typedef ossim_int32 ossimAppCacheId;
    typedef ossim_int32 ossimTileId;
-   typedef map<ossimAppCacheId, ossimTileCache*>::iterator AppIdIterator;
+   typedef std::map<ossimAppCacheId, ossimTileCache*>::iterator AppIdIterator;
 
    ~ossimAppTileCache();
 
@@ -145,7 +143,7 @@ protected:
    /*!
     * Will hold the list of application caches
     */
-   map<ossimAppCacheId, ossimTileCache*>  theAppCache;
+   std::map<ossimAppCacheId, ossimTileCache*>  theAppCache;
 
    /*!
     * Is the maximum size of the cache.
@@ -163,7 +161,7 @@ protected:
    /*!
     * Is used in an Least recently used algorithm
     */
-   list<ossimAppCacheTileInfo>      theUsedQueue;
+   std::list<ossimAppCacheTileInfo>      theUsedQueue;
    
 };
 

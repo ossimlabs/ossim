@@ -41,7 +41,7 @@ public:
     *
     * @param out Stream to write to.
     */
-   void writeStream(std::ostream& out);   
+   void writeStream(std::ostream& out);
    
    void clearFields();
 

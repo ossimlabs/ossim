@@ -125,8 +125,8 @@ protected:
 
    ossimRefPtr<ossimPixelFlipper>  m_flipper;
    ossimRefPtr<ossimMemoryImageSource> m_memoryImage;
-   vector<ossim_uint8 *> m_buffers;
-   vector<ossimIpt>                m_bufferSizes;
+   std::vector<ossim_uint8 *> m_buffers;
+   std::vector<ossimIpt>                m_bufferSizes;
    ossim_uint32                    m_startingResLevel;
    ossimIpt                        m_imageSize; //!< Size of full res source image
 };

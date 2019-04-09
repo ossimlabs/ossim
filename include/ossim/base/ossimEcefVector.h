@@ -165,10 +165,10 @@ public:
    /*!
     * Debug Dump: 
     */
-   void print(ostream& os = ossimNotify(ossimNotifyLevel_INFO)) const
+   void print(std::ostream& os = ossimNotify(ossimNotifyLevel_INFO)) const
       {	 os << "(ossimEcefVector) " << theData; }
 
-   friend ostream& operator<< (ostream& os , const ossimEcefVector& instance)
+   friend std::ostream& operator<< (std::ostream& os , const ossimEcefVector& instance)
       { instance.print(os); return os; }
 
 protected:

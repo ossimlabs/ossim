@@ -20,7 +20,7 @@
 static ossimTrace traceExec  ("ossimAdjustmentExecutive:exec");
 static ossimTrace traceDebug ("ossimAdjustmentExecutive:debug");
 
-
+using namespace std;
 
 //*****************************************************************************
 //  METHOD: ossimAdjustmentExecutive::ossimAdjustmentExecutive()

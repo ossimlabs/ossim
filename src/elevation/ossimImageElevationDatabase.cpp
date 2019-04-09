@@ -25,6 +25,8 @@ static ossimTrace traceDebug(ossimString("ossimImageElevationDatabase:debug"));
 
 RTTI_DEF1(ossimImageElevationDatabase, "ossimImageElevationDatabase", ossimElevationCellDatabase);
 
+using namespace std;
+
 ossimImageElevationDatabase::ossimImageElevationDatabase()
    :
    ossimElevationCellDatabase(),

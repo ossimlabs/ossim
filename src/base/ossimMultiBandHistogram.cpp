@@ -15,6 +15,8 @@
 #include <ossim/imaging/ossimImageSource.h>
 #include <fstream>
 
+using namespace std;
+
 ossimMultiBandHistogram::ossimMultiBandHistogram()
 {  
 }

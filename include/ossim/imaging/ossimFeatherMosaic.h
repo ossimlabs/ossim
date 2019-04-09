@@ -40,9 +40,9 @@ protected:
    {
       
    public:
-      ossimFeatherInputInformation(const vector<ossimIpt>& validVertices=vector<ossimIpt>());
+      ossimFeatherInputInformation(const std::vector<ossimIpt>& validVertices=std::vector<ossimIpt>());
 
-      void setVertexList(const vector<ossimIpt>& validVertices);
+      void setVertexList(const std::vector<ossimIpt>& validVertices);
       
       ossimDpt        theCenter;
       ossimDpt        theAxis1;
@@ -53,7 +53,7 @@ protected:
       
    };
 
-   friend ostream& operator<<(ostream& out,
+   friend std::ostream& operator<<(std::ostream& out,
                               const ossimFeatherInputInformation& data);
    
 

@@ -74,7 +74,7 @@ public:
     * Writes a template of geom keywords processed by loadState and saveState
     * to output stream.
     */
-   static void writeGeomTemplate(ostream& os);
+   static void writeGeomTemplate(std::ostream& os);
                           
                           
    /*!
@@ -299,12 +299,12 @@ protected:
     * Aperture Reference Point (ARP) Polynomials.
     * Note: Size is derived dependent.
     */
-   vector<ossim_float64> theArpXPolCoeff;
-   vector<ossim_float64> theArpYPolCoeff;
-   vector<ossim_float64> theArpZPolCoeff;
+   std::vector<ossim_float64> theArpXPolCoeff;
+   std::vector<ossim_float64> theArpYPolCoeff;
+   std::vector<ossim_float64> theArpZPolCoeff;
 
    /** Time Coefficients.  Note: Size is derived dependent. */
-   vector<ossim_float64> theTimeCoeff;
+   std::vector<ossim_float64> theTimeCoeff;
 
    /**
     * Other computed parameters

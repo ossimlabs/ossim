@@ -19,6 +19,8 @@
 
 ossimFreeTypeFontFactory* ossimFreeTypeFontFactory::theInstance=0;
 
+using namespace std;
+
 ossimFreeTypeFontFactory::ossimFreeTypeFontFactory()
 {
    theInstance = this;

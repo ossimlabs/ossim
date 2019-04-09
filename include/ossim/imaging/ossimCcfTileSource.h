@@ -106,7 +106,7 @@ public:
     *  Set the output band list.  Use to set the number and order of output
     *  bands.  Will set an error if out of range.
     */
-   bool setOutputBandList(const vector<ossim_uint32>& outputBandList);
+   bool setOutputBandList(const std::vector<ossim_uint32>& outputBandList);
 
    /**
     * Method to save the state of an object to a keyword list.
@@ -221,8 +221,8 @@ protected:
    ossimCcfHead                theCcfHead;
    ossimRefPtr<ossimImageData> theTile;
    ossim_uint8*                theChipBuffer;
-   ifstream*                   theFileStr;
-   vector<ossim_uint32>        theOutputBandList;
+   std::ifstream*                   theFileStr;
+   std::vector<ossim_uint32>        theOutputBandList;
    ossim_int32                 theByteOrder;
 
 

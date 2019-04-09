@@ -35,6 +35,8 @@ static ossimTrace traceDebug ("ossimGeoidManager:debug");
 
 RTTI_DEF1(ossimGeoidManager, "ossimGeoidManager", ossimGeoid);
 
+using namespace std;
+
 //ossimGeoidManager* ossimGeoidManager::theInstance = 0;
 
 //*****************************************************************************

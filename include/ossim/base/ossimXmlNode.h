@@ -14,8 +14,6 @@
 #define ossimXmlNode_HEADER
 
 #include <vector>
-using namespace std;
-
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimErrorStatusInterface.h>
@@ -30,7 +28,7 @@ public:
    typedef std::vector<ossimRefPtr<ossimXmlNode> > ChildListType;
    typedef std::vector<ossimRefPtr<ossimXmlAttribute> > AttributeListType;
    
-   ossimXmlNode(istream& xml_stream, ossimXmlNode* parent=0);
+   ossimXmlNode(std::istream& xml_stream, ossimXmlNode* parent=0);
    ossimXmlNode();
    ossimXmlNode(const ossimXmlNode& src);
    virtual ossimObject* dup() const
@@ -92,8 +90,8 @@ public:
    const ossimString&                      getText()       const { return theText; }
    bool cdataFlag()const;
    void setCDataFlag(bool value);
-   OSSIMDLLEXPORT friend ostream& operator << (ostream& os, const ossimXmlNode* xml_node);
-   OSSIMDLLEXPORT friend ostream& operator << (ostream& os, const ossimXmlNode& xml_node);
+   OSSIMDLLEXPORT friend std::ostream& operator << (std::ostream& os, const ossimXmlNode* xml_node);
+   OSSIMDLLEXPORT friend std::ostream& operator << (std::ostream& os, const ossimXmlNode& xml_node);
 
    ossimRefPtr<ossimXmlNode> removeChild(ossimRefPtr<ossimXmlNode> node);
    ossimRefPtr<ossimXmlNode> removeChild(const ossimString& tag);
@@ -118,8 +116,8 @@ protected:
    bool readCDataContent(std::istream& in);
    ossimString                 theTag;
    ossimXmlNode*         theParentNode;
-   vector<ossimRefPtr<ossimXmlNode> >      theChildNodes;
-   vector<ossimRefPtr<ossimXmlAttribute> >  theAttributes;
+   std::vector<ossimRefPtr<ossimXmlNode> >      theChildNodes;
+   std::vector<ossimRefPtr<ossimXmlAttribute> >  theAttributes;
    ossimString                 theText;
    bool                        theCDataFlag;
 /*    ossimString                 theCData; */

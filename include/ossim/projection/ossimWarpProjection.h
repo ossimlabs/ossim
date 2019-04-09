@@ -68,7 +68,7 @@ public:
                                         ossimGpt&       worldPt) const;
    
    /*!
-    * Extends base-class implementation. Dumps contents of object to ostream.
+    * Extends base-class implementation. Dumps contents of object to std::ostream.
     */
    virtual std::ostream& print(std::ostream& out) const;
    friend std::ostream& operator<<(std::ostream& os,

@@ -122,7 +122,7 @@ public:
    /*!
     * Debug Dump: 
     */
-   std::ostream& print(ostream& stream) const;
+   std::ostream& print(std::ostream& stream) const;
 
    friend std::ostream& operator<< (std::ostream& os ,
                                     const ossimLsrVector& instance);

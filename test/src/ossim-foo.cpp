@@ -17,113 +17,57 @@
 // System includes:
 #include <cmath>
 #include <memory>
+#include <string>
 #include <sstream>
 #include <iostream>
-
-// ossim includes:  These are here just to save time/typing...
-#include <ossim/base/ossimApplicationUsage.h>
-#include <ossim/base/ossimArgumentParser.h>
-#include <ossim/base/ossimConnectableObject.h>
-#include <ossim/base/ossimCsvFile.h>
-#include <ossim/base/ossimDate.h>
-#include <ossim/base/ossimDpt.h>
-#include <ossim/base/ossimDrect.h>
-#include <ossim/base/ossimException.h>
-#include <ossim/base/ossimFilename.h>
-#include <ossim/base/ossimIpt.h>
-#include <ossim/base/ossimIrect.h>
-#include <ossim/base/ossimKeywordlist.h>
-#include <ossim/base/ossimKeywordNames.h>
-#include <ossim/base/ossimNotify.h>
-#include <ossim/base/ossimObjectFactory.h>
-#include <ossim/base/ossimObjectFactoryRegistry.h>
-#include <ossim/base/ossimProperty.h>
-#include <ossim/base/ossimRefPtr.h>
-#include <ossim/base/ossimString.h>
-#include <ossim/base/ossimScalarTypeLut.h>
-#include <ossim/base/ossimStdOutProgress.h>
-#include <ossim/base/ossimStreamFactoryRegistry.h>
-#include <ossim/base/ossimStringProperty.h>
-#include <ossim/base/ossimTimer.h>
-#include <ossim/base/ossimTrace.h>
-#include <ossim/base/ossimUrl.h>
-#include <ossim/base/ossimVisitor.h>
-#include <ossim/base/ossimEcefPoint.h>
-#include <ossim/base/ossimEcefVector.h>
-#include <ossim/base/ossim2dBilinearTransform.h>
-
-#include <ossim/imaging/ossimNitfTileSource.h>
-#include <ossim/imaging/ossimBrightnessContrastSource.h>
-#include <ossim/imaging/ossimBumpShadeTileSource.h>
-#include <ossim/imaging/ossimFilterResampler.h>
-#include <ossim/imaging/ossimFusionCombiner.h>
-#include <ossim/imaging/ossimImageData.h>
-#include <ossim/imaging/ossimImageFileWriter.h>
-#include <ossim/imaging/ossimImageGeometry.h>
-#include <ossim/imaging/ossimImageHandler.h>
-#include <ossim/imaging/ossimImageMosaic.h>
-#include <ossim/imaging/ossimImageRenderer.h>
-#include <ossim/imaging/ossimImageSource.h>
-#include <ossim/imaging/ossimImageSourceFilter.h>
-#include <ossim/imaging/ossimImageToPlaneNormalFilter.h>
-#include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
-#include <ossim/imaging/ossimIndexToRgbLutFilter.h>
-#include <ossim/imaging/ossimRectangleCutFilter.h>
-#include <ossim/imaging/ossimScalarRemapper.h>
-#include <ossim/imaging/ossimSFIMFusion.h>
-#include <ossim/imaging/ossimTwoColorView.h>
-#include <ossim/imaging/ossimImageSourceFactoryRegistry.h>
-#include <ossim/imaging/ossimImageHandlerRegistry.h>
-#include <ossim/support_data/ImageHandlerState.h>
-
-#include <ossim/init/ossimInit.h>
-
-#include <ossim/projection/ossimEquDistCylProjection.h>
-#include <ossim/projection/ossimImageViewAffineTransform.h>
-#include <ossim/projection/ossimMapProjection.h>
-#include <ossim/projection/ossimProjection.h>
-#include <ossim/projection/ossimProjectionFactoryRegistry.h>
-#include <ossim/projection/ossimUtmProjection.h>
-
-#include <ossim/support_data/ossimSrcRecord.h>
-#include <ossim/support_data/ossimNitfFile.h>
-#include <ossim/support_data/ossimWkt.h>
-
-#include <ossim/base/Barrier.h>
-#include <ossim/base/Block.h>
-#include <ossim/base/Thread.h>
-#include <ossim/support_data/TiffHandlerState.h>
-#include <ossim/support_data/ImageHandlerStateRegistry.h>
-#include <ossim/imaging/ossimNitfCodecFactory.h>
-#include <ossim/projection/ossimNitfRpcModel.h>
-#include <ossim/projection/ossimQuickbirdRpcModel.h>
-#include <ossim/imaging/ossimNitfCodecFactory.h>
+#include <iomanip>
+#include <cstring>
 
 // Put your includes here:
 
+using namespace std;
+
 int main(int argc, char *argv[])
 {
-   int returnCode = 0;
-
-   ossimArgumentParser ap(&argc, argv);
-   ossimInit::instance()->addOptions(ap);
-   ossimInit::instance()->initialize(ap);
-
-   try
+   struct U
    {
-      // Put your code here.
-   }
-   catch(const ossimException& e)
-   {
-      ossimNotify(ossimNotifyLevel_WARN) << e.what() << std::endl;
-      returnCode = 1;
-   }
-   catch( ... )
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-            << "ossim-foo caught unhandled exception!" << std::endl;
-      returnCode = 1;
-   }
+      union
+      {
+         uint64_t u64;
+         int32_t u32[2];
+         float f32[2];
+         char valueChars[8];
+      };
+   };
 
-   return returnCode;
+   stringstream iostr;
+   U u1;
+   U u2;
+   u1.f32[0] = 0.1;
+   u1.f32[1] = 0.2;
+   //iostr<<hex<<setfill('0') << setw(16) <<u1.u64;
+   //iostr>>hex>>setw(16)>>u2.u64;
+   iostr.write(reinterpret_cast<const char*>(&u1.f32[0]), sizeof(float));
+   iostr.write(reinterpret_cast<const char*>(&u1.f32[1]), sizeof(float));
+
+   float f1, f2;
+   iostr.read(reinterpret_cast<char*>(&u2.u64), sizeof(uint64_t));
+
+   int32_t i1 = ((u2.u64>>32) & 0xffffffff);
+   int32_t i2 = (u2.u64 & 0xffffffff);
+
+   memcpy(&f1, &i1, sizeof(float));
+   memcpy(&f2, &i2, sizeof(float));
+
+   cout<<hex<<setfill('0') << setw(16) <<u2.u64<<endl;
+   //cout<<"u32[0] = "<<u2.u32[0]<<endl;
+   //cout<<"u32[1] = "<<u2.u32[1]<<endl;
+   //cout<<"f32[0] = "<<u2.f32[0]<<endl;
+   //cout<<"f32[1] = "<<u2.f32[1]<<endl;
+   cout<<"i1 = "<<i1<<endl;
+   cout<<"i2 = "<<i2<<endl;
+   cout<<"f1 = "<<f1<<endl;
+   cout<<"f2 = "<<f2<<endl;
+
+   return 0;
 }

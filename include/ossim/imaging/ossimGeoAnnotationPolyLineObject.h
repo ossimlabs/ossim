@@ -17,7 +17,7 @@ class ossimAnnotationMultiLineObject;
 class OSSIMDLLEXPORT ossimGeoAnnotationPolyLineObject : public ossimGeoAnnotationObject
 {
 public:
-   ossimGeoAnnotationPolyLineObject(const vector<ossimGpt>& groundPts,
+   ossimGeoAnnotationPolyLineObject(const std::vector<ossimGpt>& groundPts,
                                      ossim_uint8 r=255,
                                      ossim_uint8 g=255,
                                      ossim_uint8 b=255,

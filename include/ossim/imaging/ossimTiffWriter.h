@@ -203,8 +203,8 @@ protected:
     */
    bool isTiled() const;
 
-   void writeMinMaxTags(const vector<ossim_float64>& minBand,
-                        const vector<ossim_float64>& maxBand);
+   void writeMinMaxTags(const std::vector<ossim_float64>& minBand,
+                        const std::vector<ossim_float64>& maxBand);
 
    bool isLutEnabled()const;
 

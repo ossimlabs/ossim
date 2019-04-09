@@ -18,6 +18,8 @@
 
 RTTI_DEF1(ossimRectilinearDataObject, "ossimRectilinearDataObject", ossimDataObject);
 
+using namespace std;
+
 ossimRectilinearDataObject::ossimRectilinearDataObject()
    : ossimDataObject(),
      m_numberOfDataComponents(0),

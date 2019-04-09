@@ -33,7 +33,7 @@ public:
    const ossimString& getName()const;
    
    ossim_uint32 getNumberOfFeatureClasses()const;
-   void print(ostream& out)const;
+   void print(std::ostream& out)const;
 
    bool getExtent(ossimVpfExtent& extent)const;
    ossimVpfLibrary* getLibrary();

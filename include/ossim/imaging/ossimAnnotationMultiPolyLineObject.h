@@ -18,7 +18,7 @@ class OSSIMDLLEXPORT ossimAnnotationMultiPolyLineObject : public ossimAnnotation
 {
 public:
    ossimAnnotationMultiPolyLineObject();
-   ossimAnnotationMultiPolyLineObject(const vector<ossimPolyLine>& multiPoly,
+   ossimAnnotationMultiPolyLineObject(const std::vector<ossimPolyLine>& multiPoly,
                                   unsigned char r,
                                   unsigned char g,
                                   unsigned char b,
@@ -39,7 +39,7 @@ public:
    virtual void addPolyLine(const ossimPolyLine& poly);
    virtual void addPoint(ossim_uint32 polygonIndex, const ossimDpt& pt);
    
-   virtual void setMultiPolyLine(const vector<ossimPolyLine>& multiPoly);
+   virtual void setMultiPolyLine(const std::vector<ossimPolyLine>& multiPoly);
    virtual void computeBoundingRect();
    virtual bool isPointWithin(const ossimDpt& imagePoint)const;
    
@@ -47,7 +47,7 @@ public:
    std::vector<ossimPolyLine>& getMultiPolyLine();
 protected:
    virtual ~ossimAnnotationMultiPolyLineObject();
-   vector<ossimPolyLine> theMultiPolyLine;
+   std::vector<ossimPolyLine> theMultiPolyLine;
    ossimDrect           theBoundingRect;
 
 TYPE_DATA

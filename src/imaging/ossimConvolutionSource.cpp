@@ -22,6 +22,8 @@ static const ossimKeyword NUMBER_OF_COLS = ossimKeyword("cols", "");
 
 RTTI_DEF1(ossimConvolutionSource, "ossimConvolutionSource", ossimImageSourceFilter);
 
+using namespace std;
+
 ossimConvolutionSource::ossimConvolutionSource()
    : ossimImageSourceFilter(),
      theTile(NULL)

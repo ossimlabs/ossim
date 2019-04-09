@@ -17,7 +17,6 @@
 #include <iomanip>
 #include <iostream>
 #include <cmath>
-using namespace std;
 
 class OSSIMDLLEXPORT ossimColumnVector4d
 {
@@ -45,9 +44,9 @@ public:
          data[2] = rhs.data[2];
          data[3] = rhs.data[3];
       }
-   friend ostream& operator <<(ostream& out, const ossimColumnVector4d& v)
+   friend std::ostream& operator <<(std::ostream& out, const ossimColumnVector4d& v)
       {
-         return out << setiosflags(ios::fixed) << setprecision(15)
+         return out << std::setiosflags(std::ios::fixed) << std::setprecision(15)
                     << v[0] << " " << v[1] <<" "
                     << v[2] << " " << v[3];
       }

@@ -11,8 +11,6 @@
 #define ossimDirectoryTree_HEADER
 #include <queue>
 #include <vector>
-using namespace std;
-
 #include <ossim/base/ossimDirectory.h>
 
 class OSSIMDLLEXPORT ossimDirectoryTree
@@ -58,7 +56,7 @@ private:
       ossimFilename   theFilename;
    };
    
-   queue<ossimFilename> theDirectoryQueue;
+   std::queue<ossimFilename> theDirectoryQueue;
    ossimDirData*        theCurrentDirectoryData;
    int                  theFlags;
 

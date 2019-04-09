@@ -124,7 +124,7 @@ public:
    ossimString toString(ossim_uint32 precision=15) const;
 
    /**
-    * Initializes this point from string.  This method opens an istream to
+    * Initializes this point from string.  This method opens an std::istream to
     * s and then calls operator>>.
     *
     * Expected format:  ( 30.00000000000000, -90.00000000000000 )
@@ -145,9 +145,9 @@ public:
     * This method starts by doing a "makeNan" on pt.  So if anything goes
     * wrong with the stream or parsing pt could be all or partially nan.
     *
-    * @param is Input stream istream to formatted text.
+    * @param is Input stream std::istream to formatted text.
     * @param pt osimDpt to be initialized from stream.
-    * @return istream pass in.
+    * @return std::istream pass in.
     */
    friend OSSIMDLLEXPORT std::istream& operator>>(std::istream& is,
                                                   ossimDpt& pt);

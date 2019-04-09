@@ -17,6 +17,8 @@
 #include <ossim/imaging/gdfontmb.inc>
 #include <ossim/imaging/gdfontt.inc>
 
+using namespace std;
+
 ossimAnnotationGdBitmapFont::ossimAnnotationGdBitmapFont(const ossimDpt& position,
                                                          const ossimString &text,
                                                          ossimGdFontPtr font,

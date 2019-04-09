@@ -13,6 +13,8 @@
 
 RTTI_DEF1(ossimAnnotationFontObject, "ossimAnnotationFontObject", ossimAnnotationObject);
 
+using namespace std;
+
 ossimAnnotationFontObject::ossimAnnotationFontObject()
    :ossimAnnotationObject(),
     theFont(ossimFontFactoryRegistry::instance()->getDefaultFont()),

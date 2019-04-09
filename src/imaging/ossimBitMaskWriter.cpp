@@ -23,6 +23,8 @@
 const char *ossimBitMaskWriter::MASK_FILE_MAGIC_NUMBER = "OSSIM_BIT_MASK";
 const char *ossimBitMaskWriter::BM_STARTING_RLEVEL_KW = "starting_rlevel";
 
+using namespace std;
+
 //*************************************************************************************************
 // Constructor accepts handler to the source imagery being used to compute the mask.
 //*************************************************************************************************

@@ -16,6 +16,8 @@
 
 RTTI_DEF1(ossimBandClipFilter, "ossimBandClipFilter", ossimImageSourceFilter);
 
+using namespace std;
+
 ossimBandClipFilter::ossimBandClipFilter()
    :ossimImageSourceFilter(),
     theClipType(ossimBandClipType_NONE),

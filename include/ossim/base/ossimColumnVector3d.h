@@ -17,8 +17,6 @@
 #include <iomanip>
 #include <iostream>
 #include <cmath>
-using namespace std;
-
 #include <ossim/matrix/newmat.h>
 #include <ossim/base/ossimString.h>
 
@@ -69,9 +67,9 @@ public:
       return *this;
    }
 
-   friend ostream& operator <<(ostream& out, const ossimColumnVector3d& v)
+   friend std::ostream& operator <<(std::ostream& out, const ossimColumnVector3d& v)
       {
-         return out << setiosflags(ios::fixed) << setprecision(15)
+         return out << setiosflags(std::ios::fixed) << std::setprecision(15)
                     << v[0] << " " << v[1] <<" "
                     << v[2];
       }

@@ -15,8 +15,6 @@
 #define ossimSpot5Model_HEADER
 
 #include <iostream>
-using namespace std;
-
 #include <ossim/projection/ossimSensorModel.h>
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimFilename.h>
@@ -61,7 +59,7 @@ public:
    virtual ossimObject* dup() const;
 
    /*!
-    * Extends base-class implementation. Dumps contents of object to ostream.
+    * Extends base-class implementation. Dumps contents of object to std::ostream.
     */
    virtual std::ostream& print(std::ostream& out) const;
 
@@ -79,7 +77,7 @@ public:
     * Writes a template of geom keywords processed by loadState and saveState
     * to output stream.
     */
-   static void writeGeomTemplate(ostream& os);
+   static void writeGeomTemplate(std::ostream& os);
 
    /*!
     * Given an image point and height, initializes worldPoint.

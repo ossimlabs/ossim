@@ -17,14 +17,13 @@
 #define ossimAxes_HEADER
 #include <iostream>
 #include <iomanip>
-using namespace std;
 #include <ossim/base/ossimMatrix3x3.h>
 #include <ossim/base/ossimMatrix4x4.h>
 class OSSIMDLLEXPORT ossimAxes
 {
 public:
 
-   friend inline ostream& operator <<(ostream &out, const ossimAxes &axes);
+   friend inline std::ostream& operator <<(std::ostream &out, const ossimAxes &axes);
    
    /*!
     * Default constructor is at position 0, 0, 0 with unit axes
@@ -85,11 +84,11 @@ private:
    ossimColumnVector3d theZAxis;  // Is the direction of the z axis
 };
 
-inline ostream& operator <<(ostream &out, const ossimAxes &axes)
+inline std::ostream& operator <<(std::ostream &out, const ossimAxes &axes)
 {
-   return out << "position: " << axes.theOrigin << endl
-              << "x axis  : " << axes.theXAxis  << endl
-              << "Y axis  : " << axes.theYAxis  << endl
+   return out << "position: " << axes.theOrigin << std::endl
+              << "x axis  : " << axes.theXAxis  << std::endl
+              << "Y axis  : " << axes.theYAxis  << std::endl
               << "z axis  : " << axes.theZAxis;
 }
 

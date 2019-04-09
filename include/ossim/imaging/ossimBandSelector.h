@@ -81,7 +81,7 @@ public:
     * theBandSelector->enableSource();
     * theBandSelector->setOutputBandList(bandList);
     */
-   virtual void setOutputBandList(const vector<ossim_uint32>& outputBandList,
+   virtual void setOutputBandList(const std::vector<ossim_uint32>& outputBandList,
                                   bool disablePassThru=false);
    
    /**

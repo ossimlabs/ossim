@@ -13,7 +13,9 @@
 #include <ossim/base/ossimScalarTypeLut.h>
 
 RTTI_DEF1(ossimDataObject, "ossimDataObject", ossimObject)
-   
+
+using namespace std;
+
 ossimDataObject::ossimDataObject(ossimSource* source,
                                  ossimDataObjectStatus status)
    :

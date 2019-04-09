@@ -34,6 +34,8 @@ static const ossimKeyword DEM_FILENAME_KW ("dem_filename",
                                            "Name of DEM file to load.");
 static const ossimIpt ZERO_SIZE_IPT (0, 0);
 
+using namespace std;
+
 ossimElevCellHandler::ossimElevCellHandler ()
    : ossimElevSource(),
      theFilename(),

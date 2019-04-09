@@ -7,6 +7,8 @@
 #include <sstream>
 #include <ossim/base/ossimCommon.h>
 
+using namespace std;
+
 bool ossimWmsGetMap::read(ossimRefPtr<ossimXmlNode> node)
 {
    clearFields();

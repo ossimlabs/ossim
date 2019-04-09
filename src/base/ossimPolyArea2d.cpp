@@ -30,6 +30,8 @@
 #include <vector>
 #include <mutex>
 
+using namespace std;
+
 class MyGeomFactory : public geos::geom::GeometryFactory
 {
 public:
