@@ -39,6 +39,8 @@ static ossimTrace traceDebug("ossimGeneralRasterTileSource:debug");
 // For interleave type enum to string conversions.
 static const ossimInterleaveTypeLut ILUT;
 
+using namespace std;
+
 //*******************************************************************
 // Public Constructor:
 //*******************************************************************
