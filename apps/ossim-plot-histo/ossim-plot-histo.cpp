@@ -89,7 +89,7 @@ void plotHistogram(const ossimFilename& histoFile, const ossimString& plotWith,
    ossim_uint32 band = 0;
    ossimRefPtr<ossimHistogram> histogram = h->getHistogram(band);
    int numBins = histogram->GetRes();
-   const float* x = histogram->GetVals();
+   const double* x = histogram->GetVals();
    const ossim_int64* y = histogram->GetCounts();
    for (int i=0; i<numBins; ++i)
    {
