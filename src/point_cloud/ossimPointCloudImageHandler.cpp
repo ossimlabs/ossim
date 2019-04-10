@@ -27,6 +27,8 @@
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/projection/ossimEpsgProjectionFactory.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimPointCloudImageHandler, "ossimPointCloudImageHandler", ossimImageHandler);
 
 static ossimTrace traceDebug("ossimPointCloudImageHandler:debug");

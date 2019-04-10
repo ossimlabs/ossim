@@ -21,6 +21,8 @@
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <iterator>
 
+using namespace std;
+
 static const char* NUM_THREADS_KW         = "ossimImageChainMtAdaptor.num_threads";
 static const char* ORIGINAL_SOURCE_ID_KW  = "ossimImageChainMtAdaptor.original_source_id";
 

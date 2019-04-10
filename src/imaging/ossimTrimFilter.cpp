@@ -16,6 +16,8 @@
 #include <ossim/base/ossimNumericProperty.h>
 #include <ossim/base/ossimDpt.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimTrimFilter:debug");
 
 RTTI_DEF1(ossimTrimFilter,

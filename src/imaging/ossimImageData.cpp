@@ -31,6 +31,8 @@
 //#include <ostream>
 
 
+using namespace std;
+
 RTTI_DEF1(ossimImageData, "ossimImageData", ossimRectilinearDataObject)
 
 ossimImageData::ossimImageData()

@@ -14,6 +14,8 @@
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 
+using namespace std;
+
 static ossimTrace traceDebug ("ossimOrthoImageMosaic:debug");
 
 RTTI_DEF1(ossimOrthoImageMosaic, "ossimOrthoImageMosaic", ossimImageMosaic);

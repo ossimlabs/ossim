@@ -22,6 +22,8 @@
 #include <ossim/imaging/ossimImageWriter.h>
 #include <ossim/base/ossimMultiResLevelHistogram.h>
 
+using namespace std;
+
 RTTI_DEF2(ossimImageSourceSequencer, "ossimImageSourceSequencer",
           ossimImageSource, ossimConnectableObjectListener);
 

@@ -34,6 +34,9 @@ RTTI_DEF1(ossimGridRemapSource,
 // Define Trace flags for use within this file:
 //***
 #include <ossim/base/ossimTrace.h>
+
+using namespace std;
+
 static ossimTrace traceExec  ("ossimGridRemapSource:exec");
 static ossimTrace traceDebug ("ossimGridRemapSource:debug");
 

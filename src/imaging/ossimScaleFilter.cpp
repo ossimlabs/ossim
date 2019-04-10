@@ -18,6 +18,8 @@
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/base/ossimKeywordNames.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimScaleFilter, "ossimScaleFilter", ossimImageSourceFilter);
 
 //**************************************************************************************************

@@ -15,6 +15,8 @@
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <algorithm>
 
+using namespace std;
+
 static const char* NUMBER_POLYGONS_KW = "number_polygons";
 
 RTTI_DEF2(ossimGeoPolyCutter, "ossimGeoPolyCutter", ossimPolyCutter, ossimViewInterface)

@@ -18,6 +18,8 @@
 #include <ossim/base/ossimActiveEdgeTable.h>
 static const char* NUMBER_POLYGONS_KW = "number_polygons";
 
+using namespace std;
+
 RTTI_DEF1(ossimPolyCutter, "ossimPolyCutter", ossimImageSourceFilter)
 
 ossimPolyCutter::ossimPolyCutter()

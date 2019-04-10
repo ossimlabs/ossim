@@ -21,6 +21,8 @@
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/base/ossimFilenameProperty.h>
 
+using namespace std;
+
 RTTI_DEF3(ossimMetadataFileWriter,
           "ossimMetadataFileWriter",
           ossimConnectableObject,

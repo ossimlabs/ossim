@@ -23,6 +23,9 @@
 #include <ossim/support_data/ossimApplanixEOFile.h>
 #include <ossim/base/ossimMatrix4x4.h>
 #include <ossim/elevation/ossimElevManager.h>
+
+using namespace std;
+
 static ossimTrace traceDebug("ossimApplanixEcefModel:debug");
 
 RTTI_DEF1(ossimApplanixEcefModel, "ossimApplanixEcefModel", ossimSensorModel);

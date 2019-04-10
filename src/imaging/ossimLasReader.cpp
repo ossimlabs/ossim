@@ -44,6 +44,8 @@
 #include <limits>
 #include <sstream>
 
+using namespace std;
+
 RTTI_DEF1(ossimLasReader, "ossimLasReader", ossimImageHandler)
 
 static ossimTrace traceDebug("ossimLasReader:debug");

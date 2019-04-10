@@ -39,6 +39,8 @@
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/support_data/TiffHandlerState.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimTiffTileSource, "ossimTiffTileSource", ossimImageHandler)
 
 static ossimTrace traceDebug("ossimTiffTileSource:debug");

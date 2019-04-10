@@ -16,6 +16,8 @@
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimRectangleCutFilter:debug");
 
 RTTI_DEF1(ossimRectangleCutFilter,

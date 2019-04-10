@@ -9,6 +9,8 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimKeywordNames.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimVpfAnnotationSource:debug");
 
 ossimVpfAnnotationSource::ossimVpfAnnotationSource()

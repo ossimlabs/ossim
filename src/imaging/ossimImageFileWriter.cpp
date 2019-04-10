@@ -47,6 +47,8 @@
 #include <ossim/projection/ossimMapProjectionInfo.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimImageFileWriter:debug");
 static const ossimString AUTO_CREATE_DIRECTORY_KW("auto_create_directory");
 

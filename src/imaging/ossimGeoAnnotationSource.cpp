@@ -13,6 +13,8 @@
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 
+using namespace std;
+
 RTTI_DEF2(ossimGeoAnnotationSource,
           "ossimGeoAnnotationSource",
           ossimAnnotationSource,

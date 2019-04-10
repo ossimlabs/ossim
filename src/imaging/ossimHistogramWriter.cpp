@@ -18,6 +18,8 @@
 #include <ossim/imaging/ossimImageHistogramSource.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimHistogramWriter:debug");
 class ossimHistogramWriterProcessListener : public ossimProcessListener
 {

@@ -42,6 +42,8 @@
 #include <vector>
 #include <jpeglib.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimPdfWriter,
 	  "ossimPdfWriter",
 	  ossimImageFileWriter)

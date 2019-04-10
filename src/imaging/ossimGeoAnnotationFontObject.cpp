@@ -22,6 +22,8 @@ RTTI_DEF1(ossimGeoAnnotationFontObject,
           ossimGeoAnnotationObject);
 
 
+using namespace std;
+
 ossimGeoAnnotationFontObject::ossimGeoAnnotationFontObject()
    :
    ossimGeoAnnotationObject(),

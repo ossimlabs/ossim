@@ -17,6 +17,8 @@
 #include <ossim/vec/ossimVpfDatabase.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimVpfAnnotationLibraryInfo:debug");
 
 

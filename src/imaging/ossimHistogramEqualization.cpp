@@ -19,6 +19,8 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimKeyword.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimHistogramEqualization, "ossimHistogramEqualization", ossimImageSourceHistogramFilter)
    
 static const ossimKeyword HISTOGRAM_INVERSE_FLAG_KW("inverse_flag",
