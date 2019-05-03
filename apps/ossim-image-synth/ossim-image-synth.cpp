@@ -25,8 +25,6 @@
 
 using namespace std;
 
-#define USE_UINT8 true
-
 int main(int argc, char *argv[])
 {
    int returnCode = 0;
@@ -44,7 +42,7 @@ int main(int argc, char *argv[])
    ossimFilename filename = ap[1];
 
    // Establish the image geometry's map projection:
-   ossimIpt image_size (32, 32);
+   ossimIpt image_size (416, 416);
    ossimGpt observerGpt (0, 0, 0);
    ossimDpt gsd (1.0, 1.0); // must be same value in both directions
    ossimRefPtr<ossimEquDistCylProjection> mapProj = new ossimEquDistCylProjection();
@@ -60,19 +58,11 @@ int main(int argc, char *argv[])
    geometry->setImageSize(image_size);
 
    // Set the destination image size:
-#if USE_UINT8
    ossimRefPtr<ossimImageData> outImage =
-         ossimImageDataFactory::instance()->create(0, OSSIM_UINT8, 1, image_size.x, image_size.y);
-   typedef unsigned char PIXEL_TYPE;
+         ossimImageDataFactory::instance()->create(0, OSSIM_UINT16, 3, image_size.x, image_size.y);
+   typedef uint16_t PIXEL_TYPE;
    double min = 0.0;
    double max = 255;
-#else
-   ossimRefPtr<ossimImageData> outImage =
-         ossimImageDataFactory::instance()->create(0, OSSIM_NORMALIZED_DOUBLE, 1, image_size.x, image_size.y);
-   typedef double PIXEL_TYPE;
-   double min = 0.0;
-   double max = 1.0;
-#endif
 
    if(outImage.valid())
       outImage->initialize();
@@ -83,23 +73,21 @@ int main(int argc, char *argv[])
 
    PIXEL_TYPE step = 8;
    PIXEL_TYPE value = 0;
-   PIXEL_TYPE* buffer = ( PIXEL_TYPE*) outImage->getBuf(0);
+   PIXEL_TYPE* bufferR = ( PIXEL_TYPE*) outImage->getBuf(0);
+   PIXEL_TYPE* bufferG = ( PIXEL_TYPE*) outImage->getBuf(1);
+   PIXEL_TYPE* bufferB = ( PIXEL_TYPE*) outImage->getBuf(2);
 
    ossim_uint32 i = 0;
-   for (int y=0; y<image_size.y; y++)
+   for (uint16_t y=1; y<=image_size.y; y++)
    {
-      for (int x=0; x<image_size.x; x++)
+      for (uint16_t x=0; x<image_size.x; x++)
       {
-         buffer[i++] = value;
-         if (value == 248)
-            value = 0;
-         else
-            value += step;
+         bufferR[i] = y;
+         bufferG[i] = y;
+         bufferB[i++] = y;
       }
    }
 
-   outImage->write("tile.tif");
-   
    // Create output image chain:
    ossimRefPtr<ossimMemoryImageSource> memSource = new ossimMemoryImageSource;
    memSource->setImage(outImage);
