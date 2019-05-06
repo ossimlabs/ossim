@@ -19,11 +19,13 @@ RTTI_DEF1(ossimImageSharpenFilter, "ossimImageSharpenFilter", ossimImageSourceFi
 
 static const char* KERNEL_WIDTH_KW = "kernel_width";
 static const char* KERNEL_SIGMA_KW = "kernel_sigma";
+static const char* SHARPEN_PERCENT_KW = "sharpen_percent";
 
-ossimImageSharpenFilter::ossimImageSharpenFilter(ossimObject* owner)
-   :ossimImageSourceFilter(owner),
-   theWidth(3),
-   theSigma(.5)
+ossimImageSharpenFilter::ossimImageSharpenFilter(ossimObject *owner)
+    : ossimImageSourceFilter(owner),
+      theWidth(3),
+      theSigma(.5),
+      m_sharpenPercent(0.0)
 {
    theConvolutionSource = new ossimConvolutionSource;
 }
@@ -49,11 +51,18 @@ ossimRefPtr<ossimImageData> ossimImageSharpenFilter::getTile(
    {
       return NULL;
    }
-   if(!isSourceEnabled())
+   if (!isSourceEnabled() || (std::fabs(m_sharpenPercent) < FLT_EPSILON))
    {
       return theInputConnection->getTile(tileRect, resLevel);
    }
-   return theConvolutionSource->getTile(tileRect, resLevel);   
+
+   ossimIrect requestRect(tileRect);
+   requestRect.expand(ossimIpt(1,1));
+
+   ossimRefPtr<ossimImageData> result = theInputConnection->getTile(requestRect, resLevel);
+   
+   
+  // return theConvolutionSource->getTile(tileRect, resLevel);   
 }
 
 void ossimImageSharpenFilter::initialize()
@@ -64,7 +73,8 @@ void ossimImageSharpenFilter::initialize()
       theConvolutionSource->disconnectAllInputs();
       theConvolutionSource->connectMyInputTo(0, getInput());
    }
-   buildConvolutionMatrix();   
+   buildConvolutionMatrix();
+   buildConvolutionLuts();
 }
 
 void ossimImageSharpenFilter::buildConvolutionMatrix()
@@ -113,6 +123,62 @@ void ossimImageSharpenFilter::buildConvolutionMatrix()
    theConvolutionSource->setConvolution(kernel, theWidth, theWidth, false);
 }
 
+
+void ossimImageSharpenFilter::buildConvolutionLuts()
+{
+   // Gimp port of the sharpen kernel.  I will describe what appears to be happening in the Gimp code
+   // and then port to work with any bit depths.
+   //
+   // the Laplacian kernel is a 3x3 matrix kernel where the center is 8 and the surrounding kernel weights are -1
+   // by multiplying through the positive coefficient by 100/100 ( essentially 1) giving you
+   //
+   //    100*8*<pixel>/(100 - m_sharpenPercent*100)
+   //    giving you
+   //    800*<pixel>/(100 - m_sharpenPercent*100)
+   //
+   // If you didn't multiply by 1 then we would need to have a floating buffer and this would have the same
+   // affect as 
+   //
+   //    8*<pixel>/(1 - m_sharpenPercent)
+   //
+   ossim_int32 fact = static_cast<ossim_int32>(100 - m_sharpenPercent*100.0);
+
+   // precompute luts for 8, 11 and 12 bit data
+   //
+   if (theInputConnection&&fact>=1)
+   {
+      ossimScalarType outputScalarType = theInputConnection->getOutputScalarType();
+      ossim_int32 size = 0;
+      switch(outputScalarType)
+      {
+         case OSSIM_UINT8:                  /**<  8 bit unsigned integer */
+         {
+            size = 256;
+            break;
+         }
+         case OSSIM_UINT11:              /**< 16 bit unsigned integer (9 bits used) */
+         {
+            size = 2048;
+         }
+         case OSSIM_UINT12:
+         {
+            size = 4096;
+         }
+      }
+   }
+   else
+   {
+      m_posLut.clear();
+      m_posNegLut.clear();
+   }
+
+   for (ossim_int32 i = 0; i < m_posLut.size(); i++)
+   {
+      m_posLut[i]    = 800 * i / fact;
+      m_posNegLut[i] = (4 + m_posLut[i] - (i << 3)) >> 3;
+   }
+}
+
 void ossimImageSharpenFilter::connectInputEvent(ossimConnectionEvent &event)
 {
    ossimImageSourceFilter::connectInputEvent(event);
@@ -134,6 +200,14 @@ ossimString ossimImageSharpenFilter::getShortName() const
 ossimString ossimImageSharpenFilter::getLongName() const
 {
    return ossimString("Sharpens the input");
+}
+
+template <class T>
+void ossimImageSharpenFilter::sharpen(T,
+                                      const ossimRefPtr<ossimImageData> &inputData,
+                                      ossimRefPtr<ossimImageData> &outputData)
+{
+
 }
 
 void ossimImageSharpenFilter::setProperty(ossimRefPtr<ossimProperty> property)
@@ -171,7 +245,7 @@ ossimRefPtr<ossimProperty> ossimImageSharpenFilter::getProperty(const ossimStrin
       property->setCacheRefreshBit();
       
    }
-   else if(name == KERNEL_SIGMA_KW)
+   else if (name == KERNEL_SIGMA_KW)
    {
       property = new ossimNumericProperty(name,
                                           ossimString::toString(theSigma),
@@ -179,7 +253,15 @@ ossimRefPtr<ossimProperty> ossimImageSharpenFilter::getProperty(const ossimStrin
                                           32);
       property->setCacheRefreshBit();
    }
-   else 
+   else if (name == SHARPEN_PERCENT_KW)
+   {
+      property = new ossimNumericProperty(name,
+                                          ossimString::toString(m_sharpenPercent),
+                                          0.0,
+                                          1.0);
+      property->setCacheRefreshBit();
+   }
+   else
    {
       property = ossimImageSourceFilter::getProperty(name);
    }

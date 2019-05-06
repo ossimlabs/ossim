@@ -61,23 +61,21 @@ protected:
     * no null data.  We don't have to compare for nulls here
     */
    template<class T>
-   void sharpenFull(T,
-                    const ossimRefPtr<ossimImageData>& inputData,
-                    ossimRefPtr<ossimImageData>& outputData);
+   void sharpen(T,
+                const ossimRefPtr<ossimImageData>& inputData,
+                ossimRefPtr<ossimImageData>& outputData);
    
-   /*!
-    * Convolve partial means that the input data is has some
-    * null data.  We will have to compare nulls
-    */
-   template<class T>
-   void sharpenPartial(T,
-                       const ossimRefPtr<ossimImageData>& inputData,
-                       ossimRefPtr<ossimImageData>& outputData);
+   void buildConvolutionLuts();
 
    ossimRefPtr<ossimConvolutionSource> theConvolutionSource;
    ossim_uint32 theWidth;
    ossim_float64 theSigma;
-TYPE_DATA
+
+   std::vector<ossim_int32>    m_posLut;
+   std::vector<ossim_int32>    m_posNegLut;
+   ossim_float64               m_sharpenPercent;
+   ossimRefPtr<ossimImageData> m_tile;
+   TYPE_DATA
 };
 
 #endif /* #ifndef ossimImageSharpenFilter_HEADER */
