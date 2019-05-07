@@ -459,7 +459,6 @@ void ossimImageSharpenFilter::sharpenLutRemap(T,
                convolveResult = convolveResult > (m_posLut.size() - 1) ? m_posLut.size() - 1 : convolveResult;
                ossim_float64 t = convolveResult / (m_posLut.size() - 1);
                *outBuf = static_cast<T>(minPix * (1 - t) + deltaMinMax * t);
-               std::cout << "OUT: " << *outBuf << "\n";
             }
 
             inBuf += 2;
@@ -541,7 +540,6 @@ void ossimImageSharpenFilter::sharpenLutRemap(T,
 
 void ossimImageSharpenFilter::setProperty(ossimRefPtr<ossimProperty> property)
 {
-   //std::cout << "ossimImageSharpenFilter::setProperty with name = " << property->getName() << std::endl;
    if(!property) return;
    if(property->getName() == SHARPEN_PERCENT_KW)
    {
