@@ -21,10 +21,13 @@ public:
    virtual ossimString getShortName()const;
    virtual ossimString getLongName()const;
    
-   ossim_uint32 getWidth()const;
-   ossim_float64 getSigma()const;
-   void setWidthAndSigma(ossim_uint32 w, ossim_float64 sigma);
-   
+   /**
+    * @param percent Sets the percentage of sharpen.  A value of 0 is no sharpen and a
+    *                value of 1 is fully sharpened.  The range is between and including
+    *                0 and 1
+    */
+   void setSharpenPercent(ossim_float64 percent);
+
    virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& tileRect,
                                                ossim_uint32 resLevel=0);
    
@@ -43,38 +46,46 @@ public:
                           const char* prefix=0)const;
 protected:
    virtual ~ossimImageSharpenFilter();
-   inline double laplacianOfGaussian(double x, double y, double sigma)
-   {
-      double r2 = x*x+y*y;
-      double sigma2 = sigma*sigma;
-      return ((1.0/(M_PI*sigma2*sigma2))*
-              (1.0-r2/(2.0*sigma2))*
-              (exp(-r2/(2.0*sigma2))));
+   // inline double laplacianOfGaussian(double x, double y, double sigma)
+   // {
+   //    double r2 = x*x+y*y;
+   //    double sigma2 = sigma*sigma;
+   //    return ((1.0/(M_PI*sigma2*sigma2))*
+   //            (1.0-r2/(2.0*sigma2))*
+   //            (exp(-r2/(2.0*sigma2))));
       
-   }
+   // }
    
-   void buildConvolutionMatrix();
-   
+   // void buildConvolutionMatrix();
 
-   /*!
-    * Convolve full means that the input data is full and has
-    * no null data.  We don't have to compare for nulls here
-    */
-   template<class T>
-   void sharpen(T,
-                const ossimRefPtr<ossimImageData>& inputData,
-                ossimRefPtr<ossimImageData>& outputData);
-   
+   template <class T>
+   void sharpenLut(T,
+                   const ossimRefPtr<ossimImageData> &inputData,
+                   ossimRefPtr<ossimImageData> &outputData);
+   template <class T>
+   void sharpenLutRemap(T,
+                   const ossimRefPtr<ossimImageData> &inputData,
+                   ossimRefPtr<ossimImageData> &outputData);
+
    void buildConvolutionLuts();
+   void allocate();
 
-   ossimRefPtr<ossimConvolutionSource> theConvolutionSource;
-   ossim_uint32 theWidth;
-   ossim_float64 theSigma;
+   // ossimRefPtr<ossimConvolutionSource> theConvolutionSource;
+   // ossim_uint32 theWidth;
+   // ossim_float64 theSigma;
+   std::vector<ossim_float64>    m_posLut;
+   std::vector<ossim_float64>    m_posNegLut;
+   ossim_float64                 m_sharpenPercent;
+   ossimRefPtr<ossimImageData>   m_tile;
 
-   std::vector<ossim_int32>    m_posLut;
-   std::vector<ossim_int32>    m_posNegLut;
-   ossim_float64               m_sharpenPercent;
-   ossimRefPtr<ossimImageData> m_tile;
+   /**
+    * This is a flag to indicate whether or not
+    * to remap values.  This means we do not have a
+    * way to directly map values to a lut and so 
+    * need to get remapped. to a sampled LUT. 
+    */
+   bool                          m_remapValue;
+
    TYPE_DATA
 };
 

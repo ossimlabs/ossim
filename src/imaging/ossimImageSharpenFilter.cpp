@@ -23,31 +23,37 @@ static const char* SHARPEN_PERCENT_KW = "sharpen_percent";
 
 ossimImageSharpenFilter::ossimImageSharpenFilter(ossimObject *owner)
     : ossimImageSourceFilter(owner),
-      theWidth(3),
-      theSigma(.5),
+      // theWidth(3),
+      // theSigma(.5),
       m_sharpenPercent(0.0)
 {
-   theConvolutionSource = new ossimConvolutionSource;
+   // theConvolutionSource = new ossimConvolutionSource;
 }
 
 ossimImageSharpenFilter::~ossimImageSharpenFilter()
 {
 }
 
-void ossimImageSharpenFilter::setWidthAndSigma(ossim_uint32 w, ossim_float64 sigma)
+// void ossimImageSharpenFilter::setWidthAndSigma(ossim_uint32 w, ossim_float64 sigma)
+// {
+//    theWidth = w;
+//    theWidth |= 1;
+//    if(theWidth < 3) theWidth = 3;
+//    theSigma = sigma;
+//    buildConvolutionMatrix();
+// }
+
+void ossimImageSharpenFilter::setSharpenPercent(ossim_float64 percent)
 {
-   theWidth = w;
-   theWidth |= 1;
-   if(theWidth < 3) theWidth = 3;
-   theSigma = sigma;
-   buildConvolutionMatrix();
+   m_sharpenPercent = percent;
+   buildConvolutionLuts();
 }
 
-ossimRefPtr<ossimImageData> ossimImageSharpenFilter::getTile(
-   const ossimIrect& tileRect,
+ossimRefPtr<ossimImageData> ossimImageSharpenFilter::getTile( 
+   const ossimIrect &tileRect,
    ossim_uint32 resLevel)
 {
-   if(!theInputConnection)
+   if (!theInputConnection)
    {
       return NULL;
    }
@@ -56,73 +62,81 @@ ossimRefPtr<ossimImageData> ossimImageSharpenFilter::getTile(
       return theInputConnection->getTile(tileRect, resLevel);
    }
 
+   if (!m_tile.valid())
+   {
+      allocate();
+      if (!m_tile.valid()) // Throw exception???
+      {
+         return theInputConnection->getTile(tileRect, resLevel);
+      }
+   }
    ossimIrect requestRect(tileRect);
-   requestRect.expand(ossimIpt(1,1));
+   requestRect.expand(ossimIpt(1, 1));
+   m_tile->makeBlank();
+   m_tile->setImageRectangle(tileRect);
+   ossimRefPtr<ossimImageData> input = theInputConnection->getTile(requestRect, resLevel);
 
-   ossimRefPtr<ossimImageData> result = theInputConnection->getTile(requestRect, resLevel);
-   
-   
-  // return theConvolutionSource->getTile(tileRect, resLevel);   
+   if(input.valid())
+   {
+      switch(input->getScalarType())
+      {
+         case OSSIM_UINT8:
+         {
+            sharpenLut(static_cast<ossim_uint8>(0),
+                    input, 
+                    m_tile);
+            break;
+         }
+         case OSSIM_UINT9:
+         case OSSIM_UINT10:
+         case OSSIM_UINT11:
+         case OSSIM_UINT12:
+         case OSSIM_UINT16:
+         {
+            sharpenLut(static_cast<ossim_uint16>(0),
+                    input,
+                    m_tile);
+            break;
+         }
+         case OSSIM_SINT16:
+         {
+            sharpenLutRemap(static_cast<ossim_uint16>(0),
+                            input,
+                            m_tile);
+            break;
+         }
+         default:
+         {
+            m_tile->loadTile(input.get());
+            break;
+         }
+      }
+   }
+
+   return m_tile;
+     // return theConvolutionSource->getTile(tileRect, resLevel);   
+}
+void ossimImageSharpenFilter::allocate()
+{
+   if (theInputConnection)
+   {
+      m_tile = ossimImageDataFactory::instance()->create(this,
+                                                          theInputConnection);
+      m_tile->initialize();
+   }
 }
 
 void ossimImageSharpenFilter::initialize()
 {
    ossimImageSourceFilter::initialize();
-   if(theConvolutionSource->getInput()!=getInput())
-   {
-      theConvolutionSource->disconnectAllInputs();
-      theConvolutionSource->connectMyInputTo(0, getInput());
-   }
-   buildConvolutionMatrix();
+   // if(theConvolutionSource->getInput()!=getInput())
+   // {
+   //    theConvolutionSource->disconnectAllInputs();
+   //    theConvolutionSource->connectMyInputTo(0, getInput());
+   // }
+   // buildConvolutionMatrix();
    buildConvolutionLuts();
 }
-
-void ossimImageSharpenFilter::buildConvolutionMatrix()
-{
-   std::vector<double> theKernel(theWidth*theWidth);
-   double* kernel = &theKernel.front();
-   //width = findWidth(sigma);
-   ossim_int32 i = 0 ;
-   ossim_int32 u = 0 ;
-   ossim_int32 v = 0 ;
-   double normalize = 0.0 ;
-   ossim_int32 w2 = theWidth>>1;
-   for (v = -w2; v <= w2; ++v)
-   {
-      for (u = -w2; u <= w2; ++u)
-      {
-         double value = laplacianOfGaussian(u, v, theSigma);
-         kernel[i] = value;
-         normalize += kernel[i] ;
-         ++i ;
-      }
-   }
-   if (fabs(normalize) <= 1e-6)
-   {
-      normalize = 1.0;
-   }
-   normalize=(1.0/normalize);
-   ossim_int32 size = static_cast<ossim_int32>(theWidth*theWidth);
-   for (i = 0; i < size; ++i)
-   {
-      kernel[i]=kernel[i]*normalize;
-   } 
-      
-#if 0
-   // print the kernel
-   for (i = 0; i < theWidth*theWidth; ++i)
-   {
-      if((i%theWidth)==0)
-      {
-         std::cout << std::endl;
-      }
-      std::cout << kernel[i] <<", ";
-   } 
-   std::cout << std::endl;
-#endif
-   theConvolutionSource->setConvolution(kernel, theWidth, theWidth, false);
-}
-
 
 void ossimImageSharpenFilter::buildConvolutionLuts()
 {
@@ -141,28 +155,52 @@ void ossimImageSharpenFilter::buildConvolutionLuts()
    //
    //    8*<pixel>/(1 - m_sharpenPercent)
    //
-   ossim_int32 fact = static_cast<ossim_int32>(100 - m_sharpenPercent*100.0);
+   ossim_float64 fact = 100 - m_sharpenPercent*100.0;
+   ossim_int32 size = 0;
 
-   // precompute luts for 8, 11 and 12 bit data
+   if( fact < FLT_EPSILON ) fact = 1.0;
+   // precompute luts for 8, 11, 12 and 16 bit data
    //
-   if (theInputConnection&&fact>=1)
+   m_remapValue = false;
+   if (theInputConnection && fact >= 1)
    {
       ossimScalarType outputScalarType = theInputConnection->getOutputScalarType();
-      ossim_int32 size = 0;
-      switch(outputScalarType)
+      switch (outputScalarType)
       {
-         case OSSIM_UINT8:                  /**<  8 bit unsigned integer */
+         case OSSIM_UINT8: /**<  8 bit unsigned integer */
          {
             size = 256;
             break;
          }
-         case OSSIM_UINT11:              /**< 16 bit unsigned integer (9 bits used) */
+         case OSSIM_UINT9: /**<  9 bit unsigned integer */
+         {
+            size = 512;
+            break;
+         }
+         case OSSIM_UINT10: /**<  10 bit unsigned integer */
+         {
+            size = 1024;
+            break;
+         }
+         case OSSIM_UINT11: /**< 16 bit unsigned integer (9 bits used) */
          {
             size = 2048;
+            break;
          }
          case OSSIM_UINT12:
          {
             size = 4096;
+            break;
+         }
+         case OSSIM_UINT16:
+         {
+            size = 65536;
+            break;
+         }
+         default:
+         {
+            m_remapValue = true;
+            size = 65536; // later support normalized so we can still sharpen other scalar types
          }
       }
    }
@@ -172,24 +210,30 @@ void ossimImageSharpenFilter::buildConvolutionLuts()
       m_posNegLut.clear();
    }
 
+   if(size)
+   {
+      m_posLut.resize(size);
+      m_posNegLut.resize(size);
+   }
+   
    for (ossim_int32 i = 0; i < m_posLut.size(); i++)
    {
       m_posLut[i]    = 800 * i / fact;
-      m_posNegLut[i] = (4 + m_posLut[i] - (i << 3)) >> 3;
+      m_posNegLut[i] = (4 + m_posLut[i] - (i << 3))/ 8.0;
    }
 }
 
 void ossimImageSharpenFilter::connectInputEvent(ossimConnectionEvent &event)
 {
    ossimImageSourceFilter::connectInputEvent(event);
-   theConvolutionSource->connectMyInputTo(0, getInput());
-   buildConvolutionMatrix();
+   // theConvolutionSource->connectMyInputTo(0, getInput());
+   buildConvolutionLuts();
 }
 
 void ossimImageSharpenFilter::disconnectInputEvent(ossimConnectionEvent &event)
 {
    ossimImageSourceFilter::disconnectInputEvent(event);
-   theConvolutionSource->connectMyInputTo(0, getInput());
+   // theConvolutionSource->connectMyInputTo(0, getInput());
 }
 
 ossimString ossimImageSharpenFilter::getShortName() const
@@ -203,28 +247,300 @@ ossimString ossimImageSharpenFilter::getLongName() const
 }
 
 template <class T>
-void ossimImageSharpenFilter::sharpen(T,
-                                      const ossimRefPtr<ossimImageData> &inputData,
-                                      ossimRefPtr<ossimImageData> &outputData)
+void ossimImageSharpenFilter::sharpenLut(T,
+                                      const ossimRefPtr<ossimImageData> &inputTile,
+                                      ossimRefPtr<ossimImageData> &outputTile)
 {
+   ossimDataObjectStatus status = inputTile->getDataObjectStatus();
+   ossim_int64 tileHeight     = outputTile->getHeight();
+   ossim_int64 tileWidth      = outputTile->getWidth();
+   ossim_int64 inputTileHeight= inputTile->getHeight();
+   ossim_int64 inputTileWidth = inputTile->getWidth();
+   ossim_int64 outputBands    = outputTile->getNumberOfBands();
+   ossim_int64 convolutionTopLeftOffset = 0;
+   ossim_int64 convolutionMiddleLeftOffset = 0;
+   ossim_int64 convolutionBottomLeftOffset = 0;
+   ossim_int64 convolutionCenterOffset = inputTileWidth + 1; // kernel is a 3x3  so move it over by 1
+   ossim_int64 outputOffset = 0;
+   std::vector<T *> inputBandBuf(outputBands);
+   std::vector<T *> outputBandBuf(outputBands);
 
+   for (ossim_int64 b = 0; b < outputBands; ++b)
+   {
+      inputBandBuf[b]  = (T *)(inputTile->getBuf(b));
+      outputBandBuf[b] = (T *)(outputTile->getBuf(b));
+   }
+
+   if (status == OSSIM_NULL || status == OSSIM_EMPTY)
+   {
+      outputTile->makeBlank();
+   }
+   else if(status == OSSIM_FULL)// whether partial or null we must check nulls over entire matrix
+   {
+      for (ossim_int64 b = 0; b < outputBands; ++b)
+      {
+         ossim_float64 minPix = outputTile->getMinPix(b);
+         ossim_float64 maxPix = outputTile->getMaxPix(b);
+         convolutionTopLeftOffset = 0;
+         convolutionCenterOffset = convolutionTopLeftOffset + inputTileWidth + 1;
+         convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
+         convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
+         T *inBuf = (T *)(inputBandBuf[b]);
+         T *outBuf = (T *)(outputBandBuf[b]);
+
+         for (ossim_int64 y = 0; y < tileHeight; y++)
+         {
+            for (ossim_int64 x = 0; x < tileWidth; ++x, ++inBuf, ++outBuf)
+            {
+                  ossim_float64 convolveResult = 0.0;
+                  ossim_float64 pos = m_posLut[*(inBuf + inputTileWidth + 1)];
+                  ossim_float64 neg = m_posNegLut[*(inBuf)] + m_posNegLut[*(inBuf + 1)] + m_posNegLut[*(inBuf + 2)]; // top
+                  neg += (m_posNegLut[*(inBuf + inputTileWidth)] + m_posNegLut[*(inBuf + inputTileWidth + 2)]);      // middle without positive
+                  neg += (m_posNegLut[*(inBuf + (inputTileWidth << 1))] + 
+                          m_posNegLut[*(inBuf + (inputTileWidth << 1) + 1)] +
+                          m_posNegLut[*(inBuf + (inputTileWidth << 1) + 2)]); // bottom
+
+                  convolveResult = ((pos - neg) + 4)/ 8.0;
+
+                  convolveResult = convolveResult < minPix ? minPix : convolveResult;
+                  convolveResult = convolveResult > maxPix ? maxPix : convolveResult;
+
+                  *outBuf = (T)convolveResult;
+            }
+
+            inBuf +=2;
+         }
+      }
+   }
+   else
+   {
+      ossim_float64 inputValues[9];
+      for (ossim_int64 b = 0; b < outputBands; ++b)
+      {
+         ossim_float64 minPix     = inputTile->getMinPix(b);
+         ossim_float64 maxPix     = inputTile->getMaxPix(b);
+         ossim_float64 nullPix    = inputTile->getNullPix(b);
+         convolutionTopLeftOffset = 0;
+         convolutionCenterOffset  = convolutionTopLeftOffset + inputTileWidth + 1;
+         convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
+         convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
+         T *inBuf = (T *)(inputBandBuf[b]);
+         T *outBuf = (T *)(outputBandBuf[b]);
+
+         for (ossim_int64 y = 0; y < tileHeight; y++)
+         {
+            for (ossim_int64 x = 0; x < tileWidth; ++x, ++inBuf, ++outBuf)
+            {
+               ossim_float64 convolveResult = 0.0;
+               inputValues[0] = *(inBuf);
+               inputValues[1] = *(inBuf + 1);
+               inputValues[2] = *(inBuf + 2);
+               inputValues[3] = *(inBuf + inputTileWidth);
+               inputValues[4] = *(inBuf + inputTileWidth + 1);
+               inputValues[5] = *(inBuf + inputTileWidth + 2);
+               inputValues[6] = *(inBuf + (inputTileWidth<<1) );
+               inputValues[7] = *(inBuf + (inputTileWidth<<1)+1);
+               inputValues[8] = *(inBuf + (inputTileWidth<<1)+2);
+
+               if((inputValues[0]==nullPix)&&
+                  (inputValues[1]==nullPix)&&
+                  (inputValues[2]==nullPix)&&
+                  (inputValues[3]==nullPix)&&
+                  (inputValues[4]==nullPix)&&
+                  (inputValues[5]==nullPix)&&
+                  (inputValues[6]==nullPix)&&
+                  (inputValues[7]==nullPix)&&
+                  (inputValues[8]==nullPix))
+               {
+                  *outBuf = static_cast<T>(inputValues[4]);
+               } 
+               else
+               {
+                  ossim_float64 pos = m_posLut[inputValues[4]];
+                  ossim_float64 neg = m_posLut[inputValues[0]] + m_posLut[inputValues[1]] +
+                                      m_posLut[inputValues[2]] + m_posLut[inputValues[3]] +
+                                      m_posLut[inputValues[5]] + m_posLut[inputValues[6]] +
+                                      m_posLut[inputValues[7]] + m_posLut[inputValues[8]];
+                  convolveResult = ((pos - neg) + 4) / 8.0;
+
+                  convolveResult = convolveResult < minPix ? minPix : convolveResult;
+                  convolveResult = convolveResult > maxPix ? maxPix : convolveResult;
+
+                  *outBuf = static_cast<T>(convolveResult);
+                  /* code */
+               }
+            }
+
+            inBuf += 2;
+         }
+      }
+   }
+
+   outputTile->validate();
+}
+
+template <class T>
+void ossimImageSharpenFilter::sharpenLutRemap(T,
+                                         const ossimRefPtr<ossimImageData> &inputTile,
+                                         ossimRefPtr<ossimImageData> &outputTile)
+{
+   ossim_float64 inputValues[9];
+   ossimDataObjectStatus status = inputTile->getDataObjectStatus();
+   ossim_int64 tileHeight = outputTile->getHeight();
+   ossim_int64 tileWidth = outputTile->getWidth();
+   ossim_int64 inputTileHeight = inputTile->getHeight();
+   ossim_int64 inputTileWidth = inputTile->getWidth();
+   ossim_int64 outputBands = outputTile->getNumberOfBands();
+   ossim_int64 convolutionTopLeftOffset = 0;
+   ossim_int64 convolutionMiddleLeftOffset = 0;
+   ossim_int64 convolutionBottomLeftOffset = 0;
+   ossim_int64 convolutionCenterOffset = inputTileWidth + 1; // kernel is a 3x3  so move it over by 1
+   ossim_int64 outputOffset = 0;
+   ossim_float64 convolveResult = 0.0;
+   std::vector<T *> inputBandBuf(outputBands);
+   std::vector<T *> outputBandBuf(outputBands);
+
+   for (ossim_int64 b = 0; b < outputBands; ++b)
+   {
+      inputBandBuf[b] = (T *)(inputTile->getBuf(b));
+      outputBandBuf[b] = (T *)(outputTile->getBuf(b));
+   }
+
+   if (status == OSSIM_NULL || status == OSSIM_EMPTY)
+   {
+      outputTile->makeBlank();
+   }
+   else if (status == OSSIM_FULL) // whether partial or null we must check nulls over entire matrix
+   {
+      for (ossim_int64 b = 0; b < outputBands; ++b)
+      {
+         ossim_float64 minPix = outputTile->getMinPix(b);
+         ossim_float64 maxPix = outputTile->getMaxPix(b);
+         convolutionTopLeftOffset = 0;
+         convolutionCenterOffset = convolutionTopLeftOffset + inputTileWidth + 1;
+         convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
+         convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
+         T *inBuf = (T *)(inputBandBuf[b]);
+         T *outBuf = (T *)(outputBandBuf[b]);
+         ossim_float64 deltaMinMax = (maxPix-minPix);
+         for (ossim_int64 y = 0; y < tileHeight; y++)
+         {
+            for (ossim_int64 x = 0; x < tileWidth; ++x, ++inBuf, ++outBuf)
+            {
+               inputValues[0] = *(inBuf);
+               inputValues[1] = *(inBuf + 1);
+               inputValues[2] = *(inBuf + 2);
+               inputValues[3] = *(inBuf + inputTileWidth);
+               inputValues[4] = *(inBuf + inputTileWidth + 1);
+               inputValues[5] = *(inBuf + inputTileWidth + 2);
+               inputValues[6] = *(inBuf + (inputTileWidth << 1));
+               inputValues[7] = *(inBuf + (inputTileWidth << 1) + 1);
+               inputValues[8] = *(inBuf + (inputTileWidth << 1) + 2);
+
+               for (ossim_uint32 idx = 0; idx < 9; ++idx)
+               {
+                  inputValues[idx] = ((inputValues[0] - minPix) / deltaMinMax) * m_posLut.size();
+                  if (inputValues[idx] < 0)
+                     inputValues[idx] = 0;
+                  if (inputValues[idx] >= m_posLut.size())
+                     inputValues[idx] = m_posLut.size() - 1;
+               }
+
+               ossim_float64 pos = m_posLut[inputValues[4]];
+               ossim_float64 neg = m_posLut[inputValues[0]] + m_posLut[inputValues[1]] +
+                                    m_posLut[inputValues[2]] + m_posLut[inputValues[3]] +
+                                    m_posLut[inputValues[5]] + m_posLut[inputValues[6]] +
+                                    m_posLut[inputValues[7]] + m_posLut[inputValues[8]];
+               convolveResult = ((pos - neg) + 4) / 8.0;
+               convolveResult = convolveResult < 0 ? 0 : convolveResult;
+               convolveResult = convolveResult > (m_posLut.size() - 1) ? m_posLut.size() - 1 : convolveResult;
+               ossim_float64 t = convolveResult / (m_posLut.size() - 1);
+               *outBuf = static_cast<T>(minPix * (1 - t) + deltaMinMax * t);
+            }
+
+            inBuf += 2;
+         }
+      }
+   }
+   else
+   {
+      for (ossim_int64 b = 0; b < outputBands; ++b)
+      {
+         ossim_float64 minPix = outputTile->getMinPix(b);
+         ossim_float64 maxPix = outputTile->getMaxPix(b);
+         ossim_float64 nullPix = inputTile->getNullPix(b);
+         convolutionTopLeftOffset = 0;
+         convolutionCenterOffset = convolutionTopLeftOffset + inputTileWidth + 1;
+         convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
+         convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
+         T *inBuf = (T *)(inputBandBuf[b]);
+         T *outBuf = (T *)(outputBandBuf[b]);
+         ossim_float64 deltaMinMax = (maxPix - minPix);
+         for (ossim_int64 y = 0; y < tileHeight; y++)
+         {
+            for (ossim_int64 x = 0; x < tileWidth; ++x, ++inBuf, ++outBuf)
+            {
+               inputValues[0] = *(inBuf);
+               inputValues[1] = *(inBuf + 1);
+               inputValues[2] = *(inBuf + 2);
+               inputValues[3] = *(inBuf + inputTileWidth);
+               inputValues[4] = *(inBuf + inputTileWidth + 1);
+               inputValues[5] = *(inBuf + inputTileWidth + 2);
+               inputValues[6] = *(inBuf + (inputTileWidth << 1));
+               inputValues[7] = *(inBuf + (inputTileWidth << 1) + 1);
+               inputValues[8] = *(inBuf + (inputTileWidth << 1) + 2);
+
+               if ((inputValues[0] == nullPix) &&
+                   (inputValues[1] == nullPix) &&
+                   (inputValues[2] == nullPix) &&
+                   (inputValues[3] == nullPix) &&
+                   (inputValues[4] == nullPix) &&
+                   (inputValues[5] == nullPix) &&
+                   (inputValues[6] == nullPix) &&
+                   (inputValues[7] == nullPix) &&
+                   (inputValues[8] == nullPix))
+               {
+                  *outBuf = static_cast<T>(inputValues[4]);
+               }
+               else
+               {
+                  for (ossim_uint32 idx = 0; idx < 9; ++idx)
+                  {
+                     inputValues[idx] = ((inputValues[0] - minPix) / deltaMinMax) * m_posLut.size();
+                     if (inputValues[idx] < 0)
+                        inputValues[idx] = 0;
+                     if (inputValues[idx] >= m_posLut.size())
+                        inputValues[idx] = m_posLut.size() - 1;
+                  }
+
+                  ossim_float64 pos = m_posLut[inputValues[4]];
+                  ossim_float64 neg = m_posLut[inputValues[0]] + m_posLut[inputValues[1]] +
+                                      m_posLut[inputValues[2]] + m_posLut[inputValues[3]] +
+                                      m_posLut[inputValues[5]] + m_posLut[inputValues[6]] +
+                                      m_posLut[inputValues[7]] + m_posLut[inputValues[8]];
+                  convolveResult = ((pos - neg) + 4) / 8.0;
+                  convolveResult = convolveResult < 0 ? 0 : convolveResult;
+                  convolveResult = convolveResult > (m_posLut.size() - 1) ? m_posLut.size() - 1 : convolveResult;
+                  ossim_float64 t = convolveResult / (m_posLut.size() - 1);
+                  *outBuf = static_cast<T>(minPix * (1 - t) + deltaMinMax * t);
+               }
+            }
+
+            inBuf += 2;
+         }
+      }
+   }
+
+   outputTile->validate();
 }
 
 void ossimImageSharpenFilter::setProperty(ossimRefPtr<ossimProperty> property)
 {
    //std::cout << "ossimImageSharpenFilter::setProperty with name = " << property->getName() << std::endl;
    if(!property) return;
-   if(property->getName() == KERNEL_WIDTH_KW)
+   if(property->getName() == SHARPEN_PERCENT_KW)
    {
-      theWidth = property->valueToString().toUInt32();
-      theWidth |=1;
-      if(theWidth < 3) theWidth = 3;
-      initialize();
-   }
-   else if(property->getName() == KERNEL_SIGMA_KW)
-   {
-      theSigma = property->valueToString().toDouble();
-      if(theSigma < .1) theSigma = .1;
+      m_sharpenPercent = property->valueToString().toDouble();
       initialize();
    }
    else
@@ -236,24 +552,7 @@ void ossimImageSharpenFilter::setProperty(ossimRefPtr<ossimProperty> property)
 ossimRefPtr<ossimProperty> ossimImageSharpenFilter::getProperty(const ossimString& name)const
 {
    ossimRefPtr<ossimProperty> property = 0;
-   if(name == KERNEL_WIDTH_KW)
-   {
-      property = new ossimNumericProperty(name,
-                                          ossimString::toString(theWidth),
-                                          3.0,
-                                          64.0);
-      property->setCacheRefreshBit();
-      
-   }
-   else if (name == KERNEL_SIGMA_KW)
-   {
-      property = new ossimNumericProperty(name,
-                                          ossimString::toString(theSigma),
-                                          .1,
-                                          32);
-      property->setCacheRefreshBit();
-   }
-   else if (name == SHARPEN_PERCENT_KW)
+   if (name == SHARPEN_PERCENT_KW)
    {
       property = new ossimNumericProperty(name,
                                           ossimString::toString(m_sharpenPercent),
@@ -280,28 +579,20 @@ bool ossimImageSharpenFilter::loadState(const ossimKeywordlist& kwl,
                                         const char* prefix)
 {
    bool result = ossimImageSourceFilter::loadState(kwl, prefix);
-   ossimString kernelWidth = kwl.find(prefix, KERNEL_WIDTH_KW);
-   ossimString kernelSigma = kwl.find(prefix, KERNEL_SIGMA_KW);
-   kernelWidth = kernelWidth.trim();
-   kernelSigma = kernelSigma.trim();
-   if(!kernelWidth.empty())
+   ossimString sharpenPercent = kwl.find(prefix, SHARPEN_PERCENT_KW);
+   if(!sharpenPercent.empty())
    {
-      theWidth = kernelWidth.toUInt32();
-      theWidth |= 1; // make it odd and check for size
-      if(theWidth < 3) theWidth = 3;
+      m_sharpenPercent = sharpenPercent.toDouble();
    }
-   if(!kernelSigma.empty())
-   {
-      theSigma = kernelSigma.toFloat64();
-   }
-   buildConvolutionMatrix();
+   buildConvolutionLuts();
+
    return result;
 }
 
 bool ossimImageSharpenFilter::saveState(ossimKeywordlist& kwl,
                                         const char* prefix)const
 {
-   kwl.add(prefix, KERNEL_WIDTH_KW, theWidth, true);
-   kwl.add(prefix, KERNEL_SIGMA_KW, theSigma, true);
+   kwl.add(prefix, SHARPEN_PERCENT_KW, m_sharpenPercent, true);
+
    return ossimImageSourceFilter::saveState(kwl, prefix);
 }
