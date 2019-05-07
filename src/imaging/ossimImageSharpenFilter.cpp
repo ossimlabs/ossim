@@ -199,8 +199,12 @@ void ossimImageSharpenFilter::buildConvolutionLuts()
          }
          default:
          {
+            // for remapping we will just a set of sample 
+            // values and then do a normalization 
+            // we will enable remap and do a 256 samples 
+            // for the laplacian.
             m_remapValue = true;
-            size = 65536; // later support normalized so we can still sharpen other scalar types
+            size = 256;
          }
       }
    }
@@ -275,7 +279,7 @@ void ossimImageSharpenFilter::sharpenLut(T,
    {
       outputTile->makeBlank();
    }
-   else if(status == OSSIM_FULL)// whether partial or null we must check nulls over entire matrix
+   else if(status == OSSIM_FULL)
    {
       for (ossim_int64 b = 0; b < outputBands; ++b)
       {
@@ -357,10 +361,10 @@ void ossimImageSharpenFilter::sharpenLut(T,
                else
                {
                   ossim_float64 pos = m_posLut[inputValues[4]];
-                  ossim_float64 neg = m_posLut[inputValues[0]] + m_posLut[inputValues[1]] +
-                                      m_posLut[inputValues[2]] + m_posLut[inputValues[3]] +
-                                      m_posLut[inputValues[5]] + m_posLut[inputValues[6]] +
-                                      m_posLut[inputValues[7]] + m_posLut[inputValues[8]];
+                  ossim_float64 neg = m_posNegLut[inputValues[0]] + m_posNegLut[inputValues[1]] +
+                                      m_posNegLut[inputValues[2]] + m_posNegLut[inputValues[3]] +
+                                      m_posNegLut[inputValues[5]] + m_posNegLut[inputValues[6]] +
+                                      m_posNegLut[inputValues[7]] + m_posNegLut[inputValues[8]];
                   convolveResult = ((pos - neg) + 4) / 8.0;
 
                   convolveResult = convolveResult < minPix ? minPix : convolveResult;
@@ -436,10 +440,9 @@ void ossimImageSharpenFilter::sharpenLutRemap(T,
                inputValues[6] = *(inBuf + (inputTileWidth << 1));
                inputValues[7] = *(inBuf + (inputTileWidth << 1) + 1);
                inputValues[8] = *(inBuf + (inputTileWidth << 1) + 2);
-
                for (ossim_uint32 idx = 0; idx < 9; ++idx)
                {
-                  inputValues[idx] = ((inputValues[0] - minPix) / deltaMinMax) * m_posLut.size();
+                  inputValues[idx] = ((inputValues[idx] - minPix) / deltaMinMax) * m_posLut.size();
                   if (inputValues[idx] < 0)
                      inputValues[idx] = 0;
                   if (inputValues[idx] >= m_posLut.size())
@@ -447,15 +450,16 @@ void ossimImageSharpenFilter::sharpenLutRemap(T,
                }
 
                ossim_float64 pos = m_posLut[inputValues[4]];
-               ossim_float64 neg = m_posLut[inputValues[0]] + m_posLut[inputValues[1]] +
-                                    m_posLut[inputValues[2]] + m_posLut[inputValues[3]] +
-                                    m_posLut[inputValues[5]] + m_posLut[inputValues[6]] +
-                                    m_posLut[inputValues[7]] + m_posLut[inputValues[8]];
+               ossim_float64 neg = m_posNegLut[inputValues[0]] + m_posNegLut[inputValues[1]] +
+                                   m_posNegLut[inputValues[2]] + m_posNegLut[inputValues[3]] +
+                                   m_posNegLut[inputValues[5]] + m_posNegLut[inputValues[6]] +
+                                   m_posNegLut[inputValues[7]] + m_posNegLut[inputValues[8]];
                convolveResult = ((pos - neg) + 4) / 8.0;
                convolveResult = convolveResult < 0 ? 0 : convolveResult;
                convolveResult = convolveResult > (m_posLut.size() - 1) ? m_posLut.size() - 1 : convolveResult;
                ossim_float64 t = convolveResult / (m_posLut.size() - 1);
                *outBuf = static_cast<T>(minPix * (1 - t) + deltaMinMax * t);
+               std::cout << "OUT: " << *outBuf << "\n";
             }
 
             inBuf += 2;
@@ -506,7 +510,8 @@ void ossimImageSharpenFilter::sharpenLutRemap(T,
                {
                   for (ossim_uint32 idx = 0; idx < 9; ++idx)
                   {
-                     inputValues[idx] = ((inputValues[0] - minPix) / deltaMinMax) * m_posLut.size();
+                     inputValues[idx] = ((inputValues[idx] - minPix) / deltaMinMax) * m_posLut.size();
+
                      if (inputValues[idx] < 0)
                         inputValues[idx] = 0;
                      if (inputValues[idx] >= m_posLut.size())
@@ -514,11 +519,11 @@ void ossimImageSharpenFilter::sharpenLutRemap(T,
                   }
 
                   ossim_float64 pos = m_posLut[inputValues[4]];
-                  ossim_float64 neg = m_posLut[inputValues[0]] + m_posLut[inputValues[1]] +
-                                      m_posLut[inputValues[2]] + m_posLut[inputValues[3]] +
-                                      m_posLut[inputValues[5]] + m_posLut[inputValues[6]] +
-                                      m_posLut[inputValues[7]] + m_posLut[inputValues[8]];
-                  convolveResult = ((pos - neg) + 4) / 8.0;
+                  ossim_float64 neg = m_posNegLut[inputValues[0]] + m_posNegLut[inputValues[1]] +
+                                      m_posNegLut[inputValues[2]] + m_posNegLut[inputValues[3]] +
+                                      m_posNegLut[inputValues[5]] + m_posNegLut[inputValues[6]] +
+                                      m_posNegLut[inputValues[7]] + m_posNegLut[inputValues[8]];
+                  convolveResult = ((pos - neg) + 4.0) / 8.0;
                   convolveResult = convolveResult < 0 ? 0 : convolveResult;
                   convolveResult = convolveResult > (m_posLut.size() - 1) ? m_posLut.size() - 1 : convolveResult;
                   ossim_float64 t = convolveResult / (m_posLut.size() - 1);
