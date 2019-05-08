@@ -1766,7 +1766,7 @@ bool ossimTiffTileSource::loadFromU16Strip(const ossimIrect &clip_rect, ossimIma
                                                          bandStrip,
                                                          theBuffer + bufferOffsetInBytes,
                                                          bytesToRead);
-            std::cout << "bytesRead" << bytesRead << " ?? " << bytesToRead << "\n";
+            // std::cout << "bytesRead" << bytesRead << " ?? " << bytesToRead << "\n";
             if (bytesRead != bytesToRead)
             {
                if (traceDebug())
