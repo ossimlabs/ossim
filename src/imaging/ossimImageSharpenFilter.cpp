@@ -230,14 +230,12 @@ void ossimImageSharpenFilter::buildConvolutionLuts()
 void ossimImageSharpenFilter::connectInputEvent(ossimConnectionEvent &event)
 {
    ossimImageSourceFilter::connectInputEvent(event);
-   // theConvolutionSource->connectMyInputTo(0, getInput());
    buildConvolutionLuts();
 }
 
 void ossimImageSharpenFilter::disconnectInputEvent(ossimConnectionEvent &event)
 {
    ossimImageSourceFilter::disconnectInputEvent(event);
-   // theConvolutionSource->connectMyInputTo(0, getInput());
 }
 
 ossimString ossimImageSharpenFilter::getShortName() const
@@ -427,6 +425,7 @@ void ossimImageSharpenFilter::sharpenLutRemap(T,
          T *inBuf = (T *)(inputBandBuf[b]);
          T *outBuf = (T *)(outputBandBuf[b]);
          ossim_float64 deltaMinMax = (maxPix-minPix);
+         ossimScalarType inputScalar = inputTile->getScalarType();
          for (ossim_int64 y = 0; y < tileHeight; y++)
          {
             for (ossim_int64 x = 0; x < tileWidth; ++x, ++inBuf, ++outBuf)
@@ -574,8 +573,7 @@ ossimRefPtr<ossimProperty> ossimImageSharpenFilter::getProperty(const ossimStrin
 void ossimImageSharpenFilter::getPropertyNames(std::vector<ossimString>& propertyNames)const
 {
    ossimImageSourceFilter::getPropertyNames(propertyNames);
-   propertyNames.push_back(KERNEL_WIDTH_KW);
-   propertyNames.push_back(KERNEL_SIGMA_KW);
+   propertyNames.push_back(SHARPEN_PERCENT_KW);
 }
 
 bool ossimImageSharpenFilter::loadState(const ossimKeywordlist& kwl,

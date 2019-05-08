@@ -46,18 +46,6 @@ public:
                           const char* prefix=0)const;
 protected:
    virtual ~ossimImageSharpenFilter();
-   // inline double laplacianOfGaussian(double x, double y, double sigma)
-   // {
-   //    double r2 = x*x+y*y;
-   //    double sigma2 = sigma*sigma;
-   //    return ((1.0/(M_PI*sigma2*sigma2))*
-   //            (1.0-r2/(2.0*sigma2))*
-   //            (exp(-r2/(2.0*sigma2))));
-      
-   // }
-   
-   // void buildConvolutionMatrix();
-
    template <class T>
    void sharpenLut(T,
                    const ossimRefPtr<ossimImageData> &inputData,
@@ -70,9 +58,6 @@ protected:
    void buildConvolutionLuts();
    void allocate();
 
-   // ossimRefPtr<ossimConvolutionSource> theConvolutionSource;
-   // ossim_uint32 theWidth;
-   // ossim_float64 theSigma;
    std::vector<ossim_float64>    m_posLut;
    std::vector<ossim_float64>    m_posNegLut;
    ossim_float64                 m_sharpenPercent;
