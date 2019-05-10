@@ -901,7 +901,7 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
                                           << std::endl;
       return false;
    }
-   thePolyType = (PolynomialType) value[0];
+   thePolyType = (PolynomialType) value.at(0);
       
    keyword = LINE_SCALE_KW;
    value = kwl.find(prefix, keyword);
