@@ -14,12 +14,11 @@
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimIpt64.h>
-
 #include <iosfwd>
-#include <vector>
 
 // Forward class declarations.
 class ossimDrect;
+class ossimIrect;
 class ossimKeywordlist;
 
 /**
