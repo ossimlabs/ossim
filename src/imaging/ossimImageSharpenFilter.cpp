@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -17,8 +17,8 @@
 
 RTTI_DEF1(ossimImageSharpenFilter, "ossimImageSharpenFilter", ossimImageSourceFilter);
 
-static const char* KERNEL_WIDTH_KW = "kernel_width";
-static const char* KERNEL_SIGMA_KW = "kernel_sigma";
+// static const char* KERNEL_WIDTH_KW = "kernel_width";
+// static const char* KERNEL_SIGMA_KW = "kernel_sigma";
 static const char* SHARPEN_PERCENT_KW = "sharpen_percent";
 
 ossimImageSharpenFilter::ossimImageSharpenFilter(ossimObject *owner)
@@ -220,7 +220,7 @@ void ossimImageSharpenFilter::buildConvolutionLuts()
       m_posNegLut.resize(size);
    }
    
-   for (ossim_int32 i = 0; i < m_posLut.size(); i++)
+   for (ossim_int32 i = 0; i < (ossim_int32)m_posLut.size(); i++)
    {
       m_posLut[i]    = 800 * i / fact;
       m_posNegLut[i] = (4 + m_posLut[i] - (i << 3))/ 8.0;
@@ -256,14 +256,14 @@ void ossimImageSharpenFilter::sharpenLut(T,
    ossimDataObjectStatus status = inputTile->getDataObjectStatus();
    ossim_int64 tileHeight     = outputTile->getHeight();
    ossim_int64 tileWidth      = outputTile->getWidth();
-   ossim_int64 inputTileHeight= inputTile->getHeight();
+   // ossim_int64 inputTileHeight= inputTile->getHeight();
    ossim_int64 inputTileWidth = inputTile->getWidth();
    ossim_int64 outputBands    = outputTile->getNumberOfBands();
-   ossim_int64 convolutionTopLeftOffset = 0;
-   ossim_int64 convolutionMiddleLeftOffset = 0;
-   ossim_int64 convolutionBottomLeftOffset = 0;
-   ossim_int64 convolutionCenterOffset = inputTileWidth + 1; // kernel is a 3x3  so move it over by 1
-   ossim_int64 outputOffset = 0;
+   // ossim_int64 convolutionTopLeftOffset = 0;
+   // ossim_int64 convolutionMiddleLeftOffset = 0;
+   // ossim_int64 convolutionBottomLeftOffset = 0;
+   // ossim_int64 convolutionCenterOffset = inputTileWidth + 1; // kernel is a 3x3  so move it over by 1
+   // ossim_int64 outputOffset = 0;
    std::vector<T *> inputBandBuf(outputBands);
    std::vector<T *> outputBandBuf(outputBands);
 
@@ -283,10 +283,10 @@ void ossimImageSharpenFilter::sharpenLut(T,
       {
          ossim_float64 minPix = outputTile->getMinPix(b);
          ossim_float64 maxPix = outputTile->getMaxPix(b);
-         convolutionTopLeftOffset = 0;
-         convolutionCenterOffset = convolutionTopLeftOffset + inputTileWidth + 1;
-         convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
-         convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
+         // convolutionTopLeftOffset = 0;
+         // convolutionCenterOffset = convolutionTopLeftOffset + inputTileWidth + 1;
+         // convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
+         // convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
          T *inBuf = (T *)(inputBandBuf[b]);
          T *outBuf = (T *)(outputBandBuf[b]);
 
@@ -322,10 +322,10 @@ void ossimImageSharpenFilter::sharpenLut(T,
          ossim_float64 minPix     = inputTile->getMinPix(b);
          ossim_float64 maxPix     = inputTile->getMaxPix(b);
          ossim_float64 nullPix    = inputTile->getNullPix(b);
-         convolutionTopLeftOffset = 0;
-         convolutionCenterOffset  = convolutionTopLeftOffset + inputTileWidth + 1;
-         convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
-         convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
+         // convolutionTopLeftOffset = 0;
+         // convolutionCenterOffset  = convolutionTopLeftOffset + inputTileWidth + 1;
+         // convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
+         // convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
          T *inBuf = (T *)(inputBandBuf[b]);
          T *outBuf = (T *)(outputBandBuf[b]);
 
@@ -390,14 +390,15 @@ void ossimImageSharpenFilter::sharpenLutRemap(T,
    ossimDataObjectStatus status = inputTile->getDataObjectStatus();
    ossim_int64 tileHeight = outputTile->getHeight();
    ossim_int64 tileWidth = outputTile->getWidth();
-   ossim_int64 inputTileHeight = inputTile->getHeight();
+   // ossim_int64 inputTileHeight = inputTile->getHeight();
    ossim_int64 inputTileWidth = inputTile->getWidth();
    ossim_int64 outputBands = outputTile->getNumberOfBands();
-   ossim_int64 convolutionTopLeftOffset = 0;
-   ossim_int64 convolutionMiddleLeftOffset = 0;
-   ossim_int64 convolutionBottomLeftOffset = 0;
-   ossim_int64 convolutionCenterOffset = inputTileWidth + 1; // kernel is a 3x3  so move it over by 1
-   ossim_int64 outputOffset = 0;
+   // ossim_int64 convolutionTopLeftOffset = 0;
+   // ossim_int64 convolutionMiddleLeftOffset = 0;
+   // ossim_int64 convolutionBottomLeftOffset = 0;
+   // kernel is a 3x3  so move it over by 1
+   // ossim_int64 convolutionCenterOffset = inputTileWidth + 1;
+   // ossim_int64 outputOffset = 0;
    ossim_float64 convolveResult = 0.0;
    std::vector<T *> inputBandBuf(outputBands);
    std::vector<T *> outputBandBuf(outputBands);
@@ -418,14 +419,14 @@ void ossimImageSharpenFilter::sharpenLutRemap(T,
       {
          ossim_float64 minPix = outputTile->getMinPix(b);
          ossim_float64 maxPix = outputTile->getMaxPix(b);
-         convolutionTopLeftOffset = 0;
-         convolutionCenterOffset = convolutionTopLeftOffset + inputTileWidth + 1;
-         convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
-         convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
+         // convolutionTopLeftOffset = 0;
+         // convolutionCenterOffset = convolutionTopLeftOffset + inputTileWidth + 1;
+         // convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
+         // convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
          T *inBuf = (T *)(inputBandBuf[b]);
          T *outBuf = (T *)(outputBandBuf[b]);
          ossim_float64 deltaMinMax = (maxPix-minPix);
-         ossimScalarType inputScalar = inputTile->getScalarType();
+         // ossimScalarType inputScalar = inputTile->getScalarType();
          for (ossim_int64 y = 0; y < tileHeight; y++)
          {
             for (ossim_int64 x = 0; x < tileWidth; ++x, ++inBuf, ++outBuf)
@@ -471,10 +472,10 @@ void ossimImageSharpenFilter::sharpenLutRemap(T,
          ossim_float64 minPix = outputTile->getMinPix(b);
          ossim_float64 maxPix = outputTile->getMaxPix(b);
          ossim_float64 nullPix = inputTile->getNullPix(b);
-         convolutionTopLeftOffset = 0;
-         convolutionCenterOffset = convolutionTopLeftOffset + inputTileWidth + 1;
-         convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
-         convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
+         // convolutionTopLeftOffset = 0;
+         // convolutionCenterOffset = convolutionTopLeftOffset + inputTileWidth + 1;
+         // convolutionMiddleLeftOffset = convolutionTopLeftOffset + inputTileWidth;
+         // convolutionBottomLeftOffset = convolutionMiddleLeftOffset + inputTileWidth;
          T *inBuf = (T *)(inputBandBuf[b]);
          T *outBuf = (T *)(outputBandBuf[b]);
          ossim_float64 deltaMinMax = (maxPix - minPix);

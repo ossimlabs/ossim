@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -194,8 +194,8 @@ bool ossimTiffTileSource::getTile(ossimImageData *result,
             }
 
             bool reallocateBuffer = false;
-            if ((tile_rect.width() != theOutputTileSize.x) ||
-                (tile_rect.height() != theOutputTileSize.y))
+            if ((tile_rect.width() != (ossim_uint32)theOutputTileSize.x) ||
+                (tile_rect.height() != (ossim_uint32)theOutputTileSize.y))
             {
                // Current tile size must be set prior to allocatBuffer call.
                theOutputTileSize.x = tile_rect.width();
