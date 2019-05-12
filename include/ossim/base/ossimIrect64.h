@@ -38,13 +38,6 @@ class ossimKeywordlist;
 class OSSIMDLLEXPORT ossimIrect64
 {
 public:
-   enum
-   {
-      UPPER_LEFT  = 1,
-      LOWER_LEFT  = 2,
-      LOWER_RIGHT = 4,
-      UPPER_RIGHT = 8
-   };
 
    /** @brief Default constructor. */
    ossimIrect64();
