@@ -23,7 +23,7 @@ node ("${BUILD_NODE}"){
     try {
         stage( "Download Artifacts" ) {
             dir( "ossim-ci" ) {
-                git branch: "BRANCH_NAME",
+                git branch: "$BRANCH_NAME",
                 url: "${ GIT_PRIVATE_SERVER_URL }/ossim-ci.git",
                 credentialsId: "${ CREDENTIALS_ID }"
             }
