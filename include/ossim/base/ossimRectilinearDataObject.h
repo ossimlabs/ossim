@@ -20,24 +20,24 @@ public:
    ossimRectilinearDataObject();
 
    ossimRectilinearDataObject(const ossimRectilinearDataObject&rhs);
-      
-   ossimRectilinearDataObject(ossim_uint32 numberOfSpatialComponents,
-                              ossimSource* owner,
-                              ossim_uint32 numberOfDataComponents,
-                              ossimScalarType scalarType=OSSIM_SCALAR_UNKNOWN,
-                              ossimDataObjectStatus status=OSSIM_NULL);
-   
+
+   ossimRectilinearDataObject(ossim_uint64 numberOfSpatialComponents,
+                              ossimSource *owner,
+                              ossim_uint64 numberOfDataComponents,
+                              ossimScalarType scalarType = OSSIM_SCALAR_UNKNOWN,
+                              ossimDataObjectStatus status = OSSIM_NULL);
+
    /**
     * This is a helper constructor that allows one to instantiate a one
     * dimensional Spatial component with N number of data components.
     * It will internally allocate theSpatialExtent to 1 and set the
     * contents equal to the value passed in to length.
     */
-   ossimRectilinearDataObject(ossimSource* owner,
-                              ossim_uint32 numberOfDataComponents,
-                              ossim_uint32 length,
-                              ossimScalarType scalarType=OSSIM_SCALAR_UNKNOWN,
-                              ossimDataObjectStatus status=OSSIM_NULL);
+   ossimRectilinearDataObject(ossimSource *owner,
+                              ossim_uint64 numberOfDataComponents,
+                              ossim_uint64 length,
+                              ossimScalarType scalarType = OSSIM_SCALAR_UNKNOWN,
+                              ossimDataObjectStatus status = OSSIM_NULL);
 
    /**
     * This is a helper constructor that allows one to instantiate a two
@@ -46,12 +46,12 @@ public:
     * to 2 and set the contents equal to the value passed in to width, and
     * height.
     */
-   ossimRectilinearDataObject(ossimSource* owner,
-                              ossim_uint32 numberOfDataComponents,
-                              ossim_uint32 width,
-                              ossim_uint32 height,
-                              ossimScalarType scalarType=OSSIM_SCALAR_UNKNOWN,
-                              ossimDataObjectStatus status=OSSIM_NULL);
+   ossimRectilinearDataObject(ossimSource *owner,
+                              ossim_uint64 numberOfDataComponents,
+                              ossim_uint64 width,
+                              ossim_uint64 height,
+                              ossimScalarType scalarType = OSSIM_SCALAR_UNKNOWN,
+                              ossimDataObjectStatus status = OSSIM_NULL);
 
    /**
     * This is a helper constructor that allows one to instantiate a two
@@ -60,14 +60,13 @@ public:
     * to 3 and set the contents equal to the value passed in to width,
     * height, and depth.
     */
-   ossimRectilinearDataObject(ossimSource* owner,
-                              ossim_uint32 numberOfDataComponents,
-                              ossim_uint32 width,
-                              ossim_uint32 height,
-                              ossim_uint32 depth,
-                              ossimScalarType   scalarType=OSSIM_SCALAR_UNKNOWN,
-                              ossimDataObjectStatus status=OSSIM_NULL);
-   
+   ossimRectilinearDataObject(ossimSource *owner,
+                              ossim_uint64 numberOfDataComponents,
+                              ossim_uint64 width,
+                              ossim_uint64 height,
+                              ossim_uint64 depth,
+                              ossimScalarType scalarType = OSSIM_SCALAR_UNKNOWN,
+                              ossimDataObjectStatus status = OSSIM_NULL);
 
    virtual ~ossimRectilinearDataObject();
    /**
@@ -77,9 +76,9 @@ public:
     * RGB would be seen as a single data object being
     * passed through.
     */
-   virtual void setNumberOfDataComponents(ossim_uint32 n);
-   
-   virtual void setSpatialExtents(ossim_uint32* extents, ossim_uint32  size);
+   virtual void setNumberOfDataComponents(ossim_uint64 n);
+
+   virtual void setSpatialExtents(ossim_uint64 *extents, ossim_uint64 size);
 
    /**
     *  See ossimScalarType in ossimConstants for a full list
@@ -94,15 +93,15 @@ public:
     */
    virtual void setScalarType(ossimScalarType type);
 
-   virtual ossim_uint32 getNumberOfDataComponents() const;
+   virtual ossim_uint64 getNumberOfDataComponents() const;
 
-   virtual ossim_uint32 getNumberOfSpatialComponents() const;
+   virtual ossim_uint64 getNumberOfSpatialComponents() const;
 
-   virtual const ossim_uint32* getSpatialExtents() const;
+   virtual const ossim_uint64 *getSpatialExtents() const;
 
    virtual ossimScalarType getScalarType() const;
 
-   virtual ossim_uint32 getScalarSizeInBytes()const;
+   virtual ossim_uint64 getScalarSizeInBytes() const;
 
    virtual void*   getBuf();
 
@@ -126,9 +125,9 @@ public:
     */
    virtual void initialize();
 
-   virtual ossim_uint32 computeSpatialProduct()const;
+   virtual ossim_uint64 computeSpatialProduct() const;
 
-   virtual ossim_uint32 getDataSizeInBytes()const;
+   virtual ossim_uint64 getDataSizeInBytes()const;
 
    virtual std::ostream& print(std::ostream& out) const;
 
@@ -144,10 +143,10 @@ public:
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
 
 protected:
-   ossim_uint32              m_numberOfDataComponents;
+   ossim_uint64 m_numberOfDataComponents;
    ossimScalarType           m_scalarType;
    std::vector<ossim_uint8>  m_dataBuffer;
-   std::vector<ossim_uint32> m_spatialExtents;
+   std::vector<ossim_uint64> m_spatialExtents;
    
 TYPE_DATA
 };

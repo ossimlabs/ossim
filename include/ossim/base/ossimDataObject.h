@@ -70,9 +70,9 @@ public:
     */
    virtual ossimString getDataObjectStatusString() const;
 
-   virtual ossim_uint32 getObjectSizeInBytes()const;
+   virtual ossim_uint64 getObjectSizeInBytes()const;
 
-   virtual ossim_uint32 getDataSizeInBytes()const=0;
+   virtual ossim_uint64 getDataSizeInBytes() const = 0;
 
    /**
     * This is to be overriden in the derived classes so they can check
