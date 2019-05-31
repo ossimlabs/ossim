@@ -140,22 +140,22 @@ bool ossimImageData::isValidBand(ossim_uint32 band) const
    return (band<getNumberOfDataComponents());
 }
 
-ossim_uint32 ossimImageData::getSize() const
+ossim_uint64 ossimImageData::getSize() const
 {
    return (getSizePerBand() * getNumberOfDataComponents());
 }
 
-ossim_uint32 ossimImageData::getSizePerBand() const
+ossim_uint64 ossimImageData::getSizePerBand() const
 {
    return (getHeight() * getWidth());
 }
 
-ossim_uint32 ossimImageData::getSizeInBytes() const
+ossim_uint64 ossimImageData::getSizeInBytes() const
 {
    return (getSizePerBandInBytes() * getNumberOfDataComponents());
 }
 
-ossim_uint32 ossimImageData::getSizePerBandInBytes() const
+ossim_uint64 ossimImageData::getSizePerBandInBytes() const
 {
    return (getHeight() * getWidth() * getScalarSizeInBytes());
 }
@@ -7717,12 +7717,12 @@ template <class T> void ossimImageData::computeAlphaChannel(T /* dummyTemplate *
 
 }  //  End: template <class T> void ossimImageData::computeAlphaChannel
 
-ossim_uint32 ossimImageData::getWidth()const
+ossim_uint64 ossimImageData::getWidth() const
 {
    return m_spatialExtents[0];
 }
 
-ossim_uint32 ossimImageData::getHeight()const
+ossim_uint64 ossimImageData::getHeight() const
 {
    return m_spatialExtents[1];
 }
@@ -7754,15 +7754,15 @@ void ossimImageData::setOrigin(const ossimIpt& origin)
    m_origin = origin;
 }
 
-ossim_uint32 ossimImageData::getDataSizeInBytes()const
+ossim_uint64 ossimImageData::getDataSizeInBytes()const
 {
    return getSizeInBytes();
 }
 
-void ossimImageData::copyLine(const void* src,
-                              ossim_int32 lineNumber,
-                              ossim_int32 lineStartSample,
-                              ossim_int32 lineStopSample,
+void ossimImageData::copyLine(const void *src,
+                              ossim_int64 lineNumber,
+                              ossim_int64 lineStartSample,
+                              ossim_int64 lineStopSample,
                               ossimInterleaveType lineInterleave)
 {
    switch(m_scalarType)
@@ -7838,10 +7838,10 @@ void ossimImageData::copyLine(const void* src,
 
 template <class T>
 void ossimImageData::copyLineTemplate(T /* dummyTemplate */,
-                                      const void* src,
-                                      ossim_int32 lineNumber,
-                                      ossim_int32 lineStartSample,
-                                      ossim_int32 lineStopSample,
+                                      const void *src,
+                                      ossim_int64 lineNumber,
+                                      ossim_int64 lineStartSample,
+                                      ossim_int64 lineStopSample,
                                       ossimInterleaveType lineInterleave)
 {
    if (src)
@@ -7855,16 +7855,16 @@ void ossimImageData::copyLineTemplate(T /* dummyTemplate */,
             ( lineStartSample  <= RECT.lr().x)     &&
             ( lineStopSample   >= RECT.ul().x) )
       {
-         const ossim_int32 BANDS = static_cast<ossim_int32>(m_numberOfDataComponents);
-         const ossim_int32 START_SAMP =
-               (lineStartSample > RECT.ul().x)?lineStartSample:RECT.ul().x;
-         const ossim_int32 STOP_SAMP  =
-               (lineStopSample  < RECT.lr().x)?lineStopSample:RECT.lr().x;
-         const ossim_int32 SAMPS = STOP_SAMP - START_SAMP + 1;
+         const ossim_int64 BANDS = static_cast<ossim_int32>(m_numberOfDataComponents);
+         const ossim_int64 START_SAMP =
+             (lineStartSample > RECT.ul().x) ? lineStartSample : RECT.ul().x;
+         const ossim_int64 STOP_SAMP =
+             (lineStopSample < RECT.lr().x) ? lineStopSample : RECT.lr().x;
+         const ossim_int64 SAMPS = STOP_SAMP - START_SAMP + 1;
 
          std::vector<T*> d(BANDS);
 
-         ossim_int32 band;
+         ossim_int64 band;
          for (band = 0; band < BANDS; ++band)
          {
             d[band] = static_cast<T*>(getBuf(band));
@@ -7891,7 +7891,7 @@ void ossimImageData::copyLineTemplate(T /* dummyTemplate */,
          }
          else
          {
-            const ossim_int32 W = lineStopSample - lineStartSample + 1;
+            const ossim_int64 W = lineStopSample - lineStartSample + 1;
             std::vector<const T*> S(BANDS);
             for (band = 0; band < BANDS; ++band)
             {

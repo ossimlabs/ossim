@@ -133,12 +133,12 @@ public:
    /**
     * @return The width of the data object.
     */
-   virtual ossim_uint32 getWidth()const;
+   virtual ossim_uint64 getWidth() const;
 
    /**
     * @return The height of the data object.
     */
-   virtual ossim_uint32 getHeight()const;
+   virtual ossim_uint64 getHeight() const;
 
    /**
     * @return The image rectangle relative to origin, height and width.
@@ -324,15 +324,15 @@ public:
    template <class T> void copyTileToFloatBuffer(
       T /* dummyTemplate*/, ossim_float32* buf)const
    {
-     const ossim_uint32 SIZE  = getSizePerBand();
-     const ossim_uint32 BANDS = getNumberOfBands();
+     const ossim_uint64 SIZE  = getSizePerBand();
+     const ossim_uint64 BANDS = getNumberOfBands();
 
-     for(ossim_uint32 band = 0; band < BANDS; ++band)
+     for (ossim_uint64 band = 0; band < BANDS; ++band)
      {
        const T* s = (T*)getBuf(band);  // source
        ossim_float32* d = (ossim_float32*)(buf + (band*SIZE));  // destination
 
-       for(ossim_uint32 offset = 0; offset < SIZE; ++offset)
+       for (ossim_uint64 offset = 0; offset < SIZE; ++offset)
        {
          ossim_float32 p = s[offset];
          d[offset] = p;
@@ -559,25 +559,25 @@ public:
     *  Returns the total number of pixels in a tile for all bands.
     *  Note:  This is not in bytes but in pixels.
     */
-   virtual ossim_uint32 getSize() const;
+   virtual ossim_uint64 getSize() const;
 
    /**
     *  Returns the number of pixels in a single band in a tile.
     *  Note:  This is not in bytes but in pixels.
     */
-   virtual ossim_uint32 getSizePerBand()const;
+   virtual ossim_uint64 getSizePerBand() const;
 
    /**
     *  Returns the number of bytes in single band of the tile.
     */
-   virtual ossim_uint32 getSizePerBandInBytes() const;
+   virtual ossim_uint64 getSizePerBandInBytes() const;
 
-   virtual ossim_uint32 getDataSizeInBytes()const;
+   virtual ossim_uint64 getDataSizeInBytes() const;
 
    /**
     * Returns the total number of bytes for all bands.
     */
-   virtual ossim_uint32  getSizeInBytes() const;
+   virtual ossim_uint64 getSizeInBytes() const;
 
    /**
     *  Initializes data to null pixel values.
@@ -929,10 +929,10 @@ public:
     *
     * Usage example in method: ossimTiffTileSource::loadFromScanLine
     */
-   virtual void copyLine(const void* src,
-                         ossim_int32 lineNumber,
-                         ossim_int32 lineStartSample,
-                         ossim_int32 lineStopSample,
+   virtual void copyLine(const void *src,
+                         ossim_int64 lineNumber,
+                         ossim_int64 lineStartSample,
+                         ossim_int64 lineStopSample,
                          ossimInterleaveType lineInterleave);
 
    /**
@@ -963,13 +963,14 @@ public:
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
 protected:
    /** @brief Templated copy line method. */
-   template <class T> void copyLineTemplate(T dummyTemplate,
-                                            const void* src,
-                                            ossim_int32 lineNumber,
-                                            ossim_int32 lineStartSample,
-                                            ossim_int32 lineStopSample,
-                                            ossimInterleaveType lineInterleave);
-   
+   template <class T>
+   void copyLineTemplate(T dummyTemplate,
+                         const void *src,
+                         ossim_int64 lineNumber,
+                         ossim_int64 lineStartSample,
+                         ossim_int64 lineStopSample,
+                         ossimInterleaveType lineInterleave);
+
    /**
     * @brief Templated stretch method.
     *

@@ -781,11 +781,20 @@ private:
    /**
     * @brief Gets the sharpen mode.
     *
-    * Valid modes: light, heavy
+    * Valid modes: light, medium, heavy
     * 
     * @return sharpness mode
-    */   
+    */
    std::string getSharpenMode() const;
+
+   /**
+    * @brief Gets the sharpen mode.
+    *
+    * Valid percent: values between 0 and 1
+    * 
+    * @return sharpen percent as string
+    */
+   std::string getSharpenPercent() const;
 
    int getHistoMode() const;
 

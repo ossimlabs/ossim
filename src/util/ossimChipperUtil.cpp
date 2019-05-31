@@ -124,6 +124,7 @@ static const std::string ROTATE_TO_INPUT = "rotate_to_input";
 static const std::string RRDS_KW = "rrds";
 static const std::string SCALE_2_8_BIT_KW = "scale_2_8_bit";
 static const std::string SHARPEN_MODE_KW = "sharpen_mode";
+static const std::string SHARPEN_PERCENT_KW = "sharpen_percent";
 static const std::string SNAP_TIE_TO_ORIGIN_KW = "snap_tie_to_origin";
 static const std::string SRC_FILE_KW = "src_file";
 static const std::string SRS_KW = "srs";
@@ -302,7 +303,8 @@ void ossimChipperUtil::addArguments(ossimArgumentParser &ap)
 
    au->addCommandLineOption("--scale-to-8-bit", "Scales the output to unsigned eight bits per band. This option has been deprecated by the newer \"--output-radiometry\" option.");
 
-   au->addCommandLineOption("--sharpen-mode", "<mode> Applies sharpness to image chain(s). Valid modes: \"light\", \"heavy\"");
+   au->addCommandLineOption("--sharpen-mode", "<mode> Applies sharpness to image chain(s). Valid modes: \"light\", \"medium\",\"heavy\"");
+   au->addCommandLineOption("--sharpen-percent", "<sharpen-percent> Applies sharpness to image chain(s). Valid percentage is between 0 and 1");
 
    au->addCommandLineOption("--snap-tie-to-origin",
                             "Snaps tie point to projection origin so that (tie-origin)/gsd come out on an even integer boundary.");
@@ -726,6 +728,11 @@ bool ossimChipperUtil::initialize(ossimArgumentParser &ap)
    if (ap.read("--sharpen-mode", stringParam1))
    {
       m_kwl->addPair(SHARPEN_MODE_KW, tempString1);
+   }
+
+   if (ap.read("--sharpen-percent", stringParam1))
+   {
+      m_kwl->addPair(SHARPEN_PERCENT_KW, tempString1);
    }
 
    if (ap.read("--snap-tie-to-origin"))
@@ -1881,7 +1888,8 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
          }
 
          std::string sharpnessMode = getSharpenMode();
-         if (sharpnessMode.size())
+         std::string sharpenPercent = getSharpenPercent();
+         if (sharpnessMode.size()|| sharpenPercent.size())
          {
             ic->setSharpenFlag(true);
          }
@@ -1920,12 +1928,22 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
          {
             if (sharpnessMode == "light")
             {
-               ic->getSharpenFilter()->setWidthAndSigma(3, 0.5);
+               ic->getSharpenFilter()->setSharpenPercent(0.2);
+               // ic->getSharpenFilter()->setWidthAndSigma(3, 0.5);
+            }
+            else if (sharpnessMode == "medium")
+            {
+               ic->getSharpenFilter()->setSharpenPercent(0.5);
             }
             else if (sharpnessMode == "heavy")
             {
-               ic->getSharpenFilter()->setWidthAndSigma(5, 1.0);
+               ic->getSharpenFilter()->setSharpenPercent(0.8);
             }
+         }
+         else if(sharpenPercent.size())
+         {
+            std::cout << "VALUE IS ============== " << ossimString(sharpenPercent).toDouble() << "\n";
+             ic->getSharpenFilter()->setSharpenPercent(ossimString(sharpenPercent).toDouble());
          }
 
          if (hasGeoPolyCutterOption())
@@ -2062,7 +2080,8 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       }
 
       std::string sharpnessMode = getSharpenMode();
-      if (sharpnessMode.size())
+      std::string sharpenPercent = getSharpenPercent();
+      if (sharpnessMode.size() || sharpenPercent.size())
       {
          ic->setSharpenFlag(true);
       }
@@ -2106,12 +2125,21 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       {
          if (sharpnessMode == "light")
          {
-            ic->getSharpenFilter()->setWidthAndSigma(3, 0.5);
+            ic->getSharpenFilter()->setSharpenPercent(0.2);
+         }
+         else if(sharpnessMode == "medium")
+         {
+            ic->getSharpenFilter()->setSharpenPercent(0.5);
          }
          else if (sharpnessMode == "heavy")
          {
-            ic->getSharpenFilter()->setWidthAndSigma(5, 1.0);
+            ic->getSharpenFilter()->setSharpenPercent(0.8);
          }
+      }
+      else if(sharpenPercent.size())
+      {
+         std::cout << "VALUE IS ---------------- " << ossimString(sharpenPercent).toDouble() << "\n";
+         ic->getSharpenFilter()->setSharpenPercent(ossimString(sharpenPercent).toDouble());
       }
 
       if (hasGeoPolyCutterOption())
@@ -4809,12 +4837,15 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource *source, ossimIrect &r
             if (!source)
             {
                errMsg += " image source null!";
+               throw(ossimException(errMsg));
             }
-            else
-            {
-               errMsg += " output projection null!";
-            }
-            throw(ossimException(errMsg));
+            // do not have to have a projection to output in image space
+            // So commenting out here
+            //
+            // else
+            // {
+            //    errMsg += " output projection null!";
+            // }
          }
 
          // If no user defined rect set to scene bounding rect.
@@ -5764,19 +5795,38 @@ std::string ossimChipperUtil::getSharpenMode() const
    if (mode.size())
    {
       mode.downcase();
-      if ((mode != "light") && (mode != "heavy") && (mode != "none"))
+      if ((mode != "light") && (mode != "heavy") && (mode != "medium") && (mode != "none"))
       {
          ossimNotify(ossimNotifyLevel_WARN)
             << "ossimChipperUtil::getSharpnessMode WARNING!"
             << "\nInvalid sharpness mode: " << mode
-            << "\nValid modes: \"light\" and \"heavy\""
+            << "\nValid modes: \"light\", \"medium\", and \"heavy\""
             << std::endl;
          mode = "";
       }
       if (mode == "none")
          mode = "";
    }
+
    return mode.string();
+}
+
+std::string ossimChipperUtil::getSharpenPercent() const
+{
+   ossimString percent = m_kwl->findKey(SHARPEN_PERCENT_KW);
+   if (percent.size())
+   {
+      ossim_float64 value = percent.toDouble();
+      if (value < 0 || value > 1)
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+             << "ossimChipperUtil::getSharpenPercent WARNING!"
+             << "\nInvalid sharpen percent: " << percent
+             << "\nValid percent: Between 0 and 1\n";
+         percent = "";
+      }
+   }
+   return percent;
 }
 
 int ossimChipperUtil::getHistoMode() const

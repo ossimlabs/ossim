@@ -91,7 +91,7 @@ ossimString ossimDataObject::getDataObjectStatusString() const
    return s;
 }
 
-ossim_uint32 ossimDataObject::getObjectSizeInBytes()const
+ossim_uint64 ossimDataObject::getObjectSizeInBytes() const
 {
    return sizeof(theOwner);
 }

@@ -6,6 +6,7 @@ OSSIM_SETUP_APPLICATION(ossim-batch-test INSTALL COMPONENT_NAME ossim SOURCE_FIL
 # Remainder to be built but not installed
 OSSIM_SETUP_APPLICATION(ossim-foo COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-foo.cpp)
 OSSIM_SETUP_APPLICATION(ossim-test COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-helloworld COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-helloworld.cpp)
 
 add_subdirectory(base)
 add_subdirectory(elevation)

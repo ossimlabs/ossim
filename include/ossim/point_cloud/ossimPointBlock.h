@@ -76,7 +76,7 @@ public:
     */
    virtual bool isEqualTo(const ossimDataObject& /*rhs*/, bool /*deep_copy*/) const { return false; }
    virtual ossim_uint32 getHashId() const { return 0; }
-   virtual ossim_uint32 getDataSizeInBytes() const { return 0; };
+   virtual ossim_uint64 getDataSizeInBytes() const { return 0; };
    virtual void initialize() {};
 
 protected:
