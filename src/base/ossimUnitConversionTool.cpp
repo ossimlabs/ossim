@@ -421,7 +421,11 @@ double ossimUnitConversionTool::computeMeters()const
       }
       case OSSIM_MILLIMETERS:
       {
-         return (theValue/(1e3));
+         return (theValue / (1e3));
+      }
+      case OSSIM_CENTIMETERS:
+      {
+         return (theValue / (100.0));
       }
       case OSSIM_MICRONS:
       {

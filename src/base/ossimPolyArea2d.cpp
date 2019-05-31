@@ -27,6 +27,7 @@
 #include <geos/opBuffer.h>
 #include <cstdlib>
 #include <exception>
+#include <memory>
 #include <vector>
 #include <mutex>
 
@@ -177,7 +178,7 @@ void ossimPolyArea2d::recurseVisibleGeometries(
             
             for (idx=0; idx<nPoints; idx++)
             {
-               std::auto_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
+               std::unique_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
                polyList[currentPolyIdx].addPoint(point->getX(), point->getY());
             }
          }
@@ -219,7 +220,7 @@ void ossimPolyArea2d::recurseHoles(std::vector<ossimPolygon>& polyList,
 
                for (idx=0; idx<nPoints; idx++)
                {
-                  std::auto_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
+                  std::unique_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
                   polyList[currentPolyIdx].addPoint(point->getX(), point->getY());
                }
             }
@@ -256,7 +257,7 @@ void ossimPolyArea2d::recurseCompleteGeometries(std::vector<ossimPolyArea2d>& po
             int nPoints = (int)lineString->getNumPoints();
             for (int idx = 0; idx<nPoints; idx++)
             {
-               std::auto_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
+               std::unique_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
                shell.addPoint(point->getX(), point->getY());
             }
          }
@@ -272,7 +273,7 @@ void ossimPolyArea2d::recurseCompleteGeometries(std::vector<ossimPolyArea2d>& po
                std::size_t nPoints = lineString->getNumPoints();
                for (std::size_t idx = 0; idx<nPoints; ++idx)
                {
-                  std::auto_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
+                  std::unique_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
                   holes[holeIdx].addPoint(point->getX(), point->getY());
                }
             }
