@@ -442,6 +442,12 @@ private:
     * @note Throws ossimException on error.
     */
    void propagateOutputProjectionToChains();
+   
+   /**
+    * @brief loops through all chains and sets the viewport aoi.  This is used
+    *        if viewport stretch is enabled based on center tile request.
+    */
+   void propagateViewportStretch(const ossimIrect& aoi);
 
    /**
     * @brief Combines all layers into an ossimImageMosaic.
@@ -843,10 +849,12 @@ private:
    mutable ossimRefPtr<ossimImageFileWriter> m_writer;
 
    /**
-   * We need to support changing clips without doing a full initilization.  
+   * We need to support changing clips without doing a full initialization.  
    * we will save the ImageSource pointer on first initialization
    */
     ossimRefPtr<ossimImageSource> m_source;
+
+   mutable bool m_viewPortStretchEnabled;
 
 };
 
