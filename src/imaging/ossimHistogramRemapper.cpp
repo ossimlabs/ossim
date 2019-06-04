@@ -226,7 +226,6 @@ ossimRefPtr<ossimImageData> ossimHistogramRemapper::getTile(
          // Rebuild the table if dirty flag set:
          makeClean();
       }
-
       if ( theEnableFlag && !theBypassFlag && theTable.size() ) 
       {
          //---
