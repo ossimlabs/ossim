@@ -208,7 +208,6 @@ bool ossimHistogramRemapper::computeHistogram(const ossimIrect& roi)
 
             setHistogram( histo );
             result = true;
-            std::cout << "SETTING THE HISTOGRAM!!!!!!!!!!!!!!!!!!\n";
          }
       }
    }
