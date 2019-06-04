@@ -3871,8 +3871,6 @@ void ossimChipperUtil::propagateViewportStretch(const ossimIrect& rect)
          if (ivt.valid()&&remapper.valid())
          {
             ossimIrect imageRect = viewToImage(ivt, rect);
-            std::cout << rect<< "\n";
-            std::cout << imageRect << "\n";
             remapper->setEnableFlag(true);
             remapper->computeHistogram(imageRect);
          
