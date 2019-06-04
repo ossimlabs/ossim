@@ -26,6 +26,7 @@
 #include <ossim/imaging/ossimSingleImageChain.h>
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <ossim/projection/ossimMapProjection.h>
+#include <ossim/base/ossimConnectableContainer.h>
 
 #include <map>
 #include <vector>
@@ -810,6 +811,9 @@ private:
    /** @brief Hidden from use copy constructor. */
    ossimChipperUtil( const ossimChipperUtil& obj );
 
+   ossimRefPtr<ossimImageSource> getFinalInput(const ossimIrect& aoi, ossimRefPtr<ossimImageSource> currentSource);
+   void setStretch(ossimRefPtr<ossimHistogramRemapper> remapper)const;
+
    /** @brief Hidden from use assignment operator. */
    const ossimChipperUtil& operator=( const ossimChipperUtil& rhs );
 
@@ -856,6 +860,10 @@ private:
 
    mutable bool m_viewPortStretchEnabled;
 
+   /**
+    * Final container that holds any cuts or stretching, ... etc just before we output 
+    */
+   ossimRefPtr<ossimConnectableContainer> m_container;
 };
 
 #endif /* #ifndef ossimChipperUtil_HEADER */
