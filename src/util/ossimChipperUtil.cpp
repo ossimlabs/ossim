@@ -1164,6 +1164,9 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain(ossimIrect &aoi)
          source->initialize();
       }
 
+      // GP 2019: we will add cutters at the end
+      // Will remove temporarily bt leave the code hear just in
+      // case I messed something up
       if (source.valid() && !aoi.hasNans())
       {
          //---
@@ -1172,29 +1175,29 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain(ossimIrect &aoi)
          // 2) Speed up by not propagating get tile request outside the cut or "aoi"
          //    to the left hand side(input).
          //---
-         ossimRefPtr<ossimRectangleCutFilter> cutter = new ossimRectangleCutFilter();
+         // ossimRefPtr<ossimRectangleCutFilter> cutter = new ossimRectangleCutFilter();
 
-         // Set the cut rectangle:
-         cutter->setRectangle(aoi);
+         // // Set the cut rectangle:
+         // cutter->setRectangle(aoi);
 
-         // Null outside.
-         cutter->setCutType(ossimRectangleCutFilter::OSSIM_RECTANGLE_NULL_OUTSIDE);
+         // // Null outside.
+         // cutter->setCutType(ossimRectangleCutFilter::OSSIM_RECTANGLE_NULL_OUTSIDE);
 
-         // Connect cutter input to source chain.
-         cutter->connectMyInputTo(0, source.get());
+         // // Connect cutter input to source chain.
+         // cutter->connectMyInputTo(0, source.get());
 
-         source = cutter.get();
+         // source = cutter.get();
 
-         // Dependent on correct aoi so place after the cutter.
-         if (hasAnnotations())
-         {
-            // Put annotations after scalar remapper.
-            ossimRefPtr<ossimImageSource> result = addAnnotations(source);
-            if (result.valid())
-            {
-               source = result.get();
-            }
-         }
+         // // Dependent on correct aoi so place after the cutter.
+         // if (hasAnnotations())
+         // {
+         //    // Put annotations after scalar remapper.
+         //    ossimRefPtr<ossimImageSource> result = addAnnotations(source);
+         //    if (result.valid())
+         //    {
+         //       source = result.get();
+         //    }
+         // }
       }
    }
 
@@ -1652,6 +1655,7 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist &op
    {
       m_kwl->addList(optionsKwl, true);
    }
+   
 
    // (GP)
    // Until we add more ellaborate code to check for scale changes
@@ -1668,6 +1672,7 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist &op
 
    if (optionsKwl.getSize() > 0)
    {
+      
       //---
       // Only do this if new options were passed in. This was causing an off by
       // one error when now options were passed in using thumbnail option.
@@ -1678,6 +1683,10 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist &op
       getAreaOfInterest(m_source.get(), aoi);
 
       m_geom->setImageSize(aoi.size());
+   }
+   else
+   {
+      getAreaOfInterest(m_source.get(), aoi);
    }
 
    if (m_source.valid())
