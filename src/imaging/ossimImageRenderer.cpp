@@ -1119,7 +1119,8 @@ ossimImageRenderer::ossimImageRenderer(ossimImageSource *inputSource,
    m_Resampler = new ossimFilterResampler();
 
    loadState(ossimPreferences::instance()->preferencesKWL(), "renderer.");
-   m_ImageViewTransform = imageViewTrans;
+   if (imageViewTrans)
+      m_ImageViewTransform = imageViewTrans;
 }
 
 ossimImageRenderer::~ossimImageRenderer()
