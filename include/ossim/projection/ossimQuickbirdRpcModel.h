@@ -64,11 +64,12 @@ class ossimQuickbirdRpcModel : public ossimRpcModel
       return theSupportData.get();
    }
 
+   bool parseRpcData(const ossimFilename &file);
+
  protected:
    bool parseNitfFile(const ossimFilename &file);
    bool parseTiffFile(const ossimFilename &file);
    bool parseMetaData(const ossimFilename &file);
-   bool parseRpcData(const ossimFilename &file);
    bool parseTileData(const ossimFilename &file);
 
    //! Given an initial filename with case-agnostic extension, this method searches first for an
