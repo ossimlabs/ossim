@@ -15,6 +15,7 @@ properties([
             [$class: "GitHubPushTrigger"]
     ]),
     [$class: 'GithubProjectProperty', displayName: '', projectUrlStr: 'https://github.com/ossimlabs/tlv'],
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '3', daysToKeepStr: '', numToKeepStr: '20')),
     disableConcurrentBuilds()
 ])
 
