@@ -297,6 +297,9 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
 {
    ossimFilename rpcFile(base_name);
 
+   // Make the gsd nan so it gets computed.
+   theGSD.makeNan();
+
    // There are three possibilities for RPC data files: either each image file has its own RPC data
    // file, or a single RPC file is provided for a multi-tile scene.
    while (1)
@@ -347,6 +350,15 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
    theBiasError  = m_qbRpcHeader->theErrBias;
    theRandError  = m_qbRpcHeader->theErrRand;
    theImageID = rpcFile.fileNoExtension();
+
+   if (theImageSize.length() == 0)
+   {
+      theImageSize.x = 2 * (int) theSampOffset;
+      theImageSize.y = 2 * (int) theLineOffset;
+      theRefImgPt = ossimDpt(theSampOffset, theLineOffset);
+   }
+
+   finishConstruction();
 
    return true;
 }
