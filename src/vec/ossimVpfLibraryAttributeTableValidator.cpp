@@ -3,12 +3,6 @@
 
 bool ossimVpfLibraryAttributeTableValidator::isValid(ossimVpfTable& aTable)const
 {
-   // make sure the table is not null
-   if(&aTable == NULL)
-   {
-      return false;
-   }
-
    // and make sure that the table is not closed
    if(aTable.isClosed())
    {
