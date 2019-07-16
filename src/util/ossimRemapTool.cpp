@@ -3,6 +3,8 @@
 //     OSSIM Open Source Geospatial Data Processing Library
 //     See top level LICENSE.txt file for license information
 //
+//     Author: oscar.kramer@maxar.com
+//
 //**************************************************************************************************
 
 #include <ossim/util/ossimRemapTool.h>
@@ -32,6 +34,23 @@ ossimRemapTool::ossimRemapTool()
       m_entry(0)
 {
    theStdOutProgress.setFlushStreamFlag(true);
+}
+
+ossimRemapTool::ossimRemapTool(const ossimFilename& inputFile,
+                               int entryIndex,
+                               bool doHistoStretch,
+                               ossimFilename outputFile)
+   :  m_inputFilename (inputFile),
+      m_entry (entryIndex),
+      m_doHistoStretch(doHistoStretch)
+{
+   m_productFilename = outputFile;
+   theStdOutProgress.setFlushStreamFlag(true);
+
+   initProcessingChain();
+
+   if (!execute())
+      throw ossimException("Error encountered writing remap image.");
 }
 
 ossimRemapTool::~ossimRemapTool()
@@ -90,12 +109,6 @@ bool ossimRemapTool::initialize(ossimArgumentParser& ap)
       m_productFilename = ap[2];
       cout<<m_inputFilename<<endl;
    }
-   if (m_productFilename.empty())
-   {
-      m_productFilename = m_inputFilename.fileNoExtension() + "-remap";
-      m_productFilename.setExtension(m_inputFilename.ext());
-   }
-
    try
    {
       initProcessingChain();
@@ -168,6 +181,12 @@ void ossimRemapTool::initProcessingChain()
 
 bool ossimRemapTool::execute()
 {
+   if (m_productFilename.empty())
+   {
+      m_productFilename = m_inputFilename.fileNoExtension() + "-remap";
+      m_productFilename.setExtension(m_inputFilename.ext());
+   }
+
    m_geom->getBoundingRect(m_aoiViewRect);
 
    // Parent class has service to create writer:
