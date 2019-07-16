@@ -9,14 +9,10 @@
 
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimException.h>
-#include <ossim/base/ossimFilename.h>
 #include <ossim/util/ossimRemapTool.h>
-#include <ossim/base/ossimNotify.h>
-#include <ossim/base/ossimRefPtr.h>
 #include <ossim/init/ossimInit.h>
 #include <getopt.h>
 #include <iostream>
-#include <memory>
 
 void usage(char* argv0, int exitCode, std::string errMsg="")
 {
