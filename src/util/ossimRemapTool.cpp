@@ -27,12 +27,11 @@ using namespace std;
 const char* ossimRemapTool::DESCRIPTION  =
    "Performs remap to 8-bit including optional histogram stretch and saves the corresponding external geometry file.";
 
-static const std::string HISTO_STRETCH_KW = "histo_stretch";
-
 ossimRemapTool::ossimRemapTool()
    :  m_doHistoStretch(true),
       m_entry(0)
 {
+   theStdOutProgress.setFlushStreamFlag(true);
 }
 
 ossimRemapTool::~ossimRemapTool()
@@ -44,7 +43,7 @@ void ossimRemapTool::setUsage(ossimArgumentParser& ap)
    // Add options.
    ossimApplicationUsage* au = ap.getApplicationUsage();
    ossimString usageString = ap.getApplicationName();
-   usageString += " remap [options] <input-image> ";
+   usageString += " remap [options] <input-image> [<remap-out-image>]";
    au->setCommandLineUsage(usageString);
 
    // Set the command line options:
@@ -55,7 +54,6 @@ void ossimRemapTool::setUsage(ossimArgumentParser& ap)
 
    au->addCommandLineOption("-e, --entry", "<entry> For multi image handlers which entry do you wish to extract. For list of entries use: \"ossim-info -i <your_image>\" ");
    au->addCommandLineOption("-n, --no-histo", "Optionally bypass histogram-stretch. ");
-   au->addCommandLineOption("-o, --output", "Output filename (defaults to <input-image>-remap.<ext>).");
 }
 
 bool ossimRemapTool::initialize(ossimArgumentParser& ap)
@@ -74,23 +72,24 @@ bool ossimRemapTool::initialize(ossimArgumentParser& ap)
    if ( ap.read("--no-histo") || ap.read("-n"))
       m_doHistoStretch = false;
 
-   if(ap.read("--output", sp1) || ap.read("-o", sp1))
-      m_productFilename = ts1;
+   // Determine input filename:
+   if ( ap.argc() > 1 )
+      m_inputFilename = ap[1];
 
-   if ( ap.argc() >= 2 )
+   if (!m_inputFilename.isReadable())
    {
-      // Input file is last arg:
-      m_inputFilename = ap[ap.argc()-1];
-      cout<<m_inputFilename<<endl;
-   }
-   else
-   {
-      ossimNotify(ossimNotifyLevel_FATAL)<<"ossimRemapTool::initialize() Input filename must be "
-                                           "provided!"<<endl;
-      ap.getApplicationUsage()->write(ossimNotify(ossimNotifyLevel_FATAL));
+      ossimNotify(ossimNotifyLevel_FATAL)<<"ossimRemapTool::initialize() Input filename <"
+                                         <<m_inputFilename<<"> was not specified or is not "
+                                         <<"readable. Try again.\n"<<endl;
       return false;
    }
 
+   // Establish output filename:
+   if ( ap.argc() > 2 )
+   {
+      m_productFilename = ap[2];
+      cout<<m_inputFilename<<endl;
+   }
    if (m_productFilename.empty())
    {
       m_productFilename = m_inputFilename.fileNoExtension() + "-remap";
@@ -138,31 +137,33 @@ void ossimRemapTool::initProcessingChain()
          histoSource->connectMyInputTo(0, handler.get());
          histoSource->enableSource();
          writer->connectMyInputTo(0, histoSource.get());
-
          ossimFilename histoFile;
-         handler->getFilenameWithThisExt("his", histoFile);
+         histoFile = handler->getFilenameWithThisExtension(ossimString("his"));
          writer->setFilename(histoFile);
          writer->addListener(&theStdOutProgress);
          writer->execute();
-
          histogram = handler->getImageHistogram();
          if (!histogram)
          {
             errMsg<<"Could not create histogram from <"<<histoFile<<">.";
             throw ossimException(errMsg.str());
          }
-         ossimRefPtr<ossimHistogramRemapper> histogramRemapper = new ossimHistogramRemapper();
-         histogramRemapper->setEnableFlag(true);
-         histogramRemapper->setStretchMode( ossimHistogramRemapper::LINEAR_AUTO_MIN_MAX );
-         histogramRemapper->setHistogram(histogram);
-         m_procChain->add(histogramRemapper.get());
       }
+
+      // Ready the histogram object in the processing chain:
+      ossimRefPtr<ossimHistogramRemapper> histogramRemapper = new ossimHistogramRemapper();
+      histogramRemapper->setEnableFlag(true);
+      histogramRemapper->setStretchMode( ossimHistogramRemapper::LINEAR_AUTO_MIN_MAX );
+      histogramRemapper->setHistogram(histogram);
+      m_procChain->add(histogramRemapper.get());
    }
 
    // Add scalar remapper:
    ossimRefPtr<ossimScalarRemapper> scalarRemapper = new ossimScalarRemapper();
    scalarRemapper->setOutputScalarType(OSSIM_UINT8);
    m_procChain->add(scalarRemapper.get());
+
+   m_procChain->initialize();
 }
 
 bool ossimRemapTool::execute()
@@ -170,14 +171,13 @@ bool ossimRemapTool::execute()
    m_geom->getBoundingRect(m_aoiViewRect);
 
    // Parent class has service to create writer:
-   ossimRefPtr<ossimImageFileWriter>writer = newWriter();
+   m_writer = newWriter();
    m_writer->connectMyInputTo(0, m_procChain.get());
 
    // Add a listener to get percent complete.
    m_writer->addListener(&theStdOutProgress);
 
    // Write the file and external geometry:
-   ;
    if(!m_writer->execute())
       return false;
 
