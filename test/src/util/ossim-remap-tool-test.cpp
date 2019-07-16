@@ -41,14 +41,13 @@ int main(int argc, char *argv[])
    int entryIndex=0, c=0;
    bool doHistoStretch=true;
 
-   // USAGE:
    // Parse command line:
    while ((c = getopt(argc, argv, "e:hn")) != -1)
    {
       switch (c)
       {
       case 'e':
-          entryIndex = atoi(optarg);
+         entryIndex = atoi(optarg);
          break;
       case 'h':
          usage(argv[0], 0);
