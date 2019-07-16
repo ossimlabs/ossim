@@ -24,6 +24,9 @@
 
 using namespace std;
 
+const char* ossimPointCloudTool::DESCRIPTION =
+   "Utility class for generating point-cloud-derived image products.";
+
 ossimPointCloudTool::ossimPointCloudTool()
 :  m_operation (LOWEST_DEM),
    m_gsd (0)

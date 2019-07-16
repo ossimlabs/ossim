@@ -49,20 +49,20 @@ public:
     *  method or use the ossimImageHandler::open that takes a file name and an
     *  entry index.
     */
-   virtual bool open();
+   virtual bool open() override;
 
    /**
     *  @brief is open method.
     *  Satisfies ossimImageHandler::isOpen pure virtual.
     *  @return true if open, false if not.
     */
-   virtual bool isOpen() const { return m_pch.valid(); }
+   virtual bool isOpen() const override { return m_pch.valid(); }
 
 
    /**
     * @brief Close method.
     */
-   virtual void close();
+   virtual void close() override;
 
    /**
     *  Returns a pointer to a tile given an origin representing the upper left
@@ -250,8 +250,6 @@ protected:
    std::mutex                   m_mutex;
    Components                   m_activeComponent;
    std::vector<ossimString>     m_componentNames;
-
-   TYPE_DATA
 };
 
 #endif /* ossimPointCloudRenderer_HEADER */
