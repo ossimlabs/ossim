@@ -36,6 +36,9 @@ public:
    void saveJSON(Json::Value& json) const override;
    virtual bool execute() override;
 
+   /** Used by ossimUtilityFactory */
+   static const char* DESCRIPTION;
+
 protected:
    bool initialize();
    void setGSD(const double& meters_per_pixel);
