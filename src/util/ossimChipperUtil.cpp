@@ -16,6 +16,7 @@
 
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
+#include <ossim/base/ossimConnectableContainer.h>
 #include <ossim/base/ossimConnectableObject.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimFilename.h>
@@ -145,14 +146,15 @@ static const std::string TWOCMV_GREEN_OUTPUT_SOURCE_KW = "2cmv_green_output_sour
 static const std::string TWOCMV_BLUE_OUTPUT_SOURCE_KW = "2cmv_blue_output_source";
 
 ossimChipperUtil::ossimChipperUtil()
-   : ossimReferenced(),
-     m_operation(OSSIM_CHIPPER_OP_UNKNOWN),
-     m_kwl(new ossimKeywordlist()),
-     m_srcKwl(0),
-     m_geom(0),
-     m_ivt(0),
-     m_demLayer(0),
-     m_imgLayer(0)
+    : ossimReferenced(),
+      m_operation(OSSIM_CHIPPER_OP_UNKNOWN),
+      m_kwl(new ossimKeywordlist()),
+      m_srcKwl(0),
+      m_geom(0),
+      m_ivt(0),
+      m_demLayer(0),
+      m_imgLayer(0),
+      m_viewPortStretchEnabled(false)
 {
    // traceDebug.setTraceFlag(true);
 
@@ -1162,6 +1164,9 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain(ossimIrect &aoi)
          source->initialize();
       }
 
+      // GP 2019: we will add cutters at the end
+      // Will remove temporarily bt leave the code hear just in
+      // case I messed something up
       if (source.valid() && !aoi.hasNans())
       {
          //---
@@ -1170,29 +1175,29 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain(ossimIrect &aoi)
          // 2) Speed up by not propagating get tile request outside the cut or "aoi"
          //    to the left hand side(input).
          //---
-         ossimRefPtr<ossimRectangleCutFilter> cutter = new ossimRectangleCutFilter();
+         // ossimRefPtr<ossimRectangleCutFilter> cutter = new ossimRectangleCutFilter();
 
-         // Set the cut rectangle:
-         cutter->setRectangle(aoi);
+         // // Set the cut rectangle:
+         // cutter->setRectangle(aoi);
 
-         // Null outside.
-         cutter->setCutType(ossimRectangleCutFilter::OSSIM_RECTANGLE_NULL_OUTSIDE);
+         // // Null outside.
+         // cutter->setCutType(ossimRectangleCutFilter::OSSIM_RECTANGLE_NULL_OUTSIDE);
 
-         // Connect cutter input to source chain.
-         cutter->connectMyInputTo(0, source.get());
+         // // Connect cutter input to source chain.
+         // cutter->connectMyInputTo(0, source.get());
 
-         source = cutter.get();
+         // source = cutter.get();
 
-         // Dependent on correct aoi so place after the cutter.
-         if (hasAnnotations())
-         {
-            // Put annotations after scalar remapper.
-            ossimRefPtr<ossimImageSource> result = addAnnotations(source);
-            if (result.valid())
-            {
-               source = result.get();
-            }
-         }
+         // // Dependent on correct aoi so place after the cutter.
+         // if (hasAnnotations())
+         // {
+         //    // Put annotations after scalar remapper.
+         //    ossimRefPtr<ossimImageSource> result = addAnnotations(source);
+         //    if (result.valid())
+         //    {
+         //       source = result.get();
+         //    }
+         // }
       }
    }
 
@@ -1459,6 +1464,108 @@ void ossimChipperUtil::initializeOutputProjection()
    }
 }
 
+ossimIrect clampViewportStretch(const ossimIrect &viewRect)
+{
+   ossimIrect result = viewRect;
+
+   if (result.width() > 1024 || result.height() > 1024)
+   {
+      ossim_int64 w = ossim::min(static_cast<ossim_int64>(result.width()), static_cast<ossim_int64>(1024));
+      ossim_int64 h = ossim::min(static_cast<ossim_int64>(result.height()), static_cast<ossim_int64>(1024));
+      if (w < 64)
+         w = 64;
+      if (h < 64)
+         h = 64;
+
+      result = ossimIrect(ossimIpt(result.midPoint()), w, h);
+   }
+   return result;
+}
+
+void ossimChipperUtil::setStretch(ossimRefPtr<ossimHistogramRemapper> remapper)const
+{
+   ossim_int32 mode = getHistoMode();
+   if(mode == ossimHistogramRemapper::LINEAR_ONE_PIECE)
+   {
+      ossimString value = m_kwl->findKey(HIST_LINEAR_CLIP_KW);
+      std::vector<ossimString> splitValues;
+      if (!value.empty())
+      {
+         splitValues = value.split(",");
+         if(splitValues.size() == 2)
+         {
+            remapper->setLowClipPoint(splitValues[0].toFloat32());
+            remapper->setHighClipPoint(splitValues[1].toFloat32());
+         }
+      }
+      else
+      {
+         value = m_kwl->findKey(HIST_LINEAR_NORM_CLIP_KW);
+         if(!value.empty())
+         {
+            splitValues = value.split(",");
+            if (splitValues.size() == 2)
+            {
+               ossim_float32 low = splitValues[0].toFloat32();
+               ossim_float32 high = splitValues[1].toFloat32();
+               remapper->setLowNormalizedClipPoint(low);
+               remapper->setHighNormalizedClipPoint(high);
+            }
+         }
+      }
+   }
+}
+
+ossimRefPtr<ossimImageSource> ossimChipperUtil::getFinalInput(const ossimIrect& aoi, 
+                                                              ossimRefPtr<ossimImageSource> currentSource)
+{
+   ossimRefPtr<ossimImageSource> result = currentSource;
+
+   if(m_container.valid())
+   {
+      m_container->deleteAllChildren();
+      m_container->disconnect();
+   }
+   else
+   {
+      m_container = new ossimConnectableContainer();
+   }
+   ossimRefPtr<ossimRectangleCutFilter> cut = new ossimRectangleCutFilter();
+   cut->connectMyInputTo(result.get());
+   cut->setRectangle(aoi);
+   m_container->addChild(cut.get());
+   result = cut.get();
+
+   if(m_viewPortStretchEnabled)
+   {
+      ossimRefPtr<ossimImageHistogramSource> histoSource = new ossimImageHistogramSource();
+      histoSource->connectMyInputTo(result.get());
+
+      ossimRefPtr<ossimHistogramRemapper> remapper =new ossimHistogramRemapper();
+      remapper->connectMyInputTo(result.get());
+      remapper->connectMyInputTo(histoSource.get());
+      remapper->setStretchMode(static_cast<ossimHistogramRemapper::StretchMode>(getHistoMode()));
+      remapper->setEnableFlag(true);
+
+      result = remapper.get();
+      m_container->addChild(histoSource.get());
+      m_container->addChild(remapper.get());
+      setStretch(remapper);
+   }
+   if(scaleToEightBit())
+   {
+      if(result->getOutputScalarType() != OSSIM_UINT8)
+      {
+         ossimRefPtr<ossimScalarRemapper>  scalarRemapper = new ossimScalarRemapper();
+         scalarRemapper->setOutputScalarType(OSSIM_UINT8);
+         scalarRemapper->connectMyInputTo(result.get());
+         m_container->addChild(scalarRemapper.get());
+         result = scalarRemapper.get();
+      }
+   }
+   return result;
+}
+
 void ossimChipperUtil::execute()
 {
    static const char MODULE[] = "ossimChipperUtil::execute";
@@ -1469,8 +1576,9 @@ void ossimChipperUtil::execute()
    }
 
    ossimIrect aoi;
-   ossimRefPtr<ossimImageSource> source = initializeChain(aoi);
-
+   ossimRefPtr<ossimImageSource> chain = initializeChain(aoi);
+ //  ossimRefPtr<ossimConnectableContainer> container = new ossimConnectableContainer();
+   ossimRefPtr<ossimImageSource> source = getFinalInput(aoi, chain);//chain.get();
    if (source.valid() && !aoi.hasNans())
    {
       // Set up the writer.
@@ -1485,7 +1593,7 @@ void ossimChipperUtil::execute()
       // ossimImageFileWriter::initialize incorrectly resets theAreaOfInterest
       // back to the bounding rect.
       //---
-      m_writer->setAreaOfInterest(aoi);
+      // m_writer->setAreaOfInterest(aoi);
 
       if (m_writer->getErrorStatus() == ossimErrorCodes::OSSIM_OK)
       {
@@ -1514,6 +1622,9 @@ void ossimChipperUtil::execute()
          {
             throw ossimException("Writer Process aborted!");
          }
+         m_writer->disconnect();
+         m_container->deleteAllChildren();
+         m_container->disconnect();
       }
       else
       {
@@ -1544,6 +1655,7 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist &op
    {
       m_kwl->addList(optionsKwl, true);
    }
+   
 
    // (GP)
    // Until we add more ellaborate code to check for scale changes
@@ -1552,6 +1664,7 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist &op
    //
 
    initializeOutputProjection();
+
    if (!m_source.valid())
    {
       m_source = initializeChain(aoi);
@@ -1559,6 +1672,7 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist &op
 
    if (optionsKwl.getSize() > 0)
    {
+      
       //---
       // Only do this if new options were passed in. This was causing an off by
       // one error when now options were passed in using thumbnail option.
@@ -1570,10 +1684,15 @@ ossimRefPtr<ossimImageData> ossimChipperUtil::getChip(const ossimKeywordlist &op
 
       m_geom->setImageSize(aoi.size());
    }
+   else
+   {
+      getAreaOfInterest(m_source.get(), aoi);
+   }
 
    if (m_source.valid())
    {
-      result = m_source->getTile(aoi, 0);
+      ossimRefPtr<ossimImageSource> source = getFinalInput(aoi, m_source.get());
+      result = source->getTile(aoi);
    }
 
    return result;
@@ -1856,10 +1975,12 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
          //---
          // If multiple inputs and scaleToEightBit do it at the end of the processing
          // chain to alleviate un-even stretches between inputs.
+         //
+         // GP 2019:  Going to move this to the end of the chain.  Should always be full bit depth until the end
          //---
-         const ossim_uint32 INPUT_COUNT = getNumberOfInputs();
-         bool scaleFlag = (scaleToEightBit() && (INPUT_COUNT == 1));
-         ic->setRemapToEightBitFlag(scaleFlag);
+         // const ossim_uint32 INPUT_COUNT = getNumberOfInputs();
+         // bool scaleFlag = (scaleToEightBit() && (INPUT_COUNT == 1));
+         //ic->setRemapToEightBitFlag(scaleFlag);
 
          // Always have resampler cache.
          ic->setAddResamplerCacheFlag(true);
@@ -1942,7 +2063,6 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
          }
          else if(sharpenPercent.size())
          {
-            std::cout << "VALUE IS ============== " << ossimString(sharpenPercent).toDouble() << "\n";
              ic->getSharpenFilter()->setSharpenPercent(ossimString(sharpenPercent).toDouble());
          }
 
@@ -2048,10 +2168,12 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       //---
       // If multiple inputs and scaleToEightBit do it at the end of the processing
       // chain to alleviate un-even stretches between inputs.
+      //
+      // GP 2019:  Going to move this to the end of the chain.  Should always be full bit depth until the end
       //---
-      const ossim_uint32 INPUT_COUNT = getNumberOfInputs();
-      bool scaleFlag = (scaleToEightBit() && (INPUT_COUNT == 1));
-      ic->setRemapToEightBitFlag(scaleFlag);
+      // const ossim_uint32 INPUT_COUNT = getNumberOfInputs();
+      // bool scaleFlag = (scaleToEightBit() && (INPUT_COUNT == 1));
+      //ic->setRemapToEightBitFlag(scaleFlag);
 
       // Always have resampler cache.
       ic->setAddResamplerCacheFlag(true);
@@ -2138,7 +2260,6 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       }
       else if(sharpenPercent.size())
       {
-         std::cout << "VALUE IS ---------------- " << ossimString(sharpenPercent).toDouble() << "\n";
          ic->getSharpenFilter()->setSharpenPercent(ossimString(sharpenPercent).toDouble());
       }
 
@@ -3699,6 +3820,74 @@ ossimRefPtr<ossimImageFileWriter> ossimChipperUtil::createNewWriter() const
 
    return writer;
 }
+ossimIrect viewToImage(ossimRefPtr<ossimImageViewTransform> ivt, const ossimIrect& viewRect)
+{
+   ossimIrect result;
+   ossimDpt ul,ur,lr,ll;
+
+   ivt->viewToImage(viewRect.ul(), ul);
+   ivt->viewToImage(viewRect.ur(), ur);
+   ivt->viewToImage(viewRect.lr(), lr);
+   ivt->viewToImage(viewRect.ll(), ll);
+
+   result = ossimDrect(ul, ur, lr, ll);
+
+   if(result.width() > 1024 || result.height() > 1024)
+   {
+      ossim_int64 w = ossim::min(static_cast<ossim_int64>(result.width()), static_cast<ossim_int64>(1024));
+      ossim_int64 h = ossim::min(static_cast<ossim_int64>(result.height()), static_cast<ossim_int64>(1024));
+      if(w < 64) w = 64;
+      if(h < 64) h = 64;
+
+      result = ossimIrect(ossimIpt(result.midPoint()), w, h);
+   }
+   return result;
+}
+
+void ossimChipperUtil::propagateViewportStretch(const ossimIrect& rect)
+{
+   //for now we will do it on each image chaing
+   std::vector<ossimRefPtr<ossimSingleImageChain> >::iterator chainIdx;
+
+   // Loop through dem layers.
+   chainIdx = m_demLayer.begin();
+   while (chainIdx != m_demLayer.end())
+   {
+      ossimRefPtr<ossimHistogramRemapper> remapper = (*chainIdx)->getHistogramRemapper();
+      ossimRefPtr<ossimImageRenderer> resampler = (*chainIdx)->getImageRenderer();
+      if (resampler.valid())
+      {
+         ossimRefPtr<ossimImageViewTransform> ivt = resampler->getImageViewTransform();
+         if (ivt.valid() && remapper.valid())
+         {
+            ossimIrect imageRect = viewToImage(ivt, rect);
+            remapper->setEnableFlag(true);
+            remapper->computeHistogram(imageRect);
+         }
+      }
+      ++chainIdx;
+   }
+
+   // Loop through image layers.
+   chainIdx = m_imgLayer.begin();
+   while (chainIdx != m_imgLayer.end())
+   {
+      ossimRefPtr<ossimHistogramRemapper> remapper = (*chainIdx)->getHistogramRemapper();
+      ossimRefPtr<ossimImageRenderer>     resampler = (*chainIdx)->getImageRenderer();
+      if (resampler.valid())
+      {
+         ossimRefPtr<ossimImageViewTransform> ivt = resampler->getImageViewTransform();
+         if (ivt.valid()&&remapper.valid())
+         {
+            ossimIrect imageRect = viewToImage(ivt, rect);
+            remapper->setEnableFlag(true);
+            remapper->computeHistogram(imageRect);
+         
+         }
+      }
+      ++chainIdx;
+   }
+}
 
 void ossimChipperUtil::propagateOutputProjectionToChains()
 {
@@ -4422,7 +4611,6 @@ bool ossimChipperUtil::setupChainHistogram(ossimRefPtr<ossimSingleImageChain> &c
          if (roiStretch)
          {
             ossimIrect aoi;
-
             std::string value = m_kwl->findKey(HIST_AOI_KW);
             if (value.size())
             {
@@ -4437,7 +4625,11 @@ bool ossimChipperUtil::setupChainHistogram(ossimRefPtr<ossimSingleImageChain> &c
                }
                else //  Use center of image.
                {
-                  result = getIrect(chain, aoi);
+                  // Will need to mark it to do a true computation later
+                  // for each chain.  We do not set the request rect yet.
+                  //
+                  m_viewPortStretchEnabled = true;
+                  result = false;//getIrect(chain, aoi);
                }
             }
 
@@ -4449,9 +4641,21 @@ bool ossimChipperUtil::setupChainHistogram(ossimRefPtr<ossimSingleImageChain> &c
 
             if (result)
             {
+               ossimIrect newAoi = aoi;   
+               ossimDpt centerPoint;
+
+               // we will clamp the region of interest if too large
+               if ( aoi.width() > 2048 || aoi.height() > 2048)
+               {
+                  ossim_int64 w = ossim::min(static_cast<ossim_int64>(aoi.width()), static_cast<ossim_int64>(2048));
+                  ossim_int64 h = ossim::min(static_cast<ossim_int64>(aoi.height()), static_cast<ossim_int64>(2048));
+                  aoi.getCenter(centerPoint);
+                  newAoi = ossimIrect(ossimIpt(centerPoint), w, h);
+               }
                //---
                // Note: both of these sections work.
                // Going with separate connection for now. drb - 20 Feb. 2016
+               //
                //---
 #if 1
                ossimRefPtr<ossimImageHistogramSource> ihist =
@@ -4460,7 +4664,7 @@ bool ossimChipperUtil::setupChainHistogram(ossimRefPtr<ossimSingleImageChain> &c
                ihist->connectMyInputTo(remapper->getInput()); //ih.get());
                remapper->connectMyInputTo(ihist.get());
 #else
-               remapper->computeHistogram(aoi);
+               remapper->computeHistogram(newAoi);
 #endif
             }
          }
@@ -4469,38 +4673,8 @@ bool ossimChipperUtil::setupChainHistogram(ossimRefPtr<ossimSingleImageChain> &c
          {
             remapper->setEnableFlag(false);
          }
-         if(mode == ossimHistogramRemapper::LINEAR_ONE_PIECE)
-         {
-            ossimString value = m_kwl->findKey(HIST_LINEAR_CLIP_KW);
-            std::vector<ossimString> splitValues;
-            if (!value.empty())
-            {
-                splitValues = value.split(",");
-                if(splitValues.size() == 2)
-                {
-                   remapper->setLowClipPoint(splitValues[0].toFloat32());
-                   remapper->setHighClipPoint(splitValues[1].toFloat32());
-                }
-            }
-            else
-            {
-               value = m_kwl->findKey(HIST_LINEAR_NORM_CLIP_KW);
-               if(!value.empty())
-               {
-                  splitValues = value.split(",");
-                  if (splitValues.size() == 2)
-                  {
-                     ossim_float32 low = splitValues[0].toFloat32();
-                     ossim_float32 high = splitValues[1].toFloat32();
-                     remapper->setLowNormalizedClipPoint(low);
-                     remapper->setHighNormalizedClipPoint(high);
-                  }
-               }
-            }
-         }
-
+         setStretch(remapper);
       } // Matches: if ( ih.valid() && remapper.valid() && mode... )
-
    } // Matches: if ( chain.valid() )
 
    if (traceDebug())
@@ -4865,7 +5039,6 @@ void ossimChipperUtil::getAreaOfInterest(ossimImageSource *source, ossimIrect &r
          << "aoi: " << rect << "\n"
          << MODULE << " exited...\n";
    }
-
 } // End: ossimChipperUtil::getAreaOfInterest
 
 bool ossimChipperUtil::getIrect(const std::string &s, ossimIrect &rect) const
@@ -4940,6 +5113,7 @@ bool ossimChipperUtil::getIrect(ossimRefPtr<ossimSingleImageChain> &chain,
    bool result = false;
    if (chain.valid())
    {
+      
       ossimRefPtr<ossimImageHandler> ih = chain->getImageHandler();
       if (ih.valid())
       {
@@ -5011,11 +5185,12 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect &originalR
                {
                   m_ivt->scale(m_ivt->getScale().x * scale, m_ivt->getScale().y * scale);
                }
+               tw *= scale;
+               th *= scale;
             }
             else
             {
                scale = maxRectDimension / thumbSize;
-
                //---
                // Adjust the projection scale.  Note the "true" is to recenter
                // the tie point so it falls relative to the projection origin.
@@ -5023,9 +5198,9 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect &originalR
                // This call also scales: ossimImageGeometry::m_imageSize
                //---
                m_geom->applyScale(ossimDpt(scale, scale), true);
+               tw /= scale;
+               th /= scale;
             }
-            tw *= scale;
-            th *= scale;
             if (tw < 1)
                tw = 1;
             if (th < 1)

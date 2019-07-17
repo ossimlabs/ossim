@@ -124,7 +124,7 @@ static char * get_line (FILE *fp)
         return (char *) NULL ;
       }
     }  
-    if ( ( CurrentChar == (ossim_int32) LINE_CONTINUE ) ) {
+    if ( CurrentChar == (ossim_int32) LINE_CONTINUE ) {
       CurrentChar = fgetc(fp ) ;        /* read character after backslash */
       /* A newline will be ignored and thus skipped over */
       if ( CurrentChar == (ossim_int32) SPACE )  /* Assume line continue error */

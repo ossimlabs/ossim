@@ -34,7 +34,7 @@ class ossimQbTileFilesHandler;
  *****************************************************************************/
 class ossimQuickbirdRpcModel : public ossimRpcModel
 {
- public:
+public:
    ossimQuickbirdRpcModel();
    ossimQuickbirdRpcModel(const ossimQuickbirdRpcModel &rhs);
 
@@ -64,11 +64,16 @@ class ossimQuickbirdRpcModel : public ossimRpcModel
       return theSupportData.get();
    }
 
- protected:
+   /** Initializes this with contents of RPC file. IMPORTANT: This is not enough to fully initialize
+    * the model. The image size and reference (mid) point need to be set before calling this method
+    * so that the GSD is properly computed. A guesstimate of image size is made based
+    * on line/samp offset params, but this will probably be wrong. Returns TRUE if successful. */
+   bool parseRpcData(const ossimFilename &file);
+
+protected:
    bool parseNitfFile(const ossimFilename &file);
    bool parseTiffFile(const ossimFilename &file);
    bool parseMetaData(const ossimFilename &file);
-   bool parseRpcData(const ossimFilename &file);
    bool parseTileData(const ossimFilename &file);
 
    //! Given an initial filename with case-agnostic extension, this method searches first for an
@@ -83,7 +88,7 @@ class ossimQuickbirdRpcModel : public ossimRpcModel
    ossimRefPtr<ossimQuickbirdMetaData> theSupportData;
    std::shared_ptr<ossimQuickbirdRpcHeader> m_qbRpcHeader;
 
-   TYPE_DATA
+TYPE_DATA
 };
 
 #endif

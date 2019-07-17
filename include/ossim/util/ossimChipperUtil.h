@@ -26,6 +26,7 @@
 #include <ossim/imaging/ossimSingleImageChain.h>
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <ossim/projection/ossimMapProjection.h>
+#include <ossim/base/ossimConnectableContainer.h>
 
 #include <map>
 #include <vector>
@@ -442,6 +443,12 @@ private:
     * @note Throws ossimException on error.
     */
    void propagateOutputProjectionToChains();
+   
+   /**
+    * @brief loops through all chains and sets the viewport aoi.  This is used
+    *        if viewport stretch is enabled based on center tile request.
+    */
+   void propagateViewportStretch(const ossimIrect& aoi);
 
    /**
     * @brief Combines all layers into an ossimImageMosaic.
@@ -804,6 +811,9 @@ private:
    /** @brief Hidden from use copy constructor. */
    ossimChipperUtil( const ossimChipperUtil& obj );
 
+   ossimRefPtr<ossimImageSource> getFinalInput(const ossimIrect& aoi, ossimRefPtr<ossimImageSource> currentSource);
+   void setStretch(ossimRefPtr<ossimHistogramRemapper> remapper)const;
+
    /** @brief Hidden from use assignment operator. */
    const ossimChipperUtil& operator=( const ossimChipperUtil& rhs );
 
@@ -843,11 +853,17 @@ private:
    mutable ossimRefPtr<ossimImageFileWriter> m_writer;
 
    /**
-   * We need to support changing clips without doing a full initilization.  
+   * We need to support changing clips without doing a full initialization.  
    * we will save the ImageSource pointer on first initialization
    */
     ossimRefPtr<ossimImageSource> m_source;
 
+   mutable bool m_viewPortStretchEnabled;
+
+   /**
+    * Final container that holds any cuts or stretching, ... etc just before we output 
+    */
+   ossimRefPtr<ossimConnectableContainer> m_container;
 };
 
 #endif /* #ifndef ossimChipperUtil_HEADER */

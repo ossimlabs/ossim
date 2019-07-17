@@ -11,6 +11,7 @@ OSSIM_SETUP_APPLICATION(ossim-duration-test INSTALL COMMAND_LINE COMPONENT_NAME 
 OSSIM_SETUP_APPLICATION(ossim-filename-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-filename-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-gpt-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-gpt-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-histo-compare INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-histo-compare.cpp)
+OSSIM_SETUP_APPLICATION(ossim-irect64-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-irect64-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-keywordlist-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-keywordlist-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-kmeans-clustering-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-kmeans-clustering-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-least-squares-plane-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-least-squares-plane-test.cpp)

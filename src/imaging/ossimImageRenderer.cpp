@@ -1105,7 +1105,6 @@ ossimImageRenderer::ossimImageRenderer(ossimImageSource *inputSource,
       m_Tile(0),
       m_TemporaryBuffer(0),
       m_StartingResLevel(0),
-      m_ImageViewTransform(imageViewTrans),
       m_inputR0Rect(),
       m_viewRect(),
       m_rectsDirty(true),
@@ -1118,12 +1117,10 @@ ossimImageRenderer::ossimImageRenderer(ossimImageSource *inputSource,
 {
    ossimViewInterface::theObject = this;
    m_Resampler = new ossimFilterResampler();
-   if(!m_ImageViewTransform.valid())
-   {
-      m_ImageViewTransform = new ossimImageViewProjectionTransform;
-   }
 
    loadState(ossimPreferences::instance()->preferencesKWL(), "renderer.");
+   if (imageViewTrans)
+      m_ImageViewTransform = imageViewTrans;
 }
 
 ossimImageRenderer::~ossimImageRenderer()
