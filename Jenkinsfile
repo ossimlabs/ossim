@@ -144,6 +144,10 @@ node ("${BUILD_NODE}"){
                     sh """
                         export PATH=${ PATH }:/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin
                         sourceanalyzer -64 -b ossimlabs -scan -f fortifyResults-ossim.fpr
+                    """
+                    archiveArtifacts "fortifyResults-ossim.fpr"
+                    sh """
+                        export PATH=${ PATH }:/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin
                         fortifyclient -url ${ HP_FORTIFY_URL } -authtoken ${ HP_FORTIFY_TOKEN } uploadFPR -file fortifyResults-ossim.fpr -project ossim -version 1.0
                     """
                 }
