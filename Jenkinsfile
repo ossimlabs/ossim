@@ -148,7 +148,7 @@ node ("${BUILD_NODE}"){
                     archiveArtifacts "fortifyResults-ossim.fpr"
                     withCredentials([[$class: 'UsernamePasswordMultiBinding',
                             credentialsId: 'fortifyCredentials',
-                            usernameVariable: 'HP_FORITFY_USERNAME',
+                            usernameVariable: 'HP_FORTIFY_USERNAME',
                             passwordVariable: 'HP_FORTIFY_PASSWORD']]) {
                         sh """
                             export PATH=${ PATH }:/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin
