@@ -22,6 +22,8 @@
 
 #include <ossim/support_data/ossimNitfCsexraTag.h>
 
+using namespace std;
+
 
 RTTI_DEF1(ossimNitfCsexraTag, "ossimNitfCsexraTag", ossimNitfRegisteredTag);
 

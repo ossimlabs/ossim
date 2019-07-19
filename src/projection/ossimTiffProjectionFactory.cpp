@@ -20,6 +20,8 @@
 #include <ossim/support_data/TiffHandlerState.h>
 #include <fstream>
 
+using namespace std;
+
 ossimTiffProjectionFactory* ossimTiffProjectionFactory::theInstance = 0;
 
 //*****************************************************************************

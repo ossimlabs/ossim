@@ -69,7 +69,7 @@ public:
 
    friend std::ostream& operator <<(std::ostream& out, const ossimColumnVector3d& v)
       {
-         return out << setiosflags(std::ios::fixed) << std::setprecision(15)
+         return out << std::setiosflags(std::ios::fixed) << std::setprecision(15)
                     << v[0] << " " << v[1] <<" "
                     << v[2];
       }

@@ -9,6 +9,8 @@
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimGpt.h>
 
+using namespace std;
+
 namespace ossim
 {
 

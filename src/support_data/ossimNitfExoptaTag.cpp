@@ -12,6 +12,8 @@
 #include <iomanip>
 #include <iostream>
 
+using namespace std;
+
 ossimNitfExoptaTag::ossimNitfExoptaTag()
    : ossimNitfRegisteredTag(std::string("EXOPTA"), CEL_SIZE) 
 {

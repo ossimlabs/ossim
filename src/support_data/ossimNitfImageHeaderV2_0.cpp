@@ -27,6 +27,8 @@
 #include <stdexcept>
 #include <sstream>
 
+using namespace std;
+
 static const ossimTrace traceDebug(ossimString("ossimNitfImageHeaderV2_0:debug"));
 
 RTTI_DEF1(ossimNitfImageHeaderV2_0,

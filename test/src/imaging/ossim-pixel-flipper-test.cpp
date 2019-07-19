@@ -30,6 +30,8 @@
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimPixelFlipper.h>
 
+using namespace std;
+
 static int expected_0[] = {0,0,0,0,255,0,0,255,255,5,5,5,5,255,5,128,255,255};
 static int expected_1[] = {11,11,11,11,255,11,11,255,255,11,11,11,11,255,11,128,255,255};
 static int expected_2[] = {0,0,0,11,255,11,11,255,255,5,5,5,11,255,11,128,255,255};

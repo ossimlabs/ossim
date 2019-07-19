@@ -22,6 +22,8 @@ RTTI_DEF2(ossimPolynomProjection, "ossimPolynomProjection", ossimProjection, oss
 #include <sstream>
 #include <float.h>
 
+using namespace std;
+
 // keywords
 static const char* MODEL_TYPE        = "ossimPolynomProjection";
 static const char* LAT_SCALE_KW      = "lat_scale";

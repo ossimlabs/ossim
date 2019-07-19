@@ -15,6 +15,8 @@
 #include <ossim/vec/ossimVpfLibrary.h>
 #include <ossim/base/ossimErrorCodes.h>
 
+using namespace std;
+
 ossimVpfDatabase::ossimVpfDatabase()
    :theDatabaseHeaderTable(""),
     theLibraryAttributeTable(""),

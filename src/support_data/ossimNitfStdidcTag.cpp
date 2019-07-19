@@ -18,6 +18,8 @@
 #include <ossim/support_data/ossimNitfStdidcTag.h>
 #include <ossim/base/ossimStringProperty.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimNitfStdidcTag, "ossimNitfStdidcTag", ossimNitfRegisteredTag);
 static const ossimString ACQDATE_KW = "ACQDATE";
 static const ossimString MISSION_KW = "MISSION";

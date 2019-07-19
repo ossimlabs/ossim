@@ -67,6 +67,8 @@
 #include <iomanip>
 #include <string>
 #include <vector>
+
+using namespace std;
  
 static std::string CMM_MAX_KW                  = "cmm_max"; // CMM(ComputeMinMax)
 static std::string CMM_MIN_KW                  = "cmm_min";

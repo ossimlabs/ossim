@@ -24,6 +24,8 @@
 #include <ossim/imaging/ossimTiffTileSource.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 
 RTTI_DEF1(ossimIkonosRpcModel, "ossimIkonosRpcModel", ossimRpcModel);
 

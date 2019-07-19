@@ -31,6 +31,8 @@
 #include <sstream>
 #include <cstring> // for memset
 
+using namespace std;
+
 RTTI_DEF1(ossimNitfFileHeaderV2_1,
           "ossimNitfFileHeaderV2_1",
           ossimNitfFileHeaderV2_X)

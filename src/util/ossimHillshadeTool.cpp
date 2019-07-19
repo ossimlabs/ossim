@@ -58,6 +58,8 @@
 #include <sstream>
 #include <string>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimHillshadeUtil:debug");
 
 static const std::string COLOR_BLUE_KW           = "color_blue";

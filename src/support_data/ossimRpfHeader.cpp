@@ -39,6 +39,8 @@
 
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
  // Static trace for debugging
 static ossimTrace traceDebug("ossimRpfHeader:debug");
 

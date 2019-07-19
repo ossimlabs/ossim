@@ -35,6 +35,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 static std::string ACCESS_TIME_THRESHOLD_KW    = "access_time_threshold";
 static std::string CLEAN_KW                    = "clean";
 static std::string DUMP_FILTERED_IMAGES_KW     = "dump_filtered_images";

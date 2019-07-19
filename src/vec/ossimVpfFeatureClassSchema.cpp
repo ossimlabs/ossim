@@ -14,6 +14,8 @@
 #include <ossim/vec/ossimVpfFeatureClassSchema.h>
 #include <ossim/vec/ossimVpfFeatureClass.h>
 
+using namespace std;
+
 ossimVpfFeatureClassSchema::ossimVpfFeatureClassSchema()
    :theCoverage(NULL)
 {

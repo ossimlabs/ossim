@@ -17,6 +17,8 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimNitfMapModel, "ossimNitfMapModel", ossimSensorModel);
 
 //***

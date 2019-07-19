@@ -11,6 +11,8 @@
 #include <iostream>
 #include <iomanip>
 
+using namespace std;
+
 
 static const ossimTrace traceDebug(ossimString("ossimNitfRsmecaTag:debug"));
 static const ossimString RNPCF_KW = "RNPCF";

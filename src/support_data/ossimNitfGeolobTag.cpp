@@ -27,6 +27,8 @@
 #include <ossim/base/ossimDms.h>
 #include <ossim/base/ossimDpt.h>
 
+using namespace std;
+
 static const ossimTrace traceDebug(ossimString("ossimNitfBlockaTag:debug"));
 
 RTTI_DEF1(ossimNitfGeolobTag, "ossimNitfGeolobTag", ossimNitfRegisteredTag);

@@ -41,6 +41,8 @@
 #include <istream>
 #include <ostream>
 
+using namespace std;
+
 static const ossimTrace traceDebug("ossimRpfFrame:debug");
 
 std::ostream& operator <<(std::ostream& out, const ossimRpfFrame& data)

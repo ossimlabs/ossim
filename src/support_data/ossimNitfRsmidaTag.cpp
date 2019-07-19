@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <iostream>
 
+using namespace std;
+
 RTTI_DEF1(ossimNitfRsmidaTag, "ossimNitfRsmidaTag", ossimNitfRegisteredTag);
 
 ossimNitfRsmidaTag::ossimNitfRsmidaTag()
