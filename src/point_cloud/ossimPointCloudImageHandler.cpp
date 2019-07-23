@@ -29,8 +29,6 @@
 
 using namespace std;
 
-RTTI_DEF1(ossimPointCloudImageHandler, "ossimPointCloudImageHandler", ossimImageHandler);
-
 static ossimTrace traceDebug("ossimPointCloudImageHandler:debug");
 static const char* GSD_FACTOR_KW = "gsd_factor";
 static const char* COMPONENT_KW = "component";

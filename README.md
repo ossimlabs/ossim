@@ -53,6 +53,8 @@ The following 3rd-party SDKs are needed in order to build the core ossim library
     OpenThreads-devel
     libjpeg-devel
     libgeos-devel (on later Debian / Ubuntu versions, libgeos++-dev)
+    
+(Mac users: use [MacPorts](https://github.com/macports/macports-base) to install dependencies)
 
 Plugins will require additional 3rd-party packages.
 

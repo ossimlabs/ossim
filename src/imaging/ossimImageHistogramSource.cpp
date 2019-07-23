@@ -231,8 +231,7 @@ void ossimImageHistogramSource::computeNormalModeHistogram()
 {
    // ref ptr, not a leak.
    theHistogram = new ossimMultiResLevelHistogram;
-	
-   ossimImageSource* input = PTR_CAST(ossimImageSource, getInput(0));
+   ossimImageSource *input = PTR_CAST(ossimImageSource, getInput(0));
    if ( input )
    {
       // sum up all tiles needing processing.  We will use the sequencer.
