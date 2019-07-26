@@ -47,6 +47,8 @@ static ossimTrace traceDebug("ossimAdrgTileSource:debug");
 //        be to put in flags to access overview and legend image files.
 //***
 
+using namespace std;
+
 //*******************************************************************
 // Public Constructor:
 //*******************************************************************

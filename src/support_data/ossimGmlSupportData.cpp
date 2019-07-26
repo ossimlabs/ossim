@@ -33,6 +33,8 @@
 #include <iomanip>
 #include <sstream>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimGmlSupportData:debug");
 
 #define UNKNOWN_PCSCODE 32767

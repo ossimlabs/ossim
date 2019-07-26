@@ -27,6 +27,8 @@
 
 #include <ossim/imaging/ossimScalarRemapper.h>
 
+using namespace std;
+
 
 RTTI_DEF1(ossimWatermarkFilter, "ossimWatermarkFilter", ossimImageSourceFilter)
 

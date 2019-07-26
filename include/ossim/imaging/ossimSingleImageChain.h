@@ -254,7 +254,7 @@ public:
    */
    void addGeoPolyCutter();
 
-   void addGeoPolyCutterPolygon(const vector<ossimGpt>& polygon);
+   void addGeoPolyCutterPolygon(const std::vector<ossimGpt>& polygon);
    void addGeoPolyCutterPolygon(const ossimGeoPolygon& polygon);
 
    /**

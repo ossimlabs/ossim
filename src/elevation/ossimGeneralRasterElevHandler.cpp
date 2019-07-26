@@ -15,6 +15,8 @@
 
 RTTI_DEF1(ossimGeneralRasterElevHandler, "ossimGeneralRasterElevHandler", ossimElevCellHandler);
 
+using namespace std;
+
 ossimGeneralRasterElevHandler::ossimGeneralRasterElevHandler(const ossimFilename& file)
    :ossimElevCellHandler(file.c_str()),
     m_streamOpen(false)

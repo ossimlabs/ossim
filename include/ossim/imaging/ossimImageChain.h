@@ -13,8 +13,6 @@
 #define ossimImageChain_HEADER
 #include <vector>
 #include <map>
-using namespace std;
-
 #include <ossim/imaging/ossimImageSource.h>
 #include <ossim/base/ossimConnectableObjectListener.h>
 #include <ossim/base/ossimId.h>
@@ -177,7 +175,7 @@ public:
     * Will pass this call to the head of the list.
     */
    virtual ossimIrect getBoundingRect(ossim_uint32 resLevel=0)const;
-   virtual void getValidImageVertices(vector<ossimIpt>& validVertices,
+   virtual void getValidImageVertices(std::vector<ossimIpt>& validVertices,
                                       ossimVertexOrdering ordering=OSSIM_CLOCKWISE_ORDER,
                                       ossim_uint32 resLevel=0)const;
    
@@ -185,7 +183,7 @@ public:
 
    virtual void getDecimationFactor(ossim_uint32 resLevel,
                                     ossimDpt& result) const;
-   virtual void getDecimationFactors(vector<ossimDpt>& decimations) const;
+   virtual void getDecimationFactors(std::vector<ossimDpt>& decimations) const;
    virtual ossim_uint32 getNumberOfDecimationLevels()const;
    
    /**
@@ -347,7 +345,7 @@ public:
    virtual bool removeChild(ossimConnectableObject* object);
    virtual ossimConnectableObject* removeChild(const ossimId& id);
    
-   virtual void getChildren(vector<ossimConnectableObject*>& children,
+   virtual void getChildren(std::vector<ossimConnectableObject*>& children,
                             bool immediateChildrenOnlyFlag);
    //______________END CONNECTABLE CONTAINER INTERFACE____________
    
@@ -402,13 +400,13 @@ protected:
     * we will create a map that takes the id of the source as a key and a
     * vector of input id's to connect it's inputs to.
     */
-   bool addAllSources(map<ossimId, vector<ossimId> >& idMapping,
+   bool addAllSources(std::map<ossimId, std::vector<ossimId> >& idMapping,
                       const ossimKeywordlist& kwl,
                       const char* prefix = NULL);
-   void findInputConnectionIds(vector<ossimId>& result,
+   void findInputConnectionIds(std::vector<ossimId>& result,
                                const ossimKeywordlist& kwl,
                                const char* prefix=NULL);
-   bool connectAllSources(const map<ossimId, vector<ossimId> >& idMapping);
+   bool connectAllSources(const std::map<ossimId, std::vector<ossimId> >& idMapping);
    
    
 TYPE_DATA

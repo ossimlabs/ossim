@@ -18,6 +18,8 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimLsrSpace.h>
 
+using namespace std;
+
 static ossimTrace traceDebug(ossimString("ossimPositionQualityEvaluator:debug"));
 static ossimTrace traceExec(ossimString("ossimPositionQualityEvaluator:exec"));
 

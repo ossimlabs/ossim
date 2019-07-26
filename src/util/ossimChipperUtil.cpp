@@ -74,6 +74,8 @@
 #include <sstream>
 #include <string>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimChipperUtil:debug");
 static ossimTrace traceLog("ossimChipperUtil:log");
 static ossimTrace traceOptions("ossimChipperUtil:options");

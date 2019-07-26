@@ -21,6 +21,8 @@
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/elevation/ossimElevManager.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimEquDistCylProjection:debug");
 
 RTTI_DEF1(ossimEquDistCylProjection, "ossimEquDistCylProjection", ossimMapProjection);

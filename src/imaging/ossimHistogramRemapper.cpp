@@ -26,6 +26,8 @@
 #include <cstdlib>
 #include <iomanip>
 
+using namespace std;
+
 RTTI_DEF1(ossimHistogramRemapper, "ossimHistogramRemapper", ossimTableRemapper)
 
 static ossimTrace traceDebug("ossimHistogramRemapper:debug");

@@ -7,6 +7,8 @@
 #include <ossim/base/ossimDms.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 
 static ossimTrace traceDebug("ossimGeographicAnnotationGrid:debug");
 

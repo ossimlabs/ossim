@@ -23,6 +23,8 @@
 #include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimIoStream.h>
 
+using namespace std;
+
 ossimDtedDsi::ossimDtedDsi()
    :
       theRecSen(),

@@ -43,6 +43,8 @@
 #include <ossim/imaging/ossimPixelFlipper.h> // for its keywords
 #include <ossim/imaging/ossimBitMaskWriter.h> // for its keywords
 
+using namespace std;
+
 static ossimTrace traceDebug = ossimTrace("img2rr:debug");
 static ossimTrace traceTime("time");
 

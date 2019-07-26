@@ -22,6 +22,8 @@ ossimAppFixedTileCache* ossimAppFixedTileCache::theInstance = 0;
 ossimAppFixedTileCache::ossimAppFixedCacheId ossimAppFixedTileCache::theUniqueAppIdCounter = 0;
 const ossim_uint32 ossimAppFixedTileCache::DEFAULT_SIZE = 1024*1024*80;
 
+using namespace std;
+
 static const ossimTrace traceDebug("ossimAppFixedTileCache:debug");
 std::ostream& operator <<(std::ostream& out, const ossimAppFixedTileCache& rhs)
 {

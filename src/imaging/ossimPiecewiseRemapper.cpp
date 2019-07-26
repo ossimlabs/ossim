@@ -25,6 +25,8 @@
 #include <limits>
 #include <sstream>
 
+using namespace std;
+
 RTTI_DEF1(ossimPiecewiseRemapper, "ossimPiecewiseRemapper", ossimTableRemapper)
 
 

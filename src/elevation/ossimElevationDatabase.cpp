@@ -2,6 +2,8 @@
 
 RTTI_DEF1(ossimElevationDatabase, "ossimElevationDatabase", ossimObject);
 
+using namespace std;
+
 double ossimElevationDatabase::getOffsetFromEllipsoid(const ossimGpt& gpt)
 {
    double result = 0.0;

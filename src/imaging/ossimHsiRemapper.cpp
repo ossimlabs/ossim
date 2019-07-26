@@ -23,6 +23,8 @@
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/base/ossimNumericProperty.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimHsiRemapper, "ossimHsiRemapper", ossimImageSourceFilter)
 
 static ossimTrace traceDebug("ossimHsiRemapper:debug");

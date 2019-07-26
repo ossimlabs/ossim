@@ -11,6 +11,8 @@
 
 RTTI_DEF1(ossimColorProperty, "ossimColorProperty", ossimProperty);
 
+using namespace std;
+
 ossimColorProperty::ossimColorProperty(const ossimString& name,
                                        const ossimRgbVector& value)
    :ossimProperty(name),

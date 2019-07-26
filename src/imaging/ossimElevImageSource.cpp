@@ -26,7 +26,9 @@ RTTI_DEF1(ossimElevImageSource, "ossimElevImageSource", ossimImageSource)
 
 // Static trace for debugging
 static ossimTrace traceDebug("ossimElevImage:debug");
-   
+
+using namespace std;
+
 ossimElevImageSource::ossimElevImageSource()
    :
       ossimImageSource(NULL,

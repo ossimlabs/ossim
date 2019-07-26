@@ -42,10 +42,10 @@ public:
    virtual bool loadState(const ossimKeywordlist& kwl,
                           const char* prefix=0);
    
-   virtual ostream& print(ostream& os) const;
-   friend ostream& operator << (ostream& os,  const ossimAOD& hr);
+   virtual std::ostream& print(std::ostream& os) const;
+   friend std::ostream& operator << (std::ostream& os,  const ossimAOD& hr);
 
-   static void writeTemplate(ostream& os);
+   static void writeTemplate(std::ostream& os);
 
 protected:
    virtual ~ossimAOD();

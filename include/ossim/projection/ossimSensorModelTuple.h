@@ -18,7 +18,7 @@
 // Forward class declarations:
 class ossimEcefPoint;
 
-typedef vector<ossimDpt> DptSet_t;
+typedef std::vector<ossimDpt> DptSet_t;
 
 /**
  * Container class to hold computed rpc model inputs to the

@@ -25,6 +25,8 @@ const ossim_uint32 ossimAppTileCache::DEFAULT_SIZE          = 80*1024*1024;
 const ossim_uint32 ossimAppTileCache::DEFAULT_BUCKET_SIZE          = 293;
 ossimAppTileCache::ossimAppCacheId ossimAppTileCache::theUniqueAppIdCounter = 1;
 
+using namespace std;
+
 ossimAppTileCache *ossimAppTileCache::instance(ossim_uint32  maxSize)
 {
    if(!theInstance)

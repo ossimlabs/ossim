@@ -19,6 +19,8 @@
 
 #include <ossim/support_data/ossimNitfStreobTag.h>
 
+using namespace std;
+
 
 RTTI_DEF1(ossimNitfStreobTag, "ossimNitfStreobTag", ossimNitfRegisteredTag);
 

@@ -19,6 +19,8 @@ static ossimTrace traceDebug("ossimElevRemapper::debug");
 
 const char ossimElevRemapper::REMAP_MODE_KW[]  = "remap_mode";
 
+using namespace std;
+
 ossimElevRemapper::ossimElevRemapper()
 :m_replacementType(ReplacementType_ELLIPSOID)
 {

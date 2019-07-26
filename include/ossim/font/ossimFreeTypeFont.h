@@ -47,7 +47,7 @@ public:
          return theOutputBuffer;
       }
    
-   void layoutGlyphs(vector<TGlyph>& glyphs,
+   void layoutGlyphs(std::vector<TGlyph>& glyphs,
                      const ossimString& s );
    
    virtual const ossim_uint8* rasterize();
@@ -75,7 +75,7 @@ public:
          return false;
       }
    
-   virtual void getFixedSizes(vector<ossimIpt>& sizeArray)const;
+   virtual void getFixedSizes(std::vector<ossimIpt>& sizeArray)const;
 
    /*!
     * Will enable kerning support.  This is enabled
@@ -163,7 +163,7 @@ protected:
    /*!
     * Pre-compute all glyphs but don't render it
     */
-   vector<TGlyph> theStringLayout;
+   std::vector<TGlyph> theStringLayout;
    
    /*!
     * We will precompute the bounding rect only when we have to.
@@ -189,7 +189,7 @@ protected:
 
    void computeGlyphBox(FT_Glyph,
                         ossimIrect& box)const;
-   void deleteGlyphs(vector<TGlyph>& glyphs);
+   void deleteGlyphs(std::vector<TGlyph>& glyphs);
 
 TYPE_DATA
 };

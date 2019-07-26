@@ -42,6 +42,8 @@
 #include <sstream>
 #include <string>
 
+using namespace std;
+
 static const std::string AOI_GEO_RECT_KW         = "aoi_geo_rect";
 static const std::string AOI_MAP_RECT_KW         = "aoi_map_rect";
 static const std::string AOI_GEO_CENTER_KW       = "aoi_geo_center";

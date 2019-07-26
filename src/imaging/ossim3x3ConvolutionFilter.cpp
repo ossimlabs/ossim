@@ -18,6 +18,8 @@
 
 RTTI_DEF1(ossim3x3ConvolutionFilter, "ossim3x3ConvolutionFilter", ossimImageSourceFilter);
 
+using namespace std;
+
 ossim3x3ConvolutionFilter::ossim3x3ConvolutionFilter(ossimObject* owner)
    :ossimImageSourceFilter(owner),
     theTile(NULL),

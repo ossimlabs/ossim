@@ -31,6 +31,8 @@
 #include <ossim/projection/ossimProjection.h>
 #include <memory>
 
+using namespace std;
+
 // Static trace for debugging.
 static const ossimTrace traceDebug( ossimString("ossimAuxXmlSupportData:debug") );
 

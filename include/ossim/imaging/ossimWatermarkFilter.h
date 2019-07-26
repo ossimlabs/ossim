@@ -156,7 +156,7 @@ public:
     *
     * @note This method clears the "list" prior to stuffing.
     */
-   void getModeList(vector<ossimString>& list) const;
+   void getModeList(std::vector<ossimString>& list) const;
 
    /** @return theMode */
    ossimWatermarkFilter::WatermarkMode getMode() const;
@@ -227,7 +227,7 @@ protected:
     * space of the input connection to paint the watermark(s) on.  The start of
     * each rectangle will be the start of where "theWatermark" is painted.
     */
-   void getIntersectingRects(vector<ossimIrect>& rects);
+   void getIntersectingRects(std::vector<ossimIrect>& rects);
 
    /**
     * Addes upper left watermark rectangle to rects if it intersects
@@ -235,7 +235,7 @@ protected:
     *
     * @param rects Array to add rect to.
     */
-   void getUpperLeftRect(vector<ossimIrect>& rects);
+   void getUpperLeftRect(std::vector<ossimIrect>& rects);
    
    /**
     * Addes upper center watermark rectangle to rects if it intersects
@@ -243,7 +243,7 @@ protected:
     *
     * @param rects Array to add rect to.
     */
-   void getUpperCenterRect(vector<ossimIrect>& rects);
+   void getUpperCenterRect(std::vector<ossimIrect>& rects);
    
    /**
     * Addes upper right watermark rectangle to rects if it intersects
@@ -251,7 +251,7 @@ protected:
     *
     * @param rects Array to add rect to.
     */
-   void getUpperRightRect(vector<ossimIrect>& rects);
+   void getUpperRightRect(std::vector<ossimIrect>& rects);
 
    /**
     * Addes center watermark rectangle to rects if it intersects
@@ -259,7 +259,7 @@ protected:
     *
     * @param rects Array to add rect to.
     */
-   void getCenterRect(vector<ossimIrect>& rects);
+   void getCenterRect(std::vector<ossimIrect>& rects);
 
    /**
     * Addes lower left watermark rectangle to rects if it intersects
@@ -267,7 +267,7 @@ protected:
     *
     * @param rects Array to add rect to.
     */
-   void getLowerLeftRect(vector<ossimIrect>& rects);
+   void getLowerLeftRect(std::vector<ossimIrect>& rects);
 
    /**
     * Addes lower center watermark rectangle to rects if it intersects
@@ -275,7 +275,7 @@ protected:
     *
     * @param rects Array to add rect to.
     */
-   void getLowerCenterRect(vector<ossimIrect>& rects);
+   void getLowerCenterRect(std::vector<ossimIrect>& rects);
    
    /**
     * Addes lower right watermark rectangle to rects if it intersects
@@ -283,7 +283,7 @@ protected:
     *
     * @param rects Array to add rect to.
     */
-   void getLowerRightRect(vector<ossimIrect>& rects);
+   void getLowerRightRect(std::vector<ossimIrect>& rects);
    
    /**
     * Addes rectangles to rects if it intersects
@@ -293,7 +293,7 @@ protected:
     *
     * @param rects Array to add rect to.
     */
-   void getUniformDenseRects(vector<ossimIrect>& rects);
+   void getUniformDenseRects(std::vector<ossimIrect>& rects);
    
    /**
     * Addes rectangles to rects if it intersects
@@ -304,7 +304,7 @@ protected:
     * 
     * @param rects Array to add rect to.
     */
-   void getUniformSparceRects(vector<ossimIrect>& rects);
+   void getUniformSparceRects(std::vector<ossimIrect>& rects);
    
    /** File name of watermark image. */
    ossimFilename      theFilename;

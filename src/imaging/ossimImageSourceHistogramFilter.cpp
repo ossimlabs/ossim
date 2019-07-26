@@ -17,6 +17,8 @@
 #include <ossim/base/ossimKeyword.h>
 #include <ossim/base/ossimKeywordlist.h>
 
+using namespace std;
+
 static const ossimKeyword PROPRIETARY_FILENAME_KW("proprietary_filename",
                                                   "imports a proprietary file");
 

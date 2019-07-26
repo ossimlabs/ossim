@@ -12,6 +12,8 @@
 
 RTTI_DEF1(ossimAtCorrGridRemapper, "ossimAtCorrGridRemapper", ossimAtCorrRemapper);
 
+using namespace std;
+
 ossimAtCorrGridRemapper::ossimAtCorrGridRemapper(ossimObject* owner,
                                                  ossimImageSource* inputSource,
                                                  const ossimString& sensorType)

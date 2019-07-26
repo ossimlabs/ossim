@@ -23,14 +23,13 @@
 #ifndef ossimVpfExtent_HEADER
 #define ossimVpfExtent_HEADER
 #include <iostream>
-using namespace std;
 #include <ossim/vec/vpf.h>
 
 
 class ossimVpfExtent
 {
 public:
-   friend ostream& operator <<(ostream& out,
+   friend std::ostream& operator <<(std::ostream& out,
                                const ossimVpfExtent& data);
    
    ossimVpfExtent (double x1, double y1, double x2, double y2);

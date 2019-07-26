@@ -111,9 +111,9 @@ public:
    /*!
     * Debug Dump: 
     */
-   inline void print(ostream& stream = ossimNotify(ossimNotifyLevel_INFO)) const;
+   inline void print(std::ostream& stream = ossimNotify(ossimNotifyLevel_INFO)) const;
 
-   friend ostream& operator<< (ostream& os , const ossimLsrPoint& instance)
+   friend std::ostream& operator<< (std::ostream& os , const ossimLsrPoint& instance)
       { instance.print(os); return os; }
 
 protected:
@@ -172,11 +172,11 @@ inline ossimLsrPoint::operator ossimEcefPoint() const
 }
 
 //*****************************************************************************
-//  INLINE METHOD: ossimLsrPoint::print(ostream)
+//  INLINE METHOD: ossimLsrPoint::print(std::ostream)
 //  
 //  Dumps contents for debug purposes.
 //*****************************************************************************
-inline void ossimLsrPoint::print(ostream& os) const
+inline void ossimLsrPoint::print(std::ostream& os) const
 {
    os << "(ossimLsrPoint)\n"
       << "  theData = " << theData

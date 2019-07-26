@@ -13,6 +13,7 @@
 #include <ossim/projection/ossimImageProjectionModel.h>
 #include <ossim/base/ossimException.h>
 
+using namespace std;
 
 RTTI_DEF1(ossimGeoAnnotationLineObject,
           "ossimGeoAnnotationLineObject",

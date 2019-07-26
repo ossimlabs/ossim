@@ -271,7 +271,7 @@ private:
 
    /**
     * @return Value of options key: "flush_tiles".
-    * If true, ostream::flush() is called after each tile write.
+    * If true, std::ostream::flush() is called after each tile write.
     * default=true
     */
    bool getFlushTilesFlag() const;

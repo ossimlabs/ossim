@@ -34,6 +34,8 @@ RTTI_DEF1(ossimRgbGridRemapEngine, "ossimRgbGridRemapEngine",
 static ossimTrace traceExec  ("ossimRgbGridRemapEngine:exec");
 static ossimTrace traceDebug ("ossimRgbGridRemapEngine:debug");
 
+using namespace std;
+
 //*****************************************************************************
 //  METHOD: ossimRgbGridRemapEngine::dup
 //  

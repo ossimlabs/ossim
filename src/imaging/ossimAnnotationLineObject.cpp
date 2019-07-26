@@ -17,6 +17,8 @@ RTTI_DEF1(ossimAnnotationLineObject,
           "ossimAnnotationLineObject",
           ossimAnnotationObject)
 
+using namespace std;
+
 ossimAnnotationLineObject::ossimAnnotationLineObject()
    :ossimAnnotationObject(),
     theStart(0,0),

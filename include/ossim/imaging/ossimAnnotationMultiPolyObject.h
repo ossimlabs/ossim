@@ -17,7 +17,7 @@ class OSSIMDLLEXPORT ossimAnnotationMultiPolyObject : public ossimAnnotationObje
 {
 public:
    ossimAnnotationMultiPolyObject();
-   ossimAnnotationMultiPolyObject(const vector<ossimPolygon>& multiPoly,
+   ossimAnnotationMultiPolyObject(const std::vector<ossimPolygon>& multiPoly,
                                   bool enableFill,
                                   unsigned char r,
                                   unsigned char g,
@@ -61,7 +61,7 @@ public:
          }
       }
    
-   virtual void setMultiPolygon(const vector<ossimPolygon>& multiPoly)
+   virtual void setMultiPolygon(const std::vector<ossimPolygon>& multiPoly)
       {
          theMultiPolygon = multiPoly;
          computeBoundingRect();
@@ -77,7 +77,7 @@ public:
       }
 protected:
    virtual ~ossimAnnotationMultiPolyObject();
-   vector<ossimPolygon> theMultiPolygon;
+   std::vector<ossimPolygon> theMultiPolygon;
    ossimDrect           theBoundingRect;
    bool                 theFillEnabled;
 

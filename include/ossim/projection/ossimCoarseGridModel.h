@@ -66,7 +66,7 @@ public:
    static void setInterpolationError(double error=.1);
    static void setMinGridSpacing(ossim_int32 minSpacing = 100);
 
-   /** Extends base-class implementation. Dumps contents of object to ostream. */
+   /** Extends base-class implementation. Dumps contents of object to std::ostream. */
    virtual std::ostream& print(std::ostream& out) const;
    
    /** Fulfills ossimObject base-class pure virtuals. Saves geometry KWL files.
@@ -79,7 +79,7 @@ public:
 
    /** Writes a template of geometry keywords processed by loadState and
     * saveState to output stream. */
-   static void writeGeomTemplate(ostream& os);
+   static void writeGeomTemplate(std::ostream& os);
 
    /** Returns pointer to a new instance, copy of this. */
    virtual ossimObject* dup() const { return new ossimCoarseGridModel(*this); }

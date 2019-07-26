@@ -28,6 +28,8 @@
 #include <iostream>
 #include <iterator>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimImageChain");
 
 

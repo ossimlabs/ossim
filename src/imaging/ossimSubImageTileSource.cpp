@@ -24,6 +24,8 @@
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/imaging/ossimImageData.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimSubImageTileSource,
           "ossimSubImageTileSource",
           ossimImageSourceFilter);

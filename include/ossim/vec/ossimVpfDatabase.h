@@ -11,8 +11,6 @@
 #ifndef ossimVpfDatabase_HEADER
 #define ossimVpfDatabase_HEADER
 #include <vector>
-using namespace std;
-
 #include <ossim/base/ossimErrorContext.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimString.h>
@@ -56,8 +54,8 @@ public:
 
    bool isOpened()const;
    
-   vector<ossimString> getLibraryNames()const;
-   vector<ossimString> getLibraryNamesFullPath()const;
+   std::vector<ossimString> getLibraryNames()const;
+   std::vector<ossimString> getLibraryNamesFullPath()const;
 
    ossimFilename getLibraryAttributeTable()const;
 protected:
@@ -78,7 +76,7 @@ protected:
    /*!
     * Will hold a constructed set of libraries.
     */
-   vector<ossimVpfLibrary*> theVpfLibraryList;
+   std::vector<ossimVpfLibrary*> theVpfLibraryList;
 
    /*!
     * This jhust specifies whether the database has been opened or not.

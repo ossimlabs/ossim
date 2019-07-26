@@ -35,6 +35,8 @@
 #include <sstream>
 #include <iomanip>
 
+using namespace std;
+
 RTTI_DEF1(ossimNitfWriter, "ossimNitfWriter", ossimNitfWriterBase);
 
 static ossimTrace traceDebug(ossimString("ossimNitfWriter:debug"));

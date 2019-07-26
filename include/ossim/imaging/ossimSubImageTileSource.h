@@ -67,7 +67,7 @@ public:
    /*!
     * Fetches the sub-image's valid image vertices in FULL-IMAGE SPACE.
     */
-   virtual void getValidImageVertices(vector<ossimIpt>& validVertices,
+   virtual void getValidImageVertices(std::vector<ossimIpt>& validVertices,
                                       ossimVertexOrdering ordering=OSSIM_CLOCKWISE_ORDER,
                                       ossim_uint32 resLevel=0)const;
 

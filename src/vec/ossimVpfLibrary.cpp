@@ -17,6 +17,8 @@
 #include <ossim/vec/ossimVpfCoverage.h>
 #include <ossim/base/ossimErrorCodes.h>
 
+using namespace std;
+
 ossimVpfLibrary::ossimVpfLibrary()
    :theDatabase(0),
     theLibraryName(""),

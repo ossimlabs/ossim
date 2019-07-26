@@ -22,6 +22,8 @@
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/imaging/ossimEsriShapeFileInterface.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimTilingRect:debug");
 
 RTTI_DEF1(ossimTilingRect, "ossimTilingRect", ossimTiling);

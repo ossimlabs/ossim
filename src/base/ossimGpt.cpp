@@ -24,6 +24,8 @@
 #include <iostream>
 #include <sstream>
 
+using namespace std;
+
 std::ostream& ossimGpt::print(std::ostream& os, ossim_uint32 precision) const
 {
    // Capture the original flags.

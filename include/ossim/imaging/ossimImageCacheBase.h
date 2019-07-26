@@ -275,7 +275,7 @@ protected:
     * @param rect the current region to render.
     * @return The list of entry data objects found for this rect.
     */
-   vector<ossimFrameEntryData> getIntersectingEntries(const ossimIrect& rect);
+   std::vector<ossimFrameEntryData> getIntersectingEntries(const ossimIrect& rect);
 
    void deleteAll();
 

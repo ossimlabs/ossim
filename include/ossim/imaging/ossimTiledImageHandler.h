@@ -106,7 +106,7 @@ protected:
       ossimTileFile() : overviewIsOpen(false) {}
 
       ossimFilename tileFilename;
-      vector<ossimIrect>  subImageRects; // one rect per resolution level
+      std::vector<ossimIrect>  subImageRects; // one rect per resolution level
       ossimRefPtr<ossimImageHandler> imageHandler;
       bool overviewIsOpen;
    };
@@ -114,7 +114,7 @@ protected:
    //!  Initialize tile buffer to match image datatype.
    void allocate();
 
-  vector<ossimTileFile> m_tileFiles;
+  std::vector<ossimTileFile> m_tileFiles;
   ossimRefPtr<ossimImageData> m_tile;
   ossimRefPtr<ossimImageData> m_blankTile;
   ossimIrect  m_fullImgRect;

@@ -68,14 +68,14 @@ public:
     * Initializes "bias" with "theBias" from the radiometry record.
     * Contains eight bands; although, only bands present will be initialized.
     */
-   void getBias(vector<double>& bias) const;
+   void getBias(std::vector<double>& bias) const;
    double getBias(long bandIdx)const;
 
    /*!
     * Initializes "bias" with "theBias" from the radiometry record.
     * Contains eight bands; although, only bands present will be initialized.
     */
-   void getGain(vector<double>& gain) const;
+   void getGain(std::vector<double>& gain) const;
    double getGain(long bandIdx)const;
 
    double getParam(ossim_uint32 i)const;
@@ -154,8 +154,8 @@ public:
    char   theBandFileNames[8][30];
 
    // The Radiometry Record:
-   vector<double> theBias;
-   vector<double> theGain;
+   std::vector<double> theBias;
+   std::vector<double> theGain;
 
    // The Geometry Record:
    char    theMapProjectionName[5];  

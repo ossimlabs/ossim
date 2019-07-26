@@ -72,7 +72,7 @@ public:
    /**
     * Prints data members to stream.  Returns stream&.
     */
-   virtual std::ostream& print(std::ostream& out) const;   
+   virtual std::ostream& print(std::ostream& out) const;
 
    /**
     * @return The false easting.

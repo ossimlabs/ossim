@@ -38,6 +38,8 @@
 #include <iterator>
 #include <sstream>
 
+using namespace std;
+
 static ossimTrace traceDebug(ossimString("ossimIgen:debug"));
 static ossimTrace traceLog(ossimString("ossimIgen:log"));
 

@@ -22,6 +22,9 @@
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimDrect.h>
 #include <ossim/imaging/ossimFilterTable.h>
+
+using namespace std;
+
 ossimFilterResampler::ossimFilterResampler()
    :theMinifyFilter(new ossimNearestNeighborFilter()),
     theMagnifyFilter(new ossimNearestNeighborFilter()),

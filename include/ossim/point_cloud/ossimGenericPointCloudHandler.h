@@ -16,13 +16,11 @@
 #include <ossim/base/ossimGrect.h>
 #include <vector>
 
-using namespace std;
-
 class OSSIM_DLL ossimGenericPointCloudHandler : public ossimPointCloudHandler
 {
 public:
-   ossimGenericPointCloudHandler(vector<ossimEcefPoint>& ecef_points);
-   ossimGenericPointCloudHandler(vector<ossimGpt>& ground_points);
+   ossimGenericPointCloudHandler(std::vector<ossimEcefPoint>& ecef_points);
+   ossimGenericPointCloudHandler(std::vector<ossimGpt>& ground_points);
    virtual ~ossimGenericPointCloudHandler();
    virtual ossim_uint32 getNumPoints() const;
    virtual void getFileBlock(ossim_uint32 offset,

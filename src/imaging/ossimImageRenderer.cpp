@@ -39,6 +39,8 @@
 #include <ossim/base/ossimPreferences.h>
 // using namespace std;
 
+using namespace std;
+
 #ifdef OSSIM_ID_ENABLED
 static const char OSSIM_ID[] = "$Id: ossimImageRenderer.cpp 23663 2015-12-11 21:10:54Z dburken $";
 #endif

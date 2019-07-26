@@ -20,7 +20,6 @@
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimReferenced.h>
 #include <vector>
-using namespace std;
 
 class ossimAtbPointSource;
 class ossimGridRemapEngine;
@@ -75,15 +74,15 @@ public:
    /*!
     * Dumps the contents of the object to the stream in human readable format.
     */
-//   void print(ostream& os) const;
+//   void print(std::ostream& os) const;
 
-//   friend ostream& operator << (ostream& os);
+//   friend std::ostream& operator << (std::ostream& os);
 
 protected:
    virtual ~ossimAtbMatchPoint();
    
    ossimDpt                     theViewPoint;
-   vector<ossimAtbPointSource*> thePointSourceList; 
+   std::vector<ossimAtbPointSource*> thePointSourceList;
    ossimGridRemapEngine*        theGridRemapEngine;
 };
 

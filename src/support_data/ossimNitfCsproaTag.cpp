@@ -2,6 +2,8 @@
 #include <iomanip>
 #include <iostream>
 
+using namespace std;
+
 ossimNitfCsproaTag::ossimNitfCsproaTag()
    : ossimNitfRegisteredTag(std::string("CSPROA"), 120)
 {

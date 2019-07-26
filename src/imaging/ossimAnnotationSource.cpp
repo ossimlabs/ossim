@@ -16,7 +16,9 @@
 RTTI_DEF1(ossimAnnotationSource,
           "ossimAnnotationSource",
           ossimImageSourceFilter)
-   
+
+using namespace std;
+
 ossimAnnotationSource::ossimAnnotationSource(ossimImageSource* inputSource)
    :
       ossimImageSourceFilter(inputSource),

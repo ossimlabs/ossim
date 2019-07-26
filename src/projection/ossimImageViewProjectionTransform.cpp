@@ -27,6 +27,8 @@
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <cmath>
 
+using namespace std;
+
 RTTI_DEF1(ossimImageViewProjectionTransform,
           "ossimImageViewProjectionTransform",
           ossimImageViewTransform);

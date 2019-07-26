@@ -7,6 +7,8 @@
 //**************************************************************************************************
 #include <ossim/point_cloud/ossimPointBlock.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimPointBlock, "ossimPointBlock", ossimDataObject)
 
 ossimPointBlock::ossimPointBlock(ossimSource* owner, ossim_uint32 fields)

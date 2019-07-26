@@ -15,8 +15,6 @@
 #define DataCache_HEADER
 #include <map>
 #include <stack>
-using namespace std;
-
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimDpt3d.h>
@@ -71,7 +69,7 @@ protected:
    struct ossimTileInformation
    {
    public:
-      friend ostream& operator <<(ostream &out,
+      friend std::ostream& operator <<(std::ostream &out,
                                   const ossimTileInformation& /* info */)
          {
 
@@ -89,7 +87,7 @@ protected:
       unsigned long      theResLevel;
    };
 
-   typedef multimap<ossim_uint32, ossimTileInformation*>::iterator Iterator;
+   typedef std::multimap<ossim_uint32, ossimTileInformation*>::iterator Iterator;
    typedef ossimTileInformation* CacheDataPtr;
    typedef ossimTileInformation  CacheData;
    
@@ -97,7 +95,7 @@ protected:
    virtual ossim_uint32 bucketHash(const ossimDpt3d &aPt);
    virtual ossim_uint32 tileId(const ossimDpt3d &aPt);
    
-   multimap<ossim_uint32, ossimTileInformation*>  *theCache;
+   std::multimap<ossim_uint32, ossimTileInformation*>  *theCache;
    long                                            theNumberOfBuckets;
    ossim_uint32                                    theSizeInBytes;
 };

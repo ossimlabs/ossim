@@ -1,5 +1,7 @@
 #include <ossim/point_cloud/ossimGenericPointCloudHandler.h>
 
+using namespace std;
+
 ossimGenericPointCloudHandler::ossimGenericPointCloudHandler(vector<ossimEcefPoint>& ecef_points)
 {
    // Fill the point storage in any order.

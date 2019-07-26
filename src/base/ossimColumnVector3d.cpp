@@ -14,6 +14,8 @@
 #include <ossim/base/ossimColumnVector3d.h>
 #include <ossim/base/ossimCommon.h>
 
+using namespace std;
+
 ossimString ossimColumnVector3d::toString(ossim_uint32 precision) const
 {
    std::ostringstream os;

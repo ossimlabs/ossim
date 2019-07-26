@@ -20,6 +20,8 @@
 #include <ossim/imaging/ossimImageData.h>
 #include <cstdlib>
 
+using namespace std;
+
 RTTI_DEF1(ossimPixelFlipper, "ossimPixelFlipper", ossimImageSourceFilter)
 
 static ossimTrace traceDebug("ossimPixelFlipper:debug");

@@ -30,6 +30,8 @@
 #include <iostream>
 #include <sstream>
 
+using namespace std;
+
 RTTI_DEF1(ossimRsmModel, "ossimRsmModel", ossimSensorModel);
 
 // Define Trace flags for use within this file:

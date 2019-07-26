@@ -20,6 +20,8 @@
 #include <ossim/base/ossimColumnVector3d.h>
 #include <ossim/base/ossimEcefVector.h>
 
+using namespace std;
+
 
 //*****************************************************************************
 //  CONSTRUCTOR: ossimLsrSpace(origin, x_dir, y_dir, int)

@@ -13,7 +13,9 @@
 RTTI_DEF1(ossimAnnotationEllipseObject,
           "ossimAnnotationEllipseObject",
           ossimAnnotationObject)
-   
+
+using namespace std;
+
 ossimAnnotationEllipseObject::ossimAnnotationEllipseObject(
    const ossimDpt& center,
    const ossimDpt& widthHeight,

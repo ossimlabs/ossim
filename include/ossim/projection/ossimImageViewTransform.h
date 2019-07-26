@@ -15,7 +15,6 @@
 #ifndef ossimImageViewTransform_HEADER
 #define ossimImageViewTransform_HEADER
 #include <iostream>
-using namespace std;
 #include <ossim/base/ossimViewInterface.h>
 #include <ossim/base/ossimObject.h>
 #include <ossim/base/ossimDpt.h>
@@ -26,7 +25,7 @@ class OSSIMDLLEXPORT ossimImageViewTransform : public ossim2dTo2dTransform,
 					       public ossimViewInterface
 {
 public:
-   friend OSSIMDLLEXPORT ostream& operator<<(ostream& out,
+   friend OSSIMDLLEXPORT std::ostream& operator<<(std::ostream& out,
 					     const ossimImageViewTransform& data);
    
    ossimImageViewTransform();

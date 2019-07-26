@@ -14,6 +14,8 @@
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimPolyArea2d.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimGeoAnnotationMultiPolyObject, "ossimGeoAnnotationMultiPolyObject", ossimGeoAnnotationObject);
 
 ossimGeoAnnotationMultiPolyObject::ossimGeoAnnotationMultiPolyObject()

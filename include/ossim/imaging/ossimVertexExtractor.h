@@ -109,7 +109,7 @@ public:
          return (object&& PTR_CAST(ossimImageSource, object));
       }
 
-   const vector<ossimIpt>& getVertices() const { return theVertice; }
+   const std::vector<ossimIpt>& getVertices() const { return theVertice; }
    
 protected:
    virtual ~ossimVertexExtractor();
@@ -144,7 +144,7 @@ protected:
    ossimIrect       theAreaOfInterest;
    ossimFilename    theFilename;
    std::ofstream    theFileStream;
-   vector<ossimIpt> theVertice;
+   std::vector<ossimIpt> theVertice;
    std::vector<ossim_int32>     theLeftEdge;
    std::vector<ossim_int32>     theRightEdge;
 

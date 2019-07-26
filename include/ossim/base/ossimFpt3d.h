@@ -36,10 +36,10 @@ public:
 
    ossimFpt pt2d() const { return ossimFpt(x, y); }
    
-   ostream& print(ostream& os) const;
+   ostream& print(std::ostream& os) const;
 
-   friend ostream& operator<<(ostream& os, const ossimFpt3d& pt);
-   friend istream& operator>>(istream& is, ossimFpt3d& pt);
+   friend std::ostream& operator<<(std::ostream& os, const ossimFpt3d& pt);
+   friend std::istream& operator>>(std::istream& is, ossimFpt3d& pt);
 
    ossim_float32 x;
    ossim_float32 y;

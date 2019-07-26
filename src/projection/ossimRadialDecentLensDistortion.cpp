@@ -18,6 +18,8 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimCommon.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimRadialDecentLensDistortion, "ossimRadialDecentLensDistortion",
           ossim2dTo2dTransform);
 

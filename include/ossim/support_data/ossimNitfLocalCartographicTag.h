@@ -69,7 +69,7 @@ protected:
     *
     * This field shall contain the easting of the
     * origin pixel (row number 0, column number 0) in the absolute coordinate system.
-    * 15 BCS-N ±mmmmmmmmmmmm.m
+    * 15 BCS-N ï¿½mmmmmmmmmmmm.m
     */
    char theEastingReferenceOrigin[16];
    
@@ -82,7 +82,7 @@ protected:
     *
     * This field shall contain the northing of the
     * origin pixel (row number 0, column number 0) in the absolute coordinate system.
-    * 15 BCS-N ±mmmmmmmmmmmm.m
+    * 15 BCS-N ï¿½mmmmmmmmmmmm.m
     */
    char theNorthingReferenceOrigin[16];
 

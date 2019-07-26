@@ -22,7 +22,7 @@ class OSSIM_DLL ossimGeoAnnotationMultiPolyLineObject : public ossimGeoAnnotatio
 {
 public:
    ossimGeoAnnotationMultiPolyLineObject();
-   ossimGeoAnnotationMultiPolyLineObject(const vector<ossimPolyLine>& multiPolyLine,
+   ossimGeoAnnotationMultiPolyLineObject(const std::vector<ossimPolyLine>& multiPolyLine,
 					 ossim_uint8 r=255,
 					 ossim_uint8 g=255,
 					 ossim_uint8 b=255,
@@ -43,7 +43,7 @@ public:
    virtual void addPoint(ossim_uint32 polygonIndex,
                          const ossimGpt& pt);
    
-   virtual void setMultiPolyLine(const vector<ossimPolyLine>& multiPoly);
+   virtual void setMultiPolyLine(const std::vector<ossimPolyLine>& multiPoly);
 
    virtual void computeBoundingRect();
    

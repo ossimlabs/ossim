@@ -19,7 +19,6 @@
 #include <iosfwd>
 #include <ios>
 
-//using namespace std;
 class OSSIM_DLL ossimByteStreamBuffer : public std::basic_streambuf<char, std::char_traits<char> >
 {
 public:

@@ -68,9 +68,9 @@ protected:
    ossimRefPtr<ossimImageData> theTile;
    double theKernel[3][3];
 
-   vector<double> theNullPixValue;
-   vector<double> theMinPixValue;
-   vector<double> theMaxPixValue;   
+   std::vector<double> theNullPixValue;
+   std::vector<double> theMinPixValue;
+   std::vector<double> theMaxPixValue;
    
    /*!
     * Convolve full means that the input data is full and has

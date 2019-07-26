@@ -22,6 +22,8 @@
 
 #include <ossim/support_data/ossimNitfCscrnaTag.h>
 
+using namespace std;
+
 
 RTTI_DEF1(ossimNitfCscrnaTag, "ossimNitfCscrnaTag", ossimNitfRegisteredTag);
 

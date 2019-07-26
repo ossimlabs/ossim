@@ -8,6 +8,8 @@
 #include <ossim/reg/PhotoBlock.h>
 #include <ossim/base/ossimException.h>
 
+using namespace std;
+
 namespace ossim
 {
 PhotoBlock::PhotoBlock()

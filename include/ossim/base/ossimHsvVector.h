@@ -10,7 +10,6 @@
 #ifndef ossimHsvVector_HEADER
 #define ossimHsvVector_HEADER
 #include <iostream>
-using namespace std;
 #include <ossim/base/ossimConstants.h>
 
 class ossimRgbVector;
@@ -18,7 +17,7 @@ class ossimRgbVector;
 class OSSIMDLLEXPORT ossimHsvVector
 {
 public:
-   friend ostream& operator << (ostream& out, const ossimHsvVector & data)
+   friend std::ostream& operator << (std::ostream& out, const ossimHsvVector & data)
       {
          out << "<" << data.theBuf[0] << ", "
              << data.theBuf[1] << ", "

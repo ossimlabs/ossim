@@ -25,6 +25,8 @@
 #include <ossim/base/ossimCommon.h>
 #include <ossim/vec/vpf.h>
 
+using namespace std;
+
 /*****************************************************************************/
 
 ostream& operator <<(ostream& out,

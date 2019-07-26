@@ -22,6 +22,8 @@
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageSource.h>
 
+using namespace std;
+
 
 RTTI_DEF1(ossimWorldFileWriter,
           "ossimWorldFileWriter",

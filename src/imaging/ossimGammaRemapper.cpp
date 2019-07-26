@@ -33,6 +33,8 @@ static const double DEFAULT_GAMMA = 1.0;
 
 static ossimTrace traceDebug("ossimGammaRemapper:debug");
 
+using namespace std;
+
 ossimGammaRemapper::ossimGammaRemapper(ossimObject* owner)
    :
       ossimImageSourceFilter  (owner),  // base class

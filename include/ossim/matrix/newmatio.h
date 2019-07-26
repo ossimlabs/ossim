@@ -30,7 +30,7 @@ class Omanip_precision
    int x;
 public:
    Omanip_precision(int i) : x(i) {}
-   friend ostream& operator<<(ostream& os, Omanip_precision i);
+   friend std::ostream& operator<<(std::ostream& os, Omanip_precision i);
 };
 
 
@@ -41,7 +41,7 @@ class Omanip_width
    int x;
 public:
    Omanip_width(int i) : x(i) {}
-   friend ostream& operator<<(ostream& os, Omanip_width i);
+   friend std::ostream& operator<<(std::ostream& os, Omanip_width i);
 };
 
 Omanip_width setw(int i);

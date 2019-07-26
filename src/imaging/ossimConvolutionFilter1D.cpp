@@ -21,6 +21,8 @@ RTTI_DEF1(ossimConvolutionFilter1D, "ossimConvolutionFilter1D", ossimImageSource
 #define PROPNAME_CENTEROFFSET "CenterOffset"
 #define PROPNAME_STRICTNODATA "StrictNoData"
 
+using namespace std;
+
 ossimConvolutionFilter1D::ossimConvolutionFilter1D(ossimObject* owner)
    :ossimImageSourceFilter(owner),
     theCenterOffset(0),

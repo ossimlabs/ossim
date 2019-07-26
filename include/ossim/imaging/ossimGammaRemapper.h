@@ -41,11 +41,11 @@ public:
    virtual bool loadState(const ossimKeywordlist& kwl,
                           const char* prefix=0);
    
-   virtual ostream& print(ostream& os) const;
-   friend ostream& operator<< (ostream& os,  const ossimGammaRemapper& hr);
+   virtual std::ostream& print(std::ostream& os) const;
+   friend std::ostream& operator<< (std::ostream& os,  const ossimGammaRemapper& hr);
 
-   void setMinMaxPixelValues(const vector<double>& v_min,
-                             const vector<double>& v_max);
+   void setMinMaxPixelValues(const std::vector<double>& v_min,
+                             const std::vector<double>& v_max);
 
    virtual void enableSource();
    
@@ -60,9 +60,9 @@ protected:
 
    ossimRefPtr<ossimImageData> theTile;
    double*         theBuffer;
-   vector<double>  theMinPixelValue;
-   vector<double>  theMaxPixelValue;
-   vector<double>  theGamma;
+   std::vector<double>  theMinPixelValue;
+   std::vector<double>  theMaxPixelValue;
+   std::vector<double>  theGamma;
    bool            theUserDisabledFlag;
 
    TYPE_DATA

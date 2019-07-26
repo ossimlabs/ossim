@@ -52,11 +52,11 @@ public:
    virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& tileRect,
                                    ossim_uint32 resLevel=0);
 
-   void setInputOutputValues(const vector<double>& inputValues,
-                             const vector<double>& outputValues);
+   void setInputOutputValues(const std::vector<double>& inputValues,
+                             const std::vector<double>& outputValues);
 
-   const vector<double>& getInputValues()const;
-   const vector<double>& getOutputValues()const;
+   const std::vector<double>& getInputValues()const;
+   const std::vector<double>& getOutputValues()const;
    ossimValueAssignType getValueAssignType()const;
    void setValueAssignType(ossimValueAssignType type);
 
@@ -80,8 +80,8 @@ protected:
     */
    void allocate();
    
-   vector<double>              theInputValueArray;
-   vector<double>              theOutputValueArray;
+   std::vector<double>              theInputValueArray;
+   std::vector<double>              theOutputValueArray;
    ossimValueAssignType        theAssignType;
    ossimRefPtr<ossimImageData> theTile;
    

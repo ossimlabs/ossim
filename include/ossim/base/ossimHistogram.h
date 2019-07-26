@@ -77,7 +77,7 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
    public:
       ossimProprietaryHeaderInformation(){clear();}
 
-      bool parseStream(istream& in);
+      bool parseStream(std::istream& in);
 
       long getNumberOfBins()
          {
@@ -244,7 +244,7 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
    virtual ~ossimHistogram();
 
    virtual bool importHistogram(const ossimFilename& inputFile);
-   virtual bool importHistogram(istream& in);
+   virtual bool importHistogram(std::istream& in);
    virtual bool saveState(ossimKeywordlist& kwl,
                           const char* prefix=0)const;
    virtual bool loadState(const ossimKeywordlist& kwl,

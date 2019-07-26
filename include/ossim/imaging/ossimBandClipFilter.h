@@ -12,7 +12,6 @@
 #ifndef ossimBandClipFilter_HEADER
 #define ossimBandClipFilter_HEADER
 #include <vector>
-using namespace std;
 
 #include <ossim/imaging/ossimImageSourceFilter.h>
 
@@ -34,8 +33,8 @@ public:
 
    ossimBandClipFilter();
    ossimBandClipFilter(ossimImageSource*,
-                        const vector<double>& minPix,
-                        const vector<double>& maxPix,
+                        const std::vector<double>& minPix,
+                        const std::vector<double>& maxPix,
                         ossimBandClipType clipType=ossimBandClipType_NONE);
    
    ossimBandClipFilter(ossimImageSource*,
@@ -52,8 +51,8 @@ public:
 
    void setNumberOfValues(ossim_uint32 size);
    
-   void setMinMaxPix(const vector<double>& minPix,
-                     const vector<double>& maxPix);
+   void setMinMaxPix(const std::vector<double>& minPix,
+                     const std::vector<double>& maxPix);
 
    const std::vector<double>& getMinPixList()const;
    const std::vector<double>  getMaxPixList()const;

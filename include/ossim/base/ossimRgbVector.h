@@ -10,7 +10,6 @@
 #ifndef ossimRgbVector_HEADER
 #define ossimRgbVector_HEADER
 #include <iostream>
-using namespace std;
 #include <ossim/base/ossimConstants.h>
 
 class ossimJpegYCbCrVector;
@@ -21,7 +20,7 @@ class ossimCmyVector;
 class OSSIMDLLEXPORT ossimRgbVector
 {
 public:
-   friend ostream& operator <<(ostream& out, const ossimRgbVector& data)
+   friend std::ostream& operator <<(std::ostream& out, const ossimRgbVector& data)
       {
          out << "<" << (long)data.theBuf[0] << ", "
              << (long)data.theBuf[1] << ", "

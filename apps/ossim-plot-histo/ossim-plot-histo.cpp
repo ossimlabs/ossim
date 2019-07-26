@@ -33,6 +33,8 @@
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
+
+using namespace std;
 #ifdef WIN32
 #define MY_POPEN(arg1, arg2) _popen(arg1, arg2)
 #else

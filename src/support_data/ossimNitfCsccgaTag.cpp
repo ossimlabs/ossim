@@ -12,6 +12,8 @@
 #include <iomanip>
 #include <iostream>
 
+using namespace std;
+
 ossimNitfCsccgaTag::ossimNitfCsccgaTag()
    : ossimNitfRegisteredTag(std::string("CSCCGA"), CEL_SIZE)
 {

@@ -65,6 +65,8 @@
 #include <ossim/imaging/ossimRgbImage.h>
 #include <ossim/base/ossimCommon.h>
 
+using namespace std;
+
 // this should be in another file.  This is from gd's gdtable.c file and has
 // precomputations for sine and cosine.  It looks like they multiply the cos and
 // sign by 1024 and store the rounded int. 

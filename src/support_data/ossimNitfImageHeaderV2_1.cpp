@@ -29,6 +29,8 @@
 #include <iomanip>
 #include <cstring> // for memset
 
+using namespace std;
+
 RTTI_DEF1(ossimNitfImageHeaderV2_1,
           "ossimNitfImageHeaderV2_1",
           ossimNitfImageHeaderV2_X)

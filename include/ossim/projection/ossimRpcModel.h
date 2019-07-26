@@ -111,7 +111,7 @@ public:
                                    ossimDpt&       image_point) const;
    /**
     * @brief print()
-    * Extends base-class implementation. Dumps contents of object to ostream.
+    * Extends base-class implementation. Dumps contents of object to std::ostream.
     */
    virtual std::ostream& print(std::ostream& out) const;
 
@@ -154,11 +154,11 @@ public:
                            ossimEcefRay&   image_ray) const;
 
    /**
-    * @brief STATIC METHOD: writeGeomTemplate(ostream)
+    * @brief STATIC METHOD: writeGeomTemplate(std::ostream)
     * Writes a template of geom keywords processed by loadState and saveState
     * to output stream.
     */
-   static void writeGeomTemplate(ostream& os);
+   static void writeGeomTemplate(std::ostream& os);
 
    virtual void updateModel();
    virtual void initAdjustableParameters();

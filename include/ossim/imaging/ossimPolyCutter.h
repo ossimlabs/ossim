@@ -48,14 +48,14 @@ public:
    virtual bool loadState(const ossimKeywordlist& kwl,
                           const char* prefix=0);
 
-   virtual void setPolygon(const vector<ossimDpt>& polygon,
+   virtual void setPolygon(const std::vector<ossimDpt>& polygon,
                            ossim_uint32 i = 0);
    
-   virtual void setPolygon(const vector<ossimIpt>& polygon,
+   virtual void setPolygon(const std::vector<ossimIpt>& polygon,
                            ossim_uint32 i = 0);
    
-   virtual void addPolygon(const vector<ossimIpt>& polygon);
-   virtual void addPolygon(const vector<ossimDpt>& polygon);
+   virtual void addPolygon(const std::vector<ossimIpt>& polygon);
+   virtual void addPolygon(const std::vector<ossimDpt>& polygon);
    virtual void addPolygon(const ossimPolygon& polygon);
    
    virtual void setNumberOfPolygons(ossim_uint32 count);

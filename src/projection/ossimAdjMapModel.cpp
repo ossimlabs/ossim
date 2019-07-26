@@ -24,6 +24,8 @@
 #include <ossim/projection/ossimMapProjectionFactory.h>
 #include <ossim/elevation/ossimElevManager.h>
 
+using namespace std;
+
 // Geometry File Keywords:
 static const char* PARAMETER_KEYWORDS[] = {"map_offset_x",
                                            "map_offset_y",

@@ -23,6 +23,8 @@
 #include <iterator>
 #include <ostream>
 
+using namespace std;
+
 //ossimImageWriterFactoryRegistry* ossimImageWriterFactoryRegistry::theInstance = NULL;
 
 ossimImageWriterFactoryRegistry::ossimImageWriterFactoryRegistry()
