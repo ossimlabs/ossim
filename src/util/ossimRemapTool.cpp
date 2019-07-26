@@ -23,6 +23,7 @@
 #include <ossim/imaging/ossimHistogramWriter.h>
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/base/ossimAffineTransform.h>
 
 using namespace std;
 
@@ -42,7 +43,8 @@ ossimRemapTool::ossimRemapTool(const ossimFilename& inputFile,
                                ossimFilename outputFile)
    :  m_inputFilename (inputFile),
       m_entry (entryIndex),
-      m_doHistoStretch(doHistoStretch)
+      m_doHistoStretch(doHistoStretch),
+      m_gsd(-1.0)
 {
    m_productFilename = outputFile;
    theStdOutProgress.setFlushStreamFlag(true);
@@ -73,6 +75,7 @@ void ossimRemapTool::setUsage(ossimArgumentParser& ap)
 
    au->addCommandLineOption("-e, --entry", "<entry> For multi image handlers which entry do you wish to extract. For list of entries use: \"ossim-info -i <your_image>\" ");
    au->addCommandLineOption("-n, --no-histo", "Optionally bypass histogram-stretch. ");
+   au->addCommandLineOption("-g, --gsd", "Set the output resolution, in meters. Default is same as input resolution (no resampling).");
 }
 
 bool ossimRemapTool::initialize(ossimArgumentParser& ap)
@@ -90,6 +93,9 @@ bool ossimRemapTool::initialize(ossimArgumentParser& ap)
 
    if ( ap.read("--no-histo") || ap.read("-n"))
       m_doHistoStretch = false;
+
+   if ( ap.read("--gsd", sp1) || ap.read("-g", sp1))
+      m_gsd = ts1.toDouble();
 
    // Determine input filename:
    if ( ap.argc() > 1 )
@@ -137,6 +143,21 @@ void ossimRemapTool::initProcessingChain()
       handler->setCurrentEntry(m_entry);
    m_procChain->add(handler.get());
    m_geom = handler->getImageGeometry();
+
+   // Check for scaling:
+   if (m_gsd > 0)
+   {
+      ossimDpt inGsd = m_geom->getMetersPerPixel();
+      if (inGsd.x == 0 || inGsd.y == 0 || inGsd.hasNans())
+      {
+         errMsg<<"Input GSD = "<<inGsd<<" is not allowed! Cannot continue.";
+         throw ossimException(errMsg.str());
+      }
+      ossimDpt scale (m_gsd / inGsd.x, m_gsd / inGsd.y);
+      ossimRefPtr<ossimAffineTransform> scaler = new ossimAffineTransform();
+      scaler->setScale(scale);
+      m_geom->setTransform(scaler.get());
+   }
 
    // Add histogram remapper if requested:
    if (m_doHistoStretch)
