@@ -54,6 +54,7 @@ protected:
    bool m_doHistoStretch;
    ossimFilename m_inputFilename;
    uint32_t m_entry;
+   double m_gsd;
 };
 
 #endif
