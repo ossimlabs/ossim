@@ -20,6 +20,8 @@ RTTI_DEF2(ossimSource, "ossimSource",
           ossimConnectableObject, ossimErrorStatusInterface)
 
 
+using namespace std;
+
 ossimSource::ossimSource(ossimObject* owner)
    :
       ossimConnectableObject(owner),

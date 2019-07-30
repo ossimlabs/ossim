@@ -15,6 +15,8 @@
 #include <vector>
 #include <algorithm>
 
+using namespace std;
+
 ossimImageDataHelper::ossimImageDataHelper(ossimImageData* imageData)
 {
    setImageData(imageData);

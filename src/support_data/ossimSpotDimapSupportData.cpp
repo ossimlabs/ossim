@@ -27,6 +27,8 @@
 #include <iterator>
 #include <sstream>
 
+using namespace std;
+
 // Define Trace flags for use within this file:
 static ossimTrace traceDebug ("ossimSpotDimapSupportData:debug");
 

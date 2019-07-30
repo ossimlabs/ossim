@@ -9,6 +9,8 @@
 
 #include <ossim/point_cloud/ossimPointRecord.h>
 
+using namespace std;
+
 ossimPointRecord::ossimPointRecord(ossim_uint32 field_code)
       : m_pointId(0)
 {

@@ -24,6 +24,8 @@
 #include <ossim/imaging/ossimImageHandlerFactoryBase.h>
 #include <algorithm>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimImageHandlerRegistry:debug");
 
 

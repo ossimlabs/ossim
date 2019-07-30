@@ -19,6 +19,8 @@
 
 //ossimFontFactoryRegistry* ossimFontFactoryRegistry::theInstance = 0;
 
+using namespace std;
+
 ossimFontFactoryRegistry::ossimFontFactoryRegistry()
 :theDefaultFont(NULL)
 {

@@ -36,8 +36,6 @@
 #ifndef ossimRadialDecentLensDistortion_HEADER
 #define ossimRadialDecentLensDistortion_HEADER
 #include <iostream>
-using namespace std;
-
 #include <ossim/matrix/newmat.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossim2dTo2dTransform.h>
@@ -110,7 +108,7 @@ public:
    void setRadialDistortionParams(const NEWMAT::ColumnVector& params);
    void setDecentDistortionParams(const NEWMAT::ColumnVector& params);
    /*!
-    * Dumps contents of object to ostream.
+    * Dumps contents of object to std::ostream.
     */
    virtual std::ostream& print(std::ostream& out) const;
    

@@ -15,6 +15,8 @@
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimKeywordlist.h>
 
+using namespace std;
+
 ossimHistoMatchRemapper::ossimHistoMatchRemapper()
    : ossimImageSourceFilter()
 {

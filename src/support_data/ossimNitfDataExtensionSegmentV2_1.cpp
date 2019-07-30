@@ -19,6 +19,8 @@
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimBinaryDataProperty.h>
+
+using namespace std;
 RTTI_DEF1(ossimNitfDataExtensionSegmentV2_1, "ossimNitfDataExtensionSegmentV2_1",ossimNitfDataExtensionSegment)
 
 

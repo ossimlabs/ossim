@@ -19,6 +19,8 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimShiftFilter, "ossimShiftFilter", ossimImageSourceFilter)
 
 static ossimTrace traceDebug("ossimShiftFilter:debug");

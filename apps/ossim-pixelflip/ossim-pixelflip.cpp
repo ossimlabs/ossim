@@ -45,6 +45,8 @@
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
 
+using namespace std;
+
 #ifdef OSSIM_HAS_MPI
 #  if OSSIM_HAS_MPI
 #    include <mpi.h>

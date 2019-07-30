@@ -97,7 +97,7 @@ public:
     * You can get a list of fixed sizes supported by
     * this font.
     */
-   virtual void getFixedSizes(vector<ossimIpt>& sizes)const=0;
+   virtual void getFixedSizes(std::vector<ossimIpt>& sizes)const=0;
 
    /*!
     * Will return the previously rasterized buffer.
@@ -278,7 +278,7 @@ public:
          return ( (theAffineTransform[0][0] == 1.0) && (theAffineTransform[1][0] == 0.0)&&
                   (theAffineTransform[0][1] == 0.0) && (theAffineTransform[1][1] == 1.0));
       }
-   virtual void getFontInformation(vector<ossimFontInformation>& fontInformationList)const
+   virtual void getFontInformation(std::vector<ossimFontInformation>& fontInformationList)const
       {
          fontInformationList.push_back(ossimFontInformation(getFamilyName(),
                                                             getStyleName(),

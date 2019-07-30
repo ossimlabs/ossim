@@ -24,6 +24,8 @@
 #include <ctime>
 #include <iomanip>
 
+using namespace std;
+
 static ossimTrace traceDebug = ossimTrace("ossimRpfUtil:debug");
 
 ossimRpfUtil::ossimRpfUtil()

@@ -37,6 +37,8 @@ static ossimTrace traceExec  ("ossimMonoGridRemapEngine:exec");
 static ossimTrace traceDebug ("ossimMonoGridRemapEngine:debug");
 static bool TRACE_FLAG = true;
 
+using namespace std;
+
 //*****************************************************************************
 //  METHOD: ossimMonoGridRemapEngine::dup
 //  

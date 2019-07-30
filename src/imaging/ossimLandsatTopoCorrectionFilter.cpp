@@ -20,6 +20,8 @@
 #include <ossim/base/ossimVisitor.h>
 #include <iostream>
 
+using namespace std;
+
 RTTI_DEF1(ossimLandsatTopoCorrectionFilter, "ossimLandsatTopoCorrectionFilter",ossimTopographicCorrectionFilter);
 ossimLandsatTopoCorrectionFilter::ossimLandsatTopoCorrectionFilter()
    :ossimTopographicCorrectionFilter(),

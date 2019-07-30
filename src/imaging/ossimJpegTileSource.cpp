@@ -46,6 +46,8 @@ extern "C"
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/support_data/ossimXmpInfo.h>
 
+using namespace std;
+
 //---
 // Using windows .NET compiler there is a conflict in the libjpeg with INT32
 // in the file jmorecfg.h.  Defining XMD_H fixes this.

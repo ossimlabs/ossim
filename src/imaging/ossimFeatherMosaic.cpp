@@ -21,6 +21,8 @@ static ossimTrace traceDebug("ossimFeatherMosaic:debug");
 
 RTTI_DEF1(ossimFeatherMosaic, "ossimFeatherMosaic", ossimImageMosaic);
 
+using namespace std;
+
 ossimFeatherMosaic::ossimFeatherMosaic()
    :ossimImageMosaic(),
     theInputFeatherInformation(NULL),

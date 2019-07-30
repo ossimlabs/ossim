@@ -18,6 +18,8 @@ RTTI_DEF1(ossimEdgeFilter, "ossimEdgeFilter", ossimImageSourceFilter);
 
 #define PROP_EDGE_FILTER "Edge type"
 
+using namespace std;
+
 ossimEdgeFilter::ossimEdgeFilter(ossimObject* owner)
    :ossimImageSourceFilter(owner),
     theTile(NULL),

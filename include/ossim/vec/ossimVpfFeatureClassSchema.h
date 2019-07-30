@@ -18,13 +18,13 @@ class ossimVpfLibrary;
 class ossimVpfFeatureClassSchemaNode
 {
  public:
-   friend ostream& operator <<(std::ostream& out,
+   friend std::ostream& operator <<(std::ostream& out,
                                const ossimVpfFeatureClassSchemaNode& data)
       {
-         out << "table    :     " << data.theTable << endl
-             << "key      :     " << data.theTableKey << endl
-             << "primitive:     " << data.thePrimitiveTable << endl
-             << "primitive key: " << data.thePrimitiveTableKey << endl;
+         out << "table    :     " << data.theTable << std::endl
+             << "key      :     " << data.theTableKey << std::endl
+             << "primitive:     " << data.thePrimitiveTable << std::endl
+             << "primitive key: " << data.thePrimitiveTableKey << std::endl;
          return out;
       }
    

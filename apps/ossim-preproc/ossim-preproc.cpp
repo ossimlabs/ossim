@@ -17,6 +17,8 @@
 #include <ossim/init/ossimInit.h>
 #include <ossim/util/ossimImageUtil.h>
 
+using namespace std;
+
 int main(int argc, char *argv[])
 {
    // Return 0 on success, something else on error.

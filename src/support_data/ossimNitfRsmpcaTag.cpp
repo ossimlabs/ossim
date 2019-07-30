@@ -9,6 +9,8 @@
 #include <iostream>
 #include <iomanip>
 
+using namespace std;
+
 static const ossimTrace traceDebug(ossimString("ossimNitfRsmpcaTag:debug"));
 static const ossimString CNPCF_KW = "CNPCF";
 static const ossimString CDPCF_KW = "CDPCF";

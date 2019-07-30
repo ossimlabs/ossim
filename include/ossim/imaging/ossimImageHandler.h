@@ -365,7 +365,7 @@ public:
    /**
     * This returns all decimation for all levels.
     */
-   virtual void getDecimationFactors(vector<ossimDpt>& decimations) const;
+   virtual void getDecimationFactors(std::vector<ossimDpt>& decimations) const;
 
    /**
     * This returns the total number of decimation levels.  It is important to
@@ -433,7 +433,7 @@ public:
     *
     * The default implementation is to return the bounding rect.
     */
-   virtual void getValidImageVertices(vector<ossimIpt>& validVertices,
+   virtual void getValidImageVertices(std::vector<ossimIpt>& validVertices,
                                       ossimVertexOrdering ordering=OSSIM_CLOCKWISE_ORDER,
                                       ossim_uint32 resLevel=0)const;
 
@@ -734,9 +734,9 @@ public:
 
 
    template <class T>
-   std::shared_ptr<T> getStateAs(){return dynamic_pointer_cast<T> (m_state);}
+   std::shared_ptr<T> getStateAs(){return std::dynamic_pointer_cast<T> (m_state);}
    template <class T>
-   std::shared_ptr<const T> getStateAs()const{return dynamic_pointer_cast<const T> (m_state);}
+   std::shared_ptr<const T> getStateAs()const{return std::dynamic_pointer_cast<const T> (m_state);}
    std::shared_ptr<ossim::ImageHandlerState> getState(){return m_state;}
    std::shared_ptr<const ossim::ImageHandlerState> getState()const{return m_state;}
    void setState(std::shared_ptr<ossim::ImageHandlerState> state){m_state = state;}
@@ -833,7 +833,7 @@ protected:
    ossimFilename theOverviewFile;
    ossimFilename theSupplementaryDirectory;
    ossimRefPtr<ossimImageHandler> theOverview;
-   vector<ossimIpt> theValidImageVertices;
+   std::vector<ossimIpt> theValidImageVertices;
    ossimImageMetaData theMetaData;
    mutable ossimRefPtr<ossimImageGeometry> theGeometry;
    ossimRefPtr<ossimNBandLutDataObject> theLut;

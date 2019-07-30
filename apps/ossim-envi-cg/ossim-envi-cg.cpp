@@ -22,6 +22,8 @@
 #include <ossim/projection/ossimEnviCgModel.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 
+using namespace std;
+
 // Put your includes here:
 
 int main(int argc, char *argv[])

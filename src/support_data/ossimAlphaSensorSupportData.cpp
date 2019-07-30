@@ -8,6 +8,8 @@
 #include <ossim/support_data/ossimEnviHeader.h>
 #include <sstream>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimAlphaSensorSupportData:debug");
 
 

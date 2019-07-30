@@ -21,6 +21,8 @@
 
 #include <ossim/support_data/ossimNitfMstgtaTag.h>
 
+using namespace std;
+
 
 RTTI_DEF1(ossimNitfMstgtaTag, "ossimNitfMstgtaTag", ossimNitfRegisteredTag);
 

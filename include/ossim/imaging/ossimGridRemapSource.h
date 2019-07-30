@@ -132,7 +132,7 @@ protected:
     */
    void deallocateGrids();
    
-   vector<ossimDblGrid*> theGrids;
+   std::vector<ossimDblGrid*> theGrids;
    ossimFilename         theGridFilename;
    ossimGridRemapEngine* theRemapEngine;
    bool                  theRemapIsLockedFlag;

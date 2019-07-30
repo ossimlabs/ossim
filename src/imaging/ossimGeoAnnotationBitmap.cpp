@@ -19,7 +19,9 @@
 RTTI_DEF1(ossimGeoAnnotationBitmap,
           "ossimGeoAnnotationBitmap",
           ossimGeoAnnotationObject)
-   
+
+using namespace std;
+
 ossimGeoAnnotationBitmap::ossimGeoAnnotationBitmap(
    const ossimGpt& center,
    ossimRefPtr<ossimImageData> imageData,

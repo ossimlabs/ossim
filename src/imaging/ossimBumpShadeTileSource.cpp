@@ -27,6 +27,8 @@ static const char COLOR_RED_KW[]   = "color_red";
 static const char COLOR_GREEN_KW[] = "color_green";
 static const char COLOR_BLUE_KW[]  = "color_blue";
 
+using namespace std;
+
 RTTI_DEF1(ossimBumpShadeTileSource,
           "ossimBumpShadeTileSource",
           ossimImageCombiner);

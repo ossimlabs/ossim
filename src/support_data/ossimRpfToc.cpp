@@ -32,6 +32,8 @@
 #include <iostream>
 #include <fstream>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimRpfToc:debug");
 
 std::ostream& operator <<(std::ostream& out, const ossimRpfToc& data)

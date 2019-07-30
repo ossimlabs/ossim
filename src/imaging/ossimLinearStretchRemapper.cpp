@@ -18,6 +18,8 @@
 #include <ossim/base/ossimNumericProperty.h>
 #include <ossim/imaging/ossimLinearStretchRemapper.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimLinearStretchRemapper, "ossimLinearRemapper", ossimImageSourceFilter);
 
 static const char* MIN_VALUE_KW = "min_value";

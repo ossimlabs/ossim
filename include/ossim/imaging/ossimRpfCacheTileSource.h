@@ -375,7 +375,7 @@ protected:
     * @param rect the current region to render.
     * @return The list of entry data objects found for this rect.
     */
-   vector<ossimFrameEntryData> getIntersectingEntries(const ossimIrect& rect);
+   std::vector<ossimFrameEntryData> getIntersectingEntries(const ossimIrect& rect);
 
    /**
     * This is a wrapper for the fill cib and fill cadrg.  It takes the frames
@@ -388,7 +388,7 @@ protected:
     * @param framesInvolved All intersecting frames used to render the region.
     */
    void fillTile(const ossimIrect& tileRect,
-                 const vector<ossimFrameEntryData>& framesInvolved,
+                 const std::vector<ossimFrameEntryData>& framesInvolved,
                  ossimImageData* tile);
 
    /**

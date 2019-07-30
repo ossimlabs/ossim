@@ -21,6 +21,8 @@
 
 #include <ossim/support_data/ossimNitfAimidbTag.h>
 
+using namespace std;
+
 
 RTTI_DEF1(ossimNitfAimidbTag, "ossimNitfAimidbTag", ossimNitfRegisteredTag);
 

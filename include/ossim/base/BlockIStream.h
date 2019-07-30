@@ -33,7 +33,7 @@ namespace ossim {
       * Constructor must be initialized with an inputstream.
       *
       * @param adaptStream Currenlty a required parameter and is initialized on construction.
-                           Takes an input istream to force block aligned
+                           Takes an input std::istream to force block aligned
       *                    requests
       * @param blockSize Specify the block size to use 
       */

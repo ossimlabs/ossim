@@ -107,9 +107,9 @@ public:
    /*!
     * Debug Dump: 
     */
-   void print(ostream& stream = ossimNotify(ossimNotifyLevel_INFO)) const;  // inline below
+   void print(std::ostream& stream = ossimNotify(ossimNotifyLevel_INFO)) const;  // inline below
    
-   friend ostream& operator<< (ostream& os , const ossimLsrRay& instance)
+   friend std::ostream& operator<< (std::ostream& os , const ossimLsrRay& instance)
       { instance.print(os); return os; }
 
 private:
@@ -159,14 +159,14 @@ inline ossimLsrRay::operator ossimEcefRay() const
 }
    
 //*****************************************************************************
-//  INLINE METHOD: ossimLsrRay::print(ostream)
+//  INLINE METHOD: ossimLsrRay::print(std::ostream)
 //  Dumps contents for debug purposes.
 //*****************************************************************************
-inline void ossimLsrRay::print(ostream& os) const
+inline void ossimLsrRay::print(std::ostream& os) const
 {
    os << "(ossimLsrRay)"
       << "\n   theOrigin    = " << theOrigin
-      << "\n   theDirection = " << theDirection << ends;
+      << "\n   theDirection = " << theDirection << std::ends;
 }
    
 #endif

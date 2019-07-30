@@ -11,6 +11,8 @@
 #include <ossim/imaging/ossimTileCache.h>
 #include <ossim/base/ossimDataObject.h>
 
+using namespace std;
+
 void ossimTileCache::display()const
 {
    ossimTileCache::Iterator tiles;

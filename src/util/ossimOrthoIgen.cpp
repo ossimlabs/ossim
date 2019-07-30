@@ -56,6 +56,8 @@
 
 #include <sstream>
 
+using namespace std;
+
 // In Windows, standard output is ASCII by default. 
 // Let's include the following in case we have
 // to change it over to binary mode.

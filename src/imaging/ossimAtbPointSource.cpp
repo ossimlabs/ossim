@@ -30,6 +30,8 @@ static ossimTrace traceDebug ("ossimImageSource:debug");
 
 static const int DEFAULT_KERNEL_SIZE = 18;  // recommend odd number
 
+using namespace std;
+
 //*****************************************************************************
 //  DEFAULT CONSTRUCTOR: ossimAtbPointSource
 //  

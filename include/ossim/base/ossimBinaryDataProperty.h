@@ -24,9 +24,9 @@ public:
 
    virtual void valueToString(ossimString& valueResult) const;
 
-   void setBinaryData(const vector<unsigned char>& binaryData);
+   void setBinaryData(const std::vector<unsigned char>& binaryData);
 
-   const vector<unsigned char>& getBinaryData() const;
+   const std::vector<unsigned char>& getBinaryData() const;
 
 private:
    std::vector<unsigned char> theBinaryData;

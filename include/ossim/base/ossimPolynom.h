@@ -402,7 +402,7 @@ public:
       return os;
    }
  
-   std::ostream& 
+   std::ostream&
    printNice(std::ostream& os, const char symbols[DIM]) //!classic representation (bad accuracy, for display only)
    {
       if (getMonoms().size() == 0)
@@ -857,7 +857,7 @@ protected:
 /**
  * stream operators
  */
-template < class T, int DIM  > std::ostream& 
+template < class T, int DIM  > std::ostream&
 operator<<(std::ostream& os, const ossimPolynom<T,DIM>& pt)
 {
    return pt.print(os);

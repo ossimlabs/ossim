@@ -24,6 +24,8 @@
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimTableRemapper, "ossimTableRemapper", ossimImageSourceFilter)
 
 static ossimTrace traceDebug("ossimTableRemapper:debug");

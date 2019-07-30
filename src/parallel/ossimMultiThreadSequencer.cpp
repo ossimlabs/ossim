@@ -18,6 +18,8 @@
 #include <ossim/base/ossimTimer.h>
 static const ossim_uint32 DEFAULT_MAX_TILE_CACHE_FACTOR = 8; // Must be > 1
 
+using namespace std;
+
 ossimMtDebug* ossimMtDebug::m_instance = NULL;
 
 //*************************************************************************************************

@@ -9,6 +9,8 @@
 
 #include <ossim/point_cloud/ossimPointCloudHandler.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimPointCloudHandler, "ossimPointCloudHandler" , ossimPointCloudSource);
 
 ossim_uint32 ossimPointCloudHandler::DEFAULT_BLOCK_SIZE = 0x400000;

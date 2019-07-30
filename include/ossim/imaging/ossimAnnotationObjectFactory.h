@@ -33,7 +33,7 @@ public:
     * METHOD: getList()
     * Returns name list of all products represented by this factory:
     */
-   virtual list<ossimString> getList() const;
+   virtual std::list<ossimString> getList() const;
 
 protected:
    ossimAnnotationObjectFactory();

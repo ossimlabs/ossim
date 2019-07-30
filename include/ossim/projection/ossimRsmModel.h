@@ -72,7 +72,7 @@ public:
 
    /**
     * @brief print()
-    * Extends base-class implementation. Dumps contents of object to ostream.
+    * Extends base-class implementation. Dumps contents of object to std::ostream.
     */
    virtual std::ostream& print(std::ostream& out) const;
 

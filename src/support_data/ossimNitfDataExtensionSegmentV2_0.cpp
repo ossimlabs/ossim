@@ -15,6 +15,8 @@
 
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimBinaryDataProperty.h>
+
+using namespace std;
 RTTI_DEF1(ossimNitfDataExtensionSegmentV2_0, "ossimNitfDataExtensionSegmentV2_0",ossimNitfDataExtensionSegment)
 
 const ossimString ossimNitfDataExtensionSegmentV2_0::DESTAG_KW = "destag";

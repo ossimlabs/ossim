@@ -26,6 +26,8 @@
 
 RTTI_DEF1(ossimBandSeparateHandler, "ossimBandSeparateHandler", ossimImageHandler)
 
+using namespace std;
+
 //*************************************************************************************************
 //!  Constructor (default):
 //*************************************************************************************************

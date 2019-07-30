@@ -29,6 +29,8 @@
 
 RTTI_DEF1_INST(ossimBitMaskTileSource, "ossimBitMaskTileSource", ossimImageHandler);
 
+using namespace std;
+
 //*******************************************************************
 // Public Constructor:
 //*******************************************************************

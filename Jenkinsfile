@@ -144,8 +144,17 @@ node ("${BUILD_NODE}"){
                     sh """
                         export PATH=${ PATH }:/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin
                         sourceanalyzer -64 -b ossimlabs -scan -f fortifyResults-ossim.fpr
-                        fortifyclient -url ${ HP_FORTIFY_URL } -authtoken ${ HP_FORTIFY_TOKEN } uploadFPR -file fortifyResults-ossim.fpr -project ossim -version 1.0
                     """
+                    archiveArtifacts "fortifyResults-ossim.fpr"
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding',
+                            credentialsId: 'fortifyCredentials',
+                            usernameVariable: 'HP_FORTIFY_USERNAME',
+                            passwordVariable: 'HP_FORTIFY_PASSWORD']]) {
+                        sh """
+                            export PATH=${ PATH }:/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin
+                            fortifyclient -url ${ HP_FORTIFY_URL } -user "${ HP_FORTIFY_USERNAME }" -password "${ HP_FORTIFY_PASSWORD }" uploadFPR -file fortifyResults-ossim.fpr -project ossim -version 1.0
+                        """
+                    }
                 }
             }
         }

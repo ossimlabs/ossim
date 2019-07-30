@@ -13,6 +13,8 @@
 #include <sstream>
 #include <iomanip>
 
+using namespace std;
+
 ossimNitfProjectionParameterTag::ossimNitfProjectionParameterTag()
    :ossimNitfRegisteredTag(std::string("PRJPSB"), 0 )
 {

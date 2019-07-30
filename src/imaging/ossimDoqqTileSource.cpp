@@ -22,6 +22,8 @@ RTTI_DEF1(ossimDoqqTileSource,
           "ossimDoqqTileSource",
           ossimGeneralRasterTileSource);
 
+using namespace std;
+
 ossimDoqqTileSource::ossimDoqqTileSource()
    :theHeaderInformation(0)
 {

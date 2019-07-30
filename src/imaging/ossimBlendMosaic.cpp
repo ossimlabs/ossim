@@ -14,6 +14,8 @@
 
 RTTI_DEF1(ossimBlendMosaic, "ossimBlendMosaic", ossimImageMosaic)
 
+using namespace std;
+
 ossimBlendMosaic::ossimBlendMosaic()
    : ossimImageMosaic(),
      theNormResult(NULL)

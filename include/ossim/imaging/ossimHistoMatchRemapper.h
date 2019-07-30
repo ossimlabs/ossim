@@ -12,8 +12,6 @@
 #ifndef ossimHistoMatchRemapper_HEADER
 #define ossimHistoMatchRemapper_HEADER 1
 #include <vector>
-using namespace std;
-
 #include <ossim/base/ossimConstants.h>
 #include <ossim/imaging/ossimImageSourceFilter.h>
 
@@ -22,25 +20,25 @@ class OSSIM_DLL ossimHistoMatchRemapper: public ossimImageSourceFilter
 public:
    ossimHistoMatchRemapper();
    ossimHistoMatchRemapper(ossimImageSource* inputSource,
-                           const vector<double>& targetMeanPerBand  = vector<double>(),
-                           const vector<double>& targetSigmaPerBand = vector<double>(),
-                           const vector<double>& inputMeanPerBand   = vector<double>(),
-                           const vector<double>& inputSigmaPerBand  = vector<double>()
+                           const std::vector<double>& targetMeanPerBand  = std::vector<double>(),
+                           const std::vector<double>& targetSigmaPerBand = std::vector<double>(),
+                           const std::vector<double>& inputMeanPerBand   = std::vector<double>(),
+                           const std::vector<double>& inputSigmaPerBand  = std::vector<double>()
                            );
 
    virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& tileRect,
                                                ossim_uint32 resLevel=0);
    virtual void initialize();
    
-   const vector<double>& getInputMeanValues()const;
-   const vector<double>& getInputSigmaValues()const;
-   const vector<double>& getTargetMeanValues()const;
-   const vector<double>& getTargetSigmaValues()const;
+   const std::vector<double>& getInputMeanValues()const;
+   const std::vector<double>& getInputSigmaValues()const;
+   const std::vector<double>& getTargetMeanValues()const;
+   const std::vector<double>& getTargetSigmaValues()const;
 
-   void setInputMeanValues(const vector<double>& newValues);
-   void setInputSigmaValues(const vector<double>& newValues);
-   void setTargetMeanValues(const vector<double>& newValues);
-   void setTargetSigmaValues(const vector<double>& newValues);
+   void setInputMeanValues(const std::vector<double>& newValues);
+   void setInputSigmaValues(const std::vector<double>& newValues);
+   void setTargetMeanValues(const std::vector<double>& newValues);
+   void setTargetSigmaValues(const std::vector<double>& newValues);
    
 
    virtual bool loadState(const ossimKeywordlist& kwl,
@@ -53,10 +51,10 @@ protected:
    
    ossimRefPtr<ossimImageData> theBlankTile;
    
-   vector<double> theTargetMeanPerBand;
-   vector<double> theTargetSigmaPerBand;
-   vector<double> theInputMeanPerBand;
-   vector<double> theInputSigmaPerBand;
+   std::vector<double> theTargetMeanPerBand;
+   std::vector<double> theTargetSigmaPerBand;
+   std::vector<double> theInputMeanPerBand;
+   std::vector<double> theInputSigmaPerBand;
 
    /**
     * transLean

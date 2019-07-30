@@ -26,6 +26,8 @@ RTTI_DEF1(ossimEnviCgModel, "ossimEnviCgModel", ossimCoarseGridModel);
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/base/ossimKeywordlist.h>
 
+using namespace std;
+
 static const char* MODEL_TYPE = "ossimEnviCgModel";
 
 //*****************************************************************************

@@ -32,6 +32,8 @@
 #include <ossim/base/ossimUnitTypeLut.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 #define USE_MODEL_TRANSFORM 1
 
 static ossimTrace traceDebug("ossimMapProjection:debug");

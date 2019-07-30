@@ -15,7 +15,9 @@
 RTTI_DEF1(ossimSlopeFilter, "ossimSlopeFilter", ossimImageSourceFilter)
 
 const char* SLOPE_TYPE_KW = "slope_type";
-   
+
+using namespace std;
+
 ossimSlopeFilter::ossimSlopeFilter()
    :  ossimImageSourceFilter(),
       m_slopeType (DEGREES)

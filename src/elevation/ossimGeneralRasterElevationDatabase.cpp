@@ -7,6 +7,8 @@
 
 RTTI_DEF1(ossimGeneralRasterElevationDatabase, "ossimGeneralRasterElevationDatabase", ossimElevationCellDatabase);
 
+using namespace std;
+
 double ossimGeneralRasterElevationDatabase::getHeightAboveMSL(const ossimGpt& gpt)
 {
    if(!isSourceEnabled()) return ossim::nan();

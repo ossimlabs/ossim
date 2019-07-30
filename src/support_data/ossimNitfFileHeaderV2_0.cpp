@@ -34,6 +34,8 @@
 #include <iomanip>
 #include <stdexcept>
 
+using namespace std;
+
 
 const ossimString ossimNitfFileHeaderV2_0::FSDWNG_KW = "fsdwng";
 const ossimString ossimNitfFileHeaderV2_0::FSDEVT_KW = "fsdevt";

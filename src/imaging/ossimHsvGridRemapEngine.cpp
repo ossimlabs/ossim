@@ -36,6 +36,8 @@ RTTI_DEF1(ossimHsvGridRemapEngine, "ossimHsvGridRemapEngine",
 static ossimTrace traceExec  ("ossimHsvGridRemapEngine:exec");
 static ossimTrace traceDebug ("ossimHsvGridRemapEngine:debug");
 
+using namespace std;
+
 //*****************************************************************************
 //  METHOD: ossimHsvGridRemapEngine::remapTile
 //  

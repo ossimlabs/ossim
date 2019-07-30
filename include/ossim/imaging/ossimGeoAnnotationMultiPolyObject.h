@@ -18,7 +18,7 @@ class OSSIM_DLL ossimGeoAnnotationMultiPolyObject : public ossimGeoAnnotationObj
 {
 public:
    ossimGeoAnnotationMultiPolyObject();
-   ossimGeoAnnotationMultiPolyObject(const vector<ossimGeoPolygon>& multiPoly,
+   ossimGeoAnnotationMultiPolyObject(const std::vector<ossimGeoPolygon>& multiPoly,
                                      bool enableFill=false,
                                      unsigned char r=255,
                                      unsigned char g=255,
@@ -40,7 +40,7 @@ public:
    virtual void getBoundingRect(ossimDrect& rect)const;
    virtual void addPoint(ossim_uint32 polygonIndex, const ossimGpt& pt);
    
-   virtual void setMultiPolygon(const vector<ossimGeoPolygon>& multiPoly);
+   virtual void setMultiPolygon(const std::vector<ossimGeoPolygon>& multiPoly);
 
    virtual void setColor(unsigned char r, unsigned char g, unsigned char b);
    

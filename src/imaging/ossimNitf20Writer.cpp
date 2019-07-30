@@ -42,6 +42,8 @@
 #include <sstream>
 #include <iomanip>
 
+using namespace std;
+
 RTTI_DEF1(ossimNitf20Writer, "ossimNitf20Writer", ossimNitfWriterBase);
 
 static ossimTrace traceDebug(ossimString("ossimNitfWriter:debug"));

@@ -35,6 +35,8 @@ extern "C"
 #include <ossim/imaging/ossimImageSource.h>
 #include <ossim/imaging/ossimScalarRemapper.h>
 
+using namespace std;
+
 RTTI_DEF1_INST(ossimJpegWriter, "ossimJpegWriter", ossimImageFileWriter)
 
 static const char DEFAULT_FILE_NAME[] = "output.jpg";

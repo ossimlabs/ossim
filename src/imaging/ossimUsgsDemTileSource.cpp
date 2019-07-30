@@ -31,6 +31,8 @@
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/imaging/ossimImageGeometryRegistry.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimUsgsDemTileSource, "ossimUsgsDemTileSource", ossimImageHandler)
 
 // Static trace for debugging

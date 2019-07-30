@@ -32,6 +32,8 @@
 #include <ossim/base/ossimException.h>
 #include <cmath>
 
+using namespace std;
+
 //ossimEpsgProjectionDatabase* ossimEpsgProjectionDatabase::m_instance = 0;
 
 // Indexes into the DB file fields using "SPADAC EPSG" format (format "A"). 

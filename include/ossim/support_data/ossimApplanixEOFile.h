@@ -74,7 +74,7 @@ public:
 
    /**
     * Utility method that just checks for an APPlanix exterior orientation header.
-    * Will call the isEOFile(istream) method.
+    * Will call the isEOFile(std::istream) method.
     *
     * @param file theExterior orientation file.
     */ 
@@ -87,7 +87,7 @@ public:
 
    /**
     * Parses the header of the exterior orientation file.
-    * Calls the parseHeader(istream, header) method.
+    * Calls the parseHeader(std::istream, header) method.
     *
     * @param file The filename that is an Applanix Exterior orientation file.
     * @param header The resulting header that was parsed out.
@@ -97,7 +97,7 @@ public:
 
    /**
     * Parses the header of the exterior orientation file.
-    * Calls the parseHeader(istream, header) method.
+    * Calls the parseHeader(std::istream, header) method.
     *
     * @param in The input stream That contains an exterior orientation 
     * @param header The resulting header that was parsed out.

@@ -67,6 +67,8 @@ static ossimTrace traceDebug = ossimTrace("ossimSensorModelFactory:debug");
 #include <ossim/support_data/ossimAlphaSensorSupportData.h>
 #include <ossim/projection/ossimSpectraboticsRedEdgeModel.h>
 
+using namespace std;
+
 //***
 // ADD_MODEL: List names of all sensor models produced by this factory:
 //***

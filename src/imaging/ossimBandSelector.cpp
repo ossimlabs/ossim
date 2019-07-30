@@ -27,6 +27,8 @@ static ossimTrace traceDebug("ossimBandSelector:debug");
 
 RTTI_DEF1(ossimBandSelector,"ossimBandSelector", ossimImageSourceFilter)
 
+using namespace std;
+
 ossimBandSelector::ossimBandSelector()
    :
       ossimImageSourceFilter(),

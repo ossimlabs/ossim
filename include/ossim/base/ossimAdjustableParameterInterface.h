@@ -129,7 +129,7 @@ public:
    //! Provides the derived adjustable class an opportunity to update its state after a param change.
    virtual void updateModel() {}
 
-   //!  Dumps the currently active adjustment to ostream.
+   //!  Dumps the currently active adjustment to std::ostream.
    std::ostream& print(std::ostream& out) const;
 
 protected:

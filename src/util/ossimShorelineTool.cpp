@@ -30,6 +30,8 @@
 #include <ossim/util/ossimToolRegistry.h>
 #include <fstream>
 
+using namespace std;
+
 static const string COLOR_CODING_KW = "color_coding";
 static const string SMOOTHING_KW = "smoothing";
 static const string THRESHOLD_KW = "threshold";
@@ -43,8 +45,6 @@ static const ossimFilename TEMP_MASK_FILENAME = "temp_shoreline_mask.tif";
 
 const char* ossimShorelineTool::DESCRIPTION =
       "Computes bitmap of water versus land areas in an input image.";
-
-using namespace std;
 
 ossimShorelineTool::ossimShorelineTool()
 :    m_waterValue (0),

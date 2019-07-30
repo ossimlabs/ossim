@@ -261,13 +261,13 @@ protected:
    ossim_uint32                     theCurrentResLevel;
    virtual void assignValue();
    virtual void clearStacks();
-   virtual void clearArgList(vector<ossimEquValue>& argList);
+   virtual void clearArgList(std::vector<ossimEquValue>& argList);
 
    virtual ossimRefPtr<ossimImageData> getImageData(ossim_uint32 index);
    virtual ossimRefPtr<ossimImageData> getNewImageData(ossim_uint32 index);
 
-   virtual void deleteArgList(vector<ossimEquValue>& args);
-   virtual bool parseArgList(vector<ossimEquValue>& args,
+   virtual void deleteArgList(std::vector<ossimEquValue>& args);
+   virtual bool parseArgList(std::vector<ossimEquValue>& args,
                              bool popValueStack = true);
    
    virtual ossimRefPtr<ossimImageData> parseEquation();
@@ -282,16 +282,16 @@ protected:
    virtual bool parseUnaryFactor();
 
    virtual bool applyClamp(ossimImageData* &result,
-                           const vector<ossimEquValue>& argList);
+                           const std::vector<ossimEquValue>& argList);
                            
    virtual bool applyConvolution(ossimImageData* &result,
-                                 const vector<ossimEquValue>& argList);
+                                 const std::vector<ossimEquValue>& argList);
    
    virtual bool applyBlurr(ossimImageData* &result,
-                           const vector<ossimEquValue>& argList);
+                           const std::vector<ossimEquValue>& argList);
    
    virtual bool applyShift(ossimImageData* &result,
-                           const vector<ossimEquValue>& argList);
+                           const std::vector<ossimEquValue>& argList);
    
    virtual bool applyOp(const ossimBinaryOp& op,
                         ossimEquValue& result,

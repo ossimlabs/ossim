@@ -23,7 +23,7 @@ public:
                              ossim_uint8 b=255,
                              ossim_uint8 thickness=1);
    
-   ossimAnnotationPolyObject(const vector<ossimDpt>& imagePts,
+   ossimAnnotationPolyObject(const std::vector<ossimDpt>& imagePts,
                              bool enableFill = false,
                              ossim_uint8 r=255,
                              ossim_uint8 g=255,
@@ -50,7 +50,7 @@ public:
 
    virtual void addPoint(const ossimDpt& pt);
 
-   virtual void setPolygon(const vector<ossimDpt>& imagePoints);
+   virtual void setPolygon(const std::vector<ossimDpt>& imagePoints);
 
    virtual void setPolygon(const ossimPolygon& polygon);
 

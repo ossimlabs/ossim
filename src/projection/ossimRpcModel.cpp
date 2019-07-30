@@ -43,6 +43,8 @@ RTTI_DEF1(ossimRpcModel, "ossimRpcModel", ossimSensorModel);
 // Define Trace flags for use within this file:
 //***
 #include <ossim/base/ossimTrace.h>
+
+using namespace std;
 static ossimTrace traceExec  ("ossimRpcModel:exec");
 static ossimTrace traceDebug ("ossimRpcModel:debug");
 

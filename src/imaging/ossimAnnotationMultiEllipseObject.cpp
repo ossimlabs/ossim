@@ -9,6 +9,8 @@
 
 #include <ossim/imaging/ossimAnnotationMultiEllipseObject.h>
 
+using namespace std;
+
 ossimAnnotationMultiEllipseObject::ossimAnnotationMultiEllipseObject
    (const std::vector<ossimDpt>& pointList,
     const ossimDpt& widthHeight,

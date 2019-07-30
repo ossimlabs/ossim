@@ -25,6 +25,8 @@ static ossimTrace traceDebug ("ossimFreeTypeFont:debug");
 
 RTTI_DEF1(ossimFreeTypeFont, "ossimFreeTypeFont", ossimFont);
 
+using namespace std;
+
 ossimFreeTypeFont::ossimFreeTypeFont(const ossimFilename& fontFile)
    :ossimFont(),
     theFontFace(NULL),

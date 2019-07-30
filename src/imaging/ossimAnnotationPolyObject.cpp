@@ -17,15 +17,17 @@ RTTI_DEF1(ossimAnnotationPolyObject,
           "ossimAnnotationPolyObject",
           ossimAnnotationObject)
 
-   ossimAnnotationPolyObject::ossimAnnotationPolyObject(bool enableFill,
-                                                        ossim_uint8 r,
-                                                        ossim_uint8 g,
-                                                        ossim_uint8 b,
-                                                        ossim_uint8 thickness)
-      :ossimAnnotationObject(r, g, b, thickness),
-       thePolygon(),
-       theBoundingRect(),
-       theFillEnabled(enableFill)
+using namespace std;
+
+ossimAnnotationPolyObject::ossimAnnotationPolyObject(bool enableFill,
+                                                     ossim_uint8 r,
+                                                     ossim_uint8 g,
+                                                     ossim_uint8 b,
+                                                     ossim_uint8 thickness)
+   :ossimAnnotationObject(r, g, b, thickness),
+    thePolygon(),
+    theBoundingRect(),
+    theFillEnabled(enableFill)
 {
 }
 
@@ -73,7 +75,7 @@ bool ossimAnnotationPolyObject::intersects(const ossimDrect& rect)const
    //
    if(rect.hasNans()) return false;
    if(!rect.intersects(theBoundingRect)) return false;
-   
+
    if(!theFillEnabled)
    {
       int vertexCount = thePolygon.getVertexCount();
@@ -121,7 +123,7 @@ ossimAnnotationObject* ossimAnnotationPolyObject::getNewClippedObject(const ossi
       if(theFillEnabled)
       {
          vector<ossimPolygon> resultPoly;
-         
+
          if(thePolygon.clipToRect(resultPoly, rect))
          {
             if(resultPoly.size() == 1)
@@ -148,7 +150,7 @@ ossimAnnotationObject* ossimAnnotationPolyObject::getNewClippedObject(const ossi
       {
          vector<ossimPolyLine> lineListResult;
          ossimPolyLine polyLine = thePolygon;
-         
+
          if(polyLine.clipToRect(lineListResult,
                                 rect))
          {
@@ -169,7 +171,7 @@ void ossimAnnotationPolyObject::draw(ossimRgbImage& anImage)const
    if(thePolygon.getVertexCount() < 2) return;
    if(theBoundingRect.hasNans()) return;
    int vertexCount = thePolygon.getVertexCount();
-   
+
    anImage.setDrawColor(theRed, theGreen, theBlue);
    anImage.setThickness(theThickness);
    ossimDrect imageRect = anImage.getImageData()->getImageRectangle();
@@ -187,7 +189,7 @@ void ossimAnnotationPolyObject::draw(ossimRgbImage& anImage)const
                           imageRect.ul().y - 10,
                           imageRect.lr().x + 10,
                           imageRect.lr().y + 10);
-      
+
       if(!theFillEnabled)
       {
          ossimDpt start, end;
@@ -227,7 +229,7 @@ void ossimAnnotationPolyObject::draw(ossimRgbImage& anImage)const
             }
          }
 #if 0
-               ossimDpt start, end;
+         ossimDpt start, end;
                start = thePolygon[vertexCount-1];
                end   = thePolygon[0];
                int i = 0;
@@ -242,7 +244,7 @@ void ossimAnnotationPolyObject::draw(ossimRgbImage& anImage)const
                   start = thePolygon[i];
                   end   = thePolygon[i-1];
                }while(i < vertexCount);
-#endif    
+#endif
       }
       else
       {
@@ -266,7 +268,7 @@ std::ostream& ossimAnnotationPolyObject::print(std::ostream& out)const
       for(long index =0; index < (long)(thePolygon.getVertexCount()-1); ++index)
       {
          out << thePolygon[index] << endl;
-            
+
       }
       out << thePolygon[thePolygon.getVertexCount()-1] << endl;
    }

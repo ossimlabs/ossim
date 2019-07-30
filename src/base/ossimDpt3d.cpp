@@ -14,6 +14,7 @@
 #include <ossim/base/ossimGpt.h>
 #include <ossim/base/ossimString.h>
 
+using namespace std;
 
 ossimDpt3d::ossimDpt3d(const ossimDpt &aPt)
    :x(aPt.x),

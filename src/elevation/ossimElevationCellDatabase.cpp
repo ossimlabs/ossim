@@ -2,6 +2,8 @@
 
 RTTI_DEF1(ossimElevationCellDatabase, "ossimElevationCellDatabase", ossimElevationDatabase);
 
+using namespace std;
+
 void ossimElevationCellDatabase::getOpenCellList(std::vector<ossimFilename>& list) const
 {
    CellMap::const_iterator iter = m_cacheMap.begin();

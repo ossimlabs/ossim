@@ -15,6 +15,8 @@
 
 RTTI_DEF1(ossimROIEvent, "ossimROIEvent", ossimEvent);
 
+using namespace std;
+
 ossimROIEvent::ossimROIEvent(ossimObject* object,
                              long id)
    : ossimEvent( object, id ),

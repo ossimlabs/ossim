@@ -47,6 +47,8 @@
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimFilename.h>
 
+using namespace std;
+
 
 static ossimTrace traceExec("senint:exec");
 static ossimTrace traceDebug("senint:debug");

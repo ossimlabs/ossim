@@ -36,6 +36,8 @@ static ossimTrace traceDebug ("ossimAtbController:debug");
 static const ossimIpt DEFAULT_GRID_SPACING (64,64);
 static const char* DEFAULT_ATB_REMAP_ENGINE = "ossimHsvGridRemapEngine";
 
+using namespace std;
+
 //*****************************************************************************
 //  CONSTRUCTOR:  ossimAtbController()
 //   

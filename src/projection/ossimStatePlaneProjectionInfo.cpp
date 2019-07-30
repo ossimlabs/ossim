@@ -16,6 +16,8 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimUnitTypeLut.h>
 
+using namespace std;
+
 ossimStatePlaneProjectionInfo::ossimStatePlaneProjectionInfo(
    const std::string&  name,
    int                 pcsCode,

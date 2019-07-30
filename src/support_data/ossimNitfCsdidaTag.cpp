@@ -22,6 +22,8 @@
 
 #include <ossim/support_data/ossimNitfCsdidaTag.h>
 
+using namespace std;
+
 
 RTTI_DEF1(ossimNitfCsdidaTag, "ossimNitfCsdidaTag", ossimNitfRegisteredTag);
 

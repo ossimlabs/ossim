@@ -25,6 +25,8 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimNotify.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimSarModel, "ossimSarModel", ossimSensorModel);
 
 static ossimTrace traceExec (ossimString("ossimSarModel:exec"));

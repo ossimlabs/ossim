@@ -16,6 +16,8 @@
 #include <ossim/vec/ossimVpfLibrary.h>
 #include <ossim/vec/ossimVpfFeatureClassSchema.h>
 
+using namespace std;
+
 bool ossimVpfAnnotationCoverageInfo::hasRenderableFeature()const
 {
   for(ossim_uint32 idx = 0; idx < theFeatureInfoArray.size();++idx)

@@ -8,6 +8,7 @@
 
 RTTI_DEF1(ossimBinaryDataProperty, "ossimBinaryDataProperty", ossimProperty);
 
+using namespace std;
 ossimBinaryDataProperty::ossimBinaryDataProperty(const ossimString& name,
    const std::vector<unsigned char>& binaryData)
    :ossimProperty(name),

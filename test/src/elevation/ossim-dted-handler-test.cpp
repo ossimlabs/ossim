@@ -19,6 +19,8 @@
 #include <ossim/init/ossimInit.h>
 #include <ossim/elevation/ossimDtedHandler.h>
 
+using namespace std;
+
 
 int main(int argc, char *argv[])
 {

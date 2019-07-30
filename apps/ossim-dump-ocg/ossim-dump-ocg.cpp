@@ -19,6 +19,8 @@
 #include <ossim/init/ossimInit.h>
 #include <ossim/projection/ossimCoarseGridModel.h>
 
+using namespace std;
+
 int main(int argc, char** argv)
 {
    ossimInit::instance()->initialize(argc, argv);

@@ -39,7 +39,7 @@ public:
    virtual ossimObject* dup() const { return 0; } // TBR
    
    /*!
-    * Extends base-class implementation. Dumps contents of object to ostream.
+    * Extends base-class implementation. Dumps contents of object to std::ostream.
     */
    virtual std::ostream& print(std::ostream& out) const;
    
@@ -57,7 +57,7 @@ public:
     * Writes a template of geom keywords processed by loadState and saveState
     * to output stream.
     */
-   static void writeGeomTemplate(ostream& os);
+   static void writeGeomTemplate(std::ostream& os);
    
    //***
    // Overrides base class pure virtual.

@@ -12,6 +12,8 @@
 
 RTTI_DEF1(ossimGdBitmapFont, "ossimGdBitmapFont", ossimFont);
 
+using namespace std;
+
 ossimGdBitmapFont::ossimGdBitmapFont(const ossimString& familyName,
                                      const ossimString& styleName,
                                      const ossimGdFont* gdFontPtr)

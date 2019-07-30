@@ -15,6 +15,8 @@
 #include <ossim/projection/ossimLambertConformalConicProjection.h>
 #include <ossim/base/ossimKeywordNames.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimLambertConformalConicProjection, "ossimLambertConformalConicProjection", ossimMapProjection)
 
 /***************************************************************************/

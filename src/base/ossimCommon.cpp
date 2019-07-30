@@ -33,6 +33,8 @@
 static std::mutex timeMutex;
 static ossimTrace traceDebug("ossimCommon:debug");
 
+using namespace std;
+
 // stores a floating point nan value
 const ossim::IntFloatBitCoercion ossim::nanValue(~ossim_int64(0));
 

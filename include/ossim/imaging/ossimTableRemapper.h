@@ -56,9 +56,9 @@ public:
                           const char* prefix=0);
    
    
-   virtual ostream& print(ostream& os) const;
+   virtual std::ostream& print(std::ostream& os) const;
 
-   friend ostream& operator << (ostream& os,  const ossimTableRemapper& tr);
+   friend std::ostream& operator << (std::ostream& os,  const ossimTableRemapper& tr);
 
 protected:
    /** virtual destructor */
@@ -85,7 +85,7 @@ protected:
 
    void remapFromNormalizedTable(ossimRefPtr<ossimImageData>& inputTile);
 
-   template <class T> void dumpTable(T dummy, ostream& os) const;
+   template <class T> void dumpTable(T dummy, std::ostream& os) const;
 
    // Do not allow copy constructor, operator=.
    ossimTableRemapper(const ossimTableRemapper& tr);

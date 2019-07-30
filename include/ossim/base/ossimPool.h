@@ -45,7 +45,7 @@ class ossimPool
          catch(std::bad_alloc)
          {
             ossimNotify(ossimNotifyLevel_FATAL)
-               << "FATAL ossimPool::ossimPool(): Bad allocation" << endl;
+               << "FATAL ossimPool::ossimPool(): Bad allocation" << std::endl;
          }
       }
    }
@@ -117,7 +117,7 @@ class ossimPool
          out << "obj address:  " << (hex) << thePool[idx]->theObjectPtr
              << " is "
              << (thePool[idx]->theAvailableFlag ? "available":"unavailable")
-             << endl;
+             << std::endl;
       } 
       return out;
    }

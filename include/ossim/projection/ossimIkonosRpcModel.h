@@ -50,10 +50,10 @@ public:
                           const char* prefix=0);
   
    /*!
-    * STATIC METHOD: writeGeomTemplate(ostream)
+    * STATIC METHOD: writeGeomTemplate(std::ostream)
     * Writes a template of an ossimIkonosRpcModel geometry file.
     */
-   static void writeGeomTemplate(ostream& os);
+   static void writeGeomTemplate(std::ostream& os);
 
    virtual bool parseFile(const ossimFilename& file);
    

@@ -110,7 +110,7 @@ public:
    virtual ossimIrect getBoundingRect(ossim_uint32 resLevel=0)const;
    virtual void getDecimationFactor(ossim_uint32 resLevel,
                                     ossimDpt& result) const;
-   virtual void getDecimationFactors(vector<ossimDpt>& decimations) const;
+   virtual void getDecimationFactors(std::vector<ossimDpt>& decimations) const;
    virtual ossim_uint32 getNumberOfDecimationLevels()const;
    
    /*!

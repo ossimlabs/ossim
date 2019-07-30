@@ -37,6 +37,8 @@ RTTI_DEF1(ossimLandSatModel, "ossimLandSatModel", ossimSensorModel);
 // Define Trace flags for use within this file:
 //***
 #include <ossim/base/ossimTrace.h>
+
+using namespace std;
 static ossimTrace traceExec  ("ossimLandSatModel:exec");
 static ossimTrace traceDebug ("ossimLandSatModel:debug");
 

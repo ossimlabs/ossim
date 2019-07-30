@@ -21,7 +21,7 @@ class ossimPoolObject
    {
       if(theObjectPtr)
       {
-         cout << "deleting obj:  " << (hex) << theObjectPtr << endl;
+         cout << "deleting obj:  " << (hex) << theObjectPtr << std::endl;
          delete theObjectPtr;
          theObjectPtr = NULL;
       }

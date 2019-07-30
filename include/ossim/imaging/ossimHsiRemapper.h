@@ -61,9 +61,9 @@ public:
    
    ossim_uint32 getNumberOfOutputBands() const;
 
-   virtual ostream& print(ostream& os) const;
+   virtual std::ostream& print(std::ostream& os) const;
 
-   friend ostream& operator << (ostream& os,  const ossimHsiRemapper& hr);
+   friend std::ostream& operator << (std::ostream& os,  const ossimHsiRemapper& hr);
    
    void setHueOffset               (int color_group, double offset);
    void setHueLowRange             (int color_group, double range);

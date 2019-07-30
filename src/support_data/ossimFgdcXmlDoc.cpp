@@ -24,6 +24,8 @@
 
 #include <cmath> /* for std::fabs */
 
+using namespace std;
+
 // Static trace for debugging
 static ossimTrace traceDebug("ossimFgdcXmlDoc:debug");
 

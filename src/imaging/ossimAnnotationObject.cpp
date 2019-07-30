@@ -13,6 +13,8 @@ RTTI_DEF1(ossimAnnotationObject, "ossimAnnotationObject", ossimObject)
 
 ossim_uint32 ossimAnnotationObject::theIdCounter = 0;
 
+using namespace std;
+
 ossimAnnotationObject::~ossimAnnotationObject()
 {}
 

@@ -19,7 +19,9 @@
 RTTI_DEF1(ossimGeoAnnotationEllipseObject,
           "ossimGeoAnnotationEllipseObject",
           ossimGeoAnnotationObject);
-   
+
+using namespace std;
+
 ossimGeoAnnotationEllipseObject::ossimGeoAnnotationEllipseObject(
    const ossimGpt& center,
    const ossimDpt& widthHeight,

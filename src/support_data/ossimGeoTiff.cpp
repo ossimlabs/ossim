@@ -48,6 +48,8 @@
 #include <sstream>
 #include <cstdlib>
 
+using namespace std;
+
 static const ossimGeoTiffCoordTransformsLut COORD_TRANS_LUT;
 static const ossimGeoTiffDatumLut DATUM_LUT;
 std::mutex ossimGeoTiff::theMutex;

@@ -20,7 +20,7 @@ public:
    bool saveState(ossimKeywordlist& kwl, const char* prefix=0) const;
 
 private:
-   double readValue(ifstream& s, bool bigEndian) const;
+   double readValue(std::ifstream& s, bool bigEndian) const;
 
 TYPE_DATA
 };

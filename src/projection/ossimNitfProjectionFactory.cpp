@@ -31,6 +31,8 @@
 #include <fstream>
 #include <cmath>
 
+using namespace std;
+
     // Define Trace flags for use within this file:
     static ossimTrace traceDebug(ossimString("ossimNitfProjectionFactory:debug"));
 

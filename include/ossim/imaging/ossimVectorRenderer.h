@@ -40,7 +40,7 @@ public:
     * the index passed in.  Implementors should set an error and return an
     * empty vector if the index is out of range.
     */
-   virtual vector<ossimDpt3d> getObject(ossim_uint32 index) const = 0;
+   virtual std::vector<ossimDpt3d> getObject(ossim_uint32 index) const = 0;
    
    /**
     * Method to save the state of an object to a keyword list.

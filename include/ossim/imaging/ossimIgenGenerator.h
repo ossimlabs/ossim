@@ -84,7 +84,7 @@ public:
          ++theSpecFileIndex;
          return true;
       }
-   void getSpecs(vector<ossimKeywordlist>& specList)const
+   void getSpecs(std::vector<ossimKeywordlist>& specList)const
       {
          specList = theSpecList;
       }
@@ -278,8 +278,8 @@ protected:
    ossimGeoPolygon   theOutputGeoPolygon;
    ossimString       theTileNamingConvention;
   
-   vector<ossimKeywordlist> theSpecList;
-   vector<ossimFilename>    theSpecFileList;
+   std::vector<ossimKeywordlist> theSpecList;
+   std::vector<ossimFilename>    theSpecFileList;
 
    void generateInputKwl(ossimConnectableObject* connectable);
    void generateOutputKwl(ossimConnectableObject* connectable);

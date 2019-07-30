@@ -63,7 +63,7 @@ public:
             result.y = 1.0;
          }
       }
-   virtual void getDecimationFactors(vector<ossimDpt>& decimations)const
+   virtual void getDecimationFactors(std::vector<ossimDpt>& decimations)const
       {
          decimations.push_back(ossimDpt(1.0, 1.0));
       }

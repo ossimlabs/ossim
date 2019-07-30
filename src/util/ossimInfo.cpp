@@ -55,6 +55,8 @@
 #include <vector>
 #include <memory>
 
+using namespace std;
+
 static const char BUILD_DATE_KW[]           = "build_date";
 static const char CAN_OPEN_KW[]             = "can_open";
 static const char CENTER_GROUND_KW[]        = "center_ground";

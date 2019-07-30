@@ -14,6 +14,8 @@
 #include <ossim/base/ossimString.h>
 #include <iomanip>
 
+using namespace std;
+
 ossimNitfHistoaProcessingEvent::ossimNitfHistoaProcessingEvent()
 {
    clearFields();

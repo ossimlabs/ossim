@@ -19,6 +19,8 @@
 // #include <ossim/imaging/ossimTiledImagePatch.h>
 #include <ossim/support_data/ossimSrcRecord.h>
 
+using namespace std;
+
 ossimSingleImageChain::ossimSingleImageChain()
    :
    ossimImageChain(),

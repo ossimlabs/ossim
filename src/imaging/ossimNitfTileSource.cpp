@@ -49,6 +49,8 @@
 #include <fstream>
 #include <algorithm> /* for std::fill */
 
+using namespace std;
+
 RTTI_DEF1_INST(ossimNitfTileSource, "ossimNitfTileSource", ossimImageHandler)
 
 #ifdef OSSIM_ID_ENABLED

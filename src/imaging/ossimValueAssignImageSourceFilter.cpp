@@ -13,6 +13,8 @@
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimValueAssignImageSourceFilter,
           "ossimValueAssignImageSourceFilter",
           ossimImageSourceFilter);

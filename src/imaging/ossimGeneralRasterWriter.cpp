@@ -32,6 +32,8 @@ RTTI_DEF1(ossimGeneralRasterWriter,
 
 static const char DEFAULT_FILE_NAME[] = "output.ras";
 
+using namespace std;
+
 ossimGeneralRasterWriter::ossimGeneralRasterWriter()
    :
       ossimImageFileWriter(),

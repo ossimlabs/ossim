@@ -18,6 +18,8 @@
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimCommon.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimNitfUse00aTag, "ossimNitfUse00aTag", ossimNitfRegisteredTag);
 
 static const ossimString ANGLETONORTH_KW = "ANGLETONORTH";

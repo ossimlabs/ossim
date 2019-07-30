@@ -17,6 +17,8 @@
 #include <iostream>
 #include <iomanip>
 
+using namespace std;
+
 RTTI_DEF1(ossimNitfGeoPositioningTag, "ossimNitfGeoPositioningTag", ossimNitfRegisteredTag);
 
 ossimNitfGeoPositioningTag::ossimNitfGeoPositioningTag()

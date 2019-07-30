@@ -13,6 +13,8 @@
 #include <ossim/projection/ossimImageProjectionModel.h>
 #include <ossim/base/ossimException.h>
 
+using namespace std;
+
 ossimGeoAnnotationMultiEllipseObject::ossimGeoAnnotationMultiEllipseObject()
    :ossimGeoAnnotationObject(),
     theProjectedObject(new ossimAnnotationMultiEllipseObject()),

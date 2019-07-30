@@ -86,9 +86,9 @@ protected:
    //! the individual band files. If other "metadata" formats are to be supported, then this class
    //! should be derived from. This method would therefore be pure virtual in this base-class and 
    //! only this method would need to be implemented in the derived classes.
-   virtual void getBandFileNames(vector<ossimFilename>& file_names);
+   virtual void getBandFileNames(std::vector<ossimFilename>& file_names);
 
-  vector<ossimRefPtr<ossimImageHandler> > m_bandFiles;
+  std::vector<ossimRefPtr<ossimImageHandler> > m_bandFiles;
   ossimRefPtr<ossimBandMergeSource>       m_mergeSource;
 
 TYPE_DATA

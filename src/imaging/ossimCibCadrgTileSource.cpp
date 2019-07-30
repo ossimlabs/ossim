@@ -48,6 +48,8 @@ RTTI_DEF1(ossimCibCadrgTileSource, "ossimCibCadrgTileSource", ossimImageHandler)
 const ossim_uint32 ossimCibCadrgTileSource::CIBCADRG_FRAME_WIDTH  = 1536;
 const ossim_uint32 ossimCibCadrgTileSource::CIBCADRG_FRAME_HEIGHT = 1536;
 
+using namespace std;
+
 ossimCibCadrgTileSource::ossimCibCadrgTileSource()
    :ossimImageHandler(),
     theCompressedBuffer(0),

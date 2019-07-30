@@ -42,6 +42,8 @@
 #include <iterator>
 #include <exception>
 
+using namespace std;
+
 static ossimTrace traceDebug("icp:main");
 
 static void usage()

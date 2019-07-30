@@ -22,8 +22,6 @@
 #define ossimPolygon_HEADER
 #include <iostream>
 #include <vector>
-using namespace std;
-
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimDrect.h>
 #include <ossim/base/ossimIrect.h>
@@ -40,9 +38,9 @@ class OSSIMDLLEXPORT ossimPolygon
 public:
   typedef std::vector<ossimPolygon> Vector;
    ossimPolygon();
-   ossimPolygon(const vector<ossimIpt>& polygon);
-   ossimPolygon(const vector<ossimDpt>& polygon);
-   ossimPolygon(const vector<ossimGpt>& polygon);
+   ossimPolygon(const std::vector<ossimIpt>& polygon);
+   ossimPolygon(const std::vector<ossimDpt>& polygon);
+   ossimPolygon(const std::vector<ossimGpt>& polygon);
    ossimPolygon(int numVertices, const ossimDpt* vertex_array);
 
    ossimPolygon(const ossimPolygon& copy_this);
@@ -106,12 +104,12 @@ public:
     */
    bool hasNans()const;
 
-   const vector<ossimDpt>& getVertexList()const;
+   const std::vector<ossimDpt>& getVertexList()const;
       
    /**
     * Uses the ossimPolyArea2d class for the intersection
     */
-   bool clipToRect(vector<ossimPolygon>& result,
+   bool clipToRect(std::vector<ossimPolygon>& result,
                    const ossimDrect& rect)const;
 
    
@@ -172,9 +170,9 @@ public:
     * OPERATORS: (Some are inlined at bottom) 
     */
    const ossimPolygon& operator= (const ossimPolygon& copy_this);
-   const ossimPolygon& operator= (const vector<ossimDpt>& vertexList);
-   const ossimPolygon& operator= (const vector<ossimGpt>& vertexList);
-   const ossimPolygon& operator= (const vector<ossimIpt>& vertexList);
+   const ossimPolygon& operator= (const std::vector<ossimDpt>& vertexList);
+   const ossimPolygon& operator= (const std::vector<ossimGpt>& vertexList);
+   const ossimPolygon& operator= (const std::vector<ossimIpt>& vertexList);
    const ossimPolygon& operator= (const ossimIrect& rect);
    const ossimPolygon& operator= (const ossimDrect& rect);
    bool                operator==(const ossimPolygon& compare_this) const;
@@ -196,8 +194,8 @@ public:
    /**
     * METHOD: print()
     */
-   void print(ostream& os) const;
-   friend ostream& operator<<(ostream&, const ossimPolygon&);
+   void print(std::ostream& os) const;
+   friend std::ostream& operator<<(std::ostream&, const ossimPolygon&);
 
 
    bool saveState(ossimKeywordlist& kwl,
@@ -247,7 +245,7 @@ protected:
    void fitCircleInsideVertex(ossimDpt &destPt, unsigned int vertex, double radius) const;
 
    mutable ossimVertexOrdering theOrderingType;
-   vector<ossimDpt> theVertexList;
+   std::vector<ossimDpt> theVertexList;
    mutable ossim_int32 theCurrentVertex;
 };
 

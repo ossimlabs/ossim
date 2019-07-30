@@ -23,6 +23,8 @@
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <cmath>
 
+using namespace std;
+
 RTTI_DEF1(ossimImageGeometry, "ossimImageGeometry", ossimObject);
 
 //**************************************************************************************************

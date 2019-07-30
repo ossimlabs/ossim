@@ -23,6 +23,8 @@ RTTI_DEF1(ossimBandLutFilter, "ossimBandLutFilter", ossimImageSourceFilter);
 static const char* MODE_KW = "mode";
 static const char* LUT_FILE_KW = "lut_file";
 
+using namespace std;
+
 ossimBandLutFilter::ossimBandLutFilter()
 :ossimImageSourceFilter(),
  theMode(INTERPOLATED),
@@ -72,7 +74,7 @@ ossimRefPtr<ossimImageData> ossimBandLutFilter::getTile(const ossimIrect& tileRe
    ossim_uint32 numBands = getNumberOfInputBands();
    for (ossim_uint32 band = 0; band < numBands; ++band)
    {
-      map<double, double>& bandMap = theLut[band];
+      std::map<double, double>& bandMap = theLut[band];
       std::map<double, double>::const_iterator lut_entry;
       for (ossim_uint32 pixel=0; pixel<maxLength; ++pixel)
       {

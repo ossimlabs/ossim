@@ -39,6 +39,8 @@ RTTI_DEF1(ossimCoarseGridModel, "ossimCoarseGridModel", ossimSensorModel);
 //***
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 static ossimTrace traceExec  ("ossimCoarseGridModel:exec");
 static ossimTrace traceDebug ("ossimCoarseGridModel:debug");
 

@@ -21,7 +21,7 @@
 #include <ossim/base/ossimMultiResLevelHistogram.h>
 
 #include <vector>
-#include <iosfwd> /* for ostream */
+#include <iosfwd> /* for std::ostream */
 
 
 class ossimMultiBandHistogram;

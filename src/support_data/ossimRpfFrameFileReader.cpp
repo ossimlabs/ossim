@@ -17,6 +17,8 @@
 #include <fstream>
 #include <ostream>
 
+using namespace std;
+
 std::ostream& operator<<(std::ostream& out, const ossimRpfFrameFileReader& data)
 {
    return data.print(out);

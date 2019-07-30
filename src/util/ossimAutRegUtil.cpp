@@ -48,6 +48,8 @@
 
 #include <iostream>
 
+using namespace std;
+
 static ossimTrace traceDebug ("ossimAutRegUtil:debug");
 static ossimTrace traceLog("ossimAutRegUtil:log");
 static ossimTrace traceOptions("ossimAutRegUtil:options");

@@ -15,6 +15,8 @@
 #include <math.h>
 #include <ossim/base/ossimCommon.h>
 
+using namespace std;
+
 const float ossimHsvVector::OSSIM_HSV_UNDEFINED = -1;
 ossimHsvVector::ossimHsvVector(const ossimRgbVector& rgb)
 {
