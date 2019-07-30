@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 
    for (int i=0; i<N; ++i)
    {
-      fprintf(gnuplotPipe, "%f %f \n", x[i], y[i]);
+      fprintf(gnuplotPipe, "%f %f \n", x[i], (double)y[i]);
    }
    fprintf(gnuplotPipe, "e\n");
 
