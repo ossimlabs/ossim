@@ -13,6 +13,7 @@
 #include <ossim/base/ossim2dTo2dShiftTransform.h>
 #include <ossim/base/ossim2dTo2dIdentityTransform.h>
 #include <ossim/base/ossim2dTo2dCompositeTransform.h>
+#include <ossim/base/ossimAffineTransform.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimRefPtr.h>
@@ -46,7 +47,11 @@ ossim2dTo2dTransform* ossim2dTo2dTransformFactory::createTransform(const ossimSt
    {
       result = new ossim2dTo2dCompositeTransform();
    }
-   
+   else if(name == STATIC_TYPE_NAME(ossimAffineTransform))
+   {
+      result = new ossimAffineTransform();
+   }
+
    return result;
 }
 
@@ -69,5 +74,5 @@ void ossim2dTo2dTransformFactory::getTypeNameList(std::vector<ossimString>& type
    typeList.push_back(STATIC_TYPE_NAME(ossim2dTo2dShiftTransform));
    typeList.push_back(STATIC_TYPE_NAME(ossim2dTo2dIdentityTransform));
    typeList.push_back(STATIC_TYPE_NAME(ossim2dTo2dCompositeTransform));
-   
+   typeList.push_back(STATIC_TYPE_NAME(ossimAffineTransform));
 }
