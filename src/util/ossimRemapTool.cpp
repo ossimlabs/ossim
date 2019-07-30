@@ -23,6 +23,7 @@
 #include <ossim/imaging/ossimHistogramWriter.h>
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/projection/ossimImageViewProjectionTransform.h>
 #include <ossim/base/ossimAffineTransform.h>
 
 using namespace std;
@@ -144,21 +145,6 @@ void ossimRemapTool::initProcessingChain()
    m_procChain->add(handler.get());
    m_geom = handler->getImageGeometry();
 
-   // Check for scaling:
-   if (m_gsd > 0)
-   {
-      ossimDpt inGsd = m_geom->getMetersPerPixel();
-      if (inGsd.x == 0 || inGsd.y == 0 || inGsd.hasNans())
-      {
-         errMsg<<"Input GSD = "<<inGsd<<" is not allowed! Cannot continue.";
-         throw ossimException(errMsg.str());
-      }
-      ossimDpt scale (m_gsd / inGsd.x, m_gsd / inGsd.y);
-      ossimRefPtr<ossimAffineTransform> scaler = new ossimAffineTransform();
-      scaler->setScale(scale);
-      m_geom->setTransform(scaler.get());
-   }
-
    // Add histogram remapper if requested:
    if (m_doHistoStretch)
    {
@@ -197,6 +183,33 @@ void ossimRemapTool::initProcessingChain()
    scalarRemapper->setOutputScalarType(OSSIM_UINT8);
    m_procChain->add(scalarRemapper.get());
 
+   // Check for scaling, need a resampler if non-zero:
+   if (m_gsd > 0)
+   {
+      // First the IVT:
+      ossimDpt inGsd = m_geom->getMetersPerPixel();
+      if (inGsd.x == 0 || inGsd.y == 0 || inGsd.hasNans())
+      {
+         errMsg<<"Input GSD = "<<inGsd<<" is not allowed! Cannot continue.";
+         throw ossimException(errMsg.str());
+      }
+      ossimDpt scale (m_gsd / inGsd.x, m_gsd / inGsd.y);
+      ossimIpt inSize (m_geom->getImageSize());
+      ossimIpt outSize (inSize.x/scale.x, inSize.y/scale.y);
+      ossimRefPtr<ossimAffineTransform> transform = new ossimAffineTransform;
+      transform->setScale(scale);
+      ossimRefPtr<ossimImageGeometry> outGeom =
+         new ossimImageGeometry(transform.get(), m_geom->getProjection());
+      outGeom->setImageSize(outSize);
+      ossimRefPtr<ossimImageViewProjectionTransform> ivt =
+         new ossimImageViewProjectionTransform(m_geom.get(), outGeom.get());
+      ossimRefPtr<ossimImageRenderer> renderer = new ossimImageRenderer;
+      renderer->setImageViewTransform(ivt.get());
+      renderer->getResampler()->setFilterType(ossimFilterResampler::ossimFilterResampler_TRIANGLE,
+                                              ossimFilterResampler::ossimFilterResampler_TRIANGLE);
+      m_procChain->add(renderer.get());
+   }
+
    m_procChain->initialize();
 }
 
@@ -225,6 +238,8 @@ bool ossimRemapTool::execute()
       return false;
 
    ossimNotify(ossimNotifyLevel_INFO)<<"Wrote product image to <"<<m_productFilename<<">"<<endl;
+   ossimNotify(ossimNotifyLevel_INFO)<<"Wrote product geometry to <"<<
+                                     m_productFilename.fileNoExtension()<<".geom>"<<endl;
 
    return true;
 }
