@@ -2417,6 +2417,7 @@ bool ossimGeoTiff::initTiePointsFromImageModelTransform()
    theTiePoint.push_back(theModelTransformation[3]);
    theTiePoint.push_back(theModelTransformation[7]);
    theTiePoint.push_back(0.0);
+   return true;
 }
 
 
