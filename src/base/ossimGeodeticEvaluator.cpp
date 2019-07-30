@@ -113,7 +113,7 @@ bool ossimGeodeticEvaluator::direct(const ossimGpt& p1,
    double cos2sigm;
    double cos2sigm2;
 
-   while (abs(sigma - prevSigma) > 1.e-12)
+   while (fabs(sigma - prevSigma) > 1.e-12)
    {
       // eq. 5
       sigmaM2 = 2.0*sigma1 + sigma;
@@ -276,7 +276,7 @@ bool ossimGeodeticEvaluator::inverse(const ossimGpt& p1,
 
 
       // Check delta lambda for convergence
-      double delta = abs(lam - lam0);
+      double delta = fabs(lam - lam0);
       if (delta < 1e-13 && iter>=iterMin)
       {
         converged = true;
