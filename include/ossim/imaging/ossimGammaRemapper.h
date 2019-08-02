@@ -53,13 +53,16 @@ protected:
    void calculateGammaWithLookup(ossimRefPtr<ossimImageData> input);
    template<class T>
    void calculateGammaWithLookupTemplate(ossimRefPtr<ossimImageData> input, T /*dummy*/);
-   
+
    ossim_float64 m_gamma;
    mutable bool m_dirtyFlag;
    ossimRefPtr<ossimImageData> m_tile;
    ossimRefPtr<ossimImageData> m_normalizedTile;
    mutable std::vector<ossim_float32> m_lookupTable;
 
+   static const ossim_float64 MIN_GAMMA;   
+   static const ossim_float64 MAX_GAMMA;   
+   static const ossim_float64 DEFAULT_GAMMA;   
    TYPE_DATA
 };
 

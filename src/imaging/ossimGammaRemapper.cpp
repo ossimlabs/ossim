@@ -19,14 +19,16 @@
 
 RTTI_DEF1(ossimGammaRemapper, "ossimGammaRemapper", ossimImageSourceFilter)
 
-static const double DEFAULT_GAMMA = 1.0;
 static const char GAMMA_KW[] = "gamma";
+const ossim_float64 ossimGammaRemapper::MIN_GAMMA=0.0001;
+const ossim_float64 ossimGammaRemapper::MAX_GAMMA=10.0;
+const ossim_float64 ossimGammaRemapper::DEFAULT_GAMMA = 1.0;
 
 static ossimTrace traceDebug("ossimGammaRemapper:debug");
 
 ossimGammaRemapper::ossimGammaRemapper()
    :
-      m_gamma                (DEFAULT_GAMMA),
+      m_gamma(DEFAULT_GAMMA),
       m_dirtyFlag(true)
 {
 }
@@ -274,6 +276,9 @@ bool ossimGammaRemapper::saveState(ossimKeywordlist& kwl,
 void ossimGammaRemapper::setGamma(const double& gamma)
 {
    m_gamma = gamma;
+   if(m_gamma < MIN_GAMMA) m_gamma = MIN_GAMMA;
+   if(m_gamma > MAX_GAMMA) m_gamma = MAX_GAMMA;
+
    m_dirtyFlag = true;
 }
 
