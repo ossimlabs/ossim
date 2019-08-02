@@ -136,17 +136,17 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
     *
     * @return A new histogram from the this.
     */
-   ossimHistogram* fillEmptyBins(bool interiorOnly,
+   ossimRefPtr<ossimHistogram> fillEmptyBins(bool interiorOnly,
                                  int type=HISTOGRAM_FILL_THIN_PLATE)const;
 
-   ossimHistogram* Scale(double scale_factor); // Scale Transformation
+   ossimRefPtr<ossimHistogram> Scale(double scale_factor); // Scale Transformation
 
    // From density to cumulative
-   ossimHistogram* CumulativeGreaterThanEqual()const;
-   ossimHistogram* CumulativeLessThanEqual()const;
+   ossimRefPtr<ossimHistogram> CumulativeGreaterThanEqual()const;
+   ossimRefPtr<ossimHistogram> CumulativeLessThanEqual()const;
 
    //Suppress non-peak values.
-   ossimHistogram* NonMaximumSupress(int radius = 1, bool cyclic = false);
+   ossimRefPtr<ossimHistogram> NonMaximumSupress(int radius = 1, bool cyclic = false);
 
    // void create(int xres, float val1, float val2);
    void create(int bins, double minValue, double maxValue,

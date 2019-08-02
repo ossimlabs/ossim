@@ -27,6 +27,7 @@ ossimSingleImageChain::ossimSingleImageChain()
    m_handler(0),
    m_bandSelector(0),
    m_histogramRemapper(0),
+   m_gammaRemapper(0),
    m_brightnessContrast(0),
    m_sharpen(0),
    m_scalarRemapper(0),
@@ -35,6 +36,7 @@ ossimSingleImageChain::ossimSingleImageChain()
    m_chainCache(0),
    m_addNullPixelFlipFlag(false),
    m_addHistogramFlag(false),
+   m_addGammaFlag(false),
    m_addResamplerCacheFlag(false),
    m_addChainCacheFlag(false),
    m_remapToEightBitFlag(false),
@@ -61,6 +63,7 @@ ossimSingleImageChain::ossimSingleImageChain(bool addNullPixelFlipFlag,
    m_handler(0),
    m_bandSelector(0),
    m_histogramRemapper(0),
+   m_gammaRemapper(0),
    m_brightnessContrast(0),
    m_sharpen(0),
    m_scalarRemapper(0),
@@ -86,6 +89,7 @@ ossimSingleImageChain::~ossimSingleImageChain()
    m_nullPixelFlip      = 0;
    m_bandSelector       = 0;
    m_histogramRemapper  = 0;
+   m_gammaRemapper      = 0;
    m_brightnessContrast = 0;
    m_sharpen            = 0;
    m_scalarRemapper     = 0;
@@ -108,6 +112,7 @@ void ossimSingleImageChain::reset()
    m_bandSelector           = 0;
    m_nullPixelFlip          = 0;
    m_histogramRemapper      = 0;
+   m_gammaRemapper          = 0;
    m_brightnessContrast     = 0;
    m_sharpen                = 0;
    m_scalarRemapper         = 0;
@@ -117,6 +122,7 @@ void ossimSingleImageChain::reset()
    m_chainCache             = 0;
 
    m_addHistogramFlag       = false;
+   m_addGammaFlag           = false;
    m_addNullPixelFlipFlag   = false;
    m_addResamplerCacheFlag  = false;
    m_addChainCacheFlag      = false;
@@ -195,6 +201,11 @@ void ossimSingleImageChain::createRenderedChain()
    if ( m_addHistogramFlag )
    {
       addHistogramRemapper();
+   }
+
+   if(m_addGammaFlag)
+   {
+      addGammaRemapper();
    }
 
    // brightness contrast:
@@ -341,6 +352,10 @@ void ossimSingleImageChain::createRenderedChain(const ossimSrcRecord& src)
       addHistogramRemapper(src);
    }
 
+   if(m_addGammaFlag)
+   {
+      addGammaRemapper();
+   }
    // brightness contrast:
    if ( m_brightnessContrastFlag )
    {
@@ -701,6 +716,30 @@ void ossimSingleImageChain::addScalarRemapper()
    }
 }
 
+void ossimSingleImageChain::addGammaRemapper()
+{
+   if ( !m_gammaRemapper )
+   {
+      m_gammaRemapper = new ossimGammaRemapper();
+
+      // Add to the end of the chain.
+      addFirst( m_gammaRemapper.get() );
+   }
+}
+
+void ossimSingleImageChain::addGammaRemapper(const ossimSrcRecord& src)
+{
+   if ( !m_gammaRemapper )
+   {
+      m_gammaRemapper = new ossimGammaRemapper();
+
+      m_gammaRemapper->setGamma(src.getGamma());
+      // Add to the end of the chain.
+      addFirst( m_gammaRemapper.get() );
+   }
+}
+
+
 void ossimSingleImageChain::addBrightnessContrast()
 {
    if ( !m_brightnessContrast )
@@ -808,6 +847,17 @@ ossimRefPtr<ossimHistogramRemapper> ossimSingleImageChain::getHistogramRemapper(
    return m_histogramRemapper;
 }
 
+ossimRefPtr<const ossimGammaRemapper> ossimSingleImageChain::getGammaRemapper() const
+{
+   return ossimRefPtr<const ossimGammaRemapper>( m_gammaRemapper.get() );
+}
+
+ossimRefPtr<ossimGammaRemapper> ossimSingleImageChain::getGammaRemapper()
+{
+   return m_gammaRemapper;
+}
+
+
 ossimRefPtr<const ossimCacheTileSource> ossimSingleImageChain::getResamplerCache() const
 {
    return ossimRefPtr<const ossimCacheTileSource>( m_resamplerCache.get() );
@@ -889,6 +939,16 @@ void ossimSingleImageChain::setAddHistogramFlag(bool flag)
 bool ossimSingleImageChain::getAddHistogramFlag() const
 {
    return m_addHistogramFlag;
+}
+
+void ossimSingleImageChain::setAddGammaFlag(bool flag)
+{
+   m_addGammaFlag = flag;
+}
+
+bool ossimSingleImageChain::getAddGammaFlag() const
+{
+   return m_addGammaFlag;
 }
 
 void ossimSingleImageChain::setAddResamplerCacheFlag(bool flag)

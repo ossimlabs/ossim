@@ -21,7 +21,8 @@ ossimSrcRecord::ossimSrcRecord()
 :  m_entryIndex(-1),
    m_weight(0.0),
    m_isVectorData(false),
-   m_isRgbData(false)
+   m_isRgbData(false),
+   m_gamma(1.0)
 {}
 
 //*************************************************************************************************
@@ -31,7 +32,8 @@ ossimSrcRecord::ossimSrcRecord(const ossimKeywordlist& src_kwl, ossim_uint32 ind
 :  m_entryIndex(-1),
    m_weight(0.0),
    m_isVectorData(false),
-   m_isRgbData(false)
+   m_isRgbData(false),
+   m_gamma(1.0)
 {
    prefix_str += ossimString::toString(index) + ".";
    const char* prefix = prefix_str.chars();
@@ -207,6 +209,11 @@ bool ossimSrcRecord::loadState(const ossimKeywordlist& kwl, const char* prefix)
    if (!lookup.empty())
       m_weight =  lookup.toDouble();
 
+   lookup = kwl.find(prefix, "gamma");
+   if(!lookup.empty())
+   {
+      m_gamma = lookup.toFloat64();
+   }
    // Look for vector data info:
    m_isVectorData = false;
    ossimString vector_prefix (prefix);

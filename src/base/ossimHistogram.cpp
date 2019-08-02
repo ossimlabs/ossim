@@ -317,10 +317,10 @@ m_scalarType(OSSIM_SCALAR_UNKNOWN)
       else if(!(width == 0.0))
       {
          m_num = (int)ceil((maxvalue - minvalue)/width);
-         if ( m_nullCount )
-         {
-            m_nullCount /= width; // ??? drb
-         }
+//         if ( m_nullCount )
+//         {
+//            m_nullCount /= width; // ??? drb
+//         }
       }
       else
          m_num = 1; // This shouldn't happen anyway.
@@ -574,10 +574,10 @@ void ossimHistogram::create(
    }
 }
 
-ossimHistogram* ossimHistogram::fillEmptyBins(bool interiorOnly, int type) const
+ossimRefPtr<ossimHistogram> ossimHistogram::fillEmptyBins(bool interiorOnly, int type) const
 {
    if(m_num < 1) return 0;
-   ossimHistogram* result = new ossimHistogram(*this);
+   ossimRefPtr<ossimHistogram> result = new ossimHistogram(*this);
    switch(type)
    {
       case HISTOGRAM_FILL_THIN_PLATE:
@@ -640,7 +640,7 @@ ossimHistogram* ossimHistogram::fillEmptyBins(bool interiorOnly, int type) const
 //    translation, transl, and a scale factor, scale.
 //    The new histogram has the same resolution as his.
 
-ossimHistogram* ossimHistogram::Scale(double scale_factor)
+ossimRefPtr<ossimHistogram> ossimHistogram::Scale(double scale_factor)
 {
 
 // Extract attributes of self
@@ -650,7 +650,7 @@ ossimHistogram* ossimHistogram::Scale(double scale_factor)
 
 // Construct a new histogram
 
-   ossimHistogram* scaled_his = new ossimHistogram(this, m_delta);
+   ossimRefPtr<ossimHistogram> scaled_his = new ossimHistogram(this, m_delta);
    ossim_int64* new_counts = scaled_his->GetCounts();
    int i = 0;
    for(i=0; i < m_num; i++)  // Initialize
@@ -714,9 +714,9 @@ ossimHistogram* ossimHistogram::Scale(double scale_factor)
 //            {x | (xi - .5*m_delta) < x <= (xi + .5*m_delta)}
 //    Each bin, xi, in the result represents a cumulative distribution, i.e.,
 //            {x | x <= (xi + .5*m_delta)}
-ossimHistogram* ossimHistogram::CumulativeGreaterThanEqual()const
+ossimRefPtr<ossimHistogram> ossimHistogram::CumulativeGreaterThanEqual()const
 {
-   ossimHistogram* cum_his = new ossimHistogram(*this);
+   ossimRefPtr<ossimHistogram> cum_his = new ossimHistogram(*this);
    const ossim_int64* density_counts = this->GetCounts();
    int res = this->GetRes();
 
@@ -735,7 +735,7 @@ ossimHistogram* ossimHistogram::CumulativeGreaterThanEqual()const
    return cum_his;
 }
 
-ossimHistogram* ossimHistogram::CumulativeLessThanEqual()const
+ossimRefPtr<ossimHistogram> ossimHistogram::CumulativeLessThanEqual()const
 {
    ossimHistogram* cum_his = new ossimHistogram(*this);
    const ossim_int64* density_counts = this->GetCounts();
@@ -903,7 +903,7 @@ inline void RemoveFlatPeaks(int nbins, ossim_int64* cnts, bool cyclic)
 //    If the cyclic flag is true then the index space is assumed to
 //    be equivalent to a circle. That is, elements "0" and (n_buckets-1)
 //    are in correspondence.
-ossimHistogram* ossimHistogram::NonMaximumSupress(int radius, bool cyclic)
+ossimRefPtr<ossimHistogram> ossimHistogram::NonMaximumSupress(int radius, bool cyclic)
 {
    if((2*radius +1)> m_num/2)
    {
@@ -911,7 +911,7 @@ ossimHistogram* ossimHistogram::NonMaximumSupress(int radius, bool cyclic)
       return NULL;
    }
    //Get the m_counts array of "this"
-   ossimHistogram* h_new = new ossimHistogram(*this);
+   ossimRefPtr<ossimHistogram> h_new = new ossimHistogram(*this);
    int n_buckets = h_new->GetRes();
    ossim_int64* counts_old = this->GetCounts();
 

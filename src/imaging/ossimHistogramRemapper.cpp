@@ -47,6 +47,9 @@ static const char MIN_OUTPUT_VALUE_KW[] = "min_output_value";
 static const char MAX_OUTPUT_VALUE_KW[] = "max_output_value";
 static const char STRETCH_MODE_KW[] = "stretch_mode";
 static const char HISTOGRAM_FILENAME_KW[] = "histogram_filename";
+static const char AUTO_MINMAX_BIAS_KW[] = "auto_minmax_bias";
+static const char BIAS_FACTOR_KW[] = "bias_factor";
+static const char PERCENT_PENETRATION_KW[] = "percent_penetration";
 
 #ifdef OSSIM_ID_ENABLED
 static const char OSSIM_ID[] = "$Id: ossimHistogramRemapper.cpp 23182 2015-03-09 14:30:52Z okramer $";
@@ -64,7 +67,10 @@ ossimHistogramRemapper::ossimHistogramRemapper()
    theMaxOutputValue(),
    theBandList(),
    theBypassFlag(true),
-   theResetBandIndicesFlag(false)
+   theResetBandIndicesFlag(false),
+   m_percentPenetration(0.05),
+   m_autoMinMaxBias(.006),
+   m_biasFactor(1.0)
 {
    setNumberOfInputs(2);
    if (traceDebug())
@@ -802,7 +808,24 @@ bool ossimHistogramRemapper::loadState(const ossimKeywordlist& kwl,
             return false;
          }
       }
-     
+      lookup = kwl.find(prefix, AUTO_MINMAX_BIAS_KW);
+      if(lookup)
+      {
+         m_autoMinMaxBias = ossimString(lookup).toFloat64();
+      }
+
+      lookup = kwl.find(prefix, BIAS_FACTOR_KW);
+      if(lookup)
+      {
+         m_biasFactor = ossimString(lookup).toFloat64();
+      }
+
+      lookup = kwl.find(prefix, PERCENT_PENETRATION_KW);
+      if(lookup)
+      {
+         m_percentPenetration = ossimString(lookup).toFloat64();
+      }
+           
       //---
       // Get the band specific keywords.
       // NOTES:
@@ -983,12 +1006,20 @@ bool ossimHistogramRemapper::saveState(ossimKeywordlist& kwl,
            true);
    
    const ossim_uint32 BANDS = (ossim_uint32)theNormalizedLowClipPoint.size();
-   
    kwl.add(prefix,
            ossimKeywordNames::NUMBER_BANDS_KW,
            BANDS,
            true);
-   
+
+
+ static const char AUTO_MINMAX_BIAS_KW[] = "auto_minmax_bias";
+static const char AUTO_MINMAX_BIAS_FACTOR_KW[] = "auto_minmax_bias_factor";
+static const char PERCENT_PENETRATION_KW[] = "percent_penetration";
+  
+   kwl.add(prefix, AUTO_MINMAX_BIAS_KW, m_autoMinMaxBias, true);
+   kwl.add(prefix, BIAS_FACTOR_KW, m_biasFactor, true);
+   kwl.add(prefix, PERCENT_PENETRATION_KW, m_percentPenetration, true);
+
    for (ossim_uint32 band = 0; band < BANDS; ++band)
    {
       ossimString keyword;
@@ -1400,7 +1431,6 @@ template <class T> void ossimHistogramRemapper::buildLinearTable(T /* dummy */)
       const T NULL_PIX = static_cast<T>(getNullPixelValue(band));
       const T MIN_PIX  = static_cast<T>(theMinOutputValue[band]);
       const T MAX_PIX  = static_cast<T>(theMaxOutputValue[band]);
-      
       ossim_float64 min_clip_value = h->LowClipVal(theNormalizedLowClipPoint[band]);
       ossim_float64 max_clip_value = h->HighClipVal(1.0-theNormalizedHighClipPoint[band]);
       ossim_float64 gain = 1.0;
@@ -1409,7 +1439,8 @@ template <class T> void ossimHistogramRemapper::buildLinearTable(T /* dummy */)
       {
          min_clip_value = floor(min_clip_value);
          max_clip_value = ceil(max_clip_value);
-         gain = (MAX_PIX-MIN_PIX+1)/(max_clip_value-min_clip_value+1);
+         gain = (MAX_PIX-MIN_PIX+1)/(max_clip_value-min_clip_value);
+//         gain = (MAX_PIX-MIN_PIX+1)/(max_clip_value-min_clip_value+1);
       }
       else
       {
@@ -1479,18 +1510,17 @@ template <class T> void ossimHistogramRemapper::buildAutoLinearMinMaxTableTempla
       }
       return;
    }
+   ossim_float64 bias = m_autoMinMaxBias*m_biasFactor;
    for (ossim_uint32 band = 0; band < BANDS; ++band)
    {
       ossimRefPtr<ossimHistogram> h  = getHistogram(band);
       T nullPix = static_cast<T>(getNullPixelValue(band));
-      //h->fillInteriorEmptyBins();
 
-      if(h.valid())
+      if(h)
       {
          ossim_uint32 n     = h->GetRes();
          ossim_float64 low  = h->GetIndex(h->GetMinVal());
          ossim_float64 high = h->GetIndex(h->GetMaxVal());
-         double bias = 0.006;
          if(n > 0)
          {
             double newCount       = 0.0;
@@ -1498,7 +1528,7 @@ template <class T> void ossimHistogramRemapper::buildAutoLinearMinMaxTableTempla
             double percentage = 0.0;
             int idx = 0;
             const ossim_int64* counts = h->GetCounts();
-            double count   = h->ComputeArea();
+            double count              = h->ComputeArea();
             for(idx = 0; idx < (ossim_int32)(n-1); ++idx)
             {
                bool hasValue = (counts[idx] > 0)&&(counts[idx+1]);
@@ -1508,8 +1538,6 @@ template <class T> void ossimHistogramRemapper::buildAutoLinearMinMaxTableTempla
                }
                percentage = newCount / count;
                nextPercentage = (newCount + counts[idx+1]) / count;
-//               if (std::fabs(percentage - 0.006) <
-//                   std::fabs(nextPercentage - 0.006))
                if (hasValue &&((std::fabs(percentage - bias) <
                                 std::fabs(nextPercentage - bias))))
                {
@@ -1580,7 +1608,6 @@ void ossimHistogramRemapper::buildLinearTableStdFromMean()
    {
       multiplier =  3.0;
    }
-   
    // Finally, build the table...
    for (ossim_uint32 band = 0; band < BANDS; ++band)
    {
@@ -1647,8 +1674,8 @@ template <class T> void ossimHistogramRemapper::buildAutoLinearPercentileTableTe
       if(h.valid())
       {
          ossim_uint32 n     = h->GetRes();
-         ossim_float64 low  = h->GetIndex(h->LowClipVal((float)0.05));
-         ossim_float64 high = h->GetIndex(h->HighClipVal((float)0.05));
+         ossim_float64 low  = h->GetIndex(h->LowClipVal((float)m_percentPenetration));
+         ossim_float64 high = h->GetIndex(h->HighClipVal((float)m_percentPenetration));
          if(low > high)
          {
             low = 0;
@@ -2159,7 +2186,35 @@ double ossimHistogramRemapper::getMinPixelValue(ossim_uint32 band)const
 
    return result;
 }
+void ossimHistogramRemapper::setBiasFactor(ossim_float64 factor)
+{
+   m_biasFactor = factor;  
+}
+ossim_float64 ossimHistogramRemapper::getBiasFactor()const
+{
+   return m_biasFactor;
+}
 
+void ossimHistogramRemapper::setAutoMinMaxBias(ossim_float64 bias)
+{
+   m_autoMinMaxBias = bias;
+}
+
+ossim_float64 ossimHistogramRemapper::getAutoMinMaxBias()const
+{
+   return m_autoMinMaxBias;
+}
+
+void ossimHistogramRemapper::setPercentPenetration(ossim_float64 percent)
+{
+   m_percentPenetration = percent;
+}
+
+ossim_float64 ossimHistogramRemapper::getPercentPenetration()const
+{
+   return m_percentPenetration;
+}
+  
 double ossimHistogramRemapper::getMaxPixelValue(ossim_uint32 band)const
 {
    double result = ossimTableRemapper::getMaxPixelValue(band);

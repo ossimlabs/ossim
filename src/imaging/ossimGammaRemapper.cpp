@@ -1,15 +1,9 @@
 //*******************************************************************
 // Copyright (C) 2002 ImageLinks Inc. 
 //
-// License:  LGPL
+// License:  MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  Kathy Minear
-//
-// Description: Takes in DNs for any number of bands
-// Converts DNs to Radiance at the satellite values Lsat
-// Converts Lsat to Surface Reflectance values
 //
 //*************************************************************************
 // $Id: ossimGammaRemapper.cpp 12980 2008-06-04 00:50:33Z dburken $
@@ -18,419 +12,272 @@
 #include <cmath>
 
 #include <ossim/imaging/ossimGammaRemapper.h>
-#include <ossim/imaging/ossimAtCorrKeywords.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimKeywordNames.h>
-#include <ossim/base/ossimMultiBandHistogram.h>
-#include <ossim/base/ossimHistogram.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 
 
 RTTI_DEF1(ossimGammaRemapper, "ossimGammaRemapper", ossimImageSourceFilter)
 
 static const double DEFAULT_GAMMA = 1.0;
-
+static const char GAMMA_KW[] = "gamma";
 
 static ossimTrace traceDebug("ossimGammaRemapper:debug");
 
-using namespace std;
-
-ossimGammaRemapper::ossimGammaRemapper(ossimObject* owner)
+ossimGammaRemapper::ossimGammaRemapper()
    :
-      ossimImageSourceFilter  (owner),  // base class
-      theTile                 (NULL),
-      theBuffer               (NULL), 
-      theMinPixelValue        (0),
-      theMaxPixelValue        (0),
-      theGamma                (0),
-      theUserDisabledFlag     (false)
+      m_gamma                (DEFAULT_GAMMA),
+      m_dirtyFlag(true)
 {
-   //***
-   // Set the base class "theEnableFlag" to off since no adjustments have been
-   // made yet.
-   //***
-   disableSource();
-
-   // Construction not complete.
-}
-
-
-ossimGammaRemapper::ossimGammaRemapper(ossimImageSource* inputSource)
-   :
-      ossimImageSourceFilter  (NULL, inputSource),  // base class
-      theTile                 (NULL),
-      theBuffer               (NULL),
-      theMinPixelValue        (0),
-      theMaxPixelValue        (0),
-      theGamma                (0),
-      theUserDisabledFlag     (false)
-{
-   //***
-   // Set the base class "theEnableFlag" to off since no adjustments have been
-   // made yet.
-   //***
-   disableSource();
-
-   if (inputSource == NULL)
-   {
-      setErrorStatus();
-      cerr << "ossimGammaRemapper::ossimGammaRemapper ERROR:"
-           << "\nNull input source passed to constructor!" << endl;
-      return;
-   }
-
-   initialize();
-}
-
-
-ossimGammaRemapper::ossimGammaRemapper(ossimObject* owner,
-                                         ossimImageSource* inputSource)
-   :
-      ossimImageSourceFilter  (owner, inputSource),  // base class     
-      theTile                 (NULL),
-      theBuffer               (NULL),
-      theMinPixelValue        (0),
-      theMaxPixelValue        (0),
-      theGamma                (0)
-{
-   //***
-   // Set the base class "theEnableFlag" to off since no adjustments have been
-   // made yet.
-   //***
-   disableSource();
-
-   if (inputSource == NULL)
-   {
-      setErrorStatus();
-      cerr << "ossimGammaRemapper::ossimGammaRemapper ERROR:"
-           << "\nNull input source passed to constructor!" << endl;
-      return;
-   }
-
-   initialize();
 }
 
 ossimGammaRemapper::~ossimGammaRemapper()
 {
-   if (theBuffer)
+}
+
+ossimRefPtr<ossimImageData> ossimGammaRemapper::getTile(const ossimIrect& tileRect,
+                                            ossim_uint32 resLevel)
+{
+   ossimRefPtr<ossimImageData> result = 0;
+
+   if ( theInputConnection )
    {
-      delete [] theBuffer;
-      theBuffer = NULL;
+      ossimRefPtr<ossimImageData> inputTile = theInputConnection->getTile(tileRect, resLevel);
+
+
+      if(!m_tile||!m_tile->getBuf())
+      {
+         allocate();
+      }
+
+      if(!m_tile) return inputTile;
+
+      m_tile->setImageRectangle(tileRect);
+      m_tile->makeBlank();
+      if ( !inputTile.valid() ||
+         (inputTile->getDataObjectStatus() == OSSIM_NULL) ||
+         (inputTile->getDataObjectStatus() == OSSIM_EMPTY) )
+      {
+         //---
+         // Since the filter is enabled, return theTile which is of the
+         // correct scalar type.
+         //---
+         return m_tile;
+      }
+      if (m_dirtyFlag)
+      {
+         computeLookup();
+      }
+
+      if(!m_lookupTable.empty())
+      {
+         calculateGammaWithLookup(inputTile);
+      }
+      else
+      {
+         calculateGamma(inputTile);
+      }
+      m_tile->validate();
+
+      result = m_tile;
+   }
+
+   return result;
+}
+
+void ossimGammaRemapper::calculateGammaWithLookup(ossimRefPtr<ossimImageData> inputTile)
+{
+   switch(inputTile->getScalarType())
+   {
+      case OSSIM_UINT8:
+      {
+         calculateGammaWithLookupTemplate(inputTile, (ossim_uint8)0);
+         break;
+      }
+      case OSSIM_UINT9:
+      case OSSIM_UINT11:
+      case OSSIM_UINT12:
+      case OSSIM_UINT13:
+      case OSSIM_UINT14:
+      case OSSIM_UINT15:
+      case OSSIM_UINT16:
+      {
+         calculateGammaWithLookupTemplate(inputTile, (ossim_uint16)0);
+         break;
+      }
+      default:
+      {
+         break;
+      }
    }
 }
 
-ossimRefPtr<ossimImageData> ossimGammaRemapper::getTile(const ossimIrect& tile_rect,
-                                            ossim_uint32 resLevel)
+
+template<class T>
+void ossimGammaRemapper::calculateGammaWithLookupTemplate(ossimRefPtr<ossimImageData> inputTile, T /*dummy*/)
 {
-   if (!isInitialized())
+   T* input  = reinterpret_cast<T*>(inputTile->getBuf());
+   T* output = reinterpret_cast<T*>(m_tile->getBuf());
+   T nullPix = static_cast<T>(inputTile->getNullPix(0));
+   ossim_uint32 nValues = inputTile->getNumberOfBands()*inputTile->getImageRectangle().area();
+   ossim_uint32 idx = 0;
+   ossim_float32* table = &m_lookupTable.front();
+   if(inputTile->getDataObjectStatus() == OSSIM_PARTIAL)
    {
-      cerr << "ossimGammaRemapper::getTile ERROR:"
-           << "\nNot initialized!"
-           << endl;
-      return ossimRefPtr<ossimImageData>();
-   }
-      
-   // Fetch tile from pointer from the input source.
-   ossimRefPtr<ossimImageData> inputTile = theInputConnection->getTile(
-      tile_rect, resLevel);
-
-   if (!inputTile.valid())  // Just in case...
-   {
-      cerr << "ossimGammaRemapper::getTile ERROR:"
-           << "\nReceived null pointer to tile from input source!"
-           << "\nReturning blank tile."
-           << endl;
-      theTile->makeBlank();
-      return theTile;
-   }
-
-   // Get its status.
-   ossimDataObjectStatus tile_status = inputTile->getDataObjectStatus();
-   
-   //---
-   // Check for remap bypass:
-   //---
-   if (!theEnableFlag || tile_status == OSSIM_NULL ||!theTile.valid() ||
-       tile_status == OSSIM_EMPTY)
-   {
-      return inputTile;
-   }
-
-   ossim_uint32 w     = tile_rect.width();
-   ossim_uint32 h     = tile_rect.height();
-   ossim_uint32 tw    = theTile->getWidth();
-   ossim_uint32 th    = theTile->getHeight();
-   ossim_uint32 bands = theTile->getNumberOfBands();
-
-   // Set the origin of the output tile.
-   theTile->setOrigin(tile_rect.ul());
-
-   if(w*h != tw*th)
-   {
-      theTile->setWidthHeight(w, h);
-      theTile->initialize();
-      if(theBuffer)
+      for(idx = 0; idx < nValues; ++idx,++input,++output)
       {
-         delete [] theBuffer;
-         theBuffer = NULL;
-      }
-   }   
-   
-   if(!theBuffer)
-   {
-      theBuffer = new double[w*h*bands];
-   }
-   
-   // Copy the source tile into the buffer at the same time normalizing it.
-   inputTile->copyTileToNormalizedBuffer(theBuffer);
-   
-   // for each band, get the radiance value
-
-   ossim_uint32 buffer_index = 0;
-   const double MP = theTile->getMinNormalizedPix(); // Minimum normalized pix.
-   const ossim_uint32 PPTB = theTile->getSizePerBand();  // Pixels Per Tile Band
-
-   for (ossim_uint32 band=0; band<bands; ++band)
-   {
-      for (ossim_uint32 i=0; i<PPTB; ++i)
-      {
-         double p = theBuffer[buffer_index]; // input pixel
-         // double p = getPix(buffer_index);
-
-         if (p)
+         if(*input != nullPix)
          {
-            // cout<<"p before:  "<<p<<endl;
-            // Stretch it...
-            p = (p - theMinPixelValue[band]) /
-               (theMaxPixelValue[band] -
-                theMinPixelValue[band]);
-            
-            p = pow(p, theGamma[band]);
-           
-            
-            //***
-            // Since it wasn't null to start with clip / clamp between minimum
-            // normalized pixel and one(max).
-            //*** 
-            p =  ( p > MP ? ( p < 1.0 ? p : 1.0) : MP );  
-
-            theBuffer[buffer_index] = p;
+            *output = table[*input];
          }
-         else
-         {
-            theBuffer[buffer_index] = 0.0;
-         }
-         
-         ++buffer_index;
       }
    }
-   
-   // Copy the buffer to the output tile at the same time unnormalizing it.
-   theTile->copyNormalizedBufferToTile(theBuffer);
-   
-   // Set the status to that of the input tile.
-   theTile->setDataObjectStatus(tile_status);
+   else
+   {
+      for(idx = 0; idx < nValues; ++idx,++input,++output)
+      {
+         *output = table[*input];
+      }
+   }
+}
 
-   return theTile;
+void ossimGammaRemapper::calculateGamma(ossimRefPtr<ossimImageData> inputTile)
+{
+   m_normalizedTile->setImageRectangle(inputTile->getImageRectangle());
+   m_normalizedTile->makeBlank();
+   ossim_float64 minPix = ossim::defaultMin(OSSIM_NORMALIZED_FLOAT);
+   ossim_float64 maxPix = ossim::defaultMax(OSSIM_NORMALIZED_FLOAT);
+
+   ossim_float64 delta = maxPix;
+
+   inputTile->copyTileToNormalizedBuffer(reinterpret_cast<ossim_float32*>(m_normalizedTile->getBuf()));
+   ossim_float32* input = reinterpret_cast<ossim_float32*>(m_normalizedTile->getBuf());
+   ossim_uint32 idx = 0;
+   ossim_float64 v = 0.0;
+   ossim_uint32 nValues = m_normalizedTile->getNumberOfBands()*inputTile->getImageRectangle().area();
+
+   if(inputTile->getDataObjectStatus() == OSSIM_PARTIAL)
+   {
+      for(idx = 0; idx < nValues; ++idx,++input)
+      {
+         if(*input != 0.0)
+         {
+            v = std::pow(*input, m_gamma)*delta;
+            if(v > maxPix) v = maxPix;
+            if(v < minPix) v = minPix;
+            *input = v;
+         }
+      }
+   }
+   else
+   {
+      for(idx = 0; idx < nValues; ++idx,++input)
+      {
+         v = std::pow(*input, m_gamma)*delta;
+         if(v > maxPix) v = maxPix;
+         if(v < minPix) v = minPix;
+         *input = v;
+      }
+
+   }
+
+   m_tile->copyNormalizedBufferToTile(reinterpret_cast<ossim_float32*>(m_normalizedTile->getBuf()));
+   m_tile->validate();
 }
 
 void ossimGammaRemapper::initialize()
 {
-   if(theInputConnection)
-   {
-      theTile = ossimImageDataFactory::instance()->create(this,
-                                                          theInputConnection);
-      theTile->initialize();
+   ossimImageSourceFilter::initialize();
+   m_tile = 0;
+   m_dirtyFlag = true;
+   m_lookupTable.clear();
+}
 
-      if(theBuffer)
+void ossimGammaRemapper::allocate()
+{
+   m_tile = ossimImageDataFactory::instance()->create(this,this);
+   if(m_tile.valid())
+   {
+      m_tile->initialize();
+      m_normalizedTile = new ossimImageData(0, OSSIM_NORMALIZED_FLOAT, m_tile->getNumberOfBands(), m_tile->getWidth(), m_tile->getHeight());
+      m_normalizedTile->initialize();
+   }
+}
+void ossimGammaRemapper::computeLookup()
+{
+   ossim_uint32 nValues=0;
+   ossimScalarType scalarType = getOutputScalarType();
+   switch(scalarType)
+   {
+      case OSSIM_UINT8:
+      case OSSIM_UINT9:
+      case OSSIM_UINT11:
+      case OSSIM_UINT12:
+      case OSSIM_UINT13:
+      case OSSIM_UINT14:
+      case OSSIM_UINT15:
+      case OSSIM_UINT16:
       {
-         delete []theBuffer;
-         theBuffer = NULL;
+         nValues = ossim::defaultMax(scalarType)+1;
       }
-      
-      ossim_uint32 tw    = theTile->getWidth();
-      ossim_uint32 th    = theTile->getHeight();
-      ossim_uint32 bands = theTile->getNumberOfBands();
-      
-      theBuffer = new double[tw*th*bands];
-      memset(theBuffer, '\0', tw*th*bands);
-
-      setInitializedFlag(true);
-      clearErrorStatus();
+      default:
+      {
+         break;
+      }
    }
-   else
+   if(nValues)
    {
-      setInitializedFlag(false);
-      setErrorStatus();
-      cerr << "ossimGammaRemapper::initialize ERROR:"
-           << "\nCannot call method when input connection is NULL!"
-           << endl;
-   };
+      ossim_uint32 idx = 0;
+      ossim_float64 maxPix = nValues-1;
+      ossim_float64 outputMaxPix = getMaxPixelValue();
+      ossim_float64 outputMinPix = getMinPixelValue();
 
-   verifyEnabled();
-}
-
-void ossimGammaRemapper::setMinMaxPixelValues(const vector<double>& v_min,
-                                              const vector<double>& v_max)
-{
-   theMinPixelValue = v_min;
-   theMaxPixelValue = v_max;
-   verifyEnabled();
-}
-
-void ossimGammaRemapper::verifyEnabled()
-{
-   // Check all the pointers...
-   if ( !theInputConnection || !theTile || !theBuffer )
-   {
-      disableSource();
-      return;
+      ossim_float64 v = 0.0;
+      m_lookupTable.resize(nValues);
+      for(idx = 0; idx < m_lookupTable.size();++idx)
+      {
+         ossim_float64 input = static_cast<double>(idx)/maxPix;
+         v = std::pow(input, m_gamma)*maxPix;
+         if(v > outputMaxPix) v = outputMaxPix;
+         if(v < outputMinPix) v = outputMinPix;
+         m_lookupTable[idx] = v;
+      }
    }
-
-   ossim_uint32 bands = theTile->getNumberOfBands();
-   if ( (theMinPixelValue.size() != bands) ||
-        (theMaxPixelValue.size() != bands) )
-   {
-      disableSource(); 
-      return;
-   }
-
-   if (theUserDisabledFlag == false)
-   {
-      enableSource();
-   }
-
-   if (traceDebug())
-   {
-      cout << *this << endl;
-   }
+   m_dirtyFlag = false;
 }
 
 bool ossimGammaRemapper::loadState(const ossimKeywordlist& kwl,
                                    const char* prefix)
 {
-   //***
-   // Call the base class to pick up the enable flag.  Note that the
-   // verifyEnabled flag can override this.
-   //***
-   ossimString pref;
-   if (prefix) pref += prefix;
-   pref += "gamma_remapper.";
+   bool result = ossimImageSourceFilter::loadState(kwl, prefix);
 
-   if (!theTile)
+   ossimString lookup = kwl.find(prefix, GAMMA_KW);
+
+   if(!lookup.empty())
    {
-      cerr << "ossimGammaRemapper::loadState:  ERROR"
-           << "Not initialized yet!" << endl;
-      return false;
-   }
+      m_gamma = lookup.toFloat64();
+   }   
 
-   //---
-   // NOTE:
-   // base class seems to call initialize which in turn errors if you don't
-   // have a connection yet, so check for the enable keyword here...
-   // ossimSource::loadState(kwl, pref.c_str());
-   //---
-   cout << "pref:  " << pref
-        << "kw:  " << ossimKeywordNames::ENABLED_KW    << endl;
-   
-   const char* lookup = kwl.find(pref, ossimKeywordNames::ENABLED_KW);
-   if(lookup)
-   {
-      theEnableFlag = ossimString(lookup).toBool();
-      if (theEnableFlag == false)
-      {
-         // User want filter disabled...
-         theUserDisabledFlag = true;
-      }
-   }
-
-   ossim_uint32 bands = theTile->getNumberOfBands();
-
-   theGamma.clear();
-   theGamma.resize(bands, 1.0);
-
-   for(ossim_uint32 band = 0; band < bands; ++band)
-   {
-      ossimString band_string = ".band";
-      band_string += ossimString::toString(band+1);  // Start at one.
-
-      ossimString kw = GAMMA_REMAPPER_GAMMA_KW;
-      kw += band_string;
-      lookup = kwl.find(prefix, kw.c_str());
-      if (lookup)
-      {
-         theGamma[band] = atof(lookup);
-      }
-      else
-      {
-         cout << "MODULE NOTICE:"
-              << "\nlookup failed for keyword:  " << kw.c_str()
-              << "\nGamma set to " << DEFAULT_GAMMA << " for band:  "
-              << (band+1) << endl;
-         theGamma[band] = DEFAULT_GAMMA;
-      }
-   }
-
-   if (traceDebug())
-   {
-      cout << "ossimGammaRemapper DEBUG:"
-           << *this
-           << endl;
-   }
-   
-   return true;
+   return result;
 }
 
-ostream& ossimGammaRemapper::print(ostream& os) const
+bool ossimGammaRemapper::saveState(ossimKeywordlist& kwl,
+                            const char* prefix)
 {
-   os << setprecision(15) << setiosflags(ios::fixed)
-      << "ossimGammaRemapper:"
-      << "\ntheEnableFlag:  " << (theEnableFlag?"enabled":"disabled")
-      << endl;
+   bool result = ossimImageSourceFilter::saveState(kwl, prefix);
 
-   ossim_uint32 band = 1;
-   vector<double>::const_iterator i = theMinPixelValue.begin();
-   while (i != theMinPixelValue.end())
-   {
-      os << "band[" << band << "] min:  " << (*i) << endl;
-      ++i;
-      ++band;
-   }
+   kwl.add(prefix, GAMMA_KW, m_gamma, true);
 
-   band = 1;
-   i = theMaxPixelValue.begin();
-   while (i != theMaxPixelValue.end())
-   {
-      os << "band[" << band << "] max:  " << (*i) << endl;
-      ++i;
-      ++band;
-   }
-   
-   band = 1;
-   i = theGamma.begin();
-   while (i != theGamma.end())
-   {
-      os << "band[" << band << "] gamma:  " << (*i) << endl;
-      ++i;
-      ++band;
-   }
-
-   return os;
+   return result;
 }
 
-void ossimGammaRemapper::enableSource()
+void ossimGammaRemapper::setGamma(const double& gamma)
 {
-   // Clear the flag...
-   theUserDisabledFlag = false;
-   ossimSource::enableSource();
+   m_gamma = gamma;
+   m_dirtyFlag = true;
 }
 
 ossimString ossimGammaRemapper::getShortName() const
 {
    return ossimString("Gamma Remapper");
-}
-
-ostream& operator<<(ostream& os, const ossimGammaRemapper& hr)
-{
-   return hr.print(os);
 }

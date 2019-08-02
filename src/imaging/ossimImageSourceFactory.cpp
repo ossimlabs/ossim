@@ -93,6 +93,7 @@
 #include <ossim/imaging/ossimAtCorrRemapper.h>
 #include <ossim/imaging/ossimDilationFilter.h>
 #include <ossim/imaging/ossimErosionFilter.h>
+#include <ossim/imaging/ossimGammaRemapper.h>
 #include <ossim/imaging/ossimImageSourceSequencer.h>
 #include <ossim/imaging/ossimElevRemapper.h>
 #include <ossim/parallel/ossimMultiThreadSequencer.h>
@@ -470,6 +471,10 @@ ossimObject* ossimImageSourceFactory::createObject(const ossimString& name)const
    {
       return new ossimErosionFilter();
    }
+   else if(name == STATIC_TYPE_NAME(ossimGammaRemapper))
+   {
+      return new ossimGammaRemapper();
+   }
    return NULL;
 }
 
@@ -610,6 +615,7 @@ void ossimImageSourceFactory::getTypeNameList(std::vector<ossimString>& typeList
    typeList.push_back(STATIC_TYPE_NAME(ossimImageSourceSequencer));
    typeList.push_back(STATIC_TYPE_NAME(ossimDilationFilter));
    typeList.push_back(STATIC_TYPE_NAME(ossimErosionFilter));
+   typeList.push_back(STATIC_TYPE_NAME(ossimGammaRemapper));
 }
 
 // Hide from use...

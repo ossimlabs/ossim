@@ -5,8 +5,6 @@
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
-// Author:  Kathy Minear
-//
 // Description:
 //
 // Gamma remapper.
@@ -21,49 +19,46 @@
 class ossimGammaRemapper : public ossimImageSourceFilter
 {
 public:
+   ossimGammaRemapper();
 
-   ossimGammaRemapper(ossimObject* owner=NULL);
-   ossimGammaRemapper(ossimImageSource* inputSource);
-   ossimGammaRemapper(ossimObject* owner, ossimImageSource* inputSource);
+   virtual ossimString getShortName() const;
 
-
-   virtual ossimString getShortName()const;
+   virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& tileRect,
+                                               ossim_uint32 resLevel=0);
 
    virtual void initialize();
 
-   virtual ossimRefPtr<ossimImageData> getTile(const ossimIrect& tile_rect,
-                                   ossim_uint32 resLevel=0);
-   
+   void setGamma(const double& gamma);
+   double getGamma()const { return m_gamma; }
    /*!
     * Method to the load (recreate) the state of an object from a keyword
     * list.  Return true if ok or false on error.
     */
    virtual bool loadState(const ossimKeywordlist& kwl,
                           const char* prefix=0);
-   
-   virtual std::ostream& print(std::ostream& os) const;
-   friend std::ostream& operator<< (std::ostream& os,  const ossimGammaRemapper& hr);
 
-   void setMinMaxPixelValues(const std::vector<double>& v_min,
-                             const std::vector<double>& v_max);
+   /*!
+    * Method to the load (recreate) the state of an object from a keyword
+    * list.  Return true if ok or false on error.
+    */
+   virtual bool saveState(ossimKeywordlist& kwl,
+                          const char* prefix=0);
 
-   virtual void enableSource();
-   
 protected:
    virtual ~ossimGammaRemapper();
 
-   /*!
-    * Method to set unset the enable flag.
-    */
-
-   void verifyEnabled();
-
-   ossimRefPtr<ossimImageData> theTile;
-   double*         theBuffer;
-   std::vector<double>  theMinPixelValue;
-   std::vector<double>  theMaxPixelValue;
-   std::vector<double>  theGamma;
-   bool            theUserDisabledFlag;
+   void allocate();
+   void computeLookup();
+   void calculateGamma(ossimRefPtr<ossimImageData> input);
+   void calculateGammaWithLookup(ossimRefPtr<ossimImageData> input);
+   template<class T>
+   void calculateGammaWithLookupTemplate(ossimRefPtr<ossimImageData> input, T /*dummy*/);
+   
+   ossim_float64 m_gamma;
+   mutable bool m_dirtyFlag;
+   ossimRefPtr<ossimImageData> m_tile;
+   ossimRefPtr<ossimImageData> m_normalizedTile;
+   mutable std::vector<ossim_float32> m_lookupTable;
 
    TYPE_DATA
 };

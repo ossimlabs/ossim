@@ -344,14 +344,14 @@ void ossimImageSharpenFilter::sharpenLut(T,
                inputValues[7] = *(inBuf + (inputTileWidth<<1)+1);
                inputValues[8] = *(inBuf + (inputTileWidth<<1)+2);
 
-               if((inputValues[0]==nullPix)&&
-                  (inputValues[1]==nullPix)&&
-                  (inputValues[2]==nullPix)&&
-                  (inputValues[3]==nullPix)&&
-                  (inputValues[4]==nullPix)&&
-                  (inputValues[5]==nullPix)&&
-                  (inputValues[6]==nullPix)&&
-                  (inputValues[7]==nullPix)&&
+               if((inputValues[0]==nullPix)||
+                  (inputValues[1]==nullPix)||
+                  (inputValues[2]==nullPix)||
+                  (inputValues[3]==nullPix)||
+                  (inputValues[4]==nullPix)||
+                  (inputValues[5]==nullPix)||
+                  (inputValues[6]==nullPix)||
+                  (inputValues[7]==nullPix)||
                   (inputValues[8]==nullPix))
                {
                   *outBuf = static_cast<T>(inputValues[4]);

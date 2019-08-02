@@ -42,6 +42,7 @@
 #include <ossim/imaging/ossimBumpShadeTileSource.h>
 #include <ossim/imaging/ossimFilterResampler.h>
 #include <ossim/imaging/ossimFusionCombiner.h>
+#include <ossim/imaging/ossimGammaRemapper.h>
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <ossim/imaging/ossimImageGeometry.h>
@@ -101,6 +102,7 @@ static const std::string CUT_MIN_LON_KW = "cut_min_lon";
 static const std::string CUT_WIDTH_KW = "cut_width"; // pixels
 static const std::string DEM_KW = "dem";
 static const std::string GAIN_KW = "gain";
+static const std::string GAMMA_KW = "gamma";
 static const std::string FILE_KW = "file";
 static const std::string FULLRES_XYS_KW = "fullres_xys";
 static const std::string HIST_AOI_KW = "hist_aoi";
@@ -255,6 +257,8 @@ void ossimChipperUtil::addArguments(ossimArgumentParser &ap)
    au->addCommandLineOption("--exaggeration", "<factor>\nMultiplier for elevation values when computing surface normals. Has the effect of lengthening shadows for oblique lighting.\nRange: .0001 to 50000, Default = 1.0");
 
    au->addCommandLineOption("--fullres-xys", "<full res center x>,<full res center y>,<scale>[,<scale>]\nSpecify a full resolution x,y point (Used as pivot and center cut) and scale, comma separated with no spaces.  If two scales are specified then first is x and second is y else x and y are set to equal scales");
+
+   au->addCommandLineOption("--gamma", "Good ranges are between .1 and 6.  Probably try about .7,  A value of 1 will not apply anything");
 
    au->addCommandLineOption("-h or --help", "Display this help and exit.");
 
@@ -542,6 +546,11 @@ bool ossimChipperUtil::initialize(ossimArgumentParser &ap)
    if (ap.read("-e", stringParam1) || ap.read("--entry", stringParam1))
    {
       m_kwl->addPair(std::string(ossimKeywordNames::ENTRY_KW), tempString1);
+   }
+
+   if(ap.read("--gamma", stringParam1))
+   {
+      m_kwl->addPair(GAMMA_KW, tempString1);
    }
 
    if (ap.read("--exaggeration", stringParam1))
@@ -2004,6 +2013,10 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
             ic->setAddHistogramFlag(hasHistogramOperation());
          }
 
+         if(hasGammaCorrection())
+         {
+            ic->setAddGammaFlag(true);
+         }
          // Brightness, contrast. Note in same filter.
          if (hasBrightnesContrastOperation())
          {
@@ -2020,6 +2033,10 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimFile
          // Create the chain.
          ic->createRenderedChain();
 
+         if(hasGammaCorrection())
+         {
+            ic->getGammaRemapper()->setGamma(getGamma());
+         }
          // Set the filter type if needed.
          ossimString lookup = m_kwl->findKey(RESAMPLER_FILTER_KW);
          if (lookup.size())
@@ -2197,6 +2214,10 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
          ic->setAddHistogramFlag(hasHistogramOperation());
       }
 
+      if(hasGammaCorrection())
+      {
+         ic->setAddGammaFlag(true);
+      }
       // Brightness, contrast. Note in same filter.
       if (hasBrightnesContrastOperation())
       {
@@ -2232,6 +2253,10 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
          setupChainHistogram(ic, std::make_shared<ossimSrcRecord>(rec));
       }
 
+      if(hasGammaCorrection())
+      {
+         ic->getGammaRemapper()->setGamma(getGamma());
+      }
       // Brightness contrast setup:
       if (hasBrightnesContrastOperation())
       {
@@ -5493,6 +5518,17 @@ bool ossimChipperUtil::hasHistogramOperation() const
    return result;
 }
 
+bool ossimChipperUtil::hasGammaCorrection() const
+{
+   bool result = false;
+   if (m_kwl.valid())
+   {
+      result = m_kwl->hasKey(GAMMA_KW);
+   }
+   return result;
+
+}
+
 bool ossimChipperUtil::isDemFile(const ossimFilename &file) const
 {
    bool result = false;
@@ -5964,6 +6000,20 @@ ossim_float64 ossimChipperUtil::getContrast() const
       }
    }
    return contrast;
+}
+
+ossim_float64 ossimChipperUtil::getGamma() const
+{
+   ossim_float64 gamma = 1.0;
+   std::string value = m_kwl->findKey(GAMMA_KW);
+   if (value.size())
+   {
+      gamma = ossimString(value).toFloat64();
+
+      // Range check it:
+   }
+   return gamma;
+
 }
 
 std::string ossimChipperUtil::getSharpenMode() const

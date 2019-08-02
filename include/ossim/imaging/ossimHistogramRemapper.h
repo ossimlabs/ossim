@@ -438,6 +438,15 @@ public:
     */
    ossimFilename getHistogramFile() const;
    
+   void setBiasFactor(ossim_float64 factor);
+   ossim_float64 getBiasFactor()const;
+
+   void setAutoMinMaxBias(ossim_float64 bias);
+   ossim_float64 getAutoMinMaxBias()const;
+
+   void setPercentPenetration(ossim_float64 percent);
+   ossim_float64 getPercentPenetration()const;
+   
    /**
     * Method to the save the state to a keyword list.
     * Returns true if ok or false on error.
@@ -565,6 +574,18 @@ private:
    // Internally bypassed flag.
    bool theBypassFlag;
    bool theResetBandIndicesFlag;
+
+   ossim_float64 m_percentPenetration;
+
+   // Internal bias used to find the clip points
+   ossim_float64 m_autoMinMaxBias;
+
+   // this is a multiplier for any of the current bias factors
+   // This will serve as a fudge factor for the Internal bias values.
+   //
+   // Will vary between 0 and 1
+   //
+   ossim_float64 m_biasFactor;
 
    TYPE_DATA
 };
