@@ -257,7 +257,7 @@ bool ossimGammaRemapper::loadState(const ossimKeywordlist& kwl,
 
    if(!lookup.empty())
    {
-      m_gamma = lookup.toFloat64();
+      setGamma(lookup.toFloat64());
    }   
 
    return result;
@@ -268,7 +268,7 @@ bool ossimGammaRemapper::saveState(ossimKeywordlist& kwl,
 {
    bool result = ossimImageSourceFilter::saveState(kwl, prefix);
 
-   kwl.add(prefix, GAMMA_KW, m_gamma, true);
+   kwl.add(prefix, GAMMA_KW, getGamma(), true);
 
    return result;
 }
