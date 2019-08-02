@@ -101,6 +101,7 @@ public:
    const std::vector<ossim_uint32>& getBands()       const { return m_bandList; }
    const double&                    getWeight()      const { return m_weight; }  
    const double&                    getGamma()       const { return m_gamma; }
+   const double&                    getAutoMinMaxBiasFactory() const { return m_autoMinMaxBiasFactor; }
    const PixelFlipParams&           getPixelFlipParams() const { return m_pixelFlipParams; }
    
    //! See note below on these data members.
@@ -120,6 +121,7 @@ public:
    void setWeight(const double& weight)              { m_weight = weight; }
    void setRgbDataBool(bool isRgbData)               { m_isRgbData = isRgbData; }
    void setGamma(const double& gamma)                { m_gamma = gamma; }
+   void getAutoMinMaxBiasFactory(const double& autoMinMaxBiasFactor) { m_autoMinMaxBiasFactor = autoMinMaxBiasFactor; }
    //! Sets supplementary data files dir. If the OVR and/or hist dirs are undefined, they are also
    //! set to this path.
    void setSupportDir(const ossimFilename& f);
@@ -147,6 +149,7 @@ private:
    ossimFilename m_supportDir;
    std::vector<ossim_uint32> m_bandList;
    ossimString   m_histogramOp;
+   double        m_autoMinMaxBiasFactor;
    double        m_weight;
 
    //! The following data members are usually just a copy of m_supportDir, but are provided in

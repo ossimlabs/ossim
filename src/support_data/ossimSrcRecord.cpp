@@ -22,6 +22,7 @@ ossimSrcRecord::ossimSrcRecord()
    m_weight(0.0),
    m_isVectorData(false),
    m_isRgbData(false),
+   m_autoMinMaxBiasFactor(1.0),
    m_gamma(1.0)
 {}
 
@@ -33,6 +34,7 @@ ossimSrcRecord::ossimSrcRecord(const ossimKeywordlist& src_kwl, ossim_uint32 ind
    m_weight(0.0),
    m_isVectorData(false),
    m_isRgbData(false),
+   m_autoMinMaxBiasFactor(1.0),
    m_gamma(1.0)
 {
    prefix_str += ossimString::toString(index) + ".";
@@ -213,6 +215,11 @@ bool ossimSrcRecord::loadState(const ossimKeywordlist& kwl, const char* prefix)
    if(!lookup.empty())
    {
       m_gamma = lookup.toFloat64();
+   }
+   lookup = kwl.find(prefix, "auto-minmax-bias-factor");
+   if(!lookup.empty())
+   {
+      m_autoMinMaxBiasFactor = lookup.toFloat64();
    }
    // Look for vector data info:
    m_isVectorData = false;
