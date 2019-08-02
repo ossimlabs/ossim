@@ -26,6 +26,8 @@
 #include <ossim/support_data/ossimWkt.h>
 #include <sstream>
 
+using namespace std;
+
 ossimWktProjectionFactory* ossimWktProjectionFactory::m_instance = 0;
 
 static const ossimString WKT_MAGIC("WKT_PCS");

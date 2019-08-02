@@ -41,6 +41,8 @@
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <algorithm>
 
+using namespace std;
+
 RTTI_DEF1(ossimImageHandler, "ossimImageHandler", ossimImageSource)
 
 // Static trace for debugging

@@ -17,6 +17,8 @@
 
 std::mutex ossimLocalTm::m_mutex;
 
+using namespace std;
+
 std::ostream& operator<< (std::ostream& out, const ossimDate& src)
 {
    return src.print(out);

@@ -20,6 +20,8 @@
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimTiling:debug");
 
 RTTI_DEF1(ossimTiling, "ossimTiling", ossimObject);

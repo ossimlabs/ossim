@@ -35,6 +35,8 @@ static ossimTrace traceDebug(ossimString("ossimTiledElevationDatabase:debug"));
 
 RTTI_DEF1(ossimTiledElevationDatabase, "ossimTiledElevationDatabase", ossimElevationDatabase);
 
+using namespace std;
+
 ossimTiledElevationDatabase::ossimTiledElevationDatabase()
    :
    ossimElevationDatabase(),

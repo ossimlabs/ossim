@@ -43,7 +43,7 @@ public:
     *
     * @param out Stream to write to.
     */
-   void writeStream(std::ostream& out);   
+   void writeStream(std::ostream& out);
 
    void setNumberOfEntries(ossim_uint32 numberOfEntries);
 

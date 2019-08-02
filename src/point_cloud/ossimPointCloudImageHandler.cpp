@@ -27,6 +27,8 @@
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/projection/ossimEpsgProjectionFactory.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimPointCloudImageHandler:debug");
 static const char* GSD_FACTOR_KW = "gsd_factor";
 static const char* COMPONENT_KW = "component";

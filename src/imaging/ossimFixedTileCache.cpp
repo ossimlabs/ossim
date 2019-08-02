@@ -11,6 +11,8 @@
 #include <ossim/imaging/ossimFixedTileCache.h>
 #include <algorithm>
 
+using namespace std;
+
 ossimFixedTileCache::ossimFixedTileCache()
    : theTileBoundaryRect(),
      theTileSize(),

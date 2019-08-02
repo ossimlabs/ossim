@@ -419,7 +419,7 @@ bool ossimHdf5ImageDataset::scanForMinMax()
    // }
 
    ossim_uint32 bufSizeInBytes = m_validRect.width()*ossim::scalarSizeInBytes(scalarType);
-   vector<char> dataBuffer(bufSizeInBytes);
+   std::vector<char> dataBuffer(bufSizeInBytes);
 
    // Get the extents. Assuming dimensions are same for lat lon dataset.
    ossimIpt ulIpt (m_validRect.ul());
@@ -506,7 +506,7 @@ H5::DataSet* ossimHdf5ImageDataset::getDataset()
    return &m_dataset;
 }
 
-string ossimHdf5ImageDataset::getName() const
+std::string ossimHdf5ImageDataset::getName() const
 {
    return m_dataset.getObjName();
 }

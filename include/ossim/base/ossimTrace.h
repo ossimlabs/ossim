@@ -54,7 +54,7 @@ public:
     * You can do:
     * if (traceDebug())
     * {
-    *     CLOG << "Your trace stuff goes here..." << endl;
+    *     CLOG << "Your trace stuff goes here..." << std::endl;
     * }
     */
    bool operator()() const { return theEnabledFlag; }

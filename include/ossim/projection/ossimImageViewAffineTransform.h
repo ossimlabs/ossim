@@ -17,6 +17,20 @@
 class OSSIMDLLEXPORT ossimImageViewAffineTransform: public ossimImageViewTransform
 {
 public:
+   /**
+    * Initialize transform completely here. The image-to-view transform is a chain of 3x3 matrix
+    * multiplies as: [translation] [view scale] [rotation (about pivot pt)] [image scale].
+    * The view to image is stored as the inverse transform.
+    * @param rotateDegrees
+    * @param imageScaleX  Image-side scale, applied before rotation
+    * @param imageScaleY  ditto
+    * @param scaleXValue  View-side scale
+    * @param scaleYValue  ditto
+    * @param translateXValue View-side translation
+    * @param translateYValue  ditto
+    * @param pivotXValue Pivot point in image space
+    * @param pivotYValue ditto
+    */
    ossimImageViewAffineTransform(double rotateDegrees = 0.0,
                                  double imageScaleX = 1.0,
                                  double imageScaleY = 1.0,

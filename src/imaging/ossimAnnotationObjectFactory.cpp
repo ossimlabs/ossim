@@ -16,6 +16,8 @@
 
 ossimAnnotationObjectFactory*  ossimAnnotationObjectFactory::theInstance=NULL;
 
+using namespace std;
+
 ossimAnnotationObjectFactory::ossimAnnotationObjectFactory()
    :ossimFactoryBase<ossimAnnotationObject>()
 {

@@ -32,6 +32,8 @@
 #include <fstream>
 #include <cstddef>
 
+using namespace std;
+
 static const string MASK_EXCLUDE_KW = "exclude_regions";
 static const string MASK_INCLUDE_KW = "include_regions";
 static const string SLOPE_OUTPUT_FILE_KW = "slope_output_file";
@@ -44,7 +46,6 @@ static const string SLOPE_THRESHOLD_KW = "max_slope";
 const char* ossimHlzTool::DESCRIPTION =
       "Computes bitmap of helicopter landing zones given ROI and DEM.";
 
-using namespace std;
 
 ossimHlzTool::ossimHlzTool()
 : m_slopeThreshold(7.0),

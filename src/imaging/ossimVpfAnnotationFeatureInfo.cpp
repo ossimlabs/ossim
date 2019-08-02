@@ -18,6 +18,8 @@
 #include <ossim/font/ossimFontFactoryRegistry.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimVpfAnnotationFeatureInfo:debug");
 
 RTTI_DEF1(ossimVpfAnnotationFeatureInfo, "ossimVpfAnnotationFeatureInfo", ossimObject);

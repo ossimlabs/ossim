@@ -25,6 +25,8 @@
 #include <limits>
 #include <ostream>
 
+using namespace std;
+
 static const std::string ALIGN_TILES_KW         = "align_tiles";         // bool
 static const std::string BLOCK_SIZE_KW          = "block_size";          // unsigned int
 static const std::string FLUSH_TILES_KW         = "flush_tiles";         // bool

@@ -23,6 +23,8 @@
 #include <ossim/imaging/ossimHistogramWriter.h>
 #include <ossim/base/ossimStdOutProgress.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/projection/ossimImageViewProjectionTransform.h>
+#include <ossim/base/ossimAffineTransform.h>
 
 using namespace std;
 
@@ -42,7 +44,8 @@ ossimRemapTool::ossimRemapTool(const ossimFilename& inputFile,
                                ossimFilename outputFile)
    :  m_inputFilename (inputFile),
       m_entry (entryIndex),
-      m_doHistoStretch(doHistoStretch)
+      m_doHistoStretch(doHistoStretch),
+      m_gsd(-1.0)
 {
    m_productFilename = outputFile;
    theStdOutProgress.setFlushStreamFlag(true);
@@ -73,6 +76,7 @@ void ossimRemapTool::setUsage(ossimArgumentParser& ap)
 
    au->addCommandLineOption("-e, --entry", "<entry> For multi image handlers which entry do you wish to extract. For list of entries use: \"ossim-info -i <your_image>\" ");
    au->addCommandLineOption("-n, --no-histo", "Optionally bypass histogram-stretch. ");
+   au->addCommandLineOption("-g, --gsd", "Set the output resolution, in meters. Default is same as input resolution (no resampling).");
 }
 
 bool ossimRemapTool::initialize(ossimArgumentParser& ap)
@@ -90,6 +94,9 @@ bool ossimRemapTool::initialize(ossimArgumentParser& ap)
 
    if ( ap.read("--no-histo") || ap.read("-n"))
       m_doHistoStretch = false;
+
+   if ( ap.read("--gsd", sp1) || ap.read("-g", sp1))
+      m_gsd = ts1.toDouble();
 
    // Determine input filename:
    if ( ap.argc() > 1 )
@@ -176,6 +183,33 @@ void ossimRemapTool::initProcessingChain()
    scalarRemapper->setOutputScalarType(OSSIM_UINT8);
    m_procChain->add(scalarRemapper.get());
 
+   // Check for scaling, need a resampler if non-zero:
+   if (m_gsd > 0)
+   {
+      // First the IVT:
+      ossimDpt inGsd = m_geom->getMetersPerPixel();
+      if (inGsd.x == 0 || inGsd.y == 0 || inGsd.hasNans())
+      {
+         errMsg<<"Input GSD = "<<inGsd<<" is not allowed! Cannot continue.";
+         throw ossimException(errMsg.str());
+      }
+      ossimDpt scale (m_gsd / inGsd.x, m_gsd / inGsd.y);
+      ossimIpt inSize (m_geom->getImageSize());
+      ossimIpt outSize (inSize.x/scale.x, inSize.y/scale.y);
+      ossimRefPtr<ossimAffineTransform> transform = new ossimAffineTransform;
+      transform->setScale(scale);
+      ossimRefPtr<ossimImageGeometry> outGeom =
+         new ossimImageGeometry(transform.get(), m_geom->getProjection());
+      outGeom->setImageSize(outSize);
+      ossimRefPtr<ossimImageViewProjectionTransform> ivt =
+         new ossimImageViewProjectionTransform(m_geom.get(), outGeom.get());
+      ossimRefPtr<ossimImageRenderer> renderer = new ossimImageRenderer;
+      renderer->setImageViewTransform(ivt.get());
+      renderer->getResampler()->setFilterType(ossimFilterResampler::ossimFilterResampler_TRIANGLE,
+                                              ossimFilterResampler::ossimFilterResampler_TRIANGLE);
+      m_procChain->add(renderer.get());
+   }
+
    m_procChain->initialize();
 }
 
@@ -204,6 +238,8 @@ bool ossimRemapTool::execute()
       return false;
 
    ossimNotify(ossimNotifyLevel_INFO)<<"Wrote product image to <"<<m_productFilename<<">"<<endl;
+   ossimNotify(ossimNotifyLevel_INFO)<<"Wrote product geometry to <"<<
+                                     m_productFilename.fileNoExtension()<<".geom>"<<endl;
 
    return true;
 }

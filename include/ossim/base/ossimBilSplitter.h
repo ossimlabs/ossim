@@ -17,7 +17,6 @@
 #define ossimBilSplitter_HEADER
 
 #include <fstream>
-using namespace std;
 
 #include <ossim/base/ossimConstants.h>
 

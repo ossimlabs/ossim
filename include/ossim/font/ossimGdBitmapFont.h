@@ -61,7 +61,7 @@ public:
          return true;
       }
    
-   virtual void getFixedSizes(vector<ossimIpt>& sizes)const;
+   virtual void getFixedSizes(std::vector<ossimIpt>& sizes)const;
 
 protected:
    const ossimGdFont* theGdFontPtr;

@@ -12,8 +12,6 @@
 #ifndef ossimImageMosaic_HEADER
 #define ossimImageMosaic_HEADER
 #include <vector>
-using namespace std;
-
 #include <ossim/imaging/ossimImageCombiner.h>
 
 

@@ -26,6 +26,8 @@
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimCommon.h>
 
+using namespace std;
+
 static const ossimString CLOUDCVR_KW = "CLOUDCVR";
 static const ossimString SRP_KW = "SRP";
 static const ossimString SENSMODE_KW = "SENSMODE";

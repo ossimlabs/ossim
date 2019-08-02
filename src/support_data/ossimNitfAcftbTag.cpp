@@ -21,6 +21,8 @@
 
 #include <ossim/support_data/ossimNitfAcftbTag.h>
 
+using namespace std;
+
 
 RTTI_DEF1(ossimNitfAcftbTag, "ossimNitfAcftbTag", ossimNitfRegisteredTag);
 

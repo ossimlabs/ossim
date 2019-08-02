@@ -23,6 +23,8 @@
 #include <ossim/support_data/ossimFfL5.h>
 #include <ossim/projection/ossimLandSatModel.h>
 
+using namespace std;
+
 RTTI_DEF1_INST(ossimLandsatTileSource,
                "ossimLandsatTileSource",
                ossimGeneralRasterTileSource)

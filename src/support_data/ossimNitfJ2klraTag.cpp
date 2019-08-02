@@ -25,6 +25,8 @@
 #include <istream>
 #include <ostream>
 
+using namespace std;
+
 RTTI_DEF1(ossimNitfJ2klraTag, "ossimNitfJ2klraTag", ossimNitfRegisteredTag);
 
 ossimNitfJ2klraTag::ossimNitfJ2klraTag()

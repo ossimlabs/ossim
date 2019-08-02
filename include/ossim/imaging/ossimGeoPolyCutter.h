@@ -106,7 +106,7 @@ public:
     * /param polygon A vector of points in projected 2-D.
     * /param i index of the polygon to change.
     */
-   virtual void setPolygon(const vector<ossimDpt>& polygon,
+   virtual void setPolygon(const std::vector<ossimDpt>& polygon,
                            ossim_uint32 i = 0);
    
    /*!
@@ -114,7 +114,7 @@ public:
     * /param polygon A vector of points in projected 2-D.
     * /param i index of the polygon to change.
     */
-   virtual void setPolygon(const vector<ossimIpt>& polygon,
+   virtual void setPolygon(const std::vector<ossimIpt>& polygon,
                            ossim_uint32 i = 0);
 
    /*!
@@ -122,7 +122,7 @@ public:
     * /param polygon A Ground polygon.
     * /param i index of the polygon to change.
     */
-    virtual void setPolygon(const vector<ossimGpt>& polygon,
+    virtual void setPolygon(const std::vector<ossimGpt>& polygon,
                             ossim_uint32 i = 0);
 
    virtual void setPolygon(const ossimGeoPolygon& polygon,
@@ -131,18 +131,18 @@ public:
     * Will invert this polygon out to world space and add it to the
     * polygon list
     */
-   virtual void addPolygon(const vector<ossimIpt>& polygon);
+   virtual void addPolygon(const std::vector<ossimIpt>& polygon);
 
    /*!
     * Will invert the passed in polygon to world space and add to the
     * polygon list
     */
-   virtual void addPolygon(const vector<ossimDpt>& polygon);
+   virtual void addPolygon(const std::vector<ossimDpt>& polygon);
 
    /*!
     * Will add the ground polygon to the list
     */
-   virtual void addPolygon(const vector<ossimGpt>& polygon);
+   virtual void addPolygon(const std::vector<ossimGpt>& polygon);
 
    /*!
     * Will invert te polygon to ground and add.

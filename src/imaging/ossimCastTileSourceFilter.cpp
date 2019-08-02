@@ -20,6 +20,8 @@ RTTI_DEF1( ossimCastTileSourceFilter,
            "ossimCastTileSourceFilter",
            ossimImageSourceFilter );
 
+using namespace std;
+
 ossimCastTileSourceFilter::ossimCastTileSourceFilter(ossimImageSource* input,
 						     ossimScalarType scalarType)
    :ossimImageSourceFilter(NULL,input),

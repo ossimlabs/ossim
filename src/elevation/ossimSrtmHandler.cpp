@@ -27,6 +27,8 @@ RTTI_DEF1(ossimSrtmHandler, "ossimSrtmHandler" , ossimElevCellHandler)
 #include <ossim/base/ossimTrace.h>
 static ossimTrace traceDebug ("ossimSrtmElevSource:debug");
 
+using namespace std;
+
 ossimSrtmHandler::ossimSrtmHandler()
    :
       ossimElevCellHandler(),

@@ -20,6 +20,8 @@
 #include <ctime>
 // #include <sys/time.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimImageHandlerMtAdaptor, "ossimImageHandlerMtAdaptor", ossimImageHandler);
 
 const char* ossimImageHandlerMtAdaptor::ADAPTEE_ID_KW = "adaptee_id";

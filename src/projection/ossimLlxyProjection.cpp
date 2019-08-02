@@ -19,6 +19,8 @@
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDatum.h>
 
+using namespace std;
+
 // RTTI information for the ossimMapProjection
 RTTI_DEF1(ossimLlxyProjection, "ossimLlxyProjection" , ossimMapProjection);
 

@@ -37,6 +37,8 @@ static ossimTrace traceDebug ("ossimElevSource:debug");
 
 static const char ENABLE_STATS_KW[] = "elevation.compute_statistics.enabled";
 
+using namespace std;
+
 ossimElevSource::ossimElevSource()
    :
       theMinHeightAboveMSL (0.0),

@@ -66,6 +66,8 @@
 #include <algorithm>
 #include <mutex>
 
+using namespace std;
+
 static ossimTrace traceExec = ossimTrace("ossimInit:exec");
 static ossimTrace traceDebug = ossimTrace("ossimInit:debug");
 

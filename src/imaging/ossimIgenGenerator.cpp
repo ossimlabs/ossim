@@ -19,6 +19,8 @@
 #include <ossim/base/ossimDatum.h>
 #include <ossim/base/ossimUsgsQuad.h>
 
+using namespace std;
+
 void ossimIgenGenerator::generateSpecList(bool outputToFileFlag)
 {
    if(theTilingFlag&&

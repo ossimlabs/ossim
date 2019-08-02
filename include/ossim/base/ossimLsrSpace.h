@@ -112,14 +112,14 @@ public:
     * displaying an error message when LSR spaces do not match between
     * objects. All operations between LSR objects must be in a common space.
     */
-   static ostream& lsrSpaceErrorMessage(ostream& os=ossimNotify(ossimNotifyLevel_INFO));
+   static std::ostream& lsrSpaceErrorMessage(std::ostream& os=ossimNotify(ossimNotifyLevel_INFO));
    
    /*!
     * Debug Dump: 
     */
-   void print(ostream& stream = ossimNotify(ossimNotifyLevel_INFO)) const;
+   void print(std::ostream& stream = ossimNotify(ossimNotifyLevel_INFO)) const;
    
-   friend ostream& operator<< (ostream& os , const ossimLsrSpace& instance)
+   friend std::ostream& operator<< (std::ostream& os , const ossimLsrSpace& instance)
       { instance.print(os); return os; }
 
 private:

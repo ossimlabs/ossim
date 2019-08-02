@@ -27,6 +27,8 @@ RTTI_DEF1(ossimAOD, "ossimAOD", ossimImageSourceFilter)
 
 static ossimTrace traceDebug("ossimAOD:debug");
 
+using namespace std;
+
 ossimAOD::ossimAOD(ossimObject* owner)
    :
       ossimImageSourceFilter  (owner),  // base class

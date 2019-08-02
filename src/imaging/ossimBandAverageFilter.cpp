@@ -26,6 +26,8 @@ RTTI_DEF1(ossimBandAverageFilter,
           "ossimBandAverageFilter",
           ossimImageSourceFilter);
 
+using namespace std;
+
 ossimBandAverageFilter::ossimBandAverageFilter()
    :ossimImageSourceFilter(),
     theTile(NULL)

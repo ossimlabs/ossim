@@ -16,9 +16,11 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimImageHistogramSource:debug");
 
-  RTTI_DEF3(ossimImageHistogramSource, "ossimImageHistogramSource", ossimHistogramSource, ossimConnectableObjectListener, ossimProcessInterface);
+RTTI_DEF3(ossimImageHistogramSource, "ossimImageHistogramSource", ossimHistogramSource, ossimConnectableObjectListener, ossimProcessInterface);
 
 ossimImageHistogramSource::ossimImageHistogramSource(ossimObject* owner)
    :ossimHistogramSource(owner,

@@ -23,6 +23,8 @@
 static ossimTrace traceExec  ("ossimAtbMatchPoint:exec");
 static ossimTrace traceDebug ("ossimAtbMatchPoint:debug");
 
+using namespace std;
+
 //*****************************************************************************
 //  DESTRUCTOR: ~ossimAtbMatchPoint()
 //  

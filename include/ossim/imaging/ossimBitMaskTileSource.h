@@ -114,8 +114,8 @@ protected:
    virtual void establishDecimationFactors();
 
    ossimRefPtr<ossimImageData>  m_tile;
-   vector<ossim_uint8*>         m_buffers;
-   vector<ossimIpt>             m_bufferSizes;
+   std::vector<ossim_uint8*>         m_buffers;
+   std::vector<ossimIpt>             m_bufferSizes;
    
    //! For backward compatibility with older mask format ("Ming Mask"), provide for associating
    //! the mask with an image handler:

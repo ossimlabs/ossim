@@ -17,6 +17,8 @@
 
 #include <sstream>
 
+using namespace std;
+
 
 static ossimTrace traceDebug("ossimSpectraboticsRedEdgeModel:debug");
 

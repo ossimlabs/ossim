@@ -32,6 +32,8 @@
 #include <ossim/imaging/ossimTiffOverviewBuilder.h>
 #include <ossim/imaging/ossimTiffTileSource.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimTiledImageHandler, "ossimTiledImageHandler", ossimImageHandler)
 
 // Static trace for debugging

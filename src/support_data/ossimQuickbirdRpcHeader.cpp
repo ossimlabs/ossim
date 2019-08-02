@@ -15,6 +15,8 @@
 #include <iterator>
 #include <ossim/base/ossimXmlDocument.h>
 
+using namespace std;
+
 std::ostream& operator << (std::ostream& out,
 		      const ossimQuickbirdRpcHeader& data)
 {

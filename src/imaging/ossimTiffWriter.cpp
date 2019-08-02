@@ -47,6 +47,8 @@
 #include <algorithm>
 #include <sstream>
 
+using namespace std;
+
 static ossimTrace traceDebug("ossimTiffWriter:debug");
 static const char* TIFF_WRITER_OUTPUT_TILE_SIZE_X_KW = "output_tile_size_x";
 static const char* TIFF_WRITER_OUTPUT_TILE_SIZE_Y_KW = "output_tile_size_y";

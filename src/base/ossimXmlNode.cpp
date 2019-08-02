@@ -30,6 +30,8 @@ ossimTrace traceDebug("ossimXmlNode:debug");
 
 RTTI_DEF2(ossimXmlNode, "ossimXmlNode", ossimObject, ossimErrorStatusInterface);
 
+using namespace std;
+
 static std::istream &xmlskipws(std::istream &in)
 {
 	int c = in.peek();

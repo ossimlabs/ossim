@@ -120,7 +120,7 @@ public:
    
 
    /** @brief Print method.  Called by ossimObject::operator<<. */
-   virtual ostream& print(ostream& os) const;
+   virtual std::ostream& print(std::ostream& os) const;
 
    /** @return The min pixel of the band. */
    virtual double getMinPixelValue(ossim_uint32 band=0)const;
@@ -262,8 +262,8 @@ private:
 
 #if 1 /* Not sure if we need min/max right now.(drb) */
    // Stores the min/max from the table for each band.
-   vector<ossim_float64> m_min;
-   vector<ossim_float64> m_max;
+   std::vector<ossim_float64> m_min;
+   std::vector<ossim_float64> m_max;
 #endif
 
    TYPE_DATA

@@ -22,6 +22,8 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimStringProperty.h>
 
+using namespace std;
+
 static const ossimTrace traceDebug(ossimString("ossimNitfRpcBase:debug"));
 static const ossimString ERR_BIAS_KW = "ERR_BIAS";
 static const ossimString ERR_RAND_KW = "ERR_RAND";

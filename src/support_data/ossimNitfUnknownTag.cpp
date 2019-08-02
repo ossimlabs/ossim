@@ -21,6 +21,8 @@
 #include <ossim/support_data/ossimNitfUnknownTag.h>
 #include <ossim/support_data/ossimNitfCommon.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimNitfUnknownTag, "ossimNitfUnknownTag", ossimNitfRegisteredTag);
 
 ossimNitfUnknownTag::ossimNitfUnknownTag()

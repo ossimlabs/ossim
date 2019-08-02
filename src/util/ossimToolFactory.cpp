@@ -21,7 +21,10 @@
 #include <ossim/util/ossimRemapTool.h>
 #if OSSIM_HAS_HDF5
 #include <ossim/hdf5/ossimHdf5Tool.h>
+
 #endif
+
+using namespace std;
 
 ossimToolFactory* ossimToolFactory::s_Instance = 0;
 

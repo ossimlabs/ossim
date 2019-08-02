@@ -22,6 +22,8 @@
 #include <cstdio>
 #include <cstdlib> /* for exit */
 
+using namespace std;
+
 //*************************************************************************************************
 // FINALIZE -- Convenient location for placing debug breakpoint for catching program exit.
 //*************************************************************************************************

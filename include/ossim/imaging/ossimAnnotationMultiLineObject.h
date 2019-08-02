@@ -64,12 +64,12 @@ public:
    virtual bool isPointWithin(const ossimDpt& imagePoint)const;
    virtual void computeBoundingRect();
 
-   virtual const vector<ossimPolyLine>& getPolyLineList()const
+   virtual const std::vector<ossimPolyLine>& getPolyLineList()const
       {
          return thePolyLineList;
       }
 
-   virtual vector<ossimPolyLine>& getPolyLineList()
+   virtual std::vector<ossimPolyLine>& getPolyLineList()
       {
          return thePolyLineList;
       }
@@ -79,7 +79,7 @@ public:
          thePolyLineList.push_back(line);
       }
 protected:
-   vector<ossimPolyLine> thePolyLineList;
+   std::vector<ossimPolyLine> thePolyLineList;
    ossimDrect            theBoundingRect;
 
 TYPE_DATA

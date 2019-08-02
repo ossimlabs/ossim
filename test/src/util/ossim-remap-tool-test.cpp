@@ -14,6 +14,8 @@
 #include <getopt.h>
 #include <iostream>
 
+using namespace std;
+
 void usage(char* argv0, int exitCode, std::string errMsg="")
 {
    if (!errMsg.empty())

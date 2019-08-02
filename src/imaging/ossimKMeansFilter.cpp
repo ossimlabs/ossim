@@ -18,6 +18,8 @@
 #include <ossim/imaging/ossimImageHistogramSource.h>
 #include <ossim/imaging/ossimHistogramWriter.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimKMeansFilter, "ossimKMeansFilter", ossimImageSourceFilter);
 
 ossimKMeansFilter::ossimKMeansFilter()

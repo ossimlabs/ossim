@@ -464,7 +464,7 @@ public:
                           const char* prefix=0);
    
    
-   virtual ostream& print(ostream& os) const;
+   virtual std::ostream& print(std::ostream& os) const;
 
    /**
     * Returns the min pixel of the band.
@@ -562,14 +562,14 @@ private:
    StretchMode                   theStretchMode;
    bool                          theDirtyFlag;
    mutable ossimRefPtr<ossimMultiResLevelHistogram>  theHistogram;
-   vector<ossim_float64>         theNormalizedLowClipPoint;
-   vector<ossim_float64>         theNormalizedHighClipPoint;
-   vector<ossim_float64>         theMidPoint;
-   vector<ossim_float64>         theMinOutputValue;
-   vector<ossim_float64>         theMaxOutputValue;
+   std::vector<ossim_float64>         theNormalizedLowClipPoint;
+   std::vector<ossim_float64>         theNormalizedHighClipPoint;
+   std::vector<ossim_float64>         theMidPoint;
+   std::vector<ossim_float64>         theMinOutputValue;
+   std::vector<ossim_float64>         theMaxOutputValue;
 
    // Maps zero based band to histogram band.
-   vector<ossim_uint32>          theBandList;
+   std::vector<ossim_uint32>          theBandList;
 
    // Internally bypassed flag.
    bool theBypassFlag;

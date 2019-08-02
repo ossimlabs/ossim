@@ -39,7 +39,7 @@ public:
     * Returns OR'd mash-up of ossimPointRecord field codes being stored (or desired to be stored)
     */
    ossim_uint32 getFieldCode() const;
-   vector<ossimPointRecord::FIELD_CODES> getFieldCodesAsList() const;
+   std::vector<ossimPointRecord::FIELD_CODES> getFieldCodesAsList() const;
 
    /**
     * Initializes the desired fields to be stored. This will affect future getBlock() calls. If

@@ -21,6 +21,8 @@
 #include <ossim/support_data/ossimImageMetaData.h>
 #include <ossim/parallel/ossimMpi.h>
 
+using namespace std;
+
 
 #ifdef OSSIM_ID_ENABLED
 static const char OSSIM_ID[] = "$Id: ossimOverviewSequencer.cpp 23377 2015-06-17 18:03:05Z okramer $";

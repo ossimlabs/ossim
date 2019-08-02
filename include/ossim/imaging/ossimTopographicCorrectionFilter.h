@@ -84,7 +84,7 @@ public:
    virtual void getDecimationFactor(ossim_uint32 resLevel,
                                     ossimDpt& result) const;
    
-   virtual void getDecimationFactors(vector<ossimDpt>& decimations) const;
+   virtual void getDecimationFactors(std::vector<ossimDpt>& decimations) const;
 
    virtual ossim_uint32 getNumberOfDecimationLevels()const;
 
@@ -123,23 +123,23 @@ public:
 
    void setGainValues(const std::vector<double>& gainValues);
   
-   const vector<double>& getBiasValues()const;
+   const std::vector<double>& getBiasValues()const;
 
    void setBiasValues(const std::vector<double>& biasValues);
 
-   const vector<double>& getKValues()const;
+   const std::vector<double>& getKValues()const;
 
    double getK(int idx)const;
 
    void setK(int idx, double value);
 
-   void setKValues(const vector<double>& kValues);
+   void setKValues(const std::vector<double>& kValues);
 
    double getC(int idx)const;
 
    void setC(int idx, double value);
 
-   void setCValues(const vector<double>& cValues);
+   void setCValues(const std::vector<double>& cValues);
    
    void computeLightDirection();
 

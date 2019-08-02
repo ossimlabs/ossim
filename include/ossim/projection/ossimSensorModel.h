@@ -135,7 +135,7 @@ public:
 
    /*!
     * METHOD: print()
-    * Fulfills base-class pure virtual. Dumps contents of object to ostream.
+    * Fulfills base-class pure virtual. Dumps contents of object to std::ostream.
     */
    virtual std::ostream& print(std::ostream& out) const;
 
@@ -208,11 +208,11 @@ public:
       }
 
    /*!
-    * STATIC METHOD: writeGeomTemplate(ostream)
+    * STATIC METHOD: writeGeomTemplate(std::ostream)
     * Writes a template of keywords processed by loadState and saveState to
     * output stream.
     */
-   static void writeGeomTemplate(ostream& os);
+   static void writeGeomTemplate(std::ostream& os);
 
    /*!
     * OPERATORS: 

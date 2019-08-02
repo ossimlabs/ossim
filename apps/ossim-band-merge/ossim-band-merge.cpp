@@ -36,6 +36,8 @@
 #include <ossim/base/ossimApplicationUsage.h>
 #include <iostream>
 #include <exception>
+
+using namespace std;
 static ossimTrace traceDebug("band_merge:main");
 
 static void usage();

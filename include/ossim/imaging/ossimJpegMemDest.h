@@ -14,7 +14,7 @@
 #define ossimJpegMemDest_HEADER 1
 
 #include <ossim/base/ossimConstants.h> /** for OSSIM_DLL export macro */
-#include <iosfwd> /* ostream& */
+#include <iosfwd> /* std::ostream& */
 
 // Forward declaration:
 struct jpeg_compress_struct;

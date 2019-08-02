@@ -34,6 +34,8 @@
 //ossimElevManager* ossimElevManager::m_instance = 0;
 static ossimTrace traceDebug("ossimElevManager:debug");
 
+using namespace std;
+
 //---
 // For std::sort of ElevationDatabaseListType
 // e.g.: std::sort( dbList.begin(), dbList.end(), dbSort );

@@ -1114,7 +1114,7 @@ void ossimTiffInfo::getImageGeometry(ossim_uint64 geoKeyLength,
    }
 
    // Dump the geotiff keys to memory.
-   ostringstream out;
+   std::ostringstream out;
    printGeoKeys(out, std::string("tiff.image0."),
                 geoKeyLength, geoKeyBlock,
                 geoDoubleLength, geoDoubleBlock,

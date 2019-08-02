@@ -27,6 +27,8 @@ static const char OSSIM_ID[] = "$Id: ossimHgtRef.cpp 21399 2012-07-27 18:19:22Z 
 #endif
 
 
+using namespace std;
+
 
 //*****************************************************************************
 //  METHOD: ossimHgtRef::ossimHgtRef()

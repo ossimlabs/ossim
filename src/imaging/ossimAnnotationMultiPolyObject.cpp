@@ -15,6 +15,8 @@
 
 RTTI_DEF1(ossimAnnotationMultiPolyObject, "ossimAnnotationMultiPolyObject", ossimAnnotationObject)
 
+using namespace std;
+
 ossimAnnotationMultiPolyObject::ossimAnnotationMultiPolyObject()
    :ossimAnnotationObject(),
     theFillEnabled(false)

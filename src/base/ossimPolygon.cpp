@@ -32,6 +32,8 @@ static const int RECT_TOP_EDGE    = 1;
 static const int RECT_RIGHT_EDGE  = 2;
 static const int RECT_BOTTOM_EDGE = 3;
 
+using namespace std;
+
 ossimPolygon::ossimPolygon()
    : theOrderingType(OSSIM_VERTEX_ORDER_UNKNOWN),
     theVertexList(),

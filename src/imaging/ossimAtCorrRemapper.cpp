@@ -28,6 +28,8 @@ RTTI_DEF1(ossimAtCorrRemapper, "ossimAtCorrRemapper", ossimImageSourceFilter);
 
 static ossimTrace traceDebug("ossimAtCorrRemapper:debug");
 
+using namespace std;
+
 ossimAtCorrRemapper::ossimAtCorrRemapper(ossimObject* owner,
                                          ossimImageSource* inputSource,
                                          const ossimString& sensorType)

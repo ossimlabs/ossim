@@ -19,6 +19,8 @@ RTTI_DEF2(ossimEastingNorthingCutter, "ossimEastingNorthingCutter", ossimRectang
 
 static ossimTrace traceDebug(ossimString("ossimEastingNorthingCutter:debug"));
 
+using namespace std;
+
 
 ossimEastingNorthingCutter::ossimEastingNorthingCutter(ossimObject* owner,
                                                        ossimImageSource* inputSource)

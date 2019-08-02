@@ -23,6 +23,8 @@
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimIoStream.h>
 
+using namespace std;
+
 ossimDtedAcc::ossimDtedAcc()
 {
    

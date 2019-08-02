@@ -35,6 +35,8 @@
 
 static const ossimTrace traceDebug("ossimArcInfoGridWriter:debug");
 
+using namespace std;
+
 RTTI_DEF1(ossimArcInfoGridWriter,
           "ossimArcInfoGridWriter",
           ossimImageFileWriter);

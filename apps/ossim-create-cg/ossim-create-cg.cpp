@@ -30,6 +30,8 @@
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
 
+using namespace std;
+
 int main(int argc, char *argv[])
 {
    //---

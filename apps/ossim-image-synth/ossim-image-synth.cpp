@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
    ossimArgumentParser ap(&argc, argv);
    ossimInit::instance()->addOptions(ap);
    ossimInit::instance()->initialize(ap);
-   
+
    if ( (ap.argc() < 2) || ap.read("-h") || ap.read("--help") )
    {
       cout << "\nUsage: "<<ap[0]<<" <filename>\n"<<endl;

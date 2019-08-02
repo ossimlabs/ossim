@@ -36,6 +36,8 @@ RTTI_DEF3(ossimRpcProjection, "ossimRpcProjection", ossimProjection, ossimOptimi
 // Define Trace flags for use within this file:
 //***
 #include <ossim/base/ossimTrace.h>
+
+using namespace std;
 static ossimTrace traceExec  ("ossimRpcProjection:exec");
 static ossimTrace traceDebug ("ossimRpcProjection:debug");
 

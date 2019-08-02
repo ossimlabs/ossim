@@ -15,6 +15,8 @@
 
 RTTI_DEF1(ossimAnnotationMultiPolyLineObject, "ossimAnnotationMultiPolyLineObject", ossimAnnotationObject)
 
+using namespace std;
+
 ossimAnnotationMultiPolyLineObject::ossimAnnotationMultiPolyLineObject()
    :ossimAnnotationObject()
 {

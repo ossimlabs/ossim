@@ -24,6 +24,8 @@
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossim2dBilinearTransform.h>
 
+using namespace std;
+
 static const ossimString XFRM_FLAG_KW = "XFRM_FLAG";
 static const ossimString SCALE_FACTOR_KW = "SCALE_FACTOR";
 static const ossimString ANAMRPH_CORR_KW = "ANAMRPH_CORR";

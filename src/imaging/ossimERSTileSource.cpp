@@ -27,6 +27,8 @@
 
 RTTI_DEF1(ossimERSTileSource, "ossimERSTileSource", ossimGeneralRasterTileSource);
 
+using namespace std;
+
 //*******************************************************************
 // Public Constructor:
 //*******************************************************************

@@ -29,6 +29,8 @@
 #include <ossim/base/ossimTrace.h>
 static ossimTrace traceDebug("ossimXmlDocument:debug");
 
+using namespace std;
+
 static std::istream& xmlskipws(std::istream& in)
 {
    int c = in.peek();

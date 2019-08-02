@@ -103,6 +103,8 @@
 
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 RTTI_DEF1(ossimImageSourceFactory, "ossimImageSourceFactory", ossimImageSourceFactoryBase);
 
 static ossimTrace traceDebug("ossimImageSourceFactory:debug");

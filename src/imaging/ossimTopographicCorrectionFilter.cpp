@@ -21,6 +21,8 @@
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimKeywordNames.h>
 
+using namespace std;
+
 static const char* CORRECTION_TYPE_KW        = "correction_type";
 static const char* C_COMPUTED_FLAG_KW        = "c_computed_flag";
 static const char* NDVI_RANGE_KW             = "ndvi_range";

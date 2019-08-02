@@ -18,6 +18,8 @@ static ossimTrace traceExec  ("ossimObservationSet:exec");
 static ossimTrace traceDebug ("ossimObservationSet:debug");
 
 
+using namespace std;
+
 
 ossimObservationSet::ossimObservationSet() :
 theNumAdjPar(0),

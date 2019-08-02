@@ -23,6 +23,8 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTrace.h>
 
+using namespace std;
+
 static const ossimTrace traceDebug(ossimString("ossimNitfEngrda:debug"));
 
 RTTI_DEF1(ossimNitfEngrdaTag, "ossimNitfEngrdaTag", ossimNitfRegisteredTag);

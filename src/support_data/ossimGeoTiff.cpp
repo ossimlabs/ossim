@@ -48,6 +48,8 @@
 #include <sstream>
 #include <cstdlib>
 
+using namespace std;
+
 static const ossimGeoTiffCoordTransformsLut COORD_TRANS_LUT;
 static const ossimGeoTiffDatumLut DATUM_LUT;
 std::mutex ossimGeoTiff::theMutex;
@@ -2415,6 +2417,7 @@ bool ossimGeoTiff::initTiePointsFromImageModelTransform()
    theTiePoint.push_back(theModelTransformation[3]);
    theTiePoint.push_back(theModelTransformation[7]);
    theTiePoint.push_back(0.0);
+   return true;
 }
 
 

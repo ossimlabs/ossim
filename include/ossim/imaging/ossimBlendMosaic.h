@@ -55,7 +55,7 @@ public:
    void findMinMax(double& minValue, double& maxValue)const;
    
 protected:
-   vector<double>              theWeights;
+   std::vector<double>              theWeights;
    ossimRefPtr<ossimImageData> theNormResult;
    /**
     * If our inputs have output of different scalar

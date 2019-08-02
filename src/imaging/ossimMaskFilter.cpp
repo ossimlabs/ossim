@@ -21,6 +21,8 @@
 #include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimStringProperty.h>
 
+using namespace std;
+
 static const char * MASK_FILTER_MASK_TYPE_KW = "mask_type";
 
 RTTI_DEF1(ossimMaskFilter, "ossimMaskFilter", ossimImageSource);

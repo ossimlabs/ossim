@@ -41,6 +41,8 @@
 #include <netdb.h>
 #include <netinet/tcp.h>
 #include <netinet/in.h>
+
+using namespace std;
 #endif
 
 

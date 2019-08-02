@@ -32,6 +32,8 @@ static ossimTrace traceDebug ("ossimDtedHandler:debug");
 
 static const char ENABLE_STATS_KW[] = "elevation.compute_statistics.enabled";
 
+using namespace std;
+
 
 ossimDtedHandler::ossimDtedHandler(const ossimFilename& dted_file, bool memoryMapFlag)
    :

@@ -122,7 +122,7 @@ protected:
    void nextJob(ossim_uint32 chain_id);
 
    //! For debug -- thread-safe console output
-   void print(ostringstream& msg) const;
+   void print(std::ostringstream& msg) const;
 
    ossimRefPtr<ossimImageChainMtAdaptor> m_inputChain; //!< Same as base class' theInputConnection
    std::shared_ptr<ossimJobMultiThreadQueue> m_jobMtQueue;

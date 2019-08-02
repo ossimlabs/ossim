@@ -42,14 +42,14 @@ public:
    virtual bool loadState(const ossimKeywordlist& kwl,
                           const char* prefix=0);
    
-   virtual ostream& print(ostream& os) const;
-   friend ostream& operator << (ostream& os,  const ossimAtCorrRemapper& hr);
+   virtual std::ostream& print(std::ostream& os) const;
+   friend std::ostream& operator << (std::ostream& os,  const ossimAtCorrRemapper& hr);
 
-   vector<double> getNormMinPixelValues() const;
-   vector<double> getNormMaxPixelValues() const;
+   std::vector<double> getNormMinPixelValues() const;
+   std::vector<double> getNormMaxPixelValues() const;
 
-   void getNormMinPixelValues(vector<double>& v) const;
-   void getNormMaxPixelValues(vector<double>& v) const;
+   void getNormMinPixelValues(std::vector<double>& v) const;
+   void getNormMaxPixelValues(std::vector<double>& v) const;
 
    const ossimString& getSensorType() const;
 
@@ -71,15 +71,15 @@ protected:
    ossimRefPtr<ossimImageData> theTile;
    double*            theSurfaceReflectance;
    bool               theUseInterpolationFlag;
-   vector<double>     theMinPixelValue;
-   vector<double>     theMaxPixelValue;
-   vector<double>     theXaArray;
-   vector<double>     theXbArray;
-   vector<double>     theXcArray;
-   vector<double>     theBiasArray;
-   vector<double>     theGainArray;
-   vector<double>     theCalCoefArray;
-   vector<double>     theBandWidthArray;
+   std::vector<double>     theMinPixelValue;
+   std::vector<double>     theMaxPixelValue;
+   std::vector<double>     theXaArray;
+   std::vector<double>     theXbArray;
+   std::vector<double>     theXcArray;
+   std::vector<double>     theBiasArray;
+   std::vector<double>     theGainArray;
+   std::vector<double>     theCalCoefArray;
+   std::vector<double>     theBandWidthArray;
    ossimString        theSensorType;
 
 TYPE_DATA

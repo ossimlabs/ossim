@@ -12,6 +12,8 @@
 #include <ossim/imaging/ossimImageData.h>
 #include <cmath>
 
+using namespace std;
+
 RTTI_DEF1(ossimImageGaussianFilter, "ossimImageGaussianFilter", ossimImageSourceFilter);
 
 /** 

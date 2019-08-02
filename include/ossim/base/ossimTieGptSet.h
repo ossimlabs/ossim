@@ -44,9 +44,9 @@ public:
    const ossimTieGptSet& operator=(const ossimTieGptSet&);
 
    // accessors   
-   inline void  setTiePoints(const vector<ossimRefPtr<ossimTieGpt> >& aTieSet) { theTies = aTieSet; }
-   inline const vector<ossimRefPtr<ossimTieGpt> >& getTiePoints()const         { return theTies; }
-   inline       vector<ossimRefPtr<ossimTieGpt> >& refTiePoints()              { return theTies; }
+   inline void  setTiePoints(const std::vector<ossimRefPtr<ossimTieGpt> >& aTieSet) { theTies = aTieSet; }
+   inline const std::vector<ossimRefPtr<ossimTieGpt> >& getTiePoints()const         { return theTies; }
+   inline       std::vector<ossimRefPtr<ossimTieGpt> >& refTiePoints()              { return theTies; }
 
    inline void  setMasterPath(const ossimString& aPath) { theMasterPath = aPath; }
    inline const ossimString& getMasterPath()const       { return theMasterPath; }

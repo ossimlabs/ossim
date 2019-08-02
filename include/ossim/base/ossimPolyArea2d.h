@@ -35,9 +35,9 @@ public:
    friend OSSIM_DLL std::ostream& operator <<(std::ostream& out, const ossimPolyArea2d& data);
    
    ossimPolyArea2d();
-   ossimPolyArea2d(const vector<ossimGpt>& polygon);
-   ossimPolyArea2d(const vector<ossimDpt>& polygon);
-   ossimPolyArea2d(const ossimPolygon& shell, const vector<ossimPolygon>& holes); 
+   ossimPolyArea2d(const std::vector<ossimGpt>& polygon);
+   ossimPolyArea2d(const std::vector<ossimDpt>& polygon);
+   ossimPolyArea2d(const ossimPolygon& shell, const std::vector<ossimPolygon>& holes);
    
    ossimPolyArea2d(const ossimDpt& p1,
                    const ossimDpt& p2,
@@ -58,8 +58,8 @@ public:
    const ossimPolyArea2d& operator =(const ossimPolygon& rhs);
    const ossimPolyArea2d& operator =(const ossimIrect& rect);
    const ossimPolyArea2d& operator =(const ossimDrect& rect);
-   const ossimPolyArea2d& operator =(const vector<ossimGpt>& polygon);
-   const ossimPolyArea2d& operator =(const vector<ossimDpt>& polygon);
+   const ossimPolyArea2d& operator =(const std::vector<ossimGpt>& polygon);
+   const ossimPolyArea2d& operator =(const std::vector<ossimDpt>& polygon);
    const ossimPolyArea2d& operator &=(const ossimPolyArea2d& rhs);
    ossimPolyArea2d operator &(const ossimPolyArea2d& rhs)const;
    ossimPolyArea2d operator +(const ossimPolyArea2d& rhs)const;
@@ -70,8 +70,8 @@ public:
    bool intersects(const ossimPolyArea2d& rhs)const;
    
    void add(const ossimPolyArea2d& rhs);
-   bool getVisiblePolygons(vector<ossimPolygon>& polyList)const;
-   bool getPolygonHoles(vector<ossimPolygon>& polyList)const;
+   bool getVisiblePolygons(std::vector<ossimPolygon>& polyList)const;
+   bool getPolygonHoles(std::vector<ossimPolygon>& polyList)const;
    
    /**
     * @brief Gets all of the polygons stored with their holes embedded. This
@@ -98,7 +98,7 @@ public:
     * @param polylist an empty vector of ossimPolyArea2d that will be filled
     * @return returns true if it successfully places polygons in the input vector
     */
-   bool getCompletePolygons(vector<ossimPolyArea2d>& polyList)const;
+   bool getCompletePolygons(std::vector<ossimPolyArea2d>& polyList)const;
    
    bool isEmpty()const;
    bool isValid(bool displayValidationError = false)const;

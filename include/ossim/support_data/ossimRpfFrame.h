@@ -62,7 +62,7 @@ public:
 
    bool hasSubframeMaskTable()const;
 
-   const vector< vector<ossim_uint32> >& getSubFrameMask(
+   const std::vector< std::vector<ossim_uint32> >& getSubFrameMask(
       ossim_uint32 spectralGroup)
    {
       return theSubframeMaskTable[spectralGroup];
@@ -77,7 +77,7 @@ public:
    {
       return theCompressionSection;
    }
-   const vector<ossimRpfColorGrayscaleTable>& getColorGrayscaleTable()const
+   const std::vector<ossimRpfColorGrayscaleTable>& getColorGrayscaleTable()const
    {
       return theColorGrayscaleTable;
    }
@@ -168,7 +168,7 @@ private:
    /*!
     * 
     */
-   vector<ossimRpfColorGrayscaleTable>     theColorGrayscaleTable;
+   std::vector<ossimRpfColorGrayscaleTable>     theColorGrayscaleTable;
 
    /*!
     * 
@@ -185,7 +185,7 @@ private:
     *  and it will hold an offset value from the start of the
     * [spatial data section] to the first byte of the subframe table.
     */
-   vector< vector< vector< ossim_uint32> > > theSubframeMaskTable;
+   std::vector< std::vector< std::vector< ossim_uint32> > > theSubframeMaskTable;
 
    /*!
     * We have a 3-D array.  For the most part the numberof spectral groups
@@ -197,7 +197,7 @@ private:
     *  and it will hold an offset value from the start of the
     * [spatial data section] to the first byte of the subframe table.
     */
-   vector< vector< vector< ossim_uint32> > > theSubframeTransparencyMaskTable;
+   std::vector< std::vector< std::vector< ossim_uint32> > > theSubframeTransparencyMaskTable;
 
    /** Holds table of "replace / update" records if present. */
    ossimRefPtr<ossimRpfReplaceUpdateTable> theReplaceUpdateTable;
