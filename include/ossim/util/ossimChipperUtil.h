@@ -612,6 +612,11 @@ private:
    /** @return true if histogram option is set; false, if not. */
    bool hasHistogramOperation() const;
 
+
+  /** @return true if histogram option is set; false, if not. */
+   bool hasGammaCorrection() const;
+
+
    /** @return true if file extension is "hgt", "dem" or contains "dtN" (dted). */
    bool isDemFile(const ossimFilename& file) const;
 
@@ -784,6 +789,15 @@ private:
     * @return brightness
     */   
    ossim_float64 getContrast() const;
+
+   /**
+    * @brief Gets the gamma.
+    * 
+    * This will return 1.0 if the keyword is not found.
+    *
+    * @return gamma
+    */   
+   ossim_float64 getGamma() const;
 
    /**
     * @brief Gets the sharpen mode.

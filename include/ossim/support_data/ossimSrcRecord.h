@@ -100,7 +100,7 @@ public:
    const ossimString&               getHistogramOp() const { return m_histogramOp;}
    const std::vector<ossim_uint32>& getBands()       const { return m_bandList; }
    const double&                    getWeight()      const { return m_weight; }  
-
+   const double&                    getGamma()       const { return m_gamma; }
    const PixelFlipParams&           getPixelFlipParams() const { return m_pixelFlipParams; }
    
    //! See note below on these data members.
@@ -119,7 +119,7 @@ public:
    void setBands(const std::vector<ossim_uint32>& v) { m_bandList = v; }
    void setWeight(const double& weight)              { m_weight = weight; }
    void setRgbDataBool(bool isRgbData)               { m_isRgbData = isRgbData; }
-
+   void setGamma(const double& gamma)                { m_gamma = gamma; }
    //! Sets supplementary data files dir. If the OVR and/or hist dirs are undefined, they are also
    //! set to this path.
    void setSupportDir(const ossimFilename& f);
@@ -166,6 +166,8 @@ private:
    std::vector<ossimString> m_rgbOverviewPaths;
    bool m_isRgbData;
    PixelFlipParams m_pixelFlipParams;
+
+   double m_gamma;
 };
 
 #endif
