@@ -23,6 +23,7 @@
 #include <ossim/imaging/ossimImageSharpenFilter.h>
 #include <ossim/imaging/ossimNullPixelFlip.h>
 #include <ossim/imaging/ossimScalarRemapper.h>
+#include <ossim/imaging/ossimGammaRemapper.h>
 #include <vector>
 
 // Forward class declarations:
@@ -208,6 +209,20 @@ public:
     */
    void addHistogramRemapper(const ossimSrcRecord& src);
 
+   /** @brief Adds histogram remapper to the chain. */
+   void addGammaRemapper();
+
+   /**
+    * @brief Adds a band selector.
+    *
+    * This takes an ossimSrcRecord which can contain a histogram
+    * operation to be performed.
+    * 
+    * @param src Record to initialize band selector from.
+    */
+   void addGammaRemapper(const ossimSrcRecord& src);
+
+
    /**
     * @brief Adds a new cache to the current end of the chain.
     * @return Pointer to cache.
@@ -297,6 +312,18 @@ public:
     * @note Can contain a null pointer so callers should validate.
     */
    ossimRefPtr<ossimHistogramRemapper> getHistogramRemapper();
+
+   /**
+    * @return ossimRefPtr containing the histogram remapper.
+    * @note Can contain a null pointer so callers should validate.
+    */
+   ossimRefPtr<const ossimGammaRemapper> getGammaRemapper() const;
+
+   /**
+    * @return ossimRefPtr containing the histogram remapper.
+    * @note Can contain a null pointer so callers should validate.
+    */
+   ossimRefPtr<ossimGammaRemapper> getGammaRemapper();
 
    /**
     * @return  ossimRefPtr containing the resampler cache.
@@ -396,6 +423,18 @@ public:
     * @return true or false.
     */
    bool getAddHistogramFlag() const;
+
+   /**
+    * @brief If flag is true a gamma remapper will be added to the chain at create time.
+    * @param flag
+    */
+   void setAddGammaFlag(bool flag);
+
+   /**
+    * @brief Gets the add gamma flag.
+    * @return true or false.
+    */
+   bool getAddGammaFlag() const;
 
    /**
     * @brief If flag is true a resampler cache will be added to the chain at create time.
@@ -565,6 +604,7 @@ private:
    ossimRefPtr<ossimBandSelector>             m_bandSelector;
    ossimRefPtr<ossimNullPixelFlip>            m_nullPixelFlip;
    ossimRefPtr<ossimHistogramRemapper>        m_histogramRemapper;
+   ossimRefPtr<ossimGammaRemapper>            m_gammaRemapper;
    ossimRefPtr<ossimBrightnessContrastSource> m_brightnessContrast;
    ossimRefPtr<ossimImageSharpenFilter>       m_sharpen;   
    ossimRefPtr<ossimScalarRemapper>           m_scalarRemapper;
@@ -575,6 +615,7 @@ private:
    /** control flags */
    bool m_addNullPixelFlipFlag;
    bool m_addHistogramFlag;
+   bool m_addGammaFlag;
    bool m_addResamplerCacheFlag;
    bool m_addChainCacheFlag;
    bool m_remapToEightBitFlag;
