@@ -4,17 +4,12 @@ properties([
         string(name: 'MAKE_VERBOSE', defaultValue: 'VERBOSE=true', description: ''),
         booleanParam(name: 'BUILD_WITH_FORTIFY', defaultValue: false, description: 'Check to build and scan source using HP Fortify tool'),
         booleanParam(name: 'SCAN_WITH_SONARQUBE', defaultValue: false, description: 'Check to perform SonarQube analysis'),
-        string(name: 'GIT_PUBLIC_SERVER_URL', defaultValue: 'https://github.com/ossimlabs', description: ''),
-        string(name: 'GIT_PRIVATE_SERVER_URL', defaultValue: 'https://github.com/Maxar-Corp', description: ''),
-        string(name: 'CREDENTIALS_ID', defaultValue: 'cicdGithub', description: ''),
-
-
         booleanParam(name: 'CLEAN_WORKSPACE', defaultValue: true, description: 'Clean the workspace at the end of the run')
     ]),
     pipelineTriggers([
             [$class: "GitHubPushTrigger"]
     ]),
-    [$class: 'GithubProjectProperty', displayName: '', projectUrlStr: 'https://github.com/ossimlabs/tlv'],
+    [$class: 'GithubProjectProperty', displayName: '', projectUrlStr: 'https://github.com/ossimlabs/ossim'],
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '3', daysToKeepStr: '', numToKeepStr: '20')),
     disableConcurrentBuilds()
 ])
@@ -23,10 +18,12 @@ node ("${BUILD_NODE}"){
 
     try {
         stage( "Download Artifacts" ) {
-            dir( "ossim-ci" ) {
-                git branch: "$BRANCH_NAME",
-                url: "${ GIT_PRIVATE_SERVER_URL }/ossim-ci.git",
-                credentialsId: "${ CREDENTIALS_ID }"
+            env.OPENCV_HOME = "${env.WORKSPACE}/opencv-3.2-minimal-install"
+            withCredentials([string(credentialsId: 'o2-artifact-project', variable: 'o2ArtifactProject')]) {
+                step ([$class: "CopyArtifact",
+                    projectName: o2ArtifactProject,
+                    filter: "common-variables.groovy",
+                    flatten: true])
             }
 
             dir( "${ env.WORKSPACE }" ) {
@@ -48,8 +45,7 @@ node ("${BUILD_NODE}"){
                     """
             }
 
-            load "ossim-ci/jenkins/variables/common-variables.groovy"
-            load "ossim-ci/jenkins/variables/ossim-variables.groovy"
+            load "common-variables.groovy"
         }
 
         stage( "Checkout" ) {
@@ -100,8 +96,8 @@ node ("${BUILD_NODE}"){
                 sh """
                     rm -rf ${ env.WORKSPACE }/build/CMakeCache.txt
                     export PATH=${ PATH }:/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin
-                    ${ env.WORKSPACE }/ossim-ci/scripts/ossim-build.sh
-                    ${ env.WORKSPACE }/ossim-ci/scripts/ossim-install.sh
+                    ${ env.WORKSPACE }/ossim/scripts/ossim-build.sh
+                    ${ env.WORKSPACE }/ossim/scripts/ossim-install.sh
                 """
             }
         }
@@ -112,7 +108,7 @@ node ("${BUILD_NODE}"){
                 usernameVariable: 'REPOSITORY_MANAGER_USER',
                 passwordVariable: 'REPOSITORY_MANAGER_PASSWORD']]) {
                     dir( "${ env.WORKSPACE }" ) {
-                        sh "${ env.WORKSPACE }/ossim-ci/scripts/oms-deploy.sh"
+                        sh "${ env.WORKSPACE }/ossim/scripts/oms-deploy.sh"
                     }
             }
         }
@@ -141,7 +137,7 @@ node ("${BUILD_NODE}"){
         if ( BUILD_WITH_FORTIFY == "true" ) {
             stage( 'Fortify SCA' ) {
                 dir( "${ env.WORKSPACE }/build" ) {
-                    sh """
+                    sh """ 
                         export PATH=${ PATH }:/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin
                         sourceanalyzer -64 -b ossimlabs -scan -f fortifyResults-ossim.fpr
                     """
