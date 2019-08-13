@@ -81,7 +81,6 @@ static ossimTrace traceDebug("ossimChipperUtil:debug");
 static ossimTrace traceLog("ossimChipperUtil:log");
 static ossimTrace traceOptions("ossimChipperUtil:options");
 
-static const std::string AUTO_MINMAX_BIAS_FACTOR_KW = "auto_min_max_bias_factor";
 static const std::string BRIGHTNESS_KW = "brightness";
 static const std::string COLOR_BLUE_KW = "color_blue";
 static const std::string COLOR_GREEN_KW = "color_green";
@@ -113,6 +112,7 @@ static const std::string HIST_OP_KW = "hist_op";
 static const std::string HIST_LINEAR_CLIP_KW = "hist_linear_clip";
 static const std::string HIST_LINEAR_NORM_CLIP_KW = "hist_linear_norm_clip";
 static const std::string HIST_CENTER_CLIP_KW = "hist_center_clip";
+static const std::string HIST_BIAS_FACTOR_KW = "hist_bias_factor";
 static const std::string IMAGE_SPACE_SCALE_X_KW = "image_space_scale_x";
 static const std::string IMAGE_SPACE_SCALE_Y_KW = "image_space_scale_y";
 static const std::string IMG_KW = "image";
@@ -611,9 +611,9 @@ bool ossimChipperUtil::initialize(ossimArgumentParser &ap)
       m_kwl->addPair(HIST_OP_KW, tempString1);
    }
 
-   if (ap.read("--auto-minmax-bias-factor", stringParam1))
+   if (ap.read("--histogram-bias-factor", stringParam1))
    {
-      m_kwl->addPair(AUTO_MINMAX_BIAS_FACTOR_KW, tempString1);
+      m_kwl->addPair(HIST_BIAS_FACTOR_KW, tempString1);
    }
    if (ap.read("--histogram-linear-clip", stringParam1))
    {
@@ -1537,7 +1537,7 @@ void ossimChipperUtil::setStretch(ossimRefPtr<ossimHistogramRemapper> remapper)c
          }
       }
    }
-   value = m_kwl->findKey(AUTO_MINMAX_BIAS_FACTOR_KW);
+   value = m_kwl->findKey(HIST_BIAS_FACTOR_KW);
    if(!value.empty())
    {
       remapper->setBiasFactor(value.toDouble());
