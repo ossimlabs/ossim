@@ -2,7 +2,7 @@
 ZIP_OPTION=$1
 pushd `dirname ${BASH_SOURCE[0]}` >/dev/null
 OSSIMCI_SCRIPT_DIR=`pwd -P`
-pushd $OSSIMCI_SCRIPT_DIR/../../.. >/dev/null
+pushd $OSSIMCI_SCRIPT_DIR/../.. >/dev/null
 export OSSIM_DEV_HOME=$PWD
 popd > /dev/null
 popd >/dev/null
