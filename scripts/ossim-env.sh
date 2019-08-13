@@ -41,9 +41,9 @@ if [ -z $JAVA_HOME ] ; then
 fi
 
 if [ -z $OSSIM_GIT_BRANCH ] ; then
-   pushd $OSSIM_DEV_HOME/ossim-ci
+   pushd $OSSIMCI_SCRIPT_DIR
    export OSSIM_GIT_BRANCH=`__git_ps1 "%s"`
-   popd $OSSIM_DEV_HOME/ossim-ci
+   popd
 fi
 
 echo "CURRENT BRANCH = ${OSSIM_GIT_BRANCH}"
