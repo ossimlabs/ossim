@@ -218,11 +218,17 @@ public:
    * Notes on clip points:
       * - If input chip source is mutiband this will set all band to same
    *   percentage of clip.
+   * 
+   *  Note:  The midpoint is normalized between 0 to 1 where the default is 0.5 or the
+   *         average of the high low values when used.
    */
    void setMidPoint(const ossim_float64& value);
 
    /**
     * Sets the mid clip point for band.
+    * 
+    *  Note:  The midpoint is normalized between 0 to 1 where the default is 0.5 or the
+    *         average of the high low values when used.
     */
    void setMidPoint(const ossim_float64& value, ossim_uint32 zero_based_band);
 

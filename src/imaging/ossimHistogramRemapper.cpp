@@ -1430,27 +1430,33 @@ template <class T> void ossimHistogramRemapper::buildLinearTable(T /* dummy */)
       
       const T NULL_PIX = static_cast<T>(getNullPixelValue(band));
       const T MIN_PIX  = static_cast<T>(theMinOutputValue[band]);
-      const T MAX_PIX  = static_cast<T>(theMaxOutputValue[band]);
+      const T MAX_PIX = static_cast<T>(theMaxOutputValue[band]);
+      const ossim_float64 TARGET_CENTER_PIX = static_cast<T>((MAX_PIX - MIN_PIX) * 0.5);
       ossim_float64 min_clip_value = h->LowClipVal(theNormalizedLowClipPoint[band]);
       ossim_float64 max_clip_value = h->HighClipVal(1.0-theNormalizedHighClipPoint[band]);
+      ossim_float64 centerClipValue = min_clip_value * (1.0 - theMidPoint[band]) + (max_clip_value * theMidPoint[band]);
       ossim_float64 gain = 1.0;
+      ossim_float64 gainLeft  = 1.0;
+      ossim_float64 gainRight = 1.0;
 
-      if(theTableType == ossimTableRemapper::NATIVE)
+      if (theTableType == ossimTableRemapper::NATIVE)
       {
          min_clip_value = floor(min_clip_value);
          max_clip_value = ceil(max_clip_value);
          gain = (MAX_PIX-MIN_PIX+1)/(max_clip_value-min_clip_value);
-//         gain = (MAX_PIX-MIN_PIX+1)/(max_clip_value-min_clip_value+1);
+         gainLeft = (TARGET_CENTER_PIX - MIN_PIX + 1) / (centerClipValue - min_clip_value);
+         gainRight = (MAX_PIX - TARGET_CENTER_PIX + 1) / (max_clip_value - centerClipValue);
       }
       else
       {
          gain = (MAX_PIX-MIN_PIX)/(max_clip_value-min_clip_value);
+         gainLeft = (TARGET_CENTER_PIX - MIN_PIX) / (centerClipValue - min_clip_value);
+         gainRight = (MAX_PIX - TARGET_CENTER_PIX) / (max_clip_value - centerClipValue);
       }
-
 
       table[index] = NULL_PIX;
       ++index;
-      
+
 #if 0 /* Please leave for debug. */
       std::cout  << "table count:    " << theTableBinCount
                  << "\nmin_clip_value: " << min_clip_value
@@ -1461,6 +1467,7 @@ template <class T> void ossimHistogramRemapper::buildLinearTable(T /* dummy */)
 #endif
 
       T pix = MIN_PIX;
+      bool needSkewCheck = std::fabs(theMidPoint[band] - 0.5) > FLT_EPSILON;
       for (ossim_uint32 pixIndex = 1; pixIndex < theTableBinCount; ++pixIndex)
       {
          ossim_float64 p = pix;
@@ -1474,13 +1481,24 @@ template <class T> void ossimHistogramRemapper::buildLinearTable(T /* dummy */)
          }
          else
          {
-            p = ossim::round<ossim_float64>( ((p - min_clip_value) * gain) + MIN_PIX );
-
-            // Range check...
-            p = ( p >= MIN_PIX ) ? ((p <= MAX_PIX) ? p : MAX_PIX ) : MIN_PIX;
-            
+            if (!needSkewCheck)
+            {
+               p = (((p - min_clip_value) * gain) + MIN_PIX);
+            }
+            else if (p < centerClipValue)
+            {
+               p = (((p - min_clip_value) * gainLeft) + MIN_PIX);
+            }
+            else if (p > centerClipValue)
+            {
+               p = (((p - centerClipValue) * gainRight) + TARGET_CENTER_PIX);
+            }
+            else
+            {
+               p = TARGET_CENTER_PIX;
+            }
+            p = (p >= MIN_PIX) ? ((p <= MAX_PIX) ? p : MAX_PIX) : MIN_PIX;
          }
-
          table[index] = static_cast<T>(p);
 
          // cout << "table[" << index << "]: " << table[index] << endl;
@@ -1722,7 +1740,7 @@ void ossimHistogramRemapper::initializeClips(ossim_uint32 bands)
       {
          theNormalizedLowClipPoint[band]  = 0.0;
          theNormalizedHighClipPoint[band] = 1.0;
-         theMidPoint[band] = 0.0;
+         theMidPoint[band] = 0.5;
 
          switch(theOutputScalarType)
          {

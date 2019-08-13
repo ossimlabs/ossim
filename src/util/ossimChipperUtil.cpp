@@ -112,6 +112,7 @@ static const std::string HIST_LLWH_KW = "hist_llwh";
 static const std::string HIST_OP_KW = "hist_op";
 static const std::string HIST_LINEAR_CLIP_KW = "hist_linear_clip";
 static const std::string HIST_LINEAR_NORM_CLIP_KW = "hist_linear_norm_clip";
+static const std::string HIST_CENTER_CLIP_KW = "hist_center_clip";
 static const std::string IMAGE_SPACE_SCALE_X_KW = "image_space_scale_x";
 static const std::string IMAGE_SPACE_SCALE_Y_KW = "image_space_scale_y";
 static const std::string IMG_KW = "image";
@@ -275,6 +276,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser &ap)
 
    au->addCommandLineOption("--histogram-linear-clip", "<low>,<high> in actual DN value.  If it's 8 bit then it will be values between 0 and 255");
    au->addCommandLineOption("--histogram-linear-norm-clip", "<low>,<high> normalized value that range from 0 to 1. Example .2,.85");
+   au->addCommandLineOption("--histogram-center-clip", "<center> normalized value that range from 0 to 1. Default is 0.5 which is the center of the min max clip points.");
 
    au->addCommandLineOption("--image-space-scale", "<x> <y>\nSpecifies an image space scale for x and y direction. \"chip\" operation only.");
 
@@ -620,6 +622,10 @@ bool ossimChipperUtil::initialize(ossimArgumentParser &ap)
    if (ap.read("--histogram-linear-norm-clip", stringParam1))
    {
       m_kwl->addPair(HIST_LINEAR_NORM_CLIP_KW, tempString1);
+   }
+   if (ap.read("--histogram-center-clip", stringParam1))
+   {
+      m_kwl->addPair(HIST_CENTER_CLIP_KW, tempString1);
    }
    if (ap.read("--image-space-scale", doubleParam1, doubleParam2))
    {
@@ -1502,7 +1508,7 @@ void ossimChipperUtil::setStretch(ossimRefPtr<ossimHistogramRemapper> remapper)c
 {
    ossim_int32 mode = getHistoMode();
    ossimString value;
-   if(mode == ossimHistogramRemapper::LINEAR_ONE_PIECE)
+   if (mode == ossimHistogramRemapper::LINEAR_ONE_PIECE)
    {
       value = m_kwl->findKey(HIST_LINEAR_CLIP_KW);
       std::vector<ossimString> splitValues;
@@ -1535,6 +1541,12 @@ void ossimChipperUtil::setStretch(ossimRefPtr<ossimHistogramRemapper> remapper)c
    if(!value.empty())
    {
       remapper->setBiasFactor(value.toDouble());
+   }
+
+   value = m_kwl->findKey(HIST_CENTER_CLIP_KW);
+   if (!value.empty())
+   {
+      remapper->setMidPoint(value.toFloat64());
    }
 }
 
