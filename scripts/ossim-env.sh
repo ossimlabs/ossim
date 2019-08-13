@@ -8,7 +8,7 @@ if [ -z $OSSIMCI_SCRIPT_DIR ] ; then
 fi
 if [ -z $WORKSPACE ] ; then
    if [ -z $OSSIM_DEV_HOME ] ; then
-      pushd $OSSIMCI_SCRIPT_DIR/../../.. >/dev/null
+      pushd $OSSIMCI_SCRIPT_DIR/../.. >/dev/null
       export OSSIM_DEV_HOME=$PWD
       popd > /dev/null
    fi
