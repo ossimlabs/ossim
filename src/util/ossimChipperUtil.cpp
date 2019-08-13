@@ -277,6 +277,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser &ap)
    au->addCommandLineOption("--histogram-linear-clip", "<low>,<high> in actual DN value.  If it's 8 bit then it will be values between 0 and 255");
    au->addCommandLineOption("--histogram-linear-norm-clip", "<low>,<high> normalized value that range from 0 to 1. Example .2,.85");
    au->addCommandLineOption("--histogram-center-clip", "<center> normalized value that range from 0 to 1. Default is 0.5 which is the center of the min max clip points.");
+   au->addCommandLineOption("--histogram-bias-factor", "<bias factor> values are typically between 0 to 2.  Allows small adjustments to the auto clip points.  Currently only works for auto min max.");
 
    au->addCommandLineOption("--image-space-scale", "<x> <y>\nSpecifies an image space scale for x and y direction. \"chip\" operation only.");
 
