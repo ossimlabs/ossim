@@ -1495,10 +1495,10 @@ ossimIrect clampViewportStretch(const ossimIrect &viewRect)
    {
       ossim_int64 w = ossim::min(static_cast<ossim_int64>(result.width()), static_cast<ossim_int64>(1024));
       ossim_int64 h = ossim::min(static_cast<ossim_int64>(result.height()), static_cast<ossim_int64>(1024));
-      if (w < 64)
-         w = 64;
-      if (h < 64)
-         h = 64;
+      if (w < 256)
+         w = 256;
+      if (h < 256)
+         h = 256;
 
       result = ossimIrect(ossimIpt(result.midPoint()), w, h);
    }
@@ -1573,19 +1573,48 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::getFinalInput(const ossimIrect& 
 
    if(m_viewPortStretchEnabled)
    {
-      ossimRefPtr<ossimImageHistogramSource> histoSource = new ossimImageHistogramSource();
-      histoSource->connectMyInputTo(result.get());
+      if(m_geom)
+      {
+         ossimDpt iptCenter;
+         ossimDrect histogramSourceRect;
+         ossimTypeNameVisitor imageRenderer("ossimImageRenderer", true);
+         imageRenderer.visit(result.get());
+         ossimRefPtr<ossimImageRenderer> rendererObj = imageRenderer.getObjectAs<ossimImageRenderer>(0);
+         // need a rectangle cut that we will connect to an input source that is before the resampling 
+         // process so we will need to invert the view window center and then expand the sample rect to a 
+         // fixed size.  Probably like 256x256 for now
+         //
+         //m_geom->viewToImage(aoi.midPoint(), iptCenter);
+         //histogramSourceRect = ossimDrect(iptCenter, 256.0, 256.0);
 
-      ossimRefPtr<ossimHistogramRemapper> remapper =new ossimHistogramRemapper();
-      remapper->connectMyInputTo(result.get());
-      remapper->connectMyInputTo(histoSource.get());
-      remapper->setStretchMode(static_cast<ossimHistogramRemapper::StretchMode>(getHistoMode()));
-      remapper->setEnableFlag(true);
+         ossimRefPtr<ossimImageHistogramSource> histoSource = new ossimImageHistogramSource();
+         bool setupOk=false;
+         if (rendererObj)
+         {
+            ossimRefPtr<ossimImageViewTransform> trans = rendererObj->getImageViewTransform();
+            if(trans)
+            {
+               setupOk = true;
+               trans->viewToImage(aoi.midPoint(), iptCenter);
+               histogramSourceRect = ossimDrect(iptCenter, 256.0, 256.0);
+               histoSource->connectMyInputTo(rendererObj->getInput(0));
+            }
+         }
+         if(!setupOk)
+         {
+            histoSource->connectMyInputTo(result.get());
+         }
+         ossimRefPtr<ossimHistogramRemapper> remapper = new ossimHistogramRemapper();
+         remapper->connectMyInputTo(result.get());
+         remapper->connectMyInputTo(histoSource.get());
+         remapper->setStretchMode(static_cast<ossimHistogramRemapper::StretchMode>(getHistoMode()));
+         remapper->setEnableFlag(true);
 
-      result = remapper.get();
-      m_container->addChild(histoSource.get());
-      m_container->addChild(remapper.get());
-      setStretch(remapper);
+         result = remapper.get();
+         m_container->addChild(histoSource.get());
+         m_container->addChild(remapper.get());
+         setStretch(remapper);
+      }
    }
    if(scaleToEightBit())
    {
