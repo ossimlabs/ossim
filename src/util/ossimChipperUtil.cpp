@@ -1155,7 +1155,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain(ossimIrect &aoi)
       if ((getOutputScalarType() != OSSIM_SCALAR_UNKNOWN) &&
           (source->getOutputScalarType() != getOutputScalarType()))
       {
-         source = addScalarRemapper(source, getOutputScalarType());
+         // source = addScalarRemapper(source, getOutputScalarType());
       }
 
       //---
@@ -1384,7 +1384,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeColorReliefChain()
       // No LUT file provided, so doing the default 8-bit linear stretch:
       if (result->getOutputScalarType() != OSSIM_UINT8)
       {
-         result = addScalarRemapper(result, OSSIM_UINT8);
+         //result = addScalarRemapper(result, OSSIM_UINT8);
       }
    }
    return result;
@@ -1570,40 +1570,54 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::getFinalInput(const ossimIrect& 
    cut->setRectangle(aoi);
    m_container->addChild(cut.get());
    result = cut.get();
-
    if(m_viewPortStretchEnabled)
    {
       if(m_geom)
       {
          ossimDpt iptCenter;
          ossimDrect histogramSourceRect;
-         ossimTypeNameVisitor imageRenderer("ossimImageRenderer", true);
-         imageRenderer.visit(result.get());
-         ossimRefPtr<ossimImageRenderer> rendererObj = imageRenderer.getObjectAs<ossimImageRenderer>(0);
-         // need a rectangle cut that we will connect to an input source that is before the resampling 
-         // process so we will need to invert the view window center and then expand the sample rect to a 
+         ossimRefPtr<ossimImageHistogramSource>
+             histoSource = new ossimImageHistogramSource();
+         // ossimTypeNameVisitor imageRendererVisitor("ossimImageRenderer", true);
+         // currentSource->accept(imageRendererVisitor);
+         ossim_float64 cutWidth  = ossim::clamp<double>(aoi.width(), 256, 1024);
+         ossim_float64 cutHeight = ossim::clamp<double>(aoi.height(), 256, 1024);
+         ossimRefPtr<ossimRectangleCutFilter> viewportCut = new ossimRectangleCutFilter();
+         ossimIrect cutRect = ossimIrect(ossimIpt(aoi.midPoint()), cutWidth, cutHeight);
+         m_container->addChild(viewportCut.get());
+         viewportCut->connectMyInputTo(currentSource.get());
+         viewportCut->setRectangle(cutRect);
+         histoSource->connectMyInputTo(viewportCut.get());
+
+         // ossimRefPtr<ossimImageRenderer> rendererObj = imageRendererVisitor.getObjectAs<ossimImageRenderer>(0);
+         // imageRendererVisitor.reset();
+         // need a rectangle cut that we will connect to an input source that is before the resampling
+         // process so we will need to invert the view window center and then expand the sample rect to a
          // fixed size.  Probably like 256x256 for now
          //
-         //m_geom->viewToImage(aoi.midPoint(), iptCenter);
-         //histogramSourceRect = ossimDrect(iptCenter, 256.0, 256.0);
-
-         ossimRefPtr<ossimImageHistogramSource> histoSource = new ossimImageHistogramSource();
-         bool setupOk=false;
-         if (rendererObj)
-         {
-            ossimRefPtr<ossimImageViewTransform> trans = rendererObj->getImageViewTransform();
-            if(trans)
-            {
-               setupOk = true;
-               trans->viewToImage(aoi.midPoint(), iptCenter);
-               histogramSourceRect = ossimDrect(iptCenter, 256.0, 256.0);
-               histoSource->connectMyInputTo(rendererObj->getInput(0));
-            }
-         }
-         if(!setupOk)
-         {
-            histoSource->connectMyInputTo(result.get());
-         }
+ 
+         // bool setupOk=false;
+         // if (rendererObj)
+         // {
+         //    ossimRefPtr<ossimImageViewTransform> trans = rendererObj->getImageViewTransform();
+         //    if(trans)
+         //    {
+         //       m_container->addChild(viewportCut.get());
+         //       trans->viewToImage(aoi.midPoint(), iptCenter);
+         //       histogramSourceRect = ossimIrect(ossimIpt(iptCenter), 1024, 1024);
+         //       viewportCut->connectMyInputTo(rendererObj->getInput(0));
+         //       viewportCut->setRectangle(histogramSourceRect);
+         //       histoSource->connectMyInputTo(viewportCut.get());
+         //       // ossimKeywordlist  kwl;
+         //       // histoSource->getHistogram()->saveState(kwl);
+         //       //std::cout << "KWL: " <<  kwl << "\n";
+         //       setupOk = true;
+         //    }
+         // }
+         // if(!setupOk)
+         // {
+         //   histoSource->connectMyInputTo(result.get());
+         // }
          ossimRefPtr<ossimHistogramRemapper> remapper = new ossimHistogramRemapper();
          remapper->connectMyInputTo(result.get());
          remapper->connectMyInputTo(histoSource.get());
