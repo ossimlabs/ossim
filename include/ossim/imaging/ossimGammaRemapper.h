@@ -16,10 +16,27 @@
 
 #include <ossim/imaging/ossimImageSourceFilter.h>
 
+/*
+* The gamma remapper is based on the equation:
+* 
+* pow(<normalized input pixel>, gammaValue)
+*
+*
+* @code
+* // assume we have an input image source that we wish to gamma correct
+* //  called inputSource.
+* ossimRefPtr<ossimGammaRemapper> gamma = new ossimGammaRemapper()
+*
+* gamma->setGamma(0.7);
+* gamma->connectMyInputTo(inputSource.get());
+* 
+* @endcode
+ */
 class ossimGammaRemapper : public ossimImageSourceFilter
 {
 public:
    ossimGammaRemapper();
+   ossimGammaRemapper(const double& gamma);
 
    virtual ossimString getShortName() const;
 

@@ -33,6 +33,14 @@ ossimGammaRemapper::ossimGammaRemapper()
 {
 }
 
+ossimGammaRemapper::ossimGammaRemapper(const double &gamma)
+   : 
+      m_gamma(gamma),
+      m_dirtyFlag(true)
+{
+
+}
+
 ossimGammaRemapper::~ossimGammaRemapper()
 {
 }
