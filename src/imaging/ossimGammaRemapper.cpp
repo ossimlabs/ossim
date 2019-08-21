@@ -60,7 +60,8 @@ ossimRefPtr<ossimImageData> ossimGammaRemapper::getTile(const ossimIrect& tileRe
          allocate();
       }
 
-      if(!m_tile) return inputTile;
+      if (!m_tile || ossim::almostEqual(m_gamma, 0.0))
+         return inputTile;
 
       m_tile->setImageRectangle(tileRect);
       m_tile->makeBlank();
