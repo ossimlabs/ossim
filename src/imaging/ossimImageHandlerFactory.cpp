@@ -167,10 +167,17 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimFilename& fileName,
       // 
       // This must be checked first before the NITF raw handler.
       //---
-      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying Quickbird Nitf...\n";
-      result = new ossimQuickbirdNitfTileSource;
-      result->setOpenOverviewFlag(openOverview);      
-      if (result->open(copyFilename))  break;
+
+      /*
+      * We need to move the shifts to a different location than to use the quickbird tile source
+      * Ultimately we should use the TIL file for putting the images together into a single image plane
+      * then serving that out as one image.  This means we open the image with a TIL instead of
+      * an NITF image
+      */
+//      if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying Quickbird Nitf...\n";
+//      result = new ossimQuickbirdNitfTileSource;
+//      result->setOpenOverviewFlag(openOverview);      
+      //if (result->open(copyFilename))  break;
 
       if (traceDebug()) ossimNotify(ossimNotifyLevel_DEBUG)<<M<< "Trying NITF...\n";
       result = new ossimNitfTileSource;
@@ -366,9 +373,9 @@ ossimImageHandler* ossimImageHandlerFactory::open(const ossimKeywordlist& kwl,
       result  = new ossimJpegTileSource();
       if (result->loadState(kwl, prefix))  break;
 
-      if(traceDebug())  ossimNotify(ossimNotifyLevel_DEBUG) << M<< "trying Quickbird NITF...\n";
-      result = new ossimQuickbirdNitfTileSource;
-      if (result->loadState(kwl, prefix))  break;
+      //if(traceDebug())  ossimNotify(ossimNotifyLevel_DEBUG) << M<< "trying Quickbird NITF...\n";
+      //result = new ossimQuickbirdNitfTileSource;
+      //if (result->loadState(kwl, prefix))  break;
 
       if(traceDebug())  ossimNotify(ossimNotifyLevel_DEBUG) << M << "trying Nitf...\n";
       result  = new ossimNitfTileSource();
@@ -702,10 +709,10 @@ ossimObject* ossimImageHandlerFactory::createObject(const ossimString& typeName)
    {
       return new ossimGeneralRasterTileSource();
    }
-   if(STATIC_TYPE_NAME(ossimQuickbirdNitfTileSource) == typeName)
-   {
-      return new ossimQuickbirdNitfTileSource();
-   }
+//   if(STATIC_TYPE_NAME(ossimQuickbirdNitfTileSource) == typeName)
+//   {
+//      return new ossimQuickbirdNitfTileSource();
+//   }
    if(STATIC_TYPE_NAME(ossimQbTileFilesHandler) == typeName)
    {
       return new ossimQbTileFilesHandler();
