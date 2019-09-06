@@ -1,6 +1,0 @@
-[ossim-dev]
-name=OSSIM Dev Repo
-baseurl=https://s3.amazonaws.com/o2-rpms/CentOS/7/dev/x86_64
-enabled=1
-gpgcheck=0
-
