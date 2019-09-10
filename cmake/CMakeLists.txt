@@ -205,6 +205,10 @@ IF(BUILD_OSSIM_FPGA AND EXISTS ${OSSIM_DEV_HOME}/ossim-fpga)
    add_subdirectory(${OSSIM_DEV_HOME}/ossim-fpga ${CMAKE_CURRENT_BINARY_DIR}/ossim-fpga)
 ENDIF()
 
+IF(BUILD_OSSIM_DEEPCORE AND EXISTS ${OSSIM_DEV_HOME}/ossim-deepcore)
+   add_subdirectory(${OSSIM_DEV_HOME}/ossim-deepcore ${CMAKE_CURRENT_BINARY_DIR}/ossim-deepcore)
+ENDIF()
+
 
 ############################## Doxygen installation for current ossim core module ###########################################
 FIND_PACKAGE(Doxygen)
@@ -385,4 +389,5 @@ MESSAGE( STATUS "BUILD_DSMG                      = ${BUILD_DSMG}" )
 MESSAGE( STATUS "BUILD_MSP_PLUGIN                = ${BUILD_MSP_PLUGIN}" )
 MESSAGE( STATUS "BUILD_CSM_PLUGIN                = ${BUILD_CSM_PLUGIN}" )
 MESSAGE( STATUS "BUILD_OSSIM_FPGA                = ${BUILD_OSSIM_FPGA}" )
+MESSAGE( STATUS "BUILD_OSSIM_DEEPCORE            = ${BUILD_OSSIM_DEEPCORE}" )
 MESSAGE( STATUS "Use OSSIM_BUILD_ADDITIONAL_DIRECTORIES to add other cmake builds." )

@@ -18,7 +18,6 @@
 #include <ossim/util/ossimViewshedTool.h>
 #include <ossim/util/ossimSubImageTool.h>
 #include <ossim/util/ossimPointCloudTool.h>
-#include <ossim/util/ossimRemapTool.h>
 #if OSSIM_HAS_HDF5
 #include <ossim/hdf5/ossimHdf5Tool.h>
 
@@ -82,9 +81,6 @@ ossimTool* ossimToolFactory::createTool(const std::string& argName) const
    if ((utilName == "pointcloud") || (argName == "ossimPointCloudTool"))
       return new ossimPointCloudTool;
 
-   if ((utilName == "remap") || (argName == "ossimRemapTool"))
-      return new ossimRemapTool;
-
 #if OSSIM_HAS_HDF5
    if ((utilName == "hdf5") || (argName == "ossimHdf5Tool"))
       return new ossimHdf5Tool;
@@ -106,7 +102,6 @@ void ossimToolFactory::getCapabilities(std::map<std::string, std::string>& capab
    capabilities.insert(pair<string, string>("bandmerge", ossimBandMergeTool::DESCRIPTION));
    capabilities.insert(pair<string, string>("subimage", ossimSubImageTool::DESCRIPTION));
    capabilities.insert(pair<string, string>("pointcloud", ossimPointCloudTool::DESCRIPTION));
-   capabilities.insert(pair<string, string>("remap", ossimRemapTool::DESCRIPTION));
 #if OSSIM_HAS_HDF5
    capabilities.insert(pair<string, string>("hdf5", ossimHdf5Tool::DESCRIPTION));
 #endif
@@ -132,7 +127,6 @@ void ossimToolFactory::getTypeNameList(vector<ossimString>& typeList) const
    typeList.push_back("ossimBandMergeUtil");
    typeList.push_back("ossimSubImageTool");
    typeList.push_back("ossimPointCloudTool");
-   typeList.push_back("ossimRemapTool");
 #if OSSIM_HAS_HDF5
    typeList.push_back("ossimHdf5Tool");
 #endif
