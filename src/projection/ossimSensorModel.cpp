@@ -1,10 +1,8 @@
 //*****************************************************************************
 // FILE: ossimSensorModel.cc
 //
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // AUTHOR: Oscar Kramer
 //
 // DESCRIPTION:
@@ -1801,3 +1799,19 @@ cout<<"warning: singular matrix in SVD"<<endl;
    //compute inverse of decomposed m;
    return v*d*u.t();
 }
+
+const ossimDpt& ossimSensorModel::getRefImgPt() const
+{
+   return theRefImgPt;
+}
+
+const ossimGpt& ossimSensorModel::getRefGndPt() const
+{
+   return theRefGndPt;
+}
+
+const ossimPolygon& ossimSensorModel::getGroundRect() const
+{
+   return theBoundGndPolygon;
+}
+

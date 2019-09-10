@@ -3,9 +3,7 @@
 //
 // Copyright (C) 2001 ImageLinks, Inc.
 //
-// License:  MIT
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // AUTHOR: Oscar Kramer
 //
@@ -19,12 +17,12 @@
 //  $Id: ossimPolygon.h 22333 2013-07-26 15:55:36Z dlucas $
 
 #ifndef ossimPolygon_HEADER
-#define ossimPolygon_HEADER
-#include <iostream>
-#include <vector>
+#define ossimPolygon_HEADER 1
+
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimDrect.h>
 #include <ossim/base/ossimIrect.h>
+#include <iostream>
 #include <vector>
 class ossimLine;
 
@@ -78,6 +76,16 @@ public:
                        ossim_float64& minY,
                        ossim_float64& maxX,
                        ossim_float64& maxY)const;
+
+   /**
+    * @brief Gets the min and max of points.
+    *
+    * Points will be NAN in polygon is empty.
+    *
+    * @param min Initialized by this.
+    * @param max Initialized by this.
+    */
+   void getMinMax( ossimDpt& min, ossimDpt& max) const;
 
    void getBoundingRect(ossimIrect& rect)const;
    void getBoundingRect(ossimDrect& rect)const;
@@ -149,7 +157,7 @@ public:
    */
    bool isPolyWithin(const ossimPolygon &poly) const;
 
-   /**
+/**
     * METHOD: vertex(index)
     * Returns the ossimDpt vertex given the index. Returns false if no vertex
     * defined.
@@ -187,8 +195,9 @@ public:
    void resize(ossim_uint32 newSize);
 
    /**
-   * METHOD: remove()
-   * Removes the vertex from the polygon. */
+    * METHOD: removeVertex()
+    * Removes the vertex from the polygon.
+    */
    void removeVertex(int vertex);
 
    /**
@@ -221,10 +230,10 @@ protected:
    * Shrinks the current polygon by inset, return true if success.
     */
    bool shrink(ossimPolygon &dest, double inset) const;
-   
+
    /**
-   * METHOD: removeSmallestContributingVertex()
-   * Removes the vertex that contributes the smallest area to the polygon.
+    * METHOD: removeSmallestContributingVertex()
+    * Removes the vertex that contributes the smallest area to the polygon.
     */
    void removeSmallestContributingVertex();
 

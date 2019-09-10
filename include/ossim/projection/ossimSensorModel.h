@@ -1,7 +1,7 @@
 //*****************************************************************************
 // FILE: ossimSensorModel.h
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // AUTHOR: Oscar Kramer
 //
@@ -140,11 +140,17 @@ public:
    virtual std::ostream& print(std::ostream& out) const;
 
    /**
-    * @brief Sets the center line sampe of the image.
+    * @brief Sets the center line sample of the image.
     *
     * @param pt Image center point (x = sample, y = line).
     */
    void setRefImgPt(const ossimDpt& pt);
+
+   /**
+    * @brief Gets the center line sample of the image.
+    * @return Reference to the center line sample of the image as an ossimDpt.
+    */
+   const ossimDpt& getRefImgPt() const;
 
    /**
     * @brief Sets the center latitude, longitude, height of the image.
@@ -152,13 +158,26 @@ public:
     * @param pt Image center point.
     */
    void setRefGndPt(const ossimGpt& pt);
-   
+
+   /**
+    * @brief Gets the center latitude, longitude, height of the image.
+    * @return Reference to the center latitude, longitude, height of the image
+    * as an ossimGpt.
+    */
+   const ossimGpt& getRefGndPt() const;
 
    void setImageRect(const ossimDrect& imageRect);
    void setGroundRect(const ossimGpt& ul,
                       const ossimGpt& ur,
                       const ossimGpt& lr,
                       const ossimGpt& ll);
+
+   /**
+    * @brief Gets the ground rect.
+    * @return Reference to the ground rectangle as an ossimPolygon.
+    */ 
+   const ossimPolygon& getGroundRect() const;
+
    /*!
     * METHOD: imageSize()
     * Returns the maximum line/sample rigorously defined by this model.

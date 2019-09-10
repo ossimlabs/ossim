@@ -1,7 +1,7 @@
 //*****************************************************************************
 // FILE: ossimPolygon.cpp
 //
-// License:  LGPL
+// License: MIT
 //
 // AUTHOR: Oscar Kramer
 //
@@ -32,8 +32,6 @@ static const int RECT_TOP_EDGE    = 1;
 static const int RECT_RIGHT_EDGE  = 2;
 static const int RECT_BOTTOM_EDGE = 3;
 
-using namespace std;
-
 ossimPolygon::ossimPolygon()
    : theOrderingType(OSSIM_VERTEX_ORDER_UNKNOWN),
     theVertexList(),
@@ -41,7 +39,7 @@ ossimPolygon::ossimPolygon()
    
 {}
 
-ossimPolygon::ossimPolygon(const vector<ossimIpt>& polygon)
+ossimPolygon::ossimPolygon(const std::vector<ossimIpt>& polygon)
    :theOrderingType(OSSIM_VERTEX_ORDER_UNKNOWN),
    theVertexList(polygon.size()),
    theCurrentVertex(0)
@@ -54,7 +52,7 @@ ossimPolygon::ossimPolygon(const vector<ossimIpt>& polygon)
    }
 }
 
-ossimPolygon::ossimPolygon(const vector<ossimGpt>& polygon)
+ossimPolygon::ossimPolygon(const std::vector<ossimGpt>& polygon)
    :theOrderingType(OSSIM_VERTEX_ORDER_UNKNOWN),
    theVertexList(polygon.size()),
    theCurrentVertex(0)
@@ -68,7 +66,7 @@ ossimPolygon::ossimPolygon(const vector<ossimGpt>& polygon)
 }
 
 
-ossimPolygon::ossimPolygon(const vector<ossimDpt>& polygon)
+ossimPolygon::ossimPolygon(const std::vector<ossimDpt>& polygon)
    :theOrderingType(OSSIM_VERTEX_ORDER_UNKNOWN),
    theVertexList(polygon),
     theCurrentVertex(0)
@@ -184,7 +182,7 @@ void ossimPolygon::roundToIntegerBounds(bool compress)
 
   if(compress&&theVertexList.size())
    {
-      vector<ossimDpt> polyLine;
+      std::vector<ossimDpt> polyLine;
       
       polyLine.push_back(theVertexList[0]);
       ossimDpt testPt = theVertexList[0];
@@ -318,7 +316,33 @@ void ossimPolygon::getFloatBounds(ossim_float64& minX,
    }
 }
 
-bool ossimPolygon::clipToRect(vector<ossimPolygon>& result,
+void ossimPolygon::getMinMax( ossimDpt& min, ossimDpt& max) const
+
+{
+   ossim_uint32 npoly = theVertexList.size();
+   if(npoly)
+   {
+      min.x = theVertexList[0].x;
+      max.x = theVertexList[0].x;
+      min.y = theVertexList[0].y;
+      max.y = theVertexList[0].y;
+
+      for(ossim_uint32 i = 1; i < npoly; ++i)
+      {
+         min.x = std::min<ossim_float64>( theVertexList[i].x, min.x);
+         max.x = std::max<ossim_float64>( theVertexList[i].x, max.x);
+         min.y = std::min<ossim_float64>( theVertexList[i].y, min.y);
+         max.y = std::max<ossim_float64>( theVertexList[i].y, max.y);
+      }
+   }
+   else
+   {
+      min.makeNan();
+      max.makeNan();
+   }
+}
+
+bool ossimPolygon::clipToRect(std::vector<ossimPolygon>& result,
                               const ossimDrect& rect)const
 {
    result.clear();
@@ -585,7 +609,7 @@ const ossimPolygon&  ossimPolygon::operator=(const ossimPolygon& polygon)
    return *this;
 }
 
-const ossimPolygon& ossimPolygon::operator= (const vector<ossimDpt>& vertexList)
+const ossimPolygon& ossimPolygon::operator= (const std::vector<ossimDpt>& vertexList)
 {
    theVertexList    = vertexList;
    theCurrentVertex = 0;
@@ -594,7 +618,7 @@ const ossimPolygon& ossimPolygon::operator= (const vector<ossimDpt>& vertexList)
    return *this;
 }
 
-const ossimPolygon& ossimPolygon::operator=(const vector<ossimIpt>& vertexList)
+const ossimPolygon& ossimPolygon::operator=(const std::vector<ossimIpt>& vertexList)
 {
    theVertexList.resize(vertexList.size());
    
@@ -610,7 +634,7 @@ const ossimPolygon& ossimPolygon::operator=(const vector<ossimIpt>& vertexList)
    return *this;
 }
 
-const ossimPolygon& ossimPolygon::operator=(const vector<ossimGpt>& vertexList)
+const ossimPolygon& ossimPolygon::operator=(const std::vector<ossimGpt>& vertexList)
 {
    theVertexList.resize(vertexList.size());
    
@@ -692,11 +716,11 @@ void ossimPolygon::reverseOrder()
 //  METHOD: ossimPolygon::print(ostream)
 //  
 //*****************************************************************************
-void ossimPolygon::print(ostream& os) const
+void ossimPolygon::print(std::ostream& os) const
 {
    copy(theVertexList.begin(),
         theVertexList.end(),
-        ostream_iterator<ossimDpt>(os, "\n"));
+        std::ostream_iterator<ossimDpt>(os, "\n"));
 }
 
 
@@ -878,7 +902,7 @@ bool ossimPolygon::loadState(const ossimKeywordlist& kwl,
       ossimString v = kwl.find(prefix, (ossimString("v")+ossimString::toString(i)).c_str());
       v = v.trim();
 
-      istringstream vStream(v.string());
+      std::istringstream vStream(v.string());
       vStream >> x.string() >> y.string();
       theVertexList.push_back(ossimDpt(x.toDouble(),y.toDouble()));
    }
@@ -960,10 +984,10 @@ void ossimPolygon::getMinimumBoundingRect(ossimPolygon& minRect) const
                             cos_theta*min_y + sin_theta*max_x + theVertexList[0].y);
                ossimDpt v4 (cos_theta*min_x - sin_theta*min_y + theVertexList[0].x,
                             cos_theta*min_y + sin_theta*min_x + theVertexList[0].y);
-               cout << v1.x << "\t" << v1.y << endl;
-               cout << v2.x << "\t" << v2.y << endl;
-               cout << v3.x << "\t" << v3.y << endl;
-               cout << v4.x << "\t" << v4.y << endl << endl;
+               std::cout << v1.x << "\t" << v1.y << std::endl;
+               std::cout << v2.x << "\t" << v2.y << std::endl;
+               std::cout << v3.x << "\t" << v3.y << std::endl;
+               std::cout << v4.x << "\t" << v4.y << std::endl << std::endl;
             }
 
             //***
@@ -1004,10 +1028,10 @@ void ossimPolygon::getMinimumBoundingRect(ossimPolygon& minRect) const
     
    if (TESTING)
    {
-      cout << v1.x << "\t" << v1.y << endl;
-      cout << v2.x << "\t" << v2.y << endl;
-      cout << v3.x << "\t" << v3.y << endl;
-      cout << v4.x << "\t" << v4.y << endl << endl;
+      std::cout << v1.x << "\t" << v1.y << std::endl;
+      std::cout << v2.x << "\t" << v2.y << std::endl;
+      std::cout << v3.x << "\t" << v3.y << std::endl;
+      std::cout << v4.x << "\t" << v4.y << std::endl << std::endl;
    }
 
    //***
@@ -1036,7 +1060,7 @@ void ossimPolygon::removeVertex(int vertex)
    if(vertex>numvertices) {
       return;
    } else {
-      vector<ossimDpt>::iterator it;
+      std::vector<ossimDpt>::iterator it;
       int v=0;
       for(it=theVertexList.begin();it!=theVertexList.end();it++) {
          if(v++==vertex) {
@@ -1145,7 +1169,7 @@ void ossimPolygon::addPoint(double x, double y)
    theOrderingType = OSSIM_VERTEX_ORDER_UNKNOWN;
 }
 
-const vector<ossimDpt>& ossimPolygon::getVertexList()const
+const std::vector<ossimDpt>& ossimPolygon::getVertexList()const
 {
    return theVertexList;
 }
@@ -1182,7 +1206,7 @@ bool ossimPolygon::operator!=(const ossimPolygon& compare_this) const
    return !(*this == compare_this);
 }
 
-ostream& operator<<(ostream& os, const ossimPolygon& polygon)
+std::ostream& operator<<(std::ostream& os, const ossimPolygon& polygon)
 {
    polygon.print(os);
    return os;
