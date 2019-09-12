@@ -16,7 +16,9 @@ if [ -z $WORKSPACE ] ; then
       popd >/dev/null
    fi
 else
-   export OSSIM_DEV_HOME=$WORKSPACE
+   if [ "$OSSIM_DEV_HOME" == "" ] ; then
+      export OSSIM_DEV_HOME=$WORKSPACE
+   fi
 fi
 
 if [ -z "$OSSIM_MAKE_JOBS" ]; then
