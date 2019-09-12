@@ -75,6 +75,9 @@ fi
 
 # CMake successful, now run make in the build directory (OSSIM_BUILD_DIR
 # exported by cmake config script):
+if [ ! -d $OSSIM_BUILD_DIR ] ; then
+mkdir -p $OSSIM_BUILD_DIR
+fi
 pushd $OSSIM_BUILD_DIR >/dev/null
 make $MAKE_VERBOSE -j $OSSIM_MAKE_JOBS
 if [ $? -ne 0 ]; then
