@@ -25,10 +25,10 @@
 
 #CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config.sh
 pushd `dirname ${BASH_SOURCE[0]}` >/dev/null
-export SCRIPT_DIR=`pwd -P`
+export BUILD_SCRIPT_DIR=`pwd -P`
 popd >/dev/null
 # source variables used during the builds
-. $SCRIPT_DIR/env.sh
+. $BUILD_SCRIPT_DIR/env.sh
 
 # Consider whether running in interactive shell or batch for possible
 # prompting on build configuration:
