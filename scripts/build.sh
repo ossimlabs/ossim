@@ -32,33 +32,33 @@ popd >/dev/null
 
 # Consider whether running in interactive shell or batch for possible
 # prompting on build configuration:
-if [ "$(ps -o stat= -p $PPID)" == "Ss" ]; then
-  echo
-  echo "Select build type:"
-  echo "  <1> Release,"
-  echo "  <2> Debug,"
-  echo "  <3> RelWithDebInfo,"
-  echo "  <4> MinSizeRel"
-  while
-    read -p "Enter 1-4 [1]: " buildtype
-    if [ -z $buildtype ]; then
-      buildtype=1
-    fi
-    [ $buildtype -lt 1 ] || [ $buildtype -gt 4 ]
-  do
-    continue
-  done
-  case $buildtype in
-    1) CMAKE_BUILD_TYPE="Release";;
-    2) CMAKE_BUILD_TYPE="Debug";;
-    3) CMAKE_BUILD_TYPE="RelWithDebInfo";;
-    4) CMAKE_BUILD_TYPE="MinSizeRel";;
-  esac
-else
-  if [ -z $CMAKE_BUILD_TYPE ] ; then
-    CMAKE_BUILD_TYPE="Release"
-  fi
-fi
+# if [ "$(ps -o stat= -p $PPID)" == "Ss" ]; then
+#   echo
+#   echo "Select build type:"
+#   echo "  <1> Release,"
+#   echo "  <2> Debug,"
+#   echo "  <3> RelWithDebInfo,"
+#   echo "  <4> MinSizeRel"
+#   while
+#     read -p "Enter 1-4 [1]: " buildtype
+#     if [ -z $buildtype ]; then
+#       buildtype=1
+#     fi
+#     [ $buildtype -lt 1 ] || [ $buildtype -gt 4 ]
+#   do
+#     continue
+#   done
+#   case $buildtype in
+#     1) CMAKE_BUILD_TYPE="Release";;
+#     2) CMAKE_BUILD_TYPE="Debug";;
+#     3) CMAKE_BUILD_TYPE="RelWithDebInfo";;
+#     4) CMAKE_BUILD_TYPE="MinSizeRel";;
+#   esac
+# else
+#   if [ -z $CMAKE_BUILD_TYPE ] ; then
+#     CMAKE_BUILD_TYPE="Release"
+#   fi
+# fi
 
 # Try running the CMake config script (sourcing here to capture OSSIM_BUILD_DIR var
 # possibly initialized in cmake config script)
