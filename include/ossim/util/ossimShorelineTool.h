@@ -70,9 +70,7 @@ protected:
    void doThreshold();
    void autoComputeThreshold();
 
-#if OSSIM_HAS_JSONCPP
    bool addPropsToJSON();
-#endif
 
    ossim_uint8 m_waterValue;
    ossim_uint8 m_marginalValue;

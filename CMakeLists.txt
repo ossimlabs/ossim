@@ -103,16 +103,6 @@ else( TIFF_FOUND )
    message( FATAL_ERROR "Could not find required tiff package!" )
 endif( TIFF_FOUND )
 
-# JSONCPP - Required:
-find_package( JsonCpp )
-if( JSONCPP_FOUND )
-   include_directories( ${JSONCPP_INCLUDE_DIR} )
-   set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
-   message("Found JsonCpp" )
-else( JSONCPP_FOUND )
-   message( FATAL_ERROR "Could not find required JsonCpp package!" )
-endif( JSONCPP_FOUND )
-
 # This caused a core dump on ossim executables running in jenins pipeline (ossim-test-dev)
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
   find_library( DL_LIBRARY dl )
@@ -133,17 +123,6 @@ endif() # if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 #      message( FATAL_ERROR "Could not find dl library!" )
 #   endif( DL_LIBRARY )
 #endif( UNIX )
-
-# JSONCPP - Optional:
-set( OSSIM_HAS_JSONCPP 0 )
-find_package( JsonCpp )
-if( JSONCPP_FOUND )
-   include_directories( ${JSONCPP_INCLUDE_DIR} )
-   set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
-   set( OSSIM_HAS_JSONCPP 1 )
-else( JSONCPP_FOUND )
-   message("Could not find optional JSONCPP package! Consider installing this as it will soon become a required package." )
-endif( JSONCPP_FOUND )
 
 # FREETYPE - Optional:
 set( OSSIM_HAS_FREETYPE 0 )
@@ -276,8 +255,6 @@ MESSAGE( STATUS "JPEG_LIBRARY                    = ${JPEG_LIBRARIES}" )
 MESSAGE( STATUS "JPEG_INCLUDE                    = ${JPEG_INCLUDE_DIR}" )
 MESSAGE( STATUS "OSSIM DEPENDENT LIBRARIES       = ${ossimDependentLibs}" )
 MESSAGE( STATUS "OSSIM_HAS_HDF5                  = ${OSSIM_HAS_HDF5}" )
-MESSAGE( STATUS "OSSIM_HAS_JSONCPP               = ${OSSIM_HAS_JSONCPP}" )
-
 
 #-----------------------------------------------------------------------------
 # uninstall target

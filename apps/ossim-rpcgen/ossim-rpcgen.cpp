@@ -197,7 +197,6 @@ int main(int argc, char* argv[])
    {
    case JSON:
    {
-#if OSSIM_HAS_JSONCPP
       if (outputFile)
          jsonFile = outputFile;
       else
@@ -210,11 +209,6 @@ int main(int argc, char* argv[])
          write_ok = rpc->toJSON(jsonStream);
          jsonStream.close();
       }
-#else
-      ossimNotify(ossimNotifyLevel_FATAL) << "ERROR: JSON output requested but JSON is not "
-            "available in this build! <"<< std::endl;
-      exit(1);
-#endif
       break;
    }
 

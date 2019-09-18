@@ -34,10 +34,7 @@ RTTI_DEF1(ossimRpcModel, "ossimRpcModel", ossimSensorModel);
 #include <iomanip>
 #include <sstream>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
-
-#if OSSIM_HAS_JSONCPP
-#include <json/json.h>
-#endif
+#include <ossim/json/json.h>
 
 //***
 // Define Trace flags for use within this file:
@@ -1396,7 +1393,6 @@ void ossimRpcModel::setImageOffset(const ossimDpt& offset)
 
 bool ossimRpcModel::toJSON(std::ostream& jsonStream) const
 {
-#if OSSIM_HAS_JSONCPP
    Json::Value IMAGE;
    IMAGE["ERRBIAS"]      = theBiasError;
    IMAGE["ERRRAND"]      = theRandError;
@@ -1469,10 +1465,6 @@ bool ossimRpcModel::toJSON(std::ostream& jsonStream) const
    root["isd"] = ISD;
    jsonStream << root;
    return true;
-#else
-   jsonStream<<"Error: JSON format not supported."<<endl;
-   return false;
-#endif
 }
 
 bool ossimRpcModel::toRPB(ostream &out) const

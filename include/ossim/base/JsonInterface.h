@@ -7,7 +7,7 @@
 #ifndef JsonInterface_HEADER
 #define JsonInterface_HEADER 1
 
-#include <json/json.h>
+#include <ossim/json/json.h>
 
 namespace ossim {
 
