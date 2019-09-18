@@ -1,9 +1,9 @@
 #!/bin/bash 
 pushd `dirname ${BASH_SOURCE[0]}` >/dev/null
-export SCRIPT_DIR=`pwd -P`
+export ENV_SCRIPT_DIR=`pwd -P`
 popd >/dev/null
 
-. $SCRIPT_DIR/git-prompt.sh
+. $ENV_SCRIPT_DIR/git-prompt.sh
 
 if [ -z $OSSIM_GIT_BRANCH ] ; then
   export OSSIM_GIT_BRANCH=`__git_ps1 "%s"`
@@ -11,12 +11,14 @@ fi
 
 if [ -z $WORKSPACE ] ; then
    if [ -z "$OSSIM_DEV_HOME" ]; then
-      pushd $SCRIPT_DIR/../.. >/dev/null
+      pushd $ENV_SCRIPT_DIR/../.. >/dev/null
       export OSSIM_DEV_HOME=$PWD
       popd >/dev/null
    fi
 else
-   export OSSIM_DEV_HOME=$WORKSPACE
+   if [ "$OSSIM_DEV_HOME" == "" ] ; then
+      export OSSIM_DEV_HOME=$WORKSPACE
+   fi
 fi
 
 if [ -z "$OSSIM_MAKE_JOBS" ]; then

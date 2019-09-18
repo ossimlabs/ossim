@@ -25,40 +25,40 @@
 
 #CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config.sh
 pushd `dirname ${BASH_SOURCE[0]}` >/dev/null
-export SCRIPT_DIR=`pwd -P`
+export BUILD_SCRIPT_DIR=`pwd -P`
 popd >/dev/null
 # source variables used during the builds
-. $SCRIPT_DIR/env.sh
+. $BUILD_SCRIPT_DIR/env.sh
 
 # Consider whether running in interactive shell or batch for possible
 # prompting on build configuration:
-if [ "$(ps -o stat= -p $PPID)" == "Ss" ]; then
-  echo
-  echo "Select build type:"
-  echo "  <1> Release,"
-  echo "  <2> Debug,"
-  echo "  <3> RelWithDebInfo,"
-  echo "  <4> MinSizeRel"
-  while
-    read -p "Enter 1-4 [1]: " buildtype
-    if [ -z $buildtype ]; then
-      buildtype=1
-    fi
-    [ $buildtype -lt 1 ] || [ $buildtype -gt 4 ]
-  do
-    continue
-  done
-  case $buildtype in
-    1) CMAKE_BUILD_TYPE="Release";;
-    2) CMAKE_BUILD_TYPE="Debug";;
-    3) CMAKE_BUILD_TYPE="RelWithDebInfo";;
-    4) CMAKE_BUILD_TYPE="MinSizeRel";;
-  esac
-else
-  if [ -z $CMAKE_BUILD_TYPE ] ; then
-    CMAKE_BUILD_TYPE="Release"
-  fi
-fi
+# if [ "$(ps -o stat= -p $PPID)" == "Ss" ]; then
+#   echo
+#   echo "Select build type:"
+#   echo "  <1> Release,"
+#   echo "  <2> Debug,"
+#   echo "  <3> RelWithDebInfo,"
+#   echo "  <4> MinSizeRel"
+#   while
+#     read -p "Enter 1-4 [1]: " buildtype
+#     if [ -z $buildtype ]; then
+#       buildtype=1
+#     fi
+#     [ $buildtype -lt 1 ] || [ $buildtype -gt 4 ]
+#   do
+#     continue
+#   done
+#   case $buildtype in
+#     1) CMAKE_BUILD_TYPE="Release";;
+#     2) CMAKE_BUILD_TYPE="Debug";;
+#     3) CMAKE_BUILD_TYPE="RelWithDebInfo";;
+#     4) CMAKE_BUILD_TYPE="MinSizeRel";;
+#   esac
+# else
+#   if [ -z $CMAKE_BUILD_TYPE ] ; then
+#     CMAKE_BUILD_TYPE="Release"
+#   fi
+# fi
 
 # Try running the CMake config script (sourcing here to capture OSSIM_BUILD_DIR var
 # possibly initialized in cmake config script)
@@ -75,6 +75,9 @@ fi
 
 # CMake successful, now run make in the build directory (OSSIM_BUILD_DIR
 # exported by cmake config script):
+if [ ! -d $OSSIM_BUILD_DIR ] ; then
+mkdir -p $OSSIM_BUILD_DIR
+fi
 pushd $OSSIM_BUILD_DIR >/dev/null
 make $MAKE_VERBOSE -j $OSSIM_MAKE_JOBS
 if [ $? -ne 0 ]; then

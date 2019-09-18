@@ -766,7 +766,6 @@ void ossimHdf5ImageDataset::getTileBuf(void* buffer, const ossimIrect& rect,
    catch( const H5::Exception& error )
    {
       ossimNotify(ossimNotifyLevel_WARN) << MODULE << " caught H5 Exception!" << std::endl;
-      error.printError();
    }
 
    catch( ... )
