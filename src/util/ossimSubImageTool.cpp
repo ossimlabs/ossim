@@ -20,9 +20,7 @@
 
 using namespace std;
 
-const char* ossimSubImageTool::DESCRIPTION  = "Tool for extracting a sub-image from a full image."
-      " No reprojection is done. Presently, the subimage geometry is represented by an RPC "
-      "replacement model until generic models can support subimage chipping.";
+const char* ossimSubImageTool::DESCRIPTION  = "Tool for extracting a sub-image from a full image.";
 const char* BBOX_KW = "bbox";
 
 ossimSubImageTool::ossimSubImageTool()
@@ -42,9 +40,13 @@ void ossimSubImageTool::setUsage(ossimArgumentParser& ap)
    usageString += " subimage [options] <input-image> <output-image>";
    au->setCommandLineUsage(usageString);
 
-   // Set the command line options:
-   au->setDescription(DESCRIPTION);
+   ostringstream descr;
+   descr << DESCRIPTION << "\n\n"
+         <<  " No reprojection is done. Presently, the subimage geometry is represented by an RPC "
+         << "replacement model until generic models can support subimage chipping.";
+   au->setDescription(descr.str());
 
+   // Set the command line options:
    // Base class has its own. Skip the ossimChipProcTool usage as that adds a lot of view-space
    // specific stuff not used in this tool:
    ossimTool::setUsage(ap);
