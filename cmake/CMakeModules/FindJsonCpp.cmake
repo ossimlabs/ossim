@@ -15,8 +15,8 @@
 include(FindPackageHandleStandardArgs)
 
 if (USE_OSSIM_JSONCPP)
+   find_path( JSONCPP_INCLUDE_DIR json/json.h PATHS "${OSSIM_INCLUDE_DIR}/ossim")
    message("JSONCPP: Using amalgamated form in ${JSONCPP_INCLUDE_DIR}/json/json.h")
-   find_path( JSONCPP_INCLUDE_DIR json/json.h PATHS "${OSSIM_DEV_HOME}/ossim/include/ossim")
    set(JSONCPP_LIBRARY "")
    find_package_handle_standard_args( JSONCPP DEFAULT_MSG JSONCPP_INCLUDE_DIR )
 else(USE_OSSIM_JSONCPP)
