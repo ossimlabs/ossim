@@ -12,18 +12,23 @@
 #
 ########################################################################
 
-set(JSONCPP_FOUND "NO")
-set(OSSIM_HAS_JSONCPP 0)
-
-find_path( JSONCPP_INCLUDE_DIR json/json.h
-          PATHS "${CMAKE_INSTALL_PREFIX}" "${CMAKE_INSTALL_PREFIX}/include/jsoncpp" "/usr/include/jsoncpp" )
-
-find_library( JSONCPP_LIBRARY NAMES "jsoncpp")
-
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args( JSONCPP DEFAULT_MSG 
-                                   JSONCPP_LIBRARY 
-                                   JSONCPP_INCLUDE_DIR )
+
+if (USE_OSSIM_JSONCPP)
+   message("JSONCPP: Using amalgamated form in ${JSONCPP_INCLUDE_DIR}/json/json.h")
+   find_path( JSONCPP_INCLUDE_DIR json/json.h PATHS "${OSSIM_DEV_HOME}/ossim/include/ossim")
+   set(JSONCPP_LIBRARY "")
+   find_package_handle_standard_args( JSONCPP DEFAULT_MSG JSONCPP_INCLUDE_DIR )
+else(USE_OSSIM_JSONCPP)
+   set(JSONCPP_FOUND "NO")
+   set(OSSIM_HAS_JSONCPP 0)
+   find_path( JSONCPP_INCLUDE_DIR json/json.h
+         PATHS "${CMAKE_INSTALL_PREFIX}"
+               "${CMAKE_INSTALL_PREFIX}/include/jsoncpp"
+               "/usr/include/jsoncpp" )
+   find_library( JSONCPP_LIBRARY NAMES "jsoncpp")
+   find_package_handle_standard_args( JSONCPP DEFAULT_MSG JSONCPP_LIBRARY JSONCPP_INCLUDE_DIR )
+endif(USE_OSSIM_JSONCPP)
 
 if (JSONCPP_FOUND)
    set(OSSIM_HAS_JSONCPP 1)

@@ -239,7 +239,6 @@ bool ossimSubImageTool::execute()
    }
    else if (m_geomFormat == JSON)
    {
-#if OSSIM_HAS_JSONCPP
       geomFile.setExtension("json");
       ofstream jsonStream (geomFile.string());
       if (!jsonStream.fail())
@@ -250,12 +249,6 @@ bool ossimSubImageTool::execute()
          write_ok = rpc->toJSON(jsonStream);
          jsonStream.close();
       }
-#else
-      ostringstream errMsg;
-      errMsg << " ERROR: ossimSubImageTool ["<<__LINE__<<"] JSON geometry output requested but JSON is not "
-            "available in this build! <" << endl;
-      throw ossimException( errMsg.str() );
-#endif
    }
    else if (m_geomFormat == DG)
    {
@@ -286,4 +279,3 @@ bool ossimSubImageTool::execute()
 
    return true;
 }
-
