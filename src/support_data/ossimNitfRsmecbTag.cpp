@@ -406,7 +406,70 @@ void ossimNitfRsmecbTag::clearFields()
 std::ostream &ossimNitfRsmecbTag::print(std::ostream &out,
                                       const std::string &prefix) const
 {
-   return out;
+   std::string pfx = prefix;
+   pfx += getTagName();
+   pfx += ".";
+   out << std::setiosflags(std::ios::left)
+       << pfx << std::setw(24) << "CETAG: " << getTagName() << "\n"
+       << pfx << std::setw(24) << "CEL: " << getTagLength() << "\n"
+       << pfx << std::setw(24) << "IID: " << m_iid << "\n"
+       << pfx << std::setw(24) << "EDITION: " << m_edition << "\n"
+       << pfx << std::setw(24) << "TID: " << m_tid << "\n "
+       << pfx << std::setw(24) << "INCLIC: " << m_inclic << "\n"
+       << pfx << std::setw(24) << "INCLUC: " << m_incluc << "\n"
+       << pfx << std::setw(24) << "NPARO: " << m_nparo << "\n"
+       << pfx << std::setw(24) << "IGN: " << m_ign << "\n"
+       << pfx << std::setw(24) << "CVDATE:" << m_cvdate << "\n"
+       << pfx << std::setw(24) << "NPAR: " << m_npar << "\n"
+       << pfx << std::setw(24) << "APTYPE: " << m_aptype << "\n"
+       << pfx << std::setw(24) << "LOCTYPE: " << m_loctype << "\n"
+       << pfx << std::setw(24) << "NSFX: " << m_nsfx << "\n"
+       << pfx << std::setw(24) << "NSFY: " << m_nsfy << "\n"
+       << pfx << std::setw(24) << "NSFZ: " << m_nsfz << "\n"
+       << pfx << std::setw(24) << "NOFFX: " << m_noffx << "\n"
+       << pfx << std::setw(24) << "NOFFY: " << m_noffy << "\n"
+       << pfx << std::setw(24) << "NOFFZ: " << m_noffz << "\n"
+       << pfx << std::setw(24) << "XUOL: " << m_xuol << "\n"
+       << pfx << std::setw(24) << "YUOL: " << m_yuol << "\n"
+       << pfx << std::setw(24) << "ZUOL: " << m_zuol << "\n"
+       << pfx << std::setw(24) << "XUXL: " << m_xuxl << "\n"
+       << pfx << std::setw(24) << "XUYL: " << m_xuyl << "\n"
+       << pfx << std::setw(24) << "XUZL: " << m_xuzl << "\n"
+       << pfx << std::setw(24) << "YUXL: " << m_yuxl << "\n"
+       << pfx << std::setw(24) << "YUYL: " << m_yuyl << "\n"
+       << pfx << std::setw(24) << "YUZL: " << m_yuzl << "\n"
+       << pfx << std::setw(24) << "ZUXL: " << m_zuxl << "\n"
+       << pfx << std::setw(24) << "ZUYL: " << m_zuyl << "\n"
+       << pfx << std::setw(24) << "ZUZL: " << m_zuzl << "\n"
+       << pfx << std::setw(24) << "APBASE: " << m_apbase << "\n"
+       << pfx << std::setw(24) << "NISAP: " << m_nisap << "\n"
+       << pfx << std::setw(24) << "NISAPR: " << m_nisapr << "\n"
+       << pfx << std::setw(24) << "NISAPC: " << m_nisapc << "\n"
+       << pfx << std::setw(24) << "NGSAP: " << m_ngsap << "\n"
+       << pfx << std::setw(24) << "URR: " << m_urr << "\n"
+       << pfx << std::setw(24) << "URC: " << m_urc << "\n"
+       << pfx << std::setw(24) << "UCC: " << m_ucc << "\n"
+       << pfx << std::setw(24) << "UACSMC: " << m_uacsmc << "\n"
+       << pfx << std::setw(24) << "UNCSR: " << m_uncsr << "\n"
+       << pfx << std::setw(24) << "UNCSC: " << m_uncsc << "\n"
+       << pfx << std::setw(24) << "UACR: " << m_uacr << "\n"
+       << pfx << std::setw(24) << "UALPCR: " << m_ualpcr << "\n"
+       << pfx << std::setw(24) << "UBETCR: " << m_ubetcr << "\n"
+       << pfx << std::setw(24) << "UTCR: " << m_utcr << "\n"
+       << pfx << std::setw(24) << "UACC: " << m_uacc << "\n"
+       << pfx << std::setw(24) << "UALPCC: " << m_ualpcc << "\n"
+       << pfx << std::setw(24) << "UBETCC: " << m_ubetcc << "\n"
+       << pfx << std::setw(24) << "UTCC: " << m_utcc << "\n";
+
+       //   m_imageSpaceAdjParamRowArray.clear();
+       // m_imageSpaceAdjParamColArray.clear();
+       //m_gsapidArray.clear();
+       //m_aelArray.clear();
+       //m_map.clear();
+       //m_uncsrEntries.clear();
+       //   m_uncscEntries.clear();
+
+      return out;
 }
 
 bool ossimNitfRsmecbTag::getInclicFlag() const
