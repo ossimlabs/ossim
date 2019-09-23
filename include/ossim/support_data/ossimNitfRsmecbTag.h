@@ -57,8 +57,8 @@ public:
       void parseStream(std::istream &in);
       void writeStream(std::ostream &out);
       void clearFields();
-
-
+      std::ostream &print(std::ostream &out,
+                          const std::string &prefix = std::string()) const;
 
    protected:
       char m_parameterPowerX[XPW_SIZE + 1];
@@ -72,6 +72,8 @@ public:
       void parseStream(std::istream &in);
       void writeStream(std::ostream &out);
       void clearFields();
+      std::ostream &print(std::ostream &out,
+                          const std::string &prefix = std::string()) const;
 
    protected:
       char m_segmentCorrelationValue[FLOAT21_SIZE + 1];
@@ -90,6 +92,8 @@ public:
          void parseStream(std::istream &in);
          void writeStream(std::ostream &out);
          void clearFields();
+         std::ostream &print(std::ostream &out,
+                             const std::string &prefix = std::string()) const;
 
          ossim_int64 getNumberOfOriginalAdjustableParametersInSubgroup() const;
          bool getCSMCorrelationOptionFlag() const;
