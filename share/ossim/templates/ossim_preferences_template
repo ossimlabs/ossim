@@ -1,40 +1,49 @@
 // ------------------------------------------------------------------------
 // 
 // Description:  ossim_preferences_template
-// 
-// This file will be automatically loaded by ossim applications provided the
-// environment variable "OSSIM_PREFS_FILE" is set to point to some form of 
-// this file.
 //
-// Note:  c++ comments "//" can be used to comment a line.
+// Copy this template to define your own preferences file for the OSSIM runtime.
+// At runtime, OSSIM will reference the "OSSIM_PREFS_FILE" environment variable
+// to find your preferences file.
 //
-// To set the environment variable for automatic preference file loading:
-//
+// Setting the environment variable for automatic preference file loading:
 // This assumes a preference file in your home called "ossim_preferences".
-// Typically this would be put in a dot file read at startup of a shell.
+// Typically this definition would be put in a dot file read at startup of a shell.
 //
 // tcsh and csh users:  setenv OSSIM_PREFS_FILE ~/ossim_preferences
-//
 // bash and sh users:   export OSSIM_PREFS_FILE=~/ossim_preferences
-// 
-// windoze users:       I'll have to look this up...
+// windoze users:       Google it...
 //
 // Use the "-P <preference_file>" option at application startup to specify
 // a path to preferences file.  Where <preference_file> is full path and 
-// filename.
+// filename. This can be used to override the preferences file at $OSSIM_PREFS_FILE
 //
-// Use the "-K key=value option at application startup to specify a key value
-// pair. e.g.:
+// Use the "-K key=value option at application startup to specify a key value that will
+// override the same key in the preferences file. Example:
+//
 // ossim-chipper -K ossim.std.out.progress=1 --options tgt-008-options.kwl
 //
-// Note that system environment variables found in this ossim preferences
-// file in the format "$(env_var_name)" will be expanded in place.
+// Note that system environment variables can be referenced in the ossim preferences
+// file by using the parenthesis format "$(env_var_name)".
+//
+// This template makes use of two environment variables that you can define and thus
+// leave the references to them here intact in your copy:
+//
+// OSSIM_INSTALL_PREFIX -- The top-level directory containing the ossim installation
+//     including the bin, lib, lib64, and share subdirectories. If you are using a
+//     sandbox installation of OSSIM. Set this variable to the sandbox folder path.
+//
+// OSSIM_DATA -- The top-level directory containing data items such as elevation,
+//     geoids, and others. These items are the responsibility of the user to set up
+//     on the host.
 //
 // To view your preferences use below command.  This is useful when trouble
 // shooting paths and so on:
 //
 // $ ossim-info --config
-// 
+//
+// Note:  c++ comments "//" can be used to comment a line.
+//
 // ------------------------------------------------------------------------
 
 //---
