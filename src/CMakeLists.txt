@@ -17,13 +17,9 @@ FILE(GLOB ossim_SRCS  RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}
         "${CMAKE_CURRENT_SOURCE_DIR}/reg/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/reg/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/util/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/util/*.c" 
         "${CMAKE_CURRENT_SOURCE_DIR}/vec/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/vec/*.c" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/video/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/video/*.c" 
+        "${CMAKE_CURRENT_SOURCE_DIR}/video/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/video/*.c"
         "${CMAKE_CURRENT_SOURCE_DIR}/vpfutil/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/vpfutil/*.c"
         "${CMAKE_CURRENT_SOURCE_DIR}/plugin/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/plugin/*.c")
-
-IF(USE_OSSIM_JSONCPP)
-   LIST(APPEND ossim_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/json/jsoncpp.cpp")
-ENDIF(USE_OSSIM_JSONCPP)
 
 IF(UNIX)
    FILE(GLOB ossim_sockets_SRCS RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/sockets/*.cpp")
@@ -77,8 +73,14 @@ IF (OSSIM_HAS_HDF5)
 ENDIF (OSSIM_HAS_HDF5)
 
 MESSAGE( "${ossim_HDRS}" )
-SET(OSSIM_HEADER_FILES 
-  ${ossim_HDRS}
+
+IF(USE_OSSIM_JSONCPP)
+   FILE(GLOB ossim_jsoncpp_HDRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../include/ossim/json/*.h")
+   LIST(APPEND ossim_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/json/jsoncpp.cpp")
+ENDIF(USE_OSSIM_JSONCPP)
+
+SET(OSSIM_HEADER_FILES
+  ${ossim_HDRS} ${ossim_jsoncpp_HDRS}
   ${ossim_base_HDRS} ${ossim_elevation_HDRS} ${ossim_font_HDRS}  ${ossim_imaging_HDRS} 
   ${ossim_init_HDRS} ${ossim_reg_HDRS} ${ossim_matrix_HDRS} ${ossim_parallel_HDRS} ${ossim_plugin_HDRS} 
   ${ossim_point_cloud_HDRS} ${ossim_projection_HDRS} ${ossim_support_data_HDRS} ${ossim_util_HDRS} 
@@ -137,7 +139,7 @@ IF(APPLE)
   ENDFOREACH(f)
 
   FOREACH(f  ${ossim_vpfutil_HDRS} )
-      SET_SOURCE_FILES_PROPERTIES( ${f} PROPERTIES MACOSX_PACKAGE_LOCATION Headers/vpfutil )
+     SET_SOURCE_FILES_PROPERTIES( ${f} PROPERTIES MACOSX_PACKAGE_LOCATION Headers/vpfutil )
   ENDFOREACH(f)
 
   IF (OSSIM_HAS_HDF5)
@@ -145,6 +147,10 @@ IF(APPLE)
       SET_SOURCE_FILES_PROPERTIES( ${f} PROPERTIES MACOSX_PACKAGE_LOCATION Headers/hdf5 )
     ENDFOREACH(f)
   ENDIF (OSSIM_HAS_HDF5)
+
+  IF(USE_OSSIM_JSONCPP)
+     SET_SOURCE_FILES_PROPERTIES( json.h PROPERTIES MACOSX_PACKAGE_LOCATION Headers/json )
+  ENDIF(USE_OSSIM_JSONCPP)
 
 ENDIF(APPLE)
 
@@ -179,7 +185,10 @@ IF(NOT OSSIM_BUILD_FRAMEWORKS OR NOT APPLE)
    install(FILES ${ossim_util_HDRS} DESTINATION include/ossim/util COMPONENT ossim) 
    install(FILES ${ossim_vec_HDRS} DESTINATION include/ossim/vec COMPONENT ossim) 
    install(FILES ${ossim_video_HDRS} DESTINATION include/ossim/video COMPONENT ossim) 
-   install(FILES ${ossim_vpfutil_HDRS} DESTINATION include/ossim/vpfutil COMPONENT ossim) 
+   install(FILES ${ossim_vpfutil_HDRS} DESTINATION include/ossim/vpfutil COMPONENT ossim)
+   IF(USE_OSSIM_JSONCPP)
+      install(FILES ${ossim_jsoncpp_HDRS} DESTINATION include/ossim/json COMPONENT ossim)
+   ENDIF(USE_OSSIM_JSONCPP)
    IF(UNIX)
      install(FILES ${ossim_sockets_HDRS} DESTINATION include/ossim/sockets COMPONENT ossim) 
    ENDIF(UNIX)

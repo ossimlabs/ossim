@@ -103,12 +103,13 @@ else( TIFF_FOUND )
    message( FATAL_ERROR "Could not find required tiff package!" )
 endif( TIFF_FOUND )
 
-# JSONCPP - Required:
+# JSONCPP - Required. This will use the amalgamated form embedded in OSSIM. If an previously
+# installed JSONCPP package is preferred, add "-DUSE_OSSIM_JSONCPP=OFF" to the cmake command
 find_package( JsonCpp )
 if( JSONCPP_FOUND )
    include_directories( ${JSONCPP_INCLUDE_DIR} )
    set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
-   message("Found JsonCpp" )
+   message("-- Found JsonCpp: ${JSONCPP_INCLUDE_DIR}" )
 else( JSONCPP_FOUND )
    message( FATAL_ERROR "Could not find required JsonCpp package!" )
 endif( JSONCPP_FOUND )
