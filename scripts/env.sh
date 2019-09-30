@@ -114,6 +114,14 @@ else
    export BUILD_OSSIM_WMS=OFF
 fi
 
+if [ -d $OSSIM_DEV_HOME/ossim-qt4 ] ; then
+   if [ -z $BUILD_OSSIM_QT4 ] ; then
+      export BUILD_OSSIM_QT4=ON
+   fi
+else
+   export BUILD_OSSIM_QT4=OFF
+fi
+
 if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
 
    if [ -z $BUILD_CNES_PLUGIN ] ; then
