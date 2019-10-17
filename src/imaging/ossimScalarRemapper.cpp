@@ -467,7 +467,7 @@ bool ossimScalarRemapper::saveState(ossimKeywordlist& kwl,
            ossimKeywordNames::SCALAR_TYPE_KW,
            ossimScalarTypeLut::instance()->getEntryString(theOutputScalarType),
            true);
-   kwl.add(prefix, "elevation", ossimString::toString(thePreserveMagnitudeFlag).c_str());
+   kwl.add(prefix, "preserve-magnitude", ossimString::toString(thePreserveMagnitudeFlag).c_str());
 
    return true;
 }
@@ -495,7 +495,7 @@ bool ossimScalarRemapper::loadState(const ossimKeywordlist& kwl,
    {
       setOutputScalarType(static_cast<ossimScalarType>(scalar));
    }
-   const char* lookup = kwl.find(prefix, "elevation");
+   const char* lookup = kwl.find(prefix, "preserve-magnitude");
    if(lookup)
    {
       thePreserveMagnitudeFlag = ossimString(lookup).toBool();

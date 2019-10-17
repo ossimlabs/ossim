@@ -47,12 +47,12 @@ void ossimTool::setUsage(ossimArgumentParser& ap)
    ossimApplicationUsage* au = ap.getApplicationUsage();
    au->setApplicationName( ossimString( appName ) );
 
-   au->addCommandLineOption(
-         "--write-api <filename>",
-         "Writes a JSON API specification to the specified filename.");
-   au->addCommandLineOption(
-         "--write-template <filename>",
-         "Writes a template keyword-list to the specified filename.");
+   //au->addCommandLineOption(
+   //      "--write-api <filename>",
+   //      "Writes a JSON API specification to the specified filename.");
+   //au->addCommandLineOption(
+   //      "--write-template <filename>",
+   //      "Writes a template keyword-list to the specified filename.");
 }
 
 bool ossimTool::initialize(ossimArgumentParser& ap)

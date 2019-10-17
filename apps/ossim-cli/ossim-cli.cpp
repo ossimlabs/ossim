@@ -56,7 +56,7 @@ bool runCommand(ossimArgumentParser& ap)
 
    if (!utility.valid())
    {
-      CWARN << "\nDid not understand command <"<<command<<">"<<endl;
+      CWARN << "Did not understand command <"<<command<<">"<<endl;
       showAvailableCommands();
       return false;
    }
@@ -66,7 +66,7 @@ bool runCommand(ossimArgumentParser& ap)
 
    if (!utility->initialize(ap))
    {
-      CWARN << "\nCould not execute command <"<<command<<"> with arguments and options "
+      CWARN << "Could not execute command <"<<command<<"> with arguments and options "
             "provided."<<endl;
       return false;
    }
@@ -76,7 +76,7 @@ bool runCommand(ossimArgumentParser& ap)
 
    if (!utility->execute())
    {
-      CWARN << "\nAn error was encountered executing the command. Check options."<<endl;
+      CWARN << "An error was encountered executing the command. Check options."<<endl;
       return false;
    }
 

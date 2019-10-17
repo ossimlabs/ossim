@@ -81,35 +81,24 @@ ossimRefPtr<ossimImageData> ossimImageSharpenFilter::getTile(
       switch(input->getScalarType())
       {
          case OSSIM_UINT8:
-         {
-            sharpenLut(static_cast<ossim_uint8>(0),
-                    input, 
-                    m_tile);
+            sharpenLut(static_cast<ossim_uint8>(0), input, m_tile);
             break;
-         }
          case OSSIM_UINT9:
          case OSSIM_UINT10:
          case OSSIM_UINT11:
          case OSSIM_UINT12:
+         case OSSIM_UINT13:
+         case OSSIM_UINT14:
+         case OSSIM_UINT15:
          case OSSIM_UINT16:
-         {
-            sharpenLut(static_cast<ossim_uint16>(0),
-                    input,
-                    m_tile);
+            sharpenLut(static_cast<ossim_uint16>(0), input, m_tile);
             break;
-         }
          case OSSIM_SINT16:
-         {
-            sharpenLutRemap(static_cast<ossim_uint16>(0),
-                            input,
-                            m_tile);
+            sharpenLutRemap(static_cast<ossim_uint16>(0), input, m_tile);
             break;
-         }
          default:
-         {
             m_tile->loadTile(input.get());
             break;
-         }
       }
    }
 
@@ -167,45 +156,40 @@ void ossimImageSharpenFilter::buildConvolutionLuts()
       ossimScalarType outputScalarType = theInputConnection->getOutputScalarType();
       switch (outputScalarType)
       {
-         case OSSIM_UINT8: /**<  8 bit unsigned integer */
-         {
-            size = 256;
-            break;
-         }
-         case OSSIM_UINT9: /**<  9 bit unsigned integer */
-         {
-            size = 512;
-            break;
-         }
-         case OSSIM_UINT10: /**<  10 bit unsigned integer */
-         {
-            size = 1024;
-            break;
-         }
-         case OSSIM_UINT11: /**< 16 bit unsigned integer (9 bits used) */
-         {
-            size = 2048;
-            break;
-         }
-         case OSSIM_UINT12:
-         {
-            size = 4096;
-            break;
-         }
-         case OSSIM_UINT16:
-         {
-            size = 65536;
-            break;
-         }
-         default:
-         {
-            // for remapping we will just a set of sample 
-            // values and then do a normalization 
-            // we will enable remap and do a 256 samples 
-            // for the laplacian.
-            m_remapValue = true;
-            size = 256;
-         }
+      case OSSIM_UINT8:
+         size = 256;
+         break;
+      case OSSIM_UINT9:
+         size = 512;
+         break;
+      case OSSIM_UINT10:
+         size = 1024;
+         break;
+      case OSSIM_UINT11:
+         size = 2048;
+         break;
+      case OSSIM_UINT12:
+         size = 4096;
+         break;
+      case OSSIM_UINT13:
+         size = 8192;
+         break;
+      case OSSIM_UINT14:
+         size = 16384;
+         break;
+      case OSSIM_UINT15:
+         size = 32768;
+         break;
+      case OSSIM_UINT16:
+         size = 65536;
+         break;
+      default:
+         // for remapping we will just a set of sample
+         // values and then do a normalization
+         // we will enable remap and do a 256 samples
+         // for the laplacian.
+         m_remapValue = true;
+         size = 256;
       }
    }
    else

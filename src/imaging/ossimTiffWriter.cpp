@@ -194,12 +194,14 @@ MODULE);
       sampleFormat = SAMPLEFORMAT_UINT;
       break;
 
+   case OSSIM_UINT9:
+   case OSSIM_UINT10:
+   case OSSIM_UINT11:
+   case OSSIM_UINT12:
+   case OSSIM_UINT13:
+   case OSSIM_UINT14:
+   case OSSIM_UINT15:
    case OSSIM_UINT16:
-   case OSSIM_USHORT11:
-   case OSSIM_USHORT12:
-   case OSSIM_USHORT13:
-   case OSSIM_USHORT14:
-   case OSSIM_USHORT15:
       bitsPerSample = 16;
       sampleFormat = SAMPLEFORMAT_UINT;
       break;
@@ -315,12 +317,14 @@ MODULE);
    ossimScalarType scalarType = theInputConnection->getOutputScalarType();
    bool lutEnabled = (theColorLutFlag&&
                       ((scalarType == OSSIM_UINT8)||
-                       (scalarType == OSSIM_UINT16)||
-                       (scalarType == OSSIM_USHORT11)||
-                       (scalarType == OSSIM_USHORT12)||
-                       (scalarType == OSSIM_USHORT13)||
-                       (scalarType == OSSIM_USHORT14)||
-                       (scalarType == OSSIM_USHORT15))&&
+                       (scalarType == OSSIM_UINT9)||
+                       (scalarType == OSSIM_UINT10)||
+                       (scalarType == OSSIM_UINT11)||
+                       (scalarType == OSSIM_UINT12)||
+                       (scalarType == OSSIM_UINT13)||
+                       (scalarType == OSSIM_UINT14)||
+                       (scalarType == OSSIM_UINT15)||
+                       (scalarType == OSSIM_UINT16))&&
                       (theColorLut->getNumberOfEntries() > 0)&&
                       (theInputConnection->getNumberOfOutputBands() == 1));
    if(lutEnabled)
@@ -1035,7 +1039,7 @@ bool ossimTiffWriter::writeToTilesBandSep()
                      << std::endl;
             return false;
          }
-         ossim_int32 tileSizeInBytes = id->getSizePerBandInBytes();
+         auto tileSizeInBytes = id->getSizePerBandInBytes();
 
          if(!theColorLutFlag)
          {
@@ -1376,27 +1380,17 @@ void ossimTiffWriter::writeMinMaxTags(const vector<ossim_float64>& minBand,
 
       switch( theInputConnection->getOutputScalarType() )
       {
-      case OSSIM_USHORT11:
-      case OSSIM_USHORT12:
-      case OSSIM_USHORT13:
-      case OSSIM_USHORT14:
-      case OSSIM_USHORT15:
-      {
-         TIFFSetField( tiffPtr, TIFFTAG_MINSAMPLEVALUE,
-                       static_cast<ossim_sint16>(0) );
-         TIFFSetField( tiffPtr, TIFFTAG_MAXSAMPLEVALUE,
-                       static_cast<ossim_sint16>(2047) );
-         break;
-      }
-      case OSSIM_UINT8:
+      case OSSIM_UINT9:
+      case OSSIM_UINT10:
+      case OSSIM_UINT11:
+      case OSSIM_UINT12:
+      case OSSIM_UINT13:
+      case OSSIM_UINT14:
+      case OSSIM_UINT15:
       case OSSIM_UINT16:
-      {
-         TIFFSetField( tiffPtr, TIFFTAG_MINSAMPLEVALUE,
-                       static_cast<ossim_sint16>(minValue) );
-         TIFFSetField( tiffPtr, TIFFTAG_MAXSAMPLEVALUE,
-                       static_cast<ossim_sint16>(maxValue) );
+         TIFFSetField( tiffPtr, TIFFTAG_MINSAMPLEVALUE, (uint16_t) minValue);
+         TIFFSetField( tiffPtr, TIFFTAG_MAXSAMPLEVALUE, (uint16_t) maxValue);
          break;
-      }
 
       case OSSIM_SINT16:
       case OSSIM_UINT32:
@@ -1404,17 +1398,12 @@ void ossimTiffWriter::writeMinMaxTags(const vector<ossim_float64>& minBand,
       case OSSIM_FLOAT64:
       case OSSIM_NORMALIZED_FLOAT:
       case OSSIM_NORMALIZED_DOUBLE:
-      {
-         TIFFSetField( tiffPtr, TIFFTAG_SMINSAMPLEVALUE,
-                       static_cast<ossim_float32>(minValue) );
-         TIFFSetField( tiffPtr, TIFFTAG_SMAXSAMPLEVALUE,
-                       static_cast<ossim_float32>(maxValue) );
+         TIFFSetField( tiffPtr, TIFFTAG_SMINSAMPLEVALUE, static_cast<ossim_float32>(minValue) );
+         TIFFSetField( tiffPtr, TIFFTAG_SMAXSAMPLEVALUE, static_cast<ossim_float32>(maxValue) );
          break;
-      }
-      default:
-      {
+
+         default:
          break;
-      }
       }
    }
 }

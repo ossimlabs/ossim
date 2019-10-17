@@ -6,74 +6,73 @@
 //
 // Description:
 //
-// Class definition of ossimU11ImageData.  Specialized image data object for
-// unsigned short data with an 11 bit depth.
+// Class definition of ossimU9ImageData.  Specialized image data object for
+// unsigned short data with an 9 bit depth.
 //
 // NOTE:  This object is optimized for unsigned short data and assumes the
 //        following:  null pixel value  = 0.0
 //                    min  pixel value  = 1.0
-//                    max  pixel value  = 2047.0  (2^11 - 1)
+//                    max  pixel value  = 511.0  (2^9 - 1)
 //
 //        If you want anything else use the less efficient ossimImageData.
 //
 //*************************************************************************
-// $Id: ossimU11ImageData.cpp 16052 2009-12-08 22:20:40Z dburken $
 
-#include <ossim/imaging/ossimU11ImageData.h>
+#include <ossim/imaging/ossimU9ImageData.h>
 #include <ossim/base/ossimSource.h>
 #include <ossim/base/ossimErrorContext.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimMultiBandHistogram.h>
 #include <ossim/base/ossimHistogram.h>
 
-RTTI_DEF1(ossimU11ImageData, "ossimU11ImageData", ossimImageData)
+RTTI_DEF1(ossimU9ImageData, "ossimU9ImageData", ossimImageData)
 
-const ossimNormalizedU11RemapTable ossimU11ImageData::m_remapTable;
+const ossimNormalizedU9RemapTable ossimU9ImageData::m_remapTable;
    
-ossimU11ImageData::ossimU11ImageData()
+ossimU9ImageData::ossimU9ImageData()
    :
       ossimImageData()
 {
-   m_scalarType = OSSIM_USHORT11;
+   m_scalarType = OSSIM_UINT9;
 }
 
-ossimU11ImageData::ossimU11ImageData(ossimSource* source,
+ossimU9ImageData::ossimU9ImageData(ossimSource* source,
                                      ossim_uint32 bands)
    :
       ossimImageData(source,
-                     OSSIM_USHORT11,
+                     OSSIM_UINT9,
                      bands)
 {
 }
 
-ossimU11ImageData::ossimU11ImageData(ossimSource* source,
+ossimU9ImageData::ossimU9ImageData(ossimSource* source,
                                      ossim_uint32 bands,
                                      ossim_uint32 width,
                                      ossim_uint32 height)
    :
       ossimImageData(source,
-                     OSSIM_USHORT11,
+                     OSSIM_UINT9,
                      bands,
                      width,
                      height)
 {
 }
 
-ossimU11ImageData::ossimU11ImageData(const ossimU11ImageData &rhs)
+ossimU9ImageData::ossimU9ImageData(const ossimU9ImageData &rhs)
    :
       ossimImageData(rhs)
 {}
 
-ossimU11ImageData::~ossimU11ImageData()
+ossimU9ImageData::~ossimU9ImageData()
 {
 }
 
-ossimObject* ossimU11ImageData::dup()const
+ossimObject* ossimU9ImageData::dup()const
 {
-   return new ossimU11ImageData(*this);
+   return new ossimU9ImageData(*this);
 }
 
-ossimDataObjectStatus ossimU11ImageData::validate() const
+ossimDataObjectStatus ossimU9ImageData::validate() const
 {
    if (m_dataBuffer.size() == 0)
    {
@@ -106,7 +105,7 @@ ossimDataObjectStatus ossimU11ImageData::validate() const
    return getDataObjectStatus();
 }
 
-void ossimU11ImageData::getNormalizedFloat(ossim_uint32 offset,
+void ossimU9ImageData::getNormalizedFloat(ossim_uint32 offset,
                                            ossim_uint32 bandNumber,
                                            float& result)const
 {
@@ -118,7 +117,7 @@ void ossimU11ImageData::getNormalizedFloat(ossim_uint32 offset,
    }
 }
 
-void ossimU11ImageData::setNormalizedFloat(ossim_uint32 offset,
+void ossimU9ImageData::setNormalizedFloat(ossim_uint32 offset,
                                            ossim_uint32 bandNumber,
                                            float inputValue)
 {
@@ -131,7 +130,7 @@ void ossimU11ImageData::setNormalizedFloat(ossim_uint32 offset,
 }
 
 void
-ossimU11ImageData::convertToNormalizedFloat(ossimImageData* result)const
+ossimU9ImageData::convertToNormalizedFloat(ossimImageData* result)const
 {
    if(!result)
    {
@@ -167,7 +166,7 @@ ossimU11ImageData::convertToNormalizedFloat(ossimImageData* result)const
    }
 }
 
-void ossimU11ImageData::convertToNormalizedDouble(ossimImageData* result)const
+void ossimU9ImageData::convertToNormalizedDouble(ossimImageData* result)const
 {
    if(!result)
    {
@@ -203,7 +202,7 @@ void ossimU11ImageData::convertToNormalizedDouble(ossimImageData* result)const
 
 }
 
-void ossimU11ImageData::unnormalizeInput(ossimImageData* normalizedInput)
+void ossimU9ImageData::unnormalizeInput(ossimImageData* normalizedInput)
 {
    if((normalizedInput->getScalarType() != OSSIM_NORMALIZED_FLOAT) &&
       (normalizedInput->getScalarType() != OSSIM_NORMALIZED_DOUBLE) )
@@ -252,7 +251,7 @@ void ossimU11ImageData::unnormalizeInput(ossimImageData* normalizedInput)
    }   
 }
 
-double ossimU11ImageData::computeMeanSquaredError(double meanValue,
+double ossimU9ImageData::computeMeanSquaredError(double meanValue,
                                                   ossim_uint32 bandNumber)
 {
    double result = -1; // invalid MSE
@@ -283,7 +282,7 @@ double ossimU11ImageData::computeMeanSquaredError(double meanValue,
    return result;
 }
 
-double ossimU11ImageData::computeAverageBandValue(ossim_uint32 bandNumber)
+double ossimU9ImageData::computeAverageBandValue(ossim_uint32 bandNumber)
 {
    double result = 0.0;
    ossim_uint32 index = 0;
@@ -311,7 +310,7 @@ double ossimU11ImageData::computeAverageBandValue(ossim_uint32 bandNumber)
    return result;
 }
 
-void ossimU11ImageData::setValue(long x, long y, double color)
+void ossimU9ImageData::setValue(long x, long y, double color)
 {
    if(m_dataBuffer.size() > 0 && isWithin(x, y))
    {
@@ -333,7 +332,7 @@ void ossimU11ImageData::setValue(long x, long y, double color)
    }
 }
 
-void ossimU11ImageData::fill(ossim_uint32 band, double value)
+void ossimU9ImageData::fill(ossim_uint32 band, double value)
 {
    void* s         = getBuf(band);
 
@@ -350,7 +349,7 @@ void ossimU11ImageData::fill(ossim_uint32 band, double value)
 }
 
 
-bool ossimU11ImageData::isNull(ossim_uint32 offset)const
+bool ossimU9ImageData::isNull(ossim_uint32 offset)const
 {
    for(ossim_uint32 band = 0; band < getNumberOfBands(); ++band)  
    {
@@ -365,7 +364,7 @@ bool ossimU11ImageData::isNull(ossim_uint32 offset)const
    return true;
 }
 
-void ossimU11ImageData::setNull(ossim_uint32 offset)
+void ossimU9ImageData::setNull(ossim_uint32 offset)
 {
    ossim_uint32 bands = getNumberOfBands();
    for(ossim_uint32 band = 0; band < bands; ++band)  
@@ -376,13 +375,13 @@ void ossimU11ImageData::setNull(ossim_uint32 offset)
 }
 
 
-void ossimU11ImageData::copyTileToNormalizedBuffer(double* buf) const
+void ossimU9ImageData::copyTileToNormalizedBuffer(double* buf) const
 {
    if (!buf)
    {
       ossimSetError(getClassName(),
                     ossimErrorCodes::OSSIM_ERROR,
-                    "ossimU11ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
+                    "ossimU9ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
                     __FILE__,
                     __LINE__);
       return;
@@ -406,14 +405,14 @@ void ossimU11ImageData::copyTileToNormalizedBuffer(double* buf) const
    }
 }
 
-void ossimU11ImageData::copyTileToNormalizedBuffer(ossim_uint32 band,
+void ossimU9ImageData::copyTileToNormalizedBuffer(ossim_uint32 band,
                                                    double* buf) const
 {
    if (!buf)
    {
       ossimSetError(getClassName(),
                     ossimErrorCodes::OSSIM_ERROR,
-                    "ossimU11ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
+                    "ossimU9ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
                     __FILE__,
                     __LINE__);
       return;
@@ -435,13 +434,13 @@ void ossimU11ImageData::copyTileToNormalizedBuffer(ossim_uint32 band,
    }
 }
 
-void ossimU11ImageData::copyNormalizedBufferToTile(double* buf)
+void ossimU9ImageData::copyNormalizedBufferToTile(double* buf)
 {
    if (!buf)
    {
       ossimSetError(getClassName(),
                     ossimErrorCodes::OSSIM_ERROR,
-                    "ossimU11ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
+                    "ossimU9ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
                     __FILE__,
                     __LINE__);
       return;
@@ -464,14 +463,14 @@ void ossimU11ImageData::copyNormalizedBufferToTile(double* buf)
    }
 }
 
-void ossimU11ImageData::copyNormalizedBufferToTile(ossim_uint32 band,
+void ossimU9ImageData::copyNormalizedBufferToTile(ossim_uint32 band,
                                                    double* buf)
 {
    if (!buf)
    {
       ossimSetError(getClassName(),
                     ossimErrorCodes::OSSIM_ERROR,
-                    "ossimU11ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
+                    "ossimU9ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
                     __FILE__,
                     __LINE__);
       return;
@@ -494,13 +493,13 @@ void ossimU11ImageData::copyNormalizedBufferToTile(ossim_uint32 band,
 }
 
 
-void ossimU11ImageData::copyTileToNormalizedBuffer(float* buf) const
+void ossimU9ImageData::copyTileToNormalizedBuffer(float* buf) const
 {
    if (!buf)
    {
       ossimSetError(getClassName(),
                     ossimErrorCodes::OSSIM_ERROR,
-                    "ossimU11ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
+                    "ossimU9ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
                     __FILE__,
                     __LINE__);
       return;
@@ -524,14 +523,14 @@ void ossimU11ImageData::copyTileToNormalizedBuffer(float* buf) const
    }
 }
 
-void ossimU11ImageData::copyTileToNormalizedBuffer(ossim_uint32 band,
+void ossimU9ImageData::copyTileToNormalizedBuffer(ossim_uint32 band,
                                                    float* buf) const
 {
    if (!buf)
    {
       ossimSetError(getClassName(),
                     ossimErrorCodes::OSSIM_ERROR,
-                    "ossimU11ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
+                    "ossimU9ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
                     __FILE__,
                     __LINE__);
       return;
@@ -552,13 +551,13 @@ void ossimU11ImageData::copyTileToNormalizedBuffer(ossim_uint32 band,
    }
 }
 
-void ossimU11ImageData::copyNormalizedBufferToTile(float* buf)
+void ossimU9ImageData::copyNormalizedBufferToTile(float* buf)
 {
    if (!buf)
    {
       ossimSetError(getClassName(),
                     ossimErrorCodes::OSSIM_ERROR,
-                    "ossimU11ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
+                    "ossimU9ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
                     __FILE__,
                     __LINE__);
       return;
@@ -582,14 +581,14 @@ void ossimU11ImageData::copyNormalizedBufferToTile(float* buf)
 }
 
 
-void ossimU11ImageData::copyNormalizedBufferToTile(ossim_uint32 band,
+void ossimU9ImageData::copyNormalizedBufferToTile(ossim_uint32 band,
                                                    float* buf)
 {
    if (!buf)
    {
       ossimSetError(getClassName(),
                     ossimErrorCodes::OSSIM_ERROR,
-                    "ossimU11ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
+                    "ossimU9ImageData::copyTileToNormalizedBuffer File %s line %d\nNull pointer passed to method!",
                     __FILE__,
                     __LINE__);
       return;
