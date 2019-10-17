@@ -21,9 +21,8 @@ void ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::parseStream(std::istream
    in.read(m_parameterPowerZ, XPW_SIZE);
 }
 
-void ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::writeStream(std::ostream &out)
+void ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::writeStream(std::ostream& /* out */)
 {
-
 }
 
 void ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::clearFields()
@@ -37,8 +36,8 @@ void ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::clearFields()
    m_parameterPowerZ[ZPW_SIZE] = '\0';
 }
 
-std::ostream &ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::print(std::ostream &out,
-                                                                       const std::string &prefix) const 
+std::ostream &ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::print(
+   std::ostream &out, const std::string& /* prefix */) const 
 {
     return out;
 }
@@ -56,9 +55,8 @@ void ossimNitfRsmecbTag::CorrelationSegment::parseStream(std::istream &in)
    in.read(m_segmentTauValue, FLOAT21_SIZE);
 }
 
-void ossimNitfRsmecbTag::CorrelationSegment::writeStream(std::ostream &out)
+void ossimNitfRsmecbTag::CorrelationSegment::writeStream(std::ostream& /* out */)
 {
-
 }
 
 void ossimNitfRsmecbTag::CorrelationSegment::clearFields()
@@ -70,8 +68,8 @@ void ossimNitfRsmecbTag::CorrelationSegment::clearFields()
    m_segmentTauValue[FLOAT21_SIZE]         = '\0';
 }
 
-std::ostream &ossimNitfRsmecbTag::CorrelationSegment::print(std::ostream &out,
-                                                            const std::string &prefix) const
+std::ostream &ossimNitfRsmecbTag::CorrelationSegment::print(
+   std::ostream &out, const std::string& /* prefix */) const
 {
    return out;
 }
@@ -115,9 +113,8 @@ void ossimNitfRsmecbTag::IGNEntry::parseStream(std::istream &in)
    }
 }
 
-void ossimNitfRsmecbTag::IGNEntry::writeStream(std::ostream &out)
+void ossimNitfRsmecbTag::IGNEntry::writeStream(std::ostream& /* out */)
 {
-
 }
 
 void ossimNitfRsmecbTag::IGNEntry::clearFields()
@@ -141,10 +138,9 @@ void ossimNitfRsmecbTag::IGNEntry::clearFields()
    m_betc[FLOAT21_SIZE] = '\0';
    m_tc[FLOAT21_SIZE] = '\0';
 }
-std::ostream &ossimNitfRsmecbTag::IGNEntry::print(std::ostream &out,
-                                                  const std::string &prefix) const
+std::ostream &ossimNitfRsmecbTag::IGNEntry::print(
+   std::ostream &out, const std::string& /* prefix */) const
 {
-
    return out;
 }
 
@@ -305,9 +301,8 @@ void ossimNitfRsmecbTag::parseStream(std::istream &in)
    }
 }
 
-void ossimNitfRsmecbTag::writeStream(std::ostream &out)
+void ossimNitfRsmecbTag::writeStream(std::ostream& /* out */)
 {
-
 }
 
 void ossimNitfRsmecbTag::clearFields()
