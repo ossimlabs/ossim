@@ -7,10 +7,10 @@
 // Description:
 //
 // Contains class declaration for  ossimNormalizedU9RemapTable.  Table for
-// normalizing unsigned 11 bit data.
+// normalizing unsigned 9 bit data.
 //
 //*******************************************************************
-//  $Id: ossimNormalizedU9RemapTable.h 16034 2009-12-03 14:49:25Z dburken $
+//  $Id$
 
 #ifndef ossimNormalizedU9RemapTable_HEADER
 #define ossimNormalizedU9RemapTable_HEADER
