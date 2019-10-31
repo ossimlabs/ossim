@@ -195,6 +195,8 @@ void ossimInit::initialize(ossimArgumentParser& parser)
       }
       return;
    }
+   initGEOS(geosNoticeFunction, geosErrorFunction);
+
    theInstance->parseEnvOptions(parser);
    theInstance->parseNotifyOption(parser);
    theInstance->parsePrefsOptions(parser);
@@ -253,7 +255,7 @@ void ossimInit::initialize()
       }
       return;
    }
-   
+
    int argc = 1;
    char* argv[1];
 
@@ -261,54 +263,6 @@ void ossimInit::initialize()
    argv[0][0] = '\0';
    initialize(argc, argv);
    delete [] argv[0];
-
-#if 0   
-    static std::mutex m;
-   std::lock_guard<std::mutex> lock(m);
-   if(theInitializedFlag)
-   {
-      if (traceDebug())
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "DEBUG ossimInit::initialize(): Already initialized, returning......" << std::endl;
-      }
-      return;
-   }
-
-   theInstance->theAppName  = "";
-   theInstance->thePreferences = ossimPreferences::instance();
-   theInstance->initializeDefaultFactories();
-   
-   if ( theElevEnabledFlag )
-   {
-      theInstance->initializeElevation();
-   }
-
-   theInstance->initializeLogFile();
-
-   //---
-   // To do:
-   // We need a mechanism to register factories to the "front" or the
-   // "back" of factory list so that plugins can override things.  For
-   // now we will initialize the plugins last...
-   //---
-   if(thePluginLoaderEnabledFlag)
-   {
-      theInstance->initializePlugins();
-   }
-
-   if (traceDebug())
-   {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "ossim preferences file: "
-         << theInstance->thePreferences->getPreferencesFilename()
-         << "\nVersion: " << version()
-         << "\nossimInit::initialize() leaving..."
-         << std::endl;
-   } 
-   
-   theInitializedFlag = true;
-#endif
 }
 
 void ossimInit::finalize()

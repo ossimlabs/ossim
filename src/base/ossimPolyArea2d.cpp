@@ -100,6 +100,7 @@ public:
 void ossimPolyArea2dPrivate::setGeometry(const ossimPolygon &exteriorRing,
                                          const std::vector<ossimPolygon> &interiorRings)
 {
+
    deleteGeometry();
 
    if (exteriorRing.getNumberOfVertices() < 1)
@@ -107,14 +108,15 @@ void ossimPolyArea2dPrivate::setGeometry(const ossimPolygon &exteriorRing,
    GEOSGeometryPtr shell = 0;
    std::vector<GEOSGeometryPtr> holes;
    const std::vector<ossimDpt> &pts = exteriorRing.getVertexList();
-   int idx = 0;
-   int n = (int)pts.size();
+   ossim_int32 idx = 0;
+   ossim_int32 n = (int)pts.size();
 
    bool firstAndLastSame = ((pts[0].x == pts[n - 1].x) && (pts[0].y == pts[n - 1].y));
    if (n > 0)
    {
       GEOSCoordSequence *shellSeq = GEOSCoordSeq_create(
-          exteriorRing.getNumberOfVertices() + ((firstAndLastSame) ? 0 : 1), 2);
+          n + ((firstAndLastSame) ? 0 : 1), 2);
+
       //fill the exterior ring
       for (idx = 0; idx < n; idx++)
       {
@@ -123,7 +125,7 @@ void ossimPolyArea2dPrivate::setGeometry(const ossimPolygon &exteriorRing,
       //if the original polygon didn't have the first and last point the same, make it so
       if (!firstAndLastSame)
       {
-         GEOSCoordSeq_setXY(shellSeq, idx, pts[0].x, pts[0].y);
+         GEOSCoordSeq_setXY(shellSeq, n, pts[0].x, pts[0].y);
       }
       shell = GEOSGeom_createLinearRing(shellSeq);
       //fill the interior rings
