@@ -58,7 +58,7 @@ std::ostream& ossimNitfCamsdaCamera::print( std::ostream& out,
 
    const ossim_int32 W = 13;
 
-   out << setiosflags(ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(W) << "CAMERA_ID:" << ossimString(m_cameraId).trim() << "\n"
        << pfx << std::setw(W) << "CAMERA_DESC:" << ossimString(m_cameraDesc).trim() << "\n"
        << pfx << std::setw(W) << "LAYER_ID:" << ossimString(m_layerId).trim() << "\n"
@@ -136,7 +136,7 @@ std::ostream& ossimNitfCamsdaCameraSet::print( std::ostream& out,
 
    const ossim_int32 W = 21;
 
-   out << setiosflags(ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(W) << "NUM_CAMERAS_IN_SET:" << m_numCamerasInSet << "\n";
 
    ossim_uint32 count = ossimString(m_numCamerasInSet).toUInt32();
@@ -239,7 +239,7 @@ std::ostream& ossimNitfCamsdaTag::print( std::ostream& out,
 
    const ossim_int32 W = 33;
 
-   out << setiosflags(ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(W) << "CETAG:" << getTagName() << "\n"
        << pfx << std::setw(W) << "CEL:" << getTagLength() << "\n"
        << pfx << std::setw(W) << "NUM_CAMERA_SETS:" << m_numCameraSets << "\n"
