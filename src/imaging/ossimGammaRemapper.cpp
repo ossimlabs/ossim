@@ -106,6 +106,7 @@ void ossimGammaRemapper::calculateGammaWithLookup(ossimRefPtr<ossimImageData> in
          break;
       }
       case OSSIM_UINT9:
+      case OSSIM_UINT10:
       case OSSIM_UINT11:
       case OSSIM_UINT12:
       case OSSIM_UINT13:
@@ -222,6 +223,7 @@ void ossimGammaRemapper::computeLookup()
    {
       case OSSIM_UINT8:
       case OSSIM_UINT9:
+      case OSSIM_UINT10:
       case OSSIM_UINT11:
       case OSSIM_UINT12:
       case OSSIM_UINT13:

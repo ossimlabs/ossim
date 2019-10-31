@@ -7,8 +7,8 @@
 //*************************************************************************
 // $Id$
 
-#ifndef ossimPointCloudUtil_HEADER
-#define ossimPointCloudUtil_HEADER
+#ifndef ossimPointCloudTool_HEADER
+#define ossimPointCloudTool_HEADER 1
 
 #include <ossim/util/ossimTool.h>
 #include <ossim/base/ossimRefPtr.h>
@@ -60,4 +60,4 @@ protected:
 
 };
 
-#endif /* ossimPointCloudUtil_HEADER */
+#endif /* ossimPointCloudTool_HEADER */

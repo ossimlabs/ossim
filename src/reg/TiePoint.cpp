@@ -162,7 +162,7 @@ void TiePoint::loadJSON(const Json::Value& json_node)
    }
 
    // Loop over points on each image:
-   for (int i=0; i<imagePoints.size(); ++i)
+   for (int i=0; i<(int)imagePoints.size(); ++i)
    {
       const Json::Value& p = imagePoints[i];
       if (!p || !(p["imageId"].isString()) || !(p["x"]) || !(p["y"]))
@@ -217,14 +217,14 @@ void TiePoint::saveJSON(Json::Value& json_node) const
    // Image points
    Json::Value jsonList (Json::arrayValue);
    // Loop over points on each image:
-   for (int i=0; i<m_imagePoints.size(); ++i)
+   for (int i=0; i<(int)m_imagePoints.size(); ++i)
    {
       jsonList[i]["filename"] = m_images[i]->getFilename();
       jsonList[i]["imageId"] = m_images[i]->getImageId();
       jsonList[i]["x"] = m_imagePoints[i].x;
       jsonList[i]["y"] = m_imagePoints[i].y;
 
-      if (i<m_covariances.size())
+      if (i<(int)m_covariances.size())
       {
          Json::Value covJson (Json::arrayValue);
          covJson[0] = m_covariances[i](1,1);

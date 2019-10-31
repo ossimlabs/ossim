@@ -12,6 +12,8 @@
 
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/imaging/ossimU8ImageData.h>
+#include <ossim/imaging/ossimU9ImageData.h>
+#include <ossim/imaging/ossimU10ImageData.h>
 #include <ossim/imaging/ossimU11ImageData.h>
 #include <ossim/imaging/ossimU12ImageData.h>
 #include <ossim/imaging/ossimU13ImageData.h>
@@ -31,7 +33,7 @@ static ossimTrace traceDebug("ossimImageDataFactory:debug");
 
 ossimImageDataFactory* ossimImageDataFactory::theInstance = 0;
 std::mutex ossimImageDataFactory::theInstanceMutex;
-ossimImageDataFactory::ossimImageDataFactory() 
+ossimImageDataFactory::ossimImageDataFactory()
 {
    theInstance = 0;
 }
@@ -65,7 +67,7 @@ ossimRefPtr<ossimImageData> ossimImageDataFactory::create(
    ossim::defaultTileSize(tileSize);
    ossim_uint32 width  = tileSize.x;
    ossim_uint32 height = tileSize.y;
-   
+
    // do some bounds checking and initialize to a default
    bands  = (bands>0)?bands:1;
    scalar = scalar != OSSIM_SCALAR_UNKNOWN?scalar:OSSIM_UINT8;
@@ -83,68 +85,56 @@ ossimRefPtr<ossimImageData> ossimImageDataFactory::create(
          << (ossimScalarTypeLut::instance()->getEntryString(scalar))
          << std::endl;
    }
-   
+
    ossimRefPtr<ossimImageData> result = 0;
    switch(scalar)
    {
-      case OSSIM_UINT8:
-      {
-         result = new ossimU8ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_USHORT11:
-      {
-         result = new ossimU11ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_USHORT12:
-      {
-         result = new ossimU12ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_USHORT13:
-      {
-         result = new ossimU13ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_USHORT14:
-      {
-         result = new ossimU14ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_USHORT15:
-      {
-         result = new ossimU15ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_UINT16:
-      {
-         result = new ossimU16ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_SINT16:
-      {
-         result = new ossimS16ImageData(owner, bands, width, height);
-         break;
-      }
-      default:
-      {
-         // create a generic image data implementation.
-         result = new ossimImageData(owner, scalar, bands, width, height);
+   case OSSIM_UINT8:
+      result = new ossimU8ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT9:
+      result = new ossimU9ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT10:
+      result = new ossimU10ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT11:
+      result = new ossimU11ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT12:
+      result = new ossimU12ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT13:
+      result = new ossimU13ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT14:
+      result = new ossimU14ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT15:
+      result = new ossimU15ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT16:
+      result = new ossimU16ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_SINT16:
+      result = new ossimS16ImageData(owner, bands, width, height);
+      break;
+   default:
+      // create a generic image data implementation.
+      result = new ossimImageData(owner, scalar, bands, width, height);
 
-         // Set the scalar type for stretching.
-         ossimImageSource* inputSource = dynamic_cast<ossimImageSource*>(owner);
-         if( inputSource )
+      // Set the scalar type for stretching.
+      ossimImageSource* inputSource = dynamic_cast<ossimImageSource*>(owner);
+      if( inputSource )
+      {
+         for(ossim_uint32 band = 0; band < bands; ++band)
          {
-            for(ossim_uint32 band = 0; band < bands; ++band)
-            {
-               result->setMinPix(inputSource->getMinPixelValue(band), band);
-               result->setMaxPix(inputSource->getMaxPixelValue(band), band);
-               result->setNullPix(inputSource->getNullPixelValue(band), band);
-            }
+            result->setMinPix(inputSource->getMinPixelValue(band), band);
+            result->setMaxPix(inputSource->getMaxPixelValue(band), band);
+            result->setNullPix(inputSource->getNullPixelValue(band), band);
          }
-         break;
       }
+      break;
    }
 
    return result;
@@ -178,56 +168,44 @@ ossimRefPtr<ossimImageData> ossimImageDataFactory::create(
          << (ossimScalarTypeLut::instance()->getEntryString(scalar))
          << std::endl;
    }
-   
+
    ossimRefPtr<ossimImageData> result = 0;
    switch(scalar)
    {
-      case OSSIM_UINT8:
-      {
-         result = new ossimU8ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_USHORT11:
-      {
-         result = new ossimU11ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_USHORT12:
-      {
-         result = new ossimU12ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_USHORT13:
-      {
-         result = new ossimU13ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_USHORT14:
-      {
-         result = new ossimU14ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_USHORT15:
-      {
-         result = new ossimU15ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_UINT16:
-      {
-         result = new ossimU16ImageData(owner, bands, width, height);
-         break;
-      }
-      case OSSIM_SINT16:
-      {
-         result = new ossimS16ImageData(owner, bands, width, height);
-         break;
-      }
-      default:
-      {
-         // create a generic image data implementation.
-         result = new ossimImageData(owner, scalar, bands, width, height);
-         break;
-      }
+   case OSSIM_UINT8:
+      result = new ossimU8ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT9:
+      result = new ossimU9ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT10:
+      result = new ossimU10ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT11:
+      result = new ossimU11ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT12:
+      result = new ossimU12ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT13:
+      result = new ossimU13ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT14:
+      result = new ossimU14ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT15:
+      result = new ossimU15ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_UINT16:
+      result = new ossimU16ImageData(owner, bands, width, height);
+      break;
+   case OSSIM_SINT16:
+      result = new ossimS16ImageData(owner, bands, width, height);
+      break;
+   default:
+      // create a generic image data implementation.
+      result = new ossimImageData(owner, scalar, bands, width, height);
+      break;
    }
 
    return result;
@@ -263,7 +241,7 @@ ossimRefPtr<ossimImageData> ossimImageDataFactory::create(
          << "ossimImageDataFactory::create ERROR:"
          << "\nNULL input source!" << std::endl;
    }
-   
+
    return result;
 }
 
