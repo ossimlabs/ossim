@@ -59,6 +59,9 @@ public:
       void clearFields();
       std::ostream &print(std::ostream &out,
                           const std::string &prefix = std::string()) const;
+      ossim_int16 getPowerX()const;
+      ossim_int16 getPowerY()const;
+      ossim_int16 getPowerZ()const;
 
    protected:
       char m_parameterPowerX[XPW_SIZE + 1];
@@ -74,6 +77,9 @@ public:
       void clearFields();
       std::ostream &print(std::ostream &out,
                           const std::string &prefix = std::string()) const;
+
+      ossim_float64 getCorrelation()const;
+      ossim_float64 getTau()const;
 
    protected:
       char m_segmentCorrelationValue[FLOAT21_SIZE + 1];
@@ -95,9 +101,9 @@ public:
          std::ostream &print(std::ostream &out,
                              const std::string &prefix = std::string()) const;
 
-         ossim_int64 getNumberOfOriginalAdjustableParametersInSubgroup() const;
-         bool getCSMCorrelationOptionFlag() const;
-         ossim_int64 getNumberOfCorrelationSegments() const;
+         ossim_int64 getNumopg() const;
+         bool getAcsmc() const;
+         ossim_int64 getNcseg() const;
 
       protected:
          /**
@@ -251,9 +257,12 @@ public:
    bool getUnmodeledCSMCorrelationOptionFlag()const;
    ossim_int64 getUncsr() const;
    ossim_int64 getUncsc() const;
+   virtual void setProperty(ossimRefPtr<ossimProperty> property);
+   virtual ossimRefPtr<ossimProperty> getProperty(const ossimString &name) const;
+   virtual void getPropertyNames(std::vector<ossimString> &propertyNames) const;
 
-       protected :
-       /**
+protected:
+   /**
    * TAG IID (80 bytes BCS-A). Required
    *
    * Image Identifier. This field contains a character string that uniquely 
@@ -262,7 +271,7 @@ public:
    * chipping, re-sampling, or other such image-to-image transformations. The image 
    * identifier is left justified with trailing spaces
    */
-       char m_iid[IID_SIZE + 1];
+   char m_iid[IID_SIZE + 1];
 
    /**
     * TAG EDITION (40 bytes BCS-A). Required
@@ -316,7 +325,7 @@ public:
     * 
     * Values 01 to 53
     */
-   char m_nparo[NPAR_SIZE + 1];
+   char m_nparo[NPARO_SIZE + 1];
 
    /**
     * TAG IGN (2 bytes BCS-N). Conditional INCLIC == Y
@@ -802,7 +811,7 @@ public:
     */
    StringArray m_gsapidArray;
 
-       /**
+   /**
     * NBASIS (2 Bytes). Conditional APBASE==Y and INCLIC == Y
     * 
     * Number of Basis Adjustable Parameters. This field contains the number of RSM adjustable parameters 
@@ -814,7 +823,7 @@ public:
     * 
     * Values 1-99
     */
-       char m_nbasis[NBASIS_SIZE + 1];
+   char m_nbasis[NBASIS_SIZE + 1];
 
    /**
     * AEL ( 21 bytes each BCS-A). Conditional APBASE==Y and INCLIC == Y
@@ -840,7 +849,7 @@ public:
     * 
     *   +9.99999999999999E+99
     */
-       StringArray m_map;
+   StringArray m_map;
 
    /**
     * URR (21 Byte BCS-A). Conditional INCLUC == Y
@@ -954,7 +963,7 @@ public:
    std::vector<CorrelationSegment> m_uncsrEntries;
 
    /**
-    * UNCSR (1 Byte BCS-N). Conditional INCLUC == Y and UACSMC == N
+    * UNCSC (1 Byte BCS-N). Conditional INCLUC == Y and UACSMC == N
     * 
     * Number of Correlation Segments for independent variable Column distance. 
     * This field contains the number of piece-wise linear correlation 

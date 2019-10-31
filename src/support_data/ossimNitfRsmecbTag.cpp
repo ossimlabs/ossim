@@ -3,11 +3,61 @@
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimStringProperty.h>
+#include <ossim/base/ossimBooleanProperty.h>
 
 #include <iostream>
 #include <iomanip>
 
 RTTI_DEF1(ossimNitfRsmecbTag, "ossimNitfRsmecbTag", ossimNitfRegisteredTag);
+
+static const ossimString IID_PROPERTY     = "IID";
+static const ossimString EDITION_PROPERTY = "EDITION";
+static const ossimString INCLIC_PROPERTY  = "INCLIC";
+static const ossimString INCLUC_PROPERTY  = "INCLUC";
+static const ossimString NPAR_PROPERTY    = "NPAR";
+static const ossimString NPARO_PROPERTY   = "NPARO";
+static const ossimString IGN_PROPERTY     = "IGN";
+static const ossimString CVDATE_PROPERTY  = "CVDATE";
+static const ossimString APTYP_PROPERTY   = "APTYP";
+static const ossimString LOCTYP_PROPERTY  = "LOCTYP";
+static const ossimString NSFX_PROPERTY    = "NSFX";
+static const ossimString NSFY_PROPERTY    = "NSFY";
+static const ossimString NSFZ_PROPERTY    = "NSFZ";
+static const ossimString NOFFX_PROPERTY   = "NOFFX";
+static const ossimString NOFFY_PROPERTY   = "NOFFY";
+static const ossimString NOFFZ_PROPERTY   = "NOFFZ";
+static const ossimString XUOL_PROPERTY    = "XUOL";
+static const ossimString YUOL_PROPERTY    = "YUOL";
+static const ossimString ZUOL_PROPERTY    = "ZUOL";
+static const ossimString XUXL_PROPERTY    = "XUXL";
+static const ossimString XUYL_PROPERTY    = "XUYL";
+static const ossimString XUZL_PROPERTY    = "XUZL";
+static const ossimString YUXL_PROPERTY    = "YUXL";
+static const ossimString YUYL_PROPERTY    = "YUYL";
+static const ossimString YUZL_PROPERTY    = "YUZL";
+static const ossimString ZUXL_PROPERTY    = "ZUXL";
+static const ossimString ZUYL_PROPERTY    = "ZUYL";
+static const ossimString ZUZL_PROPERTY    = "ZUZL";
+static const ossimString APBASE_PROPERTY  = "APBASE";
+static const ossimString NISAP_PROPERTY   = "NISAP";
+static const ossimString NISAPR_PROPERTY  = "NISAPR";
+static const ossimString NISAPC_PROPERTY  = "NISAPC";
+static const ossimString NGSAP_PROPERTY   = "NGSAP";
+static const ossimString NBASIS_PROPERTY  = "NBASIS";
+static const ossimString URR_PROPERTY     = "URR";
+static const ossimString URC_PROPERTY     = "URC";
+static const ossimString UCC_PROPERTY     = "UCC";
+static const ossimString UACSMC_PROPERTY  = "UACSMC";
+static const ossimString UNCSR_PROPERTY   = "UNCSR";
+static const ossimString UNCSC_PROPERTY   = "UNCSC";
+static const ossimString UACR_PROPERTY    = "UACR";
+static const ossimString UALPCR_PROPERTY  = "UALPCR";
+static const ossimString UBETCR_PROPERTY  = "UBETCR";
+static const ossimString UTCR_PROPERTY    = "UTCR";
+static const ossimString UACC_PROPERTY    = "UACC";
+static const ossimString UALPCC_PROPERTY  = "UALPCC";
+static const ossimString UBETCC_PROPERTY  = "UBETCC";
+static const ossimString UTCC_PROPERTY    = "UTCC";
 
 ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::ImageSpaceAdjustableParameter()
 {
@@ -43,6 +93,21 @@ std::ostream &ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::print(std::ostr
     return out;
 }
 
+ossim_int16 ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::getPowerX() const 
+{
+    return ossimString(m_parameterPowerX).toInt16();
+}
+
+ossim_int16 ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::getPowerY() const
+{
+   return ossimString(m_parameterPowerY).toInt16();
+}
+
+ossim_int16 ossimNitfRsmecbTag::ImageSpaceAdjustableParameter::getPowerZ() const
+{
+   return ossimString(m_parameterPowerZ).toInt16();
+}
+
 ossimNitfRsmecbTag::CorrelationSegment::CorrelationSegment()
 {
    clearFields();
@@ -76,6 +141,16 @@ std::ostream &ossimNitfRsmecbTag::CorrelationSegment::print(std::ostream &out,
    return out;
 }
 
+ossim_float64 ossimNitfRsmecbTag::CorrelationSegment::getCorrelation() const
+{
+   return ossimString(m_segmentCorrelationValue).toFloat64();
+}
+
+ossim_float64 ossimNitfRsmecbTag::CorrelationSegment::getTau() const
+{
+   return ossimString(m_segmentTauValue).toFloat64();
+}
+
 ossimNitfRsmecbTag::IGNEntry::IGNEntry()
 {
    clearFields();
@@ -84,7 +159,7 @@ ossimNitfRsmecbTag::IGNEntry::IGNEntry()
 void ossimNitfRsmecbTag::IGNEntry::parseStream(std::istream &in)
 {
    in.read(m_numopg, NUMOPG_SIZE);
-   ossim_int64 numopg = getNumberOfOriginalAdjustableParametersInSubgroup();
+   ossim_int64 numopg = getNumopg();
    ossim_int64 totalNumopg = ((numopg + 1)*(numopg)) / 2;
    ossim_int64 idx = 0;
    m_errorCovarianceElement.resize(totalNumopg);
@@ -96,10 +171,10 @@ void ossimNitfRsmecbTag::IGNEntry::parseStream(std::istream &in)
    }
    in.read(m_tcdf, TCDF_SIZE);
    in.read(m_acsmc, ACSMC_SIZE);
-   if (!getCSMCorrelationOptionFlag())
+   if (!getAcsmc())
    {
       in.read(m_ncseg, NCSEG_SIZE);
-      ossim_int64 ncseg = getNumberOfCorrelationSegments();
+      ossim_int64 ncseg = getNcseg();
       m_correlationSegmentArray.resize(ncseg);
       for (idx = 0; idx < ncseg; ++idx)
       {
@@ -148,17 +223,17 @@ std::ostream &ossimNitfRsmecbTag::IGNEntry::print(std::ostream &out,
    return out;
 }
 
-ossim_int64 ossimNitfRsmecbTag::IGNEntry::getNumberOfOriginalAdjustableParametersInSubgroup() const
+ossim_int64 ossimNitfRsmecbTag::IGNEntry::getNumopg() const
 {
    return ossimString(m_numopg).toInt64();
 }
 
-bool ossimNitfRsmecbTag::IGNEntry::getCSMCorrelationOptionFlag() const
+bool ossimNitfRsmecbTag::IGNEntry::getAcsmc() const
 {
    return ossimString(m_acsmc).toBool();
 }
 
-ossim_int64 ossimNitfRsmecbTag::IGNEntry::getNumberOfCorrelationSegments() const
+ossim_int64 ossimNitfRsmecbTag::IGNEntry::getNcseg() const
 {
    return ossimString(m_ncseg).toInt64();
 }
@@ -556,4 +631,94 @@ ossim_int64 ossimNitfRsmecbTag::getUncsr() const
 ossim_int64 ossimNitfRsmecbTag::getUncsc() const
 {
    return ossimString(m_uncsc).toInt64();
+}
+
+void ossimNitfRsmecbTag::setProperty(ossimRefPtr<ossimProperty> property)
+{
+    ossimNitfRegisteredTag::setProperty(property);
+}
+
+ossimRefPtr<ossimProperty> ossimNitfRsmecbTag::getProperty(const ossimString &name) const
+{
+   ossimRefPtr<ossimProperty> result = ossimNitfRegisteredTag::getProperty(name);
+
+   if(!result)
+   {
+      if(name == IID_PROPERTY)
+      {
+         result = new ossimStringProperty(IID_PROPERTY,
+                                           ossimString(m_iid).trim());
+      }
+      else if(name == EDITION_PROPERTY)
+      {
+         result = new ossimStringProperty(EDITION_PROPERTY,
+                                           ossimString(m_edition).trim());
+      }
+      else if (name == INCLIC_PROPERTY)
+      {
+         result = new ossimBooleanProperty(INCLIC_PROPERTY, 
+                                           ossimString(m_inclic).toBool());
+      }
+      else if (name == INCLUC_PROPERTY)
+      {
+         result = new ossimBooleanProperty(INCLUC_PROPERTY,
+                                           ossimString(m_incluc).toBool());
+      }
+   }
+
+   return result;
+}
+
+void ossimNitfRsmecbTag::getPropertyNames(std::vector<ossimString> &propertyNames) const
+{
+   ossimNitfRegisteredTag::getPropertyNames(propertyNames);
+
+   propertyNames.push_back(IID_PROPERTY);
+   propertyNames.push_back(EDITION_PROPERTY);
+   propertyNames.push_back(INCLIC_PROPERTY);
+   propertyNames.push_back(INCLUC_PROPERTY);
+   propertyNames.push_back(NPAR_PROPERTY);
+   propertyNames.push_back(NPARO_PROPERTY);
+   propertyNames.push_back(IGN_PROPERTY);
+   propertyNames.push_back(CVDATE_PROPERTY);
+   propertyNames.push_back(APTYP_PROPERTY);
+   propertyNames.push_back(LOCTYP_PROPERTY);
+   propertyNames.push_back(NSFX_PROPERTY);
+   propertyNames.push_back(NSFY_PROPERTY);
+   propertyNames.push_back(NSFZ_PROPERTY);
+   propertyNames.push_back(NOFFX_PROPERTY);
+   propertyNames.push_back(NOFFY_PROPERTY);
+   propertyNames.push_back(NOFFZ_PROPERTY);
+   propertyNames.push_back(XUOL_PROPERTY);
+   propertyNames.push_back(YUOL_PROPERTY);
+   propertyNames.push_back(ZUOL_PROPERTY);
+   propertyNames.push_back(XUXL_PROPERTY);
+   propertyNames.push_back(XUYL_PROPERTY);
+   propertyNames.push_back(XUZL_PROPERTY);
+   propertyNames.push_back(YUXL_PROPERTY);
+   propertyNames.push_back(YUYL_PROPERTY);
+   propertyNames.push_back(YUZL_PROPERTY);
+   propertyNames.push_back(ZUXL_PROPERTY);
+   propertyNames.push_back(ZUYL_PROPERTY);
+   propertyNames.push_back(ZUZL_PROPERTY);
+   propertyNames.push_back(APBASE_PROPERTY);
+   propertyNames.push_back(NISAP_PROPERTY);
+   propertyNames.push_back(NISAPR_PROPERTY);
+   propertyNames.push_back(NISAPC_PROPERTY);
+   propertyNames.push_back(NGSAP_PROPERTY);
+   propertyNames.push_back(NBASIS_PROPERTY);
+   propertyNames.push_back(URR_PROPERTY);
+   propertyNames.push_back(URC_PROPERTY);
+   propertyNames.push_back(UCC_PROPERTY);
+   propertyNames.push_back(UACSMC_PROPERTY);
+   propertyNames.push_back(UNCSR_PROPERTY);
+   propertyNames.push_back(UNCSC_PROPERTY);
+   propertyNames.push_back(UACR_PROPERTY);
+   propertyNames.push_back(UALPCR_PROPERTY);
+   propertyNames.push_back(UBETCR_PROPERTY);
+   propertyNames.push_back(UTCR_PROPERTY);
+   propertyNames.push_back(UACC_PROPERTY);
+   propertyNames.push_back(UALPCC_PROPERTY);
+   propertyNames.push_back(UBETCC_PROPERTY);
+   propertyNames.push_back(UTCC_PROPERTY);
 }
