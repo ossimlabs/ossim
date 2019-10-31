@@ -3,153 +3,167 @@
 //
 // $Id: ossimPolyArea2d.cpp 23623 2015-11-13 18:24:28Z gpotts $
 //---
-
 #include <ossim/base/ossimPolyArea2d.h>
-#include <ossim/base/ossimDrect.h>
-#include <ossim/base/ossimIrect.h>
+#include <ossim/base/ossimReferenced.h>
+#include <ossim/base/ossimPolygon.h>
+#include <ossim/base/ossimNotifyContext.h>
+#include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimKeywordNames.h>
-#include <ossim/base/ossimNotify.h>
-#include <ossim/base/ossimRefPtr.h>
-#include <ossim/base/ossimString.h>
-#include <geos/geom/Coordinate.h>
-#include <geos/geom/CoordinateArraySequence.h>
-#include <geos/geom/GeometryFactory.h>
-#include <geos/geom/LinearRing.h>
-#include <geos/opBuffer.h>
-#include <geos/geom/Point.h>
-#include <geos/geom/Polygon.h>
-#include <geos/geom/MultiPolygon.h>
-#include <geos/geom/PrecisionModel.h>
-#include <geos/io/WKTReader.h>
-#include <geos/io/WKTWriter.h>
-#include <geos/util/GEOSException.h>
-#include <geos/operation/valid/IsValidOp.h>
-#include <geos/opBuffer.h>
-#include <cstdlib>
-#include <exception>
-#include <memory>
 #include <vector>
-#include <mutex>
+#include <cstdio>
+#include <cstdarg>
+#include <geos_c.h>
 
-using namespace std;
-
-class MyGeomFactory : public geos::geom::GeometryFactory
+class ossimPolyArea2dPrivate
 {
 public:
-   MyGeomFactory():
-   geos::geom::GeometryFactory(new geos::geom::PrecisionModel(geos::geom::PrecisionModel::FLOATING),
-                             -1)
+   typedef GEOSGeometry *GEOSGeometryPtr;
+   typedef const GEOSGeometry *ConstGEOSGeometryPtr;
+   ossimPolyArea2dPrivate() : m_geometry(GEOSGeom_createEmptyPolygon()) {}
+   virtual ~ossimPolyArea2dPrivate() { deleteGeometry(); }
+   void deleteGeometry()
    {
-
+      if (m_geometry)
+         GEOSGeom_destroy(m_geometry);
+      m_geometry = 0;
    }
-}; 
-class ossimGeometryFactoryWrapper : public ossimReferenced
-{
-public:
-   ossimGeometryFactoryWrapper()
-      : m_geomFactory(0)
+
+   void setGeometry(GEOSGeometryPtr geom)
    {
-      //geos::geom::PrecisionModel *pm =
-      //   new geos::geom::PrecisionModel(geos::geom::PrecisionModel::FLOATING);
-      m_geomFactory = new MyGeomFactory();//new geos::geom::GeometryFactory(pm, -1); 
-   }
-   virtual ~ossimGeometryFactoryWrapper(){if(m_geomFactory) delete m_geomFactory;m_geomFactory=0;}
-   
-   MyGeomFactory* m_geomFactory;
-};
-
-class OssimPolyArea2dPrivate
-{
-public:
-   typedef geos::geom::Geometry* GeometryPtr;
-   typedef const geos::geom::Geometry* ConstGeometryPtr;
-   
-   OssimPolyArea2dPrivate(GeometryPtr geom=0);
-   ~OssimPolyArea2dPrivate();
-   
-   void deleteGeometry() { if(m_geometry) { delete m_geometry; m_geometry = 0; }}
-   void setGeometry(const ossimPolygon& polygon, const vector<ossimPolygon>& holes = vector<ossimPolygon>());
-   void setGeometry(GeometryPtr geom){deleteGeometry();m_geometry=geom;}
-   geos::geom::GeometryFactory* geomFactory(){{return m_globalFactory.valid()?m_globalFactory->m_geomFactory:0;}}
-   GeometryPtr m_geometry;
-   static ossimRefPtr<ossimGeometryFactoryWrapper> m_globalFactory; 
-};
-
-ossimRefPtr<ossimGeometryFactoryWrapper> OssimPolyArea2dPrivate::m_globalFactory;
-
-OssimPolyArea2dPrivate::OssimPolyArea2dPrivate(GeometryPtr geom)
-:m_geometry(geom)
-{
-   static std::mutex globalFactoryMutex;
-   
-   {
-      std::lock_guard<std::mutex> lock(globalFactoryMutex);
-      if(!m_globalFactory.valid())
+      if(geom != m_geometry)
       {
-         m_globalFactory = new ossimGeometryFactoryWrapper();
-      }    
+         deleteGeometry();
+         m_geometry = geom;
+      }
    }
-}
+   void setGeometry(const ossimPolygon &polygon, const std::vector<ossimPolygon> &holes = std::vector<ossimPolygon>());
 
-OssimPolyArea2dPrivate::~OssimPolyArea2dPrivate()
+   void ringToPoints(const ConstGEOSGeometryPtr geom, std::vector<ossimDpt> &points) const;
+   void recurseVisibleGeometries(ossimPolygon::Vector &polyList) const
+   {
+      recurseVisibleGeometries(m_geometry, polyList);
+   }
+
+   void recurseVisibleGeometries(ConstGEOSGeometryPtr geom,
+                                 ossimPolygon::Vector &polygons) const;
+
+   void getVisiblePolygons(ConstGEOSGeometryPtr geom,
+                           ossimPolygon::Vector &polygons) const;
+
+   bool getVisiblePolygons(ossimPolygon::Vector &polygons) const;
+
+   void getHoles(ConstGEOSGeometryPtr geom,
+                 ossimPolygon::Vector &polygons) const;
+   bool getPolygonHoles(ossimPolygon::Vector &polygons) const;
+   bool getPolygonHoles(ConstGEOSGeometryPtr geom,
+                        ossimPolygon::Vector &polygons) const;
+   void recurseGeometryHoles(ConstGEOSGeometryPtr geom,
+                             ossimPolygon::Vector &polygons) const;
+   void getBoundingRect(ossimDrect &bounds) const
+   {
+      bounds.makeNan();
+      if (!isEmpty())
+      {
+         GEOSGeometry *geom = GEOSEnvelope(m_geometry);
+
+         if (geom)
+         {
+            ossimPolygon::Vector polys;
+            getVisiblePolygons(geom, polys);
+            for (ossim_int32 idx = 0; idx < polys.size(); ++idx)
+            {
+               if (bounds.isNan())
+               {
+                  polys[idx].getBoundingRect(bounds);
+               }
+               else
+               {
+                  ossimDrect tempRect;
+                  polys[idx].getBoundingRect(tempRect);
+                  bounds = bounds.combine(tempRect);
+               }
+            }
+            GEOSGeom_destroy(geom);
+            geom = 0;
+         }
+      }
+   }
+   std::string toString() const;
+   bool setFromWkt(const std::string &s);
+
+   bool isEmpty() const;
+   bool isValid(bool displayValidationError = false) const;
+   bool isPointWithin(const ossimDpt &pt) const;
+   GEOSGeometryPtr m_geometry;
+};
+
+void ossimPolyArea2dPrivate::setGeometry(const ossimPolygon &exteriorRing,
+                                         const std::vector<ossimPolygon> &interiorRings)
 {
    deleteGeometry();
-}
 
-void OssimPolyArea2dPrivate::setGeometry(
-   const ossimPolygon& exteriorRing, const vector<ossimPolygon>& interiorRings)
-{
-   deleteGeometry();
-   
-   geos::geom::CoordinateArraySequence *cas = new geos::geom::CoordinateArraySequence();
-   
-   const std::vector<ossimDpt>& pts = exteriorRing.getVertexList();
-
+   if (exteriorRing.getNumberOfVertices() < 1)
+      return;
+   GEOSGeometryPtr shell = 0;
+   std::vector<GEOSGeometryPtr> holes;
+   const std::vector<ossimDpt> &pts = exteriorRing.getVertexList();
    int idx = 0;
    int n = (int)pts.size();
-   
-   if(n > 0)
+
+   bool firstAndLastSame = ((pts[0].x == pts[n - 1].x) && (pts[0].y == pts[n - 1].y));
+   if (n > 0)
    {
+      GEOSCoordSequence *shellSeq = GEOSCoordSeq_create(
+          exteriorRing.getNumberOfVertices() + ((firstAndLastSame) ? 0 : 1), 2);
       //fill the exterior ring
       for (idx = 0; idx < n; idx++)
       {
-         cas->add(geos::geom::Coordinate(pts[idx].x, pts[idx].y));
+         GEOSCoordSeq_setXY(shellSeq, idx, pts[idx].x, pts[idx].y);
       }
-      
       //if the original polygon didn't have the first and last point the same, make it so
-      if((pts[0].x != pts[n-1].x) || (pts[0].y!=pts[n-1].y))
+      if (!firstAndLastSame)
       {
-         cas->add(geos::geom::Coordinate(pts[0].x, pts[0].y));
+         GEOSCoordSeq_setXY(shellSeq, idx, pts[0].x, pts[0].y);
       }
-      
+      shell = GEOSGeom_createLinearRing(shellSeq);
       //fill the interior rings
-      vector<geos::geom::Geometry*> *holes = new vector<geos::geom::Geometry*>();
-      for (ossim_uint32 interiorRingIdx = 0; interiorRingIdx < interiorRings.size(); ++interiorRingIdx)
+      if (!interiorRings.empty())
       {
-         geos::geom::CoordinateArraySequence *interiorCas =
-            new geos::geom::CoordinateArraySequence();
-         const std::vector<ossimDpt>& vertexPts = interiorRings[interiorRingIdx].getVertexList();
-         for(ossim_uint32 vertexIndex=0; vertexIndex < vertexPts.size(); ++vertexIndex)
+         for (ossim_uint32 interiorRingIdx = 0; interiorRingIdx < interiorRings.size(); ++interiorRingIdx)
          {
-            interiorCas->add(geos::geom::Coordinate(vertexPts[vertexIndex].x,
-                                                    vertexPts[vertexIndex].y));
+            if (interiorRings[interiorRingIdx].getNumberOfVertices() > 0)
+            {
+               const std::vector<ossimDpt> &vertexPts = interiorRings[interiorRingIdx].getVertexList();
+               firstAndLastSame = ((vertexPts[0].x == vertexPts[n - 1].x) && (vertexPts[0].y == vertexPts[n - 1].y));
+
+               GEOSCoordSequence *ring = GEOSCoordSeq_create(
+                   vertexPts.size() + ((firstAndLastSame) ? 0 : 1), 2);
+               for (ossim_uint32 vertexIndex = 0; vertexIndex < vertexPts.size(); ++vertexIndex)
+               {
+                  GEOSCoordSeq_setXY(ring, vertexIndex, vertexPts[vertexIndex].x, vertexPts[vertexIndex].y);
+               }
+
+               //if the original polygon didn't have the first and last point the same, make it so
+               if (!firstAndLastSame)
+               {
+                  GEOSCoordSeq_setXY(ring, vertexPts.size(), vertexPts[0].x, vertexPts[0].y);
+               }
+               GEOSGeometryPtr hole = GEOSGeom_createLinearRing(ring);
+               holes.push_back(hole);
+            }
          }
-         
-         //if the original polygon didn't have the first and last point the same, make it so
-         if((vertexPts[0].x != vertexPts[vertexPts.size()-1].x) ||
-            (vertexPts[0].y!=vertexPts[vertexPts.size()-1].y))
-         {
-            interiorCas->add(geos::geom::Coordinate(vertexPts[0].x, vertexPts[0].y));
-         }
-         
-         geos::geom::LinearRing *hole = geomFactory()->createLinearRing(interiorCas);
-         holes->push_back(hole);
       }
-      
-      geos::geom::LinearRing* shell = geomFactory()->createLinearRing(cas);
-      if ( shell )
+
+      if (shell)
       {
-         m_geometry = geomFactory()->createPolygon(shell, holes);
+         if (holes.size())
+         {
+            m_geometry = GEOSGeom_createPolygon(shell, &holes.front(), holes.size());
+         }
+         else
+         {
+            m_geometry = GEOSGeom_createPolygon(shell, 0, 0);
+         }
       }
       else
       {
@@ -158,708 +172,540 @@ void OssimPolyArea2dPrivate::setGeometry(
    }
 }
 
-void ossimPolyArea2d::recurseVisibleGeometries(
-   std::vector<ossimPolygon>& polyList, const geos::geom::Geometry* geom) const
+void ossimPolyArea2dPrivate::ringToPoints(const ConstGEOSGeometryPtr geom, std::vector<ossimDpt> &points) const
 {
-   int nGeoms = (int)geom->getNumGeometries();
-   
-   if(nGeoms < 2 )
+   double x, y;
+   if (!geom)
+      return;
+   ossim_int32 nPoints = GEOSGetNumCoordinates(geom);
+   if (nPoints > 0)
    {
-      const geos::geom::Polygon* poly = dynamic_cast<const geos::geom::Polygon*> (geom);
-      
-      if (poly)
+      const GEOSCoordSequence *seq = GEOSGeom_getCoordSeq(geom);
+      ossim_int32 i = 0;
+      for (i = 0; i < nPoints; i++)
       {
-         const geos::geom::LineString* lineString = dynamic_cast<const geos::geom::LineString*> (poly->getExteriorRing());
-         if (lineString)
-         {
-            int currentPolyIdx = (int)polyList.size();
-            int nPoints = (int)lineString->getNumPoints();
-            int idx = 0;
-            
-            polyList.push_back(ossimPolygon());
-            
-            for (idx=0; idx<nPoints; idx++)
-            {
-               std::unique_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
-               polyList[currentPolyIdx].addPoint(point->getX(), point->getY());
-            }
-         }
+         GEOSCoordSeq_getX(seq, i, &x);
+         GEOSCoordSeq_getY(seq, i, &y);
+         points.push_back(ossimDpt(x, y));
+      }
+   }
+}
+
+void ossimPolyArea2dPrivate::getHoles(ConstGEOSGeometryPtr geom,
+                                      ossimPolygon::Vector &polygons) const
+{
+   int geomType = GEOSGeomTypeId(geom);
+   std::vector<ossimDpt> points;
+   switch (geomType)
+   {
+   case GEOS_LINESTRING:
+   case GEOS_LINEARRING:
+   {
+      ringToPoints(geom, points);
+      polygons.push_back(ossimPolygon(points));
+      break;
+   }
+   }
+}
+
+void ossimPolyArea2dPrivate::getVisiblePolygons(ConstGEOSGeometryPtr geom,
+                                                ossimPolygon::Vector &polygons) const
+{
+   int geomType = GEOSGeomTypeId(geom);
+   std::vector<ossimDpt> points;
+
+   switch (geomType)
+   {
+   case GEOS_LINESTRING:
+   case GEOS_LINEARRING:
+   {
+      ringToPoints(geom, points);
+      polygons.push_back(ossimPolygon(points));
+      break;
+   }
+   case GEOS_POLYGON:
+   {
+      ConstGEOSGeometryPtr geom2 = GEOSGetExteriorRing(geom);
+      ringToPoints(geom2, points);
+      polygons.push_back(ossimPolygon(points));
+
+      break;
+   }
+   }
+}
+void ossimPolyArea2dPrivate::recurseVisibleGeometries(ConstGEOSGeometryPtr geom,
+                                                      ossimPolygon::Vector &polygons) const
+{
+   ossim_int32 nGeoms = GEOSGetNumGeometries(geom);
+   ConstGEOSGeometryPtr geomPtr = 0;
+   if (nGeoms < 2)
+   {
+      geomPtr = GEOSGetGeometryN(geom, 0);
+      if (geomPtr)
+      {
+         getVisiblePolygons(geomPtr, polygons);
       }
    }
    else
    {
-      for (int idx=0; idx < nGeoms; ++idx)
+      for (int idx = 0; idx < nGeoms; ++idx)
       {
-         recurseVisibleGeometries(polyList, geom->getGeometryN(idx));
+         geomPtr = GEOSGetGeometryN(geom, idx);
+         recurseVisibleGeometries(geomPtr, polygons);
       }
    }
 }
 
-void ossimPolyArea2d::recurseHoles(std::vector<ossimPolygon>& polyList,
-                                   const geos::geom::Geometry* geom) const
+void ossimPolyArea2dPrivate::recurseGeometryHoles(ConstGEOSGeometryPtr geom,
+                                                  ossimPolygon::Vector &polygons) const
 {
-   int nGeoms = (int)geom->getNumGeometries();
-   
-   if(nGeoms < 2 )
+   ossim_int32 nGeoms = GEOSGetNumGeometries(geom);
+   ConstGEOSGeometryPtr geomPtr = 0;
+   if (nGeoms < 2)
    {
-      const geos::geom::Polygon* poly = dynamic_cast<const geos::geom::Polygon*> (geom);
+      ossim_int32 nInteriorRings = GEOSGetNumInteriorRings(geom);
+      ossim_int32 idx = 0;
 
-      if (poly)
+      for (idx = 0; idx < nInteriorRings; ++idx)
       {
-         ossim_uint32 nInteriorRings = (ossim_uint32)poly->getNumInteriorRing();
-         ossim_uint32 idx = 0;
-         
-         for(idx = 0; idx < nInteriorRings; ++idx)
-         {
-            const geos::geom::LineString* lineString = poly->getInteriorRingN(idx);
-            if (lineString)
-            {
-               int currentPolyIdx = (int)polyList.size();
-               int nPoints = (int)lineString->getNumPoints();
-               int idx = 0;
-
-               polyList.push_back(ossimPolygon());
-
-               for (idx=0; idx<nPoints; idx++)
-               {
-                  std::unique_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
-                  polyList[currentPolyIdx].addPoint(point->getX(), point->getY());
-               }
-            }
-         }
+         const GEOSGeometry *ringGeom = GEOSGetInteriorRingN(geom, idx);
+         getHoles(ringGeom, polygons);
       }
    }
    else
    {
-      int idx = 0;
-      
-      for (idx=0; idx < nGeoms; idx++)
+      for (int idx = 0; idx < nGeoms; ++idx)
       {
-         recurseHoles(polyList, geom->getGeometryN(idx));
+         geomPtr = GEOSGetGeometryN(geom, idx);
+         recurseGeometryHoles(geomPtr, polygons);
       }
    }
 }
 
-void ossimPolyArea2d::recurseCompleteGeometries(std::vector<ossimPolyArea2d>& polyList,
-                                                const geos::geom::Geometry* geom) const
+bool ossimPolyArea2dPrivate::getVisiblePolygons(ossimPolygon::Vector &polygons) const
 {
-   int nGeoms = (int)geom->getNumGeometries();
-   if(nGeoms < 2 )
+   bool foundPolys = false;
+   if (m_geometry)
    {
-      const geos::geom::Polygon* poly = dynamic_cast<const geos::geom::Polygon*> (geom);
+      ossim_uint32 sizeBefore = (ossim_uint32)polygons.size();
+      recurseVisibleGeometries(m_geometry, polygons);
+      foundPolys = (sizeBefore != polygons.size());
+   }
 
-      if (poly)
-      {
-         //get exterior shell for the geometry
-         ossimPolygon shell;
-         const geos::geom::LineString* lineString =
-            dynamic_cast<const geos::geom::LineString*> (poly->getExteriorRing());
-         if (lineString)
-         {
-            int nPoints = (int)lineString->getNumPoints();
-            for (int idx = 0; idx<nPoints; idx++)
-            {
-               std::unique_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
-               shell.addPoint(point->getX(), point->getY());
-            }
-         }
-         
-         // Get interior rings for the geometry.
-         std::size_t nInteriorRings = poly->getNumInteriorRing();
-         vector<ossimPolygon> holes(nInteriorRings);
-         for(std::size_t holeIdx = 0; holeIdx < nInteriorRings; ++holeIdx)
-         {
-            const geos::geom::LineString* lineString = poly->getInteriorRingN(holeIdx);
-            if (lineString)
-            {
-               std::size_t nPoints = lineString->getNumPoints();
-               for (std::size_t idx = 0; idx<nPoints; ++idx)
-               {
-                  std::unique_ptr<const geos::geom::Point> point(lineString->getPointN(idx));
-                  holes[holeIdx].addPoint(point->getX(), point->getY());
-               }
-            }
-         }
-         polyList.push_back(ossimPolyArea2d(shell, holes));
-      }
+   return foundPolys;
+}
+bool ossimPolyArea2dPrivate::getPolygonHoles(ossimPolygon::Vector &polygons) const
+{
+   return getPolygonHoles(m_geometry, polygons);
+}
+
+bool ossimPolyArea2dPrivate::getPolygonHoles(ConstGEOSGeometryPtr geom,
+                                             ossimPolygon::Vector &polygons) const
+{
+   bool foundPolys = false;
+   if (m_geometry)
+   {
+      ossim_uint32 sizeBefore = (ossim_uint32)polygons.size();
+      recurseGeometryHoles(m_geometry, polygons);
+      foundPolys = (sizeBefore != polygons.size());
+   }
+
+   return foundPolys;
+}
+
+std::string ossimPolyArea2dPrivate::toString() const
+{
+   std::string result;
+
+   if (m_geometry)
+   {
+      GEOSWKTWriter *wktWriter = GEOSWKTWriter_create();
+      GEOSWKTWriter_setRoundingPrecision(wktWriter, 20);
+      char *wkt_c = GEOSWKTWriter_write(wktWriter, m_geometry);
+
+      result = wkt_c;
+      GEOSWKTWriter_destroy(wktWriter);
+
+      GEOSFree(wkt_c);
+   }
+
+   return result;
+}
+bool ossimPolyArea2dPrivate::setFromWkt(const std::string &s)
+{
+   bool result = false;
+
+   GEOSWKTReader *reader = GEOSWKTReader_create();
+   GEOSGeometry *geom = GEOSWKTReader_read(reader, s.c_str());
+   result = (geom != 0);
+   setGeometry(geom);
+
+   GEOSWKTReader_destroy(reader);
+
+   return result;
+}
+
+
+bool ossimPolyArea2dPrivate::isEmpty() const
+{
+   bool result = true;
+   if (m_geometry)
+   {
+      result = (GEOSisEmpty(m_geometry) == 1);
+   }
+
+   return result;
+}
+
+bool ossimPolyArea2dPrivate::isValid(bool displayValidationError) const
+{
+   bool result = false;
+
+   if (!displayValidationError)
+   {
+      result = GEOSisValid(m_geometry) == 1;
    }
    else
    {
-      int idx = 0;
-      
-      for (idx=0; idx < nGeoms; idx++)
+      char *reason = GEOSisValidReason(m_geometry);
+      if (reason)
       {
-         recurseCompleteGeometries(polyList, geom->getGeometryN(idx));
+         ossimNotify(ossimNotifyLevel_INFO)
+             << "ossimPolyArea2dPrivate::isValid: " << reason << "\n";
+
+         GEOSFree(reason);
+         reason = 0;
       }
    }
+
+   return result;
+}
+bool ossimPolyArea2dPrivate::isPointWithin(const ossimDpt &pt) const
+{
+   bool result = false;
+
+   if (!isEmpty())
+   {
+      GEOSCoordSequence *pointSeq = GEOSCoordSeq_create(1, 2);
+      GEOSCoordSeq_setXY(pointSeq, 0, pt.x, pt.y);
+      GEOSGeometry *geom = GEOSGeom_createPoint(pointSeq);
+      result = (GEOSWithin(geom, m_geometry) == 1);
+
+      GEOSGeom_destroy(geom);
+   }
+
+   return result;
 }
 
-std::ostream& operator <<(std::ostream& out, const ossimPolyArea2d& rhs)
-{
-   if(rhs.m_privateData->m_geometry)
-   {
-      out << rhs.m_privateData->m_geometry->toString();
-   }
-   return out;
-}
 
 ossimPolyArea2d::ossimPolyArea2d()
-   :m_privateData(new OssimPolyArea2dPrivate)
+    : m_privateData(new ossimPolyArea2dPrivate())
 {
 }
 
-ossimPolyArea2d::ossimPolyArea2d(const vector<ossimGpt>& polygon)
-   :m_privateData(new OssimPolyArea2dPrivate)
+ossimPolyArea2d::ossimPolyArea2d(const std::vector<ossimGpt> &polygon)
+    : m_privateData(new ossimPolyArea2dPrivate())
 {
-   (*this) = polygon;
+   m_privateData->setGeometry(polygon);
 }
 
-ossimPolyArea2d::ossimPolyArea2d(const vector<ossimDpt>& polygon)
-   :m_privateData(new OssimPolyArea2dPrivate)
+ossimPolyArea2d::ossimPolyArea2d(const std::vector<ossimDpt> &polygon)
+    : m_privateData(new ossimPolyArea2dPrivate())
 {
-   (*this) = polygon;
+   m_privateData->setGeometry(polygon);
 }
 
-ossimPolyArea2d::ossimPolyArea2d(const ossimIrect& rect)
-   :m_privateData(new OssimPolyArea2dPrivate)
+ossimPolyArea2d::ossimPolyArea2d(const ossimPolygon &shell, const std::vector<ossimPolygon> &holes)
+    : m_privateData(new ossimPolyArea2dPrivate())
 {
-   (*this) = rect;
+   m_privateData->setGeometry(shell, holes);
 }
 
-ossimPolyArea2d::ossimPolyArea2d(const ossimDrect& rect)
-   :m_privateData(new OssimPolyArea2dPrivate)
+ossimPolyArea2d::ossimPolyArea2d(const ossimDpt &p1,
+                                 const ossimDpt &p2,
+                                 const ossimDpt &p3,
+                                 const ossimDpt &p4)
+    : m_privateData(new ossimPolyArea2dPrivate())
 {
-   (*this) = rect;
+   m_privateData->setGeometry(ossimPolygon(p1, p2, p3, p4));
 }
 
-ossimPolyArea2d::ossimPolyArea2d(const ossimPolygon& polygon)
-   :m_privateData(new OssimPolyArea2dPrivate)
+ossimPolyArea2d::ossimPolyArea2d(const ossimPolyArea2d &rhs)
+    : m_privateData(new ossimPolyArea2dPrivate())
 {
-   (*this) = polygon;
+   m_privateData->deleteGeometry();
+   m_privateData->m_geometry = GEOSGeom_clone(rhs.m_privateData->m_geometry);
 }
 
-ossimPolyArea2d::ossimPolyArea2d(const ossimPolygon& exteriorRing, const vector<ossimPolygon>& interiorRings)
-   :m_privateData(new OssimPolyArea2dPrivate)
-{	
-	m_privateData->setGeometry(exteriorRing, interiorRings);
+ossimPolyArea2d::ossimPolyArea2d(const ossimIrect &rect)
+    : m_privateData(new ossimPolyArea2dPrivate())
+{
+   m_privateData->setGeometry(ossimPolygon(rect));
 }
 
-ossimPolyArea2d::ossimPolyArea2d(const ossimPolyArea2d& rhs)
-   :m_privateData(new OssimPolyArea2dPrivate) 
+ossimPolyArea2d::ossimPolyArea2d(const ossimDrect &rect)
+    : m_privateData(new ossimPolyArea2dPrivate())
 {
-   *this = rhs;
+   m_privateData->setGeometry(ossimPolygon(rect));
 }
 
-ossimPolyArea2d::ossimPolyArea2d(const ossimDpt& p1,
-                                 const ossimDpt& p2,
-                                 const ossimDpt& p3,
-                                 const ossimDpt& p4)
-   :
-   m_privateData(new OssimPolyArea2dPrivate)
+ossimPolyArea2d::ossimPolyArea2d(const ossimPolygon &polygon)
+    : m_privateData(new ossimPolyArea2dPrivate())
 {
-   ossimPolygon temp(p1,p2,p3,p4);
-   *this = temp;
+   m_privateData->setGeometry(polygon);
 }
 
 ossimPolyArea2d::~ossimPolyArea2d()
 {
-   if(m_privateData)
+   if (m_privateData)
    {
       delete m_privateData;
-      m_privateData = 0;
    }
-}
-
-const ossimPolyArea2d& ossimPolyArea2d::operator =(const ossimPolyArea2d& rhs)
-{ 
-   if(this != &rhs)
-   {
-      if(rhs.m_privateData->m_geometry)
-      {
-         m_privateData->setGeometry(rhs.m_privateData->m_geometry->clone());
-      }
-   }
-   return *this;
-}
-
-const ossimPolyArea2d& ossimPolyArea2d::operator =(const ossimPolygon& polygon)
-{
-   m_privateData->setGeometry(polygon);
-
-   return *this;
-}
-
-const ossimPolyArea2d& ossimPolyArea2d::operator =(const ossimIrect& rect)
-{
-   return (*this = ossimPolygon(rect));
-}
-
-const ossimPolyArea2d& ossimPolyArea2d::operator =(const ossimDrect& rect)
-{
-   return (*this = ossimPolygon(rect));
-}
-
-const ossimPolyArea2d& ossimPolyArea2d::operator =(const vector<ossimGpt>& polygon)
-{
-   std::vector<ossimDpt> pts;
-   int idx = 0;
-   int n = (int)polygon.size();
-   for(idx = 0; idx < n;++idx)
-   {
-      pts.push_back(polygon[idx]);
-   }
-  
-   return (*this = ossimPolygon(pts));
-}
-
-const ossimPolyArea2d& ossimPolyArea2d::operator =(const vector<ossimDpt>& polygon)
-{
-   return (*this = ossimPolygon(polygon));
-}
-
-bool ossimPolyArea2d::intersects(const ossimPolyArea2d& rhs)const
-{
-   bool result = false;
-
-   if(m_privateData->m_geometry&&rhs.m_privateData->m_geometry)
-   {
-      result = m_privateData->m_geometry->intersects(rhs.m_privateData->m_geometry); 
-   }
-
-   return result;
-}
-
-ossimPolyArea2d ossimPolyArea2d::operator &(const ossimPolyArea2d& rhs)const
-{
-   if((this!=&rhs) && m_privateData->m_geometry && rhs.m_privateData->m_geometry)
-   {
-      ossimPolyArea2d result;
-      try // GEOS code throws exceptions...
-      {
-         result.m_privateData->setGeometry(m_privateData->m_geometry->intersection(
-                                              rhs.m_privateData->m_geometry));
-      }
-      catch( const std::exception& e )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator& Caught exception: " << e.what() << std::endl;
-         result.clearPolygons();
-      }
-      catch( ... )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator& Caught exception!" << std::endl;
-         result.clearPolygons();
-      }
-      return result;
-   }
-   return *this;
-}
-
-ossimPolyArea2d ossimPolyArea2d::operator +(const ossimPolyArea2d& rhs)const
-{
-   if((this!=&rhs) && m_privateData->m_geometry && rhs.m_privateData->m_geometry)
-   {
-      ossimPolyArea2d result;
-      try // GEOS code throws exceptions...
-      {
-         result.m_privateData->setGeometry(m_privateData->m_geometry->Union(
-                                              rhs.m_privateData->m_geometry));
-      }  
-      catch( const std::exception& e )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator+ Caught exception: " << e.what() << std::endl;
-         result.clearPolygons();
-      }
-      catch( ... )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator+ Caught exception!" << std::endl;
-         result.clearPolygons();
-      }
-      return result;
-   }
-   return *this;
-}
-ossimPolyArea2d ossimPolyArea2d::operator -(const ossimPolyArea2d& rhs)const
-{
-   if((this!=&rhs) && m_privateData->m_geometry && rhs.m_privateData->m_geometry)
-   {
-      ossimPolyArea2d result;
-      try // GEOS code throws exceptions...
-      {
-         result.m_privateData->setGeometry(m_privateData->m_geometry->difference(
-                                              rhs.m_privateData->m_geometry));
-      }
-      catch( const std::exception& e )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator- Caught exception: " << e.what() << std::endl;
-         result.clearPolygons();
-      }
-      catch( ... )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator- Caught exception!" << std::endl;
-         result.clearPolygons();
-      }
-      return result;
-   }
-   return *this;
-}
-
-const ossimPolyArea2d& ossimPolyArea2d::operator &=(const ossimPolyArea2d& rhs)
-{
-   if((this!=&rhs) && m_privateData->m_geometry && rhs.m_privateData->m_geometry)
-   {
-      try // GEOS code throws exceptions...
-      {
-         m_privateData->setGeometry(m_privateData->m_geometry->intersection(
-                                       rhs.m_privateData->m_geometry));
-      }
-      catch( const std::exception& e )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator&= Caught exception: " << e.what() << std::endl;
-         this->clearPolygons();
-      }
-      catch( ... )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator&= Caught exception!" << std::endl;
-         this->clearPolygons();
-      }      
-   }
-   return *this;
-}
-
-const ossimPolyArea2d& ossimPolyArea2d::operator +=(const ossimPolyArea2d& rhs)
-{
-   if((this!=&rhs) && m_privateData->m_geometry && rhs.m_privateData->m_geometry)
-   {
-      try // GEOS code throws exceptions...
-      {
-         m_privateData->setGeometry(m_privateData->m_geometry->Union(
-                                       rhs.m_privateData->m_geometry));
-      }
-      catch( const std::exception& e )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator+= Caught exception: " << e.what() << std::endl;
-         this->clearPolygons();
-      }
-      catch( ... )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator+= Caught exception!" << std::endl;
-         this->clearPolygons();
-      }      
-   }
-   return *this;
-}
-
-const ossimPolyArea2d& ossimPolyArea2d::operator -=(const ossimPolyArea2d& rhs)
-{
-   if((this!=&rhs) && m_privateData->m_geometry && rhs.m_privateData->m_geometry)
-   {
-      try // GEOS code throws exceptions...
-      {
-         m_privateData->setGeometry(m_privateData->m_geometry->difference(
-                                       rhs.m_privateData->m_geometry));
-      }
-      catch( const std::exception& e )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator-= Caught exception: " << e.what() << std::endl;
-         this->clearPolygons();
-      }
-      catch( ... )
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "ossimPolyArea2d::operator-= Caught exception!" << std::endl;
-         this->clearPolygons();
-      }      
-   }
-   return *this;
-}
-
-void ossimPolyArea2d::add(const ossimPolyArea2d& rhs)
-{
-   if(isEmpty())
-   {
-      *this=rhs;
-   }
-   else
-   {
-      geos::geom::Geometry* geom = m_privateData->m_geometry->Union(rhs.m_privateData->m_geometry);
-      if(geom) m_privateData->setGeometry(geom);
-   }
+   m_privateData = 0;
 }
 
 void ossimPolyArea2d::clearPolygons()
 {
-   m_privateData->deleteGeometry();
-#if 0
-   clearEngine();
-#endif
+   m_privateData->setGeometry(GEOSGeom_createEmptyPolygon());
 }
 
-bool ossimPolyArea2d::getVisiblePolygons(vector<ossimPolygon>& polyList)const
+const ossimPolyArea2d &ossimPolyArea2d::operator=(const ossimPolyArea2d &rhs)
 {
-   bool foundPolys = false;
-   if(m_privateData->m_geometry)
+   if (&rhs != this)
    {
-      ossim_uint32 sizeBefore = (ossim_uint32)polyList.size();
-      recurseVisibleGeometries(polyList, m_privateData->m_geometry);
-      foundPolys = (sizeBefore != polyList.size());
-   }
-
-   return foundPolys;
-}
-
-bool ossimPolyArea2d::getPolygonHoles(vector<ossimPolygon>& polyList)const
-{
-   bool foundPolys = false;
-   if(m_privateData->m_geometry)
-   {
-      ossim_uint32 sizeBefore = (ossim_uint32)polyList.size();
-      recurseHoles(polyList, m_privateData->m_geometry);
-      foundPolys = (sizeBefore != polyList.size());
-   }
-
-   return foundPolys;
-}
-
-bool ossimPolyArea2d::getCompletePolygons(vector<ossimPolyArea2d>& polyList)const
-{
-	bool foundPolys = false;
-	if(m_privateData->m_geometry){
-		ossim_uint32 sizeBefore = (ossim_uint32)polyList.size();
-		recurseCompleteGeometries(polyList, m_privateData->m_geometry);
-		foundPolys = (sizeBefore != polyList.size());
-	}
-	return foundPolys;
-}
-
-bool ossimPolyArea2d::isEmpty()const
-{
-   bool result = true;
-   if (m_privateData&&m_privateData->m_geometry)
-   {
-      result = m_privateData->m_geometry->isEmpty();
-   }
-
-   return result;
-}
-
-bool ossimPolyArea2d::isValid(bool displayValidationError)const
-{
-   bool result = false;
-   
-   if(m_privateData&&m_privateData->m_geometry)
-   {
-      if(displayValidationError)
-      {
-         geos::operation::valid::IsValidOp validityCheck(m_privateData->m_geometry);
-         geos::operation::valid::TopologyValidationError*
-            topologyValidationError(validityCheck.getValidationError());
-         // if(topologyValidationError == nullptr)
-         if(topologyValidationError == 0)
-         {
-            result = true;
-         }
-         else
-         {
-            ossimNotify(ossimNotifyLevel_INFO)
-               << "ossimPolyArea2d::isValid: " << topologyValidationError->toString() << std::endl;
-         }
-      }
-      else
-      {
-         result = m_privateData->m_geometry->isValid();
-      }
-   }
-   
-   return result;
-}
-
-bool ossimPolyArea2d::isPointWithin(const ossimDpt& point)const
-{
-   return isPointWithin(point.x, point.y);
-}
-
-bool ossimPolyArea2d::isPointWithin(double x, double y)const
-{
-   bool result = false;
-
-   if(!isEmpty())
-   {
-      geos::geom::Coordinate c(x,y);
-      geos::geom::Geometry* geom = m_privateData->geomFactory()->createPoint(c);
-  
-      result = m_privateData->m_geometry->intersects(geom);
-
-      delete geom;
-   }
-
-   return result;
-}
-
-void ossimPolyArea2d::getBoundingRect(ossimDrect& rect)
-{
-   rect.makeNan();
-
-   if(!isEmpty())
-   {
-      const geos::geom::Envelope* envelope = m_privateData->m_geometry->getEnvelopeInternal();
-
-      rect = ossimDrect(envelope->getMinX(), envelope->getMinY(), envelope->getMaxX(), envelope->getMaxY());
-   }
-}
-
-std::string ossimPolyArea2d::toString()const
-{
-   std::string result = "";
-
-   if(m_privateData->m_geometry)
-   {
-      result = m_privateData->m_geometry->toString();
-   }
-
-   return result;
-}
-
-ossimPolyArea2d ossimPolyArea2d::getBufferedShape(double distance) const{
-	ossimPolyArea2d result;
-	try{
-		geos::operation::buffer::BufferOp buffer_operation(m_privateData->m_geometry);
-		result.m_privateData->setGeometry( buffer_operation.getResultGeometry(distance));
-	}catch( const std::exception& e ){
-		ossimNotify(ossimNotifyLevel_DEBUG)
-			<< "ossimPolyArea2d::getBufferedShape Caught exception: " << e.what() << std::endl;
-		result.clearPolygons();
-	}catch( ... ){
-		ossimNotify(ossimNotifyLevel_DEBUG)
-			<< "ossimPolyArea2d::getBufferedShape Caught exception!" << std::endl;
-		result.clearPolygons();
-	}
-	return result;
-}
-ossimPolyArea2d& ossimPolyArea2d::setToBufferedShape(double distance)
-{
-   try{
-      geos::operation::buffer::BufferOp buffer_operation(m_privateData->m_geometry);
-      m_privateData->setGeometry( buffer_operation.getResultGeometry(distance));
-   }catch( const std::exception& e ){
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "ossimPolyArea2d::getBufferedShape Caught exception: " << e.what() << std::endl;
-   }catch( ... ){
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "ossimPolyArea2d::getBufferedShape Caught exception!" << std::endl;
-   }
-   return *this;
-}
-
-ossimPolyArea2d& ossimPolyArea2d::toMultiPolygon()
-{
-
-
-   try{
-      if(m_privateData->m_geometry)
-      {
-         switch(m_privateData->m_geometry->getGeometryTypeId())
-         {
-            case geos::geom::GEOS_POLYGON:
-            {
-               std::vector<geos::geom::Geometry*> values;
-               values.push_back(m_privateData->m_geometry->clone());
-
-               m_privateData->setGeometry(m_privateData->m_geometry->getFactory()->createMultiPolygon(values));
-               break;
-            }
-            case geos::geom::GEOS_MULTIPOLYGON:
-            {
-               // intentionally left blank
-               break;
-            }
-            default:
-            {  
-               // might need an error at a later date
-               ossimNotify(ossimNotifyLevel_WARN)
-                  << "ossimPolyArea2d::toMultiPolygon Geometry type can not be converted to a multi polygon: " <<m_privateData->m_geometry->getGeometryType()<< std::endl;
-
-               break;
-            }
-         }
-      }
-   }
-   catch(const std::exception& e)
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-         << "ossimPolyArea2d::toMultiPolygon Caught exception: " << e.what() << std::endl;
-   }
-   catch(...)
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-         << "ossimPolyArea2d::toMultiPolygon Caught exception!" << std::endl;
+      m_privateData->deleteGeometry();
+      m_privateData->m_geometry = GEOSGeom_clone(rhs.m_privateData->m_geometry);
    }
 
    return *this;
 }
 
-bool ossimPolyArea2d::saveState(ossimKeywordlist& kwl,
-                                const char* prefix)const
+const ossimPolyArea2d &ossimPolyArea2d::operator=(const ossimPolygon &rhs)
+{
+   m_privateData->setGeometry(rhs);
+
+   return *this;
+}
+
+const ossimPolyArea2d &ossimPolyArea2d::operator=(const ossimIrect &rect)
+{
+   m_privateData->setGeometry(ossimPolygon(rect));
+
+   return *this;
+}
+
+const ossimPolyArea2d &ossimPolyArea2d::operator=(const ossimDrect &rect)
+{
+   m_privateData->setGeometry(ossimPolygon(rect));
+
+   return *this;
+}
+
+const ossimPolyArea2d &ossimPolyArea2d::operator=(const std::vector<ossimGpt> &polygon)
+{
+   m_privateData->setGeometry(ossimPolygon(polygon));
+
+   return *this;
+}
+
+const ossimPolyArea2d &ossimPolyArea2d::operator=(const std::vector<ossimDpt> &polygon)
+{
+   m_privateData->setGeometry(ossimPolygon(polygon));
+
+   return *this;
+}
+
+const ossimPolyArea2d &ossimPolyArea2d::operator&=(const ossimPolyArea2d &rhs)
+{
+   GEOSGeometry *geom = GEOSIntersection(m_privateData->m_geometry, rhs.m_privateData->m_geometry);
+   m_privateData->setGeometry(geom);
+
+   return *this;
+}
+
+ossimPolyArea2d ossimPolyArea2d::operator&(const ossimPolyArea2d &rhs) const
+{
+   ossimPolyArea2d result(*this);
+
+   result &= rhs;
+
+   return result;
+}
+
+ossimPolyArea2d ossimPolyArea2d::operator+(const ossimPolyArea2d &rhs) const
+{
+   ossimPolyArea2d result(*this);
+
+   result += rhs;
+
+   return result;
+}
+
+const ossimPolyArea2d &ossimPolyArea2d::operator+=(const ossimPolyArea2d &rhs)
+{
+   GEOSGeometry *geom = GEOSUnion(m_privateData->m_geometry, rhs.m_privateData->m_geometry);
+
+   m_privateData->setGeometry(geom);
+
+   return *this;
+}
+
+ossimPolyArea2d ossimPolyArea2d::operator-(const ossimPolyArea2d &rhs) const
+{
+   ossimPolyArea2d result(*this);
+
+   result -= rhs;
+
+   return result;
+}
+
+const ossimPolyArea2d &ossimPolyArea2d::operator-=(const ossimPolyArea2d &rhs)
+{
+   GEOSGeometry *geom = GEOSDifference(m_privateData->m_geometry, rhs.m_privateData->m_geometry);
+
+   m_privateData->setGeometry(geom);
+
+   return *this;
+}
+
+ossim_float64 ossimPolyArea2d::getArea()const
+{
+   double result = 0.0;
+   
+   if(!isEmpty())
+   {
+      GEOSArea(m_privateData->m_geometry, &result);
+   }
+
+   return result;
+}
+
+bool ossimPolyArea2d::isEmpty() const
+{
+   return m_privateData->isEmpty();
+}
+
+bool ossimPolyArea2d::isValid(bool displayValidationError) const
+{
+   return m_privateData->isValid(displayValidationError);
+}
+
+bool ossimPolyArea2d::isPointWithin(const ossimDpt &point) const
+{
+   return m_privateData->isPointWithin(point);
+}
+
+bool ossimPolyArea2d::isPointWithin(double x, double y) const
+{
+   return isPointWithin(ossimDpt(x, y));
+}
+
+void ossimPolyArea2d::getBoundingRect(ossimDrect &rect) const
+{
+   m_privateData->getBoundingRect(rect);
+}
+
+bool ossimPolyArea2d::intersects(const ossimPolyArea2d &rhs) const
+{
+   return (GEOSIntersects(m_privateData->m_geometry,
+                          rhs.m_privateData->m_geometry) == 1);
+}
+
+void ossimPolyArea2d::makeValid()
+{
+   ossimPolyArea2dPrivate::GEOSGeometryPtr geom = GEOSMakeValid(m_privateData->m_geometry);
+   if(geom) m_privateData->setGeometry(geom);
+}
+
+
+void ossimPolyArea2d::add(const ossimPolyArea2d &rhs)
+{
+   *this += rhs;
+}
+
+bool ossimPolyArea2d::getVisiblePolygons(std::vector<ossimPolygon> &polyList) const
+{
+   m_privateData->getVisiblePolygons(polyList);
+
+   return (polyList.size() > 0);
+}
+
+bool ossimPolyArea2d::getPolygonHoles(std::vector<ossimPolygon> &polyList) const
+{
+   m_privateData->getPolygonHoles(polyList);
+
+   return (polyList.size() > 0);
+}
+
+ossimPolyArea2d &ossimPolyArea2d::toMultiPolygon()
+{
+   int geomType = GEOSGeomTypeId(m_privateData->m_geometry);
+
+   if (geomType != GEOS_MULTIPOLYGON)
+   {
+      std::vector<GEOSGeometry *> geoms(1);
+      geoms[0] = GEOSGeom_clone(m_privateData->m_geometry);
+      GEOSGeometry *result = GEOSGeom_createCollection(GEOS_MULTIPOLYGON,
+                                                       &geoms.front(), 1);
+      m_privateData->setGeometry(result);
+   }
+
+   return *this;
+}
+
+std::string ossimPolyArea2d::toString() const
+{
+   return m_privateData->toString();
+}
+
+bool ossimPolyArea2d::setFromWkt(const std::string &s)
+{
+   return m_privateData->setFromWkt(s);
+}
+
+bool ossimPolyArea2d::saveState(ossimKeywordlist &kwl,
+                                const char *prefix) const
 {
    kwl.add(prefix,
            ossimKeywordNames::TYPE_KW,
            "ossimPolyArea2d",
            true);
 
-   if(!isEmpty())
+   if (!isEmpty())
    {
-      geos::io::WKTWriter writer;
 
       kwl.add(prefix,
               "wkt",
-              writer.write(m_privateData->m_geometry).c_str(),
+              toString().c_str(),
               true);
    }
-   // else
-   // {
-   //
-   // }
-
    return true;
 }
 
-bool ossimPolyArea2d::loadState(const ossimKeywordlist& kwl,
-                                const char* prefix)
+bool ossimPolyArea2d::loadState(const ossimKeywordlist &kwl,
+                                const char *prefix)
 {
-   if(m_privateData)
+   bool result = true;
+
+   if (m_privateData)
    {
       ossimString wkt = kwl.find(prefix, "wkt");
 
-      if(!wkt.empty())
+      if (!wkt.empty())
       {
-         geos::io::WKTReader reader(m_privateData->geomFactory());
-         try
-         {
-            m_privateData->setGeometry(reader.read(wkt.c_str()));
-         }
-         catch( const std::exception& e )
-         {
-            ossimNotify(ossimNotifyLevel_DEBUG)
-               << "ossimPolyArea2d::loadState Caught exception: " << e.what() << std::endl;
-            this->clearPolygons();
-         }
-         catch(...)
-         {
-            ossimNotify(ossimNotifyLevel_DEBUG)
-               << "ossimPolyArea2d::loadState Caught exception!" << std::endl;
-            this->clearPolygons(); 
-         }
+         result = setFromWkt(wkt.string());
       }
    }
-   return true;
+
+   return result;
+}
+
+std::ostream &operator<<(std::ostream &out, const ossimPolyArea2d &rhs)
+{
+   if (!rhs.isEmpty())
+   {
+      out << rhs.toString();
+   }
+
+   return out;
 }

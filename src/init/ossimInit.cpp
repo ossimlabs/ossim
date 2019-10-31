@@ -65,11 +65,58 @@
 
 #include <algorithm>
 #include <mutex>
+#include <geos_c.h>
 
 using namespace std;
 
 static ossimTrace traceExec = ossimTrace("ossimInit:exec");
 static ossimTrace traceDebug = ossimTrace("ossimInit:debug");
+
+extern "C"
+{
+   void geosNoticeFunction(const char *fmt, ...);
+   void geosErrorFunction(const char *fmt, ...);
+}
+
+ossimString geosErrorV(const char *fmt, va_list args)
+{
+   char temp[2024];
+   if (fmt)
+   {
+      vsprintf(temp, fmt, args);
+   }
+   else
+   {
+      sprintf(temp, "%s", "");
+   }
+
+   return temp;
+}
+
+void geosNoticeFunction(const char *fmt, ...)
+{
+   // NOTE: This code has an infinite loop in it!!! (drb)
+   //std::lock_guard<std::mutex> lock(theMutex);
+   // theMutex.lock();
+   va_list args;
+
+   va_start(args, fmt);
+   ossimString result = geosErrorV(fmt, args);
+   va_end(args);
+   // theMutex.unlock();
+   ossimNotify(ossimNotifyLevel_WARN) << result << "\n";
+}
+
+void geosErrorFunction(const char *fmt, ...)
+{
+   va_list args;
+
+   va_start(args, fmt);
+   ossimString result = geosErrorV(fmt, args);
+   va_end(args);
+   // theMutex.unlock();
+   ossimNotify(ossimNotifyLevel_WARN) << result << "\n";
+}
 
 ossimInit* ossimInit::theInstance = 0;
 
@@ -122,6 +169,8 @@ void ossimInit::initialize(int& argc, char** argv)
 {
    static std::mutex m;
    std::lock_guard<std::mutex> lock(m);
+   initGEOS(geosNoticeFunction, geosErrorFunction);
+
    if( !theInitializedFlag )
    {
       ossimArgumentParser argumentParser(&argc, argv);
@@ -262,7 +311,7 @@ void ossimInit::initialize()
 
 void ossimInit::finalize()
 {
-   
+   finishGEOS();
 }
 /*!****************************************************************************
  *  Prints to stdout the list of command line options that this object parses.

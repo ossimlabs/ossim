@@ -1240,7 +1240,7 @@ void ossimImageGeometry::calculatePolyBounds(ossimPolyArea2d& result, ossim_uint
       }
       result.add(ossimPolygon(gPoints));
    }
-   if(!result.isValid()) result.setToBufferedShape();
+   if(!result.isValid()) result.makeValid();
 }
 
 
