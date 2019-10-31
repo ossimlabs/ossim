@@ -46,7 +46,7 @@ std::ostream& ossimNitfMtimfaCameraBlock::print( std::ostream& out,
    
    const ossim_int32 W = 17;
    
-   out << setiosflags(ios::left)
+   out << setiosflags(std::ios::left)
        << pfx << std::setw(W) << "START_TIMESTAMP:" << ossimString(m_startTimestamp).trim() << "\n"
        << pfx << std::setw(W) << "END_TIMESTAMP:" << ossimString(m_endTimestamp).trim() << "\n"
        << pfx << std::setw(W) << "IMAGE_SEG_INDEX:" << m_imageSegIndex << "\n";
@@ -106,7 +106,7 @@ std::ostream& ossimNitfMtimfaCamera::print( std::ostream& out,
 
    const ossim_int32 W = 33;
 
-   out << setiosflags(ios::left)
+   out << setiosflags(std::ios::left)
        << pfx << std::setw(W) << "CAMERAS_ID:" << ossimString(m_cameraId).trim() << "\n"
        << pfx << std::setw(W) << "NUM_TEMP_BLOCKS:" << m_numTempBlocks << "\n";
 
@@ -195,7 +195,7 @@ std::ostream& ossimNitfMtimfaTag::print( std::ostream& out,
 
    const ossim_int32 W = 41;
 
-   out << setiosflags(ios::left)
+   out << setiosflags(std::ios::left)
        << pfx << std::setw(W) << "CETAG:" << getTagName() << "\n"
        << pfx << std::setw(W) << "CEL:" << getTagLength() << "\n"
        << pfx << std::setw(W) << "LAYER_ID: " << m_layerId << "\n"

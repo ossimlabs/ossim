@@ -46,7 +46,7 @@ std::ostream& ossimNitfTmintaTime::print( std::ostream& out,
 
    const ossim_int32 W = 21;
 
-   out << setiosflags(ios::left)
+   out << setiosflags(std::ios::left)
        << pfx << std::setw(W) << "TIME_INTERVAL_INDEX:" << m_timeIntervalIndex << "\n"
        << pfx << std::setw(W) << "START_TIMESTAMP:" << m_startTimestamp << "\n"
        << pfx << std::setw(W) << "END_TIMESTAMP:" << m_endTimestamp << "\n";
@@ -116,7 +116,7 @@ std::ostream& ossimNitfTmintaTag::print( std::ostream& out,
 
    const ossim_int32 W = 27;
 
-   out << setiosflags(ios::left)
+   out << setiosflags(std::ios::left)
        << pfx << std::setw(W) << "CETAG:" << getTagName() << "\n"
        << pfx << std::setw(W) << "CEL:" << getTagLength() << "\n"
        << pfx << std::setw(W) << "NUM_TIM_INT:" << m_numTimInt << "\n";
