@@ -1,8 +1,8 @@
 //---
 // File: ossimNitfRsmecbTag.h
 //---
-#ifndef ossimNitfRsmecaTag_HEADER
-#define ossimNitfRsmecaTag_HEADER 1
+#ifndef ossimNitfRsmecbTag_HEADER
+#define ossimNitfRsmecbTag_HEADER 1
 
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 #include <vector>
