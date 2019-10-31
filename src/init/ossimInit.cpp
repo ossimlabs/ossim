@@ -66,7 +66,9 @@
 #include <algorithm>
 #include <mutex>
 #include <geos_c.h>
-
+#include <cstdio>
+#include <cstdarg>
+#include <cstddef>
 using namespace std;
 
 static ossimTrace traceExec = ossimTrace("ossimInit:exec");
