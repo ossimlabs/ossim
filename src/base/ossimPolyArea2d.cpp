@@ -120,12 +120,14 @@ void ossimPolyArea2dPrivate::setGeometry(const ossimPolygon &exteriorRing,
       //fill the exterior ring
       for (idx = 0; idx < n; idx++)
       {
-         GEOSCoordSeq_setXY(shellSeq, idx, pts[idx].x, pts[idx].y);
+         GEOSCoordSeq_setX(shellSeq, idx, pts[idx].x);
+         GEOSCoordSeq_setY(shellSeq, idx, pts[idx].y);
       }
       //if the original polygon didn't have the first and last point the same, make it so
       if (!firstAndLastSame)
       {
-         GEOSCoordSeq_setXY(shellSeq, n, pts[0].x, pts[0].y);
+         GEOSCoordSeq_setX(shellSeq, n, pts[0].x);
+         GEOSCoordSeq_setY(shellSeq, n, pts[0].y);
       }
       shell = GEOSGeom_createLinearRing(shellSeq);
       //fill the interior rings
@@ -142,13 +144,15 @@ void ossimPolyArea2dPrivate::setGeometry(const ossimPolygon &exteriorRing,
                    vertexPts.size() + ((firstAndLastSame) ? 0 : 1), 2);
                for (ossim_uint32 vertexIndex = 0; vertexIndex < vertexPts.size(); ++vertexIndex)
                {
-                  GEOSCoordSeq_setXY(ring, vertexIndex, vertexPts[vertexIndex].x, vertexPts[vertexIndex].y);
+                  GEOSCoordSeq_setX(ring, vertexIndex, vertexPts[vertexIndex].x);
+                  GEOSCoordSeq_setY(ring, vertexIndex, vertexPts[vertexIndex].y);
                }
 
                //if the original polygon didn't have the first and last point the same, make it so
                if (!firstAndLastSame)
                {
-                  GEOSCoordSeq_setXY(ring, vertexPts.size(), vertexPts[0].x, vertexPts[0].y);
+                  GEOSCoordSeq_setX(ring, vertexPts.size(), vertexPts[0].x);
+                  GEOSCoordSeq_setY(ring, vertexPts.size(), vertexPts[0].y);
                }
                GEOSGeometryPtr hole = GEOSGeom_createLinearRing(ring);
                holes.push_back(hole);
@@ -389,7 +393,8 @@ bool ossimPolyArea2dPrivate::isPointWithin(const ossimDpt &pt) const
    if (!isEmpty())
    {
       GEOSCoordSequence *pointSeq = GEOSCoordSeq_create(1, 2);
-      GEOSCoordSeq_setXY(pointSeq, 0, pt.x, pt.y);
+      GEOSCoordSeq_setX(pointSeq, 0, pt.x);
+      GEOSCoordSeq_setY(pointSeq, 0, pt.y);
       GEOSGeometry *geom = GEOSGeom_createPoint(pointSeq);
       result = (GEOSWithin(geom, m_geometry) == 1);
 

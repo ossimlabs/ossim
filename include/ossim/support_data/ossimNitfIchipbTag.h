@@ -16,7 +16,9 @@
 #define ossimNitfIchipbTag_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimIrect.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
+#include <ossim/imaging/ossimImageGeometry.h>
 
 class ossimDpt;
 class ossimDrect;
@@ -239,6 +241,14 @@ public:
    void getFullImageRect(ossimDrect& rect) const;
 
    ossim2dTo2dTransform* newTransform()const;
+
+   /**
+    * Initializes this object given an image geometry. The geometry must contain a 2D transform
+    * in order to be considered valid.
+    * @param geom Contains image model with 2D transform
+    * @returns true if geometry contained a 2D transform
+    */
+   bool initFromGeometry(const ossimImageGeometry* geom);
    
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;

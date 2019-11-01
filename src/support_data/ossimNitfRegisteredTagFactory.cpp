@@ -1,21 +1,20 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
-// See LICENSE.txt file in the top level directory for more details.
-// 
 // Author: Garrett Potts
 //
 // Description: Nitf support class
-// 
+//
 //********************************************************************
-// $Id: ossimNitfRegisteredTagFactory.cpp 23113 2015-01-28 17:04:17Z gpotts $
+// $Id$
 
 #include <ossim/support_data/ossimNitfRegisteredTagFactory.h>
 
 #include <ossim/support_data/ossimNitfAcftbTag.h>
 #include <ossim/support_data/ossimNitfAimidbTag.h>
 #include <ossim/support_data/ossimNitfBlockaTag.h>
+#include <ossim/support_data/ossimNitfCamsdaTag.h>
 #include <ossim/support_data/ossimNitfCscrnaTag.h>
 #include <ossim/support_data/ossimNitfCsdidaTag.h>
 #include <ossim/support_data/ossimNitfCsexraTag.h>
@@ -27,7 +26,11 @@
 #include <ossim/support_data/ossimNitfJ2klraTag.h>
 // #include <ossim/support_data/ossimNitfLocalGeographicTag.h>
 #include <ossim/support_data/ossimNitfLocalCartographicTag.h>
+#include <ossim/support_data/ossimNitfMicidaTag.h>
+#include <ossim/support_data/ossimNitfMimcsaTag.h>
 #include <ossim/support_data/ossimNitfMstgtaTag.h>
+#include <ossim/support_data/ossimNitfMtimfaTag.h>
+#include <ossim/support_data/ossimNitfMtimsaTag.h>
 #include <ossim/support_data/ossimNitfPiaimcTag.h>
 #include <ossim/support_data/ossimNitfProjectionParameterTag.h>
 #include <ossim/support_data/ossimNitfRpcBTag.h>
@@ -44,6 +47,7 @@
 #include <ossim/support_data/ossimNitfRsmpcaTag.h>
 #include <ossim/support_data/ossimNitfRsmpiaTag.h>
 #include <ossim/support_data/ossimNitfStreobTag.h>
+#include <ossim/support_data/ossimNitfTmintaTag.h>
 
 
 RTTI_DEF1(ossimNitfRegisteredTagFactory, "ossimNitfRegisteredTagFactory", ossimNitfTagFactory);
@@ -51,6 +55,7 @@ RTTI_DEF1(ossimNitfRegisteredTagFactory, "ossimNitfRegisteredTagFactory", ossimN
 static const char ACFTB_TAG[]                = "ACFTB";
 static const char AIMIDB_TAG[]               = "AIMIDB";
 static const char BLOCKA_TAG[]               = "BLOCKA";
+static const char CAMSDA_TAG[]               = "CAMSDA";
 static const char CSCRNA_TAG[]               = "CSCRNA";
 static const char CSDIDA_TAG[]               = "CSDIDA";
 static const char CSEXRA_TAG[]               = "CSEXRA";
@@ -61,7 +66,11 @@ static const char ICHIPB_TAG[]               = "ICHIPB";
 static const char J2KLRA_TAG[]               = "J2KLRA";
 static const char LOCAL_GEOGRAPHIC_TAG[]     = "GEOLOB";
 static const char LOCAL_CARTOGRAPHIC_TAG[]   = "MAPLOB";
+static const char MICIDA_TAG[]               = "MICIDA";
+static const char MIMCSA_TAG[]               = "MIMCSA";
 static const char MSTGTA_TAG[]               = "MSTGTA";
+static const char MTIMFA_TAG[]               = "MTIMFA";
+static const char MTIMSA_TAG[]               = "MTIMSA";
 static const char PIAIMC_TAG[]               = "PIAIMC";
 static const char PROJECTION_PARAMETER_TAG[] = "PRJPSB";
 static const char RPCB_TAG[]                 = "RPC00B";
@@ -78,6 +87,8 @@ static const char RSMECA_TAG[]               = "RSMECA";
 static const char RSMIDA_TAG[]               = "RSMIDA";
 static const char RSMPCA_TAG[]               = "RSMPCA";
 static const char RSMPIA_TAG[]               = "RSMPIA";
+static const char TMINTA_TAG[]               = "TMINTA";
+
 ossimNitfRegisteredTagFactory::ossimNitfRegisteredTagFactory()
 {
 }
@@ -108,6 +119,10 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    else if(tagName == BLOCKA_TAG)
    {
       return new ossimNitfBlockaTag;
+   }
+   else if(tagName == CAMSDA_TAG)
+   {
+      return new ossimNitfCamsdaTag;
    }
    else if(tagName == CSCRNA_TAG)
    {
@@ -151,9 +166,25 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    {
       return new ossimNitfLocalCartographicTag;
    }
+   else if(tagName == MICIDA_TAG)
+   {
+      return new ossimNitfMicidaTag;
+   }
+   else if(tagName == MIMCSA_TAG)
+   {
+      return new ossimNitfMimcsaTag;
+   }
    else if(tagName == MSTGTA_TAG)
    {
       return new ossimNitfMstgtaTag;
+   }
+   else if(tagName == MTIMFA_TAG)
+   {
+      return new ossimNitfMtimfaTag;
+   }
+   else if(tagName == MTIMSA_TAG)
+   {
+      return new ossimNitfMtimsaTag;
    }
    else if(tagName == PIAIMC_TAG)
    {
@@ -219,5 +250,10 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    {
       return new ossimNitfRsmpiaTag();
    }
+   else if(tagName == TMINTA_TAG)
+   {
+      return new ossimNitfTmintaTag();
+   }
+
    return NULL;
 }

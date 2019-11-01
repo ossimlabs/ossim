@@ -18,6 +18,7 @@
 #include <ossim/support_data/ossimNitfFileHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
 #include <vector>
+#include <ossim/base/ossim2dBilinearTransform.h>
 
 class ossimFilename;
 class ossimImageSourceSequencer;
@@ -169,6 +170,16 @@ protected:
    void addRpcbTag(const ossimIrect& rect,
                    ossimProjection* proj,
                    ossimNitfImageHeaderV2_X* hdr);
+
+   /**
+    * @brief Adds the ICHIPB tag.
+    *
+    * This will only be added if geometry contains a 2D bilinear transform.
+    *
+    * @param transform ossim2dBilinearTransform associated with input's geometry.
+    * @param hdr The header to write to.
+    */
+   void addIchipbTag(ossimImageGeometry* geom, ossimNitfImageHeaderV2_X* hdr);
 
    /**
     * @brief Sets the complexity level of theFileHeader.
