@@ -119,7 +119,7 @@ std::ostream& ossimNitfMtimsaTag::print( std::ostream& out,
 
    const ossim_int32 W = 24;
 
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(W) << "CETAG:" << getTagName() << "\n"
        << pfx << std::setw(W) << "CEL:" << getTagLength() << "\n"
        << pfx << std::setw(W) << "IMAGE_SEG_INDEX: " << m_imageSegIndex << "\n"

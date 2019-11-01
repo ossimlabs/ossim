@@ -52,7 +52,7 @@ std::ostream& ossimNitfMicidaCamera::print( std::ostream& out,
    
    const ossim_int32 W = 20;
 
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(W) << "CAMERAS_ID:" << ossimString(m_cameraId).trim() << "\n"
        << pfx << std::setw(W) << "CORE_ID_LENGTH:" << m_coreIdLength << "\n"
        << pfx << std::setw(W) << "CAMERA_CORE_ID:" << m_cameraCoreId << "\n";
@@ -133,7 +133,7 @@ std::ostream& ossimNitfMicidaTag::print( std::ostream& out,
 
    const ossim_int32 W = 28;
 
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(W) << "CETAG:" << getTagName() << "\n"
        << pfx << std::setw(W) << "CEL:" << getTagLength() << "\n"
        << pfx << std::setw(W) << "MIIS_CORE_ID_VERSION: " << m_miisCoreIdVersion << "\n"

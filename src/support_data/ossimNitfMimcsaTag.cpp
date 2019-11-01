@@ -92,7 +92,7 @@ std::ostream& ossimNitfMimcsaTag::print(std::ostream& out,
 
    const ossim_int32 W = 24;
    
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(W) << "CETAG:" << getTagName() << "\n"
        << pfx << std::setw(W) << "CEL:" << getTagLength() << "\n"
        << pfx << std::setw(W) << "LAYER_ID:" << m_layerId << "\n"
