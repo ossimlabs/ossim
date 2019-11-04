@@ -34,13 +34,16 @@
 #include <ossim/support_data/ossimNitfImageHeaderV2_X.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 #include <ossim/support_data/ossimNitfTagInformation.h>
+#include <ossim/base/ossim2dBilinearTransform.h>
+#include <ossim/support_data/ossimNitfIchipbTag.h>
+#include <ossim/base/ossimStringProperty.h>
 
 static const char ENABLE_BLOCKA_KW[] = "enable_blocka_tag";
 static const char ENABLE_RPCB_KW[]   = "enable_rpcb_tag";
 static const char ENABLE_GEOLOB_KW[] = "enable_geolob_tag";
 
 RTTI_DEF1(ossimNitfWriterBase, "ossimNitfWriterBase", ossimImageFileWriter)
-   
+
 static ossimTrace traceDebug(ossimString("ossimNitfWriterBase:debug"));
 
 ossimNitfWriterBase::ossimNitfWriterBase()
@@ -93,7 +96,7 @@ ossimRefPtr<ossimProperty> ossimNitfWriterBase::getProperty(
    const ossimString& name)const
 {
    ossimRefPtr<ossimProperty> result = 0;
-   
+
    if(name == ENABLE_BLOCKA_KW)
    {
       result = new ossimBooleanProperty(name, theEnableBlockaTagFlag);
@@ -130,7 +133,7 @@ bool ossimNitfWriterBase::saveState(ossimKeywordlist& kwl,
 {
    kwl.add(prefix, ENABLE_BLOCKA_KW, theEnableBlockaTagFlag, true);
    kwl.add(prefix, ENABLE_GEOLOB_KW, theEnableGeolobTagFlag, true);
-   kwl.add(prefix, ENABLE_RPCB_KW, theEnableRpcbTagFlag, true);   
+   kwl.add(prefix, ENABLE_RPCB_KW, theEnableRpcbTagFlag, true);
 
    return ossimImageFileWriter::saveState(kwl, prefix);
 }
@@ -170,81 +173,80 @@ bool ossimNitfWriterBase::loadState(const ossimKeywordlist& kwl,
 void ossimNitfWriterBase::writeGeometry(ossimNitfImageHeaderV2_X* hdr,
                                         ossimImageSourceSequencer* seq)
 {
-   if (hdr && seq)
+   if (!hdr || !seq)
+      return;
+
+   ossimRefPtr<ossimImageGeometry> geom = theInputConnection->getImageGeometry();
+   ossimKeywordlist kwl;
+   if (!geom || !geom->hasProjection())
+      return;
+
+   // Get the requested bounding rectangles.
+   ossimIrect rect = seq->getBoundingRect();
+
+   // See if it's a map projection; else, a sensor model.
+   ossimMapProjection* mapProj = PTR_CAST(ossimMapProjection, geom->getProjection());
+   if (mapProj)
    {
-      ossimRefPtr<ossimImageGeometry> geom = theInputConnection->getImageGeometry();
-      ossimKeywordlist kwl;
+      // Use map info to get the corners.
+      ossimMapProjectionInfo mapInfo(mapProj, rect);
+      mapInfo.setPixelType(OSSIM_PIXEL_IS_AREA);
 
-      if (geom.valid()&&geom->hasProjection())
+      // See if it's utm.
+      ossimUtmProjection* utmProj = PTR_CAST(ossimUtmProjection,
+                                             mapProj);
+      if(utmProj)
       {
-         // Get the requested bounding rectangles.
-         ossimIrect rect = seq->getBoundingRect();
-         
-         // See if it's a map projection; else, a sensor model.
-         ossimMapProjection* mapProj =
-            PTR_CAST(ossimMapProjection, geom->getProjection());
-         if (mapProj)
+         ossimDpt ul = mapInfo.ulEastingNorthingPt();
+         ossimDpt ur = mapInfo.urEastingNorthingPt();
+         ossimDpt lr = mapInfo.lrEastingNorthingPt();
+         ossimDpt ll = mapInfo.llEastingNorthingPt();
+
+         if(utmProj->getHemisphere() == 'N')
          {
-            // Use map info to get the corners.
-            ossimMapProjectionInfo mapInfo(mapProj, rect);
-            mapInfo.setPixelType(OSSIM_PIXEL_IS_AREA);
-            
-            // See if it's utm.
-            ossimUtmProjection* utmProj = PTR_CAST(ossimUtmProjection,
-                                                   mapProj);
-            if(utmProj)
-            {
-               ossimDpt ul = mapInfo.ulEastingNorthingPt();
-               ossimDpt ur = mapInfo.urEastingNorthingPt();
-               ossimDpt lr = mapInfo.lrEastingNorthingPt();
-               ossimDpt ll = mapInfo.llEastingNorthingPt();
-               
-               if(utmProj->getHemisphere() == 'N')
-               {
-                  hdr->setUtmNorth(utmProj->getZone(), ul, ur, lr, ll);
-               }
-               else
-               {
-                  hdr->setUtmSouth(utmProj->getZone(), ul, ur, lr, ll);
-               }
-            }
-            else
-            {
-               ossimGpt ul = mapInfo.ulGroundPt();
-               ossimGpt ur = mapInfo.urGroundPt();
-               ossimGpt lr = mapInfo.lrGroundPt();
-               ossimGpt ll = mapInfo.llGroundPt();
-               hdr->setGeographicLocationDms(ul, ur, lr, ll);
-            }
-
-            if (theEnableBlockaTagFlag)
-            {
-               addBlockaTag(mapInfo, hdr);
-            }
-
-            if ( theEnableGeolobTagFlag )
-            {
-               addGeolobTag( mapInfo, hdr );
-            }
+            hdr->setUtmNorth(utmProj->getZone(), ul, ur, lr, ll);
          }
          else
          {
-            ossimGpt ul, ur, lr, ll;
-            bool status = geom->getCornerGpts(ul, ur, lr, ll);
-            if (status)
-            {
-                hdr->setGeographicLocationDms(ul, ur, lr, ll);
-            }
+            hdr->setUtmSouth(utmProj->getZone(), ul, ur, lr, ll);
          }
-         
-         if (theEnableRpcbTagFlag)
-         {
-            addRpcbTag(rect, geom->getProjection(), hdr);
-         }
-         
-      } // matches:  if (proj.valid())
+      }
+      else
+      {
+         ossimGpt ul = mapInfo.ulGroundPt();
+         ossimGpt ur = mapInfo.urGroundPt();
+         ossimGpt lr = mapInfo.lrGroundPt();
+         ossimGpt ll = mapInfo.llGroundPt();
+         hdr->setGeographicLocationDms(ul, ur, lr, ll);
+      }
 
-   } // matches: if (hdr && seq)
+      if (theEnableBlockaTagFlag)
+      {
+         addBlockaTag(mapInfo, hdr);
+      }
+
+      if ( theEnableGeolobTagFlag )
+      {
+         addGeolobTag( mapInfo, hdr );
+      }
+   }
+   else
+   {
+      // Not a map projection, probably sensor model:
+      ossimGpt ul, ur, lr, ll;
+      bool status = geom->getCornerGpts(ul, ur, lr, ll);
+      if (status)
+      {
+         hdr->setGeographicLocationDms(ul, ur, lr, ll);
+      }
+   }
+
+   if (theEnableRpcbTagFlag)
+      addRpcbTag(rect, geom->getProjection(), hdr);
+
+   // Now deal with possible 2D transform in the image geometry. Use it to populate ICHIPB block:
+   addIchipbTag(geom.get(), hdr);
+
 }
 
 void ossimNitfWriterBase::addBlockaTag(ossimMapProjectionInfo& mapInfo,
@@ -254,31 +256,31 @@ void ossimNitfWriterBase::addBlockaTag(ossimMapProjectionInfo& mapInfo,
    {
       // Capture the current pixel type.
       ossimPixelType originalPixelType = mapInfo.getPixelType();
-      
+
       // This tag wants corners as area:
       mapInfo.setPixelType(OSSIM_PIXEL_IS_AREA);
-      
+
       // Stuff the blocka tag which has six digit precision.
       ossimRefPtr<ossimNitfBlockaTag> blockaTag = new ossimNitfBlockaTag();
-      
+
       // Set the block number.
       blockaTag->setBlockInstance(1);
-      
+
       // Set the number of lines.
       blockaTag->setLLines(mapInfo.linesPerImage());
-      
+
       // Set first row, first column.
       blockaTag->setFrfcLoc(ossimDpt(mapInfo.ulGroundPt()));
-      
+
       // Set first row, last column.
       blockaTag->setFrlcLoc(ossimDpt(mapInfo.urGroundPt()));
-      
+
       // Set last row, last column.
       blockaTag->setLrlcLoc(ossimDpt(mapInfo.lrGroundPt()));
-      
+
       // Set last row, first column.
       blockaTag->setLrfcLoc(ossimDpt(mapInfo.llGroundPt()));
-      
+
       if (traceDebug())
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
@@ -286,16 +288,38 @@ void ossimNitfWriterBase::addBlockaTag(ossimMapProjectionInfo& mapInfo,
             << "\nBLOCKA Tag:" << *((ossimObject*)(blockaTag.get()))
             << std::endl;
       }
-      
+
       // Add the tag to the header.
       ossimRefPtr<ossimNitfRegisteredTag> blockaTagRp = blockaTag.get();
       ossimNitfTagInformation blockaTagInfo(blockaTagRp);
       hdr->addTag(blockaTagInfo);
-      
+
       // Reset the pixel type to original value
       mapInfo.setPixelType(originalPixelType);
-      
+
    } // matches: if (hdr)
+}
+
+void ossimNitfWriterBase::addIchipbTag(ossimImageGeometry* geom,
+                                       ossimNitfImageHeaderV2_X* hdr)
+{
+   // Tag is valid only if the geometry has a 2D transform:
+   auto ichipb = new ossimNitfIchipbTag;
+   bool tagValid = ichipb->initFromGeometry(geom);
+   if (tagValid)
+   {
+      ossimRefPtr<ossimNitfRegisteredTag> ichipbTag = ichipb;
+      ossimNitfTagInformation ichipbTagInfo(ichipbTag);
+      hdr->addTag(ichipbTagInfo);
+
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "ossimNitfWriterBase::addIchipbTag DEBUG:"
+            << "\nICHIPB Tag:" << std::endl;
+         ichipb->print(ossimNotify(ossimNotifyLevel_DEBUG));
+      }
+   }
 }
 
 void ossimNitfWriterBase::addGeolobTag(ossimMapProjectionInfo& mapInfo,
@@ -349,37 +373,37 @@ void ossimNitfWriterBase::addRpcbTag(const ossimIrect& rect,
    if (proj && hdr)
    {
       bool useElevation = false;
-      
+
       if (PTR_CAST(ossimMapProjection, proj))
       {
          // If we're already map projected turn the elevation off.
          useElevation = false;
       }
-      
+
       // Make an rpc solver.
       ossimRefPtr<ossimRpcSolver> rs = new ossimRpcSolver(useElevation);
-      
+
       // Compute the coefficients.
       rs->solveCoefficients(ossimDrect(rect), proj, 64, 64);
-      
+
       // Add the tag.
       ossimRefPtr<ossimNitfRegisteredTag> tag = rs->getNitfRpcBTag();
       ossimNitfTagInformation tagInfo(tag);
       hdr->addTag(tagInfo);
-      
+
       if (traceDebug())
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
             << "ossimNitfWriterBase::addRpcbTag DEBUG:"
             << "\nRPCB Tag:" << *((ossimObject*)(tag.get()))
             << "\nProjection:\n";
-         
+
          proj->print(ossimNotify(ossimNotifyLevel_DEBUG));
-         
+
          ossimNotify(ossimNotifyLevel_DEBUG)
             << "\nRect: " << rect << std::endl;
       }
-      
+
    } // matches: if (proj && hdr)
 }
 
@@ -397,9 +421,9 @@ void ossimNitfWriterBase::setComplexityLevel(std::streamoff endPosition,
       const std::streamoff MB50 = 50   * MB;
       const std::streamoff GIG  = 1000 * MB;
       const std::streamoff GIG2 = 2    * GIG;
-      
+
       ossimString complexity = "03"; // Less than 50 mb.
-      
+
       if ( (endPosition >= MB50) && (endPosition < GIG) )
       {
          complexity = "05";
@@ -412,7 +436,7 @@ void ossimNitfWriterBase::setComplexityLevel(std::streamoff endPosition,
       {
          complexity = "07";
       }
-      
+
       hdr->setComplexityLevel(complexity);
    }
 }

@@ -49,7 +49,7 @@ public:
     * subsequent call to execute().
     * @note Throws ossimException on error.
     */
-   virtual void loadJSON(const Json::Value& json_request) {};
+   virtual void loadJSON(const Json::Value& /*json_request*/) {};
 
    /**
     * Fetch product as JSON object when applicable

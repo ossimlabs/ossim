@@ -363,6 +363,58 @@ ossim2dTo2dTransform* ossimNitfIchipbTag::newTransform()const
                                        ossimDpt(getFiCol22(), getFiRow22()));
 }
 
+bool ossimNitfIchipbTag::initFromGeometry(const ossimImageGeometry* geom)
+{
+   if (!geom || !geom->hasTransform())
+      return false;
+
+   auto transform = geom->getTransform();
+   if (!transform)
+      return false;
+
+   ossimDrect viewRect;
+   geom->getBoundingRect(viewRect);
+
+   if (dynamic_cast<const ossimMapProjection*>(geom->getProjection()))
+      strcpy(theXfrmFlag, "01");
+   else
+      strcpy(theXfrmFlag, "00");
+
+   ossimDpt ul, ur, ll, lr;
+
+   transform->inverse(viewRect.ul(), ul);
+   transform->inverse(viewRect.ur(), ur);
+   transform->inverse(viewRect.ll(), ll);
+   transform->inverse(viewRect.lr(), lr);
+
+   ossimDrect imageRect(ul, ur, lr, ll);
+   double imageArea = imageRect.area();
+   if (imageArea <= FLT_EPSILON)
+      return false;
+   double scaleFactor = sqrt(viewRect.area() / imageArea);
+   sprintf(theScaleFactor, "%10.5f", scaleFactor);
+
+   sprintf(theOpCol11, "%12.3f", viewRect.ul().x);
+   sprintf(theOpRow11, "%12.3f", viewRect.ul().y);
+   sprintf(theOpCol12, "%12.3f", viewRect.ur().x);
+   sprintf(theOpRow12, "%12.3f", viewRect.ur().y);
+   sprintf(theOpCol21, "%12.3f", viewRect.ll().x);
+   sprintf(theOpRow21, "%12.3f", viewRect.ll().y);
+   sprintf(theOpCol22, "%12.3f", viewRect.lr().x);
+   sprintf(theOpRow22, "%12.3f", viewRect.lr().y);
+
+   sprintf(theFiCol11, "%12.3f", ul.x);
+   sprintf(theFiRow11, "%12.3f", ul.y);
+   sprintf(theFiCol12, "%12.3f", ur.x);
+   sprintf(theFiRow12, "%12.3f", ur.y);
+   sprintf(theFiCol21, "%12.3f", ll.x);
+   sprintf(theFiRow21, "%12.3f", ll.y);
+   sprintf(theFiCol22, "%12.3f", lr.x);
+   sprintf(theFiRow22, "%12.3f", lr.y);
+
+   return true;
+}
+
 void ossimNitfIchipbTag::setProperty(ossimRefPtr<ossimProperty> property)
 {
    ossimNitfRegisteredTag::setProperty(property);   
@@ -612,3 +664,4 @@ bool ossimNitfIchipbTag::loadState(const ossimKeywordlist& kwl, const char* pref
 
    return true;
 }
+
