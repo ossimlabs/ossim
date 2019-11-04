@@ -34,7 +34,7 @@ find_path( GEOS_INCLUDE_DIR geos_c.h
            /usr/local/include)
 
 # Find GEOS library:
-find_library( GEOS_LIB NAMES geos 
+find_library( GEOS_LIB NAMES geos_c 
               PATHS
               $ENV{GEOS_DIR}/lib
               ${GEOS_DIR}/lib
