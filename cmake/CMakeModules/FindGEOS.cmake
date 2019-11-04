@@ -27,7 +27,7 @@
 # Instead looking for Geometry.h
 #---
 
-find_path( GEOS_INCLUDE_DIR geos/geom/Geometry.h
+find_path( GEOS_INCLUDE_DIR geos_c.h
            PATHS 
            $ENV{GEOS_DIR}/include
            ${GEOS_DIR}/include)
