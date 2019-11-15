@@ -27,16 +27,19 @@
 # Instead looking for Geometry.h
 #---
 
-find_path( GEOS_INCLUDE_DIR geos/geom/Geometry.h
+find_path( GEOS_INCLUDE_DIR geos_c.h
            PATHS 
            $ENV{GEOS_DIR}/include
-           ${GEOS_DIR}/include)
+           ${GEOS_DIR}/include
+           /usr/local/include)
 
 # Find GEOS library:
-find_library( GEOS_LIB NAMES geos 
+find_library( GEOS_LIB NAMES geos_c 
               PATHS
               $ENV{GEOS_DIR}/lib
-              ${GEOS_DIR}/lib)
+              ${GEOS_DIR}/lib
+              /usr/local/lib
+              /usr/local/lib64)
 
 # Find GEOS C library:
 find_library( GEOS_C_LIB NAMES geos_c 
