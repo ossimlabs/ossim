@@ -10,15 +10,23 @@
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/base/ossimCommon.h>
 
+// To get console width for usage output:
+#ifdef _MSC_VER
+#include <windows.h>
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
+
 ossimApplicationUsage::ossimApplicationUsage(const ossimString& commandLineUsage):
-    theCommandLineUsage(commandLineUsage)
+   theCommandLineUsage(commandLineUsage)
 {
 }
 
 ossimApplicationUsage* ossimApplicationUsage::instance()
 {
-    static ossimApplicationUsage theApplicationUsage;
-    return &theApplicationUsage;
+   static ossimApplicationUsage theApplicationUsage;
+   return &theApplicationUsage;
 }
 void ossimApplicationUsage::setApplicationName(const ossimString& name)
 {
@@ -41,15 +49,15 @@ const ossimString& ossimApplicationUsage::getDescription() const
 
 void ossimApplicationUsage::addUsageExplanation(Type type,const ossimString& option,const ossimString& explanation)
 {
-    switch(type)
-    {
-        case(OSSIM_COMMAND_LINE_OPTION):
-            addCommandLineOption(option,explanation);
-            break;
-        case(OSSIM_ENVIRONMENTAL_VARIABLE):
-            addEnvironmentalVariable(option,explanation);
-            break;
-    }
+   switch(type)
+   {
+   case(OSSIM_COMMAND_LINE_OPTION):
+      addCommandLineOption(option,explanation);
+      break;
+   case(OSSIM_ENVIRONMENTAL_VARIABLE):
+      addEnvironmentalVariable(option,explanation);
+      break;
+   }
 }
 void ossimApplicationUsage::setCommandLineUsage(const ossimString& explanation)
 {
@@ -63,7 +71,7 @@ const ossimString& ossimApplicationUsage::getCommandLineUsage() const
 
 void ossimApplicationUsage::addCommandLineOption(const ossimString& option,const ossimString& explanation)
 {
-    theCommandLineOptions[option]=explanation;
+   theCommandLineOptions[option]=explanation;
 }
 
 const ossimApplicationUsage::UsageMap& ossimApplicationUsage::getCommandLineOptions() const
@@ -73,144 +81,154 @@ const ossimApplicationUsage::UsageMap& ossimApplicationUsage::getCommandLineOpti
 
 void ossimApplicationUsage::addEnvironmentalVariable(const ossimString& option,const ossimString& explanation)
 {
-    theEnvironmentalVariables[option]=explanation;
+   theEnvironmentalVariables[option]=explanation;
 }
 const ossimApplicationUsage::UsageMap& ossimApplicationUsage::getEnvironmentalVariables() const
 {
    return theEnvironmentalVariables;
 }
 
-void ossimApplicationUsage::getFormatedString(ossimString& str, const UsageMap& um,unsigned int widthOfOutput)
+void ossimApplicationUsage::getFormatedString(ossimString& str, const UsageMap& um)
 {
+   unsigned int maxNumCharsInOptions = 0;
+   ossimApplicationUsage::UsageMap::const_iterator citr;
+   for(citr=um.begin();
+       citr!=um.end();
+       ++citr)
+   {
+      maxNumCharsInOptions = ossim::max(maxNumCharsInOptions,(unsigned int)citr->first.length());
+   }
 
-    unsigned int maxNumCharsInOptions = 0;
-    ossimApplicationUsage::UsageMap::const_iterator citr;
-    for(citr=um.begin();
-        citr!=um.end();
-        ++citr)
-    {
-        maxNumCharsInOptions = ossim::max(maxNumCharsInOptions,(unsigned int)citr->first.length());
-    }
-    
-    unsigned int fullWidth = widthOfOutput;
-    unsigned int optionPos = 2;
-    unsigned int explanationPos = 2+maxNumCharsInOptions+2;
-    unsigned int explanationWidth = fullWidth-explanationPos;
+#ifdef _MSC_VER
+   CONSOLE_SCREEN_BUFFER_INFO csbi;
+   GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+   unsigned int fullWidth = csbi.srWindow.Right - csbi.srWindow.Left;
+#else
+   struct winsize size;
+   ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+   unsigned int fullWidth = size.ws_col - 1;
+#endif
+   if (fullWidth > 120)
+      fullWidth = 120;
 
-    ossimString line;
-    
-    for(citr=um.begin();
-        citr!=um.end();
-        ++citr)
-    {
-        line.assign(fullWidth,' ');
-        line.replace(optionPos,citr->first.length(),citr->first);
-        
-        const ossimString& explanation = citr->second;
-        std::string::size_type pos = 0;
-        std::string::size_type offset = 0;
-        bool firstInLine = true;
-        while (pos<explanation.length())
-        {
-            if (firstInLine) offset = 0;
-                    
-            // skip any leading white space.
-            while (pos<explanation.length() && *(explanation.begin()+pos)==' ')
+   unsigned int optionPos = 2;
+   unsigned int explanationPos = 2+maxNumCharsInOptions+2;
+   unsigned int explanationWidth = fullWidth-explanationPos;
+
+   ossimString line;
+
+   for(citr=um.begin();
+       citr!=um.end();
+       ++citr)
+   {
+      line.assign(fullWidth,' ');
+      line.replace(optionPos,citr->first.length(),citr->first);
+
+      const ossimString& explanation = citr->second;
+      std::string::size_type pos = 0;
+      std::string::size_type offset = 0;
+      bool firstInLine = true;
+      while (pos<explanation.length())
+      {
+         if (firstInLine) offset = 0;
+
+         // skip any leading white space.
+         while (pos<explanation.length() && *(explanation.begin()+pos)==' ')
+         {
+            if (firstInLine) ++offset;
+            ++pos;
+         }
+
+         firstInLine = false;
+
+         std::string::size_type width = ossim::min((ossim_int64)(explanation.length()-pos),
+                                                   (ossim_int64)(explanationWidth-offset));
+         std::string::size_type slashn_pos = explanation.find('\n',pos);
+
+         unsigned int extraSkip = 0;
+         bool concatinated = false;
+         if (slashn_pos!=std::string::npos)
+         {
+            if (slashn_pos<pos+width)
             {
-                if (firstInLine) ++offset;
-                ++pos;
+               width = slashn_pos-pos;
+               ++extraSkip;
+               firstInLine = true;
             }
-            
-            firstInLine = false;
-        
-            std::string::size_type width = ossim::min((ossim_int64)(explanation.length()-pos),
-                                                      (ossim_int64)(explanationWidth-offset));
-            std::string::size_type slashn_pos = explanation.find('\n',pos);
-            
-            unsigned int extraSkip = 0;
-            bool concatinated = false;
-            if (slashn_pos!=std::string::npos)
+            else if (slashn_pos==pos+width)
             {
-                if (slashn_pos<pos+width)
-                {
-                    width = slashn_pos-pos;
-                    ++extraSkip;
-                    firstInLine = true;
-                }
-                else if (slashn_pos==pos+width) 
-                {
-                    ++extraSkip;
-                    firstInLine = true;
-                }
+               ++extraSkip;
+               firstInLine = true;
             }
-            
-            if (pos+width<explanation.length())
+         }
+
+         if (pos+width<explanation.length())
+         {
+            // now reduce width until we get a space or a return
+            // so that we ensure that whole words are printed.
+            while (width>0 &&
+                   *(explanation.begin()+(pos+width))!=' ' &&
+                   *(explanation.begin()+(pos+width))!='\n') --width;
+
+            if (width==0)
             {
-                // now reduce width until we get a space or a return
-                // so that we ensure that whole words are printed.
-                while (width>0 && 
-                       *(explanation.begin()+(pos+width))!=' ' && 
-                       *(explanation.begin()+(pos+width))!='\n') --width;
-                       
-                if (width==0)
-                {
-                    // word must be longer than a whole line so will need
-                    // to concatinate it.
-                    width = explanationWidth-1;
-                    concatinated = true;
-                }
+               // word must be longer than a whole line so will need
+               // to concatinate it.
+               width = explanationWidth-1;
+               concatinated = true;
             }
+         }
 
-            line.replace(explanationPos+offset,explanationWidth, explanation, pos, width);
+         line.replace(explanationPos+offset,explanationWidth, explanation, pos, width);
 
-            if (concatinated) { str += line; str += "-\n"; }
-            else { str += line; str += "\n"; }
-            
-            // move to the next line of output.
-            line.assign(fullWidth,' ');
-            
-            pos += width+extraSkip;
+         if (concatinated) { str += line; str += "-\n"; }
+         else { str += line; str += "\n"; }
 
-            
-        }
-                
-    }
+         // move to the next line of output.
+         line.assign(fullWidth,' ');
+
+         pos += width+extraSkip;
+
+
+      }
+
+   }
 }
 
-void ossimApplicationUsage::write(std::ostream& output, const ossimApplicationUsage::UsageMap& um,unsigned int widthOfOutput)
+void ossimApplicationUsage::write(std::ostream& output, const ossimApplicationUsage::UsageMap& um)
 {
-    ossimString str;
-    getFormatedString(str, um, widthOfOutput);
-    output << str << std::endl;
+   ossimString str;
+   getFormatedString(str, um);
+   output << str << std::endl;
 }
 
-void ossimApplicationUsage::write(std::ostream& output, unsigned int type, unsigned int widthOfOutput)
+void ossimApplicationUsage::write(std::ostream& output, unsigned int type)
 {
 
-    output << "Usage: "<<getCommandLineUsage()<<std::endl;
-    if(theDescription.size()>0)
+   output << "Usage: "<<getCommandLineUsage()<<std::endl;
+   if(theDescription.size()>0)
     {
        // TODO: take into account "widthOfOutput"
        output << "\nDescription:\n" << theDescription.c_str() << "\n"
               << std::endl;
     }
-    
-    bool needspace = false;
-    if ((type&OSSIM_COMMAND_LINE_OPTION) && !getCommandLineOptions().empty())
-    {
-        // if (needspace) output << std::endl;
-        output << "Options:"<<std::endl;
-        write(output,getCommandLineOptions(),widthOfOutput);
-        needspace = true;
-    }
-    
-    if ((type&OSSIM_ENVIRONMENTAL_VARIABLE) && !getEnvironmentalVariables().empty())
-    {
-        if (needspace) output << std::endl;
-        output << "Environmental Variables:"<<std::endl;
-        write(output,getEnvironmentalVariables(),widthOfOutput);
-        needspace = true;
-    }
+
+   bool needspace = false;
+   if ((type&OSSIM_COMMAND_LINE_OPTION) && !getCommandLineOptions().empty())
+   {
+      // if (needspace) output << std::endl;
+      output << "Options:"<<std::endl;
+      write(output,getCommandLineOptions());
+      needspace = true;
+   }
+
+   if ((type&OSSIM_ENVIRONMENTAL_VARIABLE) && !getEnvironmentalVariables().empty())
+   {
+      if (needspace) output << std::endl;
+      output << "Environmental Variables:"<<std::endl;
+      write(output,getEnvironmentalVariables());
+      needspace = true;
+   }
 
 }
 

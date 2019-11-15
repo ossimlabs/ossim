@@ -94,7 +94,7 @@ public:
     */
    virtual void getTypeNameList(std::vector<ossimString>& typeList)const;
 
-private:
+protected:
    
    ossimProjection* createProjectionFromHeaders(ossimNitfFile* nitfFile,
       ossimNitfFileHeader* fileHeader,
