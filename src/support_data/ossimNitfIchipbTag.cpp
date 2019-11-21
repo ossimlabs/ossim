@@ -417,14 +417,14 @@ bool ossimNitfIchipbTag::initFromGeometry(const ossimImageGeometry* geom)
 
 bool ossimNitfIchipbTag::isIdentity()const
 {
-   return (!(ossim::almostEqual(theOpCol11, theFiCol11) 
-           && ossim::almostEqual(theOpRow11, theFiRow11) 
-           && ossim::almostEqual(theOpCol12, theFiCol12) 
-           && ossim::almostEqual(theOpRow12, theFiRow12)
-           && ossim::almostEqual(theOpCol21, theFiCol21) 
-           && ossim::almostEqual(theOpRow21, theFiRow21) 
-           && ossim::almostEqual(theOpCol22, theFiCol22)
-           && ossim::almostEqual(theOpRow22, theFiRow22)));
+   return (!(ossim::almostEqual(getOpCol11(), getFiCol11()) 
+           && ossim::almostEqual(getOpRow11(), getFiRow11()) 
+           && ossim::almostEqual(getOpCol12(), getFiCol12()) 
+           && ossim::almostEqual(getOpRow12(), getFiRow12())
+           && ossim::almostEqual(getOpCol21(), getFiCol21()) 
+           && ossim::almostEqual(getOpRow21(), getFiRow21()) 
+           && ossim::almostEqual(getOpCol22(), getFiCol22())
+           && ossim::almostEqual(getOpRow22(), getFiRow22())));
 }
 
 void ossimNitfIchipbTag::setProperty(ossimRefPtr<ossimProperty> property)
