@@ -14,68 +14,70 @@
 
 class OSSIMDLLEXPORT ossimApplicationUsage
 {
-    public:
-        
-        static ossimApplicationUsage* instance();
+public:
 
-        ossimApplicationUsage() {}
+   static ossimApplicationUsage* instance();
 
-        ossimApplicationUsage(const ossimString& commandLineUsage);
+   ossimApplicationUsage() {}
 
-        typedef std::map<ossimString,ossimString,ossimStringLtstr> UsageMap;
+   ossimApplicationUsage(const ossimString& commandLineUsage);
 
-        void setApplicationName(const ossimString& name);
-        const ossimString& getApplicationName() const;
+   typedef std::map<ossimString,ossimString,ossimStringLtstr> UsageMap;
 
-        void setDescription(const ossimString& desc);
-        const ossimString& getDescription() const;
+   void setApplicationName(const ossimString& name);
+   const ossimString& getApplicationName() const;
 
-        enum Type
-        {
-            OSSIM_COMMAND_LINE_OPTION    = 0x1,
-            OSSIM_ENVIRONMENTAL_VARIABLE = 0x2
-        };
-        
-        void addUsageExplanation(Type type,const ossimString& option,const ossimString& explanation);
-        
-        void setCommandLineUsage(const ossimString& explanation);
+   void setDescription(const ossimString& desc);
+   const ossimString& getDescription() const;
 
-        const ossimString& getCommandLineUsage() const;
+   enum Type
+   {
+      OSSIM_COMMAND_LINE_OPTION    = 0x1,
+      OSSIM_ENVIRONMENTAL_VARIABLE = 0x2
+   };
 
+   void addUsageExplanation(Type type,const ossimString& option,const ossimString& explanation);
 
-        void addCommandLineOption(const ossimString& option,const ossimString& explanation);
-        
-        const UsageMap& getCommandLineOptions() const;
+   void setCommandLineUsage(const ossimString& explanation);
+
+   const ossimString& getCommandLineUsage() const;
 
 
-        void addEnvironmentalVariable(const ossimString& option,const ossimString& explanation);
-        
-        const UsageMap& getEnvironmentalVariables() const;
+   void addCommandLineOption(const ossimString& option,const ossimString& explanation);
 
-        void getFormatedString(ossimString& str, const UsageMap& um,unsigned int widthOfOutput=80);
+   const UsageMap& getCommandLineOptions() const;
 
-        void write(std::ostream& output,const UsageMap& um,unsigned int widthOfOutput=80);
-        
-        void write(std::ostream& output,unsigned int type=OSSIM_COMMAND_LINE_OPTION|OSSIM_ENVIRONMENTAL_VARIABLE, unsigned int widthOfOutput=80);
 
-    protected:
-    
-        ossimString theApplicationName;
-        ossimString theDescription;
-        ossimString theCommandLineUsage;
-        UsageMap    theCommandLineOptions;
-        UsageMap    theEnvironmentalVariables;
+   void addEnvironmentalVariable(const ossimString& option,const ossimString& explanation);
+
+   const UsageMap& getEnvironmentalVariables() const;
+
+
+   void write(std::ostream& output, const UsageMap& um);
+
+   void write(std::ostream& output,
+              unsigned int type=OSSIM_COMMAND_LINE_OPTION|OSSIM_ENVIRONMENTAL_VARIABLE);
+
+protected:
+   void getFormatedString(ossimString& str,
+                          const UsageMap& um);
+
+   ossimString theApplicationName;
+   ossimString theDescription;
+   ossimString theCommandLineUsage;
+   UsageMap    theCommandLineOptions;
+   UsageMap    theEnvironmentalVariables;
 };
 
 class ApplicationUsageProxy
-{   
-    public:
+{
+public:
 
-        /** register an explanation of commandline/evironmentalvaraible/keyboard mouse usage.*/
-        ApplicationUsageProxy(ossimApplicationUsage::Type type,const ossimString& option,const ossimString& explanation)
-        {
-            ossimApplicationUsage::instance()->addUsageExplanation(type,option,explanation);
-        }
+   /** register an explanation of commandline/evironmentalvaraible/keyboard mouse usage.*/
+   ApplicationUsageProxy(ossimApplicationUsage::Type type,const ossimString& option,const ossimString& explanation)
+   {
+      ossimApplicationUsage::instance()->addUsageExplanation(type,option,explanation);
+   }
 };
 
 
