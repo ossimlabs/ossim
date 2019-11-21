@@ -13,6 +13,8 @@
 #include <cstdio>
 #include <cstdarg>
 #include <geos_c.h>
+#define GEOS_VERSION_COMBINED ((GEOS_VERSION_MAJOR * 10000) +  (GEOS_VERSION_MINOR*1000))
+#define VERSION_38 38000
 
 class ossimPolyArea2dPrivate
 {
@@ -620,8 +622,12 @@ bool ossimPolyArea2d::intersects(const ossimPolyArea2d &rhs) const
 
 void ossimPolyArea2d::makeValid()
 {
+#if (GEOS_VERSION_COMBINED < VERSION_38)
+   ossimNotify(ossimNotifyLevel_WARN) << "ossimPolyArea2d::makeValid() is only callable from geos 3.8 and above\n";
+#else
    ossimPolyArea2dPrivate::GEOSGeometryPtr geom = GEOSMakeValid(m_privateData->m_geometry);
    if(geom) m_privateData->setGeometry(geom);
+#endif
 }
 
 

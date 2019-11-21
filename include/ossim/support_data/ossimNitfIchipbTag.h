@@ -250,6 +250,13 @@ public:
     */
    bool initFromGeometry(const ossimImageGeometry* geom);
    
+   /**
+    * Is identity.
+    * 
+    * This will verify if all data mappings are equal from the input to output mapping.
+    */
+   virtual bool isIdentity()const;
+   
    virtual void setProperty(ossimRefPtr<ossimProperty> property);
    virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
