@@ -66,6 +66,10 @@ if [ -z $OSSIM_BUILD_RELEASE ] ; then
    export OSSIM_BUILD_RELEASE=1
 fi
 
+if [ -z BUILD_OSSIM_MPI_SUPPORT ] ; then
+  export BUILD_OSSIM_MPI_SUPPORT=OFF
+fi
+
 if [ -z $BUILD_OSSIM_APPS ] ; then
    export BUILD_OSSIM_APPS=ON
 fi
