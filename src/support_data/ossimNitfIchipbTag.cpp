@@ -417,7 +417,7 @@ bool ossimNitfIchipbTag::initFromGeometry(const ossimImageGeometry* geom)
 
 bool ossimNitfIchipbTag::isIdentity()const
 {
-   return (!(ossim::almostEqual(getOpCol11(), getFiCol11()) 
+   return ((ossim::almostEqual(getOpCol11(), getFiCol11()) 
            && ossim::almostEqual(getOpRow11(), getFiRow11()) 
            && ossim::almostEqual(getOpCol12(), getFiCol12()) 
            && ossim::almostEqual(getOpRow12(), getFiRow12())
