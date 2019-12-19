@@ -678,11 +678,7 @@ bool ossimTiffOverviewBuilder::writeRn( ossimImageHandler* imageHandler,
       
       if ( getHistogramMode() != OSSIM_HISTO_MODE_UNKNOWN )
       {
-         // Accumulate a histogram.  Can't do with mpi/multi-process.
-         if(ossimMpi::instance()->getNumberOfProcessors() == 1)
-         {
-            sequencer->setHistogramMode(getHistogramMode());
-         }
+         sequencer->setHistogramMode(getHistogramMode());
          //---
          // else{} Not sure if we want an error thrown here.  For now will handle at the
          // application level.
@@ -851,23 +847,20 @@ bool ossimTiffOverviewBuilder::writeRn( ossimImageHandler* imageHandler,
 
    if ( firstResLevel )
    {
-      if ( ossimMpi::instance()->getNumberOfProcessors() == 1 )
+      if ( getHistogramMode() != OSSIM_HISTO_MODE_UNKNOWN )
       {
-         if ( getHistogramMode() != OSSIM_HISTO_MODE_UNKNOWN )
-         {
-            // Write the histogram.
-            ossimFilename histoFilename = getOutputFile();
-            histoFilename.setExtension("his");
-            sequencer->writeHistogram(histoFilename);
-         }
+         // Write the histogram.
+         ossimFilename histoFilename = getOutputFile();
+         histoFilename.setExtension("his");
+         sequencer->writeHistogram(histoFilename);
+      }
 
-         if ( ( getScanForMinMaxNull() == true ) || ( getScanForMinMax() == true ) )
-         {
-            // Write the omd file:
-            ossimFilename file = getOutputFile();
-            file = file.setExtension("omd");
-            sequencer->writeOmdFile(file);
-         }
+      if ( ( getScanForMinMaxNull() == true ) || ( getScanForMinMax() == true ) )
+      {
+         // Write the omd file:
+         ossimFilename file = getOutputFile();
+         file = file.setExtension("omd");
+         sequencer->writeOmdFile(file);
       }
    }
 

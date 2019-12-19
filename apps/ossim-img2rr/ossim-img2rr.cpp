@@ -694,8 +694,7 @@ int main(int argc, char* argv[])
          bool singlePassHistoFlag = true; 
          if ( histoMode != OSSIM_HISTO_MODE_UNKNOWN )
          {
-            if ( ( ossimMpi::instance()->getNumberOfProcessors() > 1) ||
-               ( ih->hasOverviews() && histoR0Flag ) ||
+            if ( ( ih->hasOverviews() && histoR0Flag ) ||
                ( !ossim::isnan(histoMin) ) ||
                ( !ossim::isnan(histoMax) ) ||
                ( histoBins ) ||

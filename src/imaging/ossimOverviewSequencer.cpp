@@ -361,30 +361,6 @@ ossimRefPtr<ossimImageData> ossimOverviewSequencer::getNextTile()
    }
    else if ( inputTile.valid() )
    {
-      if ( m_scanForMinMaxNull )
-      {
-         inputTile->computeMinMaxNulPix(m_minValues, m_maxValues, m_nulValues);
-      }
-      else if ( m_scanForMinMax )
-      {
-         inputTile->computeMinMaxPix(m_minValues, m_maxValues);
-      }
-      
-      if ( ( m_histoMode != OSSIM_HISTO_MODE_UNKNOWN ) &&
-           ( (m_currentTileNumber % m_histoTileIndex) == 0 ) )
-      {
-         if (traceDebug())
-         {
-            ossimNotify(ossimNotifyLevel_DEBUG)
-               << "ossimOverviewSequencer::getNextTile DEBUG:"
-               << "\npopulating histogram for tile: " << m_currentTileNumber
-               << "\n";
-         }
-         ossimIrect tileRect = inputTile->getImageRectangle();
-         ossimIrect clipRect = tileRect.clipToRect( m_areaOfInterest );
-         inputTile->populateHistogram(m_histogram, clipRect);
-      }
-      
       if ( (inputTile->getDataObjectStatus() == OSSIM_PARTIAL) ||
            (inputTile->getDataObjectStatus() == OSSIM_FULL ) )
       {
@@ -395,6 +371,7 @@ ossimRefPtr<ossimImageData> ossimOverviewSequencer::getNextTile()
          // Scan the resampled pixels for bogus values to be masked out (if masking enabled)
          if (m_maskWriter.valid())
             m_maskWriter->generateMask(m_tile, m_sourceResLevel+1);
+         populateStats(m_tile);
       }
    }
    else
@@ -463,6 +440,33 @@ void ossimOverviewSequencer::clearMinMaxNullArrays()
    m_minValues.clear();
    m_maxValues.clear();
    m_nulValues.clear();
+}
+
+void ossimOverviewSequencer::populateStats(ossimRefPtr<ossimImageData> tile)
+{
+   if (m_scanForMinMaxNull)
+   {
+      tile->computeMinMaxNulPix(m_minValues, m_maxValues, m_nulValues);
+   }
+   else if (m_scanForMinMax)
+   {
+      tile->computeMinMaxPix(m_minValues, m_maxValues);
+   }
+
+   if ((m_histoMode != OSSIM_HISTO_MODE_UNKNOWN) &&
+       ((m_currentTileNumber % m_histoTileIndex) == 0))
+   {
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+             << "ossimOverviewSequencer::populateStats DEBUG:"
+             << "\npopulating histogram for tile: " << m_currentTileNumber
+             << "\n";
+      }
+      ossimIrect tileRect = tile->getImageRectangle();
+      ossimIrect clipRect = tileRect.clipToRect(m_areaOfInterest);
+      tile->populateHistogram(m_histogram, clipRect);
+   }
 }
 
 bool ossimOverviewSequencer::writeOmdFile(const std::string& file)

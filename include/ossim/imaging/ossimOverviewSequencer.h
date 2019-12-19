@@ -242,6 +242,8 @@ protected:
 
    /** @brief Clears out the arrays from a scan for min, max, nulls. */
    void clearMinMaxNullArrays();
+   
+   virtual void populateStats(ossimRefPtr<ossimImageData> tile);
 
    ossimRefPtr<ossimImageHandler>  m_imageHandler;
    ossimRefPtr<ossimBitMaskWriter> m_maskWriter;
