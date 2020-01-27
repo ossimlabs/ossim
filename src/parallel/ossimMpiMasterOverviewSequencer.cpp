@@ -118,7 +118,10 @@ ossimRefPtr<ossimImageData> ossimMpiMasterOverviewSequencer::getNextTile()
 
    // Set the tile status.
    m_tile->validate();
-
+   if(m_tile->getDataObjectStatus() != OSSIM_EMPTY)
+   {
+      populateStats(m_tile.get());
+   }
    // Increment the tile index.
    ++m_currentTileNumber;
 

@@ -215,103 +215,6 @@ void ossimImageMpiSWriterSequenceConnection::slaveProcessTiles()
                              0,
                              MPI_COMM_WORLD,
                              &requests[currentSendRequest]);
-#if 0      
-      switch(theOutputTile[currentSendRequest]->getScalarType())
-      {
-         case OSSIM_UINT8:
-         {
-            errorValue = MPI_Isend(buf,
-                                    theOutputTile[currentSendRequest]->getSize(),
-                                    MPI_UNSIGNED_CHAR,
-                                    0,
-                                    0,
-                                    MPI_COMM_WORLD,
-                                    &requests[currentSendRequest]);
-            break;
-         }
-         case OSSIM_SINT8:
-         {
-            errorValue = MPI_Isend(buf,
-                                    theOutputTile[currentSendRequest]->getSize(),
-                                    MPI_CHAR,
-                                    0,
-                                    0,
-                                    MPI_COMM_WORLD,
-                                    &requests[currentSendRequest]);
-            break;
-         }
-         case OSSIM_UINT16:
-         {
-            errorValue = MPI_Isend(buf,
-                                    theOutputTile[currentSendRequest]->getSize(),
-                                    MPI_UNSIGNED_SHORT,
-                                    0,
-                                    0,
-                                    MPI_COMM_WORLD,
-                                    &requests[currentSendRequest]);
-            break;
-         }
-         case OSSIM_SINT16:
-         {
-            errorValue = MPI_Isend(buf,
-                                    theOutputTile[currentSendRequest]->getSize(),
-                                    MPI_SHORT,
-                                    0,
-                                    0,
-                                    MPI_COMM_WORLD,
-                                    &requests[currentSendRequest]);
-            break;
-         }
-         case OSSIM_UINT32:
-         {
-            errorValue = MPI_Isend(buf,
-                                    theOutputTile[currentSendRequest]->getSize(),
-                                    MPI_UNSIGNED_LONG,
-                                    0,
-                                    0,
-                                    MPI_COMM_WORLD,
-                                    &requests[currentSendRequest]);
-            break;
-         }
-         case OSSIM_SINT32:
-         {
-            errorValue = MPI_Isend(buf,
-                                    theOutputTile[currentSendRequest]->getSize(),
-                                    MPI_LONG,
-                                    0,
-                                    0,
-                                    MPI_COMM_WORLD,
-                                    &requests[currentSendRequest]);
-            break;
-         }
-         case OSSIM_FLOAT32:
-         case OSSIM_NORMALIZED_FLOAT:
-         {
-            errorValue = MPI_Isend(buf,
-                                    theOutputTile[currentSendRequest]->getSize(),
-                                    MPI_FLOAT,
-                                    0,
-                                    0,
-                                    MPI_COMM_WORLD,
-                                    &requests[currentSendRequest]);
-            break;
-         }
-         case OSSIM_FLOAT64:
-         case OSSIM_NORMALIZED_DOUBLE:
-         {
-            errorValue = MPI_Isend(buf,
-                                    theOutputTile[currentSendRequest]->getSize(),
-                                    MPI_DOUBLE,
-                                    0,
-                                    0,
-                                    MPI_COMM_WORLD,
-                                    &requests[currentSendRequest]);
-            break;
-         }
-         default:
-            break;
-      }
-#endif
       theCurrentTileNumber += (theNumberOfProcessors-1);
       //numberOfTilesSent++;
       currentSendRequest++;
@@ -322,11 +225,15 @@ void ossimImageMpiSWriterSequenceConnection::slaveProcessTiles()
    //
    while(tempCount < theNumberOfTilesToBuffer)
    {
+      // if (requests[currentSendRequest] != MPI_REQUEST_NULL)
+      // {
       errorValue = MPI_Wait(&requests[currentSendRequest], MPI_STATUS_IGNORE);
-      currentSendRequest++;
-      currentSendRequest %= theNumberOfTilesToBuffer;
-      
+      requests[currentSendRequest] = MPI_REQUEST_NULL;
       ++tempCount;
+      // }
+      //errorValue = MPI_Wait(&requests[currentSendRequest], MPI_STATUS_IGNORE);
+      currentSendRequest++;
+      currentSendRequest %= theNumberOfTilesToBuffer;      
    }
    
 //   MPI_Waitall(theNumberOfTilesToBuffer,
