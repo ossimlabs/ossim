@@ -1266,7 +1266,7 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
                   ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW,
                   out.str().c_str(), true);
       geomKwl.add(geomPrefix.c_str(),
-                  ossimKeywordNames::ORIGINAL_MAP_UNITS_KW,
+                  ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
                   units.c_str(), true);
    }
    else // Use tie points and scale.

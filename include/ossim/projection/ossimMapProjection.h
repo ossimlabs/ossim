@@ -301,6 +301,11 @@ protected:
 
    virtual ~ossimMapProjection();
 
+   /** This static method converts the image-to-model transform matrix from degrees
+    *  into meters as required by the base class and GeoTrans code. It uses the geographic
+    *  origin given as the offset terms in the input transform to compute scaling */
+   void convertImageModelTransformToMeters();
+
    /**
     * This method verifies that the projection parameters match the current
     * pcs code.  If not this will set the pcs code to 0.

@@ -452,14 +452,23 @@ namespace ossim
 
     bool getCitation(ossimString& citation, ossim_int32 directory=0)const;
     bool getCopyright(ossimString &copyright, ossim_int32 directory = 0) const;
+
     /**
-    * Convenience method to get a Geo trans matrix array.  
-    *
-    * @param result resulting double array
-    * @param directory to use
-    */
-    bool getGeoTransMatrix(std::vector<ossim_float64>& result,
-                           ossim_int32 directory)const;
+     * Convenience method to get optional image-to-model transform matrix array. This describes
+     * the scaling, rotation and offset to transform pixel x,y to map easting, northing. In the
+     * case of the transform units being in degrees, the transform maps x,y to lat,lon (for
+     * geographic projection). OSSIM internally uses GeoTrans map projection code that communicates
+     * coordinates in easting, northing for computing lat,lon (and visa versa), so the transform
+     * will need to be converted to meters if provided in degrees before being used in the
+     * ossimMapProjection base class. Unfortunately, there is code in TiffHandlerState that pulls
+     * the image tiepoint out of the transform matrix offset terms [3] and [7], so those need to be
+     * referenced before the transform matrix is converted to meters for geographic-projected image.
+     *
+     * @param result resulting double array [8] wide, only indexes 0, 1, 3, 4, 5, 7 are used.
+     * @param directory to use
+     */
+    bool getImageModelTransform (std::vector<ossim_float64>& result,
+                                 ossim_int32 directory)const;
 
     /**
     * Loads the the state object from keywordlist.

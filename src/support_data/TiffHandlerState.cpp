@@ -21,6 +21,8 @@
 #include <geovalues.h>
 #include <cstddef> //nullptr
 #include <sstream>
+#include <ossim/projection/ossimEquDistCylProjection.h>
+
 static ossimTrace traceDebug("ossim::TiffHandlerState");
 
 static const ossimGeoTiffCoordTransformsLut COORD_TRANS_LUT;
@@ -1207,8 +1209,8 @@ bool ossim::TiffHandlerState::getGeoTiePoints(std::vector<ossim_float64>& result
   return getDoubleArray(result, directory, "model_tie_point");
 }
 
-bool ossim::TiffHandlerState::getGeoTransMatrix(std::vector<ossim_float64>& result,
-                                              ossim_int32 directory)const
+bool ossim::TiffHandlerState::getImageModelTransform (std::vector<ossim_float64>& result,
+                                                      ossim_int32 directory)const
 {
   return getDoubleArray(result, directory, "model_transform");
 }
