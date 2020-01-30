@@ -611,7 +611,7 @@ bool ossimCcfTileSource::setOutputBandList(const vector<ossim_uint32>& outputBan
                  << "\nOutput band number in list is greater than the "
                  << "number of bands in the image source!"
                  << "\noutputBandList[" << i << "]:  "
-                 << "\nHighest available band:  "
+                 << "\nHighest availabe band:  "
                  << (getNumberOfInputBands() - 1)
                  << "\nError status has been set!  Returning..."
                  << endl;
@@ -779,12 +779,22 @@ ossim_uint32 ossimCcfTileSource::getTileHeight() const
 
 ossim_uint32 ossimCcfTileSource::getImageTileWidth() const
 {
-   return 32;
+   //---
+   // A chip is 32 x 32. A chunk is 8 x 8 chips. We'll use the chunk size of
+   // 256 x 256 so that the image cache uses 256 x 256 to avoid re-reading
+   // a whole chunk for a single chip.
+   //---
+   return 256;
 }
 
 ossim_uint32 ossimCcfTileSource::getImageTileHeight() const
 {
-   return 32;
+   //---
+   // A chip is 32 x 32. A chunk is 8 x 8 chips. We'll use the chunk size of
+   // 256 x 256 so that the image cache uses 256 x 256 to avoid re-reading
+   // a whole chunk for a single chip.
+   //---
+   return 256;
 }
 
 void ossimCcfTileSource::initVerticesFromHeader()
