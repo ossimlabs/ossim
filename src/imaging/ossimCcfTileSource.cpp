@@ -611,7 +611,7 @@ bool ossimCcfTileSource::setOutputBandList(const vector<ossim_uint32>& outputBan
                  << "\nOutput band number in list is greater than the "
                  << "number of bands in the image source!"
                  << "\noutputBandList[" << i << "]:  "
-                 << "\nHighest availabe band:  "
+                 << "\nHighest available band:  "
                  << (getNumberOfInputBands() - 1)
                  << "\nError status has been set!  Returning..."
                  << endl;
