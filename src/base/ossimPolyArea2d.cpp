@@ -71,7 +71,7 @@ public:
          {
             ossimPolygon::Vector polys;
             getVisiblePolygons(geom, polys);
-            for (ossim_int32 idx = 0; idx < polys.size(); ++idx)
+            for (ossim_uint32 idx = 0; idx < polys.size(); ++idx)
             {
                if (bounds.isNan())
                {
@@ -317,7 +317,7 @@ bool ossimPolyArea2dPrivate::getPolygonHoles(ossimPolygon::Vector &polygons) con
    return getPolygonHoles(m_geometry, polygons);
 }
 
-bool ossimPolyArea2dPrivate::getPolygonHoles(ConstGEOSGeometryPtr geom,
+bool ossimPolyArea2dPrivate::getPolygonHoles(ConstGEOSGeometryPtr /* geom */,
                                              ossimPolygon::Vector &polygons) const
 {
    bool foundPolys = false;
