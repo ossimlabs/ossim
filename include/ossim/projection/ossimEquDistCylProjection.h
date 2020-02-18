@@ -114,8 +114,11 @@ public:
     */
    virtual bool loadState(const ossimKeywordlist& kwl,
                           const char* prefix=0);
-   
-private:   
+
+private:
+   /** Extracts tiepoint, scale and rotation info from transform */
+   virtual void updateFromTransform();
+
    //---------------------GEOTRANS-------------------------------
    mutable double Eqcy_a;                  /* Semi-major axis of ellipsoid in meters */
    mutable double Eqcy_f;          /* Flattening of ellipsoid */

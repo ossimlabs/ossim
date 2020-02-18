@@ -27,8 +27,6 @@
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <cmath>
 
-using namespace std;
-
 RTTI_DEF1(ossimImageViewProjectionTransform,
           "ossimImageViewProjectionTransform",
           ossimImageViewTransform);
@@ -192,159 +190,171 @@ void ossimImageViewProjectionTransform::getViewSegments(std::vector<ossimDrect>&
                                                       ossimPolyArea2d& polyArea,
                                                       ossim_uint32 numberOfEdgePoints)const
 {
-  ossimDrect imageRect;
-  ossimDrect worldRect(ossimDpt(-180,-90),
-                       ossimDpt(-180,90),
-                       ossimDpt(180,90),
-                       ossimDpt(180,-90));
-  viewBounds.clear();
-  polyArea.clear();
+   ossimDrect imageRect;
+   ossimDrect worldRect(ossimDpt(-180,-90),
+                        ossimDpt(-180,90),
+                        ossimDpt(180,90),
+                        ossimDpt(180,-90));
+   viewBounds.clear();
+   polyArea.clear();
 
-  if(m_imageGeometry.valid())
-  {
-    m_imageGeometry->getBoundingRect(imageRect);
-    ossim_uint32 idx=0;
-    std::vector<ossimDpt> points;
-    std::vector<ossimGpt> gPoints;
-    bool affectedByElevation = m_imageGeometry->isAffectedByElevation();
+   if(m_imageGeometry.valid())
+   {
+      m_imageGeometry->getBoundingRect(imageRect);
+      ossim_uint32 idx=0;
+      std::vector<ossimDpt> points;
+      std::vector<ossimGpt> gPoints;
+      bool affectedByElevation = m_imageGeometry->isAffectedByElevation();
 
 
-    if((numberOfEdgePoints > 2)&&(affectedByElevation))
-    {
-      m_imageGeometry->getImageEdgePoints(points, numberOfEdgePoints);
-    }
-    else
-    {
-      points.resize(4);
-
-      points[0] = imageRect.ul();
-      points[1] = imageRect.ur();
-      points[2] = imageRect.lr();
-      points[3] = imageRect.ll();
-    }
-    if(m_crossesDateline)
-    {
-      ossimDpt testPt;
-      ossimGpt cg;
-      m_imageGeometry->localToWorld(imageRect.midPoint(), cg);
-      ossim_int32 sgn = static_cast<ossim_int32>(ossim::sgn(cg.lond()));
-      std::vector<ossimPolygon> polyList;
-      for(idx=0; idx < points.size();++idx)
+      if((numberOfEdgePoints > 2)&&(affectedByElevation))
       {
-        ossimGpt testGpt;
-        m_imageGeometry->localToWorld(points[idx], testGpt); 
-
-        if(!testGpt.isLatNan()&&!testGpt.isLonNan())
-        {
-          gPoints.push_back(testGpt);        
-        }
+         m_imageGeometry->getImageEdgePoints(points, numberOfEdgePoints);
       }
-
-      // first we get the list of ground points initialized
-      // and shifted to one side of the full world rect
-      // We will do the other side next
-      //
-      for(idx=0; idx < gPoints.size();++idx)
+      else
       {
-         if(std::fabs(gPoints[idx].lond()-cg.lond()) > 180)
-         {
-            gPoints[idx].lond(gPoints[idx].lond()+sgn*360);
-         }
+         points.resize(4);
+
+         points[0] = imageRect.ul();
+         points[1] = imageRect.ur();
+         points[2] = imageRect.lr();
+         points[3] = imageRect.ll();
       }
-
-      // now clip the ground list to the full ground rect
-      //
-      ossimPolygon tempPoly(gPoints);
-      tempPoly.clipToRect(polyList, worldRect);
-
-      ossim_uint32 pointListIdx=0;
-
-      // Loop through the clipped polygons and find their 
-      // view projection.  We will add this to the view
-      // bounds and we will add to the poly Area.  Poly Area
-      // is used for a tighter clip.
-      //
-      for(pointListIdx=0;pointListIdx<polyList.size();++pointListIdx)
+      if(m_crossesDateline)
       {
-         const std::vector<ossimDpt>& clipPoints = polyList[pointListIdx].getVertexList();
-         points.clear();
-         for(idx = 0; idx<clipPoints.size(); ++idx)
+         ossimDpt testPt;
+         ossimGpt cg;
+         m_imageGeometry->localToWorld(imageRect.midPoint(), cg);
+         ossim_int32 sgn = static_cast<ossim_int32>(ossim::sgn(cg.lond()));
+         std::vector<ossimPolygon> polyList;
+         for(idx=0; idx < points.size();++idx)
          {
-            m_viewGeometry->worldToLocal(ossimGpt(clipPoints[idx]), testPt);
-            if(!testPt.hasNans())
+            ossimGpt testGpt;
+            m_imageGeometry->localToWorld(points[idx], testGpt); 
+
+            if(!testGpt.isLatNan()&&!testGpt.isLonNan())
             {
-               points.push_back(testPt);
+               gPoints.push_back(testGpt);        
             }
          }
-         viewBounds.push_back(ossimDrect(points));
 
-         if (points.size() >= 4)
+         // first we get the list of ground points initialized
+         // and shifted to one side of the full world rect
+         // We will do the other side next
+         //
+         for(idx=0; idx < gPoints.size();++idx)
          {
-            points.push_back(points[0]);
-            polyArea.add(ossimPolyArea2d(points));//ossimPolygon(points)));
-         }
-      }
-
-      // now shift the ground points to the other side of the world rect
-      //
-      for(idx=0; idx < gPoints.size();++idx)
-      {
-        gPoints[idx].lond(gPoints[idx].lond()+(-sgn*360));
-      }
-
-      // Now we will do the same thing to the other side of the world
-      // and find the view projection and add those to the poly area
-      // and the view rect
-      //
-      tempPoly = gPoints;
-      polyList.clear();
-      tempPoly.clipToRect(polyList, worldRect);
-
-      for(pointListIdx=0;pointListIdx<polyList.size();++pointListIdx)
-      {
-         const std::vector<ossimDpt>& clipPoints = polyList[pointListIdx].getVertexList();
-         points.clear();
-         for(idx = 0; idx<clipPoints.size(); ++idx)
-         {
-            m_viewGeometry->worldToLocal(ossimGpt(clipPoints[idx]), testPt);
-            if(!testPt.hasNans())
+            if(std::fabs(gPoints[idx].lond()-cg.lond()) > 180)
             {
-               points.push_back(testPt);
+               gPoints[idx].lond(gPoints[idx].lond()+sgn*360);
             }
          }
-         viewBounds.push_back(ossimDrect(points));
-         if (points.size() >= 4)
+
+         // now clip the ground list to the full ground rect
+         //
+         ossimPolygon tempPoly(gPoints);
+         tempPoly.clipToRect(polyList, worldRect);
+
+         ossim_uint32 pointListIdx=0;
+
+         // Loop through the clipped polygons and find their 
+         // view projection.  We will add this to the view
+         // bounds and we will add to the poly Area.  Poly Area
+         // is used for a tighter clip.
+         //
+         for(pointListIdx=0;pointListIdx<polyList.size();++pointListIdx)
          {
-            points.push_back(points[0]);
-            polyArea.add(ossimPolyArea2d(points));//ossimPolygon(points)));
+            const std::vector<ossimDpt>& clipPoints = polyList[pointListIdx].getVertexList();
+            points.clear();
+            for(idx = 0; idx<clipPoints.size(); ++idx)
+            {
+               m_viewGeometry->worldToLocal(ossimGpt(clipPoints[idx]), testPt);
+               if(!testPt.hasNans())
+               {
+                  points.push_back(testPt);
+               }
+            }
+            viewBounds.push_back(ossimDrect(points));
+
+            if (points.size() >= 4)
+            {
+               points.push_back(points[0]);
+               polyArea.add(ossimPolyArea2d(points));//ossimPolygon(points)));
+            }
          }
 
-      }
-    }// end: if(m_crossesDateline)
-    else 
-    {
-      ossimDpt testPoint;
-      std::vector<ossimDpt> vpoints;
+         // now shift the ground points to the other side of the world rect
+         //
+         for(idx=0; idx < gPoints.size();++idx)
+         {
+            gPoints[idx].lond(gPoints[idx].lond()+(-sgn*360));
+         }
 
-      for(idx=0; idx < points.size();++idx)
+         // Now we will do the same thing to the other side of the world
+         // and find the view projection and add those to the poly area
+         // and the view rect
+         //
+         tempPoly = gPoints;
+         polyList.clear();
+         tempPoly.clipToRect(polyList, worldRect);
+
+         for(pointListIdx=0;pointListIdx<polyList.size();++pointListIdx)
+         {
+            const std::vector<ossimDpt>& clipPoints = polyList[pointListIdx].getVertexList();
+            points.clear();
+
+            //---
+            // This code was pushing a nan rectangle onto "points" when
+            // "clipPoints.size()" was zero. This in turn was causing error
+            // in the polygon code:
+            // "IllegalArgumentException: Points of LinearRing do not form a
+            // closed linestring"
+            //
+            // drb - 20200130
+            //---
+            if ( clipPoints.size() )
+            {
+               for(idx = 0; idx<clipPoints.size(); ++idx)
+               {
+                  m_viewGeometry->worldToLocal(ossimGpt(clipPoints[idx]), testPt);
+                  if(!testPt.hasNans())
+                  {
+                     points.push_back(testPt);
+                  }
+               }
+               viewBounds.push_back(ossimDrect(points));
+               if (points.size() >= 4)
+               {
+                  points.push_back(points[0]);
+                  polyArea.add(ossimPolyArea2d(points));//ossimPolygon(points)));
+               }
+            }
+         }
+      }// end: if(m_crossesDateline)
+      else 
       {
-        ossimDpt testDpt;
-        imageToView(points[idx], testDpt); 
-        if(!testDpt.hasNans())
-        {
-          vpoints.push_back(testDpt);
-        }
-      }
+         ossimDpt testPoint;
+         std::vector<ossimDpt> vpoints;
+
+         for(idx=0; idx < points.size();++idx)
+         {
+            ossimDpt testDpt;
+            imageToView(points[idx], testDpt); 
+            if(!testDpt.hasNans())
+            {
+               vpoints.push_back(testDpt);
+            }
+         }
   
-      if(vpoints.size())
-      {
-        vpoints.push_back(vpoints[0]);
-        viewBounds.push_back(ossimDrect(vpoints));
-        polyArea = vpoints;// = ossimPolyArea2d(points);
+         if(vpoints.size())
+         {
+            vpoints.push_back(vpoints[0]);
+            viewBounds.push_back(ossimDrect(vpoints));
+            polyArea = vpoints;// = ossimPolyArea2d(points);
 
+         }
       }
-    }
-  } 
+   } 
 }
 
 
@@ -390,27 +400,27 @@ bool ossimImageViewProjectionTransform::setView(ossimObject* baseObject)
 //*****************************************************************************
 std::ostream& ossimImageViewProjectionTransform::print(std::ostream& out)const
 {
-    out << "ossimImageViewProjectionTransform::print: ..... entered " <<endl;
-
-    if(m_imageGeometry.valid())
-    {
-        out << "  Input Image (LEFT) Geometry: " << endl;
+   out << "ossimImageViewProjectionTransform::print: ..... entered " << std::endl;
+   
+   if(m_imageGeometry.valid())
+   {
+      out << "  Input Image (LEFT) Geometry: " << std::endl;;
         m_imageGeometry->print(out);
-    }
-    else
-    {
-        out << "  None defined." << endl;
-    }
-    if(m_viewGeometry.valid())
-    {
-        out << "Output View (RIGHT) Geometry: " << endl;
-        m_viewGeometry->print(out);
-    }
-    else
-    {
-        out << "  None defined." << endl;
-    }
-    return out;
+   }
+   else
+   {
+      out << "  None defined." << std::endl;;
+   }
+   if(m_viewGeometry.valid())
+   {
+      out << "Output View (RIGHT) Geometry: " << std::endl;;
+      m_viewGeometry->print(out);
+   }
+   else
+   {
+      out << "  None defined." << std::endl;;
+   }
+   return out;
 }
 
 //**************************************************************************************************
@@ -707,7 +717,7 @@ bool ossimImageViewProjectionTransform::initializeViewSize()
                     << "\ngur: " << gur
                     << "\nglr: " << glr
                     << "\ngll: " << gll
-                    << endl;
+                    << std::endl;;
 #endif
             }
             else // Not an ossimEquDistCylProjection:
@@ -720,7 +730,7 @@ bool ossimImageViewProjectionTransform::initializeViewSize()
 #if 0 /* Please leave for debug: */
             cout << "m_imageGeometry:\n" << *(m_imageGeometry.get())
                  << "\n\nm_viewGeometry:\n" << *(m_viewGeometry.get())
-                 << "\n\ncomputed view size: " << size << endl;
+                 << "\n\ncomputed view size: " << size << std::endl;;
 #endif
             
             if ( size.hasNans() == false )

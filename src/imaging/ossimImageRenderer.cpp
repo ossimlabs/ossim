@@ -566,8 +566,11 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
 //  std::cout << "TRANSFORM VIEW TO IMAGE!!!!!!!!!!!!!!\n";
 
    ossimDrect vrect = getViewRect();
+
+#if 0 /* not used */
    ossim_float64 w = vrect.width() - 1; // subtract 1 to prevent core dump in full-earth view rect
    ossim_float64 h = vrect.height();
+#endif
 
    m_transform->viewToImage(m_Vul, m_Iul);
    m_transform->viewToImage(m_Vur, m_Iur);
@@ -777,7 +780,7 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate() cons
 
   if(imageToViewScale.hasNans()) return true;
 
-  ossim_float64 bias = imageToViewScale.length();
+  // ossim_float64 bias = imageToViewScale.length();
 
   // root average of 1x1 = sqrt(2)
   const double ROOT_AVERAGE = 1.41421356237309504880;
@@ -1235,7 +1238,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 
 #if 1
    ossimIrect tempRect = tileRect;
-   ossim_uint32 levels = theInputConnection->getNumberOfDecimationLevels();
+   // ossim_uint32 levels = theInputConnection->getNumberOfDecimationLevels();
    ossim_float64 length = ossim::max<ossim_float64>(m_inputR0Rect.width(), m_inputR0Rect.height());
    
    // if we are zoomed out or we are completely within the requesting tile rect
@@ -1681,139 +1684,139 @@ void ossimImageRenderer::getBoundingRect(ossimIrect& rect, ossim_uint32 resLevel
 
 void ossimImageRenderer::initializeBoundingRects()
 {
-  m_averageViewToImageScale = 1.0;
-  m_rectsDirty = true;
-  ossimImageViewProjectionTransform *ivpt =
+   m_averageViewToImageScale = 1.0;
+   m_rectsDirty = true;
+   ossimImageViewProjectionTransform *ivpt =
       dynamic_cast<ossimImageViewProjectionTransform *>(m_ImageViewTransform.get());
-  if (!theInputConnection || !m_ImageViewTransform.valid())
-    return;
-  m_inputR0Rect = theInputConnection->getBoundingRect(0);
-  if (!m_inputR0Rect.hasNans())
-  {
-    if (ivpt && ivpt->getImageGeometry() && ivpt->getViewGeometry())
-    {
-      // Little complicated but instead of always setting the edge walk
-      // to a high number like 50 points per edge
-      // we will look at the image to view scale change
-      // and use that as a factor.  So as the image zooms out we
-      // need fewer points to estimate the edge.
-      //
-      // ossim_uint32 idx;
-      std::vector<ossimDrect> boundList;
-      ossimImageGeometry *igeom = ivpt->getImageGeometry(); // look at projected meters
-      ossimImageGeometry *vgeom = ivpt->getViewGeometry();  // look at projected meters
-      ossimDrect testRect;
-      igeom->getBoundingRect(testRect);
-      ossimDpt mpp = igeom->getMetersPerPixel();
-      ossimDpt vmpp = vgeom->getMetersPerPixel();
-      ossim_float64 scale = 1.0;
-      ossim_uint32 maxLen = ossim::max(testRect.width(), testRect.height());
-
-      // (GP March 2, 2017) determine goodMatch : test if we have either enough samples to closely match the post spacing
-      //  or if we have at least half the number of pixels along the edge of an image
-      //
-      // This is hopefully to help avoid when using the polygon for intersection to not have
-      // bad intersection tests when zooming.  We might have to rethink it and implement
-      // this as a windowed edge walker.  So when zooming we create a polygon that
-      // is denser for only what the view can see and not the entire image.  Basically interatively
-      // tesselate the input image model based on bounding volumes and then create a dense edge walker
-      // for what lies in the view at the given scale.  Too much to implement right now so we will cheet
-      // and take an easy way out for now.
-      //
-
-      if (!mpp.hasNans() && !vmpp.hasNans())
+   if (!theInputConnection || !m_ImageViewTransform.valid())
+      return;
+   m_inputR0Rect = theInputConnection->getBoundingRect(0);
+   if (!m_inputR0Rect.hasNans())
+   {
+      if (ivpt && ivpt->getImageGeometry() && ivpt->getViewGeometry())
       {
-        scale = mpp.y / vmpp.y;
-        if (scale > 1.0)
-          scale = 1.0;
+         // Little complicated but instead of always setting the edge walk
+         // to a high number like 50 points per edge
+         // we will look at the image to view scale change
+         // and use that as a factor.  So as the image zooms out we
+         // need fewer points to estimate the edge.
+         //
+         // ossim_uint32 idx;
+         std::vector<ossimDrect> boundList;
+         ossimImageGeometry *igeom = ivpt->getImageGeometry(); // look at projected meters
+         ossimImageGeometry *vgeom = ivpt->getViewGeometry();  // look at projected meters
+         ossimDrect testRect;
+         igeom->getBoundingRect(testRect);
+         ossimDpt mpp = igeom->getMetersPerPixel();
+         ossimDpt vmpp = vgeom->getMetersPerPixel();
+         ossim_float64 scale = 1.0;
+         ossim_uint32 maxLen = ossim::max(testRect.width(), testRect.height());
+
+         // (GP March 2, 2017) determine goodMatch : test if we have either enough samples to closely match the post spacing
+         //  or if we have at least half the number of pixels along the edge of an image
+         //
+         // This is hopefully to help avoid when using the polygon for intersection to not have
+         // bad intersection tests when zooming.  We might have to rethink it and implement
+         // this as a windowed edge walker.  So when zooming we create a polygon that
+         // is denser for only what the view can see and not the entire image.  Basically interatively
+         // tesselate the input image model based on bounding volumes and then create a dense edge walker
+         // for what lies in the view at the given scale.  Too much to implement right now so we will cheet
+         // and take an easy way out for now.
+         //
+
+         if (!mpp.hasNans() && !vmpp.hasNans())
+         {
+            scale = mpp.y / vmpp.y;
+            if (scale > 1.0)
+               scale = 1.0;
+         }
+         ossim_float64 mppTest = mpp.y;
+         ossim_float64 divisor = mppTest; // default to 30 meter elevation
+         if (mppTest < 500)
+         {
+            if (mppTest >= 45)
+            {
+               divisor = 90; // 90 meters
+            }
+         }
+         else
+         {
+            divisor = 1000; // 1 kilometer
+         }
+         if (divisor < 30)
+            divisor = 30.0;
+
+         // now test to see if our edge walk is close to matching enough
+         // points for a good match.
+         //
+         ossim_uint32 maxEdgeSample = ossim::min(static_cast<ossim_uint32>(50), maxLen);
+         if (maxEdgeSample < 1)
+            maxEdgeSample = 1;
+         ossim_uint32 testEdgeSample = ossim::round<ossim_uint32>((maxLen * scale * mpp.y) / divisor);
+
+         bool goodMatch = (testEdgeSample <= maxEdgeSample) || (testEdgeSample >= (maxLen >> 1));
+         ossim_float64 steps = ossim::min(testEdgeSample, maxEdgeSample);
+
+         ossim_uint32 finalSteps = ossim::round<ossim_uint32>(steps);
+         if (finalSteps < 1)
+            finalSteps = 1;
+         if (igeom->getCrossesDateline())
+         {
+            if (finalSteps < maxEdgeSample)
+               finalSteps = maxEdgeSample;
+         }
+
+         ivpt->getViewSegments(boundList, m_viewArea, finalSteps);
+         if (boundList.size())
+         {
+            m_viewRect = boundList[0];
+            ossim_uint32 idx = 0;
+
+            if (goodMatch)
+            {
+               m_viewArea = boundList[idx];
+            }
+            else
+            {
+               m_viewArea = m_viewRect;
+            }
+            for (idx = 1; idx < boundList.size(); ++idx)
+            {
+               ossimIrect rectBounds = ossimIrect(boundList[idx]);
+               m_viewRect = m_viewRect.combine(rectBounds);
+               if (goodMatch)
+               {
+                  m_viewArea.add(ossimPolygon(boundList[idx]));
+               }
+               else
+               {
+                  m_viewArea.add(rectBounds);
+               }
+            } //
+            if (!m_viewRect.hasNans())
+            {
+               m_rectsDirty = false;
+            }
+         } //END if boundList.size()
       }
-      ossim_float64 mppTest = mpp.y;
-      ossim_float64 divisor = mppTest; // default to 30 meter elevation
-      if (mppTest < 500)
+      else if (m_ImageViewTransform.valid())
       {
-        if (mppTest >= 45)
-        {
-          divisor = 90; // 90 meters
-        }
+         m_viewRect = m_ImageViewTransform->getImageToViewBounds(m_inputR0Rect);
+
+         if (!m_viewRect.hasNans())
+         {
+            m_rectsDirty = false;
+         }
+
+         m_viewArea = m_viewRect;
       }
-      else
-      {
-        divisor = 1000; // 1 kilometer
-      }
-      if (divisor < 30)
-        divisor = 30.0;
-
-      // now test to see if our edge walk is close to matching enough
-      // points for a good match.
-      //
-      ossim_uint32 maxEdgeSample = ossim::min(static_cast<ossim_uint32>(50), maxLen);
-      if (maxEdgeSample < 1)
-        maxEdgeSample = 1;
-      ossim_uint32 testEdgeSample = ossim::round<ossim_uint32>((maxLen * scale * mpp.y) / divisor);
-
-      bool goodMatch = (testEdgeSample <= maxEdgeSample) || (testEdgeSample >= (maxLen >> 1));
-      ossim_float64 steps = ossim::min(testEdgeSample, maxEdgeSample);
-
-      ossim_uint32 finalSteps = ossim::round<ossim_uint32>(steps);
-      if (finalSteps < 1)
-        finalSteps = 1;
-      if (igeom->getCrossesDateline())
-      {
-        if (finalSteps < maxEdgeSample)
-          finalSteps = maxEdgeSample;
-      }
-
-      ivpt->getViewSegments(boundList, m_viewArea, finalSteps);
-      if (boundList.size())
-      {
-        m_viewRect = boundList[0];
-        ossim_uint32 idx = 0;
-
-        if (goodMatch)
-        {
-          m_viewArea = boundList[idx];
-        }
-        else
-        {
-          m_viewArea = m_viewRect;
-        }
-        for (idx = 1; idx < boundList.size(); ++idx)
-        {
-          ossimIrect rectBounds = ossimIrect(boundList[idx]);
-          m_viewRect = m_viewRect.combine(rectBounds);
-          if (goodMatch)
-          {
-            m_viewArea.add(ossimPolygon(boundList[idx]));
-          }
-          else
-          {
-            m_viewArea.add(rectBounds);
-          }
-        } //
-        if (!m_viewRect.hasNans())
-        {
-          m_rectsDirty = false;
-        }
-      } //END if boundList.size()
-    }
-    else if (m_ImageViewTransform.valid())
-    {
-      m_viewRect = m_ImageViewTransform->getImageToViewBounds(m_inputR0Rect);
-
-      if (!m_viewRect.hasNans())
-      {
-        m_rectsDirty = false;
-      }
-
-      m_viewArea = m_viewRect;
-    }
    }
    if(!m_viewRect.hasNans()&&m_ImageViewTransform)
    {
-     ossimDpt result;
-     m_ImageViewTransform->getViewToImageScale(result, m_viewRect.midPoint());
-     m_averageViewToImageScale = (result.x+result.y)/2.0;
-     m_averageViewToImageRLevelScale = log(m_averageViewToImageScale) / log(2);
+      ossimDpt result;
+      m_ImageViewTransform->getViewToImageScale(result, m_viewRect.midPoint());
+      m_averageViewToImageScale = (result.x+result.y)/2.0;
+      m_averageViewToImageRLevelScale = log(m_averageViewToImageScale) / log(2);
    }
    if ( m_rectsDirty )
    {

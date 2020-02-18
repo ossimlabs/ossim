@@ -779,12 +779,22 @@ ossim_uint32 ossimCcfTileSource::getTileHeight() const
 
 ossim_uint32 ossimCcfTileSource::getImageTileWidth() const
 {
-   return 32;
+   //---
+   // A chip is 32 x 32. A chunk is 8 x 8 chips. We'll use the chunk size of
+   // 256 x 256 so that the image cache uses 256 x 256 to avoid re-reading
+   // a whole chunk for a single chip.
+   //---
+   return 256;
 }
 
 ossim_uint32 ossimCcfTileSource::getImageTileHeight() const
 {
-   return 32;
+   //---
+   // A chip is 32 x 32. A chunk is 8 x 8 chips. We'll use the chunk size of
+   // 256 x 256 so that the image cache uses 256 x 256 to avoid re-reading
+   // a whole chunk for a single chip.
+   //---
+   return 256;
 }
 
 void ossimCcfTileSource::initVerticesFromHeader()

@@ -325,7 +325,11 @@ void ossimMapProjection::updateFromTransform()
    theUlEastingNorthing.x = m[0][3];
    theUlEastingNorthing.y = m[1][3];
    theImageToModelAzimuth = ossim::acosd(m[0][0]/theMetersPerPixel.x);
-   theUlGpt = inverse(theUlEastingNorthing);
+
+   // The remaining code here could be a problem since concrete projection may not be fully
+   // initialized! Override this method if needed. See ossimEquiDistCylProjection (OLK 01/20)
+   if (theUlGpt.hasNans())
+      theUlGpt = inverse(theUlEastingNorthing);
    computeDegreesPerPixel();
 }
 
@@ -1064,9 +1068,16 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
             ++i;
          }
       }
+
+      // If the transform is given in degrees, need to convert it to meters to work with geotrans:
+      ossimString unitstr = kwl.find(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW);
+      ossim_uint32 unitsId = ossimUnitTypeLut::instance()->getEntryNumber(unitstr.c_str());
+      if (unitsId == OSSIM_DEGREES)
+         convertImageModelTransformToMeters(); // This pulls the UL tiepoint from the offset terms if needed
+
       theInverseModelTransform = theModelTransform;
       theInverseModelTransform.i();
-      updateFromTransform();
+      updateFromTransform();  // This calls the concrete projection to perform inverse proj, but it may not be initialize! (OLK 01/20)
    }
    else
    {
@@ -1394,5 +1405,31 @@ bool ossimMapProjection::getElevationLookupFlag()const
 {
    return theElevationLookupFlag;
 }
-   
 
+void ossimMapProjection::convertImageModelTransformToMeters()
+{
+   ossimEllipsoid ellipsoid;
+   double f = ellipsoid.flattening();
+   double es2 = 2 * f - f * f;
+   double es4 = es2 * es2;
+   double es6 = es4 * es2;
+   double Ra = ellipsoid.a() * (1.0 - es2 / 6.0 - 17.0 * es4 / 360.0 - 67.0 * es6 /3024.0);
+   NEWMAT::Matrix& m = theModelTransform.getData();
+
+   // A bit of a hack here, This may be the only place to recover the decimal degrees origin pt:
+   if (theUlGpt.hasNans())
+   {
+      theUlGpt.lat = m[1][3];
+      theUlGpt.lon = m[0][3];
+   }
+
+   double refLat = m[1][3] * RAD_PER_DEG;
+   double dn_dp = Ra * RAD_PER_DEG;
+   double de_dl = dn_dp * cos(refLat);
+   m[0][0] *= de_dl;
+   m[0][1] *= de_dl;
+   m[0][3] *= de_dl;
+   m[1][0] *= dn_dp;
+   m[1][1] *= dn_dp;
+   m[1][3] *= dn_dp;
+}

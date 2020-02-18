@@ -47,6 +47,7 @@
 #include <iterator>
 #include <sstream>
 #include <cstdlib>
+#include <ossim/projection/ossimEquDistCylProjection.h>
 
 using namespace std;
 
@@ -1143,7 +1144,10 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
    theTiePoint.clear();
    state->getGeoTiePoints(theTiePoint, entryIdx);
    theModelTransformation.clear();
-   state->getGeoTransMatrix(theModelTransformation, entryIdx);
+   state->getImageModelTransform(theModelTransformation, entryIdx);
+
+   // Hack here to extract the tiepoint from the image-model transform's offset terms, if provided.
+   // The transform will need to later be converted to meters if provided in degrees.
    if (!theTiePoint.size())
       initTiePointsFromImageModelTransform();
 
@@ -1758,7 +1762,12 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
       }
 
       if (ossim::isnan(theOriginLon))
-         theOriginLon = x_tie_point;
+      {
+         if (theModelTransformation.empty())
+            theOriginLon = x_tie_point;
+         else
+            theOriginLon = 0.0; // The longitude offset is given in the image-model transform
+      }
       if (ossim::isnan(theOriginLat))
          theOriginLat = y_tie_point;
 

@@ -2,7 +2,7 @@
 //
 // File: ossimFileWalker.h
 // 
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -431,6 +431,7 @@ void ossimFileWalker::initializeDefaultFilterList()
    m_filteredExtensions.push_back(std::string("dbf"));
    m_filteredExtensions.push_back(std::string("h5"));
    m_filteredExtensions.push_back(std::string("hdr"));
+   m_filteredExtensions.push_back(std::string("histogram"));
    m_filteredExtensions.push_back(std::string("jgw"));
    m_filteredExtensions.push_back(std::string("jpw"));   
    m_filteredExtensions.push_back(std::string("kwl"));
