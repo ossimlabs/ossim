@@ -655,16 +655,22 @@ bool ossimMapProjection::saveState(ossimKeywordlist& kwl, const char* prefix) co
 
    kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_ROTATION_KW, theImageToModelAzimuth, true);
 
+   if (theImageToModelAzimuth != 0.0)
+   {
+      ostringstream xformstr;
+      xformstr << theModelTransform << ends;
+      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, xformstr.str().c_str(), true);
+      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
+              ossimUnitTypeLut::instance()->getEntryString(OSSIM_METERS), true);
+   }
+
    return true;
 }
 
 bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
+   const char* lookup = nullptr;
    ossimProjection::loadState(kwl, prefix);
-
-   // Initialize the image-to-map transform to identity (no scale, rotation, or offset):
-   theModelTransform.setIdentity();
-   theInverseModelTransform.setIdentity();
 
    const char* elevLookupFlag = kwl.find(prefix, ossimKeywordNames::ELEVATION_LOOKUP_FLAG_KW);
    if(elevLookupFlag)
@@ -673,8 +679,6 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
    }
    // Get the ellipsoid.
    theEllipsoid.loadState(kwl, prefix);
-
-   const char *lookup;
 
    // Get the Projection Coordinate System (assumed from EPSG database). 
    // NOTE: the code is read here for saving in this object only. 

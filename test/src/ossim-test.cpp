@@ -14,51 +14,43 @@ using namespace std;
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimCommon.h>
-#include <ossim/base/ossimEnvironmentUtility.h>
 #include <ossim/init/ossimInit.h>
+#include <ossim/imaging/ossimTiffWriter.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
 
 
 int main(int argc, char *argv[])
 {
    ossimInit::instance()->initialize(argc, argv);
 
-   cout << "running ossim::isnan test..." << endl;
-   double d = ossim::nan();
-   if (ossim::isnan(d))
-   {
-      cout << "ossim::isnan test passed..." << endl;
-   }
-   else
-   {
-      cout << "ossim::isnan test failed..." << endl;
-   }
+   ossimFilename inFile (argv[1]);
+   ossimFilename outFile (argv[2]);
 
-   cout << "running ossimEnvironmentUtility test..."
-        << "\ngetUserDir(): " 
-        << ossimEnvironmentUtility::instance()->getUserDir()
-        << "\ngetUserName(): " 
-        << ossimEnvironmentUtility::instance()->getUserName()
-        << "\ngetUserOssimSupportDir(): " 
-        << ossimEnvironmentUtility::instance()->getUserOssimSupportDir()
-        << "\ngetUserOssimPreferences(): " 
-        << ossimEnvironmentUtility::instance()->getUserOssimPreferences()
-        << "\ngetUserOssimPluginDir()" 
-        << ossimEnvironmentUtility::instance()->getUserOssimPluginDir()
-        << "\ngetInstalledOssimSupportDir(): " 
-        << ossimEnvironmentUtility::instance()->getInstalledOssimSupportDir()
-        << "\ngetInstalledOssimPluginDir(): " 
-        << ossimEnvironmentUtility::instance()->getInstalledOssimPluginDir()
-        << "\ngetInstalledOssimPreferences(): "
-        << ossimEnvironmentUtility::instance()->getInstalledOssimPreferences()
-        << "\ngetCurrentWorkingDir(): "
-        << ossimEnvironmentUtility::instance()->getCurrentWorkingDir()
-        << endl;
+   auto handler = ossimImageHandlerRegistry::instance()->open(inFile);
+   if (!handler)
+      throw(runtime_error("Unable to create handler."));
 
-   cout << "ossim::round<> test:";
-   ossim_float64 f1 = 8.193933404085605;
-   cout << std::setiosflags(ios::fixed) << std::setprecision(15) << "\nf1: " << f1;
-   f1 = ossim::round<int>(f1 / 0.000005359188182);
-   cout << std::setiosflags(ios::fixed) << std::setprecision(15) << "\nossim::round<int>(d / 0.000005359188182): " << f1;
-   
+   // Create writer:
+   auto writer = ossimImageWriterFactoryRegistry::instance()->createWriter(outFile);
+   if (!writer)
+      throw(runtime_error("Unable to create writer."));
+   writer->connectMyInputTo(handler);
+
+   writer->setWriteExternalGeometryFlag(false);
+   //writer->setTileSize(ossimIpt(egressor->getTileWidth(), egressor->getTileHeight()));
+   //writer->setOutputImageType("tiff_tiled");
+   //writer->setPixelType(OSSIM_PIXEL_IS_POINT);
+   writer->initialize();
+   if (writer->getErrorStatus() != ossimErrorCodes::OSSIM_OK)
+      throw(runtime_error("Unable to initialize writer for execution"));
+
+   // OSSIM writer sequences through the output tiles and writes the output image complete
+   // with metadata:
+   if (!writer->execute())
+      throw(runtime_error("Error encountered writing TIFF."));
+   writer->close();
+   cout << "\nWrote " << outFile << endl;
+
    return 0;
 }
