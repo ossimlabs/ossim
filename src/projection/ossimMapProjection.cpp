@@ -321,7 +321,7 @@ void ossimMapProjection::updateFromTransform()
    // respectively, the transform can be regenerated with a call to update().
    const NEWMAT::Matrix& m = theModelTransform.getData();
    theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
-   theMetersPerPixel.y = sqrt(m[1][0]*m[1][0] + m[1][1]*m[1][1]);
+   theMetersPerPixel.y = sqrt(m[0][1]*m[0][1] + m[1][1]*m[1][1]);
    theUlEastingNorthing.x = m[0][3];
    theUlEastingNorthing.y = m[1][3];
    theImageToModelAzimuth = ossim::acosd(m[0][0]/theMetersPerPixel.x);
@@ -655,6 +655,15 @@ bool ossimMapProjection::saveState(ossimKeywordlist& kwl, const char* prefix) co
 
    kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_ROTATION_KW, theImageToModelAzimuth, true);
 
+   if (theImageToModelAzimuth != 0.0)
+   {
+      ostringstream xformstr;
+      xformstr << theModelTransform << ends;
+      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, xformstr.str().c_str(), true);
+      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
+              ossimUnitTypeLut::instance()->getEntryString(OSSIM_METERS), true);
+   }
+
    return true;
 }
 
@@ -674,7 +683,7 @@ bool ossimMapProjection::loadState(const ossimKeywordlist& kwl, const char* pref
    // Get the ellipsoid.
    theEllipsoid.loadState(kwl, prefix);
 
-   const char *lookup;
+   const char *lookup = nullptr;
 
    // Get the Projection Coordinate System (assumed from EPSG database). 
    // NOTE: the code is read here for saving in this object only. 

@@ -202,38 +202,34 @@ bool ossimEquDistCylProjection::loadState(const ossimKeywordlist& kwl, const cha
       ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimEquDistCylProjection::loadState: Input keyword list is \n" << kwl << endl;
    }
 
-   setDefaults();
-   ossimMapProjection::loadState(kwl, prefix);
+   //setDefaults();
 
-   // Make sure the origin.lat is defined since it is needed to relate degrees/meter:
-   if (ossim::isnan(theOrigin.lat))
-   {
-      theOrigin.lat = theUlGpt.lat;
-      if (ossim::isnan(theOrigin.lat))
-         theOrigin.lat = 0.0;
-   }
+   // A bit of a hack here loading base class members, but they are needed to initialize this
+   // projection with sufficient info to permit calling forward and inverse needed by base class
+   // initialization:
+   double origin_lat = 0;
+   ossimString lookup = kwl.find(prefix, ossimKeywordNames::ORIGIN_LATITUDE_KW);
+   if (!lookup.empty())
+      origin_lat = RAD_PER_DEG*lookup.toDouble();
 
-   // Make sure degrees per pixel is defined:
-   if (theDegreesPerPixel.hasNans() && !theMetersPerPixel.hasNans())
-      computeDegreesPerPixel();
+   // Get the central meridian.
+   double origin_lon = 0;
+   lookup = kwl.find(prefix, ossimKeywordNames::CENTRAL_MERIDIAN_KW);
+   if (!lookup.empty())
+      origin_lon = RAD_PER_DEG*lookup.toDouble();
 
-   const char* type = kwl.find(prefix, ossimKeywordNames::TYPE_KW);
+   // Initialize this projection with what we know so far. The base class may modify the
+   // ellipsoid and false easting/northing so will require reinitialization after the base class
+   // does its loadState():
+   Set_Equidistant_Cyl_Parameters(theEllipsoid.getA(), theEllipsoid.getFlattening(),
+                                  origin_lat, origin_lon, 0, 0);
 
-   // make sure we are of the same type.  If we are then the easting
-   // northing values will make since
-   //
-   if(ossimString(type) == STATIC_TYPE_NAME(ossimEquDistCylProjection))
-   {
-      Eqcy_False_Easting  = theFalseEastingNorthing.x;
-      Eqcy_False_Northing = theFalseEastingNorthing.y;
-   }
-   else
-   {
-      theUlEastingNorthing.makeNan();
-   }
    // finalize the initialization.
-   update();
-            
+   ossimMapProjection::loadState(kwl, prefix);
+   Set_Equidistant_Cyl_Parameters(theEllipsoid.getA(), theEllipsoid.getFlattening(),
+                                  origin_lat, origin_lon,
+                                  theFalseEastingNorthing.x, theFalseEastingNorthing.y);
+
    return true;
 }
 
@@ -488,12 +484,13 @@ void ossimEquDistCylProjection::updateFromTransform()
    // respectively, the transform can be regenerated with a call to update().
    const NEWMAT::Matrix& m = theModelTransform.getData();
    theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
-   theMetersPerPixel.y = sqrt(m[1][0]*m[1][0] + m[1][1]*m[1][1]);
+   theMetersPerPixel.y = sqrt(m[0][1]*m[0][1] + m[1][1]*m[1][1]);
    theUlEastingNorthing.x = m[0][3];
    theUlEastingNorthing.y = m[1][3];
    theImageToModelAzimuth = ossim::acosd(m[0][0]/theMetersPerPixel.x);
 
-   if (!theUlGpt.hasNans())
-      setOrigin(ossimGpt(theUlGpt.lat, 0.0, 0.0));
+   theUlGpt = inverse(theUlEastingNorthing);
+   //if (!theUlGpt.hasNans())
+   //   setOrigin(ossimGpt(theUlGpt.lat, 0.0, 0.0));
 }
 
