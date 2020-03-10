@@ -278,7 +278,6 @@ public:
    const NEWMAT::Matrix& getData()const{return theData;}
    NEWMAT::Matrix& getData(){return theData;}
 
-
 private:
    NEWMAT::Matrix theData;
 

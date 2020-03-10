@@ -1143,8 +1143,6 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
    theTiePoint.clear();
    theModelTransformation.clear();
    if (!state->getImageModelTransform(theModelTransformation, entryIdx))
-   //   initTiePointsFromImageModelTransform();
-   //else
       state->getGeoTiePoints(theTiePoint, entryIdx);
 
    theDoubleParam.clear();
