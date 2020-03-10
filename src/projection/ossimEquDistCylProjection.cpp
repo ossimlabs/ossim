@@ -210,21 +210,24 @@ bool ossimEquDistCylProjection::loadState(const ossimKeywordlist& kwl, const cha
    double origin_lat = 0;
    ossimString lookup = kwl.find(prefix, ossimKeywordNames::ORIGIN_LATITUDE_KW);
    if (!lookup.empty())
-      origin_lat = lookup.toDouble();
+      origin_lat = RAD_PER_DEG*lookup.toDouble();
 
    // Get the central meridian.
    double origin_lon = 0;
    lookup = kwl.find(prefix, ossimKeywordNames::CENTRAL_MERIDIAN_KW);
    if (!lookup.empty())
-      origin_lon = lookup.toDouble();
+      origin_lon = RAD_PER_DEG*lookup.toDouble();
 
+   // Initialize this projection with what we know so far. The base class may modify the
+   // ellipsoid and false easting/northing so will require reinitialization after the base class
+   // does its loadState():
    Set_Equidistant_Cyl_Parameters(theEllipsoid.getA(), theEllipsoid.getFlattening(),
                                   origin_lat, origin_lon, 0, 0);
 
    // finalize the initialization.
    ossimMapProjection::loadState(kwl, prefix);
    Set_Equidistant_Cyl_Parameters(theEllipsoid.getA(), theEllipsoid.getFlattening(),
-                                  theOrigin.lat, theOrigin.lon,
+                                  origin_lat, origin_lon,
                                   theFalseEastingNorthing.x, theFalseEastingNorthing.y);
 
    return true;

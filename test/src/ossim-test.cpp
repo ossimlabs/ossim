@@ -31,13 +31,24 @@ int main(int argc, char *argv[])
    if (!handler)
       throw(runtime_error("Unable to create handler."));
 
+   ossimImageGeometry* ingeom = handler->getImageGeometry().get();
+   ossimKeywordlist inkwl;
+   ingeom->saveState(inkwl);
+   inkwl.write("ingeom.kwl");
+
    // Create writer:
    auto writer = ossimImageWriterFactoryRegistry::instance()->createWriter(outFile);
    if (!writer)
       throw(runtime_error("Unable to create writer."));
    writer->connectMyInputTo(handler);
 
-   writer->setWriteExternalGeometryFlag(false);
+   ossimImageSource* sequencer = writer->getSequencer();
+   ossimImageGeometry* outgeom = sequencer ->getImageGeometry().get();
+   ossimKeywordlist outkwl;
+   ingeom->saveState(outkwl);
+   outkwl.write("outgeom.kwl");
+
+   writer->setWriteExternalGeometryFlag(true);
    //writer->setTileSize(ossimIpt(egressor->getTileWidth(), egressor->getTileHeight()));
    //writer->setOutputImageType("tiff_tiled");
    //writer->setPixelType(OSSIM_PIXEL_IS_POINT);
