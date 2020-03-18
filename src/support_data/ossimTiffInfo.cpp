@@ -1153,11 +1153,11 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
    //---
    bool result = true;
 
-   if (traceDebug())
+   if ( traceDebug() )
    {
-      ossimNotify(ossimNotifyLevel_DEBUG) << "tiffinfo dump to kwl:\n"
-                                          << gtiffKwl << "\n";
+      ossimNotify(ossimNotifyLevel_DEBUG) << "tiffinfo dump to kwl:\n" << gtiffKwl << "\n";
    }
+
    ossimString gtiffPrefix = "tiff.image";
    gtiffPrefix += ossimString::toString(entryIndex);
    gtiffPrefix += ".";
@@ -1167,7 +1167,7 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
 
    // Get the pixel type.
    ossimString pixelType;
-   if (getPixelType(gtiffPrefix, gtiffKwl, pixelType) == false)
+   if ( getPixelType(gtiffPrefix, gtiffKwl, pixelType) == false )
    {
       pixelType = "pixel_is_point"; // Not an error we'll make assumption?
    }
@@ -1217,7 +1217,7 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
    // 4326 (geographic) so we use the projection name; else, the origin_latitude will
    // always be 0.  This is so the gsd comes out correct for scale.
    //---
-   if (hasPcsCode && (pcsCode != "4326"))
+   if ( hasPcsCode && ( pcsCode != "4326" ) )
    {
       // Add the pcs code.
       geomKwl.add(geomPrefix.c_str(),
@@ -1226,13 +1226,13 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
    }
    else
    {
-      if (getOssimProjectionName(gtiffPrefix, gtiffKwl, ossimProjectionName) == false)
+      if ( getOssimProjectionName(gtiffPrefix, gtiffKwl, ossimProjectionName) == false )
       {
          ossimProjectionName = "ossimEquDistCylProjection";
       }
       geomKwl.add(geomPrefix.c_str(), ossimKeywordNames::TYPE_KW, ossimProjectionName);
 
-      if (ossimProjectionName == "ossimEquDistCylProjection")
+      if ( ossimProjectionName == "ossimEquDistCylProjection" )
       {
          isGeographic = true;
       }
@@ -1249,41 +1249,60 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
          units = "degrees";
    }
 
+   // Get the pixel scale.
    ossimDpt scale;
-   bool hasScale = false;
+   bool hasScale = getPixelScale(gtiffPrefix, gtiffKwl, scale);
 
-   // Get the model transform if provided.
+   // Get the tie point.
+   std::vector<ossim_float64> ties;
+   getTiePoint(gtiffPrefix, gtiffKwl, ties);
+
+   //---
+   // Tie count:
+   // NOTE: It takes six doubles to make one tie point ie:
+   // x,y,z,longitude,latitude,height or x,y,z,easting,northing,height
+   //---
+   ossim_uint32 tieCount = (ossim_uint32)ties.size()/6;
+
+   // Get the model transform.
    std::vector<ossim_float64> xfrm;
    getModelTransform(gtiffPrefix, gtiffKwl, xfrm);
-   if (xfrm.size() == 16)
+
+   bool useXfrm = false;
+   if ( xfrm.size() == 16 )
    {
+      // Need at least 24 (which is four ties) to use bilinear.
+      if ( !hasScale && ties.size() < 24 )
+      {
+         useXfrm = true;
+      }
+   }
+
+   if (useXfrm)
+   {
+      ossimString linearUnits = "";
+      if ( getLinearUnits(gtiffPrefix, gtiffKwl, linearUnits) == false )
+      {
+         linearUnits = "meters";
+      }
+
       std::ostringstream out;
       out << std::setprecision(15); // To avoid truncating.
-      for (const double& m : xfrm)
-         out << m << " ";
-
+      ossim_uint32 idx = 0;
+      for(idx =0; idx < 16; ++idx)
+      {
+         out << xfrm[idx] << " ";
+      }
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW,
                   out.str().c_str(), true);
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
-                  units.c_str(), true);
+                  linearUnits.c_str(), true);
    }
-   else // Use tie points and scale.
+   else // Use tie points.
    {
-      // Get the pixel scale.
-      hasScale = getPixelScale(gtiffPrefix, gtiffKwl, scale);
-
-      // Get the tie point.
-      std::vector<ossim_float64> ties;
-      getTiePoint(gtiffPrefix, gtiffKwl, ties);
-
-      // Tie count:
-      // NOTE: It takes six doubles to make one tie point ie:
-      // x,y,z,longitude,latitude,height or x,y,z,easting,northing,height
-      ossim_uint32 tieCount = (ossim_uint32)ties.size() / 6;
-
-      if (hasScale && (tieCount == 1))
+      if ( hasScale && (tieCount == 1) )
       {
          // Shift the tile to 0,0 pixel of image if not already there.
          ossimDpt tie;
@@ -1309,19 +1328,19 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
          ossimTieGptSet tieSet;
          getTieSets(ties, width, height, tieSet);
 
-         if (tieCount >= 4)
+         if(tieCount >= 4)
          {
             ossimRefPtr<ossimBilinearProjection> proj =
-                new ossimBilinearProjection;
+               new ossimBilinearProjection;
             proj->optimizeFit(tieSet);
             proj->saveState(geomKwl, geomPrefix.c_str());
-            if (traceDebug())
+            if(traceDebug())
             {
                ossimNotify(ossimNotifyLevel_DEBUG)
-                   << "Creating a bilinear projection\n";
+                  << "Creating a bilinear projection\n";
             }
          }
-         else // Need at least four ties.
+         else  // Need at least four ties.
          {
             result = false;
          }
@@ -1334,14 +1353,14 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
    } // matches: else Use tie points block.
 
    ossimString tmpStr;
-   if (getStdParallelOne(gtiffPrefix, gtiffKwl, tmpStr))
+   if ( getStdParallelOne(gtiffPrefix, gtiffKwl, tmpStr) )
    {
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::STD_PARALLEL_1_KW,
                   tmpStr);
    }
 
-   if (getStdParallelTwo(gtiffPrefix, gtiffKwl, tmpStr))
+   if ( getStdParallelTwo(gtiffPrefix, gtiffKwl, tmpStr) )
    {
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::STD_PARALLEL_2_KW,
@@ -1349,54 +1368,53 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
    }
 
    ossimDpt eastingNorthing;
-   if (getFalseEastingNorthing(gtiffPrefix, gtiffKwl,
-                               eastingNorthing))
+   if ( getFalseEastingNorthing(gtiffPrefix, gtiffKwl,
+                                eastingNorthing) )
    {
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::FALSE_EASTING_NORTHING_KW,
                   eastingNorthing.toString());
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::
-                      FALSE_EASTING_NORTHING_UNITS_KW,
-                  units);
+                  FALSE_EASTING_NORTHING_UNITS_KW, units);
    }
 
    ossim_float64 tmpDbl = ossim::nan();
 
-   if (getOriginLat(gtiffPrefix, gtiffKwl, tmpDbl) == false)
+   if ( getOriginLat(gtiffPrefix, gtiffKwl, tmpDbl) == false )
    {
-      if (isGeographic && hasScale && scale.x)
+      if ( isGeographic && hasScale && scale.x )
       {
          //---
          // ossimEquDistCylProjection uses the origin_latitude for meters per pixel (gsd)
          // computation.  So is not set in tiff tags, compute to achieve the proper
          // horizontal scaling.
          //---
-         tmpDbl = ossim::acosd(scale.y / scale.x);
+         tmpDbl = ossim::acosd(scale.y/scale.x);
       }
    }
-   if (!ossim::isnan(tmpDbl))
+   if ( !ossim::isnan(tmpDbl) )
    {
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::ORIGIN_LATITUDE_KW,
                   tmpDbl);
    }
 
-   if (getCentralMeridian(gtiffPrefix, gtiffKwl, tmpDbl))
+   if ( getCentralMeridian(gtiffPrefix, gtiffKwl, tmpDbl) )
    {
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::CENTRAL_MERIDIAN_KW,
                   tmpDbl);
    }
 
-   if (getScaleFactor(gtiffPrefix, gtiffKwl, tmpDbl))
+   if ( getScaleFactor(gtiffPrefix, gtiffKwl, tmpDbl) )
    {
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::SCALE_FACTOR_KW,
                   tmpDbl);
    }
 
-   if (getDatumCode(gtiffPrefix, gtiffKwl, tmpStr))
+   if ( getDatumCode(gtiffPrefix, gtiffKwl, tmpStr) )
    {
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::DATUM_KW,
@@ -1407,14 +1425,14 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
    // Linear and vertical units not read by projection factories but added so external user could
    // query.
    //---
-   if (getLinearUnits(gtiffPrefix, gtiffKwl, tmpStr))
+   if ( getLinearUnits(gtiffPrefix, gtiffKwl, tmpStr) )
    {
       geomKwl.add(geomPrefix.c_str(),
                   LINEAR_UNITS_KW.c_str(),
                   tmpStr.c_str());
    }
 
-   if (getVerticalUnits(gtiffPrefix, gtiffKwl, tmpStr))
+   if ( getVerticalUnits(gtiffPrefix, gtiffKwl, tmpStr) )
    {
       geomKwl.add(geomPrefix.c_str(),
                   VERTICAL_UNITS_KW.c_str(),
@@ -1424,9 +1442,9 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-          << "geomKwl:\n"
-          << geomKwl << "\n"
-          << M << " exit status = " << (result ? "true" : "false") << "\n";
+         << "geomKwl:\n"
+         << geomKwl << "\n"
+         << M << " exit status = " << (result?"true":"false") << "\n";
    }
 
    return result;
@@ -3277,7 +3295,7 @@ std::ostream &ossimTiffInfo::printDigitalGlobe(std::ostream &out,
                                 const std::string &prefix) const
 {
    ossimFilename connection = m_connectionString;
-   bool isDigitalGlobe = false;
+   // bool isDigitalGlobe = false;
    ossimString copyright;
    ossimRegExp regex("m1bs|p1bs");
    ossimString drivePart;
