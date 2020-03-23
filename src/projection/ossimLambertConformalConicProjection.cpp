@@ -15,8 +15,6 @@
 #include <ossim/projection/ossimLambertConformalConicProjection.h>
 #include <ossim/base/ossimKeywordNames.h>
 
-using namespace std;
-
 RTTI_DEF1(ossimLambertConformalConicProjection, "ossimLambertConformalConicProjection", ossimMapProjection)
 
 /***************************************************************************/
@@ -90,7 +88,17 @@ ossimObject* ossimLambertConformalConicProjection::dup()const
 }
 
 void ossimLambertConformalConicProjection::update()
-{   
+{
+   //---
+   // ossimMapProjection::loadState() picks up the false easting and northing
+   // and then calls update(). The previous(commented out) assignment was
+   // zeroing that out... Added assign from theFalseEastingNorthing at the top.
+   // Commented out reverse.
+   // drb - 22 March 2020
+   //---
+   Lambert_False_Easting  = theFalseEastingNorthing.x;
+   Lambert_False_Northing = theFalseEastingNorthing.y;
+
    Set_Lambert_Parameters(theEllipsoid.getA(),
                           theEllipsoid.getFlattening(),
                           theOrigin.latr(),
@@ -100,8 +108,8 @@ void ossimLambertConformalConicProjection::update()
                           Lambert_False_Easting,
                           Lambert_False_Northing);
 
-   theFalseEastingNorthing.x = Lambert_False_Easting;
-   theFalseEastingNorthing.y = Lambert_False_Northing;
+   // theFalseEastingNorthing.x = Lambert_False_Easting;
+   // theFalseEastingNorthing.y = Lambert_False_Northing;
 
    ossimMapProjection::update();
 }
@@ -129,21 +137,37 @@ void ossimLambertConformalConicProjection::setStandardParallels(double parallel1
 
 void ossimLambertConformalConicProjection::setFalseEasting(double falseEasting)
 {
-   Lambert_False_Easting = falseEasting;
+   //---
+   // ossimLambertConformalConicProjection::update() now sets its false
+   // easting and northing from the ossmMapProjection's theFalseEastingNorthing.
+   //---
+   theFalseEastingNorthing.x = falseEasting;
+   // Lambert_False_Easting = falseEasting;
    update();
 }
 
 void ossimLambertConformalConicProjection::setFalseNorthing(double falseNorthing)
 {
-   Lambert_False_Northing = falseNorthing;
+   //---
+   // ossimLambertConformalConicProjection::update() now sets its false
+   // easting and northing from the ossmMapProjection's theFalseEastingNorthing.
+   //---
+   theFalseEastingNorthing.y = falseNorthing;
+   // Lambert_False_Northing = falseNorthing;
    update();
 }
 
 void ossimLambertConformalConicProjection::setFalseEastingNorthing(double falseEasting,
                                                                    double falseNorthing)
 {
-   Lambert_False_Easting = falseEasting;
-   Lambert_False_Northing = falseNorthing;  
+   //---
+   // ossimLambertConformalConicProjection::update() now sets its false
+   // easting and northing from the ossmMapProjection's theFalseEastingNorthing.
+   //---
+   theFalseEastingNorthing.x = falseEasting;
+   theFalseEastingNorthing.y = falseNorthing;
+   // Lambert_False_Easting = falseEasting;
+   // Lambert_False_Northing = falseNorthing;
    update();
 }
 
@@ -152,8 +176,14 @@ void ossimLambertConformalConicProjection::setParameters(double parallel1,
                                                          double falseEasting,
                                                          double falseNorthing)
 {
-   Lambert_False_Easting = falseEasting;
-   Lambert_False_Northing = falseNorthing;  
+   //---
+   // ossimLambertConformalConicProjection::update() now sets its false
+   // easting and northing from the ossmMapProjection's theFalseEastingNorthing.
+   //---
+   theFalseEastingNorthing.x = falseEasting;
+   theFalseEastingNorthing.y = falseNorthing;
+   // Lambert_False_Easting = falseEasting;
+   // Lambert_False_Northing = falseNorthing;
    Lambert_Std_Parallel_1 = parallel1*RAD_PER_DEG;
    Lambert_Std_Parallel_2 = parallel2*RAD_PER_DEG;
    update(); 
@@ -218,9 +248,42 @@ bool ossimLambertConformalConicProjection::saveState(ossimKeywordlist& kwl, cons
    return ossimMapProjection::saveState(kwl, prefix);
 }
 
-bool ossimLambertConformalConicProjection::loadState(const ossimKeywordlist& kwl, const char* prefix)
+bool ossimLambertConformalConicProjection::loadState(
+   const ossimKeywordlist& kwl, const char* prefix)
 {
-   bool flag = ossimMapProjection::loadState(kwl, prefix);
+   bool flag = false;
+   const char* type = kwl.find(prefix, ossimKeywordNames::TYPE_KW);
+   if ( type )
+   {
+      if(ossimString(type) == STATIC_TYPE_NAME(ossimLambertConformalConicProjection))
+      {
+         setDefaults();
+
+         const char* stdParallel1  = kwl.find(prefix, ossimKeywordNames::STD_PARALLEL_1_KW);
+         const char* stdParallel2  = kwl.find(prefix, ossimKeywordNames::STD_PARALLEL_2_KW);
+         if(stdParallel1)
+         {
+            Lambert_Std_Parallel_1 = ossimString(stdParallel1).toDouble()*RAD_PER_DEG;
+         }
+         if(stdParallel2)
+         {
+            Lambert_Std_Parallel_2 = ossimString(stdParallel2).toDouble()*RAD_PER_DEG;
+         }
+
+         //---
+         // ossimMapProjection::loadState(...) sets theFalseEastingNorthing and
+         // calls update() at the end.
+         // ossimLambertConformalConicProjection::update() now sets its false
+         // easting and northing from the ossmMapProjection's
+         // theFalseEastingNorthing.
+         //---
+         flag = ossimMapProjection::loadState(kwl, prefix);
+      }
+   }
+   return flag;
+
+#if 0 /* Old loadState */
+     bool flag = ossimMapProjection::loadState(kwl, prefix);
 
    const char* type          = kwl.find(prefix, ossimKeywordNames::TYPE_KW);
    const char* stdParallel1  = kwl.find(prefix, ossimKeywordNames::STD_PARALLEL_1_KW);
@@ -244,6 +307,7 @@ bool ossimLambertConformalConicProjection::loadState(const ossimKeywordlist& kwl
    }
    update();
    return flag;
+#endif
 }
 
 std::ostream& ossimLambertConformalConicProjection::print(
@@ -252,7 +316,7 @@ std::ostream& ossimLambertConformalConicProjection::print(
    // Capture the original flags.
    std::ios_base::fmtflags f = out.flags();
 
-   out << setiosflags(ios::fixed) << setprecision(15);
+   out << std::setiosflags(std::ios::fixed) << std::setprecision(15);
 
    out << "// ossimLambertConformalConicProjection::print\n"
        << ossimKeywordNames::STD_PARALLEL_1_KW << ": "
