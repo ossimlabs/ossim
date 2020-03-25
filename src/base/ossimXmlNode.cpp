@@ -1042,7 +1042,7 @@ void ossimXmlNode::toKwl(ossimKeywordlist &kwl,
 		std::shared_ptr<ChildNodeMapInfo> mapInfoChild = mapInfo[tagName];
 		if (mapInfoChild->m_count > 1)
 		{
-			ossimString newPrefix = (prefix+name + "." + tagName + ossimString::toString(mapInfoChild->m_idx));
+			ossimString newPrefix = (prefix+name + "." + tagName + ossimString::toString(mapInfoChild->m_idx) + ".");
 
 			mapInfoChild->m_idx++;
 			theChildNodes[idx]->toKwl(kwl,
