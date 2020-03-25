@@ -48,6 +48,7 @@ CHECK_INCLUDE_FILE("dlfcn.h" CMAKE_HAVE_DLFCN_H)
 include_directories( ${PROJECT_SOURCE_DIR}/include )
 include_directories( ${PROJECT_BINARY_DIR}/include )
 include_directories( ${OSSIM_INCLUDE_DIR} )
+include_directories( ${OSSIM_INCLUDE_DIR}/ossim )
 
 # Stores list of libs to link with. Initialized throughout.
 set( ossimDependentLibs )
