@@ -1510,7 +1510,11 @@ bool ossimKeywordlist::isValidTag(const std::string& value)const
    {
       for(++textChars;textChars!=value.end();++textChars)
       {
-         if(!isalnum(*(textChars) ))
+         bool test = isalnum(*textChars) || 
+                     (*textChars == '-') ||
+                     (*textChars == '_') ||
+                     (*textChars == '.');
+         if (!test)
          {
             result = false;
             break;
@@ -1567,7 +1571,7 @@ void ossimKeywordlist::toXML(std::ostream& out, const std::string& rootTag)const
          }
       }
       
-      if(outputValue)
+      if(!path.empty())
       {
          bool tagOk = true;
          path = path.substitute(".", "/", true);
@@ -1584,6 +1588,7 @@ void ossimKeywordlist::toXML(std::ostream& out, const std::string& rootTag)const
                {
                   tagOk = false;
                }
+               
                splitValues[idx] = splitValues[idx].upcase();
             }
          }
