@@ -129,6 +129,8 @@ protected:
    /** Initializes i reference.  Does byte swapping as needed. */
    void readUInt64(ossim_uint64& i, std::ifstream& str) const;
 
+   std::ostream &printPleiades(std::ostream &out,
+                               const ossimString &prefix = ossimString()) const;
 };
 
 #endif /* End of "#ifndef ossimJp2Info_HEADER" */
