@@ -628,10 +628,11 @@ private:
    bool hasOneBasedTiePoints(const std::vector<ossim_float64>& ties,
                              ossim_uint32 width,
                              ossim_uint32 height) const;
-   std::ostream& printDigitalGlobe(std::ostream& out,
-                                    const std::string& prefix)const;
+   std::ostream &printDigitalGlobe(std::ostream &out,
+                                   const std::string &prefix) const;
+   std::ostream &printPleiades(std::ostream &out,
+                               const std::string &prefix) const;
 
-   
    std::string m_connectionString;
    mutable std::shared_ptr<ossim::istream> m_inputStream;
    //ossimFilename          theFile;
