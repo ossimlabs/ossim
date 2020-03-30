@@ -6,30 +6,42 @@ namespace ossim
    void KwlNodeJsonFormatter::write(std::ostream &out,
                                  const FormatHints &hints) const
    {
+      ossim_uint32 indent = hints.m_indent;
+      std::string separator = hints.m_prettyPrint ? "\n" : "";
+      std::string indentStr = hints.m_prettyPrint ? std::string(hints.m_indent, ' ') : "";
       ossim_uint32 nChildren = m_kwlNode->getChildren().size();
       ossim_uint32 childIdx = 0;
       if(!m_rootTag.empty())
       {
-         out << "{\"" << m_rootTag << "\" : ";
+         indent += hints.m_indent;
+         out << "{\"" << separator << indentStr << m_rootTag << "\" : ";
       }
-      out << "{";
+      out << "{" << separator;
       for (auto n : m_kwlNode->getChildren())
       {
-         toJSON(out, n.second.get(), 0, hints);
+         toJSON(out, n.second.get(), indent, hints);
          ++childIdx;
          if (childIdx != nChildren)
          {
-            out << ",";
+            out << "," << separator;
          }
       }
-      out << "}";
+      if(indent)
+      {
+         out << indentStr << separator << "}" << separator;
+      }
+      else
+      {
+         out << separator << "}" << separator;
+      }
       if (!m_rootTag.empty())
       {
-         out << "}";
+         out << separator << "}" << separator;
       }
    }
 
-   void KwlNodeJsonFormatter::toJSON(std::ostream &out, const KwlNode *currentNode,
+   void KwlNodeJsonFormatter::toJSON(std::ostream &out, 
+                                     const KwlNode *currentNode,
                                      int indent,
                                      const FormatHints &hints) const
    {
@@ -41,7 +53,7 @@ namespace ossim
 
       if (currentNode->getIsArray())
       {
-         out << "\"" << currentNode->getKey() << "\" : ";
+         out << indentStr << "\"" << currentNode->getKey() << "\" : ";
          toJSONArrayType(out, currentNode, indent, hints);
       }
       else
@@ -52,22 +64,22 @@ namespace ossim
          if (currentNode->hasChildren() ||
              currentNode->hasAttributes())
          {
-            out << "\"" << currentNode->getKey() << "\" : ";
-            out << "{";
+            out << indentStr << "\"" << currentNode->getKey() << "\" : ";
+            out << "{" << separator;
             toJSONChildren(out, currentNode, indent, hints);
             if (currentNode->hasAttributes())
             {
                bool needsCommaForAttributes = currentNode->hasChildren();
                if (needsCommaForAttributes)
-                  out << ",";
-               toJSONAttributes(out, currentNode, indent, hints);
+                  out << "," << separator;
+               toJSONAttributes(out, currentNode, indent + hints.m_indent, hints);
             }
-            out << "}";
+            out << separator << indentStr << "}";
          }
          else
          {
             std::string indentValueStr = hints.m_prettyPrint ? std::string(indent + hints.m_indent, ' ') : "";
-            out << "\"" << currentNode->getKey() << "\" : \""
+            out << indentStr << "\"" << currentNode->getKey() << "\" : \""
                 << fixValue(currentNode->getValue()) << "\"";
 
             // toJSONAttributes(out, currentNode, indent, hints);
@@ -79,16 +91,18 @@ namespace ossim
                                                int indent,
                                                const FormatHints &hints) const
    {
+      std::string indentStr = hints.m_prettyPrint ? std::string(indent, ' ') : "";
+      std::string separator = hints.m_prettyPrint ? "\n" : "";
       ossim_uint32 nChildren = currentNode->getAttributes().size();
       ossim_uint32 childIdx = 0;
       for (auto attribute : currentNode->getAttributes())
       {
-         out << "\"" << attribute.second->getKey()
+         out << indentStr << "\"" << attribute.second->getKey()
              << "\" : \"" << fixValue(attribute.second->getValue()) << "\"";
          ++childIdx;
          if (childIdx != nChildren)
          {
-            out << ",";
+            out << "," << separator;
          }
       }
    }
@@ -97,6 +111,8 @@ namespace ossim
                                              int indent,
                                              const FormatHints &hints) const
    {
+      std::string indentStr = hints.m_prettyPrint ? std::string(indent, ' ') : "";
+      std::string separator = hints.m_prettyPrint ? "\n" : "";
       ossim_uint32 childIdx = 0;
       ossim_uint32 nChildren = currentNode->getChildren().size();
       if (!nChildren)
@@ -107,7 +123,7 @@ namespace ossim
          ++childIdx;
          if (childIdx != nChildren)
          {
-            out << ",";
+            out << "," << separator;
          }
       }
    }
@@ -116,9 +132,12 @@ namespace ossim
                                               int indent,
                                               const FormatHints &hints) const
    {
+      std::string indentStr = hints.m_prettyPrint ? std::string(indent, ' ') : "";
+      std::string indentStr2 = hints.m_prettyPrint ? std::string(indent + hints.m_indent, ' ') : "";
+      std::string separator = hints.m_prettyPrint ? "\n" : "";
       ossim_uint32 nChildren = currentNode->getChildren().size();
       ossim_uint32 childIdx = 0;
-      out << "[";
+      out << "[" << separator;
       // sort the child array
       std::map<ossim_int32, std::shared_ptr<KwlNode>> sortedMap;
       for (auto x : currentNode->getChildren())
@@ -132,29 +151,29 @@ namespace ossim
          {
             ossim_uint32 nGrandChildren = child.second->getChildren().size();
             ossim_uint32 grandChildIdx = 0;
-            out << "{";
+            out << indentStr2 << "{" << separator;
             for (auto skippedChild : child.second->getChildren())
             {
-               toJSON(out, skippedChild.second.get(), indent + hints.m_indent, hints);
+               toJSON(out, skippedChild.second.get(), indent + hints.m_indent*2, hints);
                ++grandChildIdx;
                if (grandChildIdx != nGrandChildren)
                {
-                  out << ",";
+                  out << "," << separator;
                }
             }
-            out << "}";
+            out << separator << indentStr2 << "}";
          }
          else
          {
-            out << "\"" << fixValue(child.second->getValue()) << "\"";
+            out << indentStr2 << "\"" << fixValue(child.second->getValue()) << "\"";
          }
          ++childIdx;
          if (childIdx != nChildren)
          {
-            out << ",";
+            out << "," << separator;
          }
       }
-      out << "]";
+      out << separator << indentStr << "]";
    }
 
    ossimString KwlNodeJsonFormatter::fixValue(const ossimString &value) const
