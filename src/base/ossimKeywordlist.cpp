@@ -18,6 +18,8 @@
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimXmlNode.h>
+#include <ossim/base/KwlNodeJsonFormatter.h>
+#include <ossim/base/KwlNodeXmlFormatter.h>
 
 #include <algorithm>
 #include <fstream>
@@ -1547,6 +1549,13 @@ void ossimKeywordlist::replaceSpecialCharacters(ossimString& value)const
 
 void ossimKeywordlist::toXML(std::ostream& out, const std::string& rootTag)const
 {
+
+   std::shared_ptr<ossim::KwlNodeXmlFormatter> formatter =
+       std::make_shared<ossim::KwlNodeXmlFormatter>(*this, rootTag);
+   ossim::KwlNodeFormatter *baseFormatter = formatter.get();
+   baseFormatter->write(out);
+
+#if 0
    std::string rootTagStr = rootTag;
    if (!isValidTag(rootTagStr))
    {
@@ -1622,12 +1631,18 @@ void ossimKeywordlist::toXML(std::ostream& out, const std::string& rootTag)const
    else 
    {
       out << *(metadata.get()) << std::endl;
-   }   
+   }  
+#endif 
 }
-
 
 void ossimKeywordlist::toJSON(std::ostream& out, const std::string& rootTag)const
 {
+   std::shared_ptr<ossim::KwlNodeJsonFormatter> formatter =
+       std::make_shared<ossim::KwlNodeJsonFormatter>(*this, rootTag);
+   ossim::KwlNodeFormatter *baseFormatter = formatter.get();
+   baseFormatter->write(out);
+
+#if 0
    const std::string C   = ": "; // colon
    const std::string DQ  = "\""; // double Quote
    const std::string LB  = "{"; // left bracket
@@ -1860,6 +1875,7 @@ void ossimKeywordlist::toJSON(std::ostream& out, const std::string& rootTag)cons
    
    // Closing bracket, newline with flush:
    out << NL << RB << std::endl;
+   #endif
 }
 
 bool ossimKeywordlist::isSame( const std::vector<ossimString>& a,
