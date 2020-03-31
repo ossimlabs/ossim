@@ -3,6 +3,7 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <map>
+#include <memory>
 namespace ossim
 {
    class KwlNode
