@@ -11,7 +11,7 @@ namespace ossim
       {
       public:
          FormatHints(int indent = 3,
-                     bool prettyPrint = true,
+                     bool prettyPrint = false,
                      bool outputDocumentHeader = false,
                      bool upcaseParentTags = false)
              : m_indent(indent),
