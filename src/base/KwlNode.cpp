@@ -116,13 +116,22 @@ namespace ossim
    bool KwlNode::checkIfArray(const ossimString &value) const
    {
       return value.startsWith("[A-Z|a-z]") &&
-             value.endsWith("[0-9]");
+             (value.endsWith("[0-9]") || value.endsWith("\\[[0-9]+\\]$"));
    }
 
    void KwlNode::extractKeyAndIndex(const ossimString &value, ossimString &key, ossimString &idx) const
    {
-      idx = value.fromRegExp("[0-9]*$");
-      key = value.beforeRegExp("[0-9]*$");
+      if (value.endsWith("[0-9]"))
+      {
+         idx = value.fromRegExp("[0-9]*$");
+         key = value.beforeRegExp("[0-9]*$");
+      }
+      else
+      {
+         ossimString tempValue = value.fromRegExp("\\[[0-9]+\\]$");
+         idx = tempValue.substr(1, tempValue.size()-1);
+         key = value.beforeRegExp("\\[[0-9]+\\]$");
+      }
    }
    void KwlNode::loadPath(const ossimString &key, const ossimString &value)
    {

@@ -29,6 +29,7 @@ namespace ossim
                                  int indent,
                                  const FormatHints &hints) const
    {
+      bool hasChildren = false;
       std::string indentStr = hints.m_prettyPrint ? std::string(indent, ' ') : "";
       std::string separator = hints.m_prettyPrint ? "\n" : "";
       bool keyEmpty = currentNode->getKey().empty();
@@ -50,15 +51,18 @@ namespace ossim
          // iterate through sorted array
          for (auto child : sortedMap)
          {
+            bool hasGrandChildren = false;
             ossimString key = parentKey;
             if (child.second->hasChildren()&&hints.m_upcaseParentTags)
             {
                key = key.upcase();
             }
             out << indentStr << "<" << replaceSpecialCharactersXML(key)
-                  << outputAttributesXml(child.second->getAttributes()) << ">" << separator;
+                  << outputAttributesXml(child.second->getAttributes()) << ">";
             if (child.second->hasChildren())
             {
+               hasGrandChildren = true;
+               out << separator;
                for (auto skippedChild : child.second->getChildren())
                {
                   toXML(out, skippedChild.second.get(), indent + hints.m_indent, hints);
@@ -78,14 +82,16 @@ namespace ossim
                   // we do not support currently trying to embed an xml 
                   // document inside another XML tag
                   //
-                  out << indentValueStr << "<![CDATA[" << childValue << "]]>" << separator;
+                 // out << indentValueStr << "<![CDATA[" << childValue << "]]>" << separator;
+                  out << "<![CDATA[" << childValue << "]]>";
                }
                else
                {
-                  out << indentValueStr << childValue << separator;
+                  //out << indentValueStr << childValue << separator;
+                  out << childValue ;
                }
             }
-            out << indentStr << "</" << replaceSpecialCharactersXML(key) << ">" << separator;
+            out << (hasGrandChildren?indentStr:"") << "</" << replaceSpecialCharactersXML(key) << ">" << separator;
          }
       }
       else
@@ -93,12 +99,16 @@ namespace ossim
          ossimString key = currentNode->getKey();
          if(currentNode->hasChildren())
          {
+            hasChildren = true;
             key = hints.m_upcaseParentTags?key.upcase():key;
          }
          if (!keyEmpty)
          {
             out << indentStr << "<" << replaceSpecialCharactersXML(key)
-                << outputAttributesXml(currentNode->getAttributes()) << ">" << separator;
+                << outputAttributesXml(currentNode->getAttributes()) << ">"
+                << (currentNode->hasChildren()?separator:"");
+            // out << indentStr << "<" << replaceSpecialCharactersXML(key)
+            //     << outputAttributesXml(currentNode->getAttributes()) << ">" << separator;
          }
          for (auto child : currentNode->getChildren())
          {
@@ -113,16 +123,18 @@ namespace ossim
             }
             if (needsCdata(value))
             {
-               out << indentValueStr << "<![CDATA[" << value << "]]>" << separator;
+               //out << indentValueStr << "<![CDATA[" << value << "]]>" << separator;
+               out << "<![CDATA[" << value << "]]>";
             }
             else
             {
-               out << indentValueStr << value << separator;
+               // out << indentValueStr << value << separator;
+               out << value;
             }
          }
          if (!keyEmpty)
          {
-            out << indentStr << "</" << replaceSpecialCharactersXML(key) << ">" << separator;
+            out << (hasChildren?indentStr:"") << "</" << replaceSpecialCharactersXML(key) << ">" << separator;
          }
       }
    }

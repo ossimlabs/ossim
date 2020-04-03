@@ -14,9 +14,13 @@ namespace ossim
       if(!m_rootTag.empty())
       {
          indent += hints.m_indent;
-         out << "{\"" << separator << indentStr << m_rootTag << "\" : ";
+         out << "{" << separator << indentStr << "\"" << m_rootTag << "\" : {" << separator;
       }
-      out << "{" << separator;
+      else
+      {
+         out << "{" << separator;
+      }
+      
       for (auto n : m_kwlNode->getChildren())
       {
          toJSON(out, n.second.get(), indent, hints);
@@ -147,6 +151,7 @@ namespace ossim
       // iterate through sorted array
       for (auto child : sortedMap)
       {
+         ++childIdx;
          if (child.second->hasChildren())
          {
             ossim_uint32 nGrandChildren = child.second->getChildren().size();
@@ -154,9 +159,9 @@ namespace ossim
             out << indentStr2 << "{" << separator;
             for (auto skippedChild : child.second->getChildren())
             {
-               toJSON(out, skippedChild.second.get(), indent + hints.m_indent*2, hints);
                ++grandChildIdx;
-               if (grandChildIdx != nGrandChildren)
+               toJSON(out, skippedChild.second.get(), indent + hints.m_indent * 2, hints);
+               if (grandChildIdx < nGrandChildren)
                {
                   out << "," << separator;
                }
@@ -167,8 +172,7 @@ namespace ossim
          {
             out << indentStr2 << "\"" << fixValue(child.second->getValue()) << "\"";
          }
-         ++childIdx;
-         if (childIdx != nChildren)
+         if (childIdx < nChildren)
          {
             out << "," << separator;
          }
