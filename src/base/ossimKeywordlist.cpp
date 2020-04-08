@@ -1553,7 +1553,7 @@ void ossimKeywordlist::toXML(std::ostream& out, const std::string& rootTag)const
    std::shared_ptr<ossim::KwlNodeXmlFormatter> formatter =
        std::make_shared<ossim::KwlNodeXmlFormatter>(*this, rootTag);
    ossim::KwlNodeFormatter *baseFormatter = formatter.get();
-   baseFormatter->write(out, ossim::KwlNodeFormatter::FormatHints(3, true, false, false));
+   baseFormatter->write(out, ossim::KwlNodeFormatter::FormatHints(3, ossim::KwlNodeFormatter::FormatHints::FORMAT_HINTS_PRETTY_PRINT_FLAG));
 
 #if 0
    std::string rootTagStr = rootTag;
@@ -1640,7 +1640,7 @@ void ossimKeywordlist::toJSON(std::ostream& out, const std::string& rootTag)cons
    std::shared_ptr<ossim::KwlNodeJsonFormatter> formatter =
        std::make_shared<ossim::KwlNodeJsonFormatter>(*this, rootTag);
    ossim::KwlNodeFormatter *baseFormatter = formatter.get();
-   baseFormatter->write(out, ossim::KwlNodeFormatter::FormatHints(3, true, false, false));
+   baseFormatter->write(out, ossim::KwlNodeFormatter::FormatHints(3, ossim::KwlNodeFormatter::FormatHints::FORMAT_HINTS_PRETTY_PRINT_FLAG));
 
 #if 0
    const std::string C   = ": "; // colon

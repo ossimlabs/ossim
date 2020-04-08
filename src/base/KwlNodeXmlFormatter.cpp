@@ -6,22 +6,22 @@ namespace ossim
    void KwlNodeXmlFormatter::write(std::ostream &out,
                                  const FormatHints &hints) const
    {
-      std::string separator = hints.m_prettyPrint ? "\n" : "";
-      if (hints.m_outputDocumentHeader)
+      std::string separator = hints.prettyPrint() ? "\n" : "";
+      if (hints.outputDocumentHeader())
       {
          out << "<?xml version='1.0'?>" << separator;
       }
       if(!m_rootTag.empty())
       {
-         out << "<" << (hints.m_upcaseParentTags?m_rootTag.upcase():m_rootTag) << ">" << separator;
+         out << "<" << (hints.upcaseParentTag()?m_rootTag.upcase():m_rootTag) << ">" << separator;
       }
       for (auto n : m_kwlNode->getChildren())
       {
-         toXML(out, n.second.get(), m_rootTag.empty()?0:hints.m_indent, hints);
+         toXML(out, n.second.get(), m_rootTag.empty()?0:hints.indent(), hints);
       }
       if (!m_rootTag.empty())
       {
-         out << "</" << (hints.m_upcaseParentTags ? m_rootTag.upcase() : m_rootTag) << ">" << separator;
+         out << "</" << (hints.upcaseParentTag() ? m_rootTag.upcase() : m_rootTag) << ">" << separator;
       }
       //toXML(out, m_kwlNode.get(), 0, hints);
    }
@@ -30,8 +30,8 @@ namespace ossim
                                  const FormatHints &hints) const
    {
       bool hasChildren = false;
-      std::string indentStr = hints.m_prettyPrint ? std::string(indent, ' ') : "";
-      std::string separator = hints.m_prettyPrint ? "\n" : "";
+      std::string indentStr = hints.prettyPrint() ? std::string(indent, ' ') : "";
+      std::string separator = hints.prettyPrint() ? "\n" : "";
       bool keyEmpty = currentNode->getKey().empty();
       ossimString value = currentNode->getValue();
 
@@ -44,7 +44,7 @@ namespace ossim
             sortedMap.insert(std::make_pair(x.first.toInt32(), x.second));
          }
          ossimString parentKey = currentNode->getKey();
-         // if (hints.m_upcaseParentTags && currentNode->hasChildren())
+         // if (hints.upcaseParentTag() && currentNode->hasChildren())
          // {
          //    parentKey = parentKey.upcase();
          // }
@@ -53,7 +53,7 @@ namespace ossim
          {
             bool hasGrandChildren = false;
             ossimString key = parentKey;
-            if (child.second->hasChildren()&&hints.m_upcaseParentTags)
+            if (child.second->hasChildren()&&hints.upcaseParentTag())
             {
                key = key.upcase();
             }
@@ -65,12 +65,12 @@ namespace ossim
                out << separator;
                for (auto skippedChild : child.second->getChildren())
                {
-                  toXML(out, skippedChild.second.get(), indent + hints.m_indent, hints);
+                  toXML(out, skippedChild.second.get(), indent + hints.indent(), hints);
                }
             }
             if (!child.second->getValue().empty())
             {
-               std::string indentValueStr = hints.m_prettyPrint ? std::string(indent + hints.m_indent, ' ') : "";
+               std::string indentValueStr = hints.prettyPrint() ? std::string(indent + hints.indent(), ' ') : "";
                ossimString childValue = child.second->getValue();
                if (childValue.startsWith("<\\?xml"))
                {
@@ -100,7 +100,7 @@ namespace ossim
          if(currentNode->hasChildren())
          {
             hasChildren = true;
-            key = hints.m_upcaseParentTags?key.upcase():key;
+            key = hints.upcaseParentTag()?key.upcase():key;
          }
          if (!keyEmpty)
          {
@@ -112,11 +112,11 @@ namespace ossim
          }
          for (auto child : currentNode->getChildren())
          {
-            toXML(out, child.second.get(), indent + hints.m_indent, hints);
+            toXML(out, child.second.get(), indent + hints.indent(), hints);
          }
          if (!value.empty())
          {
-            std::string indentValueStr = hints.m_prettyPrint ? std::string(indent + hints.m_indent, ' ') : "";
+            std::string indentValueStr = hints.prettyPrint() ? std::string(indent + hints.indent(), ' ') : "";
             if (value.startsWith("<\\?xml"))
             {
                value = "XML Not Converted";
