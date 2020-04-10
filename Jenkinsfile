@@ -15,6 +15,7 @@ properties([
 ])
 
 node ("${BUILD_NODE}"){
+    env.WORKSPACE = pwd()
 
     try {
         stage( "Download Artifacts" ) {
