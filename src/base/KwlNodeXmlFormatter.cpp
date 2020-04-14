@@ -6,6 +6,7 @@ namespace ossim
    void KwlNodeXmlFormatter::write(std::ostream &out,
                                  const FormatHints &hints) const
    {
+      std::cout << "___________________________________" << hints.prettyPrint() << "\n";
       std::string separator = hints.prettyPrint() ? "\n" : "";
       if (hints.outputDocumentHeader())
       {

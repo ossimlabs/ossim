@@ -129,8 +129,11 @@ namespace ossim
       else
       {
          ossimString tempValue = value.fromRegExp("\\[[0-9]+\\]$");
-         idx = tempValue.substr(1, tempValue.size()-1);
-         key = value.beforeRegExp("\\[[0-9]+\\]$");
+         if(!tempValue.empty())
+         {
+            idx = tempValue.substr(1, tempValue.size() - 2);
+            key = value.beforeRegExp("\\[[0-9]+\\]$");
+         }
       }
    }
    void KwlNode::loadPath(const ossimString &key, const ossimString &value)

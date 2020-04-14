@@ -16,7 +16,7 @@ namespace ossim
             FORMAT_HINTS_PRETTY_PRINT_FLAG = 1,
             FORMAT_HINTS_OUTPUT_DOCUMENT_HEADER_FLAG = 2,
             FORMAT_HINTS_UPCASE_PARENT_TAGS_FLAG = 4,
-            FORMAT_HINTS_ALL = (FORMAT_HINTS_NO_OPTION_FLAGS | FORMAT_HINTS_OUTPUT_DOCUMENT_HEADER_FLAG | FORMAT_HINTS_UPCASE_PARENT_TAGS_FLAG)
+            FORMAT_HINTS_ALL = (FORMAT_HINTS_PRETTY_PRINT_FLAG | FORMAT_HINTS_OUTPUT_DOCUMENT_HEADER_FLAG | FORMAT_HINTS_UPCASE_PARENT_TAGS_FLAG)
          };
          FormatHints(ossim_uint32 indent = 3,
                      FormatFlags formatFlags = FORMAT_HINTS_NO_OPTION_FLAGS)
@@ -25,10 +25,12 @@ namespace ossim
          {
          }
          ossim_uint32 indent()const { return m_indent; }
+         void setIndent(ossim_uint32 indent) { m_indent = indent; }
          bool prettyPrint() const { return m_formatFlags & FORMAT_HINTS_PRETTY_PRINT_FLAG; }
          bool outputDocumentHeader() const { return m_formatFlags & FORMAT_HINTS_OUTPUT_DOCUMENT_HEADER_FLAG; }
          bool upcaseParentTag() const { return m_formatFlags & FORMAT_HINTS_UPCASE_PARENT_TAGS_FLAG; }
-
+         void setFormatFlags(FormatFlags flags) { m_formatFlags = flags;}
+         FormatFlags getFormatFlags()const { return m_formatFlags;}
       protected:
          ossim_uint32 m_indent;
          FormatFlags m_formatFlags;
