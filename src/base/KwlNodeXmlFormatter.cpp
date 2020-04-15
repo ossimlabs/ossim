@@ -9,7 +9,7 @@ namespace ossim
       std::string separator = hints.prettyPrint() ? "\n" : "";
       if (hints.outputDocumentHeader())
       {
-         out << "<?xml version='1.0'?>" << separator;
+         out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << separator;
       }
       if(!m_rootTag.empty())
       {

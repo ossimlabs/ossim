@@ -56,7 +56,7 @@ namespace ossim
             ]
          }
       ],
-      "version" : "1"
+      "_version" : "1"
    }
 }
 * @endcode

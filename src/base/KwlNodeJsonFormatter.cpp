@@ -101,7 +101,7 @@ namespace ossim
       ossim_uint32 childIdx = 0;
       for (auto attribute : currentNode->getAttributes())
       {
-         out << indentStr << "\"" << attribute.second->getKey()
+         out << indentStr << "\"_" << attribute.second->getKey()
              << "\" : \"" << fixValue(attribute.second->getValue()) << "\"";
          ++childIdx;
          if (childIdx != nChildren)
