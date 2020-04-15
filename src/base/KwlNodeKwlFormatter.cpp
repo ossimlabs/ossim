@@ -42,6 +42,13 @@ void KwlNodeKwlFormatter::saveState(ossimKeywordlist& kwl,
          }
          else
          {
+            if (n.second->hasAttributes())
+            {
+               for(auto attribute : n.second->getAttributes())
+               {
+                  kwl.add((newPrefix + ".@" + attribute.first.c_str(), attribute.second->getValue().c_str()));
+               }
+            }
             kwl.add(newPrefix.c_str(), n.second->getValue().c_str());
          }
       }

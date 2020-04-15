@@ -6,10 +6,35 @@ namespace ossim
 {
 /*
 * @code
+ #include <ossim/base/ossimKeywordlist.h>
+ #include <ossim/base/KwlNode.h>
+ #include <ossim/base/KwlNodeKwlFormatter.h>
+ int main()int argc, char* argv[])
+ {
+   ossimKeywordlist kwl;
+   kwl.add("tiff.@version", "1");
+   kwl.add("tiff.hello.property1", "value1");
+   kwl.add("tiff.hello.property2", "value2");
+   kwl.add("tiff.what1.object1.dd", "hey1");
+   kwl.add("tiff.what2.object2.dd", "hey2");
+
+   std::shared_ptr<ossim::KwlNodeFormatter> formatter =
+       std::make_shared<ossim::KwlNodeKwlFormatter>(kwl);
+   formatter->write(std::cout);
+
+
+   return 0
+}
+
 * @endcode
 * SAMPLE OUTPUT:
 *
 * @code
+tiff.@version:  1
+tiff.hello.property1:  value1
+tiff.hello.property2:  value2
+tiff.what1.object1.dd:  hey1
+tiff.what2.object2.dd:  hey2
 * @endcode
 */
 class KwlNodeKwlFormatter : public KwlNodeFormatter

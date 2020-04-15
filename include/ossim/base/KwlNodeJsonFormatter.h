@@ -14,31 +14,51 @@ namespace ossim
    ossimKeywordlist kwl;
 
    kwl.add("tiff.@version", "1");
-   kwl.add("tiff.what2", "hey1");
-   kwl.add("tiff.what1.@f", "hey2");
-   kwl.add("tiff.what1", "hey2");
-   kwl.add("tiff.what1.ff", "hey3");
-   kwl.add("tiff.what10014.ads1.dd", "hey3");
-   kwl.add("tiff.what10015.ads2.dd", "hey4");
-   kwl.add("tiff.what2", "hey2");
-   kwl.add("tiff.what3", "hey3");
+   kwl.add("tiff.hello.property1", "value1");
+   kwl.add("tiff.hello.property2", "value2");
+   kwl.add("tiff.what1.object1.dd", "hey1");
+   kwl.add("tiff.what2.object2.dd", "hey2");
 
    std::shared_ptr<ossim::KwlNodeFormatter> formatter =
        std::make_shared<ossim::KwlNodeJsonFormatter>(kwl);
-
-   formatter->write(std::cout,
-                    ossim::KwlNodeFormatter::FormatHints(3, true, true, true));
-
+   ossim::KwlNodeFormatter::FormatHints hints(3, ossim::KwlNodeFormatter::FormatHints::FORMAT_HINTS_PRETTY_PRINT_FLAG);
+   formatter->write(std::cout, hints);
+   
    std::ostringstream out;
-   formatter->write(out,
-                    ossim::KwlNodeFormatter::FormatHints(3, true, true, true));
+   formatter->write(out, hints);
 
 }
 * @endcode
 * SAMPLE OUTPUT:
 *
 * @code
-{"tiff" : {"what" : [{"ff" : "hey3"},"hey2","hey3",{"ads" : [{"dd" : "hey3"}]},{"ads" : [{"dd" : "hey4"}]}],"version" : "1"}}
+{
+   "tiff" : {
+      "hello" : {
+         "property" : [
+            "value1",
+            "value2"
+         ]
+      },
+      "what" : [
+         {
+            "object" : [
+               {
+                  "dd" : "hey1"
+               }
+            ]
+         },
+         {
+            "object" : [
+               {
+                  "dd" : "hey2"
+               }
+            ]
+         }
+      ],
+      "version" : "1"
+   }
+}
 * @endcode
 */
 class KwlNodeJsonFormatter : public KwlNodeFormatter
