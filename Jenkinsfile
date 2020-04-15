@@ -125,36 +125,6 @@ node ("${BUILD_NODE}"){
             archiveArtifacts "artifacts/*"
         }
 
-        if (SCAN_WITH_SONARQUBE == "true" ) {
-            stage( 'SonarQube analysis' ) {
-                withSonarQubeEnv( "${ SONARQUBE_NAME }" ) {
-                    // requires SonarQube Scanner for Gradle 2.1+
-                    // It's important to add --info because of SONARJNKNS-281
-                    sh "sonar-scanner"
-                }
-            }
-        }
-
-        if ( BUILD_WITH_FORTIFY == "true" ) {
-            stage( 'Fortify SCA' ) {
-                dir( "${ env.WORKSPACE }/build" ) {
-                    sh """ 
-                        export PATH=${ PATH }:/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin
-                        sourceanalyzer -64 -b ossimlabs -scan -f fortifyResults-ossim.fpr
-                    """
-                    archiveArtifacts "fortifyResults-ossim.fpr"
-                    withCredentials([[$class: 'UsernamePasswordMultiBinding',
-                            credentialsId: 'fortifyCredentials',
-                            usernameVariable: 'HP_FORTIFY_USERNAME',
-                            passwordVariable: 'HP_FORTIFY_PASSWORD']]) {
-                        sh """
-                            export PATH=${ PATH }:/opt/HPE_Security/Fortify_SCA_and_Apps_17.20/bin
-                            fortifyclient -url ${ HP_FORTIFY_URL } -user "${ HP_FORTIFY_USERNAME }" -password "${ HP_FORTIFY_PASSWORD }" uploadFPR -file fortifyResults-ossim.fpr -project ossim -version 1.0
-                        """
-                    }
-                }
-            }
-        }
     }
     finally {
         stage( "Clean Workspace" ) {
