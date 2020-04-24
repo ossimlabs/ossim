@@ -2207,8 +2207,13 @@ void ossimImageRenderer::checkIVT()
             // Update the map projection.  Since ossimMapProjection::setOrigin calls
             // ossimMapProjection::update we do that before setUlTiePoints as it in
             // turn calls setUlEastingNorthing(forward(gpt)) which depends on the orgin.
+            // We'll keep the central meridian at 0.0 so as to not mess up the
+            // Easting / Northings of the EquDistCylProjection.
             //---
-            myMapProj->setOrigin(inputProj->origin());
+            ossimGpt origin = inputProj->origin();
+            origin.lon = 0.0;
+            // myMapProj->setOrigin(inputProj->origin());
+            myMapProj->setOrigin( origin );
             myMapProj->setUlTiePoints( inputProj->origin() );
 
          }

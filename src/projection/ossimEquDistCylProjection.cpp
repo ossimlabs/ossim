@@ -107,6 +107,22 @@ void ossimEquDistCylProjection::update()
 
 void ossimEquDistCylProjection::setOrigin(const ossimGpt& origin)
 {
+   // Capture the geodetic tie point.
+   ossimGpt gpt;
+   gpt.makeNan();
+   gpt.hgt = 0.0;
+   if ( theUlEastingNorthing.hasNans() == false )
+   {
+      double lat = 0.0;
+      double lon = 0.0;
+      Convert_Equidistant_Cyl_To_Geodetic(theUlEastingNorthing.x,
+                                          theUlEastingNorthing.y,
+                                          &lat,
+                                          &lon);
+      gpt.latr( lat );
+      gpt.lonr( lon );
+   }
+
    theOrigin = origin;
    Set_Equidistant_Cyl_Parameters(theEllipsoid.getA(),
                                   theEllipsoid.getFlattening(),
@@ -115,8 +131,23 @@ void ossimEquDistCylProjection::setOrigin(const ossimGpt& origin)
                                   Eqcy_False_Easting,
                                   Eqcy_False_Northing);
 
+   // Convert the tie point back to Easting Northing.
+   if ( gpt.hasNans() == false )
+   {
+      Convert_Geodetic_To_Equidistant_Cyl(gpt.latr(),
+                                          gpt.lonr(),
+                                          &theUlEastingNorthing.x,
+                                          &theUlEastingNorthing.y);
+   }
+
+   //---
    // Changing the projection origin from the equator implies a scale change in the longitude
    // direction to maintain GSD (meters) square at origin:
+   // Note: setMetersPerPixel(...) will call:
+   // ossimMapProjection::computeDegreesPerPixel()
+   // and
+   // ossimMapProjection::updateTransform()
+   //---
    ossimDpt gsd = getMetersPerPixel();
    gsd.x = gsd.y; // reset X (longitude) direction GSD
    setMetersPerPixel(gsd);
