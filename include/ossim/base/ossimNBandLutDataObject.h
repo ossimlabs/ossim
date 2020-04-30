@@ -316,7 +316,7 @@ public:
    }
    const LUT_ENTRY_TYPE* operator[](double normalizedIndex)const
    {
-      int idx = int(normalizedIndex*theNumberOfEntries);
+      ossim_uint32 idx = static_cast<ossim_int32>(normalizedIndex*(theNumberOfEntries-1));
       if (idx < 0)
       {
          idx = 0;
@@ -331,7 +331,7 @@ public:
     */ 
    LUT_ENTRY_TYPE* operator[](double normalizedIndex)
    {
-      ossim_uint32 idx = int(normalizedIndex*(theNumberOfEntries-1));
+      ossim_uint32 idx = static_cast<ossim_int32>(normalizedIndex * (theNumberOfEntries - 1));
       if (idx >= theNumberOfEntries)
       {
          idx = theNumberOfEntries-1;

@@ -245,6 +245,7 @@ public:
             ossim_uint64  value,
             bool          overwrite = true);
 
+
    /**
     * @param key Key for key-value pair.
     *

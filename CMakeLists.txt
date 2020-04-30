@@ -206,9 +206,25 @@ if ( NOT ${Project_WC_REVISION} EQUAL 0 )
    set( OSSIM_GIT_REVISION_NUMBER ${Project_WC_REVISION} )
 endif()
 
+
+
 #####################################################################################
 # Call the configure files for ossimConfig and ossimVersion setup
 #####################################################################################
+include(CheckTypeSize)
+check_type_size("short int" SIZE_OF_SHORT_INT)
+check_type_size("int" SIZE_OF_INT)
+check_type_size("long" SIZE_OF_LONG)
+check_type_size("long long" SIZE_OF_LONG_LONG)
+check_type_size("float" SIZE_OF_FLOAT)
+check_type_size("double" SIZE_OF_DOUBLE)
+check_type_size("long double" SIZE_OF_LONG_DOUBLE)
+
+check_type_size("unsigned short int" SIZE_OF_UNSIGNED_SHORT_INT)
+check_type_size("unsigned int" SIZE_OF_UNSIGNED_INT)
+check_type_size("unsigned long" SIZE_OF_UNSIGNED_LONG)
+check_type_size("unsigned long long" SIZE_OF_UNSIGNED_LONG_LONG)
+
 set(OSSIM_VERSION_NUMBER "\"${OSSIM_VERSION}\"")
 set(OSSIM_BUILD_DATE "\"${OSSIM_BUILD_DATE}\"")
 set(OSSIM_REVISION "\"${OSSIM_GIT_REVISION_NUMBER}\"")

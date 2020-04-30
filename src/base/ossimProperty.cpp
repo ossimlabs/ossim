@@ -215,7 +215,7 @@ void ossimProperty::saveState(ossimKeywordlist& kwl, const ossimString& prefix)c
    }
    else 
    {
-      kwl.add(prefix + getName(), valueToString(), true);
+      kwl.add(prefix + getName(), valueToString().c_str(), true);
    }
 }
 

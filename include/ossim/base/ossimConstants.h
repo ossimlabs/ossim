@@ -223,25 +223,25 @@
   we know that if this is defined all other types are defined
   since its included from ossimConfig.h
 */
-typedef char                   ossim_int8;
-typedef unsigned char          ossim_uint8;
-typedef signed char            ossim_sint8;
+// typedef char                   ossim_int8;
+// typedef unsigned char          ossim_uint8;
+// typedef signed char            ossim_sint8;
 
-typedef short                  ossim_int16;
-typedef unsigned short         ossim_uint16;
-typedef signed short           ossim_sint16;
+// typedef short                  ossim_int16;
+// typedef unsigned short         ossim_uint16;
+// typedef signed short           ossim_sint16;
 
-typedef int                    ossim_int32;
-typedef unsigned int           ossim_uint32;
-typedef signed int             ossim_sint32;
+// typedef int                    ossim_int32;
+// typedef unsigned int           ossim_uint32;
+// typedef signed int             ossim_sint32;
 
-typedef float                  ossim_float32;
-typedef double                 ossim_float64;
+// typedef float                  ossim_float32;
+// typedef double                 ossim_float64;
 
 
-typedef long long              ossim_int64;
-typedef unsigned long long     ossim_uint64;
-typedef signed long long       ossim_sint64;
+// typedef long long              ossim_int64;
+// typedef unsigned long long     ossim_uint64;
+// typedef signed long long       ossim_sint64;
    
 typedef ossim_int32            ossimErrorCode;
 
