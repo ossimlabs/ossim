@@ -466,9 +466,9 @@ statusUpdateOnClick: true
 // Keyword: cache_size
 // The cache size is in megabytes.
 // ---
-// cache_size: 256
+cache_size: 256
 // cache_size: 512
-cache_size: 1024
+// cache_size: 1024
 // cache_size: 2048
 
 
