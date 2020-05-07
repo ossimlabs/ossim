@@ -242,7 +242,8 @@
 // typedef long long              ossim_int64;
 // typedef unsigned long long     ossim_uint64;
 // typedef signed long long       ossim_sint64;
-   
+
+
 typedef ossim_int32            ossimErrorCode;
 
 enum ossimVertexOrdering

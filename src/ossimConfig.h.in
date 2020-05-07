@@ -39,11 +39,10 @@ typedef char                   ossim_int8;
 typedef unsigned char          ossim_uint8;
 typedef signed char            ossim_sint8;
 
-
 #if SIZE_OF_SHORT_INT == 2
 typedef short ossim_int16;
 typedef signed short ossim_sint16;
-typedef unsigned short         ossim_uint16;
+typedef unsigned short ossim_uint16;
 #define OSSIM_HAVE_INT16_T
 #define OSSIM_HAVE_UINT16_T
 #elif SIZE_OF_INT == 2
@@ -72,7 +71,6 @@ typedef unsigned long ossim_uint32;
 #error No 32-bit integer type was found.
 #endif
 
-
 #if SIZE_OF_LONG_LONG == 8
 typedef long long ossim_int64;
 typedef unsigned long long ossim_uint64;
@@ -96,7 +94,6 @@ typedef signed long ossim_sint64;
 #if !defined(OSSIM_HAVE_INT64_T)
 #error No 64-bit integer type was found.
 #endif
-
 
 #if SIZE_OF_DOUBLE == 8
 typedef double ossim_float64;
