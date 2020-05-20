@@ -154,6 +154,13 @@ else
    export BUILD_OSSIM_WMS=OFF
 fi
 
+if [ -d $OSSIM_DEV_HOME/ossim-deepcore ] ; then
+   if [ -z $BUILD_OSSIM_DEEPCORE ] ; then
+      export BUILD_OSSIM_DEEPCORE=ON
+   fi
+else
+   export BUILD_OSSIM_DEEPCORE=OFF
+fi
 
 if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
 
