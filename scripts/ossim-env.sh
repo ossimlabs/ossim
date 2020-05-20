@@ -154,14 +154,6 @@ else
    export BUILD_OSSIM_WMS=OFF
 fi
 
-if [ -d $OSSIM_DEV_HOME/ossim-deepcore ] ; then
-   if [ -z $BUILD_OSSIM_DEEPCORE ] ; then
-      export BUILD_OSSIM_DEEPCORE=ON
-   fi
-else
-   export BUILD_OSSIM_DEEPCORE=OFF
-fi
-
 if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
 
    if [ -z $BUILD_CNES_PLUGIN ] ; then
@@ -241,6 +233,14 @@ if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
    if [ -z $BUILD_OSSIM_HDF5_SUPPORT ] ; then
       export BUILD_OSSIM_HDF5_SUPPORT=ON
    fi
+fi
+
+if [ -d $OSSIM_DEV_HOME/ossim-deepcore ] ; then
+   if [ -z $BUILD_OSSIM_DEEPCORE ] ; then
+      export BUILD_OSSIM_DEEPCORE=ON
+   fi
+else
+   export BUILD_OSSIM_DEEPCORE=OFF
 fi
 
 # if [ -z $OSSIM_BUILD_ADDITIONAL_DIRECTORIES ] ; then
