@@ -48,7 +48,7 @@ INCLUDE(OssimCommonVariables)
 # Expose some build options
 set(LIB_NAME ossim CACHE STRING "Name of ossim libray (default is ossim).")
 OPTION(BUILD_OSSIM_FREETYPE_SUPPORT "Set to ON to build OSSIM with freetype support.  Use OFF to turn off freetype support." ON)
-OPTION(BUILD_OSSIM_HDF5_SUPPORT "Set to ON to build OSSIM with HDF5 support.  Use OFF to turn off MPI support." OFF)
+OPTION(BUILD_OSSIM_HDF5_SUPPORT "Set to ON to build OSSIM with HDF5 support.  Use OFF to turn off HDF5 support." OFF)
 OPTION(BUILD_OSSIM_MPI_SUPPORT "Set to ON to build OSSIM with MPI support.  Use OFF to turn off MPI support." OFF)
 OPTION(BUILD_OSSIM_ID_SUPPORT "Set to ON to build OSSIM GIT ID support into the library.  Use OFF to turn off ID support." ON)
 
@@ -181,9 +181,11 @@ set( OSSIM_HAS_MPI 0 )
 if( BUILD_OSSIM_MPI_SUPPORT )
    find_package(MPI)
    if ( MPI_FOUND )
+      # /usr/share/cmake/Modules/FindMPI.cmae are not consistent in terminology,
+      # so we include multiple list names, knowing some will be empty
       include_directories( ${MPI_INCLUDE_DIR} )
-      include_directories( ${MPI_CXX_INCLUDE_DIRS} )
-      include_directories( ${MPI_C_INCLUDE_DIRS} )
+      include_directories( ${MPI_CXX_INCLUDE_PATH} ${MPI_CXX_INCLUDE_DIRS} )
+      include_directories( ${MPI_C_INCLUDE_PATH} ${MPI_C_INCLUDE_DIRS} )
       set( ossimDependentLibs ${ossimDependentLibs} ${MPI_LIBRARIES} )
       set( OSSIM_HAS_MPI 1 )
    else ( MPI_FOUND )
