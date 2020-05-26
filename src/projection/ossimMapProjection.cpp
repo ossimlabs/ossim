@@ -320,7 +320,7 @@ void ossimMapProjection::updateFromTransform()
    // and offset preserved in theMetersPerPixel, theImageToModelAzimuth, and theUlEastingNorthing,
    // respectively, the transform can be regenerated with a call to update().
    const NEWMAT::Matrix& m = theModelTransform.getData();
-   theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
+   theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[0][1]*m[0][1]);
    theMetersPerPixel.y = sqrt(m[1][0]*m[1][0] + m[1][1]*m[1][1]);
    theUlEastingNorthing.x = m[0][3];
    theUlEastingNorthing.y = m[1][3];
@@ -1184,8 +1184,8 @@ void ossimMapProjection::computeMetersPerPixel()
 #elif USE_MODEL_TRANSFORM_XXX  // Not working so hide
    // Transform according to 4x4 transform embedded in the projection:
    const NEWMAT::Matrix& m = theModelTransform.getData();
-   theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
-   theMetersPerPixel.y = sqrt(m[0][1]*m[0][1] + m[1][1]*m[1][1]);
+   theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[0][1]*m[0][1]);
+   theMetersPerPixel.y = sqrt(m[1][0]*m[1][0] + m[1][1]*m[1][1]);
 #else
    ossimGpt right=theOrigin;
    ossimGpt down=theOrigin;
