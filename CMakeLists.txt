@@ -1,4 +1,29 @@
 PROJECT(ossim)
+############################################################
+# From https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
+#
+# Use, don't skip, the full RPATH for the build tree
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+
+# When building, don't use the install RPATH already
+# (but later on when installing)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# the RPATH to be used when installing, but only if it's not a system directory
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+if("${isSystemDir}" STREQUAL "-1")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+endif("${isSystemDir}" STREQUAL "-1")
+#################################################################
+
+
+
 SET(CMAKE_MODULE_PATH "${${PROJECT_NAME}_SOURCE_DIR}/cmake/CMakeModules;${CMAKE_MODULE_PATH}")
 
 set(CMAKE_CXX_STANDARD 11)
@@ -23,6 +48,7 @@ INCLUDE(OssimCommonVariables)
 # Expose some build options
 set(LIB_NAME ossim CACHE STRING "Name of ossim libray (default is ossim).")
 OPTION(BUILD_OSSIM_FREETYPE_SUPPORT "Set to ON to build OSSIM with freetype support.  Use OFF to turn off freetype support." ON)
+OPTION(BUILD_OSSIM_HDF5_SUPPORT "Set to ON to build OSSIM with HDF5 support.  Use OFF to turn off HDF5 support." OFF)
 OPTION(BUILD_OSSIM_MPI_SUPPORT "Set to ON to build OSSIM with MPI support.  Use OFF to turn off MPI support." OFF)
 OPTION(BUILD_OSSIM_ID_SUPPORT "Set to ON to build OSSIM GIT ID support into the library.  Use OFF to turn off ID support." ON)
 
@@ -155,7 +181,11 @@ set( OSSIM_HAS_MPI 0 )
 if( BUILD_OSSIM_MPI_SUPPORT )
    find_package(MPI)
    if ( MPI_FOUND )
+      # /usr/share/cmake/Modules/FindMPI.cmae are not consistent in terminology,
+      # so we include multiple list names, knowing some will be empty
       include_directories( ${MPI_INCLUDE_DIR} )
+      include_directories( ${MPI_CXX_INCLUDE_PATH} ${MPI_CXX_INCLUDE_DIRS} )
+      include_directories( ${MPI_C_INCLUDE_PATH} ${MPI_C_INCLUDE_DIRS} )
       set( ossimDependentLibs ${ossimDependentLibs} ${MPI_LIBRARIES} )
       set( OSSIM_HAS_MPI 1 )
    else ( MPI_FOUND )
