@@ -3210,7 +3210,7 @@ std::ostream &ossimTiffInfo::printModelType(std::ostream &out,
    {
       out << "geographic\n";
    }
-   else if (code == 2)
+   else if (code == 3)
    {
       out << "geocentric\n";
    }
