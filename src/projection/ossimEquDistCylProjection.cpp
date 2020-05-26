@@ -514,8 +514,8 @@ void ossimEquDistCylProjection::updateFromTransform()
    // and offset preserved in theMetersPerPixel, theImageToModelAzimuth, and theUlEastingNorthing,
    // respectively, the transform can be regenerated with a call to update().
    const NEWMAT::Matrix& m = theModelTransform.getData();
-   theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[1][0]*m[1][0]);
-   theMetersPerPixel.y = sqrt(m[0][1]*m[0][1] + m[1][1]*m[1][1]);
+   theMetersPerPixel.x = sqrt(m[0][0]*m[0][0] + m[0][1]*m[0][1]);
+   theMetersPerPixel.y = sqrt(m[1][0]*m[1][0] + m[1][1]*m[1][1]);
    theUlEastingNorthing.x = m[0][3];
    theUlEastingNorthing.y = m[1][3];
    theImageToModelAzimuth = ossim::acosd(m[0][0]/theMetersPerPixel.x);
