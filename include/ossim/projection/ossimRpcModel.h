@@ -66,6 +66,9 @@ public:
    /** @brief copy construtor */
    ossimRpcModel(const ossimRpcModel& copy_this);
 
+   /** @brief virtual destructor */
+   virtual ~ossimRpcModel();
+
    void setAttributes(ossim_float64 theSampleOffset,
                       ossim_float64 theLineOffset,
                       ossim_float64 theSampleScale,
@@ -240,9 +243,6 @@ protected:
       NUM_ADJUSTABLE_PARAMS // not an index
    };
 
-   /** @brief virtual destructor */
-   virtual ~ossimRpcModel();
-   
    //***
    // Methods for computing RPC polynomial and its derivatives:
    //***

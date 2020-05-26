@@ -246,7 +246,7 @@ bool ossimPreferences::savePreferences(const ossimFilename& pathname)
 
 void ossimPreferences::addPreference(const char* key, const char* value)
 {
-   theKWL.add(key, value, true);
+   theKWL.add("", key, value, true);
    theInstanceIsModified = true;
 }
 

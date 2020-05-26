@@ -107,6 +107,22 @@ void ossimEquDistCylProjection::update()
 
 void ossimEquDistCylProjection::setOrigin(const ossimGpt& origin)
 {
+   // Capture the geodetic tie point.
+   ossimGpt gpt;
+   gpt.makeNan();
+   gpt.hgt = 0.0;
+   if ( theUlEastingNorthing.hasNans() == false )
+   {
+      double lat = 0.0;
+      double lon = 0.0;
+      Convert_Equidistant_Cyl_To_Geodetic(theUlEastingNorthing.x,
+                                          theUlEastingNorthing.y,
+                                          &lat,
+                                          &lon);
+      gpt.latr( lat );
+      gpt.lonr( lon );
+   }
+
    theOrigin = origin;
    Set_Equidistant_Cyl_Parameters(theEllipsoid.getA(),
                                   theEllipsoid.getFlattening(),
@@ -115,8 +131,23 @@ void ossimEquDistCylProjection::setOrigin(const ossimGpt& origin)
                                   Eqcy_False_Easting,
                                   Eqcy_False_Northing);
 
+   // Convert the tie point back to Easting Northing.
+   if ( gpt.hasNans() == false )
+   {
+      Convert_Geodetic_To_Equidistant_Cyl(gpt.latr(),
+                                          gpt.lonr(),
+                                          &theUlEastingNorthing.x,
+                                          &theUlEastingNorthing.y);
+   }
+
+   //---
    // Changing the projection origin from the equator implies a scale change in the longitude
    // direction to maintain GSD (meters) square at origin:
+   // Note: setMetersPerPixel(...) will call:
+   // ossimMapProjection::computeDegreesPerPixel()
+   // and
+   // ossimMapProjection::updateTransform()
+   //---
    ossimDpt gsd = getMetersPerPixel();
    gsd.x = gsd.y; // reset X (longitude) direction GSD
    setMetersPerPixel(gsd);
@@ -202,38 +233,34 @@ bool ossimEquDistCylProjection::loadState(const ossimKeywordlist& kwl, const cha
       ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimEquDistCylProjection::loadState: Input keyword list is \n" << kwl << endl;
    }
 
-   setDefaults();
-   ossimMapProjection::loadState(kwl, prefix);
+   //setDefaults();
 
-   // Make sure the origin.lat is defined since it is needed to relate degrees/meter:
-   if (ossim::isnan(theOrigin.lat))
-   {
-      theOrigin.lat = theUlGpt.lat;
-      if (ossim::isnan(theOrigin.lat))
-         theOrigin.lat = 0.0;
-   }
+   // A bit of a hack here loading base class members, but they are needed to initialize this
+   // projection with sufficient info to permit calling forward and inverse needed by base class
+   // initialization:
+   double origin_lat = 0;
+   ossimString lookup = kwl.find(prefix, ossimKeywordNames::ORIGIN_LATITUDE_KW);
+   if (!lookup.empty())
+      origin_lat = RAD_PER_DEG*lookup.toDouble();
 
-   // Make sure degrees per pixel is defined:
-   if (theDegreesPerPixel.hasNans() && !theMetersPerPixel.hasNans())
-      computeDegreesPerPixel();
+   // Get the central meridian.
+   double origin_lon = 0;
+   lookup = kwl.find(prefix, ossimKeywordNames::CENTRAL_MERIDIAN_KW);
+   if (!lookup.empty())
+      origin_lon = RAD_PER_DEG*lookup.toDouble();
 
-   const char* type = kwl.find(prefix, ossimKeywordNames::TYPE_KW);
+   // Initialize this projection with what we know so far. The base class may modify the
+   // ellipsoid and false easting/northing so will require reinitialization after the base class
+   // does its loadState():
+   Set_Equidistant_Cyl_Parameters(theEllipsoid.getA(), theEllipsoid.getFlattening(),
+                                  origin_lat, origin_lon, 0, 0);
 
-   // make sure we are of the same type.  If we are then the easting
-   // northing values will make since
-   //
-   if(ossimString(type) == STATIC_TYPE_NAME(ossimEquDistCylProjection))
-   {
-      Eqcy_False_Easting  = theFalseEastingNorthing.x;
-      Eqcy_False_Northing = theFalseEastingNorthing.y;
-   }
-   else
-   {
-      theUlEastingNorthing.makeNan();
-   }
    // finalize the initialization.
-   update();
-            
+   ossimMapProjection::loadState(kwl, prefix);
+   Set_Equidistant_Cyl_Parameters(theEllipsoid.getA(), theEllipsoid.getFlattening(),
+                                  origin_lat, origin_lon,
+                                  theFalseEastingNorthing.x, theFalseEastingNorthing.y);
+
    return true;
 }
 
@@ -393,15 +420,15 @@ long ossimEquDistCylProjection::Convert_Geodetic_To_Equidistant_Cyl (double Lati
 
   if (!Error_Code)
   { /* no errors */
-    dlam = Longitude - Eqcy_Origin_Long;
-    //if (dlam >= TWO_PI)
-    //{
-    //  dlam -= TWO_PI;
-   // }
-   // if (dlam <= -TWO_PI)
-   // {
-   //   dlam += TWO_PI;
-   // }
+     dlam = Longitude - Eqcy_Origin_Long;
+     if (dlam >= TWO_PI)
+     {
+        dlam -= TWO_PI;
+     }
+     if (dlam <= -TWO_PI)
+     {
+        dlam += TWO_PI;
+     }
 
     *Easting = Ra_Cos_Eqcy_Std_Parallel * dlam + Eqcy_False_Easting;
     *Northing = Ra * Latitude + Eqcy_False_Northing;
@@ -493,7 +520,38 @@ void ossimEquDistCylProjection::updateFromTransform()
    theUlEastingNorthing.y = m[1][3];
    theImageToModelAzimuth = ossim::acosd(m[0][0]/theMetersPerPixel.x);
 
-   if (!theUlGpt.hasNans())
-      setOrigin(ossimGpt(theUlGpt.lat, 0.0, 0.0));
+   theUlGpt = inverse(theUlEastingNorthing);
+   //if (!theUlGpt.hasNans())
+   //   setOrigin(ossimGpt(theUlGpt.lat, 0.0, 0.0));
 }
 
+void ossimEquDistCylProjection::lineSampleToEastingNorthing(
+   const ossimDpt& lineSample, ossimDpt& eastingNorthing)const
+{
+   ossimMapProjection::lineSampleToEastingNorthing(lineSample, eastingNorthing );
+   if ( eastingNorthing.x > Eqcy_Max_Easting )
+   {
+      eastingNorthing.x = Eqcy_Min_Easting + (eastingNorthing.x - Eqcy_Max_Easting);
+   }
+}
+
+void ossimEquDistCylProjection::eastingNorthingToLineSample(
+   const ossimDpt& eastingNorthing, ossimDpt& lineSample)const
+{
+   //---
+   // Tie point is in the Eastern hemisphere and close to the dateline.
+   // Making an Assumption that a negative easting input is to the right of
+   // the tie point and output sample should be positive.
+   //---
+   if ( (eastingNorthing.x < 0.0) && (theUlGpt.lond() > 90.0) )
+   {
+      ossimDpt enPt = eastingNorthing;
+      enPt.x = Eqcy_Max_Easting + (eastingNorthing.x - Eqcy_Min_Easting);
+
+      ossimMapProjection::eastingNorthingToLineSample( enPt, lineSample );
+   }
+   else
+   {
+      ossimMapProjection::eastingNorthingToLineSample(eastingNorthing, lineSample);
+   }
+}

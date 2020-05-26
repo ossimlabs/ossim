@@ -14,6 +14,7 @@
 #include <ossim/base/ossimMatrix4x4.h>
 #include <ossim/matrix/newmatap.h>
 #include <ossim/base/ossimConstants.h>
+#include <ossim/base/ossimException.h>
 
 ossimMatrix4x4::ossimMatrix4x4(const NEWMAT::Matrix& m)
    :theData(4,4)
@@ -91,31 +92,40 @@ ossimMatrix4x4::ossimMatrix4x4()
   theData[3][3] = 1.0;
 }
 
+ossimMatrix4x4::ossimMatrix4x4(const std::vector<double>& data)
+   :theData(4, 4)
+{
+   if (data.size() < 16)
+      throw ossimException("Incorrect vector size passed to ossimMatrix4x4 constructor!");
+   for (int i=0; i<16; ++i)
+      theData[i/4][i%4] = data[i];
+}
+
 ossimMatrix4x4::ossimMatrix4x4(double v00, double v01, double v02, double v03,
                                double v10, double v11, double v12, double v13,
                                double v20, double v21, double v22, double v23,
                                double v30, double v31, double v32, double v33)
-  :theData(4, 4)
+   :theData(4, 4)
 {
-  theData[0][0] = v00;
-  theData[0][1] = v01;
-  theData[0][2] = v02;
-  theData[0][3] = v03;
+   theData[0][0] = v00;
+   theData[0][1] = v01;
+   theData[0][2] = v02;
+   theData[0][3] = v03;
 
-  theData[1][0] = v10;
-  theData[1][1] = v11;
-  theData[1][2] = v12;
-  theData[1][3] = v13;
+   theData[1][0] = v10;
+   theData[1][1] = v11;
+   theData[1][2] = v12;
+   theData[1][3] = v13;
 
-  theData[2][0] = v20;
-  theData[2][1] = v21;
-  theData[2][2] = v22;
-  theData[2][3] = v23;
+   theData[2][0] = v20;
+   theData[2][1] = v21;
+   theData[2][2] = v22;
+   theData[2][3] = v23;
 
-  theData[3][0] = v30;
-  theData[3][1] = v31;
-  theData[3][2] = v32;
-  theData[3][3] = v33;
+   theData[3][0] = v30;
+   theData[3][1] = v31;
+   theData[3][2] = v32;
+   theData[3][3] = v33;
 }
 #define QX  q.theVector[0]
 #define QY  q.theVector[1]
@@ -426,4 +436,21 @@ NEWMAT::Matrix ossimMatrix4x4::createScaleMatrix(double x, double y, double z)
         << 0.0 << 0.0 << 0.0 << 1.0;
 
     return m;
+}
+
+std::ostream& operator<<(std::ostream& out, const ossimMatrix4x4& data)
+{
+   out.precision(15);
+   const NEWMAT::Matrix& m = data.getData();
+   for (int i=0; i<16; ++i)
+      out << m[i/4][i%4] << " ";
+   return out;
+}
+
+std::istream& operator>>(std::istream& in, ossimMatrix4x4& data)
+{
+   NEWMAT::Matrix& m = data.getData();
+   for (int i=0; i<16; ++i)
+      in >> m[i/4][i%4];
+   return in;
 }

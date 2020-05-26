@@ -466,9 +466,9 @@ statusUpdateOnClick: true
 // Keyword: cache_size
 // The cache size is in megabytes.
 // ---
-// cache_size: 256
+cache_size: 256
 // cache_size: 512
-cache_size: 1024
+// cache_size: 1024
 // cache_size: 2048
 
 
@@ -529,9 +529,9 @@ overview_stop_dimension: 8
 // Uncomment one below.  
 // ---
 // tile_size: 32 32
-tile_size: 64 64
+// tile_size: 64 64
 // tile_size: 128 128
-// tile_size: 256 256
+tile_size: 256 256
 // tile_size: 512 512
 // tile_size: 1024 1024
 

@@ -13,11 +13,12 @@
 
 #include <ossim/support_data/ossimJp2Info.h>
 #include <ossim/base/ossimCommon.h>
+#include <ossim/base/ossimDirectory.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimTrace.h>
-// #include <ossim/support_data/ossimJ2kCommon.h>
+#include <ossim/support_data/ossimPleiadesMetaData.h>
 #include <ossim/support_data/ossimTiffInfo.h>
 #include <fstream>
 #include <istream>
@@ -215,7 +216,7 @@ std::ostream& ossimJp2Info::print(std::ostream& out) const
          str.close();
          
       } // matches: if ( str.is_open() )
-      
+      printPleiades(out, "jp2.");
    } // matches: if ( m_file.size() )
    
    return out; 
@@ -682,4 +683,39 @@ void ossimJp2Info::printTboxType( ossim_uint32 tbox, std::ostream& out ) const
    }
 
    out << "jp2.box_type: " << boxType << "\n";
+}
+
+std::ostream &ossimJp2Info::printPleiades(std::ostream &out,
+                                          const ossimString &prefix) const
+{
+   if (!m_file.empty())
+   {
+      ossimFilename filename(m_file);
+      if (filename.file().startsWith("IMG_"))
+      {
+         ossimFilename lineage(ossimFilename(filename.path() + "/LINEAGE"));
+         if (lineage.exists())
+         {
+            std::vector<ossimFilename> files;
+            ossimDirectory dir(lineage);
+            dir.findAllFilesThatMatch(files, "STRIP_.*");
+
+            if (!files.empty())
+            {
+               ossimPleiadesMetaData metadata;
+
+               if (metadata.open(files[0]))
+               {
+                  ossimKeywordlist kwl;
+                  ossimString tempPrefix = (prefix);
+
+                  metadata.saveState(kwl, tempPrefix);
+                  out << kwl << "\n";
+               }
+            }
+         }
+      }
+   }
+
+   return out;
 }

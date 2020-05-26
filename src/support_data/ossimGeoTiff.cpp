@@ -148,7 +148,7 @@ ossimGeoTiff::ossimGeoTiff(const ossimFilename &file, ossim_uint32 entryIdx)
       theAngularUnits(0),
       thePcsCode(0),
       theCoorTransGeoCode(0),
-      theLinearUnitsCode(ossimGeoTiff::UNDEFINED),
+      theLinearUnitsCode(ossimGeoTiff::LINEAR_METER),
       theStdPar1(0.0),
       theStdPar2(0.0),
       theOriginLon(0.0),
@@ -819,7 +819,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
    else
    {
       // Set the scale since not implicitely provided in a model transform:
-      double pixScale[3] = {0.0, 0.0, 0.0};
+      double pixScale[3] = { 0.0, 0.0, 0.0 };
       switch (units)
       {
       case LINEAR_FOOT:
@@ -844,33 +844,32 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
       } // End of "switch (units)"
 
       TIFFSetField(tifPtr, TIFFTAG_GEOPIXELSCALE, 3, pixScale);
+
+      // Set the tie point since not implicitely provided in a model transform:
+      double tiePoints[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+      switch (units)
+      {
+      case LINEAR_FOOT:
+         tiePoints[3] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().x);
+         tiePoints[4] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().y);
+         break;
+      case LINEAR_FOOT_US_SURVEY:
+         tiePoints[3] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().x);
+         tiePoints[4] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().y);
+         break;
+      case ANGULAR_DEGREE:
+         tiePoints[3] = projectionInfo->ulGroundPt().lond();
+         tiePoints[4] = projectionInfo->ulGroundPt().latd();
+         break;
+      case LINEAR_METER:
+      default:
+         tiePoints[3] = projectionInfo->ulEastingNorthingPt().x;
+         tiePoints[4] = projectionInfo->ulEastingNorthingPt().y;
+         break;
+      } // End of "switch (units)"
+
+      TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, 6, tiePoints);
    }
-
-   // Set the tie point.
-   double tiePoints[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-   switch (units)
-   {
-   case LINEAR_FOOT:
-      tiePoints[3] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().x);
-      tiePoints[4] = ossim::mtrs2ft(projectionInfo->ulEastingNorthingPt().y);
-      break;
-   case LINEAR_FOOT_US_SURVEY:
-      tiePoints[3] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().x);
-      tiePoints[4] = ossim::mtrs2usft(projectionInfo->ulEastingNorthingPt().y);
-      break;
-   case ANGULAR_DEGREE:
-      tiePoints[3] = projectionInfo->ulGroundPt().lond();
-      tiePoints[4] = projectionInfo->ulGroundPt().latd();
-      break;
-   case LINEAR_METER:
-   default:
-      tiePoints[3] = projectionInfo->ulEastingNorthingPt().x;
-      tiePoints[4] = projectionInfo->ulEastingNorthingPt().y;
-      break;
-   } // End of "switch (units)"
-
-   TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, 6, tiePoints);
-
    GTIFFree(gtif);
 
    return true;
@@ -1142,14 +1141,9 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
       }
    }
    theTiePoint.clear();
-   state->getGeoTiePoints(theTiePoint, entryIdx);
    theModelTransformation.clear();
-   state->getImageModelTransform(theModelTransformation, entryIdx);
-
-   // Hack here to extract the tiepoint from the image-model transform's offset terms, if provided.
-   // The transform will need to later be converted to meters if provided in degrees.
-   if (!theTiePoint.size())
-      initTiePointsFromImageModelTransform();
+   if (!state->getImageModelTransform(theModelTransformation, entryIdx))
+      state->getGeoTiePoints(theTiePoint, entryIdx);
 
    theDoubleParam.clear();
    state->getGeoDoubleParams(theDoubleParam, entryIdx);
@@ -1165,7 +1159,7 @@ bool ossimGeoTiff::readTags(std::shared_ptr<ossim::TiffHandlerState> state, ossi
 
    if(theModelType == MODEL_TYPE_GEOGRAPHIC)
    {
-      if (theAngularUnits == 0) 
+      if (theAngularUnits == 0)
       {
          theAngularUnits = ANGULAR_DEGREE;
       }
@@ -1413,52 +1407,58 @@ bool ossimGeoTiff::readTags( TIFF *tiff, ossim_uint32 entryIdx, bool ownTiffPtrF
    }
 #endif
    theScale.clear();
-   ossim_uint16 pixScaleSize = 0;
-   double *pixScale = 0;
-   if (TIFFGetField(theTiffPtr, TIFFTAG_GEOPIXELSCALE, &pixScaleSize, &pixScale))
-   {
-      theScale.insert(theScale.begin(), pixScale, pixScale + pixScaleSize);
-      if (theModelType == ModelTypeGeographic)
-      {
-         // The origin latitude must be computed so as to achieve the proper horizontal scaling:
-         theOriginLat = ossim::acosd(theScale[1] / theScale[0]);
-      }
-   }
    theTiePoint.clear();
-   ossim_uint16 tiePointSize = 0;
-   double *tiepoints = 0;
-   if (TIFFGetField(theTiffPtr, TIFFTAG_GEOTIEPOINTS, &tiePointSize, &tiepoints))
-   {
-      theTiePoint.insert(theTiePoint.begin(), tiepoints, tiepoints + tiePointSize);
-
-      // ESH 05/2009 -- If the image is in a projected coordinate system, the
-      // tiepoints will be projected coordinates not lat/lon. Let's avoid setting
-      // the origin lon/lat to projected x/y. Fix for ticket #711.
-      //if ( theModelType == ModelTypeGeographic )
-      //{
-      //   if(ossim::isnan(theOriginLon) &&
-      //      (pixScaleSize > 1) &&
-      //      (tiePointSize > 3))
-      //   {
-      //      theOriginLon = tiepoints[3] - tiepoints[0] * pixScale[0];
-      //   }
-      //
-      //   if(ossim::isnan(theOriginLat) && (pixScaleSize > 1) && (tiePointSize > 3))
-      //   {
-      //      theOriginLat = tiepoints[4] + tiepoints[1] * fabs(pixScale[1]);
-      //   }
-      //}
-   }
    theModelTransformation.clear();
    ossim_uint16 transSize = 0;
    double *trans = 0;
 
+   // Geotiff spec (Section 2.6.1: GeoTIFF Tags for Coordinate Transformations) states that either
+   // an image-to-model transform is given, or a tie-point and scale, but not both. Presently, only
+   // transform in meters/pixel units are handled, since the map projection easting/northing is
+   // processed in meters. This may be a bad decision...(OLK 2020)
    if (TIFFGetField(theTiffPtr, TIFFTAG_GEOTRANSMATRIX, &transSize, &trans))
    {
       theModelTransformation.insert(theModelTransformation.begin(), trans, trans + transSize);
+      //initTiePointsFromImageModelTransform();
    }
-   if (!theTiePoint.size())
-      initTiePointsFromImageModelTransform();
+   else
+   {
+      ossim_uint16 tiePointSize = 0;
+      double *tiepoints = 0;
+      if (TIFFGetField(theTiffPtr, TIFFTAG_GEOTIEPOINTS, &tiePointSize, &tiepoints))
+      {
+         theTiePoint.insert(theTiePoint.begin(), tiepoints, tiepoints + tiePointSize);
+
+         // ESH 05/2009 -- If the image is in a projected coordinate system, the
+         // tiepoints will be projected coordinates not lat/lon. Let's avoid setting
+         // the origin lon/lat to projected x/y. Fix for ticket #711.
+         //if ( theModelType == ModelTypeGeographic )
+         //{
+         //   if(ossim::isnan(theOriginLon) &&
+         //      (pixScaleSize > 1) &&
+         //      (tiePointSize > 3))
+         //   {
+         //      theOriginLon = tiepoints[3] - tiepoints[0] * pixScale[0];
+         //   }
+         //
+         //   if(ossim::isnan(theOriginLat) && (pixScaleSize > 1) && (tiePointSize > 3))
+         //   {
+         //      theOriginLat = tiepoints[4] + tiepoints[1] * fabs(pixScale[1]);
+         //   }
+         //}
+      }
+      ossim_uint16 pixScaleSize = 0;
+      double *pixScale = 0;
+      if (TIFFGetField(theTiffPtr, TIFFTAG_GEOPIXELSCALE, &pixScaleSize, &pixScale))
+      {
+         theScale.insert(theScale.begin(), pixScale, pixScale + pixScaleSize);
+         if (theModelType == ModelTypeGeographic)
+         {
+            // The origin latitude must be computed so as to achieve the proper horizontal scaling:
+            theOriginLat = ossim::acosd(theScale[1] / theScale[0]);
+         }
+      }
+   }
 
    ossim_uint16 doubleParamSize = 0;
    double *tempDoubleParam = 0;
@@ -1489,7 +1489,7 @@ bool ossimGeoTiff::readTags( TIFF *tiff, ossim_uint32 entryIdx, bool ownTiffPtrF
    // commenting this out.  Frank mentioned the GTIFFGetDefn which in geo_normalize
    // this should be all we need.
    //
-#if 0  
+#if 0
    /* 
       ESH 05/2009: Replacing badly broken code for making 
       use of TIFFTAG_GEODOUBLEPARAMS.
@@ -1570,146 +1570,18 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
           << std::endl;
    }
 
-   // NOT SURE THIS IS A GOOD IDEA HERE. KEPT FOR LEGACY SAKE. (OLK 5/10)
-   //
-
-   //---
-   // Sanity check...
-   // NOTE: It takes six doubles to make one tie point ie:
-   // x,y,z,longitude,latitude,height or x,y,z,easting,northing,height
-   //---
-   if (theErrorStatus || (!usingModelTransform() && ((theScale.size() < 2) &&     // no scale
-                                                     (theTiePoint.size() < 24)))) //need at least 3 ties if no scale.
-   {
-      if (traceDebug())
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-             << "ossimGeoTiff::addImageGeometry: Failed sanity check "
-             << std::endl;
-         if (theErrorStatus)
-         {
-            ossimNotify(ossimNotifyLevel_DEBUG)
-                << "for error status" << std::endl;
-         }
-         else if (theTiePoint.size() < 5)
-         {
-            ossimNotify(ossimNotifyLevel_DEBUG)
-                << "for tie points, size = " << theTiePoint.size()
-                << std::endl;
-         }
-         else
-         {
-            ossimNotify(ossimNotifyLevel_DEBUG) << "for scale" << std::endl;
-         }
-      }
-      return false;
-   }
-
-   double x_tie_point = theTiePoint[3];
-   double y_tie_point = theTiePoint[4];
-   ossim_uint32 tieCount = (ossim_uint32)theTiePoint.size() / 6;
-
-   if ((theScale.size() == 3) && (tieCount == 1))
-   {
-      //---
-      // Shift the tie point to the (0, 0) position if it's not already.
-      //
-      // Note:
-      // Some geotiff writers like ERDAS IMAGINE set the "GTRasterTypeGeoKey"
-      // key to RasterPixelIsArea, then set the tie point to (0.5, 0.5).
-      // This really means "RasterPixelIsPoint" with a tie point of (0.0, 0.0).
-      // Anyway we will check for this blunder and attempt to do the right
-      // thing...
-      //---
-      x_tie_point = theTiePoint[3] - theTiePoint[0] * theScale[0];
-      y_tie_point = theTiePoint[4] + theTiePoint[1] * theScale[1];
-   }
-   else if (tieCount > 1)
-   {
-      //---
-      // Should we check the model type??? (drb)
-      // if (theModelType == ModelTypeGeographic)
-      //---
-      if (tieCount >= 4)
-      {
-         ossimTieGptSet tieSet;
-         getTieSet(tieSet);
-
-         if (tieCount > 4)
-         {
-            // create a cubic polynomial model
-            //ossimRefPtr<ossimPolynomProjection> proj = new ossimPolynomProjection;
-            //proj->setupOptimizer("1 x y x2 xy y2 x3 y3 xy2 x2y z xz yz");
-            ossimRefPtr<ossimBilinearProjection> proj = new ossimBilinearProjection;
-            proj->optimizeFit(tieSet);
-            proj->saveState(kwl, prefix);
-            if (traceDebug())
-            {
-               ossimNotify(ossimNotifyLevel_DEBUG)
-                   << "ossimGeoTiff::addImageGeometry: "
-                   << "Creating a Cubic polynomial projection" << std::endl;
-            }
-
-            return true;
-         }
-         else if (tieCount == 4)
-         {
-            // create a bilinear model
-
-            // Should we check the model type (drb)
-            // if (theModelType == ModelTypeGeographic)
-
-            ossimRefPtr<ossimBilinearProjection> proj = new ossimBilinearProjection;
-            proj->optimizeFit(tieSet);
-            proj->saveState(kwl, prefix);
-
-            if (traceDebug())
-            {
-               ossimNotify(ossimNotifyLevel_DEBUG)
-                   << "ossimGeoTiff::addImageGeometry: "
-                   << "Creating a bilinear projection" << std::endl;
-            }
-            return true;
-         }
-         else
-         {
-            ossimNotify(ossimNotifyLevel_WARN)
-                << "ossimGeoTiff::addImageGeometry: "
-                << "Not enough tie points to create a interpolation model"
-                << std::endl;
-         }
-         return false;
-      }
-   }
-
-   if ((theRasterType == PIXEL_IS_AREA))
-   {
-      // Since the internal pixel representation is "point", shift the
-      // tie point to be relative to the center of the pixel.
-      if (theScale.size() > 1)
-      {
-         x_tie_point += (theScale[0]) / 2.0;
-         y_tie_point -= (theScale[1]) / 2.0;
-      }
-   }
-
    if (thePcsCode && (thePcsCode != USER_DEFINED))
    {
       ossimString epsg_spec("EPSG:");
       epsg_spec += ossimString::toString(thePcsCode);
       ossimRefPtr<ossimProjection> proj =
-          ossimEpsgProjectionFactory::instance()->createProjection(epsg_spec);
+         ossimEpsgProjectionFactory::instance()->createProjection(epsg_spec);
       if (proj.valid())
-      {
          proj->saveState(kwl, prefix);
-      }
       // Should be some else "WARNING" here maybe. (drb)
    }
    else if (getOssimProjectionName() == "unknown")
    {
-      //---
-      // Get the projection type.  If unknown no point going on, so get out.
-      //---
       return false;
    }
    else
@@ -1719,6 +1591,148 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
       kwl.add(prefix, ossimKeywordNames::TYPE_KW, getOssimProjectionName());
       kwl.add(prefix, ossimKeywordNames::DATUM_KW, getOssimDatumName());
    }
+
+   if (theScaleFactor > 0.0)
+      kwl.add(prefix, ossimKeywordNames::SCALE_FACTOR_KW, theScaleFactor, true);
+
+   ossimDpt tiepointNativeUnits;
+   tiepointNativeUnits.makeNan();
+
+   // Get the model transformation info if it's present. This is supplied in lieu of scale and TP:
+   if (usingModelTransform())
+   {
+      ossimMatrix4x4 transform (getModelTransformation());
+      ostringstream out;
+      out << transform <<ends;
+
+      // The model transform converts image pixel x, y to map (model) coordinates, typically
+      // easting, northing (even for equidistant cylindrical, a.k.a., geographic).
+      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, out.str().c_str(), true);
+      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
+              ossimUnitTypeLut::instance()->getEntryString(OSSIM_METERS), true);
+   }
+   else
+   {
+      //---
+      // Sanity check...
+      // NOTE: It takes six doubles to make one tie point ie:
+      // x,y,z,longitude,latitude,height or x,y,z,easting,northing,height
+      //---
+      if (theErrorStatus ||
+          ((theScale.size() < 2) && (theTiePoint.size() < 24))) //need at least 3 ties if no scale.
+      {
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "ossimGeoTiff::addImageGeometry: Failed sanity check "
+               << std::endl;
+            if (theErrorStatus)
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "for error status" << std::endl;
+            }
+            else if (theTiePoint.size() < 5)
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "for tie points, size = " << theTiePoint.size()
+                  << std::endl;
+            }
+            else
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG) << "for scale" << std::endl;
+            }
+         }
+         return false;
+      }
+
+      tiepointNativeUnits.x = theTiePoint[3];
+      tiepointNativeUnits.y = theTiePoint[4];
+      ossim_uint32 tieCount = (ossim_uint32) theTiePoint.size() / 6;
+
+      if ((theScale.size() == 3) && (tieCount == 1))
+      {
+         //---
+         // Shift the tie point to the (0, 0) position if it's not already.
+         //
+         // Note:
+         // Some geotiff writers like ERDAS IMAGINE set the "GTRasterTypeGeoKey"
+         // key to RasterPixelIsArea, then set the tie point to (0.5, 0.5).
+         // This really means "RasterPixelIsPoint" with a tie point of (0.0, 0.0).
+         // Anyway we will check for this blunder and attempt to do the right
+         // thing...
+         //---
+         tiepointNativeUnits.x = theTiePoint[3] - theTiePoint[0] * theScale[0];
+         tiepointNativeUnits.y = theTiePoint[4] + theTiePoint[1] * theScale[1];
+      }
+      else if (tieCount > 1)
+      {
+         //---
+         // Should we check the model type??? (drb)
+         // if (theModelType == ModelTypeGeographic)
+         //---
+         if (tieCount >= 4)
+         {
+            ossimTieGptSet tieSet;
+            getTieSet(tieSet);
+
+            if (tieCount > 4)
+            {
+               // create a cubic polynomial model
+               //ossimRefPtr<ossimPolynomProjection> proj = new ossimPolynomProjection;
+               //proj->setupOptimizer("1 x y x2 xy y2 x3 y3 xy2 x2y z xz yz");
+               ossimRefPtr<ossimBilinearProjection> proj = new ossimBilinearProjection;
+               proj->optimizeFit(tieSet);
+               proj->saveState(kwl, prefix);
+               if (traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_DEBUG)
+                     << "ossimGeoTiff::addImageGeometry: "
+                     << "Creating a Cubic polynomial projection" << std::endl;
+               }
+
+               return true;
+            }
+            else if (tieCount == 4)
+            {
+               // create a bilinear model
+
+               // Should we check the model type (drb)
+               // if (theModelType == ModelTypeGeographic)
+
+               ossimRefPtr<ossimBilinearProjection> proj = new ossimBilinearProjection;
+               proj->optimizeFit(tieSet);
+               proj->saveState(kwl, prefix);
+
+               if (traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_DEBUG)
+                     << "ossimGeoTiff::addImageGeometry: "
+                     << "Creating a bilinear projection" << std::endl;
+               }
+               return true;
+            }
+            else
+            {
+               ossimNotify(ossimNotifyLevel_WARN)
+                  << "ossimGeoTiff::addImageGeometry: "
+                  << "Not enough tie points to create a interpolation model"
+                  << std::endl;
+            }
+            return false;
+         }
+      }
+      if ((theRasterType == PIXEL_IS_AREA))
+      {
+         // Since the internal pixel representation is "point", shift the
+         // tie point to be relative to the center of the pixel.
+         if (theScale.size() > 1)
+         {
+            tiepointNativeUnits.x += (theScale[0]) / 2.0;
+            tiepointNativeUnits.y -= (theScale[1]) / 2.0;
+         }
+      }
+   } // end if no model transform
+
 
    // Now set the image-specific projection info (scale and image tiepoint):
    if (theModelType == MODEL_TYPE_GEOGRAPHIC)
@@ -1736,12 +1750,24 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
       // Tiepoint
       // Have data with tie points -180.001389 so use ossimGpt::wrap() to handle:
       //---
-      ossimGpt tieGpt(y_tie_point, x_tie_point, 0.0);
-      tieGpt.wrap();
-      ossimDpt tiepoint(tieGpt);
-      kwl.add(prefix, ossimKeywordNames::TIE_POINT_XY_KW, tiepoint.toString(), true);
-      kwl.add(prefix, ossimKeywordNames::TIE_POINT_UNITS_KW, "degrees", true);
+      ossimGpt tieGpt;
+      tieGpt.makeNan();
+      if (!tiepointNativeUnits.isNan())
+      {
+         tieGpt = ossimGpt(tiepointNativeUnits.y, tiepointNativeUnits.x, 0.0);
+         tieGpt.wrap();
+         kwl.add(prefix, ossimKeywordNames::TIE_POINT_XY_KW, tiepointNativeUnits.toString(), true);
+         kwl.add(prefix, ossimKeywordNames::TIE_POINT_UNITS_KW, "degrees", true);
 
+         if (ossim::isnan(theOriginLon))
+            theOriginLon = tiepointNativeUnits.x;
+         else
+            theOriginLon = 0.0; // The longitude offset is given in the image-model transform
+         if (ossim::isnan(theOriginLat))
+            theOriginLat = tiepointNativeUnits.y;
+         else
+            theOriginLon = 0.0; // The longitude offset is given in the image-model transform
+      }
       // scale or gsd
       if (theScale.size() > 1)
       {
@@ -1750,26 +1776,15 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
          kwl.add(prefix, ossimKeywordNames::PIXEL_SCALE_UNITS_KW, "degrees", true);
 
          // origin
-         if (ossim::isnan(theOriginLat))
+         if (ossim::isnan(theOriginLat) && !tieGpt.isNan())
          {
             //---
-            // Put the origin lat at the center of the image so the meters per
-            // pixel is somewhat real.
+            // Put the origin lat at the center of the image so the meters/pixel is somewhat real.
             //---
             double centerY = theLength / 2.0;
             theOriginLat = tieGpt.lat - theScale[1] * centerY;
          }
       }
-
-      if (ossim::isnan(theOriginLon))
-      {
-         if (theModelTransformation.empty())
-            theOriginLon = x_tie_point;
-         else
-            theOriginLon = 0.0; // The longitude offset is given in the image-model transform
-      }
-      if (ossim::isnan(theOriginLat))
-         theOriginLat = y_tie_point;
 
       kwl.add(prefix, ossimKeywordNames::ORIGIN_LATITUDE_KW, theOriginLat, true);
       kwl.add(prefix, ossimKeywordNames::CENTRAL_MERIDIAN_KW, theOriginLon, true);
@@ -1777,10 +1792,11 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
    else // Projected
    {
       // Tiepoint
-      ossimDpt tiepoint(convert2meters(x_tie_point), convert2meters(y_tie_point));
-      kwl.add(prefix, ossimKeywordNames::TIE_POINT_XY_KW, tiepoint.toString(), true);
-      kwl.add(prefix, ossimKeywordNames::TIE_POINT_UNITS_KW, "meters", true);
-
+      if (!tiepointNativeUnits.isNan())
+      {
+         kwl.add(prefix, ossimKeywordNames::TIE_POINT_XY_KW, tiepointNativeUnits.toString(), true);
+         kwl.add(prefix, ossimKeywordNames::TIE_POINT_UNITS_KW, "meters", true);
+      }
       // scale or gsd
       if (theScale.size() > 1)
       {
@@ -1848,58 +1864,6 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
          kwl.add(prefix, ossimKeywordNames::SCALE_FACTOR_KW, theScaleFactor, true);
 
    } // end of projected CS
-
-   //---
-   // Get the model transformation info if it's present.
-   //---
-   if (usingModelTransform())
-   {
-      std::vector<double> v = getModelTransformation();
-      std::ostringstream out;
-      out << std::setprecision(15); // To avoid truncating.
-      ossim_uint32 idx = 0;
-      for (idx = 0; idx < 16; ++idx)
-      {
-         out << v[idx] << " ";
-      }
-      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, out.str().c_str(), true);
-      ossimUnitType modelTransformUnitType = OSSIM_UNIT_UNKNOWN;
-      if (theModelType == ModelTypeGeographic)
-      {
-         switch (theAngularUnits)
-         {
-         case ANGULAR_DEGREE:
-            modelTransformUnitType = OSSIM_DEGREES;
-            break;
-         case ANGULAR_ARC_MINUTE:
-            modelTransformUnitType = OSSIM_MINUTES;
-            break;
-         case ANGULAR_ARC_SECOND:
-            modelTransformUnitType = OSSIM_SECONDS;
-            break;
-         default:
-            return false;
-         }
-      }
-      else if (theModelType == ModelTypeProjected)
-      {
-         switch (theLinearUnitsCode)
-         {
-         case LINEAR_METER:
-            modelTransformUnitType = OSSIM_METERS;
-            break;
-         default:
-            return false;
-         }
-      }
-      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
-              ossimUnitTypeLut::instance()->getEntryString(modelTransformUnitType), true);
-   }
-
-   if (theScaleFactor > 0.0)
-   {
-      kwl.add(prefix, ossimKeywordNames::SCALE_FACTOR_KW, theScaleFactor, true);
-   }
 
    if (traceDebug())
    {

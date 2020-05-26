@@ -1,4 +1,29 @@
 PROJECT(ossim)
+############################################################
+# From https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
+#
+# Use, don't skip, the full RPATH for the build tree
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+
+# When building, don't use the install RPATH already
+# (but later on when installing)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# the RPATH to be used when installing, but only if it's not a system directory
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+if("${isSystemDir}" STREQUAL "-1")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+endif("${isSystemDir}" STREQUAL "-1")
+#################################################################
+
+
+
 SET(CMAKE_MODULE_PATH "${${PROJECT_NAME}_SOURCE_DIR}/cmake/CMakeModules;${CMAKE_MODULE_PATH}")
 
 set(CMAKE_CXX_STANDARD 11)
@@ -23,6 +48,7 @@ INCLUDE(OssimCommonVariables)
 # Expose some build options
 set(LIB_NAME ossim CACHE STRING "Name of ossim libray (default is ossim).")
 OPTION(BUILD_OSSIM_FREETYPE_SUPPORT "Set to ON to build OSSIM with freetype support.  Use OFF to turn off freetype support." ON)
+OPTION(BUILD_OSSIM_HDF5_SUPPORT "Set to ON to build OSSIM with HDF5 support.  Use OFF to turn off HDF5 support." OFF)
 OPTION(BUILD_OSSIM_MPI_SUPPORT "Set to ON to build OSSIM with MPI support.  Use OFF to turn off MPI support." OFF)
 OPTION(BUILD_OSSIM_ID_SUPPORT "Set to ON to build OSSIM GIT ID support into the library.  Use OFF to turn off ID support." ON)
 
@@ -48,6 +74,7 @@ CHECK_INCLUDE_FILE("dlfcn.h" CMAKE_HAVE_DLFCN_H)
 include_directories( ${PROJECT_SOURCE_DIR}/include )
 include_directories( ${PROJECT_BINARY_DIR}/include )
 include_directories( ${OSSIM_INCLUDE_DIR} )
+include_directories( ${OSSIM_INCLUDE_DIR}/ossim )
 
 # Stores list of libs to link with. Initialized throughout.
 set( ossimDependentLibs )
@@ -105,15 +132,16 @@ endif( TIFF_FOUND )
 
 # JSONCPP - Required. This will use the amalgamated form embedded in OSSIM. If an previously
 # installed JSONCPP package is preferred, add "-DUSE_OSSIM_JSONCPP=OFF" to the cmake command
-find_package( JsonCpp )
-if( JSONCPP_FOUND )
-   include_directories( ${JSONCPP_INCLUDE_DIR} )
-   set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
-   message("-- Found JsonCpp: ${JSONCPP_INCLUDE_DIR}" )
-else( JSONCPP_FOUND )
-   message( FATAL_ERROR "Could not find required JsonCpp package!" )
-endif( JSONCPP_FOUND )
-
+if(NOT USE_OSSIM_JSONCPP)
+   find_package( JsonCpp )
+   if(JSONCPP_FOUND )
+      include_directories( ${JSONCPP_INCLUDE_DIR} )
+      set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
+      message("-- Found JsonCpp: ${JSONCPP_INCLUDE_DIR}" )
+   else( JSONCPP_FOUND )
+      message( FATAL_ERROR "Could not find required JsonCpp package!" )
+   endif( JSONCPP_FOUND )
+endif(NOT USE_OSSIM_JSONCPP)
 # This caused a core dump on ossim executables running in jenins pipeline (ossim-test-dev)
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
   find_library( DL_LIBRARY dl )
@@ -153,7 +181,11 @@ set( OSSIM_HAS_MPI 0 )
 if( BUILD_OSSIM_MPI_SUPPORT )
    find_package(MPI)
    if ( MPI_FOUND )
+      # /usr/share/cmake/Modules/FindMPI.cmae are not consistent in terminology,
+      # so we include multiple list names, knowing some will be empty
       include_directories( ${MPI_INCLUDE_DIR} )
+      include_directories( ${MPI_CXX_INCLUDE_PATH} ${MPI_CXX_INCLUDE_DIRS} )
+      include_directories( ${MPI_C_INCLUDE_PATH} ${MPI_C_INCLUDE_DIRS} )
       set( ossimDependentLibs ${ossimDependentLibs} ${MPI_LIBRARIES} )
       set( OSSIM_HAS_MPI 1 )
    else ( MPI_FOUND )
@@ -204,9 +236,25 @@ if ( NOT ${Project_WC_REVISION} EQUAL 0 )
    set( OSSIM_GIT_REVISION_NUMBER ${Project_WC_REVISION} )
 endif()
 
+
+
 #####################################################################################
 # Call the configure files for ossimConfig and ossimVersion setup
 #####################################################################################
+include(CheckTypeSize)
+check_type_size("short int" SIZE_OF_SHORT_INT)
+check_type_size("int" SIZE_OF_INT)
+check_type_size("long" SIZE_OF_LONG)
+check_type_size("long long" SIZE_OF_LONG_LONG)
+check_type_size("float" SIZE_OF_FLOAT)
+check_type_size("double" SIZE_OF_DOUBLE)
+check_type_size("long double" SIZE_OF_LONG_DOUBLE)
+
+check_type_size("unsigned short int" SIZE_OF_UNSIGNED_SHORT_INT)
+check_type_size("unsigned int" SIZE_OF_UNSIGNED_INT)
+check_type_size("unsigned long" SIZE_OF_UNSIGNED_LONG)
+check_type_size("unsigned long long" SIZE_OF_UNSIGNED_LONG_LONG)
+
 set(OSSIM_VERSION_NUMBER "\"${OSSIM_VERSION}\"")
 set(OSSIM_BUILD_DATE "\"${OSSIM_BUILD_DATE}\"")
 set(OSSIM_REVISION "\"${OSSIM_GIT_REVISION_NUMBER}\"")

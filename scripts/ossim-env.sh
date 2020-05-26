@@ -154,7 +154,6 @@ else
    export BUILD_OSSIM_WMS=OFF
 fi
 
-
 if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
 
    if [ -z $BUILD_CNES_PLUGIN ] ; then
@@ -236,13 +235,22 @@ if [ -d $OSSIM_DEV_HOME/ossim-plugins ] ; then
    fi
 fi
 
-if [ -z $OSSIM_BUILD_ADDITIONAL_DIRECTORIES ] ; then
-   if [ -d $OSSIM_DEV_HOME/ossim-private/ossim-kakadu-jpip-server ]; then
-     export OSSIM_BUILD_ADDITIONAL_DIRECTORIES=$OSSIM_DEV_HOME/ossim-private/ossim-kakadu-jpip-server
+if [ -d $OSSIM_DEV_HOME/ossim-deepcore ] ; then
+   if [ -z $BUILD_OSSIM_DEEPCORE ] ; then
+      export BUILD_OSSIM_DEEPCORE=ON
    fi
+else
+   export BUILD_OSSIM_DEEPCORE=OFF
 fi
 
-if [ \( "${BUILD_KAKADU_PLUGIN}"="ON" \) -o \( -d "$OSSIM_DEV_HOME/ossim-private/ossim-kakadu-jpip-server" \) ] ; then
+# if [ -z $OSSIM_BUILD_ADDITIONAL_DIRECTORIES ] ; then
+#   if [ -d $OSSIM_DEV_HOME/ossim-private/ossim-kakadu-jpip-server ]; then
+#     export OSSIM_BUILD_ADDITIONAL_DIRECTORIES=$OSSIM_DEV_HOME/ossim-private/ossim-kakadu-jpip-server
+#   fi
+# fi
+
+# if [ \( "${BUILD_KAKADU_PLUGIN}"="ON" \) -o \( -d "$OSSIM_DEV_HOME/ossim-private/ossim-kakadu-jpip-server" \) ] ; then
+if [  "${BUILD_KAKADU_PLUGIN}"="ON" ] ; then
 
    if [ -d "${OSSIM_DEV_HOME}/kakadu-${KAKADU_VERSION}" ] ; then
       if [ -z $KAKADU_ROOT_SRC ] ; then

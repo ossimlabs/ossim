@@ -14,6 +14,7 @@
 #include <ossim/support_data/ossimTiffInfo.h>
 
 #include <ossim/base/ossimCommon.h>
+#include <ossim/base/ossimDirectory.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimEndian.h>
 #include <ossim/base/ossimGeoTiffCoordTransformsLut.h>
@@ -30,6 +31,7 @@
 #include <ossim/projection/ossimEpsgProjectionFactory.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/support_data/ossimQuickbirdMetaData.h>
+#include <ossim/support_data/ossimPleiadesMetaData.h>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -192,6 +194,9 @@ std::ostream &ossimTiffInfo::print(std::ostream &out) const
       return out;
    }
 
+   // check for Pleiades
+   //
+
    //---
    // Get the byte order.  First two byte should be "II" or "MM".
    //---
@@ -241,7 +246,6 @@ std::ostream &ossimTiffInfo::print(std::ostream &out) const
    out << "tiff.version: " << int(version)
        << ((version == 42) ? "(classic)\n" : "(big)\n")
        << "tiff.byte_order: ";
-
 
    if (byteOrder[0] == 'M')
    {
@@ -608,6 +612,7 @@ std::ostream &ossimTiffInfo::print(std::ostream &out) const
           << MODULE << " DEBUG Exited..." << std::endl;
    }
    printDigitalGlobe(out, "tiff.");
+   printPleiades(out, "tiff.");
 
    return out;
 }
@@ -1158,6 +1163,7 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
       ossimNotify(ossimNotifyLevel_DEBUG) << "tiffinfo dump to kwl:\n"
                                           << gtiffKwl << "\n";
    }
+
    ossimString gtiffPrefix = "tiff.image";
    gtiffPrefix += ossimString::toString(entryIndex);
    gtiffPrefix += ".";
@@ -1249,40 +1255,59 @@ bool ossimTiffInfo::getImageGeometry(const ossimKeywordlist &gtiffKwl,
          units = "degrees";
    }
 
+   // Get the pixel scale.
    ossimDpt scale;
-   bool hasScale = false;
+   bool hasScale = getPixelScale(gtiffPrefix, gtiffKwl, scale);
 
-   // Get the model transform if provided.
+   // Get the tie point.
+   std::vector<ossim_float64> ties;
+   getTiePoint(gtiffPrefix, gtiffKwl, ties);
+
+   //---
+   // Tie count:
+   // NOTE: It takes six doubles to make one tie point ie:
+   // x,y,z,longitude,latitude,height or x,y,z,easting,northing,height
+   //---
+   ossim_uint32 tieCount = (ossim_uint32)ties.size() / 6;
+
+   // Get the model transform.
    std::vector<ossim_float64> xfrm;
    getModelTransform(gtiffPrefix, gtiffKwl, xfrm);
+
+   bool useXfrm = false;
    if (xfrm.size() == 16)
    {
+      // Need at least 24 (which is four ties) to use bilinear.
+      if (!hasScale && ties.size() < 24)
+      {
+         useXfrm = true;
+      }
+   }
+
+   if (useXfrm)
+   {
+      ossimString linearUnits = "";
+      if (getLinearUnits(gtiffPrefix, gtiffKwl, linearUnits) == false)
+      {
+         linearUnits = "meters";
+      }
+
       std::ostringstream out;
       out << std::setprecision(15); // To avoid truncating.
-      for (const double& m : xfrm)
-         out << m << " ";
-
+      ossim_uint32 idx = 0;
+      for (idx = 0; idx < 16; ++idx)
+      {
+         out << xfrm[idx] << " ";
+      }
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW,
                   out.str().c_str(), true);
       geomKwl.add(geomPrefix.c_str(),
                   ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
-                  units.c_str(), true);
+                  linearUnits.c_str(), true);
    }
-   else // Use tie points and scale.
+   else // Use tie points.
    {
-      // Get the pixel scale.
-      hasScale = getPixelScale(gtiffPrefix, gtiffKwl, scale);
-
-      // Get the tie point.
-      std::vector<ossim_float64> ties;
-      getTiePoint(gtiffPrefix, gtiffKwl, ties);
-
-      // Tie count:
-      // NOTE: It takes six doubles to make one tie point ie:
-      // x,y,z,longitude,latitude,height or x,y,z,easting,northing,height
-      ossim_uint32 tieCount = (ossim_uint32)ties.size() / 6;
-
       if (hasScale && (tieCount == 1))
       {
          // Shift the tile to 0,0 pixel of image if not already there.
@@ -3185,7 +3210,7 @@ std::ostream &ossimTiffInfo::printModelType(std::ostream &out,
    {
       out << "geographic\n";
    }
-   else if (code == 2)
+   else if (code == 3)
    {
       out << "geocentric\n";
    }
@@ -3273,11 +3298,48 @@ std::ostream &ossimTiffInfo::printAngularUnits(std::ostream &out,
    }
    return out;
 }
+
+std::ostream &ossimTiffInfo::printPleiades(std::ostream &out,
+                                           const std::string &prefix) const
+{
+   if (!m_connectionString.empty())
+   {
+      ossimFilename filename(m_connectionString);
+      if (filename.file().startsWith("IMG_"))
+      {
+         ossimFilename lineage(ossimFilename(filename.path() + "/LINEAGE"));
+         if (lineage.exists())
+         {
+            std::vector<ossimFilename> files;
+            ossimDirectory dir(lineage);
+            dir.findAllFilesThatMatch(files, "STRIP_.*");
+
+            if (!files.empty())
+            {
+               ossimPleiadesMetaData metadata;
+
+               if (metadata.open(files[0]))
+               {
+                  ossimKeywordlist kwl;
+                  ossimString tempPrefix = (prefix);
+
+                  metadata.saveState(kwl, tempPrefix);
+                  out << kwl << "\n";
+                  
+               }
+            }
+         }
+      }
+   }
+
+   return out;
+}
+
 std::ostream &ossimTiffInfo::printDigitalGlobe(std::ostream &out,
-                                const std::string &prefix) const
+                                               const std::string &prefix) const
 {
    ossimFilename connection = m_connectionString;
-   bool isDigitalGlobe = false;
+   // bool isDigitalGlobe = false;
    ossimString copyright;
    ossimRegExp regex("m1bs|p1bs");
    ossimString drivePart;
@@ -3285,7 +3347,7 @@ std::ostream &ossimTiffInfo::printDigitalGlobe(std::ostream &out,
    ossimString filePart;
    ossimString extPart;
    connection.split(drivePart, pathPart,
-                     filePart, extPart);
+                    filePart, extPart);
    if (!filePart.empty())
    {
       ossimString downcaseFilePart = filePart.downcase();
@@ -3293,17 +3355,17 @@ std::ostream &ossimTiffInfo::printDigitalGlobe(std::ostream &out,
       {
          out << prefix << "is_digital_globe: true\n";
          connection.setExtension("IMD");
-         if(connection.exists())
+         if (connection.exists())
          {
-           ossimQuickbirdMetaData md;
-           if (md.open(connection, ossimQuickbirdMetaData::QB_PARSE_TYPE_IMD))
-           {
-              ossimKeywordlist kwl;
-              ossimString tempPrefix = (prefix);
+            ossimQuickbirdMetaData md;
+            if (md.open(connection, ossimQuickbirdMetaData::QB_PARSE_TYPE_IMD))
+            {
+               ossimKeywordlist kwl;
+               ossimString tempPrefix = (prefix);
 
-              md.saveState(kwl, tempPrefix.c_str());
-              out << kwl << "\n";
-           }
+               md.saveState(kwl, tempPrefix.c_str());
+               out << kwl << "\n";
+            }
          }
       }
    }

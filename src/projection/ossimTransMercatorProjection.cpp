@@ -101,6 +101,16 @@ ossimTransMercatorProjection::ossimTransMercatorProjection(const ossimEllipsoid&
 
 void ossimTransMercatorProjection::update()
 {
+   //---
+   // ossimMapProjection::loadState() picks up the false easting and northing
+   // and then calls update(). The previous(commented out) assignment was
+   // zeroing that out... Added assign from theFalseEastingNorthing at the top.
+   // Commented out reverse.
+   // drb - 22 March 2020
+   //---
+   TranMerc_False_Easting  = theFalseEastingNorthing.x;
+   TranMerc_False_Northing = theFalseEastingNorthing.y;
+
    Set_Transverse_Mercator_Parameters(theEllipsoid.getA(),
                                       theEllipsoid.getFlattening(),
                                       theOrigin.latr(),
@@ -109,33 +119,45 @@ void ossimTransMercatorProjection::update()
                                       TranMerc_False_Northing,
                                       TranMerc_Scale_Factor);
 
-   theFalseEastingNorthing.x = TranMerc_False_Easting;
-   theFalseEastingNorthing.y = TranMerc_False_Northing;
+   // theFalseEastingNorthing.x = TranMerc_False_Easting;
+   // theFalseEastingNorthing.y = TranMerc_False_Northing;
 
    ossimMapProjection::update();
 }
 
 void ossimTransMercatorProjection::setFalseEasting(double falseEasting)
 {
-   TranMerc_False_Easting  = falseEasting;
-   
+   //---
+   // ossimTransMercatorProjection::update() now sets its false
+   // easting and northing from the ossmMapProjection's theFalseEastingNorthing.
+   //---
+   theFalseEastingNorthing.x = falseEasting;
+   // TranMerc_False_Easting  = falseEasting;
    update();
 }
 
-
 void ossimTransMercatorProjection::setFalseNorthing(double falseNorthing)
 {
-   TranMerc_False_Northing = falseNorthing;
-   
+   //---
+   // ossimTransMercatorProjection::update() now sets its false
+   // easting and northing from the ossmMapProjection's theFalseEastingNorthing.
+   //---
+   theFalseEastingNorthing.y = falseNorthing;
+   // TranMerc_False_Northing = falseNorthing;
    update();
 }
 
 void ossimTransMercatorProjection::setFalseEastingNorthing(double falseEasting,
-                                                      double falseNorthing)
+                                                           double falseNorthing)
 {
-   TranMerc_False_Easting  = falseEasting;
-   TranMerc_False_Northing = falseNorthing;
-   
+   //---
+   // ossimTransMercatorProjection::update() now sets its false
+   // easting and northing from the ossmMapProjection's theFalseEastingNorthing.
+   //---
+   theFalseEastingNorthing.x = falseEasting;
+   theFalseEastingNorthing.y = falseNorthing;
+   // TranMerc_False_Easting  = falseEasting;
+   // TranMerc_False_Northing = falseNorthing;
    update();
 }
 
@@ -150,10 +172,15 @@ void ossimTransMercatorProjection::setParameters(double falseEasting,
                                                    double falseNorthing,
                                                    double scaleFactor)
 {
-   TranMerc_False_Easting  = falseEasting;
-   TranMerc_False_Northing = falseNorthing;
+   //---
+   // ossimTransMercatorProjection::update() now sets its false
+   // easting and northing from the ossmMapProjection's theFalseEastingNorthing.
+   //---
+   theFalseEastingNorthing.x = falseEasting;
+   theFalseEastingNorthing.y = falseNorthing;
+   // TranMerc_False_Easting  = falseEasting;
+   // TranMerc_False_Northing = falseNorthing;
    TranMerc_Scale_Factor   = scaleFactor;
-   
    update();
 }
 
@@ -214,6 +241,35 @@ bool ossimTransMercatorProjection::saveState(ossimKeywordlist& kwl, const char* 
 bool ossimTransMercatorProjection::loadState(const ossimKeywordlist& kwl,
                                              const char* prefix)
 {
+   bool flag = false;
+   const char* type = kwl.find(prefix, ossimKeywordNames::TYPE_KW);
+   if ( type )
+   {
+      if(ossimString(type) == STATIC_TYPE_NAME(ossimTransMercatorProjection))
+      {
+         const char* scaleFactor   = kwl.find(prefix, ossimKeywordNames::SCALE_FACTOR_KW);
+         if(scaleFactor)
+         {
+            double d = ossimString(scaleFactor).toDouble();
+            if (d > 0.0) // Check to avoid divide by zero.
+            {
+               TranMerc_Scale_Factor = d;
+            }
+         }
+
+         //---
+         // ossimMapProjection::loadState(...) sets theFalseEastingNorthing and
+         // calls update() at the end.
+         // ossimTransMercatorProjection::update() now sets its false
+         // easting and northing from the ossmMapProjection's
+         // theFalseEastingNorthing.
+         //---
+         flag = ossimMapProjection::loadState(kwl, prefix);
+      }
+   }
+   return flag;
+
+#if 0 /* old loadState */
    bool flag = ossimMapProjection::loadState(kwl, prefix);
    const char* type          = kwl.find(prefix, ossimKeywordNames::TYPE_KW);
    const char* scaleFactor   = kwl.find(prefix, ossimKeywordNames::SCALE_FACTOR_KW);
@@ -237,6 +293,7 @@ bool ossimTransMercatorProjection::loadState(const ossimKeywordlist& kwl,
    update();
 
    return flag;
+#endif
 }
 
 /************************************************************************/
@@ -709,7 +766,7 @@ long ossimTransMercatorProjection::Convert_Transverse_Mercator_To_Geodetic (doub
 
 std::ostream& ossimTransMercatorProjection::print(std::ostream& out) const
 {
-   out << setiosflags(ios::fixed) << setprecision(15)
+   out << std::setiosflags(std::ios::fixed) << std::setprecision(15)
        << "// ossimTransMercatorProjection::print\n"
        << ossimKeywordNames::SCALE_FACTOR_KW << ":  " << TranMerc_Scale_Factor
        << endl;

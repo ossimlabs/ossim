@@ -72,6 +72,33 @@ public:
    double getFalseEasting()const{return Eqcy_False_Easting;}
    double getFalseNorthing()const{return Eqcy_False_Northing;}
 
+   /**
+    * @brief Performs image to model coordinate transformation.
+    *
+    * Overrides ossimMapProjection::lineSampleToEastingNorthing(...) to handle
+    * wrapping/dateline cross, where the computed easting goes beyond the max
+    * easting.
+    *
+    * @param lineSample (input)
+    * @param eastingNorthing (output)
+    */
+   virtual void lineSampleToEastingNorthing(const ossimDpt& lineSample,
+                                            ossimDpt& eastingNorthing) const;
+
+   /**
+    * @brief Performs model to image coordinate transformation.
+    *
+    *  Overrides ossimMapProjection::eastingNorthingToLineSample(...) to handle
+    *  wrapping/dateline cross, where the input easting is negative, the tie
+    *  point is positive, and tie point is close to the dateline.
+    *
+    *  @param eastingNorthing (input)
+    *  @param lineSample (output)
+    *
+    */
+   virtual void eastingNorthingToLineSample(const ossimDpt& eastingNorthing,
+                                            ossimDpt& lineSample) const;
+
 #if 0
    virtual void lineSampleHeightToWorld(const ossimDpt& lineSampPt,
                                         const double&   heightAboveEllipsoid,
