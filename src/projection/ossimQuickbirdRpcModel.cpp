@@ -30,7 +30,7 @@
 
 static const char *RPC00A_TAG = "RPC00A";
 static const char *RPC00B_TAG = "RPC00B";
-static const char *ICHIPB_TAG = "ICHIPB";
+// static const char *ICHIPB_TAG = "ICHIPB";
 static const char *PIAIMC_TAG = "PIAIMC";
 static const char *USE00A_TAG = "USE00A";
 
@@ -304,19 +304,16 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
    // file, or a single RPC file is provided for a multi-tile scene.
    while (1)
    {
-   rpcFile.setExtension("RPB");
-      if (findSupportFile(rpcFile))
-         break;
-
+      rpcFile.setExtension("RPB");
+      if (findSupportFile(rpcFile)) break;
+      
       rpcFile.setExtension("RPA");
-      if (findSupportFile(rpcFile))
-         break;
-
+      if (findSupportFile(rpcFile)) break;
+      
       rpcFile.setExtension("XML");
-      if (findSupportFile(rpcFile))
-         break;
+      if (findSupportFile(rpcFile)) break;
 
-         return false;
+      return false;
    }
 
    // An RPC file was located, open it:
