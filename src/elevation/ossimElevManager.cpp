@@ -31,7 +31,7 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <algorithm>
 
-//ossimElevManager* ossimElevManager::m_instance = 0;
+ossimElevManager* ossimElevManager::m_instance = 0;
 static ossimTrace traceDebug("ossimElevManager:debug");
 
 using namespace std;
@@ -74,8 +74,12 @@ void ossimElevManager::ConnectionStringVisitor::visit(ossimObject* obj)
 
 ossimElevManager* ossimElevManager::instance()
 {
-   static ossimElevManager inst;
-   return &inst;
+   if(!m_instance)
+   {
+      new ossimElevManager();
+      ossimElevationDatabaseRegistry::instance();
+   }
+   return m_instance;
 }
 
 ossimElevManager::ossimElevManager()
@@ -88,6 +92,7 @@ ossimElevManager::ossimElevManager()
     m_currentDatabaseIdx(0),
     m_mutex()
 {
+   m_instance = this;
    //---
    // Auto load removed to avoid un-wanted directory scanning.
    // Use ossim preferences.  drb - 28 March 2016.
