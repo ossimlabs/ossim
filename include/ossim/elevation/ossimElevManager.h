@@ -173,7 +173,7 @@ protected:
 
    ElevationDatabaseListType& getNextElevDbList() const; // for multithreading
    
-   //static ossimElevManager* m_instance;
+   static ossimElevManager* m_instance;
    mutable std::vector<ElevationDatabaseListType> m_dbRoundRobin;
    ossim_uint32 m_maxRoundRobinSize;
    ossim_float64 m_defaultHeightAboveEllipsoid;
