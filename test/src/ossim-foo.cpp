@@ -26,10 +26,21 @@
 // Put your includes here:
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimCommon.h>
+#include <ossim/imaging/ossimImageFactoryRegistry.h>
+#include <ossim/imaging/ossimImageGoemetry.h>
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
+   try
+   {
+      /* code */
+   }
+   catch(const std::exception& e)
+   {
+      std::cerr << e.what() << '\n';
+   }
+   
    return 0;
 }
