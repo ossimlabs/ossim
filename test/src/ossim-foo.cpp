@@ -24,10 +24,16 @@
 #include <cstring>
 
 // Put your includes here:
+#include <ossim/init/ossimInit.h>
+#include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/imaging/ossimImageFactoryRegistry.h>
 #include <ossim/imaging/ossimImageGoemetry.h>
+#include <ossim/imaging/ossimImageHandler.h>
+#include <ossim/base/ossimArgumentParser.h>
+#include <ossim/base/ossimApplicationUsage.h>
+#include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
 
 using namespace std;
 
