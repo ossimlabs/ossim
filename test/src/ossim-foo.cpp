@@ -34,19 +34,35 @@
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
 #include <ossim/imaging/ossimImageWriterFactoryRegistry.h>
+#include <ossim/base/ossimTimer.h>
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
+   ossimTimer timer;
+   // Start the timer.
+   ossimTimer::Timer_t tickStart = timer.tick();
+   ossimArgumentParser ap(&argc, argv);
+
+   // Initialize ossim stuff, factories, plugin, etc.
+   ossimInit::instance()->initialize(ap);
    try
    {
       /* code */
    }
    catch(const std::exception& e)
    {
-      std::cerr << e.what() << '\n';
+      ossimNotify(ossimNotifyLevel_WARN) << e.what() << std::endl;
+      exit(1);
    }
-   
+   ossimTimer::Timer_t tickEnd = timer.tick();
+
+   ossimNotify(ossimNotifyLevel_NOTICE)
+       << "elapsed time in seconds: "
+       << std::setiosflags(ios::fixed)
+       << std::setprecision(3)
+       << timer.delta_s(tickStart, tickEnd) << endl;
+
    return 0;
 }
