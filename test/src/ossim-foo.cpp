@@ -28,8 +28,8 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimCommon.h>
-#include <ossim/imaging/ossimImageFactoryRegistry.h>
-#include <ossim/imaging/ossimImageGoemetry.h>
+#include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimApplicationUsage.h>
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
    ossimInit::instance()->initialize(ap);
    try
    {
-      /* code */
+       /* code */
    }
    catch(const std::exception& e)
    {
