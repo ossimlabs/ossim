@@ -29,6 +29,7 @@
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
+#include <ossim/imaging/ossimImageGeometryRegistry.h>
 #include <ossim/imaging/ossimImageGeometry.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/base/ossimArgumentParser.h>
