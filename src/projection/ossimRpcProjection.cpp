@@ -693,6 +693,7 @@ bool ossimRpcProjection::saveState(ossimKeywordlist& kwl,
    
    kwl.add(prefix, HGT_OFFSET_KW, theHgtOffset);
 
+
    for (int i=0; i<NUM_COEFFS; i++)
    {
       kwl.add(prefix, (LINE_NUM_COEF_KW + ossimString::toString(i)).c_str(), theLineNumCoef[i]);
@@ -719,7 +720,8 @@ bool ossimRpcProjection::loadState(const ossimKeywordlist& kwl,
 {
    if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimRpcProjection::loadState(): entering..." << std::endl;
 
-   const char* value;
+   ossimString copyPrefix(prefix);
+   const char *value;
    const char* keyword;
 
    //***
@@ -857,48 +859,97 @@ bool ossimRpcProjection::loadState(const ossimKeywordlist& kwl,
    }
    theHgtOffset = ossimString(value).toDouble();
 
-   for (int i=0; i<NUM_COEFFS; i++)
+   std::vector<ossimString> lineNumCoeff;
+   std::vector<ossimString> lineDenCoeff;
+   std::vector<ossimString> sampNumCoeff;
+   std::vector<ossimString> sampDenCoeff;
+
+   kwl.getSortedList(lineNumCoeff, copyPrefix + LINE_NUM_COEF_KW);
+   kwl.getSortedList(lineDenCoeff, copyPrefix + LINE_DEN_COEF_KW);
+   kwl.getSortedList(sampNumCoeff, copyPrefix + SAMP_NUM_COEF_KW);
+   kwl.getSortedList(sampDenCoeff, copyPrefix + SAMP_DEN_COEF_KW);
+
+   if((lineNumCoeff.size() == 20)&&
+      (lineDenCoeff.size() == 20)&&
+      (sampNumCoeff.size() == 20)&&
+      (sampDenCoeff.size() == 20))
    {
-      value = kwl.find(prefix, (LINE_NUM_COEF_KW+ossimString::toString(i)).c_str());
-      if (!value)
+      ossim_uint32 idx = 0;
+      for(auto coeff:lineNumCoeff)
       {
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimRpcProjection::loadState(): Error encountered parsing the following required keyword: "
-                                             << "<" << keyword << ">. Check the keywordlist for proper syntax."
-                                             << std::endl;
-         return false;
+         ossimString coeffValue = kwl.find(coeff);
+         theLineNumCoef[idx] = coeffValue.toDouble();
+         ++idx;
       }
-      theLineNumCoef[i] = ossimString(value).toDouble();
-   
-      value = kwl.find(prefix, (LINE_DEN_COEF_KW+ossimString::toString(i)).c_str());
-      if (!value)
+      idx = 0;
+      for (auto coeff : lineDenCoeff)
       {
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimRpcProjection::loadState(): Error encountered parsing the following required keyword: "
-                                             << "<" << keyword << ">. Check the keywordlist for proper syntax."
-                                             << std::endl;
-         return false;
+         ossimString coeffValue = kwl.find(coeff);
+         theLineDenCoef[idx] = coeffValue.toDouble();
+         ++idx;
       }
-      theLineDenCoef[i] = ossimString(value).toDouble();
-   
-      value = kwl.find(prefix, (SAMP_NUM_COEF_KW+ossimString::toString(i)).c_str());
-      if (!value)
+      idx = 0;
+      for (auto coeff : sampNumCoeff)
       {
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimRpcProjection::loadState(): Error encountered parsing the following required keyword: "
-                                             << "<" << keyword << ">. Check the keywordlist for proper syntax."
-                                             << std::endl;
-         return false;
+         ossimString coeffValue = kwl.find(coeff);
+         theSampNumCoef[idx] = coeffValue.toDouble();
+         ++idx;
       }
-      theSampNumCoef[i] = ossimString(value).toDouble();
-      
-      value = kwl.find(prefix, (SAMP_DEN_COEF_KW+ossimString::toString(i)).c_str());
-      if (!value)
+      idx = 0;
+      for (auto coeff : sampDenCoeff)
       {
-         ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimRpcProjection::loadState(): Error encountered parsing the following required keyword: "
-                                             << "<" << keyword << ">. Check the keywordlist for proper syntax."
-                                             << std::endl;
-         return false;
+         ossimString coeffValue = kwl.find(coeff);
+         theSampDenCoef[idx] = coeffValue.toDouble();
+         ++idx;
       }
-      theSampDenCoef[i] = ossimString(value).toDouble();
    }
+   else
+   {
+      return false;
+   }
+   
+   // for (int i=0; i<NUM_COEFFS; i++)
+   // {
+   //    value = kwl.find(prefix, (LINE_NUM_COEF_KW+ossimString::toString(i)).c_str());
+   //    if (!value)
+   //    {
+   //       ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimRpcProjection::loadState(): Error encountered parsing the following required keyword: "
+   //                                           << "<" << keyword << ">. Check the keywordlist for proper syntax."
+   //                                           << std::endl;
+   //       return false;
+   //    }
+   //    theLineNumCoef[i] = ossimString(value).toDouble();
+   
+   //    value = kwl.find(prefix, (LINE_DEN_COEF_KW+ossimString::toString(i)).c_str());
+   //    if (!value)
+   //    {
+   //       ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimRpcProjection::loadState(): Error encountered parsing the following required keyword: "
+   //                                           << "<" << keyword << ">. Check the keywordlist for proper syntax."
+   //                                           << std::endl;
+   //       return false;
+   //    }
+   //    theLineDenCoef[i] = ossimString(value).toDouble();
+   
+   //    value = kwl.find(prefix, (SAMP_NUM_COEF_KW+ossimString::toString(i)).c_str());
+   //    if (!value)
+   //    {
+   //       ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimRpcProjection::loadState(): Error encountered parsing the following required keyword: "
+   //                                           << "<" << keyword << ">. Check the keywordlist for proper syntax."
+   //                                           << std::endl;
+   //       return false;
+   //    }
+   //    theSampNumCoef[i] = ossimString(value).toDouble();
+      
+   //    value = kwl.find(prefix, (SAMP_DEN_COEF_KW+ossimString::toString(i)).c_str());
+   //    if (!value)
+   //    {
+   //       ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimRpcProjection::loadState(): Error encountered parsing the following required keyword: "
+   //                                           << "<" << keyword << ">. Check the keywordlist for proper syntax."
+   //                                           << std::endl;
+   //       return false;
+   //    }
+   //    theSampDenCoef[i] = ossimString(value).toDouble();
+   // }
 
    if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimRpcProjection::loadState(): returning..." << std::endl;
 
