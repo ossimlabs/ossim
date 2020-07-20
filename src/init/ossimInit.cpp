@@ -218,18 +218,17 @@ void ossimInit::initialize(ossimArgumentParser& parser)
 
    theInstance->initializeDefaultFactories();
 
-   if ( theElevEnabledFlag )
-   {
-      theInstance->initializeElevation();
-   }
-
-   theInstance->initializeLogFile();
+    theInstance->initializeLogFile();
    
    if(thePluginLoaderEnabledFlag)
    {
       theInstance->initializePlugins();
    }
-   
+   if (theElevEnabledFlag)
+   {
+      theInstance->initializeElevation();
+   }
+
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
