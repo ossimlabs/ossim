@@ -1096,18 +1096,16 @@ void ossimKeywordlist::getSortedList(std::vector<ossimString>& prefixValues,
 
    ossim_uint32 offset = (int)ossimString(prefixKey).size();
    ossim_uint32 idx = 0;
-   std::vector<ossim_uint32> numberList(nKeys);
-   for(idx = 0; idx < (ossim_uint32)numberList.size();++idx)
+   std::map<ossim_int64, ossimString> numberList;
+   for (idx = 0; idx < nKeys; ++idx)
    {
-    ossimString numberStr(keys[idx].begin() + offset,
-           keys[idx].end());
-    numberList[idx] = numberStr.toInt();
+      ossimString numberStr(keys[idx].begin() + offset,
+            keys[idx].end());
+      numberList.insert(std::make_pair(numberStr.toInt64(), numberStr));
    }
-   std::sort(numberList.begin(), numberList.end());
-
-   for(idx=0;idx < (ossim_uint32)numberList.size();++idx)
+   for(auto& numberKey:numberList)
    {
-      prefixValues.push_back(prefixKey+ossimString::toString(numberList[idx]));
+      prefixValues.push_back(prefixKey+numberKey.second);
    }
 }
 
