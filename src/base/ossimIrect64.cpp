@@ -590,7 +590,7 @@ const ossimIrect64& ossimIrect64::expand(const ossimIpt64& padding)
    return *this;
 }
 
-inline bool ossimIrect64::pointWithin(const ossimIpt64& pt) const
+bool ossimIrect64::pointWithin(const ossimIpt64& pt) const
 {
    bool result = false;
    if( hasNans() == false )
@@ -761,9 +761,15 @@ std::ostream& operator<<(std::ostream& os, const ossimIrect64& rect)
 ossimIrect64 ossimIrect64::combine(const ossimIrect64& rect) const
 {
    ossimIrect64 result;
-   
-   // If any rect has NANs, it is assumed uninitialized, so assign the result to just the other
-   if ( ( hasNans() == false ) && ( m_mode == rect.m_mode ) )
+
+   //---
+   // If any rect has NANs, size is zero, or orientation modes do not match,
+   // the returned result will be nan.
+   //---
+   if ( ( hasNans() == false ) && (rect.hasNans() == false) &&
+        ( m_size.x != 0 ) && ( rect.m_size.x != 0 ) &&
+        ( m_size.y != 0 ) && ( rect.m_size.y != 0 ) &&
+        ( m_mode == rect.m_mode ) )
    {
       ossimIpt64 endPt0;
       end( endPt0 );
