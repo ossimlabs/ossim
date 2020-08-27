@@ -24,9 +24,11 @@ public:
 
    ossimIpt64() : x(0), y(0) {}
 
-   ossimIpt64(ossim_int64 anX, ossim_int64 aY) : x(anX), y(aY) {}
+   ossimIpt64(ossim_int64 aX, ossim_int64 aY) : x(aX), y(aY) {}
 
-   ossimIpt64(ossim_int32 anX, ossim_int32 aY) : x(anX), y(aY) {}
+   ossimIpt64(ossim_int32 aX, ossim_int32 aY) : x(aX), y(aY) {}
+
+   ossimIpt64(ossim_float64 aX, ossim_float64 aY);
    
    ossimIpt64(const ossimIpt64& pt) : x(pt.x), y(pt.y) {}
 
@@ -139,6 +141,8 @@ public:
    // OPERATORS: *, /
    // Scale point components by scalar:
    //***
+   ossimIpt64 operator*(const ossim_int64& i) const
+      { return ossimIpt64(i*x, i*y); }
    ossimDpt operator*(const double& d) const
       { return ossimDpt(d*x, d*y); }
    ossimDpt operator/(const double& d) const

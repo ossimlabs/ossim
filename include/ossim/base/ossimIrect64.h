@@ -341,8 +341,8 @@ public:
    const ossimIrect64& expand(const ossimIpt64& padding);
    
    /*!
-    * Returns true if "pt" falls within rectangle.  Fall on an edge is also
-    * considered to be within.
+    * @param pt
+    * @return true if "pt" falls within rectangle.
     */
    bool pointWithin(const ossimIpt64& pt) const;
 
@@ -374,6 +374,14 @@ public:
    friend OSSIM_DLL std::ostream& operator<<(std::ostream& os,
                                              const ossimIrect64& rect);
 
+   /**
+    * @brief Combines this rectangle with rect arg and returns the result.
+    *
+    * @note If any rect has NANs, size is zero, or orientation modes do not
+    * match, the returned result will be nan.
+    *
+    * @return combined rect.
+    */
    ossimIrect64 combine(const ossimIrect64& rect)const;
 
    bool saveState(ossimKeywordlist& kwl,
