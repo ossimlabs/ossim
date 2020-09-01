@@ -461,6 +461,17 @@ statusDatum: true
 statusGSD: true
 statusUpdateOnClick: true
 
+//---
+// Renderer tile interpolation error threshold:
+// 
+// Controls the tile splitting in the resampler; i.e.
+// if ( error > threshold ) { split_the_tile }
+//
+// The smaller the threshold the better the accuracy. Affects output timing.
+// 
+// default: 1.0 (pixel)
+//---
+// renderer.interpolation_error_threshold: 0.5
 
 // ---
 // Keyword: cache_size
