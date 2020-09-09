@@ -1,9 +1,7 @@
 //**************************************************************************
 // FILE: ossimElevManager.cpp
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // DESCRIPTION:
 //   Contains implementation of class ossimElevManager. This object 
@@ -19,12 +17,13 @@
 //              Initial coding.
 //<
 //**************************************************************************
-// $Id: ossimElevManager.cpp 23641 2015-12-02 20:32:06Z dburken $
+// $Id$
 
 #include <ossim/elevation/ossimElevManager.h>
 #include <ossim/base/ossimEnvironmentUtility.h>
 #include <ossim/elevation/ossimElevationCellDatabase.h>
 #include <ossim/base/ossimDirectory.h>
+#include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimGeoidManager.h>
 #include <ossim/elevation/ossimElevationDatabaseRegistry.h>
@@ -246,6 +245,73 @@ bool ossimElevManager::loadElevationPath(const ossimFilename& path, bool set_as_
    }
    
    return result;
+}
+
+ossimRefPtr<ossimElevationDatabase> ossimElevManager::getElevationDatabaseForPoint(
+   const ossimGpt& gpt )
+{
+   ossimRefPtr<ossimElevationDatabase> db = 0;
+
+   if ( m_dbRoundRobin.size() )
+   {
+      // "m_dbRoundRobin[0]" is a std::vector<ossimRefPtr<ossimElevationDatabase> >
+      const auto& cv = m_dbRoundRobin[0];
+      for ( auto&& i : cv )
+      {
+         if ( i.valid() )
+         {
+            if ( i->pointHasCoverage( gpt ) )
+            {
+               db = i;
+               break;
+            }
+         }
+      }
+   }
+
+   return db;
+}
+
+ossimRefPtr<ossimElevCellHandler> ossimElevManager::getCellForPoint( const ossimGpt& gpt )
+{
+   ossimRefPtr<ossimElevCellHandler> cell = 0;
+
+   if ( m_dbRoundRobin.size() )
+   {
+      // "elevDbList" is a std::vector<ossimRefPtr<ossimElevationDatabase> >
+      ElevationDatabaseListType elevDbList = m_dbRoundRobin[0];
+      for ( auto&& i : elevDbList )
+      {
+         if ( i.valid() )
+         {
+            if ( i->pointHasCoverage( gpt ) )
+            {
+               // See if it's a cell based db.
+               ossimElevationCellDatabase* cellDb =
+                  dynamic_cast<ossimElevationCellDatabase*>( i.get() );
+               if ( cellDb )
+               {
+                  cell = cellDb->getOrCreateCellHandler( gpt );
+                  if ( cell )
+                  {
+                     break;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   return cell;
+}
+
+void ossimElevManager::getCellFilenameForPoint(const ossimGpt& gpt, ossimFilename& file)
+{
+   ossimRefPtr<ossimElevCellHandler> elevCell = getCellForPoint( gpt );
+   if ( elevCell.valid() )
+   {
+      file = elevCell->getFilename();
+   }
 }
 
 void ossimElevManager::getOpenCellList(std::vector<ossimFilename>& list) const
