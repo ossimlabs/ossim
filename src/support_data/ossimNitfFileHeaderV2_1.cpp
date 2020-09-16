@@ -455,8 +455,14 @@ void ossimNitfFileHeaderV2_1::readDes(istream& in)
    {
       ossimIFStream64::seekg64(in, theDataExtSegOffsetList[i].theDataExtSegHeaderOffset, ios::beg);
       des.parseStream(in, theNitfDataExtSegInfoRecords[i].getDataExtSegLength());
-      theDesList.push_back(des);
-
+      if(in.good())
+      {
+         theDesList.push_back(des);
+      }
+      else
+      {
+         in.clear();
+      }
    }
 }
 

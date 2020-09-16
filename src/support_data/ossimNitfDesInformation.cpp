@@ -59,47 +59,48 @@ void ossimNitfDesInformation::parseStream(std::istream &in, ossim_uint64 dataLen
       }
       in.read(m_desshl, DESSHL_SIZE);
 
-      m_desDataOffset = in.tellg();
-
-      m_desData = ossimNitfDesFactoryRegistry::instance()->create(getDesId());
-
-      if (m_desData.valid())
+      if(in.good())
       {
-	 /*
-         if (m_desData->getClassName() == "ossimNitfUnknownDes")
-         {
-            // Unknown des doesn't know his des name yet.
-            m_desData->setDesName( getDesId() );
-         }
-	 */
+         m_desDataOffset = in.tellg();
 
-         //---
-         // Dess with dynamic des length construct with 0 length.
-         // Set if 0.
-         //---
-         if ( m_desData->getDesLength() == 0 )
+         m_desData = ossimNitfDesFactoryRegistry::instance()->create(getDesId());
+
+         if (m_desData.valid())
          {
-            m_desData->setDesLength( dataLength );
+            //---
+            // Dess with dynamic des length construct with 0 length.
+            // Set if 0.
+            //---
+            if (m_desData->getDesLength() == 0)
+            {
+               m_desData->setDesLength(dataLength);
+            }
+            // Sanity check fixed length in code with length from CEL field:
+            else if (m_desData->getDesLength() != getDesLength())
+            {
+               ossimNotify(ossimNotifyLevel_WARN)
+                   << "ossimNitfDesInformation::parseStream WARNING!"
+                   << "\nCEL field length does not match fixed des length for des: "
+                   << m_desData->getDesName().c_str()
+                   << "\nCEL: " << getDesLength()
+                   << "\nDes: " << m_desData->getDesLength()
+                   << std::endl;
+            }
+
+            m_desData->parseStream(in);
+            if(!in.good())
+            {
+               m_desData = 0;
+               in.clear();
+            }
          }
-         // Sanity check fixed length in code with length from CEL field:
-         else if ( m_desData->getDesLength() != getDesLength() )
+         else
          {
-            ossimNotify(ossimNotifyLevel_WARN)
-               << "ossimNitfDesInformation::parseStream WARNING!"
-               << "\nCEL field length does not match fixed des length for des: "
-               << m_desData->getDesName().c_str()
-               << "\nCEL: " << getDesLength()
-               << "\nDes: " << m_desData->getDesLength()
-               << std::endl;
+            m_desData = (ossimNitfRegisteredDes *)NULL;
          }
-                               
-         m_desData->parseStream(in);
-      }
-      else
-      {
-         m_desData = (ossimNitfRegisteredDes*)NULL;
       }
    }
+   
 }
 
 void ossimNitfDesInformation::writeStream(std::ostream &out)
@@ -113,7 +114,7 @@ void ossimNitfDesInformation::writeStream(std::ostream &out)
    out.write(m_desclsy, DESCLSY_SIZE);
    out.write(m_descode, DESCODE_SIZE);
    out.write(m_desctlh, DESCTLH_SIZE);
-   out.write(m_desrel, DESREL_SIZE);
+   out.write(m_desrel,  DESREL_SIZE);
    out.write(m_desdctp, DESDCTP_SIZE);
    out.write(m_desdcdt, DESDCDT_SIZE);
    out.write(m_desdcxm, DESDCXM_SIZE);
