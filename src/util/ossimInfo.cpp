@@ -3004,6 +3004,27 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
       }
    }
 
+   //---
+   // If no cell coverage was found for the ground point; perhaps over the
+   // ocean, use the geoid offset from the geoid manager. This will typically
+   // be the first/top geoid in the array if multiple geoids are loaded.
+   //---
+   if ( ossim::isnan( geoidOffset ) )
+   {
+      ossimRefPtr<ossimGeoid> geoid = ossimGeoidManager::instance()->
+         getGeoidForPoint(copyGpt);
+      if ( geoid.valid() )
+      {
+         geoidOffset = geoid->offsetFromEllipsoid(copyGpt);
+         geoidName = geoid->getShortName().string();
+         
+         if ( ossim::isnan( hgtAboveEllipsoid ) )
+         {
+            hgtAboveEllipsoid = geoidOffset;
+         }
+      }
+   }
+
    out << "elevation.info.cell: " << cellFilename
        << "\nelevation.info.gpt: " << copyGpt.toString()
        << "\nelevation.info.geoid_name: " << geoidName
