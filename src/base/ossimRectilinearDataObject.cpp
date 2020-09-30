@@ -110,7 +110,7 @@ ossimRectilinearDataObject::~ossimRectilinearDataObject()
 
 ossim_uint64 ossimRectilinearDataObject::computeSpatialProduct() const
 {
-   ossim_uint64 spatialProduct = 0;
+   ossim_uint64 spatialProduct = 1;
    for (ossim_uint64 index = 0; index < m_spatialExtents.size(); ++index)
    {
       spatialProduct *= m_spatialExtents[index];
