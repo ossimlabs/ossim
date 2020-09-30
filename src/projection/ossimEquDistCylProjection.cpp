@@ -193,7 +193,6 @@ ossimGpt ossimEquDistCylProjection::inverse(const ossimDpt &eastingNorthing)cons
                                        eastingNorthing.y,
                                        &lat,
                                        &lon);
-
    return ossimGpt(lat*DEG_PER_RAD, lon*DEG_PER_RAD, 0.0, theDatum);
 }
 
@@ -525,33 +524,36 @@ void ossimEquDistCylProjection::updateFromTransform()
    //   setOrigin(ossimGpt(theUlGpt.lat, 0.0, 0.0));
 }
 
-void ossimEquDistCylProjection::lineSampleToEastingNorthing(
-   const ossimDpt& lineSample, ossimDpt& eastingNorthing)const
-{
-   ossimMapProjection::lineSampleToEastingNorthing(lineSample, eastingNorthing );
-   if ( eastingNorthing.x > Eqcy_Max_Easting )
-   {
-      eastingNorthing.x = Eqcy_Min_Easting + (eastingNorthing.x - Eqcy_Max_Easting);
-   }
-}
+// void ossimEquDistCylProjection::lineSampleToEastingNorthing(
+//    const ossimDpt& lineSample, ossimDpt& eastingNorthing)const
+// {
+//    ossimMapProjection::lineSampleToEastingNorthing(lineSample, eastingNorthing );
 
-void ossimEquDistCylProjection::eastingNorthingToLineSample(
-   const ossimDpt& eastingNorthing, ossimDpt& lineSample)const
-{
-   //---
-   // Tie point is in the Eastern hemisphere and close to the dateline.
-   // Making an Assumption that a negative easting input is to the right of
-   // the tie point and output sample should be positive.
-   //---
-   if ( (eastingNorthing.x < 0.0) && (theUlGpt.lond() > 90.0) )
-   {
-      ossimDpt enPt = eastingNorthing;
-      enPt.x = Eqcy_Max_Easting + (eastingNorthing.x - Eqcy_Min_Easting);
+//    // This code is causing issues.  I don't think we should do wrapping here.
+//    //
+//    // if ( eastingNorthing.x > Eqcy_Max_Easting )
+//    // {
+//    //    eastingNorthing.x = Eqcy_Min_Easting + (eastingNorthing.x - Eqcy_Max_Easting);
+//    // }
+// }
 
-      ossimMapProjection::eastingNorthingToLineSample( enPt, lineSample );
-   }
-   else
-   {
-      ossimMapProjection::eastingNorthingToLineSample(eastingNorthing, lineSample);
-   }
-}
+// void ossimEquDistCylProjection::eastingNorthingToLineSample(
+//    const ossimDpt& eastingNorthing, ossimDpt& lineSample)const
+// {
+//    //---
+//    // Tie point is in the Eastern hemisphere and close to the dateline.
+//    // Making an Assumption that a negative easting input is to the right of
+//    // the tie point and output sample should be positive.
+//    //---
+//    if ( (eastingNorthing.x < 0.0) && (theUlGpt.lond() > 90.0) )
+//    {
+//       ossimDpt enPt = eastingNorthing;
+//       enPt.x = Eqcy_Max_Easting + (eastingNorthing.x - Eqcy_Min_Easting);
+
+//       ossimMapProjection::eastingNorthingToLineSample( enPt, lineSample );
+//    }
+//    else
+//    {
+//       ossimMapProjection::eastingNorthingToLineSample(eastingNorthing, lineSample);
+//    }
+// }

@@ -395,8 +395,8 @@ void ossimRpcModel::imagingRay(const ossimDpt& imagePoint,
    // weeds...
    //---
 
-// this one is messed up so keep as #if 0 untill tested more
-  #if 0 
+// this one is messed up so keep as #if 0 until tested more
+  #if 0
 
   ossimGpt gpt;
 
@@ -422,12 +422,15 @@ void ossimRpcModel::imagingRay(const ossimDpt& imagePoint,
     }
   }
 #else
-   double vectorLength = theHgtScale ? (theHgtScale * 2.0) : 1000.0;
-
+//   double vectorLength = theHgtScale ? (theHgtScale * 2.0) : 1000.0;
+   // double vectorLength = theHgtScale ? theHgtScale : 1000; //? (theHgtScale * 2.0) : 1000.0;
+   // double vectorLength = theHgtScale ? (10) : 1000.0;
+   //double vectorLength = theHgtScale ? (theHgtScale * 0.5) : 1000.0;
+   double vectorLength = std::fabs(theHgtOffset);// + theHgtScale;//theHgtScale ? (theHgtScale * 0.5) : 1000.0;
    ossimGpt gpt;
-   
+   vectorLength = vectorLength > 1?vectorLength:1;
    // "from" point
-   double intHgt = theHgtOffset + vectorLength;
+   double intHgt = 2 * vectorLength;
    lineSampleHeightToWorld(imagePoint, intHgt, gpt);
    ossimEcefPoint intECFfrom(gpt);
    
@@ -870,9 +873,9 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "DEBUG ossimRpcModel::loadState(): entering..." << std::endl;
    }
-
+   ossimString copyPrefix(prefix);
    ossimString value;
-   const char* keyword;
+   const char* keyword=nullptr;
 
    //***
    // Pass on to the base-class for parsing first:
@@ -1026,7 +1029,56 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
       return false;
    }
    theHgtOffset = value.toDouble();
+   std::vector<ossimString> lineNumCoeff;
+   std::vector<ossimString> lineDenCoeff;
+   std::vector<ossimString> sampNumCoeff;
+   std::vector<ossimString> sampDenCoeff;
 
+   kwl.getSortedList(lineNumCoeff, copyPrefix + LINE_NUM_COEF_KW);
+   kwl.getSortedList(lineDenCoeff, copyPrefix + LINE_DEN_COEF_KW);
+   kwl.getSortedList(sampNumCoeff, copyPrefix + SAMP_NUM_COEF_KW);
+   kwl.getSortedList(sampDenCoeff, copyPrefix + SAMP_DEN_COEF_KW);
+
+   if ((lineNumCoeff.size() == 20) &&
+       (lineDenCoeff.size() == 20) &&
+       (sampNumCoeff.size() == 20) &&
+       (sampDenCoeff.size() == 20))
+   {
+      ossim_uint32 idx = 0;
+      for(auto& coeff:lineNumCoeff)
+      {
+         ossimString coeffValue = kwl.find(coeff);
+         theLineNumCoef[idx] = coeffValue.toDouble();
+         ++idx;
+      }
+      idx = 0;
+      for (auto& coeff : lineDenCoeff)
+      {
+         ossimString coeffValue = kwl.find(coeff);
+         theLineDenCoef[idx] = coeffValue.toDouble();
+         ++idx;
+      }
+      idx = 0;
+      for (auto& coeff : sampNumCoeff)
+      {
+         ossimString coeffValue = kwl.find(coeff);
+         theSampNumCoef[idx] = coeffValue.toDouble();
+         ++idx;
+      }
+      idx = 0;
+      for (auto coeff : sampDenCoeff)
+      {
+         ossimString coeffValue = kwl.find(coeff);
+         theSampDenCoef[idx] = coeffValue.toDouble();
+         ++idx;
+      }
+   }
+   else
+   {
+      return false;
+   }
+
+#if 0
    for (int i=0; i<NUM_COEFFS; i++)
    {
       ossimString keyword;
@@ -1082,7 +1134,7 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
       }
       theSampDenCoef[i] = value.toDouble();
    }
-      
+#endif      
    //***
    // Initialize other data members given quantities read in KWL:
    //***
@@ -1093,7 +1145,7 @@ bool ossimRpcModel::loadState(const ossimKeywordlist& kwl,
    
    if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimRpcModel::loadState(): returning..." << std::endl;
    return true;
-}
+   }
 
 //*****************************************************************************
 // STATIC METHOD: ossimRpcModel::writeGeomTemplate

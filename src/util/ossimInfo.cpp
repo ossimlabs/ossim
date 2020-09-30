@@ -2973,6 +2973,74 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
 {
    // Capture the original flags.
    std::ios_base::fmtflags f = out.flags();
+   
+   // Handle wrap conditions.
+   ossimGpt copyGpt = gpt;
+   copyGpt.wrap();
+
+   ossim_float64 hgtAboveMsl = ossim::nan();
+   ossim_float64 hgtAboveEllipsoid = ossim::nan();
+   ossim_float64 geoidOffset = ossim::nan();
+   std::string geoidName = "not_found";
+   
+   ossimFilename cellFilename;
+   ossimElevManager::instance()->getCellFilenameForPoint( copyGpt, cellFilename );
+   if ( cellFilename.empty() )
+   {
+      cellFilename = "not_found";
+   }
+   
+   ossimRefPtr<ossimElevationDatabase> db =
+      ossimElevManager::instance()->getElevationDatabaseForPoint( copyGpt );
+   if ( db.valid() )
+   {
+      hgtAboveMsl = db->getHeightAboveMSL(copyGpt);
+      hgtAboveEllipsoid = db->getHeightAboveEllipsoid(copyGpt);
+      ossimGeoid* geoid = db->getGeoid();
+      if ( geoid )
+      {
+         geoidOffset = geoid->offsetFromEllipsoid(copyGpt);
+         geoidName = geoid->getShortName().string();
+      }
+   }
+
+   //---
+   // If no cell coverage was found for the ground point; perhaps over the
+   // ocean, use the geoid offset from the geoid manager. This will typically
+   // be the first/top geoid in the array if multiple geoids are loaded.
+   //---
+   if ( ossim::isnan( geoidOffset ) )
+   {
+      ossimRefPtr<ossimGeoid> geoid = ossimGeoidManager::instance()->
+         getGeoidForPoint(copyGpt);
+      if ( geoid.valid() )
+      {
+         geoidOffset = geoid->offsetFromEllipsoid(copyGpt);
+         geoidName = geoid->getShortName().string();
+         
+         if ( ossim::isnan( hgtAboveEllipsoid ) )
+         {
+            hgtAboveEllipsoid = geoidOffset;
+         }
+      }
+   }
+
+   out << "elevation.info.cell: " << cellFilename
+       << "\nelevation.info.gpt: " << copyGpt.toString()
+       << "\nelevation.info.geoid_name: " << geoidName
+       << "\nelevation.info.geoid_offset: " << std::setprecision(15) << geoidOffset
+       << "\nelevation.info.height_above_msl: " << hgtAboveMsl
+       << "\nelevation.info.height_above_ellipsoid: " << hgtAboveEllipsoid
+       << "\n";
+
+   // Reset flags.
+   out.setf(f);
+
+   return out;
+   
+#if 0
+   // Capture the original flags.
+   std::ios_base::fmtflags f = out.flags();
 
    // Handle wrap conditions.
    ossimGpt copyGpt = gpt;
@@ -3047,6 +3115,7 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
    out.setf(f);
 
    return out;
+#endif
 }
 
 void ossimInfo::printExtensions() const

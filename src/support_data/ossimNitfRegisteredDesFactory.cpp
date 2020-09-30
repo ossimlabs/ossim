@@ -38,8 +38,12 @@ ossimRefPtr<ossimNitfRegisteredDes> ossimNitfRegisteredDesFactory::create(
 {
    ossimString name = ossimString(desName).trim().upcase();
    ossimRefPtr<ossimNitfRegisteredDes> result;
-    if (desName == XML_DATA_CONTENT_DES ||
-        desName == SICD_XML)
+   // We have removed the generic XML_DATA_CONTENT for the SICD
+   // we will need to have a different parsers for that.
+   // If it explicitly specifies SICD then we will assume SICD 
+   // for the parse
+   //
+   if(desName == SICD_XML)
    {
        result = new ossimNitfSicdXmlDataContentDes;
 

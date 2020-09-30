@@ -53,6 +53,40 @@ bool ossimNitfFileHeader::getTag(ossimNitfTagInformation& tagInfo,
 
    return false;
 }
+
+ossimRefPtr<ossimNitfRegisteredTag> ossimNitfFileHeader::getTagData(const ossimString &tagName)
+{
+   if (theTagList.size())
+   {
+      for (ossim_uint32 idx = 0; idx < theTagList.size(); ++idx)
+      {
+         if (theTagList[idx].getTagName() == tagName)
+         {
+            return theTagList[idx].getTagData();
+         }
+      }
+   }
+
+   return ossimRefPtr<ossimNitfRegisteredTag>();
+}
+
+const ossimRefPtr<ossimNitfRegisteredTag> ossimNitfFileHeader::getTagData(
+    const ossimString &tagName) const
+{
+   if (theTagList.size())
+   {
+      for (ossim_uint32 idx = 0; idx < theTagList.size(); ++idx)
+      {
+         if (theTagList[idx].getTagName() == tagName)
+         {
+            return theTagList[idx].getTagData();
+         }
+      }
+   }
+
+   return ossimRefPtr<ossimNitfRegisteredTag>();
+}
+
 bool ossimNitfFileHeader::getDesInformation(ossimNitfDesInformation &desInfo,
                                             const ossimString &desId,
                                             bool exactMatch)

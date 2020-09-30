@@ -511,6 +511,17 @@ ossimProjection* ossimSensorModelFactory::createProjection(const ossimFilename& 
 
    } while (false);
 
+   ossimSensorModel* sensor = dynamic_cast<ossimSensorModel*>(model.get());
+   if(sensor)
+   {
+      ossimDpt gsd = sensor->getMetersPerPixel();
+      if(ossim::almostEqual(gsd.x, 0.0) ||
+        ossim::almostEqual(gsd.y, 0.0))
+        {
+           sensor->computeGsd();
+        }
+   }
+
    return model.release();
 }
 

@@ -1,7 +1,7 @@
 //*****************************************************************************
 // FILE: ossimElevManager.h
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // DESCRIPTION:
 //   Contains declaration of class ossimElevManager. This object provides a
@@ -18,14 +18,16 @@
 //<
 //*****************************************************************************
 #ifndef ossimElevManager_HEADER
-#define ossimElevManager_HEADER
+#define ossimElevManager_HEADER 1
 
-#include <vector>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimVisitor.h>
 #include <ossim/elevation/ossimElevSource.h>
 #include <ossim/elevation/ossimElevationDatabase.h>
 #include <mutex>
+#include <vector>
+
+class ossimFilename;
 
 class OSSIM_DLL ossimElevManager : public ossimElevSource
 {
@@ -96,6 +98,33 @@ public:
    void setDefaultHeightAboveEllipsoid(double meters) {m_defaultHeightAboveEllipsoid=meters;}
    void setElevationOffset(double meters) {m_elevationOffset=meters;}
    double getElevationOffset() const { return m_elevationOffset; }
+
+   /**
+    * @brief Gets the elevation database for a given point.
+    * @param gpt
+    * @return ossimRefPtr<ossimElevationDatabase> which can hold null pointer
+    * if there is no coverage for the point.
+    */
+   ossimRefPtr<ossimElevationDatabase> getElevationDatabaseForPoint(
+      const ossimGpt& gpt);
+
+   /**
+    * @brief Gets the elevation cell handler for a given point.
+    * @param gpt
+    * @return ossimRefPtr<ossimElevCellHandler> which can hold a null pointer
+    * if there is no coverage for the point OR the underlying elevation
+    * database is not cell based, e.g. ossimTiledElevationDatabase.
+    */
+   ossimRefPtr<ossimElevCellHandler> getCellForPoint(const ossimGpt& gpt);
+
+   /**
+    * @brief Gets the elevation cell filename for a given point.
+    * @param gpt
+    * @param file Initialized by this. Can be empty if there is no coverage
+    * for the point OR the underlying elevation data base is not cell based,
+    * e.g. ossimTiledElevationDatabase.
+    */
+   void getCellFilenameForPoint( const ossimGpt& gpt, ossimFilename& file );
    
    void getOpenCellList(std::vector<ossimFilename>& list) const;
 
@@ -173,7 +202,7 @@ protected:
 
    ElevationDatabaseListType& getNextElevDbList() const; // for multithreading
    
-   //static ossimElevManager* m_instance;
+   static ossimElevManager* m_instance;
    mutable std::vector<ElevationDatabaseListType> m_dbRoundRobin;
    ossim_uint32 m_maxRoundRobinSize;
    ossim_float64 m_defaultHeightAboveEllipsoid;

@@ -82,8 +82,8 @@ public:
     * @param lineSample (input)
     * @param eastingNorthing (output)
     */
-   virtual void lineSampleToEastingNorthing(const ossimDpt& lineSample,
-                                            ossimDpt& eastingNorthing) const;
+   // virtual void lineSampleToEastingNorthing(const ossimDpt& lineSample,
+   //                                          ossimDpt& eastingNorthing) const;
 
    /**
     * @brief Performs model to image coordinate transformation.
@@ -96,8 +96,8 @@ public:
     *  @param lineSample (output)
     *
     */
-   virtual void eastingNorthingToLineSample(const ossimDpt& eastingNorthing,
-                                            ossimDpt& lineSample) const;
+   // virtual void eastingNorthingToLineSample(const ossimDpt& eastingNorthing,
+   //                                          ossimDpt& lineSample) const;
 
 #if 0
    virtual void lineSampleHeightToWorld(const ossimDpt& lineSampPt,

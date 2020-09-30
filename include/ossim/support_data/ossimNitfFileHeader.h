@@ -155,9 +155,12 @@ public:
 
    virtual bool getTag(ossimNitfTagInformation& tagInfo,
                        const ossimString& tagName)const;
-   virtual bool getDesInformation(ossimNitfDesInformation& desInfo,
-                                  const ossimString& desId,
-                                  bool exactMatch=false);
+   ossimRefPtr<ossimNitfRegisteredTag> getTagData(const ossimString &tagName);
+   const ossimRefPtr<ossimNitfRegisteredTag> getTagData(
+       const ossimString &tagName) const;
+   virtual bool getDesInformation(ossimNitfDesInformation &desInfo,
+                                  const ossimString &desId,
+                                  bool exactMatch = false);
    virtual ossim_int64 getFileSize()const=0;
    virtual const char* getVersion()const=0;
    virtual const char* getDateTime()const=0;

@@ -8,8 +8,9 @@
 //*******************************************************************
 //  $Id: ossimSpaceObliqueMercatorProjection.cpp 17815 2010-08-03 13:23:14Z dburken $
 #include <ossim/projection/ossimSpaceObliqueMercatorProjection.h>
-#include <math.h>
+
 #include <ossim/base/ossimConstants.h>
+#include <cmath>
 
 #define PI_OVER_2 (M_PI/2)
 #define PI (M_PI)
@@ -22,33 +23,40 @@
 #define ATOL 1e-50
 #define FORTPI		0.78539816339744833
 
-double aasin(double v)
+// Namespaced to fix multiple symbol errors on windows.
+namespace ossim
 {
-   double av;
-
-   if ((av = fabs(v)) >= 1.)
+   double aasin(double v)
    {
-      return (v < 0. ? -HALFPI : HALFPI);
+      double av;
+      
+      if ((av = fabs(v)) >= 1.)
+      {
+         return (v < 0. ? -HALFPI : HALFPI);
+      }
+      return asin(v);
    }
-   return asin(v);
-}
-double aacos(double v)
-{
-	double av;
 
-	if ((av = fabs(v)) >= 1.)
-        {
-           return (v < 0. ? PI : 0.);
-	}
-	return acos(v);
-}
-double asqrt(double v)
-{
-   return ((v <= 0) ? 0. : sqrt(v));
-}
-double aatan2(double n, double d)
-{
-   return ((fabs(n) < ATOL && fabs(d) < ATOL) ? 0. : atan2(n,d));
+#if 0 /* These were not called/used so commented out. */
+   double aacos(double v)
+   {
+      double av;
+      
+      if ((av = fabs(v)) >= 1.)
+      {
+         return (v < 0. ? PI : 0.);
+      }
+      return acos(v);
+   }
+   double asqrt(double v)
+   {
+      return ((v <= 0) ? 0. : sqrt(v));
+   }
+   double aatan2(double n, double d)
+   {
+      return ((fabs(n) < ATOL && fabs(d) < ATOL) ? 0. : atan2(n,d));
+   }
+#endif
 }
 
 static const char* PATH_KW                     = "path";
@@ -242,7 +250,7 @@ ossimSpaceObliqueMercatorProjection::forward(const ossimGpt &worldPoint) const
    }
    if (l) {
       sp = sin(phi);
-      phidp = aasin((one_es * ca * sp - sa * cos(phi) * 
+      phidp = ossim::aasin((one_es * ca * sp - sa * cos(phi) * 
                      sin(lamt)) / sqrt(1. - es * sp * sp));
       tanph = log(tan(FORTPI + .5 * phidp));
       sd = sin(lamdp);
@@ -312,7 +320,7 @@ ossimSpaceObliqueMercatorProjection::inverse(const ossimDpt &projectedPoint)
    
    lam = lamt - p22 * lamdp;
    if (fabs(sa) < TOL)
-      phi = aasin(spp / sqrt(one_es * one_es + es * sppsq));
+      phi = ossim::aasin(spp / sqrt(one_es * one_es + es * sppsq));
    else
       phi = atan((tan(lamdp) * cos(lamt) - ca * sin(lamt)) /
                     (one_es * sa));
