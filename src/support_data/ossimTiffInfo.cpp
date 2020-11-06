@@ -2583,10 +2583,10 @@ std::ostream &ossimTiffInfo::printGeoKeys(
          // GeoKey value count
          // value or tag offset
          //---
-         ossim_uint16 key = geoKeyBlock[index++];
-         ossim_uint16 tag = geoKeyBlock[index++];
+         ossim_uint16 key   = geoKeyBlock[index++];
+         ossim_uint16 tag   = geoKeyBlock[index++];
          ossim_uint16 count = geoKeyBlock[index++];
-         ossim_uint16 code = geoKeyBlock[index++];
+         ossim_uint16 code  = geoKeyBlock[index++];
 
          if (traceDebug())
          {
@@ -2607,474 +2607,18 @@ std::ostream &ossimTiffInfo::printGeoKeys(
 
          switch (key)
          {
-         case ossim::OGT_MODEL_TYPE_GEO_KEY: // key 1024 Section 6.3.1.1 Codes
-         {
-            printModelType(out, prefix, code);
-            break;
-         }
-         case ossim::OGT_RASTER_TYPE_GEO_KEY: // key 1025 Section 6.3.1.2 Code
-         {
-            printRasterType(out, prefix, code);
-            break;
-         }
-
-         case ossim::OGT_CITATION_GEO_KEY: // key 1026
-         {
-            if (tag == 34737) // using ascii array
+            case ossim::OGT_MODEL_TYPE_GEO_KEY: // key 1024 Section 6.3.1.1 Codes
             {
-               if (geoAsciiBlock && ((code + count) <= geoAsciiLength))
-               {
-                  std::string s;
-                  int i = 0;
-                  while (i < count)
-                  {
-                     s.push_back(geoAsciiBlock[code + i]);
-                     ++i;
-                  }
-                  out << prefix << "citation: \"\"\"" << s << "\"\"\"\n";
-               }
+               printModelType(out, prefix, code);
+               break;
             }
-            break;
-         }
-
-         case ossim::OGEOGRAPHIC_TYPE_GEO_KEY: // key 2048  Section 6.3.2.1 Codes
-         {
-            out << prefix << ossimKeywordNames::GCS_CODE_KW << ": "
-                << code << "\n";
-            break;
-         }
-
-         case ossim::OGEOG_CITATION_GEO_KEY: // key 2049
-         {
-            if (tag == 34737) // using ascii array
+            case ossim::OGT_RASTER_TYPE_GEO_KEY: // key 1025 Section 6.3.1.2 Code
             {
-               if (geoAsciiBlock && ((code + count) <= geoAsciiLength))
-               {
-                  std::string s;
-                  int i = 0;
-                  while (i < count)
-                  {
-                     s.push_back(geoAsciiBlock[code + i]);
-                     ++i;
-                  }
-                  out << prefix << "geographic_citation: \"\"\"" << s << "\"\"\"\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OGEOG_GEODETIC_DATUM_GEO_KEY: // key 2050 Section 6.3.2.2 Codes
-         {
-            out << prefix << GEODETIC_DATUM_KW << ": " << code << "\n";
-            break;
-         }
-
-         case ossim::OGEOG_PRIME_MERIDIAN_GEOKEY: // key 2051 Section 6.3.2.4 Codes
-         {
-            out << prefix << "prime_meridian_code: " << code << "\n";
-            break;
-         }
-
-         case ossim::OGEOG_LINEAR_UNITS_GEO_KEY: // key 2052  Section 6.3.1.3 Codes
-         {
-            out << prefix << "linear_units_code: " << code << "\n";
-            printLinearUnits(out, prefix, LINEAR_UNITS_KW, code);
-            break;
-         }
-
-         case ossim::OGEOG_ANGULAR_UNITS_GEO_KEY: // key 2054  Section 6.3.1.4 Codes
-         {
-            out << prefix << "angular_units_code: " << code << "\n";
-            printAngularUnits(out, prefix, code);
-            break;
-         }
-
-         case ossim::OGEOG_ANGULAR_UNIT_SIZE_GEO_KEY: // key 2055 Size in radians Section 6.2.2
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << "angular_units_size_radians: "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OGEOG_ELLIPSOID_GEO_KEY: // key 2056  Section 6.3.23 Codes
-         {
-            out << prefix << "ellipsoid_code: " << code << "\n";
-            break;
-         }
-
-         case ossim::OGEOG_SEMI_MAJOR_AXIS: // key 2057
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << "semi_major_axis: " << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OGEOG_SEMI_MINOR_AXIS: // key 2058
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << "semi_minor_axis: " << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OGEOG_INV_FLATTENING_GEO_KEY: // key 2059 ratio Section 6.2.2
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << "inverse_flattening_ratio: " << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OGEOG_PRIME_MERIDIAN_LONG_GEO_KEY: // key 2061 GeogAngularUnit Section 6.2.2
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << "prime_meridian_longitude: " << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJECTED_CS_TYPE_GEO_KEY: // key 3072 Section 6.3.3.1 codes
-         {
-            out << prefix << "pcs_code: " << code << "\n";
-            break;
-         }
-
-         case ossim::OPCS_CITATION_GEO_KEY: // key 3073 ascii
-         {
-            if (tag == 34737) // using ascii array
-            {
-               if (geoAsciiBlock && ((code + count) <= geoAsciiLength))
-               {
-                  std::string s;
-                  int i = 0;
-                  while (i < count)
-                  {
-                     s.push_back(geoAsciiBlock[code + i]);
-                     ++i;
-                  }
-                  out << prefix << "pcs_citation: \"\"\"" << s << "\"\"\"\n";
-               }
+               printRasterType(out, prefix, code);
+               break;
             }
 
-            break;
-         }
-
-         case ossim::OPROJECTION_GEO_KEY: // key 3074 Section 6.3.3.2 codes
-         {
-            out << prefix << "proj_code: " << code << "\n";
-            break;
-         }
-
-         case ossim::OPROJ_COORD_TRANS_GEO_KEY: // key 3075 Section 6.3.3.3 codes
-         {
-            out << prefix << COORD_TRANS_CODE_KW << ": " << code << "\n";
-            printCoordTrans(out, prefix, code);
-            break;
-         }
-
-         case ossim::OPROJ_LINEAR_UNITS_GEO_KEY: // key 3076 Section 6.3.1.3 codes
-         {
-            out << prefix << "linear_units_code: " << code << "\n";
-            printLinearUnits(out, prefix, std::string("linear_units"), code);
-            break;
-         }
-
-         case ossim::OPROJ_LINEAR_UNIT_SIZE_GEO_KEY: // key 3077 meters Section 6.2.3
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << "linear_units_size: " << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_STD_PARALLEL1_GEO_KEY: // key 3078
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix
-                      << ossimKeywordNames::STD_PARALLEL_1_KW << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_STD_PARALLEL2_GEO_KEY: // key 3079
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix
-                      << ossimKeywordNames::STD_PARALLEL_2_KW << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_NAT_ORIGIN_LONG_GEO_KEY: // key 3080
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << ORIGIN_LONGITUDE_KW << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_NAT_ORIGIN_LAT_GEO_KEY: // key 3081
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << ORIGIN_LATITUDE_KW << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_FALSE_EASTING_GEO_KEY: // key 3082
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix
-                      << ossimKeywordNames::FALSE_EASTING_KW << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_FALSE_NORTHING_GEO_KEY: // key 3083
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix
-                      << ossimKeywordNames::FALSE_NORTHING_KW
-                      << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_FALSE_ORIGIN_LONG_GEO_KEY: // key 3084
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix
-                      << FALSE_ORIGIN_LONGITUDE_KW << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_FALSE_ORIGIN_LAT_GEO_KEY: // key 3085
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix
-                      << FALSE_ORIGIN_LATITUDE_KW << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_FALSE_ORIGIN_EASTING_GEO_KEY: // key 3086
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix
-                      << FALSE_ORIGIN_EASTING_KW << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_FALSE_ORIGIN_NORTHING_GEO_KEY: // key 3087
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix
-                      << FALSE_ORIGIN_NORTHING_KW << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_CENTER_LONG_GEO_KEY: // key 3088
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << "center_longitude: "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_CENTER_LAT_GEO_KEY: // key 3089
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << "center_latitude: "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OPROJ_SCALE_AT_NAT_ORIGIN_GEO_KEY: // key 3092
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << ossimKeywordNames::SCALE_FACTOR_KW
-                      << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-         case ossim::OPROJ_SCALE_AT_CENTER_GEO_KEY: // key 3093
-         {
-            if (tag == 34736) // using double array
-            {
-               // Code is index into array.
-               if (geoDoubleBlock && (code < geoDoubleLength))
-               {
-                  // Always count of one.
-                  out << prefix << ossimKeywordNames::SCALE_FACTOR_KW
-                      << ": "
-                      << geoDoubleBlock[code] << "\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OVERTICAL_CITATION_GEO_KEY: // key 4097
-         {
-            if (tag == 34737) // using ascii array
-            {
-               if (geoAsciiBlock && ((code + count) <= geoAsciiLength))
-               {
-                  std::string s;
-                  int i = 0;
-                  while (i < count)
-                  {
-                     s.push_back(geoAsciiBlock[code + i]);
-                     ++i;
-                  }
-                  out << prefix << "vertical_citation: \"\"\"" << s << "\"\"\"\n";
-               }
-            }
-            break;
-         }
-
-         case ossim::OVERTICAL_UNITS_GEO_KEY: // key 4099  Section 6.3.1.3 Codes
-         {
-            out << prefix << "vertical_units_code: " << code << "\n";
-            printLinearUnits(out, prefix, VERTICAL_UNITS_KW, code);
-            break;
-         }
-
-         default:
-         {
-            if (key > 1)
+            case ossim::OGT_CITATION_GEO_KEY: // key 1026
             {
                if (tag == 34737) // using ascii array
                {
@@ -3087,16 +2631,484 @@ std::ostream &ossimTiffInfo::printGeoKeys(
                         s.push_back(geoAsciiBlock[code + i]);
                         ++i;
                      }
-                     out << prefix << "key_" << key << ": \"\"\"" << s << "\"\"\"\n";
+                     out << prefix << "citation: \"\"\"" << s << "\"\"\"\n";
                   }
                }
-               else
-               {
-                  out << prefix << "unhandle_key: " << key << "\n";
-               }
+               break;
             }
-            break;
-         }
+
+            case ossim::OGEOGRAPHIC_TYPE_GEO_KEY: // key 2048  Section 6.3.2.1 Codes
+            {
+               out << prefix << ossimKeywordNames::GCS_CODE_KW << ": "
+                   << code << "\n";
+               break;
+            }
+
+            case ossim::OGEOG_CITATION_GEO_KEY: // key 2049
+            {
+               if (tag == 34737) // using ascii array
+               {
+                  if (geoAsciiBlock && ((code + count) <= geoAsciiLength))
+                  {
+                     std::string s;
+                     int i = 0;
+                     while (i < count)
+                     {
+                        s.push_back(geoAsciiBlock[code + i]);
+                        ++i;
+                     }
+                     out << prefix << "geographic_citation: \"\"\"" << s << "\"\"\"\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OGEOG_GEODETIC_DATUM_GEO_KEY: // key 2050 Section 6.3.2.2 Codes
+            {
+               out << prefix << GEODETIC_DATUM_KW << ": " << code << "\n";
+               break;
+            }
+
+            case ossim::OGEOG_PRIME_MERIDIAN_GEOKEY: // key 2051 Section 6.3.2.4 Codes
+            {
+               out << prefix << "prime_meridian_code: " << code << "\n";
+               break;
+            }
+
+            case ossim::OGEOG_LINEAR_UNITS_GEO_KEY: // key 2052  Section 6.3.1.3 Codes
+            {
+               out << prefix << "linear_units_code: " << code << "\n";
+               printLinearUnits(out, prefix, LINEAR_UNITS_KW, code);
+               break;
+            }
+
+            case ossim::OGEOG_ANGULAR_UNITS_GEO_KEY: // key 2054  Section 6.3.1.4 Codes
+            {
+               out << prefix << "angular_units_code: " << code << "\n";
+               printAngularUnits(out, prefix, code);
+               break;
+            }
+
+            case ossim::OGEOG_ANGULAR_UNIT_SIZE_GEO_KEY: // key 2055 Size in radians Section 6.2.2
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << "angular_units_size_radians: "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OGEOG_ELLIPSOID_GEO_KEY: // key 2056  Section 6.3.23 Codes
+            {
+               out << prefix << "ellipsoid_code: " << code << "\n";
+               break;
+            }
+
+            case ossim::OGEOG_SEMI_MAJOR_AXIS: // key 2057
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << "semi_major_axis: " << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OGEOG_SEMI_MINOR_AXIS: // key 2058
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << "semi_minor_axis: " << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OGEOG_INV_FLATTENING_GEO_KEY: // key 2059 ratio Section 6.2.2
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << "inverse_flattening_ratio: " << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OGEOG_PRIME_MERIDIAN_LONG_GEO_KEY: // key 2061 GeogAngularUnit Section 6.2.2
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << "prime_meridian_longitude: " << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJECTED_CS_TYPE_GEO_KEY: // key 3072 Section 6.3.3.1 codes
+            {
+               out << prefix << "pcs_code: " << code << "\n";
+               break;
+            }
+
+            case ossim::OPCS_CITATION_GEO_KEY: // key 3073 ascii
+            {
+               if (tag == 34737) // using ascii array
+               {
+                  if (geoAsciiBlock && ((code + count) <= geoAsciiLength))
+                  {
+                     std::string s;
+                     int i = 0;
+                     while (i < count)
+                     {
+                        s.push_back(geoAsciiBlock[code + i]);
+                        ++i;
+                     }
+                     out << prefix << "pcs_citation: \"\"\"" << s << "\"\"\"\n";
+                  }
+               }
+
+               break;
+            }
+
+            case ossim::OPROJECTION_GEO_KEY: // key 3074 Section 6.3.3.2 codes
+            {
+               out << prefix << "proj_code: " << code << "\n";
+               break;
+            }
+
+            case ossim::OPROJ_COORD_TRANS_GEO_KEY: // key 3075 Section 6.3.3.3 codes
+            {
+               out << prefix << COORD_TRANS_CODE_KW << ": " << code << "\n";
+               printCoordTrans(out, prefix, code);
+               break;
+            }
+
+            case ossim::OPROJ_LINEAR_UNITS_GEO_KEY: // key 3076 Section 6.3.1.3 codes
+            {
+               out << prefix << "linear_units_code: " << code << "\n";
+               printLinearUnits(out, prefix, std::string("linear_units"), code);
+               break;
+            }
+
+            case ossim::OPROJ_LINEAR_UNIT_SIZE_GEO_KEY: // key 3077 meters Section 6.2.3
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << "linear_units_size: " << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_STD_PARALLEL1_GEO_KEY: // key 3078
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix
+                         << ossimKeywordNames::STD_PARALLEL_1_KW << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_STD_PARALLEL2_GEO_KEY: // key 3079
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix
+                         << ossimKeywordNames::STD_PARALLEL_2_KW << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_NAT_ORIGIN_LONG_GEO_KEY: // key 3080
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << ORIGIN_LONGITUDE_KW << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_NAT_ORIGIN_LAT_GEO_KEY: // key 3081
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << ORIGIN_LATITUDE_KW << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_FALSE_EASTING_GEO_KEY: // key 3082
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix
+                         << ossimKeywordNames::FALSE_EASTING_KW << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_FALSE_NORTHING_GEO_KEY: // key 3083
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix
+                         << ossimKeywordNames::FALSE_NORTHING_KW
+                         << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_FALSE_ORIGIN_LONG_GEO_KEY: // key 3084
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix
+                         << FALSE_ORIGIN_LONGITUDE_KW << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_FALSE_ORIGIN_LAT_GEO_KEY: // key 3085
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix
+                         << FALSE_ORIGIN_LATITUDE_KW << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_FALSE_ORIGIN_EASTING_GEO_KEY: // key 3086
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix
+                         << FALSE_ORIGIN_EASTING_KW << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_FALSE_ORIGIN_NORTHING_GEO_KEY: // key 3087
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix
+                         << FALSE_ORIGIN_NORTHING_KW << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_CENTER_LONG_GEO_KEY: // key 3088
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << "center_longitude: "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_CENTER_LAT_GEO_KEY: // key 3089
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << "center_latitude: "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OPROJ_SCALE_AT_NAT_ORIGIN_GEO_KEY: // key 3092
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << ossimKeywordNames::SCALE_FACTOR_KW
+                         << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+            case ossim::OPROJ_SCALE_AT_CENTER_GEO_KEY: // key 3093
+            {
+               if (tag == 34736) // using double array
+               {
+                  // Code is index into array.
+                  if (geoDoubleBlock && (code < geoDoubleLength))
+                  {
+                     // Always count of one.
+                     out << prefix << ossimKeywordNames::SCALE_FACTOR_KW
+                         << ": "
+                         << geoDoubleBlock[code] << "\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OVERTICAL_CS_TYPE_GEO_KEY: // key 4096  Section 6.3.4.1 Codes
+            {
+               out << prefix << "vertical_cs_type_code: " << code << "\n";
+               break;
+            }
+
+            case ossim::OVERTICAL_CITATION_GEO_KEY: // key 4097
+            {
+               if (tag == 34737) // using ascii array
+               {
+                  if (geoAsciiBlock && ((code + count) <= geoAsciiLength))
+                  {
+                     std::string s;
+                     int i = 0;
+                     while (i < count)
+                     {
+                        s.push_back(geoAsciiBlock[code + i]);
+                        ++i;
+                     }
+                     out << prefix << "vertical_citation: \"\"\"" << s << "\"\"\"\n";
+                  }
+               }
+               break;
+            }
+
+            case ossim::OVERTICAL_DATUM_GEO_KEY: // key 4098  Section 6.3.4.2 Codes
+            {
+               out << prefix << "vertical_datum_code: " << code << "\n";
+               break;
+            }
+
+            case ossim::OVERTICAL_UNITS_GEO_KEY: // key 4099  Section 6.3.1.3 Codes
+            {
+               out << prefix << "vertical_units_code: " << code << "\n";
+               printLinearUnits(out, prefix, VERTICAL_UNITS_KW, code);
+               break;
+            }
+
+            default:
+            {
+               if (key > 1)
+               {
+                  if (tag == 34737) // using ascii array
+                  {
+                     if (geoAsciiBlock && ((code + count) <= geoAsciiLength))
+                     {
+                        std::string s;
+                        int i = 0;
+                        while (i < count)
+                        {
+                           s.push_back(geoAsciiBlock[code + i]);
+                           ++i;
+                        }
+                        out << prefix << "key_" << key << ": \"\"\"" << s << "\"\"\"\n";
+                     }
+                  }
+                  else
+                  {
+                     out << prefix << "unhandle_key: " << key << "\n";
+                  }
+               }
+               break;
+            }
 
          } // matches: switch(key)
 
