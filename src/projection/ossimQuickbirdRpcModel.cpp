@@ -314,19 +314,19 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
       if (findSupportFile(rpcFile)) break;
 
       // SkySat or BlackSky images - START
-      ossimFilename foo1 = rpcFile.noExtension().append( "_rpc.txt" );
+      ossimFilename blackSkyRPC = rpcFile.noExtension().append( "_rpc.txt" );
 
-      if (findSupportFile(foo1)) {
+      if (findSupportFile(blackSkyRPC)) {
          // std::cout << "HERE: Found BlackSky" << std::endl;
-         rpcFile = foo1;
+         rpcFile = blackSkyRPC;
          break;
       }
 
-      ossimFilename foo2 = rpcFile.noExtension().append( "_RPC.TXT" );
+      ossimFilename skySatRPC = rpcFile.before("_file_format").append( "_RPC.TXT" );
 
-      if (findSupportFile(foo2)) {
+      if (findSupportFile(skySatRPC)) {
          // std::cout << "HERE: Found SkySat" << std::endl;
-         rpcFile = foo2;
+         rpcFile = skySatRPC;
          break;
       }
       // SkySat or BlackSky images - END
