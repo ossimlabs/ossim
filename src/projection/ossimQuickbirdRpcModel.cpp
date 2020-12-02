@@ -313,6 +313,24 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
       rpcFile.setExtension("XML");
       if (findSupportFile(rpcFile)) break;
 
+      // SkySat or BlackSky images - START
+      ossimFilename foo1 = rpcFile.noExtension().append( "_rpc.txt" );
+
+      if (findSupportFile(foo1)) {
+         // std::cout << "HERE: Found BlackSky" << std::endl;
+         rpcFile = foo1;
+         break;
+      }
+
+      ossimFilename foo2 = rpcFile.noExtension().append( "_RPC.TXT" );
+
+      if (findSupportFile(foo2)) {
+         // std::cout << "HERE: Found SkySat" << std::endl;
+         rpcFile = foo2;
+         break;
+      }
+      // SkySat or BlackSky images - END
+
       return false;
    }
 
@@ -320,9 +338,11 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
    m_qbRpcHeader = std::make_shared<ossimQuickbirdRpcHeader>();
    if (!m_qbRpcHeader->open(rpcFile))
    {
+      // std::cout << "HERE: Cannot Open: " << rpcFile << std::endl;
       m_qbRpcHeader = 0;
       return false;
    }
+
 
    if (m_qbRpcHeader->isAPolynomial())
       thePolyType = A;
