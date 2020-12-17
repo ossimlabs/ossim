@@ -106,6 +106,10 @@ ENDIF(NOT OSSIM_INCLUDE_DIR)
 #   SET(OSSIMQT_LIBRARY "ossimQt" CACHE STRING "Caching" FORCE)
 #ENDIF(NOT OSSIMQT_LIBRARY)
 
+
+################## Add required deps ##################
+add_subdirectory(${OSSIM_DEV_HOME}/geotrans ${CMAKE_CURRENT_BINARY_DIR}/geotrans)
+
 ############################### Add subdirectories to build based on BUILD variables and presence of repo ###########################
 add_subdirectory(${OSSIM_HOME} ${CMAKE_CURRENT_BINARY_DIR}/ossim)
 
