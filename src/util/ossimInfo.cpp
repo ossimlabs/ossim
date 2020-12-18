@@ -20,12 +20,14 @@
 #include <ossim/base/ossimDatum.h>
 #include <ossim/base/ossimDatumFactoryRegistry.h>
 #include <ossim/base/ossimDrect.h>
+#include <ossim/base/ossimEnvironmentUtility.h>
 #include <ossim/base/ossimFontInformation.h>
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <ossim/base/ossimEcefPoint.h>
 #include <ossim/base/ossimEllipsoid.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimGeoid.h>
 #include <ossim/base/ossimGeoidManager.h>
 #include <ossim/base/ossimGpt.h>
 #include <ossim/base/ossimNotify.h>
@@ -61,6 +63,7 @@ static const char BUILD_DATE_KW[]           = "build_date";
 static const char CAN_OPEN_KW[]             = "can_open";
 static const char CENTER_GROUND_KW[]        = "center_ground";
 static const char CENTER_IMAGE_KW[]         = "center_image";
+static const char CHECK_CONFIG_KW[]         = "check_config";
 static const char CONFIGURATION_KW[]        = "configuration";
 static const char DATUMS_KW[]               = "datums";
 static const char DEG2RAD_KW[]              = "deg2rad";
@@ -146,6 +149,8 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    au->addCommandLineOption("--can-open", "return can_open: true or can_open: false");
 
    au->addCommandLineOption("--cg", "Will print out ground center.");
+
+   au->addCommandLineOption("--check-config", "Checks configuration.");
 
    au->addCommandLineOption("--ci", "Will print out image center.");
 
@@ -348,6 +353,15 @@ bool ossimInfo::initialize(ossimArgumentParser& ap)
          }
       }
 
+      if( ap.read("--check-config") )
+      {
+         m_kwl.addPair( CHECK_CONFIG_KW, TRUE_KW );
+         if ( ap.argc() < 2 )
+         {
+            break;
+         }
+      }
+      
       if( ap.read("--ci") )
       {
          m_kwl.add( CENTER_IMAGE_KW, TRUE_KW );
@@ -863,6 +877,16 @@ bool ossimInfo::execute()
             getBuildDate( value.string() );
             ossimNotify(ossimNotifyLevel_INFO)
             << BUILD_DATE_KW << ": " << value << "\n";
+         }
+
+         value = m_kwl.findKey( std::string(CHECK_CONFIG_KW) );
+         if ( value.size() )
+         {
+            ++consumedKeys;
+            if ( ossimString(value).toBool() == true )
+            {
+               checkConfig( ossimNotify(ossimNotifyLevel_INFO) );
+            }
          }
 
          lookup = m_kwl.find(CONFIGURATION_KW);
@@ -2974,6 +2998,20 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
    // Capture the original flags.
    std::ios_base::fmtflags f = out.flags();
    
+   ossimKeywordlist kwl;
+   getHeight( gpt, kwl, std::string("") ); // no prefix
+   out << kwl << std::endl;
+   
+   // Reset flags.
+   out.setf(f);
+   
+   return out;
+}
+
+void ossimInfo::getHeight( const ossimGpt& gpt,
+                           ossimKeywordlist& kwl,
+                           const std::string& prefix ) const
+{
    // Handle wrap conditions.
    ossimGpt copyGpt = gpt;
    copyGpt.wrap();
@@ -2982,7 +3020,7 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
    ossim_float64 hgtAboveEllipsoid = ossim::nan();
    ossim_float64 geoidOffset = ossim::nan();
    std::string geoidName = "not_found";
-   
+
    ossimFilename cellFilename;
    ossimElevManager::instance()->getCellFilenameForPoint( copyGpt, cellFilename );
    if ( cellFilename.empty() )
@@ -3017,7 +3055,7 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
       {
          geoidOffset = geoid->offsetFromEllipsoid(copyGpt);
          geoidName = geoid->getShortName().string();
-         
+
          if ( ossim::isnan( hgtAboveEllipsoid ) )
          {
             hgtAboveEllipsoid = geoidOffset;
@@ -3025,97 +3063,15 @@ std::ostream& ossimInfo::outputHeight(const ossimGpt& gpt, std::ostream& out) co
       }
    }
 
-   out << "elevation.info.cell: " << cellFilename
-       << "\nelevation.info.gpt: " << copyGpt.toString()
-       << "\nelevation.info.geoid_name: " << geoidName
-       << "\nelevation.info.geoid_offset: " << std::setprecision(15) << geoidOffset
-       << "\nelevation.info.height_above_msl: " << hgtAboveMsl
-       << "\nelevation.info.height_above_ellipsoid: " << hgtAboveEllipsoid
-       << "\n";
-
-   // Reset flags.
-   out.setf(f);
-
-   return out;
-   
-#if 0
-   // Capture the original flags.
-   std::ios_base::fmtflags f = out.flags();
-
-   // Handle wrap conditions.
-   ossimGpt copyGpt = gpt;
-   copyGpt.wrap();
-
-   ossim_float64 hgtAboveMsl = ossimElevManager::instance()->getHeightAboveMSL(copyGpt);
-   ossim_float64 hgtAboveEllipsoid =
-         ossimElevManager::instance()->getHeightAboveEllipsoid(copyGpt);
-   ossim_float64 geoidOffset = ossimGeoidManager::instance()->offsetFromEllipsoid(copyGpt);
-   ossim_float64 mslOffset = 0.0;
-
-   if(ossim::isnan(hgtAboveEllipsoid)||ossim::isnan(hgtAboveMsl))
-   {
-      mslOffset = ossim::nan();
-   }
-   else
-   {
-      mslOffset = hgtAboveEllipsoid - hgtAboveMsl;
-   }
-
-   std::vector<ossimFilename> cellList;
-   ossimElevManager::instance()->getOpenCellList(cellList);
-
-   if (!cellList.empty())
-   {
-      out << "Opened cell:            " << cellList[0] << "\n";
-   }
-   else
-   {
-      out << "Did not find cell for point: " << gpt << "\n";
-   }
-
-   out << "MSL to ellipsoid delta: ";
-   if (!ossim::isnan(mslOffset))
-   {
-      out << std::setprecision(15) << mslOffset;
-   }
-   else
-   {
-      out << "nan";
-   }
-   out << "\nHeight above MSL:       ";
-   if (!ossim::isnan(hgtAboveMsl))
-   {
-      out << std::setprecision(15) << hgtAboveMsl;
-   }
-   else
-   {
-      out << "nan";
-   }
-   out << "\nHeight above ellipsoid: ";
-   if (!ossim::isnan(hgtAboveEllipsoid))
-   {
-      out << std::setprecision(15) << hgtAboveEllipsoid << "\n";
-   }
-   else
-   {
-      out << "nan" << "\n";
-   }
-   out << "Geoid value:            ";
-
-   if (!ossim::isnan(geoidOffset))
-   {
-      out << std::setprecision(15) << geoidOffset << std::endl;
-   }
-   else
-   {
-      out << "nan" << std::endl;
-   }
-
-   // Reset flags.
-   out.setf(f);
-
-   return out;
-#endif
+   kwl.addPair( prefix, std::string("elevation.info.cell"), cellFilename.string() );
+   kwl.addPair( prefix, std::string("elevation.info.gpt"), copyGpt.toString().string() );
+   kwl.addPair( prefix, std::string("elevation.info.geoid_name"), geoidName );
+   kwl.addPair( prefix, std::string("elevation.info.geoid_offset"),
+                ossimString::toString(geoidOffset).string() );
+   kwl.addPair( prefix, std::string("elevation.info.height_above_msl"),
+                ossimString::toString(hgtAboveMsl).string() );
+   kwl.addPair( prefix, std::string("elevation.info.height_above_ellipsoid"),
+                ossimString::toString(hgtAboveEllipsoid).string() );
 }
 
 void ossimInfo::printExtensions() const
@@ -3487,4 +3443,227 @@ bool ossimInfo::keyIsTrue( const std::string& key ) const
       result = ossimString(value).toBool();
    }
    return result;
+}
+
+void ossimInfo::checkConfig() const
+{
+   checkConfig( ossimNotify(ossimNotifyLevel_INFO) );
+}
+
+std::ostream& ossimInfo::checkConfig(std::ostream& out) const
+{
+   // Check some common environment variables:
+   out << "\nChecking some common environment variables...\n\n";
+   
+   ossimString key = "OSSIM_PREFS_FILE";
+   ossimString envVar = ossimEnvironmentUtility::instance()->
+      getEnvironmentVariable( key );
+   if ( envVar.size() )
+   {
+      out << key << " = " << envVar << "\n";
+   }
+   else
+   {
+      out << key << " is NOT set!\n";
+   }
+
+   key = "OSSIM_DATA";
+   envVar = ossimEnvironmentUtility::instance()->getEnvironmentVariable( key );
+   if ( envVar.size() )
+   {
+      out << key << " = " << envVar << "\n";
+   }
+   else
+   {
+      out << key << " is NOT set!\n";
+   }
+
+   key = "OSSIM_INSTALL_PREFIX";
+   envVar = ossimEnvironmentUtility::instance()->getEnvironmentVariable( key );
+   if ( envVar.size() )
+   {
+      out << key << " = " << envVar << "\n";
+   }
+   else
+   {
+      out << key << " is NOT set!\n";
+   }
+   
+    // Check for an ossim preferences file:
+    out << "\nChecking for ossim prefences file...\n\n";
+
+    ossimFilename prefs = ossimPreferences::instance()->getPreferencesFilename();
+    if ( prefs.exists() == true )
+    {
+       out << "Preferences file loaded:\n" << prefs << "\n";
+   }
+   else
+   {
+      out << "ERROR: ossim preferences file does NOT exists!\n"
+          << "Set environment variable OSSIM_PREFS_FILE to point to a valid ossim preferences\n"
+          << "or use the \"-P <pref_file>\" option on any ossim command line app to override\n"
+          << "the environment variable.\n"
+          << "Notes:\n"
+          << "1) There is a template in:\n"
+          << "   ossim_install_dir/share/ossim/ossim-preferences-template\n"
+          << "   This can be used to create an ossim-site-preferences file.\n"
+          << "2) The \"-P <pref_file>\" option is very useful at troubleshooting a new\n"
+          << "   ossim preferences file.\n";
+
+     
+   }
+
+   out << "\nChecking for plugins...\n\n";
+
+   ossim_uint32 count = ossimSharedPluginRegistry::instance()->getNumberOfPlugins();
+   if ( count )
+   {
+      out << "Plugins loaded:\n";
+      for(ossim_uint32 index = 0; index < count; ++index)
+      {
+         std::vector<ossimString> classNames;
+         const ossimPluginLibrary* pi = ossimSharedPluginRegistry::instance()->getPlugin(index);
+         if(pi)
+         {
+            out << "plugin[" << index << "]: " << pi->getName() << "\n";
+         }
+      }
+   }
+   else
+   {
+      out << "WARNING: No plugins loaded!\n"
+          << "Notes:\n"
+          << "1) The plugins are set in the ossim preferences file.\n"
+          << "2) Typical plugin line references the environment variable OSSIM_INSTALL_PREFIX.\n"
+          << "   If so, make sure that is set.\n";
+   }
+   
+   out << "\nChecking for geoids...\n\n";
+   
+   count = ossimGeoidManager::instance()->getNumberOfGeoids();
+   if ( count )
+   {
+      out << "Geoids loaded:\n";
+      for ( ossim_uint32 index = 0; index < count; ++index )
+      {
+         ossimRefPtr<ossimGeoid> geoid = ossimGeoidManager::instance()->getGeoid( index );
+         if ( geoid.valid() )
+         {
+            out << "geoid[" << index << "] " << geoid->getShortName() << "\n";
+         }
+         else
+         {
+            out << "geoid[" << index << "] is NULL!\n";
+         }
+      }
+   }
+   else
+   {
+      out << "\nThere are no geoids loaded!\n"
+          << "Typical elevation sources, e.g. DTED, are relative to some geoid.\n";
+   }
+   
+   out << "\nChecking for elevation databases...\n\n";
+   count = ossimElevManager::instance()->getNumberOfElevationDatabases();
+   if ( count )
+   {
+      out << "elevation sources loaded:\n";
+      for ( ossim_uint32 index = 0; index < count; ++index )
+      {
+         const ossimElevationDatabase* edb = ossimElevManager::instance()->getElevationDatabase( index );
+         if ( edb )
+         {
+            ossimFilename f = edb->getConnectionString();
+            out << "elevation_source[" << index << "].connetion_string: " << f << "\n";
+            if ( f.exists() == false )
+            {
+               out << "\nWARNING: " << f << " doesn NOT exists!\n"
+                   << "Correct the path, or disable this elevation source in the ossim prefences "
+                   << "file.\n\n";
+            }
+         }
+         else
+         {
+            out << "\nelevation_source[" << index << "] is NULL!\n";
+         }
+      }
+
+      out << "\nTesting some elevation points...\n";
+
+      ossimKeywordlist kwl;
+
+      std::string prefix = "denver_airport_us.";
+      ossimGpt gpt(39.850929, -104.696613, 0.0);
+      getHeight( gpt, kwl, prefix );
+      
+      prefix = "dulles_airport_us.";
+      gpt.lat = 38.938116;
+      gpt.lon = -77.459796;
+      getHeight( gpt, kwl, prefix );
+
+      prefix = "hobart_airport_tasmania.";
+      gpt.lat = -42.82896;
+      gpt.lon = 147.50203;
+      getHeight( gpt, kwl, prefix );
+
+      prefix = "changjin_afb_north_korea.";
+      gpt.lat = 40.36444;
+      gpt.lon = 127.26422;
+      getHeight( gpt, kwl, prefix );
+
+      prefix = "wuhan_airport_china.";
+      gpt.lat = 30.77235;
+      gpt.lon = 114.196525;
+      getHeight( gpt, kwl, prefix );
+
+#if 0
+      prefix = "mount_everest.";
+      gpt.lat = 27.988055555555558;
+      gpt.lon = 86.925277777777779;
+      getHeight( gpt, kwl, prefix );
+#endif
+
+      prefix = "aleppo_airport_syria.";
+      gpt.lat = 36.17915;
+      gpt.lon = 37.24014;
+      getHeight( gpt, kwl, prefix );
+
+      prefix = "mehrabad_airport_iran.";
+      gpt.lat = 35.694610;
+      gpt.lon = 51.291831;
+      getHeight( gpt, kwl, prefix );
+
+      prefix = "jalalabad_afghanistan.";
+      gpt.lat = 34.429708;
+      gpt.lon = 70.451630;      ;
+      getHeight( gpt, kwl, prefix );
+
+      prefix = "buur_hakaba_somalia.";
+      gpt.lat = 2.79716;
+      gpt.lon = 44.07852;
+      getHeight( gpt, kwl, prefix );
+      
+      prefix = "atlantic_ocean.";
+      gpt.lat = 22.82;
+      gpt.lon = -21.74;
+      getHeight( gpt, kwl, prefix );
+
+      prefix = "placetas_cuba.";
+      gpt.lat = 22.32002;
+      gpt.lon = -79.65626;
+      getHeight( gpt, kwl, prefix );
+
+      prefix = "bogota_columbia.";
+      gpt.lat = 4.70044;
+      gpt.lon = -74.01521;
+      getHeight( gpt, kwl, prefix );
+
+      out << "\n" << kwl << "\n";
+   }
+   else
+   {
+      out << "There are no elevation sources loaded!\n";
+   }
+
+   return out;
 }

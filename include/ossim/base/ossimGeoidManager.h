@@ -84,6 +84,17 @@ public:
    */
    virtual void clear();
 
+   /** @return The number of geoids loaded. */
+   ossim_uint32 getNumberOfGeoids() const;
+
+   /**
+    * @brief Gets the geoid for index.
+    * @param index
+    * @return ossimRefPtr<ossimGeoid> which can hold null pointer if the index
+    * is out of range or no geoids loaded.
+    */
+   ossimRefPtr<ossimGeoid> getGeoid( ossim_uint32 index );
+
 private:
    /**
     *  Private constructor.  Use "instance" method.
