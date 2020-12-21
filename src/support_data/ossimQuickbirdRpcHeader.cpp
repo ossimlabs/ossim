@@ -89,8 +89,11 @@ bool ossimQuickbirdRpcHeader::open(const ossimFilename& file)
    ossimString line = test;
    line = line.upcase();
    
+   // std::cout << "HERE: parse" << std::endl;
+
    if(parseNameValue(line))
-   {
+   {      
+
       theErrorStatus = ossimErrorCodes::OSSIM_OK;
       getline(in, line);
       while((in)&&(theErrorStatus == ossimErrorCodes::OSSIM_OK))
@@ -373,6 +376,103 @@ bool ossimQuickbirdRpcHeader::parseNameValue(const ossimString& line)
    else if(lineCopy.contains("END"))
    {
    }
+   // SkySat or BlackSky images - START
+   else if(lineCopy.contains("HEIGHT_OFF"))
+   {
+      lineCopy = lineCopy.after(":");
+      theHeightOffset = lineCopy.before("\n").toDouble();
+   }
+   else if(lineCopy.contains("HEIGHT_SCALE"))
+   {
+      lineCopy = lineCopy.after(":");
+      theHeightScale = lineCopy.before("\n").toDouble();
+   }
+   else if(lineCopy.contains("LAT_OFF"))
+   {
+      lineCopy = lineCopy.after(":");
+      theLatOffset = lineCopy.before("\n").toDouble();
+   }
+   else if(lineCopy.contains("LAT_SCALE"))
+   {
+      lineCopy = lineCopy.after(":");
+      theLatScale = lineCopy.before("\n").toDouble();
+   }
+   else if(lineCopy.contains("LINE_OFF"))
+   {
+      lineCopy = lineCopy.after(":");
+      theLineOffset = lineCopy.before("\n").toInt();
+   }
+   else if(lineCopy.contains("LINE_SCALE"))
+   {
+      lineCopy = lineCopy.after(":");
+      theLineScale = lineCopy.before("\n").toDouble();
+   }
+   else if(lineCopy.contains("LONG_OFF"))
+   {
+      lineCopy = lineCopy.after(":");
+      theLonOffset = lineCopy.before("\n").toDouble();
+   }
+   else if(lineCopy.contains("LONG_SCALE"))
+   {
+      lineCopy = lineCopy.after(":");
+      theLonScale = lineCopy.before("\n").toDouble();
+   }
+   else if(lineCopy.contains("SAMP_OFF"))
+   {
+      lineCopy = lineCopy.after(":");
+      theSampOffset = lineCopy.before("\n").toInt();
+   }
+   else if(lineCopy.contains("SAMP_SCALE"))
+   {
+      lineCopy = lineCopy.after(":");
+      theSampScale = lineCopy.before("\n").toDouble();
+   }
+   else if(lineCopy.contains("LINE_DEN_COEFF"))
+   {
+      ossimString label = lineCopy.before(":");
+      int index = label.explode("_").back().toInt() - 1;
+      double coeff = lineCopy.after(":").before("\n").toDouble();
+
+      // std::cout << "HERE: " << label.substr(0, label.find_last_of('_')) << "(" << index << ")" << "=" << coeff << std::endl;
+
+      //theLineDenCoeff[index] = coeff;
+      theLineDenCoeff.push_back(coeff);
+
+   }
+   else if(lineCopy.contains("LINE_NUM_COEFF"))
+   {
+      ossimString label = lineCopy.before(":");
+      int index = label.explode("_").back().toInt() - 1;
+      double coeff = lineCopy.after(":").before("\n").toDouble();
+
+      // std::cout << "HERE: " << label.substr(0, label.find_last_of('_')) << "(" << index << ")" << "=" << coeff << std::endl;
+
+      // theLineNumCoeff[index] = coeff;
+      theLineNumCoeff.push_back(coeff);
+   }
+   else if(lineCopy.contains("SAMP_DEN_COEFF"))
+   {
+      ossimString label = lineCopy.before(":");
+      int index = label.explode("_").back().toInt() - 1;
+      double coeff = lineCopy.after(":").before("\n").toDouble();
+
+      // std::cout << "HERE: " << label.substr(0, label.find_last_of('_')) << "(" << index << ")" << "=" << coeff << std::endl;
+
+      // theSampDenCoeff[index] = coeff;
+      theSampDenCoeff.push_back(coeff);
+   }
+   else if(lineCopy.contains("SAMP_NUM_COEFF"))
+   {
+      ossimString label = lineCopy.before(":");
+      int index = label.explode("_").back().toInt() - 1;
+      double coeff = lineCopy.after(":").before("\n").toDouble();
+
+      // std::cout << "HERE: " << label.substr(0, label.find_last_of('_')) << "(" << index << ")" << "=" << coeff << std::endl;
+
+      // theSampNumCoeff[index] = coeff;
+      theSampNumCoeff.push_back(coeff);
+   }
+   // SkySat or BlackSky images - END
    else
    {
       result = false;

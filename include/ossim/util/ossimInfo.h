@@ -371,6 +371,16 @@ public:
     */
    bool isImageEntryOverview() const;
 
+   /** @brief Checks configuration. */
+   void checkConfig() const;
+
+   /**
+    * @brief Checks configuration.
+    * @param out Output to write to.
+    * @return stream
+    */
+   std::ostream& checkConfig(std::ostream& out) const;
+
    /** @brief Dumps ossim preferences/configuration data. */
    void printConfiguration() const;
 
@@ -460,6 +470,16 @@ public:
     * @param gpt Ground point.
     */
    void outputHeight(const ossimGpt& gpt) const;
+
+   /**
+    * @brief Gets the height for ground point (latitude, longitude).
+    * @param gpt Ground point for requested height.
+    * @param kwl Initialized by this with height.
+    * @param prefix Optional prefix.
+    */
+   void getHeight(const ossimGpt& gpt,
+                  ossimKeywordlist& kwl,
+                  const std::string& prefix) const;
 
    /**
     * @brief Gets the height for ground point (latitude, longitude). Outputs

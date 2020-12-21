@@ -9,13 +9,6 @@
 // $Id$
 //----------------------------------------------------------------------------
 
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <cassert>
-
-using namespace std;
-
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/projection/ossimWktProjectionFactory.h>
@@ -25,6 +18,14 @@ using namespace std;
 #include <ossim/projection/ossimMercatorProjection.h>
 #include <ossim/projection/ossimLambertConformalConicProjection.h>
 #include <ossim/projection/ossimUtmProjection.h>
+#include <ossim/support_data/ossimWkt.h>
+
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <cassert>
+
+using namespace std;
 
 static const char* P1 = "PROJCS[\"NAD_1983_HARN_Lambert_Conformal_Conic\",\
 GEOGCS[\"GCS_North_American_1983_HARN\",DATUM[\"NAD83_High_Accuracy_Regional_Network\",\
@@ -73,6 +74,8 @@ PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Merc
 PARAMETER[\"False_Easting\",0],PARAMETER[\"False_Northing\",0],PARAMETER[\"Central_Meridian\",0],\
 PARAMETER[\"latitude_of_origin\",0],UNIT[\"Meter\",1]]";
 
+static const std::string P7 = "PROJCS[\"NAD_1983_StatePlane_Maryland_FIPS_1900\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.2572221010002,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Lambert_Conformal_Conic_2SP\"],PARAMETER[\"standard_parallel_1\",39.45],PARAMETER[\"standard_parallel_2\",38.3],PARAMETER[\"latitude_of_origin\",37.66666666666666],PARAMETER[\"central_meridian\",-77],PARAMETER[\"false_easting\",400000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AUTHORITY[\"EPSG\",\"26985\"]]";
+
 int main(int argc, char* argv[])
 {
    cout << "ossimWktProjectionFactory Test:" << endl;
@@ -116,6 +119,78 @@ int main(int argc, char* argv[])
    assert(dynamic_cast<ossimMercatorProjection*>(
          ossimWktProjectionFactory::instance()->createProjection(ossimString(P6))));
    cout << "  Passed.\n";
+
+
+   cout << "  Testing UTM (P2)... "; cout.flush();
+   ossimWkt wkt;
+   if ( wkt.parse( std::string(P2) ) )
+   {
+      cout << "wkt kwl\n" << wkt.getKwl() << "\n";
+      
+      cout << "\nTesting ossimWktProjectionFactory::createProjectionFromWkt(...):\n";
+      ossimRefPtr<ossimProjection> proj =
+         ossimWktProjectionFactory::instance()->createProjection( wkt.getKwl() );
+      if ( proj.valid() )
+      {
+         cout << "proj->print():\n";
+         proj->print( cout );
+      }
+      else
+      {
+         cout << "ossimWktProjectionFactory::createProjectionFromWkt(...) failed for P2!\n";
+      }
+
+      cout << "\nTesting ossimWktProjectionFactory::createProjection(...):\n";
+      proj = ossimWktProjectionFactory::instance()->createProjection( wkt.getKwl() );
+      if ( proj.valid() )
+      {
+         cout << "proj->print():\n";
+         proj->print( cout );
+      }
+      else
+      {
+         cout << "ossimWktProjectionFactory::createProjection(...) failed for P2!\n";
+      }
+   }
+   else
+   {
+      cout << "ossimWkt::parse(...) failed for P2!\n";
+   }
+
+   cout << "  Testing Lambert_Conformal_Conic (P7)... "; cout.flush();
+   if ( wkt.parse( P7 ) )
+   {
+      cout << "wkt kwl\n" << wkt.getKwl() << "\n";
+
+      cout << "\nTesting ossimWktProjectionFactory::createProjectionFromWkt(...):\n";
+      ossimRefPtr<ossimProjection> proj =
+         ossimWktProjectionFactory::instance()->createProjection( wkt.getKwl() );
+      if ( proj.valid() )
+      {
+         cout << "proj->print():\n";
+         proj->print( cout );
+      }
+      else
+      {
+         cout << "ossimWktProjectionFactory::createProjectionFromWkt(...) failed for P7!\n";
+      }
+
+      cout << "\nTesting ossimWktProjectionFactory::createProjection(...):\n";
+      proj = ossimWktProjectionFactory::instance()->createProjection( wkt.getKwl() );
+      if ( proj.valid() )
+      {
+         cout << "proj->print():\n";
+         proj->print( cout );
+      }
+      else
+      {
+         cout << "ossimWktProjectionFactory::createProjection(...) failed for P7!\n";
+      }
+   }
+   else
+   {
+      cout << "ossimWkt::parse(...) failed for P7!\n";
+   }
 
    return 0;
 }

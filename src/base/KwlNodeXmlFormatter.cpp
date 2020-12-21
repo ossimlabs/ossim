@@ -51,14 +51,16 @@ namespace ossim
          // iterate through sorted array
          for (auto child : sortedMap)
          {
+            ossimString idxString;
             bool hasGrandChildren = false;
             ossimString key = parentKey;
             if (child.second->hasChildren()&&hints.upcaseParentTag())
             {
                key = key.upcase();
             }
+            if(!child.second->hasChildren()) idxString = ossimString::toString(child.first);
             out << indentStr << "<" << replaceSpecialCharactersXML(key)
-                  << outputAttributesXml(child.second->getAttributes()) << ">";
+                << outputAttributesXml(child.second->getAttributes())+idxString << ">";
             if (child.second->hasChildren())
             {
                hasGrandChildren = true;
@@ -91,7 +93,7 @@ namespace ossim
                   out << childValue ;
                }
             }
-            out << (hasGrandChildren?indentStr:"") << "</" << replaceSpecialCharactersXML(key) << ">" << separator;
+            out << (hasGrandChildren?indentStr:"") << "</" << replaceSpecialCharactersXML(key)+idxString << ">" << separator;
          }
       }
       else

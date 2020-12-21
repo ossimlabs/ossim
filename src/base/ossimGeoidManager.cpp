@@ -379,3 +379,18 @@ ossimGeoid* ossimGeoidManager::findGeoidByShortName(const ossimString& shortName
    }
    return 0;
 }
+
+ossim_uint32 ossimGeoidManager::getNumberOfGeoids() const
+{
+   return (ossim_uint32)theGeoidList.size();
+}
+
+ossimRefPtr<ossimGeoid> ossimGeoidManager::getGeoid( ossim_uint32 index )
+{
+   ossimRefPtr<ossimGeoid> geoid = 0;
+   if ( theGeoidList.size() && (index < theGeoidList.size()) )
+   {
+      geoid = theGeoidList[index];
+   }
+   return geoid;
+}
