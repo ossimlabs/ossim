@@ -1460,7 +1460,7 @@ bool ossimKeywordlist::getBoolKeywordValue(bool& rtn_val,
    {
       found = true;
       ossimString yesno (val_str);
-      yesno.upcase();
+      yesno.upcase().trim();
       if ((yesno == "YES") || (yesno == "TRUE") || (yesno == "1"))
          rtn_val = true;
       else if ((yesno == "NO") || (yesno == "FALSE") || (yesno == "0"))
