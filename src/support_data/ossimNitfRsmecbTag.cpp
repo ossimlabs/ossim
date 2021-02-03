@@ -263,7 +263,7 @@ void ossimNitfRsmecbTag::parseStream(std::istream &in)
       in.read(m_noffx, FLOAT21_SIZE);
       in.read(m_noffy, FLOAT21_SIZE);
       in.read(m_noffz, FLOAT21_SIZE);
-      if (getLocalCoordinateSystemType().upcase() == 'R')
+      if (getLocalCoordinateSystemType().upcase() == "R")
       {
          in.read(m_xuol, FLOAT21_SIZE);
          in.read(m_yuol, FLOAT21_SIZE);
