@@ -34,23 +34,20 @@ find_path( GEOS_INCLUDE_DIR geos_c.h
            /usr/local/include)
 
 # Find GEOS library:
-find_library( GEOS_LIB NAMES geos_c 
+find_library( GEOS_LIBRARY_RELEASE NAMES geos_c 
               PATHS
               $ENV{GEOS_DIR}/lib
               ${GEOS_DIR}/lib
               /usr/local/lib
               /usr/local/lib64)
-
-# Find GEOS C library:
-find_library( GEOS_C_LIB NAMES geos_c 
-              PATHS 
+find_library( GEOS_LIBRARY_DEBUG NAMES geos_cd 
+              PATHS
               $ENV{GEOS_DIR}/lib
-              ${GEOS_DIR}/lib)
-
-# Set the GEOS_LIBRARY:
-if( GEOS_LIB AND GEOS_C_LIB )
-   set( GEOS_LIBRARY ${GEOS_LIB} ${GEOS_C_LIB} CACHE STRING INTERNAL )
-endif(GEOS_LIB AND GEOS_C_LIB )
+              ${GEOS_DIR}/lib
+              /usr/local/lib
+              /usr/local/lib64)
+include(SelectLibraryConfigurations)
+select_library_configurations(GEOS)
 
 #---
 # This function sets GEOS_FOUND if variables are valid.

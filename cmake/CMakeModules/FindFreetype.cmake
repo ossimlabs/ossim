@@ -84,7 +84,7 @@ find_path(FREETYPE_INCLUDE_DIR_freetype2
     freetype2
 )
 
-find_library(FREETYPE_LIBRARY
+find_library(FREETYPE_LIBRARY_RELEASE
   NAMES
     freetype
     libfreetype
@@ -100,13 +100,30 @@ find_library(FREETYPE_LIBRARY
     lib
     lib64
 )
+find_library(FREETYPE_LIBRARY_DEBUG
+  NAMES
+    freetyped
+    libfreetyped
+    freetype219d
+  HINTS
+    ENV FREETYPE_DIR
+  PATHS
+    /usr/freeware
+    ENV GTKMM_BASEPATH
+    [HKEY_CURRENT_USER\\SOFTWARE\\gtkmm\\2.4;Path]
+    [HKEY_LOCAL_MACHINE\\SOFTWARE\\gtkmm\\2.4;Path]
+  PATH_SUFFIXES
+    lib
+    lib64
+)
+include(SelectLibraryConfigurations)
+select_library_configurations(FREETYPE)
 
 # set the user variables
 if(FREETYPE_INCLUDE_DIR_ft2build AND FREETYPE_INCLUDE_DIR_freetype2)
   set(FREETYPE_INCLUDE_DIRS "${FREETYPE_INCLUDE_DIR_ft2build};${FREETYPE_INCLUDE_DIR_freetype2}")
   list(REMOVE_DUPLICATES FREETYPE_INCLUDE_DIRS)
 endif()
-set(FREETYPE_LIBRARIES "${FREETYPE_LIBRARY}")
 
 if(EXISTS "${FREETYPE_INCLUDE_DIR_freetype2}/freetype/freetype.h")
   set(FREETYPE_H "${FREETYPE_INCLUDE_DIR_freetype2}/freetype/freetype.h")
