@@ -173,7 +173,7 @@ ossimMpi::ossimMpi()
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "ossimMpi::ossimMpi entered..."
          << std::endl;
-#ifdef OSSIM_ID_ENABLED
+#if OSSIM_ID_ENABLED == 1
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "OSSIM_ID = " << OSSIM_ID << std::endl;
 #endif

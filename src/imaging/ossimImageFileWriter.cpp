@@ -101,7 +101,7 @@ ossimImageFileWriter::ossimImageFileWriter(const ossimFilename& file,
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "ossimImageFileWriter::ossimImageFileWriter entered..."
          << std::endl;
-#ifdef OSSIM_ID_ENABLED
+#if OSSIM_ID_ENABLED == 1
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "OSSIM_ID:  " << OSSIM_ID << std::endl;
 #endif

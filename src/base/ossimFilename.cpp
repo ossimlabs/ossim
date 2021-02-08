@@ -1129,7 +1129,7 @@ bool ossimFilename::createDirectory( bool recurseFlag,
             }
 #endif
             
-            if(current != OSSIM_FILENAME_PATH_SEPARATOR)
+            if(current != (const char*)OSSIM_FILENAME_PATH_SEPARATOR)
             {
                if(!ossimFilename(current).exists())
                {
