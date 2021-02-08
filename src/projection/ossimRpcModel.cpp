@@ -396,7 +396,7 @@ void ossimRpcModel::imagingRay(const ossimDpt& imagePoint,
    //---
 
 // this one is messed up so keep as #if 0 until tested more
-  #if 0
+#if 0
 
   ossimGpt gpt;
 
@@ -422,6 +422,26 @@ void ossimRpcModel::imagingRay(const ossimDpt& imagePoint,
     }
   }
 #else
+
+  double vectorLength = theHgtScale ? (theHgtScale * 2.0) : 1000.0;
+
+   ossimGpt gpt;
+   
+   // "from" point
+   double intHgt = theHgtOffset + vectorLength;
+   lineSampleHeightToWorld(imagePoint, intHgt, gpt);
+   ossimEcefPoint intECFfrom(gpt);
+   
+   // "to" point
+   lineSampleHeightToWorld(imagePoint, theHgtOffset, gpt);
+   ossimEcefPoint intECFto(gpt);
+   
+   // Construct ray
+   ossimEcefRay ray(intECFfrom, intECFto);
+   
+   imageRay = ray;
+
+#if 0
 //   double vectorLength = theHgtScale ? (theHgtScale * 2.0) : 1000.0;
    // double vectorLength = theHgtScale ? theHgtScale : 1000; //? (theHgtScale * 2.0) : 1000.0;
    // double vectorLength = theHgtScale ? (10) : 1000.0;
@@ -442,8 +462,9 @@ void ossimRpcModel::imagingRay(const ossimDpt& imagePoint,
    ossimEcefRay ray(intECFfrom, intECFto);
    
    imageRay = ray;
+#endif
 
-   #endif
+#endif
 }
 
 
