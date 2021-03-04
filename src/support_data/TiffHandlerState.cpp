@@ -184,11 +184,12 @@ void ossim::TiffHandlerState::loadDefaults(std::shared_ptr<ossim::istream> &str,
     nValues = prefixValues.size();
     addValue("tiff.number_of_directories", ossimString::toString(nValues));
     ossim_uint32 idx = 0;
-    ossim_int64 h = getImageLength(0);
-    ossim_int64 w = getImageWidth(0);
+    //ossim_int64 h = getImageLength(0);
+    //ossim_int64 w = getImageWidth(0);
     ossim_int64 tw = getTileWidth(0);
     ossim_int64 th = getTileLength(0);
-    bool isTiled = (th&&tw&& ((tw < w) && (th < h)));
+    //bool isTiled = (th&&tw&& ((tw < w) && (th < h)));
+    bool isTiled = (tw>0 && th>0); // Can be a single tile (no strip info)
     for (auto key : prefixValues)
     {
       if(isTiled)
