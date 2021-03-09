@@ -14,6 +14,7 @@
 #include <ossim/support_data/ossimNitfAcftbTag.h>
 #include <ossim/support_data/ossimNitfAimidbTag.h>
 #include <ossim/support_data/ossimNitfBlockaTag.h>
+#include <ossim/support_data/ossimNitfBndplbTag.h>
 #include <ossim/support_data/ossimNitfCamsdaTag.h>
 #include <ossim/support_data/ossimNitfCscrnaTag.h>
 #include <ossim/support_data/ossimNitfCsdidaTag.h>
@@ -43,6 +44,7 @@
 #include <ossim/support_data/ossimNitfCsproaTag.h>
 #include <ossim/support_data/ossimNitfExoptaTag.h>
 #include <ossim/support_data/ossimNitfRsmecaTag.h>
+// #include <ossim/support_data/ossimNitfRsmecbTag.h>
 #include <ossim/support_data/ossimNitfRsmidaTag.h>
 #include <ossim/support_data/ossimNitfRsmpcaTag.h>
 #include <ossim/support_data/ossimNitfRsmpiaTag.h>
@@ -55,6 +57,7 @@ RTTI_DEF1(ossimNitfRegisteredTagFactory, "ossimNitfRegisteredTagFactory", ossimN
 static const char ACFTB_TAG[]                = "ACFTB";
 static const char AIMIDB_TAG[]               = "AIMIDB";
 static const char BLOCKA_TAG[]               = "BLOCKA";
+static const char BNDPLB_TAG[]               = "BNDPLB";
 static const char CAMSDA_TAG[]               = "CAMSDA";
 static const char CSCRNA_TAG[]               = "CSCRNA";
 static const char CSDIDA_TAG[]               = "CSDIDA";
@@ -84,6 +87,7 @@ static const char CSCCGA_TAG[]               = "CSCCGA";
 static const char CSPROA_TAG[]               = "CSPROA";
 static const char EXOPTA_TAG[]               = "EXOPTA";
 static const char RSMECA_TAG[]               = "RSMECA";
+// static const char RSMECB_TAG[]               = "RSMECB";
 static const char RSMIDA_TAG[]               = "RSMIDA";
 static const char RSMPCA_TAG[]               = "RSMPCA";
 static const char RSMPIA_TAG[]               = "RSMPIA";
@@ -119,6 +123,10 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    else if(tagName == BLOCKA_TAG)
    {
       return new ossimNitfBlockaTag;
+   }
+   else if(tagName == BNDPLB_TAG)
+   {
+      return new ossimNitfBndplbTag;
    }
    else if(tagName == CAMSDA_TAG)
    {
@@ -238,6 +246,14 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    {
       return new ossimNitfRsmecaTag();
    }
+
+#if 0 /* Not ready for prime time yet. drb - 20191105 */
+   else if(tagName == RSMECB_TAG)
+   {
+      return new ossimNitfRsmecbTag();
+   }
+#endif
+   
    else if(tagName == RSMIDA_TAG)
    {
       return new ossimNitfRsmidaTag();
