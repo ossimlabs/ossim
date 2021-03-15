@@ -47,8 +47,8 @@ public:
     * @param size
     * @param mode
     */
-   ossimIrect64(ossimIpt64 origin,
-                ossimIpt64 size,
+   ossimIrect64(const ossimIpt64& origin,
+                const ossimIpt64& size,
                 ossimCoordSysOrientMode mode=OSSIM_LEFT_HANDED);
 
    /**

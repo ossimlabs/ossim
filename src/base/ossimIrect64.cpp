@@ -27,8 +27,8 @@ ossimIrect64::ossimIrect64()
    m_mode(OSSIM_LEFT_HANDED)
 {}
 
-ossimIrect64::ossimIrect64(ossimIpt64 origin,
-                           ossimIpt64 size,
+ossimIrect64::ossimIrect64(const ossimIpt64& origin,
+                           const ossimIpt64& size,
                            ossimCoordSysOrientMode mode)
    :
    m_origin(origin),

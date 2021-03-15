@@ -1,12 +1,9 @@
 //---
 // License: MIT
 //
-// Description: Contains class declaration for 64 bit integer point.
+// Description: Contains class definition for 64 bit integer point.
 //---
 // $Id$
-
-#include <iostream>
-#include <sstream>
 
 #include <ossim/base/ossimIpt64.h>
 #include <ossim/base/ossimCommon.h>
@@ -14,6 +11,30 @@
 #include <ossim/base/ossimFpt.h>
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimString.h>
+
+#include <iostream>
+#include <sstream>
+
+ossimIpt64::ossimIpt64(ossim_float64 aX, ossim_float64 aY)
+{
+   if (ossim::isnan(aX) == false)
+   {
+      x = ossim::round<ossim_int64>(aX);
+   }
+   else
+   {
+      x = OSSIM_INT64_NAN;
+   }
+
+   if (ossim::isnan(aY) == false)
+   {
+      y = ossim::round<ossim_int64>(aY);
+   }
+   else
+   {
+      y = OSSIM_INT64_NAN;
+   }
+}
 
 ossimIpt64::ossimIpt64(const ossimIpt& pt)
 {
