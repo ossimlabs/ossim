@@ -12,7 +12,7 @@
 // $Id$
 
 #include <ossim/support_data/ossimNitfFileHeaderV2_1.h>
-#include <ossim/support_data/ossimNitfTextHeaderV2_0.h>
+#include <ossim/support_data/ossimNitfTextHeaderV2_1.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimColorProperty.h>
 #include <ossim/base/ossimDateProperty.h>
@@ -899,7 +899,7 @@ ossimNitfImageHeader* ossimNitfFileHeaderV2_1::allocateImageHeader()const
 
 ossimNitfTextHeader *ossimNitfFileHeaderV2_1::allocateTextHeader()const
 {
-   return new ossimNitfTextHeaderV2_0;
+   return new ossimNitfTextHeaderV2_1;
 }
 
 ossimNitfDataExtensionSegment* ossimNitfFileHeaderV2_1::allocateDataExtSegment()const
@@ -1349,11 +1349,19 @@ ossimNitfFileHeaderV2_1::getNewLabelHeader(ossim_uint32 /* labelNumber */,
 }
 
 ossimNitfTextHeader*
-ossimNitfFileHeaderV2_1::getNewTextHeader(ossim_uint32 /* textNumber */,
-                                          ossim::istream& /* in */)const
+ossimNitfFileHeaderV2_1::getNewTextHeader(ossim_uint32 textNumber,
+                                          ossim::istream& in)const
 {
-   // Currently not implemented...
    ossimNitfTextHeader *result = 0;
+
+   if ((getNumberOfTextSegments() > 0) &&
+      (textNumber < (ossim_int32)theNitfTextFileInfoRecords.size()) &&
+      (textNumber >= 0))
+   {
+      result = allocateTextHeader();
+      in.seekg(theTextFileOffsetList[textNumber].theTextHeaderOffset, ios::beg);
+      result->parseStream(in, theNitfTextFileInfoRecords[textNumber].getTextLength());
+   }
    
    return result;
 }

@@ -19,7 +19,7 @@ public:
    ossimNitfTextHeaderV2_1();
    virtual ~ossimNitfTextHeaderV2_1();
    
-   virtual void parseStream(std::istream &in);
+   virtual void parseStream(std::istream &in, ossim_uint64 textLength);
    virtual std::ostream& print(std::ostream &out)const;
    
    virtual void writeStream(std::ostream &out);
@@ -30,6 +30,8 @@ public:
    void setControlAndHandling(const ossimString& value);
    void setReleasingInstructions(const ossimString& value);
    void setDeclassificationType(const ossimString& value);
+
+   virtual const std::vector<unsigned char> getTextData() const;
    
    static const ossimString TE_KW;
    static const ossimString TEXTID_KW;
@@ -215,6 +217,11 @@ private:
     * theExtSubheaderDataLength is not 0
     */
    char theExtSubheaderOverflow[4];
+
+   /*!
+    * This is an n-byte field, where n is found in the file header.
+    */
+   std::vector<unsigned char> theText;
    
    TYPE_DATA
 };

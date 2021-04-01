@@ -57,7 +57,7 @@ ossimNitfTextHeaderV2_1::~ossimNitfTextHeaderV2_1()
 {
 }
 
-void ossimNitfTextHeaderV2_1::parseStream(std::istream &in)
+void ossimNitfTextHeaderV2_1::parseStream(std::istream &in, ossim_uint64 textLength)
 {
    if(in)
    {
@@ -77,7 +77,7 @@ void ossimNitfTextHeaderV2_1::parseStream(std::istream &in)
       in.read(theTextDeclassificationType, 2);
       in.read(theTextDeclassificationDate, 8);
       in.read(theTextDeclassificationExemption, 4);
-      in.read(theTextSecurityDowngrade, 2);
+      in.read(theTextSecurityDowngrade, 1);
       in.read(theTextSecurityDowngradeDate, 8);
       in.read(theTextClassificationText, 43);        // TSCLTX
       in.read(theTextClassificationAthorityType, 1); // TSCATP
@@ -97,6 +97,8 @@ void ossimNitfTextHeaderV2_1::parseStream(std::istream &in)
          // ignore the data for now
          in.ignore(dataLength - 3);
       }
+      theText.resize(textLength);
+      in.read(reinterpret_cast<char*>(&theText.front()), theText.size());
    }
 }
 
@@ -274,4 +276,9 @@ void ossimNitfTextHeaderV2_1::setReleasingInstructions(const ossimString& value)
 void ossimNitfTextHeaderV2_1::setDeclassificationType(const ossimString& value)
 {
    ossimNitfCommon::setField(theTextDeclassificationType, value, 2);
+}
+
+const std::vector<unsigned char> ossimNitfTextHeaderV2_1::getTextData() const
+{
+   return theText;
 }

@@ -74,9 +74,46 @@ void ossimNitfMtimsaTag::parseStream(std::istream& in)
    in.read((char*)m_dt.data(), bytes); // DTs
 }
 
-void ossimNitfMtimsaTag::writeStream(std::ostream& /* out */)
+void ossimNitfMtimsaTag::writeStream(std::ostream& out)
 {
-   // TODO:
+   // Binary data stored in big endian in file.
+   ossimEndian* endian = 0;
+   if ( ossim::byteOrder() != OSSIM_BIG_ENDIAN )
+   {
+      endian = new ossimEndian();
+   }
+    
+   out.write(m_imageSegIndex, IMAGE_SEG_INDEX_SIZE);
+   out.write(m_geocoordsStatic, GEOCOORDS_STATIC_SIZE);
+   out.write(m_layerId, LAYER_ID_SIZE);
+   out.write(m_cameraSetIndex, CAMERA_SET_INDEX_SIZE);   
+   out.write(m_cameraId, CAMERA_ID_SIZE);
+   out.write(m_timeIntervalIndex, TIME_INTERVAL_INDEX_SIZE);
+   out.write(m_tempBlockIndex, TEMP_BLOCK_INDEX_SIZE);
+   out.write(m_nominalFrameRate, NOMINAL_FRAME_RATE_SIZE);   
+   out.write(m_referenceFrameNum, REFERENCE_FRAME_NUM_SIZE);
+   out.write(m_baseTimestamp, BASE_TIMESTAMP_SIZE);
+
+   // Binary data:
+   ossim_uint64 dtMultiplier = m_dtMultiplier;
+   ossim_uint32 numberFrames = m_numberFrames;
+   ossim_uint32 numberDt = m_numberDt;
+   if (endian)
+   {
+      endian->swap(dtMultiplier);
+      endian->swap(numberFrames);
+      endian->swap(numberDt);
+
+      delete endian;
+      endian = 0;
+   }
+   out.write((char*)&m_dtMultiplier, DT_MULTIPLIER_SIZE);
+   out.write((char*)&m_dtSize, DT_SIZE);
+   out.write((char*)&m_numberFrames, NUMBER_OF_FRAMES_SIZE);
+   out.write((char*)&m_numberDt, NUMBER_DT_SIZE);
+
+   ossim_uint32 bytes = m_numberDt * m_dtSize;
+   out.write((char*)m_dt.data(), bytes); // DTs
 }
 
 void ossimNitfMtimsaTag::clearFields()

@@ -1034,7 +1034,7 @@ ossimNitfTextHeader *ossimNitfFileHeaderV2_0::getNewTextHeader(
    {
       result = allocateTextHeader();
       in.seekg(theTextOffsetList[textNumber].theTextHeaderOffset, std::ios::beg);
-      result->parseStream(in);
+      result->parseStream(in, theNitfTextInfoRecords[textNumber].getImageLength());
    }
    
    return result;

@@ -21,7 +21,7 @@ ossimNitfTextHeaderV2_0::ossimNitfTextHeaderV2_0()
    clearFields();
 }
 
-void ossimNitfTextHeaderV2_0::parseStream(std::istream &in)
+void ossimNitfTextHeaderV2_0::parseStream(std::istream &in, ossim_uint64 textLength)
 {
    if(in)
    {
@@ -53,6 +53,8 @@ void ossimNitfTextHeaderV2_0::parseStream(std::istream &in)
          // ignore the data for now
          in.ignore(dataLength - 3);
       }
+      theText.resize(textLength);
+      in.read(reinterpret_cast<char*>(&theText.front()), theText.size());
    }
 }
 
@@ -114,4 +116,9 @@ void ossimNitfTextHeaderV2_0::clearFields()
    theTextFormat[3] = '\0';
    theExtSubheaderDataLength[5] = '\0';
    theExtSubheaderOverflow[3] = '\0';
+}
+
+const std::vector<unsigned char> ossimNitfTextHeaderV2_0::getTextData() const
+{
+   return theText;
 }
