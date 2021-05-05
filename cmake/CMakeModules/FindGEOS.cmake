@@ -6,8 +6,10 @@
 # This module defines:
 #
 # GEOS_INCLUDE_DIR, where to find geos.h, etc.
-# GEOS_LIBRARY, libraries to link against to use GEOS.  Currently there are
-# two looked for, geos and geos_c libraries.
+# GEOS_C_LIBRARY
+# GEOS_CPP_LIBRARY
+# GEOS_LIBRARIES, C and CPP libraries to link against to use GEOS.  Currently
+# there are two looked for, geos and geos_c libraries.
 # GEOS_FOUND, True if found, false if one of the above are not found.
 # 
 # For ossim, typically geos will be system installed which should be found; 
@@ -34,27 +36,30 @@ find_path( GEOS_INCLUDE_DIR geos_c.h
            /usr/local/include)
 
 # Find GEOS library:
-find_library( GEOS_LIBRARY_RELEASE NAMES geos_c 
+find_library( GEOS_CPP_LIBRARY NAMES geos
               PATHS
               $ENV{GEOS_DIR}/lib
               ${GEOS_DIR}/lib
               /usr/local/lib
               /usr/local/lib64)
-find_library( GEOS_LIBRARY_DEBUG NAMES geos_cd 
-              PATHS
+
+# Find GEOS C library:
+find_library( GEOS_C_LIBRARY NAMES geos_c 
+              PATHS 
               $ENV{GEOS_DIR}/lib
-              ${GEOS_DIR}/lib
-              /usr/local/lib
-              /usr/local/lib64)
-include(SelectLibraryConfigurations)
-select_library_configurations(GEOS)
+              ${GEOS_DIR}/lib)
+
+# Set the GEOS_LIBRARY:
+if( GEOS_CPP_LIBRARY AND GEOS_C_LIBRARY )
+   set( GEOS_LIBRARIES ${GEOS_CPP_LIBRARY} ${GEOS_C_LIBRARY} CACHE STRING INTERNAL )
+endif( GEOS_CPP_LIBRARY AND GEOS_C_LIBRARY )
 
 #---
 # This function sets GEOS_FOUND if variables are valid.
 #--- 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args( GEOS DEFAULT_MSG 
-                                   GEOS_LIBRARY 
+find_package_handle_standard_args( GEOS DEFAULT_MSG
+                                   GEOS_LIBRARIES 
                                    GEOS_INCLUDE_DIR )
 
 if( GEOS_FOUND )
@@ -69,5 +74,7 @@ endif( GEOS_FOUND )
 
 if( NOT GEOS_FIND_QUIETLY )
    message( STATUS "GEOS_INCLUDE_DIR=${GEOS_INCLUDE_DIR}" )
-   message( STATUS "GEOS_LIBRARY=${GEOS_LIBRARY}" )
+   message( STATUS "GEOS_C_LIBRARY=${GEOS_C_LIBRARY}" )
+   message( STATUS "GEOS_CPP_LIBRARY=${GEOS_CPP_LIBRARY}" )     
+   message( STATUS "GEOS_LIBRARIES=${GEOS_LIBRARIES}" )
 endif( NOT GEOS_FIND_QUIETLY )
