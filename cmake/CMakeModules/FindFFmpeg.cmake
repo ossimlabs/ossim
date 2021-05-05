@@ -161,7 +161,7 @@ IF   (FFMPEG_LIBAVFORMAT_FOUND AND FFMPEG_LIBAVDEVICE_FOUND AND FFMPEG_LIBAVCODE
 # This function sets FFMPEG_FOUND if variables are valid.
 #--- 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args( FFMPEG DEFAULT_MSG 
+find_package_handle_standard_args( FFmpeg DEFAULT_MSG 
                                    FFMPEG_LIBRARIES
                                    FFMPEG_INCLUDE_DIRS )
 
