@@ -37,7 +37,7 @@ if (USE_OSSIM_JSONCPP)
          ${OSSIM_INSTALL_PREFIX}/include/ossim NO_DEFAULT_PATH)
    message("-- JSONCPP: Using amalgamated form in ossim package.")
    set(JSONCPP_LIBRARY "")
-   find_package_handle_standard_args( JSONCPP DEFAULT_MSG JSONCPP_INCLUDE_DIR )
+   find_package_handle_standard_args( JsonCpp DEFAULT_MSG JSONCPP_INCLUDE_DIR )
 
 else(USE_OSSIM_JSONCPP)
    # The use of the amalgamated form was explicitly rejected. Need to look for installed package:

@@ -109,7 +109,7 @@ ENDIF(GIT_EXECUTABLE)
 # Handle the QUIETLY and REQUIRED arguments and set GIT_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args( GIT DEFAULT_MSG
+find_package_handle_standard_args( Git DEFAULT_MSG
                                    GIT_EXECUTABLE 
                                    GIT_VERSION_STRING )
 
