@@ -31,7 +31,7 @@ find_library(OSSIM_LIBRARY NAMES ${OSSIM_NAMES}
 # This function sets OSSIM_FOUND if variables are valid.
 #---
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args( OSSIM DEFAULT_MSG
+find_package_handle_standard_args( ossim DEFAULT_MSG
                                    OSSIM_LIBRARY
                                    OSSIM_INCLUDE_DIR )
 
