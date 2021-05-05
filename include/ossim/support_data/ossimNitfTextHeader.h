@@ -20,7 +20,8 @@ public:
    ossimNitfTextHeader(){}
    virtual ~ossimNitfTextHeader(){}
    
-   virtual void parseStream(std::istream &in)=0;
+   virtual void parseStream(std::istream &in, ossim_uint64 textLength)=0;
+   virtual const std::vector<unsigned char> getTextData() const=0;
    
 TYPE_DATA
 };
