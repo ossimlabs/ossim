@@ -1,31 +1,36 @@
-//----------------------------------------------------------------------------
+//---
 //
 // File: ossimImageElevationDatabase.cpp
 // 
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description:  See class desciption in header file.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #include <ossim/elevation/ossimImageElevationDatabase.h>
 #include <ossim/base/ossimDpt.h>
+#include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/elevation/ossimImageElevationHandler.h>
 #include <ossim/util/ossimFileWalker.h>
 #include <cmath>
+#include <ostream>
+
+#define TRACE_TIME 0 /* For function level time stats. */
+#if TRACE_TIME
+#  include <ossim/base/ossimStopwatch.h>
+#endif
+
+static const std::string ELEV_CELL_MAP = "elev_cell_map.kwl";
 
 static ossimTrace traceDebug(ossimString("ossimImageElevationDatabase:debug"));
 
 RTTI_DEF1(ossimImageElevationDatabase, "ossimImageElevationDatabase", ossimElevationCellDatabase);
-
-using namespace std;
 
 ossimImageElevationDatabase::ossimImageElevationDatabase()
    :
@@ -44,8 +49,6 @@ ossimImageElevationDatabase::~ossimImageElevationDatabase()
 
 bool ossimImageElevationDatabase::open(const ossimString& connectionString)
 {
-   // return false; // tmp drb...
-   
    static const char M[] = "ossimImageElevationDatabase::open";
    if(traceDebug())
    {
@@ -62,7 +65,10 @@ bool ossimImageElevationDatabase::open(const ossimString& connectionString)
    {
       m_connectionString = connectionString.c_str();
 
-      loadFileMap();
+      if ( loadMapFromKwl() == false )
+      {
+         loadFileMap();
+      }
 
       if ( m_entryMap.size() )
       {
@@ -100,7 +106,7 @@ double ossimImageElevationDatabase::getHeightAboveMSL(const ossimGpt& gpt)
          h = handler->getHeightAboveMSL(gpt); // still need to shift
 
          // Save the elev source's post spacing as the database's mean spacing:
-         m_meanSpacing = handler->getMeanSpacingMeters();
+         // m_meanSpacing = handler->getMeanSpacingMeters();
       }
    }
 
@@ -139,6 +145,12 @@ ossimRefPtr<ossimElevCellHandler> ossimImageElevationDatabase::createCell(
             {
                // First time opened.  Capture the rectangle. for next time.
                (*i).second.m_rect = h->getBoundingGndRect();
+
+               if ( ossim::isnan(m_meanSpacing) )
+               {
+                  // Save the elev source's post spacing as the database's mean spacing:
+                  m_meanSpacing = h->getMeanSpacingMeters();
+               }
             }
             else
             {
@@ -268,8 +280,8 @@ ossimRefPtr<ossimElevCellHandler> ossimImageElevationDatabase::getOrCreateCellHa
          // NOTE: ossimImageElevationDatabase::createCell sets m_lastAccessedId to that of
          // the entries map key.
          //---
-         m_cacheMap.insert(std::make_pair(m_lastAccessedId,
-                                          new CellInfo(m_lastAccessedId, result.get())));
+         m_cacheMap.insert(std::make_pair(m_lastMapKey,
+                                          new CellInfo(m_lastMapKey, result.get())));
 
          ++m_lastMapKey;
 
@@ -308,7 +320,6 @@ bool ossimImageElevationDatabase::pointHasCoverage(const ossimGpt& gpt) const
    }
    return result;
 }
-
 
 void ossimImageElevationDatabase::getBoundingRect(ossimGrect& rect) const
 {
@@ -367,10 +378,12 @@ bool ossimImageElevationDatabase::loadState(const ossimKeywordlist& kwl, const c
       if ( ( type == "image_directory" ) || ( type == "ossimImageElevationDatabase" ) )
       {
          result = ossimElevationCellDatabase::loadState(kwl, prefix);
-
          if ( result )
          {
-            loadFileMap();
+            if ( loadMapFromKwl() == false )
+            {
+               loadFileMap();
+            }
          }
       }
    }
@@ -407,8 +420,71 @@ void ossimImageElevationDatabase::processFile(const ossimFilename& file)
    } 
 }
 
+bool ossimImageElevationDatabase::loadMapFromKwl()
+{
+#if TRACE_TIME
+   ossimStopwatch sw;
+   sw.start();
+#endif
+
+   bool result = false;
+   if ( m_connectionString.size() )
+   {
+      ossimFilename f = m_connectionString;
+
+      f = f.dirCat( ossimFilename(ELEV_CELL_MAP ) );
+      if ( f.exists() )
+      {
+         ossimKeywordlist kwl;
+         if ( kwl.addFile( f ) == true )
+         {
+            ossimString regExp = "elev_cell[0-9]*\\.file";
+            ossim_uint32 count = kwl.getNumberOfKeysThatMatch( regExp );
+            const ossim_uint32 MAX_LOOKUP = count + 100; // To allow for skipage.
+            ossim_uint32 index = 0;
+            ossim_uint32 found = 0;
+            std::string basePrefix = "elev_cell";
+            std::string dot = ".";
+            std::string prefix;
+            while ( index < MAX_LOOKUP )
+            {
+               prefix = basePrefix + ossimString::toString( index ).string() + dot;
+               ossimImageElevationFileEntry entry;
+               if ( entry.loadState( kwl, prefix ) == true )
+               {
+                  // Add the file.
+                  m_entryMap.insert( std::make_pair( m_lastMapKey++, entry ) );
+                  ++found;
+                  if ( found == count ) break;
+               }
+               ++index;
+            }
+
+            if ( m_entryMap.size() == count )
+            {
+               result = true;
+            }
+         }
+      }
+   }
+
+#if TRACE_TIME
+   sw.stop();
+   ossimNotify(ossimNotifyLevel_NOTICE)
+      << "ossimImageElevationDatabase::loadMapFromKwl() time in seconds: "
+      << std::fixed << std::setprecision(8) << sw.count() << "\n";
+#endif 
+
+   return result;
+}
+
 void ossimImageElevationDatabase::loadFileMap()
 {
+#if TRACE_TIME
+   ossimStopwatch sw;
+   sw.start();
+#endif
+   
    if ( m_connectionString.size() )
    {
       // Create a file walker which will find files we can load from the connection string.
@@ -422,11 +498,46 @@ void ossimImageElevationDatabase::loadFileMap()
       ossimFilename f = m_connectionString;
 
       // ossimFileWalker::walk will in turn call back to processFile method for each file it finds.
-      fw->walk(f); 
+      fw->walk(f);
+
+      // Save the state off for future.
+      ossim_int32 index = 0;
+      std::string basePrefix = "elev_cell";
+      std::string dot = ".";
+      std::string prefix;
+      ossimKeywordlist kwl;
+      const auto& cv = m_entryMap;
+      for (auto&& i : cv)
+      {
+         std::string prefix = basePrefix + ossimString::toString(index).string() + dot;
+         i.second.saveState( kwl, prefix );
+         ++index;
+      }
+      f = m_connectionString;
+      f = f.dirCat( ossimFilename("elev_cell_map.kwl") );
+      if ( kwl.write( f ) == true )
+      {
+         ossimNotify(ossimNotifyLevel_NOTICE)
+            << "ossimImageElevationDatabase::loadFileMap() NOTICE:"
+            << "\nWrote file: " << f << "\n";
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << "ossimImageElevationDatabase::loadFileMap() WARNING:"
+            << "\nCould not open file for write: " << f << std::endl;
+      }
       
       delete fw;
       fw = 0;
    }
+
+#if TRACE_TIME
+   sw.stop();
+   ossimNotify(ossimNotifyLevel_NOTICE)
+      << "ossimImageElevationDatabase::loadFileMap() time in seconds: "
+      << std::fixed << std::setprecision(8) << sw.count() << "\n";
+#endif  
 }
 
 // Hidden from use:
@@ -442,9 +553,11 @@ ossimImageElevationDatabase::ossimImageElevationDatabase(const ossimImageElevati
 ossimImageElevationDatabase::ossimImageElevationFileEntry::ossimImageElevationFileEntry()
    : m_file(),
      m_rect(),
+     // m_nominalGSD(),
      m_loadedFlag(false)
 {
    m_rect.makeNan();
+   // m_nominalGSD.makeNan();
 }
 
 // Private container class:
@@ -452,25 +565,73 @@ ossimImageElevationDatabase::ossimImageElevationFileEntry::ossimImageElevationFi
    const ossimFilename& file)
    : m_file(file),
      m_rect(),
+     // m_nominalGSD(),
      m_loadedFlag(false)
 {
    m_rect.makeNan();
+   // m_nominalGSD.makeNan();
+
+   ossimRefPtr<ossimImageElevationHandler> h = new ossimImageElevationHandler();
+   h->open( m_file );
+   m_rect = h->getBoundingGndRect();
+   // m_nominalGSD.x = h->getMeanSpacingMeters();
+   // m_nominalGSD.y = m_nominalGSD.x;
 }
 
 ossimImageElevationDatabase::ossimImageElevationFileEntry::ossimImageElevationFileEntry
 (const ossimImageElevationFileEntry& copy_this)
    : m_file(copy_this.m_file),
      m_rect(copy_this.m_rect),
+     // m_nominalGSD(copy_this.m_nominalGSD),
      m_loadedFlag(copy_this.m_loadedFlag)
 {
 }
 
-std::ostream& ossimImageElevationDatabase::print(ostream& out) const
+void ossimImageElevationDatabase::ossimImageElevationFileEntry::saveState(
+   ossimKeywordlist& kwl, const std::string& prefix ) const
+{
+   kwl.addPair( prefix, std::string(ossimKeywordNames::FILE_KW), m_file.string() );
+   kwl.addPair( prefix, std::string("grect"), m_rect.toString() );
+   // kwl.addPair( prefix, std::string("gsd"), m_nominalGSD.toString().string() );
+}
+
+bool ossimImageElevationDatabase::ossimImageElevationFileEntry::loadState(
+   const ossimKeywordlist& kwl, const std::string& prefix )
+{
+   bool result = false;
+   std::string key = ossimKeywordNames::FILE_KW;
+   std::string value = kwl.findKey( prefix, key );
+   if ( value.size() )
+   {
+      m_file = value;
+
+      key = "grect";
+      value = kwl.findKey( prefix, key );
+      if ( value.size() )
+      {
+         if ( m_rect.toRect( value ) )
+         {
+            result = true;
+#if 0
+            key = "gsd";
+            value = kwl.findKey( prefix, key );
+            if ( value.size() )
+            {
+               m_nominalGSD.toPoint( value );
+               result = true;
+            }
+#endif
+         }
+      }
+   }
+   return result;
+}
+
+std::ostream& ossimImageElevationDatabase::print(std::ostream& out) const
 {
    ossimKeywordlist kwl;
    saveState(kwl);
    out << "\nossimImageElevationDatabase @ "<< (ossim_uint64) this << "\n"
-         << kwl <<ends;
+       << kwl << std::endl;
    return out;
 }
-

@@ -1,16 +1,14 @@
-//----------------------------------------------------------------------------
+//---
 //
 // File: ossimImageElevationHandler.h
 // 
-// License:  MIT
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: See description for class below.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #ifndef ossimImageElevationHandler_HEADER

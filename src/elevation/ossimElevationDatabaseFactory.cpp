@@ -17,32 +17,29 @@ ossimElevationDatabaseFactory* ossimElevationDatabaseFactory::instance()
    return m_instance;
 }
 
-ossimElevationDatabase* ossimElevationDatabaseFactory::createDatabase(const ossimString& typeName)const
+ossimElevationDatabase* ossimElevationDatabaseFactory::createDatabase(
+   const ossimString& typeName )const
 {
    if((typeName == STATIC_TYPE_NAME(ossimDtedElevationDatabase)) ||
       (typeName == "dted")||
       (typeName == "dted_directory"))
-      
    {
       return new ossimDtedElevationDatabase();
    }
    else if((typeName == STATIC_TYPE_NAME(ossimSrtmElevationDatabase)) ||
            (typeName == "srtm")||
            (typeName == "srtm_directory"))
-      
    {
       return new ossimSrtmElevationDatabase();
    }
    else if((typeName == STATIC_TYPE_NAME(ossimGeneralRasterElevationDatabase)) ||
            (typeName == "general_raster")||
            (typeName == "general_raster_directory"))
-      
    {
       return new ossimGeneralRasterElevationDatabase();
    }
    else if( (typeName == "ossimImageElevationDatabase") ||
-            (typeName == "image_directory"))
-      
+            (typeName == "image_directory"))   
    {
       return new ossimImageElevationDatabase();
    }
@@ -84,6 +81,10 @@ ossimElevationDatabase* ossimElevationDatabaseFactory::open(const ossimString& c
          break;
 
       result = new ossimGeneralRasterElevationDatabase;
+      if (result->open(connectionString))
+         break;
+
+      result = new ossimImageElevationDatabase;
       if (result->open(connectionString))
          break;
 

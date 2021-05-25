@@ -321,3 +321,43 @@ void ossimGrect::expandToInclude(const ossimGrect& rect)
    expandToInclude(rect.ul());
    expandToInclude(rect.lr());
 }
+
+std::string ossimGrect::toString(ossim_uint32 precision) const
+{
+   std::string result = theUlCorner.toString( precision ).string();
+   result += ",";
+   result += theLrCorner.toString( precision ).string();
+   return result;
+}
+
+bool ossimGrect::toRect(const std::string& s)
+{
+   bool result = false;
+
+   // String example: (41,-105,0,WGE),(40,-104,0,WGE)
+   
+   // Get the upper left:
+   std::string ss = ",(";
+   std::string::size_type found = s.find(ss);
+   if ( found != std::string::npos )
+   {
+      // cout << "s.substr( 0, found ): " <<  s.substr( 0, found ) << "\n";
+      theUlCorner.toPoint( s.substr( 0, found ) );
+
+      // Get the lower right:
+      ss = "),";
+      std::string::size_type found = s.find(ss);
+      if ( found != std::string::npos )
+      {
+         if ( found+2 < s.size() )
+         {
+            // cout << "s.substr( found+2, s.size()-(found+2) ): "
+            //      << s.substr( found+2, s.size()-(found+2) ) << "\n";
+            theLrCorner.toPoint( s.substr(found+2, s.size()-(found+2)) );
+            result = true;
+         }
+      }
+   }
+
+   return result;
+}

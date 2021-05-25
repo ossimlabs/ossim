@@ -1,16 +1,14 @@
-//----------------------------------------------------------------------------
+//---
 //
 // File: ossimImageElevationDatabase.h
 // 
-// License:  MIT
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: See description for class below.
 //
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #ifndef ossimImageElevationDatabase_HEADER
@@ -23,6 +21,7 @@
 #include <ossim/base/ossimGrect.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimRtti.h>
+#include <iosfwd>
 #include <map>
 
 class ossimString;
@@ -179,12 +178,18 @@ private:
 
       ossimImageElevationFileEntry(const ossimImageElevationFileEntry& copy_this);
 
+      void saveState( ossimKeywordlist& kwl, const std::string& prefix ) const;
+
+      bool loadState(const ossimKeywordlist& kwl, const std::string& prefix ); 
+
       /** file name */
       ossimFilename m_file;
 
       /** Bounding rectangle in decimal degrees. */
       ossimGrect m_rect;
-      ossimDpt m_nominalGSD; // post spacing at center
+
+      // post spacing at center
+      // ossimDpt m_nominalGSD;
 
       /** True if in ossimElevationCellDatabase::m_cacheMap. */
       bool m_loadedFlag;
@@ -195,6 +200,12 @@ private:
     * m_connectionString.
     */
    void loadFileMap();
+
+   /**
+    * @brief Initializes m_entryMap with all loadable files from
+    * m_connectionString.
+    */
+   bool loadMapFromKwl();
 
    /** Hidden from use copy constructor */
    ossimImageElevationDatabase(const ossimImageElevationDatabase& copy_this);

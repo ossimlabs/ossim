@@ -1,16 +1,14 @@
-//----------------------------------------------------------------------------
+//---
 //
 // File: ossimImageElevationHandler.cpp
 // 
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description:  See class desciption in header file.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #include <ossim/elevation/ossimImageElevationHandler.h>
@@ -21,10 +19,6 @@
 #include <ossim/base/ossimGpt.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
-
-#include <iostream> // tmp drb
-using namespace std;
-
 #include <cmath>
 
 RTTI_DEF1(ossimImageElevationHandler, "ossimImageElevationHandler" , ossimElevCellHandler)
@@ -70,7 +64,7 @@ bool ossimImageElevationHandler::open(const ossimFilename& file)
       // NOTE: The false passed to open is flag to NOT open overviews. If code is ever changed
       // to go between reduced resolution levels this should be changed.
       //---
-      m_ih = ossimImageHandlerRegistry::instance()->open(file, true, false);
+      m_ih = ossimImageHandlerRegistry::instance()->openConnection(file, false);
       if ( m_ih.valid() )
       {
          m_geom = m_ih->getImageGeometry();
@@ -103,6 +97,8 @@ bool ossimImageElevationHandler::open(const ossimFilename& file)
                   if ( corner[i].lon > lrGpt.lon ) lrGpt.lon = corner[i].lon;
                   if ( corner[i].lat < lrGpt.lat ) lrGpt.lat = corner[i].lat;
                }
+               if ( ossim::isnan( ulGpt.hgt ) ) ulGpt.hgt = 0.0;
+               if ( ossim::isnan( lrGpt.hgt ) ) lrGpt.hgt = 0.0;
                theGroundRect = ossimGrect(ulGpt, lrGpt);
             }
             else
@@ -214,7 +210,7 @@ ossimImageData* ossimImageElevationHandler::getTile(ossim_uint32 x, ossim_uint32
 
    // Search for this tile in the cache:
    std::lock_guard<std::mutex> lock(m_mutex);
-   vector<TileCacheEntry>::iterator iter = m_tileCache.begin();
+   std::vector<TileCacheEntry>::iterator iter = m_tileCache.begin();
    while ((iter != m_tileCache.end()) && (iter->id != tile_id))
       ++iter;
 
