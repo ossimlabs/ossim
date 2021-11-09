@@ -183,7 +183,7 @@ void ossim::TiffHandlerState::loadDefaults(std::shared_ptr<ossim::istream> &str,
     m_tags.getSortedList(prefixValues, "tiff.image");
     nValues = prefixValues.size();
     addValue("tiff.number_of_directories", ossimString::toString(nValues));
-    ossim_uint32 idx = 0;
+    // ossim_uint32 idx = 0;
     //ossim_int64 h = getImageLength(0);
     //ossim_int64 w = getImageWidth(0);
     ossim_int64 tw = getTileWidth(0);
@@ -222,13 +222,13 @@ void ossim::TiffHandlerState::loadDirectory(TIFF* tiffPtr,
 {
   ossim_uint32  imageWidth=0;
   ossim_uint32  imageLength=0;
-  ossim_int32   readMethod=0;
+  // ossim_int32   readMethod=0;
   ossim_uint16  planarConfig=0;
   ossim_uint16  photometric=0;
   ossim_uint32  rowsPerStrip=0;
   ossim_uint32  imageTileWidth=0;
   ossim_uint32  imageTileLength=0;
-  ossim_uint32  imageDirectoryList=0;
+  // ossim_uint32  imageDirectoryList=0;
   ossim_int32   compressionType=0;
   ossim_uint32  subFileType=0;
   ossim_uint16  bitsPerSample=0;
@@ -435,7 +435,7 @@ void ossim::TiffHandlerState::loadGeotiffTags(TIFF* tiffPtr,
   ossim_uint16 rasterType = 0;
   ossim_uint16 pcsCode = 0;
   ossim_uint16 coordTransGeoCode = 0;
-  ossim_uint32 idx = 0;
+  // ossim_uint32 idx = 0;
   GTIF* gtif = GTIFNew(tiffPtr);
   char citationStrPtr[CITATION_STRING_SIZE];
   char* buf = 0;
@@ -693,17 +693,27 @@ bool ossim::TiffHandlerState::isDigitalGlobe() const
 
 bool ossim::TiffHandlerState::isReduced(ossim_uint32 directory)const
 {
-  return getSubFileType(directory)&FILETYPE_REDUCEDIMAGE;
+   // return getSubFileType(directory) & FILETYPE_REDUCEDIMAGE;
+   return getSubFileType(directory) == FILETYPE_REDUCEDIMAGE;
 }
 
 bool ossim::TiffHandlerState::isMask(ossim_uint32 directory)const
 {
-  return getSubFileType(directory) & FILETYPE_MASK;
+   //---
+   // NOTE:
+   // sub_file_type of 5(bit mask) from cloud optimized geotiff(COG) sample
+   // is not in tiff.h yet. Not sure if it's standard yet. drb - 20211109
+   //---
+   
+   // return getSubFileType(directory) & FILETYPE_MASK;
+   ossim_int32 sub_file_type = getSubFileType(directory);
+   return (sub_file_type == FILETYPE_MASK) || (sub_file_type == 5);
 }
 
 bool ossim::TiffHandlerState::isPage(ossim_uint32 directory)const
 {
-  return getSubFileType(directory) & FILETYPE_PAGE;
+   // return getSubFileType(directory) & FILETYPE_PAGE;
+   return getSubFileType(directory) == FILETYPE_PAGE;
 }
 
 bool ossim::TiffHandlerState::isTiled(ossim_uint32 directory)const
@@ -717,7 +727,7 @@ void ossim::TiffHandlerState::convertArrayToStringList(ossimString& result, doub
   result = "";
   if(doubleArray && (doubleArraySize > 0))
   {
-    ossim_int32 precision = 20;
+     // ossim_int32 precision = 20;
     std::ostringstream doubleArrayStream;
     doubleArrayStream << "(";
     for(idx = 0; idx < doubleArraySize-1;++idx)
@@ -950,6 +960,7 @@ bool ossim::TiffHandlerState::hasColorMap(ossim_int32 directory)const
   return exists(directory, "colormap");
 }
 
+#if 0 /* Overloaded methods for int32 dir not called in core. */
 bool ossim::TiffHandlerState::isReduced(ossim_int32 directory) const
 {
   
@@ -965,6 +976,7 @@ bool ossim::TiffHandlerState::isMask(ossim_int32 directory) const
 {
   return getSubFileType(directory) == FILETYPE_MASK;
 }
+#endif
 
 ossim_int32 ossim::TiffHandlerState::getSubFileType(ossim_int32 directory) const
 {

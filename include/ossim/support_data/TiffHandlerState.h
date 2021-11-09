@@ -401,9 +401,12 @@ namespace ossim
     bool getMinSampleValue(ossim_float64 &minSampleValue, ossim_int32 directory = 0) const;
     bool getMaxSampleValue(ossim_float64 &maxSampleValue, ossim_int32 directory = 0) const;
     bool hasColorMap(ossim_int32 dir)const;
-    bool isReduced(ossim_int32 directory = 0) const;
-    bool isPage(ossim_int32 directory = 0) const;
-    bool isMask(ossim_int32 directory = 0) const;
+
+    // Overloaded for int not called from baseline.
+    // bool isReduced(ossim_int32 directory = 0) const;
+    // bool isPage(ossim_int32 directory = 0) const;
+    // bool isMask(ossim_int32 directory = 0) const;
+    
     bool isDigitalGlobe()const;
     ossim_int32 getSubFileType(ossim_int32 directory = 0) const;
     ossim_uint32 getNumberOfDirectories()const;
