@@ -93,6 +93,7 @@ ossimTiffTileSource::ossimTiffTileSource()
       thePhotometric(0),
       theRowsPerStrip(0),
       theImageDirectoryList(0),
+      theMaskDirectoryList(0),
       theCurrentTiffRlevel(0),
       theCompressionType(0),
       theOutputBandList(0)
@@ -206,7 +207,7 @@ bool ossimTiffTileSource::getTile(ossimImageData *result,
                reallocateBuffer = true;
             }
 
-            if (getCurrentTiffRLevel() != theImageDirectoryList[level])
+            if (theCurrentDirectory != theImageDirectoryList[level])               
             {
                status = setTiffDirectory(theImageDirectoryList[level]);
                if (status)
@@ -405,6 +406,7 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
    }
    theImageFile = ossimFilename(connectionString);
    theImageDirectoryList.clear();
+   theMaskDirectoryList.clear();
 
    //---
    // Note:  The 'm' in "rm" is to tell TIFFOpen to not memory map the file.
@@ -556,28 +558,41 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
              << endl;
       }
 
-      if (state->isReduced(dir))
+      if (dir != 0)
       {
-         //---
-         // Check for a thumbnail image.  If present don't use as it will mess with
-         // overviews.  Currently only checking if it's a two directory image, i.e. a full
-         // res and a thumbnail.
-         //
-         // Note this shuts off the thumbnail which someone may want to see.  We could make
-         // this a reader prop if it becomes an issue. drb - 09 Jan. 2012.
-         //---
-         if (dir != 0)
+         if (state->isReduced(dir))
          {
+            //---
+            // Check for a thumbnail image.  If present don't use as it will mess with
+            // overviews.  Currently only checking if it's a two directory image, i.e. a full
+            // res and a thumbnail.
+            //
+            // Note this shuts off the thumbnail which someone may want to see.  We could make
+            // this a reader prop if it becomes an issue. drb - 09 Jan. 2012.
+            //---
             bool acceptAsRrdsLayer = true;
             if ((theNumberOfDirectories == 2) && (dir == 1))
             {
                acceptAsRrdsLayer = isPowerOfTwoDecimation(dir);
             }
-
+            
             if (acceptAsRrdsLayer)
             {
                theImageDirectoryList.push_back(dir);
             }
+         }
+         else if ( (state->getSubFileType(dir) == FILETYPE_MASK) ||
+                   (state->getSubFileType(dir) == 5) )
+         {
+            // sub_file_type of 5(bit mask) is not in tiff.h yet.
+            theMaskDirectoryList.push_back(dir);
+         }
+         else
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << MODULE << " WARNING:\nUnhandled sub file type value!"
+               << "IFD: " << dir << " sub file type: " << state->getSubFileType(dir)
+               << std::endl;
          }
       }
 
@@ -1030,7 +1045,8 @@ bool ossimTiffTileSource::loadFromScanLine(const ossimIrect &clip_rect,
    ossimInterleaveType type =
        (thePlanarConfig[theCurrentDirectory] == PLANARCONFIG_CONTIG) ? OSSIM_BIP : OSSIM_BIL;
 
-   if (theBufferRLevel != getCurrentTiffRLevel() || !clip_rect.completely_within(theBufferRect))
+   if (theBufferRLevel != getCurrentTiffRLevel() ||
+       !clip_rect.completely_within(theBufferRect))
    {
       //***
       // Must reload the buffer.  Grab enough lines to fill the depth of the
@@ -1318,7 +1334,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Tile(const ossimIrect &tile_rect,
                                                 ulTilePt.y +
                                                     theInputTileSize[theCurrentDirectory].y - 1);
 
-         if (getCurrentTiffRLevel() != theBufferRLevel ||
+         if (theBufferRLevel != getCurrentTiffRLevel() ||
              tiff_tile_rect != theBufferRect)
          {
             // Need to grab a new tile.
@@ -1466,8 +1482,8 @@ bool ossimTiffTileSource::loadFromRgbaU8Strip(const ossimIrect &tile_rect,
    // Loop through strips...
    for (ossim_uint32 strip = starting_strip; strip <= ending_strip; strip++)
    {
-      if ((theBufferRLevel != theCurrentDirectory) ||
-          (clip_rect.completely_within(theBufferRect) == false))
+      if (theBufferRLevel != getCurrentTiffRLevel() ||
+          !clip_rect.completely_within(theBufferRect))
       {
          if (TIFFReadRGBAStrip(theTiffPtr,
                                (strip * theRowsPerStrip[theCurrentDirectory]),
@@ -1480,7 +1496,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Strip(const ossimIrect &tile_rect,
          }
 
          // Capture rect and rlevel of buffer:
-         theBufferRLevel = theCurrentDirectory;
+         theBufferRLevel = getCurrentTiffRLevel();
          theBufferRect = ossimIrect(
              0,
              starting_strip,
@@ -1730,7 +1746,7 @@ bool ossimTiffTileSource::loadFromU16Strip(const ossimIrect &clip_rect, ossimIma
    // Loop through strips....
    for (ossim_uint32 strip = starting_strip; strip <= ending_strip; ++strip)
    {
-      if ((theBufferRLevel != theCurrentDirectory) ||
+      if (theBufferRLevel != getCurrentTiffRLevel() ||
           !clip_rect.completely_within(theBufferRect))
       {
          // Fill buffer block:
@@ -1788,7 +1804,7 @@ bool ossimTiffTileSource::loadFromU16Strip(const ossimIrect &clip_rect, ossimIma
          if (status)
          {
             // Capture rect and rlevel of buffer:
-            theBufferRLevel = theCurrentDirectory;
+            theBufferRLevel = getCurrentTiffRLevel();
             theBufferRect = ossimIrect(0,
                                        startY,
                                        theImageWidth[theCurrentDirectory] - 1,
@@ -2059,9 +2075,10 @@ std::ostream &ossimTiffTileSource::print(std::ostream &os) const
       << "\nmin_sample_value:            " << theMinSampleValue
       << "\nmax_sample_value:            " << theMaxSampleValue
       << "\nnull_sample_value:           " << theNullSampleValue
+      << "\nr0_is_full_res:              " << theR0isFullRes
       << "\ntheNumberOfDirectories:      " << theNumberOfDirectories
-      << "\nr0_is_full_res:              " << theR0isFullRes;
-
+      << "\nimage_dirs:                  " << theImageDirectoryList.size();
+         
    for (ossim_uint32 i = 0; i < theNumberOfDirectories; ++i)
    {
       os << "\ndirectory[" << i << "]"
@@ -2083,6 +2100,30 @@ std::ostream &ossimTiffTileSource::print(std::ostream &os) const
          os << "\ntile_length:     " << theInputTileSize[i].y;
       }
       os << endl;
+   }
+
+   os << "\nmask_dirs:       " << theMaskDirectoryList.size();
+   for (ossim_uint32 i=0; i<(ossim_uint32)theMaskDirectoryList.size(); ++i )
+   {
+      ossim_uint32 ifdIndex = theMaskDirectoryList[i];
+      os << "\nmask_ifd_index:    " << ifdIndex
+         << "\nmask_width:        " << theImageWidth[ifdIndex]
+         << "\nmask_length:       " << theImageLength[ifdIndex]
+         << "\nmask_read method:  " << getReadMethod(ifdIndex).c_str()
+         << "\nmask_planar:       " << thePlanarConfig[ifdIndex]
+         << "\nmask_photometric:  " << thePhotometric[ifdIndex];
+      if (theRowsPerStrip[ifdIndex])
+      {
+         os << "\nmask_rows_per_strip:  " << theRowsPerStrip[ifdIndex];
+      }
+      if (theInputTileSize[i].x)
+      {
+         os << "\nmask_tile_width:   " << theInputTileSize[i].x;
+      }
+      if (theInputTileSize[i].y)
+      {
+         os << "\nmask_tile_length:  " << theInputTileSize[i].y;
+      }
    }
 
    if (theTile.valid())
@@ -2665,7 +2706,7 @@ bool ossimTiffTileSource::allocateBuffer()
    }
 
    theBufferRect.makeNan();
-   theBufferRLevel = theCurrentDirectory;
+   theBufferRLevel = getCurrentTiffRLevel();
 
    if (bSuccess && (buffer_size != theBufferSize))
    {

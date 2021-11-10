@@ -379,7 +379,10 @@ private:
    std::vector<ossim_uint16> thePlanarConfig;
    std::vector<ossim_uint16> thePhotometric;
    std::vector<ossim_uint32> theRowsPerStrip;
+
+   // Holds the image file directory(IFD) for each image/mask level.
    std::vector<ossim_uint32> theImageDirectoryList;
+   std::vector<ossim_uint32> theMaskDirectoryList;
 
    /** theInputTileSize reflects the most efficient tiling scheme for reading from disk. If the
     * image is tiled, then the output tile size will match the tiling on disk. If it is stripped,
