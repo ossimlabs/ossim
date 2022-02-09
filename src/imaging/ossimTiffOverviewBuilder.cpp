@@ -159,10 +159,10 @@ bool ossimTiffOverviewBuilder::execute()
    }
 
    // RP - allow user to set extension with hidden option.  Used to add unique suffix to prevent duplicate requests from stomping each other
-   ossimFilename outputFileTemp;
+   ossimFilename outputFileTemp = m_outputFile;
    if ( !buildInternalOverviews() )
    {   
-      outputFileTemp = m_outputFile;
+      //outputFileTemp = m_outputFile;
       if ( m_tempExtension.size() )
       {
          outputFileTemp += "." + m_tempExtension;
@@ -546,7 +546,7 @@ bool ossimTiffOverviewBuilder::writeR0(TIFF* tif)
          //***
          // Band loop.
          //***
-         for (uint32 band=0;
+         for (ossim_uint32 band=0;
               (band < m_imageHandler->getNumberOfOutputBands())&&!needsAborting();
               ++band)
          {
@@ -883,7 +883,7 @@ bool ossimTiffOverviewBuilder::setTags(TIFF* tif,
    
    ossim_int32   imageWidth      = outputRect.width();
    ossim_int32   imageHeight     = outputRect.height();
-   int16         samplesPerPixel = m_imageHandler->getNumberOfOutputBands();
+   ossim_int16   samplesPerPixel = m_imageHandler->getNumberOfOutputBands();
    ossim_float64 minSampleValue  = m_imageHandler->getMinPixelValue();
    ossim_float64 maxSampleValue  = m_imageHandler->getMaxPixelValue();
 
@@ -1430,7 +1430,8 @@ bool ossimTiffOverviewBuilder::buildInternalOverviews() const
    bool result = false;
    if ( m_internalOverviewsFlag &&  m_imageHandler.valid() )
    {
-      if ( m_imageHandler->getClassName() == "ossimTiffTileSource" )
+      if ( (m_imageHandler->getClassName() == "ossimTiffTileSource") ||
+           (m_imageHandler->getClassName() == "ossimTiffReader" ) )
       {
          result = true;
       }
