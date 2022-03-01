@@ -471,6 +471,9 @@ void ossimRpcSolver::solveCoefficients(NEWMAT::ColumnVector& coeff,
    NEWMAT::ColumnVector tempCoeff;
    NEWMAT::DiagonalMatrix weights((int)f.size());
    NEWMAT::ColumnVector denominator(20);
+   
+   // sets up the matrix to hold the system of equations
+   setupSystemOfEquations(m, r, x, y, z);
 
    // initialize the weight matrix to the identity
    //
@@ -492,9 +495,6 @@ void ossimRpcSolver::solveCoefficients(NEWMAT::ColumnVector& coeff,
          cout<<"\nr = "<<r<<endl;
       }
 #endif
-
-      // sets up the matrix to hold the system of equations
-      setupSystemOfEquations(m, r, x, y, z);
 
       // solve the least squares solution.  Note: the invert is used
       // to do a Singular Value Decomposition for the inverse since the
