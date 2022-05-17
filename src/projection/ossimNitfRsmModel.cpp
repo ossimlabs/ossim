@@ -19,6 +19,7 @@
 #include <ossim/support_data/ossimNitfImageHeader.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 #include <ossim/support_data/ossimNitfRsmecaTag.h>
+#include <ossim/support_data/ossimNitfRsmecbTag.h>
 #include <ossim/support_data/ossimNitfRsmidaTag.h>
 #include <ossim/support_data/ossimNitfRsmpcaTag.h>
 #include <ossim/support_data/ossimNitfRsmpiaTag.h>
@@ -204,102 +205,119 @@ bool ossimNitfRsmModel::getRsmData(const ossimNitfImageHeader* ih)
    {
       ossimRefPtr<ossimNitfRegisteredTag> tag = 0;
 
-      // RSMECA:
+      // Find either RSMECB or RSMECA:
+      bool error_cov_initialized = false;
+      const ossimString RSMECB_TAG = "RSMECB";
       const ossimString RSMECA_TAG = "RSMECA";
-      tag = ih->getTagData(RSMECA_TAG);
+      tag = ih->getTagData(RSMECB_TAG);
       if (tag.valid())
       {
-         ossimRefPtr<ossimNitfRsmecaTag> rsmecaTag =
-            dynamic_cast<ossimNitfRsmecaTag*>(tag.get());
-         if ( rsmecaTag.valid() )
+         ossimRefPtr<ossimNitfRsmecbTag> rsmecbTag =
+            dynamic_cast<ossimNitfRsmecbTag*>(tag.get());
+         if ( rsmecbTag.valid() )
          {
-            if ( initializeModel( rsmecaTag.get() ) )
+            if ( initializeModel( rsmecbTag.get() ) )
+               error_cov_initialized = true;
+         }
+      } else {
+         tag = ih->getTagData(RSMECA_TAG);
+         if (tag.valid())
+         {
+            ossimRefPtr<ossimNitfRsmecaTag> rsmecaTag =
+               dynamic_cast<ossimNitfRsmecaTag*>(tag.get());
+            if ( rsmecaTag.valid() )
             {
-               // RSMIDA:
-               ossimString RSMIDA_TAG = "RSMIDA";
-               tag = ih->getTagData(RSMIDA_TAG);
-               if (tag.valid())
+               if ( initializeModel( rsmecaTag.get() ) )
+                  error_cov_initialized = true;
+            }
+         }
+      }
+
+      if (error_cov_initialized)
+      {
+         // RSMIDA:
+         ossimString RSMIDA_TAG = "RSMIDA";
+         tag = ih->getTagData(RSMIDA_TAG);
+         if (tag.valid())
+         {
+            ossimRefPtr<ossimNitfRsmidaTag> rsmidaTag =
+               dynamic_cast<ossimNitfRsmidaTag*>( tag.get() );
+            if ( rsmidaTag.valid() )
+            {
+               if ( m_ida.initialize( rsmidaTag.get() ) )
                {
-                  ossimRefPtr<ossimNitfRsmidaTag> rsmidaTag =
-                     dynamic_cast<ossimNitfRsmidaTag*>( tag.get() );
-                  if ( rsmidaTag.valid() )
+                  // RSMPIA:
+                  const ossimString RSMPIA_TAG = "RSMPIA";
+                  tag = ih->getTagData(RSMPIA_TAG);
+                  if (tag.valid())
                   {
-                     if ( m_ida.initialize( rsmidaTag.get() ) )
+                     ossimRefPtr<ossimNitfRsmpiaTag> rsmpiaTag =
+                        dynamic_cast<ossimNitfRsmpiaTag*>( tag.get() );
+                     if ( rsmpiaTag.valid() )
                      {
-                        // RSMPIA:
-                        const ossimString RSMPIA_TAG = "RSMPIA";
-                        tag = ih->getTagData(RSMPIA_TAG);
-                        if (tag.valid())
+                        if ( m_pia.initialize( rsmpiaTag.get() ) )
                         {
-                           ossimRefPtr<ossimNitfRsmpiaTag> rsmpiaTag =
-                              dynamic_cast<ossimNitfRsmpiaTag*>( tag.get() );
-                           if ( rsmpiaTag.valid() )
+                           //---
+                           // RSMPCA:
+                           // Multiple tags if image is sectioned.
+                           //---
+                           const ossimString RSMPCA_TAG = "RSMPCA";
+                           std::vector< const ossimNitfRegisteredTag* > tags;
+                           ih->getTagData( RSMPCA_TAG, tags );
+
+                           if ( tags.size() == m_pia.m_tnis )
                            {
-                              if ( m_pia.initialize( rsmpiaTag.get() ) )
+                              for ( ossim_uint32 tagIndex = 0;
+                                    tagIndex < m_pia.m_tnis;
+                                    ++tagIndex )
                               {
-                                 //---
-                                 // RSMPCA:
-                                 // Multiple tags if image is sectioned.
-                                 //---
-                                 const ossimString RSMPCA_TAG = "RSMPCA";
-                                 std::vector< const ossimNitfRegisteredTag* > tags;
-                                 ih->getTagData( RSMPCA_TAG, tags );
-
-                                 if ( tags.size() == m_pia.m_tnis )
+                                 const ossimNitfRsmpcaTag* rsmpcaTag =
+                                    dynamic_cast<const ossimNitfRsmpcaTag*>( tags[tagIndex] );
+                                 if ( rsmpcaTag )
                                  {
-                                    for ( ossim_uint32 tagIndex = 0;
-                                          tagIndex < m_pia.m_tnis;
-                                          ++tagIndex )
+                                    ossimRsmpca pca;
+                                    if ( pca.initialize( rsmpcaTag ) )
                                     {
-                                       const ossimNitfRsmpcaTag* rsmpcaTag =
-                                          dynamic_cast<const ossimNitfRsmpcaTag*>( tags[tagIndex] );
-                                       if ( rsmpcaTag )
-                                       {
-                                          ossimRsmpca pca;
-                                          if ( pca.initialize( rsmpcaTag ) )
-                                          {
-                                             m_pca.push_back( pca );
-                                          }
-                                          else if (traceDebug())
-                                          {
-                                             ossimNotify(ossimNotifyLevel_WARN)
-                                                << "WARNING! RSMPCA[" << tagIndex << "] intitialization failed!"
-                                                << std::endl;
-                                          }
-                                       }
+                                       m_pca.push_back( pca );
                                     }
-
-                                    // Call base ossimRsmModel::validate() for sanity check:
-                                    status = validate();
+                                    else if (traceDebug())
+                                    {
+                                       ossimNotify(ossimNotifyLevel_WARN)
+                                          << "WARNING! RSMPCA[" << tagIndex << "] intitialization failed!"
+                                          << std::endl;
+                                    }
                                  }
-                                 
-                              } // Matches: if ( m_pia.initialize( rsmpiaTag ) )
+                              }
+
+                              // Call base ossimRsmModel::validate() for sanity check:
+                              status = validate();
                            }
-                        }
-                        else if (traceDebug())
-                        {
-                           ossimNotify(ossimNotifyLevel_WARN)
-                              << "\nCould not find RSM tag: " << RSMPIA_TAG
-                              << "\nAborting with error..."
-                              << std::endl;
-                        }
+
+                        } // Matches: if ( m_pia.initialize( rsmpiaTag ) )
                      }
                   }
-               }
-               else if (traceDebug())
-               {
-                  ossimNotify(ossimNotifyLevel_WARN)
-                     << "\nCould not find RSM tag: " << RSMIDA_TAG
-                     << "\nAborting with error..." << std::endl;
+                  else if (traceDebug())
+                  {
+                     ossimNotify(ossimNotifyLevel_WARN)
+                        << "\nCould not find RSM tag: " << RSMPIA_TAG
+                        << "\nAborting with error..."
+                        << std::endl;
+                  }
                }
             }
+         }
+         else if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << "\nCould not find RSM tag: " << RSMIDA_TAG
+               << "\nAborting with error..." << std::endl;
          }
       }
       else if (traceDebug())
       {
          ossimNotify(ossimNotifyLevel_WARN)
             << "ossimNitfRsmModel::getRsmData WARNING!"
-            << "\nCould not find RSM tag: " << RSMECA_TAG
+            << "\nCould not find RSM tag: " << RSMECA_TAG << " or " << RSMECB_TAG
             << "\nAborting with error..." << std::endl;
       }
    }
@@ -328,6 +346,22 @@ bool ossimNitfRsmModel::initializeModel( const ossimNitfRsmecaTag* rsmecaTag )
    return status;
    
 } // End: ossimNitfRsmModel::initializeModel( rsmecaTag )
+
+
+bool ossimNitfRsmModel::initializeModel( const ossimNitfRsmecbTag* rsmecbTag )
+{
+   bool status = false;
+
+   if ( rsmecbTag )
+   {
+      // TODO:
+      status = true;
+   }
+
+   return status;
+
+} // End: ossimNitfRsmModel::initializeModel( rsmecbTag )
+
 
 ossimObject* ossimNitfRsmModel::dup() const
 {
