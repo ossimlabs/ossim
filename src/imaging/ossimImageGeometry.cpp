@@ -1535,7 +1535,7 @@ ossim_float64 ossimImageGeometry::upIsUpAngle(const ossimDpt& pt) const
             // RP - FIX POINTS IN FIRST ROW
             ipts[0] = centerIpt + ossimDpt(-widthPercent, -heightPercent);
             // 45 degree middle top 
-            ipts[1] = centerIpt + ossimDpt(0.0,heightPercent);
+            ipts[1] = centerIpt + ossimDpt(0.0, -heightPercent);
             // 45 degree right quadrant
             ipts[2] = centerIpt + ossimDpt(widthPercent, -heightPercent);
             
