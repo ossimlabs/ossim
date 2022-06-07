@@ -8,6 +8,7 @@
 
 class ossimNitfImageHeader;
 class ossimNitfRsmecaTag;
+class ossimNitfRsmecbTag;
 class ossimNitfRsmidaTag;
 class ossimNitfRsmpcaTag;
 class ossimNitfRsmpiaTag;
@@ -62,6 +63,12 @@ public:
     * @param rsmecaTag
     */
    bool initializeModel( const ossimNitfRsmecaTag* rsmecaTag );
+
+   /**
+    * @brief Initializes model from RSMECB tag.
+    * @param rsmecbTag
+    */
+   bool initializeModel( const ossimNitfRsmecbTag* rsmecbTag );
 
 protected:
    /** @brief virtual destructor */
