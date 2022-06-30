@@ -317,8 +317,7 @@ void ossimNitfImageHeaderV2_1::parseStream(ossim::istream& in, const ossimNitfFi
          }
          delete [] blockRead;
       }
-      if( (thePadPixelMaskRecordLength > 0) ||
-          ( (getCompressionCode().upcase() == "M3") && (thePadPixelMaskRecordLength == 0) ) )
+      if(thePadPixelMaskRecordLength > 0)
       {
          ossim_uint32 totalNumber = 0;
          if(theImageMode[0] == 'S')
