@@ -697,7 +697,7 @@ bool ossimNitfTileSource::canUncompress(const ossimNitfImageHeader* hdr) const
    {
       ossimString code = hdr->getCompressionCode();
 
-      if (code == "C3") // jpeg
+      if (code == "C3" || code == "M3") // jpeg
       {
          if (hdr->getBitsPerPixelPerBand() == 8)
          {
@@ -708,7 +708,7 @@ bool ossimNitfTileSource::canUncompress(const ossimNitfImageHeader* hdr) const
             if(traceDebug())
             {
                ossimNotify(ossimNotifyLevel_DEBUG)
-                  << "Entry with jpeg compression (C3) has an unsupported "
+                  << "Entry with jpeg compression (C3 or M3) has an unsupported "
                   << "JPEG data precision: " << hdr->getBitsPerPixelPerBand()
                   << std::endl;
             }
@@ -744,7 +744,7 @@ void ossimNitfTileSource::initializeReadMode()
    ossimString imode           = hdr->getIMode();
    ossimString compressionCode = hdr->getCompressionCode();
 
-   if ( (compressionCode == "C3") && ((imode == "B")||(imode == "P")) )
+   if ( (compressionCode == "C3" || compressionCode == "M3") && ((imode == "B")||(imode == "P")) )
    {
       theReadMode = READ_JPEG_BLOCK; 
    }
@@ -1144,7 +1144,7 @@ bool ossimNitfTileSource::initializeBlockSize()
       {
          theBlockSizeInBytes *= theNumberOfInputBands;
          ossimString code = hdr->getCompressionCode();
-         if (code == "C3") // jpeg
+         if (code == "C3" || code == "M3") // jpeg
          {
             m_jpegOffsetsDirty  = true;
          }
@@ -3374,6 +3374,30 @@ bool ossimNitfTileSource::scanForJpegBlockOffsets()
    theFileStr->seekg(0, ios::beg);
    theFileStr->clear();
 
+   // We've got a masked image and we need to remap the masked block
+   // details to absolute block numbers so we can use them.
+   if (hdr->hasBlockMaskRecords()) {
+      // copy the masked block details so we can replace them.
+      vector<std::streamoff> offsets = theNitfBlockOffset;
+      vector<ossim_uint32> sizes = theNitfBlockSize;
+      theNitfBlockOffset.clear();
+      theNitfBlockSize.clear();
+
+      ossim_uint32 masked_idx = 0;
+      for (ossim_uint32 block=0; block<total_blocks; block++) {
+         ossim_uint32 offset = hdr->getBlockMaskRecordOffset(block, 0);
+         ossim_uint32 size = 0;
+         if (offset != 0xffffffff) {
+            offset = offsets[masked_idx];
+            size = sizes[masked_idx];
+            masked_idx++;
+         }
+         theNitfBlockOffset.push_back(offset);
+         theNitfBlockSize.push_back(size);
+      }
+      allBlocksFound = true;
+   }
+
 #if 0 /* Please leave for debug. (drb) */
    std::streamoff startOfData = hdr->getDataLocation();
    ossimNotify(ossimNotifyLevel_WARN) << "current entry: " << theCurrentEntry << "\n";
@@ -3444,6 +3468,12 @@ bool ossimNitfTileSource::uncompressJpegBlock(ossim_uint32 x, ossim_uint32 y)
          << "\noffset to block: " << theNitfBlockOffset[blockNumber]
          << "\nblock size: " << theNitfBlockSize[blockNumber]
          << std::endl;
+   }
+
+   // We have a masked image and this is an empty tile.
+   if (theNitfBlockOffset[blockNumber] == 0xffffffff) {
+       theCacheTile->makeBlank();
+       return true;
    }
    
    // Seek to the block.
