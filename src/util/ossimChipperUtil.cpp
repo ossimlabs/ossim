@@ -1898,6 +1898,11 @@ void ossimChipperUtil::addImgSources()
          std::shared_ptr<ossimSrcRecord> srcRecord = std::make_shared<ossimSrcRecord>();
          if (srcRecord->loadState(*m_kwl, imagePrefix.c_str()))
          {
+            // Use the global entry only if not set already.
+            if ( srcRecord->getEntryIndex() == -1 )
+            {
+               srcRecord->setEntryIndex( (ossim_int32)getEntryNumber() );
+            }
             addImgSource(*srcRecord);
          }
       }
