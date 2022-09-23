@@ -726,7 +726,7 @@ protected:
     * and decimal fraction values indicate reduction.
     * For example, 2.30 indicates the original image has been magnified by a
     * factor of
-    * Ò2.30,Ó while Ò0.5Ó indicates the original image has been reduced by a
+    * "2.30," while "0.5" indicates the original image has been reduced by a
     * factor of 2.
     * The default value is 1.0, indicating no magnification or reduction.
     * In addition, the following values shall be used for reductions that are
@@ -931,7 +931,7 @@ protected:
     * of 2 bytes.  If the number of bits used by TPXCD is less than the number
     * of bits available for storage,
     * the value shall be justified in accordance with the PJUST field in the
-    * image subheader.  
+    * image subheader.
     * 3A Binary integer; 0 to 2^n -1 where n=TPXCDLNTH
     */
    ossim_uint16 thePadOutputPixelCode;
