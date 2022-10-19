@@ -18,6 +18,8 @@
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimKeyword.h>
+#include <ossim/base/ossimBooleanProperty.h>
+#include <ossim/base/ossimFilenameProperty.h>
 
 using namespace std;
 
@@ -348,6 +350,11 @@ void ossimHistogramEqualization::initialize()
    {
       theTile = NULL;
    }
+   if(getHistogram().valid())
+   {
+      theAccumulationHistogram = getHistogram()->createAccumulationLessThanEqual();
+      initializeLuts();
+   }
 }
 
 void ossimHistogramEqualization::allocate()
@@ -501,6 +508,9 @@ void ossimHistogramEqualization::initializeLuts()
 
 bool ossimHistogramEqualization::setHistogram(const ossimFilename& filename)
 {
+   theFilename = filename;
+   computeAccumulationHistogram();
+   initializeLuts();
    return ossimImageSourceHistogramFilter::setHistogram(filename);
 }
 
@@ -512,6 +522,43 @@ bool ossimHistogramEqualization::getInverseFlag()const
 void ossimHistogramEqualization::setInverseFlag(bool inverseFlag)
 {
    theInverseFlag = inverseFlag;
+}
+
+void ossimHistogramEqualization::setProperty(ossimRefPtr<ossimProperty> property)
+{
+   ossimString name = property->getName();
+std::cout << "SETTING PROPERTY ==== " << name << std::endl;
+   if(name == "filename")
+   {
+      std::cout << "SETTING HISTOGRAM to : "<< property->valueToString() << std::endl;
+      setHistogram(ossimFilename(property->valueToString()));
+   }
+   else if (name == HISTOGRAM_INVERSE_FLAG_KW.keyString())
+   {
+      theInverseFlag = property->valueToString().toBool();
+   }
+}
+
+ossimRefPtr<ossimProperty> ossimHistogramEqualization::getProperty(const ossimString& name)const
+{
+   ossimRefPtr<ossimProperty> result;
+
+   if(name == "filename")
+   {
+      result = new ossimFilenameProperty(name, theFilename);
+   }
+   else if(name == HISTOGRAM_INVERSE_FLAG_KW.keyString())
+   {
+      result = new ossimBooleanProperty(name, theInverseFlag);
+   }
+
+   return result;
+}
+
+void ossimHistogramEqualization::getPropertyNames(std::vector<ossimString>& propertyNames)const	
+{
+   propertyNames.push_back(HISTOGRAM_INVERSE_FLAG_KW.keyString());
+   propertyNames.push_back("filename");
 }
 
 void ossimHistogramEqualization::deleteLuts()
