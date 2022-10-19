@@ -2024,12 +2024,20 @@ ossimRefPtr<ossimImageGeometry> ossimImageRenderer::getImageGeometry()
       if (m_ImageViewTransform.valid() && !m_ImageViewTransform->isValid())
          checkIVT();
 
-      ossimImageViewProjectionTransform* ivpt =
-            dynamic_cast<ossimImageViewProjectionTransform*>(m_ImageViewTransform.get());
-      if (ivpt)
+      if(m_ImageViewTransform->isIdentity())
       {
-         // we need to return the right side since the geometry changed to a view geometry
-         geom = ivpt->getViewGeometry();
+         geom = theInputConnection->getImageGeometry();
+      }
+      else
+      {
+
+         ossimImageViewProjectionTransform* ivpt =
+               dynamic_cast<ossimImageViewProjectionTransform*>(m_ImageViewTransform.get());
+         if (ivpt)
+         {
+            // we need to return the right side since the geometry changed to a view geometry
+            geom = ivpt->getViewGeometry();
+         }
       }
    }
    else if (theInputConnection)
