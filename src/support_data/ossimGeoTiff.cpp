@@ -32,7 +32,7 @@
 #include <ossim/projection/ossimStatePlaneProjectionInfo.h>
 #include <ossim/projection/ossimPolynomProjection.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
-#include <ossim/projection/ossimBilinearProjection.h>
+#include <ossim/projection/ossimBilinearMapProjection.h>
 #include <ossim/base/ossimTieGptSet.h>
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/base/ossimUnitTypeLut.h>
@@ -241,14 +241,14 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
                              bool imagineNad27Flag)
 {
    std::lock_guard<std::mutex> lock(theMutex);
-
    const ossimMapProjection *mapProj = projectionInfo->getProjection();
 
    if (!mapProj)
       return false;
 
-   GTIF *gtif = GTIFNew(tifPtr);
 
+   GTIF *gtif = GTIFNew(tifPtr);
+   const ossimBilinearMapProjection* bilinearProj = dynamic_cast<const ossimBilinearMapProjection*>(mapProj);
    // Get some things we need throughout.
    ossimGpt origin = mapProj->origin();
    double falseEasting = mapProj->getFalseEasting();
@@ -280,7 +280,28 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
       units = getPcsUnitType(pcsCode);
    if (units == UNDEFINED)
       units = LINEAR_METER;
+   if(bilinearProj)
+   {
+      GTIFKeySet(gtif,
+                 GTModelTypeGeoKey,
+                 TYPE_SHORT,
+                 1,
+                 ModelTypeGeographic);
 
+      // Set the units key.
+      GTIFKeySet(gtif,
+                 GeogAngularUnitsGeoKey,
+                 TYPE_SHORT,
+                 1,
+                 units);
+      GTIFKeySet(gtif, GTRasterTypeGeoKey, TYPE_SHORT, 1, RasterPixelIsPoint);
+         GTIFKeySet(gtif,
+                    GeogCitationGeoKey,
+                    TYPE_ASCII,
+                    1,
+                    "WGS84");      
+                    //GTIFWriteKeys(gtif); // Write out geotiff tags.
+   }
    if (pcsCode)
    {
       if ((units == LINEAR_FOOT_US_SURVEY) || (units == LINEAR_FOOT))
@@ -816,7 +837,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
 
       TIFFSetField(tifPtr, TIFFTAG_GEOTRANSMATRIX, 16, transform);
    }
-   else
+   else if(!bilinearProj)
    {
       // Set the scale since not implicitely provided in a model transform:
       double pixScale[3] = { 0.0, 0.0, 0.0 };
@@ -869,6 +890,29 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
       } // End of "switch (units)"
 
       TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, 6, tiePoints);
+   }
+   else
+   {
+      std::vector<ossimDpt> lsPt;
+      std::vector<ossimGpt> geoPt;
+      std::vector<double> tiePoints;
+      bilinearProj->getTiePoints(lsPt, geoPt);
+      if(lsPt.size() == geoPt.size())
+      {
+         tiePoints.resize(lsPt.size()*6);
+      }
+      int tieOffset = 0;
+      for(int idx = 0; idx < lsPt.size();++idx)
+      {
+         tiePoints[tieOffset++] = lsPt[idx].x;
+         tiePoints[tieOffset++] = lsPt[idx].y;
+         tiePoints[tieOffset++] = 0;
+         tiePoints[tieOffset++] = geoPt[idx].lond();
+         tiePoints[tieOffset++] = geoPt[idx].latd();
+         tiePoints[tieOffset++] = 0;
+      }
+      TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, tiePoints.size(), &(tiePoints.front()));
+
    }
    GTIFFree(gtif);
 
@@ -1680,7 +1724,7 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
                // create a cubic polynomial model
                //ossimRefPtr<ossimPolynomProjection> proj = new ossimPolynomProjection;
                //proj->setupOptimizer("1 x y x2 xy y2 x3 y3 xy2 x2y z xz yz");
-               ossimRefPtr<ossimBilinearProjection> proj = new ossimBilinearProjection;
+               ossimRefPtr<ossimBilinearMapProjection> proj = new ossimBilinearMapProjection;
                proj->optimizeFit(tieSet);
                proj->saveState(kwl, prefix);
                if (traceDebug())
@@ -1699,7 +1743,7 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
                // Should we check the model type (drb)
                // if (theModelType == ModelTypeGeographic)
 
-               ossimRefPtr<ossimBilinearProjection> proj = new ossimBilinearProjection;
+               ossimRefPtr<ossimBilinearMapProjection> proj = new ossimBilinearMapProjection;
                proj->optimizeFit(tieSet);
                proj->saveState(kwl, prefix);
 

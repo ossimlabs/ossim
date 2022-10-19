@@ -33,10 +33,12 @@
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/projection/ossimImageViewTransformFactory.h>
 #include <ossim/projection/ossimMapProjection.h>
+#include <ossim/projection/ossimBilinearMapProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <iostream>
 #include <stack>
 #include <ossim/base/ossimPreferences.h>
+
 // using namespace std;
 
 using namespace std;
@@ -1711,7 +1713,6 @@ void ossimImageRenderer::initializeBoundingRects()
          ossimDpt vmpp = vgeom->getMetersPerPixel();
          ossim_float64 scale = 1.0;
          ossim_uint32 maxLen = ossim::max(testRect.width(), testRect.height());
-
          // (GP March 2, 2017) determine goodMatch : test if we have either enough samples to closely match the post spacing
          //  or if we have at least half the number of pixels along the edge of an image
          //
@@ -2189,6 +2190,13 @@ void ossimImageRenderer::checkIVT()
       const ossimMapProjection* mapProj = PTR_CAST(ossimMapProjection, inputProj);
       if (mapProj)
       {
+         if (dynamic_cast<const ossimBilinearMapProjection *>(mapProj))
+         {
+            if(traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_WARN) << "ossimBilinearMapProjection output projection is not scalable.  Change to another map projection if you want to scale." << std::endl;
+            }
+         }
          ossimProjection* my_proj = PTR_CAST(ossimProjection, mapProj->dup());
          myOutGeom->setProjection(my_proj);
       }

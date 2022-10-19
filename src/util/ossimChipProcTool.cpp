@@ -766,8 +766,10 @@ ossimRefPtr<ossimMapProjection> ossimChipProcTool::newIdentityProjection()
          if (ih.valid())
          {
             ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
+            ossimKeywordlist tempKwl;
             if (geom.valid())
             {
+
                input_proj = geom->getProjection();
 
                // Check if input is UTM, need to copy zone and hemisphere if so:
