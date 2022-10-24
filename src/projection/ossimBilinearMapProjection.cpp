@@ -355,7 +355,6 @@ bool ossimBilinearMapProjection::loadState(const ossimKeywordlist& kwl,
 
 bool ossimBilinearMapProjection::operator==(const ossimProjection&  projection ) const
 {
-   std::cout<< "ossimBilinearMapProjection:operator == " << std::endl;
    bool result = false;
 
    const ossimBilinearMapProjection* bilinear = dynamic_cast<const ossimBilinearMapProjection*>(&projection);
