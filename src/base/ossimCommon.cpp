@@ -1244,6 +1244,7 @@ bool ossim::getBinInformation( const ossimImageSource* imageSource,
          maxValue     = (ossim_float32)imageSource->getMaxPixelValue(band);
          nullValue    = (ossim_float32)imageSource->getNullPixelValue(band);
 
+// Why is this here???
          switch( imageSource->getOutputScalarType() )
          {
          case OSSIM_UINT8:
@@ -1305,24 +1306,28 @@ bool ossim::getBinInformation( const ossimImageSource* imageSource,
             numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT16+1;
             break;
          case OSSIM_SINT32:
-            minValue     = OSSIM_DEFAULT_MIN_PIX_SINT32;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_SINT32;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT32; // max number of bins
+            // we will have to scale
+            // minValue     = OSSIM_DEFAULT_MIN_PIX_SINT32;
+            // maxValue     = OSSIM_DEFAULT_MAX_PIX_SINT32;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT12; // max number of bins
             break;
          case OSSIM_UINT32:
-            minValue     = OSSIM_DEFAULT_MIN_PIX_UINT32;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT32;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT32; // max number of bins
+            // we will have to scale
+            // minValue     = OSSIM_DEFAULT_MIN_PIX_UINT32;
+            // maxValue     = OSSIM_DEFAULT_MAX_PIX_UINT32;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT12; // max number of bins
             break;
          case OSSIM_FLOAT32:
-            minValue     = OSSIM_DEFAULT_MIN_PIX_FLOAT;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_FLOAT;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT32; // max number of bins
+            // we will have to scale floats so leave as input min max
+            // minValue     = OSSIM_DEFAULT_MIN_PIX_FLOAT;
+            // maxValue     = OSSIM_DEFAULT_MAX_PIX_FLOAT;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT12; // max number of bins
             break;
          case OSSIM_FLOAT64:
-            minValue     = OSSIM_DEFAULT_MIN_PIX_FLOAT;
-            maxValue     = OSSIM_DEFAULT_MAX_PIX_FLOAT;
-            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT32; // max number of bins
+            // we will have to scale doubles so leave as input min max for default and 
+            // minValue     = OSSIM_DEFAULT_MIN_PIX_FLOAT;
+            // maxValue     = OSSIM_DEFAULT_MAX_PIX_FLOAT;
+            numberOfBins = OSSIM_DEFAULT_MAX_PIX_UINT12; // max number of bins
             break;
          case OSSIM_NORMALIZED_FLOAT:
          case OSSIM_NORMALIZED_DOUBLE:
