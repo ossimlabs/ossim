@@ -39,6 +39,9 @@ public:
 
    virtual std::ostream& print(std::ostream& out) const;
 
+   virtual void setProperty(ossimRefPtr<ossimProperty> property);
+   virtual ossimRefPtr<ossimProperty> getProperty(const ossimString& name)const;
+   virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;		
 protected:
    virtual ~ossimHistogramEqualization();
 
@@ -78,6 +81,7 @@ protected:
 
    
   std::vector<ossim_uint32> theBandList;
+  ossimFilename theFilename;
    virtual void computeAccumulationHistogram();
 
   template<class T>

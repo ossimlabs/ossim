@@ -1467,6 +1467,8 @@ template <class T> void ossimHistogramRemapper::buildLinearTable(T /* dummy */)
 #endif
 
       T pix = MIN_PIX;
+      std::cout << "theMidPoint[band]: " << theMidPoint[band]  << std::endl;
+      
       bool needSkewCheck = std::fabs(theMidPoint[band] - 0.5) > FLT_EPSILON;
       for (ossim_uint32 pixIndex = 1; pixIndex < theTableBinCount; ++pixIndex)
       {

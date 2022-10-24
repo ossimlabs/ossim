@@ -5,12 +5,12 @@
 // Author: Garrett Potts
 // 
 //********************************************************************
-// $Id: ossimBilinearProjection.cpp 19682 2011-05-31 14:21:20Z dburken $
+// $Id: ossimBilinearMapProjection.cpp 19682 2011-05-31 14:21:20Z dburken $
 
 #include <sstream>
 using namespace std;
 
-#include <ossim/projection/ossimBilinearProjection.h>
+#include <ossim/projection/ossimBilinearMapProjection.h>
 #include <ossim/base/ossimDatumFactory.h>
 #include <ossim/base/ossimGpt.h>
 #include <ossim/base/ossimDpt.h>
@@ -25,16 +25,16 @@ using namespace std;
 #include <ossim/base/ossimTieGptSet.h>
 
 #ifdef OSSIM_ID_ENABLED
-static const char OSSIM_ID[] = "$Id: ossimBilinearProjection.cpp 19682 2011-05-31 14:21:20Z dburken $";
+static const char OSSIM_ID[] = "$Id: ossimBilinearMapProjection.cpp 19682 2011-05-31 14:21:20Z dburken $";
 #endif
 
 // static const ossim_uint32 MINIMUM_NMBER_OF_POINTS = 4;
 
-static ossimTrace traceDebug("ossimBilinearProjection:debug");
+static ossimTrace traceDebug("ossimBilinearMapProjection:debug");
 
-RTTI_DEF2(ossimBilinearProjection, "ossimBilinearProjection", ossimProjection, ossimOptimizableProjection);
+RTTI_DEF2(ossimBilinearMapProjection, "ossimBilinearMapProjection", ossimMapProjection, ossimOptimizableProjection);
 
-ossimBilinearProjection::ossimBilinearProjection()
+ossimBilinearMapProjection::ossimBilinearMapProjection()
    :
       ossimOptimizableProjection(),
       theLineSamplePt(0),
@@ -47,16 +47,17 @@ ossimBilinearProjection::ossimBilinearProjection()
 #endif    
 }
 
-ossimBilinearProjection::ossimBilinearProjection(const ossimBilinearProjection& rhs)
-   :
+ossimBilinearMapProjection::ossimBilinearMapProjection(const ossimBilinearMapProjection& rhs)
+   : ossimMapProjection(rhs),
       ossimOptimizableProjection(rhs),
       theLineSamplePt(rhs.theLineSamplePt),
       theGeographicPt(rhs.theGeographicPt),
       theLonFit(rhs.theLonFit)
 {
+   initializeBilinear();
 }
 
-ossimBilinearProjection::ossimBilinearProjection(const ossimDpt& ul,
+ossimBilinearMapProjection::ossimBilinearMapProjection(const ossimDpt& ul,
                                          const ossimDpt& ur,
                                          const ossimDpt& lr,
                                          const ossimDpt& ll,
@@ -84,16 +85,16 @@ ossimBilinearProjection::ossimBilinearProjection(const ossimDpt& ul,
    initializeBilinear();
 }
                        
-ossimBilinearProjection::~ossimBilinearProjection()
+ossimBilinearMapProjection::~ossimBilinearMapProjection()
 {
 }
 
-ossimObject *ossimBilinearProjection::dup()const
+ossimObject *ossimBilinearMapProjection::dup()const
 {
-   return new ossimBilinearProjection(*this);
+   return new ossimBilinearMapProjection(*this);
 }
 
-ossimGpt ossimBilinearProjection::origin()const
+ossimGpt ossimBilinearMapProjection::origin()const
 {
    ossimGpt result;
    result.makeNan();
@@ -122,7 +123,54 @@ ossimGpt ossimBilinearProjection::origin()const
    return result;
 }
 
-void ossimBilinearProjection::worldToLineSample(const ossimGpt& worldPoint,
+ossimRefPtr<ossimBilinearMapProjection> ossimBilinearMapProjection::newProjection(const ossimDrect& imageSpace, bool shiftToZeroOrigin)const
+{
+   ossimRefPtr<ossimBilinearMapProjection> result;
+   ossimDrect targetRect = imageSpace;
+
+   if(shiftToZeroOrigin)
+   {
+      targetRect = ossimDrect(0,0,imageSpace.width()-1, imageSpace.height()-1);
+   }
+
+   ossimGpt ulg, urg, lrg, llg;
+   ossimDpt uld(imageSpace.ul());
+   ossimDpt urd(imageSpace.ur());
+   ossimDpt lrd(imageSpace.lr());
+   ossimDpt lld(imageSpace.ll());
+
+   lineSampleToWorld(uld, ulg); 
+   lineSampleToWorld(urd, urg); 
+   lineSampleToWorld(lrd, lrg); 
+   lineSampleToWorld(lld, llg); 
+
+   result = new ossimBilinearMapProjection(targetRect.ul(), targetRect.ur(), targetRect.lr(), targetRect.ll(), 
+                                           ulg, urg, lrg, llg);
+
+   
+   return result; 
+}
+
+
+ossimDpt ossimBilinearMapProjection::forward(const ossimGpt &worldPoint) const
+{
+   ossimDpt result;
+
+   worldToLineSample(worldPoint, result);
+
+   return result;
+}
+
+ossimGpt ossimBilinearMapProjection::inverse(const ossimDpt &projectedPoint)const
+{
+   ossimGpt result;
+
+   lineSampleToWorld(projectedPoint, result);
+
+   return result;
+}
+
+void ossimBilinearMapProjection::worldToLineSample(const ossimGpt& worldPoint,
                                             ossimDpt&       lineSampPt) const
 {
    if(!theInverseSupportedFlag)
@@ -143,7 +191,7 @@ void ossimBilinearProjection::worldToLineSample(const ossimGpt& worldPoint,
    }
 }
 
-void ossimBilinearProjection::lineSampleToWorld(const ossimDpt& lineSampPt,
+void ossimBilinearMapProjection::lineSampleToWorld(const ossimDpt& lineSampPt,
                                                 ossimGpt&       worldPt) const
 {
    lineSampleHeightToWorld(lineSampPt,
@@ -152,7 +200,7 @@ void ossimBilinearProjection::lineSampleToWorld(const ossimDpt& lineSampPt,
    
 }
 
-void ossimBilinearProjection::lineSampleHeightToWorld(
+void ossimBilinearMapProjection::lineSampleHeightToWorld(
    const ossimDpt& lineSampPt,
    const double&   heightAboveEllipsoid,
    ossimGpt&       worldPt) const
@@ -177,7 +225,7 @@ void ossimBilinearProjection::lineSampleHeightToWorld(
    }
 }   
 
-bool ossimBilinearProjection::saveState(ossimKeywordlist& kwl,
+bool ossimBilinearMapProjection::saveState(ossimKeywordlist& kwl,
                                         const char* prefix)const
 {
    if (theLineSamplePt.size() != theGeographicPt.size())
@@ -186,7 +234,7 @@ bool ossimBilinearProjection::saveState(ossimKeywordlist& kwl,
       return false;
    }
 
-   ossimProjection::saveState(kwl, prefix);
+   ossimMapProjection::saveState(kwl, prefix);
 
    ossimString imagePoints;
    ossimString groundPoints;
@@ -225,11 +273,11 @@ bool ossimBilinearProjection::saveState(ossimKeywordlist& kwl,
    return true;
 }
 
-bool ossimBilinearProjection::loadState(const ossimKeywordlist& kwl,
+bool ossimBilinearMapProjection::loadState(const ossimKeywordlist& kwl,
                                         const char* prefix)
 {
    // Load the base class.
-   ossimProjection::loadState(kwl, prefix);
+   ossimMapProjection::loadState(kwl, prefix);
 
    // Start with clear lists.
    theLineSamplePt.clear();
@@ -305,19 +353,61 @@ bool ossimBilinearProjection::loadState(const ossimKeywordlist& kwl,
    return true;
 }
 
-bool ossimBilinearProjection::operator==(const ossimProjection& /* projection */) const
+bool ossimBilinearMapProjection::operator==(const ossimProjection&  projection ) const
 {
-   return false;
+   std::cout<< "ossimBilinearMapProjection:operator == " << std::endl;
+   bool result = false;
+
+   const ossimBilinearMapProjection* bilinear = dynamic_cast<const ossimBilinearMapProjection*>(&projection);
+
+   if(this == bilinear)
+   {
+      result = true;
+   }
+   else if(bilinear)
+   {
+      bool sameSize = ((theLineSamplePt.size() == bilinear->theLineSamplePt.size())&&
+                       (theGeographicPt.size() == bilinear->theGeographicPt.size()));
+      if(sameSize)
+      {
+         int idx = 0;
+         bool good = true;
+         for(idx = 0 ; (idx<theLineSamplePt.size())&&good;++idx)
+         {
+            if(fabs(theLineSamplePt[idx].x - theLineSamplePt[idx].x) > FLT_EPSILON)
+            {
+               good = false;
+            }
+            else if(fabs(theLineSamplePt[idx].y - theLineSamplePt[idx].y) > FLT_EPSILON)
+            {
+               good = false;
+            }
+         }
+         for(idx = 0 ; (idx<theGeographicPt.size())&&good;++idx)
+         {
+            if(fabs(theGeographicPt[idx].lond() - theGeographicPt[idx].lond()) > FLT_EPSILON)
+            {
+               good = false;
+            }
+            else if(fabs(theGeographicPt[idx].latd() - theGeographicPt[idx].latd()) > FLT_EPSILON)
+            {
+               good = false;
+            }
+         }
+         result = good;
+      }      
+   }
+   return result;
 }
 
-ossimDpt ossimBilinearProjection::getMetersPerPixel() const
+ossimDpt ossimBilinearMapProjection::getMetersPerPixel() const
 {
    ossimGpt centerG;
    ossimGpt rightG;
    ossimGpt topG;
 
    ossimDpt midPoint = midLineSamplePt();
-                     
+
    lineSampleToWorld(midPoint, centerG);
    lineSampleToWorld(midPoint+ossimDpt(1,0), rightG);
    lineSampleToWorld(midPoint+ossimDpt(0,-1), topG);
@@ -334,17 +424,15 @@ ossimDpt ossimBilinearProjection::getMetersPerPixel() const
 
    result.x = (result.x + result.y)/2.0;
    result.y = result.x;
-   
    return result;
 }
 
-void ossimBilinearProjection::initializeBilinear()
+void ossimBilinearMapProjection::initializeBilinear()
 {
    theInterpolationPointsHaveNanFlag = dPtsHaveNan()||gPtsHaveNan();
-
-   // I am going to iterate the inverse from the forward
+   // seems the iterative approach for the inverse will achieve better accuracy by using the forward
+   // so turn it off for Bilinear map for now
    //theInverseSupportedFlag = true;
-   //
    theInverseSupportedFlag = false;
    if(!theInterpolationPointsHaveNanFlag)
    {
@@ -390,9 +478,16 @@ void ossimBilinearProjection::initializeBilinear()
          theInverseSupportedFlag = false;
       }
    }
+   if(theGeographicPt.size() > 0)
+   {
+      theDatum = theGeographicPt[0].datum();
+   }
+   theDegreesPerPixel.makeNan();
+   theMetersPerPixel.makeNan();
+   update();
 }
 
-bool ossimBilinearProjection::dPtsHaveNan() const
+bool ossimBilinearMapProjection::dPtsHaveNan() const
 {
    if (theLineSamplePt.size() == 0)
    {
@@ -411,7 +506,7 @@ bool ossimBilinearProjection::dPtsHaveNan() const
    return false;
 }
 
-bool ossimBilinearProjection::gPtsHaveNan() const
+bool ossimBilinearMapProjection::gPtsHaveNan() const
 {
    //---
    // NOTE:  This method ignores nans in the height field.
@@ -434,7 +529,7 @@ bool ossimBilinearProjection::gPtsHaveNan() const
    return false;
 }
 
-ossimDpt ossimBilinearProjection::midLineSamplePt() const
+ossimDpt ossimBilinearMapProjection::midLineSamplePt() const
 {
    ossimDpt result;
    
@@ -460,10 +555,10 @@ ossimDpt ossimBilinearProjection::midLineSamplePt() const
    return result;
 }
 
-std::ostream& ossimBilinearProjection::print(std::ostream& out) const
+std::ostream& ossimBilinearMapProjection::print(std::ostream& out) const
 {
    ossimNotify(ossimNotifyLevel_INFO)
-      << "ossimBilinearProjection::print\n";
+      << "ossimBilinearMapProjection::print\n";
 
    ossim_uint32 index = 0;
    vector<ossimDpt>::const_iterator di = theLineSamplePt.begin();
@@ -490,7 +585,7 @@ std::ostream& ossimBilinearProjection::print(std::ostream& out) const
    return ossimProjection::print(out);
 }
 
-ossim_float64 ossimBilinearProjection::setTiePoints(const std::vector<ossimDpt>& lsPt, 
+ossim_float64 ossimBilinearMapProjection::setTiePoints(const std::vector<ossimDpt>& lsPt, 
                                                     const std::vector<ossimGpt>& geoPt)
 {
    if (lsPt.size() != geoPt.size())
@@ -529,19 +624,19 @@ ossim_float64 ossimBilinearProjection::setTiePoints(const std::vector<ossimDpt>&
    return sumerr2 / theLineSamplePt.size(); //variance in meter^2
 }
 
-bool ossimBilinearProjection::setupOptimizer(const ossimString& /* setup */)
+bool ossimBilinearMapProjection::setupOptimizer(const ossimString& /* setup */)
 {
    return false;
 }
 
 ossim_uint32
-ossimBilinearProjection::degreesOfFreedom()const
+ossimBilinearMapProjection::degreesOfFreedom()const
 {
    return 2*4; //height not used
 }
 
 double
-ossimBilinearProjection::optimizeFit(const ossimTieGptSet& tieSet, double* /* targetVariance */)
+ossimBilinearMapProjection::optimizeFit(const ossimTieGptSet& tieSet, double* /* targetVariance */)
 {
    //NOTE : IGNORE targetVariance
    std::vector<ossimDpt> imagePoints;
@@ -553,7 +648,7 @@ ossimBilinearProjection::optimizeFit(const ossimTieGptSet& tieSet, double* /* ta
 //**************************************************************************************************
 //! Access method for tie point information
 //**************************************************************************************************
-void ossimBilinearProjection::getTiePoints(std::vector<ossimDpt>& lsPt, 
+void ossimBilinearMapProjection::getTiePoints(std::vector<ossimDpt>& lsPt, 
                                            std::vector<ossimGpt>& geoPt) const
 {
    lsPt  = theLineSamplePt;

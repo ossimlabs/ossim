@@ -2461,7 +2461,7 @@ void ossimChipperUtil::createOutputProjection()
    ossimRefPtr<ossimMapProjection> inputProj = getFirstInputProjection();
    if (proj.valid() && inputProj.valid())
    {
-      if (*(inputProj.get()) == *(proj.get()))
+      if (!usingInput && (*(inputProj.get()) == *(proj.get())))
       {
          if (projType == OSSIM_CHIPPER_PROJ_GEO_SCALED)
          {
@@ -3632,7 +3632,7 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getFirstInputProjection()
          if (proj.valid())
          {
             // Cast and assign to result.
-            ossimMapProjection *mapProj = PTR_CAST(ossimMapProjection, proj.get());
+            ossimMapProjection *mapProj = dynamic_cast<ossimMapProjection*>(proj.get());
             if (mapProj)
             {
                // Must duplicate in case the output projection gets modified.

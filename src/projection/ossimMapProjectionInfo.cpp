@@ -406,6 +406,10 @@ ossim_int32 ossimMapProjectionInfo::pixelsPerLine() const
 {
    return thePixelsPerLine;
 }
+const ossimDrect& ossimMapProjectionInfo::getBoundingRect()const
+{
+   return theBoundingRect;
+}
 
 bool ossimMapProjectionInfo::loadState(const ossimKeywordlist& kwl,
                                        const char* )

@@ -87,6 +87,46 @@ protected:
    
 };
 
+template<class T>
+class OSSIM_DLL ossimTypeVisitor : public ossimVisitor
+{
+public:
+   ossimTypeVisitor(int visitorType =(VISIT_INPUTS|VISIT_CHILDREN))
+   :ossimVisitor(visitorType)
+   {}
+   virtual ossimRefPtr<ossimVisitor> dup()const
+   {
+      return new ossimTypeVisitor(*this);
+   }
+   virtual void visit(ossimConnectableObject* obj)
+   {
+      T* tempObj = dynamic_cast<T*>(obj);
+      if(tempObj)
+      {
+         m_list.push_back(tempObj);
+      }
+   }
+   ossim_int32 getSize()const
+   {
+      return m_list.size();
+   }
+   T* getObject(ossim_int32 idx)
+   {
+      return m_list[idx];
+   }
+   const T* getObject(ossim_int32 idx)const
+   {
+      return m_list[idx];
+   }
+   virtual void reset()
+   {
+      m_list.clear();
+   }
+
+protected:
+   std::vector<T*> m_list;
+};
+
 class OSSIM_DLL ossimIdVisitor : public ossimVisitor
 {
 public:
