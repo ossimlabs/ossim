@@ -252,7 +252,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
    ossimRefPtr<ossimBilinearMapProjection> modBilinearProj;
    if(bilinearProj)
    {
-      modBilinearProj = bilinearProj->newProjection(projectionInfo->getBoundingRect());
+      modBilinearProj = bilinearProj->newProjection(projectionInfo->getBoundingRect()+ossimDpt(.5,.5));
    }
    // ossimRefPtr<>
    // Get some things we need throughout.
