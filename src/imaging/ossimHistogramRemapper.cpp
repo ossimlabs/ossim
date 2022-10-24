@@ -1467,8 +1467,6 @@ template <class T> void ossimHistogramRemapper::buildLinearTable(T /* dummy */)
 #endif
 
       T pix = MIN_PIX;
-      std::cout << "theMidPoint[band]: " << theMidPoint[band]  << std::endl;
-      
       bool needSkewCheck = std::fabs(theMidPoint[band] - 0.5) > FLT_EPSILON;
       for (ossim_uint32 pixIndex = 1; pixIndex < theTableBinCount; ++pixIndex)
       {
@@ -1538,6 +1536,9 @@ template <class T> void ossimHistogramRemapper::buildAutoLinearMinMaxTableTempla
 
       if(h)
       {
+         // some hisotgrams seem to mess up when we have empty bins.  So let's just fill interior empty bins.
+         //
+         h = h->fillEmptyBins(true);
          ossim_uint32 n     = h->GetRes();
          ossim_float64 low  = h->GetIndex(h->GetMinVal());
          ossim_float64 high = h->GetIndex(h->GetMaxVal());
@@ -1558,6 +1559,10 @@ template <class T> void ossimHistogramRemapper::buildAutoLinearMinMaxTableTempla
                }
                percentage = newCount / count;
                nextPercentage = (newCount + counts[idx+1]) / count;
+//                std::cout << "BUCKET_SIZE === " << h->GetBucketSize();
+// std::cout << "SLOPE  [" << band << "]" << "[" << idx << "] = " << (counts[idx + 1] - counts[idx])/h->GetBucketSize() << std::endl;
+// std::cout << "percentage:     " << percentage << "\n"
+//           << "nextPercentage: " << nextPercentage << std::endl;
                if (hasValue &&((std::fabs(percentage - bias) <
                                 std::fabs(nextPercentage - bias))))
                {
@@ -1566,6 +1571,7 @@ template <class T> void ossimHistogramRemapper::buildAutoLinearMinMaxTableTempla
                }
                
             }
+            std::cout << "LOW IDX ==== " << low << std::endl;
             newCount = 0.0;
             for (idx = n-1; idx > 0; idx--)
             {
