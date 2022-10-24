@@ -123,6 +123,35 @@ ossimGpt ossimBilinearMapProjection::origin()const
    return result;
 }
 
+ossimRefPtr<ossimBilinearMapProjection> ossimBilinearMapProjection::newProjection(const ossimDrect& imageSpace, bool shiftToZeroOrigin)const
+{
+   ossimRefPtr<ossimBilinearMapProjection> result;
+   ossimDrect targetRect = imageSpace;
+
+   if(shiftToZeroOrigin)
+   {
+      targetRect = ossimDrect(0,0,imageSpace.width()-1, imageSpace.height()-1);
+   }
+
+   ossimGpt ulg, urg, lrg, llg;
+   ossimDpt uld(imageSpace.ul());
+   ossimDpt urd(imageSpace.ur());
+   ossimDpt lrd(imageSpace.lr());
+   ossimDpt lld(imageSpace.ll());
+
+   lineSampleToWorld(uld, ulg); 
+   lineSampleToWorld(urd, urg); 
+   lineSampleToWorld(lrd, lrg); 
+   lineSampleToWorld(lld, llg); 
+
+   result = new ossimBilinearMapProjection(targetRect.ul(), targetRect.ur(), targetRect.lr(), targetRect.ll(), 
+                                           ulg, urg, lrg, llg);
+
+   
+   return result; 
+}
+
+
 ossimDpt ossimBilinearMapProjection::forward(const ossimGpt &worldPoint) const
 {
    ossimDpt result;
@@ -324,9 +353,51 @@ bool ossimBilinearMapProjection::loadState(const ossimKeywordlist& kwl,
    return true;
 }
 
-bool ossimBilinearMapProjection::operator==(const ossimProjection& /* projection */) const
+bool ossimBilinearMapProjection::operator==(const ossimProjection&  projection ) const
 {
-   return false;
+   std::cout<< "ossimBilinearMapProjection:operator == " << std::endl;
+   bool result = false;
+
+   const ossimBilinearMapProjection* bilinear = dynamic_cast<const ossimBilinearMapProjection*>(&projection);
+
+   if(this == bilinear)
+   {
+      result = true;
+   }
+   else if(bilinear)
+   {
+      bool sameSize = ((theLineSamplePt.size() == bilinear->theLineSamplePt.size())&&
+                       (theGeographicPt.size() == bilinear->theGeographicPt.size()));
+      if(sameSize)
+      {
+         int idx = 0;
+         bool good = true;
+         for(idx = 0 ; (idx<theLineSamplePt.size())&&good;++idx)
+         {
+            if(fabs(theLineSamplePt[idx].x - theLineSamplePt[idx].x) > FLT_EPSILON)
+            {
+               good = false;
+            }
+            else if(fabs(theLineSamplePt[idx].y - theLineSamplePt[idx].y) > FLT_EPSILON)
+            {
+               good = false;
+            }
+         }
+         for(idx = 0 ; (idx<theGeographicPt.size())&&good;++idx)
+         {
+            if(fabs(theGeographicPt[idx].lond() - theGeographicPt[idx].lond()) > FLT_EPSILON)
+            {
+               good = false;
+            }
+            else if(fabs(theGeographicPt[idx].latd() - theGeographicPt[idx].latd()) > FLT_EPSILON)
+            {
+               good = false;
+            }
+         }
+         result = good;
+      }      
+   }
+   return result;
 }
 
 ossimDpt ossimBilinearMapProjection::getMetersPerPixel() const
@@ -359,7 +430,10 @@ ossimDpt ossimBilinearMapProjection::getMetersPerPixel() const
 void ossimBilinearMapProjection::initializeBilinear()
 {
    theInterpolationPointsHaveNanFlag = dPtsHaveNan()||gPtsHaveNan();
-   theInverseSupportedFlag = true;
+   // seems the iterative approach for the inverse will achieve better accuracy by using the forward
+   // so turn it off for Bilinear map for now
+   //theInverseSupportedFlag = true;
+   theInverseSupportedFlag = false;
    if(!theInterpolationPointsHaveNanFlag)
    {
       theLatFit.clear();
@@ -403,6 +477,10 @@ void ossimBilinearMapProjection::initializeBilinear()
       {
          theInverseSupportedFlag = false;
       }
+   }
+   if(theGeographicPt.size() > 0)
+   {
+      theDatum = theGeographicPt[0].datum();
    }
    theDegreesPerPixel.makeNan();
    theMetersPerPixel.makeNan();

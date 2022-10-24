@@ -33,6 +33,7 @@ public:
                            const ossimGpt& llg);
    virtual ossimObject *dup()const;
    virtual ossimGpt origin()const;
+   ossimRefPtr<ossimBilinearMapProjection> newProjection(const ossimDrect& imageSpace, bool shiftToZeroOrigin=true)const;
    /**
     * This method will convert the world coordinate to  model coordinates (easting,
     * northing in meters). It will be necessary then to transform the map coordinates returned by
