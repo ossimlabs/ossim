@@ -341,7 +341,11 @@ ossimDpt ossimBilinearProjection::getMetersPerPixel() const
 void ossimBilinearProjection::initializeBilinear()
 {
    theInterpolationPointsHaveNanFlag = dPtsHaveNan()||gPtsHaveNan();
-   theInverseSupportedFlag = true;
+
+   // I am going to iterate the inverse from the forward
+   //theInverseSupportedFlag = true;
+   //
+   theInverseSupportedFlag = false;
    if(!theInterpolationPointsHaveNanFlag)
    {
       theLatFit.clear();
