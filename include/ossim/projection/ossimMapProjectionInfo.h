@@ -215,6 +215,7 @@ public:
     */
    const ossimMapProjection* getProjection() const;
 
+   const ossimDrect& getBoundingRect()const;
    //****
    // Keywords for getStateFrom/saveStateTo.
    //***
