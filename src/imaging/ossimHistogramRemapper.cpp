@@ -1571,7 +1571,6 @@ template <class T> void ossimHistogramRemapper::buildAutoLinearMinMaxTableTempla
                }
                
             }
-            std::cout << "LOW IDX ==== " << low << std::endl;
             newCount = 0.0;
             for (idx = n-1; idx > 0; idx--)
             {
