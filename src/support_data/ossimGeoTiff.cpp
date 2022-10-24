@@ -249,6 +249,12 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
 
    GTIF *gtif = GTIFNew(tifPtr);
    const ossimBilinearMapProjection* bilinearProj = dynamic_cast<const ossimBilinearMapProjection*>(mapProj);
+   ossimRefPtr<ossimBilinearMapProjection> modBilinearProj;
+   if(bilinearProj)
+   {
+      modBilinearProj = bilinearProj->newProjection(projectionInfo->getBoundingRect());
+   }
+   // ossimRefPtr<>
    // Get some things we need throughout.
    ossimGpt origin = mapProj->origin();
    double falseEasting = mapProj->getFalseEasting();
@@ -282,6 +288,9 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
       units = LINEAR_METER;
    if(bilinearProj)
    {
+      // We are going to assume WGS84 for now.
+      double doubleParams[2] = {6378137.0, 6356752.3142};
+      TIFFSetField(tifPtr, TIFFTAG_GEODOUBLEPARAMS, 2, doubleParams);
       GTIFKeySet(gtif,
                  GTModelTypeGeoKey,
                  TYPE_SHORT,
@@ -295,12 +304,47 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
                  1,
                  units);
       GTIFKeySet(gtif, GTRasterTypeGeoKey, TYPE_SHORT, 1, RasterPixelIsPoint);
-         GTIFKeySet(gtif,
-                    GeogCitationGeoKey,
-                    TYPE_ASCII,
-                    1,
-                    "WGS84");      
-                    //GTIFWriteKeys(gtif); // Write out geotiff tags.
+      GTIFKeySet(gtif,
+                  GeogCitationGeoKey,
+                  TYPE_ASCII,
+                  1,
+                  "WGS84");      
+      GTIFWriteKeys(gtif); // Write out geotiff tags.
+      std::vector<ossimDpt> lsPt;
+      std::vector<ossimGpt> geoPt;
+      std::vector<double> tiePoints;
+      modBilinearProj->getTiePoints(lsPt, geoPt);
+      if(lsPt.size() == geoPt.size())
+      {
+         tiePoints.resize(lsPt.size()*6);
+      }
+      int tieOffset = 0;
+      for(int idx = 0; idx < lsPt.size();++idx)
+      {
+         tiePoints[tieOffset++] = lsPt[idx].x;
+         tiePoints[tieOffset++] = lsPt[idx].y;
+         tiePoints[tieOffset++] = 0;
+         tiePoints[tieOffset++] = geoPt[idx].lond();
+         tiePoints[tieOffset++] = geoPt[idx].latd();
+         tiePoints[tieOffset++] = 0;
+      }
+     const ossimDatum *datum = modBilinearProj->getDatum();
+     int datum_code = USER_DEFINED;
+     int ellipsoid_code = USER_DEFINED;
+      if (datum)
+      {
+         datum_code = (int)datum->epsgCode();
+         const ossimEllipsoid *ellipsoid = datum->ellipsoid();
+         if (ellipsoid)
+            ellipsoid_code = ellipsoid->getEpsgCode();
+      }
+      GTIFKeySet(gtif, GeogGeodeticDatumGeoKey, TYPE_SHORT, 1, datum_code);
+      GTIFKeySet(gtif, ProjectionGeoKey, TYPE_SHORT, 1, pcsCode);
+      GTIFKeySet(gtif, GeogEllipsoidGeoKey, TYPE_SHORT, 1, ellipsoid_code);
+
+      TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, tiePoints.size(), &(tiePoints.front()));
+
+      return true;
    }
    if (pcsCode)
    {
@@ -890,29 +934,6 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
       } // End of "switch (units)"
 
       TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, 6, tiePoints);
-   }
-   else
-   {
-      std::vector<ossimDpt> lsPt;
-      std::vector<ossimGpt> geoPt;
-      std::vector<double> tiePoints;
-      bilinearProj->getTiePoints(lsPt, geoPt);
-      if(lsPt.size() == geoPt.size())
-      {
-         tiePoints.resize(lsPt.size()*6);
-      }
-      int tieOffset = 0;
-      for(int idx = 0; idx < lsPt.size();++idx)
-      {
-         tiePoints[tieOffset++] = lsPt[idx].x;
-         tiePoints[tieOffset++] = lsPt[idx].y;
-         tiePoints[tieOffset++] = 0;
-         tiePoints[tieOffset++] = geoPt[idx].lond();
-         tiePoints[tieOffset++] = geoPt[idx].latd();
-         tiePoints[tieOffset++] = 0;
-      }
-      TIFFSetField(tifPtr, TIFFTAG_GEOTIEPOINTS, tiePoints.size(), &(tiePoints.front()));
-
    }
    GTIFFree(gtif);
 
