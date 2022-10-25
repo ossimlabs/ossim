@@ -100,7 +100,8 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
    enum FillAlgorithmType
    {
       HISTOGRAM_FILL_DEFAULT    = 0,
-      HISTOGRAM_FILL_THIN_PLATE = 1
+      HISTOGRAM_FILL_THIN_PLATE = 1,
+      HISTOGRAM_FILL_LINEAR     = 2
    };
 
    // Constructors
@@ -265,7 +266,9 @@ class OSSIMDLLEXPORT ossimHistogram : public ossimObject
    {
       ++m_nullCount;
    }
-
+private:
+   ossimRefPtr<ossimHistogram> fillEmptyBinsThinPlate(bool fillInterior)const;
+   ossimRefPtr<ossimHistogram> fillEmptyBinsLinear(bool fillInterior)const;
 TYPE_DATA   
 };
 
