@@ -33,9 +33,41 @@
  * stores a set of monoms, a monom is (exponent tuples + coefficient)
  * requires a precion (epsilon) for comparisons
  * note: monoms absolute values below epsilon are removed from the map
+ *
+ * We can define the exponent set from a list of monomials.  A full one dimensional
+ * quadratic can be written as f(x): 1 x x2.  If we have a two dimensional quadratic
+ * we can write as a product of the two one d f(x,y): 1 x y xy xy2 yx2 x2 y2 x2y2
+ * 
+ * @code {.c++}
+   typedef ossimPolynom<ossim_float64, 1> OneDPolyT;
+
+   ossimPolynom<ossim_float64, 1> polynom;
+   OneDPolyT polynom;
+   OneDPolyT::EXPT_SET expSet;
+
+   if (polynom.buildExpSet(expSet, "1 x x2"))
+   {
+      std::vector<OneDPolyT::VAR_TUPLE> obsInput;
+      std::vector<ossim_float64> obsOutput;
+      // The tuple is the size followed by values
+      obsInput.push_back(OneDPolyT::VAR_TUPLE(1, 1));
+      obsInput.push_back(OneDPolyT::VAR_TUPLE(1, 2));
+      obsInput.push_back(OneDPolyT::VAR_TUPLE(1, 3));
+      obsOutput.push_back(45);
+      obsOutput.push_back((100));
+      obsOutput.push_back(34);
+      // now estimate the observations
+      //
+      if(polynom.LMSfit(expSet, obsInput, obsOutput))
+      {
+         std::cout << polynom.eval(OneDPolyT::VAR_TUPLE(1, 1.9)) << std::endl;
+      }
+   }
+ * @endcode
+ *
  */
-template < class T, int DIM = 1 >
-class  ossimPolynom
+template <class T, int DIM = 1>
+class ossimPolynom
 {
 public:
    /**
@@ -527,11 +559,121 @@ public:
 
       return is;
    }
+   /**
+    * @brief Builds a Polynomila from a string of monomials
+    * 
+    * @param result Expt set
+    * @param monoms String representation of monomials
+    *                Ex1 f(x): 1 + x + x2 + x3
+    *                Ex2 f(x,y): 1 + xy +x2 + y2 +xy2 + yx2 + X2y2
+    *                where 2 is square and 3 is cube
+    * @return true 
+    * @return false 
+    */
+   bool buildExpSet(EXPT_SET& result, const ossimString& monoms)
+   {
+      bool res = false;
+      result.clear();
+
+      std::vector<ossimString> spm = monoms.explode(" \t,;");
+      for (std::vector<ossimString>::const_iterator it = spm.begin(); it != spm.end(); ++it)
+      {
+         EXP_TUPLE et;
+         res = stringToExp(*it, et);
+         if (!res)
+         {
+            ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimPolynomProjection::setupDesiredExponents(): bad exponent tuple string: " << *it << std::endl;
+            return false;
+         }
+         // add to exponents
+         result.insert(et);
+      }
+      return true;
+   }
+
+   static int getExponent(ossimString &ts)
+   { // remove exponent from string, no exponent means 1
+      unsigned int pos = 0;
+      int expo = 0;
+      const ossimString &cts(ts);
+      while ((pos < ts.size()) && (cts.operator[](pos) <= '9') && (cts.operator[](pos) >= '0'))
+      {
+         expo = 10 * expo + (cts.operator[](pos) - '0');
+         ++pos;
+      }
+      // remove exp from string
+      if (pos > 0)
+         ts = ts.afterPos(pos - 1);
+
+      if (expo == 0)
+         expo = 1;
+      return expo;
+   }
+
+   bool stringToExp(const ossimString &s, EXP_TUPLE &et) const
+   {
+      et.clear();
+
+      ossimString ts = s.trim().upcase();
+      ossimString tkeys("XYZ");
+
+      if (ts.size() == 0)
+      {
+         return false;
+      }
+      // check 1
+      if (ts[static_cast<std::string::size_type>(0)] == '1')
+      {
+         for (int i = 0; i < 3; i++)
+            et.push_back(0);
+         return true;
+      }
+
+      // loop on symbols
+      int ex[3] = {0, 0, 0};
+
+      while (ts.size() > 0)
+      {
+         int symb = getSymbol(ts, tkeys);
+         if (symb < 0)
+         {
+            ossimNotify(ossimNotifyLevel_FATAL) << "FATAL ossimPolynom::stringToExp(): cant find any symbol" << std::endl;
+            return false;
+         }
+         int expo = getExponent(ts);
+         if (ex[symb] > 0)
+         {
+            ossimNotify(ossimNotifyLevel_FATAL)
+                << "FATAL ossimPolynom::stringToExp(): symbol appears twice: "
+                << tkeys[static_cast<std::string::size_type>(symb)]
+                << std::endl;
+            return false;
+         }
+         ex[symb] = expo;
+      }
+      for (int i = 0; i < 3; i++)
+         et.push_back(ex[i]);
+
+      return true;
+   }
+   static int getSymbol(ossimString &ts, const ossimString &symbols)
+   { // remove symbol from string ts and return symbol index, -1 = error
+      for (unsigned int i = 0; i < symbols.size(); ++i)
+      {
+         if (ts.operator[](0) == symbols.operator[](i))
+         {
+            ts = ts.afterPos(0);
+            return i;
+         }
+      }
+      return -1;
+   }
+
 /**
  * constructs simple exponent tuples set for using LMSfit
  * need order for each dimension
  */
- EXPT_SET builExpSet(const EXP_TUPLE& orders)const
+ EXPT_SET buildExpSet(const EXP_TUPLE& orders)const
  {
     EXPT_SET eset;
     if (orders.size() != DIM)
@@ -604,13 +746,12 @@ public:
  * returns true on success (can fail if not enough observations)
  *  + also updates rms error(root mean square)
  * NOTES: inputs must have same size and must be ordered the same way
- *        use builExpSet() to construct classic polynoms 
+ *        use buildExpSet() to construct classic polynoms 
  * TODO: add weights to observations
  */
-bool
-LMSfit(const EXPT_SET&                expset,
-       const std::vector< VAR_TUPLE > obs_input,
-       const std::vector< T >         obs_output,
+bool LMSfit(const EXPT_SET&                expset,
+       const std::vector< VAR_TUPLE >& obs_input,
+       const std::vector< T >&         obs_output,
        T*                             prms = NULL)
 {
    //init
