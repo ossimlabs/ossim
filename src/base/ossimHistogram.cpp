@@ -574,63 +574,115 @@ void ossimHistogram::create(
    }
 }
 
+ossimRefPtr<ossimHistogram> ossimHistogram::fillEmptyBinsThinPlate(bool interiorOnly)const
+{
+   ossimRefPtr<ossimHistogram> result = new ossimHistogram(*this);
+   ossimThinPlateSpline spline(1);
+   double pvars[1];
+   ossim_int64* new_counts = result->GetCounts();
+   ossim_int32 idxLeft = 0;
+   ossim_int32 idxRight = m_num-1;
+   while((idxLeft < m_num) && (new_counts[idxLeft]  < 1))++idxLeft;
+   while((idxRight > -1) && (new_counts[idxRight] < 1))--idxRight;
+   if(idxLeft < idxRight)
+   {
+      ossim_int32 idx = idxLeft;
+      while(idx <= idxRight)
+      {
+         if(new_counts[idx]>0)
+         {
+            pvars[0] = new_counts[idx];
+            spline.addPoint(idx, 0, pvars);
+         }
+         ++idx;
+      }
+      if(spline.solve())
+      {
+         idx = idxLeft;
+         while(idx <= idxRight)
+         {
+            if(new_counts[idx] < 1)
+            {
+               if(spline.getPoint(idx, 0, pvars))
+               {
+                  new_counts[idx] = pvars[0];
+               }
+            }
+            ++idx;
+         }
+         result->m_statsConsistent = 0;
+      }
+   }
+
+   if (interiorOnly == false )
+   {
+      for ( ossim_int32 idx = 0; idx < m_num; ++idx )
+      {
+         if ( new_counts[idx] == 0 ) new_counts[idx] = 1;
+      }
+      result->updateMinMax();
+   }
+   return result;
+}
+
+ossimRefPtr<ossimHistogram> ossimHistogram::fillEmptyBinsLinear(bool interiorOnly)const
+{
+   ossimRefPtr<ossimHistogram> result = new ossimHistogram(*this);
+   if(!interiorOnly)
+   {
+      // output log
+   }
+   else
+   {
+      ossim_int64* new_counts = result->GetCounts();
+      ossim_int32 idxLeft = 0;
+      ossim_int32 idxRight = m_num-1;
+      while((idxLeft < m_num) && (new_counts[idxLeft]  < 1))++idxLeft;
+      while((idxRight > -1) && (new_counts[idxRight] < 1))--idxRight;
+      while(idxLeft < idxRight)
+      {
+         ossim_int32 idxMax=idxLeft;
+         if(new_counts[idxLeft] == 0)
+         {
+            ossim_int32 start = idxLeft-1;
+            while((new_counts[idxMax] == 0) && (idxMax < idxRight)) ++idxMax;
+            double delta = new_counts[idxMax] - new_counts[start];
+            while(idxLeft < idxMax)
+            {
+               double t = static_cast<double>(idxLeft - start)/static_cast<double>(idxMax-start);
+               new_counts[idxLeft] = new_counts[start] + t*delta;
+               ++idxLeft;
+            }
+         }
+         ++idxLeft;
+      }
+      result->m_statsConsistent = 0;
+   }
+
+   return result;
+}
+
 ossimRefPtr<ossimHistogram> ossimHistogram::fillEmptyBins(bool interiorOnly, int type) const
 {
-   if(m_num < 1) return 0;
-   ossimRefPtr<ossimHistogram> result = new ossimHistogram(*this);
+   ossimRefPtr<ossimHistogram> result;
+
+   if(m_num < 1) return result;
    switch(type)
    {
       case HISTOGRAM_FILL_THIN_PLATE:
       case HISTOGRAM_FILL_DEFAULT:
       {
-         ossimThinPlateSpline spline(1);
-         double pvars[1];
-         ossim_int64* new_counts = result->GetCounts();
-         ossim_int32 idxLeft = 0;
-         ossim_int32 idxRight = m_num-1;
-         while((idxLeft < m_num) && (new_counts[idxLeft]  < 1))++idxLeft;
-         while((idxRight > -1) && (new_counts[idxRight] < 1))--idxRight;
-         if(idxLeft < idxRight)
-         {
-            ossim_int32 idx = idxLeft;
-            while(idx <= idxRight)
-            {
-               if(new_counts[idx]>0)
-               {
-                  pvars[0] = new_counts[idx];
-                  spline.addPoint(idx, 0, pvars);
-               }
-               ++idx;
-            }
-            if(spline.solve())
-            {
-               idx = idxLeft;
-               while(idx <= idxRight)
-               {
-                  if(spline.getPoint(idx, 0, pvars))
-                  {
-                     new_counts[idx] = pvars[0];
-                  }
-                  ++idx;
-               }
-               m_statsConsistent = 0;
-            }
-            else
-            {
-            }
-         }
-
-         if (interiorOnly == false )
-         {
-            for ( ossim_int32 idx = 0; idx < m_num; ++idx )
-            {
-               if ( new_counts[idx] == 0 ) new_counts[idx] = 1;
-            }
-            result->updateMinMax();
-         }
-         
+         result = fillEmptyBinsThinPlate(interiorOnly);
          break;
       }
+      case HISTOGRAM_FILL_LINEAR:
+      {
+         result = fillEmptyBinsLinear(interiorOnly);
+         break;
+      }
+      default:
+         result = fillEmptyBinsLinear(interiorOnly);
+         break;
    }
    
    return result;

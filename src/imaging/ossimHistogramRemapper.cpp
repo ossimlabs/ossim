@@ -1538,7 +1538,7 @@ template <class T> void ossimHistogramRemapper::buildAutoLinearMinMaxTableTempla
       {
          // some hisotgrams seem to mess up when we have empty bins.  So let's just fill interior empty bins.
          //
-         h = h->fillEmptyBins(true);
+         h = h->fillEmptyBins(true);//, ossimHistogram::HISTOGRAM_FILL_LINEAR);
          ossim_uint32 n     = h->GetRes();
          ossim_float64 low  = h->GetIndex(h->GetMinVal());
          ossim_float64 high = h->GetIndex(h->GetMaxVal());
@@ -1641,6 +1641,7 @@ void ossimHistogramRemapper::buildLinearTableStdFromMean()
       ossim_float64 stdDev = 0.0;
       if(h.valid())
       {
+       //  h        = h->fillEmptyBins(true);
          mean     = h->GetMean();
          stdDev   = h->GetStandardDev();
       }

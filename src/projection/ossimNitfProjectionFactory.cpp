@@ -16,7 +16,7 @@
 #include <ossim/base/ossimXmlDocument.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/imaging/ossimNitfTileSource.h>
-#include <ossim/projection/ossimBilinearProjection.h>
+#include <ossim/projection/ossimBilinearMapProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/projection/ossimMgrs.h>
 #include <ossim/projection/ossimProjection.h>
@@ -667,10 +667,10 @@ ossimProjection* ossimNitfProjectionFactory::makeBilinear(
    ossimDpt lr(cols-1.0, rows-1.0);
    ossimDpt ll(0.0, rows-1.0);
 
-   ossimRefPtr<ossimBilinearProjection> proj;
+   ossimRefPtr<ossimBilinearMapProjection> proj;
    try
    {
-     proj = new ossimBilinearProjection(ul,
+     proj = new ossimBilinearMapProjection(ul,
                                       ur,
                                       lr,
                                       ll,
