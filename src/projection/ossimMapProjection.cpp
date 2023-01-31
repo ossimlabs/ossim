@@ -303,8 +303,9 @@ void ossimMapProjection::updateTransform()
    // Note that northing in the map projection is positive up, while in image space the y-axis
    // is positive is down, so apply that inversion by forcing theMetersPerPixel.y to be negative:
    // Scale and rotation:
-   m[0][0] =  theMetersPerPixel.x * cosAz;   m[0][1] = -theMetersPerPixel.y * sinAz;
-   m[1][0] = -theMetersPerPixel.x * sinAz;   m[1][1] = -theMetersPerPixel.y * cosAz;
+   m[0][0] =  theMetersPerPixel.x * cosAz;   m[0][1] = theMetersPerPixel.y * sinAz;
+   m[1][0] =  theMetersPerPixel.x * sinAz;   m[1][1] = -theMetersPerPixel.y * cosAz;
+   // m[1][0] = -theMetersPerPixel.x * sinAz;   m[1][1] = -theMetersPerPixel.y * cosAz;
 
    // Offset:
    m[0][3] = theUlEastingNorthing.x;
@@ -459,8 +460,20 @@ void ossimMapProjection::lineSampleToEastingNorthing(const ossimDpt& lineSample,
 #ifdef USE_MODEL_TRANSFORM
    // Transform according to 4x4 transform embedded in the projection:
    const NEWMAT::Matrix& m = theModelTransform.getData();
+   // ossimColumnVector3d v = theModelTransform*ossimColumnVector3d(lineSample.x, lineSample.y, 0.0);
    eastingNorthing.x = m[0][0]*lineSample.x + m[0][1]*lineSample.y + m[0][3];
    eastingNorthing.y = m[1][0]*lineSample.x + m[1][1]*lineSample.y + m[1][3];
+   // eastingNorthing.x = v[0];
+   // eastingNorthing.y = v[1];
+
+   // std::cout << "m[0][0]" << m[0][0] << std::endl;
+   // std::cout << "m[0][1]" << m[0][1] << std::endl;
+   // std::cout << "m[0][3]" << m[0][3] << std::endl;
+   // std::cout << "m[1][0]" << m[1][0] << std::endl;
+   // std::cout << "m[1][1]" << m[1][1] << std::endl;
+   // std::cout << "m[1][3]" << m[1][3] << std::endl;
+   // std::cout << "LS: " << lineSample << std::endl
+   //           << "EN: " << eastingNorthing << std::endl;
 #else
    /** Performs image to model coordinate transformation. This implementation bypasses
     *  theModelTransform. Probably should eventually switch to use theModelTransform
