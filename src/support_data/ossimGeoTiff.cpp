@@ -1666,14 +1666,38 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
    if (usingModelTransform())
    {
       ossimMatrix4x4 transform (getModelTransformation());
+      NEWMAT::Matrix& m = transform.getData();
+      m[2][2] = 1.0;
+      m[3][3] = 1.0;
+      // std::cout << m << std::endl;
       ostringstream out;
       out << transform <<ends;
-
+      
+   // for(auto x:theModelTransformation)
+   // {
+   //    std::cout << x << " ";
+   // }
+   // std::cout << std::endl << transform << std::endl;
+   // std::cout << std::endl;
       // The model transform converts image pixel x, y to map (model) coordinates, typically
       // easting, northing (even for equidistant cylindrical, a.k.a., geographic).
-      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, out.str().c_str(), true);
-      kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
-              ossimUnitTypeLut::instance()->getEntryString(OSSIM_METERS), true);
+         kwl.clear();
+         kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, out.str().c_str(), true);
+      if(theModelType == ModelTypeGeographic)
+      { 
+         kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
+               ossimUnitTypeLut::instance()->getEntryString(OSSIM_DEGREES), true);
+         
+         kwl.add(prefix, ossimKeywordNames::CENTRAL_MERIDIAN_KW, 0.0, true);
+         kwl.add(prefix, ossimKeywordNames::ORIGIN_LATITUDE_KW, 0.0, true);     
+      }
+      else
+      {
+         // kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_MATRIX_KW, out.str().c_str(), true);
+         kwl.add(prefix, ossimKeywordNames::IMAGE_MODEL_TRANSFORM_UNIT_KW,
+               ossimUnitTypeLut::instance()->getEntryString(OSSIM_METERS), true);
+      }
+
    }
    else
    {
@@ -1819,6 +1843,7 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
       if (!tiepointNativeUnits.isNan())
       {
          tieGpt = ossimGpt(tiepointNativeUnits.y, tiepointNativeUnits.x, 0.0);
+
          tieGpt.wrap();
          kwl.add(prefix, ossimKeywordNames::TIE_POINT_XY_KW, tiepointNativeUnits.toString(), true);
          kwl.add(prefix, ossimKeywordNames::TIE_POINT_UNITS_KW, "degrees", true);
@@ -1849,9 +1874,24 @@ bool ossimGeoTiff::addImageGeometry(ossimKeywordlist &kwl, const char *prefix) c
             theOriginLat = tieGpt.lat - theScale[1] * centerY;
          }
       }
-
-      kwl.add(prefix, ossimKeywordNames::ORIGIN_LATITUDE_KW, theOriginLat, true);
+      if(ossim::isnan(theOriginLat))
+      {
+         if(theModelType == MODEL_TYPE_GEOGRAPHIC)
+         {
+            theOriginLat = 0.0;
+         }      
+      }
+      if(ossim::isnan(theOriginLon))
+      {
+         if(theModelType == MODEL_TYPE_GEOGRAPHIC)
+         {
+            theOriginLon = 0.0;
+         }      
+      }
       kwl.add(prefix, ossimKeywordNames::CENTRAL_MERIDIAN_KW, theOriginLon, true);
+      kwl.add(prefix, ossimKeywordNames::ORIGIN_LATITUDE_KW, theOriginLat, true);
+
+
    }
    else // Projected
    {
