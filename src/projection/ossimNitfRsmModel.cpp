@@ -206,6 +206,12 @@ bool ossimNitfRsmModel::getRsmData(const ossimNitfImageHeader* ih)
       ossimRefPtr<ossimNitfRegisteredTag> tag = 0;
 
       // Find either RSMECB or RSMECA:
+      //  GP: Two things.  First,  in the model it appears they do nothing in the 
+      //                   call to initializeModel
+      //                   Second,  the model appears to work fine without them so it shoudl not be
+      //                   a hard requirement.  In the model when they do become used it might need to be
+      //                   optional
+#if 0
       bool error_cov_initialized = false;
       const ossimString RSMECB_TAG = "RSMECB";
       const ossimString RSMECA_TAG = "RSMECA";
@@ -232,8 +238,8 @@ bool ossimNitfRsmModel::getRsmData(const ossimNitfImageHeader* ih)
             }
          }
       }
-
-      if (error_cov_initialized)
+#endif
+      // if (error_cov_initialized)
       {
          // RSMIDA:
          ossimString RSMIDA_TAG = "RSMIDA";
@@ -313,13 +319,13 @@ bool ossimNitfRsmModel::getRsmData(const ossimNitfImageHeader* ih)
                << "\nAborting with error..." << std::endl;
          }
       }
-      else if (traceDebug())
-      {
-         ossimNotify(ossimNotifyLevel_WARN)
-            << "ossimNitfRsmModel::getRsmData WARNING!"
-            << "\nCould not find RSM tag: " << RSMECA_TAG << " or " << RSMECB_TAG
-            << "\nAborting with error..." << std::endl;
-      }
+      // else if (traceDebug())
+      // {
+      //    ossimNotify(ossimNotifyLevel_WARN)
+      //       << "ossimNitfRsmModel::getRsmData WARNING!"
+      //       << "\nCould not find RSM tag: " << RSMECA_TAG << " or " << RSMECB_TAG
+      //       << "\nAborting with error..." << std::endl;
+      // }
    }
 
    if (traceExec())
