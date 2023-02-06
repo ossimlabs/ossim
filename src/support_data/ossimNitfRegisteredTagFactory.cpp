@@ -112,161 +112,161 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
 {
    ossimString name = ossimString(tagName).trim().upcase();
    
-   if(tagName == ACFTB_TAG)
+   if(name == ACFTB_TAG)
    {
       return new ossimNitfAcftbTag;
    }
-   else if(tagName == AIMIDB_TAG)
+   else if(name == AIMIDB_TAG)
    {
       return new ossimNitfAimidbTag;
    }
-   else if(tagName == BLOCKA_TAG)
+   else if(name == BLOCKA_TAG)
    {
       return new ossimNitfBlockaTag;
    }
-   else if(tagName == BNDPLB_TAG)
+   else if(name == BNDPLB_TAG)
    {
       return new ossimNitfBndplbTag;
    }
-   else if(tagName == CAMSDA_TAG)
+   else if(name == CAMSDA_TAG)
    {
       return new ossimNitfCamsdaTag;
    }
-   else if(tagName == CSCRNA_TAG)
+   else if(name == CSCRNA_TAG)
    {
       return new ossimNitfCscrnaTag;
    }
-   else if(tagName == CSDIDA_TAG)
+   else if(name == CSDIDA_TAG)
    {
       return new ossimNitfCsdidaTag;
    }
-   else if(tagName == CSEXRA_TAG)
+   else if(name == CSEXRA_TAG)
    {
       return new ossimNitfCsexraTag;
    }
-   else if(tagName == ENGRDA_TAG)
+   else if(name == ENGRDA_TAG)
    {
       return new ossimNitfEngrdaTag;
    }
-   else if(tagName == GEOLOB_TAG)
+   else if(name == GEOLOB_TAG)
    {
       return new ossimNitfGeolobTag;
    }
-   else if(tagName == GEO_POSITIONING_TAG)
+   else if(name == GEO_POSITIONING_TAG)
    {
       return new ossimNitfGeoPositioningTag;
    }
-   else if(tagName == ICHIPB_TAG)
+   else if(name == ICHIPB_TAG)
    {
       return new ossimNitfIchipbTag;
    }
-   else if(tagName == J2KLRA_TAG)
+   else if(name == J2KLRA_TAG)
    {
       return new ossimNitfJ2klraTag;
    }
 #if 0 /* ossimNitfGeolobTag */
-   else if(tagName == LOCAL_GEOGRAPHIC_TAG)
+   else if(name == LOCAL_GEOGRAPHIC_TAG)
    {
       return new ossimNitfLocalGeographicTag;
    }
 #endif
-   else if(tagName == LOCAL_CARTOGRAPHIC_TAG)
+   else if(name == LOCAL_CARTOGRAPHIC_TAG)
    {
       return new ossimNitfLocalCartographicTag;
    }
-   else if(tagName == MICIDA_TAG)
+   else if(name == MICIDA_TAG)
    {
       return new ossimNitfMicidaTag;
    }
-   else if(tagName == MIMCSA_TAG)
+   else if(name == MIMCSA_TAG)
    {
       return new ossimNitfMimcsaTag;
    }
-   else if(tagName == MSTGTA_TAG)
+   else if(name == MSTGTA_TAG)
    {
       return new ossimNitfMstgtaTag;
    }
-   else if(tagName == MTIMFA_TAG)
+   else if(name == MTIMFA_TAG)
    {
       return new ossimNitfMtimfaTag;
    }
-   else if(tagName == MTIMSA_TAG)
+   else if(name == MTIMSA_TAG)
    {
       return new ossimNitfMtimsaTag;
    }
-   else if(tagName == PIAIMC_TAG)
+   else if(name == PIAIMC_TAG)
    {
       return new ossimNitfPiaimcTag;
    }
-   else if(tagName == PROJECTION_PARAMETER_TAG)
+   else if(name == PROJECTION_PARAMETER_TAG)
    {
       return new ossimNitfProjectionParameterTag;
    }
-   else if(tagName == RPCB_TAG)
+   else if(name == RPCB_TAG)
    {
       return new ossimNitfRpcBTag();
    }
-   else if(tagName == RPCA_TAG)
+   else if(name == RPCA_TAG)
    {
       return new ossimNitfRpcATag();
    }
-   else if (tagName == SENSRA_TAG)
+   else if (name == SENSRA_TAG)
    {
       return new ossimNitfSensraTag();
    }
-   else if (tagName == STDIDC_TAG)
+   else if (name == STDIDC_TAG)
    {
       return new ossimNitfStdidcTag();
    }
-   else if (tagName == STREOB_TAG)
+   else if (name == STREOB_TAG)
    {
       return new ossimNitfStreobTag();
    }
-   else if (tagName == USE00A_TAG)
+   else if (name == USE00A_TAG)
    {
       return new ossimNitfUse00aTag();
    }
-   else if(tagName == HISTOA_TAG)
+   else if(name == HISTOA_TAG)
    {
       return new ossimNitfHistoaTag();
    }
-   else if(tagName == CSCCGA_TAG)
+   else if(name == CSCCGA_TAG)
    {
       return new ossimNitfCsccgaTag();
    }
-   else if(tagName == CSPROA_TAG)
+   else if(name == CSPROA_TAG)
    {
       return new ossimNitfCsproaTag();
    }
-   else if(tagName == EXOPTA_TAG)
+   else if(name == EXOPTA_TAG)
    {
       return new ossimNitfExoptaTag();
    }
-   else if(tagName == RSMECA_TAG)
+   else if(name == RSMECA_TAG)
    {
       return new ossimNitfRsmecaTag();
    }
 
 #if 0 /* Not ready for prime time yet. drb - 20191105 */
-   else if(tagName == RSMECB_TAG)
+   else if(name == RSMECB_TAG)
    {
       return new ossimNitfRsmecbTag();
    }
 #endif
    
-   else if(tagName == RSMIDA_TAG)
+   else if(name == RSMIDA_TAG)
    {
       return new ossimNitfRsmidaTag();
    }
-   else if(tagName == RSMPCA_TAG)
+   else if(name == RSMPCA_TAG)
    {
       return new ossimNitfRsmpcaTag();
    }
-   else if(tagName == RSMPIA_TAG)
+   else if(name == RSMPIA_TAG)
    {
       return new ossimNitfRsmpiaTag();
    }
-   else if(tagName == TMINTA_TAG)
+   else if(name == TMINTA_TAG)
    {
       return new ossimNitfTmintaTag();
    }
