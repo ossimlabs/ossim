@@ -187,6 +187,9 @@ void ossimUtmProjection::update()
    theFalseEastingNorthing.y = theTranMerc_False_Northing;
 
    ossimMapProjection::update();
+
+   // Recompute and set the pcs/epsg code.
+   thePcsCode = getPcsCode();
 }
 
 ossimGpt ossimUtmProjection::inverse(const ossimDpt &eastingNorthing)const
