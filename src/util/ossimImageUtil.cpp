@@ -2373,13 +2373,13 @@ void ossimImageUtil::substituteFileStrings( const ossimFilename& file,
                                             ossimString& command ) const
 {
    const std::string BASENAME_VARIABLE = "%{basename}";
-   command.gsub( BASENAME_VARIABLE, file.file().string() );
-   
+   command.gsub( BASENAME_VARIABLE, file.file().string(), true );
+
    const std::string BASENAME_NO_EXT_VARIABLE = "%{basename_no_ext}";
-   command.gsub( BASENAME_NO_EXT_VARIABLE, file.file().string() );
+   command.gsub( BASENAME_NO_EXT_VARIABLE, file.file().string(), true );
 
    const std::string DIRNAME_VARIABLE = "%{dirname}";
-   command.gsub( DIRNAME_VARIABLE, file.path().string() );
+   command.gsub( DIRNAME_VARIABLE, file.path().string(), true );
 
    const std::string FILE_VARIABLE = "%{file}";
    command.gsub( FILE_VARIABLE, file.string(), true );
