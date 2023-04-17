@@ -891,9 +891,10 @@ void ossimImageGeometry::getTiePoint(ossimDpt& tie, bool edge) const
    {
       // Use the geographic version of this method to establish UL:
       ossimGpt gTie;
-      gTie.hgt = 0.0;
+      // gTie.hgt = 0.0;
       getTiePoint(gTie, edge);
-      if (!gTie.hasNans())
+      // if (!gTie.hasNans())
+      if (!gTie.isLatLonNan())
          tie = m_projection->forward( gTie );
       else
          tie.makeNan();
