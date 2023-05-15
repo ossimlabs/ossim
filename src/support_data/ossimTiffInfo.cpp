@@ -1948,6 +1948,21 @@ std::ostream &ossimTiffInfo::print(std::ostream &out,
       printValue(out, type, valueArray);
       break;
    }
+
+   case ossim::OTIFFTAG_WHITEPOINT: // tag 318
+   {
+      out << prefix << "white_point: ";
+      printArray(out, type, count, valueArray);
+      break;
+   }
+
+   case ossim::OTIFFTAG_PRIMARYCHROMATICITIES: // tag 319
+   {
+      out << prefix << "primary_chromaticities: ";
+      printArray(out, type, count, valueArray);
+      break;
+   }
+
    case ossim::OTIFFTAG_COLORMAP: // tag 320
    {
       out << prefix << "colormap: ";
@@ -2298,7 +2313,7 @@ std::ostream &ossimTiffInfo::printValue(std::ostream &out,
 
 std::ostream &ossimTiffInfo::printArray(std::ostream &out,
                                         ossim_uint16 type,
-                                        ossim_uint64 arraySizeInBytes,
+                                        ossim_uint64 count,
                                         ossim_uint8 *valueArray) const
 {
    if (valueArray)
@@ -2307,7 +2322,7 @@ std::ostream &ossimTiffInfo::printArray(std::ostream &out,
       {
       case ossim::OTIFF_BYTE:
       {
-         for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
+         for (ossim_uint64 i = 0; i < count; ++i)
          {
             out << ((ossim_uint8)valueArray[i]);
          }
@@ -2321,7 +2336,7 @@ std::ostream &ossimTiffInfo::printArray(std::ostream &out,
          // comments.
          //---
          out << "\"\"\"";
-         for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
+         for (ossim_uint64 i = 0; i < count; ++i)
          {
             //---
             // Test to avoid putting nulls in the ascii string out.  Added to fix
@@ -2340,7 +2355,7 @@ std::ostream &ossimTiffInfo::printArray(std::ostream &out,
       case ossim::OTIFF_SHORT:
       {
          ossim_uint16 *p = (ossim_uint16 *)valueArray;
-         for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
+         for (ossim_uint64 i = 0; i < count; ++i)
          {
             out << p[i] << " ";
          }
@@ -2350,17 +2365,57 @@ std::ostream &ossimTiffInfo::printArray(std::ostream &out,
       case ossim::OTIFF_LONG:
       {
          ossim_uint32 *p = (ossim_uint32 *)valueArray;
-         for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
+         for (ossim_uint64 i = 0; i < count; ++i)
          {
             out << p[i] << " ";
          }
          out << "\n";
          break;
       }
+      case ossim::OTIFF_RATIONAL:
+      {
+         ossim_uint32* p = (ossim_uint32*)valueArray;
+         ossim_uint64 i = 0;
+         ossim_uint64 values = count*2;
+         while ( i+1 < values )
+         {
+            out << p[i] << "/" << p[i+1];
+            i += 2;
+            if ( i < values )
+            {
+               out << ",";
+            }
+            else
+            {
+               out << "\n";
+            }
+         }
+         break;
+      }
+      case ossim::OTIFF_SRATIONAL:
+      {
+         ossim_sint32* p = (ossim_sint32*)valueArray;
+         ossim_uint64 i = 0;
+         ossim_uint64 values = count*2;
+         while ( i+1 < values )
+         {
+            out << p[i] << "/" << p[i+1];
+            i += 2;
+            if ( i < values )
+            {
+               out << ",";
+            }
+            else
+            {
+               out << "\n";
+            }
+         }
+         break;
+      }      
       case ossim::OTIFF_LONG8:
       {
          ossim_uint64 *p = (ossim_uint64 *)valueArray;
-         for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
+         for (ossim_uint64 i = 0; i < count; ++i)
          {
             out << p[i] << " ";
          }
@@ -2370,7 +2425,7 @@ std::ostream &ossimTiffInfo::printArray(std::ostream &out,
       case ossim::OTIFF_DOUBLE:
       {
          ossim_float64 *p = (ossim_float64 *)valueArray;
-         for (ossim_uint64 i = 0; i < arraySizeInBytes; ++i)
+         for (ossim_uint64 i = 0; i < count; ++i)
          {
             out << p[i] << " ";
          }
