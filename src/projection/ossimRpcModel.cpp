@@ -276,26 +276,26 @@ void ossimRpcModel::worldToLineSample(const ossimGpt& ground_point,
    //   img_pt.makeNan();
    //    return;
    // }
-         
+
    //***
    // Normalize the lat, lon, hgt:
    //***
    double nlat = (ground_point.lat - theLatOffset) / theLatScale;
 
-   //---
-   // Test for dateline cross.
-   // May need test for theLonOffset positive and close to dateline and
-   // ground_point.lon is negative. (drb - 12 April 2020)
-   //---
+   // Test for dateline cross. (drb - 13 June 2023)
    double nlon;
    if ( ( theLonOffset < -160.0 ) && ( ground_point.lon > 160.0 ) )
    {
       nlon = (ground_point.lon - 360.0 - theLonOffset) / theLonScale;
    }
+   else if ( ( theLonOffset > 160.0 ) && ( ground_point.lon < -160.0 ) )
+   {
+      nlon = (ground_point.lon + 360.0 - theLonOffset) / theLonScale;
+   }
    else
    {
       nlon = (ground_point.lon - theLonOffset) / theLonScale;
-   }   
+   }
 
    double nhgt;
 
