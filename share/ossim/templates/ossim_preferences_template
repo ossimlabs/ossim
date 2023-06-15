@@ -139,7 +139,7 @@ elevation_manager.elevation_source3.geoid.type: geoid1996
 // One Kilometer post spacing, can memory map, default enabled, always last:
 elevation_manager.elevation_source4.connection_string: $(OSSIM_DATA)/elevation/dted/level0
 elevation_manager.elevation_source4.enabled: true
-elevation_manager.elevation_source2.extension: .dt0
+elevation_manager.elevation_source4.extension: .dt0
 elevation_manager.elevation_source4.type: dted_directory
 elevation_manager.elevation_source4.min_open_cells: 25
 elevation_manager.elevation_source4.max_open_cells: 50
@@ -427,11 +427,11 @@ plugin85.options:"""
 // plugin.file0:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_png_plugin.so
 
 // NTM plugin, alway make second plugin:
-// plugin.file1: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
+// plugin.file1:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ntm_plugin.so
 
 // plugin.file3:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_aws_plugin.so
 // plugin.file5:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_kakadu_plugin.so
-// plugin.file10:  $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_jpeg12_plugin.so
+// plugin.file10: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_jpeg12_plugin.so
 // plugin.file15: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_mrsid_plugin.so
 // plugin.file20: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_cnes_plugin.so
 // plugin.file30: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_sqlite_plugin.so
