@@ -22,8 +22,6 @@ if("${isSystemDir}" STREQUAL "-1")
 endif("${isSystemDir}" STREQUAL "-1")
 #################################################################
 
-
-
 SET(CMAKE_MODULE_PATH "${${PROJECT_NAME}_SOURCE_DIR}/cmake/CMakeModules;${CMAKE_MODULE_PATH}")
 
 set(CMAKE_CXX_STANDARD 11)
@@ -47,14 +45,19 @@ INCLUDE(OssimCommonVariables)
 
 # Expose some build options
 set(LIB_NAME ossim CACHE STRING "Name of ossim libray (default is ossim).")
+
+OPTION(BUILD_OSSIM_CURL_SUPPORT "Set to ON to build OSSIM with curl support.  Use OFF to turn off curl support." ON)
 OPTION(BUILD_OSSIM_FREETYPE_SUPPORT "Set to ON to build OSSIM with freetype support.  Use OFF to turn off freetype support." ON)
 OPTION(BUILD_OSSIM_HDF5_SUPPORT "Set to ON to build OSSIM with HDF5 support.  Use OFF to turn off HDF5 support." OFF)
-OPTION(BUILD_OSSIM_MPI_SUPPORT "Set to ON to build OSSIM with MPI support.  Use OFF to turn off MPI support." OFF)
 OPTION(BUILD_OSSIM_ID_SUPPORT "Set to ON to build OSSIM GIT ID support into the library.  Use OFF to turn off ID support." ON)
+OPTION(BUILD_OSSIM_MPI_SUPPORT "Set to ON to build OSSIM with MPI support.  Use OFF to turn off MPI support." OFF)
+OPTION(BUILD_OSSIM_PROJ_SUPPORT "Set to ON to build OSSIM with proj support.  Use OFF to turn off proj support." ON)
+OPTION(BUILD_OSSIM_SQLITE_SUPPORT "Set to ON to build OSSIM with sqlite support.  Use OFF to turn off sqlite support." ON)
 
 OPTION(BUILD_OSSIM_APPS "Set to ON to build OSSIM applications." ON)
 OPTION(BUILD_OSSIM_CURL_APPS "Set to ON to build ossim curl dependent apps. Use ON to enable." OFF)
 OPTION(BUILD_OSSIM_TESTS "Set to ON to build OSSIM unit/functional tests." ON)
+
 
 ###################################################################################
 # Include the Utilities in the root make
@@ -92,6 +95,77 @@ else( GEOS_FOUND )
    message( FATAL_ERROR "Could not find required geos package!" )
 endif( GEOS_FOUND )
 
+# JPEG - Required package:
+find_package( JPEG )
+if( JPEG_FOUND )
+   include_directories( ${JPEG_INCLUDE_DIR} )
+   set( ossimDependentLibs ${ossimDependentLibs} ${JPEG_LIBRARY} )
+else( JPEG_FOUND )
+   message( FATAL_ERROR "Could not find required jpeg package!" )
+endif( JPEG_FOUND )
+
+# JSONCPP - Required:
+find_package( JsonCpp )
+if( JSONCPP_FOUND )
+   include_directories( ${JSONCPP_INCLUDE_DIR} )
+   set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
+else( JSONCPP_FOUND )
+   message( FATAL_ERROR "Could not find required JsonCpp package!" )
+endif( JSONCPP_FOUND )
+
+# ZLIB - Optional, but probably required by other libraries, e.g. libtiff:
+set( OSSIM_HAS_LIBZ 0 )
+find_package( ZLIB )
+if ( ZLIB_FOUND )
+   include_directories( ${ZLIB_INCLUDE_DIR} )
+   set( ossimDependentLibs ${ossimDependentLibs} ${ZLIB_LIBRARY} )
+   set( OSSIM_HAS_LIBZ 1 )
+else ( ZLIB_FOUND )
+   message( WARNING "Could not find optional zlib package!" )
+endif ( ZLIB_FOUND )
+
+# TIFF - Required:
+find_package( TIFF )
+if( TIFF_FOUND )
+   include_directories( ${TIFF_INCLUDE_DIR} )
+   set( ossimDependentLibs ${ossimDependentLibs} ${TIFF_LIBRARY} )
+else( TIFF_FOUND )
+   message( FATAL_ERROR "Could not find required tiff package!" )
+endif( TIFF_FOUND )
+
+# Curl - Required by proj which is required by geotiff:
+if( BUILD_OSSIM_CURL_SUPPORT )
+   find_package( CURL )
+   if( CURL_FOUND )
+      include_directories( ${CURL_INCLUDE_DIR} )
+      set(  ossimDependentLibs ${ossimDependentLibs} ${CURL_LIBRARIES} )
+   else( CURL_FOUND )
+      message(FATAL_ERROR "Could not find curl")
+   endif( CURL_FOUND )
+endif( BUILD_OSSIM_CURL_SUPPORT )
+
+# SQLite - Required by proj which is required by geotiff:
+if ( BUILD_OSSIM_SQLITE_SUPPORT ) 
+   find_package(SQLITE)
+   if(SQLITE_FOUND)
+      include_directories( ${SQLITE_INCLUDE_DIR} )
+      set( ossimDependentLibs ${ossimDependentLibs} ${SQLITE_LIBRARY})
+   else(SQLITE_FOUND)
+      message(FATAL_ERROR "Could not find sqlite")
+   endif(SQLITE_FOUND)
+endif( BUILD_OSSIM_SQLITE_SUPPORT )
+
+# PROJ - Required by geotiff:
+if ( BUILD_OSSIM_PROJ_SUPPORT )
+   find_package( PROJ )
+   if( PROJ_FOUND )
+      include_directories( ${PROJ_INCLUDE_DIR} )
+      set( ossimDependentLibs ${ossimDependentLibs} ${PROJ_LIBRARY} )
+   else( PROJ_FOUND )
+      message( WARNING "Could not find proj package! May be needed for libgeotiff." )
+   endif( PROJ_FOUND )
+endif( BUILD_OSSIM_PROJ_SUPPORT )
+
 # GEOFIFF - Required:
 set( OSSIM_HAS_GEOTIFF 0 )
 find_package( GEOTIFF )
@@ -112,36 +186,7 @@ endif( GEOTIFF_FOUND )
 #   message( FATAL_ERROR "Could not find required geotrans package!" )
 # endif( GEOTRANS_FOUND )
 
-# JPEG - Required package:
-find_package( JPEG )
-if( JPEG_FOUND )
-   include_directories( ${JPEG_INCLUDE_DIR} )
-   set( ossimDependentLibs ${ossimDependentLibs} ${JPEG_LIBRARY} )
-else( JPEG_FOUND )
-   message( FATAL_ERROR "Could not find required jpeg package!" )
-endif( JPEG_FOUND )
 
-# TIFF - Required:
-find_package( TIFF )
-if( TIFF_FOUND )
-   include_directories( ${TIFF_INCLUDE_DIR} )
-   set( ossimDependentLibs ${ossimDependentLibs} ${TIFF_LIBRARY} )
-else( TIFF_FOUND )
-   message( FATAL_ERROR "Could not find required tiff package!" )
-endif( TIFF_FOUND )
-
-# JSONCPP - Required. This will use the amalgamated form embedded in OSSIM. If an previously
-# installed JSONCPP package is preferred, add "-DUSE_OSSIM_JSONCPP=OFF" to the cmake command
-if(NOT USE_OSSIM_JSONCPP)
-   find_package( JsonCpp )
-   if(JSONCPP_FOUND )
-      include_directories( ${JSONCPP_INCLUDE_DIR} )
-      set( ossimDependentLibs ${ossimDependentLibs} ${JSONCPP_LIBRARY} )
-      message("-- Found JsonCpp: ${JSONCPP_INCLUDE_DIR}" )
-   else( JSONCPP_FOUND )
-      message( FATAL_ERROR "Could not find required JsonCpp package!" )
-   endif( JSONCPP_FOUND )
-endif(NOT USE_OSSIM_JSONCPP)
 # This caused a core dump on ossim executables running in jenins pipeline (ossim-test-dev)
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
   find_library( DL_LIBRARY dl )
@@ -193,17 +238,6 @@ if( BUILD_OSSIM_MPI_SUPPORT )
    endif ( MPI_FOUND )
 endif( BUILD_OSSIM_MPI_SUPPORT )
 
-# ZLIB - Optional:
-set( OSSIM_HAS_LIBZ 0 )
-find_package( ZLIB )
-if ( ZLIB_FOUND )
-   include_directories( ${ZLIB_INCLUDE_DIR} )
-   set( ossimDependentLibs ${ossimDependentLibs} ${ZLIB_LIBRARY} )
-   set( OSSIM_HAS_LIBZ 1 )
-else ( ZLIB_FOUND )
-   message( WARNING "Could not find optional zlib package!" )
-endif ( ZLIB_FOUND )
-
 # HDF5 - Optional:
 set( OSSIM_HAS_HDF5 0 )
 if (BUILD_OSSIM_HDF5_SUPPORT)
@@ -220,7 +254,6 @@ else (BUILD_OSSIM_HDF5_SUPPORT)
   message( STATUS "Native HDF5 support was not requested. If you want HDF5 support, set the environment BUILD_OSSIM_HDF5_SUPPORT=ON..." )
 endif ( BUILD_OSSIM_HDF5_SUPPORT )
 
-
 find_package( Threads )
 set( ossimDependentLibs ${ossimDependentLibs} ${CMAKE_THREAD_LIBS_INIT} )
 
@@ -228,15 +261,13 @@ set( ossimDependentLibs ${ossimDependentLibs} ${CMAKE_THREAD_LIBS_INIT} )
 # Call the OSSIM macros in OssimUtilities.cmake
 #---
 if ( NOT OSSIM_BUILD_DATE )
-    TODAYS_DATE(OSSIM_BUILD_DATE)
+   TODAYS_DATE(OSSIM_BUILD_DATE)
 endif( NOT OSSIM_BUILD_DATE )
 SET(OSSIM_GIT_REVISION_NUMBER "UNKNOWN")
 GET_GIT_REVISION()
 if ( NOT ${Project_WC_REVISION} EQUAL 0 )
    set( OSSIM_GIT_REVISION_NUMBER ${Project_WC_REVISION} )
 endif()
-
-
 
 #####################################################################################
 # Call the configure files for ossimConfig and ossimVersion setup
@@ -272,7 +303,6 @@ SET(OSSIM_VERSION_HEADER_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/src/ossimVersion.h.
 SET(OSSIM_VERSION_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/ossim/ossimVersion.h")
 CONFIGURE_FILE("${OSSIM_VERSION_HEADER_CONFIG}"
                "${OSSIM_VERSION_HEADER}")
-
 
 ##################################################################################################
 # Point to the CMakeLists.txt in the src dir. OLK: Removed unnecessary src/ossim structure and
