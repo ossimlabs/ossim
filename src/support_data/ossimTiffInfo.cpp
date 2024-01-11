@@ -415,7 +415,7 @@ std::ostream &ossimTiffInfo::print(std::ostream &out) const
          arraySizeInBytes = getArraySizeInBytes(count, type);
          if (arraySizeInBytes == 0)
          {
-            // Could be an unhandle type.  Gobble the value.
+            // Could be an unhandled type.  Gobble the value.
             eatValue(*m_inputStream, version);
          }
          else
@@ -850,7 +850,7 @@ std::ostream &ossimTiffInfo::print(std::istream &inStr,
          arraySizeInBytes = getArraySizeInBytes(count, type);
          if (arraySizeInBytes == 0)
          {
-            // Could be an unhandle type.  Gobble the value.
+            // Could be an unhandled type.  Gobble the value.
             eatValue(inStr, version);
          }
          else
@@ -3159,7 +3159,7 @@ std::ostream &ossimTiffInfo::printGeoKeys(
                   }
                   else
                   {
-                     out << prefix << "unhandle_key: " << key << "\n";
+                     out << prefix << "unhandled_key: " << key << "\n";
                   }
                }
                break;
