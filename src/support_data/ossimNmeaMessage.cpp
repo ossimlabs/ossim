@@ -57,7 +57,7 @@ bool ossimNmeaMessage::isValidStartChar(char c)const
 }
 
 
-void ossimNmeaMessage::parseMessage(std::istream& in)throw(ossimException)
+void ossimNmeaMessage::parseMessage(std::istream& in)
 {
    ossim::skipws(in);
    m_validCheckSum = false;

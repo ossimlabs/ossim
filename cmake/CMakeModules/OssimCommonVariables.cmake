@@ -95,7 +95,8 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    # Seems like a good place to add version specific compiler flags too.
    ###################################################################################
 
-   USE_CXX11()
+   # This call is no longer needed as we are way past c++11. drb 20230829
+   # USE_CXX11()
 
    IF(APPLE)
       # use, i.e. don't skip the full RPATH for the build tree
