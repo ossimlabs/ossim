@@ -1132,7 +1132,7 @@ bool ossimFilename::createDirectory( bool recurseFlag,
             // Below was seg faulting in ossimString::operator!=(const char* rhs)
             // if(current != (const char*)OSSIM_FILENAME_PATH_SEPARATOR)
             //---
-            if(current != std::string(1, OSSIM_FILENAME_PATH_SEPARATOR).c_str())               
+            if(current != std::string(1, OSSIM_FILENAME_PATH_SEPARATOR).c_str())
             {
                if(!ossimFilename(current).exists())
                {

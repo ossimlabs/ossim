@@ -854,8 +854,8 @@ ossim_uint8 ossimBatchTest::processCommands(const ossimString& prefixBase,
    }
 
    ossimString date;
-   double startTime;
-   double stopTime;
+   double startTime = 0.0;
+   double stopTime  = 0.0;
    
    ossimString command;
    ossim_uint32 index = 0;

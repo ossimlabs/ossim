@@ -248,6 +248,11 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
 
 
    GTIF *gtif = GTIFNew(tifPtr);
+   if (!gtif)
+   {
+      return false;
+   }
+
    const ossimBilinearMapProjection* bilinearProj = dynamic_cast<const ossimBilinearMapProjection*>(mapProj);
    ossimRefPtr<ossimBilinearMapProjection> modBilinearProj;
    if(bilinearProj)
@@ -318,7 +323,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
          tiePoints.resize(lsPt.size()*6);
       }
       int tieOffset = 0;
-      for(int idx = 0; idx < lsPt.size();++idx)
+      for(ossim_uint32 idx = 0; idx < lsPt.size();++idx)
       {
          tiePoints[tieOffset++] = lsPt[idx].x;
          tiePoints[tieOffset++] = lsPt[idx].y;
@@ -561,7 +566,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
                     ProjCoordTransGeoKey,
                     TYPE_SHORT,
                     1,
-                    (uint16)CT_TransverseMercator);
+                    (ossim_uint16)CT_TransverseMercator);
 
          GTIFKeySet(gtif,
                     ProjNatOriginLongGeoKey,
@@ -591,7 +596,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
                     ProjCoordTransGeoKey,
                     TYPE_SHORT,
                     1,
-                    (uint16)CT_Sinusoidal);
+                    (ossim_uint16)CT_Sinusoidal);
 
          GTIFKeySet(gtif,
                     ProjNatOriginLongGeoKey,
@@ -655,7 +660,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
                        ProjCoordTransGeoKey,
                        TYPE_SHORT,
                        1,
-                       (uint16)CT_LambertConfConic_2SP);
+                       (ossim_uint16)CT_LambertConfConic_2SP);
          }
          else // Albers
          {
@@ -663,7 +668,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
                        ProjCoordTransGeoKey,
                        TYPE_SHORT,
                        1,
-                       (uint16)CT_AlbersEqualArea);
+                       (ossim_uint16)CT_AlbersEqualArea);
          }
 
          // User-Defined
@@ -712,7 +717,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
                     ProjCoordTransGeoKey,
                     TYPE_SHORT,
                     1,
-                    (uint16)CT_Mercator);
+                    (ossim_uint16)CT_Mercator);
 
          GTIFKeySet(gtif,
                     ProjNatOriginLongGeoKey,
@@ -757,7 +762,7 @@ bool ossimGeoTiff::writeTags(TIFF *tifPtr,
                     ProjCoordTransGeoKey,
                     TYPE_SHORT,
                     1,
-                    (uint16)CT_TransverseMercator);
+                    (ossim_uint16)CT_TransverseMercator);
 
          // User-Defined
          GTIFKeySet(gtif, ProjectedCSTypeGeoKey, TYPE_SHORT, 1, KvUserDefined);
@@ -2168,19 +2173,21 @@ void ossimGeoTiff::setOssimDatumName(std::shared_ptr<ossim::TiffHandlerState> st
 //*************************************************************************************************
 bool ossimGeoTiff::parsePcsCode()
 {
-   bool result = true;
-
+   bool result = false;
    // key 3072 Section 6.3.3.1 codes
    ossimString epsg_spec(ossimString("EPSG:") + ossimString::toString(thePcsCode));
    ossimRefPtr<ossimProjection> proj =
        ossimEpsgProjectionFactory::instance()->createProjection(epsg_spec);
-   ossimMapProjection *map_proj = PTR_CAST(ossimMapProjection, proj.get());
-   if (!parseProjection(map_proj))
+   if (proj.valid())
    {
-      result = false;
+      ossimMapProjection* map_proj = dynamic_cast<ossimMapProjection*>(proj.get());
+      if (map_proj)
+      {      
+         parseProjection(map_proj);
+         if (thePcsCode != 0) result = true;
+      }
    }
-
-   return (thePcsCode != 0);
+   return result;
 }
 
 //*************************************************************************************************
