@@ -31,10 +31,14 @@ public:
    ossimNmeaMessage(const std::string& acceptedStartingCharacters="!$"):m_startChars(acceptedStartingCharacters){}
    
    /**
-    * Parses a standard formatted NMEA message.  No exceptions are created for checksums.  The checksum needs
-    * to be checked after parsing by calling validCheckSum().
+    * Parses a standard formatted NMEA message.
+    * No exceptions are created for checksums.
+    * The checksum needs to be checked after parsing by calling:
+    * validCheckSum().
+    *
+    * throws ossimException on error.
     */
-   virtual void parseMessage(std::istream& in)throw(ossimException);
+   virtual void parseMessage(std::istream& in);
    
    virtual bool valid()const{return validCheckSum();}
    bool validCheckSum()const{return m_validCheckSum;}
