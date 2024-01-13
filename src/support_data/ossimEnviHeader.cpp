@@ -23,12 +23,14 @@
 #include <ossim/support_data/ossimWavelength.h>
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <string>
 
-typedef  std::unary_function<std::pair<ossimString, ossimString>, bool> KwlCompareFunctionType;
+// std::unary_function deprecated. drb - 20140113
+// typedef  std::unary_function<std::pair<ossimString, ossimString>, bool> KwlCompareFunctionType;
 typedef  std::pair<const ossimString, ossimString> KwlComparePairType;
 
-class KwlKeyCaseInsensitiveEquals : public KwlCompareFunctionType
+class KwlKeyCaseInsensitiveEquals //  : public KwlCompareFunctionType
 {
 public:
    KwlKeyCaseInsensitiveEquals(const ossimString& key):m_key(key){}
@@ -38,7 +40,7 @@ public:
    }
    ossimString m_key;
 };
-class KwlKeySubStringCaseInsensitive : public KwlCompareFunctionType
+class KwlKeySubStringCaseInsensitive // : public KwlCompareFunctionType
 {
 public:
    KwlKeySubStringCaseInsensitive(const ossimString& key):m_key(key){}
