@@ -1,8 +1,8 @@
 #include <ossim/base/State.h>
 
 
-bool ossim::State::load(const ossimKeywordlist& kwl,
-                        const ossimString& prefix)
+bool ossim::State::load(const ossimKeywordlist& /*kwl*/,
+                        const ossimString& /*prefix*/)
 {
    return true;
 }

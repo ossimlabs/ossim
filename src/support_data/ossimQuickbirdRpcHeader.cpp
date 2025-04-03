@@ -5,17 +5,17 @@
 // See LICENSE.txt file in the top level directory for more details.
 //
 //----------------------------------------------------------------------------
-// $Id: ossimQuickbirdRpcHeader.cpp 9094 2006-06-13 19:12:40Z dburken $
+// $Id$
 
 #include <ossim/support_data/ossimQuickbirdRpcHeader.h>
 #include <ossim/base/ossimRegExp.h>
+#include <ossim/base/ossimXmlDocument.h>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 #include <iterator>
-#include <ossim/base/ossimXmlDocument.h>
 
-using namespace std;
+// using namespace std;
 
 std::ostream& operator << (std::ostream& out,
 		      const ossimQuickbirdRpcHeader& data)
@@ -238,7 +238,7 @@ bool ossimQuickbirdRpcHeader::parseXml ()
          break;
       theHeightScale = dataString.toDouble();
 
-      vector<ossimString> ln, ld, sn, sd;
+      std::vector<ossimString> ln, ld, sn, sd;
       rpcNode->getChildTextValue("LINENUMCOEFList/LINENUMCOEF").split(ln, " ", true);
       rpcNode->getChildTextValue("LINEDENCOEFList/LINEDENCOEF").split(ld, " ", true);
       rpcNode->getChildTextValue("SAMPNUMCOEFList/SAMPNUMCOEF").split(sn, " ", true);
@@ -430,7 +430,7 @@ bool ossimQuickbirdRpcHeader::parseNameValue(const ossimString& line)
    else if(lineCopy.contains("LINE_DEN_COEFF"))
    {
       ossimString label = lineCopy.before(":");
-      int index = label.explode("_").back().toInt() - 1;
+      // int index = label.explode("_").back().toInt() - 1;
       double coeff = lineCopy.after(":").before("\n").toDouble();
 
       // std::cout << "HERE: " << label.substr(0, label.find_last_of('_')) << "(" << index << ")" << "=" << coeff << std::endl;
@@ -442,7 +442,7 @@ bool ossimQuickbirdRpcHeader::parseNameValue(const ossimString& line)
    else if(lineCopy.contains("LINE_NUM_COEFF"))
    {
       ossimString label = lineCopy.before(":");
-      int index = label.explode("_").back().toInt() - 1;
+      // int index = label.explode("_").back().toInt() - 1;
       double coeff = lineCopy.after(":").before("\n").toDouble();
 
       // std::cout << "HERE: " << label.substr(0, label.find_last_of('_')) << "(" << index << ")" << "=" << coeff << std::endl;
@@ -453,7 +453,7 @@ bool ossimQuickbirdRpcHeader::parseNameValue(const ossimString& line)
    else if(lineCopy.contains("SAMP_DEN_COEFF"))
    {
       ossimString label = lineCopy.before(":");
-      int index = label.explode("_").back().toInt() - 1;
+      // int index = label.explode("_").back().toInt() - 1;
       double coeff = lineCopy.after(":").before("\n").toDouble();
 
       // std::cout << "HERE: " << label.substr(0, label.find_last_of('_')) << "(" << index << ")" << "=" << coeff << std::endl;
@@ -464,7 +464,7 @@ bool ossimQuickbirdRpcHeader::parseNameValue(const ossimString& line)
    else if(lineCopy.contains("SAMP_NUM_COEFF"))
    {
       ossimString label = lineCopy.before(":");
-      int index = label.explode("_").back().toInt() - 1;
+      // int index = label.explode("_").back().toInt() - 1;
       double coeff = lineCopy.after(":").before("\n").toDouble();
 
       // std::cout << "HERE: " << label.substr(0, label.find_last_of('_')) << "(" << index << ")" << "=" << coeff << std::endl;

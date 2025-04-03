@@ -3,7 +3,7 @@
 namespace ossim
 {
 void KwlNodeKwlFormatter::write(std::ostream &out,
-                                 const FormatHints &hints) const
+                                const FormatHints& /*hints*/) const
 {
    ossimKeywordlist result;
    ossim_uint32 idx = 0;

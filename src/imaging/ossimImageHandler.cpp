@@ -1,9 +1,7 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description:
@@ -11,8 +9,8 @@
 // This class defines an abstract image handler which all loaders should
 // derive from.
 //
-//*******************************************************************
-//  $Id: ossimImageHandler.cpp 23013 2014-12-02 19:21:56Z okramer $
+//---
+// $Id$
 
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/base/ossimBooleanProperty.h>
@@ -40,8 +38,6 @@
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <algorithm>
-
-using namespace std;
 
 RTTI_DEF1(ossimImageHandler, "ossimImageHandler", ossimImageSource)
 
@@ -273,7 +269,7 @@ bool ossimImageHandler::initVertices(const char* file)
    std::shared_ptr<ossimKeywordlist> kwl;
    if(m_state)
    {
-      bool validVerticesFlag = false;
+      // bool validVerticesFlag = false;
       if(m_state->getValidVertices())
       {
          loadFromFileFlag = false;
@@ -426,7 +422,7 @@ void ossimImageHandler::getDecimationFactor(ossim_uint32 resLevel, ossimDpt& res
       result.makeNan();
 }
 
-void ossimImageHandler::getDecimationFactors(vector<ossimDpt>& decimations) const
+void ossimImageHandler::getDecimationFactors(std::vector<ossimDpt>& decimations) const
 {
    decimations = theDecimationFactors;
 }
@@ -905,7 +901,7 @@ bool ossimImageHandler::openOverview(const ossimFilename& overview_file)
                << "\noverview levels: "
                << theOverview->getNumberOfDecimationLevels()
                << "\nlevels: " << getNumberOfDecimationLevels()
-               << endl;
+               << std::endl;
          }
          
          //---
@@ -987,7 +983,7 @@ bool ossimImageHandler::openOverview()
                   << "\noverview levels: "
                   << theOverview->getNumberOfDecimationLevels()
                   << "\nlevels: " << getNumberOfDecimationLevels()
-                  << endl;
+                  << std::endl;
             }
             
             //---
@@ -1231,7 +1227,7 @@ bool ossimImageHandler::isValidRLevel(ossim_uint32 resLevel) const
    return result;
 }
 
-void ossimImageHandler::getValidImageVertices(vector<ossimIpt>& validVertices,
+void ossimImageHandler::getValidImageVertices(std::vector<ossimIpt>& validVertices,
                                               ossimVertexOrdering ordering,
                                               ossim_uint32 resLevel) const
 {

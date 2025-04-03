@@ -140,7 +140,8 @@ void ossimElevRemapper::elevRemap(T /* dummy */,
    {
       ossimGpt ul, ll, lr, ur;
       ossim_float32 hul, hll, hlr, hur;
-      ossim_float32 height = 0.0, xpercent, ypercent, uppery, lowery;
+      // ossim_float32 height = 0.0, xpercent, ypercent, uppery, lowery;
+      ossim_float32 xpercent, ypercent, uppery, lowery;      
 
       m_imageGeometry->rnToWorld(clipRect.ul(), resLevel, ul);
       m_imageGeometry->rnToWorld(clipRect.ur(), resLevel, ur);

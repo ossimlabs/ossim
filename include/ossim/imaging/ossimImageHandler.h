@@ -25,6 +25,7 @@
 #include <ossim/imaging/ossimFilterResampler.h>
 #include <ossim/support_data/ossimImageMetaData.h>
 #include <ossim/support_data/ImageHandlerState.h>
+#include <vector>
 
 class ossimMultiResLevelHistogram;
 

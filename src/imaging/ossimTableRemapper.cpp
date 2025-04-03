@@ -390,7 +390,7 @@ void ossimTableRemapper::remapFromNormalizedTable(
    // If (theTableBandCount == one) that means we only have one band; or,
    // the user wanted to remap all bands using the same table...
    //---
-   const ossim_uint32 BAND_OFFSET = (theTableBandCount == 1) ? 0 : PPB;
+   // const ossim_uint32 BAND_OFFSET = (theTableBandCount == 1) ? 0 : PPB;
 
    // remap table (rt)
    ossim_float64* rt = reinterpret_cast<ossim_float64*>(&theTable.front()); 

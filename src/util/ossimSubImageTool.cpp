@@ -18,7 +18,7 @@
 #include <ossim/base/ossimXmlDocument.h>
 #include <iostream>
 
-using namespace std;
+// using namespace std;
 
 const char* ossimSubImageTool::DESCRIPTION  = "Tool for extracting a sub-image from a full image.";
 const char* BBOX_KW = "bbox";
@@ -40,7 +40,7 @@ void ossimSubImageTool::setUsage(ossimArgumentParser& ap)
    usageString += " subimage [options] <input-image> <output-image>";
    au->setCommandLineUsage(usageString);
 
-   ostringstream descr;
+   std::ostringstream descr;
    descr << DESCRIPTION << "\n\n"
          <<  " No reprojection is done. Presently, the subimage geometry is represented by an RPC "
          << "replacement model until generic models can support subimage chipping.";
@@ -71,32 +71,32 @@ bool ossimSubImageTool::initialize(ossimArgumentParser& ap)
    if (m_helpRequested)
       return true;
 
-   string tempString1;
+   std::string tempString1;
    ossimArgumentParser::ossimParameter stringParam1(tempString1);
-   string tempString2;
+   std::string tempString2;
    ossimArgumentParser::ossimParameter stringParam2(tempString2);
-   string tempString3;
+   std::string tempString3;
    ossimArgumentParser::ossimParameter stringParam3(tempString3);
-   string tempString4;
+   std::string tempString4;
    ossimArgumentParser::ossimParameter stringParam4(tempString4);
    double tempDouble1;
    ossimArgumentParser::ossimParameter doubleParam1(tempDouble1);
    double tempDouble2;
    ossimArgumentParser::ossimParameter doubleParam2(tempDouble2);
-   vector<ossimString> paramList;
+   std::vector<ossimString> paramList;
 
-   ossim_uint32 readerPropIdx = 0;
+   // ossim_uint32 readerPropIdx = 0;
    ossim_uint32 writerPropIdx = 0;
-   ostringstream keys;
+   std::ostringstream keys;
 
    if ( ap.read("--bbox", stringParam1, stringParam2, stringParam3, stringParam4))
    {
-      ostringstream ostr;
-      ostr<<tempString1<<" "<<tempString2<<" "<<tempString3<<" "<<tempString4<<ends;
-      m_kwl.addPair( string(BBOX_KW), ostr.str() );
+      std::ostringstream ostr;
+      ostr<<tempString1<<" "<<tempString2<<" "<<tempString3<<" "<<tempString4<<std::ends;
+      m_kwl.addPair( std::string(BBOX_KW), ostr.str() );
    }
    if ( ap.read("-e", stringParam1) || ap.read("--entry", stringParam1) )
-      m_kwl.addPair( string(ossimKeywordNames::ENTRY_KW), tempString1 );
+      m_kwl.addPair( std::string(ossimKeywordNames::ENTRY_KW), tempString1 );
 
    if ( ap.read("--geom", stringParam1))
    {
@@ -112,9 +112,9 @@ bool ossimSubImageTool::initialize(ossimArgumentParser& ap)
          m_geomFormat = XML;
       else
       {
-         ostringstream errMsg;
+         std::ostringstream errMsg;
          errMsg << " ERROR: ossimSubImageTool ["<<__LINE__<<"] Unknown geometry format <"
-               <<formatStr<<"> specified. Aborting." << endl;
+               <<formatStr<<"> specified. Aborting." << std::endl;
          throw ossimException( errMsg.str() );
       }
    }
@@ -128,15 +128,15 @@ void ossimSubImageTool::initialize(const ossimKeywordlist& kwl)
    m_productFilename = m_kwl.find(ossimKeywordNames::OUTPUT_FILE_KW);
 
    // Init chain with handler:
-   ostringstream key;
+   std::ostringstream key;
    key<<ossimKeywordNames::IMAGE_FILE_KW<<"0";
    ossimFilename fname = m_kwl.findKey(key.str());
    ossimRefPtr<ossimImageHandler> handler =
          ossimImageHandlerRegistry::instance()->open(fname, true, false);
    if (!handler)
    {
-      ostringstream errMsg;
-      errMsg<<"ERROR: ossimSubImageTool ["<<__LINE__<<"] Could not open <"<<fname<<">"<<ends;
+      std::ostringstream errMsg;
+      errMsg<<"ERROR: ossimSubImageTool ["<<__LINE__<<"] Could not open <"<<fname<<">"<<std::ends;
       throw ossimException(errMsg.str());
    }
 
@@ -147,8 +147,8 @@ void ossimSubImageTool::initialize(const ossimKeywordlist& kwl)
       entryIndex = os.toUInt32();
    if (!handler->setCurrentEntry( entryIndex ))
    {
-      ostringstream errMsg;
-      errMsg << " ERROR: ossimSubImageTool ["<<__LINE__<<"] Entry " << entryIndex << " out of range!" << endl;
+      std::ostringstream errMsg;
+      errMsg << " ERROR: ossimSubImageTool ["<<__LINE__<<"] Entry " << entryIndex << " out of range!" << std::endl;
       throw ossimException( errMsg.str() );
    }
    m_procChain->add(handler.get());
@@ -156,10 +156,10 @@ void ossimSubImageTool::initialize(const ossimKeywordlist& kwl)
    // And finally the bounding rect:
    ossimString lookup = m_kwl.find(BBOX_KW);
    lookup.trim();
-   vector<ossimString> substrings = lookup.split(", ", true);
+   std::vector<ossimString> substrings = lookup.split(", ", true);
    if (substrings.size() != 4)
    {
-      ostringstream errMsg;
+      std::ostringstream errMsg;
       errMsg << "ossimSubImageTool ["<<__LINE__<<"] Incorrect number of values specified for bbox!";
       throw( ossimException(errMsg.str()) );
    }
@@ -197,9 +197,9 @@ bool ossimSubImageTool::execute()
    ossimRefPtr<ossimImageGeometry> inputGeom = m_procChain->getImageGeometry();
    if (!inputGeom || !inputGeom->getProjection())
    {
-      ostringstream errMsg;
+      std::ostringstream errMsg;
       errMsg << " ERROR: ossimSubImageTool ["<<__LINE__<<"] Null projection returned for input "
-            "image!" << endl;
+            "image!" << std::endl;
       throw ossimException( errMsg.str() );
    }
 
@@ -240,7 +240,7 @@ bool ossimSubImageTool::execute()
    else if (m_geomFormat == JSON)
    {
       geomFile.setExtension("json");
-      ofstream jsonStream (geomFile.string());
+      std::ofstream jsonStream (geomFile.string());
       if (!jsonStream.fail())
       {
          // Note that only the model/projection is saved here, not the full ossimImageGeometry that
@@ -253,7 +253,7 @@ bool ossimSubImageTool::execute()
    else if (m_geomFormat == DG)
    {
       geomFile.setExtension("RPB");
-      ofstream rpbStream (geomFile.string());
+      std::ofstream rpbStream (geomFile.string());
       if (!rpbStream.fail())
       {
          write_ok = rpc->toRPB(rpbStream);
@@ -269,7 +269,7 @@ bool ossimSubImageTool::execute()
    }
 
    if (write_ok)
-      ossimNotify(ossimNotifyLevel_INFO) << "Wrote geometry file to <"<<geomFile<<">.\n" << endl;
+      ossimNotify(ossimNotifyLevel_INFO) << "Wrote geometry file to <"<<geomFile<<">.\n" << std::endl;
    else
    {
       ossimNotify(ossimNotifyLevel_FATAL) << "Error encountered writing output RPC geometry file."

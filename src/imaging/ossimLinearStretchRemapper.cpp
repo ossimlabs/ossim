@@ -18,7 +18,7 @@
 #include <ossim/base/ossimNumericProperty.h>
 #include <ossim/imaging/ossimLinearStretchRemapper.h>
 
-using namespace std;
+// using namespace std;
 
 RTTI_DEF1(ossimLinearStretchRemapper, "ossimLinearRemapper", ossimImageSourceFilter);
 
@@ -163,7 +163,7 @@ void ossimLinearStretchRemapper::initialize()
 bool ossimLinearStretchRemapper::saveState(ossimKeywordlist& kwl, const char* prefix)const
 {
    bool rtn_stat = true;
-   ostringstream minstr, maxstr;
+   std::ostringstream minstr, maxstr;
    int numBands = m_minValues.size();
    if ((numBands == 0) || (numBands != m_maxValues.size()))
       rtn_stat = false;
@@ -183,12 +183,12 @@ bool ossimLinearStretchRemapper::saveState(ossimKeywordlist& kwl, const char* pr
 
 bool ossimLinearStretchRemapper::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
-   bool return_state = true;
+   // bool return_state = true;
    m_minValues.clear();
    m_maxValues.clear();
 
-   vector<ossimString> minimums;
-   vector<ossimString> maximums;
+   std::vector<ossimString> minimums;
+   std::vector<ossimString> maximums;
    ossimString minVals = kwl.find(prefix, MIN_VALUE_KW);
    ossimString maxVals = kwl.find(prefix, MAX_VALUE_KW);
    if(!minVals.empty() && !maxVals.empty())

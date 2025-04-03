@@ -93,8 +93,8 @@ bool QbMetadataParser::parse() //std::istream& in, ossimKeywordlist& kwl, const 
    std::stack<ossim_int32> currentIdxStack;
    ossimString line;
    ossimString kwlString;
-   ossim_int32 bandIdx = -1;
-   ossim_int32 imageIdx = -1;
+   // ossim_int32 bandIdx = -1;
+   // ossim_int32 imageIdx = -1;
    ossimString fullKeyValue;
    ossimString key;
    ossimString value;

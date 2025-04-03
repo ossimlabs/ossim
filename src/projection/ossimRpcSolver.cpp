@@ -99,7 +99,7 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    // we will first create f which holds the result of f(x,y,z).
    // This basically holds the cooresponding image point for each
    // ground control point.  One for x and a second array for y
-   int numPoints = imagePoints.size();
+   // int numPoints = imagePoints.size();
    std::vector<double> fx, fy;
 
    //  Holds the x, y, z vectors

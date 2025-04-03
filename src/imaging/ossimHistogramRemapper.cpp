@@ -1012,8 +1012,8 @@ bool ossimHistogramRemapper::saveState(ossimKeywordlist& kwl,
            true);
 
 
- static const char AUTO_MINMAX_BIAS_KW[] = "auto_minmax_bias";
-static const char AUTO_MINMAX_BIAS_FACTOR_KW[] = "auto_minmax_bias_factor";
+static const char AUTO_MINMAX_BIAS_KW[] = "auto_minmax_bias";
+// static const char AUTO_MINMAX_BIAS_FACTOR_KW[] = "auto_minmax_bias_factor";
 static const char PERCENT_PENETRATION_KW[] = "percent_penetration";
   
    kwl.add(prefix, AUTO_MINMAX_BIAS_KW, m_autoMinMaxBias, true);

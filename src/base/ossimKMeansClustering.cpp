@@ -64,7 +64,7 @@ bool ossimKMeansClustering::computeKmeans()
          overall_max = m_samples[i];
    }
 
-   double max_delta = overall_max - overall_min;
+   // double max_delta = overall_max - overall_min;
    // double convergenceThreshold = 0.1*(max_delta)/m_numEntries;
    ossim_uint32 numClusters = m_clusters.size();
    double* variances = new double [numClusters];

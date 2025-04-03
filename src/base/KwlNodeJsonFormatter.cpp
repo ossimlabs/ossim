@@ -51,9 +51,9 @@ namespace ossim
    {
       std::string indentStr = hints.prettyPrint() ? std::string(indent, ' ') : "";
       std::string separator = hints.prettyPrint() ? "\n" : "";
-      bool keyEmpty = currentNode->getKey().empty();
+      // bool keyEmpty = currentNode->getKey().empty();
       ossimString value = currentNode->getValue();
-      bool needsCommaForAttributes = false;
+      // bool needsCommaForAttributes = false;
 
       if (currentNode->getIsArray())
       {
@@ -63,7 +63,7 @@ namespace ossim
       else
       {
          // special case for attributes
-         needsCommaForAttributes = true;
+         // needsCommaForAttributes = true;
 
          if (currentNode->hasChildren() ||
              currentNode->hasAttributes())
