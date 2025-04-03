@@ -144,7 +144,7 @@ void ossimInfo::setUsage(ossimArgumentParser& ap)
    
    au->addCommandLineOption("--build-date", "Build date of code.");
 
-   au->addCommandLineOption("-c", "Will print ground and image center.");
+   au->addCommandLineOption("-c", "Center image point, ground point, and height of the image.");
    
    au->addCommandLineOption("--can-open", "return can_open: true or can_open: false");
 
@@ -1431,8 +1431,9 @@ ossim_uint32 ossimInfo::executeImageOptions(const ossimFilename& file)
 
       if ( imageCenterFlag )
       {
-         // -c option prints both ground and image point of center.
+         // -c option prints both ground, image point, and height of center.
          getCenterGround(okwl);
+         getCenterHeight(okwl);
          getCenterImage(okwl);
       }
 
@@ -2234,6 +2235,68 @@ void ossimInfo::getCenterGround( ossimImageHandler* ih,
 
    } // if ( ih )
 }
+
+void ossimInfo::getCenterHeight(ossimKeywordlist& kwl)
+{
+   if ( m_img.valid() )
+   {
+      getCenterHeight( m_img.get(), kwl );
+   }
+}
+
+void ossimInfo::getCenterHeight( ossimImageHandler* ih, ossimKeywordlist& kwl) const
+{
+   if ( ih )
+   {
+      // Note since there is no entry prefix on getCenterHeight
+      std::vector<ossim_uint32> entryList;
+      ih->getEntryList(entryList);
+
+      std::vector<ossim_uint32>::const_iterator i = entryList.begin();
+      while ( i != entryList.end() )
+      {
+         getCenterHeight( ih, (*i), kwl );
+         ++i;
+      }
+   } 
+}
+
+void ossimInfo::getCenterHeight( ossimImageHandler* ih,
+                                 ossim_uint32 entry, 
+                                 ossimKeywordlist& kwl ) const
+{
+   if ( ih )
+   {
+      if ( ih->setCurrentEntry(entry) )
+      {
+         ossimString prefix = "image";
+         prefix = prefix + ossimString::toString(entry) + ".center_";
+
+         ossimRefPtr<ossimImageGeometry> geom = ih->getImageGeometry();
+         if(geom.valid())
+         {
+            ossimDrect bounds;
+            geom->getBoundingRect( bounds );
+
+            if( !bounds.hasNans() )
+            {
+               ossimDpt iPt = bounds.midPoint();
+               ossimGpt gPt;
+               geom->localToWorld(iPt, gPt);
+               getHeight( gPt, kwl, prefix.string() );
+            }
+         }
+
+      } // if ( ih->setCurrentEntry(entry) )
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+                  << "Could not get center height for: " << ih->getFilename() << std::endl;
+      }
+
+   } // if ( ih )
+}
+
 
 void ossimInfo::getImageBounds(ossimKeywordlist& kwl)
 {
