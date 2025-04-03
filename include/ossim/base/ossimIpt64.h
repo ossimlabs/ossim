@@ -11,6 +11,7 @@
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimDpt.h>
 #include <iosfwd>
+#include <string>
 
 // Forward class declarations.
 class ossimFpt;

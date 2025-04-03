@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -9,16 +9,16 @@
 // Contains class declaration for ossimIrect.
 // Container class for four integer points representing a rectangle.
 //
-//*******************************************************************
-//  $Id: ossimIrect.h 22197 2013-03-12 02:00:55Z dburken $
+//---
+// $Id$
 
 #ifndef ossimIrect_HEADER
 #define ossimIrect_HEADER 1
-#include <iosfwd>
-#include <vector>
 
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimCommon.h>
+#include <iosfwd>
+#include <vector>
 
 //***
 // NOTE:  A word on corner points...
@@ -38,6 +38,7 @@
 //***
 // Forward class declarations.
 //***
+class ossimIrect64;
 class ossimDrect;
 class ossimKeywordlist;
 
@@ -97,6 +98,13 @@ public:
          theLlCorner(rect.ll()),
          theOrientMode(rect.orientMode())
       {}
+         
+   /**
+    * @brief Contructor that takes a 64 bit rect.
+    * This will nan data members if input has members
+    * outside the 32 bit integer range.
+    */
+   ossimIrect(const ossimIrect64& rect);
 
    ossimIrect(const ossimDrect& rect);
 
@@ -123,6 +131,7 @@ public:
    ~ossimIrect();
    
    inline const ossimIrect& operator=  (const ossimIrect& rect);
+   const ossimIrect&        operator=  (const ossimIrect64& rect);   
    const ossimIrect&        operator=  (const ossimDrect& rect);
    inline bool              operator!= (const ossimIrect& rect) const;
    inline bool              operator== (const ossimIrect& rect) const;
@@ -267,7 +276,6 @@ public:
                            (int)ceil(theUlCorner.x-shift.x+width()-1),
                            (int)ceil(theUlCorner.y-shift.y+height()-1),
                            theOrientMode);
-         return *this;
       }
 
    

@@ -1,4 +1,4 @@
-//*******************************************************************
+//---
 //
 // License:  See top level LICENSE.txt file.
 //
@@ -7,18 +7,18 @@
 // Description:
 // Contains class definitions for ossimDpt.
 // 
-//*******************************************************************
-//  $Id: ossimDpt.cpp 20204 2011-11-04 15:12:28Z dburken $
-
-#include <iostream>
-#include <iomanip>
-#include <sstream>
+//---
+// $Id$
 
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimDpt3d.h>
 #include <ossim/base/ossimIpt.h>
+#include <ossim/base/ossimIpt64.h>
 #include <ossim/base/ossimFpt.h>
 #include <ossim/base/ossimGpt.h>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 
 //*******************************************************************
 // Public Constructor:
@@ -39,6 +39,15 @@ ossimDpt::ossimDpt(const ossimFpt& pt)
 ossimDpt::ossimDpt(const ossimIpt& pt)
    :
       x(pt.x), y(pt.y)
+{
+   if(pt.hasNans())
+   {
+      makeNan();
+   }
+}
+
+ossimDpt::ossimDpt(const ossimIpt64& pt)
+   : x(pt.x), y(pt.y)
 {
    if(pt.hasNans())
    {
@@ -85,6 +94,20 @@ const ossimDpt& ossimDpt::operator=(const ossimFpt& pt)
 // Public Method:
 //*******************************************************************
 const ossimDpt& ossimDpt::operator=(const ossimIpt& pt)
+{
+   if(pt.hasNans())
+   {
+      makeNan();
+   }
+   else
+   {
+      x = pt.x;
+      y = pt.y;
+   }
+   return *this;
+}
+
+const ossimDpt& ossimDpt::operator=(const ossimIpt64& pt)
 {
    if(pt.hasNans())
    {

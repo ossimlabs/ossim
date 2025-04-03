@@ -1,7 +1,6 @@
-//*******************************************************************
-// Copyright (C) 2000 ImageLinks Inc.
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -9,24 +8,44 @@
 //
 // Contains class definition for ossimIrect.
 // 
-//*******************************************************************
-//  $Id: ossimIrect.cpp 21560 2012-08-30 12:09:03Z gpotts $
+//---
+// $Id$
 
-#include <ostream>
-#include <sstream>
 #include <ossim/base/ossimIrect.h>
+#include <ossim/base/ossimIrect64.h>
 #include <ossim/base/ossimDrect.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimKeywordNames.h>
+#include <ostream>
+#include <sstream>
 
-// nonstandard versions that use operator>, so they behave differently
-// than std:::min/max and ossim::min/max.  kept here for now for that
-// reason.
-#ifndef MAX
-#  define MAX(x,y) ((x)>(y)?(x):(y))
-#  define MIN(x,y) ((x)>(y)?(y):(x))
-#endif
+ossimIrect::ossimIrect(const ossimIrect64& rect)
+   :
+   theOrientMode(rect.orientationMode())
+{
+   if ( rect.hasNans() )
+   {
+      makeNan();
+   }
+   else
+   {
+      ossimIpt64 ul;
+      ossimIpt64 ur;
+      ossimIpt64 lr;
+      ossimIpt64 ll;
+      rect.ul(ul);
+      rect.ur(ur);
+      rect.lr(lr);
+      rect.ll(ll);
+      
+      // Assignment operator does 64 to 32 bit range check.
+      theUlCorner = ul;
+      theUrCorner = ur;
+      theLrCorner = lr;
+      theLlCorner = ll;
+   }
+}
 
 ossimIrect::ossimIrect(const ossimDrect& rect)
    :
@@ -503,8 +522,8 @@ ossimIrect ossimIrect::clipToRect(const ossimIrect& rect)const
    if (theOrientMode != rect.theOrientMode)
       return (*this);
 
-   int x0 = MAX(rect.ul().x, ul().x);
-   int x1 = MIN(rect.lr().x, lr().x);
+   int x0 = ossim::max(rect.ul().x, ul().x);
+   int x1 = ossim::min(rect.lr().x, lr().x);
    int y0, y1;
 
    if(!this->intersects(rect))
@@ -517,8 +536,8 @@ ossimIrect ossimIrect::clipToRect(const ossimIrect& rect)const
    }
    if (theOrientMode == OSSIM_LEFT_HANDED)
    {
-      y0 = MAX(rect.ul().y, ul().y);
-      y1 = MIN(rect.lr().y, lr().y);
+      y0 = ossim::max(rect.ul().y, ul().y);
+      y1 = ossim::min(rect.lr().y, lr().y);
 
       if( (x1 < x0) || (y1 < y0) )
          return ossimIrect(ossimIpt(0,0), ossimIpt(0,0), theOrientMode);
@@ -527,8 +546,8 @@ ossimIrect ossimIrect::clipToRect(const ossimIrect& rect)const
    }
    else
    {
-      y1 = MIN(rect.ul().y,ul().y);
-      y0 = MAX(rect.lr().y,lr().y);
+      y1 = ossim::min(rect.ul().y,ul().y);
+      y0 = ossim::max(rect.lr().y,lr().y);
 
       if((x1 < x0) || (y1 < y0))
          return ossimIrect(ossimIpt(0,0), ossimIpt(0,0), theOrientMode);
@@ -570,6 +589,33 @@ ossimIrect ossimIrect::combine(const ossimIrect& rect) const
    }
 
    return ossimIrect(ulCombine, lrCombine, theOrientMode);
+}
+
+const ossimIrect& ossimIrect::operator=(const ossimIrect64& rect)
+{
+   if ( rect.hasNans() )
+   {
+      makeNan();
+   }
+   else
+   {
+      ossimIpt64 ul;
+      ossimIpt64 ur;
+      ossimIpt64 lr;
+      ossimIpt64 ll;
+      rect.ul(ul);
+      rect.ur(ur);
+      rect.lr(lr);
+      rect.ll(ll);
+
+      // Assignment operator does 64 to 32 bit range check.
+      theUlCorner = ul;
+      theUrCorner = ur;
+      theLrCorner = lr;
+      theLlCorner = ll;
+      theOrientMode = rect.orientationMode();
+   }
+   return *this;
 }
 
 //*******************************************************************

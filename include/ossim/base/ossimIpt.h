@@ -1,28 +1,29 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  David Burken
 //
 // Description:  
 //
 // Contains class declaration for ipt.
-// Used to represent an interger point containing an x and y data member.
+// Used to represent an integer point containing an x and y data member.
 // 
-//*******************************************************************
-//  $Id: ossimIpt.h 19793 2011-06-30 13:26:56Z gpotts $
+//---
+// $Id$
 
 #ifndef ossimIpt_HEADER
-#define ossimIpt_HEADER
-#include <iosfwd>
+#define ossimIpt_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimDpt.h>
+#include <iosfwd>
 
 // Forward class declarations.
 class ossimFpt;
 class ossimDpt3d;
+class ossimIpt64;
 class ossimString;
 
 class OSSIMDLLEXPORT ossimIpt
@@ -35,6 +36,13 @@ public:
          
    ossimIpt(const ossimIpt& pt) : x(pt.x), y(pt.y) {}
 
+   /**
+    * @brief Contructor that takes a 64 bit point.
+    * This will set x or y to nan if pt.x or pt.y are outside of
+    * integer range.
+    */
+   ossimIpt(const ossimIpt64& pt);
+
    ossimIpt(const ossimDpt& pt);
 
    ossimIpt(const ossimFpt& pt);
@@ -42,6 +50,13 @@ public:
    ossimIpt(const ossimDpt3d &pt);
 
    const ossimIpt& operator=(const ossimIpt& pt);
+
+   /**
+    * @brief Assignment operator that takes a 64 bit point.
+    * This will set x or y to nan if pt.x or pt.y are outside of
+    * integer range.
+    */
+   const ossimIpt& operator=(const ossimIpt64& pt);
 
    const ossimIpt& operator=(const ossimDpt& pt);
 

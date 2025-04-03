@@ -1,7 +1,6 @@
-//*******************************************************************
-// Copyright (C) 2000 ImageLinks Inc.
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  David Burken
 // 
@@ -9,18 +8,51 @@
 //
 // Contains class definitions for ipt.
 //
-//*******************************************************************
-//  $Id: ossimIpt.cpp 20070 2011-09-07 18:48:35Z dburken $
-
-#include <iostream>
-#include <sstream>
+//---
+// $Id$
 
 #include <ossim/base/ossimIpt.h>
+#include <ossim/base/ossimIpt64.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimDpt3d.h>
 #include <ossim/base/ossimFpt.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimString.h>
+#include <limits>
+#include <iostream>
+#include <sstream>
+
+
+ossimIpt::ossimIpt(const ossimIpt64& pt)
+{
+   if ( pt.hasNans() )
+   {
+      makeNan();
+   }
+   else
+   {
+      if ( (pt.x >= std::numeric_limits<ossim_int32>::min()) &&
+           (pt.x <= std::numeric_limits<ossim_int32>::max()) )
+      {
+         x = static_cast<ossim_int32>(pt.x);
+      }
+      else
+      {
+         // Issue warning or throw exception??? drb
+         x = OSSIM_INT_NAN;
+      }
+      if ( (pt.y >= std::numeric_limits<ossim_int32>::min()) &&
+           (pt.y <= std::numeric_limits<ossim_int32>::max()) )
+      {
+         y = static_cast<ossim_int32>(pt.y);
+      }
+      else
+      {
+         // Issue warning or throw exception??? drb
+         y = OSSIM_INT_NAN;
+      }      
+   }
+}
 
 //*******************************************************************
 // Public constructor:
@@ -66,6 +98,40 @@ ossimIpt::ossimIpt(const ossimDpt3d &pt)
       y = ossim::round<int>(pt.y);
    }
 }
+
+const ossimIpt& ossimIpt::operator=(const ossimIpt64& pt)
+{
+   if ( pt.hasNans() )
+   {
+      makeNan();
+   }
+   else
+   {
+      if ( (pt.x >= std::numeric_limits<ossim_int32>::min()) &&
+           (pt.x <= std::numeric_limits<ossim_int32>::max()) )
+      {
+         x = static_cast<ossim_int32>(pt.x);
+      }
+      else
+      {
+         // Issue warning or throw exception??? drb
+         x = OSSIM_INT_NAN;
+      }
+      if ( (pt.y >= std::numeric_limits<ossim_int32>::min()) &&
+           (pt.y <= std::numeric_limits<ossim_int32>::max()) )
+      {
+         y = static_cast<ossim_int32>(pt.y);
+      }
+      else
+      {
+         // Issue warning or throw exception??? drb
+         y = OSSIM_INT_NAN;
+      }      
+   }
+
+   return *this;
+}
+
 //*******************************************************************
 // Public method:
 //*******************************************************************

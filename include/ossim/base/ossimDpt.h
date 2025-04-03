@@ -1,6 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -9,19 +9,21 @@
 // Contains class declaration for ossimDpt.
 // Used to represent an double point containing an x and y data member.
 // 
-//*******************************************************************
-//  $Id: ossimDpt.h 19793 2011-06-30 13:26:56Z gpotts $
-#ifndef ossimDpt_HEADER
-#define ossimDpt_HEADER
+//---
+// $Id$
 
-#include <iosfwd>
-#include <string>
+#ifndef ossimDpt_HEADER
+#define ossimDpt_HEADER 1
+
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimString.h>
+#include <iosfwd>
+#include <string>
 
 // Forward class declarations.
 class ossimIpt;
+class ossimIpt64;
 class ossimFpt;
 class ossimDpt3d;
 class ossimGpt;
@@ -41,6 +43,8 @@ public:
    
    ossimDpt(const ossimIpt& pt);
 
+   ossimDpt(const ossimIpt64& pt);
+
    ossimDpt(const ossimDpt3d &pt);
 
    ossimDpt(const ossimGpt &pt); // assigns lat, lon only
@@ -51,6 +55,8 @@ public:
    const ossimDpt& operator=(const ossimFpt&);
    
    const ossimDpt& operator=(const ossimIpt&);
+
+   const ossimDpt& operator=(const ossimIpt64&);
 
    const ossimDpt& operator=(const ossimDpt3d&);
 
