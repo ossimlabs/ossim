@@ -113,8 +113,11 @@ public:
   bool parseRPBData(const ossimFilename &data_file);
   bool parseSTEData(const ossimFilename &data_file);
 
-  /** @return theSatID */
-  ossimString getSatID() const;
+  /** @return m_productLevel */
+  const ossimString& getProductLevel() const;
+
+  /** @return m_satID */
+  const ossimString& getSatID() const;
 
   bool getEndOfLine(char *fileBuf,
                     ossimString lineBeginning,
@@ -139,21 +142,22 @@ public:
 ****************************************/
 
 private:
-  ossimString theGenerationDate;
-  ossimString theBandId;
-  int theBitsPerPixel;
-  ossimString theSatID;
-  ossimString theTLCDate;
-  ossim_float64 theSunAzimuth;
-  ossim_float64 theSunElevation;
-  ossim_float64 theSatAzimuth;
-  ossim_float64 theSatElevation;
-  int theTDILevel;
-  std::vector<double> theAbsCalFactors;
-  ossimString theBandNameList;
-  ossimIpt theImageSize;
-  ossim_float64 thePNiirs;
-  ossim_float64 theCloudCoverage;
+  ossimString         m_productLevel;
+  ossimString         m_generationDate;
+  ossimString         m_bandId;
+  int                 m_bitsPerPixel;
+  ossimString         m_satID;
+  ossimString         m_TLCDate;
+  ossim_float64       m_sunAzimuth;
+  ossim_float64       m_sunElevation;
+  ossim_float64       m_satAzimuth;
+  ossim_float64       m_satElevation;
+  int                 m_TDILevel;
+  std::vector<double> m_absCalFactors;
+  ossimString         m_bandNameList;
+  ossimIpt            m_imageSize;
+  ossim_float64       m_PNiirs;
+  ossim_float64       m_cloudCoverage;
 
   std::shared_ptr<ossimKeywordlist> m_imdKwl;
   std::shared_ptr<ossimKeywordlist> m_attKwl;

@@ -82,12 +82,46 @@ bool ossimQbTileFilesHandler::open()
          return false;
       }
    }
+
+   //---
+   // Check the WV03 LV1A data and abort to let specialized reader from plugin
+   // handle it.
+   //---
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_INFO) <<"OPENING ossimQuickbirdMetaData..." <<std::endl;
+   }
+   ossimFilename imdFile = theImageFile;
+   imdFile.setExtension(ossimString("IMD"));
+   ossimQuickbirdMetaData md;
+   if ( md.parseMetaData(imdFile) )
+   {
+      if (traceDebug())
+      {
+         md.print( ossimNotify(ossimNotifyLevel_INFO) );
+      }
+
+      //---
+      // Check the WV03 LV1A data and abort to let specialized reader from
+      // plugin handle it.
+      //---
+      if ( md.getSatID() == "WV03" && md.getProductLevel() == "LV1A" )
+      {
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "Satellite WV03, product level LV1A not supported by this reader.\n"
+               << "See specialized plugin" << std::endl;
+         }
+         return false;
+      }
+   }
       
    // Use ossimQuickbirdTile object for parsing the TIL file and fetching the data structure 
    // containing tile-file info:
    if (traceDebug())
       ossimNotify(ossimNotifyLevel_INFO)<<MODULE<<"OPENING ossimQuickbirdTile..."<<std::endl;
-   
+
    ossimQuickbirdTile qbt;
    bool success = qbt.open(theImageFile);
    if (!success)

@@ -32,6 +32,8 @@ RTTI_DEF1(ossimQuickbirdMetaData, "ossimQuickbirdMetaData", ossimObject);
 static ossimTrace traceExec  ("ossimQuickbirdMetaData:exec");
 static ossimTrace traceDebug ("ossimQuickbirdMetaData:debug");
 
+static const std::string UNKNOWN = "Unknown";
+
 class QbMetadataParser
 {
  public:
@@ -159,24 +161,25 @@ bool QbMetadataParser::parse() //std::istream& in, ossimKeywordlist& kwl, const 
 }
 
 ossimQuickbirdMetaData::ossimQuickbirdMetaData()
-    : theGenerationDate("Unknown"),
-      theBandId("Unknown"),
-      theBitsPerPixel(0),
-      theSatID("Unknown"),
-      theTLCDate("Unknown"),
-      theSunAzimuth(0.0),
-      theSunElevation(0.0),
-      theSatAzimuth(0.0),
-      theSatElevation(0.0),
-      theTDILevel(0),
-      theAbsCalFactors(),
-      theBandNameList("Unknown"),
-      theImageSize(),
-      thePNiirs(-1),
-      theCloudCoverage(0.0)
+   : m_productLevel(UNKNOWN),
+     m_generationDate(UNKNOWN),
+     m_bandId(UNKNOWN),
+     m_bitsPerPixel(0),
+     m_satID(UNKNOWN),
+     m_TLCDate(UNKNOWN),
+     m_sunAzimuth(0.0),
+     m_sunElevation(0.0),
+     m_satAzimuth(0.0),
+     m_satElevation(0.0),
+     m_TDILevel(0),
+     m_absCalFactors(),
+     m_bandNameList(UNKNOWN),
+     m_imageSize(),
+     m_PNiirs(-1),
+     m_cloudCoverage(0.0)
 {
-   theImageSize.makeNan();
-   theAbsCalFactors.clear();
+   m_imageSize.makeNan();
+   m_absCalFactors.clear();
 }
 
 ossimQuickbirdMetaData::~ossimQuickbirdMetaData()
@@ -280,19 +283,20 @@ bool ossimQuickbirdMetaData::open(const ossimFilename& imageFile,
 
 void ossimQuickbirdMetaData::clearFields()
 {
-   theGenerationDate = "Unknown";
-   theBitsPerPixel = 0;
-   theBandId = "Unknown";
-   theSatID = "Unknown";
-   theTLCDate = "Unknown";
-   theSunAzimuth = 0.0;
-   theSunElevation = 0.0;
-   theSatAzimuth = 0.0;
-   theSatElevation = 0.0;
-   theTDILevel = 0;
-   theAbsCalFactors.clear();
-   theBandNameList = "Unknown";
-   theImageSize.makeNan();
+   m_productLevel = UNKNOWN;
+   m_generationDate = UNKNOWN;
+   m_bitsPerPixel = 0;
+   m_bandId = UNKNOWN;
+   m_satID = UNKNOWN;
+   m_TLCDate = UNKNOWN;
+   m_sunAzimuth = 0.0;
+   m_sunElevation = 0.0;
+   m_satAzimuth = 0.0;
+   m_satElevation = 0.0;
+   m_TDILevel = 0;
+   m_absCalFactors.clear();
+   m_bandNameList = UNKNOWN;
+   m_imageSize.makeNan();
    m_attKwl = nullptr;
    m_imdKwl = nullptr;
    m_ephKwl = nullptr;
@@ -307,24 +311,25 @@ std::ostream& ossimQuickbirdMetaData::print(std::ostream& out) const
 
    out << "\n----------------- Info on Quickbird Image -------------------"
        << "\n  "
-       << "\n  Generation date:    " << theGenerationDate
-       << "\n  Band Id:            " << theBandId
-       << "\n  Bits per pixel:     " << theBitsPerPixel
-       << "\n  Sat Id:             " << theSatID
-       << "\n  TLC date:           " << theTLCDate
-       << "\n  Sun Azimuth:        " << theSunAzimuth
-       << "\n  Sun Elevation:      " << theSunElevation
-       << "\n  Sat Azimuth:        " << theSatAzimuth
-       << "\n  Sat Elevation:      " << theSatElevation
-       << "\n  Band name list:     " << theBandNameList
-       << "\n  TDI Level:          " << theTDILevel
+       << "\n  Product level:      " << m_productLevel
+       << "\n  Generation date:    " << m_generationDate
+       << "\n  Band Id:            " << m_bandId
+       << "\n  Bits per pixel:     " << m_bitsPerPixel
+       << "\n  Sat Id:             " << m_satID
+       << "\n  TLC date:           " << m_TLCDate
+       << "\n  Sun Azimuth:        " << m_sunAzimuth
+       << "\n  Sun Elevation:      " << m_sunElevation
+       << "\n  Sat Azimuth:        " << m_satAzimuth
+       << "\n  Sat Elevation:      " << m_satElevation
+       << "\n  Band name list:     " << m_bandNameList
+       << "\n  TDI Level:          " << m_TDILevel
        << "\n  abs Calibration Factors:   " 
        << std::endl;
-   for(unsigned int i=0; i<theAbsCalFactors.size(); i++)
+   for(unsigned int i=0; i<m_absCalFactors.size(); i++)
    {
-      out<<theAbsCalFactors[i] << "   ";
+      out<<m_absCalFactors[i] << "   ";
    }
-   out << "\n  Image Size:         " << theImageSize
+   out << "\n  Image Size:         " << m_imageSize
        << "\n"
        << "\n---------------------------------------------------------"
        << "\n  " << std::endl;
@@ -342,116 +347,121 @@ bool ossimQuickbirdMetaData::saveState(ossimKeywordlist& kwl,
               true);
 
       kwl.add(prefix,
+              "product_level",
+              m_productLevel,
+              true);
+
+      kwl.add(prefix,
               "generation_date",
-              theGenerationDate,
+              m_generationDate,
               true);
 
       // will use generation date as the acquisition
       kwl.add(prefix,
               "acquisition_date",
-              theGenerationDate,
+              m_generationDate,
               true);
 
       kwl.add(prefix,
               "bits_per_pixel",
-              theBitsPerPixel,
+              m_bitsPerPixel,
               true);
 
       kwl.add(prefix,
               "band_id",
-              theBandId,
+              m_bandId,
               true);
 
       kwl.add(prefix,
               "sat_id",
-              theSatID,
+              m_satID,
               true);
 
       kwl.add(prefix,
               "sensor_id",
-              theSatID,
+              m_satID,
               true);
 
       kwl.add(prefix,
               "mission_id",
-              theSatID,
+              m_satID,
               true);
 
       kwl.add(prefix,
               "tlc_date",
-              theTLCDate,
+              m_TLCDate,
               true);
 
       kwl.add(prefix,
               "sun_azimuth",
-              theSunAzimuth,
+              m_sunAzimuth,
               true);
       kwl.add(prefix,
               "sun_elevation",
-              theSunElevation,
+              m_sunElevation,
               true);
 
       kwl.add(prefix,
               ossimKeywordNames::AZIMUTH_ANGLE_KW,
-              theSunAzimuth,
+              m_sunAzimuth,
               true);
 
       kwl.add(prefix,
               ossimKeywordNames::ELEVATION_ANGLE_KW,
-              theSunElevation,
+              m_sunElevation,
               true);
 
       kwl.add(prefix,
               "sat_azimuth_angle",
-              theSatAzimuth,
+              m_satAzimuth,
               true);
 
       kwl.add(prefix,
               "sat_elevation_angle",
-              theSatElevation,
+              m_satElevation,
               true);
 
       kwl.add(prefix,
               "TDI_level",
-              theTDILevel,
+              m_TDILevel,
               true);
       kwl.add(prefix,
               "band_name_list",
-              theBandNameList,
+              m_bandNameList,
               true);
 
-      if (thePNiirs > -1)
+      if (m_PNiirs > -1)
       {
          kwl.add(prefix,
                  "niirs",
-                 thePNiirs,
+                 m_PNiirs,
                  true);
       }
 
       kwl.add(prefix,
               "cloud_cover",
-              theCloudCoverage,
+              m_cloudCoverage,
               true);
 
-      if (theBandId == "Multi")
+      if (m_bandId == "Multi")
       {
-         std::vector<ossimString> bandNameList = theBandNameList.split(" ");
+         std::vector<ossimString> bandNameList = m_bandNameList.split(" ");
          for (unsigned int i = 0; i < bandNameList.size(); ++i)
          {
             kwl.add(prefix,
                     bandNameList[i] + "_band_absCalFactor",
-                    theAbsCalFactors[i],
+                    m_absCalFactors[i],
                     true);
          }
       }
-      else if (!theAbsCalFactors.empty())
+      else if (!m_absCalFactors.empty())
       {
          kwl.add(prefix,
                  "absCalFactor",
-                 theAbsCalFactors[0],
+                 m_absCalFactors[0],
                  true);
       }
-      ossimString testBandId = theBandId;
+      ossimString testBandId = m_bandId;
       testBandId = testBandId.upcase();
       if (testBandId == "MULTI")
       {
@@ -519,125 +529,131 @@ bool ossimQuickbirdMetaData::loadState(const ossimKeywordlist& kwl,
       }
    }
 
+   lookup = kwl.find(prefix, "product_level");
+   if (lookup)
+   {
+      m_productLevel = lookup;
+   }
+
    lookup = kwl.find(prefix, "generation_date");
    if (lookup)
    {
-      theGenerationDate = lookup;
+      m_generationDate = lookup;
    }
 
    lookup = kwl.find(prefix, "band_id");
    if (lookup)
    {
-      theBandId = lookup;
+      m_bandId = lookup;
    }
   
    lookup = kwl.find(prefix, "bits_per_pixel");
    if (lookup)
    {
       s = lookup;
-      theBitsPerPixel = s.toInt();;
+      m_bitsPerPixel = s.toInt();;
    }
     
    lookup = kwl.find(prefix, "sat_id");
    if (lookup)
    {
-      theSatID = lookup;
+      m_satID = lookup;
    }
 
    lookup = kwl.find(prefix, "tlc_date");
    if (lookup)
    {
-      theTLCDate= lookup;
+      m_TLCDate= lookup;
    }
 
    lookup = kwl.find(prefix, "TDI_level");
    if (lookup)
    {
       s = lookup;
-      theTDILevel = s.toInt();
+      m_TDILevel = s.toInt();
    }
 
    lookup = kwl.find(prefix, ossimKeywordNames::AZIMUTH_ANGLE_KW);
    if (lookup)
    {
       s = lookup;
-      theSunAzimuth = s.toFloat64();
+      m_sunAzimuth = s.toFloat64();
    }
 
    lookup = kwl.find(prefix, ossimKeywordNames::ELEVATION_ANGLE_KW);
    if (lookup)
    {
       s = lookup;
-      theSunElevation = s.toFloat64();
+      m_sunElevation = s.toFloat64();
    }
 
    lookup = kwl.find(prefix, "sat_azimuth_angle");
    if (lookup)
    {
       s = lookup;
-      theSatAzimuth = s.toFloat64();
+      m_satAzimuth = s.toFloat64();
    }
 
    lookup = kwl.find(prefix, "sat_elevation_angle");
    if (lookup)
    {
       s = lookup;
-      theSatElevation = s.toFloat64();
+      m_satElevation = s.toFloat64();
    }
 
    lookup = kwl.find(prefix, "sun_azimuth");
    if (lookup)
    {
       s = lookup;
-      theSunAzimuth = s.toFloat64();
+      m_sunAzimuth = s.toFloat64();
    }
 
    lookup = kwl.find(prefix, "sun_elevation");
    if (lookup)
    {
       s = lookup;
-      theSunElevation = s.toFloat64();
+      m_sunElevation = s.toFloat64();
    }
 
    lookup = kwl.find(prefix, "band_name_list");
    if (lookup)
    {
-      theBandNameList= lookup;
+      m_bandNameList= lookup;
    }
    lookup = kwl.find(prefix, "niirs");
    if (lookup)
    {
-      thePNiirs = ossimString(lookup).toFloat64();
+      m_PNiirs = ossimString(lookup).toFloat64();
    }
 
    lookup = kwl.find(prefix, "cloud_cover");
    if(lookup)
    {
-      theCloudCoverage = ossimString(lookup).toFloat64();
+      m_cloudCoverage = ossimString(lookup).toFloat64();
    }
 
-   if(theBandId=="Multi")
+   if(m_bandId=="Multi")
    {
-      std::vector<ossimString> bandNameList = theBandNameList.split(" ");
-      theAbsCalFactors = std::vector<double>(bandNameList.size(), 1.);
+      std::vector<ossimString> bandNameList = m_bandNameList.split(" ");
+      m_absCalFactors = std::vector<double>(bandNameList.size(), 1.);
       for(unsigned int i = 0 ; i < bandNameList.size() ; ++i)
       {
          lookup = kwl.find(prefix, bandNameList[i] + "_band_absCalFactor");
          if (lookup)
          {
             s = lookup;
-            theAbsCalFactors[i] = s.toDouble();
+            m_absCalFactors[i] = s.toDouble();
          }
       }
    }
-   else if (theBandId=="P")
+   else if (m_bandId=="P")
    {
-      theAbsCalFactors = std::vector<double>(1, 1.);
+      m_absCalFactors = std::vector<double>(1, 1.);
       lookup = kwl.find(prefix, "absCalFactor");
       if (lookup)
       {
          s = lookup;
-         theAbsCalFactors[0] = s.toDouble();
+         m_absCalFactors[0] = s.toDouble();
       }	
    }
    
@@ -696,101 +712,108 @@ bool ossimQuickbirdMetaData::parseMetaData(const ossimFilename& data_file)
    if(parse(m_imdKwl, data_file))
    {
       // m_imdKwl = std::make_shared<ossimKeywordlist>(*qbMetadataParser->getKwl());
-      ossimString value = m_imdKwl->find("generationTime");
+      ossimString value = m_imdKwl->find("productLevel");
       if(!value.empty())
       {
-         theGenerationDate = value;
+         m_productLevel = value;
       }
-      theBandId = m_imdKwl->find("bandId");
+
+      value = m_imdKwl->find("generationTime");
+      if(!value.empty())
+      {
+         m_generationDate = value;
+      }
+
+      m_bandId = m_imdKwl->find("bandId");
 
       value = m_imdKwl->find("numRows");
       if(!value.empty())
       {
-         theImageSize.y = value.toInt64();
+         m_imageSize.y = value.toInt64();
       }
       value = m_imdKwl->find("numColumns");
       if (!value.empty())
       {
-         theImageSize.x = value.toInt64();
+         m_imageSize.x = value.toInt64();
       }
-      theBandId = m_imdKwl->find("bandId");
+      m_bandId = m_imdKwl->find("bandId");
 
       value = m_imdKwl->find("nbitsPerPixel");
       if(!value.empty())
       {
-         theBitsPerPixel = value.toInt32();
+         m_bitsPerPixel = value.toInt32();
       }
-      theBandNameList = m_imdKwl->find("band_name_list");
+      m_bandNameList = m_imdKwl->find("band_name_list");
       std::vector<ossimString> bandList;
-      theBandNameList.split(bandList, " ");
+      m_bandNameList.split(bandList, " ");
       if(bandList.size()>0)
       {  
          ossim_uint32 idx = 0;
-         theAbsCalFactors = std::vector<double>(bandList.size(), 1.0);
+         m_absCalFactors = std::vector<double>(bandList.size(), 1.0);
          for(auto band:bandList)
          {
             value = m_imdKwl->find("band_"+band+".absCalFactor");
             if(!value.empty())
             {
-               theAbsCalFactors[idx] = value.toFloat64();
+               m_absCalFactors[idx] = value.toFloat64();
             }
             ++idx;
          }
       }
-      theSatID = m_imdKwl->find("image_1.satId");
-      theTLCDate = m_imdKwl->find("image_1.TLCTime");
-      if(theTLCDate.empty())
+      m_satID = m_imdKwl->find("image_1.satId");
+      m_TLCDate = m_imdKwl->find("image_1.TLCTime");
+      if(m_TLCDate.empty())
       {
-         theTLCDate = m_imdKwl->find("image_1.firstLineTime");
+         m_TLCDate = m_imdKwl->find("image_1.firstLineTime");
       }
       value = m_imdKwl->find("sunAz");
       if (!value.empty())
       {
-         theSunAzimuth = value.toFloat64();
+         m_sunAzimuth = value.toFloat64();
       }
       else
       {
          value = m_imdKwl->find("image_1.meanSunAz");
          if (!value.empty())
          {
-            theSunAzimuth = value.toFloat64();
+            m_sunAzimuth = value.toFloat64();
          }
       }
       value = m_imdKwl->find("sunEl");
       if (!value.empty())
       {
-         theSunElevation = value.toFloat64();
+         m_sunElevation = value.toFloat64();
       }
       else
       {
          value = m_imdKwl->find("image_1.meanSunEl");
          if (!value.empty())
          {
-            theSunElevation = value.toFloat64();
+            m_sunElevation = value.toFloat64();
          }
       }
       value = m_imdKwl->find("image_1.satAz");
       if (!value.empty())
       {
-         theSatAzimuth = value.toFloat64();
+         m_satAzimuth = value.toFloat64();
       }
       else
       {
          value = m_imdKwl->find("image_1.meanSatAz");
          if (!value.empty())
          {
-            theSatAzimuth = value.toFloat64();
+            m_satAzimuth = value.toFloat64();
          }
       }
       value = m_imdKwl->find("image_1.cloudCover");
       if (!value.empty())
       {
-         theCloudCoverage = value.toFloat64();
+         m_cloudCoverage = value.toFloat64();
       }
       value = m_imdKwl->find("image_1.PNIIRS");
       if (!value.empty())
       {
-         thePNiirs = value.toFloat64();
+         m_PNiirs = value.toFloat64();
       }
 
       result = true;
@@ -820,9 +843,14 @@ bool ossimQuickbirdMetaData::parse(std::shared_ptr<ossimKeywordlist> &kwl,
    return result;
 }
 
-ossimString ossimQuickbirdMetaData::getSatID() const
+const ossimString& ossimQuickbirdMetaData::getProductLevel() const
 {
-   return theSatID;
+   return m_productLevel;
+}
+
+const ossimString& ossimQuickbirdMetaData::getSatID() const
+{
+   return m_satID;
 }
 
 bool ossimQuickbirdMetaData::getMapProjectionKwl( const ossimFilename& imd_file,
@@ -1146,5 +1174,5 @@ bool ossimQuickbirdMetaData::getEndOfLine( char * fileBuf,
 
 const ossimIpt& ossimQuickbirdMetaData::getImageSize() const
 {
-   return theImageSize;
+   return m_imageSize;
 }
