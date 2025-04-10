@@ -61,6 +61,32 @@ public:
                       const std::string& connectionString );
 
    /**
+    * @return the number of IFDs(Image File Directories) in the open tiff
+    * file.
+    */
+   ossim_uint16 getNumberOfIfds() const;
+
+   /**
+    * @brief Gets tile offsets and byte counts for IFD index.
+    * @param ifdIndex Zero based image file directory.
+    * @param offsets Tile offsets.
+    * @param byteCounts Byte count for each tile.
+    */
+   bool getTileInfo( ossim_uint32 ifdIndex,
+                     std::vector<ossim_uint64>& offsets,
+                     std::vector<ossim_uint64>& byteCounts ) const;
+
+   /**
+    * @brief Gets strip offsets and byte counts for IFD index.
+    * @param ifdIndex Zero based image file directory.
+    * @param offsets Strip offsets.
+    * @param byteCounts Byte count for each strip.
+    */
+   bool getStripInfo( ossim_uint32 ifdIndex,
+                      std::vector<ossim_uint64>& offsets,
+                      std::vector<ossim_uint64>& byteCounts ) const;
+  
+   /**
     * Print method.
     *
     * @param out Stream to print to.

@@ -401,7 +401,7 @@ bool ossimWriter::writeTiffTags( const std::vector<ossim_uint64>& tile_offsets,
    tag   = ossim::TIFFTAG_PLANARCONFIG;
    type  = ossim::TIFF_SHORT;
    count = 1;
-   value_ui16 = ossim::TIFFTAG_PLANARCONFIG_SEPARATE;
+   value_ui16 = ossim::PLANARCONFIG_SEPARATE;
    writeTiffTag<ossim_uint16>( tag, type, count, &value_ui16, arrayWritePos );
    ++tagCount;
 

@@ -43,18 +43,17 @@ static ossimTrace traceDebug("ossimTiffInfo:debug");
 static ossimTrace traceDump("ossimTiffInfo:dump"); // This will dump offsets.
 
 static const std::string PHOTO_INTERP[] =
-    {
-        "MINISWHITE",
-        "MINISBLACK",
-        "RGB",
-        "PALETTE",
-        "MASK",
-        "SEPARATED",
-        "YCBCR",
-        "CIELAB",
-        "ICCLAB",
-        "ITULAB"
-
+{
+   "MINISWHITE",
+   "MINISBLACK",
+   "RGB",
+   "PALETTE",
+   "MASK",
+   "SEPARATED",
+   "YCBCR",
+   "CIELAB",
+   "ICCLAB",
+   "ITULAB"
 };
 
 static const std::string ANGULAR_UNITS_KW = "angular_units";
@@ -169,6 +168,721 @@ bool ossimTiffInfo::open(std::shared_ptr<ossim::istream> &str,
 
    return result;
 }
+
+
+ossim_uint16 ossimTiffInfo::getNumberOfIfds() const
+{
+   ossim_uint16 result = 0;
+
+   if ( m_inputStream )
+   {
+      m_inputStream->clear();
+      m_inputStream->seekg(0);
+
+      // Get the byte order.  First two byte should be "II" or "MM".
+      char byteOrder[2];
+      m_inputStream->read(byteOrder, 2); // Read the byte order.
+      ossimByteOrder sysByteOrder = ossim::byteOrder();
+      ossimByteOrder tifByteOrder = OSSIM_LITTLE_ENDIAN;
+   
+      if (byteOrder[0] == 'M')
+      {
+         tifByteOrder = OSSIM_BIG_ENDIAN;
+      }
+      if (sysByteOrder != tifByteOrder)
+      {
+         if(!m_endian)
+         {
+            m_endian = new ossimEndian();
+         }
+      }
+      else if (m_endian)
+      {
+         delete m_endian;
+         m_endian = 0;
+      }
+
+      //--
+      // Get the version. Note m_endian must be set/unset before calling
+      // "readShort".
+      //---
+      ossim_uint16 version;
+      readShort(version, *m_inputStream);
+
+      std::streamoff seekOffset;
+      ossim_uint32 bytesPerTag = 12;
+
+      if (version == 43)
+      {
+         // We must skip the first four bytes.
+         ossim_uint32 offsetSize;
+         readLong(offsetSize, *m_inputStream);
+         bytesPerTag = 20;
+      }
+
+      // Get the first IFD offset.
+      if (getOffset(seekOffset, *m_inputStream, version) == true)
+      {
+         // Image File Directory (IFD) loop.
+         while( seekOffset )
+         {
+            // Seek to the image file directory.
+            m_inputStream->seekg(seekOffset, std::ios_base::beg);
+            if ( m_inputStream->fail() )
+            {
+               if(traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_WARN)
+                     << "ossimTiffInfo::getNumberOfIfds() FATAL error seeking to IFD offset: "
+                     << seekOffset
+                     << std::endl;
+               }
+               seekOffset = 0;
+               break;
+            }
+
+            // Bump the result if we get here.
+            ++result;
+
+            // Get the number of tags within the IFD.
+            ossim_uint64 nTags;
+            if (getValue(nTags, *m_inputStream, TWO_OR_EIGHT, version) == true)
+            {
+               // Seek past all the tags:
+               std::streamoff ifdOffset = static_cast<std::streamoff>(nTags * bytesPerTag );
+               m_inputStream->seekg(ifdOffset, std::ios_base::cur);
+            }
+
+            // Get the next IFD offset.  Continue this loop until the offset is zero.
+            if (getOffset(seekOffset, *m_inputStream, version) == false)
+            {
+               seekOffset = 0;
+            }
+         }
+      
+      } // End of loop through the IFD's.
+
+      m_inputStream->clear();
+      m_inputStream->seekg(0);
+   }
+   
+   return result;
+}
+
+bool ossimTiffInfo::getTileInfo( ossim_uint32 ifdIndex,
+                                 std::vector<ossim_uint64>& offsets,
+                                 std::vector<ossim_uint64>& byteCounts ) const
+{
+   bool result = false;
+
+   if ( m_inputStream )
+   {
+      m_inputStream->clear();
+      m_inputStream->seekg(0);
+
+      // Get the byte order.  First two byte should be "II" or "MM".
+      char byteOrder[2];
+      m_inputStream->read(byteOrder, 2); // Read the byte order.
+      ossimByteOrder sysByteOrder = ossim::byteOrder();
+      ossimByteOrder tifByteOrder = OSSIM_LITTLE_ENDIAN;
+   
+      if (byteOrder[0] == 'M')
+      {
+         tifByteOrder = OSSIM_BIG_ENDIAN;
+      }
+      if (sysByteOrder != tifByteOrder)
+      {
+         if(!m_endian)
+         {
+            m_endian = new ossimEndian();
+         }
+      }
+      else if (m_endian)
+      {
+         delete m_endian;
+         m_endian = 0;
+      }
+
+      //--
+      // Get the version. Note m_endian must be set/unset before calling
+      // "readShort".
+      //---
+      ossim_uint16 version;
+      readShort(version, *m_inputStream);
+
+      std::streamoff seekOffset;      // used throughout
+      std::streampos streamPosition;  // used throughout
+
+      ossim_uint32 bytesPerTag = 12;
+      ossim_uint64 tagValueLength = 4;
+   
+      if (version == 43)
+      {
+         // We must skip the first four bytes.
+         ossim_uint32 offsetSize;
+         readLong(offsetSize, *m_inputStream);
+         bytesPerTag = 20;
+         tagValueLength = 8;
+      }
+
+      // Get the first IFD offset.
+      if (getOffset(seekOffset, *m_inputStream, version) == true)
+      {
+         // Image File Directory (IFD) loop.
+         ossim_uint32 currentIfd = 0;
+         while( seekOffset )
+         {
+            // Seek to the image file directory.
+            m_inputStream->seekg(seekOffset, std::ios_base::beg);
+            if ( m_inputStream->fail() )
+            {
+               if(traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_WARN)
+                     << "ossimTiffInfo::getTileInfo(...)\n"
+                     << "FATAL error seeking to IFD offset: " << seekOffset
+                     << std::endl;
+               }
+               seekOffset = 0;
+               break;
+            }
+
+            // Get the number of tags within the IFD.
+            ossim_uint64 nTags;
+            if (getValue(nTags, *m_inputStream, TWO_OR_EIGHT, version) == true)
+            {
+               if ( currentIfd == ifdIndex )
+               {
+                  bool foundOffsets = false;
+                  bool foundByteCounts = false;
+               
+                  // Tag loop:
+                  for (ossim_uint64 tagIdx = 0; tagIdx < nTags; ++tagIdx)
+                  {
+                     // Variables used within the loop.
+                     ossim_uint16   tag              = 0; // Tag number
+                     ossim_uint16   type             = 0; // Type(short, long...)
+                     ossim_uint64   count            = 0;
+                     ossim_uint64   arraySizeInBytes = 0; // 
+                     ossim_uint8*   valueArray       = 0; // To hold value.
+                  
+                     // Get the tag.
+                     readShort(tag, *m_inputStream);
+                     if (!m_inputStream->good())
+                     {
+                        break;
+                     }
+                  
+                     if ( ( tag == ossim::TIFFTAG_TILEOFFSETS ) ||
+                          ( tag == ossim::TIFFTAG_TILEBYTECOUNTS ) )
+                     {
+                        // Get the type (byte, ascii, short...)
+                        readShort(type, *m_inputStream);
+                        if (!m_inputStream->good())
+                        {
+                           break;
+                        }
+                     
+                        //---
+                        // Get the count.  This is not in bytes.  It is based on the
+                        // type.  So if the type is a short and the count is one then
+                        // read "sizeof(short"(2) bytes.
+                        //---
+                        getValue(count, *m_inputStream, FOUR_OR_EIGHT, version);
+                        if (!m_inputStream->good())
+                        {
+                           break;
+                        }
+                     
+                        // Get the array size in bytes.
+                        arraySizeInBytes = getArraySizeInBytes(count, type);
+                        if (arraySizeInBytes == 0)
+                        {
+                           // Could be an unhandle type.  Gobble the value.
+                           eatValue(*m_inputStream, version);
+                        }
+                        else
+                        {
+                           // Allocate array.
+                           if (valueArray) delete [] valueArray;
+                           valueArray = new ossim_uint8[arraySizeInBytes];
+                        
+                           if (arraySizeInBytes <= tagValueLength)
+                           {
+                              // Read in the value(s).
+                              m_inputStream->read((char*)valueArray, arraySizeInBytes);
+                           
+                              // Skip any byes left in the field.
+                              if (arraySizeInBytes < tagValueLength)
+                              {
+                                 // Skip these bytes.
+                                 m_inputStream->ignore(tagValueLength-arraySizeInBytes);
+                              }
+                           }
+                           else // Data to big for field.  Stored elsewhere...
+                           {
+                              // Get the offset to the data.
+                              getOffset(seekOffset, *m_inputStream, version);
+                           
+                              // Capture the seek position to come back to.
+                              streamPosition = m_inputStream->tellg();
+                           
+                              // Seek to the data.
+                              m_inputStream->seekg(seekOffset, std::ios_base::beg);
+                           
+                              // Read in the value(s).
+                              m_inputStream->read((char*)valueArray, arraySizeInBytes);
+                           
+                              // Seek back.
+                              m_inputStream->seekg(streamPosition);
+                           }
+                        
+                           // Swap the bytes if needed.
+                           swapBytes(valueArray, type, count);
+                        }
+                     
+                        if ( tag == ossim::TIFFTAG_TILEOFFSETS )
+                        {
+                           offsets.resize( count );
+                           foundOffsets = true;
+                        }
+                        else
+                        {
+                           byteCounts.resize( count );
+                           foundByteCounts = true;
+                        }
+
+                        if ( type == ossim::TIFF_SHORT )
+                        {
+                           ossim_uint16* p = (ossim_uint16*)valueArray;
+                           if ( tag == ossim::TIFFTAG_TILEOFFSETS )
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 offsets[i] = p[i];
+                              }
+                           }
+                           else
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 byteCounts[i] = p[i];
+                              } 
+                           }
+                        }
+                        else if ( type == ossim::TIFF_LONG )
+                        {
+                           ossim_uint32* p = (ossim_uint32*)valueArray;
+                           if ( tag == ossim::TIFFTAG_TILEOFFSETS )
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 offsets[i] = p[i];
+                              }
+                           }
+                           else
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 byteCounts[i] = p[i];
+                              } 
+                           }
+                        }
+                        else if ( type == ossim::TIFF_LONG8 )
+                        {
+                           ossim_uint64* p = (ossim_uint64*)valueArray;
+                           if ( tag == ossim::TIFFTAG_TILEOFFSETS )
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 offsets[i] = p[i];
+                              }
+                           }
+                           else
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 byteCounts[i] = p[i];
+                              } 
+                           }
+                        }
+
+                        // Free memory if allocated...
+                        if (valueArray)
+                        {
+                           delete [] valueArray;
+                           valueArray = 0;
+                        }
+                      
+                     } // if ( ( tag == ossim::TIFFTAG_TILEOFFSETS ...
+                     else
+                     {
+                        // Seek past the rest of this tag:
+                        std::streamoff ifdOffset = static_cast<std::streamoff>(bytesPerTag - 2);
+                        m_inputStream->seekg(ifdOffset, std::ios_base::cur);
+                     }
+
+                     if ( ( foundOffsets == true) && (foundByteCounts == true ) &&
+                          ( offsets.size() == byteCounts.size() ) )
+                     {
+                        result = true;
+                        break; 
+                     }
+         
+                  } // End of tag loop.
+               }
+               else
+               {
+                  // Seek past all the tags:
+                  std::streamoff ifdOffset = static_cast<std::streamoff>(nTags * bytesPerTag );
+                  m_inputStream->seekg(ifdOffset, std::ios_base::cur);
+               }
+            }
+
+            //---
+            // Code was going in an infinite loop picking up bad offset in next
+            // "getOffset" where the byte count array was at the very end of file
+            // written by libtiff (build overviews). Anyway busting out fixes...
+            // drb - 20180221
+            //---
+            if ( result == true ) 
+            {
+               break;
+            }
+         
+            // Get the next IFD offset.  Continue this loop until the offset is zero.
+            if (getOffset(seekOffset, *m_inputStream, version) == true)
+            {
+               ++currentIfd;
+            }
+            else
+            {
+               seekOffset = 0;
+            }
+         
+         } // End:  while( seekOffset )
+      
+      } // End of loop through the IFD's.
+
+      m_inputStream->clear();
+      m_inputStream->seekg(0);
+   }
+   
+   return result;
+}
+
+bool ossimTiffInfo::getStripInfo( ossim_uint32 ifdIndex,
+                                  std::vector<ossim_uint64>& offsets,
+                                  std::vector<ossim_uint64>& byteCounts ) const
+{
+   bool result = false;
+
+   std::cout << "c1...\nstr: " << (void*)m_inputStream.get() << "\n";
+   
+   if ( m_inputStream )
+   {
+      std::cout << "c1a...\n";
+         
+      m_inputStream->clear();
+      m_inputStream->seekg(0);
+   
+      // Get the byte order.  First two byte should be "II" or "MM".
+      char byteOrder[2];
+      m_inputStream->read(byteOrder, 2); // Read the byte order.
+      ossimByteOrder sysByteOrder = ossim::byteOrder();
+      ossimByteOrder tifByteOrder = OSSIM_LITTLE_ENDIAN;
+   
+      if (byteOrder[0] == 'M')
+      {
+         tifByteOrder = OSSIM_BIG_ENDIAN;
+      }
+      if (sysByteOrder != tifByteOrder)
+      {
+         if(!m_endian)
+         {
+            m_endian = new ossimEndian();
+         }
+      }
+      else if (m_endian)
+      {
+         delete m_endian;
+         m_endian = 0;
+      }
+
+      //--
+      // Get the version. Note m_endian must be set/unset before calling
+      // "readShort".
+      //---
+      ossim_uint16 version;
+      readShort(version, *m_inputStream);
+
+      std::streamoff seekOffset;      // used throughout
+      std::streampos streamPosition;  // used throughout
+
+      ossim_uint32 bytesPerTag = 12;
+      ossim_uint64 tagValueLength = 4;
+   
+      if (version == 43)
+      {
+         // We must skip the first four bytes.
+         ossim_uint32 offsetSize;
+         readLong(offsetSize, *m_inputStream);
+         bytesPerTag = 20;
+         tagValueLength = 8;
+      }
+
+      // Get the first IFD offset.
+      if (getOffset(seekOffset, *m_inputStream, version) == true)
+      {
+         std::cout << "c3...\n";
+            
+         // Image File Directory (IFD) loop.
+         ossim_uint32 currentIfd = 0;
+         while( seekOffset )
+         {
+            std::cout << "c4...\n";
+            
+            // Seek to the image file directory.
+            m_inputStream->seekg(seekOffset, std::ios_base::beg);
+            if ( m_inputStream->fail() )
+            {
+               if(traceDebug())
+               {
+                  ossimNotify(ossimNotifyLevel_WARN)
+                     << "ossimTiffInfo::getTileInfo(...) "
+                     << "FATAL error seeking to IFD offset: " << seekOffset
+                     << std::endl;
+               }
+               seekOffset = 0;
+               break;
+            }
+
+            // Get the number of tags within the IFD.
+            ossim_uint64 nTags;
+            if (getValue(nTags, *m_inputStream, TWO_OR_EIGHT, version) == true)
+            {
+               if ( currentIfd == ifdIndex )
+               {
+                  bool foundOffsets = false;
+                  bool foundByteCounts = false;
+               
+                  // Tag loop:
+                  for (ossim_uint64 tagIdx = 0; tagIdx < nTags; ++tagIdx)
+                  {
+                     // Variables used within the loop.
+                     ossim_uint16   tag              = 0; // Tag number
+                     ossim_uint16   type             = 0; // Type(short, long...)
+                     ossim_uint64   count            = 0;
+                     ossim_uint64   arraySizeInBytes = 0; // 
+                     ossim_uint8*   valueArray       = 0; // To hold value.
+                  
+                     // Get the tag.
+                     readShort(tag, *m_inputStream);
+                     if (!m_inputStream->good())
+                     {
+                        break;
+                     }
+                  
+                     if ( ( tag == ossim::TIFFTAG_STRIPOFFSETS ) ||
+                          ( tag == ossim::TIFFTAG_STRIPBYTECOUNTS ) )
+                     {
+                        std::cout << "c2...\n";
+                        
+                        // Get the type (byte, ascii, short...)
+                        readShort(type, *m_inputStream);
+                        if (!m_inputStream->good())
+                        {
+                           break;
+                        }
+                     
+                        //---
+                        // Get the count.  This is not in bytes.  It is based on the
+                        // type.  So if the type is a short and the count is one then
+                        // read "sizeof(short"(2) bytes.
+                        //---
+                        getValue(count, *m_inputStream, FOUR_OR_EIGHT, version);
+                        if (!m_inputStream->good())
+                        {
+                           break;
+                        }
+                     
+                        // Get the array size in bytes.
+                        arraySizeInBytes = getArraySizeInBytes(count, type);
+                        if (arraySizeInBytes == 0)
+                        {
+                           // Could be an unhandle type.  Gobble the value.
+                           eatValue(*m_inputStream, version);
+                        }
+                        else
+                        {
+                           // Allocate array.
+                           if (valueArray) delete [] valueArray;
+                           valueArray = new ossim_uint8[arraySizeInBytes];
+                        
+                           if (arraySizeInBytes <= tagValueLength)
+                           {
+                              // Read in the value(s).
+                              m_inputStream->read((char*)valueArray, arraySizeInBytes);
+                           
+                              // Skip any byes left in the field.
+                              if (arraySizeInBytes < tagValueLength)
+                              {
+                                 // Skip these bytes.
+                                 m_inputStream->ignore(tagValueLength-arraySizeInBytes);
+                              }
+                           }
+                           else // Data to big for field.  Stored elsewhere...
+                           {
+                              // Get the offset to the data.
+                              getOffset(seekOffset, *m_inputStream, version);
+                           
+                              // Capture the seek position to come back to.
+                              streamPosition = m_inputStream->tellg();
+                           
+                              // Seek to the data.
+                              m_inputStream->seekg(seekOffset, std::ios_base::beg);
+                           
+                              // Read in the value(s).
+                              m_inputStream->read((char*)valueArray, arraySizeInBytes);
+                           
+                              // Seek back.
+                              m_inputStream->seekg(streamPosition);
+                           }
+                        
+                           // Swap the bytes if needed.
+                           swapBytes(valueArray, type, count);
+                        }
+                     
+                        if ( tag == ossim::TIFFTAG_STRIPOFFSETS )
+                        {
+                           offsets.resize( count );
+                           foundOffsets = true;
+                        }
+                        else
+                        {
+                           byteCounts.resize( count );
+                           foundByteCounts = true;
+                        }
+
+                        if ( type == ossim::TIFF_SHORT )
+                        {
+                           ossim_uint16* p = (ossim_uint16*)valueArray;
+                           if ( tag == ossim::TIFFTAG_STRIPOFFSETS )
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 offsets[i] = p[i];
+                              }
+                           }
+                           else
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 byteCounts[i] = p[i];
+                              } 
+                           }
+                        }
+                        else if ( type == ossim::TIFF_LONG )
+                        {
+                           ossim_uint32* p = (ossim_uint32*)valueArray;
+                           if ( tag == ossim::TIFFTAG_STRIPOFFSETS )
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 offsets[i] = p[i];
+                              }
+                           }
+                           else
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 byteCounts[i] = p[i];
+                              } 
+                           }
+                        }
+                        else if ( type == ossim::TIFF_LONG8 )
+                        {
+                           ossim_uint64* p = (ossim_uint64*)valueArray;
+                           if ( tag == ossim::TIFFTAG_STRIPOFFSETS )
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 offsets[i] = p[i];
+                              }
+                           }
+                           else
+                           {
+                              for (ossim_uint64 i = 0; i < count; ++i)
+                              {
+                                 byteCounts[i] = p[i];
+                              } 
+                           }
+                        }
+
+                        // Free memory if allocated...
+                        if (valueArray)
+                        {
+                           delete [] valueArray;
+                           valueArray = 0;
+                        }
+                      
+                     } // if ( ( tag == ossim::TIFFTAG_TILEOFFSETS ...
+                     else
+                     {
+                        // Seek past the rest of this tag:
+                        std::streamoff ifdOffset = static_cast<std::streamoff>(bytesPerTag - 2);
+                        m_inputStream->seekg(ifdOffset, std::ios_base::cur);
+                     }
+
+                     if ( ( foundOffsets == true) && (foundByteCounts == true ) &&
+                          ( offsets.size() == byteCounts.size() ) )
+                     {
+                        result = true;
+                        break; 
+                     }
+         
+                  } // End of tag loop.
+               }
+               else
+               {
+                  // Seek past all the tags:
+                  std::streamoff ifdOffset = static_cast<std::streamoff>(nTags * bytesPerTag );
+                  m_inputStream->seekg(ifdOffset, std::ios_base::cur);
+               }
+            }
+
+            //---
+            // Code was going in an infinite loop picking up bad offset in next
+            // "getOffset" where the byte count array was at the very end of file
+            // written by libtiff (build overviews). Anyway busting out fixes...
+            // drb - 20180221
+            //---
+            if ( result == true ) 
+            {
+               break;
+            }
+         
+            // Get the next IFD offset.  Continue this loop until the offset is zero.
+            if (getOffset(seekOffset, *m_inputStream, version) == true)
+            {
+               ++currentIfd;
+            }
+            else
+            {
+               seekOffset = 0;
+            }
+         
+         } // End:  while( seekOffset )
+      
+      } // End of loop through the IFD's.
+
+      m_inputStream->clear();
+      m_inputStream->seekg(0);
+   }
+   
+   return result;
+   
+} // End: ossimTiffInfo::getStripInfo(...)
 
 std::ostream &ossimTiffInfo::print(std::ostream &out) const
 {
@@ -601,7 +1315,9 @@ std::ostream &ossimTiffInfo::print(std::ostream &out) const
 
    out << std::endl;
 
-   m_inputStream.reset();
+   // Put stream back.
+   m_inputStream->clear();
+   m_inputStream->seekg(0);
 
    // Reset flags.
    out.setf(f);
@@ -1727,6 +2443,8 @@ std::ostream &ossimTiffInfo::print(std::ostream &out,
          {
             ossim_uint16 s;
             getArrayValue(s, valueArray, 0);
+            out << s << "\n";
+            out << prefix << "photo_interpretation_string: ";
             if (s < ossim::PHOTO_LAST)
             {
                out << PHOTO_INTERP[s] << "\n";
@@ -1865,11 +2583,14 @@ std::ostream &ossimTiffInfo::print(std::ostream &out,
 
       case ossim::TIFFTAG_PLANARCONFIG: // tag 284
       {
-         if ((count == 1) && (type == ossim::TIFF_SHORT))
+         if ( (count == 1) && (type == ossim::TIFF_SHORT) )
          {
             out << prefix << "planar_configuration: ";
             ossim_uint16 v;
             getArrayValue(v, valueArray, 0);
+            out << v << "\n";
+            
+            out << prefix << "planar_configuration_string: ";
             if (v == 1)
             {
                out << "single image plane\n";
@@ -1885,7 +2606,7 @@ std::ostream &ossimTiffInfo::print(std::ostream &out,
          }
          break;
       }
-
+      
       case ossim::TIFFTAG_RESOLUTIONUNIT: // tag 296
       {
          out << prefix << "resolution_units: ";

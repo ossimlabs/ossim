@@ -40,8 +40,8 @@ namespace ossim
       TIFFTAG_YRESOLUTION                = 283,
 
       TIFFTAG_PLANARCONFIG               = 284,
-      TIFFTAG_PLANARCONFIG_CONTIG        = 1,
-      TIFFTAG_PLANARCONFIG_SEPARATE      = 2,
+      PLANARCONFIG_CONTIG                = 1,
+      PLANARCONFIG_SEPARATE              = 2,
       
       TIFFTAG_RESOLUTIONUNIT             = 296,
       TIFFTAG_PAGENUMBER                 = 297,
