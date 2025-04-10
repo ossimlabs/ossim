@@ -576,13 +576,9 @@ bool ossimTiffInfo::getStripInfo( ossim_uint32 ifdIndex,
                                   std::vector<ossim_uint64>& byteCounts ) const
 {
    bool result = false;
-
-   std::cout << "c1...\nstr: " << (void*)m_inputStream.get() << "\n";
    
    if ( m_inputStream )
    {
-      std::cout << "c1a...\n";
-         
       m_inputStream->clear();
       m_inputStream->seekg(0);
    
@@ -634,14 +630,10 @@ bool ossimTiffInfo::getStripInfo( ossim_uint32 ifdIndex,
       // Get the first IFD offset.
       if (getOffset(seekOffset, *m_inputStream, version) == true)
       {
-         std::cout << "c3...\n";
-            
          // Image File Directory (IFD) loop.
          ossim_uint32 currentIfd = 0;
          while( seekOffset )
          {
-            std::cout << "c4...\n";
-            
             // Seek to the image file directory.
             m_inputStream->seekg(seekOffset, std::ios_base::beg);
             if ( m_inputStream->fail() )
@@ -686,8 +678,6 @@ bool ossimTiffInfo::getStripInfo( ossim_uint32 ifdIndex,
                      if ( ( tag == ossim::TIFFTAG_STRIPOFFSETS ) ||
                           ( tag == ossim::TIFFTAG_STRIPBYTECOUNTS ) )
                      {
-                        std::cout << "c2...\n";
-                        
                         // Get the type (byte, ascii, short...)
                         readShort(type, *m_inputStream);
                         if (!m_inputStream->good())
