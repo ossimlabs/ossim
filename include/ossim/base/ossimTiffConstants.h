@@ -140,9 +140,20 @@ namespace ossim
       RPC_COEFFICIENT_TAG = 50844
    };
 
-   enum CompressType
+   enum CompressType // Tag 259
    {
-      COMPRESSION_NONE = 1
+      // Not a complete list but handles the most common:
+      COMPRESSION_UNKNOWN       = 0,
+      COMPRESSION_NONE          = 1,
+      COMPRESSION_CCITT_2       = 2,
+      COMPRESSION_CCITT_3       = 3,
+      COMPRESSION_CCITT_4       = 4,
+      COMPRESSION_LZW           = 5,
+      COMPRESSION_OJPEG         = 6,
+      COMPRESSION_JPEG          = 7,
+      COMPRESSION_ADOBE_DEFLATE = 8,
+      COMPRESSION_DEFLATE       = 32946,
+      COMPRESSION_PACKBIT       = 32773
    };
 
    enum PhotoInterpretation

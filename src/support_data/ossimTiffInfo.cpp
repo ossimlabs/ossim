@@ -2422,14 +2422,50 @@ std::ostream &ossimTiffInfo::print(std::ostream &out,
             getArrayValue(s, valueArray, 0);
 
             out << s << "\n";
-            out << prefix << "compression_flag: ";
-            if (s == 1)
+            out << prefix << "compression_string: ";
+            if (s == ossim::COMPRESSION_NONE )
             {
-               out << "false\n";
+               out << "none\n";
+            }
+            else if ( s == ossim::COMPRESSION_CCITT_2 )
+            {
+               out << "ccitt_2\n";
+            }
+            else if ( s == ossim::COMPRESSION_CCITT_3 )
+            {
+               out << "ccitt_3\n";
+            }
+            else if ( s == ossim::COMPRESSION_CCITT_4 )
+            {
+               out << "ccitt_4\n";
+            }
+            else if ( s == ossim::COMPRESSION_DEFLATE )
+            {
+               out << "deflate\n";
+            }
+            else if ( s == ossim::COMPRESSION_LZW )
+            {
+               out << "lzw\n";
+            }
+            else if ( s == ossim::COMPRESSION_OJPEG )
+            {
+               out << "ojpeg\n";
+            }
+            else if ( s == ossim::COMPRESSION_JPEG )
+            {
+               out << "jpeg\n";
+            }
+            else if ( s == ossim::COMPRESSION_ADOBE_DEFLATE )
+            {
+               out << "adobe_deflate\n";
+            }
+            else if ( s == ossim::COMPRESSION_PACKBIT )
+            {
+               out << "packits\n";
             }
             else
             {
-               out << "true\n";
+               out << "unknown\n";
             }
          }
          break;
@@ -2591,11 +2627,11 @@ std::ostream &ossimTiffInfo::print(std::ostream &out,
             out << v << "\n";
             
             out << prefix << "planar_configuration_string: ";
-            if (v == 1)
+            if (v == ossim::PLANARCONFIG_CONTIG)
             {
                out << "single image plane\n";
             }
-            else if (v == 2)
+            else if (v == ossim::PLANARCONFIG_SEPARATE)
             {
                out << "separate image planes\n";
             }
