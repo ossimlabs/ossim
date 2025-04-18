@@ -102,6 +102,13 @@ public:
    const ossimIrect64& operator=(const ossimDrect& rect);
 
    /**
+    * @brief operator* from a double point.
+    * @param scalar
+    * @return rect
+    */
+   ossimIrect64 operator*(const ossimDpt& scalar) const;
+
+   /**
     * @brief Access to origin data member.
     *
     * If orientation mode is left handed this will be the upper left; else

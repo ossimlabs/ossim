@@ -355,6 +355,15 @@ ossimIrect64 ossimIrect64::operator-(const ossimDpt& shift)const
                        m_mode);
 }
 
+ossimIrect64 ossimIrect64::operator*(const ossimDpt& scalar)const
+{
+   ossimIpt64 origin((int)floor(m_origin.x*scalar.x),
+                     (int)floor(m_origin.y*scalar.y));
+   ossimIpt64 size((int)ceil(m_size.x*scalar.x),
+                   (int)ceil(m_size.y*scalar.y));                
+   return  ossimIrect64(origin, size, m_mode);
+}
+
 void ossimIrect64::getBounds(ossim_int64& minx, ossim_int64& miny,
                              ossim_int64& maxx, ossim_int64& maxy)const
 {
@@ -792,7 +801,7 @@ ossimIrect64 ossimIrect64::combine(const ossimIrect64& rect) const
 }
 
 bool ossimIrect64::saveState(ossimKeywordlist& kwl,
-                           const char* prefix)const
+                             const char* prefix)const
 {
    kwl.add(prefix,
            ossimKeywordNames::TYPE_KW,
