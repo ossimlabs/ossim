@@ -1046,6 +1046,9 @@ ossim_int32 ossim::TiffHandlerState::getPlanarConfig(ossim_int32 directory) cons
   ossim_int32 result = 0;
   if (getValue(tempStr, directory, "planar_configuration"))
   {
+     // This is stored now in "m_tags" as an integer converted to a string.
+     result = tempStr.toInt32();
+#if 0
     if (tempStr.contains("separate"))
     {
       result = PLANARCONFIG_SEPARATE;
@@ -1054,6 +1057,7 @@ ossim_int32 ossim::TiffHandlerState::getPlanarConfig(ossim_int32 directory) cons
     {
       result = PLANARCONFIG_CONTIG;
     }
+#endif
   }
   return result;
 }
