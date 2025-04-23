@@ -605,7 +605,8 @@ set_type read_thematic_index ( char *idxname,
   ossim_int32 			i , ival = 0, Match = -1;
   short int			sval = 0;
   float				fval = 0.0 ;
-  double			dval = 0.0 , atof () ;
+  /* double			dval = 0.0 , atof () ; */
+  double			dval = 0.0;  
   FILE				*ifp ;
   char				hack[80] , *buf = (char *) NULL, bufalloc=0 ;
   ThematicIndexHeader		h ;
@@ -885,7 +886,8 @@ set_type search_thematic_index ( ThematicIndex *idx,
   ossim_int32 			i , ival = 0, Match = -1;
   short int			sval = 0;
   float				fval = 0.0 ;
-  double			dval = 0.0 , atof () ;
+  /* double			dval = 0.0 , atof () ; */
+  double			dval = 0.0;
   char				*buf = (char *) NULL, bufalloc=0 ;
   ThematicIndexDirectory	d ;
   set_type			s ;
