@@ -176,8 +176,8 @@ namespace ossim
 
    enum ModelType
    {
-      UNKNOWN = 0,
-      MODEL_TYPE_PROJECTED = 1,  // Projection Coordinate System
+      MODEL_TYPE_UNKNOWN    = 0,
+      MODEL_TYPE_PROJECTED  = 1,  // Projection Coordinate System
       MODEL_TYPE_GEOGRAPHIC = 2, // Geographic latitude-longitude System
       MODEL_TYPE_GEOCENTRIC = 3
    };
