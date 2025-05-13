@@ -14,17 +14,16 @@
 // LIMITATIONS: None.
 //
 //*****************************************************************************
-//  $Id: ossimQuickbirdRpcModel.h 20606 2012-02-24 12:29:52Z gpotts $
+//  $Id$
 #ifndef ossimQuickbirdRpcModel_HEADER
-#define ossimQuickbirdRpcModel_HEADER
+#define ossimQuickbirdRpcModel_HEADER 1
 
 #include <ossim/projection/ossimRpcModel.h>
-#include <ossim/support_data/ossimQuickbirdMetaData.h>
-#include <ossim/support_data/ossimQuickbirdRpcHeader.h>
 #include <memory>
 
 class ossimFilename;
 class ossimQuickbirdMetaData;
+class ossimQuickbirdRpcHeader;
 class ossimQbTileFilesHandler;
 
 /*!****************************************************************************
@@ -49,20 +48,21 @@ public:
    virtual bool loadState(const ossimKeywordlist &kwl,
                           const char *prefix = 0);
 
-   virtual bool parseFile(const ossimFilename &file);
+   bool parseFile(const ossimFilename& file);
+   
+   /**
+    * @brief Looks for DigitalGlobe style dot TIL, IMD and RPB or RPA files.
+    * This does not open up a tiff reader just to get the image rectangle.
+    * @baseFile
+    * @imageRect
+    * @return true on success, false on error.
+    */
+   bool parseFiles(const ossimFilename& baseFile, const ossimDrect& imageRect);
+   
 
-   void setSupportData(ossimQuickbirdMetaData *supportData)
-   {
-      theSupportData = supportData;
-   }
-   ossimQuickbirdMetaData *getSupportData()
-   {
-      return theSupportData.get();
-   }
-   const ossimQuickbirdMetaData *getSupportData() const
-   {
-      return theSupportData.get();
-   }
+   void setSupportData(ossimQuickbirdMetaData *supportData);
+   ossimQuickbirdMetaData *getSupportData();
+   const ossimQuickbirdMetaData *getSupportData() const;
 
    /** Initializes this with contents of RPC file. IMPORTANT: This is not enough to fully initialize
     * the model. The image size and reference (mid) point need to be set before calling this method

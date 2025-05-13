@@ -9,7 +9,7 @@
 // Description: Image handler used for tiled Quickbird imagery. 
 //
 //*************************************************************************************************
-//  $Id: ossimQbTileFilesHandler.cpp 2814 2011-07-05 13:40:16Z oscar.kramer $
+// $Id$
 
 #include <ossim/imaging/ossimQbTileFilesHandler.h>
 #include <ossim/base/ossimFilename.h>
@@ -101,11 +101,8 @@ bool ossimQbTileFilesHandler::open()
          md.print( ossimNotify(ossimNotifyLevel_INFO) );
       }
 
-      //---
-      // Check the WV03 LV1A data and abort to let specialized reader from
-      // plugin handle it.
-      //---
-      if ( md.getSatID() == "WV03" && md.getProductLevel() == "LV1A" )
+      // Do not open level 1a data to let specialized reader from plugin handle it.
+      if ( md.getProductLevel() == "LV1A" )
       {
          if (traceDebug())
          {

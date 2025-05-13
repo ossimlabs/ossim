@@ -10,12 +10,13 @@
 // LIMITATIONS: None.
 //
 //*****************************************************************************
-//  $Id: ossimQuickbirdRpcModel.cpp 23564 2015-10-02 14:12:25Z dburken $
+// $Id$
 
 #include <ossim/projection/ossimQuickbirdRpcModel.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossim2dTo2dShiftTransform.h>
+#include <ossim/support_data/ossimQuickbirdMetaData.h>
 #include <ossim/support_data/ossimQuickbirdRpcHeader.h>
 #include <ossim/support_data/ossimQuickbirdTile.h>
 #include <ossim/support_data/ossimNitfFile.h>
@@ -255,38 +256,43 @@ bool ossimQuickbirdRpcModel::parseNitfFile(const ossimFilename &file)
    return true;
 }
 
+bool ossimQuickbirdRpcModel::parseFiles(const ossimFilename& baseFile,
+                                        const ossimDrect& imageRect)
+{
+   bool result = false;
+   
+   // Make the gsd nan so it gets computed.
+   theGSD.makeNan();
+   
+   theImageClipRect = imageRect;
+   
+   parseMetaData( baseFile );
+
+   result = parseRpcData( baseFile );
+   
+   parseTileData( baseFile );
+   
+   if ( result )
+   {
+      finishConstruction();
+   }
+   
+   return result;
+}
+
 //*************************************************************************************************
 //! Parses a tagged TIFF image file for RPC info. Returns TRUE if successful.
 //*************************************************************************************************
-bool ossimQuickbirdRpcModel::parseTiffFile(const ossimFilename &file)
+bool ossimQuickbirdRpcModel::parseTiffFile(const ossimFilename& file)
 {
-   setErrorStatus();
-
-   // Make the gsd nan so it gets computed.
-   theGSD.makeNan();
-
+   bool result = false;
    ossimFilename tiffFile = file;
    ossimRefPtr<ossimTiffTileSource> tiff = new ossimTiffTileSource();
    if (!tiff->open(file))
    {
-      return false;
+      result = parseFiles( file, tiff->getImageRectangle() );
    }
-
-   theImageClipRect = tiff->getImageRectangle();
-
-   parseMetaData(file);
-
-   // TIFF format expects the RPC and TILE info to be provided externally:
-   if (!parseRpcData(file))
-      return false;
-
-   // If no TIL data present, assumes full image:
-   if (!parseTileData(file))
-      return false;
-
-   finishConstruction();
-   clearErrorStatus();
-   return true;
+   return result;
 }
 
 //*************************************************************************************************
@@ -309,7 +315,7 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
       
       rpcFile.setExtension("RPA");
       if (findSupportFile(rpcFile)) break;
-      
+
       rpcFile.setExtension("XML");
       if (findSupportFile(rpcFile)) break;
 
@@ -338,11 +344,9 @@ bool ossimQuickbirdRpcModel::parseRpcData(const ossimFilename &base_name)
    m_qbRpcHeader = std::make_shared<ossimQuickbirdRpcHeader>();
    if (!m_qbRpcHeader->open(rpcFile))
    {
-      // std::cout << "HERE: Cannot Open: " << rpcFile << std::endl;
       m_qbRpcHeader = 0;
       return false;
    }
-
 
    if (m_qbRpcHeader->isAPolynomial())
       thePolyType = A;
@@ -589,4 +593,19 @@ bool ossimQuickbirdRpcModel::findSupportFile(ossimFilename &filename) const
 
    // Modify argument to match good filename:
    return false;
+}
+
+void ossimQuickbirdRpcModel::setSupportData(ossimQuickbirdMetaData* supportData)
+{
+   theSupportData = supportData;
+}
+
+ossimQuickbirdMetaData* ossimQuickbirdRpcModel::getSupportData()
+{
+   return theSupportData.get();
+}
+
+const ossimQuickbirdMetaData* ossimQuickbirdRpcModel::getSupportData()const
+{
+   return theSupportData.get();
 }
