@@ -1342,7 +1342,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Tile(const ossimIrect &tile_rect,
             if (!TIFFReadRGBATile(theTiffPtr,
                                   ulTilePt.x,
                                   ulTilePt.y,
-                                  (uint32 *)theBuffer)) // use tiff typedef
+                                  (ossim_uint32 *)theBuffer)) // use tiff typedef
             {
                ossimNotify(ossimNotifyLevel_WARN)
                    << MODULE << " Read Error!"
@@ -1487,7 +1487,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Strip(const ossimIrect &tile_rect,
       {
          if (TIFFReadRGBAStrip(theTiffPtr,
                                (strip * theRowsPerStrip[theCurrentDirectory]),
-                               (uint32 *)theBuffer) == 0) // use tiff typedef
+                               (ossim_uint32 *)theBuffer) == 0) // use tiff typedef
          {
             ossimNotify(ossimNotifyLevel_WARN)
                 << MODULE << " Error reading strip!" << endl;
@@ -1547,7 +1547,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Strip(const ossimIrect &tile_rect,
             // Copy the data to the output buffer.
             ossim_uint32 i = 0;
 
-            for (int32 sample = clip_rect.ul().x;
+            for (ossim_int32 sample = clip_rect.ul().x;
                  sample <= clip_rect.lr().x;
                  sample++)
             {
@@ -1652,7 +1652,7 @@ bool ossimTiffTileSource::loadFromRgbaU8aStrip(const ossimIrect &tile_rect,
    {
       if (TIFFReadRGBAStrip(theTiffPtr,
                             (strip * theRowsPerStrip[theCurrentDirectory]),
-                            (uint32 *)theBuffer) == 0) // use tiff typedef
+                            (ossim_uint32 *)theBuffer) == 0) // use tiff typedef
       {
          ossimNotify(ossimNotifyLevel_WARN)
              << MODULE << " Error reading strip!" << endl;
@@ -1700,7 +1700,7 @@ bool ossimTiffTileSource::loadFromRgbaU8aStrip(const ossimIrect &tile_rect,
             // Copy the data to the output buffer.
             ossim_uint32 i = 0;
             ossim_uint32 j = 0;
-            for (int32 sample = clip_rect.ul().x;
+            for (ossim_int32 sample = clip_rect.ul().x;
                  sample <= clip_rect.lr().x;
                  sample++)
             {
