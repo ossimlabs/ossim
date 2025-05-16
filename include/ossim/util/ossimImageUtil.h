@@ -34,6 +34,7 @@ class ossimGpt;
 class ossimPropertyInterface;
 class ossimApplicationUsage;
 class ossimImageHandler;
+
 /**
  * @brief ossimImageUtil class.
  *
@@ -192,6 +193,12 @@ public:
    void setOverviewStopDimension( const std::string& dimension );
 
    /**
+    * @brief Sets the overview starting rlevel.
+    * @param level
+    */
+   void setOverviewStartRLevel( ossim_uint32 level );
+
+   /**
     * @brief Sets the tile size.
     *
     * @param tileSize
@@ -334,6 +341,16 @@ public:
     * false.
     */
    bool getInternalOverviewsFlag() const;
+
+   /**
+    * @brief Gets the output directory if set.
+    *
+    * @dir Initialized by this from key "output_directory" value. Will be empty
+    * if key is not set in m_kwl options keyword list.
+    *
+    * @return true if value is found for key; else, false.
+    */
+   bool getOutputDirectory( std::string& dir ) const;
    
    /**
     * @brief Sets the output directory.  Typically overviews and histograms

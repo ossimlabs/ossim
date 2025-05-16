@@ -67,8 +67,6 @@
 #include <iomanip>
 #include <string>
 #include <vector>
-
-using namespace std;
  
 static std::string CMM_MAX_KW                  = "cmm_max"; // CMM(ComputeMinMax)
 static std::string CMM_MIN_KW                  = "cmm_min";
@@ -147,7 +145,7 @@ void ossimImageUtil::addOptions(ossimApplicationUsage* au)
  
    au->addCommandLineOption("--create-histogram-r0", "Forces create-histogram code to compute a histogram using r0 instead of the starting resolution for the overview builder. Can require a separate pass of R0 layer if the base image has built in overviews.");
  
-   au->addCommandLineOption("-d", "<output_directory> Write overview to output directory specified.");
+   au->addCommandLineOption("-d", "<output_directory> Write to output directory specified. Includes overview, histogram, omd files.");
  
    au->addCommandLineOption("--dump-filtered-image-list", "Outputs list of filtered images and extensions.");
  
@@ -179,7 +177,9 @@ void ossimImageUtil::addOptions(ossimApplicationUsage* au)
  
    au->addCommandLineOption("--reader-prop", "Adds a property to send to the reader. format is name=value");
  
-   au->addCommandLineOption("-s",  "Stop dimension for overviews.  This controls how \nmany layers will be built. If set to 64 then the builder will stop when height and width for current level are less than or equal to 64.  Note a default can be set in the ossim preferences file by setting the keyword \"overview_stop_dimension\".");
+   au->addCommandLineOption("-s",  "Stop dimension for overviews.  This controls how many layers will be built. If set to 64 then the builder will stop when height and width for current level are less than or equal to 64.  Note a default can be set in the ossim preferences file by setting the keyword \"overview_stop_dimension\".");
+
+   au->addCommandLineOption("--start-rlevel",  "Start rlevel(zero based) for overviews. This overrides the default starting rlevel which is normally the next one up from the last rlevel in the base image. Must be at least 1.");
 
    au->addCommandLineOption("--tile-size", "<size> Defines the tile size for overview builder.  Tiff option only. Must be a multiple of 16. Size will be used in both x and y directions. Note a default can be set in your ossim preferences file by setting the key \"tile_size\".");
  
@@ -482,6 +482,15 @@ bool ossimImageUtil::initialize(ossimArgumentParser& ap)
                break;
             }
          }
+
+         if( ap.read("--start-rlevel", sp1) )
+         {
+            setOverviewStartRLevel( ossimString(ts1).toUInt32() );
+            if ( ap.argc() < 2 )
+            {
+               break;
+            }
+         }
  
          if ( ap.read("--tile-size", sp1))
          {
@@ -659,7 +668,7 @@ ossim_int32 ossimImageUtil::execute()
       catch (const ossimException& e)
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << "Caught exception: " << e.what() << endl;
+            << "Caught exception: " << e.what() << std::endl;
          setErrorStatus( ossimErrorCodes::OSSIM_ERROR );
       }
  
@@ -709,11 +718,9 @@ void ossimImageUtil::processFile(const ossimFilename& file)
       if ( ih.valid() && !ih->hasError() )
       {
          // Check for output directory:
-         if ( m_kwl->hasKey( OUTPUT_DIRECTORY_KW ) )
+         ossimFilename outputDir;
+         if ( getOutputDirectory( outputDir.string() ) )
          {
-            ossimFilename outputDir;
-            outputDir.string() = m_kwl->findKey( OUTPUT_DIRECTORY_KW );
-
             if ( outputDir.exists() && outputDir.isDir() )
             {
                ih->setSupplementaryDirectory( outputDir );
@@ -917,7 +924,7 @@ void ossimImageUtil::createOverview(ossimRefPtr<ossimImageHandler>& ih,
                << "Internal overviews not supported for reader type: "
                <<ih->getClassName()
                << "\nIgnoring option..."
-               << endl;
+               << std::endl;
          }
       }
  
@@ -1007,6 +1014,7 @@ void ossimImageUtil::createOverview(ossimRefPtr<ossimImageHandler>& ih,
       ossimNotify(ossimNotifyLevel_DEBUG) << M << " exited...\n";
    }
 }
+
 void ossimImageUtil::createThumbnail(ossimRefPtr<ossimImageHandler> &ih)
 {
    ossimKeywordlist bandsKeywordList;
@@ -1357,11 +1365,9 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
       ossimFilename omd_file = ih->getFilename();;
 
       // Check for output directory:
-      if ( m_kwl->hasKey( OUTPUT_DIRECTORY_KW ) )
+      ossimFilename outputDir;
+      if ( getOutputDirectory( outputDir.string() ) )
       {
-         ossimFilename outputDir;
-         outputDir.string() = m_kwl->findKey( OUTPUT_DIRECTORY_KW );
-         
          if ( outputDir.exists() && outputDir.isDir() )
          {
             omd_file = outputDir.dirCat( omd_file.file() );
@@ -1411,7 +1417,7 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
       if ( traceDebug() )
       {
          ossimNotify(ossimNotifyLevel_DEBUG)
-            << "Sequencer tile size: " << tileWidthHeight << endl;
+            << "Sequencer tile size: " << tileWidthHeight << std::endl;
       }
  
       is->setTileSize(tileWidthHeight);
@@ -1430,9 +1436,9 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
  
       const ossim_uint32 BANDS = ih->getNumberOfInputBands();
  
-      vector<double> tmin(BANDS);
-      vector<double> tmax(BANDS);
-      vector<double> tnull(BANDS);
+      std::vector<double> tmin(BANDS);
+      std::vector<double> tmax(BANDS);
+      std::vector<double> tnull(BANDS);
       for (i = 0; i < BANDS; ++i)
       {
          tmin[i] = DEFAULT_MAX;
@@ -1453,7 +1459,7 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
       const double TOTAL_TILES = is->getNumberOfTiles();
       double tile_count = 0.0;
       ossimNotify(ossimNotifyLevel_INFO)
-         << setiosflags(ios::fixed) << setprecision(0);
+         << std::setiosflags(std::ios::fixed) << std::setprecision(0);
  
       if( (ossim::isnan(minValue) ) || (ossim::isnan(maxValue) ) )
       {
@@ -1469,9 +1475,9 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
             id = is->getNextTile();
             ++tile_count;
             ossimNotify(ossimNotifyLevel_INFO)
-               << "\r"  << setw(3)
+               << "\r"  << std::setw(3)
                << (tile_count / TOTAL_TILES * 100.0) << "%"
-               << flush;
+               << std::flush;
          }
       }
       
@@ -1483,8 +1489,7 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
       {
          std::fill(tmax.begin(), tmax.end(), maxValue);
       }
-      ossimNotify(ossimNotifyLevel_WARN)
-         << "\r100%\nFinished..." << endl;
+      ossimNotify(ossimNotifyLevel_INFO) << "\r100%\nFinished..." << std::endl;
  
       ossimKeywordlist okwl(omd_file);
  
@@ -1525,13 +1530,13 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
          if( traceDebug() )
          {
             ossimNotify(ossimNotifyLevel_INFO)
-               << setiosflags(ios::fixed) << setprecision(16)
+               << std::setiosflags(std::ios::fixed) << std::setprecision(16)
                << "band" << ossimString::toString(i+1) << ".min_value: "
                << tmin[i]
                << "\nband" << ossimString::toString(i+1) << ".max_value: "
                << tmax[i]
                << "\nband" << ossimString::toString(i+1) << ".null_value: "
-               << tnull[i] << endl;
+               << tnull[i] << std::endl;
          }
          
       } // End of band loop.
@@ -1544,7 +1549,7 @@ void ossimImageUtil::computeMinMax( ossimRefPtr<ossimImageHandler>& ih,
       // Write the file to disk:
       okwl.write(omd_file);
       ossimNotify(ossimNotifyLevel_INFO)
-         << "wrote file:  " << omd_file << endl;
+         << "wrote file:  " << omd_file << std::endl;
 
       ih->loadMetaData(); 
 
@@ -1619,7 +1624,8 @@ void ossimImageUtil::usage(ossimArgumentParser& ap)
       << "%{dirname}         = path of filename\n"
       << "%{file}            = filename being processed\n"
       << "%{file_no_ext}     = filename with no extension\n"
-
+      << "%{output_dir}      = output directory if set (see -d option)\n"
+      
       << std::endl;
 }
 
@@ -1825,6 +1831,12 @@ bool ossimImageUtil::getOverrideFilteredImagesFlag() const
    return keyIsTrue( OVERRIDE_FILTERED_IMAGES_KW );
 }
 
+bool ossimImageUtil::getOutputDirectory( std::string& dir ) const
+{
+   dir = m_kwl->findKey( OUTPUT_DIRECTORY_KW );
+   return (dir.size() > 0);
+}
+
 void ossimImageUtil::setOutputDirectory( const std::string& directory )
 {
    std::string key = OUTPUT_DIRECTORY_KW;
@@ -1905,6 +1917,15 @@ void ossimImageUtil::setOverviewStopDimension( ossim_uint32 dimension )
 void ossimImageUtil::setOverviewStopDimension( const std::string& dimension )
 {
    addOption( OVERVIEW_STOP_DIM_KW, dimension );
+}
+
+void ossimImageUtil::setOverviewStartRLevel( ossim_uint32 level )
+{
+   std::string key = WRITER_PROP_KW;
+   key += ossimString::toString( getNextWriterPropIndex() ).string();
+   std::string value = "start_rlevel=";
+   value += ossimString::toString(level).string();
+   addOption( key, value );
 }
 
 void ossimImageUtil::setTileSize( ossim_uint32 tileSize )
@@ -2376,7 +2397,7 @@ void ossimImageUtil::substituteFileStrings( const ossimFilename& file,
    command.gsub( BASENAME_VARIABLE, file.file().string(), true );
 
    const std::string BASENAME_NO_EXT_VARIABLE = "%{basename_no_ext}";
-   command.gsub( BASENAME_NO_EXT_VARIABLE, file.file().string(), true );
+   command.gsub( BASENAME_NO_EXT_VARIABLE, file.file().noExtension().string(), true );
 
    const std::string DIRNAME_VARIABLE = "%{dirname}";
    command.gsub( DIRNAME_VARIABLE, file.path().string(), true );
@@ -2386,6 +2407,11 @@ void ossimImageUtil::substituteFileStrings( const ossimFilename& file,
 
    const std::string FILE_NO_EXT_VARIABLE = "%{file_no_ext}";
    command.gsub( FILE_NO_EXT_VARIABLE, file.noExtension().string(), true );
+
+   std::string outputDir = "";
+   getOutputDirectory( outputDir );
+   const std::string OUTPUT_DIR_VARIABLE = "%{output_dir}";
+   command.gsub( OUTPUT_DIR_VARIABLE, outputDir, true );
 }
 
 void ossimImageUtil::gsubDate( const std::string& commandKey,
