@@ -1,14 +1,12 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: Base class for Info object.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #include <ossim/support_data/ossimInfoBase.h>

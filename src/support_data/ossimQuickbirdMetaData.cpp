@@ -24,7 +24,6 @@
 #include <cstdio>
 #include <iostream>
 #include <stack>
-#include <memory>
 
 RTTI_DEF1(ossimQuickbirdMetaData, "ossimQuickbirdMetaData", ossimObject);
  

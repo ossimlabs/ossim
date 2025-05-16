@@ -1,15 +1,13 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author:  David Burken
+// Author: David Burken
 //
 // Description: Factory for info objects.
 // 
-//----------------------------------------------------------------------------
-// $Id: ossimInfoFactory.cpp 22118 2013-01-18 21:05:14Z dburken $
+//---
+// $Id$
 
 #include <ossim/support_data/ossimInfoFactory.h>
 #include <ossim/ossimConfig.h>
@@ -26,6 +24,7 @@
 #include <ossim/support_data/ossimJp2Info.h>
 #include <ossim/support_data/ossimLasInfo.h>
 #include <ossim/support_data/ossimNitfInfo.h>
+#include <ossim/support_data/ossimQuickbirdMetaDataInfo.h>
 #include <ossim/support_data/ossimRpfInfo.h>
 #include <ossim/support_data/ossimTiffInfo.h>
 #include <ossim/support_data/ossimXmpInfo.h>
@@ -250,6 +249,16 @@ std::shared_ptr<ossimInfoBase> ossimInfoFactory::create(const ossimFilename& fil
    }
    
    result = std::make_shared<ossimJ2kInfo>();
+   if ( result->open( file ) )
+   {
+      return result;
+   }
+   else
+   {
+      result.reset();
+   }
+
+   result = std::make_shared<ossimQuickbirdMetaDataInfo>();
    if ( result->open( file ) )
    {
       return result;

@@ -1,7 +1,7 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -10,12 +10,11 @@
 //*************************************************************************
 // $Id: ossim2dTo2dTransform.cpp 15766 2009-10-20 12:37:09Z gpotts $
 
+#include <ossim/base/ossim2dTo2dTransform.h>
 #include <cstdlib>
 #include <sstream>
-#include <ossim/base/ossim2dTo2dTransform.h>
 
-
-RTTI_DEF1(ossim2dTo2dTransform, "ossim2dTo2dTransform", ossimObject);
+RTTI_DEF1(ossim2dTo2dTransform, "ossim2dTo2dTransform", ossimObject)
 
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimKeywordlist.h>
@@ -164,8 +163,7 @@ bool ossim2dTo2dTransform::saveState(ossimKeywordlist& kwl,
            true);
    kwl.add(prefix,
            "dxdy",
-           ossimString::toString(theDxDy.x) + " " +
-           ossimString::toString(theDxDy.y),
+           theDxDy.toString().c_str(),
            true);
            
    return ossimObject::saveState(kwl, prefix);
@@ -205,13 +203,20 @@ bool ossim2dTo2dTransform::loadState(const ossimKeywordlist& kwl,
    if(dxdy)
    {
       ossimString tempString(dxdy);
-      std::vector<ossimString> splitArray;
-      tempString = tempString.trim();
-      tempString.split(splitArray, " ");
-      if(splitArray.size()==2)
+      if ( tempString.contains(",") ) // ossimDpt::toString form: (0.009,0.009)
       {
-         theDxDy.x = splitArray[0].toDouble();
-         theDxDy.y = splitArray[1].toDouble();
+         theDxDy.toPoint( tempString.string() );
+      }
+      else // Backward compatable form of: "0.009 0.009"
+      {  
+         std::vector<ossimString> splitArray;
+         tempString = tempString.trim();
+         tempString.split(splitArray, " ");
+         if(splitArray.size()==2)
+         {
+            theDxDy.x = splitArray[0].toDouble();
+            theDxDy.y = splitArray[1].toDouble();
+         }
       }
    }
    if(result)
