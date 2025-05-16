@@ -1,21 +1,18 @@
-//----------------------------------------------------------------------------
+//---
 //
 // License:  MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: Base class for Info object.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 #ifndef ossimInfoBase_HEADER
 #define ossimInfoBase_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimReferenced.h>
-#include <iosfwd>
 #include <ossim/base/ossimIosFwd.h>
 #include <memory>
 #include <string>
@@ -32,10 +29,9 @@ class ossimKeywordlist;
 class OSSIM_DLL ossimInfoBase : public ossimReferenced
 {
 public:
-   
+
    /** default constructor */
    ossimInfoBase();
-
 
    /**
     * @brief open method.
@@ -95,6 +91,7 @@ public:
                                ossim_uint32 entryIndex)const;
 
 protected:
+
    /** virtual destructor */
    virtual ~ossimInfoBase();
    
