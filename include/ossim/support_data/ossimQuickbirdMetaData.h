@@ -141,6 +141,9 @@ public:
 *
 ****************************************/
 
+  bool parse(std::shared_ptr<ossimKeywordlist> &kwl,
+            const ossimFilename &file);
+
 private:
   ossimString         m_productLevel;
   ossimString         m_generationDate;
@@ -166,9 +169,6 @@ private:
   std::shared_ptr<ossimKeywordlist> m_rpbKwl;
   std::shared_ptr<ossimKeywordlist> m_steKwl;
   std::shared_ptr<ossimKeywordlist> m_tilKwl;
-
-  bool parse(std::shared_ptr<ossimKeywordlist> &kwl,
-             const ossimFilename &file);
 
   TYPE_DATA
 };
