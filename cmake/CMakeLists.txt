@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.31)
+
 PROJECT(ossimlabs)
 
 # Allows developer to customize compiler with their own flags (e.g., "-std=c++11")
