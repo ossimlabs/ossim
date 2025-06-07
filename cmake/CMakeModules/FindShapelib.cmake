@@ -16,13 +16,16 @@
 # Find include path:
 #---
 find_path( SHAPELIB_INCLUDE_DIR shapefil.h
-           PATHS 
+           PATHS
+           ${CMAKE_INSTALL_PREFIX}/include
            /usr/include
            /usr/local/include )
 
 # Find Shapelib library:
 find_library( SHAPELIB_LIBRARY NAMES shp
-              PATHS 
+              PATHS
+              ${CMAKE_INSTALL_PREFIX}/lib64
+              ${CMAKE_INSTALL_PREFIX}/lib
               /usr/lib64 
               /usr/lib 
               /usr/local/lib )
@@ -47,5 +50,7 @@ endif( Shapelib_FOUND )
 
 if( NOT SHAPELIB_FIND_QUIETLY )
    message( STATUS "SHAPELIB_INCLUDE_DIR=${SHAPELIB_INCLUDE_DIR}" )
-   message( STATUS "SHAPELIB_LIBRARIES=${SHAPELIB_LIBRARIES}" )
+   message( STATUS "SHAPELIB_LIBRARY=${SHAPELIB_LIBRARY}" )
 endif( NOT SHAPELIB_FIND_QUIETLY )
+
+MARK_AS_ADVANCED(SHAPELIB_INCLUDE_DIR SHAPELIB_LIBRARY)
