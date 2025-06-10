@@ -656,63 +656,6 @@ protected:
     * Full image number of cols.
     */
    char theFullImageCol[FI_COL_SIZE+1];
-
-   
-   
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   
-                            
-   /**
-    * FIELD: 
-    *
-    * required  byte field
-    *
-    * 01 to 99
-    * 
-    * 
-    */
-   /**
-    * FIELD: 
-    *
-    * required  byte field
-    *
-    * 01 to 99
-    * 
-    * 
-    */
-   /**
-    * FIELD: 
-    *
-    * required  byte field
-    *
-    * 01 to 99
-    * 
-    * 
-    */
-   
    
 TYPE_DATA   
 };
