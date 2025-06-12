@@ -20,6 +20,7 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
+#include <memory>
 
 class ossimNitfImageHeader;
 class ossimNitfSymbolHeader;
@@ -69,19 +70,23 @@ public:
    virtual ~ossimNitfFile();
 
    /*!
-    *  Opens the nitf file and attempts to parse.
-    *  Returns true on success, false on error.
+    *  @brief Opens the nitf file and attempts to parse.
+    *  @return true on success, false on error.
     */
    bool parseFile(const ossimFilename& file);
 
    /**
     * @brief Parse stream method.
+    *
+    * This method will store the stream pointer, i.e. shared_ptr<ossim::istream>
+    * for other methods that used to open up a new stream to the nitf file.
+    *
     * @param file Filename from opened stream.
     * @param in Stream to parse.
     * @return true on success, false on error.
     */
    bool parseStream(const ossimFilename& file,
-                    ossim::istream& in);
+                    std::shared_ptr<ossim::istream>& in);
    
    /*!
     * Will return the header.
@@ -122,6 +127,9 @@ protected:
    
    ossimFilename                    theFilename;
    ossimRefPtr<ossimNitfFileHeader> theNitfFileHeader;
+
+   // Storing stream so we can get the j2k info without re-opening.
+   mutable std::shared_ptr<ossim::istream> m_str;
 };
 
-#endif
+#endif /* #ifndef ossimNitfFile_HEADER */
