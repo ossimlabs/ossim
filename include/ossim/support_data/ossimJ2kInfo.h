@@ -1,26 +1,25 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  MIT
+// License: MIT
 // 
-// See LICENSE.txt file in the top level directory for more details.
-//
 // Author:  David Burken
 //
 // Description: J2K Info object.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 #ifndef ossimJ2kInfo_HEADER
-#define ossimJ2kInfo_HEADER
+#define ossimJ2kInfo_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/support_data/ossimInfoBase.h>
 #include <ossim/base/ossimFilename.h>
+#include <iosfwd>
 
 class ossimEndian;
 
 /**
- * @brief TIFF info class.
+ * @brief J2K info class.
  *
  * Encapsulates the listgeo functionality.
  */
@@ -52,11 +51,26 @@ public:
     */
    virtual std::ostream& print(std::ostream& out) const;
 
+   /**
+    * Print method.
+    *
+    * Prints from a stream to a stream inserting prefix in the
+    * key.
+    *
+    * @param in Stream position at start of j2k portion of the image.
+    * @param out Stream to print to.
+    * @param prefix to insert in front fo keys.
+    * @return std::ostream&
+    */
+   virtual std::ostream& print(std::istream& in,
+                               std::ostream& out,
+                               const std::string& prefix) const;
+
 protected:
 
    /** Initializes s reference.  Does byte swapping as needed. */
-   void readUInt16(ossim_uint16& s, std::ifstream& str) const;
-
+   void readUInt16(ossim_uint16& s, std::istream& str) const;
+   
    /**
     * @brief Prints 0xff52 COD_MARKER (0xff52).
     * @param out Stream to output to.
@@ -69,8 +83,8 @@ protected:
     */
    std::ostream& printCodMarker(std::ostream& out,
                                 const std::string& prefix,
-                                std::ifstream& str) const;
-
+                                std::istream& str) const;
+   
    /**
     * @brief Prints 0xff51 SIZ_MARKER (0xff51).
     * @param out Stream to output to.
@@ -83,8 +97,8 @@ protected:
     */
    std::ostream& printSizMarker(std::ostream& out,
                                 const std::string& prefix,
-                                std::ifstream& str) const;
-
+                                std::istream& str) const;
+   
    /**
     * @brief Prints 0xff90 SOT_MARKER (0xff90)
     * @param out Stream to output to.
@@ -97,8 +111,8 @@ protected:
     */
    std::ostream& printSotMarker(std::ostream& out,
                                 const std::string& prefix,
-                                std::ifstream& str) const;
-
+                                std::istream& str) const;
+   
    /**
     * @brief Prints unhandle segment.  This will only print the marker and
     * record length.
@@ -113,12 +127,11 @@ protected:
     */
    std::ostream& printUnknownMarker(std::ostream& out,
                                     const std::string& prefix,
-                                    std::ifstream& str,
+                                    std::istream& str,
                                     ossim_uint16 marker) const;
-
    
-   ossimFilename  m_file;
-   ossimEndian*   m_endian;
+   ossimFilename m_file;
+   ossimEndian*  m_endian;
 };
 
 #endif /* End of "#ifndef ossimJ2kInfo_HEADER" */

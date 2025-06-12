@@ -1,14 +1,12 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
 // Description: J2K Info object.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #include <ossim/support_data/ossimJ2kInfo.h>
@@ -98,7 +96,7 @@ bool ossimJ2kInfo::open(const ossimFilename& file)
 
 std::ostream& ossimJ2kInfo::print(std::ostream& out) const
 {
-   static const char MODULE[] = "ossimJ2kInfo::print";
+   static const char MODULE[] = "ossimJ2kInfo::print # 1";
 
    if (traceDebug())
    {
@@ -156,7 +154,74 @@ std::ostream& ossimJ2kInfo::print(std::ostream& out) const
    return out;
 }
 
-void ossimJ2kInfo::readUInt16(ossim_uint16& s, std::ifstream& str) const
+std::ostream& ossimJ2kInfo::print(std::istream& in,
+                                  std::ostream& out,
+                                  const std::string& prefix) const
+{
+   static const char MODULE[] = "ossimJ2kInfo::print # 2";
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " DEBUG Entered...\n";
+   }
+
+   if (in.good())
+   {
+      const ossim_uint16 SIZ_MARKER = 0xff51; // size marker
+      const ossim_uint16 SOC_MARKER = 0xff4f; // start of codestream marker
+
+      ossim_uint16 marker;
+      readUInt16(marker, in); // SOC
+      if ( marker == SOC_MARKER )
+      {
+         readUInt16(marker, in); // SIZ Required as the second marker segment.
+         if ( marker == SIZ_MARKER )
+         {
+            // If we get here we should be good...
+
+            const ossim_uint16 COD_MARKER = 0xff52; // cod maker
+            // const ossim_uint16 EOC_MARKER = 0xffd9; // end of codestream marker
+            const ossim_uint16 SOT_MARKER = 0xff90; // start of tile marker
+
+            std::string myPrefix = prefix;
+            myPrefix += "j2k.";
+
+            // SIZ marker required next.
+            printSizMarker(out, myPrefix, in);
+
+            readUInt16(marker, in);
+
+            // Look for COD marker up to SOT and then get out.
+            while ( in.good() && (marker != SOT_MARKER) )
+            {
+               if ( marker == COD_MARKER )
+               {
+                  printCodMarker(out, myPrefix, in);
+
+                  // Get out once the COD marker has been printed.
+                  break;
+               }
+               else
+               {
+                  ossim_uint16 segmentLength;
+                  readUInt16(segmentLength, in);
+
+                  // Seek to the next marker.
+                  in.seekg( (segmentLength-2), std::ios_base::cur);
+               }
+
+               // Next marker:
+               readUInt16(marker, in);
+            }
+         }
+      }
+   }
+
+   return out;
+}
+
+void ossimJ2kInfo::readUInt16(ossim_uint16& s, std::istream& str) const
 {
    str.read((char*)&s, 2);
    if (m_endian)
@@ -167,7 +232,7 @@ void ossimJ2kInfo::readUInt16(ossim_uint16& s, std::ifstream& str) const
 
 std::ostream& ossimJ2kInfo::printCodMarker(std::ostream& out,
                                            const std::string& prefix,
-                                           std::ifstream& str) const
+                                           std::istream& str) const
 {
    ossimJ2kCodRecord siz;
    siz.parseStream(str);
@@ -177,7 +242,7 @@ std::ostream& ossimJ2kInfo::printCodMarker(std::ostream& out,
 
 std::ostream& ossimJ2kInfo::printSizMarker(std::ostream& out,
                                            const std::string& prefix,
-                                           std::ifstream& str) const
+                                           std::istream& str) const
 {
    ossimJ2kSizRecord siz;
    siz.parseStream(str);
@@ -187,7 +252,7 @@ std::ostream& ossimJ2kInfo::printSizMarker(std::ostream& out,
 
 std::ostream& ossimJ2kInfo::printSotMarker(std::ostream& out,
                                            const std::string& prefix,
-                                           std::ifstream& str) const
+                                           std::istream& str) const
 {
    // Get the stream posistion.
    std::streamoff pos = str.tellg();
@@ -206,7 +271,7 @@ std::ostream& ossimJ2kInfo::printSotMarker(std::ostream& out,
 
 std::ostream& ossimJ2kInfo::printUnknownMarker(std::ostream& out,
                                                const std::string& prefix,
-                                               std::ifstream& str,
+                                               std::istream& str,
                                                ossim_uint16 marker) const
 {
    // Capture the original flags.
@@ -234,5 +299,3 @@ std::ostream& ossimJ2kInfo::printUnknownMarker(std::ostream& out,
 
    return out;
 }
-      
-
