@@ -6,8 +6,7 @@
 //
 // Author:  David Burken
 //
-// Description: Utility class definition processing digital elevation
-// models(dems).
+// Description: Utility chipper class definition.
 //
 //---
 // $Id$
@@ -1379,14 +1378,16 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeColorReliefChain()
    {
       result = addIndexToRgbLutFilter(result);
    }
+#if 0
    else
    {
       // No LUT file provided, so doing the default 8-bit linear stretch:
       if (result->getOutputScalarType() != OSSIM_UINT8)
       {
-         //result = addScalarRemapper(result, OSSIM_UINT8);
+         result = addScalarRemapper(result, OSSIM_UINT8);
       }
    }
+#endif
    return result;
 }
 
@@ -1807,11 +1808,18 @@ void ossimChipperUtil::addDemSources()
             // Get global entry.  Set by "-e" on command line apps.
             entryIndex = getEntryNumber();
          }
-         ossimSrcRecord srcRecord;
-         srcRecord.setFilename(f);
-         srcRecord.setEntryIndex(entryIndex);
-         // addDemSource( f, entryIndex );
-         addDemSource(srcRecord);
+         //---
+         // ossimSrcRecord srcRecord;
+         // srcRecord.setFilename(f);
+         // srcRecord.setEntryIndex(entryIndex);
+         // addDemSource(srcRecord);
+         // 
+         // Above code using srcRecord broke color-relief.
+         // Was returning a chain with ossimGeneralRasterTileSource with no
+         // projection instead of an ossimSrtmTileSource.
+         // Not sure why. Bug in dot.src code maybe? drb - 20250612
+         //---
+         addDemSource( f, entryIndex );
       }
    }
    sortedList.clear();
