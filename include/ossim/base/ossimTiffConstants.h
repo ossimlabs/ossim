@@ -160,18 +160,17 @@ namespace ossim
    {
       PHOTO_MINISWHITE = 0, // min value is white
       PHOTO_MINISBLACK = 1, // min value is black
-      PHOTO_RGB = 2,        // RGB color model
-      PHOTO_PALETTE = 3,    // color map indexed
-      PHOTO_MASK = 4,       // $holdout mask
-      PHOTO_SEPARATED = 5,  // !color separations
-      PHOTO_YCBCR = 6,      // !CCIR 601
-      PHOTO_CIELAB = 7,     // !1976 CIE L*a*b*
-      PHOTO_ICCLAB = 9,
-      PHOTO_ITULAB = 10,
-      PHOTO_LAST = 11, // this is here for range checking
-
-      PHOTO_LOGL = 32844,
-      PHOTO_LOGLUV = 32845
+      PHOTO_RGB        = 2, // RGB color model
+      PHOTO_PALETTE    = 3, // color map indexed
+      PHOTO_MASK       = 4, // $holdout mask
+      PHOTO_SEPARATED  = 5, // !color separations
+      PHOTO_YCBCR      = 6, // !CCIR 601
+      PHOTO_CIELAB     = 8, // !1976 CIE L*a*b*
+      PHOTO_ICCLAB     = 9,
+      PHOTO_ITULAB     = 10,
+      PHOTO_CFA        = 32803,
+      PHOTO_LOGL       = 32844,
+      PHOTO_LOGLUV     = 32845
    };
 
    enum ModelType

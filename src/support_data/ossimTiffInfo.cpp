@@ -30,13 +30,13 @@
 #include <ossim/projection/ossimProjection.h>
 #include <ossim/projection/ossimEpsgProjectionFactory.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
+#include <ossim/base/ossimTiffPhotoInterpLut.h>
 #include <ossim/support_data/ossimQuickbirdMetaData.h>
 #include <ossim/support_data/ossimPleiadesMetaData.h>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include <ossim/base/ossimIoStream.h>
 
 // Static trace for debugging
 static ossimTrace traceDebug("ossimTiffInfo:debug");
@@ -2464,29 +2464,15 @@ std::ostream &ossimTiffInfo::print(std::ostream &out,
       case ossim::TIFFTAG_PHOTOMETRIC: // tag 262
       {
          out << prefix << "photo_interpretation: ";
-
          if ((count == 1) && (type == ossim::TIFF_SHORT))
          {
             ossim_uint16 s;
             getArrayValue(s, valueArray, 0);
             out << s << "\n";
-            out << prefix << "photo_interpretation_string: ";
-            if (s < ossim::PHOTO_LAST)
-            {
-               out << PHOTO_INTERP[s] << "\n";
-            }
-            else if (s == ossim::PHOTO_LOGL)
-            {
-               out << "LOGL\n";
-            }
-            else if (s == ossim::PHOTO_LOGLUV)
-            {
-               out << "LOGLUV \n";
-            }
-            else
-            {
-               out << "range error!\n";
-            }
+
+            ossimTiffPhotoInterpLut lut;
+            out << prefix << "photo_interpretation_string: "
+                << lut.getEntryString( s ) << "\n";
          }
          break;
       }
