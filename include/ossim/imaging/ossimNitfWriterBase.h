@@ -15,10 +15,7 @@
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
-#include <ossim/support_data/ossimNitfFileHeaderV2_1.h>
-#include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
 #include <vector>
-#include <ossim/base/ossim2dBilinearTransform.h>
 
 class ossimFilename;
 class ossimImageSourceSequencer;
@@ -122,8 +119,22 @@ public:
    virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique);
    virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique, const ossim_uint32& ownerIndex, const ossimString& tagType);
 
+#if 0 /* Not called by anyone. */
    virtual void setFileHeaderV2_1(ossimRefPtr<ossimNitfFileHeaderV2_1>, bool preferSource=false);
    virtual void setImageHeaderV2_1(ossimRefPtr<ossimNitfImageHeaderV2_1>, bool preferSource=false);
+#endif
+
+   /**
+    * @brief Set file header property.
+    * @param property The property to set.
+    */
+   virtual void setFileHeaderProperty( ossimRefPtr<ossimProperty> property );
+
+   /**
+    * @brief Set image header property.
+    * @param property The property to set.
+    */
+   virtual void setImageHeaderProperty( ossimRefPtr<ossimProperty> property );
 
 protected:
 
@@ -196,23 +207,40 @@ protected:
     * found in preferences.
     */
    virtual void initializeDefaultsFromConfigFile(
-      ossimNitfFileHeaderV2_X* fileHdr,
-      ossimNitfImageHeaderV2_X* imgHdr );   
+      ossimNitfFileHeaderV2_X* fileHdr, ossimNitfImageHeaderV2_X* imgHdr );
+
+   /**
+    * @brief Sets stored properties in nitf file header.
+    * @see setFileHeaderProperty(...)
+    * @param hdr
+    */
+   void addFileHeaderProperties( ossimNitfFileHeaderV2_X* hdr );
+
+   /**
+    * @brief Sets stored properties in nitf image header.
+    * @see setImageHeaderProperty(...)
+    * @param hdr
+    */   
+   void addImageHeaderProperties( ossimNitfImageHeaderV2_X* hdr );
 
    /** @brief If true user wants to set RPC00B tag. (DEFAULT = false) */
-   bool theEnableRpcbTagFlag;
+   bool m_enableRpcbTagFlag;
    
    /**
     * @brief If true user wants to set BLOCKA tag. (DEFAULT = true)
     * Currently only valid for map projected images.
     */
-   bool theEnableBlockaTagFlag;
+   bool m_enableBlockaTagFlag;
 
    /**
     * @brief If true user wants to set GEOLOG tag. (DEFAULT = true)
     * This will only be set if a geographic projection.
     */
-   bool theEnableGeolobTagFlag;
+   bool m_enableGeolobTagFlag;
+
+   std::vector< ossimRefPtr<ossimNitfRegisteredTag> > m_tags;
+   std::vector< ossimRefPtr<ossimProperty> > m_fileHeaderProps;
+   std::vector< ossimRefPtr<ossimProperty> > m_imageHeaderProps;
 
 private:
 
