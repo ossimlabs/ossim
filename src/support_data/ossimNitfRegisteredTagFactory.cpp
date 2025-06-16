@@ -19,7 +19,7 @@
 #include <ossim/support_data/ossimNitfCscrnaTag.h>
 #include <ossim/support_data/ossimNitfCsdidaTag.h>
 #include <ossim/support_data/ossimNitfCsexraTag.h>
-#include <ossim/support_data/ossimNitfCsexraTag.h>
+#include <ossim/support_data/ossimNitfCsexrbTag.h>
 #include <ossim/support_data/ossimNitfEngrdaTag.h>
 #include <ossim/support_data/ossimNitfGeoPositioningTag.h>
 #include <ossim/support_data/ossimNitfGeolobTag.h>
@@ -62,6 +62,7 @@ static const char CAMSDA_TAG[]               = "CAMSDA";
 static const char CSCRNA_TAG[]               = "CSCRNA";
 static const char CSDIDA_TAG[]               = "CSDIDA";
 static const char CSEXRA_TAG[]               = "CSEXRA";
+static const char CSEXRB_TAG[]               = "CSEXRB";
 static const char ENGRDA_TAG[]               = "ENGRDA";
 static const char GEOLOB_TAG[]               = "GEOLOB";
 static const char GEO_POSITIONING_TAG[]      = "GEOPSB";
@@ -111,7 +112,7 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    const ossimString& tagName)const
 {
    ossimString name = ossimString(tagName).trim().upcase();
-   
+
    if(name == ACFTB_TAG)
    {
       return new ossimNitfAcftbTag;
@@ -143,6 +144,10 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    else if(name == CSEXRA_TAG)
    {
       return new ossimNitfCsexraTag;
+   }
+   else if(name == CSEXRB_TAG)
+   {
+      return new ossimNitfCsexrbTag;
    }
    else if(name == ENGRDA_TAG)
    {
@@ -253,7 +258,7 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
       return new ossimNitfRsmecbTag();
    }
 #endif
-   
+
    else if(name == RSMIDA_TAG)
    {
       return new ossimNitfRsmidaTag();

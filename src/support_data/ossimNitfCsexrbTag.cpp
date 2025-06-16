@@ -25,7 +25,7 @@
 
 
 ossimNitfCsexrbTag::ossimNitfCsexrbTag()
-   : ossimNitfRegisteredTag(std::string("CSEXRB"), 353)
+   : ossimNitfRegisteredTag(std::string("CSEXRB"), 443)
 {
    clearFields();
    m_total_length = 0;
@@ -44,6 +44,7 @@ ossimString formatPrefix(std::vector<std::vector<ossim_int32>> prefixIn)
 }
 void ossimNitfCsexrbTag::parseStream(std::istream& in)
 {
+   std::cout << "Parse\n";
    clearFields();
 
    //Curent itteration, Total iteration, i value
