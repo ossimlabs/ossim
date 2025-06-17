@@ -31,7 +31,6 @@ protected:
 
    std::map<ossimString, ossimString> m_fields_map;
    std::vector<std::pair<ossimString, ossimString>> m_fields_vector;
-   ossim_uint32 m_total_length;
 
 };
 
