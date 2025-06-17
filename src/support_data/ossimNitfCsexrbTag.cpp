@@ -155,9 +155,10 @@ static std::pair<ossimString, ossim_int32> FIELD_DEFINITIONS[NUM_DEFINITIONS] = 
    };
 
 ossimNitfCsexrbTag::ossimNitfCsexrbTag()
-   : ossimNitfRegisteredTag(std::string("CSEXRB"), 443)
+   : ossimNitfRegisteredTag()//std::string("CSEXRB"), 443
 {
    clearFields();
+   setTagName("CSEXRB");
    m_total_length = 0;
 }
 
@@ -315,13 +316,16 @@ std::ostream& ossimNitfCsexrbTag::print(std::ostream& out, const std::string& pr
    pfx += ".";
 
    out << std::setiosflags(std::ios::left)
-       << pfx << std::setw(24) << "CETAG:CSEXRB" << "\n"
-       << pfx << std::setw(24) << "CEL:" << m_total_length << "\n";
+          << pfx << std::setw(24) << "CETAG:"
+          << getTagName() << "\n"
+          << pfx << std::setw(24) << "CEL:"
+          << getTagLength() << "\n";
 
    for(std::pair field : m_fields_vector)
    {
       out << std::setiosflags(std::ios::left)
-          << pfx << std::setw(24) << field.first << ":" << field.second << "\n";
+          << pfx << std::setw(24) << field.first << ":"
+          << field.second << "\n";
    }
 
    return out;
