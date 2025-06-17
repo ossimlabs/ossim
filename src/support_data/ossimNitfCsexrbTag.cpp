@@ -22,6 +22,7 @@
 #include <iomanip>
 #include <vector>
 #include <map>
+#include <utility>
 
 static const ossim_uint32 NUM_DEFINITIONS = 122;
    //-1: variable length, -2: if start, -3: if end, -4: loop start, -5 loop end
@@ -181,7 +182,7 @@ void ossimNitfCsexrbTag::parseStream(std::istream& in)
    //Curent itteration, Total iteration, i value
    std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings, bracketSubStrings;
-   ossim_int32 length, i = 0;
+   ossim_uint32 length, i = 0;
    ossimString name, prevName;
    char *value;
    bool condition;
