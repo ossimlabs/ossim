@@ -161,13 +161,13 @@ ossimNitfCsexrbTag::ossimNitfCsexrbTag()
    m_total_length = 0;
 }
 
-ossimString formatPrefix(std::vector<std::vector<ossim_int32>> prefixIn)
+ossimString formatSuffix(std::vector<std::vector<ossim_int32>> suffixIn)
 {
    ossimString result = "";
    char separator = 'n';
-    for(std::vector<ossim_int32> set: prefixIn)
+    for(std::vector<ossim_int32> set: suffixIn)
     {
-       result += separator + ossimString(set[0]);
+       result += separator + std::to_string(set[0]);
        separator ++;
     }
     return result;
@@ -178,7 +178,7 @@ void ossimNitfCsexrbTag::parseStream(std::istream& in)
    clearFields();
 
    //Curent itteration, Total iteration, i value
-   std::vector<std::vector<ossim_int32>> prefix;
+   std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings, bracketSubStrings;
    ossim_int32 length, i = 0;
    ossimString name, prevName;
@@ -197,7 +197,7 @@ void ossimNitfCsexrbTag::parseStream(std::istream& in)
          //variable length
          case -1:
             FIELD_DEFINITIONS[i].first.split(spaceSubStrings, ' ');
-            name = spaceSubStrings[0] + formatPrefix(prefix);
+            name = spaceSubStrings[0] + formatSuffix(suffix);
             if(spaceSubStrings.size() == 1)
             {
                value = new char[m_fields_vector.back().second.toInt() + 1];
@@ -206,7 +206,7 @@ void ossimNitfCsexrbTag::parseStream(std::istream& in)
             }
             else
             {
-               length = m_fields_map[spaceSubStrings[1] + formatPrefix(prefix)].toInt();
+               length = m_fields_map[spaceSubStrings[1] + formatSuffix(suffix)].toInt();
                value = new char[length + 1];
                in.read(value, length);
                m_total_length += length;
@@ -221,7 +221,7 @@ void ossimNitfCsexrbTag::parseStream(std::istream& in)
          case -2:
             FIELD_DEFINITIONS[i].first.split(spaceSubStrings, ' ');
             spaceSubStrings[0].split(bracketSubStrings, ':');
-            name = m_fields_map[bracketSubStrings[0] + formatPrefix(prefix)];
+            name = m_fields_map[bracketSubStrings[0] + formatSuffix(suffix)];
             if(bracketSubStrings.size() > 1)
                name = name.at(bracketSubStrings[1].toInt());
             std::cout << FIELD_DEFINITIONS[i].first << ": "
@@ -248,9 +248,9 @@ void ossimNitfCsexrbTag::parseStream(std::istream& in)
          //loop start
          case -4:
             FIELD_DEFINITIONS[i].first.split(spaceSubStrings, ' ');
-            length = m_fields_map[spaceSubStrings[0] + formatPrefix(prefix)].toInt();
+            length = m_fields_map[spaceSubStrings[0] + formatSuffix(suffix)].toInt();
             if(length > 0){
-               prefix.push_back({0, length, i + 1});
+               suffix.push_back({1, length, i + 1});
                std::cout << 0 << ", "
                << length << ", "
                << i+1 << "\n";
@@ -263,23 +263,23 @@ void ossimNitfCsexrbTag::parseStream(std::istream& in)
             break;
          //loop end
          case -5:
-            std::cout << prefix.back()[0] << ", "
-                      << prefix.back()[1] << ", "
-                      << prefix.back()[2] << "\n";
-            prefix.back()[0] ++;
-            if(prefix.back()[0] < prefix.back()[1])
+            std::cout << suffix.back()[0] << ", "
+                      << suffix.back()[1] << ", "
+                      << suffix.back()[2] << "\n";
+            suffix.back()[0] ++;
+            if(suffix.back()[0] <= suffix.back()[1])
             {
-               i = prefix.back()[2];
+               i = suffix.back()[2];
             }
             else
             {
-               prefix.pop_back();
+               suffix.pop_back();
                i++;
             }
             break;
          //length provided
          default:
-            name = FIELD_DEFINITIONS[i].first + formatPrefix(prefix);
+            name = FIELD_DEFINITIONS[i].first + formatSuffix(suffix);
             value = new char[FIELD_DEFINITIONS[i].second + 1];
             in.read(value, FIELD_DEFINITIONS[i].second);
             m_total_length += FIELD_DEFINITIONS[i].second;
@@ -298,6 +298,7 @@ void ossimNitfCsexrbTag::parseStream(std::istream& in)
 
 void ossimNitfCsexrbTag::writeStream(std::ostream& out)
 {
+   std::cout << "Write\n";
    clearFields();
 
    for(std::pair field : m_fields_vector)
@@ -308,6 +309,7 @@ void ossimNitfCsexrbTag::writeStream(std::ostream& out)
 
 std::ostream& ossimNitfCsexrbTag::print(std::ostream& out, const std::string& prefix) const
 {
+   std::cout << "Print\n";
    std::string pfx = prefix;
    pfx += "CSEXRB";
    pfx += ".";
@@ -319,7 +321,7 @@ std::ostream& ossimNitfCsexrbTag::print(std::ostream& out, const std::string& pr
    for(std::pair field : m_fields_vector)
    {
       out << std::setiosflags(std::ios::left)
-          << pfx << std::setw(24) << field.first << field.second << "\n";
+          << pfx << std::setw(24) << field.first << ":" << field.second << "\n";
    }
 
    return out;
