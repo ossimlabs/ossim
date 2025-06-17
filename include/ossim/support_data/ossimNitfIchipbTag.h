@@ -1,8 +1,8 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
-// Author:  David Burken
+// Author: David Burken
 //
 // Description: ICHIPB tag class declaration.
 //
@@ -10,19 +10,18 @@
 // 
 // http://164.214.2.51/ntb/baseline/docs/stdi0002/final.pdf
 //
-//----------------------------------------------------------------------------
-// $Id: ossimNitfIchipbTag.h 22013 2012-12-19 17:37:20Z dburken $
+//---
+// $Id$
 #ifndef ossimNitfIchipbTag_HEADER
 #define ossimNitfIchipbTag_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
-#include <ossim/base/ossimIrect.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
-#include <ossim/imaging/ossimImageGeometry.h>
 
-class ossimDpt;
 class ossimDrect;
+class ossimImageGeometry;
 class ossim2dTo2dTransform;
+
 class OSSIM_DLL ossimNitfIchipbTag : public ossimNitfRegisteredTag
 {
 public:
@@ -98,9 +97,32 @@ public:
                                const std::string& prefix=std::string()) const;
 
    /**
+    * @brief Initializes the output product and full image rectangles.
+    *
+    * @note Rectangle coordinates are shifted by 0.5 since per spec (0,0) is the
+    * considered the upper left corner of the upper left pixel and we use a
+    * point method where (0,0) refers to the center of the pixel.
+    *
+    * @param opRect Output product rectangle assumed to be relative to center
+    * of pixel.
+    *
+    * @param fiRect Full image rectangle assumed to be relative to center
+    * of pixel.
+    *
+    * @return true on success, false if NANs in rectangle.
+    */
+   bool initialize( const ossimDrect& opRect,
+                    const ossimDrect& fiRect );
+   /**
     * @return The Non-linear transformation flag.
     */
    bool getXfrmFlag() const;
+
+   /**
+    * @brief Sets XFRM_FLAG field.
+    * @param flag
+    */
+   void setXfrmFlag( bool flag );
 
    /**
     * @return Scale factor relative to R0 (original full res image resolution).
@@ -108,14 +130,32 @@ public:
    ossim_float64 getScaleFactor() const;
 
    /**
+    * @brief Sets SCALE_FACTOR field.
+    * @param scale
+    */
+   void setScaleFactor( ossim_float64 scale );
+
+   /**
     * @return Anamophic correction indicator.
     */
    bool getAnamrphCorrFlag() const;
 
    /**
+    * @brief Sets ANAMRPH_CORR field.
+    * @param scale
+    */
+   void setAnamrphCorrFlag( bool flag );
+
+   /**
     * @return Scan block number or scan block index.
     */
    ossim_uint32 getScanBlock() const;
+
+   /**
+    * @brief Sets SCANBLK_NUM field.
+    * @param block
+    */
+   void setScanBlock( ossim_uint32 block );
 
    /**
     * @return Output product row number component of grid point index (1,1) for
@@ -124,10 +164,22 @@ public:
    ossim_float64 getOpRow11() const;
 
    /**
+    * @brief Sets OP_ROW_11 field.
+    * @param row
+    */
+   void setOpRow11( ossim_float64 row );
+
+   /**
     * Output product column number component of grid point index (1,1) for
     * intelligent data.
     */
    ossim_float64 getOpCol11() const;
+
+   /**
+    * @brief Sets OP_COL_11 field.
+    * @param col
+    */
+   void setOpCol11( ossim_float64 col );
 
    /**
     * @return Output product row number component of grid point index (1,2) for
@@ -136,16 +188,34 @@ public:
    ossim_float64 getOpRow12() const;
 
    /**
+    * @brief Sets OP_ROW_12 field.
+    * @param row
+    */
+   void setOpRow12( ossim_float64 row );
+   
+   /**
     * Output product column number component of grid point index (1,2) for
     * intelligent data.
     */
    ossim_float64 getOpCol12() const;
 
    /**
+    * @brief Sets OP_COL_12 field.
+    * @param col
+    */
+   void setOpCol12( ossim_float64 col );
+   
+   /**
     * @return Output product row number component of grid point index (2,1) for
     * intelligent data,
     */
    ossim_float64 getOpRow21() const;
+
+   /**
+    * @brief Sets OP_ROW_21 field.
+    * @param row
+    */
+   void setOpRow21( ossim_float64 row );
 
    /**
     * Output product column number component of grid point index (2,1) for
@@ -154,10 +224,22 @@ public:
    ossim_float64 getOpCol21() const;
 
    /**
+    * @brief Sets OP_COL_21 field.
+    * @param col
+    */
+   void setOpCol21( ossim_float64 col );
+   
+   /**
     * @return Output product row number component of grid point index (2,2) for
     * intelligent data,
     */
    ossim_float64 getOpRow22() const;
+
+   /**
+    * @brief Sets OP_ROW_22 field.
+    * @param row
+    */
+   void setOpRow22( ossim_float64 row );
    
    /**
     * @return Output product row number component of grid point index (2,2) for
@@ -166,24 +248,54 @@ public:
    ossim_float64 getOpCol22() const;
 
    /**
+    * @brief Sets OP_COL_22 field.
+    * @param col
+    */
+   void setOpCol22( ossim_float64 col );
+
+   /**
     * @return Grid point (1,1) row number in full image coordinate system.
     */
    ossim_float64 getFiRow11() const;
-   
+
+   /**
+    * @brief Sets FI_ROW_11 field.
+    * @param row
+    */
+   void setFiRow11( ossim_float64 row );
+  
    /**
     * @return Grid point (1,1) column number in full image coordinate system.
     */
    ossim_float64 getFiCol11() const;
+
+   /**
+    * @brief Sets FI_COL_11 field.
+    * @param col
+    */
+   void setFiCol11( ossim_float64 col );
    
    /**
     * @return Grid point (1,2) row number in full image coordinate system.
     */
    ossim_float64 getFiRow12() const;
+
+   /**
+    * @brief Sets FI_ROW_12 field.
+    * @param row
+    */
+   void setFiRow12( ossim_float64 row );
    
    /**
     * @return Grid point (1,2) row number in full image coordinate system.
     */
    ossim_float64 getFiCol12() const;
+
+   /**
+    * @brief Sets FI_COL_12 field.
+    * @param col
+    */
+   void setFiCol12( ossim_float64 col );
    
    /**
     * @return Grid point (2,1) row number in full image coordinate system.
@@ -191,9 +303,21 @@ public:
    ossim_float64 getFiRow21() const;
 
    /**
+    * @brief Sets FI_ROW_21 field.
+    * @param row
+    */
+   void setFiRow21( ossim_float64 row );
+
+   /**
     * @return Grid point (2,1) row number in full image coordinate system.
     */
    ossim_float64 getFiCol21() const;
+
+   /**
+    * @brief Sets FI_COL_21 field.
+    * @param col
+    */
+   void setFiCol21( ossim_float64 col );
 
    /**
     * @return Grid point (2,2) row number in full image coordinate system.
@@ -201,9 +325,21 @@ public:
    ossim_float64 getFiRow22() const;
 
    /**
+    * @brief Sets FI_ROW_22 field.
+    * @param row
+    */
+   void setFiRow22( ossim_float64 row );
+   
+   /**
     * @return Grid point (2,2) row number in full image coordinate system.
     */
    ossim_float64 getFiCol22() const;
+
+    /**
+    * @brief Sets FI_COL_22 field.
+    * @param col
+    */
+   void setFiCol22( ossim_float64 col );
 
    /**
     * @return Full image number of rows.
@@ -520,63 +656,6 @@ protected:
     * Full image number of cols.
     */
    char theFullImageCol[FI_COL_SIZE+1];
-
-   
-   
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   
-                            
-   /**
-    * FIELD: 
-    *
-    * required  byte field
-    *
-    * 01 to 99
-    * 
-    * 
-    */
-   /**
-    * FIELD: 
-    *
-    * required  byte field
-    *
-    * 01 to 99
-    * 
-    * 
-    */
-   /**
-    * FIELD: 
-    *
-    * required  byte field
-    *
-    * 01 to 99
-    * 
-    * 
-    */
-   
    
 TYPE_DATA   
 };

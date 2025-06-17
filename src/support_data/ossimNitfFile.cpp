@@ -12,11 +12,12 @@
 // $Id$
 
 #include <ossim/support_data/ossimNitfFile.h>
-#include <ossim/base/ossimTrace.h>
+#include <ossim/base/ossimFileInfoInterface.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimNotify.h>
-#include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
+#include <ossim/base/ossimTrace.h>
+#include <ossim/support_data/ossimJ2kInfo.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
 #include <ossim/support_data/ossimNitfImageHeader.h>
 #include <ossim/support_data/ossimNitfFileHeaderV2_0.h>
@@ -80,6 +81,16 @@ std::ostream& ossimNitfFile::print(std::ostream& out,
                s += ".";
                
                ih->print(out, s);
+
+               if ( ( ih->getCompressionCode() == "C8" ) && m_str )
+               {
+                  std::streampos originalPos = m_str->tellg();
+                  std::streampos dataPos = (std::streampos)ih->getDataLocation();
+                  m_str->seekg( dataPos );
+                  ossimJ2kInfo j2kInfo;
+                  j2kInfo.print( *m_str, out, s );
+                  m_str->seekg( originalPos );
+               }
             }
             ih = 0;
          }
@@ -223,7 +234,8 @@ bool ossimNitfFile::saveState(ossimKeywordlist& kwl, const ossimString& prefix)c
 
 ossimNitfFile::ossimNitfFile()
    : theFilename(""),
-     theNitfFileHeader(0)
+     theNitfFileHeader(0),
+     m_str()
 {
 }
 
@@ -250,7 +262,7 @@ bool ossimNitfFile::parseFile(const ossimFilename& file)
 
       if ( str )
       {
-         result = parseStream( file, *str );   
+         result = parseStream( file, str );
       }
       else
       {
@@ -274,7 +286,7 @@ bool ossimNitfFile::parseFile(const ossimFilename& file)
 }
 
 bool ossimNitfFile::parseStream( const ossimFilename& file,
-                                 ossim::istream& in )
+                                 std::shared_ptr<ossim::istream>& in )
 {
    bool result = false;
    
@@ -284,64 +296,112 @@ bool ossimNitfFile::parseStream( const ossimFilename& file,
          << "ossimNitfFile::parseStream: DEBUG entered...\n";
    }
    
-   if(theNitfFileHeader.valid())
+   if ( in )
    {
-      theNitfFileHeader = 0;
-   }
+      if(theNitfFileHeader.valid())
+      {
+         theNitfFileHeader = 0;
+      }
+      
+      char temp[10];
+      in->read(temp, 9);
+      in->seekg(0, std::ios::beg);
+      temp[9] ='\0';
+      
+      theFilename = file;
 
-   char temp[10];
-   in.read(temp, 9);
-   in.seekg(0, std::ios::beg);
-   temp[9] ='\0';
-   
-   theFilename = file;
-
-   ossimString s(temp);
-   if(s == "NITF02.00")
-   {
-      if(traceDebug())
+      ossimString s(temp);
+      if(s == "NITF02.00")
       {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "DEBUG: NITF Version 2.0"
-            << std::endl;
+         if(traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "DEBUG: NITF Version 2.0"
+               << std::endl;
+         }
+         theNitfFileHeader = new ossimNitfFileHeaderV2_0;
       }
-      theNitfFileHeader = new ossimNitfFileHeaderV2_0;
-   }
-   else if ( (s == "NITF02.10") || (s == "NSIF01.00") )
-   {
-      if(traceDebug())
+      else if ( (s == "NITF02.10") || (s == "NSIF01.00") )
       {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "DEBUG: NITF Version 2.1"
-            << std::endl;
+         if(traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "DEBUG: NITF Version 2.1"
+               << std::endl;
+         }
+         theNitfFileHeader = new ossimNitfFileHeaderV2_1;
       }
-      theNitfFileHeader = new ossimNitfFileHeaderV2_1;
-   }
-   else
-   {
-      if (traceDebug())
-      {
-         ossimNotify(ossimNotifyLevel_DEBUG)
-            << "DEBUG ossimNitfFile::parseFile: "
-            << "Not an NITF file!\n";
-      }
-   }
-
-   if( theNitfFileHeader.valid() )
-   {
-      try
-      {
-         theNitfFileHeader->parseStream(in);
-         result = true;
-      }
-      catch( const ossimException& e )
+      else
       {
          if (traceDebug())
          {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "DEBUG ossimNitfFile::parseFile: "
+               << "Not an NITF file!\n";
+         }
+      }
+
+      if( theNitfFileHeader.valid() )
+      {
+         try
+         {
+            // No error returned but can throw exception.
+            theNitfFileHeader->parseStream( *in );
+
+            //---
+            // Capture the stream for info code if needed later and mark result
+            // true.
+            //---
+            m_str = in;
+            result = true;
+         }
+         catch( const ossimException& e )
+         {
+            // Removed wrapper around traceDebug(). drb - 20210203
+            // if (traceDebug())
+            // {
             ossimNotify(ossimNotifyLevel_WARN)
                << "ossimNitfFile::parseStream caught exception:\n"
                << e.what()
                << std::endl;
+            // }
+         }
+
+         //---
+         // Lastly check the file size against the NITF file header FL field.
+         // Throw exception if actual is less than the FL field.
+         //---
+         ossim_int64 nitfFileSizeFromHdr = theNitfFileHeader->getFileSize();
+         ossim_int64 actualFileSize = 0;
+         
+         //---
+         // Note we get the size from the ossimFileInfoInterface if we can to avoid
+         // reopening the stream from, for instance, an s3 bucket to get the file
+         // size.
+         //---
+         
+         ossimFileInfoInterface* intf = dynamic_cast<ossimFileInfoInterface*>( in.get() );
+         if ( intf )
+         {
+            actualFileSize = intf->getFileSize();
+         }
+         else
+         {
+            actualFileSize = theFilename.fileSize();
+         }
+         
+         if ( actualFileSize < nitfFileSizeFromHdr )
+         {
+            std::ostringstream errMsg;
+            errMsg << "ossimNitfFile::parseStream(...) ERROR:"
+               // << "FILE: " << __FILE__ << " LINE: " << __LINE__
+                   << "\nNITF file: " << theFilename
+                   << "\nNITF FL(File Length) field is greater than the actual file length!"
+                   << "\nNITF FL size: " << nitfFileSizeFromHdr
+                   << "\nActual file size: " << actualFileSize
+                   << "\n";
+            // cout << "errMsg: " << errMsg.str() << std::endl;
+            throw ossimException( errMsg.str() );
          }
       }
    }
@@ -376,18 +436,21 @@ ossimIrect ossimNitfFile::getImageRect()const
 }
 
 ossimNitfImageHeader* ossimNitfFile::getNewImageHeader(
-   ossim_uint32 imageNumber)const
+   ossim_uint32 imageNumber) const
 {
    ossimNitfImageHeader* result = 0;
 
    if(theNitfFileHeader.valid())
    {
-      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
-         createIstream(theFilename, std::ios::in|std::ios::binary);
-      
-      if ( in )
+      if ( !m_str )
       {
-         result = getNewImageHeader( *in, imageNumber );
+         m_str = ossim::StreamFactoryRegistry::instance()->
+            createIstream(theFilename, std::ios::in|std::ios::binary);
+      }
+
+      if ( m_str )
+      {
+         result = getNewImageHeader( *m_str, imageNumber );
       }
    }
    
@@ -421,19 +484,21 @@ ossimNitfImageHeader* ossimNitfFile::getNewImageHeader(
    return result;
 }
 
-ossimNitfSymbolHeader* ossimNitfFile::getNewSymbolHeader(
-   ossim_uint32 symbolNumber)const
+ossimNitfSymbolHeader* ossimNitfFile::getNewSymbolHeader(ossim_uint32 symbolNumber) const
 {
    ossimNitfSymbolHeader* result = 0;
 
    if(theNitfFileHeader.valid())
    {
-      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
-         createIstream(theFilename, std::ios::in|std::ios::binary);
-
-      if ( in )
+      if ( !m_str )
       {
-         result = getNewSymbolHeader( *in, symbolNumber );
+         m_str = ossim::StreamFactoryRegistry::instance()->
+            createIstream(theFilename, std::ios::in|std::ios::binary);
+      }
+
+      if ( m_str )
+      {
+         result = getNewSymbolHeader( *m_str, symbolNumber );
       }
    }
    
@@ -451,18 +516,20 @@ ossimNitfSymbolHeader* ossimNitfFile::getNewSymbolHeader(
    return result;
 }
 
-ossimNitfLabelHeader* ossimNitfFile::getNewLabelHeader(
-   ossim_uint32 labelNumber)const
+ossimNitfLabelHeader* ossimNitfFile::getNewLabelHeader(ossim_uint32 labelNumber) const
 {
    ossimNitfLabelHeader* result = 0;
    if(theNitfFileHeader.valid())
    {
-      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
-         createIstream(theFilename, std::ios::in|std::ios::binary);
-      
-      if ( in )
+      if ( !m_str )
       {
-         result = getNewLabelHeader( *in, labelNumber );
+         m_str = ossim::StreamFactoryRegistry::instance()->
+            createIstream(theFilename, std::ios::in|std::ios::binary);
+      }
+
+      if ( m_str )
+      {
+         result = getNewLabelHeader( *m_str, labelNumber );
       }
    }
    
@@ -480,18 +547,20 @@ ossimNitfLabelHeader* ossimNitfFile::getNewLabelHeader(
    return result;
 }
 
-ossimNitfTextHeader* ossimNitfFile::getNewTextHeader(
-   ossim_uint32 textNumber)const
+ossimNitfTextHeader* ossimNitfFile::getNewTextHeader(ossim_uint32 textNumber) const
 {
    ossimNitfTextHeader* result = 0;
    if(theNitfFileHeader.valid())
    {
-      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
-         createIstream(theFilename, std::ios::in|std::ios::binary);
-
-      if ( in )
+      if ( !m_str )
       {
-         result = getNewTextHeader( *in, textNumber );
+         m_str = ossim::StreamFactoryRegistry::instance()->
+            createIstream(theFilename, std::ios::in|std::ios::binary);
+      }
+
+      if ( m_str )
+      {
+         result = getNewTextHeader( *m_str, textNumber );
       }
    }
    return result;
@@ -509,17 +578,20 @@ ossimNitfTextHeader* ossimNitfFile::getNewTextHeader(
 }
 
 ossimNitfDataExtensionSegment* ossimNitfFile::getNewDataExtensionSegment(
-   ossim_uint32 dataExtNumber)const
+   ossim_uint32 dataExtNumber) const
 {
    ossimNitfDataExtensionSegment* result = 0;
    if(theNitfFileHeader.valid())
    {
-      std::shared_ptr<ossim::istream> in = ossim::StreamFactoryRegistry::instance()->
-         createIstream(theFilename, std::ios::in|std::ios::binary);
-
-      if ( in )
+      if ( !m_str )
       {
-         result = getNewDataExtensionSegment( *in, dataExtNumber );
+         m_str = ossim::StreamFactoryRegistry::instance()->
+            createIstream(theFilename, std::ios::in|std::ios::binary);
+      }
+
+      if ( m_str )
+      {
+         result = getNewDataExtensionSegment( *m_str, dataExtNumber );
       }
    }
    return result;

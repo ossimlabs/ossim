@@ -217,7 +217,7 @@ bool ossimNitfTileSource::open( std::shared_ptr<ossim::istream>& str,
 
    theNitfFile = new ossimNitfFile();
 
-   result = theNitfFile->parseStream( file, *str);
+   result = theNitfFile->parseStream( file, str);
 
    if ( result )
    {

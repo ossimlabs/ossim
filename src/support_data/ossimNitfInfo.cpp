@@ -48,7 +48,7 @@ bool ossimNitfInfo::open(std::shared_ptr<ossim::istream>& str,
    if ( str )
    {
       m_nitfFile = std::make_shared<ossimNitfFile>();
-      result = m_nitfFile->parseStream(ossimFilename(connectionString), *str);
+      result = m_nitfFile->parseStream(ossimFilename(connectionString), str);
    }
    return result;
 }

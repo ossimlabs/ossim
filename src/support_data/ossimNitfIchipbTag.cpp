@@ -1,6 +1,6 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -10,21 +10,21 @@
 // 
 // http://164.214.2.51/ntb/baseline/docs/stdi0002/final.pdf
 //
-//----------------------------------------------------------------------------
-// $Id: ossimNitfIchipbTag.cpp 22013 2012-12-19 17:37:20Z dburken $
-
-#include <cstring> /* for memcpy */
-#include <iomanip>
-#include <iostream>
+//---
+// $Id$
 
 #include <ossim/support_data/ossimNitfIchipbTag.h>
+#include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimDrect.h>
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossim2dBilinearTransform.h>
+#include <ossim/imaging/ossimImageGeometry.h>
 
-using namespace std;
+#include <cstring>
+#include <iomanip>
+#include <iostream>
 
 static const ossimString XFRM_FLAG_KW = "XFRM_FLAG";
 static const ossimString SCALE_FACTOR_KW = "SCALE_FACTOR";
@@ -167,7 +167,7 @@ std::ostream& ossimNitfIchipbTag::print(std::ostream& out,
    pfx += getTagName();
    pfx += ".";
 
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(24) << "CETAG:"
        << getTagName() << "\n"
        << pfx << std::setw(24) << "CEL:"
@@ -199,9 +199,64 @@ std::ostream& ossimNitfIchipbTag::print(std::ostream& out,
    return out;
 }
 
+bool ossimNitfIchipbTag::initialize( const ossimDrect& opRect,
+                                     const ossimDrect& fiRect )
+{
+   bool result = true;
+   if ( opRect.hasNans() || fiRect.hasNans() )
+   {
+      result = false;
+   }
+   else
+   {
+      //---
+      // Method converts from ossim coordinates from "Pixel is Point" to
+      // "Pixel is Area".
+      //---
+      const ossim_float64 SHIFT = 0.5;
+      
+      setOpCol11( opRect.ul().x + SHIFT );
+      setOpRow11( opRect.ul().y + SHIFT );
+
+      setOpCol12( opRect.ur().x + SHIFT );
+      setOpRow12( opRect.ur().y + SHIFT );
+
+      setOpCol21( opRect.ll().x + SHIFT );
+      setOpRow21( opRect.ll().y + SHIFT );
+
+      setOpCol22( opRect.lr().x + SHIFT );
+      setOpRow22( opRect.lr().y + SHIFT );
+
+      setFiCol11( fiRect.ul().x + SHIFT );
+      setFiRow11( fiRect.ul().y + SHIFT );
+
+      setFiCol12( fiRect.ur().x + SHIFT );
+      setFiRow12( fiRect.ur().y + SHIFT );
+
+      setFiCol21( fiRect.ll().x + SHIFT );
+      setFiRow21( fiRect.ll().y + SHIFT );
+
+      setFiCol22( fiRect.lr().x + SHIFT );
+      setFiRow22( fiRect.lr().y + SHIFT );
+   }
+   return result;
+}
+
 bool ossimNitfIchipbTag::getXfrmFlag() const
 {
    return ossimString::toBool(theXfrmFlag);
+}
+
+void ossimNitfIchipbTag::setXfrmFlag( bool flag )
+{
+   if ( flag )
+   {
+      memcpy(theXfrmFlag, "01", XFRM_FLAG_SIZE);
+   }
+   else
+   {
+      memcpy(theXfrmFlag, "00", XFRM_FLAG_SIZE);
+   }
 }
 
 ossim_float64 ossimNitfIchipbTag::getScaleFactor() const
@@ -209,9 +264,27 @@ ossim_float64 ossimNitfIchipbTag::getScaleFactor() const
    return ossimString::toFloat64(theScaleFactor);
 }
 
+void ossimNitfIchipbTag::setScaleFactor( ossim_float64 scale )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(scale, 5, SCALE_FACTOR_SIZE);
+   memcpy(theScaleFactor, os.c_str(), SCALE_FACTOR_SIZE);
+}
+
 bool ossimNitfIchipbTag::getAnamrphCorrFlag() const
 {
    return ossimString::toBool(theAnamrphCorr);
+}
+
+void ossimNitfIchipbTag::setAnamrphCorrFlag( bool flag )
+{
+   if ( flag )
+   {
+      memcpy(theAnamrphCorr, "01", ANAMRPH_CORR_SIZE);
+   }
+   else
+   {
+      memcpy(theAnamrphCorr, "00", ANAMRPH_CORR_SIZE);
+   }
 }
 
 ossim_uint32 ossimNitfIchipbTag::getScanBlock() const
@@ -219,9 +292,25 @@ ossim_uint32 ossimNitfIchipbTag::getScanBlock() const
    return ossimString::toUInt32(theScanBlock);
 }
 
+void ossimNitfIchipbTag::setScanBlock( ossim_uint32 block )
+{
+   // 00 - 99:
+   if ( block < 100 )
+   {
+      ossimString os = ossimNitfCommon::convertToUIntString(block, SCANBLK_NUM_SIZE);
+      memcpy(theScanBlock, os.c_str(), SCANBLK_NUM_SIZE);
+   }
+}
+
 ossim_float64 ossimNitfIchipbTag::getOpRow11() const
 {
    return ossimString::toFloat64(theOpRow11);
+}
+
+void ossimNitfIchipbTag::setOpRow11( ossim_float64 row )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(row, 3, OP_ROW_11_SIZE);
+   memcpy(theOpRow11, os.c_str(), OP_ROW_11_SIZE);
 }
 
 ossim_float64 ossimNitfIchipbTag::getOpCol11() const
@@ -229,9 +318,21 @@ ossim_float64 ossimNitfIchipbTag::getOpCol11() const
    return ossimString::toFloat64(theOpCol11);
 }
 
+void ossimNitfIchipbTag::setOpCol11( ossim_float64 col )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(col, 3, OP_COL_11_SIZE);
+   memcpy(theOpCol11, os.c_str(), OP_COL_11_SIZE); 
+}
+
 ossim_float64 ossimNitfIchipbTag::getOpRow12() const
 {
    return ossimString::toFloat64(theOpRow12);
+}
+
+void ossimNitfIchipbTag::setOpRow12( ossim_float64 row )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(row, 3, OP_ROW_12_SIZE);
+   memcpy(theOpRow12, os.c_str(), OP_ROW_12_SIZE);
 }
 
 ossim_float64 ossimNitfIchipbTag::getOpCol12() const
@@ -239,9 +340,21 @@ ossim_float64 ossimNitfIchipbTag::getOpCol12() const
    return ossimString::toFloat64(theOpCol12);
 }
 
+void ossimNitfIchipbTag::setOpCol12( ossim_float64 col )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(col, 3, OP_COL_12_SIZE);
+   memcpy(theOpCol12, os.c_str(), OP_COL_12_SIZE); 
+}
+
 ossim_float64 ossimNitfIchipbTag::getOpRow21() const
 {
    return ossimString::toFloat64(theOpRow21);
+}
+
+void ossimNitfIchipbTag::setOpRow21( ossim_float64 row )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(row, 3, OP_ROW_21_SIZE);
+   memcpy(theOpRow21, os.c_str(), OP_ROW_21_SIZE);
 }
 
 ossim_float64 ossimNitfIchipbTag::getOpCol21()
@@ -249,9 +362,21 @@ ossim_float64 ossimNitfIchipbTag::getOpCol21()
 { return ossimString::toFloat64(theOpCol21);
 }
 
+void ossimNitfIchipbTag::setOpCol21( ossim_float64 col )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(col, 3, OP_COL_21_SIZE);
+   memcpy(theOpCol21, os.c_str(), OP_COL_21_SIZE); 
+}
+
 ossim_float64 ossimNitfIchipbTag::getOpRow22() const
 {
    return ossimString::toFloat64(theOpRow22);
+}
+
+void ossimNitfIchipbTag::setOpRow22( ossim_float64 row )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(row, 3, OP_ROW_22_SIZE);
+   memcpy(theOpRow22, os.c_str(), OP_ROW_22_SIZE);
 }
 
 ossim_float64 ossimNitfIchipbTag::getOpCol22() const
@@ -259,9 +384,21 @@ ossim_float64 ossimNitfIchipbTag::getOpCol22() const
    return ossimString::toFloat64(theOpCol22);
 }
 
+void ossimNitfIchipbTag::setOpCol22( ossim_float64 col )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(col, 3, OP_COL_22_SIZE);
+   memcpy(theOpCol22, os.c_str(), OP_COL_22_SIZE); 
+}
+
 ossim_float64 ossimNitfIchipbTag::getFiRow11() const
 {
    return ossimString::toFloat64(theFiRow11);
+}
+
+void ossimNitfIchipbTag::setFiRow11( ossim_float64 row )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(row, 3, FI_ROW_11_SIZE);
+   memcpy(theFiRow11, os.c_str(), FI_ROW_11_SIZE);
 }
 
 ossim_float64 ossimNitfIchipbTag::getFiCol11() const
@@ -269,9 +406,21 @@ ossim_float64 ossimNitfIchipbTag::getFiCol11() const
    return ossimString::toFloat64(theFiCol11);
 }
 
+void ossimNitfIchipbTag::setFiCol11( ossim_float64 col )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(col, 3, FI_COL_11_SIZE);
+   memcpy(theFiCol11, os.c_str(), FI_COL_11_SIZE); 
+}
+
 ossim_float64 ossimNitfIchipbTag::getFiRow12() const
 {
    return ossimString::toFloat64(theFiRow12);
+}
+
+void ossimNitfIchipbTag::setFiRow12( ossim_float64 row )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(row, 3, FI_ROW_12_SIZE);
+   memcpy(theFiRow12, os.c_str(), OP_ROW_12_SIZE);
 }
 
 ossim_float64 ossimNitfIchipbTag::getFiCol12() const
@@ -279,9 +428,21 @@ ossim_float64 ossimNitfIchipbTag::getFiCol12() const
    return ossimString::toFloat64(theFiCol12);
 }
 
+void ossimNitfIchipbTag::setFiCol12( ossim_float64 col )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(col, 3, FI_COL_12_SIZE);
+   memcpy(theFiCol12, os.c_str(), FI_COL_12_SIZE); 
+}
+
 ossim_float64 ossimNitfIchipbTag::getFiRow21() const
 {
    return ossimString::toFloat64(theFiRow21);
+}
+
+void ossimNitfIchipbTag::setFiRow21( ossim_float64 row )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(row, 3, FI_ROW_21_SIZE);
+   memcpy(theFiRow21, os.c_str(), OP_ROW_21_SIZE);
 }
 
 ossim_float64 ossimNitfIchipbTag::getFiCol21() const
@@ -289,14 +450,32 @@ ossim_float64 ossimNitfIchipbTag::getFiCol21() const
    return ossimString::toFloat64(theFiCol21);
 }
 
+void ossimNitfIchipbTag::setFiCol21( ossim_float64 col )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(col, 3, FI_COL_21_SIZE);
+   memcpy(theFiCol21, os.c_str(), FI_COL_21_SIZE); 
+}
+
 ossim_float64 ossimNitfIchipbTag::getFiRow22() const
 {
    return ossimString::toFloat64(theFiRow22);
 }
 
+void ossimNitfIchipbTag::setFiRow22( ossim_float64 row )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(row, 3, FI_ROW_22_SIZE);
+   memcpy(theFiRow22, os.c_str(), OP_ROW_22_SIZE);
+}
+
 ossim_float64 ossimNitfIchipbTag::getFiCol22() const
 {
    return ossimString::toFloat64(theFiCol22);
+}
+
+void ossimNitfIchipbTag::setFiCol22( ossim_float64 col )
+{
+   ossimString os = ossimNitfCommon::convertToDoubleString(col, 3, FI_COL_22_SIZE);
+   memcpy(theFiCol22, os.c_str(), FI_COL_22_SIZE); 
 }
 
 ossim_uint32 ossimNitfIchipbTag::getFullImageRows() const
@@ -308,8 +487,7 @@ ossim_uint32 ossimNitfIchipbTag::getFullImageCols() const
 {
    return ossimString::toUInt32(theFullImageCol);
 }
- 
-#if 0
+
 void ossimNitfIchipbTag::getImageRect(ossimDrect& rect) const
 {
    ossimDpt pt;
@@ -341,6 +519,7 @@ void ossimNitfIchipbTag::getFullImageRect(ossimDrect& rect) const
    rect.set_lr(pt);
 }
 
+#if 0
 void ossimNitfIchipbTag::getSubImageOffset(ossimDpt& pt) const
 {
    ossimDrect rect;
@@ -566,112 +745,112 @@ bool ossimNitfIchipbTag::loadState(const ossimKeywordlist& kwl, const char* pref
    lookup = kwl.find(prefix, XFRM_FLAG_KW);
    if(lookup)
    {
-       strcpy(theXfrmFlag, lookup);
+      strcpy(theXfrmFlag, lookup);
    }
    lookup = kwl.find(prefix, SCALE_FACTOR_KW);
    if(lookup)
    {
-        strcpy(theScaleFactor, lookup);
+      strcpy(theScaleFactor, lookup);
    }
    lookup = kwl.find(prefix, ANAMRPH_CORR_KW);
    if(lookup)
    {
-        strcpy(theAnamrphCorr, lookup);
+      strcpy(theAnamrphCorr, lookup);
    }
    lookup = kwl.find(prefix, SCANBLK_NUM_KW);
    if(lookup)
    {
-        strcpy(theScanBlock, lookup);
+      strcpy(theScanBlock, lookup);
    }
    lookup = kwl.find(prefix, OP_ROW_11_KW);
    if(lookup)
    {
-        strcpy(theOpRow11, lookup);
+      strcpy(theOpRow11, lookup);
    }
    lookup = kwl.find(prefix, OP_COL_11_KW);
    if(lookup)
    {
-        strcpy(theOpCol11, lookup);
+      strcpy(theOpCol11, lookup);
    }
    lookup = kwl.find(prefix, OP_ROW_12_KW);
    if(lookup)
    {
-        strcpy(theOpRow12, lookup);
+      strcpy(theOpRow12, lookup);
    }
    lookup = kwl.find(prefix, OP_COL_12_KW);
    if(lookup)
    {
-        strcpy(theOpCol12, lookup);
+      strcpy(theOpCol12, lookup);
    }
    lookup = kwl.find(prefix, OP_ROW_21_KW);
    if(lookup)
    {
-        strcpy(theOpRow21, lookup);
+      strcpy(theOpRow21, lookup);
    }
    lookup = kwl.find(prefix, OP_COL_21_KW);
    if(lookup)
    {
-        strcpy(theOpCol21, lookup);
+      strcpy(theOpCol21, lookup);
    }
    lookup = kwl.find(prefix, OP_ROW_22_KW);
    if(lookup)
    {
-        strcpy(theOpRow22, lookup);
+      strcpy(theOpRow22, lookup);
    }
    lookup = kwl.find(prefix, OP_COL_22_KW);
    if(lookup)
    {
-        strcpy(theOpCol22, lookup);
+      strcpy(theOpCol22, lookup);
    }
    lookup = kwl.find(prefix, FI_ROW_11_KW);
    if(lookup)
    {
-        strcpy(theFiRow11, lookup);
+      strcpy(theFiRow11, lookup);
    }
    lookup = kwl.find(prefix, FI_COL_11_KW);
    if(lookup)
    {
-        strcpy(theFiCol11, lookup);
+      strcpy(theFiCol11, lookup);
    }
    lookup = kwl.find(prefix, FI_ROW_12_KW);
    if(lookup)
    {
-        strcpy(theFiRow12, lookup);
+      strcpy(theFiRow12, lookup);
    }
    lookup = kwl.find(prefix, FI_COL_12_KW);
    if(lookup)
    {
-        strcpy(theFiCol12, lookup);
+      strcpy(theFiCol12, lookup);
    }
    lookup = kwl.find(prefix, FI_ROW_21_KW);
    if(lookup)
    {
-        strcpy(theFiRow21, lookup);
+      strcpy(theFiRow21, lookup);
    }
    lookup = kwl.find(prefix, FI_COL_21_KW);
    if(lookup)
    {
-        strcpy(theFiCol21, lookup);
+      strcpy(theFiCol21, lookup);
    }
    lookup = kwl.find(prefix, FI_ROW_22_KW);
    if(lookup)
    {
-        strcpy(theFiRow22, lookup);
+      strcpy(theFiRow22, lookup);
    }
    lookup = kwl.find(prefix, FI_COL_22_KW);
    if(lookup)
    {
-        strcpy(theFiCol22, lookup);
+      strcpy(theFiCol22, lookup);
    }
    lookup = kwl.find(prefix, FI_ROW_KW);
    if(lookup)
    {
-        strcpy(theFullImageRow, lookup);
+      strcpy(theFullImageRow, lookup);
    }
    lookup = kwl.find(prefix, FI_COL_KW);
    if(lookup)
    {
-        strcpy(theFullImageCol, lookup);
+      strcpy(theFullImageCol, lookup);
    }
 
    return true;
