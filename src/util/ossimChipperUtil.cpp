@@ -74,8 +74,6 @@
 #include <sstream>
 #include <string>
 
-using namespace std;
-
 static ossimTrace traceDebug("ossimChipperUtil:debug");
 static ossimTrace traceLog("ossimChipperUtil:log");
 static ossimTrace traceOptions("ossimChipperUtil:options");
@@ -2563,7 +2561,9 @@ void ossimChipperUtil::rotateMapToInput()
 {
    static const char MODULE[] = "ossimChipperUtil::rotateMapToInput";
    if (traceDebug())
+   {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+   }
 
    try
    {
@@ -2600,7 +2600,11 @@ void ossimChipperUtil::rotateMapToInput()
       // The -y axis relative to North is the number we need to rotate, so subtract 90 deg from
       // x-axis orientation.
       double mapRotation = gLL.azimuthTo(gUL);
-      cout << "\n Rotating map by "<<mapRotation<<" deg\n"<<endl; //###
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "\n Rotating map by "<<mapRotation<<" deg\n";
+      }
       mapProj->applyRotation(mapRotation);
 
       // Not sure where the UL of the rotated map will be, so assume it will coincide with the image
@@ -2621,6 +2625,12 @@ void ossimChipperUtil::rotateMapToInput()
       ossimNotify(ossimNotifyLevel_WARN) << "ossimChipperUtil::rotateMapToInput() -- Exception: "
                                          << e.what() <<" Ignoring request.\n";
    }
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
+   }
+
    return;
 }
 

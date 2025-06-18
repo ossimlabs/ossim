@@ -150,6 +150,21 @@ public:
     */
    void getOutputFilename(ossimFilename& f) const;
 
+protected:
+
+   /**
+    * @brief Creates a new writer.
+    *
+    * This will use the writer option (-w or --writer), if present; else,
+    * it will be derived from the output file extension.
+    *
+    * This will also set any writer properties passed in.
+    *
+    * @return new ossimImageFileWriter.
+    * @note Throws ossimException on error.
+    */
+   virtual ossimRefPtr<ossimImageFileWriter> createNewWriter() const;
+   
 private:
 
    /**
@@ -424,20 +439,7 @@ private:
     * @note Throws ossimException on error.
     */   
    void getSceneCenter(ossimSingleImageChain* chain, ossimGpt& gpt);
-
-   /**
-    * @brief Creates a new writer.
-    *
-    * This will use the writer option (-w or --writer), if present; else,
-    * it will be derived from the output file extension.
-    *
-    * This will also set any writer properties passed in.
-    *
-    * @return new ossimImageFileWriter.
-    * @note Throws ossimException on error.
-    */
-   ossimRefPtr<ossimImageFileWriter> createNewWriter() const;
-
+   
    /**
     * @brief loops through all chains and sets the output projection.
     * @note Throws ossimException on error.
