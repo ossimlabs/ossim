@@ -7,6 +7,7 @@
 #ifndef ossimNitfCsexrbTag_HEADER
 #define ossimNitfCsexrbTag_HEADER 1
 
-class OSSIM_DLL ossimNitfCsexrbTag : public ossimNitfGenericTag {
+class OSSIM_DLL ossimNitfCsexrbTag : public ossimNitfGenericTag
+{
 };
 #endif
