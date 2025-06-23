@@ -36,7 +36,8 @@ find_path( KAKADU_INCLUDE_DIR kdu_compressed.h
 	   ${CMAKE_INSTALL_PREFIX}../include/kakadu
 	   ${CMAKE_INSTALL_PREFIX}/include/kakadu/managed/all_includes
            /usr/local/ossim/include/kakadu
-	   /usr/local/ossim/include/kakadu/managed/all_includes )
+	   /usr/local/ossim/include/kakadu/managed/all_includes
+	   /usr/local/include/kakadu )
 
 # Find Kakadu library:
 find_library(
