@@ -130,18 +130,15 @@ public:
 //   ossimRefPtr<ossimImageData> getChip();
 
    /**
-   * The options will only support a couple modifications while chipping.  
-   * this is mainly here to support a moving chip window so we do not need to do
-   * a full initialize for every chip.  We can specify a new cut bounds and
-   * cut width height in pixels if desired.
-   *
-   *  cut_wms_bbox: ..........
-   *  cut_width:
-   *  cut_height:
-   *
-   *
-   *
-   */
+    * The options will only support a couple modifications while chipping.  
+    * this is mainly here to support a moving chip window so we do not need to do
+    * a full initialize for every chip.  We can specify a new cut bounds and
+    * cut width height in pixels if desired.
+    *
+    *  cut_wms_bbox: ..........
+    *  cut_width:
+    *  cut_height:
+    */
    ossimRefPtr<ossimImageData> getChip(const ossimKeywordlist& optionsKwl= ossimKeywordlist());
 
    /**
@@ -163,7 +160,15 @@ protected:
     * @return new ossimImageFileWriter.
     * @note Throws ossimException on error.
     */
-   virtual ossimRefPtr<ossimImageFileWriter> createNewWriter() const;
+   virtual ossimRefPtr<ossimImageFileWriter> createNewWriter();
+
+   /**
+    * @brief Gives direct access to the array of ossimSingleImageChains for
+    * derived chippers.
+    * 
+    * @return A reference to m_imgLayer.
+    */
+   std::vector< ossimRefPtr<ossimSingleImageChain> >& getSingleImageChainLayers();
    
 private:
 

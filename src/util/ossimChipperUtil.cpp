@@ -3833,7 +3833,7 @@ ossimRefPtr<ossimMapProjection> ossimChipperUtil::getMapProjection()
    return mp;
 }
 
-ossimRefPtr<ossimImageFileWriter> ossimChipperUtil::createNewWriter() const
+ossimRefPtr<ossimImageFileWriter> ossimChipperUtil::createNewWriter()
 {
    static const char MODULE[] = "ossimChipperUtil::createNewWriter()";
    if (traceDebug())
@@ -6257,3 +6257,9 @@ void ossimChipperUtil::usage(ossimArgumentParser &ap)
       << appName << " --options r39-options.kwl\n"
       << std::endl;
 }
+
+std::vector< ossimRefPtr<ossimSingleImageChain> >& ossimChipperUtil::getSingleImageChainLayers()
+{
+   return m_imgLayer;
+}
+
