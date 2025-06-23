@@ -1,6 +1,17 @@
+//----------------------------------------------------------------------------
 //
-// Created by Ryan Feldbush on 6/18/25.
+// File ossim-fgdc-txt-doc-test.cpp
 //
+// License:  MIT
+//
+// See LICENSE.txt file in the top level directory for more details.
+//
+// Author:  Ryan Feldbush
+//
+// Description: Test for the generic nitf tags
+//
+//----------------------------------------------------------------------------
+// $Id:
 
 #include <ossim/support_data/ossimNitfCsexrbTag.h>
 #include <ossim/support_data/ossimNitfGenericTag.h>

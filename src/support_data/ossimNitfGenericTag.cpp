@@ -8,15 +8,10 @@
 //
 // Description: Generic tag class definition.
 //
-// Exploitation Reference Data TRE.
-//
-// See document STDI-0002-NCDRD Table M.6.1 for more info.
-//
 //----------------------------------------------------------------------------
 // $Id
 #include <ossim/support_data/ossimNitfGenericTag.h>
 
-#include <cstring>
 #include <istream>
 #include <iostream>
 #include <iomanip>

@@ -1,8 +1,18 @@
-//---
-// File: ossimNitfGenericTag.h
-//---
+//----------------------------------------------------------------------------
+//
+// License:  MIT
+//
+// See LICENSE.txt file in the top level directory for more details.
+//
+// Author:  Ryan Feldbush
+//
+// Description: Generic tag class declaration.
+//
+//----------------------------------------------------------------------------
+// $Id
 
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
+
 #include <vector>
 #include <map>
 #ifndef ossimNitfGenericTag_HEADER
