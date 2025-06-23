@@ -130,18 +130,15 @@ public:
 //   ossimRefPtr<ossimImageData> getChip();
 
    /**
-   * The options will only support a couple modifications while chipping.  
-   * this is mainly here to support a moving chip window so we do not need to do
-   * a full initialize for every chip.  We can specify a new cut bounds and
-   * cut width height in pixels if desired.
-   *
-   *  cut_wms_bbox: ..........
-   *  cut_width:
-   *  cut_height:
-   *
-   *
-   *
-   */
+    * The options will only support a couple modifications while chipping.  
+    * this is mainly here to support a moving chip window so we do not need to do
+    * a full initialize for every chip.  We can specify a new cut bounds and
+    * cut width height in pixels if desired.
+    *
+    *  cut_wms_bbox: ..........
+    *  cut_width:
+    *  cut_height:
+    */
    ossimRefPtr<ossimImageData> getChip(const ossimKeywordlist& optionsKwl= ossimKeywordlist());
 
    /**
@@ -150,6 +147,29 @@ public:
     */
    void getOutputFilename(ossimFilename& f) const;
 
+protected:
+
+   /**
+    * @brief Creates a new writer.
+    *
+    * This will use the writer option (-w or --writer), if present; else,
+    * it will be derived from the output file extension.
+    *
+    * This will also set any writer properties passed in.
+    *
+    * @return new ossimImageFileWriter.
+    * @note Throws ossimException on error.
+    */
+   virtual ossimRefPtr<ossimImageFileWriter> createNewWriter();
+
+   /**
+    * @brief Gives direct access to the array of ossimSingleImageChains for
+    * derived chippers.
+    * 
+    * @return A reference to m_imgLayer.
+    */
+   std::vector< ossimRefPtr<ossimSingleImageChain> >& getSingleImageChainLayers();
+   
 private:
 
    /**
@@ -424,20 +444,7 @@ private:
     * @note Throws ossimException on error.
     */   
    void getSceneCenter(ossimSingleImageChain* chain, ossimGpt& gpt);
-
-   /**
-    * @brief Creates a new writer.
-    *
-    * This will use the writer option (-w or --writer), if present; else,
-    * it will be derived from the output file extension.
-    *
-    * This will also set any writer properties passed in.
-    *
-    * @return new ossimImageFileWriter.
-    * @note Throws ossimException on error.
-    */
-   ossimRefPtr<ossimImageFileWriter> createNewWriter() const;
-
+   
    /**
     * @brief loops through all chains and sets the output projection.
     * @note Throws ossimException on error.

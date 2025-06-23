@@ -1,13 +1,13 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimNitfWriter.cpp 22814 2014-06-05 15:13:28Z dburken $
+// $Id$
 
 #include <ossim/imaging/ossimNitfWriter.h>
 #include <ossim/base/ossimBooleanProperty.h>
@@ -34,8 +34,6 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
-
-using namespace std;
 
 RTTI_DEF1(ossimNitfWriter, "ossimNitfWriter", ossimNitfWriterBase);
 
@@ -120,7 +118,7 @@ bool ossimNitfWriter::open()
    // C++11 build.  Will refactor to do a new ifstream then use open
    //
    m_str = std::make_shared<ossim::ofstream>();
-   m_str->open(theFilename.c_str(), ios::out|ios::binary);
+   m_str->open(theFilename.c_str(), std::ios::out|std::ios::binary);
    if(!m_str->is_open())
    {
       m_str.reset();
@@ -128,7 +126,7 @@ bool ossimNitfWriter::open()
    }
    
    //new std::ofstream;
-   //m_str->open(theFilename.c_str(), ios::out|ios::binary);
+   //m_str->open(theFilename.c_str(), std::ios::out|std::ios::binary);
    
    return result;
 }
@@ -342,7 +340,7 @@ bool ossimNitfWriter::writeBlockBandSeparate()
    takeOverflowTags(false, true);
    takeOverflowTags(false, false);
 
-   for (vector<ossimNitfDataExtensionSegmentV2_1>::iterator iter = m_dataExtensionSegments.begin();
+   for (std::vector<ossimNitfDataExtensionSegmentV2_1>::iterator iter = m_dataExtensionSegments.begin();
       iter != m_dataExtensionSegments.end(); iter++)
    {
       ossimNitfDataExtSegInfoRecordV2_1 desInfoRecord;
@@ -350,14 +348,14 @@ bool ossimNitfWriter::writeBlockBandSeparate()
       std::ostringstream headerOut;
       headerOut << std::setw(4)
                 << std::setfill('0')
-                << std::setiosflags(ios::right)
+                << std::setiosflags(std::ios::right)
                 << iter->getHeaderLength();
       strcpy(desInfoRecord.theDataExtSegSubheaderLength, headerOut.str().c_str());
 
       std::ostringstream dataOut;
       dataOut << std::setw(9)
                 << std::setfill('0')
-                << std::setiosflags(ios::right)
+                << std::setiosflags(std::ios::right)
                 << iter->getDataLength();
       strcpy(desInfoRecord.theDataExtSegLength, dataOut.str().c_str());
 
@@ -520,7 +518,7 @@ bool ossimNitfWriter::writeBlockBandSeparate()
    }   
 
 
-   for (vector<ossimNitfDataExtensionSegmentV2_1>::iterator iter = m_dataExtensionSegments.begin();
+   for (std::vector<ossimNitfDataExtensionSegmentV2_1>::iterator iter = m_dataExtensionSegments.begin();
       iter != m_dataExtensionSegments.end(); iter++)
    {
       iter->writeStream( *m_str );
@@ -543,7 +541,7 @@ bool ossimNitfWriter::writeBlockBandSeparate()
     */
    m_fileHeader->setFileLength(static_cast<ossim_uint64>(pos));
    m_fileHeader->setHeaderLength(headerLength);
-   m_str->seekp(0, ios::beg);
+   m_str->seekp(0, std::ios::beg);
    imageInfoRecord.setSubheaderLength(imageHeaderSize);
    m_fileHeader->replaceImageInfoRecord(0, imageInfoRecord);
    m_fileHeader->writeStream( *m_str );
@@ -707,7 +705,7 @@ bool ossimNitfWriter::writeBlockBandSequential()
          m_str->seekp(streamOffset+ // start of image stream
                                tileNumber*blockSizeInBytes + // start of block for band separate output
                                bandOffsetInBytes*idx, // which band offset is it
-                               ios::beg); 
+                               std::ios::beg); 
          
          m_str->write((char*)(data->getBuf(idx)),
                                blockSizeInBytes);
@@ -740,7 +738,7 @@ bool ossimNitfWriter::writeBlockBandSequential()
     */
    m_fileHeader->setFileLength(static_cast<ossim_uint64>(pos));
    m_fileHeader->setHeaderLength(headerLength);
-   m_str->seekp(0, ios::beg);
+   m_str->seekp(0, std::ios::beg);
    imageInfoRecord.setSubheaderLength(imageHeaderSize);
    m_fileHeader->replaceImageInfoRecord(0, imageInfoRecord);
    m_fileHeader->writeStream( *m_str );
