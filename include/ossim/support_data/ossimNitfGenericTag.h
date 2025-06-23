@@ -14,7 +14,7 @@
 class OSSIM_DLL ossimNitfGenericTag : public ossimNitfRegisteredTag
 {
 public:
-   ossimNitfGenericTag();
+   ossimNitfGenericTag(ossimString tag);
 
    virtual void parseStream(std::istream &in);
 

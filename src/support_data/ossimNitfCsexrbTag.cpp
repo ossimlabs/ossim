@@ -2,7 +2,13 @@
 // Created by Ryan Feldbush on 6/18/25.
 //
 
-#include "ossim/support_data/ossimNitfGenericTag.h"
+
+#include "ossim/support_data/ossimNitfCsexrbTag.h"
+
+ossimNitfCsexrbTag::ossimNitfCsexrbTag()
+   : ossimNitfGenericTag("CSEXRB")
+{
+}
 
 const ossim_int32 ossimNitfGenericTag::NUM_DEFINITIONS = 122;
 //-1: variable length, -2: if start, -3: if end, -4: loop start, -5 loop end
@@ -135,3 +141,4 @@ std::pair<ossimString, ossim_int32> ossimNitfGenericTag::FIELD_DEFINITIONS[NUM_D
    //{"RESERVED_LEN_AREA", 5},
    //{"RESERVED_AREA", 0}
 };
+

@@ -24,8 +24,8 @@
 #include <map>
 #include <utility>
 
-ossimNitfGenericTag::ossimNitfGenericTag()
-   : ossimNitfRegisteredTag(std::string("GENERIC"), 0)
+ossimNitfGenericTag::ossimNitfGenericTag(ossimString tag)
+   : ossimNitfRegisteredTag(tag, 0)
 {
 }
 
@@ -149,7 +149,7 @@ void ossimNitfGenericTag::writeStream(std::ostream &out)
 std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &prefix) const
 {
    std::string pfx = prefix;
-   pfx += "GENERIC";
+   pfx += getTagName();
    pfx += ".";
 
    out << std::setiosflags(std::ios::left)
