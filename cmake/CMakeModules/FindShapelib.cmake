@@ -7,7 +7,7 @@
 #
 # SHAPELIB_INCLUDE_DIR, where to find header files, e.g. fcgio.h, etc.
 # SHAPELIB_LIBRARY, libraries to link against to use Shapelib.
-# Shapelib_FOUND, True if found, false if one of the above are not found.
+# SHAPELIB_FOUND, True if found, false if one of the above are not found.
 # 
 # $Id$
 #---
@@ -38,15 +38,15 @@ find_package_handle_standard_args( Shapelib DEFAULT_MSG
                                    SHAPELIB_LIBRARY
                                    SHAPELIB_INCLUDE_DIR )
 
-if( Shapelib_FOUND )
+if( SHAPELIB_FOUND )
    if( NOT SHAPELIB_FIND_QUIETLY )
       message( STATUS "Found SHAPELIB..." )
    endif( NOT SHAPELIB_FIND_QUIETLY )
-else( Shapelib_FOUND )
+else()
    if( NOT SHAPELIB_FIND_QUIETLY )
       message( WARNING "Could not find SHAPELIB" )
    endif( NOT SHAPELIB_FIND_QUIETLY )
-endif( Shapelib_FOUND )
+endif()
 
 if( NOT SHAPELIB_FIND_QUIETLY )
    message( STATUS "SHAPELIB_INCLUDE_DIR=${SHAPELIB_INCLUDE_DIR}" )
