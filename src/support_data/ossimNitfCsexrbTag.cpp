@@ -17,8 +17,8 @@
 
 #include <ossim/support_data/ossimNitfCsexrbTag.h>
 
-ossimNitfCsexrbTag::ossimNitfCsexrbTag()
-   : ossimNitfGenericTag("CSEXRB")
+ossimNitfCsexrbTag::ossimNitfCsexrbTag(ossim_uint32 tagLength)
+   : ossimNitfGenericTag("CSEXRB", tagLength)
 {
 }
 

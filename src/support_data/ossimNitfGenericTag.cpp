@@ -19,8 +19,8 @@
 #include <map>
 #include <utility>
 
-ossimNitfGenericTag::ossimNitfGenericTag(ossimString tag)
-   : ossimNitfRegisteredTag(tag, 0)
+ossimNitfGenericTag::ossimNitfGenericTag(ossimString tag, ossim_uint32 tagLength)
+   : ossimNitfRegisteredTag(tag, tagLength)
 {
 }
 
@@ -172,4 +172,9 @@ void ossimNitfGenericTag::clearFields()
 ossimString ossimNitfGenericTag::get(ossimString fieldName)
 {
    return m_fields_map[fieldName];
+}
+
+void setLength(ossim_uint32 length)
+{
+
 }

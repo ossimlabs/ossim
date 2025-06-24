@@ -23,6 +23,6 @@
 class OSSIM_DLL ossimNitfCsexrbTag : public ossimNitfGenericTag
 {
    public:
-      ossimNitfCsexrbTag();
+      ossimNitfCsexrbTag(ossim_uint32 tagLength=0);
 };
 #endif
