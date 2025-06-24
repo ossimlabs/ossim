@@ -420,6 +420,9 @@ plugin85.options:"""
                  //disable_drivers:
 """
 
+
+plugin90.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_maxar_plugin.so
+
 //---
 // Old style with no options keyword:
 //---
