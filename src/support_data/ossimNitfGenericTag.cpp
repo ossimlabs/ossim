@@ -35,48 +35,39 @@ static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
    return result;
 }
 
-void ossimNitfGenericTag::parseStream(std::istream &in)
+std::vector<std::pair<ossimString, ossim_int32>> ossimNitfGenericTag::readDefinitions(int start)
 {
-   clearFields();
-
-   m_fields_map.clear();
-   m_fields_vector.clear();
-
-   //Current iteration, Total iteration, i value
+   std::cout << "Definitions";
+   std::vector<std::pair<ossimString, ossim_int32>> result;
    std::vector<std::vector<ossim_int32> > suffix;
    std::vector<ossimString> spaceSubStrings, colonSubStrings;
-   ossim_int32 length, i = 0;
+   ossim_int32 length, i = start;
    ossimString name, prevName;
-   char value[256];
    bool condition;
 
    while (i < NUM_DEFINITIONS)
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
-      switch (FIELD_DEFINITIONS[i].second)
+      switch (FIELD_DEFINITIONS[i].size)
       {
          //variable length
          case -1:
-            FIELD_DEFINITIONS[i].first.split(spaceSubStrings, ' ');
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             name = spaceSubStrings[0] + formatSuffix(suffix);
             if (spaceSubStrings.size() == 1)
             {
-               in.read(value, m_fields_vector.back().second.toInt());
-               value[m_fields_vector.back().second.toInt()] = '\0';
+               length = m_fields_vector.back().second.toInt();
             } else
             {
                length = m_fields_map[spaceSubStrings[1] + formatSuffix(suffix)].toInt();
-               in.read(value, length);
-               value[length] = '\0';
             }
-            m_fields_map.insert(std::pair<ossimString, ossimString>(name, value));
-            m_fields_vector.push_back(std::pair<ossimString, ossimString>(name, value));
+            result.push_back(std::make_pair(name, length));
             i++;
             break;
          //if start
          case -2:
-            FIELD_DEFINITIONS[i].first.split(spaceSubStrings, ' ');
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             spaceSubStrings[0].split(colonSubStrings, ':');
             name = m_fields_map[colonSubStrings[0] + formatSuffix(suffix)];
             if (colonSubStrings.size() > 1)
@@ -89,7 +80,7 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
             else
                condition = false;
             if (!condition)
-               while (FIELD_DEFINITIONS[i].second != -3)
+               while (FIELD_DEFINITIONS[i].size != -3)
                   i++;
             i++;
             break;
@@ -99,12 +90,12 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
             break;
          //loop start
          case -4:
-            FIELD_DEFINITIONS[i].first.split(spaceSubStrings, ' ');
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             length = m_fields_map[spaceSubStrings[0] + formatSuffix(suffix)].toInt();
             if (length > 0)
                suffix.push_back({1, length, i + 1, spaceSubStrings[1].at(0)});
             else
-               while (FIELD_DEFINITIONS[i].second != -5)
+               while (FIELD_DEFINITIONS[i].size != -5)
                   i++;
             i++;
             break;
@@ -122,14 +113,29 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
             break;
          //length provided
          default:
-            name = FIELD_DEFINITIONS[i].first + formatSuffix(suffix);
-            in.read(value, FIELD_DEFINITIONS[i].second);
-            value[FIELD_DEFINITIONS[i].second] = '\0';
-            m_fields_map.insert(std::pair<ossimString, ossimString>(name, value));
-            m_fields_vector.push_back(std::pair<ossimString, ossimString>(name, value));
+            result.push_back(std::make_pair(name, length));
             i++;
             break;
       };
+   }
+}
+
+void ossimNitfGenericTag::parseStream(std::istream &in)
+{
+   clearFields();
+
+   m_fields_map.clear();
+   m_fields_vector.clear();
+
+   char value[256];
+
+   std::vector<std::pair<ossimString, ossim_int32>> actionItems = readDefinitions(0);
+   for (std::pair item: actionItems)
+   {
+      in.read(value, item.second);
+      value[item.second] = '\0';
+      m_fields_map.insert(std::pair<ossimString, ossimString>(item.first, value));
+      m_fields_vector.push_back(std::pair<ossimString, ossimString>(item.first, value));
    }
 }
 
@@ -169,12 +175,29 @@ void ossimNitfGenericTag::clearFields()
    m_fields_vector.clear();
 }
 
-ossimString ossimNitfGenericTag::get(ossimString fieldName)
+ossimString ossimNitfGenericTag::get(ossimString name)
 {
-   return m_fields_map[fieldName];
+   return m_fields_map[name];
 }
 
-void setLength(ossim_uint32 length)
+void ossimNitfGenericTag::setField(ossimString name, ossimString value)
 {
-
+   //Formatting
+   int definition = 0;
+   for (int i=0; i < NUM_DEFINITIONS; i++)
+      if (name == FIELD_DEFINITIONS[i].field.substr(name.length()))
+         definition = i;
+   switch (FIELD_DEFINITIONS[definition].specs)
+   {
+      case ' ':
+         while (value.length() < FIELD_DEFINITIONS[definition].size)
+            value = value + ' ';
+         break;
+      case '0':
+         while (value.length() < FIELD_DEFINITIONS[definition].size)
+            value = '0' + value;
+         break;
+      default:
+         break;
+   };
 }

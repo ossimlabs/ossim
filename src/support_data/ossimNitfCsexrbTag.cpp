@@ -24,10 +24,8 @@ ossimNitfCsexrbTag::ossimNitfCsexrbTag(ossim_uint32 tagLength)
 
 const ossim_int32 ossimNitfGenericTag::NUM_DEFINITIONS = 122;
 //-1: variable length, -2: if start, -3: if end, -4: loop start, -5 loop end
-std::pair<ossimString, ossim_int32> ossimNitfGenericTag::FIELD_DEFINITIONS[NUM_DEFINITIONS] =
+ossimNitfGenericTag::definition ossimNitfGenericTag::FIELD_DEFINITIONS[NUM_DEFINITIONS] =
 {
-   //{"CETAG", 6},
-   //{"CEL", 5},
    {"IMAGE_UUID", 36},
    {"NUM_ASSOC_DES", 3},
    {"NUM_ASSOC_DES i", -4},
@@ -149,8 +147,6 @@ std::pair<ossimString, ossim_int32> ossimNitfGenericTag::FIELD_DEFINITIONS[NUM_D
             {"QUALITY_METRIC_VALUE", -1},
          {"NUM_QUALITY_METRICS", -5},
       {"NUM_IMG_OPS_DATA", -5},
-   {"RESERVED_FIELD_MASK:0 == 1", -3},
-   //{"RESERVED_LEN_AREA", 5},
-   //{"RESERVED_AREA", 0}
+   {"RESERVED_FIELD_MASK:0 == 1", -3}
 };
 

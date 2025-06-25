@@ -36,13 +36,21 @@ public:
                                const std::string &prefix) const;
 
    ossimString get(ossimString fieldName);
+   void setField(ossimString name, ossimString value);
 
+   struct definition
+   {
+      ossimString field;
+      ossim_int32 size;
+      char specs = ' ';
+   };
    static const ossim_int32 NUM_DEFINITIONS;
-   static std::pair<ossimString, ossim_int32> FIELD_DEFINITIONS[];
+   static definition FIELD_DEFINITIONS[];
 
 protected:
    std::map<ossimString, ossimString> m_fields_map;
    std::vector<std::pair<ossimString, ossimString> > m_fields_vector;
+   std::vector<std::pair<ossimString, ossim_int32>> readDefinitions(int start);
 };
 
 #endif
