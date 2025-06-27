@@ -33,7 +33,7 @@ public:
    virtual void clearFields();
 
    virtual std::ostream &print(std::ostream &out,
-                               const std::string &prefix) const;
+                               const std::string &prefix);
 
    ossimString get(ossimString fieldName);
    void setField(ossimString name, ossimString value);
@@ -49,8 +49,9 @@ public:
 
 protected:
    std::map<ossimString, ossimString> m_fields_map;
-   std::vector<std::pair<ossimString, ossimString> > m_fields_vector;
-   std::vector<std::pair<ossimString, ossim_int32>> readDefinitions(int start);
+   void readDefinitions(int actionFunction, std::istream &in, std::ostream &out, ossimString args = "");
+   ossimString defaultFormatting(ossimString value, int definition, ossimString name);
+   ossimString defaultFormatting(ossimString value, int definition, int length);
 };
 
 #endif
