@@ -9,7 +9,6 @@
 // Description: Generic tag class definition.
 //
 //----------------------------------------------------------------------------
-// $Id
 #include <ossim/support_data/ossimNitfGenericTag.h>
 
 #include <istream>

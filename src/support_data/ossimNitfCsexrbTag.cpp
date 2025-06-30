@@ -13,7 +13,6 @@
 // See document App AH - GLAS-GFM table AH.6.1 for more info.
 //
 //----------------------------------------------------------------------------
-// $Id
 
 #include <ossim/support_data/ossimNitfCsexrbTag.h>
 

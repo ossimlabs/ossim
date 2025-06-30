@@ -9,7 +9,6 @@
 // Description: Generic tag class declaration.
 //
 //----------------------------------------------------------------------------
-// $Id
 
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 
