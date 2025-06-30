@@ -35,7 +35,7 @@ public:
                                const std::string &prefix);
 
    ossimString get(ossimString fieldName);
-   void setField(ossimString name, ossimString value);
+   void setField(ossimString fieldName, ossimString fieldValue);
 
    struct definition
    {
@@ -49,8 +49,23 @@ public:
 protected:
    std::map<ossimString, ossimString> m_fields_map;
    void readDefinitions(int actionFunction, std::istream &in, std::ostream &out, ossimString args = "");
-   ossimString defaultFormatting(ossimString value, int definition, ossimString name);
-   ossimString defaultFormatting(ossimString value, int definition, int length);
+   ossimString defaultFormatting(ossimString fieldValue, int definitionIndex, ossimString fieldName);
+   ossimString defaultFormatting(ossimString fieldValue, int definitionIndex, int length);
+   enum specialFields
+   {
+      VARIABLE_LENGTH = -1,
+      IF_STATEMENT_START = -2,
+      IF_STATEMENT_END = -3,
+      LOOP_START = -4,
+      LOOP_END = -5
+   };
+   enum actionFunctions
+   {
+      PARSE_STREAM = 0,
+      SET_FIELD = 1,
+      WRITE_STREAM = 2,
+      PRINT = 3
+   };
 };
 
 #endif
