@@ -57,7 +57,7 @@ void ossimNitfGenericTag::readDefinitions(int actionFunction, std::istream &in, 
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             spaceSubStrings[0].split(colonSubStrings, ':');
             generatedFieldName = m_fields_map[colonSubStrings[0] + formatSuffix(suffix)];
-            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toInt())
+            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
                generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
             if (spaceSubStrings[1] == "==")
                ifCondition = (generatedFieldName == spaceSubStrings[2]);
