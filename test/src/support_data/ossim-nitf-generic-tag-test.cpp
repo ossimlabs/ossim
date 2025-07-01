@@ -29,7 +29,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
    cout << "Hello World! Courtesy of OSSIM." << endl;
-   ossimNitfCsexrbTag csexrb;
+   ossimNitfCsexrbTag csexrb = ossimNitfCsexrbTag();
    string fname = getenv("OSSIM_DATA");
    fname += "/19SEP01060448-P1BS-200007943201_01_P004.NTF";
    cout << fname << endl;
@@ -61,8 +61,12 @@ int main(int argc, char *argv[])
    }
 
    csexrb.parseStream(file);
-   csexrb.print(cout, "");
    csexrb.writeStream(cout);
+   csexrb.print(cout, "");
+   csexrb.setField("RESERVED_LEN", "1");
+   csexrb.setField("MASK_LEN", "2");
+   csexrb.setField("RESERVED_FIELD_MASK", "1");
+   csexrb.print(cout, "");
 
    return 0;
 }

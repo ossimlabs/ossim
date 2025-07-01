@@ -9,7 +9,6 @@
 // Description: Generic tag class declaration.
 //
 //----------------------------------------------------------------------------
-// $Id
 
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 
@@ -33,16 +32,38 @@ public:
    virtual void clearFields();
 
    virtual std::ostream &print(std::ostream &out,
-                               const std::string &prefix) const;
+                               const std::string &prefix);
 
    ossimString get(ossimString fieldName);
+   void setField(ossimString fieldName, ossimString fieldValue);
 
+   struct definition
+   {
+      ossimString field;
+      ossim_int32 size;
+      std::vector<ossim_int8> formatMethod = {0};
+   };
    static const ossim_int32 NUM_DEFINITIONS;
-   static std::pair<ossimString, ossim_int32> FIELD_DEFINITIONS[];
+   static definition FIELD_DEFINITIONS[];
 
 protected:
    std::map<ossimString, ossimString> m_fields_map;
-   std::vector<std::pair<ossimString, ossimString> > m_fields_vector;
+   void readDefinitions(int actionFunction, std::istream &in, std::ostream &out, ossimString args = "");
+   enum specialFields
+   {
+      VARIABLE_LENGTH = -1,
+      IF_STATEMENT_START = -2,
+      IF_STATEMENT_END = -3,
+      LOOP_START = -4,
+      LOOP_END = -5
+   };
+   enum actionFunctions
+   {
+      PARSE_STREAM = 0,
+      SET_FIELD = 1,
+      WRITE_STREAM = 2,
+      PRINT = 3
+   };
 };
 
 #endif
