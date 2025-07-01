@@ -41,7 +41,7 @@ public:
    {
       ossimString field;
       ossim_int32 size;
-      char specs = ' ';
+      std::vector<ossim_int8> formatMethod = {0};
    };
    static const ossim_int32 NUM_DEFINITIONS;
    static definition FIELD_DEFINITIONS[];
@@ -49,8 +49,6 @@ public:
 protected:
    std::map<ossimString, ossimString> m_fields_map;
    void readDefinitions(int actionFunction, std::istream &in, std::ostream &out, ossimString args = "");
-   ossimString defaultFormatting(ossimString fieldValue, int definitionIndex, ossimString fieldName);
-   ossimString defaultFormatting(ossimString fieldValue, int definitionIndex, int length);
    enum specialFields
    {
       VARIABLE_LENGTH = -1,

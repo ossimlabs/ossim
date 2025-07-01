@@ -10,6 +10,7 @@
 //
 //----------------------------------------------------------------------------
 #include <ossim/support_data/ossimNitfGenericTag.h>
+#include <ossim/support_data/ossimNitfCommon.h>
 
 #include <istream>
 #include <iostream>
@@ -121,9 +122,9 @@ void ossimNitfGenericTag::readDefinitions(int actionFunction, std::istream &in, 
                   fieldContentsBuffer[fieldLength] = '\0';
                   m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, fieldContentsBuffer));
                   break;
-               case SET_FIELD:
+            case SET_FIELD:
                   if (m_fields_map.count(generatedFieldName) == 0)
-                     m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, defaultFormatting("", i, fieldLength)));
+                     m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, std::string(fieldLength, ' ')));
                   break;
                case WRITE_STREAM:
                   out.write(m_fields_map[generatedFieldName], fieldLength);
@@ -197,39 +198,45 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
          break;
       }
    }
-   fieldValue = defaultFormatting(fieldValue, definition, fieldName);
+   int length = FIELD_DEFINITIONS[definition].size;
+   if (length == VARIABLE_LENGTH)
+   {
+      std::vector<ossimString> spaceSubStrings;
+      FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
+      length = m_fields_map[spaceSubStrings[1]].toInt();
+   }
+   if (fieldValue.size() != length)
+   {
+      switch (FIELD_DEFINITIONS[definition].formatMethod[0])
+      {
+         case 1:
+            fieldValue = ossimNitfCommon::convertToUIntString(fieldValue.toUInt32(),
+               FIELD_DEFINITIONS[definition].size);
+            break;
+         case 2:
+            fieldValue = ossimNitfCommon::convertToIntString(fieldValue.toInt32(),
+               FIELD_DEFINITIONS[definition].size);
+            break;
+         case 3:
+            fieldValue = ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
+               FIELD_DEFINITIONS[definition].formatMethod[1],
+               FIELD_DEFINITIONS[definition].size);
+            break;
+         case 4:
+            if (fieldValue.toFloat64() > 0)
+               fieldValue = "+" + ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
+                                 FIELD_DEFINITIONS[definition].formatMethod[1],
+                                    FIELD_DEFINITIONS[definition].size);
+            else
+               fieldValue = ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
+                                 FIELD_DEFINITIONS[definition].formatMethod[1],
+                                    FIELD_DEFINITIONS[definition].size);
+         default:
+            while (fieldValue.length() < length)
+               fieldValue = fieldValue + ' ';
+            break;
+      }
+   }
    m_fields_map[fieldName] = fieldValue;
    readDefinitions(SET_FIELD, std::cin, std::cout, fieldName);
-}
-
-ossimString ossimNitfGenericTag::defaultFormatting(ossimString fieldValue, int definitionIndex, ossimString fieldName)
-{
-   int length;
-      if (FIELD_DEFINITIONS[definitionIndex].size == VARIABLE_LENGTH)
-      {
-         length = m_fields_map[fieldName].toInt();
-      }
-      else
-      {
-         length = FIELD_DEFINITIONS[definitionIndex].size;
-      }
-   return defaultFormatting(fieldValue, definitionIndex, length);
-}
-
-ossimString ossimNitfGenericTag::defaultFormatting(ossimString fieldValue, int definitionIndex, int length)
-{
-   switch (FIELD_DEFINITIONS[definitionIndex].specs)
-   {
-      case ' ':
-         while (fieldValue.length() < length)
-            fieldValue = fieldValue + ' ';
-         break;
-      case '0':
-         while (fieldValue.length() < length)
-            fieldValue = '0' + fieldValue;
-         break;
-      default:
-         throw ossimException("This should be unreachable");
-   };
-   return fieldValue;
 }
