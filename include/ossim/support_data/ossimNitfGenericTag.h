@@ -43,8 +43,7 @@ public:
       ossim_int32 size;
       std::vector<ossim_int8> formatMethod = {0};
    };
-   static const ossim_int32 NUM_DEFINITIONS;
-   static definition FIELD_DEFINITIONS[];
+   std::vector<definition> FIELD_DEFINITIONS;
 
 protected:
    std::map<ossimString, ossimString> m_fields_map;

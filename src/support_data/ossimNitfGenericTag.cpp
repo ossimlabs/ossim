@@ -47,7 +47,7 @@ void ossimNitfGenericTag::readDefinitions(int actionFunction, std::istream &in, 
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (i < NUM_DEFINITIONS)
+   while (i < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
@@ -66,8 +66,17 @@ void ossimNitfGenericTag::readDefinitions(int actionFunction, std::istream &in, 
             else
                ifCondition = false;
             if (!ifCondition)
-               while (FIELD_DEFINITIONS[i].size != IF_STATEMENT_END)
+            {
+               int loopCount = 1;
+               while (loopCount > 0)
+               {
                   i++;
+                  if (FIELD_DEFINITIONS[i].size == IF_STATEMENT_END)
+                     loopCount--;
+                  else if (FIELD_DEFINITIONS[i].size == IF_STATEMENT_START)
+                     loopCount++;
+               }
+            }
             i++;
             break;
          case IF_STATEMENT_END:
@@ -188,7 +197,7 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
 {
    //Formatting
    int definition = 0;
-   for (int i=0; i < NUM_DEFINITIONS; i++)
+   for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
    {
       if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
          FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
@@ -211,26 +220,28 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
       {
          case 1:
             fieldValue = ossimNitfCommon::convertToUIntString(fieldValue.toUInt32(),
-               FIELD_DEFINITIONS[definition].size);
+               length);
             break;
          case 2:
             fieldValue = ossimNitfCommon::convertToIntString(fieldValue.toInt32(),
-               FIELD_DEFINITIONS[definition].size);
+               length);
             break;
          case 3:
             fieldValue = ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
                FIELD_DEFINITIONS[definition].formatMethod[1],
-               FIELD_DEFINITIONS[definition].size);
+               length);
             break;
          case 4:
             if (fieldValue.toFloat64() > 0)
                fieldValue = "+" + ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
                                  FIELD_DEFINITIONS[definition].formatMethod[1],
-                                    FIELD_DEFINITIONS[definition].size);
+                                    length);
             else
                fieldValue = ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
                                  FIELD_DEFINITIONS[definition].formatMethod[1],
-                                    FIELD_DEFINITIONS[definition].size);
+                                    length);
+         case 5:
+            fieldValue = ossimNitfCommon::convertToScientificString(fieldValue.toFloat64(), length);
          default:
             while (fieldValue.length() < length)
                fieldValue = fieldValue + ' ';
