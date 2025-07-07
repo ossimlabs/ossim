@@ -32,7 +32,7 @@ public:
    virtual void clearFields();
 
    virtual std::ostream &print(std::ostream &out,
-                               const std::string &prefix);
+                               const std::string &prefix) const;
 
    ossimString get(ossimString fieldName);
    void setField(ossimString fieldName, ossimString fieldValue);
@@ -46,8 +46,7 @@ public:
    std::vector<definition> FIELD_DEFINITIONS;
 
 protected:
-   std::map<ossimString, ossimString> m_fields_map;
-   void readDefinitions(int actionFunction, std::istream &in, std::ostream &out, ossimString args = "");
+   mutable std::map<ossimString, ossimString> m_fields_map;
    enum specialFields
    {
       VARIABLE_LENGTH = -1,
@@ -55,13 +54,6 @@ protected:
       IF_STATEMENT_END = -3,
       LOOP_START = -4,
       LOOP_END = -5
-   };
-   enum actionFunctions
-   {
-      PARSE_STREAM = 0,
-      SET_FIELD = 1,
-      WRITE_STREAM = 2,
-      PRINT = 3
    };
 };
 
