@@ -46,7 +46,7 @@ public:
    std::vector<definition> FIELD_DEFINITIONS;
 
 protected:
-   mutable std::map<ossimString, ossimString> m_fields_map;
+   std::map<ossimString, ossimString> m_fields_map;
    enum specialFields
    {
       VARIABLE_LENGTH = -1,
