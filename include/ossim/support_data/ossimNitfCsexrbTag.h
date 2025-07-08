@@ -14,14 +14,16 @@
 //
 //----------------------------------------------------------------------------
 
-#include <ossim/support_data/ossimNitfGenericTag.h>
-
 #ifndef ossimNitfCsexrbTag_HEADER
 #define ossimNitfCsexrbTag_HEADER 1
+
+#include <ossim/support_data/ossimNitfGenericTag.h>
 
 class OSSIM_DLL ossimNitfCsexrbTag : public ossimNitfGenericTag
 {
    public:
       ossimNitfCsexrbTag(ossim_uint32 tagLength=0);
+
+      virtual ossimString getClassName() const;
 };
 #endif

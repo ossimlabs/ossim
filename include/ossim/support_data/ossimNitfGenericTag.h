@@ -10,12 +10,12 @@
 //
 //----------------------------------------------------------------------------
 
-#include <ossim/support_data/ossimNitfRegisteredTag.h>
-
-#include <vector>
-#include <map>
 #ifndef ossimNitfGenericTag_HEADER
 #define ossimNitfGenericTag_HEADER 1
+
+#include <ossim/support_data/ossimNitfRegisteredTag.h>
+#include <map>
+#include <vector>
 
 /**
  * @class ossimNitfGenericTag
@@ -41,11 +41,13 @@ public:
    {
       ossimString field;
       ossim_int32 size;
-      std::vector<ossim_int8> formatMethod = {0};
+      std::vector<ossim_int8> formatMethod;
    };
-   std::vector<definition> FIELD_DEFINITIONS;
 
 protected:
+   
+   std::vector<definition> FIELD_DEFINITIONS;
+
    std::map<ossimString, ossimString> m_fields_map;
    enum specialFields
    {

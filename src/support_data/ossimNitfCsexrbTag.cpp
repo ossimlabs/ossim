@@ -147,3 +147,7 @@ ossimNitfCsexrbTag::ossimNitfCsexrbTag(ossim_uint32 tagLength)
    };
 }
 
+ossimString ossimNitfCsexrbTag::getClassName() const
+{
+   return ossimString("ossimNitfCsexrbTag");
+}

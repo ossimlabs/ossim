@@ -9,17 +9,14 @@
 // Description: Generic tag class definition.
 //
 //----------------------------------------------------------------------------
+
 #include <ossim/support_data/ossimNitfGenericTag.h>
 #include <ossim/support_data/ossimNitfCommon.h>
 
 #include <istream>
 #include <iostream>
 #include <iomanip>
-#include <vector>
-#include <map>
 #include <utility>
-
-#include "base/ossimException.h"
 
 ossimNitfGenericTag::ossimNitfGenericTag(ossimString tag, ossim_uint32 tagLength)
    : ossimNitfRegisteredTag(tag, tagLength)
