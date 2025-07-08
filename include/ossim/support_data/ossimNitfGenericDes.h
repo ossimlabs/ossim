@@ -10,13 +10,15 @@
 //
 //----------------------------------------------------------------------------
 
+#ifndef OSSIMNITFGENERICDES_H
+#define OSSIMNITFGENERICDES_H
+
 #include <ossim/support_data/ossimNitfRegisteredDes.h>
 
 #include <vector>
 #include <map>
 
-#ifndef OSSIMNITFGENERICDES_H
-#define OSSIMNITFGENERICDES_H
+
 
 /**
  * @class ossimNitfGenericDes
