@@ -6,7 +6,7 @@
 //
 // Author:  Ryan Feldbush
 //
-// Description: CSSFAB tag class declaration.
+// Description: CSSFAB des class declaration.
 //
 // Exploitation Reference Data TRE.
 //
@@ -14,14 +14,14 @@
 //
 //----------------------------------------------------------------------------
 
-#include <ossim/support_data/ossimNitfGenericTag.h>
+#include <ossim/support_data/ossimNitfGenericDes.h>
 
-#ifndef ossimNitfCssfabTag_HEADER
-#define ossimNitfCssfabTag_HEADER 1
+#ifndef ossimNitfCssfabDes_HEADER
+#define ossimNitfCssfabDes_HEADER 1
 
-class OSSIM_DLL ossimNitfCssfabTag : public ossimNitfGenericTag
+class OSSIM_DLL ossimNitfCssfabDes : public ossimNitfGenericDes
 {
 public:
-   ossimNitfCssfabTag(ossim_uint32 tagLength=0);
+   ossimNitfCssfabDes(ossim_uint32 desLength=0);
 };
 #endif
