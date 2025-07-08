@@ -14,7 +14,7 @@
 // $Id:
 
 #include <ossim/support_data/ossimNitfCsexrbTag.h>
-#include <ossim/support_data/ossimNitfGenericTag.h>
+#include <ossim/support_data/ossimNitfCssfabTag.h>
 
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimException.h>
@@ -30,8 +30,11 @@ int main(int argc, char *argv[])
 {
    cout << "Hello World! Courtesy of OSSIM." << endl;
    ossimNitfCsexrbTag csexrb = ossimNitfCsexrbTag();
+   ossimNitfCssfabTag cssfab = ossimNitfCssfabTag();
    string fname = getenv("OSSIM_DATA");
-   fname += "/19SEP01060448-P1BS-200007943201_01_P004.NTF";
+   //19SEP01060448-P1BS-200007943201_01_P004.NTF
+   //24MAR05002840-P1BS-200004901937_01_P001_B.NTF
+   fname += "/24MAR05002840-P1BS-200004901937_01_P001_B.NTF";
    cout << fname << endl;
    ifstream file(fname);
 
@@ -46,15 +49,16 @@ int main(int argc, char *argv[])
    char ch;
    while (file.get(ch))
    {
-      std::cout << ch; // Print each character
+      //std::cout << ch; // Print each character
       buffer += ch;
 
       // Keep buffer the same length as the target
-      if (buffer.size() > 11)
+      if (buffer.size() > 6)
          buffer.erase(0, 1); // Remove the first character
 
-      if (buffer == "CSEXRB00443")
+      if (buffer == "CSEXRB")
       {
+         file.seekg (5, ios::cur);
          std::cout << "\nTarget string found. Stopping read." << std::endl;
          break;
       }
@@ -63,10 +67,27 @@ int main(int argc, char *argv[])
    csexrb.parseStream(file);
    csexrb.writeStream(cout);
    csexrb.print(cout, "");
-   csexrb.setField("RESERVED_LEN", "1");
-   csexrb.setField("MASK_LEN", "2");
-   csexrb.setField("RESERVED_FIELD_MASK", "1");
-   csexrb.print(cout, "");
+
+   while (file.get(ch))
+   {
+      //std::cout << ch; // Print each character
+      buffer += ch;
+
+      // Keep buffer the same length as the target
+      if (buffer.size() > 6)
+         buffer.erase(0, 1); // Remove the first character
+
+      if (buffer == "CSSFAB")
+      {
+         file.seekg (19, ios::cur);
+         std::cout << "\nTarget string found. Stopping read." << std::endl;
+         break;
+      }
+   }
+
+   cssfab.parseStream(file);
+   cssfab.writeStream(cout);
+   cssfab.print(cout, "");
 
    return 0;
 }

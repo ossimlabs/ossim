@@ -37,8 +37,13 @@ static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
    return result;
 }
 
-void ossimNitfGenericTag::readDefinitions(int actionFunction, std::istream &in, std::ostream &out, ossimString args)
+void ossimNitfGenericTag::parseStream(std::istream &in)
 {
+   clearFields();
+
+   m_fields_map.clear();
+
+   //copy-pasted looping logic
    char fieldContentsBuffer[256];
    std::vector<std::pair<ossimString, ossim_int32>> result;
    std::vector<std::vector<ossim_int32>> suffix;
@@ -47,7 +52,7 @@ void ossimNitfGenericTag::readDefinitions(int actionFunction, std::istream &in, 
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (i < NUM_DEFINITIONS)
+   while (i < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
@@ -56,7 +61,7 @@ void ossimNitfGenericTag::readDefinitions(int actionFunction, std::istream &in, 
          case IF_STATEMENT_START:
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             spaceSubStrings[0].split(colonSubStrings, ':');
-            generatedFieldName = m_fields_map[colonSubStrings[0] + formatSuffix(suffix)];
+            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
             if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
                generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
             if (spaceSubStrings[1] == "==")
@@ -66,8 +71,17 @@ void ossimNitfGenericTag::readDefinitions(int actionFunction, std::istream &in, 
             else
                ifCondition = false;
             if (!ifCondition)
-               while (FIELD_DEFINITIONS[i].size != IF_STATEMENT_END)
+            {
+               int loopCount = 1;
+               while (loopCount > 0)
+               {
                   i++;
+                  if (FIELD_DEFINITIONS[i].size == IF_STATEMENT_END)
+                     loopCount--;
+                  else if (FIELD_DEFINITIONS[i].size == IF_STATEMENT_START)
+                     loopCount++;
+               }
+            }
             i++;
             break;
          case IF_STATEMENT_END:
@@ -75,7 +89,7 @@ void ossimNitfGenericTag::readDefinitions(int actionFunction, std::istream &in, 
             break;
          case LOOP_START:
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            fieldLength = m_fields_map[spaceSubStrings[0] + formatSuffix(suffix)].toInt();
+            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
             if (fieldLength > 0)
                suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
             else
@@ -108,56 +122,118 @@ void ossimNitfGenericTag::readDefinitions(int actionFunction, std::istream &in, 
             {
                FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
                generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
-               fieldLength = m_fields_map[spaceSubStrings[1] + formatSuffix(suffix)].toInt();
+               fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
             }
             else
             {
                generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
                fieldLength = FIELD_DEFINITIONS[i].size;
             }
-            switch (actionFunction)
+            //Unique actions for parseStream
+            in.read(fieldContentsBuffer, fieldLength);
+            fieldContentsBuffer[fieldLength] = '\0';
+            m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, fieldContentsBuffer));
+            i++;
+            break;
+         }
+      }
+}
+
+void ossimNitfGenericTag::writeStream(std::ostream &out)
+{
+   //Start of copy-pasted block
+   std::vector<std::pair<ossimString, ossim_int32>> result;
+   std::vector<std::vector<ossim_int32>> suffix;
+   std::vector<ossimString> spaceSubStrings, colonSubStrings;
+   ossim_int32 fieldLength, i = 0;
+   ossimString generatedFieldName;
+   bool ifCondition;
+
+   while (i < FIELD_DEFINITIONS.size())
+   {
+      spaceSubStrings.clear();
+      colonSubStrings.clear();
+      switch (FIELD_DEFINITIONS[i].size)
+      {
+         case IF_STATEMENT_START:
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+            spaceSubStrings[0].split(colonSubStrings, ':');
+            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
+            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
+               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
+            if (spaceSubStrings[1] == "==")
+               ifCondition = (generatedFieldName == spaceSubStrings[2]);
+            else if (spaceSubStrings[1] == "!=")
+               ifCondition = (generatedFieldName != spaceSubStrings[2]);
+            else
+               ifCondition = false;
+            if (!ifCondition)
             {
-               case PARSE_STREAM:
-                  in.read(fieldContentsBuffer, fieldLength);
-                  fieldContentsBuffer[fieldLength] = '\0';
-                  m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, fieldContentsBuffer));
-                  break;
-            case SET_FIELD:
-                  if (m_fields_map.count(generatedFieldName) == 0)
-                     m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, std::string(fieldLength, ' ')));
-                  break;
-               case WRITE_STREAM:
-                  out.write(m_fields_map[generatedFieldName], fieldLength);
-                  break;
-               case PRINT:
-                  out << std::setiosflags(std::ios::left)
-                      << args << std::setw(24) << generatedFieldName << ":"
-                      << m_fields_map[generatedFieldName] << "\n";
-                  break;
-               default:
-                  break;
+               int loopCount = 1;
+               while (loopCount > 0)
+               {
+                  i++;
+                  if (FIELD_DEFINITIONS[i].size == IF_STATEMENT_END)
+                     loopCount--;
+                  else if (FIELD_DEFINITIONS[i].size == IF_STATEMENT_START)
+                     loopCount++;
+               }
             }
+            i++;
+            break;
+         case IF_STATEMENT_END:
+            i++;
+            break;
+         case LOOP_START:
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            if (fieldLength > 0)
+               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+            else
+            {
+               int loopCount = 1;
+               while (loopCount > 0)
+               {
+                  i++;
+                  if (FIELD_DEFINITIONS[i].size == LOOP_END)
+                     loopCount--;
+                  else if (FIELD_DEFINITIONS[i].size == LOOP_START)
+                     loopCount++;
+               }
+            }
+            i++;
+            break;
+         case LOOP_END:
+            suffix.back()[0]++;
+            if (suffix.back()[0] <= suffix.back()[1])
+            {
+               i = suffix.back()[2];
+            } else
+            {
+               suffix.pop_back();
+               i++;
+            }
+            break;
+         default:
+            if (FIELD_DEFINITIONS[i].size == VARIABLE_LENGTH)
+            {
+               FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+               generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
+               fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+            }
+            else
+            {
+               generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
+               fieldLength = FIELD_DEFINITIONS[i].size;
+            }
+            out.write(m_fields_map.at(generatedFieldName), fieldLength);
             i++;
             break;
       }
    }
 }
 
-void ossimNitfGenericTag::parseStream(std::istream &in)
-{
-   clearFields();
-
-   m_fields_map.clear();
-
-   readDefinitions(PARSE_STREAM, in, std::cout);
-}
-
-void ossimNitfGenericTag::writeStream(std::ostream &out)
-{
-   readDefinitions(WRITE_STREAM, std::cin, out);
-}
-
-std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &prefix)
+std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &prefix) const
 {
    std::string pfx = prefix;
    pfx += getTagName();
@@ -169,7 +245,99 @@ std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &p
          << pfx << std::setw(24) << "CEL:"
          << getTagLength() << "\n";
 
-   readDefinitions(PRINT, std::cin, out, pfx);
+   //Start of copy-pasted block
+   std::vector<std::pair<ossimString, ossim_int32>> result;
+   std::vector<std::vector<ossim_int32>> suffix;
+   std::vector<ossimString> spaceSubStrings, colonSubStrings;
+   ossim_int32 fieldLength, i = 0;
+   ossimString generatedFieldName;
+   bool ifCondition;
+
+   while (i < FIELD_DEFINITIONS.size())
+   {
+      spaceSubStrings.clear();
+      colonSubStrings.clear();
+      switch (FIELD_DEFINITIONS[i].size)
+      {
+         case IF_STATEMENT_START:
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+            spaceSubStrings[0].split(colonSubStrings, ':');
+            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
+            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
+               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
+            if (spaceSubStrings[1] == "==")
+               ifCondition = (generatedFieldName == spaceSubStrings[2]);
+            else if (spaceSubStrings[1] == "!=")
+               ifCondition = (generatedFieldName != spaceSubStrings[2]);
+            else
+               ifCondition = false;
+            if (!ifCondition)
+            {
+               int loopCount = 1;
+               while (loopCount > 0)
+               {
+                  i++;
+                  if (FIELD_DEFINITIONS[i].size == IF_STATEMENT_END)
+                     loopCount--;
+                  else if (FIELD_DEFINITIONS[i].size == IF_STATEMENT_START)
+                     loopCount++;
+               }
+            }
+            i++;
+            break;
+         case IF_STATEMENT_END:
+            i++;
+            break;
+         case LOOP_START:
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            if (fieldLength > 0)
+               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+            else
+            {
+               int loopCount = 1;
+               while (loopCount > 0)
+               {
+                  i++;
+                  if (FIELD_DEFINITIONS[i].size == LOOP_END)
+                     loopCount--;
+                  else if (FIELD_DEFINITIONS[i].size == LOOP_START)
+                     loopCount++;
+               }
+            }
+            i++;
+            break;
+         case LOOP_END:
+            suffix.back()[0]++;
+            if (suffix.back()[0] <= suffix.back()[1])
+            {
+               i = suffix.back()[2];
+            } else
+            {
+               suffix.pop_back();
+               i++;
+            }
+            break;
+         default:
+            if (FIELD_DEFINITIONS[i].size == VARIABLE_LENGTH)
+            {
+               FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+               generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
+               fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+            }
+            else
+            {
+               generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
+               fieldLength = FIELD_DEFINITIONS[i].size;
+            }
+            //Unique print actions
+            out << std::setiosflags(std::ios::left)
+                << pfx << std::setw(24) << generatedFieldName << ":"
+                << m_fields_map.at(generatedFieldName) << "\n";
+            i++;
+            break;
+      }
+      }
 
    return out;
 }
@@ -181,14 +349,14 @@ void ossimNitfGenericTag::clearFields()
 
 ossimString ossimNitfGenericTag::get(ossimString fieldName)
 {
-   return m_fields_map[fieldName];
+   return m_fields_map.at(fieldName);
 }
 
 void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue)
 {
    //Formatting
    int definition = 0;
-   for (int i=0; i < NUM_DEFINITIONS; i++)
+   for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
    {
       if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
          FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
@@ -203,7 +371,7 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
    {
       std::vector<ossimString> spaceSubStrings;
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
-      length = m_fields_map[spaceSubStrings[1]].toInt();
+      length = m_fields_map.at(spaceSubStrings[1]).toInt();
    }
    if (fieldValue.size() != length)
    {
@@ -211,32 +379,126 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
       {
          case 1:
             fieldValue = ossimNitfCommon::convertToUIntString(fieldValue.toUInt32(),
-               FIELD_DEFINITIONS[definition].size);
+               length);
             break;
          case 2:
             fieldValue = ossimNitfCommon::convertToIntString(fieldValue.toInt32(),
-               FIELD_DEFINITIONS[definition].size);
+               length);
             break;
          case 3:
             fieldValue = ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
                FIELD_DEFINITIONS[definition].formatMethod[1],
-               FIELD_DEFINITIONS[definition].size);
+               length);
             break;
          case 4:
             if (fieldValue.toFloat64() > 0)
                fieldValue = "+" + ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
                                  FIELD_DEFINITIONS[definition].formatMethod[1],
-                                    FIELD_DEFINITIONS[definition].size);
+                                    length);
             else
                fieldValue = ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
                                  FIELD_DEFINITIONS[definition].formatMethod[1],
-                                    FIELD_DEFINITIONS[definition].size);
+                                    length);
+         case 5:
+            fieldValue = ossimNitfCommon::convertToScientificString(fieldValue.toFloat64(), length);
          default:
             while (fieldValue.length() < length)
                fieldValue = fieldValue + ' ';
             break;
       }
    }
-   m_fields_map[fieldName] = fieldValue;
-   readDefinitions(SET_FIELD, std::cin, std::cout, fieldName);
+   m_fields_map.at(fieldName) = fieldValue;
+
+   //Start of copy-pasted code
+   std::vector<std::pair<ossimString, ossim_int32>> result;
+   std::vector<std::vector<ossim_int32>> suffix;
+   std::vector<ossimString> spaceSubStrings, colonSubStrings;
+   ossim_int32 fieldLength, i = 0;
+   ossimString generatedFieldName;
+   bool ifCondition;
+
+   while (i < FIELD_DEFINITIONS.size())
+   {
+      spaceSubStrings.clear();
+      colonSubStrings.clear();
+      switch (FIELD_DEFINITIONS[i].size)
+      {
+         case IF_STATEMENT_START:
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+            spaceSubStrings[0].split(colonSubStrings, ':');
+            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
+            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
+               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
+            if (spaceSubStrings[1] == "==")
+               ifCondition = (generatedFieldName == spaceSubStrings[2]);
+            else if (spaceSubStrings[1] == "!=")
+               ifCondition = (generatedFieldName != spaceSubStrings[2]);
+            else
+               ifCondition = false;
+            if (!ifCondition)
+            {
+               int loopCount = 1;
+               while (loopCount > 0)
+               {
+                  i++;
+                  if (FIELD_DEFINITIONS[i].size == IF_STATEMENT_END)
+                     loopCount--;
+                  else if (FIELD_DEFINITIONS[i].size == IF_STATEMENT_START)
+                     loopCount++;
+               }
+            }
+            i++;
+            break;
+         case IF_STATEMENT_END:
+            i++;
+            break;
+         case LOOP_START:
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            if (fieldLength > 0)
+               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+            else
+            {
+               int loopCount = 1;
+               while (loopCount > 0)
+               {
+                  i++;
+                  if (FIELD_DEFINITIONS[i].size == LOOP_END)
+                     loopCount--;
+                  else if (FIELD_DEFINITIONS[i].size == LOOP_START)
+                     loopCount++;
+               }
+            }
+            i++;
+            break;
+         case LOOP_END:
+            suffix.back()[0]++;
+            if (suffix.back()[0] <= suffix.back()[1])
+            {
+               i = suffix.back()[2];
+            } else
+            {
+               suffix.pop_back();
+               i++;
+            }
+            break;
+         default:
+            if (FIELD_DEFINITIONS[i].size == VARIABLE_LENGTH)
+            {
+               FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+               generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
+               fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+            }
+            else
+            {
+               generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
+               fieldLength = FIELD_DEFINITIONS[i].size;
+            }
+            //Unique setField actions
+            if (m_fields_map.count(generatedFieldName) == 0)
+               m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, std::string(fieldLength, ' ')));
+            i++;
+            break;
+      }
+   }
 }

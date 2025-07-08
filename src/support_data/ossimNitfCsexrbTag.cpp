@@ -19,11 +19,8 @@
 ossimNitfCsexrbTag::ossimNitfCsexrbTag(ossim_uint32 tagLength)
    : ossimNitfGenericTag("CSEXRB", tagLength)
 {
-}
-
-const ossim_int32 ossimNitfGenericTag::NUM_DEFINITIONS = 123;
-ossimNitfGenericTag::definition ossimNitfGenericTag::FIELD_DEFINITIONS[NUM_DEFINITIONS] =
-{
+   FIELD_DEFINITIONS =
+   {
    {"IMAGE_UUID", 36},
    {"NUM_ASSOC_DES", 3, {1}},
    {"NUM_ASSOC_DES i", LOOP_START},
@@ -147,5 +144,6 @@ ossimNitfGenericTag::definition ossimNitfGenericTag::FIELD_DEFINITIONS[NUM_DEFIN
          {"NUM_IMG_OPS_DATA", LOOP_END},
       {"RESERVED_FIELD_MASK:0 == 1", IF_STATEMENT_END},
    {"RESERVED_LEN != 00000", IF_STATEMENT_END}
-};
+   };
+}
 
