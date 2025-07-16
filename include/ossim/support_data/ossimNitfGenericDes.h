@@ -50,6 +50,7 @@ public:
 
 protected:
    std::map<ossimString, ossimString> m_fields_map;
+   int parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn);
    enum specialFields
    {
       VARIABLE_LENGTH = -1,

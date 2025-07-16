@@ -37,6 +37,80 @@ static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
    return result;
 }
 
+//Parse statements in reverse polish notation
+int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn){
+   std::vector<ossimString> splitInput = input.split(' ');
+   std::stack<int> stack;
+   int a, b;
+   for(ossimString entry: splitInput)
+   {
+      switch(entry.at(0))
+      {
+         case '+':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a + b);
+            break;
+         case '-':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a - b);
+            break;
+         case '*':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a * b);
+            break;
+         case '/':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a / b);
+            break;
+         case '&':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(bool(a) && bool(b));
+            break;
+         case '|':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(bool(a) || bool(b));
+            break;
+         case '=':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a == b);
+            break;
+         case '!':
+            a = stack.top();
+            stack.pop();
+            stack.push(!bool(a));
+            break;
+         default:
+            if(entry.toInt() != 0)
+               stack.push(entry.toInt());
+            else
+               stack.push(m_fields_map.at(entry + formatSuffix(suffixIn)).toInt());
+            break;
+      }
+   }
+   return stack.top();
+}
+
 void ossimNitfGenericDes::parseStream(std::istream &in)
 {
    clearFields();
@@ -496,7 +570,7 @@ void ossimNitfGenericDes::setField(ossimString fieldName, ossimString fieldValue
             }
             //Unique setField actions
             if (m_fields_map.count(generatedFieldName) == 0)
-               m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, std::string(fieldLength, ' ')));
+               m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, std::string(fieldLength, '0')));
             i++;
             break;
       }
