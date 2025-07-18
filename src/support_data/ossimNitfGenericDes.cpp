@@ -144,7 +144,7 @@ void ossimNitfGenericDes::parseStream(std::istream &in)
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (ossim_uint32(i) < FIELD_DEFINITIONS.size())
+   while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
@@ -230,7 +230,7 @@ void ossimNitfGenericDes::writeStream(std::ostream &out)
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (ossim_uint32(i) < FIELD_DEFINITIONS.size())
+   while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
@@ -323,7 +323,7 @@ std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &p
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (ossim_uint32(i) < FIELD_DEFINITIONS.size())
+   while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
@@ -476,7 +476,7 @@ void ossimNitfGenericDes::setField(ossimString fieldName, ossimString fieldValue
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (ossim_uint32(i) < FIELD_DEFINITIONS.size())
+   while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
