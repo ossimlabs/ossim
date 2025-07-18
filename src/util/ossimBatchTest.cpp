@@ -1,14 +1,14 @@
-//----------------------------------------------------------------------------
+//---
 //
-// File ossim-batch-test.cpp
+// File ossimBatchTest.cpp
 // 
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author:  David Burken, Oscar Kramer
 //
 // Description: Test code application ossim batch test.
 //
-//----------------------------------------------------------------------------
+//---
 // $Id: ossim-batch-test.cpp 3112 2012-01-26 17:28:00Z david.burken $
 
 #include <ossim/util/ossimBatchTest.h>
@@ -28,8 +28,6 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-
-using namespace std;
 
 //**************************************************************************************************
 // Constructor
@@ -223,8 +221,8 @@ void ossimBatchTest::writeTemplate(const ossimFilename& templateFile, bool write
       del_cmd = del_cmd.expandEnvironmentVariable();
       if (system(del_cmd.chars()) != 0)
       {
-         cerr << "ERROR: Could not delete existing template file before writing new template."
-            " Please delete the existing and rerun the command."<< endl;
+         std::cerr << "ERROR: Could not delete existing template file before writing new template."
+            " Please delete the existing and rerun the command."<< std::endl;
          return;
       }
    }
@@ -425,7 +423,7 @@ ossim_uint8 ossimBatchTest::execute()
    ossim_uint8 status = TEST_TBD;
 
    ossimString configName (m_configFileName.fileNoExtension());
-   cout << "\nExecuting batch test for config: <" << configName << ">" << endl;
+   std::cout << "\nExecuting batch test for config: <" << configName << ">" << std::endl;
 
    try
    {
@@ -437,8 +435,8 @@ ossim_uint8 ossimBatchTest::execute()
       if (base_output_dir.empty())
       {
          // Need to establish the top-level test directory that will contain log and out subdirs:
-         cout<<"\nossimBatchTest WARNING: The environment variable OSSIM_BATCH_TEST_RESULTS is not "
-               "defined. Results will be written relative to the current working directory."<<endl;
+         std::cout << "\nossimBatchTest WARNING: The environment variable OSSIM_BATCH_TEST_RESULTS is not defined. Results will be written relative to the current working directory."
+                   << std::endl;
          base_output_dir = ossimEnv->getCurrentWorkingDir();
       }
 
@@ -466,8 +464,8 @@ ossim_uint8 ossimBatchTest::execute()
       kwl.setExpandEnvVarsFlag(true);
       if (!kwl.addFile(m_configFileName))
       {
-         ostringstream errmsg;
-         errmsg << "Error encountered reading test config at <"<<m_configFileName<<">."<<endl;
+         std::ostringstream errmsg;
+         errmsg << "Error encountered reading test config at <"<<m_configFileName<<">."<<std::endl;
          throw ossimException(errmsg.str());
       }
 
@@ -476,8 +474,8 @@ ossim_uint8 ossimBatchTest::execute()
       status = processConfigList(kwl);
       if (status != TEST_TBD)
       {
-         cout<<"\nossimBatchTest: Exiting <"<<configName<<"> with overall status = "
-               <<m_statusLabels[status]<<"\n"<<endl;
+         std::cout <<"\nossimBatchTest: Exiting <"<<configName<<"> with overall status = "
+                   << m_statusLabels[status] << "\n" << std::endl;
          return status;
       }
 
@@ -517,8 +515,8 @@ ossim_uint8 ossimBatchTest::execute()
       if (( logDir.exists() == false ) && ( logDir.createDirectory() == false ))
       {
          status = TEST_ERROR;
-         ostringstream errmsg;
-         errmsg << "Could not create: <" << logDir << ">."<< endl;
+         std::ostringstream errmsg;
+         errmsg << "Could not create: <" << logDir << ">."<< std::endl;
          throw ossimException(errmsg.str());
       }
 
@@ -531,12 +529,12 @@ ossim_uint8 ossimBatchTest::execute()
       if ( m_logStr.fail() )
       {
          status = TEST_ERROR;
-         ostringstream errmsg;
-         errmsg << "Could not open: <" << logFile  << ">."<< endl;
+         std::ostringstream errmsg;
+         errmsg << "Could not open: <" << logFile  << ">."<< std::endl;
          throw ossimException(errmsg.str());
       }
 
-      cout << "Logging to file: " << logFile << "\n";
+      std::cout << "Logging to file: " << logFile << "\n";
 
       ossimString date;
       getDateString(date);
@@ -571,28 +569,28 @@ ossim_uint8 ossimBatchTest::execute()
       m_logStr << "\nstop_time: " << date << "\n";
       double stopTime = ossimTimer::instance()->time_s();
       m_logStr << "total elapsed time in seconds: "
-               << std::setiosflags(ios::fixed) << std::setprecision(4)
+               << std::setiosflags(std::ios::fixed) << std::setprecision(4)
                << (stopTime-startTime)
-               << endl; // flush
+               << std::endl;
       m_logStr.close();
 
-      cout << "\ntotal elapsed time in seconds: "
-           << std::setiosflags(ios::fixed) << std::setprecision(4)
+      std::cout << "\ntotal elapsed time in seconds: "
+           << std::setiosflags(std::ios::fixed) << std::setprecision(4)
            << (stopTime-startTime)
-           << "\nWrote log: " << logFile << "\n" << endl;
+           << "\nWrote log: " << logFile << "\n" << std::endl;
    }
    catch (ossimException& e)
    {
       status = TEST_ERROR;
-      cerr << "\nossimBatchTest::execute() caught exception: " << e.what() << endl;
+      std::cerr << "\nossimBatchTest::execute() caught exception: " << e.what() << std::endl;
    }
    catch ( ... )
    {
-      cerr << "\nossimBatchTest::execute() caught unhandled exception: " << endl;
+      std::cerr << "\nossimBatchTest::execute() caught unhandled exception: " << std::endl;
    }
 
-   cout<<"ossimBatchTest: Exiting <"<<configName<<"> with status = "
-         <<m_statusLabels[status]<<endl;
+   std::cout << "ossimBatchTest: Exiting <"<<configName<<"> with status = "
+             << m_statusLabels[status]<<std::endl;
 
    return status;
 }
@@ -716,16 +714,19 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
       {
          statusString = "test: disabled";
       }
-      cout << "test_name: " << testName << "\n" << statusString << endl;
-      m_logStr << "test_name: " << testName << "\n" << statusString << endl;
+      std::cout << "test_name: " << testName << "\n" << statusString << std::endl;
+      m_logStr << "test_name: " << testName << "\n" << statusString << std::endl;
       return testStatus;
    }
 
-   cout     << "\n\nbegin_test:\n" << prefix << "name: " << testName << "\n";
+   std::cout << "\n\nbegin_test:\n" << prefix << "name: " << testName << "\n";
    m_logStr << "\n\nbegin_test:\n" << prefix << "name: " << testName << "\n";   
    lookup = kwl.find( prefix, "description" );
    if ( lookup )
+   {
+      std::cout << "description: " << lookup << "\n";
       m_logStr << "description: " << lookup << "\n";
+   }
 
    bool preProcessFlag  = false;
    bool expectedFlag    = false;
@@ -804,12 +805,12 @@ ossim_uint8 ossimBatchTest::processTest(const ossimString& prefix, const ossimKe
       }
       else
       {
-         m_logStr << testName << ": ERROR temp file could not be derived..." << endl;
+         m_logStr << testName << ": ERROR temp file could not be derived..." << std::endl;
          testStatus |= TEST_ERROR; // Set an error bit...
       }
    }
 
-   cout     << "end_test:\n";
+   std::cout << "end_test:\n";
    m_logStr << "end_test:\n";
 
    m_logStr << "----------------------------------------------------------------------\n"; 
@@ -905,7 +906,7 @@ ossim_uint8 ossimBatchTest::processCommands(const ossimString& prefixBase,
             getDateString(date);
             m_logStr << "end: " << date << "\n"
                    << testName << "[" << index << "]: elapsed time in seconds: "
-                   << std::setiosflags(ios::fixed)
+                   << std::setiosflags(std::ios::fixed)
                    << std::setprecision(4)
                    << (stopTime-startTime) << "\n";
          }
@@ -914,7 +915,7 @@ ossim_uint8 ossimBatchTest::processCommands(const ossimString& prefixBase,
          
          // Output the status.
          // If failed write the temp file to the log.  This should have the diffs in it.
-         ostringstream statusString;
+         std::ostringstream statusString;
          if ( prefixBase.size() )
          {
             statusString << prefixBase;
@@ -937,13 +938,13 @@ ossim_uint8 ossimBatchTest::processCommands(const ossimString& prefixBase,
                statusString << "ERROR";
             }
 
-            cout << statusString.str() << endl;
-            m_logStr << statusString.str() << endl;
+            std::cout << statusString.str() << std::endl;
+            m_logStr << statusString.str() << std::endl;
             m_logStr << command << "\noutput follows:\n";
             std::ifstream in;
             if (!tempFileName.empty())
             {
-               in.open(tempFileName.c_str(), ios::in | ios::binary);
+               in.open(tempFileName.c_str(), std::ios::in | std::ios::binary);
                if ( in.is_open() )
                {
                   char ch;
@@ -956,8 +957,8 @@ ossim_uint8 ossimBatchTest::processCommands(const ossimString& prefixBase,
          else
          {
             statusString << "PASSED";
-            cout << statusString.str() << endl;
-            m_logStr << statusString.str() << endl;
+            std::cout << statusString.str() << std::endl;
+            m_logStr << statusString.str() << std::endl;
          }
 
          ++processedIndexes;
@@ -1074,12 +1075,12 @@ bool ossimBatchTest::makeDefaultResultsDir()
 {
    if ( !m_outDir.exists() && !m_outDir.createDirectory() )
    {
-      cerr << "Could not create: " << m_outDir << endl;
+      std::cerr << "Could not create: " << m_outDir << std::endl;
       return false;
    }
    if ( !m_expDir.exists() &&  !m_expDir.createDirectory() )
    {
-      cerr << "Could not create: " << m_expDir << endl;
+      std::cerr << "Could not create: " << m_expDir << std::endl;
       return false;
    }
    return true;
@@ -1103,7 +1104,7 @@ bool ossimBatchTest::doDefaultClean()
       if (system(command_line) != 0)
       {
          m_logStr << "ERROR: execution failed!\n";
-         cerr << "ERROR: Could not delete <"<<m_outDir<<">. Clean operation failed."<< endl;
+         std::cerr << "ERROR: Could not delete <"<<m_outDir<<">. Clean operation failed."<< std::endl;
          result = false;
       }
    }
@@ -1118,7 +1119,7 @@ bool ossimBatchTest::doDefaultClean()
          if (system(command_line) != 0)
          {
             m_logStr << "ERROR: execution failed!\n";
-            cerr << "ERROR: Could not delete <"<<m_outDir<<">. Clean operation failed."<< endl;
+            std::cerr << "ERROR: Could not delete <"<<m_outDir<<">. Clean operation failed."<< std::endl;
             result = false;
          }
       }
