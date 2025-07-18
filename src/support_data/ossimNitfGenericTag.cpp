@@ -142,7 +142,7 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (i < FIELD_DEFINITIONS.size())
+   while (ossim_uint32(i) < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
@@ -228,7 +228,7 @@ void ossimNitfGenericTag::writeStream(std::ostream &out)
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (i < FIELD_DEFINITIONS.size())
+   while (ossim_uint32(i) < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
@@ -321,7 +321,7 @@ std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &p
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (i < FIELD_DEFINITIONS.size())
+   while (ossim_uint32(i) < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
@@ -474,7 +474,7 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (i < FIELD_DEFINITIONS.size())
+   while (ossim_uint32(i) < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
