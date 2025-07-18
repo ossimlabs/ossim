@@ -423,7 +423,7 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
          break;
       }
    }
-   int length = FIELD_DEFINITIONS[definition].size;
+   ossim_uint32 length = FIELD_DEFINITIONS[definition].size;
    if (length == VARIABLE_LENGTH)
    {
       std::vector<ossimString> spaceSubStrings;
