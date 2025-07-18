@@ -34,6 +34,99 @@ static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
    return result;
 }
 
+//Parse statements in reverse polish notation
+int ossimNitfGenericTag::parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const
+{
+   std::vector<ossimString> splitInput = input.split(' ');
+   std::stack<ossimString> stack;
+   ossimString a, b;
+   int colPosition;
+   std::vector<ossimString> colonSubStrings;
+   for(ossimString entry: splitInput)
+   {
+      switch(entry.at(0))
+      {
+         case '+':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a.toInt() + b.toInt());
+            break;
+         case '-':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a.toInt()- b.toInt());
+            break;
+         case '*':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a.toInt()* b.toInt());
+            break;
+         case '/':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a.toInt()/ b.toInt());
+            break;
+         case '&':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(bool(a) && bool(b));
+            break;
+         case '|':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(bool(a) || bool(b));
+            break;
+         case '=':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            if(a == b)
+               stack.push("1");
+            else
+               stack.push("0");
+            break;
+         case '!':
+            a = stack.top();
+            stack.pop();
+            stack.push(!bool(a));
+            break;
+         default:
+            if(entry.toInt() != 0 || entry == "0")
+               stack.push(entry.toInt());
+            else
+            {
+               if(entry[0] == '\'')
+                  stack.push(entry.substr(1, entry.length() - 2));
+               else
+               {
+                  colonSubStrings = entry.split(':');
+                  if(colonSubStrings.size() > 1)
+                     stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(suffixIn))[colonSubStrings[1].toInt()]);
+                  else
+                     stack.push(m_fields_map.at(entry + formatSuffix(suffixIn)));
+               }
+            }
+            break;
+      }
+   }
+   if(stack.size() > 1)
+      std::cout << "EEEEEE" << std::endl;
+   return stack.top().toInt();
+}
+
 void ossimNitfGenericTag::parseStream(std::istream &in)
 {
    clearFields();
@@ -56,17 +149,7 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
       switch (FIELD_DEFINITIONS[i].size)
       {
          case IF_STATEMENT_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            spaceSubStrings[0].split(colonSubStrings, ':');
-            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
-            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
-               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
-            if (spaceSubStrings[1] == "==")
-               ifCondition = (generatedFieldName == spaceSubStrings[2]);
-            else if (spaceSubStrings[1] == "!=")
-               ifCondition = (generatedFieldName != spaceSubStrings[2]);
-            else
-               ifCondition = false;
+            ifCondition = bool(parseRPN(FIELD_DEFINITIONS[i].field, suffix));
             if (!ifCondition)
             {
                int loopCount = 1;
@@ -85,10 +168,9 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
             i++;
             break;
          case LOOP_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            fieldLength = parseRPN(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length() - 2) , suffix);
             if (fieldLength > 0)
-               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+               suffix.push_back({1, fieldLength, i + 1, FIELD_DEFINITIONS[i].field.at(FIELD_DEFINITIONS[i].field.length() - 1)});
             else
             {
                int loopCount = 1;
@@ -153,17 +235,7 @@ void ossimNitfGenericTag::writeStream(std::ostream &out)
       switch (FIELD_DEFINITIONS[i].size)
       {
          case IF_STATEMENT_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            spaceSubStrings[0].split(colonSubStrings, ':');
-            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
-            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
-               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
-            if (spaceSubStrings[1] == "==")
-               ifCondition = (generatedFieldName == spaceSubStrings[2]);
-            else if (spaceSubStrings[1] == "!=")
-               ifCondition = (generatedFieldName != spaceSubStrings[2]);
-            else
-               ifCondition = false;
+            ifCondition = parseRPN(FIELD_DEFINITIONS[i].field, suffix);
             if (!ifCondition)
             {
                int loopCount = 1;
@@ -182,10 +254,9 @@ void ossimNitfGenericTag::writeStream(std::ostream &out)
             i++;
             break;
          case LOOP_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            fieldLength = parseRPN(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length() - 2) , suffix);
             if (fieldLength > 0)
-               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+               suffix.push_back({1, fieldLength, i + 1, FIELD_DEFINITIONS[i].field.at(FIELD_DEFINITIONS[i].field.length() - 1)});
             else
             {
                int loopCount = 1;
@@ -257,17 +328,7 @@ std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &p
       switch (FIELD_DEFINITIONS[i].size)
       {
          case IF_STATEMENT_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            spaceSubStrings[0].split(colonSubStrings, ':');
-            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
-            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
-               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
-            if (spaceSubStrings[1] == "==")
-               ifCondition = (generatedFieldName == spaceSubStrings[2]);
-            else if (spaceSubStrings[1] == "!=")
-               ifCondition = (generatedFieldName != spaceSubStrings[2]);
-            else
-               ifCondition = false;
+            ifCondition = parseRPN(FIELD_DEFINITIONS[i].field, suffix);
             if (!ifCondition)
             {
                int loopCount = 1;
@@ -286,10 +347,9 @@ std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &p
             i++;
             break;
          case LOOP_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            fieldLength = parseRPN(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length() - 2) , suffix);
             if (fieldLength > 0)
-               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+               suffix.push_back({1, fieldLength, i + 1, FIELD_DEFINITIONS[i].field.at(FIELD_DEFINITIONS[i].field.length() - 1)});
             else
             {
                int loopCount = 1;
@@ -421,17 +481,7 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
       switch (FIELD_DEFINITIONS[i].size)
       {
          case IF_STATEMENT_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            spaceSubStrings[0].split(colonSubStrings, ':');
-            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
-            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
-               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
-            if (spaceSubStrings[1] == "==")
-               ifCondition = (generatedFieldName == spaceSubStrings[2]);
-            else if (spaceSubStrings[1] == "!=")
-               ifCondition = (generatedFieldName != spaceSubStrings[2]);
-            else
-               ifCondition = false;
+            ifCondition = parseRPN(FIELD_DEFINITIONS[i].field, suffix);
             if (!ifCondition)
             {
                int loopCount = 1;
@@ -450,10 +500,9 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
             i++;
             break;
          case LOOP_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            fieldLength = parseRPN(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length() - 2) , suffix);
             if (fieldLength > 0)
-               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+               suffix.push_back({1, fieldLength, i + 1, FIELD_DEFINITIONS[i].field.at(FIELD_DEFINITIONS[i].field.length() - 1)});
             else
             {
                int loopCount = 1;
@@ -493,7 +542,7 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
             }
             //Unique setField actions
             if (m_fields_map.count(generatedFieldName) == 0)
-               m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, std::string(fieldLength, ' ')));
+               m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, std::string(fieldLength, '0')));
             i++;
             break;
       }
