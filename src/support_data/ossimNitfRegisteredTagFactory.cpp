@@ -20,7 +20,6 @@
 #include <ossim/support_data/ossimNitfCsdidaTag.h>
 #include <ossim/support_data/ossimNitfCsexraTag.h>
 #include <ossim/support_data/ossimNitfCsexrbTag.h>
-#include <ossim/support_data/ossimNitfCssfabTag.h>
 #include <ossim/support_data/ossimNitfEngrdaTag.h>
 #include <ossim/support_data/ossimNitfGeoPositioningTag.h>
 #include <ossim/support_data/ossimNitfGeolobTag.h>
@@ -64,7 +63,6 @@ static const char CSCRNA_TAG[]               = "CSCRNA";
 static const char CSDIDA_TAG[]               = "CSDIDA";
 static const char CSEXRA_TAG[]               = "CSEXRA";
 static const char CSEXRB_TAG[]               = "CSEXRB";
-static const char CSSFAB_TAG[]               = "CSSFAB";
 static const char ENGRDA_TAG[]               = "ENGRDA";
 static const char GEOLOB_TAG[]               = "GEOLOB";
 static const char GEO_POSITIONING_TAG[]      = "GEOPSB";
@@ -150,10 +148,6 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    else if(name == CSEXRB_TAG)
    {
       return new ossimNitfCsexrbTag;
-   }
-   else if(name == CSSFAB_TAG)
-   {
-      return new ossimNitfCssfabTag;
    }
    else if(name == ENGRDA_TAG)
    {

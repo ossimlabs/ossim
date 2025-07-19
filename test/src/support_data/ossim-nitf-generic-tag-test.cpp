@@ -14,7 +14,7 @@
 // $Id:
 
 #include <ossim/support_data/ossimNitfCsexrbTag.h>
-#include <ossim/support_data/ossimNitfCssfabTag.h>
+#include <ossim/support_data/ossimNitfCssfabDes.h>
 
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimException.h>
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 {
    cout << "Hello World! Courtesy of OSSIM." << endl;
    ossimNitfCsexrbTag csexrb = ossimNitfCsexrbTag();
-   ossimNitfCssfabTag cssfab = ossimNitfCssfabTag();
+   ossimNitfCssfabDes cssfab = ossimNitfCssfabDes();
    string fname = getenv("OSSIM_DATA");
    //19SEP01060448-P1BS-200007943201_01_P004.NTF
    //24MAR05002840-P1BS-200004901937_01_P001_B.NTF
