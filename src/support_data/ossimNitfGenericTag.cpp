@@ -16,6 +16,7 @@
 #include <istream>
 #include <iostream>
 #include <iomanip>
+#include <stack>
 #include <utility>
 
 ossimNitfGenericTag::ossimNitfGenericTag(ossimString tag, ossim_uint32 tagLength)
@@ -40,7 +41,7 @@ int ossimNitfGenericTag::parseRPN(ossimString input, std::vector<std::vector<oss
    std::vector<ossimString> splitInput = input.split(' ');
    std::stack<ossimString> stack;
    ossimString a, b;
-   int colPosition;
+   // int colPosition;
    std::vector<ossimString> colonSubStrings;
    for(ossimString entry: splitInput)
    {
@@ -197,7 +198,7 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
             }
             break;
          default:
-            if (FIELD_DEFINITIONS[i].size == VARIABLE_LENGTH)
+            if ((ossim_int32)FIELD_DEFINITIONS[i].size == VARIABLE_LENGTH)
             {
                FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
                generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
@@ -412,8 +413,8 @@ ossimString ossimNitfGenericTag::get(ossimString fieldName)
 void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue)
 {
    //Formatting
-   int definition = 0;
-   for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
+   ossim_uint32 definition = 0;
+   for (ossim_uint32 i=0; i < FIELD_DEFINITIONS.size(); i++)
    {
       if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
          FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
@@ -424,7 +425,7 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
       }
    }
    ossim_uint32 length = FIELD_DEFINITIONS[definition].size;
-   if (length == VARIABLE_LENGTH)
+   if ((ossim_int32)length == VARIABLE_LENGTH) // VARIABLE_LENGTH is signed -1
    {
       std::vector<ossimString> spaceSubStrings;
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');

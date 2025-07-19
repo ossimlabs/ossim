@@ -11,7 +11,7 @@
 //----------------------------------------------------------------------------
 
 #ifndef OSSIMNITFGENERICDES_H
-#define OSSIMNITFGENERICDES_H
+#define OSSIMNITFGENERICDES_H 1
 
 #include <ossim/support_data/ossimNitfRegisteredDes.h>
 
