@@ -48,6 +48,8 @@ protected:
    
    std::vector<definition> FIELD_DEFINITIONS;
 
+   //Parses field value from reverse polish noatation for loop and if conditions
+   int parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const;
    std::map<ossimString, ossimString> m_fields_map;
    enum specialFields
    {

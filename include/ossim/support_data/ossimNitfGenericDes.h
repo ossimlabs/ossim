@@ -44,12 +44,15 @@ public:
    {
       ossimString field;
       ossim_int32 size;
-      std::vector<ossim_int8> formatMethod = {0};
+      std::vector<ossim_int8> formatMethod;
    };
    std::vector<definition> FIELD_DEFINITIONS;
 
 protected:
    std::map<ossimString, ossimString> m_fields_map;
+
+   //Parses field value from reverse polish noatation for loop and if conditions
+   int parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const;
    enum specialFields
    {
       VARIABLE_LENGTH = -1,

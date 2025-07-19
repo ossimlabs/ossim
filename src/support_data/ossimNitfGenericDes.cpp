@@ -37,6 +37,98 @@ static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
    return result;
 }
 
+//Parse statements in reverse polish notation
+int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const
+{
+   std::vector<ossimString> splitInput = input.split(' ');
+   std::stack<ossimString> stack;
+   ossimString a, b;
+   std::vector<ossimString> colonSubStrings;
+   for(ossimString entry: splitInput)
+   {
+      switch(entry.at(0))
+      {
+         case '+':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a.toInt() + b.toInt());
+            break;
+         case '-':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a.toInt()- b.toInt());
+            break;
+         case '*':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a.toInt()* b.toInt());
+            break;
+         case '/':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(a.toInt()/ b.toInt());
+            break;
+         case '&':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(bool(a) && bool(b));
+            break;
+         case '|':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            stack.push(bool(a) || bool(b));
+            break;
+         case '=':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            if(a == b)
+               stack.push("1");
+            else
+               stack.push("0");
+            break;
+         case '!':
+            a = stack.top();
+            stack.pop();
+            stack.push(!bool(a));
+            break;
+         default:
+            if(entry.toInt() != 0 || entry == "0")
+               stack.push(entry.toInt());
+            else
+            {
+               if(entry[0] == '\'')
+                  stack.push(entry.substr(1, entry.length() - 2));
+               else
+               {
+                  colonSubStrings = entry.split(':');
+                  if(colonSubStrings.size() > 1)
+                     stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(suffixIn))[colonSubStrings[1].toInt()]);
+                  else
+                     stack.push(m_fields_map.at(entry + formatSuffix(suffixIn)));
+               }
+            }
+            break;
+      }
+   }
+   if(stack.size() > 1)
+      std::cout << "EEEEEE" << std::endl;
+   return stack.top().toInt();
+}
+
 void ossimNitfGenericDes::parseStream(std::istream &in)
 {
    clearFields();
@@ -52,24 +144,14 @@ void ossimNitfGenericDes::parseStream(std::istream &in)
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (i < FIELD_DEFINITIONS.size())
+   while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
       switch (FIELD_DEFINITIONS[i].size)
       {
          case IF_STATEMENT_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            spaceSubStrings[0].split(colonSubStrings, ':');
-            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
-            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
-               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
-            if (spaceSubStrings[1] == "==")
-               ifCondition = (generatedFieldName == spaceSubStrings[2]);
-            else if (spaceSubStrings[1] == "!=")
-               ifCondition = (generatedFieldName != spaceSubStrings[2]);
-            else
-               ifCondition = false;
+            ifCondition = bool(parseRPN(FIELD_DEFINITIONS[i].field, suffix));
             if (!ifCondition)
             {
                int loopCount = 1;
@@ -88,10 +170,9 @@ void ossimNitfGenericDes::parseStream(std::istream &in)
             i++;
             break;
          case LOOP_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            fieldLength = parseRPN(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length() - 2) , suffix);
             if (fieldLength > 0)
-               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+               suffix.push_back({1, fieldLength, i + 1, FIELD_DEFINITIONS[i].field.at(FIELD_DEFINITIONS[i].field.length() - 1)});
             else
             {
                int loopCount = 1;
@@ -149,24 +230,14 @@ void ossimNitfGenericDes::writeStream(std::ostream &out)
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (i < FIELD_DEFINITIONS.size())
+   while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
       switch (FIELD_DEFINITIONS[i].size)
       {
          case IF_STATEMENT_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            spaceSubStrings[0].split(colonSubStrings, ':');
-            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
-            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
-               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
-            if (spaceSubStrings[1] == "==")
-               ifCondition = (generatedFieldName == spaceSubStrings[2]);
-            else if (spaceSubStrings[1] == "!=")
-               ifCondition = (generatedFieldName != spaceSubStrings[2]);
-            else
-               ifCondition = false;
+            ifCondition = parseRPN(FIELD_DEFINITIONS[i].field, suffix);
             if (!ifCondition)
             {
                int loopCount = 1;
@@ -185,10 +256,9 @@ void ossimNitfGenericDes::writeStream(std::ostream &out)
             i++;
             break;
          case LOOP_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            fieldLength = parseRPN(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length() - 2) , suffix);
             if (fieldLength > 0)
-               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+               suffix.push_back({1, fieldLength, i + 1, FIELD_DEFINITIONS[i].field.at(FIELD_DEFINITIONS[i].field.length() - 1)});
             else
             {
                int loopCount = 1;
@@ -253,24 +323,14 @@ std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &p
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (i < FIELD_DEFINITIONS.size())
+   while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
       switch (FIELD_DEFINITIONS[i].size)
       {
          case IF_STATEMENT_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            spaceSubStrings[0].split(colonSubStrings, ':');
-            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
-            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
-               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
-            if (spaceSubStrings[1] == "==")
-               ifCondition = (generatedFieldName == spaceSubStrings[2]);
-            else if (spaceSubStrings[1] == "!=")
-               ifCondition = (generatedFieldName != spaceSubStrings[2]);
-            else
-               ifCondition = false;
+            ifCondition = parseRPN(FIELD_DEFINITIONS[i].field, suffix);
             if (!ifCondition)
             {
                int loopCount = 1;
@@ -289,10 +349,9 @@ std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &p
             i++;
             break;
          case LOOP_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            fieldLength = parseRPN(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length() - 2) , suffix);
             if (fieldLength > 0)
-               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+               suffix.push_back({1, fieldLength, i + 1, FIELD_DEFINITIONS[i].field.at(FIELD_DEFINITIONS[i].field.length() - 1)});
             else
             {
                int loopCount = 1;
@@ -366,7 +425,7 @@ void ossimNitfGenericDes::setField(ossimString fieldName, ossimString fieldValue
          break;
       }
    }
-   int length = FIELD_DEFINITIONS[definition].size;
+   ossim_uint32 length = FIELD_DEFINITIONS[definition].size;
    if (length == VARIABLE_LENGTH)
    {
       std::vector<ossimString> spaceSubStrings;
@@ -417,24 +476,14 @@ void ossimNitfGenericDes::setField(ossimString fieldName, ossimString fieldValue
    ossimString generatedFieldName;
    bool ifCondition;
 
-   while (i < FIELD_DEFINITIONS.size())
+   while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
       spaceSubStrings.clear();
       colonSubStrings.clear();
       switch (FIELD_DEFINITIONS[i].size)
       {
          case IF_STATEMENT_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            spaceSubStrings[0].split(colonSubStrings, ':');
-            generatedFieldName = m_fields_map.at(colonSubStrings[0] + formatSuffix(suffix));
-            if (colonSubStrings.size() > 1 && generatedFieldName.length() > colonSubStrings[1].toUInt32())
-               generatedFieldName = generatedFieldName.at(colonSubStrings[1].toInt());
-            if (spaceSubStrings[1] == "==")
-               ifCondition = (generatedFieldName == spaceSubStrings[2]);
-            else if (spaceSubStrings[1] == "!=")
-               ifCondition = (generatedFieldName != spaceSubStrings[2]);
-            else
-               ifCondition = false;
+            ifCondition = parseRPN(FIELD_DEFINITIONS[i].field, suffix);
             if (!ifCondition)
             {
                int loopCount = 1;
@@ -453,10 +502,9 @@ void ossimNitfGenericDes::setField(ossimString fieldName, ossimString fieldValue
             i++;
             break;
          case LOOP_START:
-            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            fieldLength = m_fields_map.at(spaceSubStrings[0] + formatSuffix(suffix)).toInt();
+            fieldLength = parseRPN(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length() - 2) , suffix);
             if (fieldLength > 0)
-               suffix.push_back({1, fieldLength, i + 1, spaceSubStrings[1].at(0)});
+               suffix.push_back({1, fieldLength, i + 1, FIELD_DEFINITIONS[i].field.at(FIELD_DEFINITIONS[i].field.length() - 1)});
             else
             {
                int loopCount = 1;
@@ -496,7 +544,7 @@ void ossimNitfGenericDes::setField(ossimString fieldName, ossimString fieldValue
             }
             //Unique setField actions
             if (m_fields_map.count(generatedFieldName) == 0)
-               m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, std::string(fieldLength, ' ')));
+               m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, std::string(fieldLength, '0')));
             i++;
             break;
       }
