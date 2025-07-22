@@ -313,7 +313,7 @@ private:
     * parse all overflow tags and put them into theTagList.
     */
    void readOverflowTags(ossim::istream& in);
-   void readDes(std::istream& in);     
+   void readDes(ossim::istream& in);     
 
    // Note: these are work variables and not part of the
    // Nitf header.  These variables will be used to quickly
