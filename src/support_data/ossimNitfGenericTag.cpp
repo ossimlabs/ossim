@@ -11,6 +11,8 @@
 //----------------------------------------------------------------------------
 
 #include <ossim/support_data/ossimNitfGenericTag.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimTrace.h>
 #include <ossim/support_data/ossimNitfCommon.h>
 
 #include <istream>
@@ -19,9 +21,29 @@
 #include <stack>
 #include <utility>
 
+static ossimTrace traceDebug("ossimNitfGenericTag:debug");
+
+std::ostream& ossimNitfGenericTag::definition::print(std::ostream& out) const
+{
+   out << "field: " << field
+       << "\nsize: " << size << "\n";
+   for ( ossim_uint32 i = 0; i < formatMethod.size(); ++i)
+   {
+      out << "formatMethod[" << i << "]: " << formatMethod[i] << "\n";
+   }
+   return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const ossimNitfGenericTag::definition& def)
+{
+   return def.print(out);
+}
+
 ossimNitfGenericTag::ossimNitfGenericTag(ossimString tag, ossim_uint32 tagLength)
    : ossimNitfRegisteredTag(tag, tagLength)
 {
+   // Uncomment to hard code on trace for class.
+   // traceDebug.setTraceFlag(true);
 }
 
 static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
@@ -130,9 +152,13 @@ int ossimNitfGenericTag::parseRPN(ossimString input, std::vector<std::vector<oss
 
 void ossimNitfGenericTag::parseStream(std::istream &in)
 {
-   clearFields();
+   static const char MODULE[] = "ossimNitfGenericTag::parseStream";
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+   }
 
-   m_fields_map.clear();
+   clearFields();
 
    //copy-pasted looping logic
    char fieldContentsBuffer[256];
@@ -145,6 +171,12 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
 
    while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "FIELD_DEFINITIONS[" << i << "]:\n" << FIELD_DEFINITIONS[i] << "\n";
+      }
+      
       spaceSubStrings.clear();
       colonSubStrings.clear();
       switch (FIELD_DEFINITIONS[i].size)
@@ -215,12 +247,23 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
             m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, fieldContentsBuffer));
             i++;
             break;
-         }
       }
+   }
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited..." << std::endl;
+   }
 }
 
 void ossimNitfGenericTag::writeStream(std::ostream &out)
 {
+   static const char MODULE[] = "ossimNitfGenericTag::writeStream";
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+   }
+   
    //Start of copy-pasted block
    std::vector<std::pair<ossimString, ossim_int32>> result;
    std::vector<std::vector<ossim_int32>> suffix;
@@ -231,6 +274,12 @@ void ossimNitfGenericTag::writeStream(std::ostream &out)
 
    while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "FIELD_DEFINITIONS[" << i << "]:\n" << FIELD_DEFINITIONS[i] << "\n";
+      }
+            
       spaceSubStrings.clear();
       colonSubStrings.clear();
       switch (FIELD_DEFINITIONS[i].size)
@@ -300,6 +349,11 @@ void ossimNitfGenericTag::writeStream(std::ostream &out)
             break;
       }
    }
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " entered...\n";
+   }
 }
 
 std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &prefix) const
@@ -328,6 +382,7 @@ std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &p
       colonSubStrings.clear();
       switch (FIELD_DEFINITIONS[i].size)
       {
+         
          case IF_STATEMENT_START:
             ifCondition = parseRPN(FIELD_DEFINITIONS[i].field, suffix);
             if (!ifCondition)
@@ -548,4 +603,34 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
             break;
       }
    }
+}
+
+ossim_uint32 ossimNitfGenericTag::computeTagLength() const
+{
+   ossim_uint32 length = 11; // CETAG(6) + CEL(5)
+   for ( const auto& i : m_fields_map )
+   {
+      length += i.second.string().size();
+   }
+   return length;
+}
+
+std::ostream& ossimNitfGenericTag::printMap(std::ostream& out ) const
+{
+   for ( const auto& i : m_fields_map )
+   {
+      out << i.first << ": " << i.second << "\n";
+   }
+   out << std::endl;
+   return out;
+}
+
+std::ostream& ossimNitfGenericTag::printFieldDefs(std::ostream& out ) const
+{
+   for ( const auto& def : FIELD_DEFINITIONS )
+   {
+      out << def;
+   }
+   out << std::endl;
+   return out;
 }

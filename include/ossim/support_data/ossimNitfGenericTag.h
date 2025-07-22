@@ -14,6 +14,7 @@
 #define ossimNitfGenericTag_HEADER 1
 
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
+#include <ossim/base/ossimString.h>
 #include <map>
 #include <vector>
 
@@ -36,16 +37,41 @@ public:
 
    ossimString get(ossimString fieldName);
    void setField(ossimString fieldName, ossimString fieldValue);
+   
+protected:
+   
+   /**
+    * @brief Computes tag length from m_fields_map size.
+    * @return Tag length in bytes.
+    */
+   ossim_uint32 computeTagLength() const;
 
-   struct definition
+   /**
+    * @brief Prints out m_fields_map for debug.
+    */
+   std::ostream& printMap(std::ostream& out ) const;
+
+   /**
+    * @brief Prints out field definitions for debug.
+    */
+   std::ostream& printFieldDefs(std::ostream& out ) const;
+
+   class definition
    {
+   public:
+      std::ostream& print(std::ostream& out) const;
+      
       ossimString field;
+
+      /** Size in bytes or if negative relative to specialFields enum. */
       ossim_int32 size;
+      
       std::vector<ossim_int8> formatMethod;
    };
 
-protected:
-   
+   friend std::ostream& operator<<(std::ostream& out,
+                                   const ossimNitfGenericTag::definition& def);
+
    std::vector<definition> FIELD_DEFINITIONS;
 
    //Parses field value from reverse polish noatation for loop and if conditions
@@ -60,5 +86,7 @@ protected:
       LOOP_END = -5
    };
 };
+
+
 
 #endif
