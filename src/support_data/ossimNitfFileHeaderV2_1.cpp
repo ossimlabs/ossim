@@ -394,8 +394,11 @@ void ossimNitfFileHeaderV2_1::parseStream(ossim::istream& in)
    initializeAllOffsets();
    readOverflowTags(in);
    // custom DES parsers
-   // bool parseDes = ossimString(ossimPreferences::instance()->findPreference("des_parser")).toBool();
-   bool parseDes = true; // tmp drb
+   bool parseDes = ossimString(ossimPreferences::instance()->findPreference("des_parser")).toBool();
+   
+   // tmp drb
+   // bool parseDes = true; 
+
    if (parseDes) readDes(in);
 }
 
