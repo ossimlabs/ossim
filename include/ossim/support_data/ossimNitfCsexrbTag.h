@@ -21,9 +21,25 @@
 
 class OSSIM_DLL ossimNitfCsexrbTag : public ossimNitfGenericTag
 {
-   public:
-      ossimNitfCsexrbTag(ossim_uint32 tagLength=0);
+public:
 
-      virtual ossimString getClassName() const;
+   ossimNitfCsexrbTag();
+   
+   ossimNitfCsexrbTag(ossim_uint32 tagLength);
+   
+   virtual ossimString getClassName() const;
+
+private:
+   
+   /**
+    * @brief Initializes ossimNitfGenericTag FIELD_DEFINITIONS.
+    */
+   void initializeFieldDefinitions();
+   
+   /**
+    * @brief Initializes ossimNitfGenericTag m_fields_map required tags.
+    */
+   void initializeDefaults();
+
 };
 #endif

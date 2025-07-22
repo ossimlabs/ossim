@@ -15,9 +15,37 @@
 //----------------------------------------------------------------------------
 
 #include <ossim/support_data/ossimNitfCsexrbTag.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimTrace.h>
+#include <utility> /* make_pair */
+
+static ossimTrace traceDebug("ossimNitfCsexrbTag:debug");
+
+ossimNitfCsexrbTag::ossimNitfCsexrbTag()
+   : ossimNitfGenericTag("CSEXRB", 0)
+{
+   // Uncomment to hard code on trace for class.
+   // traceDebug.setTraceFlag(true);
+   
+   initializeFieldDefinitions();
+   initializeDefaults();
+   setTagLength(computeTagLength());
+
+   if ( traceDebug() )
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimNitfCsexrbTag::ossimNitfCsexrbTag() DEBUG:\n"
+         << "Computed default tag length: " << getTagLength() << "\n";
+   }
+}
 
 ossimNitfCsexrbTag::ossimNitfCsexrbTag(ossim_uint32 tagLength)
    : ossimNitfGenericTag("CSEXRB", tagLength)
+{
+   initializeFieldDefinitions();
+}
+
+void ossimNitfCsexrbTag::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
    {
@@ -145,9 +173,249 @@ ossimNitfCsexrbTag::ossimNitfCsexrbTag(ossim_uint32 tagLength)
       {"RESERVED_FIELD_MASK:0 1 =", IF_STATEMENT_END},
    {"RESERVED_LEN 0 = !", IF_STATEMENT_END}
    };
-}
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimNitfCsexrbTag::initializeFieldDefinitions() DEBUG\n"
+         << "Field definitions:\n";
+      printFieldDefs(ossimNotify(ossimNotifyLevel_DEBUG)); 
+   }
+   
+} // End: ossimNitfCsexrbTag::initializeFieldDefinitions()
 
 ossimString ossimNitfCsexrbTag::getClassName() const
 {
    return ossimString("ossimNitfCsexrbTag");
 }
+
+//---
+// See: Vol-2-APP M-GLAS-GFM
+// Table M.6-1: Common Sensor Exploitation Reference Data (CSEXRB) TRE
+//---
+void ossimNitfCsexrbTag::initializeDefaults()
+{
+   clearFields();
+
+   ossimString key;
+   ossimString val;
+
+   // 36 BCS-A R
+   key = "IMAGE_UUID";
+   val = "00000000-0000-0000-0000-000000000000";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 3 BCS-N 000 to 999 R
+   key = "NUM_ASSOC_DES";
+   val = "000";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   //  ASSOC_DES_UUIDi 36 BCS-A C
+
+   // 6 BCS-A R
+   key = "PLATFORM_ID";
+   val.string().resize(6);
+   val.string().replace(0,6,6,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 6 BCS-A R
+   key = "PAYLOAD_ID";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 6 BCS-A R
+   key = "SENSOR_ID";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 1 BCS-A "F", "S" or BCS space if field is N/A <R>
+   key = "SENSOR_TYPE";
+   val = " ";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A -99999999.99 to +99999999.99 or BCS spaces meters <R>
+   key = "GROUND_REF_POINT_X";
+   val.string().resize(12);
+   val.string().replace(0,12,12,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A -99999999.99 to +99999999.99 or BCS spaces meters <R>
+   key = "GROUND_REF_POINT_Y";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A -99999999.99 to +99999999.99 or BCS spaces meters <R>
+   key = "GROUND_REF_POINT_Z";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // If (SENSOR_TYPE = S) conditional.
+
+   //---
+   // Field: DAY_FIRST_LINE_IMAGE 8 BCS-N CCYYMMDD UTC C
+   // Day of First Line of the Synthetic Array Image.
+   //---
+
+   //---
+   // Field: TIME_FIRST_LINE_IMAGE
+   // 15 BCS-N  00000.000000000 to 86399.999999999 seconds UTC C
+   //---
+
+   //---
+   // Field: TIME_IMAGE_DURATION
+   // 16 BCS-N -86399.999999999 to 86399.999999999 seconds UTC C
+   //---
+
+   // END If (SENSOR_TYPE = S) conditional.
+
+   // If (SENSOR_TYPE = F)
+
+   // Field: TIME_STAMP_LOC 1 BCS-N 0 or 1 C
+
+   //---
+   // Field: REFERENCE_FRAME_NUM 9 BCS-A 000000001 to 999999999 or BCS spaces <C>
+   //---
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = "MAX_GSD";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = "ALONG_SCAN_GSD";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = "CROSS_SCAN_GSD";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = "GEO_MEAN_GSD";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = "A_S_VERT_GSD";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = "C_S_VERT_GSD";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = "GEO_MEAN_VERT_GSD";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-A 000.0 to 180.0 or BCS spaces degrees <R>
+   key = "GSD_BETA_ANGLE";
+   val.string().resize(5);
+   val.string().replace(0,5,5,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-A 00000 to 99999 or BCS spaces dn <R>
+   key = "DYNAMIC_RANGE";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 7 BCS-N 0000000 to 9999999 R
+   key = "NUM_LINES";
+   val.string().resize(7);
+   val.string().replace(0,7,7,'0');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-N 00000 to 99999 R
+   key = "NUM_SAMPLES";
+   val.string().resize(5);
+   val.string().replace(0,5,5,'0');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 7 BCS-A 000.000 to 359.999 or BCS spaces degrees <R>
+   key = "ANGLE_TO_NORTH";
+   val.string().resize(7);
+   val.string().replace(0,7,7,'0');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 6 BCS-A 00.000 to 90.000 or BCS spaces degrees <R>
+   key = "OBLIQUITY_ANGLE";
+   val.string().resize(6);
+   val.string().replace(0,6,6,'0');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 7 BCS-A 000.000 to 359.999 or BCS spaces degrees <R>
+   key = "AZ_OF_OBLIQUITY";
+   val.string().resize(7);
+   val.string().replace(0,7,7,'0');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 1 BCS-N  0 = Do not apply correction 1 = Apply correction R
+   key = "ATM_REFR_FLAG";
+   val.string().resize(1);
+   val = "0";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 1 BCS-N  0 = Do not apply correction 1 = Apply correction R
+   key = "VEL_ABER_FLAG";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 1 BCS-N  1 = Snow 0 = No Snow 9 - Not Available R
+   key = "GRD_COVER";
+   val = "9";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   //---
+   // 1 BCS-N 0 = inches
+   // 1 = 1 to 8 inches of ice and/or snow
+   // 2 = 9 to 17 inches
+   // 3 = greater than 17 inches
+   // 9 = Not Available
+   //---
+   key = "SNOW_DEPTH_CATEGORY";
+   val = "9";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 7 BCS-A -90.000 to +90.000 or BCS spaces degrees <R>
+   key = "SUN_AZIMUTH";
+   val.string().resize(7);
+   val.string().replace(0,7,7,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 7 BCS-A -90.000 to +90.000 or BCS spaces degrees <R>
+   key = "SUN_ELEVATION";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 3 BCS-A 0.0 to 9.0 or BCS spaces NIIRS <R>
+   key = "PREDICTED_NIIRS";
+   val.string().resize(3);
+   val.string().replace(0,3,3,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-A 000.0 to 999.9 or BCS spaces feet <R>
+   key = "CIRCL_ERR";
+   val.string().resize(5);
+   val.string().replace(0,5,5,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-A 000.0 to 999.9 or BCS spaces feet <R>
+   key = "LINEAR_ERR";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 3 BCS-A 000 to 100, 999 or BCS spaces percent <R>
+   key = "CLOUD_COVER";
+   val.string().resize(3);
+   val.string().replace(0,3,3,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 1 BCS-N 0 = no 1 = yes or BCS space <R>
+   key = "UE_TIME_FLAG";
+   val.string().resize(1);
+   val = " ";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-A 00000 to 00063 Max or BCS spaces bytes R
+   key = "RESERVED_LEN";
+   val.string().resize(5);
+   val.string().replace(0,5,5,'0');
+   m_fields_map.insert(std::make_pair(key, val));
+   
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimNitfCsexrbTag::initializeDefaults() DEBUG\n"
+         << "Default map:\n";
+      printMap(ossimNotify(ossimNotifyLevel_DEBUG)); 
+   }
+   
+} // End: void ossimNitfCsexrbTag::initializeDefaults()
