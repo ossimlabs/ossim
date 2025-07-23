@@ -29,7 +29,7 @@ std::ostream& ossimNitfGenericTag::definition::print(std::ostream& out) const
        << "\nsize: " << size << "\n";
    for ( ossim_uint32 i = 0; i < formatMethod.size(); ++i)
    {
-      out << "formatMethod[" << i << "]: " << formatMethod[i] << "\n";
+      out << "formatMethod[" << i << "]: " << (int)formatMethod[i] << "\n";
    }
    return out;
 }
