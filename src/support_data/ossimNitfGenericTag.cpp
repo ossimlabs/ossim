@@ -607,7 +607,7 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
 
 ossim_uint32 ossimNitfGenericTag::computeTagLength() const
 {
-   ossim_uint32 length = 11; // CETAG(6) + CEL(5)
+   ossim_uint32 length = 0;
    for ( const auto& i : m_fields_map )
    {
       length += i.second.string().size();
