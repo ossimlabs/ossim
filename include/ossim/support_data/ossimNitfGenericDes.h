@@ -44,12 +44,14 @@ public:
    {
       ossimString field;
       ossim_int32 size;
-      std::vector<ossim_int8> formatMethod;
+      ossim_int8 dataFormat;
+      ossim_int8 precision;
    };
    std::vector<definition> FIELD_DEFINITIONS;
 
 protected:
    std::map<ossimString, ossimString> m_fields_map;
+   void loopLogic(ossim_int32 &i, std::vector<std::vector<ossim_int32>> &suffix) const;
 
    //Parses field value from reverse polish noatation for loop and if conditions
    int parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const;
