@@ -34,6 +34,7 @@
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimRefPtr.h>
+#include <ossim/base/ossimStopwatch.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimScalarTypeLut.h>
 #include <ossim/base/ossimStdOutProgress.h>
@@ -80,6 +81,7 @@
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/projection/ossimUtmProjection.h>
 
+#include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/support_data/ossimSrcRecord.h>
 #include <ossim/support_data/ossimWkt.h>
 
@@ -113,11 +115,11 @@
 
 int main(int argc, char *argv[])
 {
-   ossimTimer timer;
-   // Start the timer.
-   ossimTimer::Timer_t tickStart = timer.tick();
-   ossimArgumentParser ap(&argc, argv);
+   ossimStopwatch sw;
+   sw.start();
 
+   ossimArgumentParser ap(&argc, argv);
+   
    // Initialize ossim stuff, factories, plugin, etc.
    ossimInit::instance()->initialize(ap);
    try
@@ -129,13 +131,13 @@ int main(int argc, char *argv[])
       ossimNotify(ossimNotifyLevel_WARN) << e.what() << std::endl;
       exit(1);
    }
-   ossimTimer::Timer_t tickEnd = timer.tick();
 
+   sw.stop();
    ossimNotify(ossimNotifyLevel_NOTICE)
        << "elapsed time in seconds: "
        << std::setiosflags(std::ios::fixed)
        << std::setprecision(3)
-       << timer.delta_s(tickStart, tickEnd) << std::endl;
+       << sw.count() << std::endl;
 
    return 0;
 }
