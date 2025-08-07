@@ -1,16 +1,15 @@
-//*******************************************************************
+//---
 //
 // License:  MIT
-//
-// See LICENSE.txt file in the top level directory for more details.
 //
 // Author: Garrett Potts, with some additions and modifciations by
 // Patrick Melody
 //
 // Description: Common file for utility functions.
 //
-//*************************************************************************
-// $Id: ossimCommon.h 23131 2015-02-06 13:35:55Z gpotts $
+//---
+// $Id$
+
 #ifndef ossimCommon_HEADER
 #define ossimCommon_HEADER 1
 
@@ -716,7 +715,16 @@ namespace ossim
                            ossim_float32& maxValue,
                            ossim_float32& nullValue );
 
-} // End: namespace ossim
+   /**
+    * @brief Generates a 36 character string.
+    * 
+    * @param uuid_string Initialized by this or cleared if libuuid support
+    * is not built in.
+    *
+    * @return true on success, false if not supported.
+    */
+   bool generate_uuid(std::string& uuid_string);
 
+} // End: namespace ossim
 
 #endif /* #ifndef ossimCommon_HEADER */
