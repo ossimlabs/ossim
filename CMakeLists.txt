@@ -122,7 +122,19 @@ if ( ZLIB_FOUND )
    set( OSSIM_HAS_LIBZ 1 )
 else ( ZLIB_FOUND )
    message( WARNING "Could not find optional zlib package!" )
-endif ( ZLIB_FOUND )
+ endif ( ZLIB_FOUND )
+
+# LIBUUID - Optional
+set( OSSIM_HAS_UUID 0 ) 
+find_package( Libuuid )
+if ( LIBUUID_FOUND )
+   include_directories( ${LIBUUID_INCLUDE_DIR} )
+   set( ossimDependentLibs ${ossimDependentLibs} ${LIBUUID_LIBRARY} )
+   set( OSSIM_HAS_UUID 1 )
+else ( LIBUUID_FOUND )
+   message( WARNING "Could not find optional libuuid package!" )
+endif ( LIBUUID_FOUND )
+
 
 # TIFF - Required:
 find_package( TIFF )

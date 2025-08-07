@@ -1,15 +1,11 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
-//
-// Author: David Burken
+// License: MIT
 //
 // Description: Common file for global functions.
 //
-//*************************************************************************
-// $Id: ossimCommon.cpp 23141 2015-02-10 19:43:19Z dburken $
+//---
+// $Id$
 
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimConstants.h>
@@ -19,7 +15,7 @@
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimKeywordNames.h>
-#include <ossim/base/ossimNotifyContext.h>
+#include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimTrace.h>
@@ -29,11 +25,12 @@
 #include <ctime>
 #include <sstream>
 #include <mutex>
+#if OSSIM_HAS_UUID
+#  include <uuid.h>
+#endif
 
 static std::mutex timeMutex;
 static ossimTrace traceDebug("ossimCommon:debug");
-
-using namespace std;
 
 // stores a floating point nan value
 const ossim::IntFloatBitCoercion ossim::nanValue(~ossim_int64(0));
@@ -1339,7 +1336,7 @@ bool ossim::getBinInformation( const ossimImageSource* imageSource,
             if(traceDebug())
             {
                ossimNotify(ossimNotifyLevel_WARN)
-                  << "Unsupported scalar type in ossim::getBinInformation()" << endl;
+                  << "Unsupported scalar type in ossim::getBinInformation()" << std::endl;
             }
             result = false;
             break;
@@ -1347,4 +1344,27 @@ bool ossim::getBinInformation( const ossimImageSource* imageSource,
       }
    }
    return result;
+}
+
+bool ossim::generate_uuid(std::string& uuid_string)
+{
+#if OSSIM_HAS_UUID
+   // typedef unsigned char uuid_t[16];
+   uuid_t uuid;
+   
+   // generate
+   uuid_generate_time_safe(uuid);
+   
+   // unparse (to string)
+   char uuid_str[37]; // ex. "1b4e28ba-2fa1-11d2-883f-0016d3cca427" + "\0"
+   uuid_unparse_lower(uuid, uuid_str);
+   uuid_string = uuid_str;
+   return true;
+#else
+   uuid_string.clear();
+   ossimNotify(ossimNotifyLevel_WARN)
+      << "ossim::generate_uuid() WARNING: Unsupported call! Requires build with libuuid support."
+      << std::endl;
+   return false;
+#endif
 }
