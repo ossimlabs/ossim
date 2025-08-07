@@ -698,7 +698,7 @@ void ossimNitfFileHeaderV2_1::writeStream(ossim::ostream& out)
 std::ostream& ossimNitfFileHeaderV2_1::print(std::ostream& out,
                                              const std::string& prefix) const
 {
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << prefix << std::setw(24) << "FHDR:"
        << theFileTypeVersion << "\n"
        << prefix << std::setw(24) << "CLEVEL:"
