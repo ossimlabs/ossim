@@ -15,6 +15,7 @@
 
 #include <ossim/support_data/ossimNitfCsexrbTag.h>
 #include <ossim/support_data/ossimNitfCssfabDes.h>
+#include <ossim/support_data/ossimNitfCsattbDes.h>
 
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimException.h>
@@ -31,6 +32,7 @@ int main(int argc, char *argv[])
    cout << "Hello World! Courtesy of OSSIM." << endl;
    ossimNitfCsexrbTag csexrb = ossimNitfCsexrbTag();
    ossimNitfCssfabDes cssfab = ossimNitfCssfabDes();
+   ossimNitfCsattbDes csattb = ossimNitfCsattbDes();
    string fname = getenv("OSSIM_DATA");
    //19SEP01060448-P1BS-200007943201_01_P004.NTF
    //24MAR05002840-P1BS-200004901937_01_P001_B.NTF
@@ -67,6 +69,27 @@ int main(int argc, char *argv[])
    csexrb.parseStream(file);
    csexrb.writeStream(cout);
    csexrb.print(cout, "");
+
+   while (file.get(ch))
+   {
+      //std::cout << ch; // Print each character
+      buffer += ch;
+
+      // Keep buffer the same length as the target
+      if (buffer.size() > 6)
+         buffer.erase(0, 1); // Remove the first character
+
+      if (buffer == "CSATTB")
+      {
+         file.seekg (19, ios::cur);
+         std::cout << "\nTarget string found. Stopping read." << std::endl;
+         break;
+      }
+   }
+
+   csattb.parseStream(file);
+   csattb.writeStream(cout);
+   csattb.print(cout, "");
 
    while (file.get(ch))
    {

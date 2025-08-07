@@ -14,12 +14,14 @@
 
 #include <ossim/support_data/ossimNitfSicdXmlDataContentDes.h>
 
+#include "support_data/ossimNitfCsattbDes.h"
 #include "support_data/ossimNitfCssfabDes.h"
 
 RTTI_DEF1(ossimNitfRegisteredDesFactory, "ossimNitfRegisteredDesFactory", ossimNitfDesFactory);
 
 static const char XML_DATA_CONTENT_DES[]                = "XML_DATA_CONTENT";
 static const char SICD_XML[]                            = "SICD_XML";
+static const char CSATTB_DES[]                          = "CSSFAB";
 static const char CSSFAB_DES[]                          = "CSSFAB";
 
 ossimNitfRegisteredDesFactory::ossimNitfRegisteredDesFactory()
@@ -51,6 +53,12 @@ ossimRefPtr<ossimNitfRegisteredDes> ossimNitfRegisteredDesFactory::create(
        result = new ossimNitfSicdXmlDataContentDes;
 
        result->setDesName(desName);
+   }
+   else if(desName == CSATTB_DES)
+   {
+      result = new ossimNitfCsattbDes;
+
+      result->setDesName(desName);
    }
    else if(desName == CSSFAB_DES)
    {
