@@ -87,7 +87,8 @@ int main(int argc, char *argv[])
       }
    }
 
-   csattb.parseStream(file);
+   //csattb.parseStream(file);
+   csattb.setField("", "");
    csattb.writeStream(cout);
    csattb.print(cout, "");
 

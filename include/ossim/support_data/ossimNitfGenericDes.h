@@ -46,10 +46,12 @@ public:
       ossim_int32 size;
       ossim_int8 dataFormat;
       ossim_int8 precision;
+      ossimString defaultValue = "";
    };
    std::vector<definition> FIELD_DEFINITIONS;
 
 protected:
+   ossimString formatField(int definition, ossimString fieldValue) const;
    std::map<ossimString, ossimString> m_fields_map;
    void loopLogic(ossim_int32 &i, std::vector<std::vector<ossim_int32>> &suffix) const;
 

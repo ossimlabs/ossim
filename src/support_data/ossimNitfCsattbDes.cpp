@@ -29,7 +29,7 @@ ossimNitfCsattbDes::ossimNitfCsattbDes(ossim_uint32 desLength)
          {"UUID", 36, 0},
          {"NUMAIS", 3, 0},
          {"NUMAIS n", LOOP_START},
-            {"AISDLVLn", 3, 1},
+            {"AISDLVL", 3, 1},
          {"NUMAIS n", LOOP_END},
          {"NUM_ASSOC_ELEM", 3, 1},
          {"NUM_ASSOC_ELEM n", LOOP_START},
