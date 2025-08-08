@@ -21,7 +21,9 @@ find_path( LIBUUID_INCLUDE_DIR uuid.h
            /usr/include/uuid
 	   /usr/include
 	   /usr/local/include/uuid
-	   /usr/local/include )
+	   /usr/local/include
+	   /opt/local/include/uuid
+	   /opt/local/include )
 
 # Find Libuuid library:
 find_library( LIBUUID_LIBRARY NAMES uuid
@@ -31,7 +33,8 @@ find_library( LIBUUID_LIBRARY NAMES uuid
               /usr/lib64 
               /usr/lib
 	      /usr/local/lib64
-	      /usr/local/lib )
+	      /usr/local/lib
+	      /opt/local/lib )
 	    
 #---
 # This function sets Libuuid_FOUND if variables are valid.
