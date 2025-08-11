@@ -15,14 +15,11 @@
 #include <ossim/imaging/ossimImageSourceSequencer.h>
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimDrect.h>
-#include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/imaging/ossimImageData.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
 #include <ossim/imaging/ossimImageWriter.h>
 #include <ossim/base/ossimMultiResLevelHistogram.h>
-
-using namespace std;
 
 RTTI_DEF2(ossimImageSourceSequencer, "ossimImageSourceSequencer",
           ossimImageSource, ossimConnectableObjectListener);
@@ -36,6 +33,7 @@ ossimImageSourceSequencer::ossimImageSourceSequencer(ossimImageSource* inputSour
                   1,
                   true,
                   false),
+    theInputConnection(inputSource),
     theBlankTile(NULL),
     theAreaOfInterest(0,0,0,0),
     theTileSize(OSSIM_DEFAULT_TILE_WIDTH, OSSIM_DEFAULT_TILE_HEIGHT),
@@ -46,7 +44,6 @@ ossimImageSourceSequencer::ossimImageSourceSequencer(ossimImageSource* inputSour
 {
    ossim::defaultTileSize(theTileSize);
    theAreaOfInterest.makeNan();
-   theInputConnection    = inputSource;
    if(inputSource)
    {
      connectMyInputTo(0, inputSource);
@@ -151,12 +148,11 @@ void ossimImageSourceSequencer::initialize()
       else
       {
          rect.stretchOut();
-         setAreaOfInterest(rect);
+         setAreaOfInterest(ossimIrect64(rect));
       }
       updateTileDimensions();
       
-      theBlankTile  = ossimImageDataFactory::instance()->create(this,
-                                                                this);
+      theBlankTile  = ossimImageDataFactory::instance()->create(this, this);
       if(theBlankTile.valid())
       {
          theBlankTile->initialize();
@@ -205,7 +201,7 @@ void ossimImageSourceSequencer::getDecimationFactor(ossim_uint32 resLevel,
    result.makeNan();
 }
 
-void ossimImageSourceSequencer::getDecimationFactors(vector<ossimDpt>& decimations) const
+void ossimImageSourceSequencer::getDecimationFactors(std::vector<ossimDpt>& decimations) const
 {
    if(theInputConnection)
    {
@@ -225,6 +221,11 @@ ossim_uint32 ossimImageSourceSequencer::getNumberOfDecimationLevels()const
 
 void ossimImageSourceSequencer::setAreaOfInterest(const ossimIrect& areaOfInterest)
 {
+   setAreaOfInterest( ossimIrect64(areaOfInterest) );
+}
+
+void ossimImageSourceSequencer::setAreaOfInterest(const ossimIrect64& areaOfInterest)
+{
    if(areaOfInterest.hasNans())
    {
       theAreaOfInterest.makeNan();
@@ -232,12 +233,11 @@ void ossimImageSourceSequencer::setAreaOfInterest(const ossimIrect& areaOfIntere
       theNumberOfTilesVertical   = 0;
    }
 
-   // let's round it to the nearest pixel value before setting it.
    theAreaOfInterest = areaOfInterest;
    updateTileDimensions();
 }
 
-const ossimIrect& ossimImageSourceSequencer::getAreaOfInterest()const
+const ossimIrect64& ossimImageSourceSequencer::getAreaOfInterest()const
 {
    return theAreaOfInterest;
 }
@@ -298,29 +298,30 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
       }
       for (ossim_uint32 tile_idx=0; tile_idx<num_tiles; ++tile_idx)
       {
-       ossimRefPtr<ossimImageData> imagedata = getNextTile();
-       //tile->setDataObjectStatus(imagedata->getDataObjectStatus());
-       if(imagedata->getBuf() && (imagedata->getDataObjectStatus()!=OSSIM_EMPTY))
-       {
-          tile->loadTile(imagedata.get());
-          if (theCreateHistogram)
+         ossimRefPtr<ossimImageData> imagedata = getNextTile();
+         //tile->setDataObjectStatus(imagedata->getDataObjectStatus());
+         if(imagedata->getBuf() && (imagedata->getDataObjectStatus()!=OSSIM_EMPTY))
          {
-            ossimIrect tileRect = tile->getImageRectangle();
-            ossimIrect clipRect = tileRect.clipToRect( theAreaOfInterest );
-            imagedata->populateHistogram(
-               histogram->getMultiBandHistogram(0), clipRect);
+            tile->loadTile(imagedata.get());
+            if (theCreateHistogram)
+            {
+               ossimIrect tileRect = tile->getImageRectangle();
+               ossimIrect clipRect = tileRect.clipToRect( theAreaOfInterest );
+               imagedata->populateHistogram(
+                  histogram->getMultiBandHistogram(0), clipRect);
+            }
          }
-       }
-       if (traceDebug())
-       {
-       ossimNotify(ossimNotifyLevel_WARN)<< "BASE SEQUENCER TILE " << tile_idx << " RECT: " << rect << std::endl;;
-       }
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << "BASE SEQUENCER TILE " << tile_idx << " RECT: " << rect << std::endl;
+         }
       }
       tile->validate();
       if (theCreateHistogram) tile->setHistogram(histogram);
       return tile;
    }
-
+   
    return 0;
 }
 
@@ -355,7 +356,7 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
    static const char* MODULE= "ossimImageSourceSequencer::getTile(id, resLevel)";
    if(traceDebug())
    {
-      CLOG << "entering.."<<endl;
+      CLOG << "entering.."<<std::endl;
    }
 
    ossimRefPtr<ossimImageData> result = 0;
@@ -382,7 +383,7 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
       {
          if(traceDebug())
          {
-            CLOG << "was not able to get an origin for id = " << id << endl;
+            CLOG << "was not able to get an origin for id = " << id << std::endl;
          }
       }
    }
@@ -390,12 +391,12 @@ ossimRefPtr<ossimImageData> ossimImageSourceSequencer::getTile(
    {
       if(traceDebug())
       {
-         CLOG << "No input connection so returning NULL" << endl;
+         CLOG << "No input connection so returning NULL" << std::endl;
       }
    }
    if(traceDebug())
    {
-      CLOG << "leaving.."<<endl;
+      CLOG << "leaving.."<<std::endl;
    }
    
    return result;
@@ -433,6 +434,19 @@ bool ossimImageSourceSequencer::getTileOrigin(ossim_int64 id, ossimIpt& origin) 
       }
    }
    return result;
+}
+
+ossim_int64 ossimImageSourceSequencer::getTileIndex(ossim_int64 id) const
+{
+   ossim_int64 index = -1;
+   ossimIpt origin;
+   if ( getTileOrigin(id, origin) )
+   {
+      index = ((origin.y - theAreaOfInterest.ul().y) / theTileSize.y) *
+         theNumberOfTilesHorizontal + ( origin.x - theAreaOfInterest.ul().x) /
+         theTileSize.x;
+   }
+   return index;
 }
 
 bool ossimImageSourceSequencer::getTileRect(ossim_int64 tile_id, ossimIrect& tileRect) const
@@ -601,7 +615,8 @@ void ossimImageSourceSequencer::getBinInformation(ossim_uint32& numberOfBins,
             if(traceDebug())
             {
                ossimNotify(ossimNotifyLevel_WARN)
-                  << "Unsupported scalar type in ossimImageHistogramSource::computeHistogram()" << endl;
+                  << "Unsupported scalar type in ossimImageHistogramSource::computeHistogram()"
+                  << std::endl;
             }
             return;
          }
