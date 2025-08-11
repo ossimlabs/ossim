@@ -171,9 +171,10 @@ private:
 
    /**
     * @brief Writes tiff header to stream.
+    * @param str Stream to write to.
     * @return true on success, false on error.
     */
-   bool writeTiffHdr();
+   bool writeTiffHdr( std::ostream* str );
 
    /**
     * @brief Writes tags to image file directory(IFD).
@@ -189,13 +190,34 @@ private:
                        const std::vector<ossim_float64>& maxBands );
 
    /**
+    * @brief Writes tags to image file directory(IFD).
+    * @param str Stream to write to.
+    * @return true on success, false on error.
+    */
+   bool writeTiffTags( std::ostream* str );
+
+   /**
     * @brief Writes tags TIFFTAG_MINSAMPLEVALUE(280) and
     * TIFFTAG_MAXSAMPLEVALUE(281).  Only written if scalar type is an unsigned
     * byte or short.
+    * @param arrayWritePos Position to write array to.  This will be updated
+    * if array is written with new offset.
     * @return true on success, false on error.
     */
    bool writeMinMaxTiffTags( std::streamoff& arrayWritePos  );
-
+   
+   /**
+    * @brief Writes tags TIFFTAG_MINSAMPLEVALUE(280) and
+    * TIFFTAG_MAXSAMPLEVALUE(281).  Only written if scalar type is an unsigned
+    * byte or short.
+    * @param str Stream to write to.
+    * @param arrayWritePos Position to write array to.  This will be updated
+    * if array is written with new offset.
+    * @return true on success, false on error.
+    */
+   bool writeMinMaxTiffTags( std::ostream* str,
+                             std::streamoff& arrayWritePos );
+   
 
    /**
     * @brief Writes tags TIFFTAG_SMINSAMPLEVALUE(340) and
@@ -208,8 +230,40 @@ private:
     * tags were not written due to the scalar type.
     */
    bool writeSMinSMaxTiffTags( const std::vector<ossim_float64>& minBands,
-                             const std::vector<ossim_float64>& maxBands,
-                             std::streamoff& arrayWritePos  );
+                               const std::vector<ossim_float64>& maxBands,
+                               std::streamoff& arrayWritePos  );
+
+   /**
+    * @brief Writes tags TIFFTAG_SMINSAMPLEVALUE(340) and
+    * TIFFTAG_SMAXSAMPLEVALUE(341).  Only written if scalar type is not an
+    * unsigned byte or short.
+    * @param str Stream to write to.
+    * @param minBands Array of min values from image write.
+    * @param maxBands Array of max values from image write.
+    * @return true if tags are written, false if not.
+    * A false return is not necessarily an error, just means the
+    * tags were not written due to the scalar type.
+    */
+   bool writeSMinSMaxTiffTags( std::ostream* str,
+                               const std::vector<ossim_float64>& minBands,
+                               const std::vector<ossim_float64>& maxBands,
+                               std::streamoff& arrayWritePos  );
+
+   /**
+    * @brief Writes tags TIFFTAG_SMINSAMPLEVALUE(340) and
+    * TIFFTAG_SMAXSAMPLEVALUE(341).  Only written if scalar type is not an
+    * unsigned byte or short.
+    *
+    * This method pulls min and max values from the input connection as
+    * oposed to scanned from tile values.
+    * 
+    * @param str Stream to write to.
+    * @return true if tags are written, false if not.
+    * A false return is not necessarily an error, just means the
+    * tags were not written due to the scalar type.
+    */ 
+   bool writeSMinSMaxTiffTags( std::ostream* str,
+                               std::streamoff& arrayWritePos );
 
    /**
     * @brief Writes tiff tag to image file directory(IFD).
@@ -220,16 +274,35 @@ private:
     * @param arrayWritePos Position to write array to.  This will be updated
     * if array is written with new offset.
     */   
-   template <class T> void writeTiffTag(ossim_uint16 tag, ossim_uint16 type,
+   template <class T> void writeTiffTag(ossim_uint16 tag,
+                                        ossim_uint16 type,
                                         ossim_uint64 count,
                                         const T* value,
                                         std::streamoff& arrayWritePos );
 
    /**
-    * @brief Writes image data to stream.
+    * @brief Writes tiff tag to image file directory(IFD).
+    * @param str Stream to write to.
+    * @param tag
+    * @param type
+    * @param count
+    * @param value(s) or offset to array.
+    * @param arrayWritePos Position to write array to.  This will be updated
+    * if array is written with new offset.
+    */   
+   template <class T> void writeTiffTag( std::ostream* str,
+                                         ossim_uint16 tag,
+                                         ossim_uint16 type,
+                                         ossim_uint64 count,
+                                         const T* value,
+                                         std::streamoff& arrayWritePos );
+
+   
+   /**
+    * @brief Writes image data to stream. (TTBS = Tiled Tiff Band Separate)
     *
-    * Data is in a band separate tile layout(PLANARCONFIG_SEPARATE), i.e. all
-    * the red tiles, all the green tiles, all the blue tiles.
+    * Data is in a band separate tile layout(PLANARCONFIG_SEPARATE), i.e. red
+    * tile, green tile, blue tile, ..., red tile, green tile, blue tile.
     * 
     * @param tile_offsets Initialized by this with offset for each tile.
     * @param tile_byte_counts Initialized by this with the byte count of each
@@ -238,11 +311,23 @@ private:
     * @param maxBands Initialized by this with the max values for each band.
     * @return true on success, false on error.
     */
-   bool writeTiffTilesBandSeparate( std::vector<ossim_uint64>& tile_offsets,
-                                    std::vector<ossim_uint64>& tile_byte_counts,
-                                    std::vector<ossim_float64>& minBands,
-                                    std::vector<ossim_float64>& maxBands );
+   bool writeTtbs( std::vector<ossim_uint64>& tile_offsets,
+                   std::vector<ossim_uint64>& tile_byte_counts,
+                   std::vector<ossim_float64>& minBands,
+                   std::vector<ossim_float64>& maxBands );
 
+   /**
+    * @brief Writes image data to stream. (TTBS = Tiled Tiff Band Separate)
+    * Data is in a band separate tile layout(PLANARCONFIG_SEPARATE), i.e. red
+    * tile, green tile, blue tile, ..., red tile, green tile, blue tile.
+    *
+    * @note This method does not capture tile offsets and byte sizes or
+    * scan for min/max.
+    *
+    * @return true on success, false on error.
+    */
+   bool writeTtbs();
+   
    /**
     * @brief Gets the tiff sample format based on scalar type.
     * E.g SAMPLEFORMAT_UINT, SAMPLEFORMAT_INT or SAMPLEFORMAT_IEEEFP.
@@ -263,15 +348,31 @@ private:
    bool getAlignTilesFlag() const;
 
    /**
-    * @return Value of options key: "flush_tiles".
+    * @return Value of options key: "block_size".
     * If true, aligns tile addresses to block boundary.
     * default=true
     */
    ossim_int64 getBlockSize() const;
 
    /**
+    * @brief Value of options key: "sequencer_box_size".
+    * @param size Initialized by this. No range check. The sequencer range
+    * checks.
+    * @return true on success, false on error.
+    */
+   bool getSequencerBoxSize( ossimIpt& size ) const;
+
+   /**
+    * @brief Value of options key: "sequencer_mode".
+    * @param mode Initialized by this. No range check. The sequencer range
+    * checks.
+    * @return true on success, false on error.
+    */
+   bool getSequencerMode( std::string& mode ) const;
+
+   /**
     * @return Value of options key: "flush_tiles".
-    * If true, std::ostream::flush() is called after each tile write.
+    * If true, ostream::flush() is called after each tile write.
     * default=true
     */
    bool getFlushTilesFlag() const;
@@ -284,14 +385,43 @@ private:
     */
    bool getWriteBlanksFlag() const;
 
+   /**
+    * @return true if min / max should be scanned for when writing tiles;
+    * false, if not.
+    */
    bool needsMinMax() const;
+   
+   /**
+    * @return true if format is such that it can be written contiguously with
+    * no seeking. Pertinent for streaming code.
+    */
+   bool canContiguousWrite() const;
+
+   /**
+    * @brief Initializes tile offsets and byte counts assuming sequential
+    * write from a fixed position.
+    * @param tile_offsets Initialized by this with offset for each tile.
+    * @param tile_byte_counts Initialized by this with the byte count of each
+    * tile.
+    * @return true on success, false on error.
+    */
+   bool getTileInfo( std::vector<ossim_uint64>& tile_offsets,
+                     std::vector<ossim_uint64>& tile_byte_counts ) const;
+
+   void getTtbsTileStartPos( std::streampos& pos ) const;
+
+   /**
+    * @return true if "add_alpha_channel" key is present and set to true; else,
+    * false.
+    */
+   bool addAlpha() const;
   
    std::ostream* m_str;
    bool          m_ownsStreamFlag;
 
    /** Hold all options. */
    ossimRefPtr<ossimKeywordlist> m_kwl;
-   
+
    ossimIpt      m_outputTileSize;
    
 }; // End: class ossimWriter

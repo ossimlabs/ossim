@@ -14,10 +14,11 @@
 
 #include <ossim/imaging/ossimImageSource.h>
 #include <ossim/base/ossimIpt.h>
+#include <ossim/base/ossimIrect.h>
+#include <ossim/base/ossimIrect64.h>
 #include <ossim/base/ossimConnectableObjectListener.h>
-#include <ossim/base/ossimHistogramSource.h>
 #include <ossim/base/ossimMultiResLevelHistogram.h>
-
+#include <vector>
 
 class OSSIMDLLEXPORT ossimImageSourceSequencer
    :
@@ -58,15 +59,12 @@ public:
     */
    virtual void initialize();
 
-   /*!
-    * Will set the current area of interest.
-    */
+   /** @brief Will set the current area of interest. */
    virtual void setAreaOfInterest(const ossimIrect& areaOfInterest);
+   virtual void setAreaOfInterest(const ossimIrect64& areaOfInterest);
 
-   /*!
-    * Just returns the current area of interest.
-    */
-   const ossimIrect& getAreaOfInterest()const;
+   /** @return The current area of interest. */
+   const ossimIrect64& getAreaOfInterest()const;
 
    /*!
     * Will set the internal pointers to the upperleft
@@ -95,6 +93,17 @@ public:
    virtual bool getNextTileStream(std::ostream& bos);
 
    virtual bool getTileOrigin(ossim_int64 id, ossimIpt& origin)const;
+
+   /**
+    * @brief Gets the tile index computed from the origin.
+    *
+    * This index represents where the tile is in image space relative to the
+    * upper left corner, in row, col order.
+    *
+    * @return tile index or -1 if id is not sequenced.
+    */
+   virtual ossim_int64 getTileIndex(ossim_int64 id) const;
+
 
    /*!
     * @brief Establishes a tile rect given tile ID.
@@ -151,15 +160,7 @@ protected:
    ossimImageSource*  theInputConnection;
    ossimRefPtr<ossimImageData> theBlankTile;
    ossimRefPtr<ossimMultiResLevelHistogram> theHistogram;
-   /*!
-    * Is the area of interest.  The default will
-    * 
-    */
-   ossimIrect theAreaOfInterest;
-
-   /*!
-    * Called during initialize.
-    */
+   ossimIrect64 theAreaOfInterest;
    ossimIpt theTileSize;
 
    //---
