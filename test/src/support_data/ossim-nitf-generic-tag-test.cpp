@@ -25,6 +25,8 @@
 
 #include <iostream>
 
+#include "support_data/ossimNitfCephbDes.h"
+
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -33,6 +35,7 @@ int main(int argc, char *argv[])
    ossimNitfCsexrbTag csexrb = ossimNitfCsexrbTag();
    ossimNitfCssfabDes cssfab = ossimNitfCssfabDes();
    ossimNitfCsattbDes csattb = ossimNitfCsattbDes();
+   ossimNitfCsephbDes csephb = ossimNitfCsephbDes();
    string fname = getenv("OSSIM_DATA");
    //19SEP01060448-P1BS-200007943201_01_P004.NTF
    //24MAR05002840-P1BS-200004901937_01_P001_B.NTF
@@ -112,6 +115,9 @@ int main(int argc, char *argv[])
    cssfab.parseStream(file);
    cssfab.writeStream(cout);
    cssfab.print(cout, "");
+
+   csephb.setField("", "");
+   csephb.print(cout, "");
 
    return 0;
 }
