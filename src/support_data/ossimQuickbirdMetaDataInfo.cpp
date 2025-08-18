@@ -26,11 +26,15 @@ bool ossimQuickbirdMetaDataInfo::open(const ossimFilename& file)
    bool result = false;
    m_info.clear();
    m_file = file;
-   m_file.setExtension(ossimString("IMD"));
-   if ( m_file.exists() )
+   // m_file.setExtension(ossimString("IMD"));
+   if ( m_file.exists() && m_file.ext() == "TIL" )
    {
       ossimQuickbirdMetaData qbmd;
-      result = qbmd.open( m_file ) ;
+      ossim_int32 parseTypes = ossimQuickbirdMetaData::QB_PARSE_TYPE_IMD;
+      
+         //    (ossimQuickbirdMetaData::QB_PARSE_TYPE_IMD | ossimQuickbirdMetaData::QB_PARSE_TYPE_GEO);
+      // result = qbmd.open(m_file, ossimQuickbirdMetaData::QB_PARSE_TYPE_ALL);
+      result = qbmd.open(m_file, parseTypes);
       if ( result )
       {
          std::string s = "qbmd.";
