@@ -24,6 +24,9 @@
 class OSSIM_DLL ossimNitfGenericTag : public ossimNitfRegisteredTag
 {
 public:
+
+   typedef std::map<ossimString, ossimString> FieldMap;
+   
    ossimNitfGenericTag(ossimString tag, ossim_uint32 tagLength=0);
 
    virtual void parseStream(std::istream &in);
@@ -76,7 +79,9 @@ protected:
 
    //Parses field value from reverse polish noatation for loop and if conditions
    int parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const;
-   std::map<ossimString, ossimString> m_fields_map;
+
+   FieldMap m_fields_map;
+   
    enum specialFields
    {
       VARIABLE_LENGTH = -1,
