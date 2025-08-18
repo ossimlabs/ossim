@@ -18,18 +18,14 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimTrace.h>
-#include <ossim/projection/ossimProjection.h>
-#include <ossim/projection/ossimRpcSolver.h>
-#include <ossim/projection/ossimUtmProjection.h>
-#include <ossim/projection/ossimMapProjectionInfo.h>
-#include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/imaging/ossimImageData.h>
-#include <ossim/imaging/ossimRectangleCutFilter.h>
+#include <ossim/projection/ossimProjection.h>
+#include <ossim/projection/ossimUtmProjection.h>
+#include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/support_data/ossimNitfProjectionParameterTag.h>
 #include <ossim/support_data/ossimNitfNameConversionTables.h>
 #include <ossim/support_data/ossimNitfImageDataMaskV2_1.h>
-#include <tiffio.h>
 #include <fstream>
 #include <algorithm>
 #include <sstream>
@@ -747,12 +743,6 @@ bool ossimNitfWriter::writeBlockBandSequential()
 }
 
 void ossimNitfWriter::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag,
-   bool unique)
-{
-   addRegisteredTag(registeredTag, unique, 1, ossimString("IXSHD"));
-}
-
-void ossimNitfWriter::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag,
    bool unique, const ossim_uint32& ownerIndex, const ossimString& tagType)
 {
    ossimNitfTagInformation tagInfo;
@@ -766,13 +756,11 @@ void ossimNitfWriter::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> regis
          m_fileHeader->addTag(tagInfo, unique);
          break;
       }
-
       case 1:
       {
          m_imageHeader->addTag(tagInfo, unique);
          break;
       }
-
       default:
       {
          // Do nothing

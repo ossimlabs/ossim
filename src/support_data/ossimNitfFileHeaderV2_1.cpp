@@ -22,9 +22,10 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimPreferences.h>
+#include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_X.h>
-#include <ossim/support_data/ossimNitfDataExtensionSegmentV2_1.h> // ??? drb
+#include <ossim/support_data/ossimNitfDataExtensionSegmentV2_1.h>
 
 #include <iostream>
 #include <iomanip>
@@ -400,7 +401,20 @@ void ossimNitfFileHeaderV2_1::parseStream(ossim::istream& in)
    // bool parseDes = true; 
 
    if (parseDes) readDes(in);
-}
+
+   if ( traceDebug() )
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimNitfFileHeaderV2_1::parseStream(...) parsed tags:\n";
+      for (ossim_uint32 i = 0; i < theTagList.size(); ++i)
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "tag_name[" << i << "]: " << theTagList[i].getTagName()
+            << "\ntag_type[" << i << "]: " << theTagList[i].getTagType() << "\n";
+      }
+   }
+   
+} // End: ossimNitfFileHeaderV2_1::parseStream(ossim::istream& in)
 
 bool ossimNitfFileHeaderV2_1::isValid()const
 {
@@ -619,81 +633,108 @@ void ossimNitfFileHeaderV2_1::writeStream(ossim::ostream& out)
       ossimNotify(ossimNotifyLevel_WARN) << "WARNING ossimNitfFileHeaderV2_1::writeStream: Only support writing of total tag length < 99999" << std::endl;
    }
    */
-      ossim_uint32 totalLength = ossimString(theUserDefinedHeaderDataLength).toUInt32();
+
+   //---
+   // User Defined Header Data (UDHD):
+   // Compute the total length: Tags can be added prior to write via
+   // addTag() or nitf file header addRegisteredTag().
+   //--- 
+   // ossim_uint32 totalLength = ossimString(theUserDefinedHeaderDataLength).toUInt32();
+   ossim_uint32 totalLength = getTotalTagLength(ossimString("UDHD"));
    if (totalLength > 0)
    {
       totalLength += 3;
-   }
-
-   // Scope tempOut
-   {
-      std::ostringstream tempOut;
-      tempOut << std::setw(5)
-              << std::setfill('0')
-              << std::setiosflags(std::ios::right)
-              << totalLength;
-
-      out.write(tempOut.str().c_str(), 5);
-   }
-
-   if (totalLength > 0)
-   {
-      if(totalLength <= 99999)
+      if(totalLength <= 99999) // Five byte field:
       {
-         out.write(theUserDefinedHeaderOverflow, 3);
-
-         for (unsigned int i = 0; i < theTagList.size(); ++i)
-         {
-            if (theTagList[i].getTagType() == "UDHD")
-            {
-               theTagList[i].writeStream(out);
-            }
-         }
+         ossimNitfCommon::setField(theUserDefinedHeaderDataLength,
+                                   ossimString::toString(totalLength),
+                                   5, std::ios::right, '0');
+         memset(theUserDefinedHeaderOverflow, '0', 3);
       }
       else
       {
-         ossimNotify(ossimNotifyLevel_WARN) << "WARNING ossimNitfFileHeaderV2_1::writeStream: Only support writing of total tag length <= 99999" << std::endl;
+         ossimNotify(ossimNotifyLevel_WARN)
+            << "ossimNitfFileHeaderV2_1::writeStream(...) WARNING!\n"
+            << "Total tag length for UDHD section is: " << totalLength
+            << "\nUser Defined Header Data (XHD) section only support writing of total tag"
+            << " length <= 99999" << std::endl;
+         
+         memset(theUserDefinedHeaderDataLength, '0',5);
+         memset(theUserDefinedHeaderOverflow, '0', 3);
+         totalLength = 0;
+      }
+   }
+   
+   // Always write UDHDL:
+   out.write(theUserDefinedHeaderDataLength, 5);
+   if (totalLength > 0)
+   {
+      // Write UDHOFL only if XHDL has data. Omitted if XHDL is 0s.
+      out.write(theUserDefinedHeaderOverflow, 3);
+
+      // Write the tags:
+      for(unsigned int i = 0; i < theTagList.size(); ++i)
+      {
+         if (theTagList[i].getTagType() == "UDHD")
+         {
+            theTagList[i].writeStream(out);
+         }
       }
    }
 
-   totalLength = ossimString(theExtendedHeaderDataLength).toUInt32();
+   // End of User Defined Header Data (UDHD) section.
+
+   //---
+   // Extended Header Data (XHD) section:
+   // Compute the total length: Tags can be added prior to write via
+   // addTag() or nitf file header addRegisteredTag().
+   //--- 
+   // totalLength = ossimString(theExtendedHeaderDataLength).toUInt32();
+   totalLength = getTotalTagLength(ossimString("XHD"));
    if (totalLength > 0)
    {
       totalLength += 3;
-   }
-
-   // Scope tempOut
-   {
-      std::ostringstream tempOut;
-      tempOut << std::setw(5)
-              << std::setfill('0')
-              << std::setiosflags(std::ios::right)
-              << totalLength;
-
-      out.write(tempOut.str().c_str(), 5);
-   }
-
-   if (totalLength > 0)
-   {
-      if(totalLength <= 99999)
+      if(totalLength <= 99999) // Five byte field:
       {
-         out.write(theExtendedHeaderDataOverflow, 3);
-
-         for(unsigned int i = 0; i < theTagList.size(); ++i)
-         {
-            if (theTagList[i].getTagType() == "XHD")
-            {
-               theTagList[i].writeStream(out);
-            }
-         }
+         ossimNitfCommon::setField(theExtendedHeaderDataLength,
+                                   ossimString::toString(totalLength),
+                                   5, std::ios::right, '0');
+         memset(theExtendedHeaderDataOverflow, '0', 3);
       }
       else
       {
-         ossimNotify(ossimNotifyLevel_WARN) << "WARNING ossimNitfFileHeaderV2_1::writeStream: Only support writing of total tag length <= 99999" << std::endl;
+         ossimNotify(ossimNotifyLevel_WARN)
+            << "ossimNitfFileHeaderV2_1::writeStream(...) WARNING!\n"
+            << "Total tag length for XHD section is: " << totalLength
+            << "\nExtended Header Data (XHD) section only support writing of total tag"
+            << " length <= 99999" << std::endl;
+         
+         memset(theExtendedHeaderDataLength, '0',5);
+         memset(theExtendedHeaderDataOverflow, '0', 3);
+         totalLength = 0;
       }
    }
 
-}
+   // Always write XHDL:
+   out.write(theExtendedHeaderDataLength, 5);
+   if (totalLength > 0)
+   {
+      // Write XHDLOFL only if XHDL has data. Omitted if XHDL is 0s.
+      out.write(theExtendedHeaderDataOverflow, 3);
+
+      // Write the tags:
+      for(unsigned int i = 0; i < theTagList.size(); ++i)
+      {
+         if (theTagList[i].getTagType() == "XHD")
+         {
+            theTagList[i].writeStream(out);
+         }
+      }
+   }
+
+   // End of Extended Header Data (XHD) section.
+
+} // End: ossimNitfFileHeaderV2_1::writeStream(...)
 
 std::ostream& ossimNitfFileHeaderV2_1::print(std::ostream& out,
                                              const std::string& prefix) const
