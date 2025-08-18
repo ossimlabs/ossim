@@ -7,7 +7,7 @@
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id$
+// $Id$
 
 #ifndef ossimNitfWriter_HEADER
 #define ossimNitfWriter_HEADER 1
@@ -16,12 +16,9 @@
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimIpt.h>
 #include <ossim/base/ossimKeywordlist.h>
-#include <ossim/base/ossimRgbLutDataObject.h>
 #include <ossim/base/ossimRefPtr.h>
-#include <ossim/projection/ossimMapProjectionInfo.h>
 #include <ossim/support_data/ossimNitfFileHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
-#include <ossim/support_data/ossimNitfTextHeaderV2_0.h>
 #include <ossim/support_data/ossimNitfTextHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfDataExtensionSegmentV2_1.h>
 #include <iosfwd>
@@ -64,10 +61,18 @@ public:
     *  des_header
     */
    virtual void getPropertyNames(std::vector<ossimString>& propertyNames)const;
-   
-   void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique = true);
+
+   /**
+    * @brief Adds a tag.
+    *
+    * Satifies pure virtual from ossimNitfWriterBase.
+    * 
+    * @param unique true will overwrite if exist, false will add new tag.
+    * @param ownerIndex 0 = file header, 1 = image header
+    * @param tagType UDHD, UDID, XHD, IXSHD, SXSHD, or TXSHD.
+    */
    void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique,
-      const ossim_uint32& ownerIndex, const ossimString& tagType);
+                         const ossim_uint32& ownerIndex, const ossimString& tagType);
 
    /**
     * Saves the state of the writer to kwl with prefix then calls

@@ -12,6 +12,7 @@
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimTrace.h>
 #include <ossim/support_data/ossimNitfTagFactoryRegistry.h>
 #include <ossim/support_data/ossimNitfUnknownTag.h>
 #include <sstream>
@@ -56,8 +57,18 @@ void ossimNitfTagInformation::parseStream(ossim::istream& in)
          {
             theTagData->setTagLength( getTagLength() );
          }
+
+         //---
+         // Call parseStream before issuing warning on tag length.
+         // 
+         // NOTE: Some tags with conditional data will contruct with a default
+         // set of fields and tag length. Fields and length then get adjusted
+         // during parseStream call.
+         //---
+         theTagData->parseStream(in);
+
          // Sanity check fixed length in code with length from CEL field:
-         else if ( theTagData->getTagLength() != getTagLength() )
+         if ( theTagData->getTagLength() != getTagLength() )
          {
             ossimNotify(ossimNotifyLevel_WARN)
                << "ossimNitfTagInformation::parseStream WARNING!"
@@ -67,8 +78,6 @@ void ossimNitfTagInformation::parseStream(ossim::istream& in)
                << "\nTag: " << theTagData->getTagLength()
                << std::endl;
          }
-                               
-         theTagData->parseStream(in);
       }
       else
       {

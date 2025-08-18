@@ -250,6 +250,9 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
       }
    }
 
+   // Recompute and set tag length. This is needed for conditional tags.
+   setTagLength(computeTagLength());
+
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited..." << std::endl;

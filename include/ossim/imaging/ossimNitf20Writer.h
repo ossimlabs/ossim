@@ -7,19 +7,17 @@
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimNitfWriter.h 9256 2006-07-14 15:28:19Z dburken $
+// $Id$
 #ifndef ossimNitf20Writer_HEADER
-#define ossimNitf20Writer_HEADER
+#define ossimNitf20Writer_HEADER 1
 
-#include <iosfwd>
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <ossim/imaging/ossimNitfWriterBase.h>
 #include <ossim/base/ossimKeywordlist.h>
-#include <ossim/projection/ossimMapProjectionInfo.h>
-#include <ossim/base/ossimRgbLutDataObject.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/support_data/ossimNitfFileHeaderV2_0.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_0.h>
+#include <iosfwd>
 
 class ossimProjection;
 
@@ -84,6 +82,20 @@ public:
     * @return true on success, false on failure.
     */
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
+
+   /**
+    * @brief Adds a tag.
+    *
+    * Satifies pure virtual from ossimNitfWriterBase.
+    * 
+    * @param unique true will overwrite if exist, false will add new tag.
+    * @param ownerIndex 0 = file header, 1 = image header
+    * @param tagType UDHD, UDID, XHD, IXSHD, SXSHD, or TXSHD.
+    */
+   virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag,
+                                 bool unique, const ossim_uint32& ownerIndex,
+                                 const ossimString& tagType);
+  
 
 protected:
    

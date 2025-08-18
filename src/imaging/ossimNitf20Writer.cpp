@@ -7,8 +7,7 @@
 // Author:  Garrett Potts
 //
 //*******************************************************************
-//  $Id: ossimNitf20Writer.cpp 2982 2011-10-10 21:28:55Z david.burken $
-
+// $Id$
 
 #include <ossim/imaging/ossimNitf20Writer.h>
 #include <ossim/imaging/ossimNitfTileSource.h>
@@ -17,12 +16,7 @@
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimEndian.h>
-#include <ossim/projection/ossimProjection.h>
-#include <ossim/projection/ossimRpcSolver.h>
-#include <ossim/projection/ossimUtmProjection.h>
-#include <ossim/projection/ossimMapProjectionInfo.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
-#include <ossim/imaging/ossimRectangleCutFilter.h>
 #include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimContainerProperty.h>
 #include <ossim/base/ossimStringProperty.h>
@@ -30,19 +24,10 @@
 #include <ossim/base/ossimBooleanProperty.h>
 #include <ossim/base/ossimVisitor.h>
 #include <ossim/support_data/ossimNitfCommon.h>
-// #include <ossim/support_data/ossimNitfGeoPositioningTag.h>
-// #include <ossim/support_data/ossimNitfLocalGeographicTag.h>
-// #include <ossim/support_data/ossimNitfLocalCartographicTag.h>
-// #include <ossim/support_data/ossimNitfProjectionParameterTag.h>
-// #include <ossim/support_data/ossimNitfNameConversionTables.h>
-// #include <ossim/support_data/ossimNitfBlockaTag.h>
-#include <tiffio.h>
 #include <fstream>
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
-
-using namespace std;
 
 RTTI_DEF1(ossimNitf20Writer, "ossimNitf20Writer", ossimNitfWriterBase);
 
@@ -104,7 +89,7 @@ bool ossimNitf20Writer::open()
       close();
    }
    theOutputStream = new std::ofstream;
-   theOutputStream->open(theFilename.c_str(), ios::out|ios::binary);
+   theOutputStream->open(theFilename.c_str(), std::ios::out|std::ios::binary);
    
    return theOutputStream->good();
 }
@@ -434,7 +419,7 @@ bool ossimNitf20Writer::writeBlockBandSeparate()
     */
    theFileHeader->setFileLength(static_cast<ossim_uint64>(pos));
    theFileHeader->setHeaderLength(headerLength);
-   theOutputStream->seekp(0, ios::beg);
+   theOutputStream->seekp(0, std::ios::beg);
    imageInfoRecord.setSubheaderLength(imageHeaderSize);
    theFileHeader->replaceImageInfoRecord(0, imageInfoRecord);
    theFileHeader->writeStream(*theOutputStream);
@@ -589,7 +574,7 @@ bool ossimNitf20Writer::writeBlockBandSequential()
          theOutputStream->seekp(streamOffset+ // start of image stream
                                 tileNumber*blockSizeInBytes + // start of block for band separate output
                                 bandOffsetInBytes*idx, // which band offset is it
-                                ios::beg); 
+                                std::ios::beg); 
          
          theOutputStream->write((char*)(data->getBuf(idx)),
                                 blockSizeInBytes);
@@ -614,7 +599,7 @@ bool ossimNitf20Writer::writeBlockBandSequential()
     */
    theFileHeader->setFileLength(static_cast<ossim_uint64>(pos));
    theFileHeader->setHeaderLength(headerLength);
-   theOutputStream->seekp(0, ios::beg);
+   theOutputStream->seekp(0, std::ios::beg);
    imageInfoRecord.setSubheaderLength(imageHeaderSize);
    theFileHeader->replaceImageInfoRecord(0, imageInfoRecord);
    theFileHeader->writeStream(*theOutputStream);
@@ -839,4 +824,31 @@ bool ossimNitf20Writer::loadState(const ossimKeywordlist& kwl,
                                   const char* prefix)
 {
    return ossimNitfWriterBase::loadState(kwl, prefix);
+}
+
+void ossimNitf20Writer::addRegisteredTag(
+   ossimRefPtr<ossimNitfRegisteredTag> registeredTag,
+   bool unique, const ossim_uint32& ownerIndex, const ossimString& tagType)
+{
+   ossimNitfTagInformation tagInfo;
+   tagInfo.setTagData(registeredTag.get());
+   tagInfo.setTagType(tagType);
+
+   switch (ownerIndex)
+   {
+      case 0:
+      {
+         theFileHeader->addTag(tagInfo, unique);
+         break;
+      }
+      case 1:
+      {
+         theImageHeader->addTag(tagInfo, unique);
+         break;
+      }
+      default:
+      {
+         // Do nothing
+      }
+   }
 }
