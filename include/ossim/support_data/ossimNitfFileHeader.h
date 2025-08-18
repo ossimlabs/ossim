@@ -197,7 +197,26 @@ public:
    virtual ossimNitfDataExtensionSegment *allocateDataExtSegment()const=0;
    virtual const std::vector<ossimNitfDesInformation>& getDesInfoList()const;
 
-    virtual ossim_uint32 getTotalTagLength() const;
+   /**
+    * @brief Get the total tag length in bytes for all tags in the tag list
+    * with tagType.
+    *
+    * Includes the 11 bytes for CETAG(tag name) and CEL(tag length) fields.
+    *
+    * @param tagType can be: UDHD, XHD, SXSHD, or TXSHD
+    *
+    * @return Total number of bytes.
+    */
+   virtual ossim_uint32 getTotalTagLength(const ossimString& tagType) const;
+
+   /**
+    * @brief Get the total tag length in bytes for all tags in the tag list.
+    *
+    * Includes the 11 bytes for CETAG(tag name) and CEL(tag length) fields.
+    *
+    * @return Total number of bytes.
+    */
+   virtual ossim_uint32 getTotalTagLength() const;
 
    /** @brief Sets file length (FL) field. */
    virtual void setFileLength(ossim_uint64 fileLength) = 0;
