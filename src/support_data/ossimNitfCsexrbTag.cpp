@@ -18,6 +18,7 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/support_data/ossimNitfCommon.h>
+#include <ossim/support_data/ossimNitfCommonFieldNames.h>
 #include <utility> /* make_pair */
 
 static ossimTrace traceDebug("ossimNitfCsexrbTag:debug");
@@ -25,44 +26,6 @@ static ossimTrace traceDebug("ossimNitfCsexrbTag:debug");
 static const int FOREVER = 1;
 
 const std::string ossimNitfCsexrbTag::CETAG_KW = "CSEXRB";
-const std::string ossimNitfCsexrbTag::IMAGE_UUID_KW = "IMAGE_UUID";
-const std::string ossimNitfCsexrbTag::NUM_ASSOC_DES_KW = "NUM_ASSOC_DES";
-const std::string ossimNitfCsexrbTag::ASSOC_DES_UUID_KW = "ASSOC_DES_UUID";
-const std::string ossimNitfCsexrbTag::PLATFORM_ID_KW = "PLATFORM_ID";
-const std::string ossimNitfCsexrbTag::PAYLOAD_ID_KW = "PAYLOAD_ID";
-const std::string ossimNitfCsexrbTag::SENSOR_ID_KW = "SENSOR_ID";
-const std::string ossimNitfCsexrbTag::SENSOR_TYPE_KW = "SENSOR_TYPE";
-const std::string ossimNitfCsexrbTag::DAY_FIRST_LINE_IMAGE_KW = "DAY_FIRST_LINE_IMAGE";
-const std::string ossimNitfCsexrbTag::TIME_FIRST_LINE_IMAGE_KW = "TIME_FIRST_LINE_IMAGE";
-const std::string ossimNitfCsexrbTag::TIME_IMAGE_DURATION_KW = "TIME_IMAGE_DURATION";   
-const std::string ossimNitfCsexrbTag::GROUND_REF_POINT_X_KW = "GROUND_REF_POINT_X";
-const std::string ossimNitfCsexrbTag::GROUND_REF_POINT_Y_KW = "GROUND_REF_POINT_Y";
-const std::string ossimNitfCsexrbTag::GROUND_REF_POINT_Z_KW = "GROUND_REF_POINT_Z";
-const std::string ossimNitfCsexrbTag::MAX_GSD_KW = "MAX_GSD";
-const std::string ossimNitfCsexrbTag::ALONG_SCAN_GSD_KW = "ALONG_SCAN_GSD";
-const std::string ossimNitfCsexrbTag::CROSS_SCAN_GSD_KW = "CROSS_SCAN_GSD";
-const std::string ossimNitfCsexrbTag::GEO_MEAN_GSD_KW = "GEO_MEAN_GSD";
-const std::string ossimNitfCsexrbTag::A_S_VERT_GSD_KW = "A_S_VERT_GSD";
-const std::string ossimNitfCsexrbTag::C_S_VERT_GSD_KW = "C_S_VERT_GSD";
-const std::string ossimNitfCsexrbTag::GEO_MEAN_VERT_GSD_KW = "GEO_MEAN_VERT_GSD";
-const std::string ossimNitfCsexrbTag::GSD_BETA_ANGLE_KW = "GSD_BETA_ANGLE";
-const std::string ossimNitfCsexrbTag::DYNAMIC_RANGE_KW = "DYNAMIC_RANGE";
-const std::string ossimNitfCsexrbTag::NUM_LINES_KW = "NUM_LINES";
-const std::string ossimNitfCsexrbTag::NUM_SAMPLES_KW = "NUM_SAMPLES";
-const std::string ossimNitfCsexrbTag::ANGLE_TO_NORTH_KW = "ANGLE_TO_NORTH";
-const std::string ossimNitfCsexrbTag::OBLIQUITY_ANGLE_KW = "OBLIQUITY_ANGLE";
-const std::string ossimNitfCsexrbTag::AZ_OF_OBLIQUITY_KW = "AZ_OF_OBLIQUITY";
-const std::string ossimNitfCsexrbTag::ATM_REFR_FLAG_KW = "ATM_REFR_FLAG";
-const std::string ossimNitfCsexrbTag::VEL_ABER_FLAG_KW = "VEL_ABER_FLAG";
-const std::string ossimNitfCsexrbTag::GRD_COVER_KW = "GRD_COVER";
-const std::string ossimNitfCsexrbTag::SNOW_DEPTH_CATEGORY_KW = "SNOW_DEPTH_CATEGORY";
-const std::string ossimNitfCsexrbTag::SUN_AZIMUTH_KW = "SUN_AZIMUTH";
-const std::string ossimNitfCsexrbTag::SUN_ELEVATION_KW = "SUN_ELEVATION";
-const std::string ossimNitfCsexrbTag::PREDICTED_NIIRS_KW = "PREDICTED_NIIRS";
-const std::string ossimNitfCsexrbTag::CIRCL_ERR_KW = "CIRCL_ERR";
-const std::string ossimNitfCsexrbTag::LINEAR_ERR_KW = "LINEAR_ERR";
-const std::string ossimNitfCsexrbTag::CLOUD_COVER_KW = "CLOUD_COVER";
-
 
 ossimNitfCsexrbTag::ossimNitfCsexrbTag()
    : ossimNitfGenericTag(CETAG_KW, 0)
@@ -108,17 +71,17 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
    while(FOREVER) // Break on error or at end.
    {
       fieldSize = 36;
-      value = kwl.findKey( pfx, IMAGE_UUID_KW );
+      value = kwl.findKey( pfx, ossim::nitf::IMAGE_UUID_KW );
       // Size must be exact. Currently no format check, only size.
       if ( value.size() == fieldSize ) 
       {
-         m_fields_map.insert_or_assign(ossimString(IMAGE_UUID_KW), ossimString(value));
+         m_fields_map.insert_or_assign(ossimString(ossim::nitf::IMAGE_UUID_KW), ossimString(value));
       }
       else
       {
          ossimNotify(ossimNotifyLevel_WARN)
             << MODULE << " WARNING: Incorrect length of " << value.size()
-            << " for " << IMAGE_UUID_KW << " field!" << std::endl;
+            << " for " << ossim::nitf::IMAGE_UUID_KW << " field!" << std::endl;
          status = false;
          break;
       }
@@ -129,7 +92,7 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
 
       // PLATFORM_ID
       fieldSize = 6;
-      value = kwl.findKey( pfx, PLATFORM_ID_KW );
+      value = kwl.findKey( pfx, ossim::nitf::PLATFORM_ID_KW );
       if ( value.size() <= fieldSize )
       {
          if ( value.size() < fieldSize ) // Currently no format check, only size.
@@ -138,12 +101,12 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
             value.resize(fieldSize);
             ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
          }
-         m_fields_map.insert_or_assign(ossimString(PLATFORM_ID_KW), ossimString(value));
+         m_fields_map.insert_or_assign(ossimString(ossim::nitf::PLATFORM_ID_KW), ossimString(value));
       }
       else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << MODULE << " WARNING:\n" << PLATFORM_ID_KW
+            << MODULE << " WARNING:\n" << ossim::nitf::PLATFORM_ID_KW
             << " key value has incorrect length of "
             << value.size() << " for field!" << " value: " << value << std::endl;
          status = false;
@@ -151,7 +114,7 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
       }      
 
       // PAYLOAD_ID
-      value = kwl.findKey( pfx, PAYLOAD_ID_KW );
+      value = kwl.findKey( pfx, ossim::nitf::PAYLOAD_ID_KW );
       if ( value.size() <= fieldSize )
       {
          if ( value.size() < fieldSize ) // Currently no format check, only size.
@@ -160,12 +123,12 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
             value.resize(fieldSize);
             ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
          }
-         m_fields_map.insert_or_assign(ossimString(PAYLOAD_ID_KW), ossimString(value));
+         m_fields_map.insert_or_assign(ossimString(ossim::nitf::PAYLOAD_ID_KW), ossimString(value));
       }
       else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << MODULE << " WARNING:\n" << PAYLOAD_ID_KW
+            << MODULE << " WARNING:\n" << ossim::nitf::PAYLOAD_ID_KW
             << " key value has incorrect length of "
             << value.size() << " for field!" << " value: " << value << std::endl;
          status = false;
@@ -173,7 +136,7 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
       }     
 
       // SENSOR_ID
-      value = kwl.findKey( pfx, SENSOR_ID_KW );
+      value = kwl.findKey( pfx, ossim::nitf::SENSOR_ID_KW );
       if ( value.size() <= fieldSize )
       {
          if ( value.size() < fieldSize ) // Currently no format check, only size.
@@ -182,30 +145,30 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
             value.resize(fieldSize);
             ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
          }
-         m_fields_map.insert_or_assign(ossimString(SENSOR_ID_KW), ossimString(value));
+         m_fields_map.insert_or_assign(ossimString(ossim::nitf::SENSOR_ID_KW), ossimString(value));
       }
       else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << MODULE << " WARNING:\n" << SENSOR_ID_KW
+            << MODULE << " WARNING:\n" << ossim::nitf::SENSOR_ID_KW
             << " key value has incorrect length of "
             << value.size() << " for field!" << " value: " << value << std::endl;
          status = false;
          break;
       }
 
-      // SENSOR_TYPE
+      // ossim::nitf::SENSOR_TYPE
       fieldSize = 1;
-      value = kwl.findKey( pfx, SENSOR_TYPE_KW );
+      value = kwl.findKey( pfx, ossim::nitf::SENSOR_TYPE_KW );
       if ( value.size() == fieldSize )
       {
-         m_fields_map.insert_or_assign(ossimString(SENSOR_TYPE_KW), ossimString(value));
+         m_fields_map.insert_or_assign(ossimString(ossim::nitf::SENSOR_TYPE_KW), ossimString(value));
 
          if ( value == "S" ) // If scan we need these three fields.
          {
             // DAY_FIRST_LINE_IMAGE:
             fieldSize = 8;
-            value = kwl.findKey( pfx, DAY_FIRST_LINE_IMAGE_KW );
+            value = kwl.findKey( pfx, ossim::nitf::DAY_FIRST_LINE_IMAGE_KW );
             if ( value.size() < fieldSize ) // Currently no format check, only size.
             {
                os = value;
@@ -213,11 +176,11 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
                ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
             }
             m_fields_map.insert_or_assign(
-               ossimString(DAY_FIRST_LINE_IMAGE_KW), ossimString(value));
+               ossimString(ossim::nitf::DAY_FIRST_LINE_IMAGE_KW), ossimString(value));
 
             // TIME_FIRST_LINE_IMAGE:
             fieldSize = 15;
-            value = kwl.findKey( pfx, TIME_FIRST_LINE_IMAGE_KW );
+            value = kwl.findKey( pfx, ossim::nitf::TIME_FIRST_LINE_IMAGE_KW );
             if ( value.size() < fieldSize ) // Currently no format check, only size.
             {
                os = value;
@@ -225,11 +188,11 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
                ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
             }
             m_fields_map.insert_or_assign(
-               ossimString(TIME_FIRST_LINE_IMAGE_KW ), ossimString(value));
+               ossimString(ossim::nitf::TIME_FIRST_LINE_IMAGE_KW ), ossimString(value));
             
             // TIME_IMAGE_DURATION:
             fieldSize = 16;
-            value = kwl.findKey( pfx, TIME_IMAGE_DURATION_KW );
+            value = kwl.findKey( pfx, ossim::nitf::TIME_IMAGE_DURATION_KW );
             if ( value.size() < fieldSize ) // Currently no format check, only size.
             {
                os = value;
@@ -237,13 +200,13 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
                ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
             }
             m_fields_map.insert_or_assign(
-               ossimString(TIME_IMAGE_DURATION_KW), ossimString(value));
+               ossimString(ossim::nitf::TIME_IMAGE_DURATION_KW), ossimString(value));
          }
       }
       else
       {
          ossimNotify(ossimNotifyLevel_WARN)
-            << MODULE << " WARNING:\n" << SENSOR_TYPE_KW
+            << MODULE << " WARNING:\n" << ossim::nitf::SENSOR_TYPE_KW
             << " key value has incorrect length of "
             << value.size() << " for field!" << " value: " << value << std::endl;
          status = false;
@@ -271,24 +234,24 @@ void ossimNitfCsexrbTag::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
    {
-   {IMAGE_UUID_KW, 36},
-   {NUM_ASSOC_DES_KW, 3, {1}},
-   {(NUM_ASSOC_DES_KW + " i"), LOOP_START}, // hack...
-      {ASSOC_DES_UUID_KW, 36},
-   {NUM_ASSOC_DES_KW, LOOP_END},
-   {PLATFORM_ID_KW, 6},
-   {PAYLOAD_ID_KW, 6},
-   {SENSOR_ID_KW, 6},
-   {SENSOR_TYPE_KW, 1},
-   {GROUND_REF_POINT_X_KW, 12, {3, 3}},
-   {GROUND_REF_POINT_Y_KW, 12, {3, 3}},
-   {GROUND_REF_POINT_Z_KW, 12, {3, 3}},
-   {(SENSOR_TYPE_KW+" 'S' ="), IF_STATEMENT_START},
-      {DAY_FIRST_LINE_IMAGE_KW, 8, {1}},
-      {TIME_FIRST_LINE_IMAGE_KW, 15, {3, 9}},
-      {TIME_IMAGE_DURATION_KW, 16, {4, 9}},
-   {(SENSOR_TYPE_KW+" 'S' ="), IF_STATEMENT_END},
-   {"SENSOR_TYPE 'F' =", IF_STATEMENT_START},
+   {ossim::nitf::IMAGE_UUID_KW, 36},
+   {ossim::nitf::NUM_ASSOC_DES_KW, 3, {1}},
+   {(ossim::nitf::NUM_ASSOC_DES_KW + " i"), LOOP_START}, // hack...
+      {ossim::nitf::ASSOC_DES_UUID_KW, 36},
+   {ossim::nitf::NUM_ASSOC_DES_KW, LOOP_END},
+   {ossim::nitf::PLATFORM_ID_KW, 6},
+   {ossim::nitf::PAYLOAD_ID_KW, 6},
+   {ossim::nitf::SENSOR_ID_KW, 6},
+   {ossim::nitf::SENSOR_TYPE_KW, 1},
+   {ossim::nitf::GROUND_REF_POINT_X_KW, 12, {3, 3}},
+   {ossim::nitf::GROUND_REF_POINT_Y_KW, 12, {3, 3}},
+   {ossim::nitf::GROUND_REF_POINT_Z_KW, 12, {3, 3}},
+   {(ossim::nitf::SENSOR_TYPE_KW+" 'S' ="), IF_STATEMENT_START},
+      {ossim::nitf::DAY_FIRST_LINE_IMAGE_KW, 8, {1}},
+      {ossim::nitf::TIME_FIRST_LINE_IMAGE_KW, 15, {3, 9}},
+      {ossim::nitf::TIME_IMAGE_DURATION_KW, 16, {4, 9}},
+   {(ossim::nitf::SENSOR_TYPE_KW+" 'S' ="), IF_STATEMENT_END},
+   {(ossim::nitf::SENSOR_TYPE_KW+" 'F' ="), IF_STATEMENT_START},
       {"TIME_STAMP_LOC", 1},
       {"TIME_STAMP_LOC 0 =", IF_STATEMENT_START, {1}},
          {"REFRENCE_FRAME_NUM", 9, {1}},
@@ -301,34 +264,34 @@ void ossimNitfCsexrbTag::initializeFieldDefinitions()
             {"DT DT_SIZE", VARIABLE_LENGTH, {1}},
          {"NUMBER_DT", LOOP_END},
       {"TIME_STAMP_LOC 0 =", IF_STATEMENT_END},
-   {"SENSOR_TYPE 'F' =", IF_STATEMENT_END},
-   {MAX_GSD_KW, 12, {3, 1}},
-   {ALONG_SCAN_GSD_KW, 12, {3, 1}},
-   {CROSS_SCAN_GSD_KW, 12, {3, 1}},
-   {GEO_MEAN_GSD_KW, 12, {3, 1}},
-   {A_S_VERT_GSD_KW, 12, {3, 1}},
-   {C_S_VERT_GSD_KW, 12, {3, 1}},
-   {GEO_MEAN_VERT_GSD_KW, 12, {3, 1}},
-   {GSD_BETA_ANGLE_KW, 5, {3, 1}},
-   {DYNAMIC_RANGE_KW, 5, {1}},
-   {NUM_LINES_KW, 7, {1}},
-   {NUM_SAMPLES_KW, 5, {1}},
-   {ANGLE_TO_NORTH_KW, 7, {3, 3}},
-   {OBLIQUITY_ANGLE_KW, 6, {3, 3}},
-   {AZ_OF_OBLIQUITY_KW, 7, {3, 3}},
-   {ATM_REFR_FLAG_KW, 1},
-   {VEL_ABER_FLAG_KW, 1},
-   {GRD_COVER_KW, 1},
-   {SNOW_DEPTH_CATEGORY_KW, 1},
-   {SUN_AZIMUTH_KW, 7, {3, 3}},
-   {SUN_ELEVATION_KW, 7, {4, 3}},
-   {PREDICTED_NIIRS_KW, 3, {3, 1}},
-   {CIRCL_ERR_KW, 5, {3, 1}},
-   {LINEAR_ERR_KW, 5, {3, 1}},
-   {CLOUD_COVER_KW, 3, {1}},
-   {"SENSOR_TYPE 'F' =", IF_STATEMENT_START},
+   {(ossim::nitf::SENSOR_TYPE_KW+" 'F' ="), IF_STATEMENT_END},
+   {ossim::nitf::MAX_GSD_KW, 12, {3, 1}},
+   {ossim::nitf::ALONG_SCAN_GSD_KW, 12, {3, 1}},
+   {ossim::nitf::CROSS_SCAN_GSD_KW, 12, {3, 1}},
+   {ossim::nitf::GEO_MEAN_GSD_KW, 12, {3, 1}},
+   {ossim::nitf::A_S_VERT_GSD_KW, 12, {3, 1}},
+   {ossim::nitf::C_S_VERT_GSD_KW, 12, {3, 1}},
+   {ossim::nitf::GEO_MEAN_VERT_GSD_KW, 12, {3, 1}},
+   {ossim::nitf::GSD_BETA_ANGLE_KW, 5, {3, 1}},
+   {ossim::nitf::DYNAMIC_RANGE_KW, 5, {1}},
+   {ossim::nitf::NUM_LINES_KW, 7, {1}},
+   {ossim::nitf::NUM_SAMPLES_KW, 5, {1}},
+   {ossim::nitf::ANGLE_TO_NORTH_KW, 7, {3, 3}},
+   {ossim::nitf::OBLIQUITY_ANGLE_KW, 6, {3, 3}},
+   {ossim::nitf::AZ_OF_OBLIQUITY_KW, 7, {3, 3}},
+   {ossim::nitf::ATM_REFR_FLAG_KW, 1},
+   {ossim::nitf::VEL_ABER_FLAG_KW, 1},
+   {ossim::nitf::GRD_COVER_KW, 1},
+   {ossim::nitf::SNOW_DEPTH_CATEGORY_KW, 1},
+   {ossim::nitf::SUN_AZIMUTH_KW, 7, {3, 3}},
+   {ossim::nitf::SUN_ELEVATION_KW, 7, {4, 3}},
+   {ossim::nitf::PREDICTED_NIIRS_KW, 3, {3, 1}},
+   {ossim::nitf::CIRCL_ERR_KW, 5, {3, 1}},
+   {ossim::nitf::LINEAR_ERR_KW, 5, {3, 1}},
+   {ossim::nitf::CLOUD_COVER_KW, 3, {1}},
+   {(ossim::nitf::SENSOR_TYPE_KW+" 'F' ="), IF_STATEMENT_START},
       {"ROLLING_SHUTTER_FLAG", 1},
-   {"SENSOR_TYPE 'F' =", IF_STATEMENT_END},
+   {(ossim::nitf::SENSOR_TYPE_KW+" 'F' ="), IF_STATEMENT_END},
    {"UE_TIME_FLAG", 1},
    {"RESERVED_LEN", 5, {1}},
    {"RESERVED_LEN 0 = !", IF_STATEMENT_START},
@@ -424,46 +387,46 @@ void ossimNitfCsexrbTag::initializeDefaults()
 
    // 36 BCS-A R
    val = "00000000-0000-0000-0000-000000000000";
-   m_fields_map.insert(std::make_pair(ossimString(IMAGE_UUID_KW), val));
+   m_fields_map.insert(std::make_pair(ossimString(ossim::nitf::IMAGE_UUID_KW), val));
 
    // 3 BCS-N 000 to 999 R
-   key = NUM_ASSOC_DES_KW;
+   key = ossim::nitf::NUM_ASSOC_DES_KW;
    val = "000";
    m_fields_map.insert(std::make_pair(key, val));
 
    //  ASSOC_DES_UUIDi 36 BCS-A C
 
    // 6 BCS-A R
-   key = PLATFORM_ID_KW;
+   key = ossim::nitf::PLATFORM_ID_KW;
    val.string().resize(6);
    val.string().replace(0,6,6,' ');
    m_fields_map.insert(std::make_pair(key, val));
 
    // 6 BCS-A R
-   key = PAYLOAD_ID_KW;
+   key = ossim::nitf::PAYLOAD_ID_KW;
    m_fields_map.insert(std::make_pair(key, val));
 
    // 6 BCS-A R
-   key = SENSOR_ID_KW;
+   key = ossim::nitf::SENSOR_ID_KW;
    m_fields_map.insert(std::make_pair(key, val));
 
    // 1 BCS-A "F", "S" or BCS space if field is N/A <R>
-   key = SENSOR_TYPE_KW;
+   key = ossim::nitf::SENSOR_TYPE_KW;
    val = " ";
    m_fields_map.insert(std::make_pair(key, val));
 
    // 12 BCS-A -99999999.99 to +99999999.99 or BCS spaces meters <R>
-   key = GROUND_REF_POINT_X_KW;
+   key = ossim::nitf::GROUND_REF_POINT_X_KW;
    val.string().resize(12);
    val.string().replace(0,12,12,' ');
    m_fields_map.insert(std::make_pair(key, val));
 
    // 12 BCS-A -99999999.99 to +99999999.99 or BCS spaces meters <R>
-   key = GROUND_REF_POINT_Y_KW;
+   key = ossim::nitf::GROUND_REF_POINT_Y_KW;
    m_fields_map.insert(std::make_pair(key, val));
 
    // 12 BCS-A -99999999.99 to +99999999.99 or BCS spaces meters <R>
-   key = GROUND_REF_POINT_Z_KW;
+   key = ossim::nitf::GROUND_REF_POINT_Z_KW;
    m_fields_map.insert(std::make_pair(key, val));
 
    // If (SENSOR_TYPE = S) conditional.
@@ -474,7 +437,7 @@ void ossimNitfCsexrbTag::initializeDefaults()
    //---
 
    //---
-   // Field: TIME_FIRST_LINE_IMAGE
+   // Field: ossim::nitf::TIME_FIRST_LINE_IMAGE
    // 15 BCS-N  00000.000000000 to 86399.999999999 seconds UTC C
    //---
 
@@ -494,7 +457,7 @@ void ossimNitfCsexrbTag::initializeDefaults()
    //---
 
    // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
-   key = MAX_GSD_KW;
+   key = ossim::nitf::MAX_GSD_KW;
    m_fields_map.insert(std::make_pair(key, val));
 
    // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
