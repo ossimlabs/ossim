@@ -108,6 +108,14 @@ public:
       theData[1] = ossim::nan();
       theData[2] = ossim::nan();
    }
+
+   /**
+   * Computes distance from this to point2
+   * @param point2
+   * @return distance in same units as point coordinates
+   */
+   double distanceTo(const ossimLsrPoint& point2) const;
+
    /*!
     * Debug Dump: 
     */

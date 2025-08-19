@@ -205,3 +205,11 @@ std::ostream& operator<< (std::ostream& out, const ossimDpt3d &rhs)
    out << s;
    return out;
 }
+
+double ossimDpt3d::distanceTo(const ossimDpt3d& point2) const
+{
+   const double dx = x - point2.x;
+   const double dy = y - point2.y;
+   const double dz = z - point2.z;
+   return std::sqrt(dx*dx + dy*dy + dz*dz);
+}

@@ -114,6 +114,14 @@ public:
    ossim_float64 operator*(const ossimDpt& pt)const
       { return (x*pt.x+y*pt.y); }
 
+   /**
+  * Computes distance from this to point2
+  * @param point2
+  * @return distance in same units as point coordinates
+  */
+   double distanceTo(const ossimDpt& p2) const
+   { const double dx=x-p2.x; const double dy=y-p2.y; return sqrt(dx*dx + dy*dy); }
+
    std::ostream& print(std::ostream& os, ossim_uint32 precision=15) const;
    
    friend OSSIMDLLEXPORT std::ostream& operator<<(std::ostream& os,

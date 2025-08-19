@@ -121,3 +121,7 @@ ossimLsrPoint ossimLsrPoint::operator+(const ossimLsrVector& v) const
    return ossimLsrPoint(theData + v.data(), theLsrSpace);
 }
 
+double ossimLsrPoint::distanceTo(const ossimLsrPoint& point2) const
+{
+   return ossimEcefPoint(*this).distanceTo(ossimEcefPoint(point2));
+}

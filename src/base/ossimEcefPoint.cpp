@@ -90,6 +90,12 @@ void ossimEcefPoint::toPoint(const std::string& s)
    theData.toPoint(s);
 }
 
+double ossimEcefPoint::distanceTo(const ossimEcefPoint& point2) const
+{
+   const ossimColumnVector3d delta (theData - point2.theData);
+   return delta.magnitude();
+}
+
 void ossimEcefPoint::print(std::ostream& os) const
 {
    if(isNan())
