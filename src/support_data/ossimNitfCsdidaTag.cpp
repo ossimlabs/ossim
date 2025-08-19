@@ -297,7 +297,7 @@ std::ostream& ossimNitfCsdidaTag::print(
    pfx += getTagName();
    pfx += ".";
    
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(24) << "CETAG:"
        << getTagName() << "\n"
        << pfx << std::setw(24) << "CEL:"   << getTagLength() << "\n"
