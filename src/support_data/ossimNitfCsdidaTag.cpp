@@ -126,7 +126,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
 {
 
    bool status = true;
-#if 0   
+#if 0   /* tmp drb */
    std::string pfx = prefix?prefix:"";
    std::string value;
    std::string os;
