@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.5)
 PROJECT(ossim)
 ############################################################
 # From https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
@@ -33,8 +34,6 @@ Message("################## Setting up OSSIM core library ######################
 IF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
    SET(OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES "" CACHE PATH "Specify full paths separated by ; to additional OSSIM applications you wish to include into the ossim build framework.  These will have variables setup for the ossim includes" FORCE)
 ENDIF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
-
-cmake_minimum_required(VERSION 2.8)
 
 SET(CMAKE_MODULE_PATH
   "${CMAKE_CURRENT_SOURCE_DIR}/ossim/cmake/CMakeModules" ${CMAKE_MODULE_PATH})

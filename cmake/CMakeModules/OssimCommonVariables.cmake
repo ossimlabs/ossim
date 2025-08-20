@@ -275,6 +275,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    OPTION(BUILD_OSSIM_GUI "Set to ON to build the new ossimGui library and geocell application." ON)
    OPTION(BUILD_OMS "Set to ON to build the oms api library." ON)
    OPTION(BUILD_OSSIM_WMS "Set to ON to build the wms api library." ON)
+   OPTION(USE_OSSIM_JSONCPP "Set to ON to use amalgamated JSONCPP header in ossim/include/json." ON)
 
    SET(CMAKE_INCLUDE_DIRS_FILE "${CMAKE_BINARY_DIR}/CMakeIncludeDirs.txt")
    SET(CMAKE_FILENAMES_FILE "${CMAKE_BINARY_DIR}/CMakeFileNames.txt")
