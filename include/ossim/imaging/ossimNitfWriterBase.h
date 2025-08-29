@@ -117,7 +117,19 @@ public:
 
    virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag);
    virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique);
-   virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique, const ossim_uint32& ownerIndex, const ossimString& tagType);
+
+   /**
+    * @brief Adds a tag.
+    *
+    * Pure virtual for derived classes with access to file and image header.
+    * 
+    * @param unique true will overwrite if exist, false will add new tag.
+    * @param ownerIndex 0 = file header, 1 = image header
+    * @param tagType UDHD, UDID, XHD, IXSHD, SXSHD, or TXSHD.
+    */
+   virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag,
+                                 bool unique, const ossim_uint32& ownerIndex,
+                                 const ossimString& tagType) = 0;
 
 #if 0 /* Not called by anyone. */
    virtual void setFileHeaderV2_1(ossimRefPtr<ossimNitfFileHeaderV2_1>, bool preferSource=false);

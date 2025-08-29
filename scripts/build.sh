@@ -23,7 +23,7 @@
 # Uncomment following line to debug script line by line:
 #set -x; trap read debug
 
-#CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config.sh
+CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config.sh
 pushd `dirname ${BASH_SOURCE[0]}` >/dev/null
 export BUILD_SCRIPT_DIR=`pwd -P`
 popd >/dev/null

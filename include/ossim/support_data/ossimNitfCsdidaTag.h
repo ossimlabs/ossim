@@ -1,4 +1,4 @@
-//----------------------------------------------------------------------------
+//---
 //
 // License:  MIT
 //
@@ -12,7 +12,7 @@
 //
 // See document STDI-0006-NCDRD Table 3.3-14 for more info.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id
 
 #ifndef ossimNitfCsdidaTag_HEADER
@@ -34,6 +34,16 @@ public:
    /** @brief Method to write data to stream. */
    virtual void writeStream(std::ostream& out);
 
+   /*!
+    * @brief Method to the load (recreate) the state of the object from a
+    * keyword list.
+    * @param kwl
+    * @param prefix Typically, somthing like: "nitf.CSDIDA."
+    * @return true on success, false on error.
+    */
+   virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
+
+
    /** @brief Method to clear all fields including null terminating. */
    virtual void clearFields();
 
@@ -45,6 +55,8 @@ public:
     */
    virtual std::ostream& print(std::ostream& out,
                                const std::string& prefix) const;
+
+   static const std::string CETAG_KW;
    
 protected:
 

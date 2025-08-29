@@ -21,9 +21,37 @@
 
 class OSSIM_DLL ossimNitfCsexrbTag : public ossimNitfGenericTag
 {
-   public:
-      ossimNitfCsexrbTag(ossim_uint32 tagLength=0);
+public:
 
-      virtual ossimString getClassName() const;
+   ossimNitfCsexrbTag();
+   
+   ossimNitfCsexrbTag(ossim_uint32 tagLength);
+   
+   virtual ossimString getClassName() const;
+
+   /*!
+    * @brief Method to the load (recreate) the state of the object from a
+    * keyword list.
+    * @param kwl
+    * @param prefix Typically, somthing like: "image0.CSEXRB."
+    * @return true on success, false on error.
+    */
+   virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
+
+   static const std::string CETAG_KW;
+   
+private:
+   
+   /**
+    * @brief Initializes ossimNitfGenericTag FIELD_DEFINITIONS.
+    */
+   void initializeFieldDefinitions();
+   
+   /**
+    * @brief Initializes ossimNitfGenericTag m_fields_map required tags.
+    */
+   void initializeDefaults();
+
 };
-#endif
+
+#endif /* #ifndef ossimNitfCsexrbTag_HEADER */

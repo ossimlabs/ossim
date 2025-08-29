@@ -1,8 +1,6 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
@@ -12,7 +10,7 @@
 //
 // See document STDI-0006-NCDRD Table 3.3-14 for more info.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id
 
 #include <cstring>
@@ -21,14 +19,16 @@
 #include <iomanip>
 
 #include <ossim/support_data/ossimNitfCsdidaTag.h>
-
-using namespace std;
-
+#include <ossim/support_data/ossimNitfCommonFieldNames.h>
 
 RTTI_DEF1(ossimNitfCsdidaTag, "ossimNitfCsdidaTag", ossimNitfRegisteredTag);
 
+static const int FOREVER = 1;
+
+const std::string ossimNitfCsdidaTag::CETAG_KW = "CSDIDA";
+
 ossimNitfCsdidaTag::ossimNitfCsdidaTag()
-   : ossimNitfRegisteredTag(std::string("CSDIDA"), 70)
+   : ossimNitfRegisteredTag(CETAG_KW, 70)
 {
    clearFields();
 }
@@ -122,6 +122,174 @@ void ossimNitfCsdidaTag::clearFields()
    theSoftwareVersionNumber[10] = '\0';
 }
 
+bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
+{
+
+   bool status = true;
+#if 0   /* tmp drb */
+   std::string pfx = prefix?prefix:"";
+   std::string value;
+   std::string os;
+   ossim_uint32 fieldSize = 0;
+
+   while(FOREVER) // Break on error or at end.
+   {
+      fieldSize = 36;
+      value = kwl.findKey( pfx, IMAGE_UUID_KW );
+      // Size must be exact. Currently no format check, only size.
+      if ( value.size() == fieldSize ) 
+      {
+         m_fields_map.insert_or_assign(ossimString(IMAGE_UUID_KW), ossimString(value));
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING: Incorrect length of " << value.size()
+            << " for " << IMAGE_UUID_KW << " field!" << std::endl;
+         status = false;
+         break;
+      }
+
+      // NUM_ASSOC_DES
+
+      // ASSOC_DES_UUID
+
+      // PLATFORM_ID
+      fieldSize = 6;
+      value = kwl.findKey( pfx, PLATFORM_ID_KW );
+      if ( value.size() <= fieldSize )
+      {
+         if ( value.size() < fieldSize ) // Currently no format check, only size.
+         {
+            os = value;
+            value.resize(fieldSize);
+            ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+         }
+         m_fields_map.insert_or_assign(ossimString(PLATFORM_ID_KW), ossimString(value));
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING:\n" << PLATFORM_ID_KW
+            << " key value has incorrect length of "
+            << value.size() << " for field!" << " value: " << value << std::endl;
+         status = false;
+         break;
+      }      
+
+      // PAYLOAD_ID
+      value = kwl.findKey( pfx, PAYLOAD_ID_KW );
+      if ( value.size() <= fieldSize )
+      {
+         if ( value.size() < fieldSize ) // Currently no format check, only size.
+         {
+            os = value;
+            value.resize(fieldSize);
+            ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+         }
+         m_fields_map.insert_or_assign(ossimString(PAYLOAD_ID_KW), ossimString(value));
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING:\n" << PAYLOAD_ID_KW
+            << " key value has incorrect length of "
+            << value.size() << " for field!" << " value: " << value << std::endl;
+         status = false;
+         break;
+      }     
+
+      // SENSOR_ID
+      value = kwl.findKey( pfx, SENSOR_ID_KW );
+      if ( value.size() <= fieldSize )
+      {
+         if ( value.size() < fieldSize ) // Currently no format check, only size.
+         {
+            os = value;
+            value.resize(fieldSize);
+            ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+         }
+         m_fields_map.insert_or_assign(ossimString(SENSOR_ID_KW), ossimString(value));
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING:\n" << SENSOR_ID_KW
+            << " key value has incorrect length of "
+            << value.size() << " for field!" << " value: " << value << std::endl;
+         status = false;
+         break;
+      }
+
+      // SENSOR_TYPE
+      fieldSize = 1;
+      value = kwl.findKey( pfx, SENSOR_TYPE_KW );
+      if ( value.size() == fieldSize )
+      {
+         m_fields_map.insert_or_assign(ossimString(SENSOR_TYPE_KW), ossimString(value));
+
+         if ( value == "S" ) // If scan we need these three fields.
+         {
+            // DAY_FIRST_LINE_IMAGE:
+            fieldSize = 8;
+            value = kwl.findKey( pfx, DAY_FIRST_LINE_IMAGE_KW );
+            if ( value.size() < fieldSize ) // Currently no format check, only size.
+            {
+               os = value;
+               value.resize(fieldSize);
+               ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+            }
+            m_fields_map.insert_or_assign(
+               ossimString(DAY_FIRST_LINE_IMAGE_KW), ossimString(value));
+
+            // TIME_FIRST_LINE_IMAGE:
+            fieldSize = 15;
+            value = kwl.findKey( pfx, TIME_FIRST_LINE_IMAGE_KW );
+            if ( value.size() < fieldSize ) // Currently no format check, only size.
+            {
+               os = value;
+               value.resize(fieldSize);
+               ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+            }
+            m_fields_map.insert_or_assign(
+               ossimString(TIME_FIRST_LINE_IMAGE_KW ), ossimString(value));
+            
+            // TIME_IMAGE_DURATION:
+            fieldSize = 16;
+            value = kwl.findKey( pfx, TIME_IMAGE_DURATION_KW );
+            if ( value.size() < fieldSize ) // Currently no format check, only size.
+            {
+               os = value;
+               value.resize(fieldSize);
+               ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+            }
+            m_fields_map.insert_or_assign(
+               ossimString(TIME_IMAGE_DURATION_KW), ossimString(value));
+         }
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING:\n" << SENSOR_TYPE_KW
+            << " key value has incorrect length of "
+            << value.size() << " for field!" << " value: " << value << std::endl;
+         status = false;
+         break;
+      }      
+
+      break; // Trailing break from forever loop.
+      
+   } // Matches: while(FOREVER)
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " exit status" << (status?"true\n":"false\n");
+   }
+#endif   
+   return status;
+}
+
 std::ostream& ossimNitfCsdidaTag::print(
    std::ostream& out, const std::string& prefix) const
 {
@@ -129,7 +297,7 @@ std::ostream& ossimNitfCsdidaTag::print(
    pfx += getTagName();
    pfx += ".";
    
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(24) << "CETAG:"
        << getTagName() << "\n"
        << pfx << std::setw(24) << "CEL:"   << getTagLength() << "\n"

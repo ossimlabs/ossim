@@ -494,12 +494,10 @@ void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> r
    m_tags.push_back( registeredTag );
 }
 
-void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> /* registeredTag */, bool /* unique */)
+void ossimNitfWriterBase::addRegisteredTag(
+   ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique )
 {
-}
-
-void ossimNitfWriterBase::addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> /* registeredTag */, bool /* unique */, const ossim_uint32& /* ownerIndex */, const ossimString& /* tagType */)
-{
+   addRegisteredTag(registeredTag, unique, 1, ossimString("IXSHD"));
 }
 
 #if 0 /* Not called by anyone. */

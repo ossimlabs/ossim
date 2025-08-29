@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.5)
 PROJECT(ossim)
 ############################################################
 # From https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
@@ -33,8 +34,6 @@ Message("################## Setting up OSSIM core library ######################
 IF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
    SET(OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES "" CACHE PATH "Specify full paths separated by ; to additional OSSIM applications you wish to include into the ossim build framework.  These will have variables setup for the ossim includes" FORCE)
 ENDIF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
-
-cmake_minimum_required(VERSION 2.8)
 
 SET(CMAKE_MODULE_PATH
   "${CMAKE_CURRENT_SOURCE_DIR}/ossim/cmake/CMakeModules" ${CMAKE_MODULE_PATH})
@@ -122,7 +121,19 @@ if ( ZLIB_FOUND )
    set( OSSIM_HAS_LIBZ 1 )
 else ( ZLIB_FOUND )
    message( WARNING "Could not find optional zlib package!" )
-endif ( ZLIB_FOUND )
+ endif ( ZLIB_FOUND )
+
+# LIBUUID - Optional
+set( OSSIM_HAS_UUID 0 ) 
+find_package( Libuuid )
+if ( LIBUUID_FOUND )
+   include_directories( ${LIBUUID_INCLUDE_DIR} )
+   set( ossimDependentLibs ${ossimDependentLibs} ${LIBUUID_LIBRARY} )
+   set( OSSIM_HAS_UUID 1 )
+else ( LIBUUID_FOUND )
+   message( WARNING "Could not find optional libuuid package!" )
+endif ( LIBUUID_FOUND )
+
 
 # TIFF - Required:
 find_package( TIFF )
@@ -344,6 +355,7 @@ MESSAGE( STATUS "JPEG_LIBRARY                    = ${JPEG_LIBRARIES}" )
 MESSAGE( STATUS "JPEG_INCLUDE                    = ${JPEG_INCLUDE_DIR}" )
 MESSAGE( STATUS "OSSIM DEPENDENT LIBRARIES       = ${ossimDependentLibs}" )
 MESSAGE( STATUS "OSSIM_HAS_HDF5                  = ${OSSIM_HAS_HDF5}" )
+MESSAGE( STATUS "OSSIM_HAS_UUID                  = ${OSSIM_HAS_UUID}" )
 
 #-----------------------------------------------------------------------------
 # uninstall target

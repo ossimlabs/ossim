@@ -313,7 +313,7 @@ private:
     * parse all overflow tags and put them into theTagList.
     */
    void readOverflowTags(ossim::istream& in);
-   void readDes(std::istream& in);     
+   void readDes(ossim::istream& in);     
 
    // Note: these are work variables and not part of the
    // Nitf header.  These variables will be used to quickly
@@ -630,7 +630,7 @@ private:
     * Field: XHDL
     * 
     * This is a required field.  It is 5 bytes long and
-    * ranges from 0-99999.  0 means there is no data
+    * ranges from 00000 or 00003-99999.  0 means there is no data
     */
    char theExtendedHeaderDataLength[6];
 

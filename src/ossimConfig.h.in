@@ -5,6 +5,9 @@
 /* Define to "1" if you have libz installed, "0" if not. */
 #define OSSIM_HAS_LIBZ @OSSIM_HAS_LIBZ@
 
+/* Define to "1" if you have libuuid installed, "0" if not. */
+#define OSSIM_HAS_UUID @OSSIM_HAS_UUID@
+
 /* Define to "1" if you have MPI(lam/mpi), "0" if not. */
 #define OSSIM_HAS_MPI @OSSIM_HAS_MPI@
 

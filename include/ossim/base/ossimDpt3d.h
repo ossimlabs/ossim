@@ -138,8 +138,15 @@ public:
     *
     * @param s String to initialize from.
     */
-   void toPoint(const std::string& s); 
-   
+   void toPoint(const std::string& s);
+
+   /**
+    * Computes distance from this to point2
+    * @param point2
+    * @return distance in same units as point coordinates
+    */
+   double distanceTo(const ossimDpt3d& point2) const;
+
    double x;
    double y;
    double z;

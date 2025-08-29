@@ -177,6 +177,13 @@ public:
       }
    }
 
+   /**
+    * Computes distance from this to point2
+    * @param point2
+    * @return distance in same units as point coordinates
+    */
+   double distanceTo(const ossimEcefPoint& point2) const;
+
    /*!
     * Debug Dump: 
     */
