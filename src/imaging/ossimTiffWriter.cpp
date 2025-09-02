@@ -155,6 +155,33 @@ bool ossimTiffWriter::closeTiff()
 {
    if (theTif)
    {
+      // BUGFIX: Force correct BPS value before closing
+      // This works around corruption that happens after writeTiffTags()
+      if (theInputConnection.valid()) {
+         ossimScalarType scalarType = theInputConnection->getOutputScalarType();
+         int correctBPS = 8; // Default for U8
+         switch(scalarType) {
+            case OSSIM_UINT8:
+               correctBPS = 8;
+               break;
+            case OSSIM_USHORT16:
+            case OSSIM_SSHORT16:
+               correctBPS = 16;
+               break;
+            case OSSIM_FLOAT32:
+               correctBPS = 32;
+               break;
+            case OSSIM_FLOAT64:
+               correctBPS = 64;
+               break;
+            default:
+               correctBPS = 8;
+               break;
+         }
+         std::cerr << "DEBUG TIFF WRITER CLOSE: Forcing BPS = " << correctBPS << std::endl;
+         TIFFSetField((TIFF*)theTif, TIFFTAG_BITSPERSAMPLE, correctBPS);
+      }
+      
       XTIFFClose( (TIFF*)theTif );
       theTif = NULL;
    }
@@ -187,6 +214,8 @@ MODULE);
 
    int bitsPerSample  = 0;
    int sampleFormat   = 0;
+   ossimScalarType debugScalarType = theInputConnection->getOutputScalarType();
+   std::cerr << "DEBUG TIFF WRITER: Scalar type = " << debugScalarType << std::endl;
    switch( theInputConnection->getOutputScalarType() )
    {
    case OSSIM_UINT8:
@@ -228,8 +257,18 @@ MODULE);
    }
 
    // Set the pixel type.
-   TIFFSetField( (TIFF*)tiffPtr, TIFFTAG_BITSPERSAMPLE, bitsPerSample );
-   TIFFSetField( (TIFF*)tiffPtr, TIFFTAG_SAMPLEFORMAT, sampleFormat );
+   std::cerr << "DEBUG TIFF WRITER: Setting BPS = " << bitsPerSample << std::endl;
+   int result1 = TIFFSetField( (TIFF*)tiffPtr, TIFFTAG_BITSPERSAMPLE, bitsPerSample );
+   int result2 = TIFFSetField( (TIFF*)tiffPtr, TIFFTAG_SAMPLEFORMAT, sampleFormat );
+   std::cerr << "DEBUG TIFF WRITER: TIFFSetField results: BPS=" << result1 << ", SF=" << result2 << std::endl;
+   
+   // Verify what was actually set
+   uint16 readBackBPS = 0;
+   if (TIFFGetField((TIFF*)tiffPtr, TIFFTAG_BITSPERSAMPLE, &readBackBPS)) {
+      std::cerr << "DEBUG TIFF WRITER: Read back BPS = " << readBackBPS << std::endl;
+   } else {
+      std::cerr << "DEBUG TIFF WRITER: Failed to read back BPS" << std::endl;
+   }
 
    // Set the image dimensions.
    ossim_uint32  width  = theAreaOfInterest.width();
