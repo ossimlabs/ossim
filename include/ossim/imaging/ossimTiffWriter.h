@@ -213,6 +213,13 @@ protected:
    UnitType getPcsUnitType(ossim_int32 pcsCode) const;
 
    void checkColorLut();
+
+   /**
+    * @brief Gets the tiff sample format based on scalar type.
+    * E.g SAMPLEFORMAT_UINT, SAMPLEFORMAT_INT or SAMPLEFORMAT_IEEEFP.
+    * @return TIFF sample format or 0 if not mapped to a scalar type.
+    */
+   ossim_uint16 getTiffSampleFormat() const;   
    
    void*                   theTif;
    ossimString             theCompressionType;

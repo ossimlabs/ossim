@@ -9,6 +9,7 @@
 
 #include <ossim/ossimConfig.h>
 #include <ossim/imaging/ossimTiffWriter.h>
+#include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDpt.h>
@@ -184,52 +185,27 @@ MODULE);
    // it is important to use the correct data type.  If in doubt see the
    // code for libtiff's _TIFFVSetField in "tif_dir.c" in the libtiff package.
    //---
-
-   int bitsPerSample  = 0;
-   int sampleFormat   = 0;
-   switch( theInputConnection->getOutputScalarType() )
+   
+   ossim_uint16 bitsPerSample =
+      (ossim_uint16)ossim::getBitsPerPixel(theInputConnection->getOutputScalarType());
+   if ( bitsPerSample )
    {
-   case OSSIM_UINT8:
-      bitsPerSample = 8;
-      sampleFormat = SAMPLEFORMAT_UINT;
-      break;
-
-   case OSSIM_UINT9:
-   case OSSIM_UINT10:
-   case OSSIM_UINT11:
-   case OSSIM_UINT12:
-   case OSSIM_UINT13:
-   case OSSIM_UINT14:
-   case OSSIM_UINT15:
-   case OSSIM_UINT16:
-      bitsPerSample = 16;
-      sampleFormat = SAMPLEFORMAT_UINT;
-      break;
-
-   case OSSIM_SINT16:
-      bitsPerSample = 16;
-      sampleFormat = SAMPLEFORMAT_INT;
-      break;
-
-   case OSSIM_FLOAT32:
-   case OSSIM_NORMALIZED_FLOAT:
-      bitsPerSample = 32;
-      sampleFormat = SAMPLEFORMAT_IEEEFP;
-      break;
-
-   case OSSIM_NORMALIZED_DOUBLE:
-   case OSSIM_FLOAT64:
-      bitsPerSample = 64;
-      sampleFormat = SAMPLEFORMAT_IEEEFP;
-      break;
-
-   default:
+      TIFFSetField( (TIFF*)tiffPtr, TIFFTAG_BITSPERSAMPLE, bitsPerSample );
+   }
+   else
+   {
       return false;
    }
-
-   // Set the pixel type.
-   TIFFSetField( (TIFF*)tiffPtr, TIFFTAG_BITSPERSAMPLE, bitsPerSample );
-   TIFFSetField( (TIFF*)tiffPtr, TIFFTAG_SAMPLEFORMAT, sampleFormat );
+   
+   ossim_uint16 sampleFormat = getTiffSampleFormat();
+   if ( sampleFormat )
+   {
+      TIFFSetField( (TIFF*)tiffPtr, TIFFTAG_SAMPLEFORMAT, sampleFormat );
+   }
+   else
+   {
+      return false;
+   }
 
    // Set the image dimensions.
    ossim_uint32  width  = theAreaOfInterest.width();
@@ -286,7 +262,7 @@ MODULE);
    }
 
    // Set the compression type:
-   uint16 tiffCompressType = COMPRESSION_NONE;
+   ossim_uint16 tiffCompressType = COMPRESSION_NONE;
    theCompressionType.downcase();
    if( theCompressionType == "jpeg")
    {
@@ -1064,7 +1040,7 @@ bool ossimTiffWriter::writeToTilesBandSep()
                                             (ossim_uint32)0,        // z
                                             (tsample_t)band);    // sample
             }
-            if ( ( bytesWritten != tileSizeInBytes ) && !needsAborting() )
+            if ( ( bytesWritten != (tsize_t)tileSizeInBytes ) && !needsAborting() )
             {
                if(traceDebug())
                {
@@ -1755,4 +1731,41 @@ void ossimTiffWriter::dumpTileToFile(ossimRefPtr<ossimImageData> t,  const ossim
    writer->execute();
    writer=0;
    tile=0;
+}
+
+ossim_uint16 ossimTiffWriter::getTiffSampleFormat() const
+{
+   ossim_uint16 result = 0;
+   switch( theInputConnection->getOutputScalarType() )
+   {
+      case OSSIM_UINT8:
+      case OSSIM_UINT9:
+      case OSSIM_UINT10:
+      case OSSIM_UINT11:
+      case OSSIM_UINT12:
+      case OSSIM_UINT13:
+      case OSSIM_UINT14:
+      case OSSIM_UINT15:
+      case OSSIM_UINT16:
+      case OSSIM_UINT32:
+         result = SAMPLEFORMAT_UINT;
+         break;
+
+      case OSSIM_SINT16:
+      case OSSIM_SINT32:
+         result = SAMPLEFORMAT_INT;
+         break;
+
+      case OSSIM_FLOAT32:
+      case OSSIM_FLOAT64:
+      case OSSIM_NORMALIZED_FLOAT:
+      case OSSIM_NORMALIZED_DOUBLE:
+         result = SAMPLEFORMAT_IEEEFP;
+         break;
+
+      default:
+         break;
+   }
+
+   return result;
 }
