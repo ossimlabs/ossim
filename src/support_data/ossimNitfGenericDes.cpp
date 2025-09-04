@@ -18,12 +18,40 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <stack>
 
 #include "base/ossimException.h"
 
-ossimNitfGenericDes::ossimNitfGenericDes(ossimString tag, ossim_uint32 tagLength)
+ossimNitfGenericDes::ossimNitfGenericDes(const std::string& tag, ossim_uint32 tagLength)
    : ossimNitfRegisteredDes(tag, tagLength)
 {
+}
+
+ossimNitfGenericDes::definition::definition(const ossimString& field, ossim_int32 size,
+                       ossim_int8 dataFormat, ossim_int8 precision,
+                       const ossimString& defaultValue)
+   :
+   field(field),
+   size(size),
+   dataFormat(dataFormat),
+   precision(precision),
+   defaultValue(defaultValue)
+{
+}
+
+std::ostream& ossimNitfGenericDes::definition::print(std::ostream& out) const
+{
+   out << "field: " << field << "\n"
+       << "size: " << size << "\n"
+       << "dataFormat: " << dataFormat << "\n"
+       << "precision: " << precision << "\n"
+       << "defaultValue: " << defaultValue;
+   return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const ossimNitfGenericDes::definition& def)
+{
+   return def.print(out);
 }
 
 static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
@@ -206,13 +234,14 @@ void ossimNitfGenericDes::loopLogic(ossim_int32 &i, std::vector<std::vector<ossi
     }
 }
 
-ossimString ossimNitfGenericDes::formatField(int definition, ossimString fieldValue) const
+ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& fieldValue) const
 {
+   ossimString result = fieldValue;
    ossim_int8 format = FIELD_DEFINITIONS[definition].dataFormat;
-   if (fieldValue.empty())
+   if (result.empty())
    {
-      fieldValue = FIELD_DEFINITIONS[definition].defaultValue;
-      if (fieldValue == " ")
+      result = FIELD_DEFINITIONS[definition].defaultValue;
+      if (result == " ")
          format = -1;
    }
 
@@ -223,41 +252,41 @@ ossimString ossimNitfGenericDes::formatField(int definition, ossimString fieldVa
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
       length = m_fields_map.at(spaceSubStrings[1]).toInt();
    }
-   if (fieldValue.size() != length)
+   if (result.size() != length)
    {
       switch (format)
       {
          case 1:
-            fieldValue = ossimNitfCommon::convertToUIntString(fieldValue.toUInt32(),
+            result = ossimNitfCommon::convertToUIntString(result.toUInt32(),
                length);
             break;
          case 2:
-            fieldValue = ossimNitfCommon::convertToIntString(fieldValue.toInt32(),
+            result = ossimNitfCommon::convertToIntString(result.toInt32(),
                length);
             break;
          case 3:
-            fieldValue = ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
+            result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
                FIELD_DEFINITIONS[definition].precision,
                length);
             break;
          case 4:
-            if (fieldValue.toFloat64() > 0)
-               fieldValue = "+" + ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
+            if (result.toFloat64() > 0)
+               result = "+" + ossimNitfCommon::convertToDoubleString(result.toFloat64(),
                                  FIELD_DEFINITIONS[definition].precision,
                                     length);
             else
-               fieldValue = ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
+               result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
                                  FIELD_DEFINITIONS[definition].precision,
                                     length);
          case 5:
-            fieldValue = ossimNitfCommon::convertToScientificString(fieldValue.toFloat64(), length);
+            result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
          default:
-            while (fieldValue.length() < length)
-               fieldValue = fieldValue + ' ';
+            while (result.length() < length)
+               result = result + ' ';
             break;
       }
    }
-   return fieldValue;
+   return result;
 }
 
 void ossimNitfGenericDes::parseStream(std::istream &in)
@@ -350,7 +379,7 @@ std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &p
 
    std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings;
-   ossim_int32 fieldLength, i = 0;
+   ossim_int32 i = 0;
    ossimString generatedFieldName;
 
    while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
@@ -365,12 +394,12 @@ std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &p
          {
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
-            fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+            //fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
          }
          else
          {
             generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
-            fieldLength = FIELD_DEFINITIONS[i].size;
+            //fieldLength = FIELD_DEFINITIONS[i].size;
          }
          //Unique print actions
          out << std::setiosflags(std::ios::left)
@@ -387,12 +416,12 @@ void ossimNitfGenericDes::clearFields()
    m_fields_map.clear();
 }
 
-ossimString ossimNitfGenericDes::get(ossimString fieldName)
+ossimString ossimNitfGenericDes::get(const ossimString& fieldName)
 {
    return m_fields_map.at(fieldName);
 }
 
-void ossimNitfGenericDes::setField(ossimString fieldName, ossimString fieldValue)
+void ossimNitfGenericDes::setField(const ossimString& fieldName, const ossimString& fieldValue)
 {
    if (!fieldName.empty())
    {

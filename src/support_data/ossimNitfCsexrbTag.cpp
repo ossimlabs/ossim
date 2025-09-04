@@ -15,14 +15,35 @@
 //----------------------------------------------------------------------------
 
 #include <ossim/support_data/ossimNitfCsexrbTag.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimTrace.h>
+#include <ossim/support_data/ossimNitfCommon.h>
+#include <ossim/support_data/ossimNitfCommonFieldNames.h>
+#include <utility> /* make_pair */
+
+static ossimTrace traceDebug("ossimNitfCsexrbTag:debug");
+
+static const int FOREVER = 1;
+
+const std::string ossimNitfCsexrbTag::CETAG_KW = "CSEXRB";
+
+ossimNitfCsexrbTag::ossimNitfCsexrbTag()
+   : ossimNitfGenericTag("CSEXRB")
+{
+   initializeFieldDefinitions();
+}
 
 ossimNitfCsexrbTag::ossimNitfCsexrbTag(ossim_uint32 tagLength)
    : ossimNitfGenericTag("CSEXRB", tagLength)
 {
+   initializeFieldDefinitions();
+}
+void ossimNitfCsexrbTag::initializeFieldDefinitions()
+{
    FIELD_DEFINITIONS =
    {
    {"IMAGE_UUID", 36},
-   {"NUM_ASSOC_DES", 3, 1},
+   {"NUM_ASSOC_DES", 3, U_INT},
    {"NUM_ASSOC_DES i", LOOP_START},
       {"ASSOC_DES_UUID", 36},
    {"NUM_ASSOC_DES", LOOP_END},
@@ -30,116 +51,116 @@ ossimNitfCsexrbTag::ossimNitfCsexrbTag(ossim_uint32 tagLength)
    {"PAYLOAD_ID", 6},
    {"SENSOR_ID", 6},
    {"SENSOR_TYPE", 1},
-   {"GROUND_REF_POINT_X", 12, 3, 3},
-   {"GROUND_REF_POINT_Y", 12, 3, 3},
-   {"GROUND_REF_POINT_Z", 12, 3, 3},
+   {"GROUND_REF_POINT_X", 12, U_DOUBLE, 3},
+   {"GROUND_REF_POINT_Y", 12, U_DOUBLE, 3},
+   {"GROUND_REF_POINT_Z", 12, U_DOUBLE, 3},
    {"SENSOR_TYPE 'S' =", IF_STATEMENT_START},
-      {"DAY_FIRST_LINE_IMAGE", 8, 1},
-      {"TIME_FIRST_LINE_IMAGE", 15, 3, 9},
-      {"TIME_IMAGE_DURATION", 16, 4, 9},
+      {"DAY_FIRST_LINE_IMAGE", 8, U_INT},
+      {"TIME_FIRST_LINE_IMAGE", 15, U_DOUBLE, 9},
+      {"TIME_IMAGE_DURATION", 16, DOUBLE, 9},
    {"SENSOR_TYPE 'S' =", IF_STATEMENT_END},
    {"SENSOR_TYPE 'F' =", IF_STATEMENT_START},
       {"TIME_STAMP_LOC", 1},
-      {"TIME_STAMP_LOC 0 =", IF_STATEMENT_START, 1},
-         {"REFRENCE_FRAME_NUM", 9, 1},
+      {"TIME_STAMP_LOC 0 =", IF_STATEMENT_START, U_INT},
+         {"REFRENCE_FRAME_NUM", 9, U_INT},
          {"BASE_TIMESTAMP", 24},
-         {"DT_MULTIPLIER", 8, 1},
-         {"DT_SIZE", 1, 1},
-         {"NUMBER_FRAMES", 4, 1},
-         {"NUMBER_DT", 4, 1},
+         {"DT_MULTIPLIER", 8, U_INT},
+         {"DT_SIZE", 1, U_INT},
+         {"NUMBER_FRAMES", 4, U_INT},
+         {"NUMBER_DT", 4, U_INT},
          {"NUMBER_DT n", LOOP_START},
-            {"DT DT_SIZE", VARIABLE_LENGTH, 1},
+            {"DT DT_SIZE", VARIABLE_LENGTH, U_INT},
          {"NUMBER_DT", LOOP_END},
       {"TIME_STAMP_LOC 0 =", IF_STATEMENT_END},
    {"SENSOR_TYPE 'F' =", IF_STATEMENT_END},
-   {"MAX_GSD", 12, 3, 1},
-   {"ALONG_SCAN_GSD", 12, 3, 1},
-   {"CROSS_SCAN_GSD", 12, 3, 1},
-   {"GEO_MEAN_GSD", 12, 3, 1},
-   {"A_S_VERT_GSD", 12, 3, 1},
-   {"C_S_VERT_GSD", 12, 3, 1},
-   {"GEO_MEAN_VERT_GSD", 12, 3, 1},
-   {"GSD_BETA_ANGLE", 5, 3, 1},
-   {"DYNAMIC_RANGE", 5, 1},
-   {"NUM_LINES", 7, 1},
-   {"NUM_SAMPLES", 5, 1},
-   {"ANGLE_TO_NORTH", 7, 3, 3},
-   {"OBLIQUITY_ANGLE", 6, 3, 3},
-   {"AZ_OF_OBLIQUITY", 7, 3, 3},
+   {"MAX_GSD", 12, U_DOUBLE, 1},
+   {"ALONG_SCAN_GSD", 12, U_DOUBLE, 1},
+   {"CROSS_SCAN_GSD", 12, U_DOUBLE, 1},
+   {"GEO_MEAN_GSD", 12, U_DOUBLE, 1},
+   {"A_S_VERT_GSD", 12, U_DOUBLE, 1},
+   {"C_S_VERT_GSD", 12, U_DOUBLE, 1},
+   {"GEO_MEAN_VERT_GSD", 12, U_DOUBLE, 1},
+   {"GSD_BETA_ANGLE", 5, U_DOUBLE, 1},
+   {"DYNAMIC_RANGE", 5, U_INT},
+   {"NUM_LINES", 7, U_INT},
+   {"NUM_SAMPLES", 5, U_INT},
+   {"ANGLE_TO_NORTH", 7, U_DOUBLE, 3},
+   {"OBLIQUITY_ANGLE", 6, U_DOUBLE, 3},
+   {"AZ_OF_OBLIQUITY", 7, U_DOUBLE, 3},
    {"ATM_REFR_FLAG", 1},
    {"VEL_ABER_FLAG", 1},
-   {"GRD_COVER", 1},
-   {"SNOW_DEPTH_CATEGORY", 1},
-   {"SUN_AZIMUTH", 7, 3, 3},
-   {"SUN_ELEVATION", 7, 4, 3},
-   {"PREDICTED_NIIRS", 3, 3, 1},
-   {"CIRCL_ERR", 5, 3, 1},
-   {"LINEAR_ERR", 5, 3, 1},
-   {"CLOUD_COVER", 3, 1},
+   {"GRD_COVER", 1, 0, 0, "9"},
+   {"SNOW_DEPTH_CATEGORY", 1, 0, 0, "9"},
+   {"SUN_AZIMUTH", 7, U_DOUBLE, 3},
+   {"SUN_ELEVATION", 7, DOUBLE, 3},
+   {"PREDICTED_NIIRS", 3, U_DOUBLE, 1},
+   {"CIRCL_ERR", 5, U_DOUBLE, 1},
+   {"LINEAR_ERR", 5, U_DOUBLE, 1},
+   {"CLOUD_COVER", 3, U_INT, 0, " "},
    {"SENSOR_TYPE 'F' =", IF_STATEMENT_START},
       {"ROLLING_SHUTTER_FLAG", 1},
    {"SENSOR_TYPE 'F' =", IF_STATEMENT_END},
    {"UE_TIME_FLAG", 1},
-   {"RESERVED_LEN", 5, 1},
+   {"RESERVED_LEN", 5, U_INT},
    {"RESERVED_LEN 0 = !", IF_STATEMENT_START},
-      {"MASK_LEN", 2, 1},
-      {"RESERVED_FIELD_MASK MASK_LEN", VARIABLE_LENGTH, 1},
+      {"MASK_LEN", 2, U_INT},
+      {"RESERVED_FIELD_MASK MASK_LEN", VARIABLE_LENGTH, U_INT},
       {"RESERVED_FIELD_MASK:0 1 =", IF_STATEMENT_START},
-         {"RESERVED_LEN_AREA1", 5, 1},
-         {"NUM_IMG_OPS", 2, 1},
-         {"TGT_ID_LEN", 2, 1},
+         {"RESERVED_LEN_AREA1", 5, U_INT},
+         {"NUM_IMG_OPS", 2, U_INT},
+         {"TGT_ID_LEN", 2, U_INT},
          {"TGT_ID TGT_ID_LEN", VARIABLE_LENGTH},
-         {"TGT_NAME_LEN", 2, 1},
+         {"TGT_NAME_LEN", 2, U_INT},
          {"TGT_NAME TGT_NAME_LEN", VARIABLE_LENGTH},
-         {"TGT_TYPE_LEN", 2, 1},
+         {"TGT_TYPE_LEN", 2, U_INT},
          {"TGT_TYPE TGT_TYPE_LEN", VARIABLE_LENGTH},
-         {"TGT_LAT", 9, 4, 5},
-         {"TGT_LON", 10, 4, 5},
-         {"TGT_HT", 8, 4, 1},
+         {"TGT_LAT", 9, DOUBLE, 5},
+         {"TGT_LON", 10, DOUBLE, 5},
+         {"TGT_HT", 8, DOUBLE, 1},
          {"TGT_DATE_TIME", 14},
-         {"TGT_AZ", 7, 3, 3},
-         {"TGT_ELEV_ANG", 7, 4, 3},
-         {"TGT_BIDEC_ANG", 7, 3, 3},
-         {"COLL_REQ_ID_LEN", 3, 1},
+         {"TGT_AZ", 7, U_DOUBLE, 3},
+         {"TGT_ELEV_ANG", 7, DOUBLE, 3},
+         {"TGT_BIDEC_ANG", 7, U_DOUBLE, 3},
+         {"COLL_REQ_ID_LEN", 3, U_INT},
          {"COLL_REQ_ID COLL_REQ_ID_LEN", VARIABLE_LENGTH},
-         {"COLLECT_STRAT_LEN", 2, 1},
+         {"COLLECT_STRAT_LEN", 2, U_INT},
          {"COLLECT_STRAT COLLECT_STRAT_LEN", VARIABLE_LENGTH},
-         {"COLLECT_TYPE_LEN", 2, 1},
+         {"COLLECT_TYPE_LEN", 2, U_INT},
          {"COLLECT_TYPE COLLECT_TYPE_LEN", VARIABLE_LENGTH},
-         {"COLL_CODE_LEN", 2, 1},
+         {"COLL_CODE_LEN", 2, U_INT},
          {"COLL_CODE COLL_CODE_LEN", VARIABLE_LENGTH},
-         {"NUM_COLLECT_CRITERIA", 2, 1},
+         {"NUM_COLLECT_CRITERIA", 2, U_INT},
          {"NUM_COLLECT_CRITERIA n", LOOP_START},
-            {"COLLECT_CRITERIA_NAME_LEN", 2, 1},
+            {"COLLECT_CRITERIA_NAME_LEN", 2, U_INT},
             {"COLLECT_CRITERIA_NAME COLLECT_CRITERIA_NAME_LEN", VARIABLE_LENGTH},
-            {"COLLECT_CRITERIA_UNIT_LEN", 2, 1},
+            {"COLLECT_CRITERIA_UNIT_LEN", 2, U_INT},
             {"COLLECT_CRITERIA_UNIT COLLECT_CRITERIA_UNIT_LEN", VARIABLE_LENGTH},
-            {"COLLECT_CRITERIA_VALUE_LEN", 2, 1},
+            {"COLLECT_CRITERIA_VALUE_LEN", 2, U_INT},
             {"COLLECT_CRITERIA_VALUE COLLECT_CRITERIA_VALUE_LEN", VARIABLE_LENGTH},
          {"NUM_COLLECT_CRITERIA", LOOP_END},
-         {"NUM_IMG_OPS_DATA", 2, 1},
+         {"NUM_IMG_OPS_DATA", 2, U_INT},
          {"NUM_IMG_OPS_DATA n", LOOP_START},
-            {"CM_ID_LEN", 2, 1},
+            {"CM_ID_LEN", 2, U_INT},
             {"CM_ID CM_ID_LEN", VARIABLE_LENGTH},
-            {"SENSOR_CONFIG_LEN", 2, 1},
+            {"SENSOR_CONFIG_LEN", 2, U_INT},
             {"SENSOR_CONFIG SENSOR_CONFIG_LEN", VARIABLE_LENGTH},
-            {"IMG_OP_ID_LEN", 2, 1},
+            {"IMG_OP_ID_LEN", 2, U_INT},
             {"IMG_OP_ID IMG_OP_ID_LEN", VARIABLE_LENGTH},
-            {"NUM_EXP", 2, 1},
+            {"NUM_EXP", 2, U_INT},
             {"INDEX_SIZE", 1},
-            {"NUM_INDICES", 2, 1},
+            {"NUM_INDICES", 2, U_INT},
             {"NUM_INDICES m", LOOP_START},
-               {"INDEX_IN_IMG_OP_ID INDEX_SIZE", VARIABLE_LENGTH, 1},
+               {"INDEX_IN_IMG_OP_ID INDEX_SIZE", VARIABLE_LENGTH, U_INT},
             {"NUM_INDICES", LOOP_END},
-            {"NUM_QUALITY_METRICS", 2, 1},
+            {"NUM_QUALITY_METRICS", 2, U_INT},
             {"NUM_QUALITY_METRICS m", LOOP_START},
-               {"QUALITY_METRIC_NAME_LEN", 2, 1},
+               {"QUALITY_METRIC_NAME_LEN", 2, U_INT},
                {"QUALITY_METRIC_NAME QUALITY_METRIC_NAME_LEN", VARIABLE_LENGTH},
-               {"QUALITY_METRIC_UNIT_LEN", 2, 1},
+               {"QUALITY_METRIC_UNIT_LEN", 2, U_INT},
                {"QUALITY_METRIC_UNIT QUALITY_METRIC_NAME_LEN", VARIABLE_LENGTH},
                {"QUALITY_METRIC_TYPE", 1},
-               {"QUALITY_METRIC_VALUE_LEN", 2, 1},
-               {"QUALITY_METRIC_VALUE QUALITY_METRIC_NAME_LEN", VARIABLE_LENGTH, 1},
+               {"QUALITY_METRIC_VALUE_LEN", 2, U_INT},
+               {"QUALITY_METRIC_VALUE QUALITY_METRIC_NAME_LEN", VARIABLE_LENGTH, U_INT},
             {"NUM_QUALITY_METRICS", LOOP_END},
          {"NUM_IMG_OPS_DATA", LOOP_END},
       {"RESERVED_FIELD_MASK:0 1 =", IF_STATEMENT_END},
@@ -150,4 +171,183 @@ ossimNitfCsexrbTag::ossimNitfCsexrbTag(ossim_uint32 tagLength)
 ossimString ossimNitfCsexrbTag::getClassName() const
 {
    return ossimString("ossimNitfCsexrbTag");
+}
+
+bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
+{
+   static const char MODULE[] = "ossimNitfCsexrbTag::loadState(...)";
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " entered...\n"
+         << "kwl:\n" << kwl << "\n"
+         << "prefix: " << (prefix?prefix:"null") << "\n";
+   }
+
+   bool status = true;
+   std::string pfx = prefix?prefix:"";
+   std::string value;
+   std::string os;
+   ossim_uint32 fieldSize = 0;
+
+   while(FOREVER) // Break on error or at end.
+   {
+      fieldSize = 36;
+      value = kwl.findKey( pfx, ossim::nitf::IMAGE_UUID_KW );
+      // Size must be exact. Currently no format check, only size.
+      if ( value.size() == fieldSize )
+      {
+         m_fields_map.insert_or_assign(ossimString(ossim::nitf::IMAGE_UUID_KW), ossimString(value));
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING: Incorrect length of " << value.size()
+            << " for " << ossim::nitf::IMAGE_UUID_KW << " field!" << std::endl;
+         status = false;
+         break;
+      }
+
+      // NUM_ASSOC_DES
+
+      // ASSOC_DES_UUID
+
+      // PLATFORM_ID
+      fieldSize = 6;
+      value = kwl.findKey( pfx, ossim::nitf::PLATFORM_ID_KW );
+      if ( value.size() <= fieldSize )
+      {
+         if ( value.size() < fieldSize ) // Currently no format check, only size.
+         {
+            os = value;
+            value.resize(fieldSize);
+            ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+         }
+         m_fields_map.insert_or_assign(ossimString(ossim::nitf::PLATFORM_ID_KW), ossimString(value));
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING:\n" << ossim::nitf::PLATFORM_ID_KW
+            << " key value has incorrect length of "
+            << value.size() << " for field!" << " value: " << value << std::endl;
+         status = false;
+         break;
+      }
+
+      // PAYLOAD_ID
+      value = kwl.findKey( pfx, ossim::nitf::PAYLOAD_ID_KW );
+      if ( value.size() <= fieldSize )
+      {
+         if ( value.size() < fieldSize ) // Currently no format check, only size.
+         {
+            os = value;
+            value.resize(fieldSize);
+            ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+         }
+         m_fields_map.insert_or_assign(ossimString(ossim::nitf::PAYLOAD_ID_KW), ossimString(value));
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING:\n" << ossim::nitf::PAYLOAD_ID_KW
+            << " key value has incorrect length of "
+            << value.size() << " for field!" << " value: " << value << std::endl;
+         status = false;
+         break;
+      }
+
+      // SENSOR_ID
+      value = kwl.findKey( pfx, ossim::nitf::SENSOR_ID_KW );
+      if ( value.size() <= fieldSize )
+      {
+         if ( value.size() < fieldSize ) // Currently no format check, only size.
+         {
+            os = value;
+            value.resize(fieldSize);
+            ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+         }
+         m_fields_map.insert_or_assign(ossimString(ossim::nitf::SENSOR_ID_KW), ossimString(value));
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING:\n" << ossim::nitf::SENSOR_ID_KW
+            << " key value has incorrect length of "
+            << value.size() << " for field!" << " value: " << value << std::endl;
+         status = false;
+         break;
+      }
+
+      // ossim::nitf::SENSOR_TYPE
+      fieldSize = 1;
+      value = kwl.findKey( pfx, ossim::nitf::SENSOR_TYPE_KW );
+      if ( value.size() == fieldSize )
+      {
+         m_fields_map.insert_or_assign(ossimString(ossim::nitf::SENSOR_TYPE_KW), ossimString(value));
+
+         if ( value == "S" ) // If scan we need these three fields.
+         {
+            // DAY_FIRST_LINE_IMAGE:
+            fieldSize = 8;
+            value = kwl.findKey( pfx, ossim::nitf::DAY_FIRST_LINE_IMAGE_KW );
+            if ( value.size() < fieldSize ) // Currently no format check, only size.
+            {
+               os = value;
+               value.resize(fieldSize);
+               ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+            }
+            m_fields_map.insert_or_assign(
+               ossimString(ossim::nitf::DAY_FIRST_LINE_IMAGE_KW), ossimString(value));
+
+            // TIME_FIRST_LINE_IMAGE:
+            fieldSize = 15;
+            value = kwl.findKey( pfx, ossim::nitf::TIME_FIRST_LINE_IMAGE_KW );
+            if ( value.size() < fieldSize ) // Currently no format check, only size.
+            {
+               os = value;
+               value.resize(fieldSize);
+               ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+            }
+            m_fields_map.insert_or_assign(
+               ossimString(ossim::nitf::TIME_FIRST_LINE_IMAGE_KW ), ossimString(value));
+
+            // TIME_IMAGE_DURATION:
+            fieldSize = 16;
+            value = kwl.findKey( pfx, ossim::nitf::TIME_IMAGE_DURATION_KW );
+            if ( value.size() < fieldSize ) // Currently no format check, only size.
+            {
+               os = value;
+               value.resize(fieldSize);
+               ossimNitfCommon::setField(value.data(), os, fieldSize, std::ios::left, ' ');
+            }
+            m_fields_map.insert_or_assign(
+               ossimString(ossim::nitf::TIME_IMAGE_DURATION_KW), ossimString(value));
+         }
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING:\n" << ossim::nitf::SENSOR_TYPE_KW
+            << " key value has incorrect length of "
+            << value.size() << " for field!" << " value: " << value << std::endl;
+         status = false;
+         break;
+      }
+
+
+      break; // Trailing break from forever loop.
+
+   } // Matches: while(FOREVER)
+
+   // Recompute and set tag length.
+   setTagLength(computeTagLength());
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " exit status" << (status?"true\n":"false\n");
+   }
+
+   return status;
 }

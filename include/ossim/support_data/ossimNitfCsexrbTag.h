@@ -36,7 +36,7 @@ public:
     * @param prefix Typically, somthing like: "image0.CSEXRB."
     * @return true on success, false on error.
     */
-   virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
+   virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix);
 
    static const std::string CETAG_KW;
    
@@ -50,7 +50,7 @@ private:
    /**
     * @brief Initializes ossimNitfGenericTag m_fields_map required tags.
     */
-   void initializeDefaults();
+   //void initializeDefaults();
 
 };
 

@@ -18,12 +18,44 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <stack>
 
 #include "base/ossimException.h"
+#include "base/ossimTrace.h"
 
-ossimNitfGenericTag::ossimNitfGenericTag(ossimString tag, ossim_uint32 tagLength)
+ossimNitfGenericTag::ossimNitfGenericTag(const std::string& tag, ossim_uint32 tagLength)
    : ossimNitfRegisteredTag(tag, tagLength)
 {
+}
+
+ossimNitfGenericTag::definition::definition::definition(const ossimString& field, ossim_int32 size,
+                       ossim_int8 dataFormat, ossim_int8 precision,
+                       const ossimString& defaultValue)
+   :
+   field(field),
+   size(size),
+   dataFormat(dataFormat),
+   precision(precision),
+   defaultValue(defaultValue)
+{
+
+}
+
+static ossimTrace traceDebug("ossimNitfGenericTag:debug");
+
+std::ostream& ossimNitfGenericTag::definition::print(std::ostream& out) const
+{
+   out << "field: " << field
+       << "\nsize: " << size << "\n"
+       << "dataFormat: " << dataFormat << "\n"
+       << "precision: " << precision << "\n"
+       << "defaultValue: " << defaultValue;
+   return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const ossimNitfGenericTag::definition& def)
+{
+   return def.print(out);
 }
 
 static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
@@ -186,13 +218,14 @@ void ossimNitfGenericTag::loopLogic(ossim_int32 &i, std::vector<std::vector<ossi
     }
 }
 
-ossimString ossimNitfGenericTag::formatField(int definition, ossimString fieldValue) const
+ossimString ossimNitfGenericTag::formatField(int definition, const ossimString& fieldValue) const
 {
+   ossimString result = fieldValue;
    ossim_int8 format = FIELD_DEFINITIONS[definition].dataFormat;
-   if (fieldValue.empty())
+   if (result.empty())
    {
-      fieldValue = FIELD_DEFINITIONS[definition].defaultValue;
-      if (fieldValue == " ")
+      result = FIELD_DEFINITIONS[definition].defaultValue;
+      if (result == " ")
          format = -1;
    }
 
@@ -203,41 +236,41 @@ ossimString ossimNitfGenericTag::formatField(int definition, ossimString fieldVa
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
       length = m_fields_map.at(spaceSubStrings[1]).toInt();
    }
-   if (fieldValue.size() != length)
+   if (result.size() != length)
    {
       switch (format)
       {
          case 1:
-            fieldValue = ossimNitfCommon::convertToUIntString(fieldValue.toUInt32(),
+            result = ossimNitfCommon::convertToUIntString(result.toUInt32(),
                length);
             break;
          case 2:
-            fieldValue = ossimNitfCommon::convertToIntString(fieldValue.toInt32(),
+            result = ossimNitfCommon::convertToIntString(result.toInt32(),
                length);
             break;
          case 3:
-            fieldValue = ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
+            result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
                FIELD_DEFINITIONS[definition].precision,
                length);
             break;
          case 4:
-            if (fieldValue.toFloat64() > 0)
-               fieldValue = "+" + ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
+            if (result.toFloat64() > 0)
+               result = "+" + ossimNitfCommon::convertToDoubleString(result.toFloat64(),
                                  FIELD_DEFINITIONS[definition].precision,
                                     length);
             else
-               fieldValue = ossimNitfCommon::convertToDoubleString(fieldValue.toFloat64(),
+               result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
                                  FIELD_DEFINITIONS[definition].precision,
                                     length);
          case 5:
-            fieldValue = ossimNitfCommon::convertToScientificString(fieldValue.toFloat64(), length);
+            result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
          default:
-            while (fieldValue.length() < length)
-               fieldValue = fieldValue + ' ';
+            while (result.length() < length)
+               result = result + ' ';
             break;
       }
    }
-   return fieldValue;
+   return result;
 }
 
 void ossimNitfGenericTag::parseStream(std::istream &in)
@@ -330,7 +363,7 @@ std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &p
 
    std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings;
-   ossim_int32 fieldLength, i = 0;
+   ossim_int32 i = 0;
    ossimString generatedFieldName;
 
    while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
@@ -345,12 +378,10 @@ std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &p
          {
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
-            fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
          }
          else
          {
             generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
-            fieldLength = FIELD_DEFINITIONS[i].size;
          }
          //Unique print actions
          out << std::setiosflags(std::ios::left)
@@ -367,12 +398,12 @@ void ossimNitfGenericTag::clearFields()
    m_fields_map.clear();
 }
 
-ossimString ossimNitfGenericTag::get(ossimString fieldName)
+ossimString ossimNitfGenericTag::get(const ossimString& fieldName)
 {
    return m_fields_map.at(fieldName);
 }
 
-void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue)
+void ossimNitfGenericTag::setField(const ossimString& fieldName, const ossimString& fieldValue)
 {
    if (!fieldName.empty())
    {
@@ -418,4 +449,34 @@ void ossimNitfGenericTag::setField(ossimString fieldName, ossimString fieldValue
          i++;
       }
    }
+}
+
+ossim_uint32 ossimNitfGenericTag::computeTagLength() const
+{
+   ossim_uint32 length = 0;
+   for ( const auto& i : m_fields_map )
+   {
+      length += i.second.string().size();
+   }
+   return length;
+}
+
+std::ostream& ossimNitfGenericTag::printMap(std::ostream& out ) const
+{
+   for ( const auto& i : m_fields_map )
+   {
+      out << i.first << ": " << i.second << "\n";
+   }
+   out << std::endl;
+   return out;
+}
+
+std::ostream& ossimNitfGenericTag::printFieldDefs(std::ostream& out ) const
+{
+   for ( const auto& def : FIELD_DEFINITIONS )
+   {
+      out << def;
+   }
+   out << std::endl;
+   return out;
 }
