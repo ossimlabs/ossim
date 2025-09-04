@@ -41,12 +41,10 @@ ossimNitfGenericTag::definition::definition::definition(const ossimString& field
 
 }
 
-static ossimTrace traceDebug("ossimNitfGenericTag:debug");
-
 std::ostream& ossimNitfGenericTag::definition::print(std::ostream& out) const
 {
-   out << "field: " << field
-       << "\nsize: " << size << "\n"
+   out << "field: " << field << "\n"
+       << "size: " << size << "\n"
        << "dataFormat: " << dataFormat << "\n"
        << "precision: " << precision << "\n"
        << "defaultValue: " << defaultValue;
