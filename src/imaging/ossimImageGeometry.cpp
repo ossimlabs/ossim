@@ -312,6 +312,27 @@ bool ossimImageGeometry::worldToLocal(const ossimGrect& world_rect, ossimDrect& 
    return false;
 }
 
+bool ossimImageGeometry::localToECF(const ossimDpt& local_pt, ossimEcefPoint& ecf_pt)
+{
+   if (isNonEarthImage())
+   {
+      // An NEI derived class should have overriden this method. I don't know what to do here:
+      ecf_pt.makeNan();
+      return false;
+   }
+
+   // This is earth imagery, just pass along to compute ground point and then convert to ECF:
+   ossimGpt gpt;
+   bool rtnStat = localToWorld(local_pt, gpt);
+   if (rtnStat)
+   {
+      ecf_pt = ossimEcefPoint(gpt);
+      return true;
+   }
+
+   return false;
+}
+
 //**************************************************************************************************
 //! Sets the transform to be used for local-to-full-image coordinate transformation
 //**************************************************************************************************
