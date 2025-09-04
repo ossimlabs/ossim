@@ -145,6 +145,18 @@ public:
    //! method. Returns TRUE if a valid ground point is available in the ground_pt argument.
    bool localToWorld(const ossimDpt& local_pt, const double& h_ellipsoid, ossimGpt& world_pt) const;
 
+   //! Intended for non-earth imagery (NEI). When the line-of-sight is over the horizon, the conventional
+   //! elevation model intersect would fail. This is an alternative projection to a plane at some range from
+   //! imaging platform. The range must be part of the sensor model projection initialization. If the image
+   //! is of the earth, then this method calls localToWorld and converts the ground point to ECF.
+   //! @param local_pt the full image space coordinates of the point being projected
+   //! @param ecf_pt Earth-centered-fixed coordinates of projected points to 3D.
+   //! @return True if an object point was successfully computed
+   bool localToECF(const ossimDpt& local_pt, ossimEcefPoint& ecf_pt);
+
+   //! Returns true if this geometry represents a non-earth image
+   bool isNonEarthImage() { return false; }
+
    //! Exposes the 3D world-to-local image coordinate reverse projection. The caller should verify 
    //! that a valid projection exists before calling this method. Returns TRUE if a valid image 
    //! point is available in the local_pt argument.
