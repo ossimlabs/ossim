@@ -403,22 +403,24 @@ ossimString ossimNitfGenericTag::get(const ossimString& fieldName)
 
 void ossimNitfGenericTag::setField(const ossimString& fieldName, const ossimString& fieldValue)
 {
-   if (!fieldName.empty())
+   int definition = -1;
+   for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
    {
-      int definition = -1;
-      for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
+      if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
+         FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
+         fieldName == FIELD_DEFINITIONS[i].field.substr(0, fieldName.length()))
       {
-         if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
-            FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
-            fieldName == FIELD_DEFINITIONS[i].field.substr(0, fieldName.length()))
-         {
-            definition = i;
-            break;
-         }
+         definition = i;
+         break;
       }
-      m_fields_map.at(fieldName) = formatField(definition, fieldValue);
    }
+   if (definition > -1)
+      m_fields_map.insert_or_assign(fieldName, formatField(definition, fieldValue));
+   initaliseFields();
+}
 
+void ossimNitfGenericTag::initaliseFields()
+{
    std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings;
    ossim_int32 fieldLength, i = 0;

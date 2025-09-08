@@ -54,10 +54,17 @@ public:
    };
    std::vector<definition> FIELD_DEFINITIONS;
 
+   ossim_uint32 computeTagLength() const;
+
+   std::ostream& printMap(std::ostream& out ) const;
+
+   std::ostream& printFieldDefs(std::ostream& out ) const;
+
 protected:
    ossimString formatField(int definition, const ossimString& fieldValue) const;
    std::map<ossimString, ossimString> m_fields_map;
    void loopLogic(ossim_int32 &i, std::vector<std::vector<ossim_int32>> &suffix) const;
+   virtual void initaliseFields();
 
    //Parses field value from reverse polish noatation for loop and if conditions
    int parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const;

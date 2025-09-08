@@ -31,12 +31,14 @@ ossimNitfCsexrbTag::ossimNitfCsexrbTag()
    : ossimNitfGenericTag("CSEXRB")
 {
    initializeFieldDefinitions();
+   setTagLength(computeTagLength());
 }
 
 ossimNitfCsexrbTag::ossimNitfCsexrbTag(ossim_uint32 tagLength)
    : ossimNitfGenericTag("CSEXRB", tagLength)
 {
    initializeFieldDefinitions();
+
 }
 void ossimNitfCsexrbTag::initializeFieldDefinitions()
 {
@@ -50,7 +52,7 @@ void ossimNitfCsexrbTag::initializeFieldDefinitions()
    {"PLATFORM_ID", 6},
    {"PAYLOAD_ID", 6},
    {"SENSOR_ID", 6},
-   {"SENSOR_TYPE", 1},
+   {"SENSOR_TYPE", 1, 0, 0, "S"},
    {"GROUND_REF_POINT_X", 12, U_DOUBLE, 3},
    {"GROUND_REF_POINT_Y", 12, U_DOUBLE, 3},
    {"GROUND_REF_POINT_Z", 12, U_DOUBLE, 3},

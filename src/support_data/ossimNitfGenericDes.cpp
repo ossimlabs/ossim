@@ -252,6 +252,8 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
       length = m_fields_map.at(spaceSubStrings[1]).toInt();
    }
+   if (fieldValue.length() >= FIELD_DEFINITIONS[definition].size)
+      throw ossimException("ossimNitfGenericDes::formatField() value is larger than field");
    if (result.size() != length)
    {
       switch (format)
@@ -423,22 +425,24 @@ ossimString ossimNitfGenericDes::get(const ossimString& fieldName)
 
 void ossimNitfGenericDes::setField(const ossimString& fieldName, const ossimString& fieldValue)
 {
-   if (!fieldName.empty())
+   int definition = -1;
+   for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
    {
-      int definition = -1;
-      for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
+      if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
+         FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
+         fieldName == FIELD_DEFINITIONS[i].field.substr(0, fieldName.length()))
       {
-         if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
-            FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
-            fieldName == FIELD_DEFINITIONS[i].field.substr(0, fieldName.length()))
-         {
-            definition = i;
-            break;
-         }
+         definition = i;
+         break;
       }
-      m_fields_map.at(fieldName) = formatField(definition, fieldValue);
    }
+   if (definition > -1)
+      m_fields_map.insert_or_assign(fieldName, formatField(definition, fieldValue));
+   initaliseFields();
+}
 
+void ossimNitfGenericDes::initaliseFields()
+{
    std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings;
    ossim_int32 fieldLength, i = 0;
@@ -467,4 +471,34 @@ void ossimNitfGenericDes::setField(const ossimString& fieldName, const ossimStri
          i++;
       }
    }
+}
+
+ossim_uint32 ossimNitfGenericDes::computeTagLength() const
+{
+   ossim_uint32 length = 0;
+   for ( const auto& i : m_fields_map )
+   {
+      length += i.second.string().size();
+   }
+   return length;
+}
+
+std::ostream& ossimNitfGenericDes::printMap(std::ostream& out ) const
+{
+   for ( const auto& i : m_fields_map )
+   {
+      out << i.first << ": " << i.second << "\n";
+   }
+   out << std::endl;
+   return out;
+}
+
+std::ostream& ossimNitfGenericDes::printFieldDefs(std::ostream& out ) const
+{
+   for ( const auto& def : FIELD_DEFINITIONS )
+   {
+      out << def;
+   }
+   out << std::endl;
+   return out;
 }
