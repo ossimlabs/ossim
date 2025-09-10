@@ -2119,17 +2119,20 @@ ossim_uint16 ossimWriter::getTiffSampleFormat() const
    switch( theInputConnection->getOutputScalarType() )
    {
       case OSSIM_UINT8:
-      case OSSIM_USHORT11:
-      case OSSIM_USHORT12:
-      case OSSIM_USHORT13:
-      case OSSIM_USHORT14:
-      case OSSIM_USHORT15:
+      case OSSIM_UINT9:
+      case OSSIM_UINT10:
+      case OSSIM_UINT11:
+      case OSSIM_UINT12:
+      case OSSIM_UINT13:
+      case OSSIM_UINT14:
+      case OSSIM_UINT15:
       case OSSIM_UINT16:
       case OSSIM_UINT32:
          result = ossim::SAMPLEFORMAT_UINT;
          break;
 
       case OSSIM_SINT16:
+      case OSSIM_SINT32:
          result = ossim::SAMPLEFORMAT_INT;
          break;
 
