@@ -403,27 +403,44 @@ ossimString ossimNitfGenericTag::get(const ossimString& fieldName)
 
 void ossimNitfGenericTag::setField(const ossimString& fieldName, const ossimString& fieldValue)
 {
-   int definition = -1;
    for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
    {
       if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
          FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
          fieldName == FIELD_DEFINITIONS[i].field.substr(0, fieldName.length()))
       {
-         definition = i;
+         m_fields_map.insert_or_assign(fieldName, formatField(i, fieldValue));
          break;
       }
    }
-   if (definition > -1)
-      m_fields_map.insert_or_assign(fieldName, formatField(definition, fieldValue));
-   initaliseFields();
+
+   initializeFields();
 }
 
-void ossimNitfGenericTag::initaliseFields()
+bool ossimNitfGenericTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
+{
+   for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
+   {
+      for (std::pair<std::string, std::string> keywords: kwl)
+      {
+         if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
+         FIELD_DEFINITIONS[i].field.length() >= keywords.first.length() &&
+         keywords.first == FIELD_DEFINITIONS[i].field.substr(0, keywords.first.length()))
+         {
+            m_fields_map.insert_or_assign(keywords.first, formatField(i, keywords.second));
+            break;
+         }
+      }
+   }
+   initializeFields();
+   return true;
+}
+
+void ossimNitfGenericTag::initializeFields()
 {
    std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings;
-   ossim_int32 fieldLength, i = 0;
+   ossim_int32 i = 0;
    ossimString generatedFieldName;
 
    while ((ossim_uint32)i < FIELD_DEFINITIONS.size())

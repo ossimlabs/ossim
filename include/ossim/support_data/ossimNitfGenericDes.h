@@ -64,7 +64,7 @@ protected:
    ossimString formatField(int definition, const ossimString& fieldValue) const;
    std::map<ossimString, ossimString> m_fields_map;
    void loopLogic(ossim_int32 &i, std::vector<std::vector<ossim_int32>> &suffix) const;
-   virtual void initaliseFields();
+   virtual void initializeFields();
 
    //Parses field value from reverse polish noatation for loop and if conditions
    int parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const;

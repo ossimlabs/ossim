@@ -438,10 +438,10 @@ void ossimNitfGenericDes::setField(const ossimString& fieldName, const ossimStri
    }
    if (definition > -1)
       m_fields_map.insert_or_assign(fieldName, formatField(definition, fieldValue));
-   initaliseFields();
+   initializeFields();
 }
 
-void ossimNitfGenericDes::initaliseFields()
+void ossimNitfGenericDes::initializeFields()
 {
    std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings;
