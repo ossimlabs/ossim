@@ -50,7 +50,7 @@ private:
    /**
     * @brief Initializes ossimNitfGenericTag m_fields_map required tags.
     */
-   //void initializeDefaults();
+   void initializeDefaults();
 
 };
 

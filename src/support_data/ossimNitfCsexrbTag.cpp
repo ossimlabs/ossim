@@ -30,7 +30,11 @@ const std::string ossimNitfCsexrbTag::CETAG_KW = "CSEXRB";
 ossimNitfCsexrbTag::ossimNitfCsexrbTag()
    : ossimNitfGenericTag("CSEXRB")
 {
+   // traceDebug.setTraceFlag(true);
+   
    initializeFieldDefinitions();
+   // initializeFields();
+   initializeDefaults();
    setTagLength(computeTagLength());
 }
 
@@ -174,6 +178,236 @@ ossimString ossimNitfCsexrbTag::getClassName() const
 {
    return ossimString("ossimNitfCsexrbTag");
 }
+
+//---
+// See: Vol-2-APP M-GLAS-GFM
+// Table M.6-1: Common Sensor Exploitation Reference Data (CSEXRB) TRE
+//---
+void ossimNitfCsexrbTag::initializeDefaults()
+{
+   clearFields();
+
+   ossimString key;
+   ossimString val;
+
+   // 36 BCS-A R
+   val = "00000000-0000-0000-0000-000000000000";
+   m_fields_map.insert(std::make_pair(ossimString(ossim::nitf::IMAGE_UUID_KW), val));
+
+   // 3 BCS-N 000 to 999 R
+   key = ossim::nitf::NUM_ASSOC_DES_KW;
+   val = "000";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   //  ASSOC_DES_UUIDi 36 BCS-A C
+
+   // 6 BCS-A R
+   key = ossim::nitf::PLATFORM_ID_KW;
+   val.string().resize(6);
+   val.string().replace(0,6,6,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 6 BCS-A R
+   key = ossim::nitf::PAYLOAD_ID_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 6 BCS-A R
+   key = ossim::nitf::SENSOR_ID_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 1 BCS-A "F", "S" or BCS space if field is N/A <R>
+   key = ossim::nitf::SENSOR_TYPE_KW;
+   val = " ";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A -99999999.99 to +99999999.99 or BCS spaces meters <R>
+   key = ossim::nitf::GROUND_REF_POINT_X_KW;
+   val.string().resize(12);
+   val.string().replace(0,12,12,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A -99999999.99 to +99999999.99 or BCS spaces meters <R>
+   key = ossim::nitf::GROUND_REF_POINT_Y_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A -99999999.99 to +99999999.99 or BCS spaces meters <R>
+   key = ossim::nitf::GROUND_REF_POINT_Z_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // If (SENSOR_TYPE = S) conditional.
+
+   //---
+   // Field: DAY_FIRST_LINE_IMAGE 8 BCS-N CCYYMMDD UTC C
+   // Day of First Line of the Synthetic Array Image.
+   //---
+
+   //---
+   // Field: TIME_FIRST_LINE_IMAGE
+   // 15 BCS-N  00000.000000000 to 86399.999999999 seconds UTC C
+   //---
+
+   //---
+   // Field: TIME_IMAGE_DURATION
+   // 16 BCS-N -86399.999999999 to 86399.999999999 seconds UTC C
+   //---
+
+   // END If (SENSOR_TYPE = S) conditional.
+
+   // If (SENSOR_TYPE = F)
+
+   // Field: TIME_STAMP_LOC 1 BCS-N 0 or 1 C
+
+   //---
+   // Field: REFERENCE_FRAME_NUM 9 BCS-A 000000001 to 999999999 or BCS spaces <C>
+   //---
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = ossim::nitf::MAX_GSD_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = ossim::nitf::ALONG_SCAN_GSD_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = ossim::nitf::CROSS_SCAN_GSD_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = ossim::nitf::GEO_MEAN_GSD_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = ossim::nitf::A_S_VERT_GSD_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = ossim::nitf::C_S_VERT_GSD_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 12 BCS-A 0000000000.0 to 9999999999.9 or BCS spaces inches <R>   
+   key = ossim::nitf::GEO_MEAN_VERT_GSD_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-A 000.0 to 180.0 or BCS spaces degrees <R>
+   key = ossim::nitf::GSD_BETA_ANGLE_KW;
+   val.string().resize(5);
+   val.string().replace(0,5,5,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-A 00000 to 99999 or BCS spaces dn <R>
+   key = ossim::nitf::DYNAMIC_RANGE_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 7 BCS-N 0000000 to 9999999 R
+   key = ossim::nitf::NUM_LINES_KW;
+   val.string().resize(7);
+   val.string().replace(0,7,7,'0');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-N 00000 to 99999 R
+   key = ossim::nitf::NUM_SAMPLES_KW;
+   val.string().resize(5);
+   val.string().replace(0,5,5,'0');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 7 BCS-A 000.000 to 359.999 or BCS spaces degrees <R>
+   key = ossim::nitf::ANGLE_TO_NORTH_KW;
+   val.string().resize(7);
+   val.string().replace(0,7,7,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 6 BCS-A 00.000 to 90.000 or BCS spaces degrees <R>
+   key = ossim::nitf::OBLIQUITY_ANGLE_KW;
+   val.string().resize(6);
+   val.string().replace(0,6,6,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 7 BCS-A 000.000 to 359.999 or BCS spaces degrees <R>
+   key = ossim::nitf::AZ_OF_OBLIQUITY_KW;
+   val.string().resize(7);
+   val.string().replace(0,7,7,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 1 BCS-N  0 = Do not apply correction 1 = Apply correction R
+   key = ossim::nitf::ATM_REFR_FLAG_KW;
+   val.string().resize(1);
+   val = "0";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 1 BCS-N  0 = Do not apply correction 1 = Apply correction R
+   key = ossim::nitf::VEL_ABER_FLAG_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 1 BCS-N  1 = Snow 0 = No Snow 9 - Not Available R
+   key = ossim::nitf::GRD_COVER_KW;
+   val = "9";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   //---
+   // 1 BCS-N 0 = inches
+   // 1 = 1 to 8 inches of ice and/or snow
+   // 2 = 9 to 17 inches
+   // 3 = greater than 17 inches
+   // 9 = Not Available
+   //---
+   key = ossim::nitf::SNOW_DEPTH_CATEGORY_KW;
+   val = "9";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 7 BCS-A -90.000 to +90.000 or BCS spaces degrees <R>
+   key = ossim::nitf::SUN_AZIMUTH_KW;
+   val.string().resize(7);
+   val.string().replace(0,7,7,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 7 BCS-A -90.000 to +90.000 or BCS spaces degrees <R>
+   key = ossim::nitf::SUN_ELEVATION_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 3 BCS-A 0.0 to 9.0 or BCS spaces NIIRS <R>
+   key = ossim::nitf::PREDICTED_NIIRS_KW;
+   val.string().resize(3);
+   val.string().replace(0,3,3,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-A 000.0 to 999.9 or BCS spaces feet <R>
+   key = ossim::nitf::CIRCL_ERR_KW;
+   val.string().resize(5);
+   val.string().replace(0,5,5,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-A 000.0 to 999.9 or BCS spaces feet <R>
+   key = ossim::nitf::LINEAR_ERR_KW;
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 3 BCS-A 000 to 100, 999 or BCS spaces percent <R>
+   key = ossim::nitf::CLOUD_COVER_KW;
+   val.string().resize(3);
+   val.string().replace(0,3,3,' ');
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 1 BCS-N 0 = no 1 = yes or BCS space <R>
+   key = ossim::nitf::UE_TIME_FLAG_KW;
+   val.string().resize(1);
+   val = " ";
+   m_fields_map.insert(std::make_pair(key, val));
+
+   // 5 BCS-A 00000 to 00063 Max or BCS spaces bytes R
+   key = ossim::nitf::RESERVED_LEN_KW;
+   val.string().resize(5);
+   val.string().replace(0,5,5,'0');
+   m_fields_map.insert(std::make_pair(key, val));
+   
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "ossimNitfCsexrbTag::initializeDefaults() DEBUG\n"
+         << "Default map:\n";
+      printMap(ossimNotify(ossimNotifyLevel_DEBUG)); 
+   }
+   
+} // End: void ossimNitfCsexrbTag::initializeDefaults()
 
 bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
@@ -348,7 +582,10 @@ bool ossimNitfCsexrbTag::loadState(const ossimKeywordlist& kwl, const char* pref
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << MODULE << " exit status" << (status?"true\n":"false\n");
+         << "ossimNitfCsexrbTag::loadState(...) DEBUG:\nresult:\n";
+      print(ossimNotify(ossimNotifyLevel_DEBUG), pfx);
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "\n" << MODULE << " exit status" << (status?"true\n":"false\n");
    }
 
    return status;

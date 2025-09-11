@@ -11,6 +11,9 @@
 //----------------------------------------------------------------------------
 #include <ossim/support_data/ossimNitfGenericTag.h>
 #include <ossim/support_data/ossimNitfCommon.h>
+#include <ossim/base/ossimKeywordlist.h>
+#include "base/ossimException.h"
+#include "base/ossimTrace.h"
 
 #include <istream>
 #include <iostream>
@@ -19,9 +22,6 @@
 #include <map>
 #include <utility>
 #include <stack>
-
-#include "base/ossimException.h"
-#include "base/ossimTrace.h"
 
 ossimNitfGenericTag::ossimNitfGenericTag(const std::string& tag, ossim_uint32 tagLength)
    : ossimNitfRegisteredTag(tag, tagLength)
@@ -154,8 +154,6 @@ int ossimNitfGenericTag::parseRPN(ossimString input, std::vector<std::vector<oss
             break;
       }
    }
-   if(stack.size() > 1)
-      std::cout << "EEEEEE" << std::endl;
    return stack.top().toInt();
 }
 
@@ -310,6 +308,9 @@ void ossimNitfGenericTag::parseStream(std::istream &in)
          i++;
       }
    }
+
+   // Recompute and set tag length as this can change the size of the map.
+   setTagLength(computeTagLength());
 }
 
 void ossimNitfGenericTag::writeStream(std::ostream &out)
@@ -419,8 +420,14 @@ void ossimNitfGenericTag::setField(const ossimString& fieldName, const ossimStri
 
 bool ossimNitfGenericTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
-   for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
+   //---
+   // This needs to take into account "prefix" as kwl can contain key:value pairs
+   // from other objects. drb - 20250910
+   //---
+#if 0 // tmp drb
+   for (ossim_uint32 i=0; i < FIELD_DEFINITIONS.size(); i++)
    {
+#if 0 /* Does not compile. gcc version 15.2.1 */
       for (std::pair<std::string, std::string> keywords: kwl)
       {
          if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
@@ -431,8 +438,24 @@ bool ossimNitfGenericTag::loadState(const ossimKeywordlist& kwl, const char* pre
             break;
          }
       }
+#endif
+
+      ossimKeywordlist::KeywordMap::const_iterator iter = kwl.getMap().begin();
+      while(iter != kwl.getMap().end())
+      {
+         if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
+             FIELD_DEFINITIONS[i].field.length() >= (*iter).first.length() &&
+             (*iter).first == FIELD_DEFINITIONS[i].field.substr(0, (*iter).first.length()))
+         {
+            m_fields_map.insert_or_assign((*iter).first, formatField(i, (*iter).second));
+            // break; can be more than one key:value pair for this object in kwl.
+         }
+         ++iter;
+      }
    }
    initializeFields();
+#endif
+   
    return true;
 }
 
