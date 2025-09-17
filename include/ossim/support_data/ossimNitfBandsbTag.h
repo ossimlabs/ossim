@@ -29,15 +29,6 @@ public:
    
    virtual ossimString getClassName() const;
 
-   /*!
-    * @brief Method to the load (recreate) the state of the object from a
-    * keyword list.
-    * @param kwl
-    * @param prefix Typically, somthing like: "image0.BANDSB."
-    * @return true on success, false on error.
-    */
-   virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
-
    static const std::string CETAG_KW;
    
 private:
@@ -46,11 +37,6 @@ private:
     * @brief Initializes ossimNitfGenericTag FIELD_DEFINITIONS.
     */
    void initializeFieldDefinitions();
-   
-   /**
-    * @brief Initializes ossimNitfGenericTag m_fields_map required tags.
-    */
-   void initializeDefaults();
 
 };
 

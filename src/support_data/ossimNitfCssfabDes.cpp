@@ -15,9 +15,33 @@
 //----------------------------------------------------------------------------
 
 #include <ossim/support_data/ossimNitfCssfabDes.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimTrace.h>
+#include <ossim/support_data/ossimNitfCommonFieldNames.h>
 
-ossimNitfCssfabDes::ossimNitfCssfabDes(ossim_uint32 desLength)
-   : ossimNitfGenericDes("CSSFAB", desLength)
+static ossimTrace traceDebug("ossimNitfCssfabdes:debug");
+
+static const int FOREVER = 1;
+
+const std::string ossimNitfCssfabDes::CETAG_KW = "CSEXRB";
+
+ossimNitfCssfabDes::ossimNitfCssfabDes()
+   : ossimNitfGenericDes("CSEXRB")
+{
+   // traceDebug.setTraceFlag(true);
+
+   initializeFieldDefinitions();
+   initializeFields();
+   setDesLength(computeDesLength());
+}
+
+ossimNitfCssfabDes::ossimNitfCssfabDes(ossim_uint32 tagLength)
+   : ossimNitfGenericDes("CSEXRB", tagLength)
+{
+   initializeFieldDefinitions();
+   initializeFields();
+}
+void ossimNitfCssfabDes::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
       {
@@ -199,4 +223,9 @@ ossimNitfCssfabDes::ossimNitfCssfabDes(ossim_uint32 desLength)
    {"SENSOR_TYPE == F", IF_STATEMENT_END},
    {"RESERVED_LEN", 9, 1}
    };
+}
+
+ossimString ossimNitfCssfabDes::getClassName() const
+{
+   return ossimString("ossimNitfCssfabdes");
 }

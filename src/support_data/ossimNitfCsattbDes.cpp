@@ -15,9 +15,31 @@
 //----------------------------------------------------------------------------
 
 #include <ossim/support_data/ossimNitfCsattbDes.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimTrace.h>
+#include <ossim/support_data/ossimNitfCommonFieldNames.h>
 
-ossimNitfCsattbDes::ossimNitfCsattbDes(ossim_uint32 desLength)
-   : ossimNitfGenericDes("CSATTB", desLength)
+static ossimTrace traceDebug("ossimNitfCsattbdes:debug");
+
+const std::string ossimNitfCsattbDes::CETAG_KW = "CSEXRB";
+
+ossimNitfCsattbDes::ossimNitfCsattbDes()
+   : ossimNitfGenericDes("CSEXRB")
+{
+   // traceDebug.setTraceFlag(true);
+
+   initializeFieldDefinitions();
+   initializeFields();
+   setDesLength(computeDesLength());
+}
+
+ossimNitfCsattbDes::ossimNitfCsattbDes(ossim_uint32 tagLength)
+   : ossimNitfGenericDes("CSEXRB", tagLength)
+{
+   initializeFieldDefinitions();
+   initializeFields();
+}
+void ossimNitfCsattbDes::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
       {
@@ -91,4 +113,9 @@ ossimNitfCsattbDes::ossimNitfCsattbDes(ossim_uint32 desLength)
          {"RESERVED_LEN", 9, 1},
          {"RESERVED RESERVED_LEN", VARIABLE_LENGTH, 0}
       };
+}
+
+ossimString ossimNitfCsattbDes::getClassName() const
+{
+   return ossimString("ossimNitfCsattbdes");
 }
