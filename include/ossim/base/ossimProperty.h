@@ -70,8 +70,13 @@ public:
    virtual ossimString getDescription()const;
 
    virtual ossimRefPtr<ossimXmlNode> toXml()const;
-   
-   virtual void saveState(ossimKeywordlist& kwl, const ossimString& prefix = "")const;
+
+   //---
+   // Tweaked to match interface of ossimObject::saveState(...) to squash
+   // hidden overloaded virtual compiler warning.
+   // virtual void saveState(ossimKeywordlist& kwl, const ossimString& prefix = "")const;
+   //---
+   bool saveState(ossimKeywordlist&, const char* prefix=0)const;
    virtual void accept(ossimVisitor& visitor);
    
 protected:

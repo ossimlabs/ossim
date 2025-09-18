@@ -113,8 +113,13 @@ public:
     */
    virtual std::ostream& print(std::ostream& out,
                                const std::string& prefix=std::string()) const;
-   
-   virtual bool saveState(ossimKeywordlist& kwl, const ossimString& prefix)const;
+
+   //---
+   // Tweaked to match interface of ossimObject::saveState(...) to squash
+   // hidden overloaded virtual compiler warning.
+   // virtual bool saveState(ossimKeywordlist& kwl, const ossimString& prefix)const;
+   //---
+   virtual bool saveState(ossimKeywordlist& kwl, const char* prefix=0)const;   
    
 protected:
    std::string  m_tagName;
