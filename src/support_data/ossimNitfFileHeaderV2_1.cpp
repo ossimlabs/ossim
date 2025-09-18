@@ -469,7 +469,8 @@ void ossimNitfFileHeaderV2_1::readDes(ossim::istream& in)
 
    for (int i=0; i<getNumberOfDataExtSegments(); ++i)
    {
-      ossimIFStream64::seekg64(in, theDataExtSegOffsetList[i].theDataExtSegHeaderOffset, std::ios::beg);
+      // ossimIFStream64::seekg64(in, theDataExtSegOffsetList[i].theDataExtSegHeaderOffset, std::ios::beg);
+      in.seekg(theDataExtSegOffsetList[i].theDataExtSegHeaderOffset, std::ios::beg);
       des.parseStream(in, theNitfDataExtSegInfoRecords[i].getDataExtSegLength());
       if(in.good())
       {
