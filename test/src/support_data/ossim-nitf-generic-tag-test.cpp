@@ -117,9 +117,9 @@ int main(int argc, char *argv[])
    cssfab.writeStream(cout);
    cssfab.print(cout, "");
 
-   //csephb.print(cout, "");
+   csephb.print(cout, "");
 
-   //bandsb.print(cout, "");
+   bandsb.print(cout, "");
 
    return 0;
 }

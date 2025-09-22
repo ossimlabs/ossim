@@ -135,6 +135,26 @@ int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<oss
             stack.pop();
             stack.push(!bool(a));
             break;
+         case '>':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            if(a > b)
+               stack.push("1");
+            else
+               stack.push("0");
+            break;
+         case '<':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            if(a < b)
+               stack.push("1");
+            else
+               stack.push("0");
+            break;
          default:
             if(entry.toInt() != 0 || entry == "0")
                stack.push(entry.toInt());

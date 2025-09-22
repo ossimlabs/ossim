@@ -34,13 +34,14 @@ ossimNitfBandsbTag::ossimNitfBandsbTag()
    
    initializeFieldDefinitions();
    setTagLength(computeTagLength());
+   initializeFields();
 }
 
 ossimNitfBandsbTag::ossimNitfBandsbTag(ossim_uint32 tagLength)
    : ossimNitfGenericTag("BANDSB", tagLength)
 {
    initializeFieldDefinitions();
-
+   initializeFields();
 }
 void ossimNitfBandsbTag::initializeFieldDefinitions()
 {
