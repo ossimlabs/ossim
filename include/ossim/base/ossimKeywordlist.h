@@ -25,6 +25,11 @@
 
 static const char DEFAULT_DELIMITER = ':';
 
+class ossimDpt;
+class ossimGpt;
+class ossimIpt;
+class ossimIpt64;
+
 class ossimFilename;
 
 /**
@@ -163,7 +168,178 @@ public:
                 const std::string& key,
                 const std::string& value,
                 bool               overwrite = true);
-   
+   void addPair(const std::string& key,
+                ossim_int16        value,
+                bool               overwrite = true);
+
+   void addPair(const std::string& prefix,
+            const std::string&     key,
+            ossim_int16            value,
+            bool                   overwrite = true);
+
+   void addPair(const std::string& key,
+            ossim_uint16           value,
+            bool                   overwrite = true);
+
+   void addPair(const std::string& prefix,
+            const std::string&     key,
+            ossim_uint16           value,
+            bool                   overwrite = true);
+
+   void addPair(const std::string& key,
+            ossim_int32            value,
+            bool                   overwrite = true);
+
+   void addPair(const std::string& prefix,
+            const std::string&     key,
+            ossim_int32            value,
+            bool                   overwrite = true);
+
+   void addPair(const std::string& key,
+            ossim_uint32           value,
+            bool                   overwrite = true);
+
+   void addPair(const std::string& prefix,
+            const std::string&     key,
+            ossim_uint32           value,
+            bool                   overwrite = true);
+
+   void addPair(const std::string& key,
+                const ossim_int64& value,
+                bool               overwrite = true);
+
+   void addPair(const std::string& prefix,
+                const std::string& key,
+                const ossim_int64& value,
+                bool               overwrite = true);
+
+   void addPair(const std::string&  key,
+                const ossim_uint64& value,
+                bool                overwrite = true);
+
+   void addPair(const std::string&  prefix,
+                const std::string&  key,
+                const ossim_uint64& value,
+                bool                overwrite = true);
+
+   /**
+    * @param key Key for key-value pair.
+    *
+    * @param value Value to pair with key.  Note this will be stored as a
+    * string.
+    * 
+    * @param precision Decimal point precision of the output. (default = 8)
+    *
+    * @param trimZeroFlag If true trailing '0's and any trailing '.' will
+    * be trimmed from the converted string.  (default = false)
+    *
+    * @param scientific If true output will be in scientific notation else
+    * fixed is used. (default = false)
+    */
+   void addPair(const std::string& key,
+                ossim_float32      value,
+                bool               overwrite = true,
+                int                precision = 8);
+
+   /**
+    * @param key Key for key-value pair.
+    *
+    * @param value Value to pair with key.  Note this will be stored as a
+    * string.
+    * 
+    * @param precision Decimal point precision of the output. (default = 8)
+    *
+    * @param trimZeroFlag If true trailing '0's and any trailing '.' will
+    * be trimmed from the converted string.  (default = false)
+    *
+    * @param scientific If true output will be in scientific notation else
+    * fixed is used. (default = false)
+    */
+   void addPair(const std::string& prefix,
+                const std::string& key,
+                ossim_float32      value,
+                bool               overwrite = true,
+                int                precision = 8);
+
+   /**
+    * @param key Key for key-value pair.
+    *
+    * @param value Value to pair with key.  Note this will be stored as a
+    * string.
+    * 
+    * @param precision Decimal point precision of the output. (default = 15)
+    *
+    * @param trimZeroFlag If true trailing '0's and any trailing '.' will
+    * be trimmed from the converted string.  (default = false)
+    *
+    * @param scientific If true output will be in scientific notation else
+    * fixed is used. (default = false)
+    */
+   void addPair(const std::string&   key,
+                const ossim_float64& value,
+                bool                 overwrite = true,
+                int                  precision = 15);
+
+   /**
+    * @param key Key for key-value pair.
+    *
+    * @param value Value to pair with key.  Note this will be stored as a
+    * string.
+    * 
+    * @param precision Decimal point precision of the output. (default = 15)
+    *
+    * @param trimZeroFlag If true trailing '0's and any trailing '.' will
+    * be trimmed from the converted string.  (default = false)
+    *
+    * @param scientific If true output will be in scientific notation else
+    * fixed is used. (default = false)
+    */
+   void addPair(const std::string&   prefix,
+                const std::string&   key,
+                const ossim_float64& value,
+                bool                 overwrite = true,
+                int                  precision = 15);
+
+   void addPair(const std::string& key,
+                const ossimIpt&    value,
+                bool               overwrite = true);
+
+   void addPair(const std::string& prefix,
+                const std::string& key,
+                const ossimIpt&    value,
+                bool               overwrite = true);
+
+   void addPair(const std::string& key,
+                const ossimIpt64&  value,
+                bool               overwrite = true);
+
+   void addPair(const std::string& prefix,
+                const std::string& key,
+                const ossimIpt64&  value,
+                bool               overwrite = true);
+
+   void addPair(const std::string& key,
+                const ossimDpt&    value,
+                bool               overwrite = true,
+                int                precision = 15);
+
+   void addPair(const std::string& prefix,
+                const std::string& key,
+                const ossimDpt&    value,
+                bool               overwrite = true,
+                int                precision = 15);
+
+   void addPair(const std::string& key,
+                const ossimGpt&    value,
+                bool               overwrite = true,
+                int                precision = 15);
+
+   void addPair(const std::string& prefix,
+                const std::string& key,
+                const ossimGpt&    value,
+                bool               overwrite = true,
+                int                precision = 15);
+
    /*!
     * Allows you to extract out a sub keywordlist from another
     * you can also collapse the hieracrchy by setting

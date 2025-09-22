@@ -9,9 +9,12 @@
 
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimDirectory.h>
+#include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimFilename.h>
+#include <ossim/base/ossimGpt.h>
 #include <ossim/base/ossimIoStream.h>
-
+#include <ossim/base/ossimIpt.h>
+#include <ossim/base/ossimIpt64.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimRegExp.h>
@@ -220,8 +223,198 @@ void ossimKeywordlist::addPair(const std::string& prefix,
                                const std::string& value,
                                bool               overwrite)
 {
-   std::string k(prefix + key);
-   addPair(k, value, overwrite);
+   addPair(std::string(prefix + key), value, overwrite);
+}
+
+
+void ossimKeywordlist::addPair(const std::string& key,
+                               ossim_int16        value,
+                               bool               overwrite)
+{
+   addPair(key, ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& prefix,
+                               const std::string& key,
+                               ossim_int16        value,
+                               bool               overwrite)
+{
+   addPair(std::string(prefix + key), ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& key,
+                               ossim_uint16       value,
+                               bool               overwrite)
+{
+   addPair(key, ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& prefix,
+                               const std::string& key,
+                               ossim_uint16       value,
+                               bool               overwrite)
+{
+   addPair(std::string(prefix + key), ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& key,
+                               ossim_int32        value,
+                               bool               overwrite)
+{
+   addPair(key, ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& prefix,
+                               const std::string& key,
+                               ossim_int32        value,
+                               bool               overwrite)
+{
+   addPair(std::string(prefix + key), ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& key,
+                               ossim_uint32       value,
+                               bool               overwrite)
+{
+   addPair(key, ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& prefix,
+                               const std::string& key,
+                               ossim_uint32       value,
+                               bool               overwrite)
+{
+   addPair(std::string(prefix + key), ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& key,
+                               const ossim_int64& value,
+                               bool               overwrite)
+{
+   addPair(key, ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& prefix,
+                               const std::string& key,
+                               const ossim_int64& value,
+                               bool               overwrite)
+{
+   addPair(std::string(prefix + key), ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string&  key,
+                               const ossim_uint64& value,
+                               bool                overwrite)
+{
+   addPair(key, ossimString::toString(value).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string&  prefix,
+                               const std::string&  key,
+                               const ossim_uint64& value,
+                               bool                overwrite)
+{
+   addPair(std::string(prefix + key), ossimString::toString(value).string(), overwrite);
+}
+
+
+void ossimKeywordlist::addPair(const std::string& key,
+                               ossim_float32      value,
+                               bool               overwrite,
+                               int                precision)
+{
+   addPair(key, ossimString::toString(value, precision).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& prefix,
+                               const std::string& key,
+                               ossim_float32      value,
+                               bool               overwrite,
+                               int                precision)
+{
+   addPair(std::string(prefix + key), ossimString::toString(value, precision).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string&   key,
+                               const ossim_float64& value,
+                               bool                 overwrite,
+                               int                  precision)
+{
+   addPair(key, ossimString::toString(value, precision).string(), overwrite);
+}
+
+
+void ossimKeywordlist::addPair(const std::string&   prefix,
+                               const std::string&   key,
+                               const ossim_float64& value,
+                               bool                 overwrite,
+                               int                  precision)
+{
+   addPair(std::string(prefix + key), ossimString::toString(value, precision).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& key,
+                               const ossimIpt&    value,
+                               bool               overwrite)
+{
+   addPair(key, value.toString().string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& prefix,
+                               const std::string& key,
+                               const ossimIpt&    value,
+                               bool               overwrite)
+{
+   addPair(std::string(prefix + key), value.toString().string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& key,
+                               const ossimIpt64&  value,
+                               bool               overwrite)
+{
+   addPair(key, value.toString(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& prefix,
+                               const std::string& key,
+                               const ossimIpt64&  value,
+                               bool               overwrite)
+{
+   addPair(std::string(prefix + key), value.toString(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& key,
+                               const ossimDpt&    value,
+                               bool               overwrite,
+                               int                precision)
+{
+   addPair(key, value.toString(precision).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& prefix,
+                               const std::string& key,
+                               const ossimDpt&    value,
+                               bool               overwrite,
+                               int                precision)
+{
+   addPair(std::string(prefix + key), value.toString(precision).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& key,
+                               const ossimGpt&    value,
+                               bool               overwrite,
+                               int                precision)
+{
+   addPair(key, value.toString(precision).string(), overwrite);
+}
+
+void ossimKeywordlist::addPair(const std::string& prefix,
+                               const std::string& key,
+                               const ossimGpt&    value,
+                               bool               overwrite,
+                               int                precision)
+{
+   addPair(std::string(prefix + key), value.toString(precision).string(), overwrite);
 }
 
 void ossimKeywordlist::add(const char* key,
