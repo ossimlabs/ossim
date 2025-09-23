@@ -42,7 +42,7 @@ find_path( KAKADU_INCLUDE_DIR kdu_compressed.h
 # Find Kakadu library:
 find_library(
   KAKADU_LIB
-  NAMES kdu_vs84R kdu_v84R kdu_vs83R kdu_v83R kdu
+  NAMES kdu_vs85R kdu_v85R kdu_vs84R kdu_v84R kdu_vs83R kdu_v83R kdu
   PATHS
   ${CMAKE_INSTALL_PREFIX}/lib64
   ${CMAKE_INSTALL_PREFIX}/lib
@@ -58,7 +58,7 @@ set( KAKADU_LIBRARY ${KAKADU_LIB} CACHE STRING INTERNAL )
 # Find Kakadu Auxilary library:
 find_library(
   KAKADU_AUX_LIB
-  NAMES kdu_as84R kdu_a84R kdu_as83R kdu_a83R kdu_aux
+  NAMES kdu_as85R kdu_a85R kdu_as84R kdu_a84R kdu_as83R kdu_a83R kdu_aux
   PATHS 
   ${CMAKE_INSTALL_PREFIX}/lib64
   ${CMAKE_INSTALL_PREFIX}/lib
