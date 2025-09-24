@@ -9,9 +9,9 @@
 #include <iostream>
 #include <sstream>
 #include <map>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/wait.h>
@@ -249,7 +249,7 @@ bool ossimToolServer::sendFile(const ossimFilename& fname)
 
    // Send file size to the client:
    char size_response[19];
-   sprintf(size_response, "SIZE: %012d", (int) fsize);
+   std::snprintf(size_response, sizeof(size_response), "SIZE: %012d", static_cast<int>(fsize));
    if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" sending <"<<size_response<<">"<<endl; //TODO REMOVE DEBUG
    writeSocket(size_response, strlen(size_response));
    if (!acknowledgeRcvd())
@@ -258,7 +258,7 @@ bool ossimToolServer::sendFile(const ossimFilename& fname)
    // Send file name to the client:
    char name_response[256];
    memset(name_response, 0, 256);
-   sprintf(name_response, "NAME: %s", fname.file().chars());
+   std::snprintf(name_response, sizeof(name_response), "NAME: %s", fname.file().chars());
    if (_DEBUG_) cout<<"ossimToolServer:"<<__LINE__<<" sending <"<<name_response<<">"<<endl; //TODO REMOVE DEBUG
    writeSocket(name_response, strlen(name_response));
    if (!acknowledgeRcvd())

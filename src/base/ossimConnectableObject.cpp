@@ -1592,6 +1592,11 @@ const ossimConnectableObject* ossimConnectableObject::getOutput(ossim_uint32 idx
    return 0;
 }
 
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 void  ossimConnectableObject::findAllObjectsOfType(ConnectableObjectList& result,
                                                    const RTTItypeid& typeInfo,
                                                    bool recurse)
@@ -1642,6 +1647,10 @@ void ossimConnectableObject::findAllObjectsOfType(ConnectableObjectList& result,
       }
    }
 }
+
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 
 #if 0
 void ossimConnectableObject::findAllInputsOfType(ConnectableObjectList& result,

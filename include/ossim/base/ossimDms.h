@@ -15,6 +15,7 @@
 
 #include <ossim/base/ossimConstants.h> /* for OSSIM_DLL macro */
 #include <ossim/base/ossimString.h>
+#include <cstddef>
 
 class OSSIM_DLL ossimDms
 {
@@ -157,7 +158,7 @@ private:
     *	the number of d's or m's or s's seen in the group
     *	just parsed.
     */
-   void setup_printf(int ival, char *fmt)const;
+   void setup_printf(int ival, char *fmt, std::size_t fmtSize)const;
 
    /**
     * function set_default						*

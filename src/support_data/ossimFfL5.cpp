@@ -72,7 +72,8 @@ void ossimFfL5::readHeaderRevB(const ossimString& header_name)
    int i=0;
    while((theBandsPresentString[i]>='0') && (theBandsPresentString[i]<='9'))
    {
-      sprintf(theBandFileNames[i],"band%c.dat",theBandsPresentString[i]);
+      std::snprintf(theBandFileNames[i], sizeof(theBandFileNames[i]),
+                    "band%c.dat", theBandsPresentString[i]);
       ++i;
    }
    int nbb=i;
@@ -110,19 +111,19 @@ void ossimFfL5::readHeaderRevB(const ossimString& header_name)
    theUsgsMapZone            = theRevb->theUsgsMapZone;
    
    char temps[256];
-   sprintf(temps,"%s %s",theRevb->theUlLon, theRevb->theUlLat);
+   std::snprintf(temps, sizeof(temps), "%s %s", theRevb->theUlLon, theRevb->theUlLat);
    if (convertGeoPoint(temps, theUL_Corner) != ossimErrorCodes::OSSIM_OK) return;
    
-   sprintf(temps,"%s %s",theRevb->theUrLon, theRevb->theUrLat);
+   std::snprintf(temps, sizeof(temps), "%s %s", theRevb->theUrLon, theRevb->theUrLat);
    if (convertGeoPoint(temps, theUR_Corner) != ossimErrorCodes::OSSIM_OK) return;
    
-   sprintf(temps,"%s %s",theRevb->theLrLon, theRevb->theLrLat);
+   std::snprintf(temps, sizeof(temps), "%s %s", theRevb->theLrLon, theRevb->theLrLat);
    if (convertGeoPoint(temps, theLR_Corner) != ossimErrorCodes::OSSIM_OK) return;
    
-   sprintf(temps,"%s %s",theRevb->theLlLon, theRevb->theLlLat);
+   std::snprintf(temps, sizeof(temps), "%s %s", theRevb->theLlLon, theRevb->theLlLat);
    if (convertGeoPoint(temps, theLL_Corner) != ossimErrorCodes::OSSIM_OK) return;        
    
-   sprintf(temps,"%s %s",theRevb->theCenterLon, theRevb->theCenterLat);
+   std::snprintf(temps, sizeof(temps), "%s %s", theRevb->theCenterLon, theRevb->theCenterLat);
    if (convertGeoPoint(temps, theCenterGP) != ossimErrorCodes::OSSIM_OK) return;        
       
    theCenterImagePoint.x     = theRevb->theCenterSample;

@@ -336,7 +336,16 @@ inline RTTIdyntypeid::~RTTIdyntypeid()
 // Definition of TYPE_DATA for a RTTI-class: introduces one static RTTITypeinfo data-member
 // and a couple of virtuals.
 
+#ifdef __clang__
+#  define OSSIM_CLANG_OVERRIDE_WARN_PUSH _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Winconsistent-missing-override\"")
+#  define OSSIM_CLANG_OVERRIDE_WARN_POP _Pragma("clang diagnostic pop")
+#else
+#  define OSSIM_CLANG_OVERRIDE_WARN_PUSH
+#  define OSSIM_CLANG_OVERRIDE_WARN_POP
+#endif
+
 #define TYPE_DATA			 		          \
+   OSSIM_CLANG_OVERRIDE_WARN_PUSH                       \
 	protected:					          \
 	   static  const  RTTITypeinfo RTTI_obj; 		  \
 	   static  void*  RTTI_scast(int,void*);	          \
@@ -345,8 +354,8 @@ inline RTTIdyntypeid::~RTTIdyntypeid()
 	   virtual RTTItypeid RTTI_vinfo() const { return &RTTI_obj; }\
 	   static  RTTItypeid RTTI_sinfo()	 { return &RTTI_obj; }\
 	   virtual void*  RTTI_cast(RTTItypeid);\
-	   virtual const void*  RTTI_cast(RTTItypeid)const;
-	
+	   virtual const void*  RTTI_cast(RTTItypeid)const;\
+	   OSSIM_CLANG_OVERRIDE_WARN_POP
 
 
 // Definition of auxiliary data-structs supporting RTTI for a class: defines the static RTTITypeinfo

@@ -25,6 +25,7 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <cstdio>
 
 static const ossimString XFRM_FLAG_KW = "XFRM_FLAG";
 static const ossimString SCALE_FACTOR_KW = "SCALE_FACTOR";
@@ -571,25 +572,25 @@ bool ossimNitfIchipbTag::initFromGeometry(const ossimImageGeometry* geom)
    if (imageArea <= FLT_EPSILON)
       return false;
    double scaleFactor = sqrt(viewRect.area() / imageArea);
-   sprintf(theScaleFactor, "%10.5f", scaleFactor);
+   std::snprintf(theScaleFactor, sizeof(theScaleFactor), "%10.5f", scaleFactor);
 
-   sprintf(theOpCol11, "%12.3f", viewRect.ul().x);
-   sprintf(theOpRow11, "%12.3f", viewRect.ul().y);
-   sprintf(theOpCol12, "%12.3f", viewRect.ur().x);
-   sprintf(theOpRow12, "%12.3f", viewRect.ur().y);
-   sprintf(theOpCol21, "%12.3f", viewRect.ll().x);
-   sprintf(theOpRow21, "%12.3f", viewRect.ll().y);
-   sprintf(theOpCol22, "%12.3f", viewRect.lr().x);
-   sprintf(theOpRow22, "%12.3f", viewRect.lr().y);
+   std::snprintf(theOpCol11, sizeof(theOpCol11), "%12.3f", viewRect.ul().x);
+   std::snprintf(theOpRow11, sizeof(theOpRow11), "%12.3f", viewRect.ul().y);
+   std::snprintf(theOpCol12, sizeof(theOpCol12), "%12.3f", viewRect.ur().x);
+   std::snprintf(theOpRow12, sizeof(theOpRow12), "%12.3f", viewRect.ur().y);
+   std::snprintf(theOpCol21, sizeof(theOpCol21), "%12.3f", viewRect.ll().x);
+   std::snprintf(theOpRow21, sizeof(theOpRow21), "%12.3f", viewRect.ll().y);
+   std::snprintf(theOpCol22, sizeof(theOpCol22), "%12.3f", viewRect.lr().x);
+   std::snprintf(theOpRow22, sizeof(theOpRow22), "%12.3f", viewRect.lr().y);
 
-   sprintf(theFiCol11, "%12.3f", ul.x);
-   sprintf(theFiRow11, "%12.3f", ul.y);
-   sprintf(theFiCol12, "%12.3f", ur.x);
-   sprintf(theFiRow12, "%12.3f", ur.y);
-   sprintf(theFiCol21, "%12.3f", ll.x);
-   sprintf(theFiRow21, "%12.3f", ll.y);
-   sprintf(theFiCol22, "%12.3f", lr.x);
-   sprintf(theFiRow22, "%12.3f", lr.y);
+   std::snprintf(theFiCol11, sizeof(theFiCol11), "%12.3f", ul.x);
+   std::snprintf(theFiRow11, sizeof(theFiRow11), "%12.3f", ul.y);
+   std::snprintf(theFiCol12, sizeof(theFiCol12), "%12.3f", ur.x);
+   std::snprintf(theFiRow12, sizeof(theFiRow12), "%12.3f", ur.y);
+   std::snprintf(theFiCol21, sizeof(theFiCol21), "%12.3f", ll.x);
+   std::snprintf(theFiRow21, sizeof(theFiRow21), "%12.3f", ll.y);
+   std::snprintf(theFiCol22, sizeof(theFiCol22), "%12.3f", lr.x);
+   std::snprintf(theFiRow22, sizeof(theFiRow22), "%12.3f", lr.y);
 
    return true;
 }
@@ -855,4 +856,3 @@ bool ossimNitfIchipbTag::loadState(const ossimKeywordlist& kwl, const char* pref
 
    return true;
 }
-

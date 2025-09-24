@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstring> /* for strcpy */
 #include <cstdio>
+#include <cstddef>
 #include <iomanip>
 #include <sstream>
 
@@ -478,7 +479,7 @@ ossimString ossimDms::degree_to_string(double degrees,
 {
    char cdegrees[64];
    char str_fmt[10];
-   char *rptr, *fptr, *sptr;
+   char *rptr, *fptr;
    int i, d_s;
    
 /* assign a default format if none is given */
@@ -497,7 +498,6 @@ ossimString ossimDms::degree_to_string(double degrees,
    
    rptr = cdegrees;
    fptr = format;
-   sptr = str_fmt;
    
 /* cycle through characters of the format and plug in values */
    
@@ -528,7 +528,7 @@ ossimString ossimDms::degree_to_string(double degrees,
 	   	while (*fptr == 'd') {
 		   d_s++, fptr++;
 	   	}
-		setup_printf(d_s, sptr);	/* printf's fmt will be %x.xd */
+		setup_printf(d_s, str_fmt, sizeof(str_fmt));	/* printf's fmt will be %x.xd */
 
 		if (theAfterDot == true) {		/* beyond the decimal point */
 		   i = d_s;
@@ -538,7 +538,13 @@ ossimString ossimDms::degree_to_string(double degrees,
 		   theIntDegs = (int)(theDecDegs);
 		 }
 
-		sprintf(rptr, str_fmt, theIntDegs);
+		{
+		   const std::size_t remaining = static_cast<std::size_t>((cdegrees + sizeof(cdegrees)) - rptr);
+		   if (remaining > 0)
+		   {
+		      std::snprintf(rptr, remaining, str_fmt, theIntDegs);
+		   }
+		}
 
 		if (*rptr == '0' && !theAfterDot)	/* remove leading zero */
 		   *rptr = ' ';
@@ -709,8 +715,12 @@ int ossimDms::calc_mins_or_secs(double *dd,
 	   ires = (int)(du) / ufactor;
 	   *dd = (du - (ires * ufactor)) / (double)ufactor;
 	}
-	setup_printf(numunits, str_fmt);
-	sprintf(res, str_fmt, ires);
+	setup_printf(numunits, str_fmt, sizeof(str_fmt));
+	const std::size_t maxLen = static_cast<std::size_t>(numunits) + 1;
+	if (maxLen > 0)
+	{
+	   std::snprintf(res, maxLen, str_fmt, ires);
+	}
         
 	return(numunits);
 }
@@ -724,16 +734,13 @@ int ossimDms::calc_mins_or_secs(double *dd,
  *	just parsed.						*
  ****************************************************************/
 
-void ossimDms::setup_printf(int ival, char *fmt)const
+void ossimDms::setup_printf(int ival, char *fmt, std::size_t fmtSize)const
 {
-	char precis[3];
-	
-	strcpy(fmt, "%");
-	sprintf(precis, "%d", ival);
-	strcat(fmt,precis);
-	strcat(fmt,".");
-	strcat(fmt,precis);
-	strcat(fmt,"d");
+	if (!fmt || fmtSize == 0)
+	{
+	   return;
+	}
+	std::snprintf(fmt, fmtSize, "%%%d.%dd", ival, ival);
 }
 
 /****************************************************************
