@@ -30,6 +30,7 @@
  */
 
 #include <cstring>
+#include <cstdio>
 #include <ossim/imaging/ossimIso8211.h>
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimCommon.h>
@@ -861,7 +862,7 @@ int ossimDDFSubfieldDefn::FormatIntValue( char *pachData, int nBytesAvailable,
     int nSize;
     char szWork[30];
 
-    sprintf( szWork, "%d", nNewValue );
+    std::snprintf( szWork, sizeof(szWork), "%d", nNewValue );
 
     if( bIsVariable )
     {
@@ -950,7 +951,7 @@ int ossimDDFSubfieldDefn::FormatFloatValue( char *pachData, int nBytesAvailable,
     int nSize;
     char szWork[120];
 
-    sprintf( szWork, "%.16g", dfNewValue );
+    std::snprintf( szWork, sizeof(szWork), "%.16g", dfNewValue );
 
     if( bIsVariable )
     {

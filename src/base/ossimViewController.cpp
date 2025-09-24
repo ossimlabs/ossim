@@ -4,6 +4,7 @@
 #include <ossim/base/ossimListenerManager.h>
 #include <ossim/base/ossimPropertyEvent.h>
 #include <ossim/base/ossimNotifyContext.h>
+#include <ossim/base/ossimVisitor.h>
 #include <vector>
 using namespace std;
 
@@ -65,32 +66,39 @@ bool ossimViewController::propagateView()
    if(inter)
    {
       RTTItypeid typeId = STATIC_TYPE_INFO(ossimViewInterface);
-      ossimConnectableObject::ConnectableObjectList result = inter->findAllObjectsOfType(typeId,
-                                                                           true);
-      if(result.size() > 0)
+      ossimTypeIdVisitor visitor(typeId, false,
+                                 ossimVisitor::VISIT_INPUTS | ossimVisitor::VISIT_CHILDREN);
+      ossimConnectableObject* ownerObj = dynamic_cast<ossimConnectableObject*>(theOwner);
+      if(ownerObj)
       {
-         ossim_uint32 index = 0;
-
-         // first set all views then update all outputs
-         //
-         for(index = 0; index < result.size(); ++index)
+         ownerObj->accept(visitor);
+         ossimCollectionVisitor::ListRef& objects = visitor.getObjects();
+         if(!objects.empty())
          {
-            ossimViewInterface* viewInterface = PTR_CAST(ossimViewInterface, result[index].get());
-
-            if(viewInterface)
+            // first set all views then update all outputs
+            for(ossim_uint32 index = 0; index < objects.size(); ++index)
             {
-               if(!viewInterface->setView(theView.get()))
+               ossimViewInterface* viewInterface = PTR_CAST(ossimViewInterface, objects[index].get());
+
+               if(viewInterface)
                {
-                  returnResult = false;
+                  if(!viewInterface->setView(theView.get()))
+                  {
+                     returnResult = false;
+                  }
                }
             }
-         }
 
-         for(index = 0; index < result.size(); ++index)
-         {
-            ossimPropertyEvent event(result[index].get());
-            result[index]->fireEvent(event);
-            result[index]->propagateEventToOutputs(event);
+            for(ossim_uint32 index = 0; index < objects.size(); ++index)
+            {
+               ossimConnectableObject* obj = PTR_CAST(ossimConnectableObject, objects[index].get());
+               if (obj)
+               {
+                  ossimPropertyEvent event(obj);
+                  obj->fireEvent(event);
+                  obj->propagateEventToOutputs(event);
+               }
+            }
          }
       }
    }

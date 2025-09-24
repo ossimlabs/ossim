@@ -7,6 +7,7 @@
 //
 //*******************************************************************
 //  $Id: mosaic.cpp 13312 2008-07-27 01:26:52Z gpotts $
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 using namespace std;
@@ -42,6 +43,7 @@ using namespace std;
 #include <ossim/base/ossimObjectFactoryRegistry.h>
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimRtti.h>
+#include <ossim/base/ossimVisitor.h>
 
 static ossimTrace traceDebug(ossimString("mosaic:main"));
 
@@ -101,7 +103,14 @@ ossimMapProjection* buildProductProjection(const ossimKeywordlist& kwl,
       }
       else
       {
-         source = imageChain->findFirstObjectOfType(STATIC_TYPE_INFO(ossimImageHandler));
+         ossimTypeIdVisitor visitor(STATIC_TYPE_INFO(ossimImageHandler), true,
+                                    ossimVisitor::VISIT_INPUTS | ossimVisitor::VISIT_CHILDREN);
+         imageChain->accept(visitor);
+         ossimCollectionVisitor::ListRef& collection = visitor.getObjects();
+         if (!collection.empty())
+         {
+            source = PTR_CAST(ossimConnectableObject, collection.front().get());
+         }
       }
 
       if(source)
@@ -145,7 +154,17 @@ bool buildRenderers(const ossimKeywordlist& specFile,
       ossimImageChain* imageChain = PTR_CAST(ossimImageChain, imageSources[index].get());
       if(imageChain)
       {
-         ossimConnectableObject* source = imageChain->findFirstObjectOfType(STATIC_TYPE_INFO(ossimImageHandler));
+         ossimConnectableObject* source = 0;
+         {
+            ossimTypeIdVisitor visitor(STATIC_TYPE_INFO(ossimImageHandler), true,
+                                       ossimVisitor::VISIT_INPUTS | ossimVisitor::VISIT_CHILDREN);
+            imageChain->accept(visitor);
+            ossimCollectionVisitor::ListRef& collection = visitor.getObjects();
+            if (!collection.empty())
+            {
+               source = PTR_CAST(ossimConnectableObject, collection.front().get());
+            }
+         }
 
          if(source)
          {
@@ -445,7 +464,7 @@ int main(int argc, char *argv[])
 		   if(!productProjection)
 		   {
 		      cerr << "unable to create product projection" << endl;
-		      return false;
+		      return EXIT_FAILURE;
 		   }
 		   
 		   // now let's build up the renderers
@@ -511,7 +530,7 @@ int main(int argc, char *argv[])
 							<< "\nCould not execute writer!"
 							<< "\nExiting..."
 							<< std::endl;
-						return 1;
+						return EXIT_FAILURE;
 					}
 		            //}
 		            writer->removeListener(&listener);
@@ -524,7 +543,7 @@ int main(int argc, char *argv[])
 		   }
 		   else
 		   {
-		      return 1;
+		      return EXIT_FAILURE;
 		   }
 		}
    }
@@ -535,5 +554,5 @@ int main(int argc, char *argv[])
          ossimNotify(ossimNotifyLevel_INFO));
    }
 
-   return 0;
+   return EXIT_SUCCESS;
 }

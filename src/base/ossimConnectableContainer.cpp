@@ -99,6 +99,11 @@ ossimConnectableContainer::~ossimConnectableContainer()
    theChildListener = 0;
 }
 
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 ossimConnectableObject* ossimConnectableContainer::findFirstObjectOfType(const RTTItypeid& typeInfo,
                                                                          bool recurse)
 {
@@ -252,6 +257,10 @@ ossimConnectableObject::ConnectableObjectList ossimConnectableContainer::findAll
    }
    return result;
 }
+
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 
 ossimConnectableObject* ossimConnectableContainer::findObject(const ossimId& id,
                                                               bool recurse)
