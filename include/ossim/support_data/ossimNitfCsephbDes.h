@@ -6,7 +6,7 @@
 //
 // Author:  Ryan Feldbush
 //
-// Description: CSATTB des class declaration.
+// Description: CSEPHB des class declaration.
 //
 // Exploitation Reference Data TRE.
 //
@@ -16,16 +16,16 @@
 
 #include <ossim/support_data/ossimNitfGenericDes.h>
 
-#ifndef ossimNitfCsattbDes_HEADER
-#define ossimNitfCsattbDes_HEADER 1
+#ifndef ossimNitfCsephbDes_HEADER
+#define ossimNitfCsephbDes_HEADER 1
 
-class OSSIM_DLL ossimNitfCsattbDes : public ossimNitfGenericDes
+class OSSIM_DLL ossimNitfCsephbDes : public ossimNitfGenericDes
 {
 public:
    
-   ossimNitfCsattbDes();
+   ossimNitfCsephbDes();
    
-   ossimNitfCsattbDes(ossim_uint32 tagLength);
+   ossimNitfCsephbDes(ossim_uint32 tagLength);
    
    virtual ossimString getClassName() const;
 

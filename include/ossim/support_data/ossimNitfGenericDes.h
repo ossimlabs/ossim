@@ -6,19 +6,16 @@
 //
 // Author:  Ryan Feldbush
 //
-// Description: Generic DES class declaration.
+// Description: Generic des class declaration.
 //
 //----------------------------------------------------------------------------
 
-#ifndef OSSIMNITFGENERICDES_H
-#define OSSIMNITFGENERICDES_H 1
+#ifndef ossimNitfGenericDes_HEADER
+#define ossimNitfGenericDes_HEADER 1
 
 #include <ossim/support_data/ossimNitfRegisteredDes.h>
-
-#include <vector>
 #include <map>
-
-
+#include <vector>
 
 /**
  * @class ossimNitfGenericDes
@@ -26,7 +23,7 @@
 class OSSIM_DLL ossimNitfGenericDes : public ossimNitfRegisteredDes
 {
 public:
-   ossimNitfGenericDes(const std::string& tag, ossim_uint32 tagLength=0);
+   ossimNitfGenericDes(const std::string& des, ossim_uint32 desLength=0);
 
    virtual void parseStream(std::istream &in);
 
@@ -54,20 +51,22 @@ public:
    };
    std::vector<definition> FIELD_DEFINITIONS;
 
-   ossim_uint32 computeTagLength() const;
+   ossim_uint32 computeDesLength() const;
 
    std::ostream& printMap(std::ostream& out ) const;
 
    std::ostream& printFieldDefs(std::ostream& out ) const;
 
+   virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix);
+
 protected:
    ossimString formatField(int definition, const ossimString& fieldValue) const;
-   std::map<ossimString, ossimString> m_fields_map;
    void loopLogic(ossim_int32 &i, std::vector<std::vector<ossim_int32>> &suffix) const;
    virtual void initializeFields();
 
    //Parses field value from reverse polish noatation for loop and if conditions
    int parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const;
+   std::map<ossimString, ossimString> m_fields_map;
    enum specialFields
    {
       VARIABLE_LENGTH = -1,

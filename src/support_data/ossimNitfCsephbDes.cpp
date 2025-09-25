@@ -14,11 +14,32 @@
 //
 //----------------------------------------------------------------------------
 
+#include <ossim/support_data/ossimNitfCsephbDes.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimTrace.h>
+#include <ossim/support_data/ossimNitfCommonFieldNames.h>
 
-#include <ossim/support_data/ossimNitfCephbDes.h>
+static ossimTrace traceDebug("ossimNitfCsephbdes:debug");
 
-ossimNitfCsephbDes::ossimNitfCsephbDes(ossim_uint32 desLength)
-   : ossimNitfGenericDes("CSEPHB", desLength)
+const std::string ossimNitfCsephbDes::CETAG_KW = "CSEXRB";
+
+ossimNitfCsephbDes::ossimNitfCsephbDes()
+   : ossimNitfGenericDes("CSEXRB")
+{
+   // traceDebug.setTraceFlag(true);
+
+   initializeFieldDefinitions();
+   initializeFields();
+   setDesLength(computeDesLength());
+}
+
+ossimNitfCsephbDes::ossimNitfCsephbDes(ossim_uint32 tagLength)
+   : ossimNitfGenericDes("CSEXRB", tagLength)
+{
+   initializeFieldDefinitions();
+   initializeFields();
+}
+void ossimNitfCsephbDes::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
       {
@@ -104,4 +125,9 @@ ossimNitfCsephbDes::ossimNitfCsephbDes(ossim_uint32 desLength)
             {"ACCEL_PROVIDED 'Y' =", IF_STATEMENT_END},
          {"NUM_EPHEM n", LOOP_END}
       };
+}
+
+ossimString ossimNitfCsephbDes::getClassName() const
+{
+   return ossimString("ossimNitfCsephbdes");
 }

@@ -22,6 +22,16 @@
 class OSSIM_DLL ossimNitfCssfabDes : public ossimNitfGenericDes
 {
 public:
-   ossimNitfCssfabDes(ossim_uint32 desLength=0);
+
+   ossimNitfCssfabDes();
+
+   ossimNitfCssfabDes(ossim_uint32 tagLength);
+
+   virtual ossimString getClassName() const;
+
+   static const std::string CETAG_KW;
+
+private:
+   void initializeFieldDefinitions();
 };
 #endif

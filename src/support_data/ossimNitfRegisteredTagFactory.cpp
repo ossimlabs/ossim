@@ -50,6 +50,7 @@
 #include <ossim/support_data/ossimNitfRsmpiaTag.h>
 #include <ossim/support_data/ossimNitfStreobTag.h>
 #include <ossim/support_data/ossimNitfTmintaTag.h>
+#include <ossim/support_data/ossimNitfBandsbTag.h>
 
 
 RTTI_DEF1(ossimNitfRegisteredTagFactory, "ossimNitfRegisteredTagFactory", ossimNitfTagFactory);
@@ -58,6 +59,7 @@ static const char ACFTB_TAG[]                = "ACFTB";
 static const char AIMIDB_TAG[]               = "AIMIDB";
 static const char BLOCKA_TAG[]               = "BLOCKA";
 static const char BNDPLB_TAG[]               = "BNDPLB";
+static const char BANDSB_TAG[]               = "BANDSB";
 static const char CAMSDA_TAG[]               = "CAMSDA";
 static const char CSCRNA_TAG[]               = "CSCRNA";
 static const char CSDIDA_TAG[]               = "CSDIDA";
@@ -128,6 +130,10 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    else if(name == BNDPLB_TAG)
    {
       return new ossimNitfBndplbTag;
+   }
+   else if(name == BANDSB_TAG)
+   {
+      return new ossimNitfBandsbTag;
    }
    else if(name == CAMSDA_TAG)
    {

@@ -6,11 +6,14 @@
 //
 // Author:  Ryan Feldbush
 //
-// Description: Generic tag class definition.
+// Description: Generic des class definition.
 //
 //----------------------------------------------------------------------------
 #include <ossim/support_data/ossimNitfGenericDes.h>
 #include <ossim/support_data/ossimNitfCommon.h>
+#include <ossim/base/ossimKeywordlist.h>
+#include "base/ossimException.h"
+#include "base/ossimTrace.h"
 
 #include <istream>
 #include <iostream>
@@ -20,14 +23,12 @@
 #include <utility>
 #include <stack>
 
-#include "base/ossimException.h"
-
-ossimNitfGenericDes::ossimNitfGenericDes(const std::string& tag, ossim_uint32 tagLength)
-   : ossimNitfRegisteredDes(tag, tagLength)
+ossimNitfGenericDes::ossimNitfGenericDes(const std::string& des, ossim_uint32 desLength)
+   : ossimNitfRegisteredDes(des, desLength)
 {
 }
 
-ossimNitfGenericDes::definition::definition(const ossimString& field, ossim_int32 size,
+ossimNitfGenericDes::definition::definition::definition(const ossimString& field, ossim_int32 size,
                        ossim_int8 dataFormat, ossim_int8 precision,
                        const ossimString& defaultValue)
    :
@@ -37,6 +38,7 @@ ossimNitfGenericDes::definition::definition(const ossimString& field, ossim_int3
    precision(precision),
    defaultValue(defaultValue)
 {
+
 }
 
 std::ostream& ossimNitfGenericDes::definition::print(std::ostream& out) const
@@ -128,6 +130,11 @@ int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<oss
             else
                stack.push("0");
             break;
+         case '!':
+            a = stack.top();
+            stack.pop();
+            stack.push(!bool(a));
+            break;
          case '>':
             a = stack.top();
             stack.pop();
@@ -148,11 +155,6 @@ int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<oss
             else
                stack.push("0");
             break;
-         case '!':
-            a = stack.top();
-            stack.pop();
-            stack.push(!bool(a));
-            break;
          default:
             if(entry.toInt() != 0 || entry == "0")
                stack.push(entry.toInt());
@@ -172,8 +174,6 @@ int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<oss
             break;
       }
    }
-   if(stack.size() > 1)
-      std::cout << "EEEEEE" << std::endl;
    return stack.top().toInt();
 }
 
@@ -252,8 +252,6 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
       length = m_fields_map.at(spaceSubStrings[1]).toInt();
    }
-   if (fieldValue.length() >= FIELD_DEFINITIONS[definition].size)
-      throw ossimException("ossimNitfGenericDes::formatField() value is larger than field");
    if (result.size() != length)
    {
       switch (format)
@@ -330,6 +328,9 @@ void ossimNitfGenericDes::parseStream(std::istream &in)
          i++;
       }
    }
+
+   // Recompute and set des length as this can change the size of the map.
+   setDesLength(computeDesLength());
 }
 
 void ossimNitfGenericDes::writeStream(std::ostream &out)
@@ -374,7 +375,7 @@ std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &p
    pfx += ".";
 
    out << std::setiosflags(std::ios::left)
-         << pfx << std::setw(24) << "CETAG:"
+         << pfx << std::setw(24) << "CEDES:"
          << getDesName() << "\n"
          << pfx << std::setw(24) << "CEL:"
          << getDesLength() << "\n";
@@ -396,12 +397,10 @@ std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &p
          {
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
-            //fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
          }
          else
          {
             generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
-            //fieldLength = FIELD_DEFINITIONS[i].size;
          }
          //Unique print actions
          out << std::setiosflags(std::ios::left)
@@ -425,27 +424,66 @@ ossimString ossimNitfGenericDes::get(const ossimString& fieldName)
 
 void ossimNitfGenericDes::setField(const ossimString& fieldName, const ossimString& fieldValue)
 {
-   int definition = -1;
    for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
    {
       if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
          FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
          fieldName == FIELD_DEFINITIONS[i].field.substr(0, fieldName.length()))
       {
-         definition = i;
+         m_fields_map.insert_or_assign(fieldName, formatField(i, fieldValue));
          break;
       }
    }
-   if (definition > -1)
-      m_fields_map.insert_or_assign(fieldName, formatField(definition, fieldValue));
+
    initializeFields();
+}
+
+bool ossimNitfGenericDes::loadState(const ossimKeywordlist& kwl, const char* prefix)
+{
+   //---
+   // This needs to take into account "prefix" as kwl can contain key:value pairs
+   // from other objects. drb - 20250910
+   //---
+#if 0 // tmp drb
+   for (ossim_uint32 i=0; i < FIELD_DEFINITIONS.size(); i++)
+   {
+#if 0 /* Does not compile. gcc version 15.2.1 */
+      for (std::pair<std::string, std::string> keywords: kwl)
+      {
+         if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
+         FIELD_DEFINITIONS[i].field.length() >= keywords.first.length() &&
+         keywords.first == FIELD_DEFINITIONS[i].field.substr(0, keywords.first.length()))
+         {
+            m_fields_map.insert_or_assign(keywords.first, formatField(i, keywords.second));
+            break;
+         }
+      }
+#endif
+
+      ossimKeywordlist::KeywordMap::const_iterator iter = kwl.getMap().begin();
+      while(iter != kwl.getMap().end())
+      {
+         if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
+             FIELD_DEFINITIONS[i].field.length() >= (*iter).first.length() &&
+             (*iter).first == FIELD_DEFINITIONS[i].field.substr(0, (*iter).first.length()))
+         {
+            m_fields_map.insert_or_assign((*iter).first, formatField(i, (*iter).second));
+            // break; can be more than one key:value pair for this object in kwl.
+         }
+         ++iter;
+      }
+   }
+   initializeFields();
+#endif
+   
+   return true;
 }
 
 void ossimNitfGenericDes::initializeFields()
 {
    std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings;
-   ossim_int32 fieldLength, i = 0;
+   ossim_int32 i = 0;
    ossimString generatedFieldName;
 
    while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
@@ -473,7 +511,7 @@ void ossimNitfGenericDes::initializeFields()
    }
 }
 
-ossim_uint32 ossimNitfGenericDes::computeTagLength() const
+ossim_uint32 ossimNitfGenericDes::computeDesLength() const
 {
    ossim_uint32 length = 0;
    for ( const auto& i : m_fields_map )
