@@ -490,6 +490,14 @@ void ossimSensorModel::worldToLineSample(const ossimGpt& worldPoint,
    ip -= theSubImageOffset;
 }
 
+void ossimSensorModel::lineSampleToECEF(const ossimDpt&  image_point,
+                                        ossimEcefPoint& ecf_point) const
+{
+   ossimGpt gpt;
+   lineSampleToWorld(image_point, gpt);
+   ecf_point = ossimEcefPoint(gpt);
+}
+
 //*****************************************************************************
 //  METHOD: ossimSensorModel::print(ostream)
 //  

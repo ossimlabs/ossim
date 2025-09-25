@@ -16,16 +16,16 @@
 # Find include path:
 #---
 set(CMAKE_FIND_FRAMEWORK "LAST")
-find_path(OSSIM_INCLUDE_DIR ossim/ossimVersion.h ossimVersion.h
+find_path(OSSIM_INCLUDE_DIR NAMES ossim/ossimVersion.h ossimVersion.h
           PATHS
-          $ENV{OSSIM_DEV_HOME}/ossim/include
-          $ENV{OSSIM_INSTALL_PREFIX}/include )
+          ${OSSIM_DEV_HOME}/ossim/include
+          ${OSSIM_INSTALL_PREFIX}/include)
 
 set(OSSIM_NAMES ${OSSIM_NAMES} ossim libossim)
 find_library(OSSIM_LIBRARY NAMES ${OSSIM_NAMES}
              PATHS
-             $ENV{OSSIM_BUILD_DIR}/lib
-             $ENV{OSSIM_INSTALL_PREFIX}/lib)
+             ${OSSIM_BUILD_DIR}/lib
+             ${OSSIM_INSTALL_PREFIX}/lib)
 
 #---
 # This function sets OSSIM_FOUND if variables are valid.

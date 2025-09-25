@@ -155,7 +155,7 @@ public:
    bool localToECF(const ossimDpt& local_pt, ossimEcefPoint& ecf_pt);
 
    //! Returns true if this geometry represents a non-earth image
-   bool isNonEarthImage() { return false; }
+   bool isNonEarthImage() const;
 
    //! Exposes the 3D world-to-local image coordinate reverse projection. The caller should verify 
    //! that a valid projection exists before calling this method. Returns TRUE if a valid image 

@@ -775,29 +775,39 @@ ossimIrect64 ossimIrect64::combine(const ossimIrect64& rect) const
    // If any rect has NANs, size is zero, or orientation modes do not match,
    // the returned result will be nan.
    //---
-   if ( ( hasNans() == false ) && (rect.hasNans() == false) &&
-        ( m_size.x != 0 ) && ( rect.m_size.x != 0 ) &&
-        ( m_size.y != 0 ) && ( rect.m_size.y != 0 ) &&
-        ( m_mode == rect.m_mode ) )
-   {
-      ossimIpt64 endPt0;
-      end( endPt0 );
-      
-      ossimIpt64 endPt1;
-      rect.end( endPt1 );
+   // OLK: Removed check for size = 0
+   // if ( ( hasNans() == false ) && (rect.hasNans() == false) &&
+   //      ( m_size.x != 0 ) && ( rect.m_size.x != 0 ) &&
+   //      ( m_size.y != 0 ) && ( rect.m_size.y != 0 ) &&
+   //      ( m_mode == rect.m_mode ) )
+   // OLK: Instead, copied code from ossimIrect::combine()
+   if (hasNans())
+      return rect;
+   if(rect.hasNans())
+      return *this;
+   if (m_mode != rect.m_mode)
+      return(*this);
 
-      result.m_origin.x = ossim::min(m_origin.x, rect.m_origin.x);
-      result.m_origin.y = ossim::min(m_origin.y, rect.m_origin.y);
-      result.m_size.x = ossim::max(endPt0.x, endPt1.x) - result.m_origin.x + 1;
-      result.m_size.y = ossim::max(endPt0.y, endPt1.y) - result.m_origin.y + 1;
-      result.m_mode = m_mode;
+   ossimIpt ulCombine;
+   ossimIpt lrCombine;
+
+   if(m_mode == OSSIM_LEFT_HANDED)
+   {
+      ulCombine.x = ((ul().x <= rect.ul().x)?ul().x:rect.ul().x);
+      ulCombine.y = ((ul().y <= rect.ul().y)?ul().y:rect.ul().y);
+      lrCombine.x = ((lr().x >= rect.lr().x)?lr().x:rect.lr().x);
+      lrCombine.y = ((lr().y >= rect.lr().y)?lr().y:rect.lr().y);
    }
    else
    {
-      result.makeNan();
+      ulCombine.x = ((ul().x <= rect.ul().x)?ul().x:rect.ul().x);
+      ulCombine.y = ((ul().y >= rect.ul().y)?ul().y:rect.ul().y);
+      lrCombine.x = ((lr().x >= rect.lr().x)?lr().x:rect.lr().x);
+      lrCombine.y = ((lr().y <= rect.lr().y)?lr().y:rect.lr().y);
    }
 
-   return result;
+   ossimIpt64 size (lrCombine.x - ulCombine.x, lrCombine.y - ulCombine.y);
+   return ossimIrect64(ulCombine, size, m_mode);
 }
 
 bool ossimIrect64::saveState(ossimKeywordlist& kwl,
