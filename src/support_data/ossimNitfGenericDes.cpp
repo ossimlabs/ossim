@@ -12,8 +12,8 @@
 #include <ossim/support_data/ossimNitfGenericDes.h>
 #include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/base/ossimKeywordlist.h>
-#include "base/ossimException.h"
-#include "base/ossimTrace.h"
+#include <base/ossimException.h>
+#include <base/ossimTrace.h>
 
 #include <istream>
 #include <iostream>
@@ -245,14 +245,14 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
          format = -1;
    }
 
-   ossim_uint32 length = FIELD_DEFINITIONS[definition].size;
+   ossim_int32 length = FIELD_DEFINITIONS[definition].size;
    if (length == VARIABLE_LENGTH)
    {
       std::vector<ossimString> spaceSubStrings;
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
       length = m_fields_map.at(spaceSubStrings[1]).toInt();
    }
-   if (result.size() != length)
+   if ((ossim_int32)result.size() != length)
    {
       switch (format)
       {
@@ -281,7 +281,7 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
          case 5:
             result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
          default:
-            while (result.length() < length)
+            while ((ossim_int32)result.length() < length)
                result = result + ' ';
             break;
       }
@@ -426,7 +426,7 @@ ossimString ossimNitfGenericDes::get(const ossimString& fieldName)
 
 void ossimNitfGenericDes::setField(const ossimString& fieldName, const ossimString& fieldValue)
 {
-   for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
+   for (int i=0; i < (int)FIELD_DEFINITIONS.size(); i++)
    {
       if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
          FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
