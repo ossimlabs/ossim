@@ -35,8 +35,8 @@ int main(int argc, char** argv)
 {
    enum
    {
-      OK,
-      ERROR
+      OK    = EXIT_SUCCESS,
+      ERROR = EXIT_FAILURE
    };
    ossimString tempString;
    ossimArgumentParser argumentParser(&argc, argv);
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
    {
       cerr << "swapbytes" << " ERROR:\n"
            << "Cannot open:  " << argv[1] << endl;
-      return false;
+      return EXIT_FAILURE;
    }
 
    // Output stream to new file.
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
    {
       cerr << "swapbytes" << " ERROR:\n"
            << "Cannot open:  " << argv[2] << endl;
-      return false;
+      return EXIT_FAILURE;
    }
 
    //***

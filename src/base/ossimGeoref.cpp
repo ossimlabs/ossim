@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cmath>
 #include <cctype>
+#include <cstddef>
 
 // These are Geotrans defines and code.
 /***************************************************************************/
@@ -221,7 +222,9 @@ void Convert_Minutes_To_String(double minutes,
     minutes = 59.999;
   minutes = minutes * 1000;
   min = Round_GEOREF (minutes/divisor);
-  sprintf (str, "%*.*ld", (int)precision, (int)precision, min);
+  const std::size_t width = static_cast<std::size_t>(precision);
+  const std::size_t bufferSize = width + 1;
+  std::snprintf (str, bufferSize, "%*.*ld", static_cast<int>(precision), static_cast<int>(precision), min);
   if (precision == 1)
     strcat (str, "0");
 } /* END Convert_Minutes_To_String */

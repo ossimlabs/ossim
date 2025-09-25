@@ -30,6 +30,8 @@
  */
 
 #include <cstring>
+#include <cstdio>
+#include <cstddef>
 #include <ossim/imaging/ossimIso8211.h>
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimCplUtil.h>
@@ -232,13 +234,20 @@ int ossimDDFFieldDefn::GenerateDDREntry( char **ppachData,
     (*ppachData)[6] = ' ';
     (*ppachData)[7] = ' ';
     (*ppachData)[8] = ' ';
-    sprintf( *ppachData + 9, "%s%c%s", 
-             _fieldName, OSSIM_DDF_UNIT_TERMINATOR, _arrayDescr );
+    std::snprintf( *ppachData + 9, (*pnLength + 1) - 9, "%s%c%s",
+                   _fieldName, OSSIM_DDF_UNIT_TERMINATOR, _arrayDescr );
 
     if( strlen(_formatControls) > 0 )
-        sprintf( *ppachData + strlen(*ppachData), "%c%s",
-                 OSSIM_DDF_UNIT_TERMINATOR, _formatControls );
-    sprintf( *ppachData + strlen(*ppachData), "%c", OSSIM_DDF_FIELD_TERMINATOR );
+    {
+        const std::size_t offset = strlen(*ppachData);
+        std::snprintf( *ppachData + offset, (*pnLength + 1) - offset, "%c%s",
+                       OSSIM_DDF_UNIT_TERMINATOR, _formatControls );
+    }
+    {
+        const std::size_t offset = strlen(*ppachData);
+        std::snprintf( *ppachData + offset, (*pnLength + 1) - offset, "%c",
+                       OSSIM_DDF_FIELD_TERMINATOR );
+    }
 
     return true;
 }

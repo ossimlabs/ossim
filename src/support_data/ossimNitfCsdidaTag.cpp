@@ -16,6 +16,7 @@
 #include <ossim/support_data/ossimNitfCsdidaTag.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTrace.h>
+#include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/support_data/ossimNitfCommonFieldNames.h>
 
 #include <cstring>
@@ -197,10 +198,13 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       {
          strcpy(theProcessTime, value.c_str());
       }
+      ossim_uint32 fieldSize = 10;
       value = kwl.findKey( pfx, ossim::nitf::SOFTWARE_VERSION_NUMBER_KW );
-      if ( value.size() == 10 )
+      if ( value.size() <= fieldSize )
       {
-         strcpy(theSoftwareVersionNumber, value.c_str());
+         ossimNitfCommon::setField(theSoftwareVersionNumber, ossimString(value),
+                                   fieldSize, std::ios::left, ' ');
+         // strcpy(theSoftwareVersionNumber, value.c_str());
       }
 
       break; // Trailing break from forever loop.

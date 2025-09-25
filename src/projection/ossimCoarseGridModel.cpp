@@ -621,12 +621,15 @@ std::ostream& ossimCoarseGridModel::print(std::ostream& out) const
       {
          samp = (int) (node.x*spacing.x);
          
-         sprintf(buf, "[%5d, %5d]    %+9.5f  %+10.5f    %+11.4e  %+11.4e",
-                  line, samp,
-                  theLatGrid.getNode(node),
-                  theLonGrid.getNode(node),
-                  theDlatDhGrid.getNode(node),
-                  theDlonDhGrid.getNode(node));
+         std::snprintf(buf,
+                       sizeof(buf),
+                       "[%5d, %5d]    %+9.5f  %+10.5f    %+11.4e  %+11.4e",
+                       line,
+                       samp,
+                       theLatGrid.getNode(node),
+                       theLonGrid.getNode(node),
+                       theDlatDhGrid.getNode(node),
+                       theDlonDhGrid.getNode(node));
          out << buf << endl;
       }
       out <<"-----------------------------------------------------------------"

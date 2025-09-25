@@ -38,7 +38,9 @@ ossimGeoAnnotationGdBitmapFont::ossimGeoAnnotationGdBitmapFont(const ossimGpt& p
 
 ossimGeoAnnotationGdBitmapFont::ossimGeoAnnotationGdBitmapFont(const ossimGeoAnnotationGdBitmapFont& rhs)
    :ossimGeoAnnotationObject(rhs),
-    theProjectedFont(rhs.theProjectedFont.valid()?(ossimAnnotationGdBitmapFont*)theProjectedFont->dup():(ossimAnnotationGdBitmapFont*)0),
+    theProjectedFont(rhs.theProjectedFont.valid() ?
+                     static_cast<ossimAnnotationGdBitmapFont*>(rhs.theProjectedFont->dup()) :
+                     static_cast<ossimAnnotationGdBitmapFont*>(0)),
     thePosition(rhs.thePosition)
 {
 }

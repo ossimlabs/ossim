@@ -196,7 +196,8 @@ ossimRefPtr<ossimXmlNode> ossimProperty::toXml()const
    return result;
 }
 
-void ossimProperty::saveState(ossimKeywordlist& kwl, const ossimString& prefix)const
+// void ossimProperty::saveState(ossimKeywordlist& kwl, const ossimString& prefix)const
+bool ossimProperty::saveState(ossimKeywordlist& kwl, const char* prefix)const
 {
    const ossimContainerProperty* container = asContainer();
    if(container)
@@ -205,17 +206,20 @@ void ossimProperty::saveState(ossimKeywordlist& kwl, const ossimString& prefix)c
       ossim_uint32 propertiesIndex = 0;
       for(propertiesIndex = 0; propertiesIndex < nproperties; ++propertiesIndex)
       {
-         ossimString newPrefix = prefix + container->getName() + ".";
+         // ossimString newPrefix = prefix + container->getName() + ".";
+         ossimString newPrefix = (prefix?prefix:"") + container->getName() + ".";         
          ossimRefPtr<ossimProperty> prop = container->theChildPropertyList[propertiesIndex];
          if(prop.valid())
          {
-            prop->saveState(kwl, newPrefix);
+            prop->saveState(kwl, newPrefix.c_str());
          }
       }
    }
    else 
    {
-      kwl.add(prefix + getName(), valueToString().c_str(), true);
+      // kwl.add(prefix + getName(), valueToString().c_str(), true);
+      ossimString newPrefix = (prefix?prefix:"") + container->getName();
+      kwl.add(newPrefix + getName(), valueToString().c_str(), true);
    }
+   return true;
 }
-

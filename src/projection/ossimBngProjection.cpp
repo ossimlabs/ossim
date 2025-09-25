@@ -14,8 +14,8 @@
 #include <ossim/base/ossimKeywordNames.h>
 #include <ossim/elevation/ossimElevManager.h>
 
-#include <string.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdio>
 
 #define BNG_NO_ERROR           0x0000
 #define BNG_LAT_ERROR          0x0001
@@ -43,6 +43,7 @@ static double BNG_Easting = 0.0;
 static double BNG_Northing = 0.0;
 static const char* Airy = "AA";
 static char BNG_Ellipsoid_Code[3] = "AA";
+static constexpr std::size_t BNG_STRING_CAPACITY = 100;
 
 RTTI_DEF1(ossimBngProjection, "ossimBngProjection", ossimMapProjection);
 
@@ -59,7 +60,7 @@ ossimBngProjection::ossimBngProjection()
 
 ossimGpt ossimBngProjection::inverse(const ossimDpt &eastingNorthing)const
 {
-   char s[100];
+   char s[BNG_STRING_CAPACITY];
    double lat;
    double lon;
 
@@ -84,7 +85,7 @@ ossimGpt ossimBngProjection::inverse(const ossimDpt &eastingNorthing)const
 
 ossimDpt ossimBngProjection::forward(const ossimGpt &latLon)const
 {
-   char BNG[100];
+   char BNG[BNG_STRING_CAPACITY];
 
    string_Broken = 0;
    Set_Transverse_Mercator_Parameters(BNG_a, BNG_f, BNG_Origin_Lat,
@@ -244,14 +245,54 @@ long ossimBngProjection::Make_BNG_String (char ltrnum[4],
     east -= 1;
   if ((Precision == 0) && (east == 1))
      east = 0;
-  i += sprintf (BNG + i, "%*.*ld",(int) Precision,(int) Precision, east);
+  auto appendValue = [&](long value) -> bool
+  {
+     if (i < 0)
+     {
+        return false;
+     }
+
+     std::size_t remaining = 0;
+     if (static_cast<std::size_t>(i) < BNG_STRING_CAPACITY)
+     {
+        remaining = BNG_STRING_CAPACITY - static_cast<std::size_t>(i);
+     }
+
+     if (remaining == 0)
+     {
+        return false;
+     }
+
+     const int written = std::snprintf(BNG + i,
+                                       remaining,
+                                       "%*.*ld",
+                                       static_cast<int>(Precision),
+                                       static_cast<int>(Precision),
+                                       value);
+
+     if (written < 0 || static_cast<std::size_t>(written) >= remaining)
+     {
+        return false;
+     }
+
+     i += written;
+     return true;
+  };
+
+  if (!appendValue(east))
+  {
+     return BNG_STRING_ERROR;
+  }
 
   north = Round_BNG (Northing/divisor);
   if (north == unitInterval)
     north -= 1;
   if ((Precision == 0) && (north == 1))
     north = 0;
-  i += sprintf (BNG + i, "%*.*ld",(int)  Precision,(int) Precision, north);
+  if (!appendValue(north))
+  {
+     return BNG_STRING_ERROR;
+  }
 
   return (error_code);
 } /* Make_BNG_String */
@@ -737,6 +778,3 @@ long ossimBngProjection::Convert_BNG_To_Transverse_Mercator(char *BNG,
   }
   return Error_Code;
 } /* END OF Convert_BNG_To_Transverse_Mercator */
-
-
-

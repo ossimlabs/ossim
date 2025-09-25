@@ -94,7 +94,8 @@ std::ostream& ossimNitfRegisteredTag::print(
    return out;
 }
 
-bool ossimNitfRegisteredTag::saveState(ossimKeywordlist& kwl, const ossimString& prefix)const
+// bool ossimNitfRegisteredTag::saveState(ossimKeywordlist& kwl, const ossimString& prefix)const
+bool ossimNitfRegisteredTag::saveState(ossimKeywordlist& kwl, const char* prefix)const   
 {
    bool result = false;
    // by default we will use the already implemented print method as backup

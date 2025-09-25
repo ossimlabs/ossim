@@ -30,7 +30,7 @@ bool ossimQuickbirdMetaDataInfo::open(const ossimFilename& file)
    if ( m_file.exists() && m_file.ext() == "TIL" )
    {
       ossimQuickbirdMetaData qbmd;
-      ossim_int32 parseTypes = ossimQuickbirdMetaData::QB_PARSE_TYPE_IMD;
+      ossim_int32 parseTypes = ossimQuickbirdMetaData::QB_PARSE_TYPE_IMD|ossimQuickbirdMetaData::QB_PARSE_TYPE_ATT;
       
          //    (ossimQuickbirdMetaData::QB_PARSE_TYPE_IMD | ossimQuickbirdMetaData::QB_PARSE_TYPE_GEO);
       // result = qbmd.open(m_file, ossimQuickbirdMetaData::QB_PARSE_TYPE_ALL);
