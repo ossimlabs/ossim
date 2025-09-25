@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.16...3.26)
 
 PROJECT(ossimlabs)
 
@@ -49,11 +49,7 @@ INCLUDE(OssimCommonVariables)
 FILE(REMOVE ${CMAKE_INCLUDE_DIRS_FILE})
 FILE(REMOVE ${CMAKE_FILENAMES_FILE})
 
-IF(NOT APPLE)
-  cmake_minimum_required(VERSION 2.6)
-ELSE(NOT APPLE)
-    cmake_minimum_required(VERSION 2.8)
-ENDIF(NOT APPLE)
+# Do not downgrade the CMake policy/version in subtrees
 
 IF(EXISTS "$ENV{OSSIM_DEPENDENCIES}")
    SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${OSSIM_DEPENDENCIES}/include )
