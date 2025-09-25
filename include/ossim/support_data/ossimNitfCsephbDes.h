@@ -14,10 +14,10 @@
 //
 //----------------------------------------------------------------------------
 
-#include <ossim/support_data/ossimNitfGenericDes.h>
-
 #ifndef ossimNitfCsephbDes_HEADER
 #define ossimNitfCsephbDes_HEADER 1
+
+#include <ossim/support_data/ossimNitfGenericDes.h>
 
 class OSSIM_DLL ossimNitfCsephbDes : public ossimNitfGenericDes
 {
