@@ -431,7 +431,7 @@ MatrixInput GetSubMatrix::operator<<(Real f)
    return MatrixInput(n, r+1);
 }
 
-MatrixInput::~MatrixInput()
+MatrixInput::~MatrixInput() noexcept(false)
 {
    REPORT
    Tracer et("MatrixInput");
@@ -482,4 +482,3 @@ void GeneralMatrix::ReverseElements()
 #ifdef use_namespace
 }
 #endif
-

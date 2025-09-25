@@ -1569,7 +1569,7 @@ class OSSIM_DLL MatrixInput // for reading a list of values into a matrix
 public:
    MatrixInput(const MatrixInput& mi) : n(mi.n), r(mi.r) {}
    MatrixInput(int nx, Real* rx) : n(nx), r(rx) {}
-   ~MatrixInput();
+   ~MatrixInput() noexcept(false);
    MatrixInput operator<<(Real);
    MatrixInput operator<<(int f);
    friend class GeneralMatrix;
@@ -1798,7 +1798,6 @@ inline MatrixInput GetSubMatrix::operator<<(int f) { return *this << (Real)f; }
 // body file: newmatex.cpp
 // body file: bandmat.cpp
 // body file: submat.cpp
-
 
 
 

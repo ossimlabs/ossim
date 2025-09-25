@@ -25,7 +25,7 @@ public:
    ossim2dTo2dCompositeTransform(const CompositeTransformList& compositeTransformList = CompositeTransformList());
    ossim2dTo2dCompositeTransform(const ossim2dTo2dCompositeTransform& rhs);
    virtual ~ossim2dTo2dCompositeTransform();
-   virtual ossimObject* dup()const;
+   ossimObject* dup()const override;
 
 
    void add(ossimRefPtr<ossim2dTo2dTransform> transform);
@@ -38,27 +38,27 @@ public:
     * the forward transform.  The output of the previous is used as the input to the next
     * transform.
     */
-   virtual void forward(const ossimDpt& input,
-                        ossimDpt& output) const;
+   void forward(const ossimDpt& input,
+                        ossimDpt& output) const override;
 
 
    /**
     * will call the forward method with 2 arguments
     */
-   virtual void forward(ossimDpt&  /* modify_this */) const;
+   void forward(ossimDpt&  /* modify_this */) const override;
    
    /**
     * Will iterate through the transformation list in reverse order from
     * n-1 ... 0 calling the inverse for each one.  The output is passed in as input
     * to the next transform.
     */
-   virtual void inverse(const ossimDpt& input,
-                        ossimDpt&       output) const;
+   void inverse(const ossimDpt& input,
+                        ossimDpt&       output) const override;
    
    /**
     * will call the inverse method with 2 arguments
     */
-   virtual void inverse(ossimDpt&  /* modify_this */) const;
+   void inverse(ossimDpt&  /* modify_this */) const override;
    
    /**
     * Pass equality to the parent
@@ -81,13 +81,13 @@ public:
     * <prefix>.object<n-1>
     * 
     */
-   virtual bool saveState(ossimKeywordlist& kwl, const char* prefix=0)const;
+   bool saveState(ossimKeywordlist& kwl, const char* prefix=0)const override;
 
    /**
     * Will laod the state of the object.  Note, it will clear the list and then add
     * all prefix found from the save state.
     */
-   virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix=0);
+   bool loadState(const ossimKeywordlist& kwl, const char* prefix=0) override;
 
 protected:
    /**

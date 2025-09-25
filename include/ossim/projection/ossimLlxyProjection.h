@@ -29,14 +29,14 @@ public:
                        double latSpacing,  // decimal degrees
                        double lonSpacing);
    
-   virtual ~ossimLlxyProjection();
-   
-   virtual ossimObject *dup()const;
-   
-   virtual bool isGeographic()const;
-   
-   virtual ossimDpt forward(const ossimGpt &worldPoint) const;
-   virtual ossimGpt inverse(const ossimDpt &projectedPoint) const;
+   ~ossimLlxyProjection() override;
+
+   ossimObject *dup()const override;
+
+   bool isGeographic()const override;
+
+   ossimDpt forward(const ossimGpt &worldPoint) const override;
+   ossimGpt inverse(const ossimDpt &projectedPoint) const override;
    
    /*!
     *  METHOD:  getLatSpacing() 
@@ -66,36 +66,36 @@ public:
     *  METHOD: worldToLineSample()
     * Performs the forward projection from ground point to line, sample.
     */
-   virtual void worldToLineSample(const ossimGpt& worldPoint,
-                                  ossimDpt&       lineSampPt) const;
+   void worldToLineSample(const ossimGpt& worldPoint,
+                          ossimDpt&       lineSampPt) const override;
 
    /*!
     * Performs the inverse projection from line, sample to ground (world):
     */
-   virtual void lineSampleHeightToWorld(const ossimDpt& lineSampPt,
-                                        const double&  hgtEllipsoid,
-                                        ossimGpt&       worldPt) const;
+   void lineSampleHeightToWorld(const ossimDpt& lineSampPt,
+                                const double&  hgtEllipsoid,
+                                ossimGpt&       worldPt) const override;
    
    /*!
     * Method to save the state of an object to a keyword list.
     * Return true if ok or false on error.
     */
-   virtual bool saveState(ossimKeywordlist& kwl,
-                          const char* prefix=0)const;
+   bool saveState(ossimKeywordlist& kwl,
+                  const char* prefix=0)const override;
 
    /*!
     * Method to the load (recreate) the state of an object from a keyword
     * list.  Return true if ok or false on error.
     */
-   virtual bool loadState(const ossimKeywordlist& kwl,
-                          const char* prefix=0);
+   bool loadState(const ossimKeywordlist& kwl,
+                  const char* prefix=0) override;
 
-   virtual std::ostream& print(std::ostream& out) const;
+   std::ostream& print(std::ostream& out) const override;
 
-   virtual bool operator==(const ossimProjection& projection) const;
+   bool operator==(const ossimProjection& projection) const override;
 
   //   virtual ossimDpt getMetersPerPixel() const;
-   virtual void setMetersPerPixel(const ossimDpt& pt);
+   void setMetersPerPixel(const ossimDpt& pt) override;
    /*!
     * This will go from the ground point and give
     * you an approximate lat and lon per pixel. the Delta Lat

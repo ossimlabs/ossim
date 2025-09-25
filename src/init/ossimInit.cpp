@@ -85,11 +85,11 @@ ossimString geosErrorV(const char *fmt, va_list args)
    char temp[2024];
    if (fmt)
    {
-      vsprintf(temp, fmt, args);
+      std::vsnprintf(temp, sizeof(temp), fmt, args);
    }
    else
    {
-      sprintf(temp, "%s", "");
+      std::snprintf(temp, sizeof(temp), "%s", "");
    }
 
    return temp;

@@ -12,8 +12,8 @@
 #include <ossim/support_data/ossimNitfGenericTag.h>
 #include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/base/ossimKeywordlist.h>
-#include "base/ossimException.h"
-#include "base/ossimTrace.h"
+#include <base/ossimException.h>
+#include <base/ossimTrace.h>
 
 #include <istream>
 #include <iostream>
@@ -225,14 +225,14 @@ ossimString ossimNitfGenericTag::formatField(int definition, const ossimString& 
          format = -1;
    }
 
-   ossim_uint32 length = FIELD_DEFINITIONS[definition].size;
+   ossim_int32 length = FIELD_DEFINITIONS[definition].size;
    if (length == VARIABLE_LENGTH)
    {
       std::vector<ossimString> spaceSubStrings;
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
       length = m_fields_map.at(spaceSubStrings[1]).toInt();
    }
-   if (result.size() != length)
+   if ((ossim_int32)result.size() != length)
    {
       switch (format)
       {
@@ -261,7 +261,7 @@ ossimString ossimNitfGenericTag::formatField(int definition, const ossimString& 
          case 5:
             result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
          default:
-            while (result.length() < length)
+            while ((ossim_int32)result.length() < length)
                result = result + ' ';
             break;
       }
@@ -399,12 +399,14 @@ void ossimNitfGenericTag::clearFields()
 
 ossimString ossimNitfGenericTag::get(const ossimString& fieldName)
 {
-   return m_fields_map.at(fieldName);
+   if (m_fields_map.find(fieldName) != m_fields_map.end())
+      return m_fields_map.at(fieldName);
+   return "";
 }
 
 void ossimNitfGenericTag::setField(const ossimString& fieldName, const ossimString& fieldValue)
 {
-   for (int i=0; i < FIELD_DEFINITIONS.size(); i++)
+   for (int i=0; i < (int)FIELD_DEFINITIONS.size(); i++)
    {
       if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
          FIELD_DEFINITIONS[i].field.length() >= fieldName.length() &&
@@ -420,42 +422,36 @@ void ossimNitfGenericTag::setField(const ossimString& fieldName, const ossimStri
 
 bool ossimNitfGenericTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
-   //---
-   // This needs to take into account "prefix" as kwl can contain key:value pairs
-   // from other objects. drb - 20250910
-   //---
-#if 0 // tmp drb
-   for (ossim_uint32 i=0; i < FIELD_DEFINITIONS.size(); i++)
-   {
-#if 0 /* Does not compile. gcc version 15.2.1 */
-      for (std::pair<std::string, std::string> keywords: kwl)
-      {
-         if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
-         FIELD_DEFINITIONS[i].field.length() >= keywords.first.length() &&
-         keywords.first == FIELD_DEFINITIONS[i].field.substr(0, keywords.first.length()))
-         {
-            m_fields_map.insert_or_assign(keywords.first, formatField(i, keywords.second));
-            break;
-         }
-      }
-#endif
+   std::string pfx = prefix?prefix:"";
 
-      ossimKeywordlist::KeywordMap::const_iterator iter = kwl.getMap().begin();
-      while(iter != kwl.getMap().end())
+   std::vector<std::vector<ossim_int32>> suffix;
+   std::vector<ossimString> spaceSubStrings;
+   ossim_int32 i = 0;
+   ossimString generatedFieldName;
+
+   while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
+   {
+      spaceSubStrings.clear();
+      if(FIELD_DEFINITIONS[i].size < -1)
       {
-         if (FIELD_DEFINITIONS[i].size >= VARIABLE_LENGTH &&
-             FIELD_DEFINITIONS[i].field.length() >= (*iter).first.length() &&
-             (*iter).first == FIELD_DEFINITIONS[i].field.substr(0, (*iter).first.length()))
+         loopLogic(i, suffix);
+      }
+      else
+      {
+         if (FIELD_DEFINITIONS[i].size == VARIABLE_LENGTH)
          {
-            m_fields_map.insert_or_assign((*iter).first, formatField(i, (*iter).second));
-            // break; can be more than one key:value pair for this object in kwl.
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+            generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
+         } else
+         {
+            generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
          }
-         ++iter;
+         //Unique setField actions
+         if (m_fields_map.count(generatedFieldName) == 0)
+            m_fields_map.insert_or_assign(generatedFieldName, formatField(i, kwl.findKey( pfx , generatedFieldName)));
+         i++;
       }
    }
-   initializeFields();
-#endif
-   
    return true;
 }
 

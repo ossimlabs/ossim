@@ -18,6 +18,8 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include <inttypes.h>
+#include <sstream>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/imaging/ossimImageData.h>
@@ -95,7 +97,7 @@ void plotHistogram(const ossimFilename& histoFile, const ossimString& plotWith,
    const ossim_int64* y = histogram->GetCounts();
    for (int i=0; i<numBins; ++i)
    {
-      fprintf(gnuplotPipe, "%f %i \n", x[i], y[i]);
+      fprintf(gnuplotPipe, "%f %" PRIi64 " \n", x[i], y[i]);
    }
    fprintf(gnuplotPipe, "e");
    fclose(gnuplotPipe);

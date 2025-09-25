@@ -30,6 +30,7 @@
  */
 
 #include <cstring>
+#include <cstdio>
 #include <ossim/imaging/ossimIso8211.h>
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimCplUtil.h>
@@ -191,13 +192,13 @@ int ossimDDFRecord::Write()
 
     memset( szLeader, ' ', nLeaderSize );
 
-    sprintf( szLeader+0, "%05d",
-             static_cast<int>(nDataSize + nLeaderSize) );
+    std::snprintf( szLeader + 0, sizeof(szLeader) - 0,
+                   "%05d", static_cast<int>(nDataSize + nLeaderSize) );
     szLeader[5] = ' ';
     szLeader[6] = 'D';
     
-    sprintf( szLeader + 12, "%05d",
-             static_cast<int>(nFieldOffset + nLeaderSize) );
+    std::snprintf( szLeader + 12, sizeof(szLeader) - 12,
+                   "%05d", static_cast<int>(nFieldOffset + nLeaderSize) );
     szLeader[17] = ' ';
 
     szLeader[20] = (char) ('0' + _sizeFieldLength);
@@ -1463,12 +1464,12 @@ int ossimDDFRecord::ResetDirectory()
         ossimDDFFieldDefn *poDefn = poField->GetFieldDefn();
         char      szFormat[128];
 
-        sprintf( szFormat, "%%%ds%%0%dd%%0%dd", 
-                 _sizeFieldTag, _sizeFieldLength, _sizeFieldPos );
+        std::snprintf( szFormat, sizeof(szFormat), "%%%ds%%0%dd%%0%dd",
+                       _sizeFieldTag, _sizeFieldLength, _sizeFieldPos );
 
-        sprintf( pachData + nEntrySize * iField, szFormat, 
-                 poDefn->GetName(), poField->GetDataSize(),
-                 poField->GetData() - pachData - nFieldOffset );
+        std::snprintf( pachData + nEntrySize * iField, nEntrySize + 1, szFormat,
+                       poDefn->GetName(), poField->GetDataSize(),
+                       poField->GetData() - pachData - nFieldOffset );
     }
 
     pachData[nEntrySize * nFieldCount] = OSSIM_DDF_FIELD_TERMINATOR;

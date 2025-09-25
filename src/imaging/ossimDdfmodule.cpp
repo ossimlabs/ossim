@@ -30,6 +30,7 @@
  */
 
 #include <cstring>
+#include <cstdio>
 #include <ossim/imaging/ossimIso8211.h>
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimCplUtil.h>
@@ -422,19 +423,19 @@ int ossimDDFModule::Create( const char *pszFilename )
 /* -------------------------------------------------------------------- */
     char achLeader[25];
 
-    sprintf( achLeader+0, "%05d", (int) _recLength );
+    std::snprintf( achLeader + 0, sizeof(achLeader) - 0, "%05d", static_cast<int>(_recLength) );
     achLeader[5] = _interchangeLevel;
     achLeader[6] = _leaderIden;
     achLeader[7] = _inlineCodeExtensionIndicator;
     achLeader[8] = _versionNumber;
     achLeader[9] = _appIndicator;
-    sprintf( achLeader+10, "%02d", (int) _fieldControlLength );
-    sprintf( achLeader+12, "%05d", (int) _fieldAreaStart );
+    std::snprintf( achLeader + 10, sizeof(achLeader) - 10, "%02d", static_cast<int>(_fieldControlLength) );
+    std::snprintf( achLeader + 12, sizeof(achLeader) - 12, "%05d", static_cast<int>(_fieldAreaStart) );
     strncpy( achLeader+17, _extendedCharSet, 3 );
-    sprintf( achLeader+20, "%1d", (int) _sizeFieldLength );
-    sprintf( achLeader+21, "%1d", (int) _sizeFieldPos );
+    std::snprintf( achLeader + 20, sizeof(achLeader) - 20, "%1d", static_cast<int>(_sizeFieldLength) );
+    std::snprintf( achLeader + 21, sizeof(achLeader) - 21, "%1d", static_cast<int>(_sizeFieldPos) );
     achLeader[22] = '0';
-    sprintf( achLeader+23, "%1d", (int) _sizeFieldTag );
+    std::snprintf( achLeader + 23, sizeof(achLeader) - 23, "%1d", static_cast<int>(_sizeFieldTag) );
     fwrite( achLeader, 24, 1, fpDDF );
 
 /* -------------------------------------------------------------------- */
@@ -449,9 +450,12 @@ int ossimDDFModule::Create( const char *pszFilename )
         papoFieldDefns[iField]->GenerateDDREntry( NULL, &nLength );
 
         strcpy( achDirEntry, papoFieldDefns[iField]->GetName() );
-        sprintf( achDirEntry + _sizeFieldTag, "%03d", nLength );
-        sprintf( achDirEntry + _sizeFieldTag + _sizeFieldLength, 
-                 "%04d", nOffset );
+        std::snprintf( achDirEntry + _sizeFieldTag,
+                       sizeof(achDirEntry) - _sizeFieldTag,
+                       "%03d", nLength );
+        std::snprintf( achDirEntry + _sizeFieldTag + _sizeFieldLength,
+                       sizeof(achDirEntry) - _sizeFieldTag - _sizeFieldLength,
+                       "%04d", nOffset );
         nOffset += nLength;
 
         fwrite( achDirEntry, 11, 1, fpDDF );

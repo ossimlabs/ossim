@@ -68,7 +68,7 @@ class OSSIMDLLEXPORT ossimReferenced
    
    
  protected:
-   virtual ~ossimReferenced();
+  virtual ~ossimReferenced();
 
  private:
     mutable std::atomic_int      m_refCount;

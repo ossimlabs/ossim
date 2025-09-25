@@ -28,7 +28,7 @@ public:
    /*!
     * Creates an object given a type name.
     */
-   virtual ossimObject* createObject(const ossimString& typeName)const
+   ossimObject* createObject(const ossimString& typeName)const override
    {
       return createObjectFromRegistry(typeName);
    }
@@ -36,15 +36,15 @@ public:
    /*!
     * Creates and object given a keyword list.
     */
-   virtual ossimObject* createObject(const ossimKeywordlist& kwl,
-                                     const char* prefix=0)const
+   ossimObject* createObject(const ossimKeywordlist& kwl,
+                                     const char* prefix=0)const override
    {
       return createObjectFromRegistry(kwl, prefix);
    }
    /*!
     * Creates an object given a type name.
     */
-   virtual ossim2dTo2dTransform* createTransform(const ossimString& typeName)const
+   ossim2dTo2dTransform* createTransform(const ossimString& typeName)const
    {
       return createNativeObjectFromRegistry(typeName);
    }
@@ -52,7 +52,7 @@ public:
    /*!
     * Creates and object given a keyword list.
     */
-   virtual ossim2dTo2dTransform* createTransform(const ossimKeywordlist& kwl,
+   ossim2dTo2dTransform* createTransform(const ossimKeywordlist& kwl,
                                                  const char* prefix=0)const
    {
       return createNativeObjectFromRegistry(kwl, prefix);
@@ -63,7 +63,7 @@ public:
     * This is the name used to construct the objects dynamially and this
     * name must be unique.
     */
-   virtual void getTypeNameList(std::vector<ossimString>& typeList)const
+   void getTypeNameList(std::vector<ossimString>& typeList)const override
    {
       getAllTypeNamesFromRegistry(typeList);
    }

@@ -14,14 +14,26 @@
 //
 //----------------------------------------------------------------------------
 
-#include <ossim/support_data/ossimNitfGenericDes.h>
-
 #ifndef ossimNitfCsattbDes_HEADER
 #define ossimNitfCsattbDes_HEADER 1
+
+#include <ossim/support_data/ossimNitfGenericDes.h>
 
 class OSSIM_DLL ossimNitfCsattbDes : public ossimNitfGenericDes
 {
 public:
-   ossimNitfCsattbDes(ossim_uint32 desLength=0);
+   
+   ossimNitfCsattbDes();
+   
+   ossimNitfCsattbDes(ossim_uint32 tagLength);
+   
+   virtual ossimString getClassName() const;
+
+   static const std::string CETAG_KW;
+
+private:
+
+   void initializeFieldDefinitions();
+
 };
 #endif

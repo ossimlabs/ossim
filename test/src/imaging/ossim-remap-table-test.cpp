@@ -118,9 +118,12 @@ int main(int argc, char *argv[])
    n = s16tbl.normFromPix(p);
    cout << "normFromPix(" << p << "): " << n << "\n";
 
-   p = 32766.99999999999;
-   n = s16tbl.normFromPix(p);
-   cout << "normFromPix(" << p << "): " << n << "\n";
+   {
+      const ossim_float64 val = 32766.99999999999;
+      p = static_cast<ossim_int32>(val);
+      n = s16tbl.normFromPix(p);
+      cout << "normFromPix(" << val << "): " << n << "\n";
+   }
 
    p = 32767;
    n = s16tbl.normFromPix(p);

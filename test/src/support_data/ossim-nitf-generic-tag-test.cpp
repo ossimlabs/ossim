@@ -16,6 +16,7 @@
 #include <ossim/support_data/ossimNitfCsexrbTag.h>
 #include <ossim/support_data/ossimNitfCssfabDes.h>
 #include <ossim/support_data/ossimNitfCsattbDes.h>
+#include <ossim/support_data/ossimNitfBandsbTag.h>
 
 #include <ossim/base/ossimArgumentParser.h>
 #include <ossim/base/ossimException.h>
@@ -36,6 +37,7 @@ int main(int argc, char *argv[])
    ossimNitfCssfabDes cssfab = ossimNitfCssfabDes();
    ossimNitfCsattbDes csattb = ossimNitfCsattbDes();
    ossimNitfCsephbDes csephb = ossimNitfCsephbDes();
+   ossimNitfBandsbTag bandsb = ossimNitfBandsbTag();
    string fname = getenv("OSSIM_DATA");
    //19SEP01060448-P1BS-200007943201_01_P004.NTF
    //24MAR05002840-P1BS-200004901937_01_P001_B.NTF
@@ -90,8 +92,7 @@ int main(int argc, char *argv[])
       }
    }
 
-   //csattb.parseStream(file);
-   csattb.setField("", "");
+   csattb.parseStream(file);
    csattb.writeStream(cout);
    csattb.print(cout, "");
 
@@ -116,8 +117,9 @@ int main(int argc, char *argv[])
    cssfab.writeStream(cout);
    cssfab.print(cout, "");
 
-   csephb.setField("", "");
    csephb.print(cout, "");
+
+   bandsb.print(cout, "");
 
    return 0;
 }

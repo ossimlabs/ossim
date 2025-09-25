@@ -6,7 +6,7 @@
 //
 // Author:  Ryan Feldbush
 //
-// Description: CSSFAB des class declaration.
+// Description: CSEPHB des class declaration.
 //
 // Exploitation Reference Data TRE.
 //
@@ -14,24 +14,26 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef ossimNitfCssfabDes_HEADER
-#define ossimNitfCssfabDes_HEADER 1
+#ifndef ossimNitfCsephbDes_HEADER
+#define ossimNitfCsephbDes_HEADER 1
 
 #include <ossim/support_data/ossimNitfGenericDes.h>
 
-class OSSIM_DLL ossimNitfCssfabDes : public ossimNitfGenericDes
+class OSSIM_DLL ossimNitfCsephbDes : public ossimNitfGenericDes
 {
 public:
-
-   ossimNitfCssfabDes();
-
-   ossimNitfCssfabDes(ossim_uint32 tagLength);
-
+   
+   ossimNitfCsephbDes();
+   
+   ossimNitfCsephbDes(ossim_uint32 tagLength);
+   
    virtual ossimString getClassName() const;
 
    static const std::string CETAG_KW;
 
 private:
+
    void initializeFieldDefinitions();
+
 };
 #endif

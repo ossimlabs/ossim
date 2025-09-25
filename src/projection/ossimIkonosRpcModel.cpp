@@ -16,6 +16,7 @@
 //  $Id: ossimIkonosRpcModel.cpp 23323 2015-05-27 12:53:00Z gpotts $
 
 #include <cstdlib>
+#include <cstdio>
 #include <ossim/projection/ossimIkonosRpcModel.h>
 #include <ossim/base/ossimException.h>
 #include <ossim/base/ossimNotify.h>
@@ -758,7 +759,7 @@ void ossimIkonosRpcModel::parseRpcData(const ossimFilename& data_file)
    keyword = kwbuf;
    for(int i=1; i<=20; i++)
    {
-      sprintf(kwbuf, "%s%d", LINE_NUM_COEFF_KW, i);
+      std::snprintf(kwbuf, sizeof(kwbuf), "%s%d", LINE_NUM_COEFF_KW, i);
       buf = kwl.find(keyword);
       if (!buf)
       {
@@ -770,7 +771,7 @@ void ossimIkonosRpcModel::parseRpcData(const ossimFilename& data_file)
       
       theLineNumCoef[i-1] = atof(buf);
       
-      sprintf(kwbuf, "%s%d", LINE_DEN_COEFF_KW, i);
+      std::snprintf(kwbuf, sizeof(kwbuf), "%s%d", LINE_DEN_COEFF_KW, i);
       buf = kwl.find(keyword);
       if (!buf)
       {
@@ -781,7 +782,7 @@ void ossimIkonosRpcModel::parseRpcData(const ossimFilename& data_file)
       }
       theLineDenCoef[i-1] = atof(buf);
       
-      sprintf(kwbuf, "%s%d", SAMP_NUM_COEFF_KW, i);
+      std::snprintf(kwbuf, sizeof(kwbuf), "%s%d", SAMP_NUM_COEFF_KW, i);
       buf = kwl.find(keyword);
       if (!buf)
       {
@@ -792,7 +793,7 @@ void ossimIkonosRpcModel::parseRpcData(const ossimFilename& data_file)
       }
       theSampNumCoef[i-1] = atof(buf);
       
-      sprintf(kwbuf, "%s%d", SAMP_DEN_COEFF_KW, i);
+      std::snprintf(kwbuf, sizeof(kwbuf), "%s%d", SAMP_DEN_COEFF_KW, i);
       buf = kwl.find(keyword);
       if (!buf)
       {
