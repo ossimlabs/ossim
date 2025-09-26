@@ -133,6 +133,11 @@ IF   (FFMPEG_LIBAVFORMAT_FOUND AND FFMPEG_LIBAVDEVICE_FOUND AND FFMPEG_LIBAVCODE
          ${FFMPEG_LIBAVFILTER_INCLUDE_DIRS}
          ${FFMPEG_LIBSWRESAMPLE_INCLUDE_DIRS} )
 
+    # Deduplicate include directories to avoid repeated paths in logs/build flags
+    if (FFMPEG_INCLUDE_DIRS)
+        list(REMOVE_DUPLICATES FFMPEG_INCLUDE_DIRS)
+    endif()
+
     SET(FFMPEG_LIBRARY_DIRS ${FFMPEG_LIBAVFORMAT_LIBRARY_DIRS})
 
     # Note we don't add FFMPEG_LIBSWSCALE_LIBRARIES here, it will be added if found later.
