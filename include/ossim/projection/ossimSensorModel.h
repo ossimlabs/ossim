@@ -116,6 +116,11 @@ public:
    virtual void  worldToLineSample(const ossimGpt& world_point,
                                    ossimDpt&       image_point) const;
 
+   /** Will return lineSampleToWorld()'s world_point, converted to ECEF. Intended to be overridden
+    * by NEI sensor models with rigorous calculation without ground intersect. **/
+   virtual void  lineSampleToECEF(const ossimDpt&  image_point,
+                                   ossimEcefPoint& ecf_point) const;
+
    /*!
     * METHOD: lineSampleHeightToWorld
     * This is the pure virtual that performs the actual work of projecting
@@ -280,6 +285,10 @@ public:
     * @return true.
     */
    virtual bool isAffectedByElevation() const { return true; }
+
+   /** Returns true if imaging ray is not intended for earh intersection.
+    * Overriden by NEI models. **/
+   virtual bool isNonEarthImage() const { return false; }
 
    /**
     * This method computes the ground sample distance(gsd) and sets class

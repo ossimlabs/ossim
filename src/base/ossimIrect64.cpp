@@ -782,7 +782,7 @@ ossimIrect64 ossimIrect64::combine(const ossimIrect64& rect) const
    {
       ossimIpt64 endPt0;
       end( endPt0 );
-      
+
       ossimIpt64 endPt1;
       rect.end( endPt1 );
 

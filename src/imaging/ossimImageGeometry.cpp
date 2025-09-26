@@ -18,6 +18,7 @@
 #include <ossim/base/ossim2dTo2dTransformRegistry.h>
 #include <ossim/elevation/ossimElevManager.h>
 #include <ossim/projection/ossimProjection.h>
+#include <ossim/projection/ossimSensorModel.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/imaging/ossimImageHandlerRegistry.h>
@@ -1706,4 +1707,17 @@ bool ossimImageGeometry::isMapProjected() const
 {
    return dynamic_cast<const ossimMapProjection*>( m_projection.get() ) != 0;
 }
+
+bool ossimImageGeometry::isNonEarthImage() const
+{
+   bool isNEI = false;
+   if (m_projection.valid())
+   {
+      const ossimSensorModel* model = dynamic_cast<const ossimSensorModel*>(m_projection.get());
+      if (model != nullptr)
+         isNEI = model->isNonEarthImage();
+   }
+   return isNEI;
+}
+
 

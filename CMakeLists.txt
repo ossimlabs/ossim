@@ -35,8 +35,7 @@ IF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
    SET(OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES "" CACHE PATH "Specify full paths separated by ; to additional OSSIM applications you wish to include into the ossim build framework.  These will have variables setup for the ossim includes" FORCE)
 ENDIF(NOT OSSIM_BUILD_ADDITIONAL_OSSIM_DIRECTORIES)
 
-SET(CMAKE_MODULE_PATH
-  "${CMAKE_CURRENT_SOURCE_DIR}/ossim/cmake/CMakeModules" ${CMAKE_MODULE_PATH})
+SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CMakeModules" ${CMAKE_MODULE_PATH})
 
 include(CMakeDetermineSystem)
 INCLUDE(OssimVersion)
