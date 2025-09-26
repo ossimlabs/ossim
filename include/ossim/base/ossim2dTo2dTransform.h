@@ -27,9 +27,10 @@ public:
 
    virtual void inverse(ossimDpt&  modify_this) const;
       
-   virtual const ossim2dTo2dTransform& operator=(
-      const ossim2dTo2dTransform& rhs);
-   
+   // virtual const ossim2dTo2dTransform& operator=(
+   //    const ossim2dTo2dTransform& rhs);
+   const ossim2dTo2dTransform& operator=(const ossim2dTo2dTransform& rhs);
+
    /*!
     * Used by the inverse iterator.  This will give it a good initial value
     * that is within the input transforms
