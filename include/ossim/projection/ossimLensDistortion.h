@@ -32,7 +32,8 @@ public:
       distort(input, output);
    }
    virtual void inverse(const ossimDpt& input,
-                        ossimDpt& output)
+                        ossimDpt& output) const
+      
    {
       undistort(input, output);
    }

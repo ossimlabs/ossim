@@ -217,8 +217,17 @@ if [ "${BUILD_OSSIM_GUI}" == "ON" ]; then
   if [ -z $QT_CMAKE_DIR ]; then
     if [ -d "/usr/lib64/cmake/Qt5Core" ]; then
       export QT_CMAKE_DIR="/usr/lib64/cmake" 
+    elif [ -d "/usr/lib/x86_64-linux-gnu/cmake/Qt5Core" ]; then
+      # Debian/Ubuntu multiarch path
+      export QT_CMAKE_DIR="/usr/lib/x86_64-linux-gnu/cmake"
     elif [ -d "/usr/local/opt/qt5/lib/cmake" ]; then
       export QT_CMAKE_DIR="/usr/local/opt/qt5/lib/cmake"
+    elif [ -d "/opt/local/lib/cmake/Qt5Core" ]; then
+      # MacPorts Qt5 (modern layout)
+      export QT_CMAKE_DIR="/opt/local/lib/cmake"
+    elif [ -d "/opt/local/libexec/qt5/lib/cmake" ]; then
+      # MacPorts Qt5 (older layout)
+      export QT_CMAKE_DIR="/opt/local/libexec/qt5/lib/cmake"
     fi
   fi   
   if [ -z $Qt5Core_DIR ]; then
@@ -231,6 +240,13 @@ if [ "${BUILD_OSSIM_GUI}" == "ON" ]; then
 
   if [ -z $Qt5OpenGL_DIR ]; then
     export Qt5OpenGL_DIR=${QT_CMAKE_DIR}/Qt5OpenGL
+  fi
+
+  # Ensure pkg-config can see MacPorts libraries (Qt5 and FFmpeg)
+  if [ -z "$PKG_CONFIG_PATH" ]; then
+    export PKG_CONFIG_PATH="/opt/local/libexec/qt5/lib/pkgconfig:/opt/local/lib/pkgconfig:/opt/local/lib/proj9/lib/pkgconfig"
+  else
+    export PKG_CONFIG_PATH="/opt/local/libexec/qt5/lib/pkgconfig:/opt/local/lib/pkgconfig:/opt/local/lib/proj9/lib/pkgconfig:$PKG_CONFIG_PATH"
   fi
 fi
 
@@ -307,4 +323,3 @@ $CMAKE_DIR
 
 echo CMAKE_COMMAND: $CMAKE_COMMAND
 popd >/dev/null
-

@@ -12,20 +12,35 @@
 #  OSSIM_LIBRARY, where to find the OSSIM library.
 #---
 
-#---
-# Find include path:
-#---
-set(CMAKE_FIND_FRAMEWORK "LAST")
-find_path(OSSIM_INCLUDE_DIR NAMES ossim/ossimVersion.h ossimVersion.h
-          PATHS
-          ${OSSIM_DEV_HOME}/ossim/include
-          ${OSSIM_INSTALL_PREFIX}/include)
+# If building in the same CMake project, prefer the ossim target directly
+if (TARGET ossim)
+  # Use known include path from the dev tree if available
+  if (DEFINED OSSIM_DEV_HOME)
+    set(OSSIM_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossim/include")
+  elseif(DEFINED ENV{OSSIM_DEV_HOME})
+    set(OSSIM_INCLUDE_DIR "$ENV{OSSIM_DEV_HOME}/ossim/include")
+  endif()
+  set(OSSIM_LIBRARY ossim)
+  set(OSSIM_LIBRARIES ossim)
+else()
+  #---
+  # Find include path:
+  #---
+  set(CMAKE_FIND_FRAMEWORK "LAST")
+  find_path(OSSIM_INCLUDE_DIR ossim/ossimVersion.h ossimVersion.h
+            PATHS
+            $ENV{OSSIM_DEV_HOME}/ossim/include
+            $ENV{OSSIM_INSTALL_PREFIX}/include )
 
-set(OSSIM_NAMES ${OSSIM_NAMES} ossim libossim)
-find_library(OSSIM_LIBRARY NAMES ${OSSIM_NAMES}
-             PATHS
-             ${OSSIM_BUILD_DIR}/lib
-             ${OSSIM_INSTALL_PREFIX}/lib)
+  set(OSSIM_NAMES ${OSSIM_NAMES} ossim libossim)
+  find_library(OSSIM_LIBRARY NAMES ${OSSIM_NAMES}
+               PATHS
+               $ENV{OSSIM_BUILD_DIR}/lib64
+               $ENV{OSSIM_BUILD_DIR}/lib
+               $ENV{OSSIM_INSTALL_PREFIX}/lib64
+               $ENV{OSSIM_INSTALL_PREFIX}/lib)
+  set(OSSIM_LIBRARIES ${OSSIM_LIBRARY})
+endif()
 
 #---
 # This function sets OSSIM_FOUND if variables are valid.
@@ -36,13 +51,12 @@ find_package_handle_standard_args( ossim DEFAULT_MSG
                                    OSSIM_INCLUDE_DIR )
 
 if(OSSIM_FOUND)
-   set( OSSIM_LIBRARIES ${OSSIM_LIBRARY} )
    set( OSSIM_INCLUDES  ${OSSIM_INCLUDE_DIR} )
-else( OSSIM_FOUND )
+else()
    if( NOT OSSIM_FIND_QUIETLY )
       message( WARNING "Could not find OSSIM" )
-   endif( NOT OSSIM_FIND_QUIETLY )
-endif(OSSIM_FOUND)
+   endif()
+endif()
 
 if( NOT OSSIM_FIND_QUIETLY )
    message( STATUS "OSSIM_INCLUDE_DIR=${OSSIM_INCLUDE_DIR}" )

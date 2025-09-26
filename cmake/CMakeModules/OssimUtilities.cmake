@@ -322,6 +322,10 @@ MACRO(OSSIM_LINK_LIBRARY)
    SET_TARGET_PROPERTIES(${LINK_NAME} PROPERTIES 
                               ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${BUILD_LIBRARY_DIR}")    
 
+   # Ensure core 'ossim' target is built before linking libraries that depend on it
+   if (TARGET ossim)
+     add_dependencies(${LINK_NAME} ossim)
+   endif()
    TARGET_LINK_LIBRARIES(${LINK_NAME} ${LINK_LIBRARIES} ${${LINK_NAME}_EXTRA_LIBS})
 
    IF(LINK_INSTALL_LIB)
