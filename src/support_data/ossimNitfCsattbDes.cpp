@@ -18,11 +18,87 @@
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/support_data/ossimNitfCommonFieldNames.h>
+#include <iomanip>
+#include <iostream>
 
-static ossimTrace traceDebug("ossimNitfCsattbdes:debug");
 
-const std::string ossimNitfCsattbDes::CETAG_KW = "CSEXRB";
+static ossimTrace traceDebug("ossimNitfCsattbDes:debug");
 
+const std::string ossimNitfCsattbDes::DESID = "CSATTB";
+
+ossimNitfCsattbDes::ossimNitfCsattbDes()
+   : ossimNitfRegisteredDes(),
+     m_segSecurityMetadata()
+{
+   // traceDebug.setTraceFlag(true);
+   
+   clearFields();
+   setDesName(DESID);
+   m_segSecurityMetadata.setSegmentPrefix(std::string("DE"));
+}
+
+ossimNitfCsattbDes::ossimNitfCsattbDes(ossim_uint32 tagLength)
+   : ossimNitfRegisteredDes(DESID, tagLength),
+     m_segSecurityMetadata()
+{
+   clearFields();
+   m_segSecurityMetadata.setSegmentPrefix(std::string("DE"));
+}
+
+ossimString ossimNitfCsattbDes::getClassName() const
+{
+   return ossimString("ossimNitfCsattbDes");
+}
+
+void ossimNitfCsattbDes::parseStream(std::istream& in)
+{
+   
+}
+
+void ossimNitfCsattbDes::writeStream(std::ostream& out)
+{
+   
+}
+
+void ossimNitfCsattbDes::setSegmentSecurityMetadata(
+   const ossimNitfSegmentSecurityMetadataV1& obj)
+{
+   m_segSecurityMetadata = obj;
+}
+
+const ossimNitfSegmentSecurityMetadataV1& ossimNitfCsattbDes::getSegmentSecurityMetadata() const
+{
+   return m_segSecurityMetadata;
+}
+
+ossimNitfSegmentSecurityMetadataV1& ossimNitfCsattbDes::getSegmentSecurityMetadata()
+{
+   return m_segSecurityMetadata;
+}
+
+void ossimNitfCsattbDes::clearFields()
+{
+   memset(m_desver, ' ', DESVER_SIZE);
+   m_desver[DESVER_SIZE] = '\0';
+   
+}
+
+std::ostream& ossimNitfCsattbDes::print(std::ostream& out,
+                                        const std::string& prefix) const
+{
+   std::string pfx = prefix;
+   pfx += DESID;
+   pfx += ".";
+
+   out << std::setiosflags(std::ios::left)
+       << pfx << std::setw(24) << "DESVER:" << m_desver << "\n";
+   m_segSecurityMetadata.print(out, pfx);
+
+   return out;
+}
+
+
+#if 0 /* ossimNitfGenericDes version */
 ossimNitfCsattbDes::ossimNitfCsattbDes()
    : ossimNitfGenericDes("CSEXRB")
 {
@@ -114,8 +190,5 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
          {"RESERVED RESERVED_LEN", VARIABLE_LENGTH, 0}
       };
 }
+#endif
 
-ossimString ossimNitfCsattbDes::getClassName() const
-{
-   return ossimString("ossimNitfCsattbdes");
-}
