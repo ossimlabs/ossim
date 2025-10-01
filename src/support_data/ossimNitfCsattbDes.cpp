@@ -28,7 +28,62 @@ const std::string ossimNitfCsattbDes::DESID = "CSATTB";
 
 ossimNitfCsattbDes::ossimNitfCsattbDes()
    : ossimNitfRegisteredDes(),
-     m_segSecurityMetadata()
+     m_desver(),
+     m_segSecurityMetadata(),
+     m_desshl(),
+     m_uuid(),
+     m_numais(),
+     m_aisdlvl(),
+     m_num_assoc_elem(),
+     m_assoc_elem_uuid(),
+     m_reservedsubh_len(), // End DES sub header:
+     
+     m_qual_flag_att(), // Strart DES data:
+     m_interp_type_att(),
+     m_interp_order_att(),
+     m_att_type(),
+     m_ecf_eci_att(),
+     m_ta_pole(),
+     m_a_pole(),
+     m_b_pole(),
+     m_cj1_pole(),
+     m_cj2_pole(),
+     m_dj1_pole(),
+     m_dj2_pole(),
+     m_pj1_pole(),   
+     m_pj2_pole(),
+     m_e_pole(),
+     m_f_pole(),
+     m_gk1_pole(),   
+     m_gk2_pole(),
+     m_hk1_pole(),
+     m_hk2_pole(),   
+     m_pk1_pole(),
+     m_pk2_pole(),   
+     m_tb_ut(),
+     m_i_ut(),
+     m_j_ut(),
+     m_kn1_ut(),
+     m_kn2_ut(),
+     m_kn3_ut(),
+     m_kn4_ut(),
+     m_ln1_ut(),
+     m_ln2_ut(),
+     m_ln3_ut(),
+     m_ln4_ut(),
+     m_pn1_ut(),
+     m_pn2_ut(),
+     m_pn3_ut(),
+     m_pn4_ut(),
+     m_dt_att(),
+     m_date_att(),
+     m_t0_att(),
+     m_num_att(),
+     m_q1(),
+     m_q2(),
+     m_q3(),
+     m_q4(),
+     m_reserved_len()
 {
    // traceDebug.setTraceFlag(true);
    
@@ -39,7 +94,62 @@ ossimNitfCsattbDes::ossimNitfCsattbDes()
 
 ossimNitfCsattbDes::ossimNitfCsattbDes(ossim_uint32 tagLength)
    : ossimNitfRegisteredDes(DESID, tagLength),
-     m_segSecurityMetadata()
+     m_desver(),
+     m_segSecurityMetadata(),
+     m_desshl(),
+     m_uuid(),
+     m_numais(),
+     m_aisdlvl(),
+     m_num_assoc_elem(),
+     m_assoc_elem_uuid(),
+     m_reservedsubh_len(), // End DES sub header:
+     
+     m_qual_flag_att(), // Strart DES data:
+     m_interp_type_att(),
+     m_interp_order_att(),
+     m_att_type(),
+     m_ecf_eci_att(),
+     m_ta_pole(),
+     m_a_pole(),
+     m_b_pole(),
+     m_cj1_pole(),
+     m_cj2_pole(),
+     m_dj1_pole(),
+     m_dj2_pole(),
+     m_pj1_pole(),   
+     m_pj2_pole(),
+     m_e_pole(),
+     m_f_pole(),
+     m_gk1_pole(),   
+     m_gk2_pole(),
+     m_hk1_pole(),
+     m_hk2_pole(),   
+     m_pk1_pole(),
+     m_pk2_pole(),   
+     m_tb_ut(),
+     m_i_ut(),
+     m_j_ut(),
+     m_kn1_ut(),
+     m_kn2_ut(),
+     m_kn3_ut(),
+     m_kn4_ut(),
+     m_ln1_ut(),
+     m_ln2_ut(),
+     m_ln3_ut(),
+     m_ln4_ut(),
+     m_pn1_ut(),
+     m_pn2_ut(),
+     m_pn3_ut(),
+     m_pn4_ut(),
+     m_dt_att(),
+     m_date_att(),
+     m_t0_att(),
+     m_num_att(),
+     m_q1(),
+     m_q2(),
+     m_q3(),
+     m_q4(),
+     m_reserved_len()
 {
    clearFields();
    m_segSecurityMetadata.setSegmentPrefix(std::string("DE"));
@@ -78,9 +188,110 @@ ossimNitfSegmentSecurityMetadataV1& ossimNitfCsattbDes::getSegmentSecurityMetada
 
 void ossimNitfCsattbDes::clearFields()
 {
-   memset(m_desver, ' ', DESVER_SIZE);
-   m_desver[DESVER_SIZE] = '\0';
-   
+   memset(m_desver, ' ', DESVER_SZ);
+   memset(m_desshl, ' ', DESSHL_SZ);
+   memset(m_uuid, ' ', UUID_SZ);
+   memset(m_numais, ' ', NUMAIS_SZ);
+   memset(m_num_assoc_elem, ' ', NUM_ASSOC_ELEM_SZ);
+   memset(m_reservedsubh_len, '0', RESERVERDSHUBH_LEN_SZ);
+   memset(m_qual_flag_att, ' ', B1_SZ);
+   memset(m_interp_type_att, ' ', B1_SZ);
+   memset(m_interp_order_att, ' ', B1_SZ);
+   memset(m_att_type, ' ', B1_SZ);
+   memset(m_ecf_eci_att, ' ', B1_SZ);
+   memset(m_ta_pole, ' ', B19_SZ);
+   memset(m_a_pole, ' ', B11_SZ);
+   memset(m_b_pole, ' ', B11_SZ);
+   memset(m_cj1_pole, ' ', B11_SZ);
+   memset(m_cj2_pole, ' ', B11_SZ);
+   memset(m_dj1_pole, ' ', B11_SZ);
+   memset(m_dj2_pole, ' ', B11_SZ);
+   memset(m_pj1_pole, ' ', B10_SZ);   
+   memset(m_pj2_pole, ' ', B10_SZ);
+   memset(m_e_pole, ' ', B11_SZ);
+   memset(m_f_pole, ' ', B11_SZ);
+   memset(m_gk1_pole, ' ', B11_SZ);   
+   memset(m_gk2_pole, ' ', B11_SZ);
+   memset(m_hk1_pole, ' ', B11_SZ);
+   memset(m_hk2_pole, ' ', B11_SZ);   
+   memset(m_pk1_pole, ' ', B10_SZ);
+   memset(m_pk2_pole, ' ', B10_SZ);   
+   memset(m_tb_ut, ' ', B19_SZ);  
+   memset(m_i_ut, ' ', B12_SZ);
+   memset(m_j_ut, ' ', B12_SZ);
+   memset(m_kn1_ut, ' ', B12_SZ);
+   memset(m_kn2_ut, ' ', B12_SZ);
+   memset(m_kn3_ut, ' ', B12_SZ);
+   memset(m_kn4_ut, ' ', B12_SZ);
+   memset(m_ln1_ut, ' ', B12_SZ);
+   memset(m_ln2_ut, ' ', B12_SZ);
+   memset(m_ln3_ut, ' ', B12_SZ);
+   memset(m_ln4_ut, ' ', B12_SZ);
+   memset(m_pn1_ut, ' ', B10_SZ);
+   memset(m_pn2_ut, ' ', B10_SZ);
+   memset(m_pn3_ut, ' ', B10_SZ);
+   memset(m_pn4_ut, ' ', B10_SZ);
+   memset(m_dt_att, ' ', B13_SZ);
+   memset(m_date_att, ' ', B8_SZ);
+   memset(m_t0_att, ' ', B16_SZ);
+   memset(m_num_att, ' ', B5_SZ);
+   memset(m_reserved_len, '0', B9_SZ);
+  
+   m_desver[DESVER_SZ] = '\0';
+   m_desshl[DESSHL_SZ] = '\0';
+   m_uuid[UUID_SZ] = '\0';
+   m_numais[NUMAIS_SZ] = '\0';
+   m_num_assoc_elem[NUM_ASSOC_ELEM_SZ] = '\0';
+   m_reservedsubh_len[RESERVERDSHUBH_LEN_SZ] = '\0';
+   m_qual_flag_att[B1_SZ] = '\0';
+   m_interp_type_att[B1_SZ] = '\0';
+   m_interp_order_att[B1_SZ] = '\0';
+   m_att_type[B1_SZ] = '\0';
+   m_ecf_eci_att[B1_SZ] = '\0';
+   m_ta_pole[B19_SZ] = '\0';
+   m_a_pole[B11_SZ] = '\0';
+   m_b_pole[B11_SZ] = '\0';
+   m_cj1_pole[B11_SZ] = '\0';
+   m_cj2_pole[B11_SZ] = '\0';
+   m_dj1_pole[B11_SZ] = '\0';
+   m_dj2_pole[B11_SZ] = '\0';
+   m_pj1_pole[B10_SZ] = '\0';   
+   m_pj2_pole[B10_SZ] = '\0';
+   m_e_pole[B11_SZ] = '\0';
+   m_f_pole[B11_SZ] = '\0';
+   m_gk1_pole[B11_SZ] = '\0';   
+   m_gk2_pole[B11_SZ] = '\0';
+   m_hk1_pole[B11_SZ] = '\0';
+   m_hk2_pole[B11_SZ] = '\0';   
+   m_pk1_pole[B10_SZ] = '\0';
+   m_pk2_pole[B10_SZ] = '\0';   
+   m_tb_ut[B19_SZ] = '\0';  
+   m_i_ut[B12_SZ] = '\0';
+   m_j_ut[B12_SZ] = '\0';
+   m_kn1_ut[B12_SZ] = '\0';
+   m_kn2_ut[B12_SZ] = '\0';
+   m_kn3_ut[B12_SZ] = '\0';
+   m_kn4_ut[B12_SZ] = '\0';
+   m_ln1_ut[B12_SZ] = '\0';
+   m_ln2_ut[B12_SZ] = '\0';
+   m_ln3_ut[B12_SZ] = '\0';
+   m_ln4_ut[B12_SZ] = '\0';
+   m_pn1_ut[B10_SZ] = '\0';
+   m_pn2_ut[B10_SZ] = '\0';
+   m_pn3_ut[B10_SZ] = '\0';
+   m_pn4_ut[B10_SZ] = '\0';
+   m_dt_att[B13_SZ] = '\0';
+   m_date_att[B8_SZ] = '\0';
+   m_t0_att[B16_SZ] = '\0';
+   m_num_att[B5_SZ] = '\0';
+   m_reserved_len[B9_SZ] = '\0';
+
+   m_aisdlvl.clear();
+   m_assoc_elem_uuid.clear();
+   m_q1.clear();
+   m_q2.clear();
+   m_q3.clear();
+   m_q4.clear();
 }
 
 std::ostream& ossimNitfCsattbDes::print(std::ostream& out,
@@ -93,6 +304,34 @@ std::ostream& ossimNitfCsattbDes::print(std::ostream& out,
    out << std::setiosflags(std::ios::left)
        << pfx << std::setw(24) << "DESVER:" << m_desver << "\n";
    m_segSecurityMetadata.print(out, pfx);
+#if 0
+   out << pfx << std::setw(24) << "DESSHL:" << m_desshl << "\n"
+       << pfx << std::setw(24) << "UUID:" << m_uuid << "\n"
+       << pfx << std::setw(24) << "numais:" << m_numais << "\n";
+   for(ossim_uint32 i 
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+       << pfx << std::setw(24) << ":" << m_ << "\n"
+#endif
 
    return out;
 }
