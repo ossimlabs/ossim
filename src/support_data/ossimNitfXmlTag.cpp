@@ -13,7 +13,7 @@ ossimNitfXmlTag::ossimNitfXmlTag(ossimString formatPath, ossimString tagName)
    this->m_tagLength = computeTagLength();
 }
 
-void r_initializeFields(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent)
+void ossimNitfXmlTag::r_initializeFields(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent)
 {
    std::vector<ossimRefPtr<ossimXmlNode>> children = fieldParent->getChildNodes();
    for (auto& fieldChild: children)
@@ -77,7 +77,6 @@ ossimString ossimNitfXmlTag::r_get(ossimRefPtr<ossimXmlNode> valueParent, ossimS
 
 ossimString ossimNitfXmlTag::get(const ossimString& fieldName, int i)
 {
-
    return r_get(m_doc.getRoot(), fieldName, i);
 }
 

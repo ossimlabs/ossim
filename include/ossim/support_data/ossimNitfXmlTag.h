@@ -31,12 +31,15 @@ public:
 
    bool loadState(const ossimKeywordlist& kwl, const char* prefix);
 
-   bool r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent, ossimKeywordlist& kwl);
+
 private:
    void initializeFields();
 
+   void r_initializeFields(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent);
+   bool r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent, ossimKeywordlist& kwl);
    ossimString r_get(ossimRefPtr<ossimXmlNode> valueParent, ossimString fieldName, int& i);
    void r_set(ossimRefPtr<ossimXmlNode> valueParent, const ossimString& fieldName, const ossimString& fieldValue, int &i);
+
 
    ossimXmlDocument m_doc;
    ossimXmlDocument m_fieldsDoc;
