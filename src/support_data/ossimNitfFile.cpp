@@ -348,6 +348,15 @@ bool ossimNitfFile::parseStream( const ossimFilename& file,
             // No error returned but can throw exception.
             theNitfFileHeader->parseStream( *in );
 
+            if (traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "DEBUG: NITF file header:\n";
+               
+               std::string pfx = "nitf.";
+               theNitfFileHeader->print(ossimNotify(ossimNotifyLevel_DEBUG), pfx);
+            }
+
             //---
             // Capture the stream for info code if needed later and mark result
             // true.
