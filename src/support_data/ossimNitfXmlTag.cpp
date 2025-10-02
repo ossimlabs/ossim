@@ -2,15 +2,15 @@
 // Created by Ryan Feldbush on 9/22/25.
 //
 
-#include <support_data/ossimNitfSorbxaTag.h>
+#include <support_data/ossimNitfXmlTag.h>
 #include <sstream>
 
-ossimNitfSorbxaTag::ossimNitfSorbxaTag(ossim_uint32 tagLength)
-   : ossimNitfRegisteredTag("SORBXA", tagLength)
+ossimNitfXmlTag::ossimNitfXmlTag(ossimString formatPath, ossimString tagName)
+   : ossimNitfRegisteredTag(tagName, 0)
 {
-   ossimString ossimInstallPrefix = getenv("OSSIM_HOME");
-   m_fieldsDoc.openFile(ossimInstallPrefix + "/share/ossim/util/nitfSorbxa.xml");
+   m_fieldsDoc.openFile(formatPath);
    initializeFields();
+   this->m_tagLength = computeTagLength();
 }
 
 void r_initializeFields(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent)
@@ -27,7 +27,7 @@ void r_initializeFields(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossim
    }
 }
 
-void ossimNitfSorbxaTag::initializeFields()
+void ossimNitfXmlTag::initializeFields()
 {
    ossimRefPtr<ossimXmlNode> node = new ossimXmlNode();
    node->setTag("spaceObjectOrbitGeometry");
@@ -35,30 +35,30 @@ void ossimNitfSorbxaTag::initializeFields()
    r_initializeFields(m_fieldsDoc.getRoot(), m_doc.getRoot());
 }
 
-void ossimNitfSorbxaTag::parseStream(std::istream &in)
+void ossimNitfXmlTag::parseStream(std::istream &in)
 {
    m_doc.read(in);
 }
 
-void ossimNitfSorbxaTag::writeStream(std::ostream &out)
+void ossimNitfXmlTag::writeStream(std::ostream &out)
 {
    out << m_doc;
 }
 
-void ossimNitfSorbxaTag::clearFields()
+void ossimNitfXmlTag::clearFields()
 {
    m_doc.getRoot()->clear();
    initializeFields();
 }
 
-std::ostream &ossimNitfSorbxaTag::print(std::ostream &out,
+std::ostream &ossimNitfXmlTag::print(std::ostream &out,
                             const std::string &prefix) const
 {
    out << m_doc;
    return out;
 }
 
-ossimString ossimNitfSorbxaTag::r_get(ossimRefPtr<ossimXmlNode> valueParent, ossimString fieldName, int& i)
+ossimString ossimNitfXmlTag::r_get(ossimRefPtr<ossimXmlNode> valueParent, ossimString fieldName, int& i)
 {
    std::vector<ossimRefPtr<ossimXmlNode>> children = valueParent->getChildNodes();
    for (auto& child: children)
@@ -75,13 +75,13 @@ ossimString ossimNitfSorbxaTag::r_get(ossimRefPtr<ossimXmlNode> valueParent, oss
    return "";
 }
 
-ossimString ossimNitfSorbxaTag::get(const ossimString& fieldName, int i)
+ossimString ossimNitfXmlTag::get(const ossimString& fieldName, int i)
 {
 
    return r_get(m_doc.getRoot(), fieldName, i);
 }
 
-void ossimNitfSorbxaTag::r_set(ossimRefPtr<ossimXmlNode> valueParent, const ossimString& fieldName, const ossimString& fieldValue, int &i)
+void ossimNitfXmlTag::r_set(ossimRefPtr<ossimXmlNode> valueParent, const ossimString& fieldName, const ossimString& fieldValue, int &i)
 {
    std::vector<ossimRefPtr<ossimXmlNode>> children = valueParent->getChildNodes();
    for (auto& child: children)
@@ -96,19 +96,19 @@ void ossimNitfSorbxaTag::r_set(ossimRefPtr<ossimXmlNode> valueParent, const ossi
    }
 }
 
-void ossimNitfSorbxaTag::setField(const ossimString& fieldName, const ossimString& fieldValue, int i)
+void ossimNitfXmlTag::setField(const ossimString& fieldName, const ossimString& fieldValue, int i)
 {
    r_set(m_doc.getRoot(), fieldName, fieldValue, i);
 }
 
-ossim_uint32 ossimNitfSorbxaTag::computeTagLength() const
+ossim_uint32 ossimNitfXmlTag::computeTagLength() const
 {
    std::stringstream result;
    result << m_doc;
    return result.str().size();
 }
 
-bool ossimNitfSorbxaTag::r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent, ossimKeywordlist& kwl)
+bool ossimNitfXmlTag::r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent, ossimKeywordlist& kwl)
 {
 
    std::vector<ossimRefPtr<ossimXmlNode>> children = fieldParent->getChildNodes();
@@ -145,7 +145,7 @@ bool ossimNitfSorbxaTag::r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossi
    return needChildren;
 }
 
-bool ossimNitfSorbxaTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
+bool ossimNitfXmlTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
    ossimKeywordlist localKWL = kwl;
    return r_loadState(m_fieldsDoc.getRoot(), m_doc.getRoot(), localKWL);

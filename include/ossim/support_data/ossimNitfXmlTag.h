@@ -2,18 +2,18 @@
 // Created by Ryan Feldbush on 9/22/25.
 //
 
-#ifndef OSSIMNITFSORBXA_H
-#define OSSIMNITFSORBXA_H
+#ifndef OSSIMNITFXML_H
+#define OSSIMNITFXML_H
 
 #include <base/ossimXmlNode.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 
 #include <base/ossimXmlDocument.h>
 
-class OSSIM_DLL ossimNitfSorbxaTag : public ossimNitfRegisteredTag
+class OSSIM_DLL ossimNitfXmlTag : public ossimNitfRegisteredTag
 {
 public:
-   ossimNitfSorbxaTag(ossim_uint32 tagLength=0);
+   ossimNitfXmlTag(ossimString formatPath, ossimString tagName);
 
    void parseStream(std::istream &in);
 
@@ -41,4 +41,4 @@ private:
    ossimXmlDocument m_doc;
    ossimXmlDocument m_fieldsDoc;
 };
-#endif //OSSIMNITFSORBXA_H
+#endif //OSSIMNITFXML_H
