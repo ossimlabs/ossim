@@ -27,7 +27,7 @@
 #include <iostream>
 
 #include "support_data/ossimNitfCephbDes.h"
-#include "support_data/ossimNitfSorbxaTag.h"
+#include "support_data/ossimNitfXmlTag.h"
 
 using namespace std;
 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
    ossimNitfCsephbDes csephb = ossimNitfCsephbDes();
    ossimNitfBandsbTag bandsb = ossimNitfBandsbTag();
    ossimString ossimHome = getenv("OSSIM_HOME");
-   ossimNitfSorbxaTag sorbxa = ossimNitfSorbxaTag(ossimHome + "/share/ossim/util/nitfSorbxa.xml", "SORBXA");
+   ossimNitfXmlTag sorbxa = ossimNitfXmlTag(ossimHome + "/share/ossim/util/nitfSorbxa.xml", "SORBXA");
    string fname = getenv("OSSIM_DATA");
    //19SEP01060448-P1BS-200007943201_01_P004.NTF
    //24MAR05002840-P1BS-200004901937_01_P001_B.NTF
