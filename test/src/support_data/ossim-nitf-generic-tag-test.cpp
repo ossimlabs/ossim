@@ -27,6 +27,7 @@
 #include <iostream>
 
 #include "support_data/ossimNitfCephbDes.h"
+#include "support_data/ossimNitfSorbxaTag.h"
 
 using namespace std;
 
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
    ossimNitfCsattbDes csattb = ossimNitfCsattbDes();
    ossimNitfCsephbDes csephb = ossimNitfCsephbDes();
    ossimNitfBandsbTag bandsb = ossimNitfBandsbTag();
+   ossimNitfSorbxaTag sorbxa = ossimNitfSorbxaTag();
    string fname = getenv("OSSIM_DATA");
    //19SEP01060448-P1BS-200007943201_01_P004.NTF
    //24MAR05002840-P1BS-200004901937_01_P001_B.NTF
@@ -121,5 +123,14 @@ int main(int argc, char *argv[])
 
    bandsb.print(cout, "");
 
+   ossimKeywordlist kwl;
+   kwl.addPair("desId0", "1");
+   kwl.addPair("desId1", "2");
+   sorbxa.print(cout, "");
+   sorbxa.loadState(kwl, "");
+   sorbxa.print(cout, "");
+   sorbxa.setField("desId", "3", 1);
+   sorbxa.print(cout, "");
+   cout << sorbxa.computeTagLength() << endl;
    return 0;
 }
