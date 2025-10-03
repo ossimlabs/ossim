@@ -18,7 +18,7 @@ void ossimNitfXmlTag::r_initializeFields(ossimRefPtr<ossimXmlNode> fieldParent, 
    std::vector<ossimRefPtr<ossimXmlNode>> children = fieldParent->getChildNodes();
    for (auto& fieldChild: children)
    {
-      if (fieldChild->findAttribute("mult")->getValue()[0] == '1')
+      if (fieldChild->findAttribute("mult") && fieldChild->getAttributeValue("mult") == "1")
       {
          auto valueChild = valueParent->addChildNode(fieldChild->getTag());
          valueChild->setText(fieldChild->getText());
@@ -137,7 +137,7 @@ bool ossimNitfXmlTag::r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRe
          }
       }
       bool needChild = !valueChild->getText().empty() | r_loadState(fieldChild, valueChild, kwl);
-      if (!needChild && fieldChild->findAttribute("mult")->getValue()[0] == '0')
+      if (!needChild && !fieldChild->findAttribute("mult"))
          valueParent->removeChild(valueChild);
       needChildren = needChildren | needChild;
    }

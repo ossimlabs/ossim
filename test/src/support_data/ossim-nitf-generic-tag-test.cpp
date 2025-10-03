@@ -40,7 +40,8 @@ int main(int argc, char *argv[])
    ossimNitfCsephbDes csephb = ossimNitfCsephbDes();
    ossimNitfBandsbTag bandsb = ossimNitfBandsbTag();
    ossimString ossimHome = getenv("OSSIM_HOME");
-   ossimNitfXmlTag sorbxa = ossimNitfXmlTag(ossimHome + "/share/ossim/util/nitfSorbxa.xml", "SORBXA");
+   ossimNitfXmlTag sorbxa = ossimNitfXmlTag(ossimHome + "/share/ossim/templates/nitfSorbxa_Template.xml", "SORBXA");
+   ossimNitfXmlTag soddxa = ossimNitfXmlTag(ossimHome + "/share/ossim/templates/nitfSoddxa_Template.xml", "SODDXA");
    string fname = getenv("OSSIM_DATA");
    //19SEP01060448-P1BS-200007943201_01_P004.NTF
    //24MAR05002840-P1BS-200004901937_01_P001_B.NTF
@@ -133,5 +134,6 @@ int main(int argc, char *argv[])
    sorbxa.setField("desId", "3", 1);
    sorbxa.print(cout, "");
    cout << sorbxa.computeTagLength() << endl;
+   soddxa.print(cout, "");
    return 0;
 }

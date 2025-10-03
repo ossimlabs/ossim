@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<spaceObjectDescriptionData mult="1">
+    <securityData mult="1">
+        <Security/>
+        <soClassification>
+            <ExternalSecurity mult="1" type="String"/>
+        </soClassification>
+        <soSIC type="String"/>
+        <orconOrganization type="String"/>
+        <smClassification>
+            <ExternalSecurity mult="1" type="String"/>
+        </smClassification>
+        <smRestrictedCollection type="bool"/>
+        <accmClassification>
+            <ExternalSecurity mult="1" type="String"/>
+        </accmClassification>
+        <accmImageHold type="bool"/>
+    </securityData>
+    <sourceCatalog mult="1" type="String">
+        <catalogDate mult="1" type="String"/>
+        <catalogVersion type="String"/>
+        <absVisualMagnitude type="double"/>
+        <radarCrossSection type="double"/>
+        <length type="double"/>
+        <width type="double"/>
+        <height type="double"/>
+        <diameter type="double"/>
+        <mass type="double"/>
+        <soUid mult="1" type="String"/>
+        <soType mult="1" type="String"/>
+        <nonSatelliteInformation>
+            <name type="String"/>
+            <identifier type="String"/>
+            <description type="String"/>
+        </nonSatelliteInformation>
+        <satelliteInformation>
+            <satNo mult="1" type="int"/>
+            <targetId type="String"/>
+            <satelliteName mult="1" type="String"/>
+            <platformId type="String"/>
+            <satelliteCategory type="String"/>
+            <satelliteDescription type="String"/>
+            <internationalDesignator type="String">
+                <pieceType mult="1" type="String"/>
+            </internationalDesignator>
+            <constellationFlag type="bool"/>
+            <closelySpacedObject type="bool"/>
+            <threatCategory type="String"/>
+            <status type="String">
+                <statusDate mult="1" type="String"/>
+            </status>
+            <flightOrientation type="String"/>
+            <attitudeControlMode type="String"/>
+            <attitudeActuatorType type="String"/>
+            <maneuverData>
+                <maneuverableVehicleFlag type="bool"/>
+                <maneuverEpoch mult="1" type="String"/>
+                <maneuverPurpose type="String"/>
+            </maneuverData>
+            <payload>
+                <payloadName type="String"/>
+                <payloadId type="String"/>
+                <payloadDescription type="String"/>
+                <sensor>
+                    <missionId type="String"/>
+                    <sensorName type="String"/>
+                    <sensorId type="String"/>
+                    <modality type="String"/>
+                    <sensorDescription type="String"/>
+                </sensor>
+            </payload>
+            <launch>
+                <launchSiteId type="String">
+                    <facilityName mult="1" type="String"/>
+                </launchSiteId>
+                <launchOrg type="String"/>
+                <launchDate type="String"/>
+                <launchVehicle type="String"/>
+            </launch>
+            <affiliation mult="1">
+                <countryName mult="1" type="String">
+                    <cc mult="1" type="String"/>
+                </countryName>
+                <orgName type="String"/>
+                <orgType type="String"/>
+                <orgRole type="String"/>
+            </affiliation>
+            <assessedIdentity type="String">
+                <confidence type="int"/>
+            </assessedIdentity>
+        </satelliteInformation>
+        <collectionData mult="1">
+            <collectionReqId mult="1" type="String"/>
+            <priority type="int"/>
+            <revNumber type="int"/>
+            <passNumber type="int"/>
+            <background mult="1" type="String"/>
+            <lightingCondition mult="1" type="String"/>
+            <appVisualMagnitude type="double"/>
+            <reflectance type="int"/>
+            <snr type="double"/>
+            <backgroundType type="String"/>
+        </collectionData>
+        <orbitData>
+            <epochDate mult="1" type="String"/>
+            <orbitRegime type="String">
+                <type type="String"/>
+            </orbitRegime>
+            <orbitCenter type="String"/>
+            <meanMotion type="double"/>
+            <orbitalPeriod type="double"/>
+            <inclination type="double"/>
+            <eccentricity type="double"/>
+            <apogeeAltitude type="double"/>
+            <perigeeAltitude type="double"/>
+        </orbitData>
+    </sourceCatalog>
+</spaceObjectDescriptionData>
