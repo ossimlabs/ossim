@@ -64,6 +64,12 @@ public:
       const ossimNitfSegmentSecurityMetadataV1& rhs);
 
    /**
+    * @brief gets length
+    * @return length in bytes
+    */
+   ossim_uint32 getLength() const;
+
+   /**
     * @brief Sets the prefix tacked onto the front of key for print / loadState
     * outputs, where prefix is "DE" and key is "SCLAS" and value is "U" would
     * result in: "DESCLAS: U".

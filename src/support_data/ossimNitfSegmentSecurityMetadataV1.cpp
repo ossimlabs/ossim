@@ -78,6 +78,11 @@ const ossimNitfSegmentSecurityMetadataV1& ossimNitfSegmentSecurityMetadataV1::op
    return *this;
 }
 
+ossim_uint32 ossimNitfSegmentSecurityMetadataV1::getLength() const
+{
+   return 167;
+}
+
 void ossimNitfSegmentSecurityMetadataV1::setSegmentPrefix(const std::string& prefix)
 {
    m_segmentPrefix = prefix;
@@ -85,82 +90,82 @@ void ossimNitfSegmentSecurityMetadataV1::setSegmentPrefix(const std::string& pre
 
 void ossimNitfSegmentSecurityMetadataV1::set_sclas(const char* sclas)
 {
-   strncpy(m_sclas, sclas, SCLAS_SIZE);
+   ossimNitfCommon::setField(m_sclas, ossimString(m_sclas), SCLAS_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_sclsy(const char* sclsy)
 {
-   strncpy( m_sclsy, sclsy, SCLSY_SIZE);
+   ossimNitfCommon::setField(m_sclsy, ossimString(sclsy) SCLSY_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_scode(const char* scode)
 {
-   strncpy(m_scode, scode, SCODE_SIZE);
+   ossimNitfCommon::setField(m_scode, ossimString(scode), SCODE_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_sctlh(const char* sctlh)
 {
-   strncpy(m_sctlh, sctlh, SCTLH_SIZE);
+   ossimNitfCommon::setField(m_sctlh, ossimString(sctlh), SCTLH_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_srel(const char* srel)
 {
-   strncpy(m_srel, srel, SREL_SIZE);
+   ossimNitfCommon::setField(m_srel, ossimString(srel), SREL_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_sdctp(const char* sdctp)
 {
-   strncpy(m_sdctp , sdctp, SDCTP_SIZE);
+   ossimNitfCommon::setField(m_sdctp, ossimString(sdctp), SDCTP_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_sdcdt(const char* sdcdt)
 {
-   strncpy(m_sdcdt, sdcdt, SDCDT_SIZE);
+   ossimNitfCommon::setField(m_sdcdt, ossimString(sdcdt), SDCDT_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_sdcxm(const char* sdcxm)
 {
-   strncpy(m_sdcxm, sdcxm, SDCXM_SIZE);
+   ossimNitfCommon::setField(m_sdcxm, ossimString(sdcxm), SDCXM_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_sdg(const char* sdg)
 {
-   strncpy(m_sdg, sdg, SDG_SIZE);
+   ossimNitfCommon::setField(m_sdg, ossimString(sdg), SDG_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_sdgdt(const char* sdgdt)
 {
-   strncpy(m_sdgdt, sdgdt, SDGDT_SIZE);
+   ossimNitfCommon::setField(m_sdgdt, ossimString(sdgdt), SDGDT_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_scltx(const char* scltx)
 {
-   strncpy(m_scltx, scltx, SCLTX_SIZE);
+   ossimNitfCommon::setField(m_scltx, ossimString(scltx), SCLTX_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_scatp(const char* scatp)
 {
-   strncpy(m_scatp, scatp, SCATP_SIZE);
+   ossimNitfCommon::setField(m_scatp, ossimString(scatp), SCATP_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_scaut(const char* scaut)
 {
-   strncpy(m_scaut, scaut, SCAUT_SIZE);
+   ossimNitfCommon::setField(m_scaut, ossimString(scaut), SCAUT_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_scrsn(const char* scrsn)
 {
-   strncpy(m_scrsn, scrsn, SCRSN_SIZE);
+   ossimNitfCommon::setField(m_scrsn, ossimString(scrsn), SCRSN_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_ssrdt(const char* ssrdt)
 {
-   strncpy(m_ssrdt, ssrdt, SSRDT_SIZE);
+   ossimNitfCommon::setField(m_ssrdt, ossimString(ssrdt), SSRDT_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_sctln(const char* sctln)
 {
-   strncpy(m_sctln, sctln, SCTLN_SIZE);
+   ossimNitfCommon::setField(m_sctln, ossimString(sctln), SCTLN_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::parseStream(std::istream& in)
@@ -207,36 +212,37 @@ void ossimNitfSegmentSecurityMetadataV1::writeStream(std::ostream& out)
 void ossimNitfSegmentSecurityMetadataV1::clearFields()
 {
    memset(m_sclas, ' ', SCLAS_SIZE);
-   m_sclas[SCLAS_SIZE] = '\0';
    memset(m_sclsy, ' ', SCLSY_SIZE);
-   m_sclsy[SCLSY_SIZE] = '\0';
    memset(m_scode, ' ', SCODE_SIZE);
-   m_scode[SCODE_SIZE] = '\0';
    memset(m_sctlh, ' ', SCTLH_SIZE);
-   m_sctlh[SCTLH_SIZE] = '\0';
    memset(m_srel, ' ', SREL_SIZE);
-   m_srel[SREL_SIZE] = '\0';
    memset(m_sdctp, ' ', SDCTP_SIZE);
-   m_sdctp[SDCTP_SIZE] = '\0';
    memset(m_sdcdt, ' ', SDCDT_SIZE);
-   m_sdcdt[SDCDT_SIZE] = '\0';
    memset(m_sdcxm, ' ', SDCXM_SIZE);
-   m_sdcxm[SDCXM_SIZE] = '\0';
    memset(m_sdg, ' ', SDG_SIZE);
-   m_sdg[SDG_SIZE] = '\0';
    memset(m_sdgdt, ' ', SDGDT_SIZE);
-   m_sdgdt[SDGDT_SIZE] = '\0';
    memset(m_scltx, ' ', SCLTX_SIZE);
-   m_scltx[SCLTX_SIZE] = '\0';
    memset(m_scatp, ' ', SCATP_SIZE);
-   m_scatp[SCATP_SIZE] = '\0';
    memset(m_scaut, ' ', SCAUT_SIZE);
-   m_scaut[SCAUT_SIZE] = '\0';
    memset(m_scrsn, ' ', SCRSN_SIZE);
-   m_scrsn[SCRSN_SIZE] = '\0';
    memset(m_ssrdt, ' ', SSRDT_SIZE);
-   m_ssrdt[SSRDT_SIZE] = '\0';
    memset(m_sctln, ' ', SCTLN_SIZE);
+   
+   m_sclas[SCLAS_SIZE] = '\0';
+   m_sclsy[SCLSY_SIZE] = '\0';
+   m_scode[SCODE_SIZE] = '\0';
+   m_sctlh[SCTLH_SIZE] = '\0';
+   m_srel[SREL_SIZE]   = '\0';
+   m_sdctp[SDCTP_SIZE] = '\0';
+   m_sdcdt[SDCDT_SIZE] = '\0';
+   m_sdcxm[SDCXM_SIZE] = '\0';
+   m_sdg[SDG_SIZE]     = '\0';
+   m_sdgdt[SDGDT_SIZE] = '\0';
+   m_scltx[SCLTX_SIZE] = '\0';
+   m_scatp[SCATP_SIZE] = '\0';
+   m_scaut[SCAUT_SIZE] = '\0';
+   m_scrsn[SCRSN_SIZE] = '\0';
+   m_ssrdt[SSRDT_SIZE] = '\0';
    m_sctln[SCTLN_SIZE] = '\0';
 }
 
@@ -245,24 +251,25 @@ std::ostream& ossimNitfSegmentSecurityMetadataV1::print(std::ostream& out,
 {
    std::string pfx = prefix;
    pfx += m_segmentPrefix;
+   int w = (int)((pfx.size()<29)?29-pfx.size():24);
 
    out << std::setiosflags(std::ios::left)
-       << pfx << std::setw(24) << "SCLAS:" << m_sclas  << "\n"
-       << pfx << std::setw(24) << "SCLSY:" << m_sclsy << "\n"
-       << pfx << std::setw(24) << "SCODE:" << m_scode << "\n"
-       << pfx << std::setw(24) << "SCTLH:" << m_sctlh << "\n"
-       << pfx << std::setw(24) << "SREL:"  << m_srel  << "\n"
-       << pfx << std::setw(24) << "SDCTP:" << m_sdctp << "\n"
-       << pfx << std::setw(24) << "SDCDT:" << m_sdcdt << "\n"
-       << pfx << std::setw(24) << "SDCXM:" << m_sdcxm << "\n"
-       << pfx << std::setw(24) << "SDG:"   << m_sdg   << "\n"
-       << pfx << std::setw(24) << "SDGDT:" << m_sdgdt << "\n"
-       << pfx << std::setw(24) << "SCLTX:" << m_scltx << "\n"
-       << pfx << std::setw(24) << "SCATP:" << m_scatp << "\n"
-       << pfx << std::setw(24) << "SCAUT:" << m_scaut << "\n"
-       << pfx << std::setw(24) << "SCRSN:" << m_scrsn << "\n"
-       << pfx << std::setw(24) << "SSRDT:" << m_ssrdt << "\n"
-       << pfx << std::setw(24) << "SCTLN:" << m_sctln << std::endl;
+       << pfx << std::setw(w) << "SCLAS:" << m_sclas << "\n"
+       << pfx << std::setw(w) << "SCLSY:" << m_sclsy << "\n"
+       << pfx << std::setw(w) << "SCODE:" << m_scode << "\n"
+       << pfx << std::setw(w) << "SCTLH:" << m_sctlh << "\n"
+       << pfx << std::setw(w) << "SREL:"  << m_srel  << "\n"
+       << pfx << std::setw(w) << "SDCTP:" << m_sdctp << "\n"
+       << pfx << std::setw(w) << "SDCDT:" << m_sdcdt << "\n"
+       << pfx << std::setw(w) << "SDCXM:" << m_sdcxm << "\n"
+       << pfx << std::setw(w) << "SDG:"   << m_sdg   << "\n"
+       << pfx << std::setw(w) << "SDGDT:" << m_sdgdt << "\n"
+       << pfx << std::setw(w) << "SCLTX:" << m_scltx << "\n"
+       << pfx << std::setw(w) << "SCATP:" << m_scatp << "\n"
+       << pfx << std::setw(w) << "SCAUT:" << m_scaut << "\n"
+       << pfx << std::setw(w) << "SCRSN:" << m_scrsn << "\n"
+       << pfx << std::setw(w) << "SSRDT:" << m_ssrdt << "\n"
+       << pfx << std::setw(w) << "SCTLN:" << m_sctln << std::endl;
    return out;
 }
 
