@@ -95,7 +95,7 @@ void ossimNitfSegmentSecurityMetadataV1::set_sclas(const char* sclas)
 
 void ossimNitfSegmentSecurityMetadataV1::set_sclsy(const char* sclsy)
 {
-   ossimNitfCommon::setField(m_sclsy, ossimString(sclsy) SCLSY_SIZE);
+   ossimNitfCommon::setField(m_sclsy, ossimString(sclsy), SCLSY_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_scode(const char* scode)
