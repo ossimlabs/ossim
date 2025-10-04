@@ -28,9 +28,6 @@ const std::string ossimNitfCsattbDes::DESID = "CSATTB";
 
 ossimNitfCsattbDes::ossimNitfCsattbDes()
    : ossimNitfRegisteredDes(),
-     m_desver(),
-     m_segSecurityMetadata(),
-     m_desshl(),
      m_uuid(),
      m_numais(),
      m_aisdlvl(),
@@ -89,14 +86,10 @@ ossimNitfCsattbDes::ossimNitfCsattbDes()
    
    clearFields();
    setDesName(DESID);
-   m_segSecurityMetadata.setSegmentPrefix(std::string("DE"));
 }
 
 ossimNitfCsattbDes::ossimNitfCsattbDes(ossim_uint32 tagLength)
    : ossimNitfRegisteredDes(DESID, tagLength),
-     m_desver(),
-     m_segSecurityMetadata(),
-     m_desshl(),
      m_uuid(),
      m_numais(),
      m_aisdlvl(),
@@ -152,7 +145,6 @@ ossimNitfCsattbDes::ossimNitfCsattbDes(ossim_uint32 tagLength)
      m_reserved_len()
 {
    clearFields();
-   m_segSecurityMetadata.setSegmentPrefix(std::string("DE"));
 }
 
 ossimString ossimNitfCsattbDes::getClassName() const
@@ -162,34 +154,88 @@ ossimString ossimNitfCsattbDes::getClassName() const
 
 void ossimNitfCsattbDes::parseStream(std::istream& in)
 {
-   
 }
 
 void ossimNitfCsattbDes::writeStream(std::ostream& out)
 {
+}
+
+std::string ossimNitfCsattbDes::get_uuid() const
+{
+   return std::string(m_uuid);
+}
+
+std::string ossimNitfCsattbDes::get_numais() const
+{
+   return std::string(m_numais);
+}
+
+ossim_uint32 ossimNitfCsattbDes::getNumberAis() const
+{
+   return ossimString(m_numais).toUInt32();
+}
+
+bool ossimNitfCsattbDes::get_aisdlv(ossim_uint32 index, std::string& aisdlvl) const
+{
+   bool status = true;
+   if (index < getNumberAis() && index < m_aisdlvl.size())
+   {
+      aisdlvl = m_aisdlvl[index];
+   }
+   else
+   {
+      status = false;
+   }
+   return status;
+}
+
+std::string ossimNitfCsattbDes::get_num_assoc_elem() const
+{
+   return std::string(m_num_assoc_elem);
+}
+
+ossim_uint32 ossimNitfCsattbDes::getNumberAssocElem() const
+{
+   return ossimString(m_num_assoc_elem).toUInt32();
+}
+
+bool ossimNitfCsattbDes::get_assoc_elem_uuid(ossim_uint32 index, std::string& uuid) const
+{
+   bool status = true;
+   if (index < getNumberAssocElem() && index < m_assoc_elem_uuid.size())
+   {
+      uuid = m_assoc_elem_uuid[index];
+   }
+   else
+   {
+      status = false;
+   }
+   return status;
+}
+
+std::string ossimNitfCsattbDes::get_reservedsubh_len() const
+{
+   m_reservedsubh_len;
+}
+
+ossim_uint32 ossimNitfCsattbDes::getReserveSubHdrLength() const
+{
+   return ossimString(m_reservedsubh_len).toUInt32();
+}
+
+ossim_uint32 ossimNitfCsattbDes::computeDesSubHeaderLength() const
+{
+   ossim_uint32 length = 0; // tmp drb 36 + 3
+   return length;
+}
+
+void ossimNitfCsattbDes::setDesSubHeaderLength(ossim_uint32 length)
+{
    
-}
-
-void ossimNitfCsattbDes::setSegmentSecurityMetadata(
-   const ossimNitfSegmentSecurityMetadataV1& obj)
-{
-   m_segSecurityMetadata = obj;
-}
-
-const ossimNitfSegmentSecurityMetadataV1& ossimNitfCsattbDes::getSegmentSecurityMetadata() const
-{
-   return m_segSecurityMetadata;
-}
-
-ossimNitfSegmentSecurityMetadataV1& ossimNitfCsattbDes::getSegmentSecurityMetadata()
-{
-   return m_segSecurityMetadata;
 }
 
 void ossimNitfCsattbDes::clearFields()
 {
-   memset(m_desver, ' ', DESVER_SZ);
-   memset(m_desshl, ' ', DESSHL_SZ);
    memset(m_uuid, ' ', UUID_SZ);
    memset(m_numais, ' ', NUMAIS_SZ);
    memset(m_num_assoc_elem, ' ', NUM_ASSOC_ELEM_SZ);
@@ -237,8 +283,6 @@ void ossimNitfCsattbDes::clearFields()
    memset(m_num_att, ' ', B5_SZ);
    memset(m_reserved_len, '0', B9_SZ);
   
-   m_desver[DESVER_SZ] = '\0';
-   m_desshl[DESSHL_SZ] = '\0';
    m_uuid[UUID_SZ] = '\0';
    m_numais[NUMAIS_SZ] = '\0';
    m_num_assoc_elem[NUM_ASSOC_ELEM_SZ] = '\0';
@@ -300,37 +344,40 @@ std::ostream& ossimNitfCsattbDes::print(std::ostream& out,
    std::string pfx = prefix;
    pfx += DESID;
    pfx += ".";
+   int w = (int)((pfx.size()<29)?29-pfx.size():24);
+   ossim_uint32 i;
 
    out << std::setiosflags(std::ios::left)
-       << pfx << std::setw(24) << "DESVER:" << m_desver << "\n";
-   m_segSecurityMetadata.print(out, pfx);
+       << pfx << std::setw(w) << "UUID:" << m_uuid << "\n"
+       << pfx << std::setw(w) << "NUMAIS:" << m_numais << "\n";
+   
 #if 0
-   out << pfx << std::setw(24) << "DESSHL:" << m_desshl << "\n"
-       << pfx << std::setw(24) << "UUID:" << m_uuid << "\n"
-       << pfx << std::setw(24) << "numais:" << m_numais << "\n";
-   for(ossim_uint32 i 
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
-       << pfx << std::setw(24) << ":" << m_ << "\n"
+   out << pfx << std::setw(w) << "DESSHL:" << m_desshl << "\n"
+       << pfx << std::setw(w) << "UUID:" << m_uuid << "\n"
+       << pfx << std::setw(w) << "numais:" << m_numais << "\n";
+   for(i = 0; i < 
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
+       << pfx << std::setw(w) << ":" << m_ << "\n"
 #endif
 
    return out;

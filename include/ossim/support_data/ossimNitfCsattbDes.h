@@ -18,7 +18,6 @@
 #define ossimNitfCsattbDes_HEADER 1
 
 #include <ossim/support_data/ossimNitfRegisteredDes.h>
-#include <ossim/support_data/ossimNitfSegmentSecurityMetadataV1.h>
 #include <string>
 #include <vector>
 
@@ -28,9 +27,6 @@ public:
 
    enum // byte size enums:
    {
-      DESVER_SZ = 2,
-      SECMD_SZ = 167,
-      DESSHL_SZ = 4,
       UUID_SZ = 36,
       NUMAIS_SZ = 3,
       AISDLVL_SZ = 3,
@@ -60,24 +56,19 @@ public:
    virtual void parseStream(std::istream& in);
    virtual void writeStream(std::ostream& out);
 
-   /**
-    * @brief Sets segment security metadata.
-    * @param obj
-    */
-   void setSegmentSecurityMetadata(
-      const ossimNitfSegmentSecurityMetadataV1& obj);
+   // DES sub header:
+   std::string get_uuid() const;   
 
-   /**
-    * @brief Gets segment security metadata.
-    * @return const reference to segment security metadata.
-    */
-   const ossimNitfSegmentSecurityMetadataV1& getSegmentSecurityMetadata() const;
-
-   /**
-    * @brief Gets segment security metadata.
-    * @return Reference to segment security metadata.
-    */
-   ossimNitfSegmentSecurityMetadataV1& getSegmentSecurityMetadata();
+   std::string get_numais() const;
+   ossim_uint32 getNumberAis() const;
+   bool get_aisdlv(ossim_uint32 index, std::string& aisdlvl) const;
+   
+   std::string get_num_assoc_elem() const;
+   ossim_uint32 getNumberAssocElem() const;
+   bool get_assoc_elem_uuid(ossim_uint32 index, std::string& uuid) const;
+   
+   std::string get_reservedsubh_len() const;
+   ossim_uint32 getReserveSubHdrLength() const;
 
    /**
     * Clears all string fields within the record to some default nothingness.
@@ -94,12 +85,10 @@ public:
                                const std::string& prefix) const;
 private:
 
+   ossim_uint32 computeDesSubHeaderLength() const;
+   void setDesSubHeaderLength(ossim_uint32 length);
+
    // DES user defined sub header:
-   char m_desver[DESVER_SZ+1];
-
-   ossimNitfSegmentSecurityMetadataV1 m_segSecurityMetadata;
-
-   char m_desshl[DESSHL_SZ+1];
    char m_uuid[UUID_SZ+1];
 
    char m_numais[NUMAIS_SZ+1];
