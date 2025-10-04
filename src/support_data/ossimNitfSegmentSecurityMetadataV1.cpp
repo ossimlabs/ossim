@@ -90,7 +90,7 @@ void ossimNitfSegmentSecurityMetadataV1::setSegmentPrefix(const std::string& pre
 
 void ossimNitfSegmentSecurityMetadataV1::set_sclas(const char* sclas)
 {
-   ossimNitfCommon::setField(m_sclas, ossimString(m_sclas), SCLAS_SIZE);
+   ossimNitfCommon::setField(m_sclas, ossimString(sclas), SCLAS_SIZE);
 }
 
 void ossimNitfSegmentSecurityMetadataV1::set_sclsy(const char* sclsy)
