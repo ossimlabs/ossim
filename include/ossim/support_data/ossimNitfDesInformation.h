@@ -1,19 +1,21 @@
 //*******************************************************************
 // Copyright (C) 2000 ImageLinks Inc. 
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author: Garrett Potts
 // 
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfDesInformation.h 22418 2013-09-26 15:01:12Z gpotts $
+// $Id$
+
 #ifndef ossimNitfDesInformation_HEADER
-#define ossimNitfDesInformation_HEADER
+#define ossimNitfDesInformation_HEADER 1
 
 #include <ossim/base/ossimObject.h>
 #include <ossim/support_data/ossimNitfRegisteredDes.h>
+#include <ossim/support_data/ossimNitfSegmentSecurityMetadataV1.h>
 
 class ossimString;
 
@@ -21,10 +23,12 @@ class OSSIMDLLEXPORT ossimNitfDesInformation : public ossimObject
 {
 
 public:
-   enum{
+   enum
+   {
       DE_SIZE = 2,
       DESID_SIZE = 25,
       DESVER_SIZE = 2,
+#if 0 /* moved to: ossimNitfSegmentSecurityMetadataV1 */
       DECLAS_SIZE = 1,
       DESCLSY_SIZE = 2,
       DESCODE_SIZE = 11,
@@ -41,6 +45,7 @@ public:
       DESCRSN_SIZE = 1,
       DESSRDT_SIZE = 8,
       DESCTLN_SIZE = 15,
+#endif
       DESOFLW_SIZE = 6,
       DESITEM_SIZE = 3,
       DESSHL_SIZE = 4
@@ -71,7 +76,9 @@ public:
    ossim_uint64 getDesOffset()const;
    ossim_uint64 getDesDataOffset()const;
    
-   ossimString   getDesId()const;
+   ossimString getDesId()const;
+   ossimString getDesVer()const;
+
    virtual std::ostream& print(std::ostream& out, const std::string& prefix)const;
    void clearFields();
    
@@ -83,12 +90,37 @@ public:
    {
       return getTotalDesLength() < rhs.getTotalDesLength();
    }
+
+      /**
+    * @brief Sets segment security metadata.
+    * @param obj
+    */
+   void setSegmentSecurityMetadata(
+      const ossimNitfSegmentSecurityMetadataV1& obj);
+
+   /**
+    * @brief Gets segment security metadata.
+    * @return const reference to segment security metadata.
+    */
+   const ossimNitfSegmentSecurityMetadataV1& getSegmentSecurityMetadata() const;
+
+   /**
+    * @brief Gets segment security metadata.
+    * @return Reference to segment security metadata.
+    */
+   ossimNitfSegmentSecurityMetadataV1& getSegmentSecurityMetadata();
+
+   ossimString get_desshl() const;
+   ossim_uint32 getDesSubHeaderLength() const;
    
 private:
 
    char           m_de[DE_SIZE+1];
    char           m_desid[DESID_SIZE+1];
-   char 	         m_desver[DESVER_SIZE+1];
+   char 	  m_desver[DESVER_SIZE+1];
+
+   ossimNitfSegmentSecurityMetadataV1 m_segSecurityMetadata;
+#if 0   
    char           m_declas[DECLAS_SIZE+1];
    char           m_desclsy[DESCLSY_SIZE+1];
    char           m_descode[DESCODE_SIZE+1];
@@ -105,6 +137,8 @@ private:
    char           m_descrsn[DESCRSN_SIZE+1];
    char           m_dessrdt[DESSRDT_SIZE+1];
    char           m_desctln[DESCTLN_SIZE+1];
+#endif
+   
    char           m_desoflw[DESOFLW_SIZE+1];
    char           m_desitem[DESITEM_SIZE+1];
    char           m_desshl[DESSHL_SIZE+1];
