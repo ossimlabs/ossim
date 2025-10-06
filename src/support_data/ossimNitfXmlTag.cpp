@@ -126,8 +126,7 @@ ossim_uint32 ossimNitfXmlTag::computeTagLength() const
 {
    std::stringstream result;
    result << m_doc;
-   //+11 for CETAG and CEL nitf fields
-   return result.str().size() + 11;
+   return result.str().size();
 }
 
 //Recursive component of the loadState method
