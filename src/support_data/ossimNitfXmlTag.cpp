@@ -1,6 +1,15 @@
+//----------------------------------------------------------------------------
 //
-// Created by Ryan Feldbush on 9/22/25.
+// License:  MIT
 //
+// See LICENSE.txt file in the top level directory for more details.
+//
+// Author:  Ryan Feldbush
+//
+// Description: Generic tag function definitions for NITF tags in an xml format,
+//    uses template files fed to the constructor to initialise and check formatting.
+//
+//----------------------------------------------------------------------------
 
 #include <support_data/ossimNitfXmlTag.h>
 #include <sstream>
@@ -13,6 +22,7 @@ ossimNitfXmlTag::ossimNitfXmlTag(ossimString formatPath, ossimString tagName)
    this->m_tagLength = computeTagLength();
 }
 
+//Recursive component of the initializeFields method
 void ossimNitfXmlTag::r_initializeFields(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent)
 {
    std::vector<ossimRefPtr<ossimXmlNode>> children = fieldParent->getChildNodes();
@@ -30,13 +40,23 @@ void ossimNitfXmlTag::r_initializeFields(ossimRefPtr<ossimXmlNode> fieldParent, 
 void ossimNitfXmlTag::initializeFields()
 {
    ossimRefPtr<ossimXmlNode> node = new ossimXmlNode();
-   node->setTag("spaceObjectOrbitGeometry");
+   node->setTag(m_fieldsDoc.getRoot()->getTag());
    m_doc.initRoot(node);
    r_initializeFields(m_fieldsDoc.getRoot(), m_doc.getRoot());
 }
 
 void ossimNitfXmlTag::parseStream(std::istream &in)
 {
+   std::ostringstream buffer;
+   std::string line;
+   std::string delimiter = "</" + m_fieldsDoc.getRoot()->getTag() + ">";
+   while (std::getline(in, line)) {
+      if (line.find(delimiter) != std::string::npos) {
+         buffer << line.substr(0, line.find(delimiter));
+         break;
+      }
+      buffer << line << '\n';
+   }
    m_doc.read(in);
 }
 
@@ -58,6 +78,7 @@ std::ostream &ossimNitfXmlTag::print(std::ostream &out,
    return out;
 }
 
+//Recursive component of the get method
 ossimString ossimNitfXmlTag::r_get(ossimRefPtr<ossimXmlNode> valueParent, ossimString fieldName, int& i)
 {
    std::vector<ossimRefPtr<ossimXmlNode>> children = valueParent->getChildNodes();
@@ -80,6 +101,7 @@ ossimString ossimNitfXmlTag::get(const ossimString& fieldName, int i)
    return r_get(m_doc.getRoot(), fieldName, i);
 }
 
+//Recursive component of the set method
 void ossimNitfXmlTag::r_set(ossimRefPtr<ossimXmlNode> valueParent, const ossimString& fieldName, const ossimString& fieldValue, int &i)
 {
    std::vector<ossimRefPtr<ossimXmlNode>> children = valueParent->getChildNodes();
@@ -107,6 +129,7 @@ ossim_uint32 ossimNitfXmlTag::computeTagLength() const
    return result.str().size();
 }
 
+//Recursive component of the loadState method
 bool ossimNitfXmlTag::r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent, ossimKeywordlist& kwl)
 {
 

@@ -1,6 +1,15 @@
+//----------------------------------------------------------------------------
 //
-// Created by Ryan Feldbush on 9/22/25.
+// License:  MIT
 //
+// See LICENSE.txt file in the top level directory for more details.
+//
+// Author:  Ryan Feldbush
+//
+// Description: Generic tag class declaration for NITF tags in an xml format,
+//    uses template files fed to the constructor to initialise and check formatting.
+//
+//----------------------------------------------------------------------------
 
 #ifndef OSSIMNITFXML_H
 #define OSSIMNITFXML_H
@@ -35,6 +44,7 @@ public:
 private:
    void initializeFields();
 
+   //Recursive functions that are called by the functions sharing their name
    void r_initializeFields(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent);
    bool r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent, ossimKeywordlist& kwl);
    ossimString r_get(ossimRefPtr<ossimXmlNode> valueParent, ossimString fieldName, int& i);
