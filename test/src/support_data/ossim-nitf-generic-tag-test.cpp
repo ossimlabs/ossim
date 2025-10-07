@@ -128,6 +128,7 @@ int main(int argc, char *argv[])
    ossimKeywordlist kwl;
    kwl.addPair("desId0", "1");
    kwl.addPair("desId1", "2");
+   kwl.addPair("pieceType", "3");
    sorbxa.print(cout, "");
    sorbxa.loadState(kwl, "");
    sorbxa.print(cout, "");
