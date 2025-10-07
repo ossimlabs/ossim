@@ -1,24 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <spaceObjectDescriptionData mult="1">
     <securityData mult="1">
-        <Security/>
+        <arh:Security/>
         <soClassification>
-            <ExternalSecurity mult="1" type="String"/>
+            <arh:ExternalSecurity mult="1" type="String"/>
         </soClassification>
         <soSIC type="String"/>
         <orconOrganization type="String"/>
         <smClassification>
-            <ExternalSecurity mult="1" type="String"/>
+            <arh:ExternalSecurity mult="1" type="String"/>
         </smClassification>
         <smRestrictedCollection type="bool"/>
         <accmClassification>
-            <ExternalSecurity mult="1" type="String"/>
+            <arh:ExternalSecurity mult="1" type="String"/>
         </accmClassification>
         <accmImageHold type="bool"/>
     </securityData>
-    <sourceCatalog mult="1" type="String">
-        <catalogDate mult="1" type="String"/>
-        <catalogVersion type="String"/>
+    <sourceCatalog mult="1" type="String" attributes="catalogDate, catalogVersion">
         <absVisualMagnitude type="double"/>
         <radarCrossSection type="double"/>
         <length type="double"/>
@@ -40,15 +38,12 @@
             <platformId type="String"/>
             <satelliteCategory type="String"/>
             <satelliteDescription type="String"/>
-            <internationalDesignator type="String">
-                <pieceType mult="1" type="String"/>
+            <internationalDesignator type="String" attributes="pieceType">
             </internationalDesignator>
             <constellationFlag type="bool"/>
             <closelySpacedObject type="bool"/>
             <threatCategory type="String"/>
-            <status type="String">
-                <statusDate mult="1" type="String"/>
-            </status>
+            <status type="String" attributes="statusDate"/>
             <flightOrientation type="String"/>
             <attitudeControlMode type="String"/>
             <attitudeActuatorType type="String"/>
@@ -70,24 +65,18 @@
                 </sensor>
             </payload>
             <launch>
-                <launchSiteId type="String">
-                    <facilityName mult="1" type="String"/>
-                </launchSiteId>
+                <launchSiteId type="String" attributes="facilityName"/>
                 <launchOrg type="String"/>
                 <launchDate type="String"/>
                 <launchVehicle type="String"/>
             </launch>
             <affiliation mult="1">
-                <countryName mult="1" type="String">
-                    <cc mult="1" type="String"/>
-                </countryName>
+                <countryName mult="1" type="String" attributes="cc"/>
                 <orgName type="String"/>
                 <orgType type="String"/>
                 <orgRole type="String"/>
             </affiliation>
-            <assessedIdentity type="String">
-                <confidence type="int"/>
-            </assessedIdentity>
+            <assessedIdentity type="String" attributes="confidence"/>
         </satelliteInformation>
         <collectionData mult="1">
             <collectionReqId mult="1" type="String"/>
@@ -103,9 +92,7 @@
         </collectionData>
         <orbitData>
             <epochDate mult="1" type="String"/>
-            <orbitRegime type="String">
-                <type type="String"/>
-            </orbitRegime>
+            <orbitRegime type="String" attributes="type"/>
             <orbitCenter type="String"/>
             <meanMotion type="double"/>
             <orbitalPeriod type="double"/>

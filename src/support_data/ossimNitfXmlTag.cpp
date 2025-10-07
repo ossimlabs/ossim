@@ -151,6 +151,9 @@ bool ossimNitfXmlTag::r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRe
          valueChild = valueParent->addChildNode(fieldChild->getTag());
       for (const auto& keyword: kwl.getMap())
       {
+         if (!fieldChild->getAttributeValue("attributes").empty() &&
+            fieldChild->getAttributeValue("attributes").find(keyword.first) != std::string::npos)
+            valueChild->addAttribute(keyword.first, keyword.second);
          if (fieldChild->getTag().length() <= keyword.first.length() &&
             fieldChild->getTag() == keyword.first.substr(0, fieldChild->getTag().length()))
          {
