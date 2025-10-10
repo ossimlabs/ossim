@@ -42,6 +42,7 @@ public:
       B12_SZ = 12,
       B13_SZ = 13,
       B16_SZ = 16,
+      B18_SZ = 18,      
       B19_SZ = 19
    };
    
@@ -59,16 +60,34 @@ public:
    // DES sub header:
    std::string get_uuid() const;   
 
+   /**
+    * @brief Gets the number of associated image segments field.
+    * 3 byte field. 001 to 998, ALL or 999. Where 999 is the same as
+    * ALL.
+    * @return field as a string.
+    */ 
    std::string get_numais() const;
+
+   /**
+    * @brief Number of associated image segments.
+    * @return 0 if(m_numais==ALL or 999); else, field as an int.
+    */
    ossim_uint32 getNumberAis() const;
+   
    bool get_aisdlv(ossim_uint32 index, std::string& aisdlvl) const;
    
    std::string get_num_assoc_elem() const;
    ossim_uint32 getNumberAssocElem() const;
+   
    bool get_assoc_elem_uuid(ossim_uint32 index, std::string& uuid) const;
    
    std::string get_reservedsubh_len() const;
    ossim_uint32 getReserveSubHdrLength() const;
+
+   std::string get_interp_type_att() const;
+
+   std::string get_num_att() const;
+   ossim_uint32 getNumberAtt() const;
 
    /**
     * Clears all string fields within the record to some default nothingness.
@@ -86,13 +105,13 @@ public:
 private:
 
    ossim_uint32 computeDesSubHeaderLength() const;
-   void setDesSubHeaderLength(ossim_uint32 length);
+   ossim_uint32 computeDesDataLength() const;
 
    // DES user defined sub header:
    char m_uuid[UUID_SZ+1];
 
    char m_numais[NUMAIS_SZ+1];
-   std::vector<std::string>  m_aisdlvl;
+   std::vector<std::string>  m_aisdlvl; // 3 bytes
    
    char m_num_assoc_elem[NUM_ASSOC_ELEM_SZ+1];
    std::vector<std::string> m_assoc_elem_uuid;
@@ -104,7 +123,7 @@ private:
    char m_interp_type_att[B1_SZ+1];
    char m_interp_order_att[B1_SZ+1];
    char m_att_type[B1_SZ+1];
-   char m_ecf_eci_att[B1_SZ+1];
+   char m_eci_ecf_att[B1_SZ+1];
    char m_ta_pole[B19_SZ+1];
    char m_a_pole[B11_SZ+1];
    char m_b_pole[B11_SZ+1];

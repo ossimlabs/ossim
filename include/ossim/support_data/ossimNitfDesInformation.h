@@ -15,7 +15,7 @@
 
 #include <ossim/base/ossimObject.h>
 #include <ossim/support_data/ossimNitfRegisteredDes.h>
-#include <ossim/support_data/ossimNitfSegmentSecurityMetadataV1.h>
+#include <ossim/support_data/ossimNitfSegmentSecurityMetadataV2_1.h>
 
 class ossimString;
 
@@ -28,24 +28,6 @@ public:
       DE_SIZE = 2,
       DESID_SIZE = 25,
       DESVER_SIZE = 2,
-#if 0 /* moved to: ossimNitfSegmentSecurityMetadataV1 */
-      DECLAS_SIZE = 1,
-      DESCLSY_SIZE = 2,
-      DESCODE_SIZE = 11,
-      DESCTLH_SIZE = 2,
-      DESREL_SIZE = 20,
-      DESDCTP_SIZE = 2,
-      DESDCDT_SIZE = 8,
-      DESDCXM_SIZE = 4,
-      DESDG_SIZE = 1,
-      DESDGDT_SIZE = 8,
-      DESCLTX_SIZE = 43,
-      DESCATP_SIZE = 1,
-      DESCAUT_SIZE = 40,
-      DESCRSN_SIZE = 1,
-      DESSRDT_SIZE = 8,
-      DESCTLN_SIZE = 15,
-#endif
       DESOFLW_SIZE = 6,
       DESITEM_SIZE = 3,
       DESSHL_SIZE = 4
@@ -59,24 +41,20 @@ public:
    virtual void writeStream(std::ostream& out);
 
    void setDesName(const ossimString& desName);
-   void setDesLength(ossim_uint32 desLength);
 
-   /**
-    * Length of the 5 byte des length the 6 byte des name and
-    * the data length.
-    * So we have Data length + 11 bytes.
-    */
-   ossim_uint32 getTotalDesLength()const;
+   /** deprecated, use setDesDataLength */
+   void setDesLength(ossim_uint32 desLength);
 
    /**
     * Should return the value of theDesLength which is the length of
     * the data in bytes.
     */
-   ossim_uint32 getDesLength()const;
+   // ossim_uint32 getDesLength()const;
    ossim_uint64 getDesOffset()const;
    ossim_uint64 getDesDataOffset()const;
    
    ossimString getDesId()const;
+   bool isTreOverflow() const;
    ossimString getDesVer()const;
 
    virtual std::ostream& print(std::ostream& out, const std::string& prefix)const;
@@ -86,58 +64,65 @@ public:
    const ossimRefPtr<ossimNitfRegisteredDes> getDesData()const;
    void setDesData(ossimRefPtr<ossimNitfRegisteredDes> desData);
 
-   bool operator<(const ossimNitfDesInformation& rhs) const
-   {
-      return getTotalDesLength() < rhs.getTotalDesLength();
-   }
+   bool operator<(const ossimNitfDesInformation& rhs) const;
 
-      /**
+   /**
     * @brief Sets segment security metadata.
     * @param obj
     */
    void setSegmentSecurityMetadata(
-      const ossimNitfSegmentSecurityMetadataV1& obj);
+      const ossimNitfSegmentSecurityMetadataV2_1& obj);
 
    /**
     * @brief Gets segment security metadata.
     * @return const reference to segment security metadata.
     */
-   const ossimNitfSegmentSecurityMetadataV1& getSegmentSecurityMetadata() const;
+   const ossimNitfSegmentSecurityMetadataV2_1& getSegmentSecurityMetadata() const;
 
    /**
     * @brief Gets segment security metadata.
     * @return Reference to segment security metadata.
     */
-   ossimNitfSegmentSecurityMetadataV1& getSegmentSecurityMetadata();
+   ossimNitfSegmentSecurityMetadataV2_1& getSegmentSecurityMetadata();
 
-   ossimString get_desshl() const;
+   std::string get_desshl() const;
+   void set_desshl(ossim_uint32 length);
    ossim_uint32 getDesSubHeaderLength() const;
-   
+
+   /**
+    * @brief This is the des record size down to the desshl field or
+    * header + user defined sub header.
+    * @return 200+sub header length
+    */
+   ossim_uint32 getDesHeaderLength() const;
+
+   /**
+    * @brief Set the m_desDataSize work variable.
+    * @param length
+    */
+   void setDesDataLength(ossim_uint32 length);
+
+   /**
+    * @brief This is the length of the des data portion.
+    * @return length
+    */
+   ossim_uint32 getDesDataLength() const;
+
+   /**
+    * @brief This is getDesDataLength() + getDesHeaderLength()
+    * @return length
+    */
+   ossim_uint32 getDesTotalLength() const;
+
 private:
+
+
 
    char           m_de[DE_SIZE+1];
    char           m_desid[DESID_SIZE+1];
    char 	  m_desver[DESVER_SIZE+1];
 
-   ossimNitfSegmentSecurityMetadataV1 m_segSecurityMetadata;
-#if 0   
-   char           m_declas[DECLAS_SIZE+1];
-   char           m_desclsy[DESCLSY_SIZE+1];
-   char           m_descode[DESCODE_SIZE+1];
-   char           m_desctlh[DESCTLH_SIZE+1];
-   char           m_desrel[DESREL_SIZE+1];
-   char           m_desdctp[DESDCTP_SIZE+1];
-   char           m_desdcdt[DESDCDT_SIZE+1];
-   char           m_desdcxm[DESDCXM_SIZE+1];
-   char           m_desdg[DESDG_SIZE+1];
-   char           m_desdgdt[DESDGDT_SIZE+1];
-   char           m_descltx[DESCLTX_SIZE+1];
-   char           m_descatp[DESCATP_SIZE+1];
-   char           m_descaut[DESCAUT_SIZE+1];
-   char           m_descrsn[DESCRSN_SIZE+1];
-   char           m_dessrdt[DESSRDT_SIZE+1];
-   char           m_desctln[DESCTLN_SIZE+1];
-#endif
+   ossimNitfSegmentSecurityMetadataV2_1 m_segSecurityMetadata;
    
    char           m_desoflw[DESOFLW_SIZE+1];
    char           m_desitem[DESITEM_SIZE+1];
@@ -148,8 +133,6 @@ private:
     * This is just a work variable.
     */
    ossim_uint64 m_desOffset;
-   ossim_uint64 m_desLength;
-
 
    /**
     * This will hold the start to the data.  This is just the

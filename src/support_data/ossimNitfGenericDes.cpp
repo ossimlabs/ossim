@@ -12,8 +12,9 @@
 #include <ossim/support_data/ossimNitfGenericDes.h>
 #include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/base/ossimKeywordlist.h>
-#include <base/ossimException.h>
-#include <base/ossimTrace.h>
+#include <ossim/base/ossimException.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimTrace.h>
 
 #include <istream>
 #include <iostream>
@@ -22,6 +23,8 @@
 #include <map>
 #include <utility>
 #include <stack>
+
+static ossimTrace traceDebug("ossimNitfGenericDes:debug");
 
 ossimNitfGenericDes::ossimNitfGenericDes(const std::string& des, ossim_uint32 desLength)
    : ossimNitfRegisteredDes(des, desLength)
@@ -330,7 +333,7 @@ void ossimNitfGenericDes::parseStream(std::istream &in)
    }
 
    // Recompute and set des length as this can change the size of the map.
-   setDesLength(computeDesLength());
+   setDesDataLength(computeDesLength());
 }
 
 void ossimNitfGenericDes::writeStream(std::ostream &out)
@@ -371,14 +374,14 @@ void ossimNitfGenericDes::writeStream(std::ostream &out)
 std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &prefix) const
 {
    std::string pfx = prefix;
-   pfx += getDesName();
+   pfx += get_desid();
    pfx += ".";
 
    out << std::setiosflags(std::ios::left)
          << pfx << std::setw(24) << "CEDES:"
-         << getDesName() << "\n"
+         << get_desid() << "\n"
          << pfx << std::setw(24) << "CEL:"
-         << getDesLength() << "\n";
+         << getDesDataLength() << "\n";
 
    std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings;
@@ -442,8 +445,17 @@ void ossimNitfGenericDes::setField(const ossimString& fieldName, const ossimStri
 
 bool ossimNitfGenericDes::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
+   static const char MODULE[] = "ossimNitfGenericDes::loadState(...)";
 
    std::string pfx = prefix?prefix:"";
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " entered...\n"
+         << "kwl:\n" << kwl << "\n"
+         << "prefix: " << pfx << "\n";
+   }
 
    std::vector<std::vector<ossim_int32>> suffix;
    std::vector<ossimString> spaceSubStrings;
@@ -473,6 +485,12 @@ bool ossimNitfGenericDes::loadState(const ossimKeywordlist& kwl, const char* pre
          i++;
       }
    }
+   
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
+   }
+   
    return true;
 }
 

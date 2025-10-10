@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  MIT
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 // 
@@ -9,7 +9,7 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfRegisteredDes.h 22013 2012-12-19 17:37:20Z dburken $
+// $Id$
 #ifndef ossimNitfRegisteredDes_HEADER
 #define ossimNitfRegisteredDes_HEADER 1
 
@@ -37,49 +37,52 @@ public:
     * @brief This will return the name of the registered des for this user
     * defined header.
     *
-    * @note Deprecated - Use getDesName()
+    * @note Deprecated - Use get_desid()
     */
    virtual std::string getRegisterDesName() const;
    
-   /**
-    * @brief This will return the name of the registered des for this user
-    * defined header.
-    */
-   virtual const std::string& getDesName() const;
+   /** @return m_desid */
+   virtual const std::string& get_desid() const;
 
    /**
-    * @param desName Name of des.
-    *
+    * @param desid of des.
     * @note Users should set des name as this is an unknown des.
     */
-   virtual void setDesName(const std::string& desName);
- 
-   /**
-    * @brief Returns the length in bytes of the des from the CEL or REL field.
-    * 
-    * @note Depricated use: getDesLength()
-    *
-    * The entire TRE length is 11 plus this(the size of the CEL or REL field).
-    *
-    * @return Length of REDATA or CEDATA.
-    */
-   virtual ossim_uint32 getSizeInBytes()const;
-   const std::vector<ossim_int8>& getDesDataBuffer()const;
-       /**
-    * @brief Returns the length in bytes of the des from the CEL or REL field.
-    *
-    * The entire TRE length is 11 plus this(the size of the CEL or REL field).
-    *
-    * @return Length of REDATA or CEDATA.
-    */
-       virtual ossim_uint32 getDesLength() const;
+   virtual void set_desid(const std::string& desid);
+
+   /** @return m_desver */
+   virtual const std::string& get_desver() const;
+
+   /** @return m_desver as an int */
+   virtual ossim_uint32 getDesVersionNumber() const;
 
    /**
-    * @brief Set the des length.
-    *
-    * @param length Length of des.
+    * @param desid of des.
+    * @note Users should set des name as this is an unknown des.
     */
-   virtual void setDesLength(ossim_uint32 length);
+   virtual void set_desver(const std::string& desver);
+
+   /** @return desshl as an int. */
+   virtual ossim_uint32 getDesSubHeaderLength() const;
+
+   /**
+    * @brief Sets the desshl.
+    * Derived from 4 byte field so max is 9999.
+    * @param desshl as an int
+    * @return true on success, false if greater than 9999.
+    */
+   virtual bool setDesSubHeaderLength(ossim_uint32 length);
+ 
+   const std::vector<ossim_int8>& getDesDataBuffer()const;
+   
+   virtual ossim_uint32 getDesDataLength() const;
+
+   /**
+    * @brief Set the des data length.
+    *
+    * @param length Length of des data portion.
+    */
+   virtual void setDesDataLength(ossim_uint32 length);
     
    /**
     * This will allow the user defined data to parse the stream.
@@ -114,8 +117,26 @@ public:
    virtual bool saveState(ossimKeywordlist& kwl, const ossimString& prefix)const;
    
 protected:
-   ossimString  m_desName;
-   ossim_uint32 m_desLength;
+   // These variables are parsed outside of this class.
+
+   // parsed by ossimNitfDesInformation
+   std::string  m_desid;
+
+   // parsed by ossimNitfDesInformation
+   std::string  m_desver;
+   
+   // parsed by ossimNitfDesInformation and or
+   // ossimNitfFileHeaderV2_1::readDataExtSegInfoRecords
+   ossim_uint32 m_desshl; // parsed and set by ossimNitfDesInformation
+
+   // parsed by ossimNitfFileHeaderV2_1::readDataExtSegInfoRecords
+   ossim_uint64 m_desLength;
+
+   /**
+    * Can hold the raw des data content if not explicitly parsed by derived
+    * ossimNitfRegisteredDes class into separate fields, in which case this
+    * will be empty.
+    */
    std::vector<ossim_int8> m_desData;
    
 TYPE_DATA

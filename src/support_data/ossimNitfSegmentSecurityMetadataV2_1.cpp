@@ -10,10 +10,8 @@
 //---
 // $Id$
 
-#include <ossim/support_data/ossimNitfSegmentSecurityMetadataV1.h>
+#include <ossim/support_data/ossimNitfSegmentSecurityMetadataV2_1.h>
 #include <ossim/support_data/ossimNitfCommon.h>
-#include <ossim/base/ossimNotify.h>
-#include <ossim/base/ossimTrace.h>
 
 #include <cstring>
 #include <iomanip>
@@ -22,15 +20,15 @@
 #include <sstream>
 
 
-ossimNitfSegmentSecurityMetadataV1::ossimNitfSegmentSecurityMetadataV1()
-   : m_segmentPrefix()
+ossimNitfSegmentSecurityMetadataV2_1::ossimNitfSegmentSecurityMetadataV2_1()
+   : m_filePartType()
 {
    clearFields();
 }
 
-ossimNitfSegmentSecurityMetadataV1::ossimNitfSegmentSecurityMetadataV1(
-   const ossimNitfSegmentSecurityMetadataV1& obj)
-   : m_segmentPrefix(obj.m_segmentPrefix)
+ossimNitfSegmentSecurityMetadataV2_1::ossimNitfSegmentSecurityMetadataV2_1(
+   const ossimNitfSegmentSecurityMetadataV2_1& obj)
+   : m_filePartType(obj.m_filePartType)
 {
    clearFields();
    
@@ -52,12 +50,12 @@ ossimNitfSegmentSecurityMetadataV1::ossimNitfSegmentSecurityMetadataV1(
    strncpy(m_sctln, obj.m_sctln, SCTLN_SIZE);
 }
 
-const ossimNitfSegmentSecurityMetadataV1& ossimNitfSegmentSecurityMetadataV1::operator=(
-   const ossimNitfSegmentSecurityMetadataV1& rhs)
+const ossimNitfSegmentSecurityMetadataV2_1& ossimNitfSegmentSecurityMetadataV2_1::operator=(
+   const ossimNitfSegmentSecurityMetadataV2_1& rhs)
 {
    if (this != &rhs)
    {
-      m_segmentPrefix = rhs.m_segmentPrefix;
+      m_filePartType = rhs.m_filePartType;
       strncpy(m_sclas, rhs.m_sclas, SCLAS_SIZE);
       strncpy(m_sclsy, rhs.m_sclsy, SCLSY_SIZE);
       strncpy(m_scode, rhs.m_scode, SCODE_SIZE);
@@ -78,97 +76,97 @@ const ossimNitfSegmentSecurityMetadataV1& ossimNitfSegmentSecurityMetadataV1::op
    return *this;
 }
 
-ossim_uint32 ossimNitfSegmentSecurityMetadataV1::getLength() const
+ossim_uint32 ossimNitfSegmentSecurityMetadataV2_1::getLength() const
 {
    return 167;
 }
 
-void ossimNitfSegmentSecurityMetadataV1::setSegmentPrefix(const std::string& prefix)
+void ossimNitfSegmentSecurityMetadataV2_1::setFilePartType(const std::string& type)
 {
-   m_segmentPrefix = prefix;
+   m_filePartType = type;
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_sclas(const char* sclas)
+void ossimNitfSegmentSecurityMetadataV2_1::set_sclas(const char* sclas)
 {
    ossimNitfCommon::setField(m_sclas, ossimString(sclas), SCLAS_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_sclsy(const char* sclsy)
+void ossimNitfSegmentSecurityMetadataV2_1::set_sclsy(const char* sclsy)
 {
    ossimNitfCommon::setField(m_sclsy, ossimString(sclsy), SCLSY_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_scode(const char* scode)
+void ossimNitfSegmentSecurityMetadataV2_1::set_scode(const char* scode)
 {
    ossimNitfCommon::setField(m_scode, ossimString(scode), SCODE_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_sctlh(const char* sctlh)
+void ossimNitfSegmentSecurityMetadataV2_1::set_sctlh(const char* sctlh)
 {
    ossimNitfCommon::setField(m_sctlh, ossimString(sctlh), SCTLH_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_srel(const char* srel)
+void ossimNitfSegmentSecurityMetadataV2_1::set_srel(const char* srel)
 {
    ossimNitfCommon::setField(m_srel, ossimString(srel), SREL_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_sdctp(const char* sdctp)
+void ossimNitfSegmentSecurityMetadataV2_1::set_sdctp(const char* sdctp)
 {
    ossimNitfCommon::setField(m_sdctp, ossimString(sdctp), SDCTP_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_sdcdt(const char* sdcdt)
+void ossimNitfSegmentSecurityMetadataV2_1::set_sdcdt(const char* sdcdt)
 {
    ossimNitfCommon::setField(m_sdcdt, ossimString(sdcdt), SDCDT_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_sdcxm(const char* sdcxm)
+void ossimNitfSegmentSecurityMetadataV2_1::set_sdcxm(const char* sdcxm)
 {
    ossimNitfCommon::setField(m_sdcxm, ossimString(sdcxm), SDCXM_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_sdg(const char* sdg)
+void ossimNitfSegmentSecurityMetadataV2_1::set_sdg(const char* sdg)
 {
    ossimNitfCommon::setField(m_sdg, ossimString(sdg), SDG_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_sdgdt(const char* sdgdt)
+void ossimNitfSegmentSecurityMetadataV2_1::set_sdgdt(const char* sdgdt)
 {
    ossimNitfCommon::setField(m_sdgdt, ossimString(sdgdt), SDGDT_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_scltx(const char* scltx)
+void ossimNitfSegmentSecurityMetadataV2_1::set_scltx(const char* scltx)
 {
    ossimNitfCommon::setField(m_scltx, ossimString(scltx), SCLTX_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_scatp(const char* scatp)
+void ossimNitfSegmentSecurityMetadataV2_1::set_scatp(const char* scatp)
 {
    ossimNitfCommon::setField(m_scatp, ossimString(scatp), SCATP_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_scaut(const char* scaut)
+void ossimNitfSegmentSecurityMetadataV2_1::set_scaut(const char* scaut)
 {
    ossimNitfCommon::setField(m_scaut, ossimString(scaut), SCAUT_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_scrsn(const char* scrsn)
+void ossimNitfSegmentSecurityMetadataV2_1::set_scrsn(const char* scrsn)
 {
    ossimNitfCommon::setField(m_scrsn, ossimString(scrsn), SCRSN_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_ssrdt(const char* ssrdt)
+void ossimNitfSegmentSecurityMetadataV2_1::set_ssrdt(const char* ssrdt)
 {
    ossimNitfCommon::setField(m_ssrdt, ossimString(ssrdt), SSRDT_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::set_sctln(const char* sctln)
+void ossimNitfSegmentSecurityMetadataV2_1::set_sctln(const char* sctln)
 {
    ossimNitfCommon::setField(m_sctln, ossimString(sctln), SCTLN_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::parseStream(std::istream& in)
+void ossimNitfSegmentSecurityMetadataV2_1::parseStream(std::istream& in)
 {
    clearFields();
    in.read(m_sclas, SCLAS_SIZE);
@@ -189,7 +187,7 @@ void ossimNitfSegmentSecurityMetadataV1::parseStream(std::istream& in)
    in.read(m_sctln, SCTLN_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::writeStream(std::ostream& out)
+void ossimNitfSegmentSecurityMetadataV2_1::writeStream(std::ostream& out)
 {
    out.write(m_sclas, SCLAS_SIZE);
    out.write(m_sclsy, SCLSY_SIZE);
@@ -209,7 +207,7 @@ void ossimNitfSegmentSecurityMetadataV1::writeStream(std::ostream& out)
    out.write(m_sctln, SCTLN_SIZE);
 }
 
-void ossimNitfSegmentSecurityMetadataV1::clearFields()
+void ossimNitfSegmentSecurityMetadataV2_1::clearFields()
 {
    memset(m_sclas, ' ', SCLAS_SIZE);
    memset(m_sclsy, ' ', SCLSY_SIZE);
@@ -246,11 +244,11 @@ void ossimNitfSegmentSecurityMetadataV1::clearFields()
    m_sctln[SCTLN_SIZE] = '\0';
 }
 
-std::ostream& ossimNitfSegmentSecurityMetadataV1::print(std::ostream& out,
-                                                        const std::string& prefix) const
+std::ostream& ossimNitfSegmentSecurityMetadataV2_1::print(
+   std::ostream& out, const std::string& prefix) const
 {
    std::string pfx = prefix;
-   pfx += m_segmentPrefix;
+   pfx += m_filePartType;
    int w = (int)((pfx.size()<29)?29-pfx.size():24);
 
    out << std::setiosflags(std::ios::left)
@@ -273,7 +271,7 @@ std::ostream& ossimNitfSegmentSecurityMetadataV1::print(std::ostream& out,
    return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const ossimNitfSegmentSecurityMetadataV1& obj)
+std::ostream& operator<<(std::ostream& out, const ossimNitfSegmentSecurityMetadataV2_1& obj)
 {
    return obj.print(out, std::string(""));
 }

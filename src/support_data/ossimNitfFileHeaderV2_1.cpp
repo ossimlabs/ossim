@@ -20,7 +20,7 @@
 #include <ossim/base/ossimIoStream.h>
 #include <ossim/base/ossimNumericProperty.h>
 #include <ossim/base/ossimTrace.h>
-#include <ossim/base/ossimNotifyContext.h>
+#include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
@@ -396,10 +396,6 @@ void ossimNitfFileHeaderV2_1::parseStream(ossim::istream& in)
    readOverflowTags(in);
    // custom DES parsers
    bool parseDes = ossimString(ossimPreferences::instance()->findPreference("des_parser")).toBool();
-   
-   // tmp drb
-   // bool parseDes = true; 
-
    if (parseDes) readDes(in);
 
    if ( traceDebug() )
@@ -1286,6 +1282,19 @@ void ossimNitfFileHeaderV2_1::addDataExtSegInfoRecord(const ossimNitfDataExtSegI
    setNumberOfDataExtSegInfoRecords(theNitfDataExtSegInfoRecords.size());
 }
 
+void ossimNitfFileHeaderV2_1::addDes(const ossimNitfDesInformation& des)
+{
+   ossimNitfDataExtSegInfoRecordV2_1 info;
+   ossimNitfCommon::setField(info.theDataExtSegSubheaderLength,
+                             ossimString::toString(des.getDesHeaderLength()),
+                             4, std::ios::right, '0');
+   ossimNitfCommon::setField(info.theDataExtSegLength,
+                             ossimString::toString(des.getDesDataLength()),
+                             9, std::ios::right, '0');  
+   addDataExtSegInfoRecord(info);
+   theDesList.push_back(des);
+}
+
 
 void ossimNitfFileHeaderV2_1::replaceImageInfoRecord(int i, const ossimNitfImageInfoRecordV2_1& recordInfo)
 {
@@ -1323,6 +1332,7 @@ void ossimNitfFileHeaderV2_1::initializeAllOffsets()
                                                                    tally + theNitfImageInfoRecords[idx].getHeaderLength()));
       tally += theNitfImageInfoRecords[idx].getTotalLength();
    }
+
    for(idx = 0; idx < theNitfGraphicInfoRecords.size(); ++idx)
    {
       theGraphicOffsetList.push_back(ossimNitfGraphicOffsetInformation(tally,

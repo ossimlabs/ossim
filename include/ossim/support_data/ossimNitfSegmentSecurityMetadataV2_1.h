@@ -10,18 +10,18 @@
 //---
 // $Id$
 
-#ifndef ossimNitfSegmentSecurityMetadataV1_H
-#define ossimNitfSegmentSecurityMetadataV1_H 1
+#ifndef ossimNitfSegmentSecurityMetadataV2_1_H
+#define ossimNitfSegmentSecurityMetadataV2_1_H 1
 
 #include <ossim/base/ossimConstants.h>
 #include <iosfwd>
 #include <string>
 
 /**
- * @class ossimNitfSegmentSecurityMetadataV1
+ * @class ossimNitfSegmentSecurityMetadataV2_1
  * Segment Security Metadata:
  */
-class OSSIM_DLL ossimNitfSegmentSecurityMetadataV1
+class OSSIM_DLL ossimNitfSegmentSecurityMetadataV2_1
 {
 public:
    
@@ -48,20 +48,20 @@ public:
    };
 
    /** @brief Default constructor. */
-   ossimNitfSegmentSecurityMetadataV1();
+   ossimNitfSegmentSecurityMetadataV2_1();
 
    /**
     * @brief Copy Constructor.
     * @param obj
     */
-   ossimNitfSegmentSecurityMetadataV1(const ossimNitfSegmentSecurityMetadataV1& obj);
+   ossimNitfSegmentSecurityMetadataV2_1(const ossimNitfSegmentSecurityMetadataV2_1& obj);
 
    /**
     * @brief assignment operator
     * @param rhs
     */
-   const ossimNitfSegmentSecurityMetadataV1& operator=(
-      const ossimNitfSegmentSecurityMetadataV1& rhs);
+   const ossimNitfSegmentSecurityMetadataV2_1& operator=(
+      const ossimNitfSegmentSecurityMetadataV2_1& rhs);
 
    /**
     * @brief gets length
@@ -70,7 +70,9 @@ public:
    ossim_uint32 getLength() const;
 
    /**
-    * @brief Sets the prefix tacked onto the front of key for print / loadState
+    * @brief Sets the file part type.
+    *
+    * This is the prefix tacked onto the front of key for print / loadState
     * outputs, where prefix is "DE" and key is "SCLAS" and value is "U" would
     * result in: "DESCLAS: U".
     * @param prefix Per spec this should one of:
@@ -81,7 +83,7 @@ public:
     * DE = Data Extension Segment
     * RE = Reserved Extension Segment
     */
-   void setSegmentPrefix(const std::string& prefix);
+   void setFilePartType(const std::string& type);
 
    void set_sclas(const char* sclas);
    void set_sclsy(const char* sclsy);
@@ -127,12 +129,12 @@ public:
    std::ostream& print(std::ostream& out, const std::string& prefix) const;
 
    friend OSSIM_DLL std::ostream& operator<<(
-      std::ostream& out, const ossimNitfSegmentSecurityMetadataV1& obj);
+      std::ostream& out, const ossimNitfSegmentSecurityMetadataV2_1& obj);
 
 private:
 
    // F, I, S, T, DE or RE
-   std::string m_segmentPrefix;
+   std::string m_filePartType;
    
    char m_sclas[SCLAS_SIZE+1];
    char m_sclsy[SCLSY_SIZE+1];
@@ -152,4 +154,4 @@ private:
    char m_sctln[SCTLN_SIZE+1];
 };
 
-#endif /* End of "#ifndef ossimNitfSegmentSecurityMetadataV1_H" */
+#endif /* End of "#ifndef ossimNitfSegmentSecurityMetadataV2_1_H" */
