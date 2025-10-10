@@ -74,7 +74,7 @@ std::ostream& ossimNitfSicdXmlDataContentDes::print(std::ostream& out,
    // pfx += getDesName() + ".";
    ossimString desData;
 	getDesDataAsString(desData);
-	out << setiosflags(std::ios::left)
+	out << std::setiosflags(std::ios::left)
             << pfx << std::setw(24) << "DESCRC:" << ((typeinfo) ? "(string)" : "") << m_descrc << "\n"
             << pfx << std::setw(24) << "DESSHFT:" << ((typeinfo) ? "(string)" : "") << m_desshft << "\n"
             << pfx << std::setw(24) << "DESSHDT:" << ((typeinfo) ? "(string)" : "") << m_desshdt << "\n"
