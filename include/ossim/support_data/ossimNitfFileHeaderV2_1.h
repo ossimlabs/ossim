@@ -145,7 +145,7 @@ public:
    virtual ossim_int32 getNumberOfGraphics()const;
    virtual ossim_int32 getNumberOfTextSegments()const;
    virtual ossim_int32 getNumberOfDataExtSegments()const;
-  virtual ossim_int32 getNumberOfReservedExtSegments()const;
+   virtual ossim_int32 getNumberOfReservedExtSegments()const;
    virtual ossim_int32 getHeaderSize()const;
    virtual ossim_int64 getFileSize()const;
    virtual const char* getVersion()const;
@@ -157,7 +157,8 @@ public:
    virtual void deleteLastDataExtSegInfoRecord();
 
    virtual void addTextInfoRecord(const ossimNitfTextFileInfoRecordV2_1& recordInfo);
-	virtual void addDataExtSegInfoRecord(const ossimNitfDataExtSegInfoRecordV2_1& recordInfo);
+   virtual void addDataExtSegInfoRecord(const ossimNitfDataExtSegInfoRecordV2_1& recordInfo);
+   virtual void addDes(const ossimNitfDesInformation& des);
 
    virtual void replaceImageInfoRecord(int i, const ossimNitfImageInfoRecordV2_1& recordInfo);
    

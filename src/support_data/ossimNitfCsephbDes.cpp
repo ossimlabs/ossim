@@ -30,7 +30,7 @@ ossimNitfCsephbDes::ossimNitfCsephbDes()
 
    initializeFieldDefinitions();
    initializeFields();
-   setDesLength(computeDesLength());
+   setDesDataLength(computeDesLength());
 }
 
 ossimNitfCsephbDes::ossimNitfCsephbDes(ossim_uint32 tagLength)

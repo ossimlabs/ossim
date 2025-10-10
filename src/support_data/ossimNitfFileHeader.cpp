@@ -190,6 +190,11 @@ const std::vector<ossimNitfDesInformation> &ossimNitfFileHeader::getDesInfoList(
     return theDesList;
 }
 
+std::vector<ossimNitfDesInformation> &ossimNitfFileHeader::getDesInfoList()
+{
+    return theDesList;
+}
+
 ossim_uint32 ossimNitfFileHeader::getTotalTagLength(const ossimString& tagType)const
 {
    ossim_uint32 tagLength = 0;
@@ -211,6 +216,11 @@ ossim_uint32 ossimNitfFileHeader::getTotalTagLength() const
       tagLength += theTagList[i].getTotalTagLength();
    }
    return tagLength;
+}
+
+void ossimNitfFileHeader::addDes(const ossimNitfDesInformation& des)
+{
+   theDesList.push_back(des);
 }
 
 void ossimNitfFileHeader::setProperty(ossimRefPtr<ossimProperty> /* property */)

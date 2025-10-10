@@ -15,6 +15,7 @@
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimKeywordlist.h>
+#include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimPreferences.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimString.h>
@@ -27,6 +28,7 @@
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/projection/ossimRpcSolver.h>
 #include <ossim/support_data/ossimNitfBlockaTag.h>
+#include <ossim/support_data/ossimNitfDesInformation.h>
 #include <ossim/support_data/ossimNitfFileHeader.h>
 #include <ossim/support_data/ossimNitfFileHeaderV2_X.h>
 // #include <ossim/support_data/ossimNitfFileHeaderV2_1.h>
@@ -498,6 +500,13 @@ void ossimNitfWriterBase::addRegisteredTag(
    ossimRefPtr<ossimNitfRegisteredTag> registeredTag, bool unique )
 {
    addRegisteredTag(registeredTag, unique, 1, ossimString("IXSHD"));
+}
+
+void ossimNitfWriterBase::addDesInfo(const ossimNitfDesInformation& /* des */)
+{
+   ossimNotify(ossimNotifyLevel_WARN)
+      << getClassName() << " WARNING:\n"
+      << "addDesInfo() not implemented!!!" << std::endl;
 }
 
 #if 0 /* Not called by anyone. */

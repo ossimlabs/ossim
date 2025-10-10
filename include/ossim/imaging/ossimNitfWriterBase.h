@@ -20,6 +20,7 @@
 class ossimFilename;
 class ossimImageSourceSequencer;
 class ossimMapProjectionInfo;
+class ossimNitfDesInformation;
 class ossimNitfFileHeaderV2_X;
 class ossimNitfImageHeaderV2_X;
 class ossimProjection;
@@ -130,6 +131,23 @@ public:
    virtual void addRegisteredTag(ossimRefPtr<ossimNitfRegisteredTag> registeredTag,
                                  bool unique, const ossim_uint32& ownerIndex,
                                  const ossimString& tagType) = 0;
+
+   /**
+    * @brief Adds a Data Extension Segment(DES) to nitf file header.
+    *
+    * This implementation does nothing.
+    *
+    * @notes:
+    *
+    * The ossimNitfDesInformation contains the segment security metadata
+    * and a ref pointer to a ossimNitfRegisteredDes record.
+    *
+    * The ossimNitfRegisteredDes contains the DES sub header and the DES
+    * data (User-Defined Data) section.
+    *
+    * @param des
+    */
+   virtual void addDesInfo(const ossimNitfDesInformation& des);
 
 #if 0 /* Not called by anyone. */
    virtual void setFileHeaderV2_1(ossimRefPtr<ossimNitfFileHeaderV2_1>, bool preferSource=false);

@@ -158,6 +158,7 @@ public:
    ossimRefPtr<ossimNitfRegisteredTag> getTagData(const ossimString &tagName);
    const ossimRefPtr<ossimNitfRegisteredTag> getTagData(
        const ossimString &tagName) const;
+
    virtual bool getDesInformation(ossimNitfDesInformation &desInfo,
                                   const ossimString &desId,
                                   bool exactMatch = false);
@@ -195,7 +196,10 @@ public:
    virtual ossimNitfLabelHeader*    allocateLabelHeader()const=0;
    virtual ossimNitfTextHeader*     allocateTextHeader()const=0;
    virtual ossimNitfDataExtensionSegment *allocateDataExtSegment()const=0;
+
    virtual const std::vector<ossimNitfDesInformation>& getDesInfoList()const;
+   virtual std::vector<ossimNitfDesInformation>& getDesInfoList();
+   
 
    /**
     * @brief Get the total tag length in bytes for all tags in the tag list
@@ -217,6 +221,12 @@ public:
     * @return Total number of bytes.
     */
    virtual ossim_uint32 getTotalTagLength() const;
+
+   /**
+    * @brief Adds a DES record.
+    * @param des
+    */
+   virtual void addDes(const ossimNitfDesInformation& des);
 
    /** @brief Sets file length (FL) field. */
    virtual void setFileLength(ossim_uint64 fileLength) = 0;
