@@ -114,7 +114,8 @@ public:
    virtual std::ostream& print(std::ostream& out,
                                const std::string& prefix=std::string()) const;
    
-   virtual bool saveState(ossimKeywordlist& kwl, const ossimString& prefix)const;
+   // virtual bool saveState(ossimKeywordlist& kwl, const ossimString& prefix)const;
+   virtual bool saveState(ossimKeywordlist& kwl, const char* prefix=0)const;   
    
 protected:
    // These variables are parsed outside of this class.

@@ -21,6 +21,8 @@
 #include <string>
 #include <vector>
 
+class ossimKeywordlist;
+
 class OSSIM_DLL ossimNitfCsattbDes : public ossimNitfRegisteredDes
 {
 public:
@@ -57,6 +59,13 @@ public:
    virtual void parseStream(std::istream& in);
    virtual void writeStream(std::ostream& out);
 
+   /*!
+    * Method to the load (recreate) the state of the object from a keyword
+    * list.  Return true if ok or false on error.
+    */
+   virtual bool loadState(const ossimKeywordlist& kwl,
+                          const char* prefix=0);
+ 
    // DES sub header:
    std::string get_uuid() const;   
 

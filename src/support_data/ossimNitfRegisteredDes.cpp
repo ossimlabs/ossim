@@ -140,7 +140,8 @@ std::ostream& ossimNitfRegisteredDes::print(
    return out;
 }
 
-bool ossimNitfRegisteredDes::saveState(ossimKeywordlist& kwl, const ossimString& prefix)const
+// bool ossimNitfRegisteredDes::saveState(ossimKeywordlist& kwl, const ossimString& prefix)const
+bool ossimNitfRegisteredDes::saveState(ossimKeywordlist& kwl, const char* prefix)const   
 {
    bool result = false;
    // by default we will use the already implemented print method as backup

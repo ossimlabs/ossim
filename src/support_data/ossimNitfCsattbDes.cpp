@@ -23,7 +23,7 @@
 #include <iostream>
 
 static ossimTrace traceDebug("ossimNitfCsattbDes:debug");
-
+static const int FOREVER = 1;
 const std::string ossimNitfCsattbDes::DESID = "CSATTB";
 
 ossimNitfCsattbDes::ossimNitfCsattbDes()
@@ -553,6 +553,255 @@ void ossimNitfCsattbDes::writeStream(std::ostream& out)
          << "\ncomputed des data bytes: " << computeDesDataLength()
          << MODULE << " DEBUG exited...\n";
    }
+}
+
+bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* prefix)
+{
+   static const char MODULE[] = "ossimNitfCsattbDes::loadState(...)";
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " entered...\n"
+         << "kwl:\n" << kwl << "\n"
+         << "prefix: " << (prefix?prefix:"null") << "\n";
+   }
+
+   bool status = true;
+   std::string pfx = prefix?prefix:"";
+   std::string key;
+   std::string value;
+   std::string os;
+   char buf[64];
+   std::string s;
+   ossim_uint32 count;
+   ossim_uint32 i;
+   ossim_uint32 subHdrBytes = 0;
+   ossim_uint32 desBytes = 0; 
+ 
+   while(FOREVER) // Break on error or at end.
+   {
+      value = kwl.findKey(pfx, ossim::nitf::UUID_KW);
+      if (value.size())
+      {
+         ossimNitfCommon::setField(m_uuid,
+                                   ossimString(value),
+                                   UUID_SZ,
+                                   std::ios::left,
+                                   ' ');
+      }
+      value = kwl.findKey(pfx, "NUMAIS");
+      if (value.size())
+      {
+         ossimNitfCommon::setField(m_numais,
+                                   ossimString(value),
+                                   NUMAIS_SZ,
+                                   std::ios::right,
+                                   '0');
+      }
+      count = getNumberAis();
+      if (count > 0)
+      {
+         key = "AISDLVL";
+         m_aisdlvl.resize(count);
+         for(i = 0; i < count; ++i)
+         {
+            std::string k = key + ossimString::toString(count).string();
+            value = kwl.findKey(pfx, k);
+            if (value.size())
+            {
+               ossimNitfCommon::setField(buf,
+                                         ossimString(value),
+                                         AISDLVL_SZ,
+                                         std::ios::right,
+                                         '0');
+               buf[AISDLVL_SZ] = '\0';
+               m_aisdlvl[i] = buf;
+            }
+#if 0 /* Not sure if this should be an error and break out? drb */
+            else // error... ??? )
+            {
+               ossimNotify(ossimNotifyLevel_WARN)
+                  << MODULE << " WARNING:\n" << "Missing key: " << k << std::endl;
+               status = false;
+               break;
+            }
+#endif         
+         }
+         
+      }
+
+      value = kwl.findKey(pfx, "NUM_ASSOC_ELEM");
+      if (value.size())
+      {
+         ossimNitfCommon::setField(m_num_assoc_elem,
+                                   ossimString(value),
+                                   NUM_ASSOC_ELEM_SZ,
+                                   std::ios::right,
+                                   '0');
+      }
+      if (count > 0)
+      {
+         key = "ASSOC_ELEM_UUID";
+         m_assoc_elem_uuid.resize(count);
+         for(i = 0; i < count; ++i)
+         {
+            std::string k = key + ossimString::toString(count).string();
+            value = kwl.findKey(pfx, k);
+            if (value.size())
+            {
+               ossimNitfCommon::setField(buf,
+                                         ossimString(value),
+                                         UUID_SZ,
+                                         std::ios::right,
+                                         '0');
+               buf[UUID_SZ] = '\0';
+               m_assoc_elem_uuid[i] = buf;
+            }
+         }
+      }
+      // End sub header:
+
+      // Start of DES data:
+      
+#if 0
+      in.read(m_qual_flag_att, B1_SZ);
+      desBytes += B1_SZ;
+      in.read(m_interp_type_att, B1_SZ);
+      desBytes += B1_SZ;
+      s = get_interp_type_att();
+      if (s == "2" || s == "3")
+      {
+         in.read(m_interp_order_att, B1_SZ);
+         desBytes += B1_SZ;
+      }
+
+      in.read(m_att_type, B1_SZ);
+      desBytes += B1_SZ;
+      in.read(m_eci_ecf_att, B1_SZ);
+      desBytes += B1_SZ;
+
+      if (m_eci_ecf_att[0] == '0' &&  getDesVersionNumber() >= 2)
+      {
+         in.read(m_ta_pole, B19_SZ);
+         desBytes += B19_SZ;
+         in.read(m_a_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_b_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_cj1_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_cj2_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_dj1_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_dj2_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_pj1_pole, B10_SZ);
+         desBytes += B10_SZ;
+         in.read(m_pj2_pole, B10_SZ);
+         desBytes += B10_SZ;
+         in.read(m_e_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_f_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_gk1_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_gk2_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_hk1_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_hk2_pole, B11_SZ);
+         desBytes += B11_SZ;
+         in.read(m_pk1_pole, B10_SZ);
+         desBytes += B10_SZ;
+         in.read(m_pk2_pole, B10_SZ);
+         desBytes += B10_SZ;
+         in.read(m_tb_ut, B19_SZ);
+         desBytes += B19_SZ;
+         in.read(m_i_ut, B12_SZ);
+         desBytes += B12_SZ;
+         in.read(m_j_ut, B12_SZ);
+         desBytes += B12_SZ;
+         in.read(m_kn1_ut, B12_SZ);
+         desBytes += B12_SZ;
+         in.read(m_kn2_ut, B12_SZ);
+         desBytes += B12_SZ;
+         in.read(m_kn3_ut, B12_SZ);
+         desBytes += B12_SZ;
+         in.read(m_kn4_ut, B12_SZ);
+         desBytes += B12_SZ;
+         in.read(m_ln1_ut, B12_SZ);
+         desBytes += B12_SZ;
+         in.read(m_ln2_ut, B12_SZ);
+         desBytes += B12_SZ;
+         in.read(m_ln3_ut, B12_SZ);
+         desBytes += B12_SZ;
+         in.read(m_ln4_ut, B12_SZ);
+         desBytes += B12_SZ;
+         in.read(m_pn1_ut, B10_SZ);
+         desBytes += B12_SZ;
+         in.read(m_pn2_ut, B10_SZ);
+         desBytes += B12_SZ;
+         in.read(m_pn3_ut, B10_SZ);
+         desBytes += B12_SZ;
+         in.read(m_pn4_ut, B10_SZ);
+         desBytes += B12_SZ;
+      }
+
+      in.read(m_dt_att, B13_SZ);
+      desBytes += B13_SZ;
+      in.read(m_date_att, B8_SZ);
+      desBytes += B8_SZ;
+      in.read(m_t0_att, B16_SZ);
+      desBytes += B16_SZ;
+      in.read(m_num_att, B5_SZ);
+      desBytes += B5_SZ;
+      count = getNumberAtt();
+      if (count > 0)
+      {
+         m_q1.resize(count);
+         m_q2.resize(count);
+         m_q3.resize(count);
+         m_q4.resize(count);
+         for(i = 0; i < count; ++i)
+         {
+            in.read(buf, B18_SZ);
+            desBytes += B18_SZ;
+            buf[B18_SZ] = '\0';
+            m_q1[i] = buf;
+         
+            in.read(buf, B18_SZ);
+            desBytes += B18_SZ;
+            buf[B18_SZ] = '\0';
+            m_q2[i] = buf;
+
+            in.read(buf, B18_SZ);
+            desBytes += B18_SZ;
+            buf[B18_SZ] = '\0';
+            m_q3[i] = buf;
+
+            in.read(buf, B18_SZ);
+            desBytes += B18_SZ;
+            buf[B18_SZ] = '\0';
+            m_q4[i] = buf;
+         }
+      }
+   
+      in.read(m_reserved_len, B9_SZ);
+      desBytes += B9_SZ;
+#endif
+
+      break; // Trailing break from forever loop.
+      
+   } // Matches: while(FOREVER)
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " exit status: " << (status?"true":"false") << "\n";
+   }   
+
+   return status;
 }
 
 std::string ossimNitfCsattbDes::get_uuid() const
