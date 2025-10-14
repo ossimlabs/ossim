@@ -286,13 +286,13 @@ void ossimNitfCsattbDes::parseStream(std::istream& in)
       in.read(m_ln4_ut, B12_SZ);
       desBytes += B12_SZ;
       in.read(m_pn1_ut, B10_SZ);
-      desBytes += B12_SZ;
+      desBytes += B10_SZ;
       in.read(m_pn2_ut, B10_SZ);
-      desBytes += B12_SZ;
+      desBytes += B10_SZ;
       in.read(m_pn3_ut, B10_SZ);
-      desBytes += B12_SZ;
+      desBytes += B10_SZ;
       in.read(m_pn4_ut, B10_SZ);
-      desBytes += B12_SZ;
+      desBytes += B10_SZ;
    }
 
    in.read(m_dt_att, B13_SZ);
@@ -483,13 +483,13 @@ void ossimNitfCsattbDes::writeStream(std::ostream& out)
       out.write(m_ln4_ut, B12_SZ);
       desBytes += B12_SZ;
       out.write(m_pn1_ut, B10_SZ);
-      desBytes += B12_SZ;
+      desBytes += B10_SZ;
       out.write(m_pn2_ut, B10_SZ);
-      desBytes += B12_SZ;
+      desBytes += B10_SZ;
       out.write(m_pn3_ut, B10_SZ);
-      desBytes += B12_SZ;
+      desBytes += B10_SZ;
       out.write(m_pn4_ut, B10_SZ);
-      desBytes += B12_SZ;
+      desBytes += B10_SZ;
    }
 
    out.write(m_dt_att, B13_SZ);
@@ -569,6 +569,7 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
    bool status = true;
    std::string pfx = prefix?prefix:"";
    std::string key;
+   std::string k;
    std::string value;
    std::string os;
    char buf[64];
@@ -605,7 +606,7 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
          m_aisdlvl.resize(count);
          for(i = 0; i < count; ++i)
          {
-            std::string k = key + ossimString::toString(count).string();
+            k = key + ossimString::toString(i).string();
             value = kwl.findKey(pfx, k);
             if (value.size())
             {
@@ -639,13 +640,14 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    std::ios::right,
                                    '0');
       }
+      count = getNumberAssocElem();
       if (count > 0)
       {
          key = "ASSOC_ELEM_UUID";
          m_assoc_elem_uuid.resize(count);
          for(i = 0; i < count; ++i)
          {
-            std::string k = key + ossimString::toString(count).string();
+            k = key + ossimString::toString(i).string();
             value = kwl.findKey(pfx, k);
             if (value.size())
             {
@@ -658,104 +660,387 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                m_assoc_elem_uuid[i] = buf;
             }
          }
+
+         // m_reservedsubh_len not loaded
       }
       // End sub header:
 
       // Start of DES data:
-      
-#if 0
-      in.read(m_qual_flag_att, B1_SZ);
-      desBytes += B1_SZ;
-      in.read(m_interp_type_att, B1_SZ);
-      desBytes += B1_SZ;
+      value = kwl.findKey(pfx, "QUAL_FLAG_ATT");
+      if (value.size())
+      {
+         m_qual_flag_att[0] = (ossimString(value).toBool()?'1':'0');
+      }
+      value = kwl.findKey(pfx, "INTERP_TYPE_ATT");
+      if (value.size())
+      {
+         ossimNitfCommon::setField(m_interp_type_att,
+                                   ossimString(value),
+                                   B1_SZ,
+                                   std::ios::right,
+                                   '0');
+      }
       s = get_interp_type_att();
       if (s == "2" || s == "3")
       {
-         in.read(m_interp_order_att, B1_SZ);
-         desBytes += B1_SZ;
+         value = kwl.findKey(pfx, "INTERP_ORDER_ATT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_interp_order_att,
+                                      ossimString(value),
+                                      B1_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
       }
-
-      in.read(m_att_type, B1_SZ);
-      desBytes += B1_SZ;
-      in.read(m_eci_ecf_att, B1_SZ);
-      desBytes += B1_SZ;
+      value = kwl.findKey(pfx, "ATT_TYPE");
+      if (value.size())
+      {
+         ossimNitfCommon::setField(m_att_type,
+                                   ossimString(value),
+                                   B1_SZ,
+                                   std::ios::right,
+                                   '0');
+      }
+      value = kwl.findKey(pfx, "ECI_ECF_ATT");
+      if (value.size())
+      {
+         ossimNitfCommon::setField(m_eci_ecf_att,
+                                   ossimString(value),
+                                   B1_SZ,
+                                   std::ios::right,
+                                   '0');
+      }
 
       if (m_eci_ecf_att[0] == '0' &&  getDesVersionNumber() >= 2)
       {
-         in.read(m_ta_pole, B19_SZ);
-         desBytes += B19_SZ;
-         in.read(m_a_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_b_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_cj1_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_cj2_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_dj1_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_dj2_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_pj1_pole, B10_SZ);
-         desBytes += B10_SZ;
-         in.read(m_pj2_pole, B10_SZ);
-         desBytes += B10_SZ;
-         in.read(m_e_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_f_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_gk1_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_gk2_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_hk1_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_hk2_pole, B11_SZ);
-         desBytes += B11_SZ;
-         in.read(m_pk1_pole, B10_SZ);
-         desBytes += B10_SZ;
-         in.read(m_pk2_pole, B10_SZ);
-         desBytes += B10_SZ;
-         in.read(m_tb_ut, B19_SZ);
-         desBytes += B19_SZ;
-         in.read(m_i_ut, B12_SZ);
-         desBytes += B12_SZ;
-         in.read(m_j_ut, B12_SZ);
-         desBytes += B12_SZ;
-         in.read(m_kn1_ut, B12_SZ);
-         desBytes += B12_SZ;
-         in.read(m_kn2_ut, B12_SZ);
-         desBytes += B12_SZ;
-         in.read(m_kn3_ut, B12_SZ);
-         desBytes += B12_SZ;
-         in.read(m_kn4_ut, B12_SZ);
-         desBytes += B12_SZ;
-         in.read(m_ln1_ut, B12_SZ);
-         desBytes += B12_SZ;
-         in.read(m_ln2_ut, B12_SZ);
-         desBytes += B12_SZ;
-         in.read(m_ln3_ut, B12_SZ);
-         desBytes += B12_SZ;
-         in.read(m_ln4_ut, B12_SZ);
-         desBytes += B12_SZ;
-         in.read(m_pn1_ut, B10_SZ);
-         desBytes += B12_SZ;
-         in.read(m_pn2_ut, B10_SZ);
-         desBytes += B12_SZ;
-         in.read(m_pn3_ut, B10_SZ);
-         desBytes += B12_SZ;
-         in.read(m_pn4_ut, B10_SZ);
-         desBytes += B12_SZ;
-      }
+         value = kwl.findKey(pfx, "TA_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_ta_pole,
+                                      ossimString(value),
+                                      B19_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "A_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_a_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "B_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_b_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "CJ1_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_cj1_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "CJ2_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_cj2_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "DJ1_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_dj1_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "DJ2_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_dj2_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "PJ1_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_pj1_pole,
+                                      ossimString(value),
+                                      B10_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "PJ2_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_pj2_pole,
+                                      ossimString(value),
+                                      B10_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "E_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_e_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "F_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_f_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "GK1_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_gk1_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "GK2_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_gk2_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "HK1_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_hk1_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "HK2_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_hk2_pole,
+                                      ossimString(value),
+                                      B11_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "PK1_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_pk1_pole,
+                                      ossimString(value),
+                                      B10_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "PK2_POLE");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_pk2_pole,
+                                      ossimString(value),
+                                      B10_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "TB_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_tb_ut,
+                                      ossimString(value),
+                                      B19_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "I_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_i_ut,
+                                      ossimString(value),
+                                      B12_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "J_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_j_ut,
+                                      ossimString(value),
+                                      B12_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "KN1_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_kn1_ut,
+                                      ossimString(value),
+                                      B12_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "KN2_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_kn2_ut,
+                                      ossimString(value),
+                                      B12_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "KN3_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_kn3_ut,
+                                      ossimString(value),
+                                      B12_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "KN4_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_kn4_ut,
+                                      ossimString(value),
+                                      B12_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "LN1_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_ln1_ut,
+                                      ossimString(value),
+                                      B12_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "LN2_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_ln2_ut,
+                                      ossimString(value),
+                                      B12_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "LN3_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_ln3_ut,
+                                      ossimString(value),
+                                      B12_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "LN4_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_ln4_ut,
+                                      ossimString(value),
+                                      B12_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "PN1_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_pn1_ut,
+                                      ossimString(value),
+                                      B10_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "PN2_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_pn2_ut,
+                                      ossimString(value),
+                                      B10_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "PN3_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_pn3_ut,
+                                      ossimString(value),
+                                      B10_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
+         value = kwl.findKey(pfx, "PN4_UT");
+         if (value.size())
+         {
+            ossimNitfCommon::setField(m_pn4_ut,
+                                      ossimString(value),
+                                      B10_SZ,
+                                      std::ios::right,
+                                      '0');
+         }
 
-      in.read(m_dt_att, B13_SZ);
-      desBytes += B13_SZ;
-      in.read(m_date_att, B8_SZ);
-      desBytes += B8_SZ;
-      in.read(m_t0_att, B16_SZ);
-      desBytes += B16_SZ;
-      in.read(m_num_att, B5_SZ);
-      desBytes += B5_SZ;
+      } // matches: if (m_eci_ecf_att[0] == '0' &&  getDesVersionNumber() >= 2)
+
+      value = kwl.findKey(pfx, "DT_ATT");
+      if (value.size())
+      {
+         ossimNitfCommon::setField(m_dt_att,
+                                   ossimString(value),
+                                   B13_SZ,
+                                   std::ios::right,
+                                   '0');
+      }
+      value = kwl.findKey(pfx, "DATE_ATT");
+      if (value.size())
+      {
+         ossimNitfCommon::setField(m_date_att,
+                                   ossimString(value),
+                                   B8_SZ,
+                                   std::ios::right,
+                                   '0');
+      }
+      value = kwl.findKey(pfx, "T0_ATT");
+      if (value.size())
+      {
+         ossimNitfCommon::setField(m_t0_att,
+                                   ossimString(value),
+                                   B16_SZ,
+                                   std::ios::right,
+                                   '0');
+      }
+      value = kwl.findKey(pfx, "NUM_ATT");
+      if (value.size())
+      {
+         ossimNitfCommon::setField(m_num_att,
+                                   ossimString(value),
+                                   B5_SZ,
+                                   std::ios::right,
+                                   '0');
+      }
       count = getNumberAtt();
       if (count > 0)
       {
@@ -765,32 +1050,64 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
          m_q4.resize(count);
          for(i = 0; i < count; ++i)
          {
-            in.read(buf, B18_SZ);
-            desBytes += B18_SZ;
-            buf[B18_SZ] = '\0';
-            m_q1[i] = buf;
-         
-            in.read(buf, B18_SZ);
-            desBytes += B18_SZ;
-            buf[B18_SZ] = '\0';
-            m_q2[i] = buf;
-
-            in.read(buf, B18_SZ);
-            desBytes += B18_SZ;
-            buf[B18_SZ] = '\0';
-            m_q3[i] = buf;
-
-            in.read(buf, B18_SZ);
-            desBytes += B18_SZ;
-            buf[B18_SZ] = '\0';
-            m_q4[i] = buf;
+            key = "Q1_";
+            k = key + ossimString::toString(i).string();
+            value = kwl.findKey(pfx, k);
+            if (value.size())
+            {
+               ossimNitfCommon::setField(buf,
+                                         ossimString(value),
+                                         B18_SZ,
+                                         std::ios::right,
+                                         '0');
+               buf[B18_SZ] = '\0';
+               m_q1[i] = buf;
+            }
+            key = "Q2_";
+            k = key + ossimString::toString(i).string();
+            value = kwl.findKey(pfx, k);
+            if (value.size())
+            {
+               ossimNitfCommon::setField(buf,
+                                         ossimString(value),
+                                         B18_SZ,
+                                         std::ios::right,
+                                         '0');
+               buf[B18_SZ] = '\0';
+               m_q2[i] = buf;
+            }
+            key = "Q3_";
+            k = key + ossimString::toString(i).string();
+            value = kwl.findKey(pfx, k);
+            if (value.size())
+            {
+               ossimNitfCommon::setField(buf,
+                                         ossimString(value),
+                                         B18_SZ,
+                                         std::ios::right,
+                                         '0');
+               buf[B18_SZ] = '\0';
+               m_q3[i] = buf;
+            }
+            key = "Q4_";
+            k = key + ossimString::toString(i).string();
+            value = kwl.findKey(pfx, k);
+            if (value.size())
+            {
+               ossimNitfCommon::setField(buf,
+                                         ossimString(value),
+                                         B18_SZ,
+                                         std::ios::right,
+                                         '0');
+               buf[B18_SZ] = '\0';
+               m_q4[i] = buf;
+            }
          }
-      }
-   
-      in.read(m_reserved_len, B9_SZ);
-      desBytes += B9_SZ;
-#endif
 
+      } // matches: count = getNumberAtt(); if (count > 0){
+
+      // m_reserved_len not loaded
+      
       break; // Trailing break from forever loop.
       
    } // Matches: while(FOREVER)
