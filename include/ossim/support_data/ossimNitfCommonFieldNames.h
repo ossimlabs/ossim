@@ -66,6 +66,7 @@ namespace ossim
       static const std::string TIME_FIRST_LINE_IMAGE_KW = "TIME_FIRST_LINE_IMAGE";
       static const std::string TIME_IMAGE_DURATION_KW = "TIME_IMAGE_DURATION";
       static const std::string UE_TIME_FLAG_KW = "UE_TIME_FLAG";
+      static const std::string UUID_KW = "UUID";
       static const std::string VEHICLE_ID_KW = "VEHICLE_ID";      
       static const std::string VEL_ABER_FLAG_KW = "VEL_ABER_FLAG";
       static const std::string YEAR_KW = "YEAR";
