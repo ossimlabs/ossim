@@ -1112,6 +1112,10 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
       
    } // Matches: while(FOREVER)
 
+   // Set the lengths in base ossimNitfRegisteredDes:
+   setDesSubHeaderLength(computeDesSubHeaderLength());
+   setDesDataLength(computeDesDataLength());
+
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
