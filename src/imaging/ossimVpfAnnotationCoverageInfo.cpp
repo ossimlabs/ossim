@@ -139,7 +139,7 @@ void ossimVpfAnnotationCoverageInfo::deleteAllFeatures()
 {
    for(ossim_uint32 idx = 0; idx < theFeatureInfoArray.size();++idx)
    {
-      theFeatureInfoArray[idx];
+      delete theFeatureInfoArray[idx];
    }
    
    theFeatureInfoArray.clear();
