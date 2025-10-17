@@ -1,6 +1,6 @@
 //*******************************************************************
 //
-// License:  LGPL
+// License: MIT
 //
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -9,13 +9,14 @@
 // Description: Nitf support class
 // 
 //********************************************************************
-// $Id: ossimNitfRegisteredTag.cpp 22013 2012-12-19 17:37:20Z dburken $
+// $Id$
 
+#include <ossim/support_data/ossimNitfRegisteredTag.h>
+#include <ossim/base/ossimNotify.h>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <sstream>
-#include <ossim/support_data/ossimNitfRegisteredTag.h>
 
 RTTI_DEF2(ossimNitfRegisteredTag, "ossimNitfRegisteredTag", ossimObject, ossimPropertyInterface)
 
@@ -114,4 +115,16 @@ bool ossimNitfRegisteredTag::saveState(ossimKeywordlist& kwl, const char* prefix
    }
    
    return result;
+}
+
+void ossimNitfRegisteredTag::truncatedWarning(const char* module,
+                                              const std::string& field,
+                                              const std::string& value,
+                                              ossim_uint32 field_width) const
+{
+   ossimNotify(ossimNotifyLevel_WARN)
+      << module << " WARNING: Field value truncated!\n"
+      << "field: " << field << " value: " << value
+      << " field width: " << field_width << " value width: " << value.size()
+      << std::endl;
 }
