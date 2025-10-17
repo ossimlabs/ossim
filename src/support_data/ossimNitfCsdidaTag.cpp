@@ -27,7 +27,6 @@
 RTTI_DEF1(ossimNitfCsdidaTag, "ossimNitfCsdidaTag", ossimNitfRegisteredTag);
 
 static ossimTrace traceDebug("ossimNitfCsdidaTag:debug");
-static const int FOREVER = 1;
 const std::string ossimNitfCsdidaTag::CETAG_KW = "CSDIDA";
 
 ossimNitfCsdidaTag::ossimNitfCsdidaTag()
@@ -138,78 +137,135 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
    
    bool status = true;
    std::string pfx = prefix?prefix:"";
-   std::string value;
+   ossimString value;
    std::string os;
 
-   while(FOREVER) // Break on error or at end.
+   value.string() = kwl.findKey(pfx, ossim::nitf::DAY_KW);
+   if (value.size())
    {
-      value = kwl.findKey( pfx, ossim::nitf::DAY_KW );
-      if ( value.size() == 2 )
+      ossimNitfCommon::setField(theDay, value, 2, std::ios::right, '0');
+      if (value.size() > 2)
       {
-         strcpy(theDay, value.c_str());
+            truncatedWarning(MODULE, ossim::nitf::DAY_KW, value.string(), 2);
       }
-      value = kwl.findKey( pfx, ossim::nitf::MONTH_KW );
-      if ( value.size() == 3 )
-      {
-         strcpy(theMonth, value.c_str());
-      }
-      value = kwl.findKey( pfx, ossim::nitf::YEAR_KW );
-      if ( value.size() == 4 )
-      {
-         strcpy(theYear, value.c_str());
-      }
-      value = kwl.findKey( pfx, ossim::nitf::PLATFORM_CODE_KW );
-      if ( value.size() == 2 )
-      {
-         strcpy(thePlatformCode, value.c_str());
-      }
-      value = kwl.findKey( pfx, ossim::nitf::VEHICLE_ID_KW );
-      if ( value.size() == 2 )
-      {
-         strcpy(theVehicleId, value.c_str());
-      }
-      value = kwl.findKey( pfx, ossim::nitf::PASS_KW );
-      if ( value.size() == 2 )
-      {
-         strcpy(thePass, value.c_str());
-      }
-      value = kwl.findKey( pfx, ossim::nitf::OPERATION_KW );
-      if ( value.size() == 3 )
-      {
-         strcpy(theOperation, value.c_str());
-      }
-      value = kwl.findKey( pfx, ossim::nitf::SENSOR_ID_KW );
-      if ( value.size() == 2 )
-      {
-         strcpy(theSensorId, value.c_str());
-      }
-      value = kwl.findKey( pfx, ossim::nitf::PRODUCT_ID_KW );
-      if ( value.size() == 2 )
-      {
-         strcpy(theProductId, value.c_str());
-      }
-      value = kwl.findKey( pfx, ossim::nitf::TIME_KW );
-      if ( value.size() == 14 )
-      {
-         strcpy(theTime, value.c_str());
-      }
-      value = kwl.findKey( pfx, ossim::nitf::PROCESS_TIME_KW );
-      if ( value.size() == 14 )
-      {
-         strcpy(theProcessTime, value.c_str());
-      }
-      ossim_uint32 fieldSize = 10;
-      value = kwl.findKey( pfx, ossim::nitf::SOFTWARE_VERSION_NUMBER_KW );
-      if ( value.size() <= fieldSize )
-      {
-         ossimNitfCommon::setField(theSoftwareVersionNumber, ossimString(value),
-                                   fieldSize, std::ios::left, ' ');
-         // strcpy(theSoftwareVersionNumber, value.c_str());
-      }
-
-      break; // Trailing break from forever loop.
+   }
       
-   } // Matches: while(FOREVER)
+   value.string() = kwl.findKey(pfx, ossim::nitf::MONTH_KW);
+   if (value.size())
+   {
+      ossimNitfCommon::setField(theMonth, value, 3, std::ios::left, ' ');
+      if (value.size() > 3)
+      {
+         truncatedWarning(MODULE, ossim::nitf::MONTH_KW, value.string(), 3);
+      }
+   }
+   
+   value.string() = kwl.findKey(pfx, ossim::nitf::YEAR_KW);
+   if (value.size())
+   {
+      ossimNitfCommon::setField(theYear, value, 4, std::ios::right, '0');
+      if (value.size() > 4)
+      {
+         truncatedWarning(MODULE, ossim::nitf::YEAR_KW, value.string(), 4);
+      }
+   }
+   
+   value.string() = kwl.findKey(pfx, ossim::nitf::PLATFORM_CODE_KW);
+   if (value.size())
+   {
+      ossimNitfCommon::setField(thePlatformCode, value, 2, std::ios::left, ' ');
+      if (value.size() > 2)
+      {
+         truncatedWarning(MODULE, ossim::nitf::PLATFORM_CODE_KW, value.string(), 2);
+      }
+   }
+   
+   value.string() = kwl.findKey(pfx, ossim::nitf::VEHICLE_ID_KW);
+   if (value.size())
+   {
+      ossimNitfCommon::setField(theVehicleId, value, 2, std::ios::right, '0');
+      if (value.size() > 2)
+      {
+         truncatedWarning(MODULE, ossim::nitf::VEHICLE_ID_KW, value.string(), 2);
+      }
+   }
+   
+   value.string() = kwl.findKey( pfx, ossim::nitf::PASS_KW );
+   if (value.size())
+   {
+      ossimNitfCommon::setField(thePass, value, 2, std::ios::right, '0');
+      if ( value.size() > 2 )
+      {
+         truncatedWarning(MODULE, ossim::nitf::PASS_KW, value.string(), 2);
+      }
+   }
+   
+   value.string() = kwl.findKey( pfx, ossim::nitf::OPERATION_KW );
+   if (value.size())
+   {
+      ossimNitfCommon::setField(theOperation, value, 3, std::ios::right, '0');
+      if (value.size() > 3)
+      {
+         truncatedWarning(MODULE, ossim::nitf::OPERATION_KW, value.string(), 3);
+      }
+   }
+   
+   value.string() = kwl.findKey( pfx, ossim::nitf::SENSOR_ID_KW );
+   if (value.size())
+   {
+      ossimNitfCommon::setField(theSensorId, value, 2, std::ios::left, ' ');
+      if (value.size() > 2)
+      {
+         truncatedWarning(MODULE, ossim::nitf::SENSOR_ID_KW, value.string(), 2);
+      }
+   }
+   
+   value.string() = kwl.findKey( pfx, ossim::nitf::PRODUCT_ID_KW );
+   if (value.size())
+   {
+      ossimNitfCommon::setField(theProductId, value, 2, std::ios::left, ' ');
+      if (value.size() > 2)
+      {
+         truncatedWarning(MODULE, ossim::nitf::PRODUCT_ID_KW, value.string(), 2);
+      }
+   }
+   
+   // Reserved field(theReservedField1) not loaded.
+   
+   value.string() = kwl.findKey( pfx, ossim::nitf::TIME_KW );
+   if (value.size())
+   {
+      ossimNitfCommon::setField(theTime, value, 14, std::ios::right, '0');
+      if (value.size() > 14)
+      {
+         truncatedWarning(MODULE, ossim::nitf::TIME_KW, value.string(), 14);
+      }
+   }
+   
+   value.string() = kwl.findKey( pfx, ossim::nitf::PROCESS_TIME_KW );
+   if (value.size())
+   {
+      ossimNitfCommon::setField(theProcessTime, value, 14, std::ios::right, '0');
+      if (value.size() > 14)
+      {
+         truncatedWarning(MODULE, ossim::nitf::PROCESS_TIME_KW, value.string(), 14);
+      }
+   }
+
+   // Reserved field(theReservedField2) not loaded.
+   // Reserved field(theReservedField3) not loaded.
+   // Reserved field(theReservedField4) not loaded.
+   // Reserved field(theReservedField5) not loaded.
+   
+   value.string() = kwl.findKey( pfx, ossim::nitf::SOFTWARE_VERSION_NUMBER_KW );
+   if (value.size())
+   {
+      ossimNitfCommon::setField(theSoftwareVersionNumber, value, 10, std::ios::left, ' ');
+      if (value.size() > 10)
+      {
+         truncatedWarning(MODULE, ossim::nitf::SOFTWARE_VERSION_NUMBER_KW, value.string(), 10);
+      }
+   }
    
    if (traceDebug())
    {

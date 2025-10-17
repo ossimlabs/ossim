@@ -122,6 +122,21 @@ public:
    virtual bool saveState(ossimKeywordlist& kwl, const char* prefix=0)const;   
    
 protected:
+
+   /**
+    * @brief Issues warning on field truncation. Outputs to
+    * ossimNotify(ossimNotifyLevel_WARN).
+    *
+    * @param module
+    * @param field
+    * @param value
+    * @param field_width
+    */
+   void truncatedWarning(const char* module,
+                         const std::string& field,
+                         const std::string& value,
+                         ossim_uint32 field_width) const; 
+
    std::string  m_tagName;
    ossim_uint32 m_tagLength;
    
