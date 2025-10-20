@@ -14,10 +14,10 @@
 #ifndef OSSIMNITFXML_H
 #define OSSIMNITFXML_H
 
-#include <base/ossimXmlNode.h>
+#include <ossim/base/ossimXmlNode.h>
 #include <ossim/support_data/ossimNitfRegisteredTag.h>
 
-#include <base/ossimXmlDocument.h>
+#include <ossim/base/ossimXmlDocument.h>
 
 class OSSIM_DLL ossimNitfXmlTag : public ossimNitfRegisteredTag
 {

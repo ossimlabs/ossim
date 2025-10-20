@@ -51,6 +51,7 @@
 #include <ossim/support_data/ossimNitfStreobTag.h>
 #include <ossim/support_data/ossimNitfTmintaTag.h>
 #include <ossim/support_data/ossimNitfBandsbTag.h>
+#include <ossim/support_data/ossimNitfXmlTag.h>
 
 
 RTTI_DEF1(ossimNitfRegisteredTagFactory, "ossimNitfRegisteredTagFactory", ossimNitfTagFactory);
@@ -82,6 +83,8 @@ static const char PROJECTION_PARAMETER_TAG[] = "PRJPSB";
 static const char RPCB_TAG[]                 = "RPC00B";
 static const char RPCA_TAG[]                 = "RPC00A";
 static const char SENSRA_TAG[]               = "SENSRA";
+static const char SORBXA_TAG[]               = "SORBXA";
+static const char SODDXA_TAG[]               = "SODDXA";
 static const char STDIDC_TAG[]               = "STDIDC";
 static const char STREOB_TAG[]               = "STREOB";
 static const char USE00A_TAG[]               = "USE00A";
@@ -224,6 +227,16 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    else if (name == SENSRA_TAG)
    {
       return new ossimNitfSensraTag();
+   }
+   else if (name == SORBXA_TAG)
+   {
+      ossimString ossimHome = getenv("OSSIM_HOME");
+      return  new ossimNitfXmlTag(ossimHome + "/share/ossim/templates/nitfSorbxa_Template.xml", name);
+   }
+   else if (name == SODDXA_TAG)
+   {
+      ossimString ossimHome = getenv("OSSIM_HOME");
+      return  new ossimNitfXmlTag(ossimHome + "/share/ossim/templates/nitfSoddxa_Template.xml", name);
    }
    else if (name == STDIDC_TAG)
    {

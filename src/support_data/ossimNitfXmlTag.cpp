@@ -18,6 +18,7 @@ ossimNitfXmlTag::ossimNitfXmlTag(ossimString formatPath, ossimString tagName)
    : ossimNitfRegisteredTag(tagName, 0)
 {
    m_fieldsDoc.openFile(formatPath);
+   m_doc.openFile(formatPath);
    initializeFields();
    this->m_tagLength = computeTagLength();
 }
@@ -173,5 +174,6 @@ bool ossimNitfXmlTag::r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRe
 bool ossimNitfXmlTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
    ossimKeywordlist localKWL = kwl;
-   return r_loadState(m_fieldsDoc.getRoot(), m_doc.getRoot(), localKWL);
+   r_loadState(m_fieldsDoc.getRoot(), m_doc.getRoot(), localKWL);
+   return true;
 }
