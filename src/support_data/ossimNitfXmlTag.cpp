@@ -11,6 +11,7 @@
 //
 //----------------------------------------------------------------------------
 
+#include <iomanip>
 #include <support_data/ossimNitfXmlTag.h>
 #include <sstream>
 
@@ -20,7 +21,7 @@ ossimNitfXmlTag::ossimNitfXmlTag(ossimString formatPath, ossimString tagName)
    m_fieldsDoc.openFile(formatPath);
    m_doc.openFile(formatPath);
    initializeFields();
-   this->m_tagLength = computeTagLength();
+   setTagLength(computeTagLength());
 }
 
 //Recursive component of the initializeFields method
@@ -48,17 +49,23 @@ void ossimNitfXmlTag::initializeFields()
 
 void ossimNitfXmlTag::parseStream(std::istream &in)
 {
-   std::ostringstream buffer;
-   std::string line;
    std::string delimiter = "</" + m_fieldsDoc.getRoot()->getTag() + ">";
-   while (std::getline(in, line)) {
-      if (line.find(delimiter) != std::string::npos) {
-         buffer << line.substr(0, line.find(delimiter));
-         break;
-      }
-      buffer << line << '\n';
+   ossimString buffer, xml;
+   char ch;
+   while (buffer != delimiter)
+   {
+      in.get(ch);
+      xml += ch;
+      buffer += ch;
+      if (buffer.size() > delimiter.size())
+         buffer.erase(0, 1); // Remove the first character
    }
-   m_doc.read(in);
+   //Skip over closing newline
+   in.get(ch);
+   std::istringstream lineStream(xml);
+   m_doc.read(lineStream);
+
+   setTagLength(computeTagLength() - 1);
 }
 
 void ossimNitfXmlTag::writeStream(std::ostream &out)
@@ -72,11 +79,34 @@ void ossimNitfXmlTag::clearFields()
    initializeFields();
 }
 
+//Recursive component of the get method
+std::ostream &ossimNitfXmlTag::r_print(ossimRefPtr<ossimXmlNode> valueParent, std::ostream &out,
+                            const std::string &prefix) const
+{
+   std::vector<ossimRefPtr<ossimXmlNode>> children = valueParent->getChildNodes();
+   out << std::setiosflags(std::ios::left)
+             << prefix << std::setw(24) << valueParent->getTag() << ":"
+             << valueParent->getText() << "\n";
+   for (auto& child: children)
+   {
+      r_print(child, out, prefix);
+   }
+   return out;
+}
+
 std::ostream &ossimNitfXmlTag::print(std::ostream &out,
                             const std::string &prefix) const
 {
-   out << m_doc;
-   return out;
+   std::string pfx = prefix;
+   pfx += m_tagName;
+   pfx += ".";
+
+   out << std::setiosflags(std::ios::left)
+         << pfx << std::setw(24) << "CEDES:"
+         << m_tagName << "\n"
+         << pfx << std::setw(24) << "CEL:"
+         << computeTagLength() << "\n";
+   return r_print(m_doc.getRoot(), out, pfx);
 }
 
 //Recursive component of the get method
@@ -175,5 +205,6 @@ bool ossimNitfXmlTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
    ossimKeywordlist localKWL = kwl;
    r_loadState(m_fieldsDoc.getRoot(), m_doc.getRoot(), localKWL);
+   setTagLength(computeTagLength());
    return true;
 }

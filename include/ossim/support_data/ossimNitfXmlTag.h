@@ -31,7 +31,7 @@ public:
    void clearFields();
 
    std::ostream &print(std::ostream &out,
-                               const std::string &prefix) const;
+                       const std::string &prefix) const;
 
    ossimString get(const ossimString& fieldName, int i = 0);
    void setField(const ossimString& fieldName, const ossimString& fieldValue, int i = 0);
@@ -49,6 +49,7 @@ private:
    bool r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRefPtr<ossimXmlNode> valueParent, ossimKeywordlist& kwl);
    ossimString r_get(ossimRefPtr<ossimXmlNode> valueParent, ossimString fieldName, int& i);
    void r_set(ossimRefPtr<ossimXmlNode> valueParent, const ossimString& fieldName, const ossimString& fieldValue, int &i);
+   std::ostream &r_print(ossimRefPtr<ossimXmlNode> valueParent, std::ostream &out, const std::string &prefix) const;
 
 
    ossimXmlDocument m_doc;
