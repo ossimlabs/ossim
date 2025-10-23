@@ -168,6 +168,21 @@ void ossimProjection::worldToLineSample(const ossimGpt& worldPoint,
    
 }
 
+void ossimProjection::lineSampleToECEF(const ossimDpt& image_point,
+ossimEcefPoint& ecf_point) const
+{
+   ossimGpt gpt;
+   lineSampleToWorld(image_point, gpt);
+   ecf_point = ossimEcefPoint(gpt);
+}
+
+void ossimProjection::ecefToLineSample(const ossimEcefPoint& ecf_point,
+ossimDpt& image_point) const
+{
+   ossimGpt gpt (ecf_point);
+   worldToLineSample(gpt, image_point);
+}
+
 void ossimProjection::getRoundTripError(const ossimDpt& imagePoint,
                                         ossimDpt& errorResult)const
 {

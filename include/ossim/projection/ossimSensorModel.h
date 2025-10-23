@@ -116,11 +116,6 @@ public:
    virtual void  worldToLineSample(const ossimGpt& world_point,
                                    ossimDpt&       image_point) const;
 
-   /** Will return lineSampleToWorld()'s world_point, converted to ECEF. Intended to be overridden
-    * by NEI sensor models with rigorous calculation without ground intersect. **/
-   virtual void  lineSampleToECEF(const ossimDpt&  image_point,
-                                   ossimEcefPoint& ecf_point) const;
-
    /*!
     * METHOD: lineSampleHeightToWorld
     * This is the pure virtual that performs the actual work of projecting
