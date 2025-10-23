@@ -52,16 +52,14 @@ void ossimNitfXmlTag::parseStream(std::istream &in)
    std::string delimiter = "</" + m_fieldsDoc.getRoot()->getTag() + ">";
    ossimString buffer, xml;
    char ch;
-   while (buffer != delimiter)
+   while (buffer != delimiter && in.get(ch))
    {
-      in.get(ch);
+      ;
       xml += ch;
       buffer += ch;
       if (buffer.size() > delimiter.size())
          buffer.erase(0, 1); // Remove the first character
    }
-   //Skip over closing newline
-   in.get(ch);
    std::istringstream lineStream(xml);
    m_doc.read(lineStream);
 
@@ -70,7 +68,9 @@ void ossimNitfXmlTag::parseStream(std::istream &in)
 
 void ossimNitfXmlTag::writeStream(std::ostream &out)
 {
-   out << m_doc;
+   std::stringstream result;
+   result << m_doc;
+   out << result.str().substr(0, result.str().size() - 1);
 }
 
 void ossimNitfXmlTag::clearFields()
@@ -106,7 +106,10 @@ std::ostream &ossimNitfXmlTag::print(std::ostream &out,
          << m_tagName << "\n"
          << pfx << std::setw(24) << "CEL:"
          << computeTagLength() << "\n";
-   return r_print(m_doc.getRoot(), out, pfx);
+   ossimKeywordlist kwlist;
+   m_doc.toKwl(kwlist, pfx);
+   out << kwlist.toString();
+   return out;//r_print(m_doc.getRoot(), out, pfx);
 }
 
 //Recursive component of the get method
@@ -157,7 +160,7 @@ ossim_uint32 ossimNitfXmlTag::computeTagLength() const
 {
    std::stringstream result;
    result << m_doc;
-   return result.str().size();
+   return result.str().size() - 1;
 }
 
 //Recursive component of the loadState method
