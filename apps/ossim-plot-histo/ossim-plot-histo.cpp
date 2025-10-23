@@ -97,7 +97,7 @@ void plotHistogram(const ossimFilename& histoFile, const ossimString& plotWith,
    const ossim_int64* y = histogram->GetCounts();
    for (int i=0; i<numBins; ++i)
    {
-      fprintf(gnuplotPipe, "%f %" PRIi64 " \n", x[i], y[i]);
+      fprintf(gnuplotPipe, "%d %" PRIi64 " \n", x[i], y[i]);
    }
    fprintf(gnuplotPipe, "e");
    fclose(gnuplotPipe);
