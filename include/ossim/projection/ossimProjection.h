@@ -71,6 +71,15 @@ public:
                                         const double&   heightAboveEllipsoid,
                                         ossimGpt&       worldPt) const = 0;
 
+   /** Will return lineSampleToWorld()'s world_point, converted to ECEF. Intended to be overridden
+    * by non-earth imaging (NEI) sensor models with rigorous calculation without ground intersect.*/
+   virtual void  lineSampleToECEF(const ossimDpt&  image_point,
+                                   ossimEcefPoint& ecf_point) const;
+
+   /** Will return image point given world point in ECEF. Intended to be overridden by non-earth
+    * imaging (NEI) sensor models with rigorous calculation without ground intersect. */
+   virtual void  ecefToLineSample(const ossimEcefPoint& ecf_point, ossimDpt&  image_point) const;
+
    virtual void getRoundTripError(const ossimDpt& imagePoint,
                                   ossimDpt& errorResult)const;
 
