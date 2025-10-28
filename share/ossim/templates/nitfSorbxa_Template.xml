@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<spaceObjectOrbitGeometry mult="1" type="Container">
+<?xml version="1.0" encoding="utf-8"?><spaceObjectOrbitGeometry mult="1" type="Container">
     <arh:Security mult="0"> </arh:Security>
     <spaceObjectIdentification mult="1">
-        <soType mult="1" type="String"> 1</soType>
+        <soType mult="1" type="String"> </soType>
         <satNo mult="0" type="String"> </satNo>
         <targetId mult="0" type="String"> </targetId>
         <soUid mult="1" type="String"> </soUid>
