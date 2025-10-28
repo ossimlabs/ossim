@@ -28,6 +28,7 @@ namespace ossim
       static const std::string CLOUD_COVER_KW = "CLOUD_COVER";
       static const std::string CROSS_SCAN_GSD_KW = "CROSS_SCAN_GSD";
       static const std::string DATE_ATT_KW = "DATE_ATT";
+      static const std::string DATE_EPHEM_KW = "DATE_EPHEM";
       static const std::string DAY_KW = "DAY";
       static const std::string DAY_FIRST_LINE_IMAGE_KW = "DAY_FIRST_LINE_IMAGE";
       static const std::string DYNAMIC_RANGE_KW = "DYNAMIC_RANGE";
@@ -62,6 +63,7 @@ namespace ossim
       static const std::string SUN_AZIMUTH_KW = "SUN_AZIMUTH";
       static const std::string SUN_ELEVATION_KW = "SUN_ELEVATION";
       static const std::string T0_ATT_KW = "T0_ATT";
+      static const std::string T0_EPHEM_KW = "T0_EPHEM";
       static const std::string TIME_KW = "TIME";
       static const std::string TIME_FIRST_LINE_IMAGE_KW = "TIME_FIRST_LINE_IMAGE";
       static const std::string TIME_IMAGE_DURATION_KW = "TIME_IMAGE_DURATION";

@@ -31,6 +31,13 @@ public:
 
    static const std::string CETAG_KW;
 
+   /*!
+   * Method to the load (recreate) the state of the object from a keyword
+   * list.  Return true if ok or false on error.
+   */
+   // virtual bool loadState(const ossimKeywordlist& kwl,
+                          // const char* prefix=0);
+
 private:
 
    void initializeFieldDefinitions();
