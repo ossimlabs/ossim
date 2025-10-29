@@ -11,8 +11,8 @@
 //
 //----------------------------------------------------------------------------
 
+#include <ossim/support_data/ossimNitfXmlTag.h>
 #include <iomanip>
-#include <support_data/ossimNitfXmlTag.h>
 #include <sstream>
 
 ossimNitfXmlTag::ossimNitfXmlTag(ossimString formatPath, ossimString tagName)
