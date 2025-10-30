@@ -671,6 +671,7 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
       {
          m_qual_flag_att[0] = (ossimString(value).toBool()?'1':'0');
       }
+
       value = kwl.findKey(pfx, "INTERP_TYPE_ATT");
       if (value.size())
       {
@@ -1042,6 +1043,7 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    '0');
       }
       count = getNumberAtt();
+//:)
       if (count > 0)
       {
          m_q1.resize(count);
@@ -1051,8 +1053,9 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
          for(i = 0; i < count; ++i)
          {
             key = "Q1_";
-            k = key + ossimString::toString(i).string();
+            k = key + ossimString::toString(i + 1).string();
             value = kwl.findKey(pfx, k);
+
             if (value.size())
             {
                ossimNitfCommon::setField(buf,
@@ -1064,7 +1067,7 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                m_q1[i] = buf;
             }
             key = "Q2_";
-            k = key + ossimString::toString(i).string();
+            k = key + ossimString::toString(i + 1).string();
             value = kwl.findKey(pfx, k);
             if (value.size())
             {
@@ -1077,7 +1080,7 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                m_q2[i] = buf;
             }
             key = "Q3_";
-            k = key + ossimString::toString(i).string();
+            k = key + ossimString::toString(i + 1).string();
             value = kwl.findKey(pfx, k);
             if (value.size())
             {
@@ -1090,7 +1093,7 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                m_q3[i] = buf;
             }
             key = "Q4_";
-            k = key + ossimString::toString(i).string();
+            k = key + ossimString::toString(i + 1).string();
             value = kwl.findKey(pfx, k);
             if (value.size())
             {
@@ -1436,15 +1439,16 @@ std::ostream& ossimNitfCsattbDes::print(std::ostream& out,
    count = getNumberAtt();
    if (count > 0 && m_q1.size() == count)
    {
+//:)
       for(i = 0; i < count; ++i)
       {
-         s = "Q1[" + ossimString::toString(i).string() + "]:";
+         s = "Q1[" + ossimString::toString(i + 1).string() + "]:";
          out << pfx << std::setw(w) << s << m_q1[i] << "\n";
-         s = "Q2[" + ossimString::toString(i).string() + "]:";
+         s = "Q2[" + ossimString::toString(i + 1).string() + "]:";
          out << pfx << std::setw(w) << s << m_q2[i] << "\n";
-         s = "Q3[" + ossimString::toString(i).string() + "]:";
+         s = "Q3[" + ossimString::toString(i + 1).string() + "]:";
          out << pfx << std::setw(w) << s << m_q3[i] << "\n";
-         s = "Q4[" + ossimString::toString(i).string() + "]:";
+         s = "Q4[" + ossimString::toString(i + 1).string() + "]:";
          out << pfx << std::setw(w) << s << m_q4[i] << "\n";
       }
    }
