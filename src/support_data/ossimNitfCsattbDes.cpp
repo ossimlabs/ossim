@@ -1043,7 +1043,6 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    '0');
       }
       count = getNumberAtt();
-//:)
       if (count > 0)
       {
          m_q1.resize(count);
@@ -1439,7 +1438,6 @@ std::ostream& ossimNitfCsattbDes::print(std::ostream& out,
    count = getNumberAtt();
    if (count > 0 && m_q1.size() == count)
    {
-//:)
       for(i = 0; i < count; ++i)
       {
          s = "Q1[" + ossimString::toString(i + 1).string() + "]:";
