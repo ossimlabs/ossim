@@ -15,7 +15,7 @@
         </accmClassification>
         <accmImageHold type="bool"/>
     </securityData>
-    <sourceCatalog mult="1" type="String" attributes="catalogDate, catalogVersion">
+    <sourceCatalog mult="1" type="String" attributes="catalogDate, catalogVersion">Space-Track
         <absVisualMagnitude type="double"/>
         <radarCrossSection type="double"/>
         <length type="double"/>
@@ -24,7 +24,7 @@
         <diameter type="double"/>
         <mass type="double"/>
         <soUid mult="1" type="String"/>
-        <soType mult="1" type="String"/>
+        <soType mult="1" type="String">satellite</soType>
         <nonSatelliteInformation>
             <name type="String"/>
             <identifier type="String"/>

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?><spaceObjectOrbitGeometry mult="1" type="Container">
-    <arh:Security mult="0"> </arh:Security>
+    <arh:Security> </arh:Security>
     <spaceObjectIdentification mult="1">
-        <soType mult="1" type="String"> </soType>
-        <satNo mult="0" type="String"> </satNo>
-        <targetId mult="0" type="String"> </targetId>
+        <soType mult="1" type="String">satellite</soType>
+        <satNo type="String"> </satNo>
+        <targetID type="String"> </targetID>
         <soUid mult="1" type="String"> </soUid>
         <name mult="1" type="String"> </name>
-        <identifier mult="0" type="String"> </identifier>
-        <description mult="0" type="String"> </description>
-        <internationalDesignator mult="0" type="String" attributes="pieceType">
+        <identifier type="String"> </identifier>
+        <description type="String"> </description>
+        <internationalDesignator type="String" attributes="pieceType">
         </internationalDesignator>
     </spaceObjectIdentification>
     <geometryData mult="1">
         <glasGfm mult="1">
-            <atitude mult="0">
+            <atitude>
                 <desId mult="1" type="String"> </desId>
                 <desVer mult="1" type="String"> </desVer>
                 <uuid mult="1" type="String"> </uuid>
