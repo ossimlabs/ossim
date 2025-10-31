@@ -14,14 +14,21 @@
 #include <ossim/support_data/ossimNitfXmlTag.h>
 #include <iomanip>
 #include <sstream>
+#include <base/ossimPreferences.h>
 
-ossimNitfXmlTag::ossimNitfXmlTag(ossimString formatPath, ossimString tagName)
+ossimNitfXmlTag::ossimNitfXmlTag(ossimString tagName)
    : ossimNitfRegisteredTag(tagName, 0)
 {
-   m_fieldsDoc.openFile(formatPath);
-   m_doc.openFile(formatPath);
-   initializeFields();
-   setTagLength(computeTagLength());
+   std::string lookup = ossimPreferences::instance()->
+         findPreference("ossim_share_directory");
+   ossimString formatPath = lookup + "/nitf" + tagName + "_Template.xml";
+   if (ossimFilename(formatPath).exists())
+   {
+      m_fieldsDoc.openFile(formatPath);
+      m_doc.openFile(formatPath);
+      initializeFields();
+      setTagLength(computeTagLength());
+   }
 }
 
 //Recursive component of the initializeFields method

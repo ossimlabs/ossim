@@ -230,13 +230,11 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    }
    else if (name == SORBXA_TAG)
    {
-      ossimString ossimHome = getenv("OSSIM_HOME");
-      return  new ossimNitfXmlTag(ossimHome + "/share/ossim/templates/nitfSorbxa_Template.xml", name);
+      return new ossimNitfXmlTag("SORBXA");
    }
    else if (name == SODDXA_TAG)
    {
-      ossimString ossimHome = getenv("OSSIM_HOME");
-      return  new ossimNitfXmlTag(ossimHome + "/share/ossim/templates/nitfSoddxa_Template.xml", name);
+      return new ossimNitfXmlTag("SODDXA");
    }
    else if (name == STDIDC_TAG)
    {
