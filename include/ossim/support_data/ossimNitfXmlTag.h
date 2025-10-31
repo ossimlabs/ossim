@@ -22,7 +22,7 @@
 class OSSIM_DLL ossimNitfXmlTag : public ossimNitfRegisteredTag
 {
 public:
-   ossimNitfXmlTag(ossimString formatPath, ossimString tagName);
+   ossimNitfXmlTag(ossimString tagName);
 
    void parseStream(std::istream &in);
 
