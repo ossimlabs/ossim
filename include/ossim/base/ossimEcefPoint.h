@@ -27,6 +27,7 @@
 class ossimGpt;
 class ossimEcefVector;
 class ossimDpt3d;
+class ossimEciPoint;
 
 //*****************************************************************************
 //  CLASS: ossimEcefPoint
@@ -45,6 +46,8 @@ public:
    // ossimEcefPoint(const ossimEcefPoint& copy_this) = default;
 
    ossimEcefPoint(const ossimGpt& convert_this);
+
+   ossimEcefPoint(const ossimEciPoint& convert_this);
 
    ossimEcefPoint(const double& x,
                   const double& y,

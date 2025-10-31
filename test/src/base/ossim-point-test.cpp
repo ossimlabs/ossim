@@ -16,6 +16,7 @@
 #include <ossim/base/ossimDpt3d.h>
 #include <ossim/base/ossimGpt.h>
 #include <ossim/base/ossimEcefPoint.h>
+#include <ossim/base/ossimEciPoint.h>
 #include <ossim/base/ossimEcefVector.h>
 
 int main()
@@ -97,7 +98,7 @@ int main()
    std::string gs2("(1.1,2.2,3.3,NAR-C)");
    std::string gs3(" (4.4,5.5,6.6,NAS-C )");
    std::string gs4_5_6_7(
-      " (4.4,5.5,6.6,NAS-C )( 10.0, 10.0 ,5.0, TOY-C ) (17, -89, 50.0, xxx) (28.2, -44.5, 10000.0, NAS-B) 12345.6789");
+                         " (4.4,5.5,6.6,NAS-C )( 10.0, 10.0 ,5.0, TOY-C ) (17, -89, 50.0, xxx) (28.2, -44.5, 10000.0, NAS-B) 12345.6789");
 
    ossimGpt gp1;
    ossimGpt gp2;
@@ -137,6 +138,20 @@ int main()
    ev1.toPoint(es1);
    std::string es3 = ev1.toString(10).string();
 
+   //---
+   // Test ossimEcifPoint .
+   //---
+   time_t t = time(NULL);
+   ossimEciPoint eci1(ep1, t);
+   ossimEciPoint eci2(ep2, t);
+   double deltaEci = eci1.distanceTo(eci2);
+   if (fabs(deltaEci - delta_ep) > 1.0e-10)
+      std::cout << "\nFailed ECI distance test.\n" << std::endl;
+   ossimEcefPoint ep3;
+   eci1.toEcef(ep3);
+   if (ep3 != ep1)
+      std::cout << "\nFailed ECI to ECEF conversion test.\n" << std::endl;
+
    std::cout
          << "\nis1:       " << is1
          << "\nip1:       " << ip1
@@ -151,7 +166,7 @@ int main()
          << "\nip7:       " << ip7
          << "\ni:         " << i
 
-         << "\n\n\nds1:       " << ds1
+         << "\n\nds1:       " << ds1
          << "\ndp1:       " << dp1
          << "\nds2:       " << ds2
          << "\ndp2:       " << dp2
@@ -173,7 +188,7 @@ int main()
          << "\ndp3d2:     " << dp3d2
          << "\ndelta_dp3: " << delta_dp3
 
-         << "\n\n\ngs1:       " << gs1
+         << "\n\ngs1:       " << gs1
          << "\ngp1:       " << gp1
          << "\ngs2:       " << gs2
          << "\ngp2:       " << gp2
@@ -187,12 +202,16 @@ int main()
          << "\nd2:        " << d2
          << "\ndelta_gp:  " << delta_gp
 
-         << "\n\n\nes1:       " << es1
+         << "\n\nes1:       " << es1
          << "\nep1:       " << ep1
          << "\nes2:       " << es2
-         << "\nev1:       " << ev1
+
+         << "\n\nev1:       " << ev1
          << "\nes3:       " << es3
          << "\ndelta_ep:  " << delta_ep
+
+         << "\n\neci1:       " << eci1
+         << "deltaEci:   " << deltaEci
 
          << std::endl;
 
