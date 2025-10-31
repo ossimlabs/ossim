@@ -19,6 +19,7 @@
 
 #include <ossim/base/ossimEcefPoint.h>
 #include <ossim/base/ossimGpt.h>
+#include <ossim/base/ossimEciPoint.h>
 #include <ossim/base/ossimGeocent.h>
 #include <ossim/base/ossimDpt3d.h>
 #include <ossim/base/ossimDatum.h>
@@ -49,6 +50,11 @@ ossimEcefPoint::ossimEcefPoint(const ossimGpt&  gpt)
                                                   theData[1],
                                                   theData[2]);
    }
+}
+
+ossimEcefPoint::ossimEcefPoint(const ossimEciPoint& pt)
+{
+   pt.toEcef(*this);
 }
 
 ossimEcefPoint::ossimEcefPoint(const ossimDpt3d& pt)
