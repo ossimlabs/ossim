@@ -146,7 +146,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(theDay, value, 2, std::ios::right, '0');
       if (value.size() > 2)
       {
-            truncatedWarning(MODULE, ossim::nitf::DAY_KW, value.string(), 2);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::DAY_KW, value.string(), 2);
       }
    }
       
@@ -156,7 +156,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(theMonth, value, 3, std::ios::left, ' ');
       if (value.size() > 3)
       {
-         truncatedWarning(MODULE, ossim::nitf::MONTH_KW, value.string(), 3);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::MONTH_KW, value.string(), 3);
       }
    }
    
@@ -166,7 +166,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(theYear, value, 4, std::ios::right, '0');
       if (value.size() > 4)
       {
-         truncatedWarning(MODULE, ossim::nitf::YEAR_KW, value.string(), 4);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::YEAR_KW, value.string(), 4);
       }
    }
    
@@ -176,7 +176,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(thePlatformCode, value, 2, std::ios::left, ' ');
       if (value.size() > 2)
       {
-         truncatedWarning(MODULE, ossim::nitf::PLATFORM_CODE_KW, value.string(), 2);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::PLATFORM_CODE_KW, value.string(), 2);
       }
    }
    
@@ -186,7 +186,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(theVehicleId, value, 2, std::ios::right, '0');
       if (value.size() > 2)
       {
-         truncatedWarning(MODULE, ossim::nitf::VEHICLE_ID_KW, value.string(), 2);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::VEHICLE_ID_KW, value.string(), 2);
       }
    }
    
@@ -196,7 +196,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(thePass, value, 2, std::ios::right, '0');
       if ( value.size() > 2 )
       {
-         truncatedWarning(MODULE, ossim::nitf::PASS_KW, value.string(), 2);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::PASS_KW, value.string(), 2);
       }
    }
    
@@ -206,7 +206,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(theOperation, value, 3, std::ios::right, '0');
       if (value.size() > 3)
       {
-         truncatedWarning(MODULE, ossim::nitf::OPERATION_KW, value.string(), 3);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::OPERATION_KW, value.string(), 3);
       }
    }
    
@@ -216,7 +216,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(theSensorId, value, 2, std::ios::left, ' ');
       if (value.size() > 2)
       {
-         truncatedWarning(MODULE, ossim::nitf::SENSOR_ID_KW, value.string(), 2);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::SENSOR_ID_KW, value.string(), 2);
       }
    }
    
@@ -226,7 +226,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(theProductId, value, 2, std::ios::left, ' ');
       if (value.size() > 2)
       {
-         truncatedWarning(MODULE, ossim::nitf::PRODUCT_ID_KW, value.string(), 2);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::PRODUCT_ID_KW, value.string(), 2);
       }
    }
    
@@ -238,7 +238,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(theTime, value, 14, std::ios::right, '0');
       if (value.size() > 14)
       {
-         truncatedWarning(MODULE, ossim::nitf::TIME_KW, value.string(), 14);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::TIME_KW, value.string(), 14);
       }
    }
    
@@ -248,7 +248,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(theProcessTime, value, 14, std::ios::right, '0');
       if (value.size() > 14)
       {
-         truncatedWarning(MODULE, ossim::nitf::PROCESS_TIME_KW, value.string(), 14);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::PROCESS_TIME_KW, value.string(), 14);
       }
    }
 
@@ -263,7 +263,7 @@ bool ossimNitfCsdidaTag::loadState(const ossimKeywordlist& kwl, const char* pref
       ossimNitfCommon::setField(theSoftwareVersionNumber, value, 10, std::ios::left, ' ');
       if (value.size() > 10)
       {
-         truncatedWarning(MODULE, ossim::nitf::SOFTWARE_VERSION_NUMBER_KW, value.string(), 10);
+         ossim::nitf::truncatedWarning(MODULE, ossim::nitf::SOFTWARE_VERSION_NUMBER_KW, value.string(), 10);
       }
    }
    
