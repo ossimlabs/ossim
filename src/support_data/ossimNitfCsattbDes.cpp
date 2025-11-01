@@ -340,12 +340,12 @@ void ossimNitfCsattbDes::parseStream(std::istream& in)
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "desshl field:              " << getDesSubHeaderLength()
+         << "desshl field:            " << getDesSubHeaderLength()
          << "\nactual bytes read:       " << subHdrBytes
          << "\ndes length field:        " << getDesDataLength()
          << "\nactual bytes read:       " << desBytes << "\n"
          << "\ncomputed sub hdr bytes:  " << computeDesSubHeaderLength()
-         << "\ncomputed des data bytes: " << computeDesDataLength()
+         << "\ncomputed des data bytes: " << computeDesDataLength() << "\n"
          << MODULE << " DEBUG exited...\n";
    }
 }
@@ -545,12 +545,12 @@ void ossimNitfCsattbDes::writeStream(std::ostream& out)
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "desshl field:              " << getDesSubHeaderLength()
+         << "desshl field:            " << getDesSubHeaderLength()
          << "\nactual bytes written:    " << subHdrBytes
          << "\ndes length field:        " << getDesDataLength()
          << "\nactual bytes writen:     " << desBytes << "\n"
          << "\ncomputed sub hdr bytes:  " << computeDesSubHeaderLength()
-         << "\ncomputed des data bytes: " << computeDesDataLength()
+         << "\ncomputed des data bytes: " << computeDesDataLength() << "\n"
          << MODULE << " DEBUG exited...\n";
    }
 }
@@ -576,8 +576,6 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
    std::string s;
    ossim_uint32 count;
    ossim_uint32 i;
-   ossim_uint32 subHdrBytes = 0;
-   ossim_uint32 desBytes = 0; 
  
    while(FOREVER) // Break on error or at end.
    {
