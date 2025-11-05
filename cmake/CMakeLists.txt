@@ -289,6 +289,8 @@ FILE(GLOB projection_files "${OSSIM_HOME}/share/ossim/projection/*.csv"  "${OSSI
 INSTALL(FILES ${projection_files} DESTINATION share/ossim/projection COMPONENT ossim)
 
 INSTALL(FILES ${OSSIM_HOME}/share/ossim/templates/ossim_preferences_template DESTINATION "share/ossim" COMPONENT ossim RENAME ossim-preferences-template)
+INSTALL(FILES ${OSSIM_HOME}/share/ossim/templates/nitfSODDXA_Template.xml DESTINATION "share/ossim" COMPONENT ossim RENAME nitfSODDXA_Template.xml)
+INSTALL(FILES ${OSSIM_HOME}/share/ossim/templates/nitfSORBXA_Template.xml DESTINATION "share/ossim" COMPONENT ossim RENAME nitfSORBXA_Template.xml)
 
 ############################## Setup the packages ##############################
 # present the packaging option only if we have the cpack command defined (effectively >= 2.6.0)

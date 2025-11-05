@@ -1,6 +1,6 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
+// License: MIT
 // 
 // See LICENSE.txt file in the top level directory for more details.
 //
@@ -8,28 +8,22 @@
 //
 // Description: Utility class for global nitf methods.
 //
-//----------------------------------------------------------------------------
-// $Id: ossimNitfCommon.cpp 17978 2010-08-24 16:17:00Z dburken $
+//---
+// $Id$
 
-#include <cstring> /* for memcpy */
-#include <sstream>
-#include <iomanip>
-#include <sstream>
-#include <stdexcept>
-#include <iostream>
 #include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/base/ossimDms.h>
 #include <ossim/base/ossimDpt.h>
 #include <ossim/base/ossimIrect.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTrace.h>
+#include <cstring>
+#include <sstream>
+#include <iomanip>
+#include <stdexcept>
+#include <iostream>
 
 static const ossimTrace traceDebug(ossimString("ossimNitfCommon:debug"));
-
-                                   
-ossimNitfCommon::ossimNitfCommon(){}
-
-ossimNitfCommon::~ossimNitfCommon(){}
 
 ossimString ossimNitfCommon::convertToScientificString(
    const ossim_float64& aValue,
@@ -543,3 +537,14 @@ ossimString ossimNitfCommon::getCompressionRate(const ossimIrect& rect,
    return result;
 }
 
+void ossim::nitf::truncatedWarning(const char* module,
+                                   const std::string& field,
+                                   const std::string& value,
+                                   ossim_uint32 field_width)
+{
+   ossimNotify(ossimNotifyLevel_WARN)
+      << module << " WARNING: Field value truncated!\n"
+      << "field: " << field << " value: " << value
+      << " field width: " << field_width << " value width: " << value.size()
+      << std::endl;
+}

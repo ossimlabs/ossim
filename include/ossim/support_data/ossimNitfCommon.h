@@ -1,4 +1,4 @@
-//----------------------------------------------------------------------------
+//---
 //
 // License:  MIT
 // 
@@ -8,14 +8,14 @@
 //
 // Description: Utility class for global nitf methods.
 //
-//----------------------------------------------------------------------------
-// $Id: ossimNitfCommon.h 15410 2009-09-11 19:45:38Z dburken $
+//---
+// $Id$
 #ifndef ossimNitfCommon_HEADER
-#define ossimNitfCommon_HEADER
+#define ossimNitfCommon_HEADER 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimString.h>
-#include <iostream>
+#include <ios>
 
 class ossimDpt;
 class ossimIrect;
@@ -24,12 +24,6 @@ class ossimIrect;
 class OSSIM_DLL ossimNitfCommon
 {
 public:
-
-   /** default constructor */
-   ossimNitfCommon();
-
-   /** destructor */
-   ~ossimNitfCommon();
 
    /**
     * This method takes a value and a size(or width) and converts it to a
@@ -125,6 +119,7 @@ public:
                         std::streamsize width,
                         std::ios_base::fmtflags ioflags = std::ios::left,
                         char fill = ' ');
+   
    /**
     * This will encode a 60 character IGEOLO field.
     */
@@ -134,11 +129,13 @@ public:
                                 const ossimDpt& ur,
                                 const ossimDpt& lr,
                                 const ossimDpt& ll);
+   
    static ossimString encodeGeographicDms(
                                           const ossimDpt& ul,
                                           const ossimDpt& ur,
                                           const ossimDpt& lr,
                                           const ossimDpt& ll);
+   
    static ossimString encodeGeographicDecimalDegrees(
                                                      const ossimDpt& ul,
                                                      const ossimDpt& ur,
@@ -178,5 +175,27 @@ public:
    
    
 }; // End of class ossimNitfCommon.
+
+namespace ossim
+{
+   namespace nitf
+   {
+      /**
+       * @brief Issues warning on field truncation. Outputs to
+       * ossimNotify(ossimNotifyLevel_WARN).
+       *
+       * @param module
+       * @param field
+       * @param value
+       * @param field_width
+       */
+      void truncatedWarning(const char* module,
+                            const std::string& field,
+                            const std::string& value,
+                            ossim_uint32 field_width);
+      
+   } // End: namespace ossim::nitf
    
+} // End: namespace ossim
+
 #endif /* #ifndef ossimNitfCommon_HEADER */

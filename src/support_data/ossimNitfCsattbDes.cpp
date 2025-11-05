@@ -340,12 +340,12 @@ void ossimNitfCsattbDes::parseStream(std::istream& in)
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "desshl field:              " << getDesSubHeaderLength()
+         << "desshl field:            " << getDesSubHeaderLength()
          << "\nactual bytes read:       " << subHdrBytes
          << "\ndes length field:        " << getDesDataLength()
          << "\nactual bytes read:       " << desBytes << "\n"
          << "\ncomputed sub hdr bytes:  " << computeDesSubHeaderLength()
-         << "\ncomputed des data bytes: " << computeDesDataLength()
+         << "\ncomputed des data bytes: " << computeDesDataLength() << "\n"
          << MODULE << " DEBUG exited...\n";
    }
 }
@@ -545,12 +545,12 @@ void ossimNitfCsattbDes::writeStream(std::ostream& out)
    if (traceDebug())
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
-         << "desshl field:              " << getDesSubHeaderLength()
+         << "desshl field:            " << getDesSubHeaderLength()
          << "\nactual bytes written:    " << subHdrBytes
          << "\ndes length field:        " << getDesDataLength()
          << "\nactual bytes writen:     " << desBytes << "\n"
          << "\ncomputed sub hdr bytes:  " << computeDesSubHeaderLength()
-         << "\ncomputed des data bytes: " << computeDesDataLength()
+         << "\ncomputed des data bytes: " << computeDesDataLength() << "\n"
          << MODULE << " DEBUG exited...\n";
    }
 }
@@ -576,8 +576,6 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
    std::string s;
    ossim_uint32 count;
    ossim_uint32 i;
-   ossim_uint32 subHdrBytes = 0;
-   ossim_uint32 desBytes = 0; 
  
    while(FOREVER) // Break on error or at end.
    {
@@ -589,8 +587,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    UUID_SZ,
                                    std::ios::left,
                                    ' ');
+         if (value.size() > UUID_SZ)
+         {
+            ossim::nitf::truncatedWarning(MODULE, ossim::nitf::UUID_KW, value, UUID_SZ);
+         }
       }
-      value = kwl.findKey(pfx, "NUMAIS");
+      key = "NUMAIS";
+      value = kwl.findKey(pfx, key);
       if (value.size())
       {
          ossimNitfCommon::setField(m_numais,
@@ -598,6 +601,10 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    NUMAIS_SZ,
                                    std::ios::right,
                                    '0');
+         if (value.size() > NUMAIS_SZ)
+         {
+            ossim::nitf::truncatedWarning(MODULE, key, value, NUMAIS_SZ);
+         }
       }
       count = getNumberAis();
       if (count > 0)
@@ -617,6 +624,10 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                          '0');
                buf[AISDLVL_SZ] = '\0';
                m_aisdlvl[i] = buf;
+               if (value.size() > AISDLVL_SZ)
+               {
+                  ossim::nitf::truncatedWarning(MODULE, k, value, AISDLVL_SZ);
+               }
             }
 #if 0 /* Not sure if this should be an error and break out? drb */
             else // error... ??? )
@@ -628,10 +639,10 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
             }
 #endif         
          }
-         
       }
 
-      value = kwl.findKey(pfx, "NUM_ASSOC_ELEM");
+      key = "NUM_ASSOC_ELEM";
+      value = kwl.findKey(pfx, key);
       if (value.size())
       {
          ossimNitfCommon::setField(m_num_assoc_elem,
@@ -639,6 +650,10 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    NUM_ASSOC_ELEM_SZ,
                                    std::ios::right,
                                    '0');
+         if (value.size() > NUM_ASSOC_ELEM_SZ)
+         {
+            ossim::nitf::truncatedWarning(MODULE, key, value, NUM_ASSOC_ELEM_SZ);
+         }
       }
       count = getNumberAssocElem();
       if (count > 0)
@@ -658,20 +673,25 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                          '0');
                buf[UUID_SZ] = '\0';
                m_assoc_elem_uuid[i] = buf;
+               if (value.size() > UUID_SZ)
+               {
+                  ossim::nitf::truncatedWarning(MODULE, k, value, UUID_SZ);
+               }
             }
          }
-
          // m_reservedsubh_len not loaded
       }
       // End sub header:
-
+      
       // Start of DES data:
-      value = kwl.findKey(pfx, "QUAL_FLAG_ATT");
+      key = "QUAL_FLAG_ATT";
+      value = kwl.findKey(pfx, key);
       if (value.size())
       {
          m_qual_flag_att[0] = (ossimString(value).toBool()?'1':'0');
       }
-      value = kwl.findKey(pfx, "INTERP_TYPE_ATT");
+      key = "INTERP_TYPE_ATT";
+      value = kwl.findKey(pfx, key);
       if (value.size())
       {
          ossimNitfCommon::setField(m_interp_type_att,
@@ -679,11 +699,16 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    B1_SZ,
                                    std::ios::right,
                                    '0');
+         if (value.size() > B1_SZ)
+         {
+            ossim::nitf::truncatedWarning(MODULE, key, value, B1_SZ);
+         }
       }
       s = get_interp_type_att();
       if (s == "2" || s == "3")
       {
-         value = kwl.findKey(pfx, "INTERP_ORDER_ATT");
+         key = "INTERP_ORDER_ATT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_interp_order_att,
@@ -691,9 +716,14 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B1_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B1_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B1_SZ);
+            }
          }
       }
-      value = kwl.findKey(pfx, "ATT_TYPE");
+      key = "ATT_TYPE";
+      value = kwl.findKey(pfx, key);
       if (value.size())
       {
          ossimNitfCommon::setField(m_att_type,
@@ -701,8 +731,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    B1_SZ,
                                    std::ios::right,
                                    '0');
+         if (value.size() > B1_SZ)
+         {
+            ossim::nitf::truncatedWarning(MODULE, key, value, B1_SZ);
+         }
       }
-      value = kwl.findKey(pfx, "ECI_ECF_ATT");
+      key = "ECI_ECF_ATT";
+      value = kwl.findKey(pfx, key);
       if (value.size())
       {
          ossimNitfCommon::setField(m_eci_ecf_att,
@@ -710,11 +745,16 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    B1_SZ,
                                    std::ios::right,
                                    '0');
+         if (value.size() > B1_SZ)
+         {
+            ossim::nitf::truncatedWarning(MODULE, key, value, B1_SZ);
+         }
       }
 
       if (m_eci_ecf_att[0] == '0' &&  getDesVersionNumber() >= 2)
       {
-         value = kwl.findKey(pfx, "TA_POLE");
+         key = "TA_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_ta_pole,
@@ -722,8 +762,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B19_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B19_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B19_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "A_POLE");
+         key = "A_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_a_pole,
@@ -731,8 +776,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "B_POLE");
+         key = "B_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_b_pole,
@@ -740,8 +790,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "CJ1_POLE");
+         key = "CJ1_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_cj1_pole,
@@ -749,8 +804,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "CJ2_POLE");
+         key = "CJ2_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_cj2_pole,
@@ -758,8 +818,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "DJ1_POLE");
+         key = "DJ1_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_dj1_pole,
@@ -767,8 +832,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "DJ2_POLE");
+         key = "DJ2_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_dj2_pole,
@@ -776,8 +846,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }           
          }
-         value = kwl.findKey(pfx, "PJ1_POLE");
+         key = "PJ1_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_pj1_pole,
@@ -785,8 +860,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B10_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B10_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B10_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "PJ2_POLE");
+         key = "PJ2_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_pj2_pole,
@@ -794,8 +874,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B10_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B10_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B10_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "E_POLE");
+         key = "E_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_e_pole,
@@ -803,8 +888,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "F_POLE");
+         key = "F_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_f_pole,
@@ -812,8 +902,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "GK1_POLE");
+         key = "GK1_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_gk1_pole,
@@ -821,8 +916,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "GK2_POLE");
+         key = "GK2_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_gk2_pole,
@@ -830,8 +930,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "HK1_POLE");
+         key = "HK1_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_hk1_pole,
@@ -839,8 +944,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "HK2_POLE");
+         key = "HK2_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_hk2_pole,
@@ -848,8 +958,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B11_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B11_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B11_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "PK1_POLE");
+         key = "PK1_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_pk1_pole,
@@ -857,8 +972,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B10_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B10_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B10_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "PK2_POLE");
+         key = "PK2_POLE";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_pk2_pole,
@@ -866,8 +986,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B10_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B10_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B10_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "TB_UT");
+         key = "TB_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_tb_ut,
@@ -875,8 +1000,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B19_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B19_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B19_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "I_UT");
+         key = "I_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_i_ut,
@@ -884,8 +1014,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B12_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B12_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B12_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "J_UT");
+         key = "J_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_j_ut,
@@ -893,8 +1028,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B12_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B12_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B12_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "KN1_UT");
+         key = "KN1_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_kn1_ut,
@@ -902,8 +1042,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B12_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B12_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B12_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "KN2_UT");
+         key = "KN2_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_kn2_ut,
@@ -911,8 +1056,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B12_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B12_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B12_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "KN3_UT");
+         key = "KN3_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_kn3_ut,
@@ -920,8 +1070,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B12_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B12_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B12_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "KN4_UT");
+         key = "KN4_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_kn4_ut,
@@ -929,8 +1084,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B12_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B12_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B12_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "LN1_UT");
+         key = "LN1_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_ln1_ut,
@@ -938,7 +1098,12 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B12_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B12_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B12_SZ);
+            }
          }
+         key = "LN2_UT";
          value = kwl.findKey(pfx, "LN2_UT");
          if (value.size())
          {
@@ -947,8 +1112,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B12_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B12_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B12_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "LN3_UT");
+         key = "LN3_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_ln3_ut,
@@ -956,8 +1126,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B12_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B12_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B12_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "LN4_UT");
+         key = "LN4_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_ln4_ut,
@@ -965,8 +1140,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B12_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B12_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B12_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "PN1_UT");
+         key = "PN1_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_pn1_ut,
@@ -974,8 +1154,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B10_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B10_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B10_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "PN2_UT");
+         key = "PN2_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_pn2_ut,
@@ -983,8 +1168,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B10_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B10_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B10_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "PN3_UT");
+         key = "PN3_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_pn3_ut,
@@ -992,8 +1182,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B10_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B10_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B10_SZ);
+            }
          }
-         value = kwl.findKey(pfx, "PN4_UT");
+         key = "PN4_UT";
+         value = kwl.findKey(pfx, key);
          if (value.size())
          {
             ossimNitfCommon::setField(m_pn4_ut,
@@ -1001,11 +1196,16 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                       B10_SZ,
                                       std::ios::right,
                                       '0');
+            if (value.size() > B10_SZ)
+            {
+               ossim::nitf::truncatedWarning(MODULE, key, value, B10_SZ);
+            }
          }
-
+         
       } // matches: if (m_eci_ecf_att[0] == '0' &&  getDesVersionNumber() >= 2)
 
-      value = kwl.findKey(pfx, "DT_ATT");
+      key = "DT_ATT";
+      value = kwl.findKey(pfx, key);
       if (value.size())
       {
          ossimNitfCommon::setField(m_dt_att,
@@ -1013,8 +1213,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    B13_SZ,
                                    std::ios::right,
                                    '0');
+         if (value.size() > B13_SZ)
+         {
+            ossim::nitf::truncatedWarning(MODULE, key, value, B13_SZ);
+         }
       }
-      value = kwl.findKey(pfx, "DATE_ATT");
+      key = "DATE_ATT";
+      value = kwl.findKey(pfx, key);
       if (value.size())
       {
          ossimNitfCommon::setField(m_date_att,
@@ -1022,8 +1227,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    B8_SZ,
                                    std::ios::right,
                                    '0');
+         if (value.size() > B8_SZ)
+         {
+            ossim::nitf::truncatedWarning(MODULE, key, value, B8_SZ);
+         } 
       }
-      value = kwl.findKey(pfx, "T0_ATT");
+      key = "T0_ATT";
+      value = kwl.findKey(pfx, key);
       if (value.size())
       {
          ossimNitfCommon::setField(m_t0_att,
@@ -1031,8 +1241,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    B16_SZ,
                                    std::ios::right,
                                    '0');
+         if (value.size() > B16_SZ)
+         {
+            ossim::nitf::truncatedWarning(MODULE, key, value, B16_SZ);
+         } 
       }
-      value = kwl.findKey(pfx, "NUM_ATT");
+      key = "NUM_ATT";
+      value = kwl.findKey(pfx, key);
       if (value.size())
       {
          ossimNitfCommon::setField(m_num_att,
@@ -1040,6 +1255,10 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                    B5_SZ,
                                    std::ios::right,
                                    '0');
+         if (value.size() > B5_SZ)
+         {
+            ossim::nitf::truncatedWarning(MODULE, key, value, B5_SZ);
+         }
       }
       count = getNumberAtt();
       if (count > 0)
@@ -1051,7 +1270,7 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
          for(i = 0; i < count; ++i)
          {
             key = "Q1_";
-            k = key + ossimString::toString(i).string();
+            k = key + ossimString::toString(i + 1).string();
             value = kwl.findKey(pfx, k);
             if (value.size())
             {
@@ -1062,9 +1281,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                          '0');
                buf[B18_SZ] = '\0';
                m_q1[i] = buf;
+               if (value.size() > B18_SZ)
+               {
+                  ossim::nitf::truncatedWarning(MODULE, k, value, B18_SZ);
+               }
             }
             key = "Q2_";
-            k = key + ossimString::toString(i).string();
+            k = key + ossimString::toString(i + 1).string();
             value = kwl.findKey(pfx, k);
             if (value.size())
             {
@@ -1075,9 +1298,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                          '0');
                buf[B18_SZ] = '\0';
                m_q2[i] = buf;
+               if (value.size() > B18_SZ)
+               {
+                  ossim::nitf::truncatedWarning(MODULE, k, value, B18_SZ);
+               }
             }
             key = "Q3_";
-            k = key + ossimString::toString(i).string();
+            k = key + ossimString::toString(i + 1).string();
             value = kwl.findKey(pfx, k);
             if (value.size())
             {
@@ -1088,9 +1315,13 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                          '0');
                buf[B18_SZ] = '\0';
                m_q3[i] = buf;
+               if (value.size() > B18_SZ)
+               {
+                  ossim::nitf::truncatedWarning(MODULE, k, value, B18_SZ);
+               }
             }
             key = "Q4_";
-            k = key + ossimString::toString(i).string();
+            k = key + ossimString::toString(i + 1).string();
             value = kwl.findKey(pfx, k);
             if (value.size())
             {
@@ -1100,7 +1331,11 @@ bool ossimNitfCsattbDes::loadState(const ossimKeywordlist& kwl, const char* pref
                                          std::ios::right,
                                          '0');
                buf[B18_SZ] = '\0';
-               m_q4[i] = buf;
+               m_q4[i] = buf;              
+               if (value.size() > B18_SZ)
+               {
+                  ossim::nitf::truncatedWarning(MODULE, k, value, B18_SZ);
+               }
             }
          }
 
@@ -1438,13 +1673,13 @@ std::ostream& ossimNitfCsattbDes::print(std::ostream& out,
    {
       for(i = 0; i < count; ++i)
       {
-         s = "Q1[" + ossimString::toString(i).string() + "]:";
+         s = "Q1[" + ossimString::toString(i + 1).string() + "]:";
          out << pfx << std::setw(w) << s << m_q1[i] << "\n";
-         s = "Q2[" + ossimString::toString(i).string() + "]:";
+         s = "Q2[" + ossimString::toString(i + 1).string() + "]:";
          out << pfx << std::setw(w) << s << m_q2[i] << "\n";
-         s = "Q3[" + ossimString::toString(i).string() + "]:";
+         s = "Q3[" + ossimString::toString(i + 1).string() + "]:";
          out << pfx << std::setw(w) << s << m_q3[i] << "\n";
-         s = "Q4[" + ossimString::toString(i).string() + "]:";
+         s = "Q4[" + ossimString::toString(i + 1).string() + "]:";
          out << pfx << std::setw(w) << s << m_q4[i] << "\n";
       }
    }

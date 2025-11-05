@@ -116,15 +116,3 @@ bool ossimNitfRegisteredTag::saveState(ossimKeywordlist& kwl, const char* prefix
    
    return result;
 }
-
-void ossimNitfRegisteredTag::truncatedWarning(const char* module,
-                                              const std::string& field,
-                                              const std::string& value,
-                                              ossim_uint32 field_width) const
-{
-   ossimNotify(ossimNotifyLevel_WARN)
-      << module << " WARNING: Field value truncated!\n"
-      << "field: " << field << " value: " << value
-      << " field width: " << field_width << " value width: " << value.size()
-      << std::endl;
-}
