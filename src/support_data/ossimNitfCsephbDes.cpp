@@ -122,11 +122,11 @@ void ossimNitfCsephbDes::initializeFieldDefinitions()
             {"VEL_Xn", 12, 4, 2},
             {"VEL_Yn", 12, 4, 2},
             {"VEL_Zn", 12, 4, 2},
-            {"ACCEL_PROVIDED 'Y' =", IF_STATEMENT_START},
+            {"^ACCEL_PROVIDED 'Y' =", IF_STATEMENT_START},
                {"ACCEL_Xn", 12, 4, 2},
                {"ACCEL_Yn", 12, 4, 2},
                {"ACCEL_Zn", 12, 4, 2},
-            {"ACCEL_PROVIDED 'Y' =", IF_STATEMENT_END},
+            {"^ACCEL_PROVIDED 'Y' =", IF_STATEMENT_END},
          {"NUM_EPHEM n", LOOP_END}
       };
 }

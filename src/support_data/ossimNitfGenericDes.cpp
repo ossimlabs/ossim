@@ -165,14 +165,15 @@ int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<oss
             {
                if(entry[0] == '\'')
                   stack.push(entry.substr(1, entry.length() - 2));
-               else
+               else if (entry[0] == '^')
+                  stack.push(m_fields_map.at(entry.substr(1, entry.length())));
+               else if (entry.contains(':'))
                {
                   colonSubStrings = entry.split(':');
-                  if(colonSubStrings.size() > 1)
-                     stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(suffixIn))[colonSubStrings[1].toInt()]);
-                  else
-                     stack.push(m_fields_map.at(entry + formatSuffix(suffixIn)));
+                  stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(suffixIn))[colonSubStrings[1].toInt()]);
                }
+               else
+                  stack.push(m_fields_map.at(entry + formatSuffix(suffixIn)));
             }
             break;
       }
@@ -480,8 +481,7 @@ bool ossimNitfGenericDes::loadState(const ossimKeywordlist& kwl, const char* pre
             generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
          }
          //Unique setField actions
-         if (m_fields_map.count(generatedFieldName) == 0)
-            m_fields_map.insert_or_assign(generatedFieldName, formatField(i, kwl.findKey( pfx , generatedFieldName)));
+         m_fields_map.insert_or_assign(generatedFieldName, formatField(i, kwl.findKey( pfx , generatedFieldName)));
          i++;
       }
    }
