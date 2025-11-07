@@ -213,7 +213,9 @@ bool ossimNitfXmlTag::r_loadState(ossimRefPtr<ossimXmlNode> fieldParent, ossimRe
 
 bool ossimNitfXmlTag::loadState(const ossimKeywordlist& kwl, const char* prefix)
 {
-   ossimKeywordlist localKWL = kwl;
+   ossimKeywordlist localKWL;
+   kwl.extractKeysThatMatch(localKWL, prefix);
+   localKWL.stripPrefixFromAll(prefix);
    r_loadState(m_fieldsDoc.getRoot(), m_doc.getRoot(), localKWL);
    setTagLength(computeTagLength());
    return true;

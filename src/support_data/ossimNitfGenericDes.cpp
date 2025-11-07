@@ -64,8 +64,7 @@ static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
    ossimString result = "";
    for (std::vector<ossim_int32> set: suffixIn)
    {
-      char separator = set[3];
-      result += separator + std::to_string(set[0]);
+      result += std::to_string(set[0]);
    }
    return result;
 }
