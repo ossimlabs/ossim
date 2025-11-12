@@ -30,6 +30,7 @@ public:
    virtual ossimString getClassName() const;
 
    static const std::string CETAG_KW;
+   static const std::string DESID;
 
    /*!
    * Method to the load (recreate) the state of the object from a keyword

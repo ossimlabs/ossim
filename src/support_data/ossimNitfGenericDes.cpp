@@ -333,7 +333,8 @@ void ossimNitfGenericDes::parseStream(std::istream &in)
    }
 
    // Recompute and set des length as this can change the size of the map.
-   setDesDataLength(computeDesLength());
+   setDesSubHeaderLength(getDesSubHeaderLength());
+   setDesDataLength(getDesDataLength());
 }
 
 void ossimNitfGenericDes::writeStream(std::ostream &out)
@@ -489,6 +490,10 @@ bool ossimNitfGenericDes::loadState(const ossimKeywordlist& kwl, const char* pre
    {
       ossimNotify(ossimNotifyLevel_DEBUG) << MODULE << " exited...\n";
    }
+
+   // Recompute and set des length as this can change the size of the map.
+   setDesSubHeaderLength(getDesSubHeaderLength());
+   setDesDataLength(getDesDataLength());
    
    return true;
 }
@@ -525,14 +530,26 @@ void ossimNitfGenericDes::initializeFields()
    }
 }
 
-ossim_uint32 ossimNitfGenericDes::computeDesLength() const
+ossim_uint32 ossimNitfGenericDes::getDesSubHeaderLength() const
+{
+   if (m_fields_map.count("NUMAIS") == 0 || m_fields_map.count("NUM_ASSOC_ELEM") == 0)
+   {
+      ossimNotify( "NUMAIS and NUM_ASSOC_ELEM not populated", ossimNotifyLevel_WARN);
+      return 46;
+   }
+
+   return 36 + 3 + m_fields_map.at("NUMAIS").toInt() * 3 + 3 + m_fields_map.at("NUM_ASSOC_ELEM").toInt() * 36 + 4;
+
+}
+
+ossim_uint32 ossimNitfGenericDes::getDesDataLength() const
 {
    ossim_uint32 length = 0;
    for ( const auto& i : m_fields_map )
    {
       length += i.second.string().size();
    }
-   return length;
+   return length - getDesSubHeaderLength();
 }
 
 std::ostream& ossimNitfGenericDes::printMap(std::ostream& out ) const

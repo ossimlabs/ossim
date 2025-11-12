@@ -23,6 +23,7 @@
 static ossimTrace traceDebug("ossimNitfCsephbdes:debug");
 
 const std::string ossimNitfCsephbDes::CETAG_KW = "CSEPHB";
+const std::string ossimNitfCsephbDes::DESID = "CSEPHB";
 
 static const int FOREVER = 1;
 
@@ -34,7 +35,8 @@ ossimNitfCsephbDes::ossimNitfCsephbDes()
 
    initializeFieldDefinitions();
    initializeFields();
-   setDesDataLength(computeDesLength());
+   setDesSubHeaderLength(getDesDataLength());
+   setDesDataLength(getDesDataLength());
 }
 
 ossimNitfCsephbDes::ossimNitfCsephbDes(ossim_uint32 tagLength)
@@ -47,22 +49,22 @@ void ossimNitfCsephbDes::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
       {
-         {"DE", 2, 0},
+         /*{"DE", 2, 0},
          {"DESID", 25, 0},
          {"DESVER", 2, 1},
          {"DESCLAS to DESCTLN", 167, 0, 0, "0"},
-         {"DESSHL", 4, 1},
+         {"DESSHL", 4, 1},*/
          {"UUID", 36, 0, 0, " "},
          {"NUMAIS", 3, 0},
          {"NUMAIS n", LOOP_START},
-            {"AISDLVLn", 3, 1},
+            {"AISDLVL", 3, 1},
          {"NUMAIS n", LOOP_END},
          {"NUM_ASSOC_ELEM", 3, 1},
          {"NUM_ASSOC_ELEM n", LOOP_START},
-            {"ASSOC_ELEM_UUIDn", 36, 0},
+            {"ASSOC_ELEM_UUID", 36, 0},
          {"NUM_ASSOC_ELEM n", LOOP_END},
          {"RESERVEDSUBH_LEN", 4, 1},
-         {"RESERVEDSUBH", 4, 1},
+         {"RESERVEDSUBH RESERVEDSUBH_LEN", VARIABLE_LENGTH, 1},
          {"QUAL_FLAG_EPH", 1, 1},
          {"INTERP_TYPE_EPH", 1, 1},
          {"INTERP_TYPE_EPH 2 =", IF_STATEMENT_START},
@@ -70,7 +72,7 @@ void ossimNitfCsephbDes::initializeFieldDefinitions()
          {"INTERP_TYPE_EPH 2 =", IF_STATEMENT_END},
          {"EPHEM_FLAG", 1, 1},
          {"ECI_ECF_EPHEM", 1, 1},
-         {"ECI_ECF_EPHEM 0 = DESVER 1 > &", IF_STATEMENT_START},
+         /*{"ECI_ECF_EPHEM 0 =", IF_STATEMENT_START},  //Assumes desver 2
             {"TA_POLE", 19, 3, 11},
             {"A_POLE", 11, 4, 8},
             {"B_POLE", 11, 4, 8},
@@ -103,15 +105,15 @@ void ossimNitfCsephbDes::initializeFieldDefinitions()
             {"PN2_UT", 10, 3, 6},
             {"PN3_UT", 10, 3, 6},
             {"PN4_UT", 10, 3, 6},
-         {"ECI_ECF_EPHEM 0 = DESVER  1 > &", IF_STATEMENT_END},
+         {"ECI_ECF_EPHEM 0 =", IF_STATEMENT_END},*/
          {"DT_EPHEM", 13, 3, 9},
          {"DATE_EPHEM", 8, 1},
          {"T0_EPHEM", 16, 1},
          {"NUM_EPHEM", 5, 1},
          {"NUM_EPHEM n", LOOP_START},
-            {"EPHEM_Xn", 12, 4, 2},
-            {"EPHEM_Yn", 12, 4, 2},
-            {"EPHEM_Zn", 12, 4, 2},
+            {"EPHEM_X", 12, 4, 2},
+            {"EPHEM_Y", 12, 4, 2},
+            {"EPHEM_Z", 12, 4, 2},
          {"NUM_EPHEM n", LOOP_END},
          {"RESERVED_LEN", 9, 1},
          {"MASK_LEN", 2, 1},
@@ -119,13 +121,13 @@ void ossimNitfCsephbDes::initializeFieldDefinitions()
          {"RESERVED_LEN_AREA1", 9, 1},
          {"ACCEL_PROVIDED", 1, 0},
          {"NUM_EPHEM n", LOOP_START},
-            {"VEL_Xn", 12, 4, 2},
-            {"VEL_Yn", 12, 4, 2},
-            {"VEL_Zn", 12, 4, 2},
+            {"VEL_X", 12, 4, 2},
+            {"VEL_Y", 12, 4, 2},
+            {"VEL_Z", 12, 4, 2},
             {"^ACCEL_PROVIDED 'Y' =", IF_STATEMENT_START},
-               {"ACCEL_Xn", 12, 4, 2},
-               {"ACCEL_Yn", 12, 4, 2},
-               {"ACCEL_Zn", 12, 4, 2},
+               {"ACCEL_X", 12, 4, 2},
+               {"ACCEL_Y", 12, 4, 2},
+               {"ACCEL_Z", 12, 4, 2},
             {"^ACCEL_PROVIDED 'Y' =", IF_STATEMENT_END},
          {"NUM_EPHEM n", LOOP_END}
       };

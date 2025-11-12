@@ -32,7 +32,7 @@ ossimNitfCssfabDes::ossimNitfCssfabDes()
 
    initializeFieldDefinitions();
    initializeFields();
-   setDesDataLength(computeDesLength());
+   setDesDataLength(getDesDataLength());
 }
 
 ossimNitfCssfabDes::ossimNitfCssfabDes(ossim_uint32 tagLength)
