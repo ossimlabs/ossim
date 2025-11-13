@@ -254,40 +254,41 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
       std::vector<ossimString> spaceSubStrings;
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
       length = m_fields_map.at(spaceSubStrings[1]).toInt();
+      if (length == 0)
+         return "";
    }
-   if ((ossim_int32)result.size() != length)
+   switch (format)
    {
-      switch (format)
-      {
-         case 1:
-            result = ossimNitfCommon::convertToUIntString(result.toUInt32(),
-               length);
-            break;
-         case 2:
-            result = ossimNitfCommon::convertToIntString(result.toInt32(),
-               length);
-            break;
-         case 3:
+      case 1:
+         result = ossimNitfCommon::convertToUIntString(result.toUInt32(),
+            length);
+         break;
+      case 2:
+         result = ossimNitfCommon::convertToIntString(result.toInt32(),
+            length);
+         break;
+      case 3:
+         result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
+            FIELD_DEFINITIONS[definition].precision,
+            length);
+         break;
+      case 4:
+         if (result.toFloat64() > 0)
+            result = "+" + ossimNitfCommon::convertToDoubleString(result.toFloat64(),
+                              FIELD_DEFINITIONS[definition].precision,
+                                 length - 1);
+         else
             result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
-               FIELD_DEFINITIONS[definition].precision,
-               length);
-            break;
-         case 4:
-            if (result.toFloat64() > 0)
-               result = "+" + ossimNitfCommon::convertToDoubleString(result.toFloat64(),
-                                 FIELD_DEFINITIONS[definition].precision,
-                                    length);
-            else
-               result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
-                                 FIELD_DEFINITIONS[definition].precision,
-                                    length);
-         case 5:
-            result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
-         default:
-            while ((ossim_int32)result.length() < length)
-               result = result + ' ';
-            break;
-      }
+                              FIELD_DEFINITIONS[definition].precision,
+                                 length);
+         break;
+      case 5:
+         result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
+         break;
+      default:
+         while ((ossim_int32)result.length() < length)
+            result = result + ' ';
+         break;
    }
    return result;
 }
