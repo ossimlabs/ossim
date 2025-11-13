@@ -8,7 +8,7 @@
 // $Id$
 
 #ifndef ossimNitfCommonFieldNames_H
-#define ossimNitfCommonFieldNames 1
+#define ossimNitfCommonFieldNames_H 1
 
 #include <string>
 
