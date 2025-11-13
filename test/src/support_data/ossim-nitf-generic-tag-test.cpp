@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
    string fname = getenv("OSSIM_DATA");
    //19SEP01060448-P1BS-200007943201_01_P004.NTF
    //24MAR05002840-P1BS-200004901937_01_P001_B.NTF
-   fname += "/24MAR05002840-P1BS-200004901937_01_P001_B.NTF";
+   fname += "/maxar/WV03/24JUN07235000/1as/016429889030_01_P001_PAN";
    cout << fname << endl;
    ifstream file(fname);
 

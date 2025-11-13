@@ -51,7 +51,8 @@ public:
    };
    std::vector<definition> FIELD_DEFINITIONS;
 
-   ossim_uint32 computeDesLength() const;
+   ossim_uint32 getDesSubHeaderLength() const;
+   ossim_uint32 getDesDataLength() const;
 
    std::ostream& printMap(std::ostream& out ) const;
 
