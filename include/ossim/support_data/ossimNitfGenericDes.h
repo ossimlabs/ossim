@@ -40,7 +40,8 @@ public:
    struct definition
    {
       definition(const ossimString& field, ossim_int32 size = 0,
-                       ossim_int8 dataFormat = 0, ossim_int8 precision = 0,
+                       ossim_int8 dataFormat = 0,
+                       ossim_int8 precision = 0,
                        const ossimString& defaultValue = "");
       std::ostream& print(std::ostream& out) const;
       ossimString field;

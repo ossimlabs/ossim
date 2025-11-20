@@ -13,16 +13,6 @@
     </spaceObjectIdentification>
     <geometryData mult="1">
         <glasGfm mult="1">
-            <atitude>
-                <desId mult="1" type="String"> </desId>
-                <desVer mult="1" type="String"> </desVer>
-                <uuid mult="1" type="String"> </uuid>
-                <quality mult="1" type="bool"> </quality>
-                <startTime mult="1" type="String"> </startTime>
-                <endTime mult="1" type="String"> </endTime>
-                <timeInterval mult="1" type="double"> </timeInterval>
-                <processedType mult="1" type="String"> </processedType>
-            </atitude>
             <ephemeris mult="1">
                 <desId mult="1" type="String"> </desId>
                 <desVer mult="1" type="String"> </desVer>
@@ -33,6 +23,16 @@
                 <timeInterval mult="1" type="double"> </timeInterval>
                 <processedType mult="1" type="String"> </processedType>
             </ephemeris>
+            <atitude>
+                <desId mult="1" type="String"> </desId>
+                <desVer mult="1" type="String"> </desVer>
+                <uuid mult="1" type="String"> </uuid>
+                <quality mult="1" type="bool"> </quality>
+                <startTime mult="1" type="String"> </startTime>
+                <endTime mult="1" type="String"> </endTime>
+                <timeInterval mult="1" type="double"> </timeInterval>
+                <processedType mult="1" type="String"> </processedType>
+            </atitude>
         </glasGfm>
     </geometryData>
 </spaceObjectOrbitGeometry>
