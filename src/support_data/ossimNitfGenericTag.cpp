@@ -62,7 +62,7 @@ static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
    for (std::vector<ossim_int32> set: suffixIn)
    {
       char separator = set[3];
-      result += separator + std::to_string(set[0]);
+      result += std::to_string(set[0]);
    }
    return result;
 }
@@ -135,6 +135,26 @@ int ossimNitfGenericTag::parseRPN(ossimString input, std::vector<std::vector<oss
             stack.pop();
             stack.push(!bool(a));
             break;
+         case '>':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            if(a > b)
+               stack.push("1");
+            else
+               stack.push("0");
+            break;
+         case '<':
+            a = stack.top();
+            stack.pop();
+            b = stack.top();
+            stack.pop();
+            if(a < b)
+               stack.push("1");
+            else
+               stack.push("0");
+            break;
          default:
             if(entry.toInt() != 0 || entry == "0")
                stack.push(entry.toInt());
@@ -142,14 +162,15 @@ int ossimNitfGenericTag::parseRPN(ossimString input, std::vector<std::vector<oss
             {
                if(entry[0] == '\'')
                   stack.push(entry.substr(1, entry.length() - 2));
-               else
+               else if (entry[0] == '^')
+                  stack.push(m_fields_map.at(entry.substr(1, entry.length())));
+               else if (entry.contains(':'))
                {
                   colonSubStrings = entry.split(':');
-                  if(colonSubStrings.size() > 1)
-                     stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(suffixIn))[colonSubStrings[1].toInt()]);
-                  else
-                     stack.push(m_fields_map.at(entry + formatSuffix(suffixIn)));
+                  stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(suffixIn))[colonSubStrings[1].toInt()]);
                }
+               else
+                  stack.push(m_fields_map.at(entry + formatSuffix(suffixIn)));
             }
             break;
       }
@@ -231,40 +252,41 @@ ossimString ossimNitfGenericTag::formatField(int definition, const ossimString& 
       std::vector<ossimString> spaceSubStrings;
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
       length = m_fields_map.at(spaceSubStrings[1]).toInt();
+      if (length == 0)
+         return "";
    }
-   if ((ossim_int32)result.size() != length)
+   switch (format)
    {
-      switch (format)
-      {
-         case 1:
-            result = ossimNitfCommon::convertToUIntString(result.toUInt32(),
-               length);
-            break;
-         case 2:
-            result = ossimNitfCommon::convertToIntString(result.toInt32(),
-               length);
-            break;
-         case 3:
+      case 1:
+         result = ossimNitfCommon::convertToUIntString(result.toUInt32(),
+            length);
+         break;
+      case 2:
+         result = ossimNitfCommon::convertToIntString(result.toInt32(),
+            length);
+         break;
+      case 3:
+         result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
+            FIELD_DEFINITIONS[definition].precision,
+            length);
+         break;
+      case 4:
+         if (result.toFloat64() > 0)
+            result = "+" + ossimNitfCommon::convertToDoubleString(result.toFloat64(),
+                              FIELD_DEFINITIONS[definition].precision,
+                                 length - 1);
+         else
             result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
-               FIELD_DEFINITIONS[definition].precision,
-               length);
-            break;
-         case 4:
-            if (result.toFloat64() > 0)
-               result = "+" + ossimNitfCommon::convertToDoubleString(result.toFloat64(),
-                                 FIELD_DEFINITIONS[definition].precision,
-                                    length);
-            else
-               result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
-                                 FIELD_DEFINITIONS[definition].precision,
-                                    length);
-         case 5:
-            result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
-         default:
-            while ((ossim_int32)result.length() < length)
-               result = result + ' ';
-            break;
-      }
+                              FIELD_DEFINITIONS[definition].precision,
+                                 length);
+         break;
+      case 5:
+         result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
+         break;
+      default:
+         while ((ossim_int32)result.length() < length)
+            result = result + ' ';
+         break;
    }
    return result;
 }
@@ -447,11 +469,12 @@ bool ossimNitfGenericTag::loadState(const ossimKeywordlist& kwl, const char* pre
             generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
          }
          //Unique setField actions
-         if (m_fields_map.count(generatedFieldName) == 0)
-            m_fields_map.insert_or_assign(generatedFieldName, formatField(i, kwl.findKey( pfx , generatedFieldName)));
+         m_fields_map.insert_or_assign(generatedFieldName, formatField(i, kwl.findKey( pfx , generatedFieldName)));
          i++;
       }
    }
+
+   setTagLength(computeTagLength());
    return true;
 }
 
