@@ -61,7 +61,6 @@ void ossimNitfXmlTag::parseStream(std::istream &in)
    char ch;
    while (buffer != delimiter && in.get(ch))
    {
-      ;
       xml += ch;
       buffer += ch;
       if (buffer.size() > delimiter.size())
@@ -70,7 +69,7 @@ void ossimNitfXmlTag::parseStream(std::istream &in)
    std::istringstream lineStream(xml);
    m_doc.read(lineStream);
 
-   setTagLength(computeTagLength() - 1);
+   setTagLength(computeTagLength());
 }
 
 void ossimNitfXmlTag::writeStream(std::ostream &out)
