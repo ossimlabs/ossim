@@ -59,18 +59,26 @@ void ossimNitfXmlTag::parseStream(std::istream &in)
    std::string delimiter = "</" + m_fieldsDoc.getRoot()->getTag() + ">";
    ossimString buffer, xml;
    char ch;
+   bool whitespace = false;
    while (buffer != delimiter && in.get(ch))
    {
-      ;
-      xml += ch;
-      buffer += ch;
+      if (ch == '\n')
+         whitespace = true;
+      else if (ch != ' ')
+         whitespace = false;
+
+      if (!whitespace)
+      {
+         xml += ch;
+         buffer += ch;
+      }
       if (buffer.size() > delimiter.size())
          buffer.erase(0, 1); // Remove the first character
    }
    std::istringstream lineStream(xml);
    m_doc.read(lineStream);
 
-   setTagLength(computeTagLength() - 1);
+   setTagLength(computeTagLength());
 }
 
 void ossimNitfXmlTag::writeStream(std::ostream &out)
@@ -166,7 +174,7 @@ void ossimNitfXmlTag::setField(const ossimString& fieldName, const ossimString& 
 ossim_uint32 ossimNitfXmlTag::computeTagLength() const
 {
    std::stringstream result;
-   result << m_doc;
+   result << m_doc << std::ends;
    return result.str().size() - 1;
 }
 

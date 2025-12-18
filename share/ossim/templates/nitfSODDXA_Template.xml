@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><spaceObjectDescriptionData mult="1">
-    <securityData mult="1">
+<?xml version="1.0" encoding="utf-8"?><spaceObjectDescriptionData mult="1"><securityData mult="1">
         <arh:Security/>
         <soClassification>
             <arh:ExternalSecurity mult="1" type="String"/>
@@ -15,8 +14,7 @@
         </accmClassification>
         <accmImageHold type="bool"/>
     </securityData>
-    <sourceCatalog mult="1" type="String" attributes="catalogDate, catalogVersion">Space-Track
-        <absVisualMagnitude type="double"/>
+    <sourceCatalog mult="1" type="String" attributes="catalogDate, catalogVersion">Space-Track<absVisualMagnitude type="double"/>
         <radarCrossSection type="double"/>
         <length type="double"/>
         <width type="double"/>

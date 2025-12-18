@@ -513,9 +513,31 @@ void ossimNitfGenericTag::initializeFields()
 ossim_uint32 ossimNitfGenericTag::computeTagLength() const
 {
    ossim_uint32 length = 0;
-   for ( const auto& i : m_fields_map )
+   std::vector<std::pair<ossimString, ossim_int32>> result;
+   std::vector<std::vector<ossim_int32>> suffix;
+   std::vector<ossimString> spaceSubStrings;
+   ossim_int32 i = 0;
+   ossimString generatedFieldName;
+   while ((ossim_uint32)i < FIELD_DEFINITIONS.size())
    {
-      length += i.second.string().size();
+      spaceSubStrings.clear();
+      if(FIELD_DEFINITIONS[i].size < -1)
+      {
+         loopLogic(i, suffix);
+      }
+      else
+      {
+         if (FIELD_DEFINITIONS[i].size == VARIABLE_LENGTH)
+         {
+            FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
+            length += m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+         }
+         else
+         {
+            length += FIELD_DEFINITIONS[i].size;
+         }
+         i++;
+      }
    }
    return length;
 }

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><spaceObjectOrbitGeometry mult="1" type="Container">
-    <arh:Security> </arh:Security>
+<?xml version="1.0" encoding="utf-8"?><spaceObjectOrbitGeometry mult="1" type="Container"><arh:Security> </arh:Security>
     <spaceObjectIdentification mult="1">
         <soType mult="1" type="String">satellite</soType>
         <satNo type="String"> </satNo>
