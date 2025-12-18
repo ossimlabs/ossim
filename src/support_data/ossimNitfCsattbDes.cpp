@@ -33,11 +33,6 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
       {
-         //{"DE", 2, 0},
-         //{"DESID", 25, 0},
-         {"DESVER", 2, 1},
-         {"DESCLAS to DESCTLN", 167, 0},
-         {"DESSHL", 4, 1},
          {"UUID", 36, 0},
          {"NUMAIS", 3, 0},
          {"NUMAIS n", LOOP_START},
@@ -45,7 +40,7 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
          {"NUMAIS n", LOOP_END},
          {"NUM_ASSOC_ELEM", 3, 1},
          {"NUM_ASSOC_ELEM n", LOOP_START},
-            {"ASSOC_ELEM_UUIDn", 36, 0},
+            {"ASSOC_ELEM_UUID", 36, 0},
          {"NUM_ASSOC_ELEM n", LOOP_END},
          {"RESERVEDSUBH_LEN", 4, 1},
          {"RESERVEDSUBH RESERVEDSUBH_LEN", VARIABLE_LENGTH, 0},
@@ -56,7 +51,7 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
          {"INTERP_TYPE_ATT 2 = INTERP_TYPE_ATT 3 = |", IF_STATEMENT_END},
          {"ATT_TYPE", 1, 1},
          {"ECI_ECF_ATT", 1, 1},
-         {"ECI_ECF_ATT 0 = DESVER 1 > &", IF_STATEMENT_START},
+         /*{"ECI_ECF_ATT 0 = DESVER 1 > &", IF_STATEMENT_START}, Assuming desver 1
             {"TA_POLE", 19, 3, 11},
             {"A_POLE", 11, 4, 8},
             {"B_POLE", 11, 4, 8},
@@ -89,7 +84,7 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
             {"PN2_UT", 10, 3, 6},
             {"PN3_UT", 10, 3, 6},
             {"PN4_UT", 10, 3, 6},
-         {"ECI_ECF_ATT 0 = DESVER 1 > &", IF_STATEMENT_END},
+         {"ECI_ECF_ATT 0 = DESVER 1 > &", IF_STATEMENT_END},*/
          {"DT_ATT", 13, 3, 9},
          {"DATE_ATT", 8, 1},
          {"T0_ATT", 16, 1},
