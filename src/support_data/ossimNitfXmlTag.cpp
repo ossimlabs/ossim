@@ -175,7 +175,7 @@ ossim_uint32 ossimNitfXmlTag::computeTagLength() const
 {
    std::stringstream result;
    result << m_doc << std::ends;
-   return result.str().size() - 1;
+   return result.str().size() - 2;
 }
 
 //Recursive component of the loadState method

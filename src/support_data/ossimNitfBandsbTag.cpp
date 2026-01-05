@@ -33,8 +33,8 @@ ossimNitfBandsbTag::ossimNitfBandsbTag()
    // traceDebug.setTraceFlag(true);
    
    initializeFieldDefinitions();
-   setTagLength(computeTagLength());
    initializeFields();
+   setTagLength(computeTagLength());
 }
 
 ossimNitfBandsbTag::ossimNitfBandsbTag(ossim_uint32 tagLength)

@@ -405,9 +405,10 @@ std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &p
             generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
          }
          //Unique print actions
-         out << std::setiosflags(std::ios::left)
-             << pfx << std::setw(24) << generatedFieldName << ":"
-             << m_fields_map.at(generatedFieldName) << "\n";
+         if (generatedFieldName != "EXISTENCE_MASK")
+            out << std::setiosflags(std::ios::left)
+                << pfx << std::setw(24) << generatedFieldName << ":"
+                << m_fields_map.at(generatedFieldName) << "\n";
          i++;
       }
    }
