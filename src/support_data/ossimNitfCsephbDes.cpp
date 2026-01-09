@@ -107,7 +107,7 @@ void ossimNitfCsephbDes::initializeFieldDefinitions()
          {"ECI_ECF_EPHEM 0 =", IF_STATEMENT_END},*/
          {"DT_EPHEM", 13, 3, 9},
          {"DATE_EPHEM", 8, 1},
-         {"T0_EPHEM", 16, 1},
+         {"T0_EPHEM", 16, 0},
          {"NUM_EPHEM", 5, 1},
          {"NUM_EPHEM n", LOOP_START},
             {"EPHEM_X", 12, 4, 2},
