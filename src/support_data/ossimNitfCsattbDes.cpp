@@ -46,9 +46,9 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
          {"RESERVEDSUBH RESERVEDSUBH_LEN", VARIABLE_LENGTH, 0},
          {"QUAL_FLAG_ATT", 1, 1},
          {"INTERP_TYPE_ATT", 1, 1},
-         {"INTERP_TYPE_ATT 2 = INTERP_TYPE_ATT 3 = |", IF_STATEMENT_START},
+         {"INTERP_TYPE_ATT 1 >", IF_STATEMENT_START},
             {"INTERP_ORDER_ATT", 1, 1},
-         {"INTERP_TYPE_ATT 2 = INTERP_TYPE_ATT 3 = |", IF_STATEMENT_END},
+         {"INTERP_TYPE_ATT 1 >", IF_STATEMENT_END},
          {"ATT_TYPE", 1, 1},
          {"ECI_ECF_ATT", 1, 1},
          /*{"ECI_ECF_ATT 0 = DESVER 1 > &", IF_STATEMENT_START}, Assuming desver 1
@@ -87,7 +87,7 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
          {"ECI_ECF_ATT 0 = DESVER 1 > &", IF_STATEMENT_END},*/
          {"DT_ATT", 13, 3, 9},
          {"DATE_ATT", 8, 1},
-         {"T0_ATT", 16, 1},
+         {"T0_ATT", 16, 0},
          {"NUM_ATT", 5, 1},
          {"NUM_ATT n", LOOP_START},
             {"Q1_", 18, 4, 15},

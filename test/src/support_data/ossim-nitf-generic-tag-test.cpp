@@ -25,6 +25,7 @@
 #include <ossim/init/ossimInit.h>
 
 #include <iostream>
+#include <sstream>
 
 #include "support_data/ossimNitfCephbDes.h"
 #include "support_data/ossimNitfXmlTag.h"
@@ -42,99 +43,14 @@ int main(int argc, char *argv[])
    ossimString ossimHome = getenv("OSSIM_HOME");
    ossimNitfXmlTag sorbxa = ossimNitfXmlTag("SORBXA");
    ossimNitfXmlTag soddxa = ossimNitfXmlTag("SODDXA");
-   string fname = getenv("OSSIM_DATA");
-   //19SEP01060448-P1BS-200007943201_01_P004.NTF
-   //24MAR05002840-P1BS-200004901937_01_P001_B.NTF
-   fname += "/maxar/WV03/24JUN07235000/1as/016429889030_01_P001_PAN";
-   cout << fname << endl;
-   ifstream file(fname);
 
-   std::string buffer;
-
-   if (!file.is_open())
-   {
-      std::cerr << "Could not open the file: " << std::endl;
-      return 1;
-   }
-
-   char ch;
-   while (file.get(ch))
-   {
-      //std::cout << ch; // Print each character
-      buffer += ch;
-
-      // Keep buffer the same length as the target
-      if (buffer.size() > 6)
-         buffer.erase(0, 1); // Remove the first character
-
-      if (buffer == "CSEXRB")
-      {
-         file.seekg (5, ios::cur);
-         std::cout << "\nTarget string found. Stopping read." << std::endl;
-         break;
-      }
-   }
-
-   csexrb.parseStream(file);
-   csexrb.writeStream(cout);
-   csexrb.print(cout, "");
-
-   while (file.get(ch))
-   {
-      //std::cout << ch; // Print each character
-      buffer += ch;
-
-      // Keep buffer the same length as the target
-      if (buffer.size() > 6)
-         buffer.erase(0, 1); // Remove the first character
-
-      if (buffer == "CSATTB")
-      {
-         file.seekg (19, ios::cur);
-         std::cout << "\nTarget string found. Stopping read." << std::endl;
-         break;
-      }
-   }
-
-   csattb.parseStream(file);
-   csattb.writeStream(cout);
-   csattb.print(cout, "");
-
-   while (file.get(ch))
-   {
-      //std::cout << ch; // Print each character
-      buffer += ch;
-
-      // Keep buffer the same length as the target
-      if (buffer.size() > 6)
-         buffer.erase(0, 1); // Remove the first character
-
-      if (buffer == "CSSFAB")
-      {
-         file.seekg (19, ios::cur);
-         std::cout << "\nTarget string found. Stopping read." << std::endl;
-         break;
-      }
-   }
-
-   cssfab.parseStream(file);
-   cssfab.writeStream(cout);
-   cssfab.print(cout, "");
-
-   csephb.print(cout, "");
-
-   bandsb.print(cout, "");
-
-   ossimKeywordlist kwl;
-   kwl.addPair("desId0", "1");
-   kwl.addPair("desId1", "2");
-   kwl.addPair("pieceType", "3");
-   sorbxa.print(cout, "");
-   sorbxa.loadState(kwl, "");
-   sorbxa.print(cout, "");
-   sorbxa.setField("desId", "3", 1);
-   sorbxa.print(cout, "");
-   cout << sorbxa.computeTagLength() << endl;
-   soddxa.print(cout, "");
+   string defaultHeader(36 + 3 + + 3 + 4, '0');
+   istringstream stream (defaultHeader+ "12311000.02000000020240607235000.30000000000002-04650413.20+01029613.77+05110465.09-04651390.88+01030212.19+05109457.17000000157011000000145Y-00004888.95+00002992.17-00005039.01-00000002.54+00000007.21-00000000.37-00004887.78+00002992.08-00005040.21-00000002.53+00000007.23-00000000.36");
+   csephb.parseStream(stream);
+   csephb.print(std::cout, "");
+   stream.clear();
+   stream.str(defaultHeader + "12311000.02000000020240607235000.30000000000002-0.180248530324575-0.838233121509416-0.409883760738082-0.311241070560455-0.180394839854912-0.838122329325916-0.409819429670391-0.311539239749436000000000");
+   csattb.parseStream(stream);
+   csattb.print(std::cout, "");
    return 0;
 }
