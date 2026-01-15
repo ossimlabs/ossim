@@ -87,7 +87,7 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
          {"ECI_ECF_ATT 0 = DESVER 1 > &", IF_STATEMENT_END},*/
          {"DT_ATT", 13, 3, 9},
          {"DATE_ATT", 8, 1},
-         {"T0_ATT", 16, 0},
+         {"T0_ATT", 16, U_DOUBLE, 9},
          {"NUM_ATT", 5, 1},
          {"NUM_ATT n", LOOP_START},
             {"Q1_", 18, 4, 15},
