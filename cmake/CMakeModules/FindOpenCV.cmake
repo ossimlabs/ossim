@@ -33,6 +33,8 @@
 find_path( OPENCV_INCLUDE_DIR opencv2/opencv.hpp
            PATHS
 	   ${OPENCV_HOME}/include
+	   /opt/local/include
+	   /opt/local/include/opencv4
 	   /usr/include/opencv4
 	 )
 
@@ -42,7 +44,11 @@ macro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
          NAMES "${MYLIBRARYNAME}${OPENCV_RELEASE_POSTFIX}"
          PATHS
 	 ${OPENCV_HOME}/lib
+	 ${OPENCV_HOME}/lib/opencv4
 	 ${OPENCV_HOME}/share/OpenCV/3rdparty/lib	 
+	 /opt/local/lib
+	 /opt/local/lib/opencv4
+	 /opt/local/share/OpenCV/3rdparty/lib
 	 /usr/lib64
 	 /usr/lib
          NO_DEFAULT_PATHS)
@@ -156,4 +162,3 @@ if(OPENCV_FOUND)
    message( STATUS "OPENCV_INCLUDE_DIR = ${OPENCV_INCLUDE_DIR}" )
    message( STATUS "OPENCV_LIBRARIES   = ${OPENCV_LIBRARIES}" )
 endif()
-
