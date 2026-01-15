@@ -66,7 +66,7 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
       {"ATMOSPHERICADJUSTMENTALTITUDE", 4, 0, 0, "NaN"},
       //{"DIAMETER", 7, 3, 2},
       //{"DATA_FLD_2", 32, 0},
-      //{"WAVE_LENGTH_UNIT", 1, 0},
+      {"WAVE_LENGTH_UNIT", 1, 0},
       {"COUNT n", LOOP_START},
          {"BANDID", 50, 0},
          {"BAD_BAND", 1, 1},
