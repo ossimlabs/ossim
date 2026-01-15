@@ -158,11 +158,9 @@ int ossimNitfGenericTag::parseRPN(ossimString input, std::vector<std::vector<oss
             else
                stack.push("0");
             break;
-         default:
-            if(entry.toInt() != 0)
+         default: //Not an operator
+            if(entry.toInt() != 0 || entry.find_first_not_of('0') == std::string::npos) //If the entry is a number
                stack.push(entry);
-            else if (entry.find_first_not_of('0') == std::string::npos)
-               stack.push("0");
             else
             {
                if(entry[0] == '\'')
@@ -175,7 +173,13 @@ int ossimNitfGenericTag::parseRPN(ossimString input, std::vector<std::vector<oss
                   stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(suffixIn))[colonSubStrings[1].toInt()]);
                }
                else
-                  stack.push(m_fields_map.at(entry + formatSuffix(suffixIn)));
+               {
+                  a = m_fields_map.at(entry + formatSuffix(suffixIn));
+                  if (a.find_first_not_of('0') == std::string::npos) //Compress any number of zeros to a single zero for string comparisons
+                     stack.push("0");
+                  else
+                     stack.push(a); //Default case, just place the string on the stack
+               }
             }
             break;
       }
