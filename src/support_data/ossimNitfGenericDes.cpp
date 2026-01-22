@@ -217,7 +217,7 @@ void ossimNitfGenericDes::loopLogic(ossim_int32 &i, std::vector<std::vector<ossi
          case LOOP_START:
             fieldLength = parseRPN(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length() - 2) , suffix);
             if (fieldLength > 0)
-               suffix.push_back({1, fieldLength, i + 1, FIELD_DEFINITIONS[i].field.at(FIELD_DEFINITIONS[i].field.length() - 1)});
+               suffix.push_back({1, fieldLength, i + 1});
             else
             {
                int loopCount = 1;
