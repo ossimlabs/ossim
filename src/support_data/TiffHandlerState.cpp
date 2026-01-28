@@ -32,7 +32,8 @@ const ossimString ossim::TiffHandlerState::m_typeName = "ossim::TiffHandlerState
 
 ossim::TiffHandlerState::TiffHandlerState()
 {
-
+   // Holds tags read by ossimTiffInfo.
+   m_tags = std::make_shared<ossimKeywordlist>();
 }
       
 ossim::TiffHandlerState::~TiffHandlerState()
@@ -53,7 +54,7 @@ const ossimString& ossim::TiffHandlerState::getStaticTypeName()
 void ossim::TiffHandlerState::addValue(const ossimString& key, 
                                        const ossimString& value)
 {
-  m_tags.add(key.c_str(), value.c_str());
+  m_tags->add(key.c_str(), value.c_str());
 }
 
 bool ossim::TiffHandlerState::getValue(ossimString& value,
@@ -69,7 +70,7 @@ bool ossim::TiffHandlerState::getValue(ossimString& value,
 {
   bool result = false;
 
-  const char* v = m_tags.find(key.c_str());
+  const char* v = m_tags->find(key.c_str());
   if(v)
   {
     result = true;
@@ -88,7 +89,7 @@ bool ossim::TiffHandlerState::exists(ossim_uint32 directory, const ossimString& 
 }
 bool ossim::TiffHandlerState::exists(const ossimString& key)const
 {
-  return (m_tags.find(key)!= 0);
+  return (m_tags->find(key)!= 0);
 
 }
 
@@ -100,7 +101,7 @@ bool ossim::TiffHandlerState::checkBool(ossim_uint32 directory, const ossimStrin
 bool ossim::TiffHandlerState::checkBool(const ossimString& key)const
 {
   bool result = false;
-  const char* value = m_tags.find(key);
+  const char* value = m_tags->find(key);
   if(value)
   {
     result = ossimString(value).toBool();
@@ -179,8 +180,9 @@ void ossim::TiffHandlerState::loadDefaults(std::shared_ptr<ossim::istream> &str,
     std::vector<ossimString> prefixValues;
     ossim_int32 nValues=0;
     info.print(out);
-    m_tags.parseString(out.str());
-    m_tags.getSortedList(prefixValues, "tiff.image");
+    m_tags->clear();
+    m_tags->parseString(out.str());
+    m_tags->getSortedList(prefixValues, "tiff.image");
     nValues = prefixValues.size();
     addValue("tiff.number_of_directories", ossimString::toString(nValues));
     // ossim_uint32 idx = 0;
@@ -1260,16 +1262,16 @@ bool ossim::TiffHandlerState::load(const ossimKeywordlist& kwl,
                                    const ossimString& prefix)
 {
   bool result = ossim::ImageHandlerState::load(kwl, prefix);
-  m_tags.clear();
+  m_tags->clear();
 
-  kwl.extractKeysThatMatch(m_tags, "^("+prefix+"dir[0-9]+)");
+  kwl.extractKeysThatMatch(*m_tags, "^("+prefix+"dir[0-9]+)");
   if(!prefix.empty())
   {
-    m_tags.stripPrefixFromAll("^("+prefix+")");
+    m_tags->stripPrefixFromAll("^("+prefix+")");
   }
   ossimString numberOfDirectories = kwl.find(prefix, "number_of_directories");
 
-  if(!numberOfDirectories.empty()) m_tags.add("number_of_directories", numberOfDirectories, true);
+  if(!numberOfDirectories.empty()) m_tags->add("number_of_directories", numberOfDirectories, true);
 
   return result;
 }
@@ -1279,7 +1281,7 @@ bool ossim::TiffHandlerState::save(ossimKeywordlist& kwl,
 {
    bool result = ossim::ImageHandlerState::save(kwl, prefix);
    
-   kwl.add(prefix.c_str(), m_tags);
+   kwl.add(prefix.c_str(), *m_tags);
 
    return result;
 }

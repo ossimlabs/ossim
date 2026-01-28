@@ -119,14 +119,14 @@ namespace ossim
     *
     * @return ossimKeywordlist that contains the tags
     */
-    ossimKeywordlist& getTags(){return m_tags;}
+    std::shared_ptr<ossimKeywordlist> getTags(){return m_tags;}
 
     /**
     * General access to the the tags of an image
     *
     * @return ossimKeywordlist that contains the tags
     */
-    const ossimKeywordlist& getTags()const{return m_tags;}
+    std::shared_ptr<const ossimKeywordlist>  getTags()const{return m_tags;}
 
     /**
     * Is used by this state to add a valud to the tags
@@ -519,7 +519,7 @@ namespace ossim
     */
     void convertArrayToStringList(ossimString& result, double* doubleArray, ossim_int32 doubleArraSize)const;
 
-    ossimKeywordlist  m_tags; 
+    std::shared_ptr<ossimKeywordlist>  m_tags; 
   };
 
 }
