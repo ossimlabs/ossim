@@ -772,6 +772,17 @@ bool ossimKeywordlist::hasKey( const std::string& key ) const
    return result;
 }
 
+bool ossimKeywordlist::keyIsTrue( const std::string& key ) const
+{
+   bool result = false;
+   std::string value = findKey( key );
+   if ( value.size() )
+   {
+      result = ossimString(value).toBool();
+   }
+   return result;
+}
+
 const std::string& ossimKeywordlist::findKey(const std::string& key) const
 {
    // std::string result;

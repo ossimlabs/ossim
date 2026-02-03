@@ -1646,3 +1646,8 @@ bool ossimRpcModel::finishConstruction()
    return status;
 }
 
+ossimRpcModel::PolynomialType ossimRpcModel::getPolynomialTypec() const
+{
+   return thePolyType;
+}
+

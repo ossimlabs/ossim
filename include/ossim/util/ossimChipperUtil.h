@@ -826,6 +826,18 @@ private:
 
    int getHistoMode() const;
 
+   /**
+    * @brief Creates NITF RPCB or RPCA tag from the input RPC sensor model
+    * and adds to the output nitf image.
+    *
+    * Only valid with chip operation on a single input image that has an
+    * associated RPC sensor model.
+    *
+    * Control key: create_nitf_rpc_tag
+    * key type: bool
+    */
+   void createNitfRpcTag();
+   
    /** @brief Initializes arg parser and outputs usage. */
    void usage(ossimArgumentParser& ap);
 

@@ -215,7 +215,7 @@ void ossimNitfRpcBase::setRpcModelParams(ossimRefPtr<ossimRpcModel> rpc)
    int idx;
    vector<double> coef (20);
    for(idx = 0; idx < 20; ++idx)
-      coef.push_back(rpc->theLineNumCoef[idx]);
+      coef[idx] = rpc->theLineNumCoef[idx];
    setLineNumeratorCoeff(coef);
 
    for(idx = 0; idx < 20; ++idx)
@@ -563,10 +563,10 @@ void ossimNitfRpcBase::setLineNumeratorCoeff(ossim_uint32 idx,
          << "ossimNitfRpcBase::setLineNumeratorCoeff range error!"
          << std::endl;
       return;
-   } 
+   }
 
    std::string s(coeff, 0, LINE_NUMERATOR_COEFFICIENT_SIZE);
-   theLineNumeratorCoefficient[idx] = s;  
+   theLineNumeratorCoefficient[idx] = s;
 }
 
 ossimString ossimNitfRpcBase::getLineDenominatorCoeff(ossim_uint32 idx)const
@@ -622,7 +622,7 @@ void ossimNitfRpcBase::setLineDenominatorCoeff(ossim_uint32 idx,
    } 
    
    std::string s(coeff, 0, LINE_DENOMINATOR_COEFFICIENT_SIZE);
-   theLineDenominatorCoefficient[idx] = s;  
+   theLineDenominatorCoefficient[idx] = s;
 }
 
 ossimString ossimNitfRpcBase::getSampleNumeratorCoeff(ossim_uint32 idx)const
@@ -677,7 +677,7 @@ void ossimNitfRpcBase::setSampleNumeratorCoeff(ossim_uint32 idx,
    } 
    
    std::string s(coeff, 0, SAMPLE_NUMERATOR_COEFFICIENT_SIZE);
-   theSampleNumeratorCoefficient[idx] = s;  
+   theSampleNumeratorCoefficient[idx] = s;
 }
 
 ossimString ossimNitfRpcBase::getSampleDenominatorCoeff(ossim_uint32 idx)const
@@ -732,9 +732,8 @@ void ossimNitfRpcBase::setSampleDenominatorCoeff(
       return;
    }
    
-  std::string s(coeff, 0, SAMPLE_DENOMINATOR_COEFFICIENT_SIZE);
-  s.resize(SAMPLE_DENOMINATOR_COEFFICIENT_SIZE, ' ');
-  theSampleDenominatorCoefficient[idx] = s;  
+   std::string s(coeff, 0, SAMPLE_DENOMINATOR_COEFFICIENT_SIZE);
+   theSampleDenominatorCoefficient[idx] = s;  
 }
 
 std::ostream& ossimNitfRpcBase::print(std::ostream& out,

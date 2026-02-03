@@ -484,9 +484,21 @@ ossim_uint32 ossimNitfIchipbTag::getFullImageRows() const
    return ossimString::toUInt32(theFullImageRow);
 }
 
+void ossimNitfIchipbTag::setFiRow( ossim_uint32 row )
+{
+   ossimString os = ossimNitfCommon::convertToUIntString(row, FI_ROW_SIZE);
+   memcpy(theFullImageRow, os.c_str(), FI_ROW_SIZE);
+}
+
 ossim_uint32 ossimNitfIchipbTag::getFullImageCols() const
 {
    return ossimString::toUInt32(theFullImageCol);
+}
+
+void ossimNitfIchipbTag::setFiCol( ossim_uint32 col )
+{
+   ossimString os = ossimNitfCommon::convertToUIntString(col, FI_COL_SIZE);
+   memcpy(theFullImageCol, os.c_str(), FI_COL_SIZE);
 }
 
 void ossimNitfIchipbTag::getImageRect(ossimDrect& rect) const
