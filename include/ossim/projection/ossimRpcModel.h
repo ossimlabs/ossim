@@ -241,6 +241,9 @@ public:
     */
    bool finishConstruction();
 
+   /** @return Enumerated PolynomialType, i.e. A or B. */
+   PolynomialType getPolynomialType() const;
+
 protected:
    enum AdjustParamIndex
    {

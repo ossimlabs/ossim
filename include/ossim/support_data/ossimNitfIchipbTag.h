@@ -347,9 +347,21 @@ public:
    ossim_uint32 getFullImageRows() const;
 
    /**
+    * @brief Sets FI_ROW field.
+    * @param row
+    */
+   void setFiRow( ossim_uint32 row );
+
+   /**
     * @return Full image number of cols.
     */
    ossim_uint32 getFullImageCols() const;
+
+   /**
+    * @brief Sets FI_COL field.
+    * @param col
+    */
+   void setFiCol( ossim_uint32 col );
 
    /**
     * Initializes rect with the image rectangle without any sub image offset
