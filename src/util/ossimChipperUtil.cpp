@@ -231,7 +231,7 @@ void ossimChipperUtil::addArguments(ossimArgumentParser &ap)
 
    au->addCommandLineOption("--contrast", "<contrast>\nApply contrast to input image(s). Valid range: -1.0 to 1.0");
 
-   au->addCommandLineOption("--create-nitf-rpc-tag", "Creates and adds a nitf rpc tag to the nitf output image. Requires: \"chip\" operation with no cut box, single input with an associated RPC sensor model, and a nitf output. Use case is tiff input image with rpc tags or dot.rpb side car written to a nitf output image.");
+   au->addCommandLineOption("--create-nitf-rpc-tag", "Creates and adds a nitf rpc tag to the nitf output image. Requires: \"chip\" operation, single input with an associated RPC sensor model, and a nitf output. Use case is tiff input image with rpc tags or dot.rpb side car written to a nitf output image.");
 
    au->addCommandLineOption("--cut-bbox-xywh", "<x>,<y>,<width>,<height>\nSpecify a comma separated bounding box.");
 
@@ -6248,7 +6248,7 @@ void ossimChipperUtil::createNitfRpcTag()
          
          if ( rpc.valid() )
          {
-            ossimIrect inputAoi = ih->getBoundingRect(0);
+            ossimIrect inputRect = ih->getBoundingRect(0);
             ossimIrect outputAoi = nitfWriter->getAreaOfInterest();
             if (traceDebug())
             {
@@ -6257,37 +6257,42 @@ void ossimChipperUtil::createNitfRpcTag()
                rpc->print(ossimNotify(ossimNotifyLevel_DEBUG));
                 
                ossimNotify(ossimNotifyLevel_DEBUG)
-                  << "\nInput aoi:  " << inputAoi
+                  << "\nInput rect: " << inputRect
                   << "\nOutput aoi: " << outputAoi << "\n";
             }
 
-#if 0 /* TODO: Fix - ICHIPB currently not working. drb 20260103 */
-            //---
             // ICHIPB for sub image:
-            // Don't add if there is a scale or rotation change.
-            //---
-            if ( m_ivt.valid() && m_ivt->isIdentity() && inputAoi != outputAoi )
+            if ( m_ivt.valid() && m_ivt->isIdentity() && inputRect != outputAoi )
             {
-               ossimDpt startImgPt(inputAoi.ul());
-               ossimDpt stopImgPt(inputAoi.lr());
+               ossimDpt ulViewPt = outputAoi.ul();
+               ossimDpt lrViewPt = outputAoi.lr();
+               ossimDpt ulImagePt = outputAoi.ul();
+               ossimDpt lrImagePt = outputAoi.lr();
+ 
+               // if ( m_ivt.valid() && !m_ivt->isIdentity() )
+               // {
+               //    m_ivt->viewToImage(ulViewPt, ulImagePt);
+               //    m_ivt->viewToImage(lrViewPt, lrImagePt);
+               // }
+               
                if ( geom->getTransform() )
                {
                   //---
                   // If original geometry had a transform apply it. This will account
                   // for previous sub image offset.
                   //---
-                  geom->getTransform()->forward( startImgPt, startImgPt );
-                  geom->getTransform()->forward( stopImgPt,  stopImgPt );
+                  geom->getTransform()->forward( ulImagePt, ulImagePt);
+                  geom->getTransform()->forward( lrImagePt, lrImagePt);
                }
                
-               ossimDrect fullImageRect( startImgPt, stopImgPt );
-               ossimDrect outputImageRect( outputAoi.ul(), outputAoi.lr());
+               ossimDrect fullImageRect(ulImagePt, lrImagePt);
+               ossimDrect outputImageRect(0,0,outputAoi.width()-1, outputAoi.height()-1);
                
                ossimRefPtr<ossimNitfIchipbTag> ichipb = new ossimNitfIchipbTag();
                ichipb->initialize( outputImageRect, fullImageRect );
                ichipb->setScaleFactor(1.0);
-               ichipb->setFiRow(inputAoi.height());
-               ichipb->setFiCol(inputAoi.width());
+               ichipb->setFiRow(inputRect.height());
+               ichipb->setFiCol(inputRect.width());
                
                nitfWriter->addRegisteredTag(
                   ossimRefPtr<ossimNitfRegisteredTag>(
@@ -6300,41 +6305,38 @@ void ossimChipperUtil::createNitfRpcTag()
                   ichipb->print(ossimNotify(ossimNotifyLevel_DEBUG));
                }
             }
-#endif 
-            if ( inputAoi == outputAoi )
+
+            ossimRefPtr<ossimNitfRpcBase> nitfRpcTag = 0;
+            if ( rpc->getPolynomialType() == ossimRpcModel::B )
             {
-               ossimRefPtr<ossimNitfRpcBase> nitfRpcTag = 0;
-               if ( rpc->getPolynomialTypec() == ossimRpcModel::B )
-               {
-                  nitfRpcTag = new ossimNitfRpcBTag();
-               }
-               else
-               {
-                  nitfRpcTag = new ossimNitfRpcATag();
-               }
-               
-               nitfRpcTag->setRpcModelParams(rpc);
-               
-               nitfWriter->addRegisteredTag(
-                  ossimRefPtr<ossimNitfRegisteredTag>(nitfRpcTag.get()),
-                  true, 1, ossimString("IXSHD"));
-               
-               if (traceDebug())
-               {
-                  ossimNotify(ossimNotifyLevel_DEBUG)
-                     << "Added RPC tag to NITF image header."
-                     << "\nRPC tag:\n";
-                  nitfRpcTag->print(ossimNotify(ossimNotifyLevel_DEBUG));
-               }
+               nitfRpcTag = new ossimNitfRpcBTag();
             }
             else
             {
-               ossimNotify(ossimNotifyLevel_WARN)
-                  << MODULE << " WARNING!\n"
-                  << "Requested addition of NITF RPC tag not performed."
-                  << "\nInput image projection is not a RPC model."
-                  << std::endl;
+               nitfRpcTag = new ossimNitfRpcATag();
             }
+            
+            nitfRpcTag->setRpcModelParams(rpc);
+            
+            nitfWriter->addRegisteredTag(
+               ossimRefPtr<ossimNitfRegisteredTag>(nitfRpcTag.get()),
+               true, 1, ossimString("IXSHD"));
+            
+            if (traceDebug())
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << "Added RPC tag to NITF image header."
+                  << "\nRPC tag:\n";
+               nitfRpcTag->print(ossimNotify(ossimNotifyLevel_DEBUG));
+            }
+         }
+         else
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << MODULE << " WARNING!\n"
+               << "Requested addition of NITF RPC tag not performed."
+               << "\nInput image projection is not a RPC model."
+               << std::endl;
          }
       }
    }
