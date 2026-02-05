@@ -265,20 +265,20 @@ ossimString ossimNitfGenericTag::formatField(int definition, const ossimString& 
    }
    switch (format)
    {
-      case 1:
+      case U_INT:
          result = ossimNitfCommon::convertToUIntString(result.toUInt32(),
             length);
          break;
-      case 2:
+      case INT:
          result = ossimNitfCommon::convertToIntString(result.toInt32(),
             length);
          break;
-      case 3:
+      case U_DOUBLE:
          result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
             FIELD_DEFINITIONS[definition].precision,
             length);
          break;
-      case 4:
+      case DOUBLE:
          if (result.toFloat64() > 0)
             result = "+" + ossimNitfCommon::convertToDoubleString(result.toFloat64(),
                               FIELD_DEFINITIONS[definition].precision,
@@ -288,7 +288,7 @@ ossimString ossimNitfGenericTag::formatField(int definition, const ossimString& 
                               FIELD_DEFINITIONS[definition].precision,
                                  length);
          break;
-      case 5:
+      case SCIENTIFIC:
          result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
          break;
       default:

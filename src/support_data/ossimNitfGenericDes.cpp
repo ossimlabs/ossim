@@ -161,7 +161,7 @@ int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<oss
                stack.push("0");
             break;
          default: //Not an operator
-            if(entry.toInt() != 0 || entry.find_first_not_of('0') == std::string::npos) //If the entry is a number
+            if(entry.toDouble() != 0 || entry.find_first_not_of('0') == std::string::npos) //If the entry is a number
                stack.push(entry);
             else
             {
@@ -268,20 +268,20 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
    }
    switch (format)
    {
-      case 1:
+      case U_INT:
          result = ossimNitfCommon::convertToUIntString(result.toUInt32(),
             length);
          break;
-      case 2:
+      case INT:
          result = ossimNitfCommon::convertToIntString(result.toInt32(),
             length);
          break;
-      case 3:
+      case U_DOUBLE:
          result = ossimNitfCommon::convertToDoubleString(result.toFloat64(),
             FIELD_DEFINITIONS[definition].precision,
             length);
          break;
-      case 4:
+      case DOUBLE:
          if (result.toFloat64() > 0)
             result = "+" + ossimNitfCommon::convertToDoubleString(result.toFloat64(),
                               FIELD_DEFINITIONS[definition].precision,
@@ -291,7 +291,7 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
                               FIELD_DEFINITIONS[definition].precision,
                                  length);
          break;
-      case 5:
+      case SCIENTIFIC:
          result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
          break;
       default:
@@ -544,7 +544,8 @@ ossim_uint32 ossimNitfGenericDes::getDesSubHeaderLength() const
 {
    if (m_fields_map.count("NUMAIS") == 0 || m_fields_map.count("NUM_ASSOC_ELEM") == 0)
    {
-      ossimNotify( "NUMAIS and NUM_ASSOC_ELEM not populated", ossimNotifyLevel_WARN);
+      if (traceDebug())
+         ossimNotify( "NUMAIS and NUM_ASSOC_ELEM not populated", ossimNotifyLevel_WARN);
       return 46;
    }
 
