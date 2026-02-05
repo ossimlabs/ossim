@@ -12,7 +12,7 @@
 // Contains class definition for TiffTileSource.
 //
 //*******************************************************************
-//  $Id: ossimTiffTileSource.cpp 23548 2015-09-28 21:01:36Z dburken $
+// $Id$
 
 #include <ossim/imaging/ossimTiffTileSource.h>
 #include <ossim/support_data/ossimGeoTiff.h>
@@ -30,16 +30,21 @@
 #include <ossim/base/ossimEllipsoid.h>
 #include <ossim/base/ossimDatum.h>
 #include <ossim/base/ossimBooleanProperty.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/imaging/ossimImageDataFactory.h>
+#include <ossim/imaging/ossimImageGeometryRegistry.h>
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
+#include <ossim/projection/ossimQuickbirdRpcModel.h>
+#include <ossim/projection/ossimRpcModel.h>
+#include <ossim/support_data/TiffHandlerState.h>
+
 #include <xtiffio.h>
 #include <geo_normalize.h>
 #include <cstdlib> /* for abs(int) */
-#include <ossim/base/ossimStreamFactoryRegistry.h>
-#include <ossim/support_data/TiffHandlerState.h>
 
-using namespace std;
+// using namespace std;
 
 RTTI_DEF1(ossimTiffTileSource, "ossimTiffTileSource", ossimImageHandler)
 
@@ -96,7 +101,9 @@ ossimTiffTileSource::ossimTiffTileSource()
       theMaskDirectoryList(0),
       theCurrentTiffRlevel(0),
       theCompressionType(0),
-      theOutputBandList(0)
+      theOutputBandList(0),
+      m_streamAdaptor(),
+      m_tags()
 {
 }
 
@@ -444,6 +451,16 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       state->loadDefaults(str, connectionString);
       //state->loadDefaults(theTiffPtr);
       state->setImageHandlerType(getClassName());
+
+      // m_tags initialized from ossimTiffInfo in ossim::TiffHandlerState::loadDefaults.
+      m_tags = state->getTags();
+
+      if ( traceDebug() )
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " DEBUG:\n"
+            << "Tags from TiffHandlerState:\n" << *m_tags << "\n\n";
+      }
    }
    state->setConnectionString(connectionString);
 
@@ -519,7 +536,7 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       CLOG << "DEBUG:"
            << "\ntheMinSampleValue:  " << theMinSampleValue
            << "\ntheMaxSampleValue:  " << theMaxSampleValue
-           << endl;
+           << std::endl;
    }
 
    theImageWidth.resize(theNumberOfDirectories);
@@ -546,7 +563,7 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
          theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
          ossimNotify(ossimNotifyLevel_WARN)
              << MODULE << " Cannot determine image length."
-             << endl;
+             << std::endl;
       }
 
       // samples:
@@ -555,7 +572,7 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
          theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
          ossimNotify(ossimNotifyLevel_WARN)
              << MODULE << " Cannot determine image width."
-             << endl;
+             << std::endl;
       }
 
       if (dir != 0)
@@ -626,14 +643,14 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
             theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
             ossimNotify(ossimNotifyLevel_WARN)
                 << "ossimTiffTileSource::getTiffTileWidth ERROR:"
-                << "\nCannot determine tile width." << endl;
+                << "\nCannot determine tile width." << std::endl;
          }
          if (!theInputTileSize[dir].y)
          {
             theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
             ossimNotify(ossimNotifyLevel_WARN)
                 << "ossimTiffTileSource::getTiffTileLength ERROR:"
-                << "\nCannot determine tile length." << endl;
+                << "\nCannot determine tile length." << std::endl;
             theInputTileSize[dir].y = 0;
          }
       }
@@ -1029,7 +1046,7 @@ bool ossimTiffTileSource::loadTile(const ossimIrect &tile_rect,
 
       default:
          ossimNotify(ossimNotifyLevel_WARN)
-             << MODULE << " Unsupported tiff type!" << endl;
+             << MODULE << " Unsupported tiff type!" << std::endl;
          status = false;
          break;
       }
@@ -1208,7 +1225,7 @@ bool ossimTiffTileSource::loadFromTile(const ossimIrect &clip_rect,
                   {
                      ossimNotify(ossimNotifyLevel_WARN)
                          << MODULE << " Read Error!"
-                         << "\nReturning error...  " << endl;
+                         << "\nReturning error...  " << std::endl;
                   }
                   theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
                   return false;
@@ -1246,7 +1263,7 @@ bool ossimTiffTileSource::loadFromTile(const ossimIrect &clip_rect,
                      {
                         ossimNotify(ossimNotifyLevel_WARN)
                             << MODULE << " Read Error!"
-                            << "\nReturning error...  " << endl;
+                            << "\nReturning error...  " << std::endl;
                      }
                      theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
                      return false;
@@ -1279,7 +1296,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Tile(const ossimIrect &tile_rect,
    {
       ossimNotify(ossimNotifyLevel_WARN)
           << MODULE << " Error:"
-          << "\nInvalid number of bands or bytes per pixel!" << endl;
+          << "\nInvalid number of bands or bytes per pixel!" << std::endl;
    }
 
    //***
@@ -1315,7 +1332,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Tile(const ossimIrect &tile_rect,
            << "\nclip_rect:  " << clip_rect
            << "\ntiles_in_v_dir:  " << tiles_in_v_dir
            << "\ntiles_in_u_dir:  " << tiles_in_u_dir
-           << endl;
+           << std::endl;
    }
 #endif
 
@@ -1346,7 +1363,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Tile(const ossimIrect &tile_rect,
             {
                ossimNotify(ossimNotifyLevel_WARN)
                    << MODULE << " Read Error!"
-                   << "\nReturning error..." << endl;
+                   << "\nReturning error..." << std::endl;
                theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
                return false;
             }
@@ -1437,7 +1454,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Strip(const ossimIrect &tile_rect,
    {
       ossimNotify(ossimNotifyLevel_WARN)
           << MODULE << " Error:"
-          << "\nInvalid number of bands or bytes per pixel!" << endl;
+          << "\nInvalid number of bands or bytes per pixel!" << std::endl;
    }
 
    //***
@@ -1463,7 +1480,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Strip(const ossimIrect &tile_rect,
         << "\nending_strip:    " << ending_strip
         << "\nstrip_width:     " << strip_width
         << "\noutput_tile_offset:  " << output_tile_offset
-        << endl;
+        << std::endl;
 #endif
 
    //***
@@ -1490,7 +1507,7 @@ bool ossimTiffTileSource::loadFromRgbaU8Strip(const ossimIrect &tile_rect,
                                (ossim_uint32 *)theBuffer) == 0) // use tiff typedef
          {
             ossimNotify(ossimNotifyLevel_WARN)
-                << MODULE << " Error reading strip!" << endl;
+                << MODULE << " Error reading strip!" << std::endl;
             delete[] d;
             return false;
          }
@@ -1604,7 +1621,7 @@ bool ossimTiffTileSource::loadFromRgbaU8aStrip(const ossimIrect &tile_rect,
    {
       ossimNotify(ossimNotifyLevel_WARN)
           << MODULE << " Error:"
-          << "\nInvalid number of bands or bytes per pixel!" << endl;
+          << "\nInvalid number of bands or bytes per pixel!" << std::endl;
    }
 
    //***
@@ -1630,7 +1647,7 @@ bool ossimTiffTileSource::loadFromRgbaU8aStrip(const ossimIrect &tile_rect,
            << "\nstrip_width:     " << strip_width
            << "\noutput_tile_offset:     " << output_tile_offset
            << "\nsamples:         " << theSamplesPerPixel
-           << endl;
+           << std::endl;
    }
 #endif
 
@@ -1655,7 +1672,7 @@ bool ossimTiffTileSource::loadFromRgbaU8aStrip(const ossimIrect &tile_rect,
                             (ossim_uint32 *)theBuffer) == 0) // use tiff typedef
       {
          ossimNotify(ossimNotifyLevel_WARN)
-             << MODULE << " Error reading strip!" << endl;
+             << MODULE << " Error reading strip!" << std::endl;
          delete[] d;
          return false;
       }
@@ -1791,7 +1808,7 @@ bool ossimTiffTileSource::loadFromU16Strip(const ossimIrect &clip_rect, ossimIma
                {
                   ossimNotify(ossimNotifyLevel_WARN)
                       << "ossimTiffTileSource::loadFromU16Strip Read Error!"
-                      << "\nReturning error...  " << endl;
+                      << "\nReturning error...  " << std::endl;
                }
                theErrorStatus = ossimErrorCodes::OSSIM_ERROR;
                status = false;
@@ -2099,7 +2116,7 @@ std::ostream &ossimTiffTileSource::print(std::ostream &os) const
       {
          os << "\ntile_length:     " << theInputTileSize[i].y;
       }
-      os << endl;
+      os << std::endl;
    }
 
    os << "\nmask_dirs:       " << theMaskDirectoryList.size();
@@ -2129,7 +2146,7 @@ std::ostream &ossimTiffTileSource::print(std::ostream &os) const
    if (theTile.valid())
    {
       os << "\nOutput tile dump:\n"
-         << *theTile << endl;
+         << *theTile << std::endl;
    }
 
    if (theOverview.valid())
@@ -2138,7 +2155,7 @@ std::ostream &ossimTiffTileSource::print(std::ostream &os) const
       theOverview->print(os);
    }
 
-   os << endl;
+   os << std::endl;
 
    return ossimSource::print(os);
 }
@@ -2379,6 +2396,215 @@ void ossimTiffTileSource::getPropertyNames(std::vector<ossimString> &propertyNam
    propertyNames.push_back("apply_color_palette_flag");
 }
 
+ossimRefPtr<ossimImageGeometry> ossimTiffTileSource::getImageGeometry()
+{
+   if ( !theGeometry )
+   {
+      //---
+      // Check for:
+      // - external dot.geom
+      // - external side car file, i.e. dot.rpb
+      //---
+      theGeometry = getExternalImageGeometry();
+      
+      if ( !theGeometry )
+      {
+         // Check the internal geometry first to avoid a factory call.
+         theGeometry = getInternalImageGeometry();
+         
+         //---
+         // WARNING:
+         // Must create/set the geometry at this point or the next call to
+         // ossimImageGeometryRegistry::extendGeometry will put us in an infinite loop
+         // as it does a recursive call back to ossimImageHandler::getImageGeometry().
+         //---
+         if ( !theGeometry )
+         {
+            theGeometry = new ossimImageGeometry();
+         }
+         
+         // Check for set projection.
+         if ( !theGeometry->getProjection() )
+         {
+            // Last try factories for projection.
+            ossimImageGeometryRegistry::instance()->extendGeometry(this);
+         }
+      }
+
+      // Set image things the geometry object should know about.
+      initImageParameters( theGeometry.get() );
+      
+      if (traceDebug())
+      {
+         ossimNotify(ossimNotifyLevel_DEBUG)
+            << "ossimTiffTileSource::getImageGeometry geometry:\n"
+            << *(theGeometry.get()) << "\n";
+      }
+      
+   }
+   return theGeometry;
+   
+} // End: ossimTiffTileSource::getImageGeometry()
+
+ossimRefPtr<ossimImageGeometry> ossimTiffTileSource::getExternalImageGeometry() const
+{
+   // Look for external dot.geom first.
+   ossimRefPtr<ossimImageGeometry> geom = ossimImageHandler::getExternalImageGeometry();
+
+   if (geom.valid() == false)
+   {
+      //---
+      // If any of these files are found, try for a
+      // ossimQuickbirdRpcModel by feeding it the base image file.
+      //---
+      
+      // Look for a stand alone RPB or RPA file.
+      ossimFilename f = theImageFile;
+      f.setExtension( ossimString("RPB") );
+      if ( f.exists() == false )
+      {
+         f.setExtension( ossimString("rpb") );
+         if ( f.exists() == false )
+         {
+            f.setExtension( ossimString("RPA") );
+            if ( f.exists() == false )
+            {
+               f.setExtension( ossimString("rpa") );
+            }
+         }
+      }
+
+      if ( f.exists() )
+      {
+         ossimRefPtr<ossimQuickbirdRpcModel> qbModel = new ossimQuickbirdRpcModel();
+         if ( qbModel->parseFiles( theImageFile,  getImageRectangle() ) )
+         {
+            // Create and assign projection to our ossimImageGeometry object.
+            ossimRefPtr<ossimProjection> proj = qbModel.get();
+            geom = new ossimImageGeometry();
+            geom->setProjection( proj.get() );
+         }
+      }
+   }
+
+   return geom;
+}
+
+ossimRefPtr<ossimImageGeometry> ossimTiffTileSource::getInternalImageGeometry() const
+{
+   static const char M[] = "ossimTiffTileSource::getInternalImageGeometry";
+
+   ossimRefPtr<ossimImageGeometry> geom = 0;
+   
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG) << M << " entered...\n";
+   }
+
+#if 1 /* tmp drb */
+   if ( m_tags )
+   {
+      std::string key;
+      std::string value;
+      
+      ossimRefPtr<ossimProjection> proj = 0;
+      
+      // Test for RPC tag 50844:
+      key = "tiff.image0.rpc.bias_error";
+      if ( m_tags->hasKey( key ) )
+      {
+         ossimKeywordlist geomKwl( *m_tags );
+         // Add the polynomial format:
+         key = "tiff.image0.rpc.polynomial_format";
+         value = "B";
+         geomKwl.addPair( key, value );
+         
+         // image id:
+         key = "tiff.image0.rpc.image_id";
+         geomKwl.addPair( key, theImageFile.file().string() );
+         
+         std::string prefix = "tiff.image0.rpc.";
+         ossimRefPtr<ossimRpcModel> model = new ossimRpcModel();
+         if ( model->loadState( geomKwl, prefix.c_str() ) == true )
+         {
+            // Must set the image rect before finish construction call:
+            model->setImageRect( getImageRectangle() );
+            if ( model->finishConstruction() == true )
+            {
+               proj = model.get();
+            }
+         }
+      }
+      // No RPCs, look for basic map projection:
+      else
+      {
+         //---
+         // Test to see if we should use external factories to pick up a
+         // sensor model where support data for model is in an external
+         // file.
+         //---
+         bool loadInternal = true;
+         key = "tiff.image0.copyright";
+         if ( m_tags->hasKey( key ) )
+         {
+            std::size_t found = value.find(std::string("EarthWatch"));
+            if ( found != std::string::npos )
+            {
+               loadInternal = false;
+            }
+         }
+         
+         if ( loadInternal )
+         {
+            // ossimRadarSat2Model has "Uncorrected Satellite Data" citation.
+            key = "tiff.image0.citation";
+            if ( m_tags->hasKey( key ) )
+            {
+               value = m_tags->findKey( key );
+               if ( value.size() )
+               {
+                  std::size_t found = value.find(std::string("Uncorrected"));
+                  if ( found != std::string::npos )
+                  {
+                     loadInternal = false;
+                  }
+               }
+            } 
+         }
+         
+         if ( loadInternal )
+         {
+            // No RPCs, look for basic map projection:
+            ossimKeywordlist geomKwl;
+            ossimTiffInfo ti;
+            if ( ti.getImageGeometry( *m_tags, geomKwl, 0) == true )
+            {
+               std::string prefix = "image0.";
+               proj = ossimProjectionFactoryRegistry::instance()->createProjection(
+                  geomKwl, prefix.c_str() );
+            }
+         }
+      }
+
+      if ( proj.valid() )
+      {
+         // Create and assign projection to our ossimImageGeometry object.
+         geom = new ossimImageGeometry();
+         geom->setProjection( proj.get() );
+      }
+   }
+#endif
+   
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << M << " exit status " << (geom.valid()?"success":"failure") << "\n";
+   }
+   
+   return geom;
+   
+} // End: ossimTiffTileSource::getInternalImageGeometry()
+
 bool ossimTiffTileSource::setTiffDirectory(ossim_uint16 directory)
 {
    bool status = true;
@@ -2396,7 +2622,7 @@ bool ossimTiffTileSource::setTiffDirectory(ossim_uint16 directory)
          {
             ossimNotify(ossimNotifyLevel_WARN)
                 << "ossimTiffTileSource::setTiffDirectory ERROR setting directory "
-                << directory << "!" << endl;
+                << directory << "!" << std::endl;
          }
       }
    }
@@ -2496,7 +2722,7 @@ void ossimTiffTileSource::validateMinMaxNull()
             {
                ossimNotify(ossimNotifyLevel_DEBUG)
                   << "ossimTiffTileSource::validateMinMaxNull kwl:\n" << gtiffKwl
-                  << endl;
+                  << std::endl;
             }
 #endif
             const char *lookup;
@@ -2691,7 +2917,7 @@ bool ossimTiffTileSource::allocateBuffer()
    default:
    {
       ossimNotify(ossimNotifyLevel_WARN)
-          << "Unknown read method!" << endl;
+          << "Unknown read method!" << std::endl;
       print(ossimNotify(ossimNotifyLevel_WARN));
       bSuccess = false;
    }
@@ -2702,7 +2928,7 @@ bool ossimTiffTileSource::allocateBuffer()
       ossimNotify(ossimNotifyLevel_DEBUG)
           << "ossimTiffTileSource::allocateBuffer DEBUG:"
           << "\nbuffer_size:  " << buffer_size
-          << endl;
+          << std::endl;
    }
 
    theBufferRect.makeNan();
@@ -2731,7 +2957,7 @@ bool ossimTiffTileSource::allocateBuffer()
             ossimNotify(ossimNotifyLevel_WARN)
                 << "ossimTiffTileSource::allocateBuffer WARN:"
                 << "\nNot enough memory: buffer_size:  " << buffer_size
-                << endl;
+                << std::endl;
          }
       }
    }

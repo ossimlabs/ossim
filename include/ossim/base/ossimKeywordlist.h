@@ -509,6 +509,9 @@ public:
     * @return true if key is in map even if value is empty; false, if not.
     */
    bool hasKey( const std::string& key ) const;
+
+   /** @return true if key is in map and set to true; false, if not. */
+   bool keyIsTrue( const std::string& key ) const;
    
    /**
     *  @brief Find methods that take std::string(s).

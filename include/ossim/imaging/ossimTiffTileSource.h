@@ -20,9 +20,10 @@
 
 #include <ossim/imaging/ossimImageHandler.h>
 #include <ossim/base/ossimIrect.h>
-#include <vector>
 #include <ossim/base/ossimStreamFactoryRegistry.h>
 #include <ossim/support_data/TiffStreamAdaptor.h>
+#include <vector>
+
 /*
  * TIFF is defined as an incomplete type to hide the tiff library's internal
  * data structures from clients.
@@ -149,7 +150,7 @@ public:
     *   line.
     */
    virtual ossim_uint32 getNumberOfDecimationLevels() const;
-   
+
    /**
     * Method to save the state of an object to a keyword list.
     * Return true if ok or false on error.
@@ -223,19 +224,52 @@ public:
    {
       return theTiffPtr;
    }
-#if 0
+
    /**
-    * @brief Method to get the image geometry object associated with this
-    * image.
+    * @brief Gets the image geometry.
     *
-    * The geometry contains full-to-local image transform as well as
-    * projection (image-to-world).
+    * The geometry contains full-to-local image transform as well as projection
+    * (image-to-world).
     *
-    * @return ossimImageGeometry* or null if not defined.
+    * This overrides ossimImageHandler::getImageGeometry() to look for
+    * the projection in the following order:
+    *
+    * 1)  External dot.geom (always takes precident).
+    * 1a) External dot.rpb file (RPC sensor model).
+    * 2)  Internal tiff tags. This could be a model, i.e. RPC, or some
+    *     map projection.
+    * 3)  Lastly it searches image geometry factories    
+    * 
+    * @return Returns the image geometry object associated with this image
+    * source. Note the underlying projection could be NULL if not found.
     */
-   virtual ossimImageGeometry* getImageGeometry();
-#endif   
+   virtual ossimRefPtr<ossimImageGeometry> getImageGeometry();
+
 protected:
+
+   /**
+    * @brief Gets the image geometry from external files.
+    * 
+    * The geometry contains full-to-local image transform as well as projection
+    * (image-to-world).
+    *
+    * This method is specialized to look for an external .geom style override
+    * and external DigitalGlobe side car files, e.g. DigitalGlobe dot TIL,
+    * RPB and IMD files.
+    *
+    * @return @return Returns the image geometry object associated with this tile
+    * source or NULL if non defined.
+    */
+   virtual ossimRefPtr<ossimImageGeometry> getExternalImageGeometry() const;
+
+   /**
+    * @brief Gets the image geometry from the embedded tiff tags.
+    *
+    * @return @return Returns the image geometry object associated with this tile
+    * source or NULL if non defined.
+    */
+   virtual ossimRefPtr<ossimImageGeometry> getInternalImageGeometry() const;
+
    virtual ~ossimTiffTileSource();
    /**
     *  Returns true if no errors initializing object.
@@ -396,6 +430,9 @@ private:
    ossim_int32               theCompressionType;
    std::vector<ossim_uint32> theOutputBandList;
    std::shared_ptr<ossim::TiffIStreamAdaptor> m_streamAdaptor;
+
+   // Holds tags read by ossimTiffInfo.
+   std::shared_ptr<ossimKeywordlist> m_tags;
 
 TYPE_DATA
 };

@@ -231,6 +231,19 @@ public:
     * */
    bool toRPB(std::ostream &out) const;
 
+   /**
+    * @brief Finishes initialization.
+    *
+    * RPC params should be initialized, plus the image clip rect
+    * prior to call this.
+    *
+    * @return true on success, false on error.
+    */
+   bool finishConstruction();
+
+   /** @return Enumerated PolynomialType, i.e. A or B. */
+   PolynomialType getPolynomialType() const;
+
 protected:
    enum AdjustParamIndex
    {

@@ -1601,3 +1601,53 @@ bool ossimRpcModel::toRPB(ostream &out) const
    return true;
 }
 
+bool ossimRpcModel::finishConstruction()
+{
+   bool status = false;
+
+   // Make the gsd nan so it gets computed.
+   theGSD.makeNan();
+   
+   theImageSize.line = theImageClipRect.height();
+   theImageSize.samp = theImageClipRect.width();
+   theRefImgPt.line = theImageClipRect.midPoint().y;
+   theRefImgPt.samp = theImageClipRect.midPoint().x;
+   theRefGndPt.lat = theLatOffset;
+   theRefGndPt.lon = theLonOffset;
+   theRefGndPt.hgt = theHgtOffset;
+   
+   ossimGpt v0, v1, v2, v3;
+   lineSampleHeightToWorld(theImageClipRect.ul(), theHgtOffset, v0);
+   lineSampleHeightToWorld(theImageClipRect.ur(), theHgtOffset, v1);
+   lineSampleHeightToWorld(theImageClipRect.lr(), theHgtOffset, v2);
+   lineSampleHeightToWorld(theImageClipRect.ll(), theHgtOffset, v3);
+   
+   theBoundGndPolygon = ossimPolygon (ossimDpt(v0), ossimDpt(v1), ossimDpt(v2), ossimDpt(v3));
+   
+   // Set the ground reference point using the model.
+   lineSampleHeightToWorld(theRefImgPt, theHgtOffset, theRefGndPt);
+   
+   if( theGSD.hasNans() )
+   {
+      try
+      {
+         // This will set theGSD and theMeanGSD. Method throws ossimException.
+         computeGsd();
+         status = true;
+      }
+      catch (const ossimException& e)
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << "ossimQuickbirdRpcModel::finishConstruction -- caught exception:\n"
+            << e.what() << std::endl;
+      }
+   }
+
+   return status;
+}
+
+ossimRpcModel::PolynomialType ossimRpcModel::getPolynomialType() const
+{
+   return thePolyType;
+}
+
