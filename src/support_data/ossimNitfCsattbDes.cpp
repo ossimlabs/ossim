@@ -34,7 +34,7 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
    FIELD_DEFINITIONS =
       {
          {"UUID", 36, 0},
-         {"NUMAIS", 3, 0},
+         {"NUMAIS", 3, 0, 0, "ALL"},
          {"NUMAIS n", LOOP_START},
             {"AISDLVL", 3, 1},
          {"NUMAIS n", LOOP_END},
@@ -44,13 +44,13 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
          {"NUM_ASSOC_ELEM n", LOOP_END},
          {"RESERVEDSUBH_LEN", 4, 1},
          {"RESERVEDSUBH RESERVEDSUBH_LEN", VARIABLE_LENGTH, 0},
-         {"QUAL_FLAG_ATT", 1, 1},
+         {"QUAL_FLAG_ATT", 1, 1, 0, "1"},
          {"INTERP_TYPE_ATT", 1, 1},
          {"INTERP_TYPE_ATT 1 >", IF_STATEMENT_START},
             {"INTERP_ORDER_ATT", 1, 1},
          {"INTERP_TYPE_ATT 1 >", IF_STATEMENT_END},
          {"ATT_TYPE", 1, 1},
-         {"ECI_ECF_ATT", 1, 1},
+         {"ECI_ECF_ATT", 1, 1, 0, "1"},
          /*{"ECI_ECF_ATT 0 = DESVER 1 > &", IF_STATEMENT_START}, Assuming desver 1
             {"TA_POLE", 19, 3, 11},
             {"A_POLE", 11, 4, 8},
