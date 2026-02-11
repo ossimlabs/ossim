@@ -45,22 +45,6 @@ void ossimNitfCssfabDes::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
       {
-   //{"DE", 2},
-   //{"DESID", 25},
-   {"DESVER", 2, U_INT},
-   {"DESCLAS to DESCTLN", 167},
-   {"DESSHL", 4, U_INT},
-   {"UUID", 36},
-   {"NUMAIS", 3, U_INT},
-   {"NUMAIS n", LOOP_START},
-      {"AISDLVL", 3, U_INT},
-   {"NUMAIS n", LOOP_END},
-   {"NUM_ASSOC_ELEM", 3, U_INT},
-   {"NUM_ASSOC_ELEM n", LOOP_START},
-      {"ASSOC_ELEM_UUID", 36},
-   {"NUM_ASSOC_ELEM n", LOOP_END},
-   {"RESERVEDSUBH_LEN", 4},///Empty?
-   {"RESERVEDSUBH RESERVEDSUBH_LEN", VARIABLE_LENGTH},///Empty?
    {"SENSOR_TYPE", 1, ASCII, 0, "S"},
    {"BAND_TYPE", 1},
    {"BAND_WAVELENGTH", 11, U_DOUBLE, 8},
