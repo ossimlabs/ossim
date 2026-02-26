@@ -14,15 +14,16 @@
         </accmClassification>
         <accmImageHold type="bool"/>
     </securityData>
-    <sourceCatalog mult="1" type="String" attributes="catalogDate, catalogVersion">Space-Track<absVisualMagnitude type="double"/>
+    <soUid mult="1" type="String"/>
+    <soType mult="1" type="String">satellite</soType>
+    <sourceCatalog mult="1" type="String" attributes="catalogDate, catalogVersion">Space-Track
+        <absVisualMagnitude type="double"/>
         <radarCrossSection type="double"/>
         <length type="double"/>
         <width type="double"/>
         <height type="double"/>
         <diameter type="double"/>
         <mass type="double"/>
-        <soUid mult="1" type="String"/>
-        <soType mult="1" type="String">satellite</soType>
         <nonSatelliteInformation>
             <name type="String"/>
             <identifier type="String"/>
@@ -75,18 +76,6 @@
             </affiliation>
             <assessedIdentity type="String" attributes="confidence"/>
         </satelliteInformation>
-        <collectionData mult="1">
-            <collectionReqId mult="1" type="String"/>
-            <priority type="int"/>
-            <revNumber type="int"/>
-            <passNumber type="int"/>
-            <background mult="1" type="String"/>
-            <lightingCondition mult="1" type="String"/>
-            <appVisualMagnitude type="double"/>
-            <reflectance type="int"/>
-            <snr type="double"/>
-            <backgroundType type="String"/>
-        </collectionData>
         <orbitData>
             <epochDate mult="1" type="String"/>
             <orbitRegime type="String" attributes="type"/>
@@ -99,4 +88,16 @@
             <perigeeAltitude type="double"/>
         </orbitData>
     </sourceCatalog>
+    <collectionData mult="1">
+        <collectionReqId mult="1" type="String"/>
+        <priority type="int"/>
+        <revNumber type="int"/>
+        <passNumber type="int"/>
+        <background mult="1" type="String"/>
+        <lightingCondition mult="1" type="String"/>
+        <appVisualMagnitude type="double"/>
+        <reflectance type="int"/>
+        <snr type="double"/>
+        <backgroundType type="String"/>
+    </collectionData>
 </spaceObjectDescriptionData>

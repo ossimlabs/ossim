@@ -85,7 +85,6 @@ protected:
       U_DOUBLE = 3,
       DOUBLE = 4,
       SCIENTIFIC = 5
-
    };
 };
 
