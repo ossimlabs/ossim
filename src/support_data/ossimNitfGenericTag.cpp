@@ -73,6 +73,7 @@ int ossimNitfGenericTag::parseRPN(ossimString input, std::vector<std::vector<oss
    std::stack<ossimString> stack;
    ossimString a, b;
    std::vector<ossimString> colonSubStrings;
+   std::vector<std::vector<ossim_int32>> tempSuffix = suffixIn;
    for(ossimString entry: splitInput)
    {
       switch(entry.at(0))
@@ -162,18 +163,21 @@ int ossimNitfGenericTag::parseRPN(ossimString input, std::vector<std::vector<oss
                stack.push(entry);
             else
             {
+               while (entry[0] == '^')
+               {
+                  entry = entry.substr(1);
+                  tempSuffix.erase(tempSuffix.end() - 1);
+               }
                if(entry[0] == '\'')
                   stack.push(entry.substr(1, entry.length() - 2));
-               else if (entry[0] == '^')
-                  stack.push(m_fields_map.at(entry.substr(1, entry.length())));
                else if (entry.contains(':'))
                {
                   colonSubStrings = entry.split(':');
-                  stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(suffixIn))[colonSubStrings[1].toInt()]);
+                  stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(tempSuffix))[colonSubStrings[1].toInt()]);
                }
                else
                {
-                  a = m_fields_map.at(entry + formatSuffix(suffixIn));
+                  a = m_fields_map.at(entry + formatSuffix(tempSuffix));
                   if (a.find_first_not_of('0') == std::string::npos) //Compress any number of zeros to a single zero for string comparisons
                      stack.push("0");
                   else
@@ -243,7 +247,7 @@ void ossimNitfGenericTag::loopLogic(ossim_int32 &i, std::vector<std::vector<ossi
     }
 }
 
-ossimString ossimNitfGenericTag::formatField(int definition, const ossimString& fieldValue) const
+ossimString ossimNitfGenericTag::formatField(int definition, const ossimString& fieldValue, std::vector<std::vector<ossim_int32>> suffixIn) const
 {
    ossimString result = fieldValue;
    ossim_int8 format = FIELD_DEFINITIONS[definition].dataFormat;
@@ -259,7 +263,7 @@ ossimString ossimNitfGenericTag::formatField(int definition, const ossimString& 
    {
       std::vector<ossimString> spaceSubStrings;
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
-      length = m_fields_map.at(spaceSubStrings[1]).toInt();
+      length = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffixIn)).toInt();
       if (length == 0)
          return "";
    }
@@ -405,6 +409,7 @@ std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &p
       {
          if (FIELD_DEFINITIONS[i].size == VARIABLE_LENGTH)
          {
+            spaceSubStrings.clear();
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
          }
@@ -478,7 +483,7 @@ bool ossimNitfGenericTag::loadState(const ossimKeywordlist& kwl, const char* pre
             generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
          }
          //Unique setField actions
-         m_fields_map.insert_or_assign(generatedFieldName, formatField(i, kwl.findKey( pfx , generatedFieldName)));
+         m_fields_map.insert_or_assign(generatedFieldName, formatField(i, kwl.findKey( pfx , generatedFieldName), suffix));
          i++;
       }
    }
@@ -513,7 +518,7 @@ void ossimNitfGenericTag::initializeFields()
          }
          //Unique setField actions
          if (m_fields_map.count(generatedFieldName) == 0)
-            m_fields_map.insert(std::pair(generatedFieldName, formatField(i, "")));
+            m_fields_map.insert(std::pair(generatedFieldName, formatField(i, "", suffix)));
          i++;
       }
    }

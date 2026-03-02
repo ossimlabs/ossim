@@ -74,7 +74,7 @@ void ossimNitfCssfabDes::initializeFieldDefinitions()
    {"NUM_FL_PTS n", LOOP_END},
    {"PPOFF_X", 10, DOUBLE, 6},
    {"PPOFF_Y", 10, DOUBLE, 6},
-   {"PPOFF_Z", 10, DOUBLE, 7},
+   {"PPOFF_Z", 10, DOUBLE, 6},
    {"ANGOFF_X", 10, DOUBLE, 7, "0"},
    {"ANGOFF_Y", 10, DOUBLE, 7, "0"},
    {"ANGOFF_Z", 10, DOUBLE, 7, "-1.5707963"},

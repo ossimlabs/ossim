@@ -52,12 +52,18 @@
 #include <ossim/support_data/ossimNitfTmintaTag.h>
 #include <ossim/support_data/ossimNitfBandsbTag.h>
 #include <ossim/support_data/ossimNitfXmlTag.h>
+#include <ossim/support_data/ossimNitfBchipaTag.h>
+#include <ossim/support_data/ossimNitfMatesaTag.h>
+#include <ossim/support_data/ossimNitfPixqlaTag.h>
+#include <ossim/support_data/ossimNitfCsrlsbTag.h>
+#include <ossim/support_data/ossimNitfCswrpbTag.h>
 
 
 RTTI_DEF1(ossimNitfRegisteredTagFactory, "ossimNitfRegisteredTagFactory", ossimNitfTagFactory);
 
 static const char ACFTB_TAG[]                = "ACFTB";
 static const char AIMIDB_TAG[]               = "AIMIDB";
+static const char BCHIPA_TAG[]               = "BCHIPA";
 static const char BLOCKA_TAG[]               = "BLOCKA";
 static const char BNDPLB_TAG[]               = "BNDPLB";
 static const char BANDSB_TAG[]               = "BANDSB";
@@ -66,6 +72,8 @@ static const char CSCRNA_TAG[]               = "CSCRNA";
 static const char CSDIDA_TAG[]               = "CSDIDA";
 static const char CSEXRA_TAG[]               = "CSEXRA";
 static const char CSEXRB_TAG[]               = "CSEXRB";
+static const char CSRLSB_TAG[]               = "CSRLSB";
+static const char CSWRPB_TAG[]               = "CSWRPB";
 static const char ENGRDA_TAG[]               = "ENGRDA";
 static const char GEOLOB_TAG[]               = "GEOLOB";
 static const char GEO_POSITIONING_TAG[]      = "GEOPSB";
@@ -73,12 +81,14 @@ static const char ICHIPB_TAG[]               = "ICHIPB";
 static const char J2KLRA_TAG[]               = "J2KLRA";
 static const char LOCAL_GEOGRAPHIC_TAG[]     = "GEOLOB";
 static const char LOCAL_CARTOGRAPHIC_TAG[]   = "MAPLOB";
+static const char MATESA_TAG[]               = "MATESA";
 static const char MICIDA_TAG[]               = "MICIDA";
 static const char MIMCSA_TAG[]               = "MIMCSA";
 static const char MSTGTA_TAG[]               = "MSTGTA";
 static const char MTIMFA_TAG[]               = "MTIMFA";
 static const char MTIMSA_TAG[]               = "MTIMSA";
 static const char PIAIMC_TAG[]               = "PIAIMC";
+static const char PIXQLA_TAG[]               = "PIXQLA";
 static const char PROJECTION_PARAMETER_TAG[] = "PRJPSB";
 static const char RPCB_TAG[]                 = "RPC00B";
 static const char RPCA_TAG[]                 = "RPC00A";
@@ -126,6 +136,10 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    {
       return new ossimNitfAimidbTag;
    }
+   else if(name == BCHIPA_TAG)
+   {
+      return new ossimNitfBchipaTag;
+   }
    else if(name == BLOCKA_TAG)
    {
       return new ossimNitfBlockaTag;
@@ -158,6 +172,14 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    {
       return new ossimNitfCsexrbTag;
    }
+   else if(name == CSRLSB_TAG)
+   {
+      return new ossimNitfCsrlsbTag;
+   }
+   else if(name == CSWRPB_TAG)
+   {
+      return new ossimNitfCswrpbTag;
+   }
    else if(name == ENGRDA_TAG)
    {
       return new ossimNitfEngrdaTag;
@@ -188,6 +210,10 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    {
       return new ossimNitfLocalCartographicTag;
    }
+   else if(name == MATESA_TAG)
+   {
+      return new ossimNitfMatesaTag;
+   }
    else if(name == MICIDA_TAG)
    {
       return new ossimNitfMicidaTag;
@@ -211,6 +237,10 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    else if(name == PIAIMC_TAG)
    {
       return new ossimNitfPiaimcTag;
+   }
+   else if(name == PIXQLA_TAG)
+   {
+      return new ossimNitfPixqlaTag;
    }
    else if(name == PROJECTION_PARAMETER_TAG)
    {

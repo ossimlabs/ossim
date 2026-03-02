@@ -60,7 +60,7 @@ public:
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix);
 
 protected:
-   ossimString formatField(int definition, const ossimString& fieldValue) const;
+   ossimString formatField(int definition, const ossimString& fieldValue, std::vector<std::vector<ossim_int32>> suffixIn = {}) const;
    void loopLogic(ossim_int32 &i, std::vector<std::vector<ossim_int32>> &suffix) const;
    virtual void initializeFields();
 

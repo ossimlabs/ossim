@@ -85,28 +85,28 @@ int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<oss
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt() + b.toInt());
+            stack.push(ossimString(std::to_string(b.toDouble() + a.toDouble())));
             break;
          case '-':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()- b.toInt());
+            stack.push(ossimString(std::to_string(b.toDouble() - a.toDouble())));
             break;
          case '*':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()* b.toInt());
+            stack.push(ossimString(std::to_string(a.toDouble() * b.toDouble())));
             break;
          case '/':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()/ b.toInt());
+            stack.push( ossimString(std::to_string(b.toDouble() / a.toDouble())));
             break;
          case '&':
             a = stack.top();
@@ -282,7 +282,7 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
             length);
          break;
       case DOUBLE:
-         if (result.toFloat64() > 0)
+         if (result.toFloat64() >= 0)
             result = "+" + ossimNitfCommon::convertToDoubleString(result.toFloat64(),
                               FIELD_DEFINITIONS[definition].precision,
                                  length - 1);
@@ -292,7 +292,10 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
                                  length);
          break;
       case SCIENTIFIC:
-         result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
+         if (result[0] == '-')
+            result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
+         else
+            result = "+" + ossimNitfCommon::convertToScientificString(result.toFloat64(), length - 1);
          break;
       default:
          while ((ossim_int32)result.length() < length)
