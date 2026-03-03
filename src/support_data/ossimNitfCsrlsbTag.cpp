@@ -45,16 +45,16 @@ void ossimNitfCsrlsbTag::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
    {
-      {"N_RS_ROW_BLOCKS", 2, U_INT, 0, "1"},
-      {"M_RS_COLUMN_BLOCKS", 2, U_INT, 0, "1"},
-      {"N_RS_ROW_BLOCKS n", LOOP_START},
-         {"^M_RS_COLUMN_BLOCKS m", LOOP_START},
-            {"RS_DT_1", 12, SCIENTIFIC},
-            {"RS_DT_2", 12, SCIENTIFIC},
-            {"RS_DT_3", 12, SCIENTIFIC},
-            {"RS_DT_4", 12, SCIENTIFIC},
-         {"^M_RS_COLUMN_BLOCKS m", LOOP_END},
-      {"N_RS_ROW_BLOCKS n", LOOP_END}
+      {ossim::nitf::N_RS_ROW_BLOCKS_KW, 2, U_INT, 0, "1"},
+      {ossim::nitf::M_RS_COLUMN_BLOCKS_KW, 2, U_INT, 0, "1"},
+      {ossim::nitf::N_RS_ROW_BLOCKS_KW, LOOP_START},
+         {"^" + ossim::nitf::M_RS_COLUMN_BLOCKS_KW, LOOP_START},
+            {ossim::nitf::RS_DT_1_KW, 12, SCIENTIFIC},
+            {ossim::nitf::RS_DT_2_KW, 12, SCIENTIFIC},
+            {ossim::nitf::RS_DT_3_KW, 12, SCIENTIFIC},
+            {ossim::nitf::RS_DT_4_KW, 12, SCIENTIFIC},
+         {"^" + ossim::nitf::M_RS_COLUMN_BLOCKS_KW, LOOP_END},
+      {ossim::nitf::N_RS_ROW_BLOCKS_KW, LOOP_END}
    };
 }
 
