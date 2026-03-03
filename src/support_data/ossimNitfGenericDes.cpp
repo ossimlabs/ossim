@@ -83,36 +83,27 @@ static const std::map<ossimString, int> OPERATORS = {
 };
 
 /**
- * shuntingYard
- *
- * Converts an infix expression string into a space-separated
- * Reverse Polish Notation string suitable for parseRPN().
- *
- * Supported operands
- *   42          numeric literal
- *   'hello'     string literal (passed through verbatim)
- *   FIELD_NAME  variable looked up in m_fields_map
- *   FIELD:3     variable with colon-index lookup
- *   ^VAR        one leading '^' per suffix level to pop
- *
- * Supported operators (in ascending precedence)
- *   |   logical OR
- *   &   logical AND
- *   =   equality
- *   < > relational
- *   + - additive
- *   * / multiplicative
- *   !   unary logical NOT  (right-associative, highest)
- *
- * Parentheses are supported for grouping and are consumed
- * (not emitted into the output).
- *
- * @param infix  The infix expression, e.g. "( A + 3 ) * B > 10"
- * @return       Space-separated RPN string ready for parseRPN()
+ * Parse integers and booleans from the field names for if statements and loops
+ * @param equation
+ *    Full string of the equation with spaces between non modifier tokens
+ *    Valid tokens are:
+ *       ( and ) for precedence
+ *       * - + / Mathmatical operators
+ *       = > < Compair integer and string values
+ *       & | Boolean AND and OR
+ *       ! Boolean not
+ *    Modifiers:
+ *       FIELD:n takes the nth character of the field
+ *       ^FIELD takes the value of the field one loop above the current suffix
+ *       'STRING' use the literal string inside the quotes instead of searching for a field with the given name
+ * @param suffixIn
+ *    The suffix that indicates the current itteration of any loops the parser is currently in
+ * @return
+ *    Integer value of the solved equation (1 is true if the equation is boolean)
  */
-int ossimNitfGenericDes::shuntingYard(const ossimString& in,std::vector<std::vector<ossim_int32>> suffixIn) const
+int ossimNitfGenericDes::solveEquation(const ossimString& equation,std::vector<std::vector<ossim_int32>> suffixIn) const
 {
-    std::vector<ossimString> tokens = in.split(' ');
+    std::vector<ossimString> tokens = equation.split(' ');
     std::stack<ossimString>  opStack;
     std::vector<ossimString> output;
 
@@ -292,127 +283,6 @@ int ossimNitfGenericDes::shuntingYard(const ossimString& in,std::vector<std::vec
    return stack.top().toInt();
 }
 
-
-//Parse statements in reverse polish notation
-int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const
-{
-   std::vector<ossimString> splitInput = input.split(' ');
-   std::stack<ossimString> stack;
-   ossimString a, b;
-   std::vector<ossimString> colonSubStrings;
-   for(ossimString entry: splitInput)
-   {
-      switch(entry.at(0))
-      {
-         case '+':
-            a = stack.top();
-            stack.pop();
-            b = stack.top();
-            stack.pop();
-            stack.push(ossimString(std::to_string(b.toDouble() + a.toDouble())));
-            break;
-         case '-':
-            a = stack.top();
-            stack.pop();
-            b = stack.top();
-            stack.pop();
-            stack.push(ossimString(std::to_string(b.toDouble() - a.toDouble())));
-            break;
-         case '*':
-            a = stack.top();
-            stack.pop();
-            b = stack.top();
-            stack.pop();
-            stack.push(ossimString(std::to_string(a.toDouble() * b.toDouble())));
-            break;
-         case '/':
-            a = stack.top();
-            stack.pop();
-            b = stack.top();
-            stack.pop();
-            stack.push( ossimString(std::to_string(b.toDouble() / a.toDouble())));
-            break;
-         case '&':
-            a = stack.top();
-            stack.pop();
-            b = stack.top();
-            stack.pop();
-            stack.push(bool(a) && bool(b));
-            break;
-         case '|':
-            a = stack.top();
-            stack.pop();
-            b = stack.top();
-            stack.pop();
-            stack.push(bool(a) || bool(b));
-            break;
-         case '=':
-            a = stack.top();
-            stack.pop();
-            b = stack.top();
-            stack.pop();
-            if(a == b)
-               stack.push("1");
-            else
-               stack.push("0");
-            break;
-         case '!':
-            a = stack.top();
-            stack.pop();
-            if (a == "0")
-               stack.push("1");
-            else
-               stack.push("0");
-            break;
-         case '>':
-            a = stack.top();
-            stack.pop();
-            b = stack.top();
-            stack.pop();
-            if(a.toInt() < b.toInt())
-               stack.push("1");
-            else
-               stack.push("0");
-            break;
-         case '<':
-            a = stack.top();
-            stack.pop();
-            b = stack.top();
-            stack.pop();
-            if(a.toInt() > b.toInt())
-               stack.push("1");
-            else
-               stack.push("0");
-            break;
-         default: //Not an operator
-            if(entry.toDouble() != 0 || entry.find_first_not_of('0') == std::string::npos) //If the entry is a number
-               stack.push(entry);
-            else
-            {
-               if(entry[0] == '\'')
-                  stack.push(entry.substr(1, entry.length() - 2));
-               else if (entry[0] == '^')
-                  stack.push(m_fields_map.at(entry.substr(1, entry.length())));
-               else if (entry.contains(':'))
-               {
-                  colonSubStrings = entry.split(':');
-                  stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(suffixIn))[colonSubStrings[1].toInt()]);
-               }
-               else
-               {
-                  a = m_fields_map.at(entry + formatSuffix(suffixIn));
-                  if (a.find_first_not_of('0') == std::string::npos) //Compress any number of zeros to a single zero for string comparisons
-                     stack.push("0");
-                  else
-                     stack.push(a); //Default case, just place the string on the stack
-               }
-            }
-            break;
-      }
-   }
-   return stack.top().toInt();
-}
-
 void ossimNitfGenericDes::loopLogic(ossim_int32 &i, std::vector<std::vector<ossim_int32>> &suffix) const
 {
     ossim_int32 fieldLength;
@@ -420,7 +290,7 @@ void ossimNitfGenericDes::loopLogic(ossim_int32 &i, std::vector<std::vector<ossi
     switch (FIELD_DEFINITIONS[i].size)
     {
          case IF_STATEMENT_START:
-            ifCondition = shuntingYard(FIELD_DEFINITIONS[i].field, suffix);
+            ifCondition = solveEquation(FIELD_DEFINITIONS[i].field, suffix);
             if (!ifCondition)
             {
                int loopCount = 1;
@@ -439,7 +309,7 @@ void ossimNitfGenericDes::loopLogic(ossim_int32 &i, std::vector<std::vector<ossi
             i++;
             break;
          case LOOP_START:
-            fieldLength = shuntingYard(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length()) , suffix);
+            fieldLength = solveEquation(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length()) , suffix);
             if (fieldLength > 0)
                suffix.push_back({1, fieldLength, i + 1});
             else

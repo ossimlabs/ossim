@@ -59,7 +59,7 @@ public:
 
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix);
 
-   int shuntingYard(const ossimString& in,std::vector<std::vector<ossim_int32>> suffixIn) const;
+   int solveEquation(const ossimString& equation,std::vector<std::vector<ossim_int32>> suffixIn) const;
 
 protected:
    ossimString formatField(int definition, const ossimString& fieldValue, std::vector<std::vector<ossim_int32>> suffixIn = {}) const;
