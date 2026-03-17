@@ -61,6 +61,8 @@ public:
 
    virtual bool loadState(const ossimKeywordlist& kwl, const char* prefix);
 
+   int solveEquation(const ossimString& equation,std::vector<std::vector<ossim_int32>> suffixIn) const;
+
 protected:
    ossimString formatField(int definition, const ossimString& fieldValue) const;
    void loopLogic(ossim_int32 &i, std::vector<std::vector<ossim_int32>> &suffix) const;

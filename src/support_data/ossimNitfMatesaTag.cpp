@@ -45,21 +45,21 @@ void ossimNitfMatesaTag::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
    {
-      {"CUR_SOURCE", 42, ASCII},
-      {"CUR_MATE_TYPE", 16, ASCII},
-      {"CUR_FILE_ID_LEN", 4, U_INT},
-      {"CUR_FILE_ID CUR_FILE_ID_LEN", VARIABLE_LENGTH, ASCII},
-      {"NUM_GROUPS", 4, U_INT, 0, "1"},
-      {"NUM_GROUPS n", LOOP_START},
-         {"RELATIONSHIP", 24, ASCII},
-         {"NUM_MATES", 4, U_INT, 0, "1"},
-         {"NUM_MATES n", LOOP_START},
-            {"SOURCE", 42, ASCII},
-            {"MATE_TYPE", 16, ASCII, 0, "SIBLING"},
-            {"MATE_ID_LEN", 4, U_INT},
-            {"MATE_ID MATE_ID_LEN", VARIABLE_LENGTH, ASCII},
-         {"NUM_MATES n", LOOP_END},
-      {"NUM_GROUPS n", LOOP_END}
+      {ossim::nitf::CUR_SOURCE_KW, 42, ASCII},
+      {ossim::nitf::CUR_MATE_TYPE_KW, 16, ASCII},
+      {ossim::nitf::CUR_FILE_ID_LEN_KW, 4, U_INT},
+      {ossim::nitf::CUR_FILE_ID_KW + " " + ossim::nitf::CUR_FILE_ID_LEN_KW, VARIABLE_LENGTH, ASCII},
+      {ossim::nitf::NUM_GROUPS_KW, 4, U_INT, 0, "1"},
+      {ossim::nitf::NUM_GROUPS_KW, LOOP_START},
+         {ossim::nitf::RELATIONSHIP_KW, 24, ASCII},
+         {ossim::nitf::NUM_MATES_KW, 4, U_INT, 0, "1"},
+         {ossim::nitf::NUM_MATES_KW, LOOP_START},
+            {ossim::nitf::SOURCE_KW, 42, ASCII},
+            {ossim::nitf::MATE_TYPE_KW, 16, ASCII, 0, "SIBLING"},
+            {ossim::nitf::MATE_ID_LEN_KW, 4, U_INT},
+            {ossim::nitf::MATE_ID_KW + " " + ossim::nitf::MATE_ID_LEN_KW, VARIABLE_LENGTH, ASCII},
+         {ossim::nitf::NUM_MATES_KW, LOOP_END},
+      {ossim::nitf::NUM_GROUPS_KW, LOOP_END}
    };
 }
 

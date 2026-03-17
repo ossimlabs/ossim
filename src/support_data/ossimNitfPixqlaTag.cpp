@@ -45,15 +45,15 @@ void ossimNitfPixqlaTag::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
    {
-      {"NUMAIS", 3, ASCII, 0, "ALL"},
-      {"NUMAIS n", LOOP_START},
-         {"AISDLVL", 3, U_INT},
-      {"NUMAIS n", LOOP_END},
-      {"NPIXQUAL", 4, U_INT, 0, "9"},
-      {"PQ_BIT_VALUE", 1, U_INT, 0, "1"},
-      {"NPIXQUAL n", LOOP_START},
-         {"PQ_CONDITION", 40, ASCII, 0, "Fill"},
-      {"NPIXQUAL n", LOOP_END}
+      {ossim::nitf::NUMAIS_KW, 3, ASCII, 0, "ALL"},
+      {ossim::nitf::NUMAIS_KW, LOOP_START},
+         {ossim::nitf::AISDLVL_KW, 3, U_INT},
+      {ossim::nitf::NUMAIS_KW, LOOP_END},
+      {ossim::nitf::NPIXQUAL_KW, 4, U_INT, 0, "9"},
+      {ossim::nitf::PQ_BIT_VALUE_KW, 1, U_INT, 0, "1"},
+      {ossim::nitf::NPIXQUAL_KW, LOOP_START},
+         {ossim::nitf::PQ_CONDITION_KW, 40, ASCII, 0, "Fill"},
+      {ossim::nitf::NPIXQUAL_KW, LOOP_END}
    };
 }
 
