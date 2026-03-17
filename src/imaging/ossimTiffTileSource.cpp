@@ -729,23 +729,23 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
          if (theMaxSampleValue <= 2047) // 2^11-1
          {
             // 11 bit EO, i.e. Ikonos, QuickBird, WorldView, GeoEye.
-            theScalarType = OSSIM_USHORT11; // IKONOS probably...
+            theScalarType = OSSIM_UINT11; // IKONOS probably...
          }
          else if (theMaxSampleValue <= 4095) // 2^12-1
          {
-            theScalarType = OSSIM_USHORT12;
+            theScalarType = OSSIM_UINT12;
          }
          else if (theMaxSampleValue <= 8191) // 2^13-1
          {
-            theScalarType = OSSIM_USHORT13;
+            theScalarType = OSSIM_UINT13;
          }
          else if (theMaxSampleValue <= 16383) // 2^14-1
          {
-            theScalarType = OSSIM_USHORT14;
+            theScalarType = OSSIM_UINT14;
          }
          else if (theMaxSampleValue <= 32767) // 2^15-1
          {
-            theScalarType = OSSIM_USHORT15;
+            theScalarType = OSSIM_UINT15;
          }
          else
          {
@@ -757,26 +757,28 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
          if (theMaxSampleValue <= 2047) // 2^11-1
          {
             // 11 bit EO, i.e. Ikonos, QuickBird, WorldView, GeoEye.
-            theScalarType = OSSIM_USHORT11; // IKONOS probably...
+            theScalarType = OSSIM_UINT11; // IKONOS probably...
          }
          else if (theMaxSampleValue <= 4095) // 2^12-1
          {
-            theScalarType = OSSIM_USHORT12;
+            theScalarType = OSSIM_UINT12;
          }
          else if (theMaxSampleValue <= 8191) // 2^13-1
          {
-            theScalarType = OSSIM_USHORT13;
+            theScalarType = OSSIM_UINT13;
          }
          else if (theMaxSampleValue <= 16383) // 2^14-1
          {
-            theScalarType = OSSIM_USHORT14;
+            theScalarType = OSSIM_UINT14;
          }
          else if (theMaxSampleValue <= 32767) // 2^15-1
          {
-            theScalarType = OSSIM_USHORT15;
+            theScalarType = OSSIM_UINT15;
          }
          else
+         {
             theScalarType = OSSIM_UINT16; // Default to unsigned...
+         }
       }
    }
    else if ((theBitsPerSample == 32) &&
@@ -824,6 +826,9 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       return false;
    }
 
+   // Check:
+   adjustScalarType();
+
    // Sanity check for min, max and null values.
    validateMinMaxNull();
 
@@ -839,6 +844,7 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
    {
       thePixelType = OSSIM_PIXEL_IS_POINT;
    }
+
    completeOpen();
 
    if (isBandSelector() && theOutputBandList.size() && (isIdentityBandList(theOutputBandList) == false))
@@ -2680,6 +2686,30 @@ void ossimTiffTileSource::populateLut()
          ++r;
          ++g;
          ++b;
+      }
+   }
+}
+
+void ossimTiffTileSource::adjustScalarType()
+{
+   if (m_tags && theScalarType == OSSIM_UINT16)
+   {
+      std::string key = "tiff.image0.gdalmetadata.vehicle_name";
+      ossimString val;
+      val.string() = m_tags->findKey(key);
+      val.trim();
+      if ( val.size() )
+      {
+         //---
+         // Look for Legion data.
+         // E.g.: tiff.image0.gdalmetadata.vehicle_name:LG02
+         //---
+         key = "LG";
+         std::string::size_type pos = val.string().find(key, 0);
+         if ( pos == 0 )
+         {
+            theScalarType = OSSIM_UINT14; // Legion data 14 bit.
+         }
       }
    }
 }
