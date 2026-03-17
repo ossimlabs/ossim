@@ -826,7 +826,7 @@ bool ossimTiffTileSource::open(std::shared_ptr<ossim::istream> &str,
       return false;
    }
 
-   // Check:
+   // Check for special cases.
    adjustScalarType();
 
    // Sanity check for min, max and null values.

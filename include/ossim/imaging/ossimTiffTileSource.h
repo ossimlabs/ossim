@@ -356,8 +356,8 @@ private:
     * @brief Checks scalar type for special cases and adjust if necessarry.
     *
     * Example is Legion data will get picked up as UINT16 but the actual bits
-    * per pixel is 14. In this case code keys off of "gdalmetadata.vehicle_name"
-    * and adjust to UINT14 if "LGXX" is found.
+    * per pixel is 14. In this case the code keys off of
+    * "gdalmetadata.vehicle_name" and adjust to UINT14 if "LGXX" is found.
     */
    void adjustScalarType();
    
