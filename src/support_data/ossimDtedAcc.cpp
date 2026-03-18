@@ -196,7 +196,7 @@ std::ostream& ossimDtedAcc::printState(std::ostream& out,
    std::string pfx = prefix;
    pfx += "acc.";
 
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(28) << "recognition_sentinel:" << theRecSen << "\n"
        << pfx << std::setw(28) << "absolute_ce:"  << theAbsoluteCE << "\n"
        << pfx << std::setw(28) << "absolute_le:"  << theAbsoluteLE << "\n"

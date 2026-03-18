@@ -506,7 +506,7 @@ std::ostream& ossimDtedDsi::printState(std::ostream& out,
    std::string pfx = prefix;
    pfx += "dsi.";
    
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(28) << "recognition_sentinel:" << theRecSen << "\n"
        << pfx << std::setw(28) << "security_code:" << theSecurityCode << "\n"
        << pfx << std::setw(28) << "product_level:" << theProductLevel << "\n"

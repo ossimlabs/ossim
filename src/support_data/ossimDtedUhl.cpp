@@ -257,7 +257,7 @@ std::ostream& ossimDtedUhl::printState(std::ostream& out,
    std::string pfx = prefix;
    pfx += "uhl.";
    
-   out << setiosflags(std::ios::left)
+   out << std::setiosflags(std::ios::left)
        << pfx << std::setw(28) << "recognition_sentinel:" << theRecSen << "\n"
        << pfx << std::setw(28) << "lon_origin:" << theLonOrigin << "\n"
        << pfx << std::setw(28) << "lat_origin:" << theLatOrigin << "\n"
