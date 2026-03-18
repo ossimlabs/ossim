@@ -353,6 +353,15 @@ private:
    void populateLut();
 
    /**
+    * @brief Checks scalar type for special cases and adjust if necessarry.
+    *
+    * Example is Legion data will get picked up as UINT16 but the actual bits
+    * per pixel is 14. In this case the code keys off of
+    * "gdalmetadata.vehicle_name" and adjust to UINT14 if "LGXX" is found.
+    */
+   void adjustScalarType();
+   
+   /**
     * @brief validateMinMaxNull Checks min, max and null to make sure they are not equal
     * to the scalar type nan or double nan; sets to default min max if so.
     */
