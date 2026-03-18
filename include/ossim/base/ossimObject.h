@@ -80,7 +80,11 @@ public:
    friend OSSIMDLLEXPORT std::ostream& operator<<(std::ostream& out,
                                                   const ossimObject& obj);
    
-   virtual bool isEqualTo(const ossimObject& obj, ossimCompareType compareType = OSSIM_COMPARE_FULL)const;
+   // virtual bool isEqualTo(const ossimObject& obj,
+   // ossimCompareType compareType = OSSIM_COMPARE_FULL)const;
+   bool isEqualTo(const ossimObject& obj,
+                  ossimCompareType compareType = OSSIM_COMPARE_FULL)const;
+
    virtual void accept(ossimVisitor& visitor);
 
  protected:

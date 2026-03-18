@@ -1,16 +1,19 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author: Ken Melero
 // 
 // Description:  This class gives access to the User Header Label
 //               (UHL) of a DTED Level 1 file.
 //
-//********************************************************************
-// $Id: ossimDtedUhl.cpp 23277 2015-04-24 21:02:24Z rashadkm $
+//---
+// $Id$
+
+#include <ossim/support_data/ossimDtedUhl.h>
+#include <ossim/base/ossimNotify.h>
+#include <ossim/base/ossimProperty.h>
+#include <ossim/base/ossimIoStream.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -18,16 +21,8 @@
 #include <fstream>
 #include <string>
 
-#include <ossim/support_data/ossimDtedUhl.h>
-#include <ossim/base/ossimNotify.h>
-#include <ossim/base/ossimProperty.h>
-#include <ossim/base/ossimIoStream.h>
-
-using namespace std;
-
 ossimDtedUhl::ossimDtedUhl()
 {
-
 }
 
 ossimDtedUhl::ossimDtedUhl(std::shared_ptr<ossim::istream>& str, ossim_int64 offset)
@@ -253,29 +248,29 @@ ossim_int32 ossimDtedUhl::stopOffset() const
 std::ostream& operator<<( std::ostream& out, const ossimDtedUhl& uhl)
 {
    std::string prefix;
-   return uhl.print(out, prefix);
+   return uhl.printState(out, prefix);
 }
 
-std::ostream& ossimDtedUhl::print(std::ostream& out,
-                                  const std::string& prefix) const
+std::ostream& ossimDtedUhl::printState(std::ostream& out,
+                                       const std::string& prefix) const
 {
    std::string pfx = prefix;
    pfx += "uhl.";
    
-   out << setiosflags(ios::left)
-       << pfx << setw(28) << "recognition_sentinel:" << theRecSen << "\n"
-       << pfx << setw(28) << "lon_origin:" << theLonOrigin << "\n"
-       << pfx << setw(28) << "lat_origin:" << theLatOrigin << "\n"
-       << pfx << setw(28) << "lon_interval:" << theLonInterval << "\n"
-       << pfx << setw(28) << "lat_interval:" << theLatInterval << "\n"
-       << pfx << setw(28) << "absolute_le:" << theAbsoluteLE << "\n"
-       << pfx << setw(28) << "security_code:" << theSecurityCode << "\n"
-       << pfx << setw(28) << "number_of_lat_points:" << theNumLatPoints << "\n"
-       << pfx << setw(28) << "number_of_lon_lines:" << theNumLonLines << "\n"
-       << pfx << setw(28) << "multiple_accuracy:"
+   out << setiosflags(std::ios::left)
+       << pfx << std::setw(28) << "recognition_sentinel:" << theRecSen << "\n"
+       << pfx << std::setw(28) << "lon_origin:" << theLonOrigin << "\n"
+       << pfx << std::setw(28) << "lat_origin:" << theLatOrigin << "\n"
+       << pfx << std::setw(28) << "lon_interval:" << theLonInterval << "\n"
+       << pfx << std::setw(28) << "lat_interval:" << theLatInterval << "\n"
+       << pfx << std::setw(28) << "absolute_le:" << theAbsoluteLE << "\n"
+       << pfx << std::setw(28) << "security_code:" << theSecurityCode << "\n"
+       << pfx << std::setw(28) << "number_of_lat_points:" << theNumLatPoints << "\n"
+       << pfx << std::setw(28) << "number_of_lon_lines:" << theNumLonLines << "\n"
+       << pfx << std::setw(28) << "multiple_accuracy:"
        << theMultipleAccuracy << "\n"
-       << pfx << setw(28) << "start_offset:" << theStartOffset << "\n"
-       << pfx << setw(28) << "stop_offset:" << theStopOffset
+       << pfx << std::setw(28) << "start_offset:" << theStartOffset << "\n"
+       << pfx << std::setw(28) << "stop_offset:" << theStopOffset
        << std::endl;
    
    return out;

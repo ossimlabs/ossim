@@ -127,8 +127,8 @@ public:
     * @param rhs The data to assign from.
     * @param A reference to this object.
     */
-   virtual const ossimImageData& operator=(const ossimImageData &rhs);
-
+   // virtual const ossimImageData& operator=(const ossimImageData &rhs);
+   const ossimImageData& operator=(const ossimImageData &rhs);   
 
    /**
     * @return The width of the data object.

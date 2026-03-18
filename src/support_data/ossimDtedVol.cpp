@@ -1,23 +1,23 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author: Ken Melero
 // 
 // Description:  This class gives access to the Volume Header Label
 //               (VOL) of a DTED Level 1 file.
 //
-//********************************************************************
-// $Id: ossimDtedVol.cpp 17501 2010-06-02 11:14:55Z dburken $
-
-#include <iostream>
-#include <fstream>
-#include <string>
+//---
+// $Id$
 
 #include <ossim/support_data/ossimDtedVol.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimIoStream.h>
+
+#include <iostream>
+#include <fstream>
+#include <string>
 
 ossimDtedVol::ossimDtedVol()
 :theStartOffset(0),
@@ -188,8 +188,8 @@ ossim_int32 ossimDtedVol::stopOffset() const
    return theStopOffset;
 }
 
-std::ostream& ossimDtedVol::print(std::ostream& out,
-                                  const std::string& prefix) const
+std::ostream& ossimDtedVol::printState(std::ostream& out,
+                                       const std::string& prefix) const
 {
    std::string pfx = prefix;
    pfx += "vol.";
@@ -212,7 +212,7 @@ std::ostream& ossimDtedVol::print(std::ostream& out,
 std::ostream& operator<<( std::ostream& out, const ossimDtedVol& vol)
 {
    std::string prefix;
-   return vol.print(out, prefix);
+   return vol.printState(out, prefix);
 }
 
 ossimDtedVol::ossimDtedVol(const ossimDtedVol& /* source */)
@@ -223,4 +223,3 @@ const ossimDtedVol& ossimDtedVol::operator=(const ossimDtedVol& rhs)
 {
    return rhs;
 }
-

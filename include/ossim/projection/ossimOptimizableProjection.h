@@ -29,7 +29,9 @@ public:
    
    virtual ~ossimOptimizableProjection();
    
-   virtual ossimOptimizableProjection& operator=(
+   // virtual ossimOptimizableProjection& operator=(
+   //    const ossimOptimizableProjection& source);
+   ossimOptimizableProjection& operator=(
       const ossimOptimizableProjection& source);
    
    /*!

@@ -1,25 +1,23 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 // 
 // Author: Ken Melero
 // 
 // Description:  This class gives access to the File Header Label
 //               (HDR) of a DTED Level 1 file.
 //
-//********************************************************************
-// $Id: ossimDtedHdr.cpp 17501 2010-06-02 11:14:55Z dburken $
-
-#include <iostream>
-#include <fstream>
-#include <string>
+//---
+// $Id$
 
 #include <ossim/support_data/ossimDtedHdr.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimIoStream.h>
+
+#include <iostream>
+#include <fstream>
+#include <string>
 
 ossimDtedHdr::ossimDtedHdr()
 :
@@ -142,11 +140,11 @@ void ossimDtedHdr::getPropertyNames(
 std::ostream& operator<<( std::ostream& os, const ossimDtedHdr& hdr)
 {
    std::string prefix;
-   return hdr.print(os, prefix);
+   return hdr.printState(os, prefix);
 }
 
-std::ostream& ossimDtedHdr::print(std::ostream& out,
-                                  const std::string& prefix) const
+std::ostream& ossimDtedHdr::printState(std::ostream& out,
+                                       const std::string& prefix) const
 {
    std::string pfx = prefix;
    pfx += "hdr.";

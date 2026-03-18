@@ -1,27 +1,24 @@
-//*******************************************************************
+//---
 //
-// License:  MIT
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author: Ken Melero
 // 
 // Description:  This class gives access to the Volume Header Label
 //               (VOL) of a DTED Level 1 file.
 //
-//********************************************************************
-// $Id: ossimDtedVol.h 16104 2009-12-17 18:09:59Z gpotts $
+//---
+// $Id$
 
 #ifndef ossimDtedVol_H
-#define ossimDtedVol_H
-
-#include <iosfwd>
+#define ossimDtedVol_H 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorStatusInterface.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIosFwd.h>
+#include <iosfwd>
 #include <memory>
 
 class ossimProperty;
@@ -87,8 +84,8 @@ public:
     * "nitf.file_name:"
     * @return output stream.
     */
-   std::ostream& print(std::ostream& out,
-                       const std::string& prefix) const;
+   std::ostream& printState(std::ostream& out,
+                            const std::string& prefix) const;
 private:
    // Do not allow...
    ossimDtedVol(const ossimDtedVol& source);

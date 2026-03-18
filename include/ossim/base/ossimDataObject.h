@@ -86,11 +86,14 @@ public:
     */
    virtual void initialize()=0;
    
-   virtual void assign(const ossimDataObject* rhs);
+   // virtual void assign(const ossimDataObject* rhs);
+   void assign(const ossimDataObject* rhs);
 
-   virtual const ossimDataObject* operator =(const ossimDataObject* rhs);
+   // virtual const ossimDataObject* operator =(const ossimDataObject* rhs);
+   const ossimDataObject* operator =(const ossimDataObject* rhs);
    
-   virtual const ossimDataObject& operator=(const ossimDataObject& rhs);
+   // virtual const ossimDataObject& operator=(const ossimDataObject& rhs);
+   const ossimDataObject& operator=(const ossimDataObject& rhs);
 
    virtual bool operator==(const ossimDataObject& rhs) const;
    virtual bool operator!=(const ossimDataObject& rhs) const;
