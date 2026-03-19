@@ -107,7 +107,8 @@ public:
 
    virtual const void* getBuf() const;
 
-   virtual void assign(const ossimRectilinearDataObject* data);
+   // virtual void assign(const ossimRectilinearDataObject* data);
+   void assign(const ossimRectilinearDataObject* data);
 
    /**
     *  Initializes m_dataBuffer to current spatial extents.
@@ -136,7 +137,9 @@ public:
     * @param rhs The data to assign from.
     * @param A reference to this object.
     */
-   virtual const ossimRectilinearDataObject& operator=(
+   //virtual const ossimRectilinearDataObject& operator=(
+   //   const ossimRectilinearDataObject& rhs);
+   const ossimRectilinearDataObject& operator=(
       const ossimRectilinearDataObject& rhs);
 
    virtual bool saveState(ossimKeywordlist& kwl, const char* prefix=0)const;

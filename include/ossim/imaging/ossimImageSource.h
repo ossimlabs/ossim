@@ -212,7 +212,8 @@ public:
     * Default implementation sets geometry of the first input to the geometry
     * specified.
     */
-   virtual void setImageGeometry(const ossimImageGeometry* geom);
+   // virtual void setImageGeometry(const ossimImageGeometry* geom);
+   void setImageGeometry(const ossimImageGeometry* geom);
        
    /** Default method to call input's saveImageGeometry. */
    virtual void saveImageGeometry() const;
