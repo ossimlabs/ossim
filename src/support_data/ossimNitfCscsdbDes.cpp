@@ -293,7 +293,7 @@ void ossimNitfCscsdbDes::initializeFieldDefinitions()
         {"! ( " + ossim::nitf::RESERVED_LEN_KW + " = 0  )", IF_STATEMENT_START},
             {ossim::nitf::MASK_LEN_KW, 2, U_INT},
             {ossim::nitf::RESERVED_FIELD_MASK_KW + " " + ossim::nitf::MASK_LEN_KW, VARIABLE_LENGTH, U_INT},
-            {ossim::nitf::RESERVED_FIELD_MASK_KW + "[0] = 1", IF_STATEMENT_START},
+            {ossim::nitf::RESERVED_FIELD_MASK_KW + ":0 = 1", IF_STATEMENT_START},
                 {ossim::nitf::RESERVED_LEN_AREA1_KW, 9, SCIENTIFIC},
                 {ossim::nitf::NUM_PARA_KW, LOOP_START},
                     {ossim::nitf::SPDCF_ID_ADJ_KW, 2, U_INT},
@@ -309,7 +309,7 @@ void ossimNitfCscsdbDes::initializeFieldDefinitions()
   			{"End if character i in RESERVED_FIELD_MASK is 1.", LOOP_END},
   		{"End of the future Reserved Field Areas loop.", LOOP_END},
   	*/
-    {"End of Reserved Field Areas (bytes counted by RESERVED_LEN).", IF_STATEMENT_END}
+    {"! ( " + ossim::nitf::RESERVED_LEN_KW + " = 0  )", IF_STATEMENT_END}
 	};
 }
 

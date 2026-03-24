@@ -501,6 +501,43 @@ namespace ossim
       static const std::string WEIGHT_KW = "WEIGHT";
       static const std::string WRP_INTERP_KW = "WRP_INTERP";
       static const std::string YEAR_KW = "YEAR";
+
+      static const std::string SYSTYPE_KW = "SYSTYPE";
+      static const std::string PC_KW = "PC";
+      static const std::string PE_KW = "PE";
+      static const std::string REMAP_FLAG_KW = "REMAP_FLAG";
+      static const std::string LUTID_KW = "LUTID";
+      static const std::string NEVENTS_KW = "NEVENTS";
+      static const std::string PDATE_KW = "PDATE";
+      static const std::string PSITE_KW = "PSITE";
+      static const std::string PAS_KW = "PAS";
+      static const std::string NIPCOM_KW = "NIPCOM";
+      static const std::string IPCOM_KW = "IPCOM";
+      static const std::string IBPP_KW = "IBPP";
+      static const std::string IPVTYPE_KW = "IPVTYPE";
+      static const std::string INBWC_KW = "INBWC";
+      static const std::string DISP_FLAG_KW = "DISP_FLAG";
+      static const std::string ROT_FLAG_KW = "ROT_FLAG";
+      static const std::string ROT_ANGLE_KW = "ROT_ANGLE";
+      static const std::string ASYM_FLAG_KW = "ASYM_FLAG";
+      static const std::string ZOOMROW_KW = "ZOOMROW";
+      static const std::string ZOOMCOL_KW = "ZOOMCOL";
+      static const std::string PROJ_FLAG_KW = "PROJ_FLAG";
+      static const std::string SHARP_FLAG_KW = "SHARP_FLAG";
+      static const std::string SHARPFAM_KW = "SHARPFAM";
+      static const std::string SHARPMEM_KW = "SHARPMEM";
+      static const std::string MAG_FLAG_KW = "MAG_FLAG";
+      static const std::string MAG_LEVEL_KW = "MAG_LEVEL";
+      static const std::string DRA_FLAG_KW = "DRA_FLAG";
+      static const std::string DRA_MULT_KW = "DRA_MULT";
+      static const std::string DRA_SUB_KW = "DRA_SUB";
+      static const std::string TTC_FLAG_KW = "TTC_FLAG";
+      static const std::string TTCFAM_KW = "TTCFAM";
+      static const std::string TTCMEM_KW = "TTCMEM";
+      static const std::string DEVLUT_FLAG_KW = "DEVLUT_FLAG";
+      static const std::string OBPP_KW = "OBPP";
+      static const std::string OPVTYPE_KW = "OPVTYPE";
+      static const std::string OUTBWC_KW = "OUTBWC";
    } // End: namespace ossim::nitf
    
 } // End: namespace ossim

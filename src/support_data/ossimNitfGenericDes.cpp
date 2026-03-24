@@ -176,28 +176,28 @@ int ossimNitfGenericDes::solveEquation(const ossimString& equation,std::vector<s
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt() + b.toInt());
+            stack.push(std::to_string(a.toDouble() + b.toDouble()));
             break;
          case '-':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()- b.toInt());
+            stack.push(std::to_string(a.toDouble() - b.toDouble()));
             break;
          case '*':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()* b.toInt());
+            stack.emplace(std::to_string(a.toDouble() * b.toDouble()));
             break;
          case '/':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()/ b.toInt());
+            stack.emplace(std::to_string(a.toDouble() / b.toDouble()));
             break;
          case '&':
             a = stack.top();

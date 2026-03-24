@@ -2259,7 +2259,7 @@ ossimRefPtr<ossimSingleImageChain> ossimChipperUtil::createChain(const ossimSrcR
       // Bands selection.  Note: Not performed on PSM pan band.
       if (!psmPanInput)
       {
-         if (isThreeBandOut())
+         if (isThreeBandOut())//////////////////////////////////////////////////////////////////////
          {
             //---
             // This will guarantee three bands out.  Will put band

@@ -45,9 +45,6 @@ void ossimNitfCssfabDes::initializeFieldDefinitions()
 {
    FIELD_DEFINITIONS =
    {
-      {ossim::nitf::DESVER_KW, 2, U_INT},
-      {ossim::nitf::DESCLAS_TO_DESCTLN_KW, 167},
-      {ossim::nitf::DESSHL_KW, 4, U_INT},
       {ossim::nitf::UUID_KW, 36},
       {ossim::nitf::NUMAIS_KW, 3, U_INT},
       {ossim::nitf::NUMAIS_KW, LOOP_START},
