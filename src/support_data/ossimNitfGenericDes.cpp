@@ -26,6 +26,28 @@
 
 static ossimTrace traceDebug("ossimNitfGenericDes:debug");
 
+namespace
+{
+ossimString lookupFieldOrDefault(const std::map<ossimString, ossimString>& fieldMap,
+                                 const ossimString& key,
+                                 const std::string& owner,
+                                 const char* context,
+                                 const ossimString& defaultValue = "0")
+{
+   auto it = fieldMap.find(key);
+   if (it != fieldMap.end())
+   {
+      return it->second;
+   }
+
+   ossimNotify(ossimNotifyLevel_WARN)
+      << owner << ": missing field '" << key << "' while " << context
+      << ", defaulting to '" << defaultValue << "'\n";
+
+   return defaultValue;
+}
+}
+
 ossimNitfGenericDes::ossimNitfGenericDes(const std::string& des, ossim_uint32 desLength)
    : ossimNitfRegisteredDes(des, desLength)
 {
@@ -266,11 +288,20 @@ int ossimNitfGenericDes::solveEquation(const ossimString& equation,std::vector<s
                else if (entry.contains(':'))
                {
                   colonSubStrings = entry.split(':');
-                  stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(tempSuffix))[colonSubStrings[1].toInt()]);
+                  stack.push(
+                     lookupFieldOrDefault(
+                        m_fields_map,
+                        colonSubStrings[0] + formatSuffix(tempSuffix),
+                        get_desid(),
+                        "evaluating character lookup equation")[colonSubStrings[1].toInt()]);
                }
                else
                {
-                  a = m_fields_map.at(entry + formatSuffix(tempSuffix));
+                  a = lookupFieldOrDefault(
+                     m_fields_map,
+                     entry + formatSuffix(tempSuffix),
+                     get_desid(),
+                     "evaluating equation");
                   if (a.find_first_not_of('0') == std::string::npos) //Compress any number of zeros to a single zero for string comparisons
                      stack.push("0");
                   else
@@ -356,7 +387,11 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
    {
       std::vector<ossimString> spaceSubStrings;
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
-      length = m_fields_map.at(spaceSubStrings[1]).toInt();
+      length = lookupFieldOrDefault(
+         m_fields_map,
+         spaceSubStrings[1],
+         get_desid(),
+         "resolving variable field length").toInt();
       if (length == 0)
          return "";
    }
@@ -424,7 +459,11 @@ void ossimNitfGenericDes::parseStream(std::istream &in)
          {
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
-            fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+            fieldLength = lookupFieldOrDefault(
+               m_fields_map,
+               spaceSubStrings[1] + formatSuffix(suffix),
+               get_desid(),
+               "parsing variable length field").toInt();
          }
          else
          {
@@ -466,14 +505,24 @@ void ossimNitfGenericDes::writeStream(std::ostream &out)
          {
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
-            fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+            fieldLength = lookupFieldOrDefault(
+               m_fields_map,
+               spaceSubStrings[1] + formatSuffix(suffix),
+               get_desid(),
+               "writing variable length field").toInt();
          }
          else
          {
             generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
             fieldLength = FIELD_DEFINITIONS[i].size;
          }
-         out.write(m_fields_map.at(generatedFieldName), fieldLength);
+         ossimString outputValue = lookupFieldOrDefault(
+            m_fields_map,
+            generatedFieldName,
+            get_desid(),
+            "writing field",
+            formatField(i, ""));
+         out.write(outputValue.c_str(), fieldLength);
          i++;
       }
    }
@@ -516,7 +565,12 @@ std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &p
          //Unique print actions
          out << std::setiosflags(std::ios::left)
              << pfx << std::setw(24) << generatedFieldName << ":"
-             << m_fields_map.at(generatedFieldName) << "\n";
+             << lookupFieldOrDefault(
+                   m_fields_map,
+                   generatedFieldName,
+                   get_desid(),
+                   "printing field",
+                   "") << "\n";
          i++;
       }
    }
@@ -530,9 +584,7 @@ void ossimNitfGenericDes::clearFields()
 
 ossimString ossimNitfGenericDes::get(const ossimString& fieldName)
 {
-   if (m_fields_map.find(fieldName) != m_fields_map.end())
-      return m_fields_map.at(fieldName);
-   return "";
+   return lookupFieldOrDefault(m_fields_map, fieldName, get_desid(), "reading field", "");
 }
 
 void ossimNitfGenericDes::setField(const ossimString& fieldName, const ossimString& fieldValue)
@@ -646,7 +698,11 @@ ossim_uint32 ossimNitfGenericDes::getDesSubHeaderLength() const
       return 46;
    }
 
-   return 36 + 3 + m_fields_map.at("NUMAIS").toInt() * 3 + 3 + m_fields_map.at("NUM_ASSOC_ELEM").toInt() * 36 + 4;
+   return 36 + 3
+      + lookupFieldOrDefault(m_fields_map, "NUMAIS", get_desid(), "computing DES subheader length").toInt() * 3
+      + 3
+      + lookupFieldOrDefault(m_fields_map, "NUM_ASSOC_ELEM", get_desid(), "computing DES subheader length").toInt() * 36
+      + 4;
 
 }
 
@@ -670,7 +726,11 @@ ossim_uint32 ossimNitfGenericDes::getDesDataLength() const
          if (FIELD_DEFINITIONS[i].size == VARIABLE_LENGTH)
          {
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            length += m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+            length += lookupFieldOrDefault(
+               m_fields_map,
+               spaceSubStrings[1] + formatSuffix(suffix),
+               get_desid(),
+               "computing DES data length").toInt();
          }
          else
          {
