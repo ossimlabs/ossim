@@ -90,6 +90,7 @@ namespace ossim
       static const std::string COL_GSD_KW = "COL_GSD";
       static const std::string COL_GSD_UNC_KW = "COL_GSD_UNC";
       static const std::string COL_GSD_UNIT_KW = "COL_GSD_UNIT";
+      static const std::string COMMENT_KW = "COMMENT";
       static const std::string COMMON_POSTS_COV_KW = "COMMON_POSTS_COV";
       static const std::string CORE_SETS_KW = "CORE_SETS";
       static const std::string CORR_REF_DATE_KW = "CORR_REF_DATE";
