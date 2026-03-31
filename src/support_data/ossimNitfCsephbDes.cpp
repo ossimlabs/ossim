@@ -66,9 +66,9 @@ void ossimNitfCsephbDes::initializeFieldDefinitions()
          {ossim::nitf::RESERVEDSUBH_KW + " " + ossim::nitf::RESERVEDSUBH_LEN_KW, VARIABLE_LENGTH, 1},
          {ossim::nitf::QUAL_FLAG_EPH_KW, 1, 1, 0, "1"},
          {ossim::nitf::INTERP_TYPE_EPH_KW, 1, 1},
-         {ossim::nitf::INTERP_TYPE_EPH_KW + " 2 =", IF_STATEMENT_START},
+         {ossim::nitf::INTERP_TYPE_EPH_KW + " = 2", IF_STATEMENT_START},
          {ossim::nitf::INTERP_ORDER_EPH_KW, 1, 1},
-         {ossim::nitf::INTERP_TYPE_EPH_KW + " 2 =", IF_STATEMENT_END},
+         {ossim::nitf::INTERP_TYPE_EPH_KW + " = 2", IF_STATEMENT_END},
          {ossim::nitf::EPHEM_FLAG_KW, 1, 1},
          {ossim::nitf::ECI_ECF_EPHEM_KW, 1, 1, 0, "1"},         /*{"ECI_ECF_EPHEM 0 =", IF_STATEMENT_START},  //Assumes desver 1
             {"TA_POLE", 19, 3, 11},
@@ -114,22 +114,22 @@ void ossimNitfCsephbDes::initializeFieldDefinitions()
             {ossim::nitf::EPHEM_Z_KW, 12, 4, 2},
          {ossim::nitf::NUM_EPHEM_KW, LOOP_END},
          {ossim::nitf::RESERVED_LEN_KW, 9, 1},
-         {ossim::nitf::RESERVED_LEN_KW + " 0 = !", IF_STATEMENT_START},
+         {"! " + ossim::nitf::RESERVED_LEN_KW + " = 0", IF_STATEMENT_START},
             {ossim::nitf::MASK_LEN_KW, 2, 1, 0, "01"},
-            {ossim::nitf::RESERVED_FIELD_MASK_KW + " " + ossim::nitf::MASK_LEN_KW, VARIABLE_LENGTH},  // truncated in original
+            {ossim::nitf::RESERVED_FIELD_MASK_KW + " " + ossim::nitf::MASK_LEN_KW, VARIABLE_LENGTH, U_INT, 0, "1"},
             {ossim::nitf::RESERVED_LEN_AREA1_KW, 9, 1},
             {ossim::nitf::ACCEL_PROVIDED_KW, 1, 0, 0, "N"},
             {ossim::nitf::NUM_EPHEM_KW, LOOP_START},
                {ossim::nitf::VEL_X_KW, 12, 4, 2},
                {ossim::nitf::VEL_Y_KW, 12, 4, 2},
                {ossim::nitf::VEL_Z_KW, 12, 4, 2},
-               {"^" + ossim::nitf::ACCEL_PROVIDED_KW + " 'Y' =", IF_STATEMENT_START},  // truncated in original
+               {"^" + ossim::nitf::ACCEL_PROVIDED_KW + " = 'Y'", IF_STATEMENT_START},
                   {ossim::nitf::ACCEL_X_KW, 12, 4, 2},
                   {ossim::nitf::ACCEL_Y_KW, 12, 4, 2},
                   {ossim::nitf::ACCEL_Z_KW, 12, 4, 2},
-               {"^" + ossim::nitf::ACCEL_PROVIDED_KW + " 'Y' =", IF_STATEMENT_END},  // truncated in original
+               {"^" + ossim::nitf::ACCEL_PROVIDED_KW + " = 'Y'", IF_STATEMENT_END},
             {ossim::nitf::NUM_EPHEM_KW, LOOP_END},
-         {ossim::nitf::RESERVED_LEN_KW + " 0 = !", IF_STATEMENT_END}
+         {"! " + ossim::nitf::RESERVED_LEN_KW + " = 0", IF_STATEMENT_END}
       };
 }
 

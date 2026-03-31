@@ -48,8 +48,8 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
    FIELD_DEFINITIONS =
    {
       {ossim::nitf::COUNT_KW, 5, 1},
-      {ossim::nitf::RADIOMETRICQUANTITY_KW, 24, 0, 0, "Uncalibrated"},
-      {ossim::nitf::RADIOMETRICQUANTITY_UNIT_KW, 1, 0, 0, "Uncalibrated"},
+      {ossim::nitf::RADIOMETRICQUANTITY_KW, 24, 0, 0, "UNCALIBRATED"},
+      {ossim::nitf::RADIOMETRICQUANTITY_UNIT_KW, 1, 0, 0, "U"},
       {ossim::nitf::SCALE_FACTOR_KW, 4, 0, 0, "1"},
       {ossim::nitf::ADDITIVEFACTOR_KW, 4, 0, 0, "0"},
       {ossim::nitf::ROW_GSD_KW, 7, 3, 3},

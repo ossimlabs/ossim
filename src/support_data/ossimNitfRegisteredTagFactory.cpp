@@ -57,6 +57,7 @@
 #include <ossim/support_data/ossimNitfPixqlaTag.h>
 #include <ossim/support_data/ossimNitfCsrlsbTag.h>
 #include <ossim/support_data/ossimNitfCswrpbTag.h>
+#include <ossim/support_data/ossimNitfComntaTag.h>
 
 
 RTTI_DEF1(ossimNitfRegisteredTagFactory, "ossimNitfRegisteredTagFactory", ossimNitfTagFactory);
@@ -68,6 +69,7 @@ static const char BLOCKA_TAG[]               = "BLOCKA";
 static const char BNDPLB_TAG[]               = "BNDPLB";
 static const char BANDSB_TAG[]               = "BANDSB";
 static const char CAMSDA_TAG[]               = "CAMSDA";
+static const char COMNTA_TAG[]               = "COMNTA";
 static const char CSCRNA_TAG[]               = "CSCRNA";
 static const char CSDIDA_TAG[]               = "CSDIDA";
 static const char CSEXRA_TAG[]               = "CSEXRA";
@@ -155,6 +157,10 @@ ossimRefPtr<ossimNitfRegisteredTag> ossimNitfRegisteredTagFactory::create(
    else if(name == CAMSDA_TAG)
    {
       return new ossimNitfCamsdaTag;
+   }
+   else if(name == COMNTA_TAG)
+   {
+      return new ossimNitfComntaTag;
    }
    else if(name == CSCRNA_TAG)
    {

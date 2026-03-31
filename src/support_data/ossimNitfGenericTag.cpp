@@ -128,54 +128,54 @@ int ossimNitfGenericTag::solveEquation(const ossimString& equation,std::vector<s
    
    for (ossimString token : tokens)
    {
-       if (token.empty()) continue;
+      if (token.empty()) continue;
 
-     if (!(token == "(" || token == ")") && OPERATORS.count(token) == 0)
-       {
-           output.push_back(token);
-           continue;
-       }
-       if (token == "(")
-       {
-           opStack.push(token);
-           continue;
-       }
-       if (token == ")")
-       {
-           while (!opStack.empty() && opStack.top() != "(")
-           {
-               output.push_back(opStack.top());
-               opStack.pop();
-           }
-           if (opStack.empty())
-               throw std::runtime_error("Mismatched parentheses: extra ')'");
-           opStack.pop(); // discard '('
-           continue;
-       }
+      if (!(token == "(" || token == ")") && OPERATORS.count(token) == 0)
+      {
+         output.push_back(token);
+         continue;
+      }
+      if (token == "(")
+      {
+         opStack.push(token);
+         continue;
+      }
+      if (token == ")")
+      {
+         while (!opStack.empty() && opStack.top() != "(")
+         {
+            output.push_back(opStack.top());
+            opStack.pop();
+         }
+         if (opStack.empty())
+            throw std::runtime_error("Mismatched parentheses: extra ')'");
+         opStack.pop(); // discard '('
+         continue;
+      }
 
-       int priority = OPERATORS.at(token);
+      int priority = OPERATORS.at(token);
 
-       // Pop operators of greater-or-equal precedence (left-assoc !)
-       // or strictly greater precedence (right-assoc / unary).
-       while (!opStack.empty() && opStack.top() != "(")
-       {
-           ossimString topChar = opStack.top();
-           if (OPERATORS.count(topChar) == 0)
-              break;
-           int topPriority = OPERATORS.at(topChar);
-           if (topPriority > priority ||
-              (token == "!" && topPriority == priority)) break;
-           output.push_back(opStack.top());
-           opStack.pop();
-       }
-       opStack.push(token);
+      // Pop operators of greater-or-equal precedence (left-assoc !)
+      // or strictly greater precedence (right-assoc / unary).
+      while (!opStack.empty() && opStack.top() != "(")
+      {
+         ossimString topChar = opStack.top();
+         if (OPERATORS.count(topChar) == 0)
+            break;
+         int topPriority = OPERATORS.at(topChar);
+         if (topPriority > priority ||
+            (token == "!" && topPriority == priority)) break;
+         output.push_back(opStack.top());
+         opStack.pop();
+      }
+      opStack.push(token);
    }
    while (!opStack.empty())
    {
-       if (opStack.top() == "(")
-           throw std::runtime_error("Mismatched parentheses: extra '('");
-       output.push_back(opStack.top());
-       opStack.pop();
+      if (opStack.top() == "(")
+         throw std::runtime_error("Mismatched parentheses: extra '('");
+      output.push_back(opStack.top());
+      opStack.pop();
    }
 
    //RPN Parser
@@ -192,42 +192,42 @@ int ossimNitfGenericTag::solveEquation(const ossimString& equation,std::vector<s
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt() + b.toInt());
+            stack.push(std::to_string(a.toInt() + b.toInt()));
             break;
          case '-':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()- b.toInt());
+            stack.push(std::to_string(a.toInt()- b.toInt()));
             break;
          case '*':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()* b.toInt());
+            stack.push(std::to_string(a.toInt()* b.toInt()));
             break;
          case '/':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()/ b.toInt());
+            stack.push(std::to_string(a.toInt()/ b.toInt()));
             break;
          case '&':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(bool(a) && bool(b));
+            stack.push(std::to_string(bool(a) && bool(b)));
             break;
          case '|':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(bool(a) || bool(b));
+            stack.push(std::to_string(bool(a) || bool(b)));
             break;
          case '=':
             a = stack.top();
@@ -334,7 +334,7 @@ void ossimNitfGenericTag::loopLogic(ossim_int32 &i, std::vector<std::vector<ossi
             i++;
             break;
          case LOOP_START:
-            fieldLength = solveEquation(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length()) , suffix);
+            fieldLength = solveEquation(FIELD_DEFINITIONS[i].field, suffix);
             if (fieldLength > 0)
                suffix.push_back({1, fieldLength, i + 1});
             else
