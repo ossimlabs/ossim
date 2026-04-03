@@ -14,6 +14,8 @@
 //
 //----------------------------------------------------------------------------
 
+#include <iomanip>
+
 #include <ossim/support_data/ossimNitfComntaTag.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTrace.h>
