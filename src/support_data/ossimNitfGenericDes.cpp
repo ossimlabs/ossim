@@ -26,6 +26,28 @@
 
 static ossimTrace traceDebug("ossimNitfGenericDes:debug");
 
+namespace
+{
+ossimString lookupFieldOrDefault(const std::map<ossimString, ossimString>& fieldMap,
+                                 const ossimString& key,
+                                 const std::string& owner,
+                                 const char* context,
+                                 const ossimString& defaultValue = "0")
+{
+   auto it = fieldMap.find(key);
+   if (it != fieldMap.end())
+   {
+      return it->second;
+   }
+
+   ossimNotify(ossimNotifyLevel_WARN)
+      << owner << ": missing field '" << key << "' while " << context
+      << ", defaulting to '" << defaultValue << "'\n";
+
+   return defaultValue;
+}
+}
+
 ossimNitfGenericDes::ossimNitfGenericDes(const std::string& des, ossim_uint32 desLength)
    : ossimNitfRegisteredDes(des, desLength)
 {
@@ -69,14 +91,105 @@ static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
    return result;
 }
 
-//Parse statements in reverse polish notation
-int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<ossim_int32>> suffixIn) const
+static const std::map<ossimString, int> OPERATORS = {
+   {"!", 6},  // Unary NOT       (highest precedence)
+   {"*", 5},  // Multiply
+   {"/", 5},  // Divide
+   {"+", 4},  // Add
+   {"-", 4},  // Subtract
+   {">", 3},  // Greater-than
+   {"<", 3},  // Less-than
+   {"=", 2},  // Equality
+   {"&", 1},  // Logical AND
+   {"|", 0},  // Logical OR      (lowest precedence)
+};
+
+/**
+ * Parse integers and booleans from the field names for if statements and loops
+ * @param equation
+ *    Full string of the equation with spaces between non modifier tokens
+ *    Valid tokens are:
+ *       ( and ) for precedence
+ *       * - + / Mathmatical operators
+ *       = > < Compair integer and string values
+ *       & | Boolean AND and OR
+ *       ! Boolean not
+ *    Modifiers:
+ *       FIELD:n takes the nth character of the field
+ *       ^FIELD takes the value of the field one loop above the current suffix
+ *       'STRING' use the literal string inside the quotes instead of searching for a field with the given name
+ * @param suffixIn
+ *    The suffix that indicates the current itteration of any loops the parser is currently in
+ * @return
+ *    Integer value of the solved equation (1 is true if the equation is boolean)
+ */
+int ossimNitfGenericDes::solveEquation(const ossimString& equation,std::vector<std::vector<ossim_int32>> suffixIn) const
 {
-   std::vector<ossimString> splitInput = input.split(' ');
+    std::vector<ossimString> tokens = equation.split(' ');
+    std::stack<ossimString>  opStack;
+    std::vector<ossimString> output;
+
+    for (ossimString token : tokens)
+    {
+        if (token.empty()) continue;
+
+      if (!(token == "(" || token == ")") && OPERATORS.count(token) == 0)
+        {
+            output.push_back(token);
+            continue;
+        }
+        if (token == "(")
+        {
+            opStack.push(token);
+            continue;
+        }
+        if (token == ")")
+        {
+            while (!opStack.empty() && opStack.top() != "(")
+            {
+                output.push_back(opStack.top());
+                opStack.pop();
+            }
+            if (opStack.empty())
+                throw std::runtime_error("Mismatched parentheses: extra ')'");
+            opStack.pop(); // discard '('
+            continue;
+        }
+
+        // ── Operator ─────────────────────────────────────────────────
+        int priority = OPERATORS.at(token);
+
+        // Pop operators of greater-or-equal precedence (left-assoc !)
+        // or strictly greater precedence (right-assoc / unary).
+        while (!opStack.empty() && opStack.top() != "(")
+        {
+            ossimString topChar = opStack.top();
+            if (OPERATORS.count(topChar) == 0)
+               break;
+            int topPriority = OPERATORS.at(topChar);
+            if (topPriority > priority ||
+               (token == "!" && topPriority == priority)) break;
+            output.push_back(opStack.top());
+            opStack.pop();
+        }
+        opStack.push(token);
+    }
+
+    // ── Drain remaining operators ─────────────────────────────────────
+    while (!opStack.empty())
+    {
+        if (opStack.top() == "(")
+            throw std::runtime_error("Mismatched parentheses: extra '('");
+        output.push_back(opStack.top());
+        opStack.pop();
+    }
+
+   //RPN Parser
    std::stack<ossimString> stack;
    ossimString a, b;
    std::vector<ossimString> colonSubStrings;
-   for(ossimString entry: splitInput)
+   std::vector<std::vector<ossim_int32>> tempSuffix = suffixIn;
+   for(ossimString entry: output)
    {
       switch(entry.at(0))
       {
@@ -85,28 +198,28 @@ int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<oss
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt() + b.toInt());
+            stack.push(std::to_string(a.toDouble() + b.toDouble()));
             break;
          case '-':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()- b.toInt());
+            stack.push(std::to_string(a.toDouble() - b.toDouble()));
             break;
          case '*':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()* b.toInt());
+            stack.emplace(std::to_string(a.toDouble() * b.toDouble()));
             break;
          case '/':
             a = stack.top();
             stack.pop();
             b = stack.top();
             stack.pop();
-            stack.push(a.toInt()/ b.toInt());
+            stack.emplace(std::to_string(a.toDouble() / b.toDouble()));
             break;
          case '&':
             a = stack.top();
@@ -165,18 +278,30 @@ int ossimNitfGenericDes::parseRPN(ossimString input, std::vector<std::vector<oss
                stack.push(entry);
             else
             {
+               while (entry[0] == '^')
+               {
+                  entry = entry.substr(1);
+                  tempSuffix.erase(tempSuffix.end() - 1);
+               }
                if(entry[0] == '\'')
                   stack.push(entry.substr(1, entry.length() - 2));
-               else if (entry[0] == '^')
-                  stack.push(m_fields_map.at(entry.substr(1, entry.length())));
                else if (entry.contains(':'))
                {
                   colonSubStrings = entry.split(':');
-                  stack.push(m_fields_map.at(colonSubStrings[0] + formatSuffix(suffixIn))[colonSubStrings[1].toInt()]);
+                  stack.push(
+                     lookupFieldOrDefault(
+                        m_fields_map,
+                        colonSubStrings[0] + formatSuffix(tempSuffix),
+                        get_desid(),
+                        "evaluating character lookup equation")[colonSubStrings[1].toInt()]);
                }
                else
                {
-                  a = m_fields_map.at(entry + formatSuffix(suffixIn));
+                  a = lookupFieldOrDefault(
+                     m_fields_map,
+                     entry + formatSuffix(tempSuffix),
+                     get_desid(),
+                     "evaluating equation");
                   if (a.find_first_not_of('0') == std::string::npos) //Compress any number of zeros to a single zero for string comparisons
                      stack.push("0");
                   else
@@ -196,7 +321,7 @@ void ossimNitfGenericDes::loopLogic(ossim_int32 &i, std::vector<std::vector<ossi
     switch (FIELD_DEFINITIONS[i].size)
     {
          case IF_STATEMENT_START:
-            ifCondition = parseRPN(FIELD_DEFINITIONS[i].field, suffix);
+            ifCondition = solveEquation(FIELD_DEFINITIONS[i].field, suffix);
             if (!ifCondition)
             {
                int loopCount = 1;
@@ -215,7 +340,7 @@ void ossimNitfGenericDes::loopLogic(ossim_int32 &i, std::vector<std::vector<ossi
             i++;
             break;
          case LOOP_START:
-            fieldLength = parseRPN(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length() - 2) , suffix);
+            fieldLength = solveEquation(FIELD_DEFINITIONS[i].field.substr(0, FIELD_DEFINITIONS[i].field.length()) , suffix);
             if (fieldLength > 0)
                suffix.push_back({1, fieldLength, i + 1});
             else
@@ -262,7 +387,11 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
    {
       std::vector<ossimString> spaceSubStrings;
       FIELD_DEFINITIONS[definition].field.split(spaceSubStrings, ' ');
-      length = m_fields_map.at(spaceSubStrings[1]).toInt();
+      length = lookupFieldOrDefault(
+         m_fields_map,
+         spaceSubStrings[1],
+         get_desid(),
+         "resolving variable field length").toInt();
       if (length == 0)
          return "";
    }
@@ -282,7 +411,7 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
             length);
          break;
       case DOUBLE:
-         if (result.toFloat64() > 0)
+         if (result.toFloat64() >= 0)
             result = "+" + ossimNitfCommon::convertToDoubleString(result.toFloat64(),
                               FIELD_DEFINITIONS[definition].precision,
                                  length - 1);
@@ -292,7 +421,10 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
                                  length);
          break;
       case SCIENTIFIC:
-         result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
+         if (result[0] == '-')
+            result = ossimNitfCommon::convertToScientificString(result.toFloat64(), length);
+         else
+            result = "+" + ossimNitfCommon::convertToScientificString(result.toFloat64(), length - 1);
          break;
       default:
          while ((ossim_int32)result.length() < length)
@@ -327,7 +459,11 @@ void ossimNitfGenericDes::parseStream(std::istream &in)
          {
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
-            fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+            fieldLength = lookupFieldOrDefault(
+               m_fields_map,
+               spaceSubStrings[1] + formatSuffix(suffix),
+               get_desid(),
+               "parsing variable length field").toInt();
          }
          else
          {
@@ -369,14 +505,24 @@ void ossimNitfGenericDes::writeStream(std::ostream &out)
          {
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
             generatedFieldName = spaceSubStrings[0] + formatSuffix(suffix);
-            fieldLength = m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+            fieldLength = lookupFieldOrDefault(
+               m_fields_map,
+               spaceSubStrings[1] + formatSuffix(suffix),
+               get_desid(),
+               "writing variable length field").toInt();
          }
          else
          {
             generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
             fieldLength = FIELD_DEFINITIONS[i].size;
          }
-         out.write(m_fields_map.at(generatedFieldName), fieldLength);
+         ossimString outputValue = lookupFieldOrDefault(
+            m_fields_map,
+            generatedFieldName,
+            get_desid(),
+            "writing field",
+            formatField(i, ""));
+         out.write(outputValue.c_str(), fieldLength);
          i++;
       }
    }
@@ -419,7 +565,12 @@ std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &p
          //Unique print actions
          out << std::setiosflags(std::ios::left)
              << pfx << std::setw(24) << generatedFieldName << ":"
-             << m_fields_map.at(generatedFieldName) << "\n";
+             << lookupFieldOrDefault(
+                   m_fields_map,
+                   generatedFieldName,
+                   get_desid(),
+                   "printing field",
+                   "") << "\n";
          i++;
       }
    }
@@ -433,9 +584,7 @@ void ossimNitfGenericDes::clearFields()
 
 ossimString ossimNitfGenericDes::get(const ossimString& fieldName)
 {
-   if (m_fields_map.find(fieldName) != m_fields_map.end())
-      return m_fields_map.at(fieldName);
-   return "";
+   return lookupFieldOrDefault(m_fields_map, fieldName, get_desid(), "reading field", "");
 }
 
 void ossimNitfGenericDes::setField(const ossimString& fieldName, const ossimString& fieldValue)
@@ -549,7 +698,11 @@ ossim_uint32 ossimNitfGenericDes::getDesSubHeaderLength() const
       return 46;
    }
 
-   return 36 + 3 + m_fields_map.at("NUMAIS").toInt() * 3 + 3 + m_fields_map.at("NUM_ASSOC_ELEM").toInt() * 36 + 4;
+   return 36 + 3
+      + lookupFieldOrDefault(m_fields_map, "NUMAIS", get_desid(), "computing DES subheader length").toInt() * 3
+      + 3
+      + lookupFieldOrDefault(m_fields_map, "NUM_ASSOC_ELEM", get_desid(), "computing DES subheader length").toInt() * 36
+      + 4;
 
 }
 
@@ -573,7 +726,11 @@ ossim_uint32 ossimNitfGenericDes::getDesDataLength() const
          if (FIELD_DEFINITIONS[i].size == VARIABLE_LENGTH)
          {
             FIELD_DEFINITIONS[i].field.split(spaceSubStrings, ' ');
-            length += m_fields_map.at(spaceSubStrings[1] + formatSuffix(suffix)).toInt();
+            length += lookupFieldOrDefault(
+               m_fields_map,
+               spaceSubStrings[1] + formatSuffix(suffix),
+               get_desid(),
+               "computing DES data length").toInt();
          }
          else
          {

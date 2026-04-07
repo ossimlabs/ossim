@@ -141,6 +141,9 @@ public:
     * @param rhs The data to assign from.
     * @param A reference to this object.
     */
+
+   //virtual const ossimRectilinearDataObject& operator=(
+   //   const ossimRectilinearDataObject& rhs);
    const ossimRectilinearDataObject& operator=(
       const ossimRectilinearDataObject& rhs);
 

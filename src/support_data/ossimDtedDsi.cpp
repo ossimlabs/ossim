@@ -1,29 +1,25 @@
-//*******************************************************************
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author: Ken Melero
 // 
 // Description:  This class gives access to the Data Set Identification
 //               (DSI) of a DTED Level 1 file.
 //
-//********************************************************************
-// $Id: ossimDtedDsi.cpp 23276 2015-04-24 21:01:51Z rashadkm $
-
-#include <cstdlib>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <string>
+//---
+// $Id$
 
 #include <ossim/support_data/ossimDtedDsi.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimProperty.h>
 #include <ossim/base/ossimIoStream.h>
 
-using namespace std;
+#include <cstdlib>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <string>
 
 ossimDtedDsi::ossimDtedDsi()
    :
@@ -501,52 +497,52 @@ ossim_int32 ossimDtedDsi::stopOffset() const
 std::ostream& operator<<( std::ostream& os, const ossimDtedDsi& dsi)
 {
    std::string prefix;
-   return dsi.print(os, prefix);
+   return dsi.printState(os, prefix);
 }
 
-std::ostream& ossimDtedDsi::print(std::ostream& out,
-                                  const std::string& prefix) const
+std::ostream& ossimDtedDsi::printState(std::ostream& out,
+                                       const std::string& prefix) const
 {
    std::string pfx = prefix;
    pfx += "dsi.";
    
-   out << setiosflags(ios::left)
-       << pfx << setw(28) << "recognition_sentinel:" << theRecSen << "\n"
-       << pfx << setw(28) << "security_code:" << theSecurityCode << "\n"
-       << pfx << setw(28) << "product_level:" << theProductLevel << "\n"
-       << pfx << setw(28) << "edition:" << theEdition << "\n"
-       << pfx << setw(28) << "match_merge_version:" << theMatchMergeVersion
+   out << std::setiosflags(std::ios::left)
+       << pfx << std::setw(28) << "recognition_sentinel:" << theRecSen << "\n"
+       << pfx << std::setw(28) << "security_code:" << theSecurityCode << "\n"
+       << pfx << std::setw(28) << "product_level:" << theProductLevel << "\n"
+       << pfx << std::setw(28) << "edition:" << theEdition << "\n"
+       << pfx << std::setw(28) << "match_merge_version:" << theMatchMergeVersion
        << "\n"
-       << pfx << setw(28) << "maintenance_date:" << theMaintenanceDate << "\n"
-       << pfx << setw(28) << "match_merge_date:" << theMatchMergeDate << "\n"
-       << pfx << setw(28) << "maintenance_code:" << theMaintenanceCode << "\n"
-       << pfx << setw(28) << "producer_code:" << theProducerCode << "\n"
-       << pfx << setw(28) << "product_stock_spec_number:"
+       << pfx << std::setw(28) << "maintenance_date:" << theMaintenanceDate << "\n"
+       << pfx << std::setw(28) << "match_merge_date:" << theMatchMergeDate << "\n"
+       << pfx << std::setw(28) << "maintenance_code:" << theMaintenanceCode << "\n"
+       << pfx << std::setw(28) << "producer_code:" << theProducerCode << "\n"
+       << pfx << std::setw(28) << "product_stock_spec_number:"
        << theProductStockSpecNumber
        << "\n"
-       << pfx << setw(28) << "product_spec_number:"
+       << pfx << std::setw(28) << "product_spec_number:"
        << theProductSpecNumber << "\n"
-       << pfx << setw(28) << "vertical_datum:" << theVerticalDatum << "\n"
-       << pfx << setw(28) << "horizontal_datum:" << theHorizontalDatum << "\n"
-       << pfx << setw(28) << "compilation_date:" << theCompilationDate << "\n"
-       << pfx << setw(28) << "lat_origin:" << theLatOrigin << "\n"
-       << pfx << setw(28) << "lon_origin:" << theLonOrigin << "\n"
-       << pfx << setw(28) << "lat_sw:" << theLatSW << "\n"
-       << pfx << setw(28) << "lon_sw:" << theLonSW << "\n"
-       << pfx << setw(28) << "lat_nw:" << theLatNW << "\n"
-       << pfx << setw(28) << "lon_nw:" << theLonNW << "\n"
-       << pfx << setw(28) << "lat_ne:" << theLatNE << "\n"
-       << pfx << setw(28) << "lon_ne:" << theLonNE << "\n"
-       << pfx << setw(28) << "lat_se:" << theLatSE << "\n"
-       << pfx << setw(28) << "lon_se:" << theLonSE << "\n"
-       << pfx << setw(28) << "orientation:" << theOrientation << "\n"
-       << pfx << setw(28) << "lat_interval:" << theLatInterval << "\n"
-       << pfx << setw(28) << "lon_interval:" << theLonInterval << "\n"
-       << pfx << setw(28) << "number_of_lat_points:" << theNumLatPoints << "\n"
-       << pfx << setw(28) << "number_of_lon_lines:" << theNumLonLines << "\n"
-       << pfx << setw(28) << "cell_indicator:" << theCellIndicator << "\n"
-       << pfx << setw(28) << "start_offset:" << theStartOffset << "\n"
-       << pfx << setw(28) << "stop_offset:" << theStopOffset
+       << pfx << std::setw(28) << "vertical_datum:" << theVerticalDatum << "\n"
+       << pfx << std::setw(28) << "horizontal_datum:" << theHorizontalDatum << "\n"
+       << pfx << std::setw(28) << "compilation_date:" << theCompilationDate << "\n"
+       << pfx << std::setw(28) << "lat_origin:" << theLatOrigin << "\n"
+       << pfx << std::setw(28) << "lon_origin:" << theLonOrigin << "\n"
+       << pfx << std::setw(28) << "lat_sw:" << theLatSW << "\n"
+       << pfx << std::setw(28) << "lon_sw:" << theLonSW << "\n"
+       << pfx << std::setw(28) << "lat_nw:" << theLatNW << "\n"
+       << pfx << std::setw(28) << "lon_nw:" << theLonNW << "\n"
+       << pfx << std::setw(28) << "lat_ne:" << theLatNE << "\n"
+       << pfx << std::setw(28) << "lon_ne:" << theLonNE << "\n"
+       << pfx << std::setw(28) << "lat_se:" << theLatSE << "\n"
+       << pfx << std::setw(28) << "lon_se:" << theLonSE << "\n"
+       << pfx << std::setw(28) << "orientation:" << theOrientation << "\n"
+       << pfx << std::setw(28) << "lat_interval:" << theLatInterval << "\n"
+       << pfx << std::setw(28) << "lon_interval:" << theLonInterval << "\n"
+       << pfx << std::setw(28) << "number_of_lat_points:" << theNumLatPoints << "\n"
+       << pfx << std::setw(28) << "number_of_lon_lines:" << theNumLonLines << "\n"
+       << pfx << std::setw(28) << "cell_indicator:" << theCellIndicator << "\n"
+       << pfx << std::setw(28) << "start_offset:" << theStartOffset << "\n"
+       << pfx << std::setw(28) << "stop_offset:" << theStopOffset
        << std::endl;
    return out;
 }

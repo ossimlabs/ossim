@@ -127,6 +127,7 @@ public:
     * @param rhs The data to assign from.
     * @param A reference to this object.
     */
+
    // overloaded-virtual warning fix.
    // virtual const ossimImageData& operator=(const ossimImageData &rhs);
    const ossimImageData& operator=(const ossimImageData &rhs);

@@ -1,6 +1,6 @@
 //---
 // License: MIT
-// Description: class declaration for LZW codec.
+// Description: Class declaration for LZW codec.
 //---
 
 #ifndef OSSIM_LZW_CODEC_H

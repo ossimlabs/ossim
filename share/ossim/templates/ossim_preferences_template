@@ -391,7 +391,7 @@ plugin50.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_ndf_plugin.s
 plugin55.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_geopdf_plugin.so
 // plugin55.options:
 
-// plugin60.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_opencv_plugin.so
+plugin60.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_opencv_plugin.so
 // plugin60.options:
 
 // plugin70.file: $(OSSIM_INSTALL_PREFIX)/lib64/ossim/plugins/libossim_openjpeg_plugin.so

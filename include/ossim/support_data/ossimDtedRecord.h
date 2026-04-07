@@ -1,8 +1,6 @@
-//*******************************************************************
+//---
 //
-// License:  MIT
-//
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author: Ken Melero
 // 
@@ -18,15 +16,16 @@
 //         in latitude and longitude at the interval designated in the
 //         User Header Label (UHL) in South to North profile sequence.
 //
-//********************************************************************
-// $Id: ossimDtedRecord.h 14248 2009-04-08 19:38:11Z dburken $
+//---
+// $Id$
+
 #ifndef ossimDtedRecord_H
-#define ossimDtedRecord_H
-#include <iosfwd>
+#define ossimDtedRecord_H 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimString.h>
 #include <ossim/base/ossimErrorStatusInterface.h>
+#include <iosfwd>
 
 class OSSIM_DLL ossimDtedRecord : public ossimErrorStatusInterface
 {

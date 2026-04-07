@@ -1,20 +1,14 @@
-//*******************************************************************
+//---
 //
-// License:  See top level LICENSE.txt file.
+// License: MIT
 //
 // Author: Ken Melero
 // 
 // Description:  This class gives access to the Accuracy Description
 //               (ACC) of a DTED Level 1 file.
 //
-//********************************************************************
-// $Id: ossimDtedAcc.cpp 23276 2015-04-24 21:01:51Z rashadkm $
-
-#include <cstdlib>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <string>
+//---
+// $Id$
 
 #include <ossim/support_data/ossimDtedAcc.h>
 #include <ossim/base/ossimNotify.h>
@@ -23,11 +17,14 @@
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimIoStream.h>
 
-using namespace std;
+#include <cstdlib>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <string>
 
 ossimDtedAcc::ossimDtedAcc()
 {
-   
 }
 
 ossimDtedAcc::ossimDtedAcc(std::shared_ptr<ossim::istream>& str, ossim_int64 offset)
@@ -193,20 +190,20 @@ void ossimDtedAcc::getPropertyNames(
    propertyNames.push_back(ossimString("relative_le"));
 }
 
-std::ostream& ossimDtedAcc::print(std::ostream& out,
-                                  const std::string& prefix) const
+std::ostream& ossimDtedAcc::printState(std::ostream& out,
+                                       const std::string& prefix) const
 {
    std::string pfx = prefix;
    pfx += "acc.";
 
-   out << setiosflags(ios::left)
-       << pfx << setw(28) << "recognition_sentinel:" << theRecSen << "\n"
-       << pfx << setw(28) << "absolute_ce:"  << theAbsoluteCE << "\n"
-       << pfx << setw(28) << "absolute_le:"  << theAbsoluteLE << "\n"
-       << pfx << setw(28) << "relative ce:"  << theRelativeCE << "\n"
-       << pfx << setw(28) << "relative le:"  << theRelativeLE << "\n"
-       << pfx << setw(28) << "start_offset:" << theStartOffset << "\n"
-       << pfx << setw(28) << "stop_offset:"  << theStopOffset
+   out << std::setiosflags(std::ios::left)
+       << pfx << std::setw(28) << "recognition_sentinel:" << theRecSen << "\n"
+       << pfx << std::setw(28) << "absolute_ce:"  << theAbsoluteCE << "\n"
+       << pfx << std::setw(28) << "absolute_le:"  << theAbsoluteLE << "\n"
+       << pfx << std::setw(28) << "relative ce:"  << theRelativeCE << "\n"
+       << pfx << std::setw(28) << "relative le:"  << theRelativeLE << "\n"
+       << pfx << std::setw(28) << "start_offset:" << theStartOffset << "\n"
+       << pfx << std::setw(28) << "stop_offset:"  << theStopOffset
        << std::endl;
    return out;
 }
@@ -249,7 +246,7 @@ ossim_int32 ossimDtedAcc::stopOffset()  const
 std::ostream& operator<<( std::ostream& os, const ossimDtedAcc& acc)
 {
    std::string prefix;
-   return acc.print(os, prefix);
+   return acc.printState(os, prefix);
 }
 
 ossimDtedAcc::ossimDtedAcc(const ossimDtedAcc& /* source */)

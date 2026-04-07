@@ -85,13 +85,14 @@ public:
     * does nothing with this and reset any internal attributes.
     */
    virtual void initialize()=0;
-
-   //  overloaded-virtual warning fix.
+   
    // virtual void assign(const ossimDataObject* rhs);
    void assign(const ossimDataObject* rhs);
 
-   //  overloaded-virtual warning fix.
    // virtual const ossimDataObject* operator =(const ossimDataObject* rhs);
+   const ossimDataObject* operator =(const ossimDataObject* rhs);
+   
+   // virtual const ossimDataObject& operator=(const ossimDataObject& rhs);
    const ossimDataObject& operator=(const ossimDataObject& rhs);
 
    virtual bool operator==(const ossimDataObject& rhs) const;

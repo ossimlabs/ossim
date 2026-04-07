@@ -1,6 +1,6 @@
 //---
 // License: MIT
-// Description: class definition for LZW codec.
+// Description: Class definition for LZW codec.
 //---
 #include <ossim/imaging/ossimLzwCodec.h>
 

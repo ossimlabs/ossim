@@ -1,26 +1,24 @@
-//*******************************************************************
+//---
 //
-// License:  MIT
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author: Ken Melero
 // 
 // Description:  This class gives access to the Accuracy Description
 //               (ACC) of a DTED Level 1 file.
 //
-//********************************************************************
-// $Id: ossimDtedAcc.h 16104 2009-12-17 18:09:59Z gpotts $
+//---
+// $Id$
 
 #ifndef ossimDtedAcc_H
-#define ossimDtedAcc_H
-#include <iosfwd>
+#define ossimDtedAcc_H 1
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimErrorStatusInterface.h>
 #include <ossim/base/ossimFilename.h>
 #include <ossim/base/ossimRefPtr.h>
 #include <ossim/base/ossimIosFwd.h>
+#include <iosfwd>
 #include <memory>
 
 class ossimProperty;
@@ -84,8 +82,8 @@ public:
     * "nitf.file_name:"
     * @return output stream.
     */
-   std::ostream& print(std::ostream& out,
-                       const std::string& prefix) const;
+   std::ostream& printState(std::ostream& out,
+                            const std::string& prefix) const;
    
    void parse(std::istream& in);
 

@@ -70,23 +70,23 @@ std::ostream& ossimDtedInfo::print(std::ostream& out) const
    std::string prefix = "dted.";
    if( m_vol.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
    {
-      m_vol.print(out, prefix);
+      m_vol.printState(out, prefix);
    }
    if( m_hdr.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
    {
-      m_hdr.print(out, prefix);
+      m_hdr.printState(out, prefix);
    }
    if( m_uhl.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
    {
-      m_uhl.print(out, prefix);
+      m_uhl.printState(out, prefix);
    }
    if( m_dsi.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
    {
-      m_dsi.print(out, prefix);
+      m_dsi.printState(out, prefix);
    }
    if( m_acc.getErrorStatus() == ossimErrorCodes::OSSIM_OK )
    {
-      m_acc.print(out, prefix);
+      m_acc.printState(out, prefix);
    }
    return out;
 }
