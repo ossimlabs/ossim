@@ -6427,3 +6427,8 @@ std::vector< ossimRefPtr<ossimSingleImageChain> >& ossimChipperUtil::getSingleIm
    return m_imgLayer;
 }
 
+ossimRefPtr<ossimKeywordlist> get_options(const ossimChipperUtil& chipper)
+{
+   return chipper.m_kwl;
+}
+

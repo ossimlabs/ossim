@@ -858,6 +858,8 @@ private:
    /** Hold all options passed into intialize. */
    ossimRefPtr<ossimKeywordlist> m_kwl;
 
+   friend ossimRefPtr<ossimKeywordlist> get_options(const ossimChipperUtil& chipper);
+
    /** Hold contents of src file if --src is used. */
    ossimRefPtr<ossimKeywordlist> m_srcKwl;
 
