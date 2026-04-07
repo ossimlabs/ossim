@@ -122,11 +122,13 @@ void ossimDataObject::assign(const ossimDataObject* rhs)
    }
 }
 
+#if 0 /* overloaded-virtual warning fix. */
 const ossimDataObject* ossimDataObject::operator=(const ossimDataObject* rhs)
 {
    assign(rhs);
    return this;
 }
+#endif
 
 const ossimDataObject& ossimDataObject::operator=(const ossimDataObject& rhs)
 {

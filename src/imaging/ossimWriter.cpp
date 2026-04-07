@@ -17,9 +17,10 @@
 #include <ossim/base/ossimStopwatch.h>
 #include <ossim/base/ossimStringProperty.h>
 #include <ossim/base/ossimRefPtr.h>
-#include <ossim/base/ossimTiffConstants.h>
+// #include <ossim/base/ossimTiffConstants.h>
 #include <ossim/base/ossimTrace.h>
 #include <ossim/imaging/ossimImageGeometry.h>
+#include <ossim/imaging/ossimLzwCodec.h>
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimProjection.h>
 
@@ -30,6 +31,7 @@
 #include <ostream>
 #include <sstream>
 
+// option keys:
 static const std::string ADD_ALPHA_CHANNEL_KW   = "add_alpha_channel";   // bool
 static const std::string ALIGN_TILES_KW         = "align_tiles";         // bool
 static const std::string BLOCK_SIZE_KW          = "block_size";          // unsigned int
@@ -39,6 +41,12 @@ static const std::string INCLUDE_BLANK_TILES_KW = "include_blank_tiles"; // bool
 static const std::string TILE_SIZE_KW           = "tile_size";           // in pixels
 static const std::string TRUE_KW                = "true";
 
+// writer types:
+static const std::string OSSIM_COG  = "ossim_cog"; 
+static const std::string OSSIM_TTBS = "ossim_ttbs";
+static const std::string TTBS       = "ttbs"; // alias of ossim_ttbs
+
+// available traces:
 static const ossimTrace traceDebug("ossimWriter:debug");
 static const ossimTrace traceTime("ossimWriter:time");
 
@@ -101,7 +109,7 @@ ossimString ossimWriter::getExtension() const
 {
    ossimString result = "";
    // ttbs = tiled tiff band separate
-   if ( theOutputImageType.contains("ttbs" ) )
+   if ( theOutputImageType.contains(TTBS.c_str()) || theOutputImageType.string() == OSSIM_COG )
    {
       result = "tif";
    }
@@ -110,8 +118,9 @@ ossimString ossimWriter::getExtension() const
 
 void ossimWriter::getImageTypeList(std::vector<ossimString>& imageTypeList) const
 {
-   imageTypeList.push_back(ossimString("ttbs"));
-   imageTypeList.push_back(ossimString("ossim_ttbs"));
+   imageTypeList.push_back(ossimString(OSSIM_COG));
+   imageTypeList.push_back(ossimString(OSSIM_TTBS));
+   imageTypeList.push_back(ossimString(TTBS));   
 }
 
 bool ossimWriter::isOpen() const
@@ -148,7 +157,9 @@ bool ossimWriter::open()
 bool ossimWriter::hasImageType(const ossimString& imageType) const
 {
    bool result = false;
-   if ( imageType.contains("ttbs") || imageType.contains("ztif") || (imageType == "image/tif") )
+   // if ( imageType.contains("ttbs") || imageType.contains("ztif") || (imageType == "image/tif") )
+   if ( imageType.contains(TTBS.c_str()) || imageType.string() == OSSIM_COG ||
+        imageType == "image/tif" )
    {
       result = true;
    }
@@ -219,15 +230,20 @@ bool ossimWriter::writeStream()
                status = writeStreamTtbs();
             }
          }
+         else if ( theOutputImageType.string() == OSSIM_COG )
+         {
+            writeStreamCog();
+         }
       }
    }
    
    return status;
 }
 
+// Write ttbs(tiled tiff band separate) method:
 bool ossimWriter::writeStreamTtbs()
 {
-   static const char* const MODULE = "ossimWriter::writeStreamTtbs";
+   static const char MODULE[] = "ossimWriter::writeStreamTtbs";
    if ( traceDebug() )
    {
       ossimNotify(ossimNotifyLevel_DEBUG)
@@ -306,7 +322,93 @@ bool ossimWriter::writeStreamTtbs()
    }
    
    return status;
-}
+   
+} // End: ossimWriter::writeStreamTtbs()
+
+// Write COG(Cloud Optimized Geotiff) method:
+bool ossimWriter::writeStreamCog()
+{
+   static const char MODULE[] = "ossimWriter::writeStreamCog";
+   if ( traceDebug() )
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " Entered...\n"
+         << "Writer opions:\n"
+         << *m_kwl << "\n";
+   }
+   
+   // Always big tiff in native byte order.
+   bool status = false;
+
+   if ( m_str )
+   {
+      if ( canContiguousWrite() == true )
+      {
+         // Open a memory stream to write to:
+         std::ostringstream* str = new std::ostringstream();
+
+         std::streampos pos;
+         getTtbsTileStartPos(pos);
+
+         // Zero out up to start of data.
+         std::vector<ossim_uint8> v((std::streamsize)pos, 0);
+         str->write( (char*)v.data(), v.size() );
+         str->seekp(0, std::ios_base::beg);
+         
+         if ( writeTiffHdr( str ) == true )
+         {
+            if ( writeTiffTags( str ) )
+            {
+               // Copy to base stream.
+               m_str->write( str->str().c_str(), str->str().size() );
+
+#if 0 /* Please leave for debug. drb */
+               std::cout << "\nifd end position: " << m_str->tellp() << std::endl;
+#endif
+
+               // Write the image tiles out:
+               status = writeTtbs( );
+            }
+         }
+
+         if ( str )
+         {
+            delete str;
+            str = 0;
+         }
+      }
+      else
+      {
+         if ( writeTiffHdr( m_str ) == true )
+         {
+            std::vector<ossim_uint64>  tile_offsets;
+            std::vector<ossim_uint64>  tile_byte_counts;
+            
+            //---
+            // Min/max arrays must start off empty for
+            // ossimImageData::computeMinMaxPix code.
+            //---
+            std::vector<ossim_float64> minBands(0);
+            std::vector<ossim_float64> maxBands(0);
+            
+            if ( writeTtbs(
+                    tile_offsets, tile_byte_counts, minBands, maxBands   ) == true )
+            {
+               status = writeTiffTags( tile_offsets, tile_byte_counts, minBands, maxBands );
+            }
+         }
+      }
+   }
+
+   if ( traceDebug() )
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << MODULE << " Exit status: " << (status?"true":"false") << "\n";
+   }
+   
+   return status;
+   
+} // End: ossimWriter::writeStreamCog()
 
 bool ossimWriter::writeTiffHdr( std::ostream* str )
 {
@@ -463,7 +565,8 @@ bool ossimWriter::writeTiffTags( const std::vector<ossim_uint64>& tile_offsets,
       tag   = ossim::TIFFTAG_COMPRESSION;
       type  = ossim::TIFF_SHORT;
       count = 1;
-      value_ui16 = ossim::COMPRESSION_NONE; // tmp only uncompressed supported.
+      // value_ui16 = ossim::COMPRESSION_NONE; // tmp only uncompressed supported.
+      value_ui16 = getCompressionType();
       writeTiffTag<ossim_uint16>( tag, type, count, &value_ui16, arrayWritePos );
       ++tagCount;
       
@@ -1439,9 +1542,486 @@ bool ossimWriter::writeTtbs( std::vector<ossim_uint64>& tile_offsets,
       sw1->start();
    }
 
-   static const char* const MODULE = "ossimWriter::writeTtbs(...)";
+   static const char MODULE[] = "ossimWriter::writeTtbs(...)";
    if ( traceDebug() ) CLOG << " Entered...\n";
 
+   // Start the sequence at the first tile.
+   theInputConnection->setToStartOfSequence();
+
+   // Control flags:
+   bool alignTiles    = getAlignTilesFlag();
+   bool flushTiles    = getFlushTilesFlag();
+   bool writeBlanks   = getWriteBlanksFlag();
+   bool computeMinMax = needsMinMax();
+   bool computeAlpha  = addAlpha();
+
+   // Block size for write:
+   const std::streamsize BLOCK_SIZE = getBlockSize();
+   
+   const ossim_int32 BANDS       = (ossim_int32)theInputConnection->getNumberOfOutputBands();
+   const ossim_int32 TILES_WIDE  = (ossim_int32)theInputConnection->getNumberOfTilesHorizontal();
+   const ossim_int32 TILES_TOTAL = (ossim_int32)theInputConnection->getNumberOfTiles();
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "align tiles flag:     " << alignTiles
+         << "\nflush tiles flag:     " << flushTiles
+         << "\nwrite blanks flag:    " << writeBlanks
+         << "\nadd alpha flag:       " << computeAlpha
+         << "\ncompute min max flag: " << computeMinMax
+         << "\nwrite block size:     " << BLOCK_SIZE
+         << "\nBANDS:                " << BANDS
+         << "\nTILES_WIDE:           " << TILES_WIDE
+         << "\nTILES_TOTAL:          " << TILES_TOTAL << "\n";
+   }
+
+   tile_offsets.resize( TILES_TOTAL * (computeAlpha?BANDS+1:BANDS) );
+   tile_byte_counts.resize( TILES_TOTAL * (computeAlpha?BANDS+1:BANDS) );
+
+   ossimDataObjectStatus tileStatus   = OSSIM_STATUS_UNKNOWN;
+   ossim_int64 ossimTileIndex         = 0;
+   ossim_int64 tiffTileIndex          = 0; // per tile
+   ossim_int64 tiffTileBandIndex      = 0; // per band
+   ossim_int64 tileSizeInBytesPerBand = 0;
+   ossim_int64 tileSizeInBytes        = 0;
+   ossim_int64 alphaTileSizeInBytes   = 0;
+   // ossim_int64 bandOffsetInBytes      = 0;
+
+   std::streampos pos;
+   getTtbsTileStartPos( pos );
+   
+   std::streamsize overflow = 0;
+   if ( alignTiles )
+   {
+      // Snap to block boundary.
+      overflow = pos % BLOCK_SIZE;
+      if ( overflow > 0 )
+      {
+         pos += BLOCK_SIZE - overflow;
+      }
+   }
+   m_str->seekp( pos );
+
+#if 0 /* Please leave for debug. drb */
+   std::cout << "\nimage data start position: " << m_str->tellp() << std::endl;
+#endif
+
+   while ( ossimTileIndex < TILES_TOTAL )
+   {
+      if ( traceTime() ) sw2->start();
+      
+      ossimRefPtr<ossimImageData> id = theInputConnection->getNextTile();
+
+      if ( traceTime() ) sw2->stop();
+      
+      if(!id)
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " ERROR:"
+            << "Error returned writing tiff tile:  " << ossimTileIndex
+            << "\nNULL Tile from input encountered"
+            << std::endl;
+         return false;
+      }
+
+      tiffTileIndex = ossimTileIndex;
+
+      tileStatus = id->getDataObjectStatus();
+      
+      if ( ossimTileIndex == 0 )
+      {
+         // Uncompressed constant tile size.
+         tileSizeInBytesPerBand = (ossim_int64)id->getSizePerBandInBytes();
+         tileSizeInBytes        = (ossim_int64)id->getSizeInBytes();
+         if ( computeAlpha )
+         {
+            // Alpha tile is always 8 bit.
+            alphaTileSizeInBytes = (ossim_int64)id->getSizePerBand();
+         }
+      }
+
+      if ( computeMinMax )
+      {
+         if ( (tileStatus == OSSIM_FULL) || (tileStatus == OSSIM_PARTIAL) )
+         {
+            // Compute running min, max.
+            id->computeMinMaxPix(minBands, maxBands);
+         }
+      }
+
+      if ((writeBlanks == true) || (tileStatus == OSSIM_FULL) || (tileStatus == OSSIM_PARTIAL))
+      {
+         if ( computeAlpha && (id->hasAlpha() == false) )
+         {
+            id->computeAlphaChannel();
+         }
+
+         if ( id->getDataBuffer().size() )
+         {
+            if ( traceTime() ) sw3->start();
+
+            // Get stream position of first tile band.
+            pos = m_str->tellp();
+            if ( alignTiles )
+            {
+               // Snap to block boundary.
+               overflow = pos % BLOCK_SIZE;
+               if ( overflow > 0 )
+               {
+                  pos += BLOCK_SIZE - overflow;
+               }
+               m_str->seekp( pos );
+            }
+            
+            if ( m_str->good() )
+            {
+               // Write the tile to stream. All bands will be written contiguously.
+               m_str->write( (const char*)id->getDataBuffer().data(),
+                             (std::streamsize)tileSizeInBytes);
+
+               if ( computeAlpha )
+               {
+                  // const char* alpha = (const char*)id->getAlphaBuf();
+                  if ( id->getAlphaBuffer().size() )
+                  {
+                     m_str->write( (const char*)id->getAlphaBuffer().data(),
+                                   (std::streamsize)alphaTileSizeInBytes );
+                  }
+               }
+
+               if ( flushTiles )
+               {
+                  m_str->flush();
+               }
+               
+               // Check stream:
+               if ( m_str->fail() == true )
+               {
+                  ossimNotify(ossimNotifyLevel_DEBUG)
+                     << MODULE << " ERROR:\nWrite error on tiff tile:  " << ossimTileIndex
+                     << std::endl;
+                  return false;
+               }
+
+               // Capture the tile byte position and size in bytes.
+               for (ossim_int32 band=0; band < BANDS; ++band)
+               {
+                  tiffTileBandIndex = tiffTileIndex + band * TILES_TOTAL;
+                  tile_offsets[ tiffTileBandIndex ] = (ossim_uint64)pos + band * tileSizeInBytesPerBand;
+                  tile_byte_counts[ tiffTileBandIndex ] = (ossim_uint64)tileSizeInBytesPerBand;
+               }
+               if ( computeAlpha )
+               {
+                  tiffTileBandIndex = tiffTileIndex + BANDS * TILES_TOTAL;
+                  tile_offsets[ tiffTileBandIndex ] = (ossim_uint64)pos + BANDS * tileSizeInBytesPerBand;
+                  tile_byte_counts[ tiffTileBandIndex ] = (ossim_uint64)alphaTileSizeInBytes;
+               }
+            }
+            else
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << MODULE << " ERROR:\nStream has gone bad!" << std::endl;
+               return false;
+            }
+
+            if ( traceTime() ) sw3->stop();
+            
+         }
+         else
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << MODULE << " ERROR:\nNull input tile:  " << ossimTileIndex
+               << std::endl;
+            return false;
+         }
+      }
+      else 
+      {
+         //---
+         // Sparse tile mode:
+         // Set the offset and byte count to zero to indicate blank/empty tile.
+         //---
+         if (traceDebug())
+         {
+            ossimNotify(ossimNotifyLevel_DEBUG)
+               << "sparse blank tile[" << tiffTileIndex << "]: " << tiffTileIndex << "\n";
+         }
+
+         for (ossim_int32 band=0; band < BANDS; ++band)
+         {
+            tiffTileBandIndex = tiffTileIndex + band * TILES_TOTAL;
+            tile_offsets[ tiffTileBandIndex ] = 0;
+            tile_byte_counts[ tiffTileBandIndex ] = 0;
+         }
+         if ( computeAlpha )
+         {
+            tiffTileBandIndex = tiffTileIndex + BANDS * TILES_TOTAL;
+            tile_offsets[ tiffTileBandIndex ] = 0;
+            tile_byte_counts[ tiffTileBandIndex ] = 0;
+         }
+      }
+      
+      ++ossimTileIndex;
+
+      if( needsAborting() )
+      {
+         setPercentComplete(100);
+         break; // Get out...
+      }
+      else if ( ossimTileIndex % TILES_WIDE )
+      {
+         // Output percent complete every row of tiles.
+         double tileNum = ossimTileIndex;
+         double numTiles = TILES_TOTAL;
+         setPercentComplete(tileNum / numTiles * 100.0);
+      }
+
+   } // End: while ( ossimTileIndex < TILES_TOTAL )
+
+   if ( traceTime() )
+   {
+      sw1->stop();
+      ossimNotify(ossimNotifyLevel_NOTICE)
+         << std::setiosflags(std::ios::fixed) << std::setprecision(3)
+         << MODULE << " timing results:"
+         << "\ninput time in seconds: " << sw2->count()
+         << "\nwrite time in seconds: " << sw3->count()
+         << "\ntotal time in seconds: " << sw1->count() << std::endl;
+
+      delete sw3;
+      delete sw2;
+      delete sw1;
+      sw1 = 0;
+      sw2 = 0;
+      sw3 = 0;
+   }
+
+   if ( traceDebug() ) CLOG << " Exited...\n";
+   
+   return m_str->good();
+}
+
+//---
+// This method is for streaming, i.e. contiguous write. No sparse tiles.
+//---
+bool ossimWriter::writeTtbs()
+{
+   ossimStopwatch* sw1 = 0; // total
+   ossimStopwatch* sw2 = 0; // input getNextTile only
+   ossimStopwatch* sw3 = 0; // I/O write only
+   
+   if ( traceTime() )
+   {
+      sw1 = new ossimStopwatch();
+      sw2 = new ossimStopwatch();
+      sw3 = new ossimStopwatch();      
+      sw1->start();
+   }
+
+   static const char MODULE[] = "ossimWriter::writeTtbs(void)";
+   if ( traceDebug() ) CLOG << " Entered...\n";
+
+   if ( !theInputConnection.valid() )
+   {
+      ossimNotify(ossimNotifyLevel_WARN)
+         << MODULE << " ERROR: Null input connection!" << std::endl;
+      return false;
+   }
+
+   // Start the sequence at the first tile.
+   theInputConnection->setToStartOfSequence();
+
+   // Control flags:
+   bool alignTiles    = getAlignTilesFlag();
+   bool flushTiles    = getFlushTilesFlag();
+   bool writeBlanks   = getWriteBlanksFlag();
+   bool computeMinMax = needsMinMax();
+   bool computeAlpha  = addAlpha();
+
+   // Block size for write:
+   const std::streamsize BLOCK_SIZE = getBlockSize();
+   
+   const ossim_int32 BANDS       = (ossim_int32)theInputConnection->getNumberOfOutputBands();
+   const ossim_int32 TILES_WIDE  = (ossim_int32)theInputConnection->getNumberOfTilesHorizontal();
+   const ossim_int32 TILES_TOTAL = (ossim_int32)theInputConnection->getNumberOfTiles();
+
+   if (traceDebug())
+   {
+      ossimNotify(ossimNotifyLevel_DEBUG)
+         << "align tiles flag:     " << alignTiles
+         << "\nflush tiles flag:     " << flushTiles
+         << "\nwrite blanks flag:    " << writeBlanks
+         << "\nadd alpha flag:       " << computeAlpha
+         << "\ncompute min max flag: " << computeMinMax
+         << "\nwrite block size:     " << BLOCK_SIZE
+         << "\nBANDS:                " << BANDS
+         << "\nTILES_WIDE:           " << TILES_WIDE
+         << "\nTILES_TOTAL:          " << TILES_TOTAL
+         << "\n";
+   }
+
+   ossimDataObjectStatus tileStatus   = OSSIM_STATUS_UNKNOWN;
+   ossim_int64 ossimTileIndex         = 0;
+   // ossim_int64 tiffTileIndex          = 0;
+   // ossim_int64 tileSizeInBytesPerBand = 0;
+   ossim_int64 tileSizeInBytes        = 0;
+   ossim_int64 alphaTileSizeInBytes   = 0;
+
+   while ( ossimTileIndex < TILES_TOTAL )
+   {
+      if ( traceTime() ) sw2->start();
+
+      ossimRefPtr<ossimImageData> id = theInputConnection->getNextTile();
+
+      if ( traceTime() ) sw2->stop();
+
+      if(!id)
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " ERROR: writing tiff tile:  " << ossimTileIndex
+            << "\nNULL Tile from input encountered"
+            << std::endl;
+         return false;
+      }
+
+      if ( ossimTileIndex == 0 )
+      {
+         // Uncompressed constant tile size.
+         tileSizeInBytes = (ossim_int64)id->getSizeInBytes();
+         if ( computeAlpha )
+         {
+            // Alpha tile is always 8 bit.
+            alphaTileSizeInBytes = (ossim_int64)id->getSizePerBand();
+         }
+      }
+
+      if ((writeBlanks == true) || (tileStatus == OSSIM_FULL) || (tileStatus == OSSIM_PARTIAL))
+      {
+         if ( computeAlpha && (id->hasAlpha() == false) )
+         {
+            id->computeAlphaChannel();
+         }
+
+         // Grab a pointer to the tile for all bands.
+         const char* data = (const char*)id->getBuf();
+         if ( data )
+         {
+            if ( traceTime() ) sw3->start();
+            
+            if ( m_str->good() )
+            {
+               // Write the tile to stream. All bands will be written contiguously.
+               m_str->write( data, (std::streamsize)tileSizeInBytes);
+
+               if ( computeAlpha )
+               {
+                  const char* alpha = (const char*)id->getAlphaBuf();
+                  if ( alpha )
+                  {
+                     m_str->write( alpha, (std::streamsize)alphaTileSizeInBytes );
+                  }
+               }
+
+               if ( flushTiles )
+               {
+                  m_str->flush();
+               }
+               
+               // Check stream:
+               if ( m_str->fail() == true )
+               {
+                  ossimNotify(ossimNotifyLevel_DEBUG)
+                     << MODULE << " ERROR:\nWrite error on tiff tile:  " << ossimTileIndex
+                     << std::endl;
+                  return false;
+               }
+            }
+            else
+            {
+               ossimNotify(ossimNotifyLevel_DEBUG)
+                  << MODULE << " ERROR:\nStream has gone bad!" << std::endl;
+               return false;
+            }
+
+            if ( traceTime() ) sw3->stop();
+
+         }
+         else
+         {
+            ossimNotify(ossimNotifyLevel_WARN)
+               << MODULE << " ERROR:\nNull input tile:  " << ossimTileIndex
+               << std::endl;
+            return false;
+         }
+      }
+      
+      ++ossimTileIndex;
+
+      if( needsAborting() )
+      {
+         setPercentComplete(100);
+         break; // Get out...
+      }
+      else if ( ossimTileIndex % TILES_WIDE )
+      {
+         // Output percent complete every row of tiles.
+         double tileNum = ossimTileIndex;
+         double numTiles = TILES_TOTAL;
+         setPercentComplete(tileNum / numTiles * 100.0);
+      }
+      
+   } // End: while ( ossimTileIndex < TILES_TOTAL )
+
+   if ( traceTime() )
+   {
+      sw1->stop();
+      ossimNotify(ossimNotifyLevel_NOTICE)
+         << std::setiosflags(std::ios::fixed) << std::setprecision(3)
+         << MODULE << " timing results:"
+         << "\ninput time in seconds: " << sw2->count()
+         << "\nwrite time in seconds: " << sw3->count()
+         << "\ntotal time in seconds: " << sw1->count() << std::endl;
+
+      delete sw3;
+      delete sw2;
+      delete sw1;
+      sw1 = 0;
+      sw2 = 0;
+      sw3 = 0;
+   }
+   
+   if ( traceDebug() ) CLOG << " Exited...\n";
+   
+   return m_str->good();
+}
+
+
+
+//---
+// This write method if for non-streaming where tile offsets and byte counts
+// are captured on the fly. Supports sparce tiles. 
+//---
+bool ossimWriter::writeCog( std::vector<ossim_uint64>& tile_offsets,
+                             std::vector<ossim_uint64>& tile_byte_counts,
+                             std::vector<ossim_float64>& minBands,
+                             std::vector<ossim_float64>& maxBands )
+{
+   ossimStopwatch* sw1 = 0; // total
+   ossimStopwatch* sw2 = 0; // input getNextTile only
+   ossimStopwatch* sw3 = 0; // I/O write only
+
+   if ( traceTime() )
+   {
+      sw1 = new ossimStopwatch();
+      sw2 = new ossimStopwatch();
+      sw3 = new ossimStopwatch();      
+      sw1->start();
+   }
+
+   static const char MODULE[] = "ossimWriter::writeCog(...)";
+   if ( traceDebug() ) CLOG << " Entered...\n";
+   
    // Start the sequence at the first tile.
    theInputConnection->setToStartOfSequence();
 
@@ -1699,199 +2279,11 @@ bool ossimWriter::writeTtbs( std::vector<ossim_uint64>& tile_offsets,
    return m_str->good();
 }
 
-//---
-// This method is for streaming, i.e. contiguous write. No sparse tiles.
-//---
-bool ossimWriter::writeTtbs()
-{
-   ossimStopwatch* sw1 = 0; // total
-   ossimStopwatch* sw2 = 0; // input getNextTile only
-   ossimStopwatch* sw3 = 0; // I/O write only
-   
-   if ( traceTime() )
-   {
-      sw1 = new ossimStopwatch();
-      sw2 = new ossimStopwatch();
-      sw3 = new ossimStopwatch();      
-      sw1->start();
-   }
 
-   static const char* const MODULE = "ossimWriter::writeTtbs(void)";
-   if ( traceDebug() ) CLOG << " Entered...\n";
 
-   if ( !theInputConnection.valid() )
-   {
-      ossimNotify(ossimNotifyLevel_WARN)
-         << MODULE << " ERROR: Null input connection!" << std::endl;
-      return false;
-   }
 
-   // Start the sequence at the first tile.
-   theInputConnection->setToStartOfSequence();
 
-   // Control flags:
-   bool alignTiles    = getAlignTilesFlag();
-   bool flushTiles    = getFlushTilesFlag();
-   bool writeBlanks   = getWriteBlanksFlag();
-   bool computeMinMax = needsMinMax();
-   bool computeAlpha  = addAlpha();
 
-   // Block size for write:
-   const std::streamsize BLOCK_SIZE = getBlockSize();
-   
-   const ossim_int32 BANDS       = (ossim_int32)theInputConnection->getNumberOfOutputBands();
-   const ossim_int32 TILES_WIDE  = (ossim_int32)theInputConnection->getNumberOfTilesHorizontal();
-   const ossim_int32 TILES_TOTAL = (ossim_int32)theInputConnection->getNumberOfTiles();
-
-   if (traceDebug())
-   {
-      ossimNotify(ossimNotifyLevel_DEBUG)
-         << "align tiles flag:     " << alignTiles
-         << "\nflush tiles flag:     " << flushTiles
-         << "\nwrite blanks flag:    " << writeBlanks
-         << "\nadd alpha flag:       " << computeAlpha
-         << "\ncompute min max flag: " << computeMinMax
-         << "\nwrite block size:     " << BLOCK_SIZE
-         << "\nBANDS:                " << BANDS
-         << "\nTILES_WIDE:           " << TILES_WIDE
-         << "\nTILES_TOTAL:          " << TILES_TOTAL
-         << "\n";
-   }
-
-   ossimDataObjectStatus tileStatus   = OSSIM_STATUS_UNKNOWN;
-   ossim_int64 ossimTileIndex         = 0;
-   // ossim_int64 tiffTileIndex          = 0;
-   // ossim_int64 tileSizeInBytesPerBand = 0;
-   ossim_int64 tileSizeInBytes        = 0;
-   ossim_int64 alphaTileSizeInBytes   = 0;
-
-   while ( ossimTileIndex < TILES_TOTAL )
-   {
-      if ( traceTime() ) sw2->start();
-
-      ossimRefPtr<ossimImageData> id = theInputConnection->getNextTile();
-
-      if ( traceTime() ) sw2->stop();
-
-      if(!id)
-      {
-         ossimNotify(ossimNotifyLevel_WARN)
-            << MODULE << " ERROR: writing tiff tile:  " << ossimTileIndex
-            << "\nNULL Tile from input encountered"
-            << std::endl;
-         return false;
-      }
-
-      if ( ossimTileIndex == 0 )
-      {
-         // Uncompressed constant tile size.
-         tileSizeInBytes = (ossim_int64)id->getSizeInBytes();
-         if ( computeAlpha )
-         {
-            // Alpha tile is always 8 bit.
-            alphaTileSizeInBytes = (ossim_int64)id->getSizePerBand();
-         }
-      }
-
-      if ((writeBlanks == true) || (tileStatus == OSSIM_FULL) || (tileStatus == OSSIM_PARTIAL))
-      {
-         if ( computeAlpha && (id->hasAlpha() == false) )
-         {
-            id->computeAlphaChannel();
-         }
-
-         // Grab a pointer to the tile for all bands.
-         const char* data = (const char*)id->getBuf();
-         if ( data )
-         {
-            if ( traceTime() ) sw3->start();
-            
-            if ( m_str->good() )
-            {
-               // Write the tile to stream. All bands will be written contiguously.
-               m_str->write( data, (std::streamsize)tileSizeInBytes);
-
-               if ( computeAlpha )
-               {
-                  const char* alpha = (const char*)id->getAlphaBuf();
-                  if ( alpha )
-                  {
-                     m_str->write( alpha, (std::streamsize)alphaTileSizeInBytes );
-                  }
-               }
-
-               if ( flushTiles )
-               {
-                  m_str->flush();
-               }
-               
-               // Check stream:
-               if ( m_str->fail() == true )
-               {
-                  ossimNotify(ossimNotifyLevel_DEBUG)
-                     << MODULE << " ERROR:\nWrite error on tiff tile:  " << ossimTileIndex
-                     << std::endl;
-                  return false;
-               }
-            }
-            else
-            {
-               ossimNotify(ossimNotifyLevel_DEBUG)
-                  << MODULE << " ERROR:\nStream has gone bad!" << std::endl;
-               return false;
-            }
-
-            if ( traceTime() ) sw3->stop();
-
-         }
-         else
-         {
-            ossimNotify(ossimNotifyLevel_WARN)
-               << MODULE << " ERROR:\nNull input tile:  " << ossimTileIndex
-               << std::endl;
-            return false;
-         }
-      }
-      
-      ++ossimTileIndex;
-
-      if( needsAborting() )
-      {
-         setPercentComplete(100);
-         break; // Get out...
-      }
-      else if ( ossimTileIndex % TILES_WIDE )
-      {
-         // Output percent complete every row of tiles.
-         double tileNum = ossimTileIndex;
-         double numTiles = TILES_TOTAL;
-         setPercentComplete(tileNum / numTiles * 100.0);
-      }
-      
-   } // End: while ( ossimTileIndex < TILES_TOTAL )
-
-   if ( traceTime() )
-   {
-      sw1->stop();
-      ossimNotify(ossimNotifyLevel_NOTICE)
-         << std::setiosflags(std::ios::fixed) << std::setprecision(3)
-         << MODULE << " timing results:"
-         << "\ninput time in seconds: " << sw2->count()
-         << "\nwrite time in seconds: " << sw3->count()
-         << "\ntotal time in seconds: " << sw1->count() << std::endl;
-
-      delete sw3;
-      delete sw2;
-      delete sw1;
-      sw1 = 0;
-      sw2 = 0;
-      sw3 = 0;
-   }
-   
-   if ( traceDebug() ) CLOG << " Exited...\n";
-   
-   return m_str->good();
-}
 
 bool ossimWriter::setOutputStream(std::ostream& stream)
 {
@@ -1943,7 +2335,7 @@ bool ossimWriter::loadState(const ossimKeywordlist& kwl, const char* prefix)
    bool result = false;
    if ( ossimImageFileWriter::loadState(kwl, prefix) )
    {
-      if ( theOutputImageType.contains("ttbs") || theOutputImageType.contains("ztif") )
+      if ( hasImageType( theOutputImageType ) )
       {
          result = true;
          
@@ -2152,7 +2544,9 @@ ossim_uint16 ossimWriter::getTiffSampleFormat() const
 
 bool ossimWriter::isTiled() const
 {
-   return ( theOutputImageType.contains("ttbs" ) || theOutputImageType.contains("ztif") );
+   // return ( theOutputImageType.contains("ttbs" ) || theOutputImageType.contains("ztif") );
+   return ( theOutputImageType.contains(TTBS.c_str()) ||
+            theOutputImageType.string() == OSSIM_COG );   
 }
 
 bool ossimWriter::getAlignTilesFlag() const
@@ -2186,6 +2580,29 @@ ossim_int64 ossimWriter::getBlockSize() const
       }
    }
    return result;
+}
+
+ossim::CompressType ossimWriter::getCompressionType() const
+{
+   static const char MODULE[] = "ossimWriter::getCompressionType()";
+
+   ossim::CompressType type = ossim::COMPRESSION_NONE;
+   std::string value = m_kwl->findKey( ossimKeywordNames::COMPRESSION_TYPE_KW );
+   if ( value.size() )
+   {
+      std::string s = ossimString(value).downcase();
+      if ( s == "lzw" )
+      {
+         type = ossim::COMPRESSION_LZW;
+      }
+      else if ( s != "none" )
+      {
+         ossimNotify(ossimNotifyLevel_WARN)
+            << MODULE << " WARNING:\n"
+            << "Unhandled compression type: " << s << std::endl;
+      }
+   }
+   return type;
 }
 
 bool ossimWriter::getFlushTilesFlag() const
@@ -2240,7 +2657,8 @@ bool ossimWriter::canContiguousWrite() const
 {
    bool result = true;
    if ( ( getAlignTilesFlag() == true ) ||
-        ( getWriteBlanksFlag() == false ) )
+        ( getWriteBlanksFlag() == false ) ||
+        ( getCompressionType() != ossim::COMPRESSION_NONE ) )
    {
       result = false;
    }

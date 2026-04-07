@@ -127,8 +127,9 @@ public:
     * @param rhs The data to assign from.
     * @param A reference to this object.
     */
-   virtual const ossimImageData& operator=(const ossimImageData &rhs);
-
+   // overloaded-virtual warning fix.
+   // virtual const ossimImageData& operator=(const ossimImageData &rhs);
+   const ossimImageData& operator=(const ossimImageData &rhs);
 
    /**
     * @return The width of the data object.
@@ -402,6 +403,9 @@ public:
     * was not computed.
     */
    virtual ossim_uint8* getAlphaBuf();
+
+   /** @return const reference to m_dataBuffer. */
+   const std::vector<ossim_uint8>& getAlphaBuffer() const;
 
    /**
     * @return const void* to theDataBuffer
@@ -1237,8 +1241,9 @@ protected:
     */
    virtual void initializeNullDefault();
 
-   virtual bool isEqualTo(const ossimDataObject& rhs,
-                          bool deepTest=false)const;
+   // overloaded-virtual warning fix.
+   // virtual bool isEqualTo(const ossimDataObject& rhs,
+   bool isEqualTo(const ossimDataObject& rhs, bool deepTest=false)const;
    
    bool hasSameDimensionsAs(ossimImageData* data)const
    {

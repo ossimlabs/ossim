@@ -13,6 +13,7 @@
 
 #include <ossim/base/ossimConstants.h>
 #include <ossim/base/ossimIpt.h>
+#include <ossim/base/ossimTiffConstants.h>
 #include <ossim/imaging/ossimImageFileWriter.h>
 #include <iosfwd>
 #include <vector>
@@ -164,10 +165,17 @@ protected:
 private:
    
    /**
-    * @brief Writes a tiled tiff band separate to stream.
+    * @brief Writes a ttbs(tiled tiff band separate) to stream.
+    * This is for uncompressed tiled tiff with band interleave by tiles.
     * @return true on success, false on error.
     */
    bool writeStreamTtbs();
+
+   /**
+    * @brief Writes COG(Cloud Optimized Geotiff) to stream.
+    * @return true on success, false on error.
+    */
+   bool writeStreamCog();
 
    /**
     * @brief Writes tiff header to stream.
@@ -297,7 +305,24 @@ private:
                                          const T* value,
                                          std::streamoff& arrayWritePos );
 
-   
+   /**
+    * @brief Writes image data to stream. (TTBS = Tiled Tiff Band Separate)
+    *
+    * Data is in a band separate tile layout(PLANARCONFIG_SEPARATE), i.e. red
+    * tile, green tile, blue tile, ..., red tile, green tile, blue tile.
+    * 
+    * @param tile_offsets Initialized by this with offset for each tile.
+    * @param tile_byte_counts Initialized by this with the byte count of each
+    * tile.
+    * @param minBands Initialized by this with the min values for each band.
+    * @param maxBands Initialized by this with the max values for each band.
+    * @return true on success, false on error.
+    */
+   bool writeCog( std::vector<ossim_uint64>& tile_offsets,
+                  std::vector<ossim_uint64>& tile_byte_counts,
+                  std::vector<ossim_float64>& minBands,
+                  std::vector<ossim_float64>& maxBands );
+
    /**
     * @brief Writes image data to stream. (TTBS = Tiled Tiff Band Separate)
     *
@@ -354,6 +379,12 @@ private:
     */
    ossim_int64 getBlockSize() const;
 
+   /**
+    * @brief Gets the compression type.
+    * @return Enumerated value of options key "compression_type".
+    */
+   ossim::CompressType getCompressionType() const;
+   
    /**
     * @brief Value of options key: "sequencer_box_size".
     * @param size Initialized by this. No range check. The sequencer range

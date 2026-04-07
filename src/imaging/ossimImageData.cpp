@@ -178,6 +178,11 @@ ossim_uint8* ossimImageData::getAlphaBuf()
    return 0;
 }
 
+const std::vector<ossim_uint8>& ossimImageData::getAlphaBuffer() const
+{
+   return m_alpha;
+}
+
 const void* ossimImageData::getBuf() const
 {
    if (m_dataBuffer.size() > 0)

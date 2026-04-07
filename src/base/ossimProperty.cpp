@@ -207,7 +207,7 @@ bool ossimProperty::saveState(ossimKeywordlist& kwl, const char* prefix)const
       for(propertiesIndex = 0; propertiesIndex < nproperties; ++propertiesIndex)
       {
          // ossimString newPrefix = prefix + container->getName() + ".";
-         ossimString newPrefix = (prefix?prefix:"") + container->getName() + ".";         
+         ossimString newPrefix = (prefix?prefix:"") + container->getName() + ".";
          ossimRefPtr<ossimProperty> prop = container->theChildPropertyList[propertiesIndex];
          if(prop.valid())
          {

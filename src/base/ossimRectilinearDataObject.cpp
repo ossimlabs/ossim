@@ -184,6 +184,11 @@ const void* ossimRectilinearDataObject::getBuf()const
    return NULL;
 }
 
+const std::vector<ossim_uint8>& ossimRectilinearDataObject::getDataBuffer() const
+{
+   return m_dataBuffer;
+}
+
 void ossimRectilinearDataObject::assign(const ossimRectilinearDataObject* data)
 {
    if(data)

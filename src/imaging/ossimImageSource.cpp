@@ -273,10 +273,12 @@ ossimRefPtr<ossimImageGeometry> ossimImageSource::getImageGeometry()
    return result;
 }
 
-//**************************************************************************************************
+//---
 //! Default implementation sets geometry of the first input to the geometry specified.
-//**************************************************************************************************
-void ossimImageSource::setImageGeometry(const ossimImageGeometry* geom)
+//---
+//  overloaded-virtual warning fix.
+// void ossimImageSource::setImageGeometry(const ossimImageGeometry* geom)
+void ossimImageSource::setImageGeometry(ossimImageGeometry* geom)   
 {
    ossimImageSource* inter = PTR_CAST(ossimImageSource, getInput(0));
    if (inter)
