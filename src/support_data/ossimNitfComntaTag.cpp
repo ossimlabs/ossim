@@ -14,6 +14,8 @@
 //
 //----------------------------------------------------------------------------
 
+#include <iomanip>
+
 #include <ossim/support_data/ossimNitfComntaTag.h>
 #include <ossim/base/ossimNotify.h>
 #include <ossim/base/ossimTrace.h>
@@ -33,9 +35,15 @@ ossimNitfComntaTag::ossimNitfComntaTag()
  */
 void ossimNitfComntaTag::parseStream(std::istream& in)
 {
-   std::string buffer(getTagLength(), '\0');
-   in.read(&buffer[0], getTagLength());
-   comment = buffer;
+   const ossim_uint32 bytes = getTagLength();
+   comment.clear();
+
+   if ( bytes )
+   {
+      comment.resize(bytes);
+      in.read(&comment.front(), bytes);
+   }
+
    setTagLength(computeTagLength());
 }
 
