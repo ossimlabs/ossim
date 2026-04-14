@@ -35,6 +35,7 @@
 static const std::string ADD_ALPHA_CHANNEL_KW   = "add_alpha_channel";   // bool
 static const std::string ALIGN_TILES_KW         = "align_tiles";         // bool
 static const std::string BLOCK_SIZE_KW          = "block_size";          // unsigned int
+static const std::string COMPRESSION_TYPE_KW    = "compression_type";
 static const std::string FALSE_KW               = "false";
 static const std::string FLUSH_TILES_KW         = "flush_tiles";         // bool
 static const std::string INCLUDE_BLANK_TILES_KW = "include_blank_tiles"; // bool
@@ -62,6 +63,7 @@ ossimWriter::ossimWriter()
    
    m_kwl->addPair( ALIGN_TILES_KW, FALSE_KW );
    m_kwl->addPair( BLOCK_SIZE_KW, "4096" );
+   m_kwl->addPair( COMPRESSION_TYPE_KW, "none" );
    m_kwl->addPair( FLUSH_TILES_KW, TRUE_KW );
    m_kwl->addPair( INCLUDE_BLANK_TILES_KW, TRUE_KW );
    m_kwl->addPair( TILE_SIZE_KW, m_outputTileSize.toString().string() );
@@ -1523,7 +1525,7 @@ void ossimWriter::writeTiffTag(
 
 //---
 // This write method if for non-streaming where tile offsets and byte counts
-// are captured on the fly. Supports sparce tiles.
+// are captured on the fly. Supports compression and sparce tiles.
 //---
 bool ossimWriter::writeTtbs( std::vector<ossim_uint64>& tile_offsets,
                              std::vector<ossim_uint64>& tile_byte_counts,
@@ -2405,6 +2407,7 @@ void ossimWriter::setProperty(ossimRefPtr<ossimProperty> property)
       if ( ( key == ADD_ALPHA_CHANNEL_KW ) ||
            ( key == ALIGN_TILES_KW ) ||
            ( key == BLOCK_SIZE_KW )  ||
+           ( key == COMPRESSION_TYPE_KW )||
            ( key == FLUSH_TILES_KW ) ||
            ( key == INCLUDE_BLANK_TILES_KW ) )
       {
@@ -2456,6 +2459,16 @@ ossimRefPtr<ossimProperty> ossimWriter::getProperty(const ossimString& name)cons
          new ossimStringProperty(name, ossimString::toString(blockSize), false); // editable flag
       prop = stringProp.get();
    }
+   else if ( name.string() == COMPRESSION_TYPE_KW )
+   {
+      ossimString value;
+      value.string() = m_kwl->findKey( COMPRESSION_TYPE_KW );
+      ossimRefPtr<ossimStringProperty> stringProp =
+         new ossimStringProperty(name, ossimString(value), false); // editable flag
+      stringProp->addConstraint(ossimString("none"));
+      stringProp->addConstraint(ossimString("lzw"));
+      prop = stringProp.get();
+   }
    else if ( name.string() == FLUSH_TILES_KW )
    {
       std::string value = m_kwl->findKey( FLUSH_TILES_KW );
@@ -2499,6 +2512,7 @@ void ossimWriter::getPropertyNames(std::vector<ossimString>& propertyNames) cons
    propertyNames.push_back(ossimString(ADD_ALPHA_CHANNEL_KW));
    propertyNames.push_back(ossimString(ALIGN_TILES_KW));
    propertyNames.push_back(ossimString(BLOCK_SIZE_KW));
+   propertyNames.push_back(ossimString(COMPRESSION_TYPE_KW));   
    propertyNames.push_back(ossimString(FLUSH_TILES_KW));   
    propertyNames.push_back(ossimString(INCLUDE_BLANK_TILES_KW));
    propertyNames.push_back(ossimString(TILE_SIZE_KW));
@@ -2587,7 +2601,7 @@ ossim::CompressType ossimWriter::getCompressionType() const
    static const char MODULE[] = "ossimWriter::getCompressionType()";
 
    ossim::CompressType type = ossim::COMPRESSION_NONE;
-   std::string value = m_kwl->findKey( ossimKeywordNames::COMPRESSION_TYPE_KW );
+   std::string value = m_kwl->findKey( COMPRESSION_TYPE_KW );
    if ( value.size() )
    {
       std::string s = ossimString(value).downcase();
