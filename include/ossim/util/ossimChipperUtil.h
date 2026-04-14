@@ -169,6 +169,9 @@ protected:
     * @return A reference to m_imgLayer.
     */
    std::vector< ossimRefPtr<ossimSingleImageChain> >& getSingleImageChainLayers();
+
+   /** Hold all options passed into intialize. */
+   ossimRefPtr<ossimKeywordlist> m_kwl;
    
 private:
 
@@ -854,9 +857,6 @@ private:
 
    /** Enumerated operation to perform. */
    ossimChipperOperation m_operation;
-   
-   /** Hold all options passed into intialize. */
-   ossimRefPtr<ossimKeywordlist> m_kwl;
 
    /** Hold contents of src file if --src is used. */
    ossimRefPtr<ossimKeywordlist> m_srcKwl;

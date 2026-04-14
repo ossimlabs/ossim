@@ -56,7 +56,7 @@ void ossimNitfMatesaTag::initializeFieldDefinitions()
          {ossim::nitf::NUM_MATES_KW, LOOP_START},
             {ossim::nitf::SOURCE_KW, 42, ASCII},
             {ossim::nitf::MATE_TYPE_KW, 16, ASCII, 0, "SIBLING"},
-            {ossim::nitf::MATE_ID_LEN_KW, 4, U_INT},
+            {ossim::nitf::MATE_ID_LEN_KW, 4, U_INT, 0, "1"},
             {ossim::nitf::MATE_ID_KW + " " + ossim::nitf::MATE_ID_LEN_KW, VARIABLE_LENGTH, ASCII},
          {ossim::nitf::NUM_MATES_KW, LOOP_END},
       {ossim::nitf::NUM_GROUPS_KW, LOOP_END}

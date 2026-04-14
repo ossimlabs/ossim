@@ -97,7 +97,8 @@ std::ostream& ossimNitfComntaTag::print(std::ostream& out,
        << getTagName() << "\n"
        << pfx << std::setw(24) << "CEL:"
        << getTagLength() << "\n"
-       << pfx << std::setw(24) << "Comment:" << comment;
+       << pfx << std::setw(24) << "Comment:"
+       << comment << "\n";
 
    return out;
 }
