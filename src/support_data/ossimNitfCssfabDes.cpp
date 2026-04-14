@@ -74,7 +74,7 @@ void ossimNitfCssfabDes::initializeFieldDefinitions()
       {ossim::nitf::NUM_FL_PTS_KW, LOOP_END},
       {ossim::nitf::PPOFF_X_KW, 10, DOUBLE, 6},
       {ossim::nitf::PPOFF_Y_KW, 10, DOUBLE, 6},
-      {ossim::nitf::PPOFF_Z_KW, 10, DOUBLE, 7},
+      {ossim::nitf::PPOFF_Z_KW, 10, DOUBLE, 6},
       {ossim::nitf::ANGOFF_X_KW, 10, DOUBLE, 7, "0"},
       {ossim::nitf::ANGOFF_Y_KW, 10, DOUBLE, 7, "0"},
       {ossim::nitf::ANGOFF_Z_KW, 10, DOUBLE, 7, "-1.5707963"},

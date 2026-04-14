@@ -35,7 +35,15 @@ ossimNitfComntaTag::ossimNitfComntaTag()
  */
 void ossimNitfComntaTag::parseStream(std::istream& in)
 {
-   in.read(&comment.front(), getTagLength());
+   const ossim_uint32 bytes = getTagLength();
+   comment.clear();
+
+   if ( bytes )
+   {
+      comment.resize(bytes);
+      in.read(&comment.front(), bytes);
+   }
+
    setTagLength(computeTagLength());
 }
 
@@ -89,7 +97,8 @@ std::ostream& ossimNitfComntaTag::print(std::ostream& out,
        << getTagName() << "\n"
        << pfx << std::setw(24) << "CEL:"
        << getTagLength() << "\n"
-       << pfx << std::setw(24) << "Comment:" << comment;
+       << pfx << std::setw(24) << "Comment:"
+       << comment << "\n";
 
    return out;
 }
