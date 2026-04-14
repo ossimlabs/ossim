@@ -157,8 +157,8 @@ static const std::string TWOCMV_BLUE_OUTPUT_SOURCE_KW = "2cmv_blue_output_source
 
 ossimChipperUtil::ossimChipperUtil()
     : ossimReferenced(),
-      m_operation(OSSIM_CHIPPER_OP_UNKNOWN),
       m_kwl(new ossimKeywordlist()),
+      m_operation(OSSIM_CHIPPER_OP_UNKNOWN),
       m_srcKwl(0),
       m_geom(0),
       m_ivt(0),
@@ -6264,8 +6264,8 @@ void ossimChipperUtil::createNitfRpcTag()
             // ICHIPB for sub image:
             if ( m_ivt.valid() && m_ivt->isIdentity() && inputRect != outputAoi )
             {
-               ossimDpt ulViewPt = outputAoi.ul();
-               ossimDpt lrViewPt = outputAoi.lr();
+               // ossimDpt ulViewPt = outputAoi.ul();
+               // ossimDpt lrViewPt = outputAoi.lr();
                ossimDpt ulImagePt = outputAoi.ul();
                ossimDpt lrImagePt = outputAoi.lr();
  
