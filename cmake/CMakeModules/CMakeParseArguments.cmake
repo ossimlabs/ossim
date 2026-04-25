@@ -97,6 +97,12 @@
 #  License text for the above reference.)
 
 
+# CMake 3.5+ provides this command natively, including newer signatures such
+# as PARSE_ARGV used by bundled CMake modules. Do not shadow the built-in.
+if(COMMAND cmake_parse_arguments)
+  return()
+endif()
+
 if(__CMAKE_PARSE_ARGUMENTS_INCLUDED)
   return()
 endif()

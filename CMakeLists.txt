@@ -283,18 +283,38 @@ endif()
 # Call the configure files for ossimConfig and ossimVersion setup
 #####################################################################################
 include(CheckTypeSize)
-check_type_size("short int" SIZE_OF_SHORT_INT)
+
+# CMake 4.3's CheckTypeSize module expands the type argument unquoted when
+# calling its internal helper. Use single-token aliases for type names
+# containing spaces.
+set(OSSIM_CHECK_TYPE_SIZE_ALIASES_HEADER "${CMAKE_CURRENT_BINARY_DIR}/ossimCheckTypeSizeAliases.h")
+file(WRITE "${OSSIM_CHECK_TYPE_SIZE_ALIASES_HEADER}"
+"typedef short int ossim_check_type_short_int;\n"
+"typedef long long ossim_check_type_long_long;\n"
+"typedef long double ossim_check_type_long_double;\n"
+"typedef unsigned short int ossim_check_type_unsigned_short_int;\n"
+"typedef unsigned int ossim_check_type_unsigned_int;\n"
+"typedef unsigned long ossim_check_type_unsigned_long;\n"
+"typedef unsigned long long ossim_check_type_unsigned_long_long;\n")
+set(OSSIM_CHECK_TYPE_SIZE_EXTRA_INCLUDE_FILES "${CMAKE_EXTRA_INCLUDE_FILES}")
+list(APPEND CMAKE_EXTRA_INCLUDE_FILES "${OSSIM_CHECK_TYPE_SIZE_ALIASES_HEADER}")
+
+check_type_size(ossim_check_type_short_int SIZE_OF_SHORT_INT)
 check_type_size("int" SIZE_OF_INT)
 check_type_size("long" SIZE_OF_LONG)
-check_type_size("long long" SIZE_OF_LONG_LONG)
+check_type_size(ossim_check_type_long_long SIZE_OF_LONG_LONG)
 check_type_size("float" SIZE_OF_FLOAT)
 check_type_size("double" SIZE_OF_DOUBLE)
-check_type_size("long double" SIZE_OF_LONG_DOUBLE)
+check_type_size(ossim_check_type_long_double SIZE_OF_LONG_DOUBLE)
 
-check_type_size("unsigned short int" SIZE_OF_UNSIGNED_SHORT_INT)
-check_type_size("unsigned int" SIZE_OF_UNSIGNED_INT)
-check_type_size("unsigned long" SIZE_OF_UNSIGNED_LONG)
-check_type_size("unsigned long long" SIZE_OF_UNSIGNED_LONG_LONG)
+check_type_size(ossim_check_type_unsigned_short_int SIZE_OF_UNSIGNED_SHORT_INT)
+check_type_size(ossim_check_type_unsigned_int SIZE_OF_UNSIGNED_INT)
+check_type_size(ossim_check_type_unsigned_long SIZE_OF_UNSIGNED_LONG)
+check_type_size(ossim_check_type_unsigned_long_long SIZE_OF_UNSIGNED_LONG_LONG)
+
+set(CMAKE_EXTRA_INCLUDE_FILES "${OSSIM_CHECK_TYPE_SIZE_EXTRA_INCLUDE_FILES}")
+unset(OSSIM_CHECK_TYPE_SIZE_ALIASES_HEADER)
+unset(OSSIM_CHECK_TYPE_SIZE_EXTRA_INCLUDE_FILES)
 
 set(OSSIM_VERSION_NUMBER "\"${OSSIM_VERSION}\"")
 set(OSSIM_BUILD_DATE "\"${OSSIM_BUILD_DATE}\"")
