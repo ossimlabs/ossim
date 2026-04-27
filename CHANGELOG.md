@@ -11,9 +11,9 @@ All notable changes to `ossim` are documented here.
 ### Changed
 - Stop adding a separate `ossim-registration-source` repository from the OSSIM
   workspace build; `BUILD_OSSIM_REGISTRATION_SOURCE` now adds only
-  `ossim-autoreg`, which owns the registration bridge target.
+  `ossim-autoreg`, which owns the registration bridge target (69ec165c).
 - Remove `OSSIM_REGISTRATION_SOURCE_ROOT` handling from the workspace configure
-  script and CMake summary.
+  script and CMake summary (69ec165c).
 
 ## [2026-04-27]
 
