@@ -2,6 +2,19 @@
 
 All notable changes to `ossim` are documented here.
 
+## [Unreleased]
+
+> **TL;DR:** The combined workspace now gets the registration-source bridge
+> from `ossim-autoreg`, reducing the optional registration build to one sibling
+> dependency.
+
+### Changed
+- Stop adding a separate `ossim-registration-source` repository from the OSSIM
+  workspace build; `BUILD_OSSIM_REGISTRATION_SOURCE` now adds only
+  `ossim-autoreg`, which owns the registration bridge target.
+- Remove `OSSIM_REGISTRATION_SOURCE_ROOT` handling from the workspace configure
+  script and CMake summary.
+
 ## [2026-04-27]
 
 > **TL;DR:** OSSIM can now optionally include the standalone registration-source
