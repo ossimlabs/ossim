@@ -8,12 +8,19 @@ All notable changes to `ossim` are documented here.
 > from `ossim-autoreg`, reducing the optional registration build to one sibling
 > dependency. RPC generation also gets a steadier solver, layered-height
 > fitting controls, and a way to compare fitted coefficients against existing
-> RPC inputs without quietly copying them.
+> RPC inputs without quietly copying them. The RPC generator can now fit a
+> height slab around the scene automatically, reducing the need for downstream
+> users to reproduce the exact same elevation database.
 
 ### Added
 - Add `ossim-rpcgen` controls for force-fitting existing RPC inputs, sampling
   layered height planes, and limiting fit refinement by iteration count or
   minimum max-residual improvement (561862d0).
+- Add radius-only auto layered RPC fitting that estimates nominal scene height,
+  derives a height-layer delta from sampled elevation variation, and caps it by
+  image height sensitivity (f86f398d).
+- Add experimental `weighted-svd`, `lm`, and `lm-huber` coefficient optimizer
+  selection for comparing linearized and nonlinear RPC fits (f86f398d).
 
 ### Changed
 - Stop adding a separate `ossim-registration-source` repository from the OSSIM
@@ -24,6 +31,9 @@ All notable changes to `ossim` are documented here.
 - Improve `ossimRpcSolver` coefficient fitting with weighted SVD,
   denominator damping, stricter max-pixel residual convergence, layered height
   observations, input guards, and Doxygen usage notes (561862d0).
+- Document elevation-aware layered RPC fitting as the normal generation path
+  when elevation is available, with `--disable-elev` reserved for diagnostics
+  and flat comparisons (f86f398d).
 
 ## [2026-05-01]
 
