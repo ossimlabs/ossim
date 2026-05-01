@@ -272,6 +272,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
    #################################### ADd some common options for all modules to use ###################################
    OPTION(BUILD_OSSIM_VIDEO "Set to ON to build the video decoding library.  Use OFF to skip this module." OFF)
    OPTION(BUILD_OSSIM_PLANET "Set to ON to build the 3-D visualization module.  Use OFF to skip this module." OFF)
+   OPTION(BUILD_OSSIM_PLANET_GUI "Set to ON to build the legacy ossimPlanet Qt GUI application." OFF)
    OPTION(BUILD_OSSIM_GUI "Set to ON to build the new ossimGui library and geocell application." ON)
    OPTION(BUILD_OSSIM_REGISTRATION_SOURCE "Set to ON to build and link the optional registration source bridge from ossim-autoreg." OFF)
    OPTION(BUILD_OMS "Set to ON to build the oms api library." ON)
