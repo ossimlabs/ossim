@@ -6,7 +6,14 @@ All notable changes to `ossim` are documented here.
 
 > **TL;DR:** The combined workspace now gets the registration-source bridge
 > from `ossim-autoreg`, reducing the optional registration build to one sibling
-> dependency.
+> dependency. RPC generation also gets a steadier solver, layered-height
+> fitting controls, and a way to compare fitted coefficients against existing
+> RPC inputs without quietly copying them.
+
+### Added
+- Add `ossim-rpcgen` controls for force-fitting existing RPC inputs, sampling
+  layered height planes, and limiting fit refinement by iteration count or
+  minimum max-residual improvement (561862d0).
 
 ### Changed
 - Stop adding a separate `ossim-registration-source` repository from the OSSIM
@@ -14,6 +21,9 @@ All notable changes to `ossim` are documented here.
   `ossim-autoreg`, which owns the registration bridge target (69ec165c).
 - Remove `OSSIM_REGISTRATION_SOURCE_ROOT` handling from the workspace configure
   script and CMake summary (69ec165c).
+- Improve `ossimRpcSolver` coefficient fitting with weighted SVD,
+  denominator damping, stricter max-pixel residual convergence, layered height
+  observations, input guards, and Doxygen usage notes (561862d0).
 
 ## [2026-05-01]
 
