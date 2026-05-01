@@ -10,7 +10,9 @@ All notable changes to `ossim` are documented here.
 > fitting controls, and a way to compare fitted coefficients against existing
 > RPC inputs without quietly copying them. The RPC generator can now fit a
 > height slab around the scene automatically, reducing the need for downstream
-> users to reproduce the exact same elevation database.
+> users to reproduce the exact same elevation database, and the solver now
+> treats invalid samples and unstable intermediate fits as recoverable input
+> problems instead of inviting NaNs to the party.
 
 ### Added
 - Add `ossim-rpcgen` controls for force-fitting existing RPC inputs, sampling
@@ -34,6 +36,11 @@ All notable changes to `ossim` are documented here.
 - Document elevation-aware layered RPC fitting as the normal generation path
   when elevation is available, with `--disable-elev` reserved for diagnostics
   and flat comparisons (f86f398d).
+
+### Fixed
+- Harden `ossimRpcSolver` against degenerate bounds, non-finite elevation
+  samples, invalid rational-fit residuals, and radius-only layer requests that
+  cannot produce a valid positive height delta (d7962caa).
 
 ## [2026-05-01]
 
