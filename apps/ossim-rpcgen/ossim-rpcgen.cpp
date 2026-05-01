@@ -16,20 +16,32 @@
  *   Run against an image with another OSSIM sensor model. The solver samples that geometry and
  *   writes an RPC approximation in the requested output format.
  * - Disable elevation:
- *   Use --disable-elev for a single height-0 fit. This is useful for flat comparisons and for
- *   isolating image-plane behavior from DEM effects.
+ *   Use --disable-elev only for diagnostics or flat comparisons. Normal RPC generation should use
+ *   elevation when it is available so the fit is centered on the scene's nominal height.
  * - Use layered heights:
  *   Use --height-layer-delta and --height-layer-radius to sample fixed-height planes around each
- *   base height. Radius 1 creates 3 total planes, radius 2 creates 5 total planes, etc.
+ *   nominal center height. With elevation enabled, the nominal height is estimated from the fit
+ *   area and the layer delta can be estimated automatically when only radius is provided. With
+ *   --disable-elev, the nominal height is 0 and an explicit delta is required for layered fitting.
+ *   The automatic delta is capped by image height sensitivity, so small-GSD or oblique images do
+ *   not receive an overly large height slab. Radius 1 creates 3 total planes, radius 2 creates 5
+ *   total planes, etc. This reduces the need for downstream consumers to use the exact same
+ *   elevation database because the RPC is fit over a height slab around the scene, not just at the
+ *   terrain samples used while generating it.
  * - Control fit refinement:
  *   Use --tolerance for maximum pixel residual, --max-fit-iterations to cap refinement, and
  *   --min-fit-improvement to stop when max-residual improvement stalls.
+ * - Compare coefficient optimizers:
+ *   Use --fit-optimizer weighted-svd, --fit-optimizer lm, or --fit-optimizer lm-huber to compare
+ *   the current linearized solve against nonlinear rational residual refinement.
  *
  * @par Examples
  * @code
  * ossim-rpcgen input.ntf output.geom
  * ossim-rpcgen --force-fit-rpc --disable-elev --tolerance 0.5 input.ntf fit.geom
+ * ossim-rpcgen --height-layer-radius 2 input.tif auto-layered.geom
  * ossim-rpcgen --height-layer-delta 0.1 --height-layer-radius 2 input.tif layered.geom
+ * ossim-rpcgen --fit-optimizer lm-huber --force-fit-rpc input.ntf robust-fit.geom
  * ossim-rpcgen --bbox 0 0 4095 4095 --geom DG input.tif chip.RPB
  * ossim-rpcgen --tolerance 0.1 --max-fit-iterations 4 --min-fit-improvement 0.001 input.tif out.geom
  * @endcode
@@ -73,9 +85,10 @@ int main(int argc, char* argv[])
    ossimDrect imageRect;
    double error = 0.1;
    double heightLayerDelta = 0.0;
-   ossim_uint32 heightLayerRadius = 1;
+   ossim_uint32 heightLayerRadius = 0;
    ossim_uint32 maxFitIterations = 6;
    double residualImprovementTolerance = -1.0;
+   ossimRpcSolver::RpcFitOptimizer fitOptimizer = ossimRpcSolver::RPC_FIT_WEIGHTED_SVD;
 
    imageRect.makeNan();
    ossimApplicationUsage* au = argumentParser.getApplicationUsage();
@@ -95,19 +108,24 @@ int main(int argc, char* argv[])
          "RPC computation over the AOI only. Note that the RPC image space UL corner will "
          "correspond to (0,0), i.e., the model will be shifted from the original full-image model.");
    au->addCommandLineOption(
-         "--height-layer-delta <meters>","Samples additional fixed-height layers at nominal height "
-         "- delta and nominal height + delta when fitting the RPC. Default is 0, which disables "
-         "layered fitting.");
+         "--height-layer-delta <meters>","Samples additional fixed-height layers around a nominal "
+         "center height when fitting the RPC. With elevation enabled, the nominal height is "
+         "estimated from the fit area. If radius is positive and delta is omitted, delta is "
+         "estimated from sampled elevation variation and capped by image height sensitivity. With "
+         "--disable-elev, an explicit delta is required for layered fitting.");
    au->addCommandLineOption(
          "--height-layer-radius <count>","Number of height layers to sample on each side of the "
          "nominal center height. Radius 1 samples 3 total planes, radius 2 samples 5 total planes, "
-         "and so on. Default is 1.");
+         "and so on. Default is 0.");
    au->addCommandLineOption(
          "--max-fit-iterations <count>","Maximum number of RPC fit/validate refinement iterations. "
          "Default is 6.");
    au->addCommandLineOption(
          "--min-fit-improvement <pixels>","Minimum max-residual improvement, in pixels, required "
          "to continue refining the fit. Default is 1 percent of --tolerance, with a small floor.");
+   au->addCommandLineOption(
+         "--fit-optimizer <name>","Coefficient optimizer to use for each RPC rational expression. "
+         "Options are weighted-svd, lm, and lm-huber. Default is weighted-svd.");
    au->addCommandLineOption(
          "--tolerance <double>","Used as a maximum error tolerance in pixels between original model "
          "and RPC.");
@@ -145,6 +163,28 @@ int main(int argc, char* argv[])
       maxFitIterations = static_cast<ossim_uint32>(std::max(1, tempString1.toInt32()));
    if(argumentParser.read("--min-fit-improvement", tempParam1))
       residualImprovementTolerance = tempString1.toDouble();
+   if(argumentParser.read("--fit-optimizer", tempParam1))
+   {
+      ossimString optimizerName = tempString1.downcase();
+      if ((optimizerName == "weighted-svd") || (optimizerName == "svd"))
+      {
+         fitOptimizer = ossimRpcSolver::RPC_FIT_WEIGHTED_SVD;
+      }
+      else if (optimizerName == "lm")
+      {
+         fitOptimizer = ossimRpcSolver::RPC_FIT_LM;
+      }
+      else if ((optimizerName == "lm-huber") || (optimizerName == "huber"))
+      {
+         fitOptimizer = ossimRpcSolver::RPC_FIT_LM_HUBER;
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_FATAL)
+               << "ERROR: Unknown fit optimizer <" << optimizerName << ">." << std::endl;
+         exit(1);
+      }
+   }
 
    if(argumentParser.read("--bbox", tempParam1,tempParam2,tempParam3,tempParam4 ))
    {
@@ -255,6 +295,7 @@ int main(int argc, char* argv[])
       solver->setHeightLayerRadius(heightLayerRadius);
       solver->setMaxIterations(maxFitIterations);
       solver->setResidualImprovementTolerance(residualImprovementTolerance);
+      solver->setFitOptimizer(fitOptimizer);
       bool converged = solver->solve(imageRect, geom.get(), error);
       if (!converged)
       {

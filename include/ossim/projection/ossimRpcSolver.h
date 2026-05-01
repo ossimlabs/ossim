@@ -37,11 +37,22 @@
  * - The maximum residual improvement stalls.
  *
  * @par Common fitting modes
- * - Single-height fitting: disable elevation and all observations are fit at height 0.
- * - Elevation-aware fitting: enable elevation and use the source geometry/DEM heights.
+ * - Elevation-aware fitting: enable elevation and use the source geometry/DEM heights. This is the
+ *   normal path for RPC generation when elevation is available.
+ * - Single-height fitting: disable elevation and all observations are fit at height 0. This is
+ *   primarily useful for diagnostics and flat image-plane comparisons.
  * - Layered-height fitting: enable a height layer delta/radius to fit several constant-height
- *   planes about each sampled base height. This helps produce an RPC that remains stable over
- *   height changes instead of only matching the terrain height sampled at each image point.
+ *   planes about a nominal center height. With elevation enabled, the nominal height is estimated
+ *   from the fit area first, and the layer delta can be estimated from sampled height variation
+ *   when only a radius is supplied. The automatic delta is capped by image height sensitivity so
+ *   small-GSD or oblique images do not receive an overly large height slab. Without elevation, the
+ *   nominal height is 0 and an explicit delta is required for layered fitting. This helps produce
+ *   an RPC that remains stable over height changes instead of only matching the terrain height
+ *   sampled at each image point. It also reduces downstream dependence on using the exact same
+ *   elevation database used during fitting, since the generated RPC has already been fit across a
+ *   small height slab around the scene.
+ * - Optimizer comparison: use setFitOptimizer() to compare the default weighted SVD solve against
+ *   nonlinear LM refinement and a Huber-weighted LM refinement.
  *
  * @par Polynomial format
  * This class currently emits RPC00B polynomial ordering. For each coordinate, the numerator has
@@ -62,13 +73,20 @@
  * @par Example: fit from an existing image geometry
  * @code
  * ossimRpcSolver solver(useElevation);
- * solver.setHeightLayerDelta(0.0); // <= 0 disables layered fitting.
- * solver.setHeightLayerRadius(1);  // Radius 1 means 3 total planes when delta > 0.
+ * solver.setHeightLayerRadius(1);  // Radius 1 means 3 total planes.
+ * solver.setHeightLayerDelta(0.0); // <= 0 requests automatic delta when elevation is enabled.
  *
  * if (solver.solve(imageBounds, geom, 0.5))
  * {
  *    ossimRefPtr<ossimRpcModel> rpc = solver.getRpcModel();
  * }
+ * @endcode
+ *
+ * @par Example: auto layered fit from an existing image geometry
+ * @code
+ * ossimRpcSolver solver(true);
+ * solver.setHeightLayerRadius(1);  // Estimate nominal height and auto delta from the fit area.
+ * solver.solve(imageBounds, geom, 0.5);
  * @endcode
  *
  * @par Example: fit from explicit observations
@@ -88,6 +106,13 @@
 class OSSIM_DLL ossimRpcSolver : public ossimReferenced
 {
 public:
+   enum RpcFitOptimizer
+   {
+      RPC_FIT_WEIGHTED_SVD = 0,
+      RPC_FIT_LM           = 1,
+      RPC_FIT_LM_HUBER     = 2
+   };
+
    /**
     * @brief Constructs an RPC solver.
     *
@@ -179,18 +204,24 @@ public:
    double getMaxError()const;
 
    /**
-    * Sets the height-layer spacing, in meters, used for layered RPC fitting and validation.
-    * A value <= 0 disables layered fitting and preserves the traditional single-height
-    * sampling behavior. When enabled, observations are sampled at nominal height plus
-    * integer multiples of delta according to the configured layer radius.
+    * @brief Sets the height-layer spacing, in meters, used for layered RPC fitting and validation.
+    *
+    * @details Layered fitting is controlled primarily by setHeightLayerRadius(). When radius is
+    * positive, observations are sampled at nominal center height plus integer multiples of delta.
+    * With elevation enabled, the nominal center height is estimated from the fit area and a
+    * delta <= 0 requests automatic delta estimation from sampled height variation and image height
+    * sensitivity. With elevation disabled, provide a positive delta if layered fitting is desired.
     */
    void setHeightLayerDelta(ossim_float64 delta);
    ossim_float64 getHeightLayerDelta() const;
 
    /**
-    * Sets the number of height layers to sample on each side of the nominal center height.
-    * A radius of 0 samples only the center height. A radius of 1 samples 3 total planes
-    * (-delta, 0, +delta), radius 2 samples 5 total planes, etc.
+    * @brief Sets the number of height layers to sample on each side of the nominal center height.
+    *
+    * @details A radius of 0 disables layered fitting. A radius of 1 samples 3 total planes
+    * (-delta, 0, +delta), radius 2 samples 5 total planes, etc. If elevation is enabled and no
+    * positive delta is supplied, the solver estimates a delta from fit-area height variation and
+    * caps it by image height sensitivity.
     */
    void setHeightLayerRadius(ossim_uint32 radius);
    ossim_uint32 getHeightLayerRadius() const;
@@ -208,6 +239,17 @@ public:
     */
    void setResidualImprovementTolerance(ossim_float64 tolerance);
    ossim_float64 getResidualImprovementTolerance() const;
+
+   /**
+    * @brief Selects the coefficient optimizer used for each rational expression.
+    *
+    * @details RPC_FIT_WEIGHTED_SVD is the default linearized, iteratively reweighted SVD solve.
+    * RPC_FIT_LM starts from that solution and refines the actual nonlinear rational residual with
+    * a damped Levenberg-Marquardt style step. RPC_FIT_LM_HUBER applies the same nonlinear
+    * refinement with Huber residual weighting.
+    */
+   void setFitOptimizer(RpcFitOptimizer optimizer);
+   RpcFitOptimizer getFitOptimizer() const;
 
    /**
     * @return ossimRefPtr<ossimNitfRegisteredTag>
@@ -263,6 +305,7 @@ protected:
    ossim_uint32 theHeightLayerRadius;
    ossim_uint32 theMaxIterations;
    ossim_float64 theResidualImprovementTolerance;
+   RpcFitOptimizer theFitOptimizer;
    ossim_float64 theMeanResidual;
    ossim_float64 theMaxResidual;
    ossimRefPtr<ossimImageGeometry> theRefGeom;

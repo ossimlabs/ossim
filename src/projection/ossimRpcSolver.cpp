@@ -27,9 +27,226 @@ static const ossim_float64 MIN_RESIDUAL_IMPROVEMENT_FRACTION = 0.01;
 static const ossim_float64 MIN_RESIDUAL_IMPROVEMENT_PIXELS = 1.0e-4;
 // Lightly damps denominator terms to avoid rational poles in sparse/flat fits.
 static const ossim_float64 RPC_DENOMINATOR_REGULARIZATION_WEIGHT = 1.0e-4;
+static const ossim_float64 RPC_DENOMINATOR_EPSILON = 1.0e-6;
+static const ossim_uint32 RPC_NONLINEAR_MAX_ITERATIONS = 10;
+static const ossim_float64 RPC_AUTO_HEIGHT_LAYER_DELTA_FRACTION = 0.25;
+static const ossim_float64 RPC_MIN_AUTO_HEIGHT_LAYER_DELTA = 0.1;
+static const ossim_float64 RPC_MAX_AUTO_HEIGHT_LAYER_DELTA = 1000.0;
+static const ossim_float64 RPC_AUTO_HEIGHT_LAYER_PROBE_DELTA = 10.0;
+static const ossim_float64 RPC_AUTO_HEIGHT_LAYER_TARGET_PIXELS = 0.25;
 
 namespace
 {
+   void setupRpcTerms(double x, double y, double z, double* terms)
+   {
+      terms[0]  = 1.0;
+      terms[1]  = x;
+      terms[2]  = y;
+      terms[3]  = z;
+      terms[4]  = x*y;
+      terms[5]  = x*z;
+      terms[6]  = y*z;
+      terms[7]  = x*x;
+      terms[8]  = y*y;
+      terms[9]  = z*z;
+      terms[10] = x*y*z;
+      terms[11] = x*x*x;
+      terms[12] = x*y*y;
+      terms[13] = x*z*z;
+      terms[14] = x*x*y;
+      terms[15] = y*y*y;
+      terms[16] = y*z*z;
+      terms[17] = x*x*z;
+      terms[18] = y*y*z;
+      terms[19] = z*z*z;
+   }
+
+   double evaluateRpcNumerator(const NEWMAT::ColumnVector& coeff,
+                               const double* terms)
+   {
+      double numerator = 0.0;
+      for (int term = 0; term < (int)RPC_POLYNOMIAL_TERM_COUNT; ++term)
+         numerator += coeff[term] * terms[term];
+      return numerator;
+   }
+
+   double evaluateRpcDenominator(const NEWMAT::ColumnVector& coeff,
+                                 const double* terms)
+   {
+      double denominator = terms[0];
+      for (int term = 1; term < (int)RPC_POLYNOMIAL_TERM_COUNT; ++term)
+         denominator += coeff[RPC_POLYNOMIAL_TERM_COUNT + term - 1] * terms[term];
+      if (std::fabs(denominator) < RPC_DENOMINATOR_EPSILON)
+         denominator = (denominator < 0.0) ? -RPC_DENOMINATOR_EPSILON : RPC_DENOMINATOR_EPSILON;
+      return denominator;
+   }
+
+   double evaluateRpcRational(const NEWMAT::ColumnVector& coeff,
+                              const double* terms)
+   {
+      return evaluateRpcNumerator(coeff, terms) / evaluateRpcDenominator(coeff, terms);
+   }
+
+   double robustLoss(double residual, bool useHuber, double huberDelta)
+   {
+      const double absResidual = std::fabs(residual);
+      if (!useHuber || (absResidual <= huberDelta))
+         return residual * residual;
+      return 2.0 * huberDelta * absResidual - huberDelta * huberDelta;
+   }
+
+   double robustWeight(double residual, bool useHuber, double huberDelta)
+   {
+      const double absResidual = std::fabs(residual);
+      if (!useHuber || (absResidual <= huberDelta) || (absResidual <= DBL_EPSILON))
+         return 1.0;
+      return std::sqrt(huberDelta / absResidual);
+   }
+
+   double computeRationalObjective(const NEWMAT::ColumnVector& coeff,
+                                   const std::vector<double>& f,
+                                   const std::vector<double>& x,
+                                   const std::vector<double>& y,
+                                   const std::vector<double>& z,
+                                   bool useHuber,
+                                   double huberDelta)
+   {
+      double objective = 0.0;
+      double terms[RPC_POLYNOMIAL_TERM_COUNT];
+      for (ossim_uint32 idx = 0; idx < f.size(); ++idx)
+      {
+         setupRpcTerms(x[idx], y[idx], z[idx], terms);
+         const double residual = evaluateRpcRational(coeff, terms) - f[idx];
+         objective += robustLoss(residual, useHuber, huberDelta);
+      }
+
+      for (int term = 1; term < (int)RPC_POLYNOMIAL_TERM_COUNT; ++term)
+      {
+         const double regularizedCoeff =
+               RPC_DENOMINATOR_REGULARIZATION_WEIGHT *
+               coeff[RPC_POLYNOMIAL_TERM_COUNT + term - 1];
+         objective += regularizedCoeff * regularizedCoeff;
+      }
+      return objective / std::max<size_t>(1, f.size());
+   }
+
+   double computeRationalRms(const NEWMAT::ColumnVector& coeff,
+                             const std::vector<double>& f,
+                             const std::vector<double>& x,
+                             const std::vector<double>& y,
+                             const std::vector<double>& z)
+   {
+      double sumSquareResidual = 0.0;
+      double terms[RPC_POLYNOMIAL_TERM_COUNT];
+      for (ossim_uint32 idx = 0; idx < f.size(); ++idx)
+      {
+         setupRpcTerms(x[idx], y[idx], z[idx], terms);
+         const double residual = evaluateRpcRational(coeff, terms) - f[idx];
+         sumSquareResidual += residual * residual;
+      }
+      return std::sqrt(sumSquareResidual / std::max<size_t>(1, f.size()));
+   }
+
+   bool computeHeightStatistics(ossimImageGeometry* geom,
+                                const ossimDrect& imageBounds,
+                                ossim_uint32 xSamples,
+                                ossim_uint32 ySamples,
+                                bool useHeightAboveMSLFlag,
+                                ossim_float64& nominalHeight,
+                                ossim_float64& heightDelta)
+   {
+      if (!geom || (xSamples <= 1) || (ySamples <= 1))
+         return false;
+
+      const double dx = imageBounds.width()/(xSamples-1);
+      const double dy = imageBounds.height()/(ySamples-1);
+      ossimDpt dpt;
+      ossimGpt gpt;
+      ossim_float64 heightSum = 0.0;
+      ossim_uint32 heightCount = 0;
+      ossim_float64 minHeight = DBL_MAX;
+      ossim_float64 maxHeight = -DBL_MAX;
+      const ossimDpt metersPerPixel = geom->getMetersPerPixel();
+      const ossim_float64 meanMetersPerPixel =
+            (std::fabs(metersPerPixel.x) + std::fabs(metersPerPixel.y)) * 0.5;
+      ossim_float64 maxPixelsPerMeterHeight = 0.0;
+
+      for(ossim_uint32 y = 0; y < ySamples; ++y)
+      {
+         dpt.y = y*dy + imageBounds.ul().y;
+         for(ossim_uint32 x = 0; x < xSamples; ++x)
+         {
+            dpt.x = x*dx + imageBounds.ul().x;
+            geom->localToWorld(dpt, gpt);
+            if (gpt.isLatLonNan() || gpt.isHgtNan())
+               continue;
+
+            if(useHeightAboveMSLFlag)
+            {
+               double h = ossimElevManager::instance()->getHeightAboveMSL(gpt);
+               if(ossim::isnan(h) == false)
+                  gpt.height(h);
+            }
+
+            heightSum += gpt.height();
+            minHeight = std::min(minHeight, gpt.height());
+            maxHeight = std::max(maxHeight, gpt.height());
+            ++heightCount;
+         }
+      }
+
+      if (heightCount == 0)
+         return false;
+
+      nominalHeight = heightSum / heightCount;
+
+      if (meanMetersPerPixel > DBL_EPSILON)
+      {
+         ossimGpt gptAtNominalHeight;
+         ossimGpt gptAtProbeHeight;
+         for(ossim_uint32 y = 0; y < ySamples; ++y)
+         {
+            dpt.y = y*dy + imageBounds.ul().y;
+            for(ossim_uint32 x = 0; x < xSamples; ++x)
+            {
+               dpt.x = x*dx + imageBounds.ul().x;
+               geom->localToWorld(dpt, nominalHeight, gptAtNominalHeight);
+               geom->localToWorld(dpt,
+                                  nominalHeight + RPC_AUTO_HEIGHT_LAYER_PROBE_DELTA,
+                                  gptAtProbeHeight);
+               if (gptAtNominalHeight.isLatLonNan() || gptAtProbeHeight.isLatLonNan())
+                  continue;
+
+               gptAtProbeHeight.height(gptAtNominalHeight.height());
+               const ossim_float64 horizontalMeters =
+                     gptAtNominalHeight.distanceTo(gptAtProbeHeight);
+               const ossim_float64 pixelsPerMeterHeight =
+                     horizontalMeters /
+                     (RPC_AUTO_HEIGHT_LAYER_PROBE_DELTA * meanMetersPerPixel);
+               if (ossim::isnan(pixelsPerMeterHeight) == false)
+                  maxPixelsPerMeterHeight =
+                        std::max(maxPixelsPerMeterHeight, pixelsPerMeterHeight);
+            }
+         }
+      }
+
+      heightDelta = (maxHeight > minHeight) ?
+            ((maxHeight - minHeight) * RPC_AUTO_HEIGHT_LAYER_DELTA_FRACTION) : 0.0;
+      if (heightDelta > 0.0)
+      {
+         heightDelta = std::max(heightDelta, RPC_MIN_AUTO_HEIGHT_LAYER_DELTA);
+         heightDelta = std::min(heightDelta, RPC_MAX_AUTO_HEIGHT_LAYER_DELTA);
+      }
+      if (maxPixelsPerMeterHeight > DBL_EPSILON)
+      {
+         const ossim_float64 sensitivityDelta =
+               RPC_AUTO_HEIGHT_LAYER_TARGET_PIXELS / maxPixelsPerMeterHeight;
+         heightDelta = (heightDelta > 0.0) ? std::min(heightDelta, sensitivityDelta) :
+               sensitivityDelta;
+      }
+      return true;
+   }
+
    /**
     * @brief Solves an overdetermined least-squares system with an explicit SVD pseudo-inverse.
     *
@@ -69,6 +286,95 @@ namespace
 
       return v * inverseSingularValues * u.t() * b;
    }
+
+   void refineRationalLm(NEWMAT::ColumnVector& coeff,
+                         const std::vector<double>& f,
+                         const std::vector<double>& x,
+                         const std::vector<double>& y,
+                         const std::vector<double>& z,
+                         bool useHuber)
+   {
+      if (coeff.Nrows() != RPC_COEFFICIENT_COUNT)
+         return;
+
+      double currentRms = computeRationalRms(coeff, f, x, y, z);
+      double huberDelta = std::max(1.0e-8, 1.5 * currentRms);
+      double currentObjective = computeRationalObjective(coeff, f, x, y, z, useHuber, huberDelta);
+      double lambda = 1.0e-3;
+
+      const int observationRows = static_cast<int>(f.size());
+      const int regularizationRows = RPC_POLYNOMIAL_TERM_COUNT - 1;
+      const int dampingRows = RPC_COEFFICIENT_COUNT;
+      const int totalRows = observationRows + regularizationRows + dampingRows;
+
+      for (ossim_uint32 iteration = 0; iteration < RPC_NONLINEAR_MAX_ITERATIONS; ++iteration)
+      {
+         NEWMAT::Matrix jacobian(totalRows, RPC_COEFFICIENT_COUNT);
+         NEWMAT::ColumnVector rhs(totalRows);
+         jacobian = 0.0;
+         rhs = 0.0;
+
+         double terms[RPC_POLYNOMIAL_TERM_COUNT];
+         for (int row = 0; row < observationRows; ++row)
+         {
+            setupRpcTerms(x[row], y[row], z[row], terms);
+            const double numerator = evaluateRpcNumerator(coeff, terms);
+            const double denominator = evaluateRpcDenominator(coeff, terms);
+            const double residual = numerator / denominator - f[row];
+            const double weight = robustWeight(residual, useHuber, huberDelta);
+
+            rhs[row] = -weight * residual;
+            for (int term = 0; term < (int)RPC_POLYNOMIAL_TERM_COUNT; ++term)
+               jacobian[row][term] = weight * terms[term] / denominator;
+
+            const double denominatorSquared = denominator * denominator;
+            for (int term = 1; term < (int)RPC_POLYNOMIAL_TERM_COUNT; ++term)
+            {
+               jacobian[row][RPC_POLYNOMIAL_TERM_COUNT + term - 1] =
+                     -weight * numerator * terms[term] / denominatorSquared;
+            }
+         }
+
+         for (int term = 1; term < (int)RPC_POLYNOMIAL_TERM_COUNT; ++term)
+         {
+            const int row = observationRows + term - 1;
+            const int coefficientIndex = RPC_POLYNOMIAL_TERM_COUNT + term - 1;
+            jacobian[row][coefficientIndex] = RPC_DENOMINATOR_REGULARIZATION_WEIGHT;
+            rhs[row] = -RPC_DENOMINATOR_REGULARIZATION_WEIGHT * coeff[coefficientIndex];
+         }
+
+         const double dampingWeight = std::sqrt(lambda);
+         for (int coefficientIndex = 0; coefficientIndex < (int)RPC_COEFFICIENT_COUNT; ++coefficientIndex)
+         {
+            const int row = observationRows + regularizationRows + coefficientIndex;
+            jacobian[row][coefficientIndex] = dampingWeight;
+         }
+
+         NEWMAT::ColumnVector delta = solveLeastSquaresSvd(jacobian, rhs);
+         NEWMAT::ColumnVector candidate = coeff + delta;
+         const double candidateObjective =
+               computeRationalObjective(candidate, f, x, y, z, useHuber, huberDelta);
+
+         if (candidateObjective < currentObjective)
+         {
+            coeff = candidate;
+            const double previousObjective = currentObjective;
+            currentObjective = candidateObjective;
+            currentRms = computeRationalRms(coeff, f, x, y, z);
+            huberDelta = std::max(1.0e-8, 1.5 * currentRms);
+            lambda = std::max(1.0e-12, lambda * 0.3);
+
+            if (std::fabs(previousObjective - currentObjective) <= 1.0e-14)
+               break;
+         }
+         else
+         {
+            lambda *= 10.0;
+            if (lambda > 1.0e8)
+               break;
+         }
+      }
+   }
 }
 
 ossimRpcSolver::ossimRpcSolver(bool useElevation, bool useHeightAboveMSLFlag)
@@ -78,6 +384,7 @@ ossimRpcSolver::ossimRpcSolver(bool useElevation, bool useHeightAboveMSLFlag)
    theHeightLayerRadius(0),
    theMaxIterations(MAX_SOLVE_ITERATIONS),
    theResidualImprovementTolerance(-1.0),
+   theFitOptimizer(RPC_FIT_WEIGHTED_SVD),
    theMeanResidual(0),
    theMaxResidual(0)
 {
@@ -96,10 +403,11 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
 /**
  * @brief Samples an image geometry over imageBounds and solves RPC coefficients.
  *
- * @details Each image grid point is projected through the source geometry to establish the base
- * ground point. If height layering is enabled, additional observations are generated at fixed
- * height offsets around that base height. The resulting image/ground observation vectors are then
- * passed to the direct observation solve.
+ * @details Each image grid point is projected through the source geometry to establish ground
+ * observations. If height layering is enabled with elevation, elevation samples first establish one
+ * nominal height for the fit area and all layers are sampled as fixed-height planes around that
+ * nominal height. If layering is enabled without elevation, the nominal height is 0. The resulting
+ * image/ground observation vectors are then passed to the direct observation solve.
  *
  * @param imageBounds Image-space area over which the RPC approximation is fit.
  * @param geom Source image geometry to approximate.
@@ -128,9 +436,30 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
    double Dy = imageBounds.height()/(ySamples-1);
    ossimDpt dpt;
    std::vector<ossim_float64> heightOffsets;
-   const ossim_uint32 layerRadius = (theHeightLayerDelta > DBL_EPSILON) ? theHeightLayerRadius : 0;
+   ossim_float64 nominalLayerHeight = 0.0;
+   ossim_float64 layerDelta = theHeightLayerDelta;
+   const ossim_uint32 layerRadius = theHeightLayerRadius;
+   if ((layerRadius > 0) && theUseElevationFlag)
+   {
+      ossim_float64 autoLayerDelta = 0.0;
+      if (computeHeightStatistics(geom,
+                                  imageBounds,
+                                  xSamples,
+                                  ySamples,
+                                  theHeightAboveMSLFlag,
+                                  nominalLayerHeight,
+                                  autoLayerDelta) &&
+          (layerDelta <= DBL_EPSILON))
+      {
+         layerDelta = autoLayerDelta;
+      }
+   }
+   if ((layerRadius > 0) && (layerDelta <= DBL_EPSILON))
+      layerDelta = 0.0;
    for (int layer = -static_cast<int>(layerRadius); layer <= static_cast<int>(layerRadius); ++layer)
-      heightOffsets.push_back(layer * theHeightLayerDelta);
+      heightOffsets.push_back(layer * layerDelta);
+   const bool useNominalLayerHeight = (layerRadius > 0) && (layerDelta > DBL_EPSILON);
+
    for(y = 0; y < ySamples; ++y)
    {
       dpt.y = y*Dy + imageBounds.ul().y;
@@ -155,7 +484,7 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
             if(ossim::isnan(h) == false)
                gpt.height(h);
          }
-         baseHeight = gpt.height();
+         baseHeight = useNominalLayerHeight ? nominalLayerHeight : gpt.height();
 
          for (std::vector<ossim_float64>::const_iterator offset = heightOffsets.begin();
               offset != heightOffsets.end(); ++offset)
@@ -442,9 +771,27 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
    ossimDpt ipt, irpc;
    ossimGpt gpt;
    std::vector<ossim_float64> heightOffsets;
-   const ossim_uint32 layerRadius = (theHeightLayerDelta > DBL_EPSILON) ? theHeightLayerRadius : 0;
+   const ossim_uint32 layerRadius = theHeightLayerRadius;
+   ossim_float64 layerDelta = theHeightLayerDelta;
+   ossim_float64 nominalLayerHeight = 0.0;
+   ossim_float64 autoLayerDelta = 0.0;
+   const bool haveHeightStatistics =
+         (layerRadius > 0) &&
+         theUseElevationFlag &&
+         computeHeightStatistics(geom,
+                                 imageBounds,
+                                 STARTING_GRID_SIZE,
+                                 STARTING_GRID_SIZE,
+                                 theHeightAboveMSLFlag,
+                                 nominalLayerHeight,
+                                 autoLayerDelta);
+   if ((layerRadius > 0) && (layerDelta <= DBL_EPSILON) && haveHeightStatistics)
+      layerDelta = autoLayerDelta;
+   if ((layerRadius > 0) && (layerDelta <= DBL_EPSILON))
+      layerDelta = 0.0;
    for (int layer = -static_cast<int>(layerRadius); layer <= static_cast<int>(layerRadius); ++layer)
-      heightOffsets.push_back(layer * theHeightLayerDelta);
+      heightOffsets.push_back(layer * layerDelta);
+   const bool useNominalLayerHeight = (layerRadius > 0) && (layerDelta > DBL_EPSILON);
 
    // Start at the minimum grid size:
    ossim_uint32 xSamples = STARTING_GRID_SIZE;
@@ -476,7 +823,6 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
       // Sample along x and y directions to accumulate errors:
       double deltaX = w/(xSamples-1);
       double deltaY = h/(ySamples-1);
-
       // Sample the midpoints between image grid used to compute RPC:
       for (ossim_uint32 y=0; y<ySamples-1; ++y)
       {
@@ -496,7 +842,8 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
                   gpt.height(h);
             }
 
-            const ossim_float64 baseHeight = gpt.isHgtNan() ? 0.0 : gpt.height();
+            const ossim_float64 baseHeight =
+                  useNominalLayerHeight ? nominalLayerHeight : (gpt.isHgtNan() ? 0.0 : gpt.height());
             for (std::vector<ossim_float64>::const_iterator offset = heightOffsets.begin();
                  offset != heightOffsets.end(); ++offset)
             {
@@ -609,7 +956,7 @@ double ossimRpcSolver::getMaxError()const
 
 void ossimRpcSolver::setHeightLayerDelta(ossim_float64 delta)
 {
-   theHeightLayerDelta = (delta > 0.0) ? delta : 0.0;
+   theHeightLayerDelta = delta;
 }
 
 ossim_float64 ossimRpcSolver::getHeightLayerDelta() const
@@ -645,6 +992,16 @@ void ossimRpcSolver::setResidualImprovementTolerance(ossim_float64 tolerance)
 ossim_float64 ossimRpcSolver::getResidualImprovementTolerance() const
 {
    return theResidualImprovementTolerance;
+}
+
+void ossimRpcSolver::setFitOptimizer(RpcFitOptimizer optimizer)
+{
+   theFitOptimizer = optimizer;
+}
+
+ossimRpcSolver::RpcFitOptimizer ossimRpcSolver::getFitOptimizer() const
+{
+   return theFitOptimizer;
 }
 
 void ossimRpcSolver::solveInitialCoefficients(NEWMAT::ColumnVector& coeff,
@@ -790,6 +1147,15 @@ void ossimRpcSolver::solveCoefficients(NEWMAT::ColumnVector& coeff,
       previousResidualValue = residualValue;
 
    } while (iterations < 15);
+
+   if (theFitOptimizer == RPC_FIT_LM)
+   {
+      refineRationalLm(tempCoeff, f, x, y, z, false);
+   }
+   else if (theFitOptimizer == RPC_FIT_LM_HUBER)
+   {
+      refineRationalLm(tempCoeff, f, x, y, z, true);
+   }
 
    coeff = tempCoeff;
 
