@@ -37,6 +37,11 @@ static const ossim_float64 RPC_AUTO_HEIGHT_LAYER_TARGET_PIXELS = 0.25;
 
 namespace
 {
+   bool isFinite(ossim_float64 value)
+   {
+      return (ossim::isnan(value) == false) && std::isfinite(value);
+   }
+
    void setupRpcTerms(double x, double y, double z, double* terms)
    {
       terms[0]  = 1.0;
@@ -117,6 +122,8 @@ namespace
       {
          setupRpcTerms(x[idx], y[idx], z[idx], terms);
          const double residual = evaluateRpcRational(coeff, terms) - f[idx];
+         if (!isFinite(residual))
+            return DBL_MAX;
          objective += robustLoss(residual, useHuber, huberDelta);
       }
 
@@ -142,6 +149,8 @@ namespace
       {
          setupRpcTerms(x[idx], y[idx], z[idx], terms);
          const double residual = evaluateRpcRational(coeff, terms) - f[idx];
+         if (!isFinite(residual))
+            return DBL_MAX;
          sumSquareResidual += residual * residual;
       }
       return std::sqrt(sumSquareResidual / std::max<size_t>(1, f.size()));
@@ -155,7 +164,9 @@ namespace
                                 ossim_float64& nominalHeight,
                                 ossim_float64& heightDelta)
    {
-      if (!geom || (xSamples <= 1) || (ySamples <= 1))
+      if (!geom || (xSamples <= 1) || (ySamples <= 1) ||
+          (imageBounds.width() <= DBL_EPSILON) ||
+          (imageBounds.height() <= DBL_EPSILON))
          return false;
 
       const double dx = imageBounds.width()/(xSamples-1);
@@ -180,11 +191,13 @@ namespace
             geom->localToWorld(dpt, gpt);
             if (gpt.isLatLonNan() || gpt.isHgtNan())
                continue;
+            if (!isFinite(gpt.height()))
+               continue;
 
             if(useHeightAboveMSLFlag)
             {
                double h = ossimElevManager::instance()->getHeightAboveMSL(gpt);
-               if(ossim::isnan(h) == false)
+               if(isFinite(h))
                   gpt.height(h);
             }
 
@@ -200,7 +213,7 @@ namespace
 
       nominalHeight = heightSum / heightCount;
 
-      if (meanMetersPerPixel > DBL_EPSILON)
+      if (isFinite(meanMetersPerPixel) && (meanMetersPerPixel > DBL_EPSILON))
       {
          ossimGpt gptAtNominalHeight;
          ossimGpt gptAtProbeHeight;
@@ -223,7 +236,7 @@ namespace
                const ossim_float64 pixelsPerMeterHeight =
                      horizontalMeters /
                      (RPC_AUTO_HEIGHT_LAYER_PROBE_DELTA * meanMetersPerPixel);
-               if (ossim::isnan(pixelsPerMeterHeight) == false)
+               if (isFinite(pixelsPerMeterHeight) && (pixelsPerMeterHeight > 0.0))
                   maxPixelsPerMeterHeight =
                         std::max(maxPixelsPerMeterHeight, pixelsPerMeterHeight);
             }
@@ -241,8 +254,11 @@ namespace
       {
          const ossim_float64 sensitivityDelta =
                RPC_AUTO_HEIGHT_LAYER_TARGET_PIXELS / maxPixelsPerMeterHeight;
-         heightDelta = (heightDelta > 0.0) ? std::min(heightDelta, sensitivityDelta) :
-               sensitivityDelta;
+         if (isFinite(sensitivityDelta) && (sensitivityDelta > 0.0))
+         {
+            heightDelta = (heightDelta > 0.0) ? std::min(heightDelta, sensitivityDelta) :
+                  sensitivityDelta;
+         }
       }
       return true;
    }
@@ -300,6 +316,9 @@ namespace
       double currentRms = computeRationalRms(coeff, f, x, y, z);
       double huberDelta = std::max(1.0e-8, 1.5 * currentRms);
       double currentObjective = computeRationalObjective(coeff, f, x, y, z, useHuber, huberDelta);
+      if (!isFinite(currentRms) || !isFinite(currentObjective) ||
+          (currentRms >= DBL_MAX) || (currentObjective >= DBL_MAX))
+         return;
       double lambda = 1.0e-3;
 
       const int observationRows = static_cast<int>(f.size());
@@ -321,6 +340,8 @@ namespace
             const double numerator = evaluateRpcNumerator(coeff, terms);
             const double denominator = evaluateRpcDenominator(coeff, terms);
             const double residual = numerator / denominator - f[row];
+            if (!isFinite(residual))
+               continue;
             const double weight = robustWeight(residual, useHuber, huberDelta);
 
             rhs[row] = -weight * residual;
@@ -355,12 +376,14 @@ namespace
          const double candidateObjective =
                computeRationalObjective(candidate, f, x, y, z, useHuber, huberDelta);
 
-         if (candidateObjective < currentObjective)
+         if (isFinite(candidateObjective) && (candidateObjective < currentObjective))
          {
             coeff = candidate;
             const double previousObjective = currentObjective;
             currentObjective = candidateObjective;
             currentRms = computeRationalRms(coeff, f, x, y, z);
+            if (!isFinite(currentRms))
+               break;
             huberDelta = std::max(1.0e-8, 1.5 * currentRms);
             lambda = std::max(1.0e-12, lambda * 0.3);
 
@@ -432,6 +455,9 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
       ySamples = STARTING_GRID_SIZE;
    if (xSamples <= 1)
       xSamples = STARTING_GRID_SIZE;
+   if ((imageBounds.width() <= DBL_EPSILON) ||
+       (imageBounds.height() <= DBL_EPSILON))
+      return;
    double Dx = imageBounds.width()/(xSamples-1);
    double Dy = imageBounds.height()/(ySamples-1);
    ossimDpt dpt;
@@ -456,9 +482,13 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
    }
    if ((layerRadius > 0) && (layerDelta <= DBL_EPSILON))
       layerDelta = 0.0;
-   for (int layer = -static_cast<int>(layerRadius); layer <= static_cast<int>(layerRadius); ++layer)
+   const ossim_uint32 effectiveLayerRadius =
+         ((layerRadius > 0) && (layerDelta > DBL_EPSILON)) ? layerRadius : 0;
+   for (int layer = -static_cast<int>(effectiveLayerRadius);
+        layer <= static_cast<int>(effectiveLayerRadius);
+        ++layer)
       heightOffsets.push_back(layer * layerDelta);
-   const bool useNominalLayerHeight = (layerRadius > 0) && (layerDelta > DBL_EPSILON);
+   const bool useNominalLayerHeight = (effectiveLayerRadius > 0);
 
    for(y = 0; y < ySamples; ++y)
    {
@@ -481,19 +511,27 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
          if(theHeightAboveMSLFlag)
          {
             double h = ossimElevManager::instance()->getHeightAboveMSL(gpt);
-            if(ossim::isnan(h) == false)
+            if(isFinite(h))
                gpt.height(h);
          }
          baseHeight = useNominalLayerHeight ? nominalLayerHeight : gpt.height();
+         if (!isFinite(baseHeight))
+            continue;
 
          for (std::vector<ossim_float64>::const_iterator offset = heightOffsets.begin();
               offset != heightOffsets.end(); ++offset)
          {
-            geom->localToWorld(dpt, baseHeight + *offset, gpt);
+            const ossim_float64 layerHeight = baseHeight + *offset;
+            if (!isFinite(layerHeight))
+               continue;
+
+            geom->localToWorld(dpt, layerHeight, gpt);
             if (gpt.isLatLonNan())
                continue;
             if(gpt.isHgtNan())
-               gpt.height(baseHeight + *offset);
+               gpt.height(layerHeight);
+            if (!isFinite(gpt.height()))
+               continue;
             gpt.changeDatum(defaultGround.datum());
 
             imagePoints.push_back(dpt);
@@ -524,6 +562,30 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
 
    if((imagePoints.size() != groundControlPoints.size()))
       return;
+   std::vector<ossimDpt> validImagePoints;
+   std::vector<ossimGpt> validGroundControlPoints;
+   validImagePoints.reserve(imagePoints.size());
+   validGroundControlPoints.reserve(groundControlPoints.size());
+   for (ossim_uint32 idx = 0; idx < imagePoints.size(); ++idx)
+   {
+      const bool validImage =
+            isFinite(imagePoints[idx].x) &&
+            isFinite(imagePoints[idx].y);
+      const bool validGround =
+            isFinite(groundControlPoints[idx].latd()) &&
+            isFinite(groundControlPoints[idx].lond()) &&
+            (groundControlPoints[idx].isHgtNan() || isFinite(groundControlPoints[idx].height()));
+      if (validImage && validGround)
+      {
+         validImagePoints.push_back(imagePoints[idx]);
+         validGroundControlPoints.push_back(groundControlPoints[idx]);
+      }
+   }
+   if (validImagePoints.size() != imagePoints.size())
+   {
+      solveCoefficients(validImagePoints, validGroundControlPoints);
+      return;
+   }
    if (imagePoints.size() < RPC_COEFFICIENT_COUNT)
    {
       ossimNotify(ossimNotifyLevel_WARN)
@@ -576,17 +638,17 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    // find the center ground  Use elevation only if its enabled
    for(c = 0; c < groundControlPoints.size();++c)
    {
-      if(ossim::isnan(groundControlPoints[c].latd()) == false)
+      if(isFinite(groundControlPoints[c].latd()))
       {
          latSum += groundControlPoints[c].latd();
          ++validLatCount;
       }
-      if(ossim::isnan(groundControlPoints[c].lond()) == false)
+      if(isFinite(groundControlPoints[c].lond()))
       {
          lonSum += groundControlPoints[c].lond();
          ++validLonCount;
       }
-      if(!groundControlPoints[c].isHgtNan())
+      if(!groundControlPoints[c].isHgtNan() && isFinite(groundControlPoints[c].height()))
       {
          if(theUseElevationFlag)
          {
@@ -726,6 +788,7 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    // back through the modeled RPC
    ossim_float64  sumSquareError = 0.0;
    ossim_uint32 idx = 0;
+   ossim_uint32 residualCount = 0;
 
    theMaxResidual = 0;
    for (idx = 0; idx<imagePoints.size(); idx++)
@@ -733,13 +796,18 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
       ossimDpt evalPt;
       evalPoint(groundControlPoints[idx], evalPt);
       ossim_float64 len = (evalPt - imagePoints[idx]).length();
+      if (!isFinite(len))
+         continue;
       if (len > theMaxResidual)
          theMaxResidual = len;
       sumSquareError += (len*len);
+      ++residualCount;
    }
 
    // set the error
-   theMeanResidual = sqrt(sumSquareError/imagePoints.size());
+   theMeanResidual = residualCount ?
+         sqrt(sumSquareError/residualCount) :
+         ossim::nan();
 }
 
 /**
@@ -768,6 +836,8 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
    ossimDpt ul = imageBounds.ul();
    ossim_float64 w = imageBounds.width();
    ossim_float64 h = imageBounds.height();
+   if ((w <= DBL_EPSILON) || (h <= DBL_EPSILON))
+      return false;
    ossimDpt ipt, irpc;
    ossimGpt gpt;
    std::vector<ossim_float64> heightOffsets;
@@ -789,9 +859,13 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
       layerDelta = autoLayerDelta;
    if ((layerRadius > 0) && (layerDelta <= DBL_EPSILON))
       layerDelta = 0.0;
-   for (int layer = -static_cast<int>(layerRadius); layer <= static_cast<int>(layerRadius); ++layer)
+   const ossim_uint32 effectiveLayerRadius =
+         ((layerRadius > 0) && (layerDelta > DBL_EPSILON)) ? layerRadius : 0;
+   for (int layer = -static_cast<int>(effectiveLayerRadius);
+        layer <= static_cast<int>(effectiveLayerRadius);
+        ++layer)
       heightOffsets.push_back(layer * layerDelta);
-   const bool useNominalLayerHeight = (layerRadius > 0) && (layerDelta > DBL_EPSILON);
+   const bool useNominalLayerHeight = (effectiveLayerRadius > 0);
 
    // Start at the minimum grid size:
    ossim_uint32 xSamples = STARTING_GRID_SIZE;
@@ -835,29 +909,41 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
                geom->localToWorld(ipt, gpt);
             else
                geom->localToWorld(ipt, 0, gpt);
+            if (gpt.isLatLonNan())
+               continue;
             if(theHeightAboveMSLFlag)
             {
                double h = ossimElevManager::instance()->getHeightAboveMSL(gpt);
-               if(ossim::isnan(h) == false)
+               if(isFinite(h))
                   gpt.height(h);
             }
 
             const ossim_float64 baseHeight =
                   useNominalLayerHeight ? nominalLayerHeight : (gpt.isHgtNan() ? 0.0 : gpt.height());
+            if (!isFinite(baseHeight))
+               continue;
             for (std::vector<ossim_float64>::const_iterator offset = heightOffsets.begin();
                  offset != heightOffsets.end(); ++offset)
             {
-               geom->localToWorld(ipt, baseHeight + *offset, gpt);
+               const ossim_float64 layerHeight = baseHeight + *offset;
+               if (!isFinite(layerHeight))
+                  continue;
+
+               geom->localToWorld(ipt, layerHeight, gpt);
                if (gpt.isLatLonNan())
                   continue;
                if(gpt.isHgtNan())
-                  gpt.height(baseHeight + *offset);
+                  gpt.height(layerHeight);
+               if (!isFinite(gpt.height()))
+                  continue;
 
                // Reverse projection using RPC:
                evalPoint(gpt, irpc);
 
                // Compute residual and accumulate:
                residual = (ipt-irpc).length();
+               if (!isFinite(residual))
+                  continue;
                if (residual > theMaxResidual)
                   theMaxResidual = residual;
                sumResiduals += residual;
@@ -1120,9 +1206,16 @@ void ossimRpcSolver::solveCoefficients(NEWMAT::ColumnVector& coeff,
             denom = (denom < 0.0) ? -denominatorEpsilon : denominatorEpsilon;
          const double estimate = numerator / denom;
          const double delta = estimate - f[idx];
+         if (!isFinite(delta))
+         {
+            sumSquareResidual = DBL_MAX;
+            break;
+         }
          sumSquareResidual += delta * delta;
       }
-      residualValue = sqrt(sumSquareResidual/f.size());
+      residualValue = isFinite(sumSquareResidual) ?
+            sqrt(sumSquareResidual/f.size()) :
+            DBL_MAX;
 
       double coefficientDelta = 1.0/FLT_EPSILON;
       if (previousCoeff.Nrows() == tempCoeff.Nrows())
@@ -1131,9 +1224,15 @@ void ossimRpcSolver::solveCoefficients(NEWMAT::ColumnVector& coeff,
          for (idx = 0; idx < (ossim_uint32)tempCoeff.Nrows(); ++idx)
          {
             const double delta = tempCoeff[idx] - previousCoeff[idx];
+            if (!isFinite(delta))
+            {
+               coefficientDelta = DBL_MAX;
+               break;
+            }
             coefficientDelta += delta * delta;
          }
-         coefficientDelta = sqrt(coefficientDelta);
+         if (coefficientDelta != DBL_MAX)
+            coefficientDelta = sqrt(coefficientDelta);
       }
 
       ++iterations;
@@ -1302,6 +1401,11 @@ void ossimRpcSolver::setupWeightMatrix(NEWMAT::DiagonalMatrix& result, // holds 
          result[idx] += row[idx2]*coefficients[idx2];
       }
 
+      if (!isFinite(result[idx]))
+      {
+         result[idx] = 1.0;
+         continue;
+      }
       result[idx] = 1.0 / std::max(std::fabs(result[idx]), denominatorEpsilon);
     }
 }
