@@ -13,6 +13,7 @@
 #include <ossim/base/ossimTrace.h>
 #include <ossim/base/ossimLsrRay.h>
 #include <ossim/base/ossimLsrSpace.h>
+#include <ossim/base/ossimMatrix3x3.h>
 #include <ossim/base/ossimMatrix4x4.h>
 #include <ossim/elevation/ossimElevManager.h>
 #include <ossim/base/ossimKeywordlist.h>
@@ -30,17 +31,61 @@ enum
    PARAM_ADJ_LON_OFFSET   = 0,
    PARAM_ADJ_LAT_OFFSET = 1,
    PARAM_ADJ_ALTITUDE_OFFSET =2, 
-   // PARAM_ADJ_ROLL_OFFSET,
-   // PARAM_ADJ_PITCH_OFFSET,
-   // PARAM_ADJ_YAW_OFFSET,
-   PARAM_ADJ_FOCAL_LENGTH_OFFSET=6,
-   PARAM_ADJ_COUNT = 7
+   PARAM_ADJ_ROLL_OFFSET,
+   PARAM_ADJ_PITCH_OFFSET,
+   PARAM_ADJ_YAW_OFFSET,
+   PARAM_ADJ_FOCAL_LENGTH_OFFSET,
+   PARAM_ADJ_COUNT
 };
+
+namespace
+{
+   void setPpjParameterDefinition(ossimAdjustableParameterInfo& param,
+                                  const ossimString& description,
+                                  ossimUnitType unit,
+                                  double sigma)
+   {
+      bool lockFlag = param.getLockFlag();
+      if (lockFlag)
+      {
+         param.setLockFlag(false);
+      }
+
+      param.setDescription(description);
+      param.setUnit(unit);
+      param.setSigma(sigma);
+      param.setCenter(0.0);
+
+      if (lockFlag)
+      {
+         param.setLockFlag(true);
+      }
+   }
+
+   void setPpjParameterDefinitions(ossimAdjustmentInfo& adjustment)
+   {
+      if (adjustment.getNumberOfAdjustableParameters() != PARAM_ADJ_COUNT)
+      {
+         return;
+      }
+
+      std::vector<ossimAdjustableParameterInfo>& params = adjustment.getParameterList();
+      setPpjParameterDefinition(params[PARAM_ADJ_LON_OFFSET], "lon_offset", OSSIM_METERS, 200.0);
+      setPpjParameterDefinition(params[PARAM_ADJ_LAT_OFFSET], "lat_offset", OSSIM_METERS, 200.0);
+      setPpjParameterDefinition(params[PARAM_ADJ_ALTITUDE_OFFSET], "altitude_offset", OSSIM_METERS, 10.0);
+      setPpjParameterDefinition(params[PARAM_ADJ_ROLL_OFFSET], "roll_offset", OSSIM_DEGREES, 0.1);
+      setPpjParameterDefinition(params[PARAM_ADJ_PITCH_OFFSET], "pitch_offset", OSSIM_DEGREES, 0.1);
+      setPpjParameterDefinition(params[PARAM_ADJ_YAW_OFFSET], "yaw_offset", OSSIM_DEGREES, 0.1);
+      setPpjParameterDefinition(params[PARAM_ADJ_FOCAL_LENGTH_OFFSET], "focal_length_offset", OSSIM_PIXEL, 20.0);
+   }
+}
 
 ossimPpjFrameSensor::ossimPpjFrameSensor()
    :
    m_ecef2Cam(),
    m_ecef2CamInverse(),
+   m_adjustedCamToCam(),
+   m_adjustedCamToCamInverse(),
    m_principalPoint(0.0, 0.0),
    m_focalLengthX(0.0),
    m_focalLengthY(0.0),
@@ -64,15 +109,25 @@ ossimPpjFrameSensor::ossimPpjFrameSensor()
    theSensorID = "PpjFrame";
    m_ecef2Cam.ReSize(3,3);
    m_ecef2CamInverse.ReSize(3,3);
+   m_adjustedCamToCam.ReSize(3,3);
+   m_adjustedCamToCamInverse.ReSize(3,3);
 
    std::fill(m_ecef2Cam.Store(), m_ecef2Cam.Store()+9, 0.0);
    std::fill(m_ecef2CamInverse.Store(), m_ecef2CamInverse.Store()+9, 0.0);
+   std::fill(m_adjustedCamToCam.Store(), m_adjustedCamToCam.Store()+9, 0.0);
+   std::fill(m_adjustedCamToCamInverse.Store(), m_adjustedCamToCamInverse.Store()+9, 0.0);
    m_ecef2Cam[0][0] = 1.0;
    m_ecef2Cam[1][1] = 1.0;
    m_ecef2Cam[2][2] = 1.0;
    m_ecef2CamInverse[0][0] = 1.0;
    m_ecef2CamInverse[1][1] = 1.0;
    m_ecef2CamInverse[2][2] = 1.0;
+   m_adjustedCamToCam[0][0] = 1.0;
+   m_adjustedCamToCam[1][1] = 1.0;
+   m_adjustedCamToCam[2][2] = 1.0;
+   m_adjustedCamToCamInverse[0][0] = 1.0;
+   m_adjustedCamToCamInverse[1][1] = 1.0;
+   m_adjustedCamToCamInverse[2][2] = 1.0;
 }
 
 ossimPpjFrameSensor::ossimPpjFrameSensor(const ossimPpjFrameSensor& src)
@@ -80,6 +135,8 @@ ossimPpjFrameSensor::ossimPpjFrameSensor(const ossimPpjFrameSensor& src)
    ossimSensorModel(src),
    m_ecef2Cam(src.m_ecef2Cam),
    m_ecef2CamInverse(src.m_ecef2CamInverse),
+   m_adjustedCamToCam(src.m_adjustedCamToCam),
+   m_adjustedCamToCamInverse(src.m_adjustedCamToCamInverse),
    m_principalPoint(src.m_principalPoint),
    m_focalLengthX(src.m_focalLengthX),
    m_focalLengthY(src.m_focalLengthY),
@@ -137,9 +194,10 @@ void ossimPpjFrameSensor::imagingRay(const ossimDpt& imagePoint,
    ossimColumnVector3d camLOS(imagePoint.x - m_principalPoint.x,
                               imagePoint.y - m_principalPoint.y,
                               m_adjustedFocalLength);   
+   ossimColumnVector3d adjustedCamLOS(m_adjustedCamToCam * camLOS);
 
    // Rotate to ECF
-   ossimColumnVector3d ecfLOS = m_ecef2CamInverse * camLOS;
+   ossimColumnVector3d ecfLOS = m_ecef2CamInverse * adjustedCamLOS;
    imageRay.setOrigin(m_adjustedCameraPosition);
    ossimEcefVector ecfRayDir(ecfLOS);
    imageRay.setDirection(ecfRayDir);
@@ -149,6 +207,7 @@ void ossimPpjFrameSensor::imagingRay(const ossimDpt& imagePoint,
       ossimNotify(ossimNotifyLevel_DEBUG)
          << "ossimPpjFrameSensor::imagingRay DEBUG:\n"
          << "  camLOS = " << camLOS << "\n"
+         << "  adjustedCamLOS = " << adjustedCamLOS << "\n"
          << "  m_adjustedPlatformPosition = " << m_adjustedCameraPosition << "\n"
          << "  imageRay = " << imageRay << "\n"
          << std::endl;
@@ -195,10 +254,11 @@ void ossimPpjFrameSensor::worldToLineSample(const ossimGpt& world_point,
    ossimEcefPoint gnd_ecf(wpt);
    ossimEcefPoint cam_ecf(m_adjustedCameraPosition);
    ossimEcefVector ecfRay(gnd_ecf - cam_ecf);
-   ossimColumnVector3d camRay(m_ecef2Cam*ecfRay.data());   
+   ossimColumnVector3d camRay(m_ecef2Cam*ecfRay.data());
+   ossimColumnVector3d adjustedCamRay(m_adjustedCamToCamInverse*camRay);
       
-   double x = m_principalPoint.x + m_adjustedFocalLength*camRay[0]/camRay[2];
-   double y = m_principalPoint.y + m_adjustedFocalLength*camRay[1]/camRay[2];
+   double x = m_principalPoint.x + m_adjustedFocalLength*adjustedCamRay[0]/adjustedCamRay[2];
+   double y = m_principalPoint.y + m_adjustedFocalLength*adjustedCamRay[1]/adjustedCamRay[2];
 
    ossimDpt p(x, y);
     
@@ -222,20 +282,15 @@ void ossimPpjFrameSensor::updateModel()
                                        m_cameraPositionEllipsoid.lond()   + deltal,
                                        m_cameraPositionEllipsoid.height() + computeParameterOffset(PARAM_ADJ_ALTITUDE_OFFSET));
 
-   // TODO  Need to add correction matrix to accommodate orientation offsets.  It
-   //       shouldn't be done in ECF frame.
-   // double r = ossim::degreesToRadians(m_roll  + computeParameterOffset(PARAM_ADJ_ROLL_OFFSET));
-   // double p = ossim::degreesToRadians(m_pitch + computeParameterOffset(PARAM_ADJ_PITCH_OFFSET) );
-   // double y = ossim::degreesToRadians(m_yaw   + computeParameterOffset(PARAM_ADJ_YAW_OFFSET));
-   // NEWMAT::Matrix rollM   = ossimMatrix3x3::create(1, 0, 0,
-   //                                                 0, cos(r), sin(r),
-   //                                                 0, -sin(r), cos(r));
-   // NEWMAT::Matrix pitchM  = ossimMatrix3x3::create(cos(p), 0, -sin(p),
-   //                                                 0,      1, 0,
-   //                                                 sin(p), 0, cos(p));
-   // NEWMAT::Matrix yawM    = ossimMatrix3x3::create(cos(y), sin(y), 0,
-   //                                                 -sin(y), cos(y), 0,
-   //                                                 0,0,1); 
+   double r = computeParameterOffset(PARAM_ADJ_ROLL_OFFSET);
+   double p = computeParameterOffset(PARAM_ADJ_PITCH_OFFSET);
+   double y = computeParameterOffset(PARAM_ADJ_YAW_OFFSET);
+   NEWMAT::Matrix rollM  = ossimMatrix3x3::createRotationXMatrix(r);
+   NEWMAT::Matrix pitchM = ossimMatrix3x3::createRotationYMatrix(p);
+   NEWMAT::Matrix yawM   = ossimMatrix3x3::createRotationZMatrix(y);
+
+   m_adjustedCamToCam = rollM*pitchM*yawM;
+   m_adjustedCamToCamInverse = m_adjustedCamToCam.t();
    
    m_adjustedFocalLength = m_focalLength + computeParameterOffset(PARAM_ADJ_FOCAL_LENGTH_OFFSET);
    
@@ -271,42 +326,11 @@ void ossimPpjFrameSensor::initAdjustableParameters()
    if (traceExec())
       ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimPpjFrameSensor::initAdjustableParameters: returning..." << std::endl;
    resizeAdjustableParameterArray(PARAM_ADJ_COUNT);
-   
-   setAdjustableParameter(PARAM_ADJ_LON_OFFSET, 0.0);
-   setParameterDescription(PARAM_ADJ_LON_OFFSET, "lon_offset");
-   setParameterUnit(PARAM_ADJ_LON_OFFSET, "meters");
-   setParameterSigma(PARAM_ADJ_LON_OFFSET, 10);
-   
-   setAdjustableParameter(PARAM_ADJ_LAT_OFFSET, 0.0);
-   setParameterDescription(PARAM_ADJ_LAT_OFFSET, "lat_offset");
-   setParameterUnit(PARAM_ADJ_LAT_OFFSET, "meters");
-   setParameterSigma(PARAM_ADJ_LAT_OFFSET, 10);
-   
-   setAdjustableParameter(PARAM_ADJ_ALTITUDE_OFFSET, 0.0);
-   setParameterDescription(PARAM_ADJ_ALTITUDE_OFFSET, "altitude_offset");
-   setParameterUnit(PARAM_ADJ_ALTITUDE_OFFSET, "meters");
-   setParameterSigma(PARAM_ADJ_ALTITUDE_OFFSET, 10);
-   
-   // TODO  Add these back in when orientation angle offsets are fixed.
-   // setAdjustableParameter(PARAM_ADJ_ROLL_OFFSET, 0.0);
-   // setParameterDescription(PARAM_ADJ_ROLL_OFFSET, "roll_offset");
-   // setParameterUnit(PARAM_ADJ_ROLL_OFFSET, "degrees");
-   // setParameterSigma(PARAM_ADJ_ROLL_OFFSET, 10);
-   
-   // setAdjustableParameter(PARAM_ADJ_PITCH_OFFSET, 0.0);
-   // setParameterDescription(PARAM_ADJ_PITCH_OFFSET, "pitch_offset");
-   // setParameterUnit(PARAM_ADJ_PITCH_OFFSET, "degrees");
-   // setParameterSigma(PARAM_ADJ_PITCH_OFFSET, 10);
-   
-   // setAdjustableParameter(PARAM_ADJ_YAW_OFFSET, 0.0);
-   // setParameterDescription(PARAM_ADJ_YAW_OFFSET, "yaw_offset");
-   // setParameterUnit(PARAM_ADJ_YAW_OFFSET, "degrees");
-   // setParameterSigma(PARAM_ADJ_YAW_OFFSET, .04);
-   
-   setAdjustableParameter(PARAM_ADJ_FOCAL_LENGTH_OFFSET, 0.0);
-   setParameterDescription(PARAM_ADJ_FOCAL_LENGTH_OFFSET, "focal_length_offset");
-   setParameterUnit(PARAM_ADJ_FOCAL_LENGTH_OFFSET, "pixels");
-   setParameterSigma(PARAM_ADJ_FOCAL_LENGTH_OFFSET, 20.0);   
+
+   ossimAdjustmentInfo adjustment;
+   getAdjustment(adjustment);
+   setPpjParameterDefinitions(adjustment);
+   setAdjustment(adjustment);
 }
 
 bool ossimPpjFrameSensor::loadState(const ossimKeywordlist& kwl, const char* prefix)
@@ -320,6 +344,23 @@ bool ossimPpjFrameSensor::loadState(const ossimKeywordlist& kwl, const char* pre
    theGSD.makeNan();
    theRefImgPt.makeNan();
    ossimSensorModel::loadState(kwl, prefix);
+
+   if (getNumberOfAdjustableParameters() == PARAM_ADJ_COUNT)
+   {
+      const ossim_uint32 numberOfAdjustments = getNumberOfAdjustments();
+      const ossim_uint32 currentAdjustment = getCurrentAdjustmentIdx();
+
+      for (ossim_uint32 adjIdx = 0; adjIdx < numberOfAdjustments; ++adjIdx)
+      {
+         ossimAdjustmentInfo adjustment;
+         getAdjustment(adjIdx, adjustment);
+         setPpjParameterDefinitions(adjustment);
+         setAdjustment(adjIdx, adjustment);
+      }
+
+      setCurrentAdjustment(currentAdjustment);
+   }
+
    if(getNumberOfAdjustableParameters() < 1)
    {
       initAdjustableParameters();
