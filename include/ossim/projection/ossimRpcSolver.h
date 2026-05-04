@@ -21,64 +21,107 @@
 #include <ossim/imaging/ossimImageGeometry.h>
 
 /**
- * This currently only support Rational poilynomial B format.  This can be
- * found in the NITF registered commercial tag document.
+ * @brief Fits an ossimRpcModel approximation to an image geometry or observation set.
  *
- * @note x=longitude, y=latitude, z=height
- * 
- * <pre>
- * Format is:
- *  coeff[ 0]       + coeff[ 1]*x     + coeff[ 2]*y     + coeff[ 3]*z     +
- *  coeff[ 4]*x*y   + coeff[ 5]*x*z   + coeff[ 6]*y*z   + coeff[ 7]*x*x   +
- *  coeff[ 8]*y*y   + coeff[ 9]*z*z   + coeff[10]*x*y*z + coeff[11]*x*x*x +
- *  coeff[12]*x*y*y + coeff[13]*x*z*z + coeff[14]*x*x*y + coeff[15]*y*y*y +
- *  coeff[16]*y*z*z + coeff[17]*x*x*z + coeff[18]*y*y*z + coeff[19]*z*z*z;
+ * @details The solver samples image-space points, projects them through the source geometry to
+ * ground, normalizes image and ground coordinates to the RPC offset/scale domain, and solves the
+ * RPC00B rational polynomial coefficients for line and sample. The coefficient solve uses weighted
+ * SVD least squares with light denominator regularization to avoid unstable rational poles in
+ * sparse or nearly flat-height fits.
  *
- *       where coeff is one of XNum, XDen, YNum, and YDen.  So there are 80
- *       coefficients all together.
+ * The public solve() method validates the fit at midpoint samples, refines the sampling grid as
+ * needed, and stops when one of these conditions is met:
+ * - The maximum pixel residual satisfies the requested tolerance.
+ * - The configured iteration limit is reached.
+ * - The configured grid limit is reached.
+ * - The maximum residual improvement stalls.
  *
- * Currently we use a linear least squares fit to solve the coefficients.
- * This is the simplest to implement.  We probably relly need a nonlinear
- * minimizer to fit the coefficients but I don't have time to experiment.
- * Levenberg Marquardt might be a solution to look into.
+ * @par Common fitting modes
+ * - Elevation-aware fitting: enable elevation and use the source geometry/DEM heights. This is the
+ *   normal path for RPC generation when elevation is available.
+ * - Single-height fitting: disable elevation and all observations are fit at height 0. This is
+ *   primarily useful for diagnostics and flat image-plane comparisons.
+ * - Layered-height fitting: enable a height layer delta/radius to fit several constant-height
+ *   planes about a nominal center height. With elevation enabled, the nominal height is estimated
+ *   from the fit area first, and the layer delta can be estimated from sampled height variation
+ *   when only a radius is supplied. The automatic delta is capped by image height sensitivity so
+ *   small-GSD or oblique images do not receive an overly large height slab. Without elevation, the
+ *   nominal height is 0 and an explicit delta is required for layered fitting. This helps produce
+ *   an RPC that remains stable over height changes instead of only matching the terrain height
+ *   sampled at each image point. It also reduces downstream dependence on using the exact same
+ *   elevation database used during fitting, since the generated RPC has already been fit across a
+ *   small height slab around the scene.
+ * - Optimizer comparison: use setFitOptimizer() to compare the default weighted SVD solve against
+ *   nonlinear LM refinement and a Huber-weighted LM refinement.
  *
- * HOW TO USE:
- * 
- *        ossimRpcSolver solver;
- *        solver.solveCoefficients(rect,
- *                                 *proj.get());
- *                                 
- * We can also call solve coefficients with a list of ground control points.
- * First is the list of image points followed by the ground points.
- * NOTE: Thes must be equal in size.
- * 
- *        solver.solveCoefficients(imagePoints,
- *                                 groundPoints);
- *                                 
- * Once you call solveCoefficients you can create the projector:
- *                                 
- *        ossimRefPtr<ossimRpcProjection> rpc = solver.createRpcProjection();
+ * @par Polynomial format
+ * This class currently emits RPC00B polynomial ordering. For each coordinate, the numerator has
+ * 20 terms and the denominator has 20 terms with denominator coefficient 0 fixed to 1, producing
+ * the standard line numerator, line denominator, sample numerator, and sample denominator sets.
  *
- * Note that a sub-image bounding rect can be passed into the solve methods. This
- * constrains the solution fit to cover only that rectangle in the original image space,
- * but the image coordinates used are still based on the full image. If the intent is to
- * generate an RPC that will work for an image chip in that chip's local image coordinate
- * system (i.e., the UL corner of the chip is 0, 0), then you'll need to call
- * rpcModel->setImageOffset(chip_offset) on the output RPC model.
+ * @note In the polynomial term listing below, x=longitude, y=latitude, z=height after
+ * normalization to RPC coordinates.
  *
- * </pre>
- * 
- */ 
+ * @code
+ * coeff[ 0]       + coeff[ 1]*x     + coeff[ 2]*y     + coeff[ 3]*z     +
+ * coeff[ 4]*x*y   + coeff[ 5]*x*z   + coeff[ 6]*y*z   + coeff[ 7]*x*x   +
+ * coeff[ 8]*y*y   + coeff[ 9]*z*z   + coeff[10]*x*y*z + coeff[11]*x*x*x +
+ * coeff[12]*x*y*y + coeff[13]*x*z*z + coeff[14]*x*x*y + coeff[15]*y*y*y +
+ * coeff[16]*y*z*z + coeff[17]*x*x*z + coeff[18]*y*y*z + coeff[19]*z*z*z
+ * @endcode
+ *
+ * @par Example: fit from an existing image geometry
+ * @code
+ * ossimRpcSolver solver(useElevation);
+ * solver.setHeightLayerRadius(1);  // Radius 1 means 3 total planes.
+ * solver.setHeightLayerDelta(0.0); // <= 0 requests automatic delta when elevation is enabled.
+ *
+ * if (solver.solve(imageBounds, geom, 0.5))
+ * {
+ *    ossimRefPtr<ossimRpcModel> rpc = solver.getRpcModel();
+ * }
+ * @endcode
+ *
+ * @par Example: auto layered fit from an existing image geometry
+ * @code
+ * ossimRpcSolver solver(true);
+ * solver.setHeightLayerRadius(1);  // Estimate nominal height and auto delta from the fit area.
+ * solver.solve(imageBounds, geom, 0.5);
+ * @endcode
+ *
+ * @par Example: fit from explicit observations
+ * @code
+ * solver.solveCoefficients(imagePoints, groundPoints);
+ * ossimRefPtr<ossimRpcModel> rpc = solver.getRpcModel();
+ * @endcode
+ *
+ * @note The image and ground observation vectors must have equal size. At least 39 observations
+ * are required to solve the 39 unknown coefficients for each rational expression.
+ *
+ * @note A sub-image bounding rect constrains the solution to that area, but sampled image
+ * coordinates remain in the source image coordinate system. If the resulting RPC will accompany
+ * a chip whose local upper-left image coordinate is (0,0), call
+ * rpcModel->setImageOffset(chip_offset) before writing the chip geometry.
+ */
 class OSSIM_DLL ossimRpcSolver : public ossimReferenced
 {
 public:
+   enum RpcFitOptimizer
+   {
+      RPC_FIT_WEIGHTED_SVD = 0,
+      RPC_FIT_LM           = 1,
+      RPC_FIT_LM_HUBER     = 2
+   };
+
    /**
-    * The use elvation flag will deterimne if we force the height t be 0.
-    * If the elevation is enabled then we use the height field of the control
-    * points to determine the coefficients of the RPC00 polynomial.  If its
-    * false then we will ignore the height by setting the height field to 0.0.
+    * @brief Constructs an RPC solver.
     *
-    * Note:  even if the elevation is enabled all NAN heights are set to 0.0.
+    * @param useElevation If true, ground observation heights are used when solving the RPC.
+    * If false, observations are fit as a single height-0 surface.
+    * @param useHeightAboveMSLFlag If true, sampled heights are converted to height above MSL
+    * when the elevation manager can provide a value.
+    *
+    * @note NaN heights are replaced with 0.0 before fitting.
     */
    ossimRpcSolver(bool useElevation=false,
                   bool useHeightAboveMSLFlag=false);
@@ -86,27 +129,44 @@ public:
    virtual ~ossimRpcSolver(){}
 
    /**
-    * This will convert any projector to an RPC model
+    * @brief Samples an image projection and solves an RPC model.
+    *
+    * @param imageBounds Image-space area to sample.
+    * @param imageProj Source projection to approximate.
+    * @param xSamples Number of grid samples in the sample direction.
+    * @param ySamples Number of grid samples in the line direction.
     */
    void solveCoefficients(const ossimDrect& imageBounds,
                           ossimProjection* imageProj,
                           ossim_uint32 xSamples=8,
                           ossim_uint32 ySamples=8);
-   
+
+   /**
+    * @brief Samples an image geometry and solves an RPC model.
+    *
+    * @details This overload honors the solver's elevation and height-layer settings when producing
+    * image/ground observations for the coefficient fit.
+    *
+    * @param imageBounds Image-space area to sample.
+    * @param geom Source image geometry to approximate.
+    * @param xSamples Number of grid samples in the sample direction.
+    * @param ySamples Number of grid samples in the line direction.
+    */
    void solveCoefficients(const ossimDrect& imageBounds,
                           ossimImageGeometry* geom,
                           ossim_uint32 xSamples=8,
                           ossim_uint32 ySamples=8);
 
    /**
-    * Similar to the other solve methods except that the final grid size is established
-    * iteratively so that the error at the midpoints between grid nodes falls below tolerance.
-    * The RPC is computed for the specified image bounds range only, not the full image. The
-    * expectation here (when the imageBounds is less than the full valid image rect) is to
-    * generate an RPC to accompany a subimage that will be written to disk.
-    * @param imageBounds The AOI in image space for the RPC computation.
-    * @param geom Represents the geometry of the input image
-    * @param pixel_tolerance Maximum error in pixels (typically fraction of a pixel) to achieve.
+    * @brief Iteratively solves an RPC model and validates midpoint residuals.
+    *
+    * @details The RPC is computed for the specified image bounds only. When imageBounds is smaller
+    * than the full valid image rect, this is intended for generating an RPC to accompany a subimage
+    * written to disk.
+    *
+    * @param aoiBounds The AOI in image space for the RPC computation.
+    * @param geom Geometry of the input image.
+    * @param pixel_tolerance Maximum image-space residual in pixels.
     * @return true if solution converged below pixel tolerance.
     */
    bool solve(const ossimDrect& aoiBounds,
@@ -114,19 +174,22 @@ public:
               const double& pixel_tolerance=0.5);
 
    /**
-    * Performs iterative solve using the other solve method, but uses an image filename to
-    * initialize, and computes RPC over entire image rect.
+    * @brief Iteratively solves an RPC model for an image file's full image rectangle.
+    *
+    * @param imageFilename Image file used to initialize the source geometry.
+    * @param pixel_tolerance Maximum image-space residual in pixels.
+    * @return true if solution converged below pixel tolerance.
     */
    bool solve(const ossimFilename& imageFilename,
               const double& pixel_tolerance=0.5);
 
    /**
-    * takes associated image points and ground points
-    * and solves the coefficents for the rational polynomial for
-    * line and sample calculations from world points.
+    * @brief Solves RPC coefficients from paired image and ground observations.
     *
-    * Note: All data will be normalized between -1 and 1 for
-    *       numerical robustness.
+    * @details All data is normalized to the RPC offset/scale domain for numerical robustness.
+    *
+    * @param imagePoints Image-space observations.
+    * @param groundControlPoints Matching ground observations.
     */ 
    void solveCoefficients(const std::vector<ossimDpt>& imagePoints,
                           const std::vector<ossimGpt>& groundControlPoints);
@@ -139,6 +202,54 @@ public:
 
    double getRmsError()const;
    double getMaxError()const;
+
+   /**
+    * @brief Sets the height-layer spacing, in meters, used for layered RPC fitting and validation.
+    *
+    * @details Layered fitting is controlled primarily by setHeightLayerRadius(). When radius is
+    * positive, observations are sampled at nominal center height plus integer multiples of delta.
+    * With elevation enabled, the nominal center height is estimated from the fit area and a
+    * delta <= 0 requests automatic delta estimation from sampled height variation and image height
+    * sensitivity. With elevation disabled, provide a positive delta if layered fitting is desired.
+    */
+   void setHeightLayerDelta(ossim_float64 delta);
+   ossim_float64 getHeightLayerDelta() const;
+
+   /**
+    * @brief Sets the number of height layers to sample on each side of the nominal center height.
+    *
+    * @details A radius of 0 disables layered fitting. A radius of 1 samples 3 total planes
+    * (-delta, 0, +delta), radius 2 samples 5 total planes, etc. If elevation is enabled and no
+    * positive delta is supplied, the solver estimates a delta from fit-area height variation and
+    * caps it by image height sensitivity.
+    */
+   void setHeightLayerRadius(ossim_uint32 radius);
+   ossim_uint32 getHeightLayerRadius() const;
+
+   /**
+    * Sets the maximum number of outer fit/validate iterations. Each iteration fits an RPC
+    * at the current sampling grid size, validates midpoint residuals, and may refine the grid.
+    */
+   void setMaxIterations(ossim_uint32 iterations);
+   ossim_uint32 getMaxIterations() const;
+
+   /**
+    * Sets the minimum max-residual improvement, in pixels, needed to continue refining.
+    * A value <= 0 uses the solver default derived from the requested pixel tolerance.
+    */
+   void setResidualImprovementTolerance(ossim_float64 tolerance);
+   ossim_float64 getResidualImprovementTolerance() const;
+
+   /**
+    * @brief Selects the coefficient optimizer used for each rational expression.
+    *
+    * @details RPC_FIT_WEIGHTED_SVD is the default linearized, iteratively reweighted SVD solve.
+    * RPC_FIT_LM starts from that solution and refines the actual nonlinear rational residual with
+    * a damped Levenberg-Marquardt style step. RPC_FIT_LM_HUBER applies the same nonlinear
+    * refinement with Huber residual weighting.
+    */
+   void setFitOptimizer(RpcFitOptimizer optimizer);
+   RpcFitOptimizer getFitOptimizer() const;
 
    /**
     * @return ossimRefPtr<ossimNitfRegisteredTag>
@@ -190,6 +301,11 @@ protected:
 
    bool theUseElevationFlag;
    bool theHeightAboveMSLFlag;
+   ossim_float64 theHeightLayerDelta;
+   ossim_uint32 theHeightLayerRadius;
+   ossim_uint32 theMaxIterations;
+   ossim_float64 theResidualImprovementTolerance;
+   RpcFitOptimizer theFitOptimizer;
    ossim_float64 theMeanResidual;
    ossim_float64 theMaxResidual;
    ossimRefPtr<ossimImageGeometry> theRefGeom;
