@@ -15,7 +15,8 @@ All notable changes to `ossim` are documented here.
 > problems instead of inviting NaNs to the party. PPJ frame sensors also get
 > complete adjustable definitions and a local camera orientation adjustment so
 > registration has real roll/pitch/yaw controls instead of leaning on offsets
-> alone.
+> alone. The generated OSSIM config header also now uses standard fixed-width
+> integer types without the old platform size-check dance.
 
 ### Added
 - Add `ossim-rpcgen` controls for force-fitting existing RPC inputs, sampling
@@ -28,6 +29,9 @@ All notable changes to `ossim` are documented here.
   selection for comparing linearized and nonlinear RPC fits (f86f398d).
 
 ### Changed
+- Use standard fixed-width integer typedefs in `ossimConfig.h.in` for both C
+  and C++ consumers, removing generated `SIZE_OF_*` checks and the unused
+  `ossim_float128` typedef (428261de).
 - Define all PPJ adjustable parameters from one shared definition path, including
   200-meter lon/lat offsets, 0.1-degree roll/pitch/yaw offsets, altitude, and
   focal length adjustment defaults.
