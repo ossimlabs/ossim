@@ -1,3 +1,52 @@
+/**
+ * @file ossim-rpcgen.cpp
+ * @brief Command-line driver for generating RPC geometry from an OSSIM image geometry.
+ *
+ * @details The application either copies an existing RPC model or fits a replacement RPC model
+ * through ossimRpcSolver. The fitted model approximates the input image geometry over the full
+ * image or over an optional image-space bounding box.
+ *
+ * @par Common scenarios
+ * - Copy an existing RPC:
+ *   Run without --force-fit-rpc on an image that already uses an RPC model.
+ * - Force-fit an existing RPC:
+ *   Use --force-fit-rpc to sample the input RPC geometry and solve a new RPC approximation. This
+ *   is useful for comparing solver behavior against known RPC data.
+ * - Fit a non-RPC sensor model:
+ *   Run against an image with another OSSIM sensor model. The solver samples that geometry and
+ *   writes an RPC approximation in the requested output format.
+ * - Disable elevation:
+ *   Use --disable-elev only for diagnostics or flat comparisons. Normal RPC generation should use
+ *   elevation when it is available so the fit is centered on the scene's nominal height.
+ * - Use layered heights:
+ *   Use --height-layer-delta and --height-layer-radius to sample fixed-height planes around each
+ *   nominal center height. With elevation enabled, the nominal height is estimated from the fit
+ *   area and the layer delta can be estimated automatically when only radius is provided. With
+ *   --disable-elev, the nominal height is 0 and an explicit delta is required for layered fitting.
+ *   The automatic delta is capped by image height sensitivity, so small-GSD or oblique images do
+ *   not receive an overly large height slab. Radius 1 creates 3 total planes, radius 2 creates 5
+ *   total planes, etc. This reduces the need for downstream consumers to use the exact same
+ *   elevation database because the RPC is fit over a height slab around the scene, not just at the
+ *   terrain samples used while generating it.
+ * - Control fit refinement:
+ *   Use --tolerance for maximum pixel residual, --max-fit-iterations to cap refinement, and
+ *   --min-fit-improvement to stop when max-residual improvement stalls.
+ * - Compare coefficient optimizers:
+ *   Use --fit-optimizer weighted-svd, --fit-optimizer lm, or --fit-optimizer lm-huber to compare
+ *   the current linearized solve against nonlinear rational residual refinement.
+ *
+ * @par Examples
+ * @code
+ * ossim-rpcgen input.ntf output.geom
+ * ossim-rpcgen --force-fit-rpc --disable-elev --tolerance 0.5 input.ntf fit.geom
+ * ossim-rpcgen --height-layer-radius 2 input.tif auto-layered.geom
+ * ossim-rpcgen --height-layer-delta 0.1 --height-layer-radius 2 input.tif layered.geom
+ * ossim-rpcgen --fit-optimizer lm-huber --force-fit-rpc input.ntf robust-fit.geom
+ * ossim-rpcgen --bbox 0 0 4095 4095 --geom DG input.tif chip.RPB
+ * ossim-rpcgen --tolerance 0.1 --max-fit-iterations 4 --min-fit-improvement 0.001 input.tif out.geom
+ * @endcode
+ */
+
 #include <ossim/init/ossimInit.h>
 #include <ossim/base/ossimNotifyContext.h>
 #include <ossim/base/ossimArgumentParser.h>
@@ -9,6 +58,8 @@
 #include <ossim/projection/ossimProjectionFactoryRegistry.h>
 #include <ossim/projection/ossimRpcSolver.h>
 #include <ossim/base/ossimXmlDocument.h>
+
+#include <algorithm>
 
 using namespace std;
 
@@ -30,8 +81,14 @@ int main(int argc, char* argv[])
 
    bool rpcFlag       = false;
    bool cgFlag       = false;
+   bool forceFitRpcFlag = false;
    ossimDrect imageRect;
    double error = 0.1;
+   double heightLayerDelta = 0.0;
+   ossim_uint32 heightLayerRadius = 0;
+   ossim_uint32 maxFitIterations = 6;
+   double residualImprovementTolerance = -1.0;
+   ossimRpcSolver::RpcFitOptimizer fitOptimizer = ossimRpcSolver::RPC_FIT_WEIGHTED_SVD;
 
    imageRect.makeNan();
    ossimApplicationUsage* au = argumentParser.getApplicationUsage();
@@ -51,12 +108,34 @@ int main(int argc, char* argv[])
          "RPC computation over the AOI only. Note that the RPC image space UL corner will "
          "correspond to (0,0), i.e., the model will be shifted from the original full-image model.");
    au->addCommandLineOption(
-         "--tolerance <double>","Used as an RMS error tolerance in meters between original model "
+         "--height-layer-delta <meters>","Samples additional fixed-height layers around a nominal "
+         "center height when fitting the RPC. With elevation enabled, the nominal height is "
+         "estimated from the fit area. If radius is positive and delta is omitted, delta is "
+         "estimated from sampled elevation variation and capped by image height sensitivity. With "
+         "--disable-elev, an explicit delta is required for layered fitting.");
+   au->addCommandLineOption(
+         "--height-layer-radius <count>","Number of height layers to sample on each side of the "
+         "nominal center height. Radius 1 samples 3 total planes, radius 2 samples 5 total planes, "
+         "and so on. Default is 0.");
+   au->addCommandLineOption(
+         "--max-fit-iterations <count>","Maximum number of RPC fit/validate refinement iterations. "
+         "Default is 6.");
+   au->addCommandLineOption(
+         "--min-fit-improvement <pixels>","Minimum max-residual improvement, in pixels, required "
+         "to continue refining the fit. Default is 1 percent of --tolerance, with a small floor.");
+   au->addCommandLineOption(
+         "--fit-optimizer <name>","Coefficient optimizer to use for each RPC rational expression. "
+         "Options are weighted-svd, lm, and lm-huber. Default is weighted-svd.");
+   au->addCommandLineOption(
+         "--tolerance <double>","Used as a maximum error tolerance in pixels between original model "
          "and RPC.");
    au->addCommandLineOption(
          "--geom <format>", "Specifies format of the subimage RPC geometry file."
          " Possible values are: \"OGEOM\" (OSSIM geometry, default), \"DG\" (DigitalGlobe WV/QB "
          ".RPB format), \"JSON\" (MSP-style JSON), or \"XML\". Case insensitive.");
+   au->addCommandLineOption(
+         "--force-fit-rpc","Forces a new RPC coefficient fit even when the input image already "
+         "uses an RPC model.");
    
    int numArgs = argumentParser.argc();
    if (argumentParser.read("-h") || argumentParser.read("--help") || (numArgs == 1))
@@ -74,6 +153,38 @@ int main(int argc, char* argv[])
 
    if(argumentParser.read("--tolerance", tempParam1))
       error = tempString1.toDouble();
+   if(argumentParser.read("--force-fit-rpc"))
+      forceFitRpcFlag = true;
+   if(argumentParser.read("--height-layer-delta", tempParam1))
+      heightLayerDelta = tempString1.toDouble();
+   if(argumentParser.read("--height-layer-radius", tempParam1))
+      heightLayerRadius = static_cast<ossim_uint32>(std::max(0, tempString1.toInt32()));
+   if(argumentParser.read("--max-fit-iterations", tempParam1))
+      maxFitIterations = static_cast<ossim_uint32>(std::max(1, tempString1.toInt32()));
+   if(argumentParser.read("--min-fit-improvement", tempParam1))
+      residualImprovementTolerance = tempString1.toDouble();
+   if(argumentParser.read("--fit-optimizer", tempParam1))
+   {
+      ossimString optimizerName = tempString1.downcase();
+      if ((optimizerName == "weighted-svd") || (optimizerName == "svd"))
+      {
+         fitOptimizer = ossimRpcSolver::RPC_FIT_WEIGHTED_SVD;
+      }
+      else if (optimizerName == "lm")
+      {
+         fitOptimizer = ossimRpcSolver::RPC_FIT_LM;
+      }
+      else if ((optimizerName == "lm-huber") || (optimizerName == "huber"))
+      {
+         fitOptimizer = ossimRpcSolver::RPC_FIT_LM_HUBER;
+      }
+      else
+      {
+         ossimNotify(ossimNotifyLevel_FATAL)
+               << "ERROR: Unknown fit optimizer <" << optimizerName << ">." << std::endl;
+         exit(1);
+      }
+   }
 
    if(argumentParser.read("--bbox", tempParam1,tempParam2,tempParam3,tempParam4 ))
    {
@@ -169,7 +280,7 @@ int main(int argc, char* argv[])
    // First consider if the input is already an RPC (type B), and if so, simply copy it:
    ossimRefPtr<ossimRpcModel> rpc;
    ossimRpcModel* inputRpc = dynamic_cast<ossimRpcModel*>(geom->getProjection());
-   if (inputRpc)
+   if (inputRpc && !forceFitRpcFlag)
    {
       ossimNotify(ossimNotifyLevel_INFO) << "\nThe input image is already using RPC. Simply copying "
             "the coefficients to the output with offset (if any) applied..." << std::endl;
@@ -180,7 +291,18 @@ int main(int argc, char* argv[])
       // Solve for replacement RPC:
       ossimNotify(ossimNotifyLevel_INFO) << "\nSolving for RPC coefficients..." << std::endl;
       ossimRefPtr<ossimRpcSolver> solver = new ossimRpcSolver(useElevation, false);
+      solver->setHeightLayerDelta(heightLayerDelta);
+      solver->setHeightLayerRadius(heightLayerRadius);
+      solver->setMaxIterations(maxFitIterations);
+      solver->setResidualImprovementTolerance(residualImprovementTolerance);
+      solver->setFitOptimizer(fitOptimizer);
       bool converged = solver->solve(imageRect, geom.get(), error);
+      if (!converged)
+      {
+         ossimNotify(ossimNotifyLevel_FATAL)
+               << "ERROR: Unable to converge on desired RPC error tolerance." << std::endl;
+         exit(1);
+      }
       rpc = solver->getRpcModel();
    }
 

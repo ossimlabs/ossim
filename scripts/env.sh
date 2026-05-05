@@ -83,7 +83,9 @@ if [ -d $OSSIM_DEV_HOME/ossim-video ] ; then
       export BUILD_OSSIM_VIDEO=ON
    fi
 else
-   export BUILD_OSSIM_VIDEO=ON
+   if [ -z $BUILD_OSSIM_VIDEO ] ; then
+      export BUILD_OSSIM_VIDEO=OFF
+   fi
 fi
 
 if [ -d $OSSIM_DEV_HOME/ossim-oms ] ; then
@@ -224,4 +226,3 @@ if [ "${BUILD_KAKADU_PLUGIN}"="ON"  ] ; then
       fi
    fi
 fi
-

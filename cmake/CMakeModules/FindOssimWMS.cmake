@@ -6,12 +6,30 @@
 #  OSSIMWMS_FOUND, If false, do not try to use WMS.
 # also defined, but not for general use are
 #  WMS_LIBRARY, where to find the WMS library.
-SET(CMAKE_FIND_FRAMEWORK "LAST")
-FIND_PATH(OSSIMWMS_INCLUDE_DIR wms/wms.h
-	PATHS	$ENV{OSSIM_DEV_HOME}/ossim-wms/include)
+IF(TARGET ossim-wms)
+  IF(DEFINED OSSIM_DEV_HOME)
+    SET(OSSIMWMS_INCLUDE_DIR "${OSSIM_DEV_HOME}/ossim-wms/include")
+  ELSEIF(DEFINED ENV{OSSIM_DEV_HOME})
+    SET(OSSIMWMS_INCLUDE_DIR "$ENV{OSSIM_DEV_HOME}/ossim-wms/include")
+  ENDIF()
+  SET(OSSIMWMS_LIBRARY ossim-wms)
+ELSE()
+  SET(CMAKE_FIND_FRAMEWORK "LAST")
+  FIND_PATH(OSSIMWMS_INCLUDE_DIR wms/wms.h
+    PATHS
+    $ENV{OSSIM_DEV_HOME}/ossim-wms/include
+    $ENV{OSSIM_BUILD_DIR}/../ossim-wms/include
+    $ENV{OSSIM_INSTALL_PREFIX}/include
+    PATH_SUFFIXES include)
 
-SET(OSSIMWMS_NAMES ${OSSIMWMS_NAMES} wms ossim-wms)
-FIND_LIBRARY(OSSIMWMS_LIBRARY NAMES ${OSSIMWMS_NAMES})
+  SET(OSSIMWMS_NAMES ${OSSIMWMS_NAMES} ossim-wms wms libossim-wms libwms)
+  FIND_LIBRARY(OSSIMWMS_LIBRARY NAMES ${OSSIMWMS_NAMES}
+    PATHS
+    $ENV{OSSIM_BUILD_DIR}/lib64
+    $ENV{OSSIM_BUILD_DIR}/lib
+    $ENV{OSSIM_INSTALL_PREFIX}/lib64
+    $ENV{OSSIM_INSTALL_PREFIX}/lib)
+ENDIF()
 
 # handle the QUIETLY and REQUIRED arguments and set OSSIMWMS_FOUND to TRUE if 
 # all listed variables are TRUE
