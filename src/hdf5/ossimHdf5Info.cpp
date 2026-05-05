@@ -1,14 +1,12 @@
-//----------------------------------------------------------------------------
+//---
 //
-// License:  LGPL
-// 
-// See LICENSE.txt file in the top level directory for more details.
+// License: MIT
 //
 // Author:  David Burken
 //
 // Description: HDF5 Info class.
 // 
-//----------------------------------------------------------------------------
+//---
 // $Id$
 
 #include <ossim/hdf5/ossimHdf5Info.h>
@@ -1145,7 +1143,8 @@ void ossimHdf5Info::dumpArrayType( H5::ArrayType& dataType,
           nArrayElements*=dims[idx]; 
          }
 
-         dimString = ossimString("(") + dimOut.str() + ossimString::toString(dims[dims.size()-1])+")";  
+         dimString = ossimString("(") + dimOut.str() +
+            ossimString::toString((ossim_uint64)dims[dims.size()-1]) + ")";  
          m_kwl.addPair(prefix+".dimensions", dimString);
 
          ossim_uint32 typeSize = superType.getSize();

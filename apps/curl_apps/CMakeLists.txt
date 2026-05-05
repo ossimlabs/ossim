@@ -1,6 +1,6 @@
 message( "************** Begin: CMAKE SETUP FOR ossim curl apps ******************" )
 
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 
 project(ossimcore)
 
