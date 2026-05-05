@@ -54,6 +54,8 @@ public:
 protected:
    NEWMAT::Matrix m_ecef2Cam;
    NEWMAT::Matrix m_ecef2CamInverse;
+   NEWMAT::Matrix m_adjustedCamToCam;
+   NEWMAT::Matrix m_adjustedCamToCamInverse;
    ossimDpt       m_principalPoint;   // pixels
    double         m_focalLengthX;     // pixels
    double         m_focalLengthY;     // pixels

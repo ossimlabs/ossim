@@ -12,7 +12,12 @@ All notable changes to `ossim` are documented here.
 > height slab around the scene automatically, reducing the need for downstream
 > users to reproduce the exact same elevation database, and the solver now
 > treats invalid samples and unstable intermediate fits as recoverable input
-> problems instead of inviting NaNs to the party.
+> problems instead of inviting NaNs to the party. PPJ frame sensors also get
+> complete adjustable definitions and a local camera orientation adjustment so
+> registration has real roll/pitch/yaw controls instead of leaning on offsets
+> alone. The generated OSSIM config header also now uses standard fixed-width
+> integer types without the old platform size-check dance, and CMake no longer
+> runs the unused probes that fed those checks.
 
 ### Added
 - Add `ossim-rpcgen` controls for force-fitting existing RPC inputs, sampling
@@ -25,6 +30,14 @@ All notable changes to `ossim` are documented here.
   selection for comparing linearized and nonlinear RPC fits (f86f398d).
 
 ### Changed
+- Use standard fixed-width integer typedefs in `ossimConfig.h.in` for both C
+  and C++ consumers, removing generated `SIZE_OF_*` checks and the unused
+  `ossim_float128` typedef (428261de).
+- Remove the obsolete CMake `CheckTypeSize` setup and generated alias-header
+  plumbing that previously fed the `ossimConfig.h.in` size checks (cbcc3b11).
+- Define all PPJ adjustable parameters from one shared definition path, including
+  200-meter lon/lat offsets, 0.1-degree roll/pitch/yaw offsets, altitude, and
+  focal length adjustment defaults.
 - Stop adding a separate `ossim-registration-source` repository from the OSSIM
   workspace build; `BUILD_OSSIM_REGISTRATION_SOURCE` now adds only
   `ossim-autoreg`, which owns the registration bridge target (69ec165c).
@@ -38,6 +51,8 @@ All notable changes to `ossim` are documented here.
   and flat comparisons (f86f398d).
 
 ### Fixed
+- Apply PPJ roll, pitch, and yaw adjustable offsets in local camera space for
+  both imaging rays and world-to-image projection.
 - Harden `ossimRpcSolver` against degenerate bounds, non-finite elevation
   samples, invalid rational-fit residuals, and radius-only layer requests that
   cannot produce a valid positive height delta (d7962caa).
