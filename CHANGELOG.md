@@ -20,6 +20,8 @@ All notable changes to `ossim` are documented here.
 > runs the unused probes that fed those checks.
 
 ### Added
+- Add solver-derived RPC approximation bias and random error estimates so
+  generated RPC00B tags can populate `ERR_BIAS` and `ERR_RAND` (0df2f0ef).
 - Add `ossim-rpcgen` controls for force-fitting existing RPC inputs, sampling
   layered height planes, and limiting fit refinement by iteration count or
   minimum max-residual improvement (561862d0).
