@@ -59,6 +59,15 @@
  * 20 terms and the denominator has 20 terms with denominator coefficient 0 fixed to 1, producing
  * the standard line numerator, line denominator, sample numerator, and sample denominator sets.
  *
+ * @par Solver-derived RPC error estimates
+ * The solver tracks signed residuals between the source geometry and the fitted RPC. These
+ * residuals describe only the RPC approximation error relative to the input model. They are not an
+ * independent absolute geolocation accuracy statement unless the input model is itself truth. The
+ * reported bias error is the magnitude of the mean residual vector, and the reported random error
+ * is the RMS scatter after removing that mean residual. When meters-per-pixel is available from an
+ * input image geometry, the meter-valued estimates are stored on the solved ossimRpcModel and are
+ * written to the RPC00B ERR_BIAS and ERR_RAND fields.
+ *
  * @note In the polynomial term listing below, x=longitude, y=latitude, z=height after
  * normalization to RPC coordinates.
  *
@@ -204,6 +213,40 @@ public:
    double getMaxError()const;
 
    /**
+    * @return Solver-derived RPC approximation bias error in meters.
+    *
+    * @details This is the magnitude of the mean signed validation residual converted to meters.
+    * It maps to RPC00B ERR_BIAS when a solved RPC model is serialized. Returns NaN when no
+    * meter-scale validation residuals have been computed.
+    */
+   double getRpcFitBiasError() const;
+
+   /**
+    * @return Solver-derived RPC approximation random error in meters.
+    *
+    * @details This is the RMS signed validation residual scatter after removing the mean residual,
+    * converted to meters. It maps to RPC00B ERR_RAND when a solved RPC model is serialized.
+    * Returns NaN when no meter-scale validation residuals have been computed.
+    */
+   double getRpcFitRandError() const;
+
+   /**
+    * @return Solver-derived RPC approximation bias error in pixels.
+    *
+    * @details This is available for explicit observation solves where no meters-per-pixel value is
+    * known. It is not written directly to RPC00B.
+    */
+   double getRpcFitBiasErrorInPixels() const;
+
+   /**
+    * @return Solver-derived RPC approximation random error in pixels.
+    *
+    * @details This is available for explicit observation solves where no meters-per-pixel value is
+    * known. It is not written directly to RPC00B.
+    */
+   double getRpcFitRandErrorInPixels() const;
+
+   /**
     * @brief Sets the height-layer spacing, in meters, used for layered RPC fitting and validation.
     *
     * @details Layered fitting is controlled primarily by setHeightLayerRadius(). When radius is
@@ -282,6 +325,15 @@ protected:
    void evalPoint(const ossimGpt& gpt, ossimDpt& ipt) const;
 
    /**
+    * Updates solver and RPC model error estimates from signed image residuals. When metersPerPixel
+    * contains finite positive values, meter estimates are also computed and stored on the RPC model.
+    */
+   void updateFitErrorEstimates(const std::vector<ossimDpt>& imageResiduals,
+                                const ossimDpt& metersPerPixel);
+
+   void clearFitErrorEstimates();
+
+   /**
     * Inverts using the SVD method
     */
    NEWMAT::Matrix invert(const NEWMAT::Matrix& m)const;
@@ -308,6 +360,10 @@ protected:
    RpcFitOptimizer theFitOptimizer;
    ossim_float64 theMeanResidual;
    ossim_float64 theMaxResidual;
+   ossim_float64 theFitBiasError;
+   ossim_float64 theFitRandError;
+   ossim_float64 theFitBiasErrorPixels;
+   ossim_float64 theFitRandErrorPixels;
    ossimRefPtr<ossimImageGeometry> theRefGeom;
    ossimRefPtr<ossimRpcModel> theRpcModel;
 

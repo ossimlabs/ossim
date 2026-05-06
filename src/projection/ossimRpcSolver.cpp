@@ -409,7 +409,11 @@ ossimRpcSolver::ossimRpcSolver(bool useElevation, bool useHeightAboveMSLFlag)
    theResidualImprovementTolerance(-1.0),
    theFitOptimizer(RPC_FIT_WEIGHTED_SVD),
    theMeanResidual(0),
-   theMaxResidual(0)
+   theMaxResidual(0),
+   theFitBiasError(ossim::nan()),
+   theFitRandError(ossim::nan()),
+   theFitBiasErrorPixels(ossim::nan()),
+   theFitRandErrorPixels(ossim::nan())
 {
 }
 
@@ -540,6 +544,21 @@ void ossimRpcSolver::solveCoefficients(const ossimDrect& imageBounds,
       }
    }
    solveCoefficients(imagePoints, groundPoints);
+   if (theRpcModel)
+   {
+      std::vector<ossimDpt> imageResiduals;
+      imageResiduals.reserve(imagePoints.size());
+      for (ossim_uint32 idx = 0; idx < imagePoints.size(); ++idx)
+      {
+         ossimDpt evalPt;
+         evalPoint(groundPoints[idx], evalPt);
+         const ossimDpt residual = evalPt - imagePoints[idx];
+         if (isFinite(residual.x) && isFinite(residual.y))
+            imageResiduals.push_back(residual);
+      }
+      theRpcModel->setMetersPerPixel(geom->getMetersPerPixel());
+      updateFitErrorEstimates(imageResiduals, geom->getMetersPerPixel());
+   }
 }
 
 /**
@@ -559,6 +578,7 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    theRpcModel = 0;
    theMeanResidual = ossim::nan();
    theMaxResidual = ossim::nan();
+   clearFitErrorEstimates();
 
    if((imagePoints.size() != groundControlPoints.size()))
       return;
@@ -789,18 +809,22 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    ossim_float64  sumSquareError = 0.0;
    ossim_uint32 idx = 0;
    ossim_uint32 residualCount = 0;
+   std::vector<ossimDpt> imageResiduals;
+   imageResiduals.reserve(imagePoints.size());
 
    theMaxResidual = 0;
    for (idx = 0; idx<imagePoints.size(); idx++)
    {
       ossimDpt evalPt;
       evalPoint(groundControlPoints[idx], evalPt);
-      ossim_float64 len = (evalPt - imagePoints[idx]).length();
+      const ossimDpt residual = evalPt - imagePoints[idx];
+      ossim_float64 len = residual.length();
       if (!isFinite(len))
          continue;
       if (len > theMaxResidual)
          theMaxResidual = len;
       sumSquareError += (len*len);
+      imageResiduals.push_back(residual);
       ++residualCount;
    }
 
@@ -808,6 +832,7 @@ void ossimRpcSolver::solveCoefficients(const std::vector<ossimDpt>& imagePoints,
    theMeanResidual = residualCount ?
          sqrt(sumSquareError/residualCount) :
          ossim::nan();
+   updateFitErrorEstimates(imageResiduals, ossimDpt(ossim::nan(), ossim::nan()));
 }
 
 /**
@@ -887,6 +912,7 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
       double residual = 0;
       double sumResiduals = 0;
       int numResiduals = 0;
+      std::vector<ossimDpt> imageResiduals;
       theMaxResidual = 0;
 
       converged = true; // hope for the best and get proved otherwise below
@@ -941,12 +967,14 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
                evalPoint(gpt, irpc);
 
                // Compute residual and accumulate:
-               residual = (ipt-irpc).length();
+               const ossimDpt imageResidual = irpc - ipt;
+               residual = imageResidual.length();
                if (!isFinite(residual))
                   continue;
                if (residual > theMaxResidual)
                   theMaxResidual = residual;
                sumResiduals += residual;
+               imageResiduals.push_back(imageResidual);
                ++numResiduals;
             }
          }
@@ -955,6 +983,7 @@ bool ossimRpcSolver::solve(const ossimDrect& imageBounds,
       if (numResiduals == 0)
          return false;
       theMeanResidual = sumResiduals/numResiduals;
+      updateFitErrorEstimates(imageResiduals, geom->getMetersPerPixel());
       if (theMaxResidual > tolerance)
          converged = false;
 
@@ -1038,6 +1067,120 @@ double ossimRpcSolver::getRmsError()const
 double ossimRpcSolver::getMaxError()const
 {
    return theMaxResidual;
+}
+
+double ossimRpcSolver::getRpcFitBiasError() const
+{
+   return theFitBiasError;
+}
+
+double ossimRpcSolver::getRpcFitRandError() const
+{
+   return theFitRandError;
+}
+
+double ossimRpcSolver::getRpcFitBiasErrorInPixels() const
+{
+   return theFitBiasErrorPixels;
+}
+
+double ossimRpcSolver::getRpcFitRandErrorInPixels() const
+{
+   return theFitRandErrorPixels;
+}
+
+void ossimRpcSolver::clearFitErrorEstimates()
+{
+   theFitBiasError = ossim::nan();
+   theFitRandError = ossim::nan();
+   theFitBiasErrorPixels = ossim::nan();
+   theFitRandErrorPixels = ossim::nan();
+}
+
+void ossimRpcSolver::updateFitErrorEstimates(const std::vector<ossimDpt>& imageResiduals,
+                                             const ossimDpt& metersPerPixel)
+{
+   if (imageResiduals.empty())
+   {
+      clearFitErrorEstimates();
+      return;
+   }
+
+   ossim_float64 meanSampleResidual = 0.0;
+   ossim_float64 meanLineResidual = 0.0;
+   for (std::vector<ossimDpt>::const_iterator residual = imageResiduals.begin();
+        residual != imageResiduals.end();
+        ++residual)
+   {
+      meanSampleResidual += residual->x;
+      meanLineResidual += residual->y;
+   }
+   meanSampleResidual /= imageResiduals.size();
+   meanLineResidual /= imageResiduals.size();
+
+   ossim_float64 sumPixelScatterSquared = 0.0;
+   for (std::vector<ossimDpt>::const_iterator residual = imageResiduals.begin();
+        residual != imageResiduals.end();
+        ++residual)
+   {
+      const ossim_float64 sampleScatter = residual->x - meanSampleResidual;
+      const ossim_float64 lineScatter = residual->y - meanLineResidual;
+      sumPixelScatterSquared += sampleScatter*sampleScatter + lineScatter*lineScatter;
+   }
+
+   theFitBiasErrorPixels =
+         std::sqrt(meanSampleResidual*meanSampleResidual +
+                   meanLineResidual*meanLineResidual);
+   theFitRandErrorPixels =
+         std::sqrt(sumPixelScatterSquared / imageResiduals.size());
+
+   const bool haveMetersPerPixel =
+         isFinite(metersPerPixel.x) &&
+         isFinite(metersPerPixel.y) &&
+         (std::fabs(metersPerPixel.x) > DBL_EPSILON) &&
+         (std::fabs(metersPerPixel.y) > DBL_EPSILON);
+   if (!haveMetersPerPixel)
+   {
+      theFitBiasError = ossim::nan();
+      theFitRandError = ossim::nan();
+      return;
+   }
+
+   const ossim_float64 sampleMetersPerPixel = std::fabs(metersPerPixel.x);
+   const ossim_float64 lineMetersPerPixel = std::fabs(metersPerPixel.y);
+   const ossim_float64 meanSampleResidualMeters =
+         meanSampleResidual * sampleMetersPerPixel;
+   const ossim_float64 meanLineResidualMeters =
+         meanLineResidual * lineMetersPerPixel;
+   ossim_float64 sumMeterScatterSquared = 0.0;
+   for (std::vector<ossimDpt>::const_iterator residual = imageResiduals.begin();
+        residual != imageResiduals.end();
+        ++residual)
+   {
+      const ossim_float64 sampleScatterMeters =
+            (residual->x - meanSampleResidual) * sampleMetersPerPixel;
+      const ossim_float64 lineScatterMeters =
+            (residual->y - meanLineResidual) * lineMetersPerPixel;
+      sumMeterScatterSquared +=
+            sampleScatterMeters*sampleScatterMeters +
+            lineScatterMeters*lineScatterMeters;
+   }
+
+   static const ossim_float64 MAX_NITF_RPC_ERROR_METERS = 9999.99;
+   theFitBiasError =
+         std::min(MAX_NITF_RPC_ERROR_METERS,
+                  std::sqrt(meanSampleResidualMeters*meanSampleResidualMeters +
+                            meanLineResidualMeters*meanLineResidualMeters));
+   theFitRandError =
+         std::min(MAX_NITF_RPC_ERROR_METERS,
+                  std::sqrt(sumMeterScatterSquared / imageResiduals.size()));
+
+   if (theRpcModel.valid() &&
+       isFinite(theFitBiasError) &&
+       isFinite(theFitRandError))
+   {
+      theRpcModel->setPositionError(theFitBiasError, theFitRandError, true);
+   }
 }
 
 void ossimRpcSolver::setHeightLayerDelta(ossim_float64 delta)
