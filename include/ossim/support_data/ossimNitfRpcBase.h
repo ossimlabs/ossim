@@ -405,7 +405,7 @@ protected:
    * Required 7 byte field
    * 
    * Error - Random. 68% time-varying error estimate assumes
-   * correlated images. 0000.00 to 9999.99 meters
+   * uncorrelated images. 0000.00 to 9999.99 meters
    */
   char theErrRand[ERR_RAND_SIZE+1];
 
