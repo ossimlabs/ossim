@@ -18,6 +18,7 @@
 #include <ossim/base/ossimPolyArea2d.h>
 #include <ossim/base/ossimViewInterface.h>
 #include <ossim/base/ossimRationalNumber.h>
+#include <memory>
 
 class ossimImageData;
 class ossimDiscreteConvolutionKernel;
@@ -241,7 +242,7 @@ private:
      ossim_uint16 getSplitFlags()const;
 
       mutable ossimRefPtr<ossimImageViewTransform> m_transform;
-      mutable const ossimPolyArea2d* m_viewBounds;
+      mutable std::shared_ptr<const ossimPolyArea2d> m_viewBounds;
       mutable ossimRendererVertexCache* m_vertexCache;
       mutable ossim_int64 m_ulVertex;
       mutable ossim_int64 m_urVertex;
@@ -333,7 +334,7 @@ private:
 
 inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(ossimImageViewTransform* transform)
 :m_transform(transform),
-m_viewBounds(0),
+m_viewBounds(),
 m_vertexCache(0),
 m_ulVertex(-1),
 m_urVertex(-1),

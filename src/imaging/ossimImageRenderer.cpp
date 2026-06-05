@@ -300,6 +300,7 @@ private:
       rect.transformViewToImage();
 
       if(rect.imageIsNan() &&
+         rect.m_viewBounds &&
          !(rect.m_viewBounds->intersects(rect.getViewRect())))
       {
          return -1;
@@ -1013,7 +1014,7 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
   
    if(imageHasNans())
    {
-      if(m_viewBounds->intersects(vRect))
+      if(m_viewBounds && m_viewBounds->intersects(vRect))
       {
          result = SPLIT_ALL;
       }
@@ -1028,7 +1029,7 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
      if(m_ulRoundTripError.hasNans()&&m_urRoundTripError.hasNans()&&
      m_lrRoundTripError.hasNans()&&m_llRoundTripError.hasNans())
      {
-     if(m_viewBounds->intersects(getViewRect()))
+     if(m_viewBounds && m_viewBounds->intersects(getViewRect()))
      {
      result = SPLIT_ALL;
      }
@@ -1095,7 +1096,7 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
 
   if(imageHasNans()||tooBig())
   {
-     if(m_viewBounds->intersects(getViewRect()))
+     if(m_viewBounds && m_viewBounds->intersects(getViewRect()))
      {
       result = SPLIT_ALL;
      }
@@ -1110,7 +1111,7 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
     if(m_ulRoundTripError.hasNans()&&m_urRoundTripError.hasNans()&&
         m_lrRoundTripError.hasNans()&&m_llRoundTripError.hasNans())
     {
-      if(m_viewBounds->intersects(getViewRect()))
+      if(m_viewBounds && m_viewBounds->intersects(getViewRect()))
       {
         result = SPLIT_ALL;
       }
@@ -1751,7 +1752,9 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 #endif
    std::unique_ptr<ossimRendererVertexCache> vertexCache(
       new ossimRendererVertexCache(m_ImageViewTransform.get()));
-   subRectInfo.m_viewBounds = &m_viewArea;
+   std::shared_ptr<const ossimPolyArea2d> viewBounds(
+      new ossimPolyArea2d(m_viewArea));
+   subRectInfo.m_viewBounds = viewBounds;
    subRectInfo.setVertexCache(vertexCache.get());
    subRectInfo.setVertexIndices(vertexCache->addVertex(tempRect.ul()),
                                 vertexCache->addVertex(tempRect.ur()),
