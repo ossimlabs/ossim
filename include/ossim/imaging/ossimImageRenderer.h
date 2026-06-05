@@ -181,11 +181,6 @@ private:
       }
 
       ossimRendererSubRectInfo(ossimImageViewTransform* transform=0);
-      ossimRendererSubRectInfo(ossimImageViewTransform* transform,
-                               const ossimDpt& vul,
-                               const ossimDpt& vur,
-                               const ossimDpt& vlr,
-                               const ossimDpt& vll);
          
       bool imageHasNans()const;
       bool imageIsNan()const;
@@ -345,25 +340,6 @@ m_urVertex(-1),
 m_lrVertex(-1),
 m_llVertex(-1)
 {
-}
-
-inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(ossimImageViewTransform* transform,
-                         const ossimDpt& vul,
-                         const ossimDpt& vur,
-                         const ossimDpt& vlr,
-                         const ossimDpt& vll)
-                         :m_transform(transform),
-                         m_viewBounds(0),
-                         m_vertexCache(0),
-                         m_ulVertex(-1),
-                         m_urVertex(-1),
-                         m_lrVertex(-1),
-                         m_llVertex(-1)
-{
-   (void)vul;
-   (void)vur;
-   (void)vlr;
-   (void)vll;
 }
 
 inline bool ossimImageRenderer::ossimRendererSubRectInfo::imageHasNans()const

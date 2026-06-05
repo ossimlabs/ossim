@@ -196,11 +196,7 @@ public:
 
       if((w2 < 2)&&(h2 < 2))
       {
-         ossimRendererSubRectInfo child(rect.m_transform.get(),
-                                        rect.vul(),
-                                        rect.vul(),
-                                        rect.vul(),
-                                        rect.vul());
+         ossimRendererSubRectInfo child(rect.m_transform.get());
          addChild(nodeIndex, 0, child,
                   rect.m_ulVertex,
                   rect.m_ulVertex,
@@ -338,16 +334,8 @@ private:
                            rect.vur().x,
                            rect.vlr().y);
 
-      ossimRendererSubRectInfo left(rect.m_transform.get(),
-                                    leftRect.ul(),
-                                    leftRect.ur(),
-                                    leftRect.lr(),
-                                    leftRect.ll());
-      ossimRendererSubRectInfo right(rect.m_transform.get(),
-                                     rightRect.ul(),
-                                     rightRect.ur(),
-                                     rightRect.lr(),
-                                     rightRect.ll());
+      ossimRendererSubRectInfo left(rect.m_transform.get());
+      ossimRendererSubRectInfo right(rect.m_transform.get());
       ossim_int64 candidates[8];
       ossim_uint32 candidateCount = 0;
       candidates[candidateCount++] = rect.m_ulVertex;
@@ -412,16 +400,8 @@ private:
                             rect.vlr().x,
                             rect.vlr().y);
 
-      ossimRendererSubRectInfo top(rect.m_transform.get(),
-                                   topRect.ul(),
-                                   topRect.ur(),
-                                   topRect.lr(),
-                                   topRect.ll());
-      ossimRendererSubRectInfo bottom(rect.m_transform.get(),
-                                      bottomRect.ul(),
-                                      bottomRect.ur(),
-                                      bottomRect.lr(),
-                                      bottomRect.ll());
+      ossimRendererSubRectInfo top(rect.m_transform.get());
+      ossimRendererSubRectInfo bottom(rect.m_transform.get());
       ossim_int64 candidates[8];
       ossim_uint32 candidateCount = 0;
       candidates[candidateCount++] = rect.m_ulVertex;
@@ -496,18 +476,10 @@ private:
                               lrRect.ul().x,
                               lrRect.ll().y);
 
-      ossimRendererSubRectInfo ul(rect.m_transform.get(),
-                                  ulRect.ul(), ulRect.ur(),
-                                  ulRect.lr(), ulRect.ll());
-      ossimRendererSubRectInfo ur(rect.m_transform.get(),
-                                  urRect.ul(), urRect.ur(),
-                                  urRect.lr(), urRect.ll());
-      ossimRendererSubRectInfo lr(rect.m_transform.get(),
-                                  lrRect.ul(), lrRect.ur(),
-                                  lrRect.lr(), lrRect.ll());
-      ossimRendererSubRectInfo ll(rect.m_transform.get(),
-                                  llRect.ul(), llRect.ur(),
-                                  llRect.lr(), llRect.ll());
+      ossimRendererSubRectInfo ul(rect.m_transform.get());
+      ossimRendererSubRectInfo ur(rect.m_transform.get());
+      ossimRendererSubRectInfo lr(rect.m_transform.get());
+      ossimRendererSubRectInfo ll(rect.m_transform.get());
 
       ossim_int64 candidates[15];
       ossim_uint32 candidateCount = 0;
@@ -1078,8 +1050,6 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
    */
    if(result != SPLIT_ALL)
    {
-      // ossim_float64 bias = m_ImageToViewScale.length();
-      //ossim_float64 bias = (m_ImageToViewScale.x+m_ImageToViewScale.y)/2.0;
       //std::cout << "SCALE BIAS = " << bias << "\n";
       // if (bias < 1.0)
       //   bias = 1.0 / bias;
@@ -1253,27 +1223,6 @@ void ossimImageRenderer::ossimRendererSubRectInfo::stretchImageOut(bool enableRo
 
 bool ossimImageRenderer::ossimRendererSubRectInfo::isIdentity()const
 {
-//    ossimDpt deltaP1P2 = m_Iul - m_Iur;
-//    ossimDpt deltaP1P3 = m_Iul - m_Ill;
-   
-//    ossimDpt deltaViewP1P2 = m_Vul - m_Vur;
-//    ossimDpt deltaViewP1P3 = m_Vul - m_Vll;
-   
-//    bool horizontalSigns = ossimGetSign(deltaP1P2.x)==ossimGetSign(deltaViewP1P2.x);
-//    bool verticalSigns   = ossimGetSign(deltaP1P3.y)==ossimGetSign(deltaViewP1P3.y);
-
-//    // check first to see if any horizontal or vertical flipping
-//    //
-//    if(horizontalSigns && verticalSigns)
-//    {
-//       // check scales to see if they are 1
-//       if(fabs(1-m_ViewToImageScale.x) <= FLT_EPSILON &&
-//          fabs(1-m_ViewToImageScale.y) <= FLT_EPSILON)
-//       {
-//          return true;
-//       }
-//    }
-
     double iulDelta = (iul()-vul()).length();
     double iurDelta = (iur()-vur()).length();
     double ilrDelta = (ilr()-vlr()).length();
@@ -1317,11 +1266,6 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate() cons
   {
     return result;
   }
-
-  //  std::cout << "ulScale: " << m_VulScale << "\n"
-  //            << "urScale: " << m_VurScale << "\n"
-  //            << "lrScale: " << m_VlrScale << "\n"
-  //            << "llScale: " << m_VllScale << "\n";
 
   // check overage power of 2 variance
   // If there is a variance of 1 resolution level
@@ -1799,17 +1743,9 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
        //   std::cout << "viewRectClip = " <<  viewRectClip << std::endl;
        //   std::cout << "tileRect = " <<  tileRect << std::endl;
        //   std::cout << "m_viewRect = " <<  m_viewRect << std::endl;
-   ossimRendererSubRectInfo subRectInfo(m_ImageViewTransform.get(),
-                                        tempRect.ul(),
-                                        tempRect.ur(),
-                                        tempRect.lr(),
-                                        tempRect.ll());
+   ossimRendererSubRectInfo subRectInfo(m_ImageViewTransform.get());
 #else
-   ossimRendererSubRectInfo subRectInfo(m_ImageViewTransform.get(),
-                                        tileRect.ul(),
-                                        tileRect.ur(),
-                                        tileRect.lr(),
-                                        tileRect.ll());
+   ossimRendererSubRectInfo subRectInfo(m_ImageViewTransform.get());
 
 
 #endif
