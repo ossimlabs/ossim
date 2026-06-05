@@ -185,10 +185,10 @@ public:
          return false;
       }
 
-      ossimIrect vrect(rect.m_Vul,
-                       rect.m_Vur,
-                       rect.m_Vlr,
-                       rect.m_Vll);
+      ossimIrect vrect(rect.vul(),
+                       rect.vur(),
+                       rect.vlr(),
+                       rect.vll());
       const ossim_int32 w  = vrect.width();
       const ossim_int32 h  = vrect.height();
       const ossim_int32 w2 = w>>1;
@@ -197,10 +197,10 @@ public:
       if((w2 < 2)&&(h2 < 2))
       {
          ossimRendererSubRectInfo child(rect.m_transform.get(),
-                                        rect.m_Vul,
-                                        rect.m_Vul,
-                                        rect.m_Vul,
-                                        rect.m_Vul);
+                                        rect.vul(),
+                                        rect.vul(),
+                                        rect.vul(),
+                                        rect.vul());
          addChild(nodeIndex, 0, child,
                   rect.m_ulVertex,
                   rect.m_ulVertex,
@@ -324,19 +324,19 @@ private:
    {
       const ossimRendererSubRectInfo rect =
          m_nodes[static_cast<std::size_t>(nodeIndex)].m_rect;
-      ossimIrect vrect(rect.m_Vul,
-                       rect.m_Vur,
-                       rect.m_Vlr,
-                       rect.m_Vll);
+      ossimIrect vrect(rect.vul(),
+                       rect.vur(),
+                       rect.vlr(),
+                       rect.vll());
       const ossim_int32 w2 = vrect.width()>>1;
-      ossimIrect leftRect(rect.m_Vul.x,
-                          rect.m_Vul.y,
-                          rect.m_Vul.x+w2-1,
-                          rect.m_Vlr.y);
+      ossimIrect leftRect(rect.vul().x,
+                          rect.vul().y,
+                          rect.vul().x+w2-1,
+                          rect.vlr().y);
       ossimIrect rightRect(leftRect.ur().x+1,
-                           rect.m_Vul.y,
-                           rect.m_Vur.x,
-                           rect.m_Vlr.y);
+                           rect.vul().y,
+                           rect.vur().x,
+                           rect.vlr().y);
 
       ossimRendererSubRectInfo left(rect.m_transform.get(),
                                     leftRect.ul(),
@@ -356,16 +356,16 @@ private:
       candidates[candidateCount++] = rect.m_llVertex;
 
       const ossim_int64 leftUr =
-         addVertex(left.m_Vur, nodeIndex, candidates, candidateCount);
+         addVertex(leftRect.ur(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = leftUr;
       const ossim_int64 leftLr =
-         addVertex(left.m_Vlr, nodeIndex, candidates, candidateCount);
+         addVertex(leftRect.lr(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = leftLr;
       const ossim_int64 rightUl =
-         addVertex(right.m_Vul, nodeIndex, candidates, candidateCount);
+         addVertex(rightRect.ul(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = rightUl;
       const ossim_int64 rightLl =
-         addVertex(right.m_Vll, nodeIndex, candidates, candidateCount);
+         addVertex(rightRect.ll(), nodeIndex, candidates, candidateCount);
 
       const ossim_int64 parentLeft =
          m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[LEFT_EDGE];
@@ -398,19 +398,19 @@ private:
    {
       const ossimRendererSubRectInfo rect =
          m_nodes[static_cast<std::size_t>(nodeIndex)].m_rect;
-      ossimIrect vrect(rect.m_Vul,
-                       rect.m_Vur,
-                       rect.m_Vlr,
-                       rect.m_Vll);
+      ossimIrect vrect(rect.vul(),
+                       rect.vur(),
+                       rect.vlr(),
+                       rect.vll());
       const ossim_int32 h2 = vrect.height()>>1;
-      ossimIrect topRect(rect.m_Vul.x,
-                         rect.m_Vul.y,
-                         rect.m_Vlr.x,
-                         rect.m_Vul.y+h2-1);
-      ossimIrect bottomRect(rect.m_Vul.x,
+      ossimIrect topRect(rect.vul().x,
+                         rect.vul().y,
+                         rect.vlr().x,
+                         rect.vul().y+h2-1);
+      ossimIrect bottomRect(rect.vul().x,
                             topRect.lr().y+1,
-                            rect.m_Vlr.x,
-                            rect.m_Vlr.y);
+                            rect.vlr().x,
+                            rect.vlr().y);
 
       ossimRendererSubRectInfo top(rect.m_transform.get(),
                                    topRect.ul(),
@@ -430,16 +430,16 @@ private:
       candidates[candidateCount++] = rect.m_llVertex;
 
       const ossim_int64 topLr =
-         addVertex(top.m_Vlr, nodeIndex, candidates, candidateCount);
+         addVertex(topRect.lr(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = topLr;
       const ossim_int64 topLl =
-         addVertex(top.m_Vll, nodeIndex, candidates, candidateCount);
+         addVertex(topRect.ll(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = topLl;
       const ossim_int64 bottomUl =
-         addVertex(bottom.m_Vul, nodeIndex, candidates, candidateCount);
+         addVertex(bottomRect.ul(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = bottomUl;
       const ossim_int64 bottomUr =
-         addVertex(bottom.m_Vur, nodeIndex, candidates, candidateCount);
+         addVertex(bottomRect.ur(), nodeIndex, candidates, candidateCount);
 
       const ossim_int64 parentLeft =
          m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[LEFT_EDGE];
@@ -472,26 +472,26 @@ private:
    {
       const ossimRendererSubRectInfo rect =
          m_nodes[static_cast<std::size_t>(nodeIndex)].m_rect;
-      ossimIrect vrect(rect.m_Vul,
-                       rect.m_Vur,
-                       rect.m_Vlr,
-                       rect.m_Vll);
+      ossimIrect vrect(rect.vul(),
+                       rect.vur(),
+                       rect.vlr(),
+                       rect.vll());
       const ossim_int32 w2 = vrect.width()>>1;
       const ossim_int32 h2 = vrect.height()>>1;
 
-      const ossimIrect ulRect(rect.m_Vul.x,
-                              rect.m_Vul.y,
-                              rect.m_Vul.x + (w2 - 1),
-                              rect.m_Vul.y + (h2 - 1));
+      const ossimIrect ulRect(rect.vul().x,
+                              rect.vul().y,
+                              rect.vul().x + (w2 - 1),
+                              rect.vul().y + (h2 - 1));
       const ossimIrect urRect(ulRect.ur().x+1,
-                              rect.m_Vul.y,
-                              rect.m_Vur.x,
-                              rect.m_Vul.y + (h2 - 1));
+                              rect.vul().y,
+                              rect.vur().x,
+                              rect.vul().y + (h2 - 1));
       const ossimIrect lrRect(ulRect.lr().x,
                               ulRect.lr().y+1,
-                              rect.m_Vlr.x,
-                              rect.m_Vlr.y);
-      const ossimIrect llRect(rect.m_Vul.x,
+                              rect.vlr().x,
+                              rect.vlr().y);
+      const ossimIrect llRect(rect.vul().x,
                               ulRect.ll().y+1,
                               lrRect.ul().x,
                               lrRect.ll().y);
@@ -517,37 +517,37 @@ private:
       candidates[candidateCount++] = rect.m_llVertex;
 
       const ossim_int64 ulUr =
-         addVertex(ul.m_Vur, nodeIndex, candidates, candidateCount);
+         addVertex(ulRect.ur(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = ulUr;
       const ossim_int64 ulLr =
-         addVertex(ul.m_Vlr, nodeIndex, candidates, candidateCount);
+         addVertex(ulRect.lr(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = ulLr;
       const ossim_int64 ulLl =
-         addVertex(ul.m_Vll, nodeIndex, candidates, candidateCount);
+         addVertex(ulRect.ll(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = ulLl;
       const ossim_int64 urUl =
-         addVertex(ur.m_Vul, nodeIndex, candidates, candidateCount);
+         addVertex(urRect.ul(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = urUl;
       const ossim_int64 urLr =
-         addVertex(ur.m_Vlr, nodeIndex, candidates, candidateCount);
+         addVertex(urRect.lr(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = urLr;
       const ossim_int64 urLl =
-         addVertex(ur.m_Vll, nodeIndex, candidates, candidateCount);
+         addVertex(urRect.ll(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = urLl;
       const ossim_int64 lrUl =
-         addVertex(lr.m_Vul, nodeIndex, candidates, candidateCount);
+         addVertex(lrRect.ul(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = lrUl;
       const ossim_int64 lrUr =
-         addVertex(lr.m_Vur, nodeIndex, candidates, candidateCount);
+         addVertex(lrRect.ur(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = lrUr;
       const ossim_int64 lrLl =
-         addVertex(lr.m_Vll, nodeIndex, candidates, candidateCount);
+         addVertex(lrRect.ll(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = lrLl;
       const ossim_int64 llUl =
-         addVertex(ll.m_Vul, nodeIndex, candidates, candidateCount);
+         addVertex(llRect.ul(), nodeIndex, candidates, candidateCount);
       candidates[candidateCount++] = llUl;
       const ossim_int64 llUr =
-         addVertex(ll.m_Vur, nodeIndex, candidates, candidateCount);
+         addVertex(llRect.ur(), nodeIndex, candidates, candidateCount);
 
       const ossim_int64 parentLeft =
          m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[LEFT_EDGE];
@@ -611,14 +611,14 @@ private:
       }
 
       const Node& node = m_nodes[static_cast<std::size_t>(nodeIndex)];
-      const ossim_int32 minX = ossim::min(node.m_rect.m_Vul.x,
-                                          node.m_rect.m_Vll.x);
-      const ossim_int32 maxX = ossim::max(node.m_rect.m_Vur.x,
-                                          node.m_rect.m_Vlr.x);
-      const ossim_int32 minY = ossim::min(node.m_rect.m_Vul.y,
-                                          node.m_rect.m_Vur.y);
-      const ossim_int32 maxY = ossim::max(node.m_rect.m_Vll.y,
-                                          node.m_rect.m_Vlr.y);
+      const ossim_int32 minX = ossim::min(node.m_rect.vul().x,
+                                          node.m_rect.vll().x);
+      const ossim_int32 maxX = ossim::max(node.m_rect.vur().x,
+                                          node.m_rect.vlr().x);
+      const ossim_int32 minY = ossim::min(node.m_rect.vul().y,
+                                          node.m_rect.vur().y);
+      const ossim_int32 maxY = ossim::max(node.m_rect.vll().y,
+                                          node.m_rect.vlr().y);
 
       if(viewPt.x == minX &&
          findVertexOnEdge(node.m_neighbor[LEFT_EDGE],
@@ -721,13 +721,13 @@ private:
       switch(edge)
       {
          case LEFT_EDGE:
-            return child.m_rect.m_Vul.x == parent.m_rect.m_Vul.x;
+            return child.m_rect.vul().x == parent.m_rect.vul().x;
          case TOP_EDGE:
-            return child.m_rect.m_Vul.y == parent.m_rect.m_Vul.y;
+            return child.m_rect.vul().y == parent.m_rect.vul().y;
          case RIGHT_EDGE:
-            return child.m_rect.m_Vur.x == parent.m_rect.m_Vur.x;
+            return child.m_rect.vur().x == parent.m_rect.vur().x;
          case BOTTOM_EDGE:
-            return child.m_rect.m_Vll.y == parent.m_rect.m_Vll.y;
+            return child.m_rect.vll().y == parent.m_rect.vll().y;
       }
 
       return false;
@@ -736,10 +736,10 @@ private:
    static bool rectContains(const ossimRendererSubRectInfo& rect,
                             const ossimIpt& viewPt)
    {
-      const ossim_int32 minX = ossim::min(rect.m_Vul.x, rect.m_Vll.x);
-      const ossim_int32 maxX = ossim::max(rect.m_Vur.x, rect.m_Vlr.x);
-      const ossim_int32 minY = ossim::min(rect.m_Vul.y, rect.m_Vur.y);
-      const ossim_int32 maxY = ossim::max(rect.m_Vll.y, rect.m_Vlr.y);
+      const ossim_int32 minX = ossim::min(rect.vul().x, rect.vll().x);
+      const ossim_int32 maxX = ossim::max(rect.vur().x, rect.vlr().x);
+      const ossim_int32 minY = ossim::min(rect.vul().y, rect.vur().y);
+      const ossim_int32 maxY = ossim::max(rect.vll().y, rect.vlr().y);
 
       return ((viewPt.x >= minX) &&
               (viewPt.x <= maxX) &&
@@ -768,470 +768,252 @@ private:
    bool m_collectStats;
 };
 
-void ossimImageRenderer::ossimRendererSubRectInfo::splitHorizontal(std::vector<ossimRendererSubRectInfo>& result)const
+ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::iul()const
 {
-   ossimIrect vrect(m_Vul,
-                    m_Vur,
-                    m_Vlr,
-                    m_Vll);
-   ossim_int32 w  = vrect.width();
-   // ossim_int32 h  = vrect.height();
-   ossim_int32 w2 = w>>1;
-   ossimIrect tempLeftRect(m_Vul.x, 
-                           m_Vul.y, 
-                           m_Vul.x+w2-1, 
-                           m_Vlr.y);
-   ossimIrect tempRightRect(tempLeftRect.ur().x+1, 
-                            m_Vul.y, 
-                            m_Vur.x, 
-                            m_Vlr.y);
-
-
-   ossimRendererSubRectInfo left(m_transform.get());
-   ossimRendererSubRectInfo right(m_transform.get());
-
-   left.m_viewBounds = m_viewBounds;
-   right.m_viewBounds = m_viewBounds;
-   left.m_vertexCache = m_vertexCache;
-   right.m_vertexCache = m_vertexCache;
-
-   left.m_Vul = tempLeftRect.ul();
-   left.m_Vur = tempLeftRect.ur();
-   left.m_Vlr = tempLeftRect.lr();
-   left.m_Vll = tempLeftRect.ll();
-
-   right.m_Vul = tempRightRect.ul();
-   right.m_Vur = tempRightRect.ur();
-   right.m_Vlr = tempRightRect.lr();
-   right.m_Vll = tempRightRect.ll();
-
-   if(m_vertexCache&&hasVertexIndices())
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_ulVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
    {
-      ossim_int64 candidates[8];
-      ossim_uint32 candidateCount = 0;
-      candidates[candidateCount++] = m_ulVertex;
-      candidates[candidateCount++] = m_urVertex;
-      candidates[candidateCount++] = m_lrVertex;
-      candidates[candidateCount++] = m_llVertex;
-
-      const ossim_int64 leftUr =
-         m_vertexCache->addVertex(left.m_Vur, candidates, candidateCount);
-      candidates[candidateCount++] = leftUr;
-      const ossim_int64 leftLr =
-         m_vertexCache->addVertex(left.m_Vlr, candidates, candidateCount);
-      candidates[candidateCount++] = leftLr;
-      const ossim_int64 rightVul =
-         m_vertexCache->addVertex(right.m_Vul, candidates, candidateCount);
-      candidates[candidateCount++] = rightVul;
-      const ossim_int64 rightVll =
-         m_vertexCache->addVertex(right.m_Vll, candidates, candidateCount);
-      left.setVertexIndices(m_ulVertex,
-                            leftUr,
-                            leftLr,
-                            m_llVertex);
-      right.setVertexIndices(rightVul,
-                             m_urVertex,
-                             m_lrVertex,
-                             rightVll);
-      m_vertexCache->referenceVertex(m_ulVertex);
-      m_vertexCache->referenceVertex(m_llVertex);
-      m_vertexCache->referenceVertex(m_urVertex);
-      m_vertexCache->referenceVertex(m_lrVertex);
+      return imagePt;
    }
 
-   left.transformViewToImage();
-   right.transformViewToImage();
-
-   if(left.imageIsNan())
-   {
-      if(left.m_viewBounds->intersects(left.getViewRect()))
-      {
-         result.push_back(left);
-      }
-   }
-   else
-   {
-      result.push_back(left);
-   }
-   if(right.imageIsNan())
-   {
-      if(right.m_viewBounds->intersects(right.getViewRect()))
-      {
-         result.push_back(right);
-      }
-   }
-   else
-   {
-      result.push_back(right);
-   }
+   imagePt.makeNan();
+   return imagePt;
 }
 
-void ossimImageRenderer::ossimRendererSubRectInfo::splitVertical(std::vector<ossimRendererSubRectInfo>& result)const
+ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::iur()const
 {
-   ossimIrect vrect(m_Vul,
-                    m_Vur,
-                    m_Vlr,
-                    m_Vll);
-   // ossim_int32 w  = vrect.width();
-   ossim_int32 h  = vrect.height();
-   ossim_int32 h2 = h>>1;
-   ossimIrect tempTopRect(m_Vul.x, 
-                          m_Vul.y, 
-                          m_Vlr.x, 
-                          m_Vul.y+h2-1);
-   ossimIrect tempBottomRect(m_Vul.x, 
-                             tempTopRect.lr().y+1, 
-                             m_Vlr.x, 
-                             m_Vlr.y);
-
-   ossimRendererSubRectInfo top(m_transform.get());
-   ossimRendererSubRectInfo bottom(m_transform.get());
-
-   top.m_viewBounds    = m_viewBounds;
-   bottom.m_viewBounds = m_viewBounds;
-   top.m_vertexCache = m_vertexCache;
-   bottom.m_vertexCache = m_vertexCache;
-
-   top.m_Vul = tempTopRect.ul();
-   top.m_Vur = tempTopRect.ur();
-   top.m_Vlr = tempTopRect.lr();
-   top.m_Vll = tempTopRect.ll();
-
-   bottom.m_Vul = tempBottomRect.ul();
-   bottom.m_Vur = tempBottomRect.ur();
-   bottom.m_Vlr = tempBottomRect.lr();
-   bottom.m_Vll = tempBottomRect.ll();
-
-   if(m_vertexCache&&hasVertexIndices())
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_urVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
    {
-      ossim_int64 candidates[8];
-      ossim_uint32 candidateCount = 0;
-      candidates[candidateCount++] = m_ulVertex;
-      candidates[candidateCount++] = m_urVertex;
-      candidates[candidateCount++] = m_lrVertex;
-      candidates[candidateCount++] = m_llVertex;
-
-      const ossim_int64 topVlr =
-         m_vertexCache->addVertex(top.m_Vlr, candidates, candidateCount);
-      candidates[candidateCount++] = topVlr;
-      const ossim_int64 topVll =
-         m_vertexCache->addVertex(top.m_Vll, candidates, candidateCount);
-      candidates[candidateCount++] = topVll;
-      const ossim_int64 bottomVul =
-         m_vertexCache->addVertex(bottom.m_Vul, candidates, candidateCount);
-      candidates[candidateCount++] = bottomVul;
-      const ossim_int64 bottomVur =
-         m_vertexCache->addVertex(bottom.m_Vur, candidates, candidateCount);
-      top.setVertexIndices(m_ulVertex,
-                           m_urVertex,
-                           topVlr,
-                           topVll);
-      bottom.setVertexIndices(bottomVul,
-                              bottomVur,
-                              m_lrVertex,
-                              m_llVertex);
-      m_vertexCache->referenceVertex(m_ulVertex);
-      m_vertexCache->referenceVertex(m_urVertex);
-      m_vertexCache->referenceVertex(m_lrVertex);
-      m_vertexCache->referenceVertex(m_llVertex);
+      return imagePt;
    }
 
-   top.transformViewToImage();
-   bottom.transformViewToImage();
-
-   if(top.imageIsNan())
-   {
-      if(top.m_viewBounds->intersects(top.getViewRect()))
-      {
-         result.push_back(top);
-      }
-   }
-   else
-   {
-      result.push_back(top);
-   }
-   if(bottom.imageIsNan())
-   {
-      if(bottom.m_viewBounds->intersects(bottom.getViewRect()))
-      {
-         result.push_back(bottom);
-      }
-   }
-   else
-   {
-      result.push_back(bottom);
-   }
+   imagePt.makeNan();
+   return imagePt;
 }
 
-void ossimImageRenderer::ossimRendererSubRectInfo::splitAll(std::vector<ossimRendererSubRectInfo>& result)const
+ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::ilr()const
 {
-   //std::cout << "FULL Split\n" << std::endl;
-   // let splitAll for now.  We can still optimize but will do that later
-   ossimIrect tempUlRect;
-   ossimIrect tempUrRect;
-   ossimIrect tempLrRect;
-   ossimIrect tempLlRect;
-   ossimIrect vrect(m_Vul,
-                    m_Vur,
-                    m_Vlr,
-                    m_Vll);
-   ossim_int32 w  = vrect.width();
-   ossim_int32 h  = vrect.height();
-   ossim_int32 w2 = w>>1;
-   ossim_int32 h2 = h>>1;
-
-   tempUlRect = ossimIrect(m_Vul.x,
-                           m_Vul.y,
-                           m_Vul.x + (w2 - 1),
-                           m_Vul.y + (h2 - 1));
-  
-   tempUrRect = ossimIrect(tempUlRect.ur().x+1,
-                           m_Vul.y,
-                           m_Vur.x,
-                           m_Vul.y + (h2 - 1));
-  
-   tempLrRect = ossimIrect(tempUlRect.lr().x,
-                           tempUlRect.lr().y+1,
-                           m_Vlr.x,
-                           m_Vlr.y);
-  
-   tempLlRect = ossimIrect(m_Vul.x,
-                           tempUlRect.ll().y+1,
-                           tempLrRect.ul().x,
-                           tempLrRect.ll().y);
-
-//  std::cout << "VR: " << vrect.width() << ", " << vrect.height() << "\n"
-//            << "UL: " << tempUlRect.width() << ", " << tempUlRect.height() << "\n"
-//            << "UR: " << tempUrRect.width() << ", " << tempUrRect.height() << "\n"
-//            << "LR: " << tempLrRect.width() << ", " << tempLrRect.height() << "\n"
-//            << "LL: " << tempLlRect.width() << ", " << tempLlRect.height() << "\n";
-
-   ossimRendererSubRectInfo ul(m_transform.get(),tempUlRect.ul(), tempUlRect.ur(),tempUlRect.lr(), tempUlRect.ll());
-   ossimRendererSubRectInfo ur(m_transform.get(),tempUrRect.ul(), tempUrRect.ur(),tempUrRect.lr(), tempUrRect.ll());
-   ossimRendererSubRectInfo lr(m_transform.get(),tempLrRect.ul(), tempLrRect.ur(),tempLrRect.lr(), tempLrRect.ll());
-   ossimRendererSubRectInfo ll(m_transform.get(),tempLlRect.ul(), tempLlRect.ur(),tempLlRect.lr(), tempLlRect.ll());
-
-   ul.m_viewBounds = m_viewBounds;
-   ur.m_viewBounds = m_viewBounds;
-   lr.m_viewBounds = m_viewBounds;
-   ll.m_viewBounds = m_viewBounds;
-   ul.m_vertexCache = m_vertexCache;
-   ur.m_vertexCache = m_vertexCache;
-   lr.m_vertexCache = m_vertexCache;
-   ll.m_vertexCache = m_vertexCache;
-
-   if(m_vertexCache&&hasVertexIndices())
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_lrVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
    {
-      ossim_int64 candidates[15];
-      ossim_uint32 candidateCount = 0;
-      candidates[candidateCount++] = m_ulVertex;
-      candidates[candidateCount++] = m_urVertex;
-      candidates[candidateCount++] = m_lrVertex;
-      candidates[candidateCount++] = m_llVertex;
-
-      const ossim_int64 ulUr =
-         m_vertexCache->addVertex(ul.m_Vur, candidates, candidateCount);
-      candidates[candidateCount++] = ulUr;
-      const ossim_int64 ulLr =
-         m_vertexCache->addVertex(ul.m_Vlr, candidates, candidateCount);
-      candidates[candidateCount++] = ulLr;
-      const ossim_int64 ulLl =
-         m_vertexCache->addVertex(ul.m_Vll, candidates, candidateCount);
-      candidates[candidateCount++] = ulLl;
-      const ossim_int64 urUl =
-         m_vertexCache->addVertex(ur.m_Vul, candidates, candidateCount);
-      candidates[candidateCount++] = urUl;
-      const ossim_int64 urLr =
-         m_vertexCache->addVertex(ur.m_Vlr, candidates, candidateCount);
-      candidates[candidateCount++] = urLr;
-      const ossim_int64 urLl =
-         m_vertexCache->addVertex(ur.m_Vll, candidates, candidateCount);
-      candidates[candidateCount++] = urLl;
-      const ossim_int64 lrUl =
-         m_vertexCache->addVertex(lr.m_Vul, candidates, candidateCount);
-      candidates[candidateCount++] = lrUl;
-      const ossim_int64 lrUr =
-         m_vertexCache->addVertex(lr.m_Vur, candidates, candidateCount);
-      candidates[candidateCount++] = lrUr;
-      const ossim_int64 lrLl =
-         m_vertexCache->addVertex(lr.m_Vll, candidates, candidateCount);
-      candidates[candidateCount++] = lrLl;
-      const ossim_int64 llUl =
-         m_vertexCache->addVertex(ll.m_Vul, candidates, candidateCount);
-      candidates[candidateCount++] = llUl;
-      const ossim_int64 llUr =
-         m_vertexCache->addVertex(ll.m_Vur, candidates, candidateCount);
-
-      ul.setVertexIndices(m_ulVertex, ulUr, ulLr, ulLl);
-      ur.setVertexIndices(urUl, m_urVertex, urLr, urLl);
-      lr.setVertexIndices(lrUl, lrUr, m_lrVertex, lrLl);
-      ll.setVertexIndices(llUl, llUr, lrLl, m_llVertex);
-
-      m_vertexCache->referenceVertex(m_ulVertex);
-      m_vertexCache->referenceVertex(m_urVertex);
-      m_vertexCache->referenceVertex(m_lrVertex);
-      m_vertexCache->referenceVertex(m_llVertex);
-      m_vertexCache->referenceVertex(llUr);
-      m_vertexCache->referenceVertex(lrLl);
+      return imagePt;
    }
 
-   ul.transformViewToImage();
-   ur.transformViewToImage();
-   lr.transformViewToImage();
-   ll.transformViewToImage();
-
-   if(ul.imageIsNan())
-   {
-      if(ul.m_viewBounds->intersects(ul.getViewRect()))
-      {
-         result.push_back(ul);
-      }
-   }
-   else
-   {
-      result.push_back(ul);
-   }
-   if(ur.imageIsNan())
-   {
-      if(ur.m_viewBounds->intersects(ur.getViewRect()))
-      {
-         result.push_back(ur);
-      }
-   }
-   else
-   {
-      result.push_back(ur);
-   }
-   if(lr.imageIsNan())
-   {
-      if(lr.m_viewBounds->intersects(lr.getViewRect()))
-      {
-         result.push_back(lr);
-      }
-   }
-   else
-   {
-      result.push_back(lr);
-   }
-   if(ll.imageIsNan())
-   {
-      if(ll.m_viewBounds->intersects(ll.getViewRect()))
-      {
-         result.push_back(ll);
-      }
-   }
-   else
-   {
-      result.push_back(ll);
-   }
+   imagePt.makeNan();
+   return imagePt;
 }
 
-void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRendererSubRectInfo>& result)const
+ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::ill()const
 {
-   ossim_uint16 splitFlags = getSplitFlags();
-   if(!splitFlags)
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_llVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
    {
-      return;
+      return imagePt;
    }
 
-  
-   // just do horizontal split for test
-   ossimIrect vrect(m_Vul,
-                    m_Vur,
-                    m_Vlr,
-                    m_Vll);
-   ossim_int32 w  = vrect.width();
-   ossim_int32 h  = vrect.height();
-   ossim_int32 w2 = w>>1;
-   ossim_int32 h2 = h>>1;
-   
-   if((w2 <2)&&(h2<2))
-   {
-      ossimRendererSubRectInfo rect(m_transform.get(),m_Vul, 
-                                    m_Vul, 
-                                    m_Vul, 
-                                    m_Vul);
-      rect.m_viewBounds = m_viewBounds;
-      rect.m_vertexCache = m_vertexCache;
-      if(m_vertexCache&&hasVertexIndices())
-      {
-         rect.setVertexIndices(m_ulVertex,
-                               m_ulVertex,
-                               m_ulVertex,
-                               m_ulVertex);
-         m_vertexCache->referenceVertex(m_ulVertex);
-         m_vertexCache->referenceVertex(m_ulVertex);
-         m_vertexCache->referenceVertex(m_ulVertex);
-         m_vertexCache->referenceVertex(m_ulVertex);
-      }
-      rect.transformViewToImage();
-
-      if(rect.imageHasNans())
-      {
-        if(rect.m_viewBounds->intersects(rect.getViewRect()))
-        {
-            result.push_back(rect);
-        }
-      }
-   }
-   // horizontal split if only the upper left and lower left 
-   // vertices need splitting 
-   else if((splitFlags==(UPPER_LEFT_SPLIT_FLAG|LOWER_LEFT_SPLIT_FLAG))||
-           (splitFlags==(UPPER_RIGHT_SPLIT_FLAG|LOWER_RIGHT_SPLIT_FLAG)))
-   {
-      // std::cout << "Horizontal Split\n" << std::endl;    
-      if(w > 1)
-      {
-         splitHorizontal(result);
-      }
-   }  
-   // check vertical only split
-   else if((splitFlags==(UPPER_LEFT_SPLIT_FLAG|UPPER_RIGHT_SPLIT_FLAG))||
-           (splitFlags==(LOWER_RIGHT_SPLIT_FLAG|LOWER_LEFT_SPLIT_FLAG)))
-   {
-      //std::cout << "Vertical Split\n" << std::endl;
-
-      if(h>1)
-      {
-         splitVertical(result);
-      }
-   }
-   else//if((w>1)&&(h>1)&&(splitFlags))
-   {
-      if((w<2)&&(h>1))
-      {
-         splitVertical(result);
-      }
-      else if((w>1)&&(h<2))
-      {
-         splitHorizontal(result);
-      }
-      else
-      {
-         splitAll(result);
-      }
-   }
+   imagePt.makeNan();
+   return imagePt;
 }
 
-void ossimImageRenderer::ossimRendererSubRectInfo::transformImageToView()
+ossimIpt ossimImageRenderer::ossimRendererSubRectInfo::vul()const
 {
-   ossimDpt vul;
-   ossimDpt vur;
-   ossimDpt vlr;
-   ossimDpt vll;
-   m_transform->imageToView(m_Iul,
-                          vul);
-   m_transform->imageToView(m_Iur,
-                          vur);
-   m_transform->imageToView(m_Ilr,
-                          vlr);
-   m_transform->imageToView(m_Ill,
-                          vll);
-   
-   m_Vul = vul;
-   m_Vur = vur;
-   m_Vlr = vlr;
-   m_Vll = vll;
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_ulVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
+   {
+      return viewPt;
+   }
+
+   viewPt.makeNan();
+   return viewPt;
+}
+
+ossimIpt ossimImageRenderer::ossimRendererSubRectInfo::vur()const
+{
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_urVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
+   {
+      return viewPt;
+   }
+
+   viewPt.makeNan();
+   return viewPt;
+}
+
+ossimIpt ossimImageRenderer::ossimRendererSubRectInfo::vlr()const
+{
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_lrVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
+   {
+      return viewPt;
+   }
+
+   viewPt.makeNan();
+   return viewPt;
+}
+
+ossimIpt ossimImageRenderer::ossimRendererSubRectInfo::vll()const
+{
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_llVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
+   {
+      return viewPt;
+   }
+
+   viewPt.makeNan();
+   return viewPt;
+}
+
+ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::ulScale()const
+{
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_ulVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
+   {
+      return scale;
+   }
+
+   scale.makeNan();
+   return scale;
+}
+
+ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::urScale()const
+{
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_urVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
+   {
+      return scale;
+   }
+
+   scale.makeNan();
+   return scale;
+}
+
+ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::lrScale()const
+{
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_lrVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
+   {
+      return scale;
+   }
+
+   scale.makeNan();
+   return scale;
+}
+
+ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::llScale()const
+{
+   ossimIpt viewPt;
+   ossimDpt imagePt;
+   ossimDpt scale;
+   if(m_vertexCache&&m_vertexCache->getVertex(m_llVertex,
+                                               viewPt,
+                                               imagePt,
+                                               scale))
+   {
+      return scale;
+   }
+
+   scale.makeNan();
+   return scale;
+}
+
+ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::viewToImageScale()const
+{
+   ossimDpt result(0.0, 0.0);
+   ossim_uint32 n = 0;
+   const ossimDpt scales[4] = {ulScale(), urScale(), lrScale(), llScale()};
+   for(ossim_uint32 idx = 0; idx < 4; ++idx)
+   {
+      if(!scales[idx].hasNans())
+      {
+         result += scales[idx];
+         ++n;
+      }
+   }
+
+   if(!n)
+   {
+      result.makeNan();
+   }
+   else
+   {
+      result.x /= n;
+      result.y /= n;
+   }
+
+   return result;
+}
+
+ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::imageToViewScale()const
+{
+   const ossimDpt scale = viewToImageScale();
+   ossimDpt result;
+   if(!scale.hasNans())
+   {
+      result.x = 1.0/scale.x;
+      result.y = 1.0/scale.y;
+   }
+   else
+   {
+      result.makeNan();
+   }
+
+   return result;
 }
 
 bool ossimImageRenderer::ossimRendererSubRectInfo::tooBig()const
@@ -1380,7 +1162,7 @@ ossim_uint16 ossimImageRenderer::ossimRendererSubRectInfo::getSplitFlags()const
 */
   if(result != SPLIT_ALL)
   {
-    ossim_float64 sensitivityScale = m_ImageToViewScale.length();
+    ossim_float64 sensitivityScale = imageToViewScale().length();
     //std::cout << sensitivityScale << std::endl;
     if(sensitivityScale < 1.0) sensitivityScale = 1.0/sensitivityScale;
 
@@ -1425,132 +1207,9 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
 {
 //  std::cout << "TRANSFORM VIEW TO IMAGE!!!!!!!!!!!!!!\n";
 
-   ossimDrect vrect = getViewRect();
-
-#if 0 /* not used */
-   ossim_float64 w = vrect.width() - 1; // subtract 1 to prevent core dump in full-earth view rect
-   ossim_float64 h = vrect.height();
-#endif
-
    if(m_vertexCache)
    {
-      if(!hasVertexIndices())
-      {
-         setVertexIndices(m_vertexCache->addVertex(m_Vul),
-                          m_vertexCache->addVertex(m_Vur),
-                          m_vertexCache->addVertex(m_Vlr),
-                          m_vertexCache->addVertex(m_Vll));
-      }
-
-      m_vertexCache->getVertex(m_ulVertex, m_Vul, m_Iul, m_VulScale);
-      m_vertexCache->getVertex(m_urVertex, m_Vur, m_Iur, m_VurScale);
-      m_vertexCache->getVertex(m_lrVertex, m_Vlr, m_Ilr, m_VlrScale);
-      m_vertexCache->getVertex(m_llVertex, m_Vll, m_Ill, m_VllScale);
-   }
-   else
-   {
-      m_transform->viewToImage(m_Vul, m_Iul);
-      m_transform->viewToImage(m_Vur, m_Iur);
-      m_transform->viewToImage(m_Vlr, m_Ilr);
-      m_transform->viewToImage(m_Vll, m_Ill);
-   }
-
-//  m_ulRoundTripError = m_transform->getRoundTripErrorView(m_Vul);
-//  m_urRoundTripError = m_transform->getRoundTripErrorView(m_Vur);
-//  m_lrRoundTripError = m_transform->getRoundTripErrorView(m_Vlr);
-//  m_llRoundTripError = m_transform->getRoundTripErrorView(m_Vll);
-
-#if 1
-   if(!m_vertexCache)
-   {
-      m_transform->getViewToImageScale(m_VulScale, m_Vul);
-      m_transform->getViewToImageScale(m_VurScale, m_Vur);
-      m_transform->getViewToImageScale(m_VlrScale, m_Vlr);
-      m_transform->getViewToImageScale(m_VllScale, m_Vll);
-   }
-
-   //  m_VulScale = computeViewToImageScale(m_Vul, ossimDpt( w, h));
-   //  m_VurScale = computeViewToImageScale(m_Vur, ossimDpt(-w, h));
-   //  m_VlrScale = computeViewToImageScale(m_Vlr, ossimDpt(-w,-h));
-   //  m_VllScale = computeViewToImageScale(m_Vll, ossimDpt( w,-h));
-
-   ossim_int32 n = 0;
-   m_ViewToImageScale.x = 0.0;
-   m_ViewToImageScale.y = 0.0;
-
-   if (!m_VulScale.hasNans())
-   {
-     m_ViewToImageScale += m_VulScale;
-     ++n;
-   }
-   if(!m_VurScale.hasNans())
-   {
-      m_ViewToImageScale += m_VurScale; 
-      ++n;
-   }
-   if(!m_VlrScale.hasNans())
-   {
-      m_ViewToImageScale += m_VlrScale; 
-      ++n;
-   }
-   if(!m_VllScale.hasNans())
-   {
-      m_ViewToImageScale += m_VllScale; 
-      ++n;
-   }
-   if(!n)
-   {
-      m_ViewToImageScale.makeNan();
-   }
-   else
-   {
-      m_ViewToImageScale.x/=n;
-      m_ViewToImageScale.y/=n;
-   }
-
-#else
-   {
-      m_ViewToImageScale = ossimDpt(1.0, 1.0);
-      
-      ossimDpt topDelta    = m_Iur - m_Iul;
-      ossimDpt rightDelta  = m_Ilr - m_Iur;
-      ossimDpt bottomDelta = m_Ill - m_Ilr;
-      ossimDpt leftDelta   = m_Iul - m_Ill;
-      
-      double topLen    = topDelta.length();
-      double bottomLen = bottomDelta.length();
-      double rightLen  = rightDelta.length();
-      double leftLen   = leftDelta.length();
-      
-      double averageHoriz = ((topLen)  + (bottomLen))*.5;
-      double averageVert  = ((leftLen) + (rightLen))*.5;
-      
-      ossimDpt deltaViewP1P2 = m_Vul - m_Vur;
-      ossimDpt deltaViewP1P3 = m_Vul - m_Vll;
-      
-      double lengthViewP1P2 = deltaViewP1P2.length();//+1;
-      double lengthViewP1P3 = deltaViewP1P3.length();//+1;
-
-      if(lengthViewP1P2 > FLT_EPSILON)
-         m_ViewToImageScale.x = averageHoriz/lengthViewP1P2;
-      else
-         m_ViewToImageScale.makeNan();
-      if(lengthViewP1P3 > FLT_EPSILON)
-         m_ViewToImageScale.y = averageVert/lengthViewP1P3;
-      else
-         m_ViewToImageScale.makeNan();
-   }
-#endif
-
-   //std::cout << m_ViewToImageScale << std::endl;
-   if(!m_ViewToImageScale.hasNans())
-   {
-      m_ImageToViewScale.x = 1.0/m_ViewToImageScale.x;
-      m_ImageToViewScale.y = 1.0/m_ViewToImageScale.y;
-   }
-   else
-   {
-      m_ImageToViewScale.makeNan();
+      return;
    }
 }
 
@@ -1589,32 +1248,7 @@ ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::computeViewToImageScale(c
 
 void ossimImageRenderer::ossimRendererSubRectInfo::stretchImageOut(bool enableRound)
 {
-   ossimDpt topDelta    = m_Iur - m_Iul;
-   ossimDpt rightDelta  = m_Ilr - m_Iur;
-   ossimDpt bottomDelta = m_Ill - m_Ilr;
-   ossimDpt leftDelta   = m_Iul - m_Ill;
-
-   topDelta = topDelta*(1.0/topDelta.length());
-   rightDelta = rightDelta*(1.0/rightDelta.length());
-   bottomDelta = bottomDelta*(1.0/bottomDelta.length());
-   leftDelta = leftDelta*(1.0/leftDelta.length());
-
-   m_Iul = m_Iul + ((leftDelta - topDelta)*.5);
-   m_Iur = m_Iur + ((topDelta - rightDelta)*.5);
-   m_Ilr = m_Ilr + ((rightDelta - bottomDelta)*.5);
-   m_Ill = m_Ill + ((bottomDelta - leftDelta)*.5);
-
-   if(enableRound)
-   {
-      m_Iul = ossimIpt(ossim::round<int>(m_Iul.x),
-                        ossim::round<int>(m_Iul.y));
-      m_Iur = ossimIpt(ossim::round<int>(m_Iur.x),
-                        ossim::round<int>(m_Iur.y));
-      m_Ilr = ossimIpt(ossim::round<int>(m_Ilr.x),
-                        ossim::round<int>(m_Ilr.y));
-      m_Ill = ossimIpt(ossim::round<int>(m_Ill.x),
-                        ossim::round<int>(m_Ill.y));
-   }
+   (void)enableRound;
 }
 
 bool ossimImageRenderer::ossimRendererSubRectInfo::isIdentity()const
@@ -1640,10 +1274,10 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::isIdentity()const
 //       }
 //    }
 
-    double iulDelta = (m_Iul-m_Vul).length();
-    double iurDelta = (m_Iur-m_Vur).length();
-    double ilrDelta = (m_Ilr-m_Vlr).length();
-    double illDelta = (m_Ill-m_Vll).length();
+    double iulDelta = (iul()-vul()).length();
+    double iurDelta = (iur()-vur()).length();
+    double ilrDelta = (ilr()-vlr()).length();
+    double illDelta = (ill()-vll()).length();
 
     return ((iulDelta <= FLT_EPSILON)&&
             (iurDelta <= FLT_EPSILON)&&
@@ -1676,10 +1310,10 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate() cons
     return true;
   }
 
-  if (m_VulScale.hasNans() ||
-      m_VurScale.hasNans() ||
-      m_VlrScale.hasNans() ||
-      m_VllScale.hasNans())
+  if (ulScale().hasNans() ||
+      urScale().hasNans() ||
+      lrScale().hasNans() ||
+      llScale().hasNans())
   {
     return result;
   }
@@ -1693,10 +1327,10 @@ bool ossimImageRenderer::ossimRendererSubRectInfo::canBilinearInterpolate() cons
   // If there is a variance of 1 resolution level
   // then we must split further
   //
-  ossim_float64 averageUlScale = m_VulScale.length();
-  ossim_float64 averageUrScale = m_VurScale.length();
-  ossim_float64 averageLrScale = m_VlrScale.length();
-  ossim_float64 averageLlScale = m_VllScale.length();
+  ossim_float64 averageUlScale = ulScale().length();
+  ossim_float64 averageUrScale = urScale().length();
+  ossim_float64 averageLrScale = lrScale().length();
+  ossim_float64 averageLlScale = llScale().length();
 
   // std::cout << "_________________________\n";
   // std::cout << log(averageUlScale)/(log(2)) << "\n";
@@ -1912,11 +1546,11 @@ void ossimImageRenderer::ossimRendererSubRectInfo::getViewMids(ossimDpt& upperMi
                  ossimDpt& center)const
 {
   
-  upperMid  = (m_Vul + m_Vur)*.5;
-  rightMid  = (m_Vur + m_Vlr)*.5;
-  bottomMid = (m_Vlr + m_Vll)*.5;
-  leftMid   = (m_Vul + m_Vll)*.5;
-  center    = (m_Vul + m_Vur + m_Vlr + m_Vll)*.25;
+  upperMid  = (vul() + vur())*.5;
+  rightMid  = (vur() + vlr())*.5;
+  bottomMid = (vlr() + vll())*.5;
+  leftMid   = (vul() + vll())*.5;
+  center    = (vul() + vur() + vlr() + vll())*.25;
 }
 
 void ossimImageRenderer::ossimRendererSubRectInfo::getImageMids(ossimDpt& upperMid,
@@ -1935,11 +1569,11 @@ void ossimImageRenderer::ossimRendererSubRectInfo::getImageMids(ossimDpt& upperM
   }
   else
   {
-    upperMid  = (m_Iul + m_Iur)*.5;
-    rightMid  = (m_Iur + m_Ilr)*.5;
-    bottomMid = (m_Ilr + m_Ill)*.5;
-    leftMid   = (m_Iul + m_Ill)*.5;
-    center    = (m_Iul + m_Iur + m_Ilr + m_Ill)*.25;
+    upperMid  = (iul() + iur())*.5;
+    rightMid  = (iur() + ilr())*.5;
+    bottomMid = (ilr() + ill())*.5;
+    leftMid   = (iul() + ill())*.5;
+    center    = (iul() + iur() + ilr() + ill())*.25;
   }
 }
 
@@ -2183,6 +1817,10 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
       new ossimRendererVertexCache(m_ImageViewTransform.get()));
    subRectInfo.m_viewBounds = &m_viewArea;
    subRectInfo.setVertexCache(vertexCache.get());
+   subRectInfo.setVertexIndices(vertexCache->addVertex(tempRect.ul()),
+                                vertexCache->addVertex(tempRect.ur()),
+                                vertexCache->addVertex(tempRect.lr()),
+                                vertexCache->addVertex(tempRect.ll()));
    subRectInfo.transformViewToImage();
 
    if((!m_viewArea.intersects(subRectInfo.getViewRect())))
@@ -2426,14 +2064,18 @@ void ossimImageRenderer::fillTile(ossimRefPtr<ossimImageData> outputData,
       }
    }
 #endif
-   ossimDpt nul(rectInfo.m_Iul.x*closestScale,
-                rectInfo.m_Iul.y*closestScale);
-   ossimDpt nll(rectInfo.m_Ill.x*closestScale,
-                rectInfo.m_Ill.y*closestScale);
-   ossimDpt nlr(rectInfo.m_Ilr.x*closestScale,
-                rectInfo.m_Ilr.y*closestScale);
-   ossimDpt nur(rectInfo.m_Iur.x*closestScale,
-                rectInfo.m_Iur.y*closestScale);
+   const ossimDpt iul = rectInfo.iul();
+   const ossimDpt iur = rectInfo.iur();
+   const ossimDpt ilr = rectInfo.ilr();
+   const ossimDpt ill = rectInfo.ill();
+   ossimDpt nul(iul.x*closestScale,
+                iul.y*closestScale);
+   ossimDpt nll(ill.x*closestScale,
+                ill.y*closestScale);
+   ossimDpt nlr(ilr.x*closestScale,
+                ilr.y*closestScale);
+   ossimDpt nur(iur.x*closestScale,
+                iur.y*closestScale);
    
    m_Resampler->getKernelSupport( kernelSupportX, kernelSupportY );
    
