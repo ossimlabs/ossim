@@ -35,8 +35,11 @@
 #include <ossim/projection/ossimMapProjection.h>
 #include <ossim/projection/ossimBilinearMapProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
+#include <cstdlib>
 #include <iostream>
+#include <map>
 #include <stack>
+#include <utility>
 #include <ossim/base/ossimPreferences.h>
 
 // using namespace std;
@@ -52,6 +55,93 @@ static ossimTrace traceDebug("ossimImageRenderer:debug");
 RTTI_DEF2(ossimImageRenderer, "ossimImageRenderer", ossimImageSourceFilter, ossimViewInterface);
 
 double ossimImageRenderer::m_interpErrorThreshold = 1.0;
+
+class ossimImageRenderer::ossimRendererVertexCache
+{
+public:
+   typedef std::pair<ossim_int32, ossim_int32> Key;
+
+   ossimRendererVertexCache(ossimImageViewTransform* transform)
+      : m_transform(transform)
+      , m_viewToImageHits(0)
+      , m_viewToImageMisses(0)
+      , m_scaleHits(0)
+      , m_scaleMisses(0)
+   {
+   }
+
+   void viewToImage(const ossimIpt& viewPt, ossimDpt& imagePt)
+   {
+      const Key key(viewPt.x, viewPt.y);
+      std::map<Key, ossimDpt>::const_iterator iter = m_viewToImage.find(key);
+      if(iter != m_viewToImage.end())
+      {
+         imagePt = iter->second;
+         ++m_viewToImageHits;
+         return;
+      }
+
+      ++m_viewToImageMisses;
+      if(m_transform.valid())
+      {
+         m_transform->viewToImage(viewPt, imagePt);
+      }
+      else
+      {
+         imagePt.makeNan();
+      }
+      m_viewToImage[key] = imagePt;
+   }
+
+   void getViewToImageScale(ossimDpt& scale, const ossimIpt& viewPt)
+   {
+      const Key key(viewPt.x, viewPt.y);
+      std::map<Key, ossimDpt>::const_iterator iter =
+         m_viewToImageScale.find(key);
+      if(iter != m_viewToImageScale.end())
+      {
+         scale = iter->second;
+         ++m_scaleHits;
+         return;
+      }
+
+      ++m_scaleMisses;
+      if(m_transform.valid())
+      {
+         m_transform->getViewToImageScale(scale, viewPt);
+      }
+      else
+      {
+         scale.makeNan();
+      }
+      m_viewToImageScale[key] = scale;
+   }
+
+   void printStats(const ossimIrect& tileRect) const
+   {
+      if(!std::getenv("OSSIM_RENDERER_VERTEX_CACHE_STATS"))
+      {
+         return;
+      }
+
+      ossimNotify(ossimNotifyLevel_INFO)
+         << "ossimImageRenderer vertex cache: rect=" << tileRect
+         << " view_to_image_hits=" << m_viewToImageHits
+         << " view_to_image_misses=" << m_viewToImageMisses
+         << " scale_hits=" << m_scaleHits
+         << " scale_misses=" << m_scaleMisses
+         << std::endl;
+   }
+
+private:
+   ossimRefPtr<ossimImageViewTransform> m_transform;
+   std::map<Key, ossimDpt> m_viewToImage;
+   std::map<Key, ossimDpt> m_viewToImageScale;
+   ossim_uint64 m_viewToImageHits;
+   ossim_uint64 m_viewToImageMisses;
+   ossim_uint64 m_scaleHits;
+   ossim_uint64 m_scaleMisses;
+};
 
 void ossimImageRenderer::ossimRendererSubRectInfo::splitHorizontal(std::vector<ossimRendererSubRectInfo>& result)const
 {
@@ -77,6 +167,8 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitHorizontal(std::vector<o
 
    left.m_viewBounds = m_viewBounds;
    right.m_viewBounds = m_viewBounds;
+   left.m_vertexCache = m_vertexCache;
+   right.m_vertexCache = m_vertexCache;
 
    left.m_Vul = tempLeftRect.ul();
    left.m_Vur = tempLeftRect.ur();
@@ -138,6 +230,8 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitVertical(std::vector<oss
 
    top.m_viewBounds    = m_viewBounds;
    bottom.m_viewBounds = m_viewBounds;
+   top.m_vertexCache = m_vertexCache;
+   bottom.m_vertexCache = m_vertexCache;
 
    top.m_Vul = tempTopRect.ul();
    top.m_Vur = tempTopRect.ur();
@@ -228,6 +322,10 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitAll(std::vector<ossimRen
    ur.m_viewBounds = m_viewBounds;
    lr.m_viewBounds = m_viewBounds;
    ll.m_viewBounds = m_viewBounds;
+   ul.m_vertexCache = m_vertexCache;
+   ur.m_vertexCache = m_vertexCache;
+   lr.m_vertexCache = m_vertexCache;
+   ll.m_vertexCache = m_vertexCache;
 
    ul.transformViewToImage();
    ur.transformViewToImage();
@@ -306,6 +404,7 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRe
                                     m_Vul, 
                                     m_Vul);
       rect.m_viewBounds = m_viewBounds;
+      rect.m_vertexCache = m_vertexCache;
       rect.transformViewToImage();
 
       if(rect.imageHasNans())
@@ -574,10 +673,20 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
    ossim_float64 h = vrect.height();
 #endif
 
-   m_transform->viewToImage(m_Vul, m_Iul);
-   m_transform->viewToImage(m_Vur, m_Iur);
-   m_transform->viewToImage(m_Vlr, m_Ilr);
-   m_transform->viewToImage(m_Vll, m_Ill);
+   if(m_vertexCache)
+   {
+      m_vertexCache->viewToImage(m_Vul, m_Iul);
+      m_vertexCache->viewToImage(m_Vur, m_Iur);
+      m_vertexCache->viewToImage(m_Vlr, m_Ilr);
+      m_vertexCache->viewToImage(m_Vll, m_Ill);
+   }
+   else
+   {
+      m_transform->viewToImage(m_Vul, m_Iul);
+      m_transform->viewToImage(m_Vur, m_Iur);
+      m_transform->viewToImage(m_Vlr, m_Ilr);
+      m_transform->viewToImage(m_Vll, m_Ill);
+   }
 
 //  m_ulRoundTripError = m_transform->getRoundTripErrorView(m_Vul);
 //  m_urRoundTripError = m_transform->getRoundTripErrorView(m_Vur);
@@ -585,10 +694,20 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
 //  m_llRoundTripError = m_transform->getRoundTripErrorView(m_Vll);
 
 #if 1
-   m_transform->getViewToImageScale(m_VulScale, m_Vul);
-   m_transform->getViewToImageScale(m_VurScale, m_Vur);
-   m_transform->getViewToImageScale(m_VlrScale, m_Vlr);
-   m_transform->getViewToImageScale(m_VllScale, m_Vll);
+   if(m_vertexCache)
+   {
+      m_vertexCache->getViewToImageScale(m_VulScale, m_Vul);
+      m_vertexCache->getViewToImageScale(m_VurScale, m_Vur);
+      m_vertexCache->getViewToImageScale(m_VlrScale, m_Vlr);
+      m_vertexCache->getViewToImageScale(m_VllScale, m_Vll);
+   }
+   else
+   {
+      m_transform->getViewToImageScale(m_VulScale, m_Vul);
+      m_transform->getViewToImageScale(m_VurScale, m_Vur);
+      m_transform->getViewToImageScale(m_VlrScale, m_Vlr);
+      m_transform->getViewToImageScale(m_VllScale, m_Vll);
+   }
 
    //  m_VulScale = computeViewToImageScale(m_Vul, ossimDpt( w, h));
    //  m_VurScale = computeViewToImageScale(m_Vur, ossimDpt(-w, h));
@@ -1300,7 +1419,9 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 
 
 #endif
+   ossimRendererVertexCache vertexCache(m_ImageViewTransform.get());
    subRectInfo.m_viewBounds = &m_viewArea;
+   subRectInfo.setVertexCache(&vertexCache);
    subRectInfo.transformViewToImage();
 
    if((!m_viewArea.intersects(subRectInfo.getViewRect())))
@@ -1321,6 +1442,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 //      return m_Tile;
 //   }
    recursiveResample(m_Tile, subRectInfo, 1);
+   vertexCache.printStats(tileRect);
   
    if(m_Tile.valid())
    {

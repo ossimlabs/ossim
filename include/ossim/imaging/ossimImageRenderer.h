@@ -153,6 +153,7 @@ public:
    
 protected:
 private:
+   class ossimRendererVertexCache;
    
    class ossimRendererSubRectInfo
    {
@@ -199,6 +200,7 @@ private:
       
       void transformViewToImage();
       void transformImageToView();
+      void setVertexCache(ossimRendererVertexCache* cache);
       bool tooBig()const;
       void roundToInteger();
       void stretchImageOut(bool enableRound=false);
@@ -255,6 +257,7 @@ private:
 
       mutable ossimRefPtr<ossimImageViewTransform> m_transform;
       mutable const ossimPolyArea2d* m_viewBounds;
+      mutable ossimRendererVertexCache* m_vertexCache;
 
     private:
       void splitHorizontal(std::vector<ossimRendererSubRectInfo>& result)const;
@@ -345,7 +348,8 @@ private:
 
 inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(ossimImageViewTransform* transform)
 :m_transform(transform),
-m_viewBounds(0)
+m_viewBounds(0),
+m_vertexCache(0)
 {
    m_Vul.makeNan();
    m_Vur.makeNan();
@@ -369,7 +373,8 @@ inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(os
                          m_Vlr(vlr),
                          m_Vll(vll),
                          m_transform(transform),
-                         m_viewBounds(0)
+                         m_viewBounds(0),
+                         m_vertexCache(0)
 {
    m_Iul.makeNan();
    m_Iur.makeNan();
@@ -385,6 +390,12 @@ inline bool ossimImageRenderer::ossimRendererSubRectInfo::imageHasNans()const
       m_Iur.hasNans()||
       m_Ilr.hasNans()||
       m_Ill.hasNans());
+}
+
+inline void ossimImageRenderer::ossimRendererSubRectInfo::setVertexCache(
+   ossimRendererVertexCache* cache)
+{
+   m_vertexCache = cache;
 }
 
 inline bool ossimImageRenderer::ossimRendererSubRectInfo::imageIsNan()const
