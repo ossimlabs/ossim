@@ -37,6 +37,7 @@
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <stack>
 #include <vector>
 #include <ossim/base/ossimPreferences.h>
@@ -2178,9 +2179,10 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 
 
 #endif
-   ossimRendererVertexCache vertexCache(m_ImageViewTransform.get());
+   std::unique_ptr<ossimRendererVertexCache> vertexCache(
+      new ossimRendererVertexCache(m_ImageViewTransform.get()));
    subRectInfo.m_viewBounds = &m_viewArea;
-   subRectInfo.setVertexCache(&vertexCache);
+   subRectInfo.setVertexCache(vertexCache.get());
    subRectInfo.transformViewToImage();
 
    if((!m_viewArea.intersects(subRectInfo.getViewRect())))
@@ -2201,7 +2203,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 //      return m_Tile;
 //   }
    recursiveResample(m_Tile, subRectInfo, 1);
-   vertexCache.printStats(tileRect);
+   vertexCache->printStats(tileRect);
   
    if(m_Tile.valid())
    {
