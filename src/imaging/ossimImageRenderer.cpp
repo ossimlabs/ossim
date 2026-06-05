@@ -37,9 +37,8 @@
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <cstdlib>
 #include <iostream>
-#include <map>
 #include <stack>
-#include <utility>
+#include <vector>
 #include <ossim/base/ossimPreferences.h>
 
 // using namespace std;
@@ -59,88 +58,713 @@ double ossimImageRenderer::m_interpErrorThreshold = 1.0;
 class ossimImageRenderer::ossimRendererVertexCache
 {
 public:
-   typedef std::pair<ossim_int32, ossim_int32> Key;
+   enum Edge
+   {
+      LEFT_EDGE   = 0,
+      TOP_EDGE    = 1,
+      RIGHT_EDGE  = 2,
+      BOTTOM_EDGE = 3
+   };
+
+   struct Vertex
+   {
+      ossimIpt m_viewPt;
+      ossimDpt m_imagePt;
+      ossimDpt m_scale;
+   };
+
+   struct Node
+   {
+      Node()
+         : m_parent(-1)
+      {
+         m_child[0] = -1;
+         m_child[1] = -1;
+         m_child[2] = -1;
+         m_child[3] = -1;
+         m_neighbor[0] = -1;
+         m_neighbor[1] = -1;
+         m_neighbor[2] = -1;
+         m_neighbor[3] = -1;
+      }
+
+      ossimRendererSubRectInfo m_rect;
+      ossim_int64 m_parent;
+      ossim_int64 m_child[4];
+      ossim_int64 m_neighbor[4];
+   };
 
    ossimRendererVertexCache(ossimImageViewTransform* transform)
       : m_transform(transform)
-      , m_viewToImageHits(0)
-      , m_viewToImageMisses(0)
-      , m_scaleHits(0)
-      , m_scaleMisses(0)
+      , m_reusedVertexReferences(0)
+      , m_collectStats(std::getenv("OSSIM_RENDERER_VERTEX_CACHE_STATS") != 0)
    {
    }
 
-   void viewToImage(const ossimIpt& viewPt, ossimDpt& imagePt)
+   ossim_int64 addVertex(const ossimIpt& viewPt)
    {
-      const Key key(viewPt.x, viewPt.y);
-      std::map<Key, ossimDpt>::const_iterator iter = m_viewToImage.find(key);
-      if(iter != m_viewToImage.end())
-      {
-         imagePt = iter->second;
-         ++m_viewToImageHits;
-         return;
-      }
-
-      ++m_viewToImageMisses;
+      Vertex vertex;
+      vertex.m_viewPt = viewPt;
       if(m_transform.valid())
       {
-         m_transform->viewToImage(viewPt, imagePt);
+         m_transform->viewToImage(viewPt, vertex.m_imagePt);
+         m_transform->getViewToImageScale(vertex.m_scale, viewPt);
       }
       else
       {
+         vertex.m_imagePt.makeNan();
+         vertex.m_scale.makeNan();
+      }
+
+      m_vertices.push_back(vertex);
+      return static_cast<ossim_int64>(m_vertices.size() - 1);
+   }
+
+   ossim_int64 addVertex(const ossimIpt& viewPt,
+                         ossim_int64 nodeIndex,
+                         const ossim_int64* candidates,
+                         ossim_uint32 candidateCount)
+   {
+      for(ossim_uint32 idx = 0; idx < candidateCount; ++idx)
+      {
+         if(vertexMatches(candidates[idx], viewPt))
+         {
+            referenceVertex(candidates[idx]);
+            return candidates[idx];
+         }
+      }
+
+      ossim_int64 neighborVertex = -1;
+      if(findNeighborVertex(nodeIndex, viewPt, neighborVertex))
+      {
+         referenceVertex(neighborVertex);
+         return neighborVertex;
+      }
+
+      return addVertex(viewPt);
+   }
+
+   ossim_int64 addVertex(const ossimIpt& viewPt,
+                         const ossim_int64* candidates,
+                         ossim_uint32 candidateCount)
+   {
+      return addVertex(viewPt, -1, candidates, candidateCount);
+   }
+
+   ossim_int64 addNode(const ossimRendererSubRectInfo& rect,
+                       ossim_int64 parent=-1)
+   {
+      Node node;
+      node.m_rect = rect;
+      node.m_parent = parent;
+      node.m_rect.setVertexCache(this);
+      m_nodes.push_back(node);
+      return static_cast<ossim_int64>(m_nodes.size() - 1);
+   }
+
+   const Node& getNode(ossim_int64 index) const
+   {
+      return m_nodes[static_cast<std::size_t>(index)];
+   }
+
+   bool splitNode(ossim_int64 nodeIndex,
+                  std::vector<ossim_int64>& result)
+   {
+      if(nodeIndex < 0 ||
+         static_cast<std::size_t>(nodeIndex) >= m_nodes.size())
+      {
+         return false;
+      }
+
+      Node& node = m_nodes[static_cast<std::size_t>(nodeIndex)];
+      const ossimRendererSubRectInfo& rect = node.m_rect;
+      const ossim_uint16 splitFlags = rect.getSplitFlags();
+      if(!splitFlags)
+      {
+         return false;
+      }
+
+      ossimIrect vrect(rect.m_Vul,
+                       rect.m_Vur,
+                       rect.m_Vlr,
+                       rect.m_Vll);
+      const ossim_int32 w  = vrect.width();
+      const ossim_int32 h  = vrect.height();
+      const ossim_int32 w2 = w>>1;
+      const ossim_int32 h2 = h>>1;
+
+      if((w2 < 2)&&(h2 < 2))
+      {
+         ossimRendererSubRectInfo child(rect.m_transform.get(),
+                                        rect.m_Vul,
+                                        rect.m_Vul,
+                                        rect.m_Vul,
+                                        rect.m_Vul);
+         addChild(nodeIndex, 0, child,
+                  rect.m_ulVertex,
+                  rect.m_ulVertex,
+                  rect.m_ulVertex,
+                  rect.m_ulVertex,
+                  result);
+      }
+      else if((splitFlags == (1|8)) ||
+              (splitFlags == (2|4)))
+      {
+         if(w > 1)
+         {
+            splitHorizontal(nodeIndex, result);
+         }
+      }
+      else if((splitFlags == (1|2)) ||
+              (splitFlags == (4|8)))
+      {
+         if(h > 1)
+         {
+            splitVertical(nodeIndex, result);
+         }
+      }
+      else
+      {
+         if((w < 2)&&(h > 1))
+         {
+            splitVertical(nodeIndex, result);
+         }
+         else if((w > 1)&&(h < 2))
+         {
+            splitHorizontal(nodeIndex, result);
+         }
+         else
+         {
+            splitAll(nodeIndex, result);
+         }
+      }
+
+      return !result.empty();
+   }
+
+   void referenceVertex(ossim_int64 index)
+   {
+      if(index >= 0)
+      {
+         ++m_reusedVertexReferences;
+      }
+   }
+
+   bool getVertex(ossim_int64 index,
+                  ossimIpt& viewPt,
+                  ossimDpt& imagePt,
+                  ossimDpt& scale) const
+   {
+      if(index < 0 ||
+         static_cast<std::size_t>(index) >= m_vertices.size())
+      {
+         viewPt.makeNan();
          imagePt.makeNan();
-      }
-      m_viewToImage[key] = imagePt;
-   }
-
-   void getViewToImageScale(ossimDpt& scale, const ossimIpt& viewPt)
-   {
-      const Key key(viewPt.x, viewPt.y);
-      std::map<Key, ossimDpt>::const_iterator iter =
-         m_viewToImageScale.find(key);
-      if(iter != m_viewToImageScale.end())
-      {
-         scale = iter->second;
-         ++m_scaleHits;
-         return;
-      }
-
-      ++m_scaleMisses;
-      if(m_transform.valid())
-      {
-         m_transform->getViewToImageScale(scale, viewPt);
-      }
-      else
-      {
          scale.makeNan();
+         return false;
       }
-      m_viewToImageScale[key] = scale;
+
+      const Vertex& vertex = m_vertices[static_cast<std::size_t>(index)];
+      viewPt = vertex.m_viewPt;
+      imagePt = vertex.m_imagePt;
+      scale = vertex.m_scale;
+      return true;
    }
 
    void printStats(const ossimIrect& tileRect) const
    {
-      if(!std::getenv("OSSIM_RENDERER_VERTEX_CACHE_STATS"))
+      if(!m_collectStats)
       {
          return;
       }
 
       ossimNotify(ossimNotifyLevel_INFO)
          << "ossimImageRenderer vertex cache: rect=" << tileRect
-         << " view_to_image_hits=" << m_viewToImageHits
-         << " view_to_image_misses=" << m_viewToImageMisses
-         << " scale_hits=" << m_scaleHits
-         << " scale_misses=" << m_scaleMisses
+         << " vertices=" << m_vertices.size()
+         << " reused_vertex_refs=" << m_reusedVertexReferences
+         << " nodes=" << m_nodes.size()
          << std::endl;
    }
 
 private:
+   ossim_int64 addChild(ossim_int64 parentIndex,
+                        ossim_uint32 childSlot,
+                        ossimRendererSubRectInfo& rect,
+                        ossim_int64 ul,
+                        ossim_int64 ur,
+                        ossim_int64 lr,
+                        ossim_int64 ll,
+                        std::vector<ossim_int64>& result)
+   {
+      Node& parent = m_nodes[static_cast<std::size_t>(parentIndex)];
+      rect.m_viewBounds = parent.m_rect.m_viewBounds;
+      rect.setVertexCache(this);
+      rect.setVertexIndices(ul, ur, lr, ll);
+      rect.transformViewToImage();
+
+      if(rect.imageIsNan() &&
+         !(rect.m_viewBounds->intersects(rect.getViewRect())))
+      {
+         return -1;
+      }
+
+      const ossim_int64 childIndex = addNode(rect, parentIndex);
+      if(childSlot < 4)
+      {
+         m_nodes[static_cast<std::size_t>(parentIndex)].m_child[childSlot] =
+            childIndex;
+      }
+      result.push_back(childIndex);
+      return childIndex;
+   }
+
+   void splitHorizontal(ossim_int64 nodeIndex,
+                        std::vector<ossim_int64>& result)
+   {
+      const ossimRendererSubRectInfo rect =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_rect;
+      ossimIrect vrect(rect.m_Vul,
+                       rect.m_Vur,
+                       rect.m_Vlr,
+                       rect.m_Vll);
+      const ossim_int32 w2 = vrect.width()>>1;
+      ossimIrect leftRect(rect.m_Vul.x,
+                          rect.m_Vul.y,
+                          rect.m_Vul.x+w2-1,
+                          rect.m_Vlr.y);
+      ossimIrect rightRect(leftRect.ur().x+1,
+                           rect.m_Vul.y,
+                           rect.m_Vur.x,
+                           rect.m_Vlr.y);
+
+      ossimRendererSubRectInfo left(rect.m_transform.get(),
+                                    leftRect.ul(),
+                                    leftRect.ur(),
+                                    leftRect.lr(),
+                                    leftRect.ll());
+      ossimRendererSubRectInfo right(rect.m_transform.get(),
+                                     rightRect.ul(),
+                                     rightRect.ur(),
+                                     rightRect.lr(),
+                                     rightRect.ll());
+      ossim_int64 candidates[8];
+      ossim_uint32 candidateCount = 0;
+      candidates[candidateCount++] = rect.m_ulVertex;
+      candidates[candidateCount++] = rect.m_urVertex;
+      candidates[candidateCount++] = rect.m_lrVertex;
+      candidates[candidateCount++] = rect.m_llVertex;
+
+      const ossim_int64 leftUr =
+         addVertex(left.m_Vur, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = leftUr;
+      const ossim_int64 leftLr =
+         addVertex(left.m_Vlr, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = leftLr;
+      const ossim_int64 rightUl =
+         addVertex(right.m_Vul, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = rightUl;
+      const ossim_int64 rightLl =
+         addVertex(right.m_Vll, nodeIndex, candidates, candidateCount);
+
+      const ossim_int64 parentLeft =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[LEFT_EDGE];
+      const ossim_int64 parentTop =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[TOP_EDGE];
+      const ossim_int64 parentRight =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[RIGHT_EDGE];
+      const ossim_int64 parentBottom =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[BOTTOM_EDGE];
+
+      const ossim_int64 leftIndex =
+         addChild(nodeIndex, 0, left,
+                  rect.m_ulVertex, leftUr, leftLr, rect.m_llVertex, result);
+      const ossim_int64 rightIndex =
+         addChild(nodeIndex, 1, right,
+                  rightUl, rect.m_urVertex, rect.m_lrVertex, rightLl, result);
+
+      setNeighbor(leftIndex, LEFT_EDGE, parentLeft);
+      setNeighbor(leftIndex, TOP_EDGE, parentTop);
+      setNeighbor(leftIndex, RIGHT_EDGE, rightIndex);
+      setNeighbor(leftIndex, BOTTOM_EDGE, parentBottom);
+      setNeighbor(rightIndex, LEFT_EDGE, leftIndex);
+      setNeighbor(rightIndex, TOP_EDGE, parentTop);
+      setNeighbor(rightIndex, RIGHT_EDGE, parentRight);
+      setNeighbor(rightIndex, BOTTOM_EDGE, parentBottom);
+   }
+
+   void splitVertical(ossim_int64 nodeIndex,
+                      std::vector<ossim_int64>& result)
+   {
+      const ossimRendererSubRectInfo rect =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_rect;
+      ossimIrect vrect(rect.m_Vul,
+                       rect.m_Vur,
+                       rect.m_Vlr,
+                       rect.m_Vll);
+      const ossim_int32 h2 = vrect.height()>>1;
+      ossimIrect topRect(rect.m_Vul.x,
+                         rect.m_Vul.y,
+                         rect.m_Vlr.x,
+                         rect.m_Vul.y+h2-1);
+      ossimIrect bottomRect(rect.m_Vul.x,
+                            topRect.lr().y+1,
+                            rect.m_Vlr.x,
+                            rect.m_Vlr.y);
+
+      ossimRendererSubRectInfo top(rect.m_transform.get(),
+                                   topRect.ul(),
+                                   topRect.ur(),
+                                   topRect.lr(),
+                                   topRect.ll());
+      ossimRendererSubRectInfo bottom(rect.m_transform.get(),
+                                      bottomRect.ul(),
+                                      bottomRect.ur(),
+                                      bottomRect.lr(),
+                                      bottomRect.ll());
+      ossim_int64 candidates[8];
+      ossim_uint32 candidateCount = 0;
+      candidates[candidateCount++] = rect.m_ulVertex;
+      candidates[candidateCount++] = rect.m_urVertex;
+      candidates[candidateCount++] = rect.m_lrVertex;
+      candidates[candidateCount++] = rect.m_llVertex;
+
+      const ossim_int64 topLr =
+         addVertex(top.m_Vlr, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = topLr;
+      const ossim_int64 topLl =
+         addVertex(top.m_Vll, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = topLl;
+      const ossim_int64 bottomUl =
+         addVertex(bottom.m_Vul, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = bottomUl;
+      const ossim_int64 bottomUr =
+         addVertex(bottom.m_Vur, nodeIndex, candidates, candidateCount);
+
+      const ossim_int64 parentLeft =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[LEFT_EDGE];
+      const ossim_int64 parentTop =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[TOP_EDGE];
+      const ossim_int64 parentRight =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[RIGHT_EDGE];
+      const ossim_int64 parentBottom =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[BOTTOM_EDGE];
+
+      const ossim_int64 topIndex =
+         addChild(nodeIndex, 0, top,
+                  rect.m_ulVertex, rect.m_urVertex, topLr, topLl, result);
+      const ossim_int64 bottomIndex =
+         addChild(nodeIndex, 2, bottom,
+                  bottomUl, bottomUr, rect.m_lrVertex, rect.m_llVertex, result);
+
+      setNeighbor(topIndex, LEFT_EDGE, parentLeft);
+      setNeighbor(topIndex, TOP_EDGE, parentTop);
+      setNeighbor(topIndex, RIGHT_EDGE, parentRight);
+      setNeighbor(topIndex, BOTTOM_EDGE, bottomIndex);
+      setNeighbor(bottomIndex, LEFT_EDGE, parentLeft);
+      setNeighbor(bottomIndex, TOP_EDGE, topIndex);
+      setNeighbor(bottomIndex, RIGHT_EDGE, parentRight);
+      setNeighbor(bottomIndex, BOTTOM_EDGE, parentBottom);
+   }
+
+   void splitAll(ossim_int64 nodeIndex,
+                 std::vector<ossim_int64>& result)
+   {
+      const ossimRendererSubRectInfo rect =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_rect;
+      ossimIrect vrect(rect.m_Vul,
+                       rect.m_Vur,
+                       rect.m_Vlr,
+                       rect.m_Vll);
+      const ossim_int32 w2 = vrect.width()>>1;
+      const ossim_int32 h2 = vrect.height()>>1;
+
+      const ossimIrect ulRect(rect.m_Vul.x,
+                              rect.m_Vul.y,
+                              rect.m_Vul.x + (w2 - 1),
+                              rect.m_Vul.y + (h2 - 1));
+      const ossimIrect urRect(ulRect.ur().x+1,
+                              rect.m_Vul.y,
+                              rect.m_Vur.x,
+                              rect.m_Vul.y + (h2 - 1));
+      const ossimIrect lrRect(ulRect.lr().x,
+                              ulRect.lr().y+1,
+                              rect.m_Vlr.x,
+                              rect.m_Vlr.y);
+      const ossimIrect llRect(rect.m_Vul.x,
+                              ulRect.ll().y+1,
+                              lrRect.ul().x,
+                              lrRect.ll().y);
+
+      ossimRendererSubRectInfo ul(rect.m_transform.get(),
+                                  ulRect.ul(), ulRect.ur(),
+                                  ulRect.lr(), ulRect.ll());
+      ossimRendererSubRectInfo ur(rect.m_transform.get(),
+                                  urRect.ul(), urRect.ur(),
+                                  urRect.lr(), urRect.ll());
+      ossimRendererSubRectInfo lr(rect.m_transform.get(),
+                                  lrRect.ul(), lrRect.ur(),
+                                  lrRect.lr(), lrRect.ll());
+      ossimRendererSubRectInfo ll(rect.m_transform.get(),
+                                  llRect.ul(), llRect.ur(),
+                                  llRect.lr(), llRect.ll());
+
+      ossim_int64 candidates[15];
+      ossim_uint32 candidateCount = 0;
+      candidates[candidateCount++] = rect.m_ulVertex;
+      candidates[candidateCount++] = rect.m_urVertex;
+      candidates[candidateCount++] = rect.m_lrVertex;
+      candidates[candidateCount++] = rect.m_llVertex;
+
+      const ossim_int64 ulUr =
+         addVertex(ul.m_Vur, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = ulUr;
+      const ossim_int64 ulLr =
+         addVertex(ul.m_Vlr, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = ulLr;
+      const ossim_int64 ulLl =
+         addVertex(ul.m_Vll, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = ulLl;
+      const ossim_int64 urUl =
+         addVertex(ur.m_Vul, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = urUl;
+      const ossim_int64 urLr =
+         addVertex(ur.m_Vlr, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = urLr;
+      const ossim_int64 urLl =
+         addVertex(ur.m_Vll, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = urLl;
+      const ossim_int64 lrUl =
+         addVertex(lr.m_Vul, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = lrUl;
+      const ossim_int64 lrUr =
+         addVertex(lr.m_Vur, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = lrUr;
+      const ossim_int64 lrLl =
+         addVertex(lr.m_Vll, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = lrLl;
+      const ossim_int64 llUl =
+         addVertex(ll.m_Vul, nodeIndex, candidates, candidateCount);
+      candidates[candidateCount++] = llUl;
+      const ossim_int64 llUr =
+         addVertex(ll.m_Vur, nodeIndex, candidates, candidateCount);
+
+      const ossim_int64 parentLeft =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[LEFT_EDGE];
+      const ossim_int64 parentTop =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[TOP_EDGE];
+      const ossim_int64 parentRight =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[RIGHT_EDGE];
+      const ossim_int64 parentBottom =
+         m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[BOTTOM_EDGE];
+
+      const ossim_int64 ulIndex =
+         addChild(nodeIndex, 0, ul,
+                  rect.m_ulVertex, ulUr, ulLr, ulLl, result);
+      const ossim_int64 urIndex =
+         addChild(nodeIndex, 1, ur,
+                  urUl, rect.m_urVertex, urLr, urLl, result);
+      const ossim_int64 lrIndex =
+         addChild(nodeIndex, 2, lr,
+                  lrUl, lrUr, rect.m_lrVertex, lrLl, result);
+      const ossim_int64 llIndex =
+         addChild(nodeIndex, 3, ll,
+                  llUl, llUr, lrLl, rect.m_llVertex, result);
+
+      setNeighbor(ulIndex, LEFT_EDGE, parentLeft);
+      setNeighbor(ulIndex, TOP_EDGE, parentTop);
+      setNeighbor(ulIndex, RIGHT_EDGE, urIndex);
+      setNeighbor(ulIndex, BOTTOM_EDGE, llIndex);
+      setNeighbor(urIndex, LEFT_EDGE, ulIndex);
+      setNeighbor(urIndex, TOP_EDGE, parentTop);
+      setNeighbor(urIndex, RIGHT_EDGE, parentRight);
+      setNeighbor(urIndex, BOTTOM_EDGE, lrIndex);
+      setNeighbor(lrIndex, LEFT_EDGE, llIndex);
+      setNeighbor(lrIndex, TOP_EDGE, urIndex);
+      setNeighbor(lrIndex, RIGHT_EDGE, parentRight);
+      setNeighbor(lrIndex, BOTTOM_EDGE, parentBottom);
+      setNeighbor(llIndex, LEFT_EDGE, parentLeft);
+      setNeighbor(llIndex, TOP_EDGE, ulIndex);
+      setNeighbor(llIndex, RIGHT_EDGE, lrIndex);
+      setNeighbor(llIndex, BOTTOM_EDGE, parentBottom);
+   }
+
+   bool vertexMatches(ossim_int64 index, const ossimIpt& viewPt) const
+   {
+      if(index < 0 ||
+         static_cast<std::size_t>(index) >= m_vertices.size())
+      {
+         return false;
+      }
+
+      return (m_vertices[static_cast<std::size_t>(index)].m_viewPt == viewPt);
+   }
+
+   bool findNeighborVertex(ossim_int64 nodeIndex,
+                           const ossimIpt& viewPt,
+                           ossim_int64& result) const
+   {
+      if(nodeIndex < 0 ||
+         static_cast<std::size_t>(nodeIndex) >= m_nodes.size())
+      {
+         return false;
+      }
+
+      const Node& node = m_nodes[static_cast<std::size_t>(nodeIndex)];
+      const ossim_int32 minX = ossim::min(node.m_rect.m_Vul.x,
+                                          node.m_rect.m_Vll.x);
+      const ossim_int32 maxX = ossim::max(node.m_rect.m_Vur.x,
+                                          node.m_rect.m_Vlr.x);
+      const ossim_int32 minY = ossim::min(node.m_rect.m_Vul.y,
+                                          node.m_rect.m_Vur.y);
+      const ossim_int32 maxY = ossim::max(node.m_rect.m_Vll.y,
+                                          node.m_rect.m_Vlr.y);
+
+      if(viewPt.x == minX &&
+         findVertexOnEdge(node.m_neighbor[LEFT_EDGE],
+                          RIGHT_EDGE,
+                          viewPt,
+                          result))
+      {
+         return true;
+      }
+      if(viewPt.x == maxX &&
+         findVertexOnEdge(node.m_neighbor[RIGHT_EDGE],
+                          LEFT_EDGE,
+                          viewPt,
+                          result))
+      {
+         return true;
+      }
+      if(viewPt.y == minY &&
+         findVertexOnEdge(node.m_neighbor[TOP_EDGE],
+                          BOTTOM_EDGE,
+                          viewPt,
+                          result))
+      {
+         return true;
+      }
+      if(viewPt.y == maxY &&
+         findVertexOnEdge(node.m_neighbor[BOTTOM_EDGE],
+                          TOP_EDGE,
+                          viewPt,
+                          result))
+      {
+         return true;
+      }
+
+      return false;
+   }
+
+   bool findVertexOnEdge(ossim_int64 nodeIndex,
+                         Edge edge,
+                         const ossimIpt& viewPt,
+                         ossim_int64& result) const
+   {
+      if(nodeIndex < 0 ||
+         static_cast<std::size_t>(nodeIndex) >= m_nodes.size())
+      {
+         return false;
+      }
+
+      const Node& node = m_nodes[static_cast<std::size_t>(nodeIndex)];
+      if(!rectContains(node.m_rect, viewPt))
+      {
+         return false;
+      }
+
+      if(vertexMatches(node.m_rect.m_ulVertex, viewPt))
+      {
+         result = node.m_rect.m_ulVertex;
+         return true;
+      }
+      if(vertexMatches(node.m_rect.m_urVertex, viewPt))
+      {
+         result = node.m_rect.m_urVertex;
+         return true;
+      }
+      if(vertexMatches(node.m_rect.m_lrVertex, viewPt))
+      {
+         result = node.m_rect.m_lrVertex;
+         return true;
+      }
+      if(vertexMatches(node.m_rect.m_llVertex, viewPt))
+      {
+         result = node.m_rect.m_llVertex;
+         return true;
+      }
+
+      for(ossim_uint32 idx = 0; idx < 4; ++idx)
+      {
+         const ossim_int64 childIndex = node.m_child[idx];
+         if(childIndex >= 0 &&
+            childTouchesEdge(childIndex, edge) &&
+            findVertexOnEdge(childIndex, edge, viewPt, result))
+         {
+            return true;
+         }
+      }
+
+      return false;
+   }
+
+   bool childTouchesEdge(ossim_int64 childIndex, Edge edge) const
+   {
+      if(childIndex < 0 ||
+         static_cast<std::size_t>(childIndex) >= m_nodes.size())
+      {
+         return false;
+      }
+
+      const Node& child = m_nodes[static_cast<std::size_t>(childIndex)];
+      const Node& parent = m_nodes[static_cast<std::size_t>(child.m_parent)];
+      switch(edge)
+      {
+         case LEFT_EDGE:
+            return child.m_rect.m_Vul.x == parent.m_rect.m_Vul.x;
+         case TOP_EDGE:
+            return child.m_rect.m_Vul.y == parent.m_rect.m_Vul.y;
+         case RIGHT_EDGE:
+            return child.m_rect.m_Vur.x == parent.m_rect.m_Vur.x;
+         case BOTTOM_EDGE:
+            return child.m_rect.m_Vll.y == parent.m_rect.m_Vll.y;
+      }
+
+      return false;
+   }
+
+   static bool rectContains(const ossimRendererSubRectInfo& rect,
+                            const ossimIpt& viewPt)
+   {
+      const ossim_int32 minX = ossim::min(rect.m_Vul.x, rect.m_Vll.x);
+      const ossim_int32 maxX = ossim::max(rect.m_Vur.x, rect.m_Vlr.x);
+      const ossim_int32 minY = ossim::min(rect.m_Vul.y, rect.m_Vur.y);
+      const ossim_int32 maxY = ossim::max(rect.m_Vll.y, rect.m_Vlr.y);
+
+      return ((viewPt.x >= minX) &&
+              (viewPt.x <= maxX) &&
+              (viewPt.y >= minY) &&
+              (viewPt.y <= maxY));
+   }
+
+   void setNeighbor(ossim_int64 nodeIndex,
+                    Edge edge,
+                    ossim_int64 neighborIndex)
+   {
+      if(nodeIndex < 0 ||
+         static_cast<std::size_t>(nodeIndex) >= m_nodes.size())
+      {
+         return;
+      }
+
+      m_nodes[static_cast<std::size_t>(nodeIndex)].m_neighbor[edge] =
+         neighborIndex;
+   }
+
    ossimRefPtr<ossimImageViewTransform> m_transform;
-   std::map<Key, ossimDpt> m_viewToImage;
-   std::map<Key, ossimDpt> m_viewToImageScale;
-   ossim_uint64 m_viewToImageHits;
-   ossim_uint64 m_viewToImageMisses;
-   ossim_uint64 m_scaleHits;
-   ossim_uint64 m_scaleMisses;
+   std::vector<Vertex> m_vertices;
+   std::vector<Node> m_nodes;
+   ossim_uint64 m_reusedVertexReferences;
+   bool m_collectStats;
 };
 
 void ossimImageRenderer::ossimRendererSubRectInfo::splitHorizontal(std::vector<ossimRendererSubRectInfo>& result)const
@@ -179,6 +803,40 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitHorizontal(std::vector<o
    right.m_Vur = tempRightRect.ur();
    right.m_Vlr = tempRightRect.lr();
    right.m_Vll = tempRightRect.ll();
+
+   if(m_vertexCache&&hasVertexIndices())
+   {
+      ossim_int64 candidates[8];
+      ossim_uint32 candidateCount = 0;
+      candidates[candidateCount++] = m_ulVertex;
+      candidates[candidateCount++] = m_urVertex;
+      candidates[candidateCount++] = m_lrVertex;
+      candidates[candidateCount++] = m_llVertex;
+
+      const ossim_int64 leftUr =
+         m_vertexCache->addVertex(left.m_Vur, candidates, candidateCount);
+      candidates[candidateCount++] = leftUr;
+      const ossim_int64 leftLr =
+         m_vertexCache->addVertex(left.m_Vlr, candidates, candidateCount);
+      candidates[candidateCount++] = leftLr;
+      const ossim_int64 rightVul =
+         m_vertexCache->addVertex(right.m_Vul, candidates, candidateCount);
+      candidates[candidateCount++] = rightVul;
+      const ossim_int64 rightVll =
+         m_vertexCache->addVertex(right.m_Vll, candidates, candidateCount);
+      left.setVertexIndices(m_ulVertex,
+                            leftUr,
+                            leftLr,
+                            m_llVertex);
+      right.setVertexIndices(rightVul,
+                             m_urVertex,
+                             m_lrVertex,
+                             rightVll);
+      m_vertexCache->referenceVertex(m_ulVertex);
+      m_vertexCache->referenceVertex(m_llVertex);
+      m_vertexCache->referenceVertex(m_urVertex);
+      m_vertexCache->referenceVertex(m_lrVertex);
+   }
 
    left.transformViewToImage();
    right.transformViewToImage();
@@ -242,6 +900,40 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitVertical(std::vector<oss
    bottom.m_Vur = tempBottomRect.ur();
    bottom.m_Vlr = tempBottomRect.lr();
    bottom.m_Vll = tempBottomRect.ll();
+
+   if(m_vertexCache&&hasVertexIndices())
+   {
+      ossim_int64 candidates[8];
+      ossim_uint32 candidateCount = 0;
+      candidates[candidateCount++] = m_ulVertex;
+      candidates[candidateCount++] = m_urVertex;
+      candidates[candidateCount++] = m_lrVertex;
+      candidates[candidateCount++] = m_llVertex;
+
+      const ossim_int64 topVlr =
+         m_vertexCache->addVertex(top.m_Vlr, candidates, candidateCount);
+      candidates[candidateCount++] = topVlr;
+      const ossim_int64 topVll =
+         m_vertexCache->addVertex(top.m_Vll, candidates, candidateCount);
+      candidates[candidateCount++] = topVll;
+      const ossim_int64 bottomVul =
+         m_vertexCache->addVertex(bottom.m_Vul, candidates, candidateCount);
+      candidates[candidateCount++] = bottomVul;
+      const ossim_int64 bottomVur =
+         m_vertexCache->addVertex(bottom.m_Vur, candidates, candidateCount);
+      top.setVertexIndices(m_ulVertex,
+                           m_urVertex,
+                           topVlr,
+                           topVll);
+      bottom.setVertexIndices(bottomVul,
+                              bottomVur,
+                              m_lrVertex,
+                              m_llVertex);
+      m_vertexCache->referenceVertex(m_ulVertex);
+      m_vertexCache->referenceVertex(m_urVertex);
+      m_vertexCache->referenceVertex(m_lrVertex);
+      m_vertexCache->referenceVertex(m_llVertex);
+   }
 
    top.transformViewToImage();
    bottom.transformViewToImage();
@@ -327,6 +1019,61 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitAll(std::vector<ossimRen
    lr.m_vertexCache = m_vertexCache;
    ll.m_vertexCache = m_vertexCache;
 
+   if(m_vertexCache&&hasVertexIndices())
+   {
+      ossim_int64 candidates[15];
+      ossim_uint32 candidateCount = 0;
+      candidates[candidateCount++] = m_ulVertex;
+      candidates[candidateCount++] = m_urVertex;
+      candidates[candidateCount++] = m_lrVertex;
+      candidates[candidateCount++] = m_llVertex;
+
+      const ossim_int64 ulUr =
+         m_vertexCache->addVertex(ul.m_Vur, candidates, candidateCount);
+      candidates[candidateCount++] = ulUr;
+      const ossim_int64 ulLr =
+         m_vertexCache->addVertex(ul.m_Vlr, candidates, candidateCount);
+      candidates[candidateCount++] = ulLr;
+      const ossim_int64 ulLl =
+         m_vertexCache->addVertex(ul.m_Vll, candidates, candidateCount);
+      candidates[candidateCount++] = ulLl;
+      const ossim_int64 urUl =
+         m_vertexCache->addVertex(ur.m_Vul, candidates, candidateCount);
+      candidates[candidateCount++] = urUl;
+      const ossim_int64 urLr =
+         m_vertexCache->addVertex(ur.m_Vlr, candidates, candidateCount);
+      candidates[candidateCount++] = urLr;
+      const ossim_int64 urLl =
+         m_vertexCache->addVertex(ur.m_Vll, candidates, candidateCount);
+      candidates[candidateCount++] = urLl;
+      const ossim_int64 lrUl =
+         m_vertexCache->addVertex(lr.m_Vul, candidates, candidateCount);
+      candidates[candidateCount++] = lrUl;
+      const ossim_int64 lrUr =
+         m_vertexCache->addVertex(lr.m_Vur, candidates, candidateCount);
+      candidates[candidateCount++] = lrUr;
+      const ossim_int64 lrLl =
+         m_vertexCache->addVertex(lr.m_Vll, candidates, candidateCount);
+      candidates[candidateCount++] = lrLl;
+      const ossim_int64 llUl =
+         m_vertexCache->addVertex(ll.m_Vul, candidates, candidateCount);
+      candidates[candidateCount++] = llUl;
+      const ossim_int64 llUr =
+         m_vertexCache->addVertex(ll.m_Vur, candidates, candidateCount);
+
+      ul.setVertexIndices(m_ulVertex, ulUr, ulLr, ulLl);
+      ur.setVertexIndices(urUl, m_urVertex, urLr, urLl);
+      lr.setVertexIndices(lrUl, lrUr, m_lrVertex, lrLl);
+      ll.setVertexIndices(llUl, llUr, lrLl, m_llVertex);
+
+      m_vertexCache->referenceVertex(m_ulVertex);
+      m_vertexCache->referenceVertex(m_urVertex);
+      m_vertexCache->referenceVertex(m_lrVertex);
+      m_vertexCache->referenceVertex(m_llVertex);
+      m_vertexCache->referenceVertex(llUr);
+      m_vertexCache->referenceVertex(lrLl);
+   }
+
    ul.transformViewToImage();
    ur.transformViewToImage();
    lr.transformViewToImage();
@@ -405,6 +1152,17 @@ void ossimImageRenderer::ossimRendererSubRectInfo::splitView(std::vector<ossimRe
                                     m_Vul);
       rect.m_viewBounds = m_viewBounds;
       rect.m_vertexCache = m_vertexCache;
+      if(m_vertexCache&&hasVertexIndices())
+      {
+         rect.setVertexIndices(m_ulVertex,
+                               m_ulVertex,
+                               m_ulVertex,
+                               m_ulVertex);
+         m_vertexCache->referenceVertex(m_ulVertex);
+         m_vertexCache->referenceVertex(m_ulVertex);
+         m_vertexCache->referenceVertex(m_ulVertex);
+         m_vertexCache->referenceVertex(m_ulVertex);
+      }
       rect.transformViewToImage();
 
       if(rect.imageHasNans())
@@ -675,10 +1433,18 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
 
    if(m_vertexCache)
    {
-      m_vertexCache->viewToImage(m_Vul, m_Iul);
-      m_vertexCache->viewToImage(m_Vur, m_Iur);
-      m_vertexCache->viewToImage(m_Vlr, m_Ilr);
-      m_vertexCache->viewToImage(m_Vll, m_Ill);
+      if(!hasVertexIndices())
+      {
+         setVertexIndices(m_vertexCache->addVertex(m_Vul),
+                          m_vertexCache->addVertex(m_Vur),
+                          m_vertexCache->addVertex(m_Vlr),
+                          m_vertexCache->addVertex(m_Vll));
+      }
+
+      m_vertexCache->getVertex(m_ulVertex, m_Vul, m_Iul, m_VulScale);
+      m_vertexCache->getVertex(m_urVertex, m_Vur, m_Iur, m_VurScale);
+      m_vertexCache->getVertex(m_lrVertex, m_Vlr, m_Ilr, m_VlrScale);
+      m_vertexCache->getVertex(m_llVertex, m_Vll, m_Ill, m_VllScale);
    }
    else
    {
@@ -694,14 +1460,7 @@ void ossimImageRenderer::ossimRendererSubRectInfo::transformViewToImage()
 //  m_llRoundTripError = m_transform->getRoundTripErrorView(m_Vll);
 
 #if 1
-   if(m_vertexCache)
-   {
-      m_vertexCache->getViewToImageScale(m_VulScale, m_Vul);
-      m_vertexCache->getViewToImageScale(m_VurScale, m_Vur);
-      m_vertexCache->getViewToImageScale(m_VlrScale, m_Vlr);
-      m_vertexCache->getViewToImageScale(m_VllScale, m_Vll);
-   }
-   else
+   if(!m_vertexCache)
    {
       m_transform->getViewToImageScale(m_VulScale, m_Vul);
       m_transform->getViewToImageScale(m_VurScale, m_Vur);
@@ -1462,12 +2221,19 @@ void ossimImageRenderer::recursiveResample(ossimRefPtr<ossimImageData> outputDat
 {
   // Removed recursion and just use the std::stack.
   //
-  std::stack<ossimRendererSubRectInfo> rectStack;
-  rectStack.push(rectInfo);
+  if(!rectInfo.m_vertexCache)
+  {
+     return;
+  }
+
+  std::stack<ossim_int64> rectStack;
+  rectStack.push(rectInfo.m_vertexCache->addNode(rectInfo));
 
   while(!rectStack.empty())
   {
-    ossimRendererSubRectInfo currentRectInfo = rectStack.top();
+    const ossim_int64 currentNode = rectStack.top();
+    const ossimRendererSubRectInfo currentRectInfo =
+       rectInfo.m_vertexCache->getNode(currentNode).m_rect;
     ossimIrect tempViewRect = currentRectInfo.getViewRect();
     rectStack.pop();
     if(m_viewArea.intersects(tempViewRect))
@@ -1484,13 +2250,15 @@ void ossimImageRenderer::recursiveResample(ossimRefPtr<ossimImageData> outputDat
       else
       {
         ossim_uint32 idx = 0;
-        std::vector<ossimRendererSubRectInfo> splitRects;
-        currentRectInfo.splitView(splitRects);
+        std::vector<ossim_int64> splitRects;
+        rectInfo.m_vertexCache->splitNode(currentNode, splitRects);
         if(!splitRects.empty())
         {
           for(idx = 0; idx < splitRects.size();++idx)
           {
-            if(m_viewArea.intersects(splitRects[idx].getViewRect()))
+            const ossimRendererSubRectInfo& splitRect =
+               rectInfo.m_vertexCache->getNode(splitRects[idx]).m_rect;
+            if(m_viewArea.intersects(splitRect.getViewRect()))
             {
               rectStack.push(splitRects[idx]);
             }

@@ -201,6 +201,11 @@ private:
       void transformViewToImage();
       void transformImageToView();
       void setVertexCache(ossimRendererVertexCache* cache);
+      void setVertexIndices(ossim_int64 ul,
+                            ossim_int64 ur,
+                            ossim_int64 lr,
+                            ossim_int64 ll);
+      bool hasVertexIndices()const;
       bool tooBig()const;
       void roundToInteger();
       void stretchImageOut(bool enableRound=false);
@@ -258,6 +263,10 @@ private:
       mutable ossimRefPtr<ossimImageViewTransform> m_transform;
       mutable const ossimPolyArea2d* m_viewBounds;
       mutable ossimRendererVertexCache* m_vertexCache;
+      mutable ossim_int64 m_ulVertex;
+      mutable ossim_int64 m_urVertex;
+      mutable ossim_int64 m_lrVertex;
+      mutable ossim_int64 m_llVertex;
 
     private:
       void splitHorizontal(std::vector<ossimRendererSubRectInfo>& result)const;
@@ -349,7 +358,11 @@ private:
 inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(ossimImageViewTransform* transform)
 :m_transform(transform),
 m_viewBounds(0),
-m_vertexCache(0)
+m_vertexCache(0),
+m_ulVertex(-1),
+m_urVertex(-1),
+m_lrVertex(-1),
+m_llVertex(-1)
 {
    m_Vul.makeNan();
    m_Vur.makeNan();
@@ -374,7 +387,11 @@ inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(os
                          m_Vll(vll),
                          m_transform(transform),
                          m_viewBounds(0),
-                         m_vertexCache(0)
+                         m_vertexCache(0),
+                         m_ulVertex(-1),
+                         m_urVertex(-1),
+                         m_lrVertex(-1),
+                         m_llVertex(-1)
 {
    m_Iul.makeNan();
    m_Iur.makeNan();
@@ -396,6 +413,26 @@ inline void ossimImageRenderer::ossimRendererSubRectInfo::setVertexCache(
    ossimRendererVertexCache* cache)
 {
    m_vertexCache = cache;
+}
+
+inline void ossimImageRenderer::ossimRendererSubRectInfo::setVertexIndices(
+   ossim_int64 ul,
+   ossim_int64 ur,
+   ossim_int64 lr,
+   ossim_int64 ll)
+{
+   m_ulVertex = ul;
+   m_urVertex = ur;
+   m_lrVertex = lr;
+   m_llVertex = ll;
+}
+
+inline bool ossimImageRenderer::ossimRendererSubRectInfo::hasVertexIndices()const
+{
+   return ((m_ulVertex >= 0)&&
+           (m_urVertex >= 0)&&
+           (m_lrVertex >= 0)&&
+           (m_llVertex >= 0));
 }
 
 inline bool ossimImageRenderer::ossimRendererSubRectInfo::imageIsNan()const
