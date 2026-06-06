@@ -56,6 +56,20 @@ RTTI_DEF2(ossimImageRenderer, "ossimImageRenderer", ossimImageSourceFilter, ossi
 
 double ossimImageRenderer::m_interpErrorThreshold = 1.0;
 
+namespace
+{
+ossim_uint64 rendererRectPixels(const ossimIrect& rect)
+{
+   const ossim_int64 w = rect.width();
+   const ossim_int64 h = rect.height();
+   if(w < 1 || h < 1)
+   {
+      return 0;
+   }
+   return static_cast<ossim_uint64>(w) * static_cast<ossim_uint64>(h);
+}
+}
+
 class ossimImageRenderer::ossimRendererVertexCache
 {
 public:
@@ -281,6 +295,13 @@ public:
          << " reused_vertex_refs=" << m_reusedVertexReferences
          << " nodes=" << m_nodes.size()
          << std::endl;
+   }
+
+   void updateRenderingStats(RenderingStats& stats) const
+   {
+      stats.m_nodes = static_cast<ossim_uint64>(m_nodes.size());
+      stats.m_vertices = static_cast<ossim_uint64>(m_vertices.size());
+      stats.m_reusedVertexReferences = m_reusedVertexReferences;
    }
 
 private:
@@ -1599,6 +1620,12 @@ ossimImageRenderer::~ossimImageRenderer()
    }
 }
 
+const ossimImageRenderer::RenderingStats&
+ossimImageRenderer::getLastRenderingStats()const
+{
+   return m_lastRenderingStats;
+}
+
 ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    const  ossimIrect& tileRect,
    ossim_uint32 resLevel)
@@ -1611,6 +1638,13 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
          << MODULE << " Requesting view rect = "
          << tileRect << endl;
    }
+   m_currentRenderingStats = RenderingStats();
+   m_currentRenderingStats.m_requestedViewRect = tileRect;
+   m_currentRenderingStats.m_clippedViewRect = tileRect;
+   m_currentRenderingStats.m_requestedViewPixels = rendererRectPixels(tileRect);
+   m_currentRenderingStats.m_clippedViewPixels =
+      m_currentRenderingStats.m_requestedViewPixels;
+   m_lastRenderingStats = m_currentRenderingStats;
    // long w = tileRect.width();
    // long h = tileRect.height();
    // ossimIpt origin = tileRect.ul();
@@ -1779,7 +1813,12 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
 //   {
 //      return m_Tile;
 //   }
+   m_currentRenderingStats.m_clippedViewRect = tempRect;
+   m_currentRenderingStats.m_clippedViewPixels = rendererRectPixels(tempRect);
+   m_currentRenderingStats.m_clipped = (tileRect != tempRect);
    recursiveResample(m_Tile, subRectInfo, 1);
+   vertexCache->updateRenderingStats(m_currentRenderingStats);
+   m_lastRenderingStats = m_currentRenderingStats;
    vertexCache->printStats(tileRect);
   
    if(m_Tile.valid())
@@ -1815,6 +1854,7 @@ void ossimImageRenderer::recursiveResample(ossimRefPtr<ossimImageData> outputDat
        rectInfo.m_vertexCache->getNode(currentNode).m_rect;
     ossimIrect tempViewRect = currentRectInfo.getViewRect();
     rectStack.pop();
+    ++m_currentRenderingStats.m_visitedNodes;
     if(m_viewArea.intersects(tempViewRect))
     {
       if(tempViewRect.width() <2 ||
@@ -1833,6 +1873,7 @@ void ossimImageRenderer::recursiveResample(ossimRefPtr<ossimImageData> outputDat
         rectInfo.m_vertexCache->splitNode(currentNode, splitRects);
         if(!splitRects.empty())
         {
+          ++m_currentRenderingStats.m_splitNodes;
           for(idx = 0; idx < splitRects.size();++idx)
           {
             const ossimRendererSubRectInfo& splitRect =
@@ -1908,6 +1949,7 @@ void ossimImageRenderer::fillTile(ossimRefPtr<ossimImageData> outputData,
    {
       return;
    }
+   ++m_currentRenderingStats.m_filledLeaves;
    ossimDrect vrect = rectInfo.getViewRect();
    
    ossimDpt imageToViewScale = rectInfo.getAbsValueImageToViewScales();
@@ -2027,6 +2069,29 @@ void ossimImageRenderer::fillTile(ossimRefPtr<ossimImageData> outputData,
                              (ossim_int32)ceil (boundingRect.lr().y + (kernelSupportY)+.5));
    
    ossimDrect requestRect = boundingRect;
+   ++m_currentRenderingStats.m_inputTileCalls;
+   m_currentRenderingStats.m_inputTilePixels +=
+      rendererRectPixels(ossimIrect(requestRect));
+   m_currentRenderingStats.m_maxInputTileWidth =
+      ossim::max(m_currentRenderingStats.m_maxInputTileWidth,
+                 static_cast<ossim_uint32>(
+                    ossim::max<ossim_int32>(0, ossimIrect(requestRect).width())));
+   m_currentRenderingStats.m_maxInputTileHeight =
+      ossim::max(m_currentRenderingStats.m_maxInputTileHeight,
+                 static_cast<ossim_uint32>(
+                    ossim::max<ossim_int32>(0, ossimIrect(requestRect).height())));
+   if(m_currentRenderingStats.m_inputTileCalls == 1)
+   {
+      m_currentRenderingStats.m_minInputResLevel = resLevel;
+      m_currentRenderingStats.m_maxInputResLevel = resLevel;
+   }
+   else
+   {
+      m_currentRenderingStats.m_minInputResLevel =
+         ossim::min(m_currentRenderingStats.m_minInputResLevel, resLevel);
+      m_currentRenderingStats.m_maxInputResLevel =
+         ossim::max(m_currentRenderingStats.m_maxInputResLevel, resLevel);
+   }
    
    ossimRefPtr<ossimImageData> data = getTileAtResLevel(requestRect, resLevel);
    

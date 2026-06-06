@@ -28,6 +28,48 @@ class OSSIMDLLEXPORT ossimImageRenderer : public ossimImageSourceFilter,
                                           public ossimViewInterface
 {
 public:
+   struct RenderingStats
+   {
+      RenderingStats()
+      : m_requestedViewRect(),
+        m_clippedViewRect(),
+        m_requestedViewPixels(0),
+        m_clippedViewPixels(0),
+        m_nodes(0),
+        m_vertices(0),
+        m_reusedVertexReferences(0),
+        m_visitedNodes(0),
+        m_splitNodes(0),
+        m_filledLeaves(0),
+        m_inputTileCalls(0),
+        m_inputTilePixels(0),
+        m_maxInputTileWidth(0),
+        m_maxInputTileHeight(0),
+        m_minInputResLevel(0),
+        m_maxInputResLevel(0),
+        m_clipped(false)
+      {
+      }
+
+      ossimIrect m_requestedViewRect;
+      ossimIrect m_clippedViewRect;
+      ossim_uint64 m_requestedViewPixels;
+      ossim_uint64 m_clippedViewPixels;
+      ossim_uint64 m_nodes;
+      ossim_uint64 m_vertices;
+      ossim_uint64 m_reusedVertexReferences;
+      ossim_uint64 m_visitedNodes;
+      ossim_uint64 m_splitNodes;
+      ossim_uint64 m_filledLeaves;
+      ossim_uint64 m_inputTileCalls;
+      ossim_uint64 m_inputTilePixels;
+      ossim_uint32 m_maxInputTileWidth;
+      ossim_uint32 m_maxInputTileHeight;
+      ossim_uint32 m_minInputResLevel;
+      ossim_uint32 m_maxInputResLevel;
+      bool m_clipped;
+   };
+
    ossimImageRenderer();
    ossimImageRenderer(ossimImageSource* inputSource,
                       ossimImageViewTransform* imageViewTrans = NULL);
@@ -151,6 +193,7 @@ public:
     */
    virtual void setEnableFlag(bool flag);
 
+   const RenderingStats& getLastRenderingStats()const;
    
 protected:
 private:
@@ -327,6 +370,8 @@ private:
 
    double                   m_averageViewToImageScale;
    double                   m_averageViewToImageRLevelScale;
+   RenderingStats           m_lastRenderingStats;
+   RenderingStats           m_currentRenderingStats;
    static double            m_interpErrorThreshold;
 
    TYPE_DATA
