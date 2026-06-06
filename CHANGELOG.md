@@ -8,7 +8,9 @@ All notable changes to `ossim` are documented here.
 > from `ossim-autoreg`, reducing the optional registration build to one sibling
 > dependency. RPC generation also gets a steadier solver, layered-height
 > fitting controls, and a way to compare fitted coefficients against existing
-> RPC inputs without quietly copying them. The RPC generator can now fit a
+> RPC inputs without quietly copying them. The renderer now exposes compact
+> per-request statistics so registration speed work can measure tile footprint
+> instead of guessing at it. The RPC generator can now fit a
 > height slab around the scene automatically, reducing the need for downstream
 > users to reproduce the exact same elevation database, and the solver now
 > treats invalid samples and unstable intermediate fits as recoverable input
@@ -57,6 +59,10 @@ All notable changes to `ossim` are documented here.
   for image offsets, 0.5 degrees for orientation, and 100 meters for altitude
   so freshly initialized model adjustments match the tested registration
   envelope.
+- Expose per-request renderer statistics for view clipping, subdivision,
+  shared-vertex reuse, filled leaves, and input tile footprint so registration
+  timing reports can separate renderer recursion from source-image request cost
+  (bcb24001).
 
 ### Fixed
 - Apply PPJ roll, pitch, and yaw adjustable offsets in local camera space for
