@@ -47,6 +47,11 @@ public:
         m_maxInputTileHeight(0),
         m_minInputResLevel(0),
         m_maxInputResLevel(0),
+        m_totalSeconds(0.0),
+        m_recursiveSeconds(0.0),
+        m_fillSeconds(0.0),
+        m_inputGetTileSeconds(0.0),
+        m_resampleSeconds(0.0),
         m_clipped(false)
       {
       }
@@ -67,6 +72,11 @@ public:
       ossim_uint32 m_maxInputTileHeight;
       ossim_uint32 m_minInputResLevel;
       ossim_uint32 m_maxInputResLevel;
+      double m_totalSeconds;
+      double m_recursiveSeconds;
+      double m_fillSeconds;
+      double m_inputGetTileSeconds;
+      double m_resampleSeconds;
       bool m_clipped;
    };
 

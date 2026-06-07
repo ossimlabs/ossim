@@ -36,6 +36,7 @@
 #include <ossim/projection/ossimBilinearMapProjection.h>
 #include <ossim/projection/ossimEquDistCylProjection.h>
 #include <cstdlib>
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <stack>
@@ -67,6 +68,13 @@ ossim_uint64 rendererRectPixels(const ossimIrect& rect)
       return 0;
    }
    return static_cast<ossim_uint64>(w) * static_cast<ossim_uint64>(h);
+}
+
+double rendererElapsedSeconds(
+   const std::chrono::steady_clock::time_point& start)
+{
+   return std::chrono::duration<double>(
+      std::chrono::steady_clock::now() - start).count();
 }
 }
 
@@ -1630,6 +1638,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    const  ossimIrect& tileRect,
    ossim_uint32 resLevel)
 {
+   const auto getTileStart = std::chrono::steady_clock::now();
   //  std::cout << "_________________________\n";
    static const char MODULE[] = "ossimImageRenderer::getTile";
    if(traceDebug())
@@ -1645,6 +1654,13 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    m_currentRenderingStats.m_clippedViewPixels =
       m_currentRenderingStats.m_requestedViewPixels;
    m_lastRenderingStats = m_currentRenderingStats;
+   const auto finishStats =
+      [this, &getTileStart]()
+      {
+         m_currentRenderingStats.m_totalSeconds =
+            rendererElapsedSeconds(getTileStart);
+         m_lastRenderingStats = m_currentRenderingStats;
+      };
    // long w = tileRect.width();
    // long h = tileRect.height();
    // ossimIpt origin = tileRect.ul();
@@ -1660,6 +1676,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
                << "ossimImageRenderer::getTile tile allocation failure!\n"
                << endl;
          }
+         finishStats();
          return ossimImageSourceFilter::getTile(tileRect, resLevel);
       }
    }
@@ -1668,6 +1685,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    
    if(!theInputConnection)
    {
+      finishStats();
       return m_BlankTile;
    }
    
@@ -1675,6 +1693,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
         (!m_ImageViewTransform->isValid()) )
    {
       // This tile source bypassed, return the input tile source.
+      finishStats();
       return theInputConnection->getTile(tileRect, resLevel);  
    }
 
@@ -1685,12 +1704,14 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
       // We can't go on without these...
       if ( m_rectsDirty )
       {
+         finishStats();
          return m_BlankTile;
       }
    }
    
    if(m_viewRect.width() < 4 && m_viewRect.height() < 4)
    {
+      finishStats();
       return m_BlankTile;
    }
 
@@ -1703,6 +1724,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
          ossimNotify(ossimNotifyLevel_DEBUG)
             << MODULE << "No intersection, Returning...." << endl;
       }
+      finishStats();
       return m_BlankTile;
    }
    
@@ -1715,6 +1737,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    // Check for identity transform:
    if( m_ImageViewTransform->isIdentity() == true )
    {
+      finishStats();
       return theInputConnection->getTile(tileRect, resLevel);
    }
    
@@ -1757,6 +1780,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
      ossimPolyArea2d tileRectArea(tileRect);
      if (!(m_viewArea.intersects(tileRectArea)))
      {
+       finishStats();
        return m_BlankTile;
      }
      else
@@ -1799,6 +1823,7 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    if((!m_viewArea.intersects(subRectInfo.getViewRect())))
 //   if((!m_viewRect.intersects(subRectInfo.getViewRect())))
    {
+     finishStats();
      return m_BlankTile;
    }
    if(traceDebug())
@@ -1816,9 +1841,12 @@ ossimRefPtr<ossimImageData> ossimImageRenderer::getTile(
    m_currentRenderingStats.m_clippedViewRect = tempRect;
    m_currentRenderingStats.m_clippedViewPixels = rendererRectPixels(tempRect);
    m_currentRenderingStats.m_clipped = (tileRect != tempRect);
+   const auto recursiveStart = std::chrono::steady_clock::now();
    recursiveResample(m_Tile, subRectInfo, 1);
+   m_currentRenderingStats.m_recursiveSeconds +=
+      rendererElapsedSeconds(recursiveStart);
    vertexCache->updateRenderingStats(m_currentRenderingStats);
-   m_lastRenderingStats = m_currentRenderingStats;
+   finishStats();
    vertexCache->printStats(tileRect);
   
    if(m_Tile.valid())
@@ -1945,6 +1973,7 @@ void ossimImageRenderer::recursiveResample(ossimRefPtr<ossimImageData> outputDat
 void ossimImageRenderer::fillTile(ossimRefPtr<ossimImageData> outputData,
                                   const ossimRendererSubRectInfo& rectInfo)
 {
+   const auto fillStart = std::chrono::steady_clock::now();
    if(!outputData.valid() || !outputData->getBuf() || rectInfo.imageHasNans())
    {
       return;
@@ -2093,7 +2122,10 @@ void ossimImageRenderer::fillTile(ossimRefPtr<ossimImageData> outputData,
          ossim::max(m_currentRenderingStats.m_maxInputResLevel, resLevel);
    }
    
+   const auto inputGetTileStart = std::chrono::steady_clock::now();
    ossimRefPtr<ossimImageData> data = getTileAtResLevel(requestRect, resLevel);
+   m_currentRenderingStats.m_inputGetTileSeconds +=
+      rendererElapsedSeconds(inputGetTileStart);
    
    ossimDataObjectStatus status = OSSIM_NULL;
    if( data.valid() )
@@ -2131,6 +2163,7 @@ void ossimImageRenderer::fillTile(ossimRefPtr<ossimImageData> outputData,
   //std::cout << "VIEW RECT: " << outputData->getImageRectangle() << std::endl;
 
 
+     const auto resampleStart = std::chrono::steady_clock::now();
      m_Resampler->resample(data,
                            outputData,
                            vrect,
@@ -2141,7 +2174,10 @@ void ossimImageRenderer::fillTile(ossimRefPtr<ossimImageData> outputData,
                            ossimDpt( ( (nlr.x - nur.x)/denominatorY ),
                                      ( (nlr.y - nur.y)/denominatorY ) ),
                            tile_size);
+     m_currentRenderingStats.m_resampleSeconds +=
+        rendererElapsedSeconds(resampleStart);
    }
+   m_currentRenderingStats.m_fillSeconds += rendererElapsedSeconds(fillStart);
    
 }
 
