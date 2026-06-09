@@ -6,7 +6,7 @@ void KwlNodeKwlFormatter::write(std::ostream &out,
                                 const FormatHints& /*hints*/) const
 {
    ossimKeywordlist result;
-   ossim_uint32 idx = 0;
+   // ossim_uint32 idx = 0;
 
    if(!m_kwlNode) return;
    ossimString prefix = m_rootTag + (m_rootTag.empty()?"":".");
@@ -18,7 +18,7 @@ void KwlNodeKwlFormatter::write(std::ostream &out,
    for (auto n : m_kwlNode->getChildren())
    {
       saveState(result, *(n.second), prefix);
-      ++idx;
+      // ++idx;
    }
 
    out << result;
