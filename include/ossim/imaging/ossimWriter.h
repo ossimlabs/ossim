@@ -336,6 +336,24 @@ private:
     * @param maxBands Initialized by this with the max values for each band.
     * @return true on success, false on error.
     */
+   bool writeTtbsCompressed( std::vector<ossim_uint64>& tile_offsets,
+                             std::vector<ossim_uint64>& tile_byte_counts,
+                             std::vector<ossim_float64>& minBands,
+                             std::vector<ossim_float64>& maxBands );
+
+   /**
+    * @brief Writes image data to stream. (TTBS = Tiled Tiff Band Separate)
+    *
+    * Data is in a band separate tile layout(PLANARCONFIG_SEPARATE), i.e. red
+    * tile, green tile, blue tile, ..., red tile, green tile, blue tile.
+    * 
+    * @param tile_offsets Initialized by this with offset for each tile.
+    * @param tile_byte_counts Initialized by this with the byte count of each
+    * tile.
+    * @param minBands Initialized by this with the min values for each band.
+    * @param maxBands Initialized by this with the max values for each band.
+    * @return true on success, false on error.
+    */
    bool writeTtbs( std::vector<ossim_uint64>& tile_offsets,
                    std::vector<ossim_uint64>& tile_byte_counts,
                    std::vector<ossim_float64>& minBands,
@@ -446,6 +464,18 @@ private:
     * false.
     */
    bool addAlpha() const;
+
+   /**
+    * @brief Gets the tile size in bytes for a single band.
+    *
+    * Private method that assumes the input connection has been initialized;
+    * i.e. the input connection(sequencer) tile size and scalar type has been
+    * initialized.
+    * 
+    * @return tile_size_in_pixels * bytes_per_pixel for a single
+    * band, uncompressed.
+    */
+   ossim_uint64 getBandTileSizeInBytes() const;
   
    std::ostream* m_str;
    bool          m_ownsStreamFlag;
