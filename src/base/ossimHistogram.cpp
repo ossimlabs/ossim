@@ -1446,8 +1446,15 @@ void ossimHistogram::Dump(char *dumpfile)const
    }
    int i = 0;
 
-   for(i = 0; i < m_num; i++)
-      fprintf(dumpfp, "%f %lld\n", m_vals[i], m_counts[i]);
+   for(i = 0; i < m_num; ++i)
+   {
+      //---
+      // Cast to squash warning:
+      // format ‘%lld’ expects argument of type ‘long long int’,
+      // but argument 4 has type ‘ossim_int64’ {aka ‘long int’}
+      //---
+      fprintf(dumpfp, "%f %lld\n", m_vals[i], (long long int)m_counts[i]);
+   }
   
    fclose(dumpfp);
    return;
@@ -1466,8 +1473,15 @@ int ossimHistogram::WritePlot(const char *fname)const
       return 0;
    }
 
-   for(int j = 0; j < m_num; j++)
-      fprintf(fp, "%f %lld\n", m_vals[j], m_counts[j]);
+   for(int j = 0; j < m_num; ++j)
+   {
+      //---
+      // Cast to squash warning:
+      // format ‘%lld’ expects argument of type ‘long long int’,
+      // but argument 4 has type ‘ossim_int64’ {aka ‘long int’}
+      //---
+      fprintf(fp, "%f %lld\n", m_vals[j], (long long int)m_counts[j]);
+   }
 
    fclose(fp);
    return 1;
