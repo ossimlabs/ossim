@@ -335,12 +335,12 @@ void ossimApplanixEcefModel::initAdjustableParameters()
    setParameterUnit(5, "meters");
    
    
-   setParameterSigma(0, 20.0);
-   setParameterSigma(1, 20.0);
-   setParameterSigma(2, .1);
-   setParameterSigma(3, .1);
-   setParameterSigma(4, .1);
-   setParameterSigma(5, 50);
+   setParameterSigma(0, 40.0);
+   setParameterSigma(1, 40.0);
+   setParameterSigma(2, .5);
+   setParameterSigma(3, .5);
+   setParameterSigma(4, .5);
+   setParameterSigma(5, 100);
 }
 
 void ossimApplanixEcefModel::setPrincipalPoint(ossimDpt principalPoint)

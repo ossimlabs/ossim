@@ -73,9 +73,9 @@ namespace
       setPpjParameterDefinition(params[PARAM_ADJ_LON_OFFSET], "lon_offset", OSSIM_METERS, 200.0);
       setPpjParameterDefinition(params[PARAM_ADJ_LAT_OFFSET], "lat_offset", OSSIM_METERS, 200.0);
       setPpjParameterDefinition(params[PARAM_ADJ_ALTITUDE_OFFSET], "altitude_offset", OSSIM_METERS, 10.0);
-      setPpjParameterDefinition(params[PARAM_ADJ_ROLL_OFFSET], "roll_offset", OSSIM_DEGREES, 0.1);
-      setPpjParameterDefinition(params[PARAM_ADJ_PITCH_OFFSET], "pitch_offset", OSSIM_DEGREES, 0.1);
-      setPpjParameterDefinition(params[PARAM_ADJ_YAW_OFFSET], "yaw_offset", OSSIM_DEGREES, 0.1);
+      setPpjParameterDefinition(params[PARAM_ADJ_ROLL_OFFSET], "roll_offset", OSSIM_DEGREES, 0.3);
+      setPpjParameterDefinition(params[PARAM_ADJ_PITCH_OFFSET], "pitch_offset", OSSIM_DEGREES, 0.3);
+      setPpjParameterDefinition(params[PARAM_ADJ_YAW_OFFSET], "yaw_offset", OSSIM_DEGREES, 0.3);
       setPpjParameterDefinition(params[PARAM_ADJ_FOCAL_LENGTH_OFFSET], "focal_length_offset", OSSIM_PIXEL, 20.0);
    }
 }

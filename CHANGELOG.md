@@ -17,9 +17,13 @@ All notable changes to `ossim` are documented here.
 > registration has real roll/pitch/yaw controls instead of leaning on offsets
 > alone. The generated OSSIM config header also now uses standard fixed-width
 > integer types without the old platform size-check dance, and CMake no longer
-> runs the unused probes that fed those checks.
+> runs the unused probes that fed those checks. Applanix ECEF/UTM defaults now
+> give registration a wider adjustment envelope for position, orientation, and
+> altitude.
 
 ### Added
+- Add solver-derived RPC approximation bias and random error estimates so
+  generated RPC00B tags can populate `ERR_BIAS` and `ERR_RAND` (0df2f0ef).
 - Add `ossim-rpcgen` controls for force-fitting existing RPC inputs, sampling
   layered height planes, and limiting fit refinement by iteration count or
   minimum max-residual improvement (561862d0).
@@ -49,6 +53,10 @@ All notable changes to `ossim` are documented here.
 - Document elevation-aware layered RPC fitting as the normal generation path
   when elevation is available, with `--disable-elev` reserved for diagnostics
   and flat comparisons (f86f398d).
+- Widen Applanix ECEF and UTM default adjustable-parameter sigmas to 40 pixels
+  for image offsets, 0.5 degrees for orientation, and 100 meters for altitude
+  so freshly initialized model adjustments match the tested registration
+  envelope.
 
 ### Fixed
 - Apply PPJ roll, pitch, and yaw adjustable offsets in local camera space for

@@ -1129,11 +1129,11 @@ void ossimLandSatModel::initAdjustableParameters()
    //***
    setParameterSigma(INTRACK_OFFSET, 500.0); //change for Landsat 5
    setParameterSigma(CRTRACK_OFFSET, 500.0); //change for Landsat 5
-   setParameterSigma(LINE_GSD_CORR, 0.005);  
-   setParameterSigma(SAMP_GSD_CORR, 0.005);  
-   setParameterSigma(ROLL_OFFSET, 0.01);  
-   setParameterSigma(YAW_OFFSET, 0.01);  
-   setParameterSigma(YAW_RATE, 0.05);  
+   setParameterSigma(LINE_GSD_CORR, 0.5);  
+   setParameterSigma(SAMP_GSD_CORR, 0.5);  
+   setParameterSigma(ROLL_OFFSET, 0.1);  
+   setParameterSigma(YAW_OFFSET, 0.1);  
+   setParameterSigma(YAW_RATE, 0.5);  
    setParameterSigma(MAP_ROTATION, 0.1);
    if (traceExec())  ossimNotify(ossimNotifyLevel_DEBUG) << "DEBUG ossimLandSatModel::initAdjustableParameters: returning..." << std::endl;
 }
