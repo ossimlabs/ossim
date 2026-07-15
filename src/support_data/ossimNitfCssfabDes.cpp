@@ -77,7 +77,7 @@ void ossimNitfCssfabDes::initializeFieldDefinitions()
       {ossim::nitf::PPOFF_Z_KW, 10, DOUBLE, 6},
       {ossim::nitf::ANGOFF_X_KW, 10, DOUBLE, 7, "0"},
       {ossim::nitf::ANGOFF_Y_KW, 10, DOUBLE, 7, "0"},
-      {ossim::nitf::ANGOFF_Z_KW, 10, DOUBLE, 7, "-1.5707963"},
+      {ossim::nitf::ANGOFF_Z_KW, 10, DOUBLE, 7, "0"},
       {ossim::nitf::SENSOR_TYPE_KW + " 'S' =", IF_STATEMENT_START},
          {ossim::nitf::SMPL_NUM_FIRST_KW, 12, DOUBLE, 5},
          {ossim::nitf::DELTA_SMPL_PAIRS_KW, 11, U_DOUBLE, 5},
