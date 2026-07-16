@@ -9,6 +9,8 @@
 # This module defines:
 #
 # OPENCV_INCLUDE_DIR
+# OpenCV_FOUND
+# OpenCV_INCLUDE_DIRS
 #
 # OPENCV_FOUND, 
 # OPENCV_CORE_FOUND 
@@ -23,16 +25,22 @@
 # OPENCV_LEGACY_LIBRARY
 # OPENCV_ML_LIBRARY
 # OPENCV_LIBRARIES
+# OpenCV_LIBS
+# OpenCV_LIBRARIES
 #
 # Created by Garrett Potts.
 #
 # $Id$
 
 # Find include path:
-# find_path(OPENCV_INCLUDE_DIR opencv4/cv.hpp  PATHS ${OPENCV_HOME}/include)
 find_path( OPENCV_INCLUDE_DIR opencv2/opencv.hpp
            PATHS
 	   ${OPENCV_HOME}/include
+	   ${OPENCV_HOME}/include/opencv4
+	   /opt/homebrew/opt/opencv/include/opencv4
+	   /opt/homebrew/include/opencv4
+	   /usr/local/opt/opencv/include/opencv4
+	   /usr/local/include/opencv4
 	   /opt/local/include
 	   /opt/local/include/opencv4
 	   /usr/include/opencv4
@@ -46,6 +54,10 @@ macro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
 	 ${OPENCV_HOME}/lib
 	 ${OPENCV_HOME}/lib/opencv4
 	 ${OPENCV_HOME}/share/OpenCV/3rdparty/lib	 
+	 /opt/homebrew/opt/opencv/lib
+	 /opt/homebrew/lib
+	 /usr/local/opt/opencv/lib
+	 /usr/local/lib
 	 /opt/local/lib
 	 /opt/local/lib/opencv4
 	 /opt/local/share/OpenCV/3rdparty/lib
@@ -156,6 +168,22 @@ if (OPENCV_FOUND)
 
     # Unfortunately, OpenCV inter-library dependency is so complicated, we just list the libs twice:
     set(OPENCV_LIBRARIES ${OPENCV_LIBRARIES} ${OPENCV_LIBRARIES} )
+endif()
+
+if(OPENCV_FOUND)
+   set(OpenCV_FOUND TRUE)
+   set(OPENCV_INCLUDE_DIRS ${OPENCV_INCLUDE_DIR})
+   set(OpenCV_INCLUDE_DIR ${OPENCV_INCLUDE_DIR})
+   set(OpenCV_INCLUDE_DIRS ${OPENCV_INCLUDE_DIR})
+   set(OpenCV_LIBS ${OPENCV_LIBRARIES})
+   set(OpenCV_LIBRARIES ${OPENCV_LIBS})
+else()
+   set(OpenCV_FOUND FALSE)
+   set(OPENCV_INCLUDE_DIRS "")
+   set(OpenCV_INCLUDE_DIR "")
+   set(OpenCV_INCLUDE_DIRS "")
+   set(OpenCV_LIBS "")
+   set(OpenCV_LIBRARIES "")
 endif()
 
 if(OPENCV_FOUND)
