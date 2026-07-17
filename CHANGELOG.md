@@ -14,8 +14,10 @@ All notable changes to `ossim` are documented here.
 > height slab around the scene automatically, reducing the need for downstream
 > users to reproduce the exact same elevation database, and the solver now
 > treats invalid samples and unstable intermediate fits as recoverable input
-> problems instead of inviting NaNs to the party. PPJ frame sensors also get
-> complete adjustable definitions and a local camera orientation adjustment so
+> problems instead of inviting NaNs to the party. Renderer subdivision now
+> reuses shared split vertices instead of recalculating the same corners during
+> tile refinement. PPJ frame sensors also get complete adjustable definitions and
+> a local camera orientation adjustment so
 > registration has real roll/pitch/yaw controls instead of leaning on offsets
 > alone. The generated OSSIM config header also now uses standard fixed-width
 > integer types without the old platform size-check dance, and CMake no longer
@@ -63,6 +65,9 @@ All notable changes to `ossim` are documented here.
   shared-vertex reuse, filled leaves, and input tile footprint so registration
   timing reports can separate renderer recursion from source-image request cost
   (bcb24001).
+- Reuse renderer split vertices across quad-map child tiles so subdivision
+  computes image/view transforms once per shared view pixel instead of
+  rediscovering sibling edge and center vertices (072e661d).
 
 ### Fixed
 - Apply PPJ roll, pitch, and yaw adjustable offsets in local camera space for
