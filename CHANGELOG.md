@@ -76,6 +76,17 @@ All notable changes to `ossim` are documented here.
   samples, invalid rational-fit residuals, and radius-only layer requests that
   cannot produce a valid positive height delta (d7962caa).
 
+## [2026-07-18]
+
+> **TL;DR:** The combined OSSIM build now owns autoregistration through one
+> consistently named option and source root, so downstream GUI configuration
+> no longer has to make a second build decision.
+
+### Changed
+- Rename the workspace controls to `BUILD_OSSIM_AUTOREGISTRATION` and
+  `OSSIM_AUTOREGISTRATION_ROOT`, and pass them consistently through OSSIM's
+  combined and Linux CMake configuration paths (`fd3aa86c`).
+
 ## [2026-05-01]
 
 > **TL;DR:** The combined OSSIM build can now opt into the legacy
