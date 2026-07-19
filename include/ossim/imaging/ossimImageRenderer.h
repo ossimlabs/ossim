@@ -18,6 +18,7 @@
 #include <ossim/base/ossimPolyArea2d.h>
 #include <ossim/base/ossimViewInterface.h>
 #include <ossim/base/ossimRationalNumber.h>
+#include <memory>
 
 class ossimImageData;
 class ossimDiscreteConvolutionKernel;
@@ -27,6 +28,58 @@ class OSSIMDLLEXPORT ossimImageRenderer : public ossimImageSourceFilter,
                                           public ossimViewInterface
 {
 public:
+   struct RenderingStats
+   {
+      RenderingStats()
+      : m_requestedViewRect(),
+        m_clippedViewRect(),
+        m_requestedViewPixels(0),
+        m_clippedViewPixels(0),
+        m_nodes(0),
+        m_vertices(0),
+        m_reusedVertexReferences(0),
+        m_visitedNodes(0),
+        m_splitNodes(0),
+        m_filledLeaves(0),
+        m_inputTileCalls(0),
+        m_inputTilePixels(0),
+        m_maxInputTileWidth(0),
+        m_maxInputTileHeight(0),
+        m_minInputResLevel(0),
+        m_maxInputResLevel(0),
+        m_totalSeconds(0.0),
+        m_recursiveSeconds(0.0),
+        m_fillSeconds(0.0),
+        m_inputGetTileSeconds(0.0),
+        m_resampleSeconds(0.0),
+        m_clipped(false)
+      {
+      }
+
+      ossimIrect m_requestedViewRect;
+      ossimIrect m_clippedViewRect;
+      ossim_uint64 m_requestedViewPixels;
+      ossim_uint64 m_clippedViewPixels;
+      ossim_uint64 m_nodes;
+      ossim_uint64 m_vertices;
+      ossim_uint64 m_reusedVertexReferences;
+      ossim_uint64 m_visitedNodes;
+      ossim_uint64 m_splitNodes;
+      ossim_uint64 m_filledLeaves;
+      ossim_uint64 m_inputTileCalls;
+      ossim_uint64 m_inputTilePixels;
+      ossim_uint32 m_maxInputTileWidth;
+      ossim_uint32 m_maxInputTileHeight;
+      ossim_uint32 m_minInputResLevel;
+      ossim_uint32 m_maxInputResLevel;
+      double m_totalSeconds;
+      double m_recursiveSeconds;
+      double m_fillSeconds;
+      double m_inputGetTileSeconds;
+      double m_resampleSeconds;
+      bool m_clipped;
+   };
+
    ossimImageRenderer();
    ossimImageRenderer(ossimImageSource* inputSource,
                       ossimImageViewTransform* imageViewTrans = NULL);
@@ -150,9 +203,11 @@ public:
     */
    virtual void setEnableFlag(bool flag);
 
+   const RenderingStats& getLastRenderingStats()const;
    
 protected:
 private:
+   class ossimRendererVertexCache;
    
    class ossimRendererSubRectInfo
    {
@@ -167,50 +222,56 @@ private:
    public:
       friend std::ostream& operator <<(std::ostream& out, const ossimRendererSubRectInfo& rhs)
       {
-         return out << "vul:   " << rhs.m_Vul << std::endl
-            << "vur:   " << rhs.m_Vur << std::endl
-            << "vlr:   " << rhs.m_Vlr << std::endl
-            << "vll:   " << rhs.m_Vll << std::endl
-            << "iul:   " << rhs.m_Iul << std::endl
-            << "iur:   " << rhs.m_Iur << std::endl
-            << "ilr:   " << rhs.m_Ilr << std::endl
-            << "ill:   " << rhs.m_Ill << std::endl
-            << "scale: " << rhs.m_ViewToImageScale << std::endl;
+         return out << "vul:   " << rhs.vul() << std::endl
+            << "vur:   " << rhs.vur() << std::endl
+            << "vlr:   " << rhs.vlr() << std::endl
+            << "vll:   " << rhs.vll() << std::endl
+            << "iul:   " << rhs.iul() << std::endl
+            << "iur:   " << rhs.iur() << std::endl
+            << "ilr:   " << rhs.ilr() << std::endl
+            << "ill:   " << rhs.ill() << std::endl
+            << "scale: " << rhs.viewToImageScale() << std::endl;
 
       }
 
       ossimRendererSubRectInfo(ossimImageViewTransform* transform=0);
-      ossimRendererSubRectInfo(ossimImageViewTransform* transform,
-                               const ossimDpt& vul,
-                               const ossimDpt& vur,
-                               const ossimDpt& vlr,
-                               const ossimDpt& vll);
          
       bool imageHasNans()const;
       bool imageIsNan()const;
       bool viewHasNans()const;
       bool viewIsNan()const;
 
-      void splitView(std::vector<ossimRendererSubRectInfo>& result)const;
-      //void splitView(ossimRendererSubRectInfo& ulRect,
-      //               ossimRendererSubRectInfo& urRect,
-      //               ossimRendererSubRectInfo& lrRect,
-      //               ossimRendererSubRectInfo& llRect)const;
-      
       void transformViewToImage();
-      void transformImageToView();
+      void setVertexCache(ossimRendererVertexCache* cache);
+      void setVertexIndices(ossim_int64 ul,
+                            ossim_int64 ur,
+                            ossim_int64 lr,
+                            ossim_int64 ll);
+      bool hasVertexIndices()const;
       bool tooBig()const;
-      void roundToInteger();
       void stretchImageOut(bool enableRound=false);
       ossimDrect getViewRect()const;
       ossimDrect getImageRect()const;
       void roundImageToInteger();
-      void roundViewToInteger();
       bool isViewEqual(const ossimRendererSubRectInfo& infoRect)const;
       bool isViewEqual(const ossimDrect& viewRect)const;
       ossimDpt computeViewToImageScale(const ossimDpt& viewPt, const ossimDpt& delta=ossimDpt(1.0,1.0))const;
       ossimDpt getAbsValueViewToImageScales()const;
       ossimDpt getAbsValueImageToViewScales()const;
+      ossimDpt iul()const;
+      ossimDpt iur()const;
+      ossimDpt ilr()const;
+      ossimDpt ill()const;
+      ossimIpt vul()const;
+      ossimIpt vur()const;
+      ossimIpt vlr()const;
+      ossimIpt vll()const;
+      ossimDpt ulScale()const;
+      ossimDpt urScale()const;
+      ossimDpt lrScale()const;
+      ossimDpt llScale()const;
+      ossimDpt viewToImageScale()const;
+      ossimDpt imageToViewScale()const;
       ossimDpt computeRoundTripErrorViewPt(const ossimDpt& dpt)const;
       bool isViewAPoint()const;
       bool isIdentity()const;
@@ -233,33 +294,14 @@ private:
 		       ossimDpt& center)const;
      ossim_uint16 getSplitFlags()const;
 
-      ossimDpt m_Iul;
-      ossimDpt m_Iur;
-      ossimDpt m_Ilr;
-      ossimDpt m_Ill;
-
-      ossimIpt m_Vul;
-      ossimIpt m_Vur;
-      ossimIpt m_Vlr;
-      ossimIpt m_Vll;
-
-      ossimDpt m_ViewToImageScale;
-      ossimDpt m_ImageToViewScale;
-
-
-      ossimDpt m_VulScale;
-      ossimDpt m_VurScale;
-      ossimDpt m_VlrScale;
-      ossimDpt m_VllScale;
-
-
       mutable ossimRefPtr<ossimImageViewTransform> m_transform;
-      mutable const ossimPolyArea2d* m_viewBounds;
+      mutable std::shared_ptr<const ossimPolyArea2d> m_viewBounds;
+      mutable ossimRendererVertexCache* m_vertexCache;
+      mutable ossim_int64 m_ulVertex;
+      mutable ossim_int64 m_urVertex;
+      mutable ossim_int64 m_lrVertex;
+      mutable ossim_int64 m_llVertex;
 
-    private:
-      void splitHorizontal(std::vector<ossimRendererSubRectInfo>& result)const;
-      void splitVertical(std::vector<ossimRendererSubRectInfo>& result)const;
-      void splitAll(std::vector<ossimRendererSubRectInfo>& result)const;
    };
 
    void recursiveResample(ossimRefPtr<ossimImageData> outputData,
@@ -338,6 +380,8 @@ private:
 
    double                   m_averageViewToImageScale;
    double                   m_averageViewToImageRLevelScale;
+   RenderingStats           m_lastRenderingStats;
+   RenderingStats           m_currentRenderingStats;
    static double            m_interpErrorThreshold;
 
    TYPE_DATA
@@ -345,157 +389,135 @@ private:
 
 inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(ossimImageViewTransform* transform)
 :m_transform(transform),
-m_viewBounds(0)
+m_viewBounds(),
+m_vertexCache(0),
+m_ulVertex(-1),
+m_urVertex(-1),
+m_lrVertex(-1),
+m_llVertex(-1)
 {
-   m_Vul.makeNan();
-   m_Vur.makeNan();
-   m_Vlr.makeNan();
-   m_Vll.makeNan();
-   m_Iul.makeNan();
-   m_Iur.makeNan();
-   m_Ilr.makeNan();
-   m_Ill.makeNan();
-   m_ViewToImageScale.makeNan();
-   m_ImageToViewScale.makeNan();            
-}
-
-inline ossimImageRenderer::ossimRendererSubRectInfo::ossimRendererSubRectInfo(ossimImageViewTransform* transform,
-                         const ossimDpt& vul,
-                         const ossimDpt& vur,
-                         const ossimDpt& vlr,
-                         const ossimDpt& vll)
-                         :m_Vul(vul),
-                         m_Vur(vur),
-                         m_Vlr(vlr),
-                         m_Vll(vll),
-                         m_transform(transform),
-                         m_viewBounds(0)
-{
-   m_Iul.makeNan();
-   m_Iur.makeNan();
-   m_Ilr.makeNan();
-   m_Ill.makeNan();
-   m_ViewToImageScale.makeNan();
-   m_ImageToViewScale.makeNan();            
 }
 
 inline bool ossimImageRenderer::ossimRendererSubRectInfo::imageHasNans()const
 {
-   return ( m_Iul.hasNans()||
-      m_Iur.hasNans()||
-      m_Ilr.hasNans()||
-      m_Ill.hasNans());
+   return ( iul().hasNans()||
+      iur().hasNans()||
+      ilr().hasNans()||
+      ill().hasNans());
+}
+
+inline void ossimImageRenderer::ossimRendererSubRectInfo::setVertexCache(
+   ossimRendererVertexCache* cache)
+{
+   m_vertexCache = cache;
+}
+
+inline void ossimImageRenderer::ossimRendererSubRectInfo::setVertexIndices(
+   ossim_int64 ul,
+   ossim_int64 ur,
+   ossim_int64 lr,
+   ossim_int64 ll)
+{
+   m_ulVertex = ul;
+   m_urVertex = ur;
+   m_lrVertex = lr;
+   m_llVertex = ll;
+}
+
+inline bool ossimImageRenderer::ossimRendererSubRectInfo::hasVertexIndices()const
+{
+   return ((m_ulVertex >= 0)&&
+           (m_urVertex >= 0)&&
+           (m_lrVertex >= 0)&&
+           (m_llVertex >= 0));
 }
 
 inline bool ossimImageRenderer::ossimRendererSubRectInfo::imageIsNan()const
 {
-   return ( m_Iul.hasNans()&&
-      m_Iur.hasNans()&&
-      m_Ilr.hasNans()&&
-      m_Ill.hasNans());
+   return ( iul().hasNans()&&
+      iur().hasNans()&&
+      ilr().hasNans()&&
+      ill().hasNans());
 }
 
 inline bool ossimImageRenderer::ossimRendererSubRectInfo::viewHasNans()const
 {
-   return ( m_Vul.hasNans()||
-      m_Vur.hasNans()||
-      m_Vlr.hasNans()||
-      m_Vll.hasNans());
+   return ( vul().hasNans()||
+      vur().hasNans()||
+      vlr().hasNans()||
+      vll().hasNans());
 }
 
 inline bool ossimImageRenderer::ossimRendererSubRectInfo::viewIsNan()const
 {
-   return ( m_Vul.hasNans()&&
-      m_Vur.hasNans()&&
-      m_Vlr.hasNans()&&
-      m_Vll.hasNans());
-}
-
-inline void ossimImageRenderer::ossimRendererSubRectInfo::roundToInteger()
-{
-   m_Iul = ossimIpt(m_Iul);
-   m_Iur = ossimIpt(m_Iur);
-   m_Ilr = ossimIpt(m_Ilr);
-   m_Ill = ossimIpt(m_Ill);
-
-   m_Vul = ossimIpt(m_Vul);
-   m_Vur = ossimIpt(m_Vur);
-   m_Vlr = ossimIpt(m_Vlr);
-   m_Vll = ossimIpt(m_Vll);
+   return ( vul().hasNans()&&
+      vur().hasNans()&&
+      vlr().hasNans()&&
+      vll().hasNans());
 }
 
 inline ossimDrect ossimImageRenderer::ossimRendererSubRectInfo::getViewRect()const
 {
-   return ossimDrect(m_Vul,
-      m_Vur,
-      m_Vlr,
-      m_Vll);            
+   return ossimDrect(vul(),
+      vur(),
+      vlr(),
+      vll());
 }
 
 inline ossimDrect ossimImageRenderer::ossimRendererSubRectInfo::getImageRect()const
 {
-   return ossimDrect(m_Iul,
-      m_Iur,
-      m_Ilr,
-      m_Ill);
+   return ossimDrect(iul(),
+      iur(),
+      ilr(),
+      ill());
 }
 
 inline void ossimImageRenderer::ossimRendererSubRectInfo::roundImageToInteger()
 {
-   m_Iul = ossimIpt(m_Iul);
-   m_Iur = ossimIpt(m_Iur);
-   m_Ilr = ossimIpt(m_Ilr);
-   m_Ill = ossimIpt(m_Ill);
-}
-
-inline void ossimImageRenderer::ossimRendererSubRectInfo::roundViewToInteger()
-{
-   m_Vul = ossimIpt(m_Vul);
-   m_Vur = ossimIpt(m_Vur);
-   m_Vlr = ossimIpt(m_Vlr);
-   m_Vll = ossimIpt(m_Vll);
 }
 
 inline bool ossimImageRenderer::ossimRendererSubRectInfo::isViewEqual(const ossimRendererSubRectInfo& infoRect)const
 {
-   return ( (m_Vul == infoRect.m_Vul)&&
-      (m_Vur == infoRect.m_Vur)&&
-      (m_Vlr == infoRect.m_Vlr)&&
-      (m_Vll == infoRect.m_Vll));
+   return ( (vul() == infoRect.vul())&&
+      (vur() == infoRect.vur())&&
+      (vlr() == infoRect.vlr())&&
+      (vll() == infoRect.vll()));
 }
 
 inline bool ossimImageRenderer::ossimRendererSubRectInfo::isViewEqual(const ossimDrect& viewRect)const
 {
-   return ( (m_Vul == viewRect.ul())&&
-      (m_Vur == viewRect.ur())&&
-      (m_Vlr == viewRect.lr())&&
-      (m_Vll == viewRect.ll()));
+   return ( (vul() == viewRect.ul())&&
+      (vur() == viewRect.ur())&&
+      (vlr() == viewRect.lr())&&
+      (vll() == viewRect.ll()));
 }
 
 inline ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::getAbsValueViewToImageScales()const
 {
-   if(m_ViewToImageScale.hasNans())
+   const ossimDpt scale = viewToImageScale();
+   if(scale.hasNans())
    {
-      return m_ImageToViewScale;
+      return scale;
    }
-   return ossimDpt(fabs(m_ViewToImageScale.x), fabs(m_ViewToImageScale.y));
+   return ossimDpt(fabs(scale.x), fabs(scale.y));
 }
 
 inline ossimDpt ossimImageRenderer::ossimRendererSubRectInfo::getAbsValueImageToViewScales()const
 {
-   if(m_ImageToViewScale.hasNans())
+   const ossimDpt scale = imageToViewScale();
+   if(scale.hasNans())
    {
-      return m_ImageToViewScale;
+      return scale;
    }
 
-   return ossimDpt(fabs(m_ImageToViewScale.x), fabs(m_ImageToViewScale.y));
+   return ossimDpt(fabs(scale.x), fabs(scale.y));
 }
 
 inline bool ossimImageRenderer::ossimRendererSubRectInfo::isViewAPoint()const
 {
-   return ((m_Vul == m_Vur)&&
-      (m_Vul == m_Vlr)&&
-      (m_Vul == m_Vll));
+   return ((vul() == vur())&&
+      (vul() == vlr())&&
+      (vul() == vll()));
 }
 
 #endif

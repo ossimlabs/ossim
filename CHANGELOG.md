@@ -8,12 +8,16 @@ All notable changes to `ossim` are documented here.
 > from `ossim-autoreg`, reducing the optional registration build to one sibling
 > dependency. RPC generation also gets a steadier solver, layered-height
 > fitting controls, and a way to compare fitted coefficients against existing
-> RPC inputs without quietly copying them. The RPC generator can now fit a
+> RPC inputs without quietly copying them. The renderer now exposes compact
+> per-request statistics so registration speed work can measure tile footprint
+> instead of guessing at it. The RPC generator can now fit a
 > height slab around the scene automatically, reducing the need for downstream
 > users to reproduce the exact same elevation database, and the solver now
 > treats invalid samples and unstable intermediate fits as recoverable input
-> problems instead of inviting NaNs to the party. PPJ frame sensors also get
-> complete adjustable definitions and a local camera orientation adjustment so
+> problems instead of inviting NaNs to the party. Renderer subdivision now
+> reuses shared split vertices instead of recalculating the same corners during
+> tile refinement. PPJ frame sensors also get complete adjustable definitions and
+> a local camera orientation adjustment so
 > registration has real roll/pitch/yaw controls instead of leaning on offsets
 > alone. The generated OSSIM config header also now uses standard fixed-width
 > integer types without the old platform size-check dance, and CMake no longer
@@ -57,6 +61,13 @@ All notable changes to `ossim` are documented here.
   for image offsets, 0.5 degrees for orientation, and 100 meters for altitude
   so freshly initialized model adjustments match the tested registration
   envelope.
+- Expose per-request renderer statistics for view clipping, subdivision,
+  shared-vertex reuse, filled leaves, and input tile footprint so registration
+  timing reports can separate renderer recursion from source-image request cost
+  (bcb24001).
+- Reuse renderer split vertices across quad-map child tiles so subdivision
+  computes image/view transforms once per shared view pixel instead of
+  rediscovering sibling edge and center vertices (072e661d).
 
 ### Fixed
 - Apply PPJ roll, pitch, and yaw adjustable offsets in local camera space for
@@ -64,6 +75,17 @@ All notable changes to `ossim` are documented here.
 - Harden `ossimRpcSolver` against degenerate bounds, non-finite elevation
   samples, invalid rational-fit residuals, and radius-only layer requests that
   cannot produce a valid positive height delta (d7962caa).
+
+## [2026-07-18]
+
+> **TL;DR:** The combined OSSIM build now owns autoregistration through one
+> consistently named option and source root, so downstream GUI configuration
+> no longer has to make a second build decision.
+
+### Changed
+- Rename the workspace controls to `BUILD_OSSIM_AUTOREGISTRATION` and
+  `OSSIM_AUTOREGISTRATION_ROOT`, and pass them consistently through OSSIM's
+  combined and Linux CMake configuration paths (`fd3aa86c`).
 
 ## [2026-05-01]
 
