@@ -23,7 +23,8 @@ All notable changes to `ossim` are documented here.
 > integer types without the old platform size-check dance, and CMake no longer
 > runs the unused probes that fed those checks. Applanix ECEF/UTM defaults now
 > give registration a wider adjustment envelope for position, orientation, and
-> altitude.
+> altitude. The legacy `ossim-autreg` command has also retired now that the
+> factory-driven `ossim-autoreg` application owns the supported workflow.
 
 ### Added
 - Add solver-derived RPC approximation bias and random error estimates so
@@ -38,6 +39,10 @@ All notable changes to `ossim` are documented here.
   selection for comparing linearized and nonlinear RPC fits (f86f398d).
 
 ### Changed
+- Retire the legacy `ossim-autreg` application and its build target so the
+  factory-driven `ossim-autoreg` repository can provide the canonical
+  standalone registration executable without an install-name conflict
+  (`d1e4a7c1`).
 - Use standard fixed-width integer typedefs in `ossimConfig.h.in` for both C
   and C++ consumers, removing generated `SIZE_OF_*` checks and the unused
   `ossim_float128` typedef (428261de).
