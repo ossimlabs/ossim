@@ -17,7 +17,7 @@
 #include <ossim/support_data/ossimNitfCscsdbDes.h>
 #include <ossim/support_data/ossimNitfCssfabDes.h>
 
-#include "support_data/ossimNitfCsephbDes.h"
+#include <ossim/support_data/ossimNitfCsephbDes.h>
 
 RTTI_DEF1(ossimNitfRegisteredDesFactory, "ossimNitfRegisteredDesFactory", ossimNitfDesFactory);
 
