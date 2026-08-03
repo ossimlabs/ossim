@@ -25,6 +25,9 @@ All notable changes to `ossim` are documented here.
 > give registration a wider adjustment envelope for position, orientation, and
 > altitude. The legacy `ossim-autreg` command has also retired now that the
 > factory-driven `ossim-autoreg` application owns the supported workflow.
+> Feather mosaics now blend mixed radiometric depths consistently, keep
+> clipped tiles in their proper image-plane positions, and remain valid at
+> coarse display scales.
 
 ### Added
 - Add solver-derived RPC approximation bias and random error estimates so
@@ -75,6 +78,13 @@ All notable changes to `ossim` are documented here.
   rediscovering sibling edge and center vertices (072e661d).
 
 ### Fixed
+- Blend heterogeneous Feather mosaic inputs in normalized space, promote the
+  output using both scalar storage size and usable bit depth, map clipped
+  source tiles by their actual image origin, and guard collapsed or fractional
+  feather footprints (`9ab5897e`).
+- Give build-tree macOS `libossim` an rpath-based install name so freshly built
+  applications do not silently load an older installed OSSIM core
+  (`9ab5897e`).
 - Apply PPJ roll, pitch, and yaw adjustable offsets in local camera space for
   both imaging rays and world-to-image projection.
 - Harden `ossimRpcSolver` against degenerate bounds, non-finite elevation
