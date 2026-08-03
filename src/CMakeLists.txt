@@ -165,6 +165,16 @@ OSSIM_LINK_LIBRARY(${LIB_NAME}
                    SOURCE_FILES "${ossim_SRCS}"
                    INSTALL_LIB VERSION_SYMLINKS)
 
+# Build-tree macOS applications must resolve the core library through their
+# configured rpaths.  An absolute install-prefix id makes a freshly built app
+# silently load an older installed libossim instead of this target.
+IF(APPLE AND BUILD_SHARED_LIBS AND TARGET ${LIB_NAME})
+   SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES
+      MACOSX_RPATH TRUE
+      BUILD_WITH_INSTALL_RPATH FALSE
+      INSTALL_NAME_DIR "@rpath")
+ENDIF()
+
 # The install headers was duplicating ossimVersion.h and ossimConfig.h in "install_prefix/include".
 # INSTALL_HEADERS)
 

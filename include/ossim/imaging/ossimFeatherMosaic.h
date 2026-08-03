@@ -78,6 +78,9 @@ protected:
    ossimRefPtr<ossimImageData> combine(T dummyVariableNotUsed,
                                        const ossimIrect& tileRect,
                                        ossim_uint32 resLevel);
+
+   ossimRefPtr<ossimImageData> combineNorm(const ossimIrect& tileRect,
+                                           ossim_uint32 resLevel);
    
    virtual double computeWeight(long index,
                                 const ossimDpt& point)const;

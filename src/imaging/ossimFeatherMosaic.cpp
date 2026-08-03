@@ -17,6 +17,9 @@
 #include <ossim/base/ossimLine.h>
 #include <ossim/base/ossimTrace.h>
 
+#include <algorithm>
+#include <cmath>
+
 static ossimTrace traceDebug("ossimFeatherMosaic:debug");
 
 RTTI_DEF1(ossimFeatherMosaic, "ossimFeatherMosaic", ossimImageMosaic);
@@ -105,6 +108,10 @@ ossimRefPtr<ossimImageData> ossimFeatherMosaic::getTile(const ossimIrect& tileRe
    {
       case OSSIM_UCHAR:
       {
+         if(hasDifferentInputs())
+         {
+            return combineNorm(tileRect, resLevel);
+         }
          return combine(static_cast<ossim_uint8>(0),
                         tileRect, resLevel);
       }
@@ -115,23 +122,39 @@ ossimRefPtr<ossimImageData> ossimFeatherMosaic::getTile(const ossimIrect& tileRe
       case OSSIM_USHORT14:
       case OSSIM_USHORT15:
       {
+         if(hasDifferentInputs())
+         {
+            return combineNorm(tileRect, resLevel);
+         }
          return combine(static_cast<ossim_uint16>(0),
                         tileRect, resLevel);
       }
       case OSSIM_SSHORT16:
       {
+         if(hasDifferentInputs())
+         {
+            return combineNorm(tileRect, resLevel);
+         }
          return combine(static_cast<ossim_sint16>(0),
                         tileRect, resLevel);
       }
       case OSSIM_DOUBLE:
       case OSSIM_NORMALIZED_DOUBLE:
       {
+         if(hasDifferentInputs())
+         {
+            return combineNorm(tileRect, resLevel);
+         }
          return combine(static_cast<double>(0),
                         tileRect, resLevel);
       }
       case OSSIM_FLOAT:
       case OSSIM_NORMALIZED_FLOAT:
       {
+         if(hasDifferentInputs())
+         {
+            return combineNorm(tileRect, resLevel);
+         }
          return combine(static_cast<float>(0),
                         tileRect, resLevel);
       }
@@ -144,6 +167,112 @@ ossimRefPtr<ossimImageData> ossimFeatherMosaic::getTile(const ossimIrect& tileRe
       }
    }
    return ossimRefPtr<ossimImageData>();
+}
+
+ossimRefPtr<ossimImageData> ossimFeatherMosaic::combineNorm(
+   const ossimIrect& tileRect,
+   ossim_uint32 resLevel)
+{
+   const long upperBound = theTile->getWidth()*theTile->getHeight();
+   const long outputWidth = static_cast<long>(theTile->getWidth());
+   const long outputHeight = static_cast<long>(theTile->getHeight());
+   const ossimIpt outputOrigin = tileRect.ul();
+   float* sumBand = static_cast<float*>(theAlphaSum->getBuf());
+
+   theAlphaSum->fill(0.0);
+   theResult->fill(0.0);
+
+   float** srcBands = new float*[theLargestNumberOfInputBands];
+   ossim_uint32 layerIdx = 0;
+   ossim_uint32 numberOfTilesProcessed = 0;
+   ossimRefPtr<ossimImageData> currentImageData =
+      getNextNormTile(layerIdx, 0, tileRect, resLevel);
+
+   while(currentImageData.valid())
+   {
+      const ossimDataObjectStatus currentStatus =
+         currentImageData->getDataObjectStatus();
+      if((currentStatus != OSSIM_EMPTY) && (currentStatus != OSSIM_NULL))
+      {
+         ++numberOfTilesProcessed;
+         const long h = static_cast<long>(currentImageData->getHeight());
+         const long w = static_cast<long>(currentImageData->getWidth());
+         const ossimIpt point = currentImageData->getOrigin();
+         ossim_uint32 band = 0;
+         const ossim_uint32 minNumberOfBands =
+            currentImageData->getNumberOfBands();
+         for(; band < minNumberOfBands; ++band)
+         {
+            srcBands[band] = static_cast<float*>(currentImageData->getBuf(band));
+         }
+         for(; band < theLargestNumberOfInputBands; ++band)
+         {
+            srcBands[band] = srcBands[minNumberOfBands - 1];
+         }
+
+         long sourceOffset = 0;
+         for(long row = 0; row < h; ++row)
+         {
+            const long outputY = point.y + row - outputOrigin.y;
+            for(long col = 0; col < w; ++col, ++sourceOffset)
+            {
+               const long outputX = point.x + col - outputOrigin.x;
+               if((outputX < 0) || (outputX >= outputWidth) ||
+                  (outputY < 0) || (outputY >= outputHeight))
+               {
+                  continue;
+               }
+               if((currentStatus == OSSIM_PARTIAL) &&
+                  currentImageData->isNull(sourceOffset))
+               {
+                  continue;
+               }
+
+               const long outputOffset = outputY*outputWidth + outputX;
+               const double weight = computeWeight(
+                  layerIdx, ossimDpt(point.x + col, point.y + row));
+               for(band = 0; band < theLargestNumberOfInputBands; ++band)
+               {
+                  float* weightedBand =
+                     static_cast<float*>(theResult->getBuf(band));
+                  weightedBand[outputOffset] +=
+                     static_cast<float>(srcBands[band][sourceOffset]*weight);
+               }
+               sumBand[outputOffset] += static_cast<float>(weight);
+            }
+         }
+      }
+      currentImageData = getNextNormTile(layerIdx, tileRect, resLevel);
+   }
+
+   if(numberOfTilesProcessed)
+   {
+      for(long offset = 0; offset < upperBound; ++offset)
+      {
+         for(ossim_uint32 band = 0;
+             band < theLargestNumberOfInputBands;
+             ++band)
+         {
+            float* weightedBand =
+               static_cast<float*>(theResult->getBuf(band));
+            if(sumBand[offset] != 0.0f)
+            {
+               weightedBand[offset] /= sumBand[offset];
+            }
+            else
+            {
+               weightedBand[offset] = 0.0f;
+            }
+         }
+      }
+      theResult->validate();
+      theTile->copyNormalizedBufferToTile(
+         static_cast<float*>(theResult->getBuf()));
+      theTile->validate();
+   }
+
+   delete [] srcBands;
+   return theTile;
 }
 
 
@@ -330,23 +459,38 @@ double ossimFeatherMosaic::computeWeight(long index,
                                          const ossimDpt& point)const
 {
    ossimFeatherInputInformation& info = theInputFeatherInformation[index];
-   double result = 0.0;
-   ossimDpt delta = point-info.theCenter;
-   
-   double length1 = fabs(delta.x*info.theAxis1.x + delta.y*info.theAxis1.y)/info.theAxis1Length;
-   double length2 = fabs(delta.x*info.theAxis2.x + delta.y*info.theAxis2.y)/info.theAxis2Length;
+   const ossimDpt delta = point-info.theCenter;
+   const bool validAxis1 = std::isfinite(info.theAxis1Length) &&
+                           (info.theAxis1Length > 0.0);
+   const bool validAxis2 = std::isfinite(info.theAxis2Length) &&
+                           (info.theAxis2Length > 0.0);
 
-   if(length1 > length2)
+   // At coarse display scales a small projected image can collapse to one
+   // pixel after getValidImageVertices rounds to integer view coordinates.
+   // It must still contribute to the mosaic instead of producing NaN weights.
+   if(!validAxis1 && !validAxis2)
    {
-      result = (1.0 - length1);
+      return 1.0;
    }
-   else
+
+   double normalizedDistance = 0.0;
+   if(validAxis1)
    {
-      result = (1.0 - length2);
+      normalizedDistance = fabs(delta.x*info.theAxis1.x +
+                                delta.y*info.theAxis1.y)/info.theAxis1Length;
    }
-   if(result < 0) result = 0;
-   
-   return result;
+   if(validAxis2)
+   {
+      const double distance2 = fabs(delta.x*info.theAxis2.x +
+                                    delta.y*info.theAxis2.y)/info.theAxis2Length;
+      normalizedDistance = validAxis1 ?
+         std::max(normalizedDistance, distance2) : distance2;
+   }
+   if(!std::isfinite(normalizedDistance))
+   {
+      return 1.0;
+   }
+   return std::max(0.0, std::min(1.0, 1.0-normalizedDistance));
 }
 
 void ossimFeatherMosaic::initialize()
@@ -432,12 +576,17 @@ void ossimFeatherMosaic::ossimFeatherInputInformation::setVertexList(const std::
          ossimDpt edgeDirection1 = validVertices[1] - validVertices[0];
          ossimDpt edgeDirection2 = validVertices[2] - validVertices[1];
 
-         theAxis1 = ossimDpt(-edgeDirection1.y, edgeDirection1.x);
-         
-         theAxis2 = ossimDpt(-edgeDirection2.y, edgeDirection2.x);
+         const double edgeLength1 = edgeDirection1.length();
+         const double edgeLength2 = edgeDirection2.length();
+         if((edgeLength1 <= 0.0) || (edgeLength2 <= 0.0))
+         {
+            theAxis1Length = 0.0;
+            theAxis2Length = 0.0;
+            return;
+         }
 
-         theAxis1 = theAxis1/theAxis1.length();
-         theAxis2 = theAxis2/theAxis2.length();
+         theAxis1 = ossimDpt(-edgeDirection1.y, edgeDirection1.x)/edgeLength1;
+         theAxis2 = ossimDpt(-edgeDirection2.y, edgeDirection2.x)/edgeLength2;
 
          ossimLine line1(theCenter,
                          theCenter + theAxis1*2);
@@ -452,8 +601,8 @@ void ossimFeatherMosaic::ossimFeatherInputInformation::setVertexList(const std::
          ossimDpt intersectionPoint2 = line3.intersectInfinite(line4);
 
          
-         theAxis1Length = ossim::round<int>((theCenter-intersectionPoint1).length());
-         theAxis2Length = ossim::round<int>((theCenter-intersectionPoint2).length());
+         theAxis1Length = (theCenter-intersectionPoint1).length();
+         theAxis2Length = (theCenter-intersectionPoint2).length();
 
           if(traceDebug())
           {

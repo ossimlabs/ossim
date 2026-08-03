@@ -284,6 +284,7 @@ void ossimImageCombiner::initialize()
    ossim_uint32 size = getNumberOfInputs();
    ossimScalarType scalarType = OSSIM_SCALAR_UNKNOWN;
    ossim_uint32 scalarSizeInBytes = 0;
+   ossim_uint32 scalarBits = 0;
    theInputToPassThrough = 0;
    theHasDifferentInputs= false;
    if(size > 0)
@@ -305,15 +306,23 @@ void ossimImageCombiner::initialize()
                {
                   scalarType = current;
                   scalarSizeInBytes = ossim::scalarSizeInBytes(scalarType);
+                  scalarBits = ossim::getActualBitsPerPixel(scalarType);
                   theInputToPassThrough = idx;
                }
                else
                {
                   theHasDifferentInputs = true;
-                  if(scalarSizeInBytes < ossim::scalarSizeInBytes(current))
+                  const ossim_uint32 currentSizeInBytes =
+                     ossim::scalarSizeInBytes(current);
+                  const ossim_uint32 currentBits =
+                     ossim::getActualBitsPerPixel(current);
+                  if((scalarSizeInBytes < currentSizeInBytes) ||
+                     ((scalarSizeInBytes == currentSizeInBytes) &&
+                      (scalarBits < currentBits)))
                   {
                      scalarType        = current;
-                     scalarSizeInBytes = ossim::scalarSizeInBytes(current);
+                     scalarSizeInBytes = currentSizeInBytes;
+                     scalarBits        = currentBits;
                      theInputToPassThrough = idx;
                   }
                }
