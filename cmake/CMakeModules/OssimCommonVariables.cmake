@@ -106,7 +106,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
         # (but later on when installing)
         SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
 
-        SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}")
+        SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib64;${CMAKE_INSTALL_PREFIX}/lib")
 
         # add the automatically determined parts of the RPATH
         # which point to directories outside the build tree to the install RPATH
@@ -117,7 +117,7 @@ MACRO(OSSIM_ADD_COMMON_SETTINGS)
         LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
 
         IF("${isSystemDir}" STREQUAL "-1")
-           SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}")
+           SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib64;${CMAKE_INSTALL_PREFIX}/lib")
         ENDIF("${isSystemDir}" STREQUAL "-1")
         SET(TEMP_CMAKE_OSX_ARCHITECTURES "")
         SET(CMAKE_OSX_SYSROOT "${CMAKE_OSX_SYSROOT}")
