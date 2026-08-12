@@ -14,7 +14,7 @@
 #include <ossim/support_data/ossimNitfXmlTag.h>
 #include <iomanip>
 #include <sstream>
-#include <base/ossimPreferences.h>
+#include <ossim/base/ossimPreferences.h>
 
 ossimNitfXmlTag::ossimNitfXmlTag(ossimString tagName)
    : ossimNitfRegisteredTag(tagName, 0)

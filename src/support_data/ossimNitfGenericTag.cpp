@@ -13,8 +13,8 @@
 #include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/base/ossimKeywordlist.h>
 #include <ossim/base/ossimNotify.h>
-#include <base/ossimException.h>
-#include <base/ossimTrace.h>
+#include <ossim/base/ossimException.h>
+#include <ossim/base/ossimTrace.h>
 
 #include <istream>
 #include <iostream>
