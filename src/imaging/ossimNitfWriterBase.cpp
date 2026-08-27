@@ -265,16 +265,11 @@ void ossimNitfWriterBase::writeGeometry(ossimNitfImageHeaderV2_X* hdr,
          }
       }
 
-#if 0 /* Moved to addImageHeaderProperties */
-      if ( m_imageHeaderProps.size() )
-      {
-         const auto& cv = m_imageHeaderProps;
-         for ( auto&& i : cv )
-         {
-            hdr->setProperty( i );
-         }
-      }
-#endif
+      // Apply explicit image-header overrides after geometry has been
+      // generated.  This allows specialized writers to intentionally replace
+      // fields such as ICORDS/IGEOLO without changing the generic geometry
+      // handling above.
+      addImageHeaderProperties(hdr);
       
    } // matches: if (hdr && seq)
 }

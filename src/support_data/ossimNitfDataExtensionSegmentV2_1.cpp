@@ -177,9 +177,10 @@ void ossimNitfDataExtensionSegmentV2_1::writeStream(std::ostream &out)
       }
 
       out.write(theLengthOfUserDefinedSubheaderFields, 4);
-      for (unsigned int i = 0; i < theUserDefinedSubheaderFields.size(); i++)
+      if (!theUserDefinedSubheaderFields.empty())
       {
-         out.write(reinterpret_cast<char*>(&theUserDefinedSubheaderFields.front()), theUserDefinedSubheaderFields.size());
+         out.write(reinterpret_cast<const char*>(&theUserDefinedSubheaderFields.front()),
+                   theUserDefinedSubheaderFields.size());
       }
 
       if (overflow && theTagList.empty() == false)

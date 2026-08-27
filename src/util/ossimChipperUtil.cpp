@@ -1166,7 +1166,7 @@ ossimRefPtr<ossimImageSource> ossimChipperUtil::initializeChain(ossimIrect &aoi)
       if ((getOutputScalarType() != OSSIM_SCALAR_UNKNOWN) &&
           (source->getOutputScalarType() != getOutputScalarType()))
       {
-         // source = addScalarRemapper(source, getOutputScalarType());
+         source = addScalarRemapper(source, getOutputScalarType());
       }
 
       //---
