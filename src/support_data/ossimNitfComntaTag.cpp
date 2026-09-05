@@ -22,6 +22,32 @@
 #include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/support_data/ossimNitfCommonFieldNames.h>
 
+namespace
+{
+//---
+// ossimNitfInfo::getKeywordlist() round-trips print() output back through
+// ossimKeywordlist::parseStream(), which is line oriented. A COMNTA comment is
+// free text and routinely contains newlines (e.g. a multi-line license), which
+// would terminate the value early and discard every tag printed after this one.
+// Escape them so the value stays on one line.
+//---
+std::string escapeNewlines(const std::string& text)
+{
+   std::string out;
+   out.reserve(text.size());
+   for (char c : text)
+   {
+      if (c == '\n')
+         out += "\\n";
+      else if (c == '\r')
+         out += "\\r";
+      else
+         out += c;
+   }
+   return out;
+}
+}
+
 ossimNitfComntaTag::ossimNitfComntaTag()
    : ossimNitfRegisteredTag("COMNTA", 0)
 {
@@ -98,7 +124,7 @@ std::ostream& ossimNitfComntaTag::print(std::ostream& out,
        << pfx << std::setw(24) << "CEL:"
        << getTagLength() << "\n"
        << pfx << std::setw(24) << "Comment:"
-       << comment << "\n";
+       << escapeNewlines(comment) << "\n";
 
    return out;
 }
