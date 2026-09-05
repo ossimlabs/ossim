@@ -81,7 +81,11 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
          //{ossim::nitf::UBOUND_KW, 7, 3, 5},
          {ossim::nitf::SCALE_FACTOR_KW, 4, 0, 0, "1"},
          {ossim::nitf::ADDITIVEFACTOR_KW, 4, 0, 0, "0"},
-         {ossim::nitf::START_TIME_KW, 16, 1},
+         // START_TIMEn is BCS-N, format YYMMDDhhmmss.sss (STDI-0002 Vol 1 App X) -
+         // it contains a decimal point, so it cannot be parsed as an unsigned
+         // integer (U_INT saturates to UINT32_MAX). Treat it as ASCII so the
+         // already-formatted 16-character string passes through verbatim.
+         {ossim::nitf::START_TIME_KW, 16, 0},
          {ossim::nitf::INT_TIME_KW, 6, 3, 5},
          //{ossim::nitf::CALDRK_KW, 6, 3, 5},
          //{ossim::nitf::CALIBRATIONSENSITIVITY_KW, 5, 3, 4},
