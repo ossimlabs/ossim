@@ -170,7 +170,8 @@ ossimArgumentParser::ossimArgumentParser(int* argc,char **argv):
    theArgc(argc),
    theArgv(argv),
    theUsage(ossimApplicationUsage::instance()),
-   theMemAllocated(false)
+   theMemAllocated(false),
+   theArgcAllocated(false)
 {
    if (theArgc)
       theUsage->setApplicationName(argv[0]);
@@ -180,7 +181,8 @@ ossimArgumentParser::ossimArgumentParser(const ossimString& commandLine):
    theArgc(new int),
    theArgv(0),
    theUsage(ossimApplicationUsage::instance()),
-   theMemAllocated(true)
+   theMemAllocated(true),
+   theArgcAllocated(true)
 {
    vector<ossimString> args = commandLine.split(" ", true);
    *theArgc = (int)args.size();
@@ -205,8 +207,9 @@ ossimArgumentParser::~ossimArgumentParser()
       for (int i=0; i<*theArgc; ++i)
          delete [] theArgv[i];
       delete [] theArgv;
-      delete theArgc;
    }
+   if (theArgcAllocated)
+      delete theArgc;
 }
 
 void ossimArgumentParser::initialize(int* argc, const char **argv)
@@ -306,13 +309,35 @@ void ossimArgumentParser::insert(int pos, const ossimString& argstr)
    int new_argc = *theArgc + (int)components.size();
    char** new_argv = new char*[new_argc];
 
+   //---
+   // This function sets theMemAllocated below, and the destructor then frees
+   // EVERY element of theArgv. So the new array must own every element it
+   // holds.
+   //
+   // When the parser was constructed from main()'s argv -- the usual case --
+   // those strings belong to the process, not to us. Copying the pointers and
+   // then claiming ownership made the destructor delete[] memory it never
+   // allocated, so any call to insert() aborted the process at exit. They are
+   // therefore duplicated here. When theMemAllocated is already set the
+   // elements are ours from a previous insert(), and re-duplicating them would
+   // leak the originals, so they are moved across as-is.
+   //---
+   const bool elementsAlreadyOwned = theMemAllocated;
+
    // First copy the original list, leaving space for the new components:
    int j = 0;
    for (int i=0; i<*theArgc; ++i)
    {
       if (j == pos)
          j += (int)components.size();
-      new_argv[j] = theArgv[i];
+      if (elementsAlreadyOwned || (theArgv[i] == 0))
+      {
+         new_argv[j] = theArgv[i];
+      }
+      else
+      {
+         new_argv[j] = ossimString(theArgv[i]).stringDup();
+      }
       ++j;
    }
 

@@ -1,6 +1,7 @@
 # $Id: CMakeLists.txt 23496 2015-08-28 15:26:18Z okramer $
 
 # Remainder to be built but not installed
+OSSIM_SETUP_APPLICATION(ossim-argument-parser-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-argument-parser-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-byte-stream-buffer-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-byte-stream-buffer-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-csv-file-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-csv-file-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-date-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-date-test.cpp)
