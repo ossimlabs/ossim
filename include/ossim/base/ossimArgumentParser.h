@@ -242,7 +242,15 @@ protected:
    char**                   theArgv;
    ossimErrorMessageMap     theErrorMessageMap;
    ossimApplicationUsage*   theUsage;
+   //---
+   // theMemAllocated covers the argv ARRAY and its elements. theArgcAllocated
+   // covers the argc int separately, because insert() can take ownership of
+   // the former without owning the latter: a parser built from main()'s argv
+   // points theArgc at the caller's stack variable, and deleting that aborted
+   // the process.
+   //---
    bool                     theMemAllocated;
+   bool                     theArgcAllocated;
         
 };
 

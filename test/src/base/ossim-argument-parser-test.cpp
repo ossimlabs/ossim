@@ -73,6 +73,39 @@ int main(int argc, char *argv[])
       fail();
 
 
+   //---
+   // insert() must leave the parser owning every element it will later free.
+   //
+   // Built from a main()-style argv -- the usual case -- the original strings
+   // belong to the process. insert() copied those pointers into its new array
+   // and then set its "memory allocated" flag, so the destructor delete[]'d
+   // memory it never allocated and the process aborted at exit. Any use of
+   // insert() did this.
+   //
+   // The parser below is SCOPED so its destructor runs here. Every test above
+   // ends at exit(), which skips destructors, so none of them could have
+   // caught this no matter what they asserted.
+   //---
+   {
+      char* ins_argv[] = { argv[0], (char*)"keep1", (char*)"keep2" };
+      int ins_argc = SizeOfArray(ins_argv);
+      ossimArgumentParser ins_ap (&ins_argc, ins_argv);
+
+      ins_ap.insert(1, "--flag value");
+
+      if (ins_ap.argc() != 5)
+         fail();
+      if ((strcmp(ins_ap[1], "--flag") != 0) || (strcmp(ins_ap[2], "value") != 0))
+         fail();
+      if ((strcmp(ins_ap[3], "keep1") != 0) || (strcmp(ins_ap[4], "keep2") != 0))
+         fail();
+
+      std::string ins_val;
+      if ( !ins_ap.read("--flag", ins_val) || (ins_val != "value") )
+         fail();
+   }  // <-- destructor runs HERE; before the fix this aborted the process
+
+
    cout<<"\nPASSED ossimArgumentParser TEST"<<endl;
    exit(0);
 }
