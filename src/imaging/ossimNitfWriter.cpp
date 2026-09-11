@@ -164,12 +164,13 @@ bool ossimNitfWriter::writeFile()
    writeGeometry(m_imageHeader.get(), theInputConnection.get());
 
    //---
-   // Apply anything set through setFileHeaderProperty() and
-   // setImageHeaderProperty().  Must happen before the headers are
-   // serialised.
+   // File-header properties.  Safe here: nothing below resets a field the
+   // caller can set, and the header object carries them into every
+   // serialisation, including the final rewrite that fixes up the lengths.
+   // The IMAGE header's are applied later, next to each writeStream, because
+   // the per-path defaults would otherwise overwrite them.
    //---
    addFileHeaderProperties( m_fileHeader.get() );
-   addImageHeaderProperties( m_imageHeader.get() );
 
    // addStandardTags();
    
@@ -428,6 +429,14 @@ bool ossimNitfWriter::writeBlockBandSeparate()
    }
 
    ossim_uint64 imageHeaderStart = m_str->tellp();
+   //---
+   // Caller properties are an OVERRIDE, so they are applied here -- after
+   // the defaults above and immediately before serialisation -- not
+   // earlier.  A writer cannot know the spectral nature of a single band
+   // and defaults ICAT accordingly; an explicit ICAT from the caller has
+   // to win over that guess.
+   //---
+   addImageHeaderProperties( m_imageHeader.get() );
    m_imageHeader->writeStream( *m_str );
    ossim_uint64 imageHeaderEnd = m_str->tellp();
    ossim_uint64 imageHeaderSize = imageHeaderEnd - imageHeaderStart;
@@ -639,6 +648,14 @@ bool ossimNitfWriter::writeBlockBandSequential()
    }
 
    ossim_uint64 imageHeaderStart = m_str->tellp();
+   //---
+   // Caller properties are an OVERRIDE, so they are applied here -- after
+   // the defaults above and immediately before serialisation -- not
+   // earlier.  A writer cannot know the spectral nature of a single band
+   // and defaults ICAT accordingly; an explicit ICAT from the caller has
+   // to win over that guess.
+   //---
+   addImageHeaderProperties( m_imageHeader.get() );
    m_imageHeader->writeStream( *m_str );
    ossim_uint64 imageHeaderEnd = m_str->tellp();
    ossim_uint64 imageHeaderSize = imageHeaderEnd - imageHeaderStart;
