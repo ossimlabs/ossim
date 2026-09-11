@@ -130,6 +130,15 @@ bool ossimNitf20Writer::writeFile()
 
    // Write out the geometry info.
    writeGeometry(theImageHeader.get(), theInputConnection.get());
+
+   //---
+   // File-header properties.  Safe here: nothing below resets a field the
+   // caller can set, and the header object carries them into every
+   // serialisation, including the final rewrite that fixes up the lengths.
+   // The IMAGE header's are applied later, next to each writeStream, because
+   // the per-path defaults would otherwise overwrite them.
+   //---
+   addFileHeaderProperties( theFileHeader.get() );
    
    addTags();
    
@@ -343,6 +352,14 @@ bool ossimNitf20Writer::writeBlockBandSeparate()
    }
 
    ossim_uint64 imageHeaderStart = theOutputStream->tellp();
+   //---
+   // Caller properties are an OVERRIDE, so they are applied here -- after
+   // the defaults above and immediately before serialisation -- not
+   // earlier.  A writer cannot know the spectral nature of a single band
+   // and defaults ICAT accordingly; an explicit ICAT from the caller has
+   // to win over that guess.
+   //---
+   addImageHeaderProperties( theImageHeader.get() );
    theImageHeader->writeStream(*theOutputStream);
    ossim_uint64 imageHeaderEnd = theOutputStream->tellp();
    ossim_uint64 imageHeaderSize = imageHeaderEnd - imageHeaderStart;
@@ -508,6 +525,14 @@ bool ossimNitf20Writer::writeBlockBandSequential()
    }
 
    int imageHeaderStart = theOutputStream->tellp();
+   //---
+   // Caller properties are an OVERRIDE, so they are applied here -- after
+   // the defaults above and immediately before serialisation -- not
+   // earlier.  A writer cannot know the spectral nature of a single band
+   // and defaults ICAT accordingly; an explicit ICAT from the caller has
+   // to win over that guess.
+   //---
+   addImageHeaderProperties( theImageHeader.get() );
    theImageHeader->writeStream(*theOutputStream);
    int imageHeaderEnd = theOutputStream->tellp();
    int imageHeaderSize = imageHeaderEnd - imageHeaderStart;
