@@ -163,6 +163,14 @@ bool ossimNitfWriter::writeFile()
    // Write out the geometry info.
    writeGeometry(m_imageHeader.get(), theInputConnection.get());
 
+   //---
+   // Apply anything set through setFileHeaderProperty() and
+   // setImageHeaderProperty().  Must happen before the headers are
+   // serialised.
+   //---
+   addFileHeaderProperties( m_fileHeader.get() );
+   addImageHeaderProperties( m_imageHeader.get() );
+
    // addStandardTags();
    
    bool result = false;
