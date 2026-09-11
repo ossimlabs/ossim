@@ -27,3 +27,4 @@ OSSIM_SETUP_APPLICATION(ossim-fft-test INSTALL COMMAND_LINE COMPONENT_NAME ossim
 OSSIM_SETUP_APPLICATION(ossim-feather-mosaic-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-feather-mosaic-test.cpp)
 
 OSSIM_SETUP_APPLICATION(ossim-image-handler-state-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-image-handler-state-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-nitf-writer-property-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-nitf-writer-property-test.cpp)
