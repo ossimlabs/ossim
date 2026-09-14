@@ -265,17 +265,6 @@ void ossimNitfWriterBase::writeGeometry(ossimNitfImageHeaderV2_X* hdr,
          }
       }
 
-#if 0 /* Moved to addImageHeaderProperties */
-      if ( m_imageHeaderProps.size() )
-      {
-         const auto& cv = m_imageHeaderProps;
-         for ( auto&& i : cv )
-         {
-            hdr->setProperty( i );
-         }
-      }
-#endif
-      
    } // matches: if (hdr && seq)
 }
 
