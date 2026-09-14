@@ -10,9 +10,11 @@ OSSIM_SETUP_APPLICATION(ossim-image-handler-test INSTALL COMMAND_LINE COMPONENT_
 OSSIM_SETUP_APPLICATION(ossim-image-writer-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-image-writer-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-index-to-rgb-lut-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-index-to-rgb-lut-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-histogram-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-histogram-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-image-handler-state-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-image-handler-state-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-linear-stretch-remapper-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-linear-stretch-remapper-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-loadtile-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-loadtile-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-mask-filter-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-mask-filter-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-nitf-writer-property-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-nitf-writer-property-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-piecewise-remapper-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-piecewise-remapper-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-pixel-flipper-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-pixel-flipper-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-range-dome-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-range-dome-test.cpp)
@@ -26,5 +28,5 @@ OSSIM_SETUP_APPLICATION(ossim-kmeans-filter-test INSTALL COMMAND_LINE COMPONENT_
 OSSIM_SETUP_APPLICATION(ossim-fft-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-fft-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-feather-mosaic-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-feather-mosaic-test.cpp)
 
-OSSIM_SETUP_APPLICATION(ossim-image-handler-state-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-image-handler-state-test.cpp)
-OSSIM_SETUP_APPLICATION(ossim-nitf-writer-property-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-nitf-writer-property-test.cpp)
+
+
