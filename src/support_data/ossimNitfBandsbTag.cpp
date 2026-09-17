@@ -131,7 +131,8 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
          {ossim::nitf::COUNT_KW, LOOP_START},
             {ossim::nitf::BAPF_KW + "m I =", IF_STATEMENT_START},
                {ossim::nitf::APN_KW, 10, 1},
-               {ossim::nitf::APR_KW, 4, 0},
+               // APRmn is "Auxiliary Parameter Real Value", 4-byte IEEE 754-2008.
+               {ossim::nitf::APR_KW, 4, IEEE_FLOAT},
                {ossim::nitf::APA_KW, 20, 0},
             {ossim::nitf::BAPF_KW + "m I =", IF_STATEMENT_END},
          {"End of the number of bands loop", LOOP_END},
@@ -143,7 +144,8 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
             {ossim::nitf::APN_KW, 10, 0},
          {ossim::nitf::CAPF_KW + "k I =", IF_STATEMENT_END},
          {ossim::nitf::CAPF_KW + "k R =", IF_STATEMENT_START},
-            {ossim::nitf::APR_KW, 4, 0},
+            // APRmn: 4-byte IEEE 754-2008, same as the per-band copy above.
+            {ossim::nitf::APR_KW, 4, IEEE_FLOAT},
          {ossim::nitf::CAPF_KW + "k R =", IF_STATEMENT_END},
          {ossim::nitf::CAPF_KW + "k A =", IF_STATEMENT_START},
             {ossim::nitf::APA_KW, 20, 0},
