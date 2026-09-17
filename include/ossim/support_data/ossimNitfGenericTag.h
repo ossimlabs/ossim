@@ -84,7 +84,13 @@ protected:
       INT = 2,
       U_DOUBLE = 3,
       DOUBLE = 4,
-      SCIENTIFIC = 5
+      SCIENTIFIC = 5,
+      // 4-byte big-endian IEEE 754-2008 binary32, written as raw bytes rather
+      // than as text. STDI-0002 marks such fields "IEEE 754-2008" in the C-Set
+      // column (BANDSB's SCALE FACTOR / ADDITIVE FACTOR, for instance). Before
+      // this existed they fell to the ASCII default and were space-padded, so
+      // "1" shipped as 0x31202020 -- which reads back as 2.33e-09, not 1.0.
+      IEEE_FLOAT = 6
 
    };
 };

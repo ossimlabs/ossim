@@ -23,6 +23,10 @@
 #include <map>
 #include <utility>
 #include <stack>
+#include <cstring>
+#include <set>
+#include <cctype>
+#include <cmath>
 
 static ossimTrace traceDebug("ossimNitfGenericDes:debug");
 
@@ -371,6 +375,53 @@ void ossimNitfGenericDes::loopLogic(ossim_int32 &i, std::vector<std::vector<ossi
     }
 }
 
+namespace
+{
+// STDI-0002 "IEEE 754-2008" fields are 4-byte binary32 in NITF byte order
+// (big-endian), not text. Returned as a 4-character string so it flows through
+// the same map and the same out.write(ptr, length) as every other field;
+// std::string carries embedded nulls safely, which matters because the common
+// default 0.0 is 0x00000000.
+ossimString toIeee754Binary32(double value)
+{
+   ossim_uint32 bits;
+   if (std::isnan(value))
+   {
+      // Emit the canonical quiet NaN. ossimString::toFloat64("nan") yields a
+      // NaN whose payload bits are all set (0xFFFFFFFF as binary32), which is
+      // a legal NaN but not the 0x7FC00000 the spec names, and a reader that
+      // compares bit patterns rather than calling isnan() would miss it.
+      bits = 0x7FC00000u;
+   }
+   else
+   {
+      float f = static_cast<float>(value);
+      std::memcpy(&bits, &f, 4);
+   }
+
+   std::string out(4, '\0');
+   out[0] = static_cast<char>((bits >> 24) & 0xFF);
+   out[1] = static_cast<char>((bits >> 16) & 0xFF);
+   out[2] = static_cast<char>((bits >> 8) & 0xFF);
+   out[3] = static_cast<char>(bits & 0xFF);
+   return ossimString(out);
+}
+
+// Inverse, for print()/getKwl() so a binary field stays readable.
+double fromIeee754Binary32(const ossimString& raw)
+{
+   if (raw.size() < 4)
+      return 0.0;
+   ossim_uint32 bits = (static_cast<ossim_uint32>(static_cast<unsigned char>(raw[0])) << 24) |
+                       (static_cast<ossim_uint32>(static_cast<unsigned char>(raw[1])) << 16) |
+                       (static_cast<ossim_uint32>(static_cast<unsigned char>(raw[2])) << 8) |
+                       (static_cast<ossim_uint32>(static_cast<unsigned char>(raw[3])));
+   float f;
+   std::memcpy(&f, &bits, 4);
+   return f;
+}
+}
+
 ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& fieldValue) const
 {
    ossimString result = fieldValue;
@@ -426,6 +477,10 @@ ossimString ossimNitfGenericDes::formatField(int definition, const ossimString& 
          else
             result = "+" + ossimNitfCommon::convertToScientificString(result.toFloat64(), length - 1);
          break;
+      case IEEE_FLOAT:
+         // Raw binary32; length is always 4 per the standard.
+         result = toIeee754Binary32(result.toFloat64());
+         break;
       default:
          while ((ossim_int32)result.length() < length)
             result = result + ' ';
@@ -473,7 +528,12 @@ void ossimNitfGenericDes::parseStream(std::istream &in)
          //Unique actions for parseStream
          in.read(fieldContentsBuffer, fieldLength);
          fieldContentsBuffer[fieldLength] = '\0';
-         m_fields_map.insert(std::pair<ossimString, ossimString>(generatedFieldName, fieldContentsBuffer));
+         // Construct with an explicit length rather than from the char*: an
+         // IEEE_FLOAT field holds raw binary and 0.0 is four NUL bytes, which
+         // a C-string conversion would truncate to "" -- and a later write
+         // would then read past the end of that empty buffer.
+         m_fields_map.insert(std::pair<ossimString, ossimString>(
+            generatedFieldName, ossimString(std::string(fieldContentsBuffer, fieldLength))));
          i++;
       }
    }
@@ -744,9 +804,27 @@ ossim_uint32 ossimNitfGenericDes::getDesDataLength() const
 
 std::ostream& ossimNitfGenericDes::printMap(std::ostream& out ) const
 {
+   // IEEE_FLOAT fields hold raw binary, so print the number they encode rather
+   // than four unprintable bytes. Looped fields carry a numeric suffix in the
+   // map key (SCALE_FACTOR2), which the definition name does not, so compare
+   // against the key with trailing digits removed.
+   std::set<std::string> ieeeFields;
+   for ( const auto& def : FIELD_DEFINITIONS )
+   {
+      if ( def.dataFormat == IEEE_FLOAT )
+         ieeeFields.insert( def.field.string() );
+   }
+
    for ( const auto& i : m_fields_map )
    {
-      out << i.first << ": " << i.second << "\n";
+      std::string base = i.first.string();
+      while ( !base.empty() && std::isdigit( static_cast<unsigned char>( base.back() ) ) )
+         base.pop_back();
+
+      if ( ieeeFields.count( base ) )
+         out << i.first << ": " << fromIeee754Binary32( i.second ) << "\n";
+      else
+         out << i.first << ": " << i.second << "\n";
    }
    out << std::endl;
    return out;
