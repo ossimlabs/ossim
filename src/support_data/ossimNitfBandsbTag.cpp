@@ -49,7 +49,13 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
    {
       {ossim::nitf::COUNT_KW, 5, 1},
       {ossim::nitf::RADIOMETRICQUANTITY_KW, 24, 0, 0, "UNCALIBRATED"},
-      {ossim::nitf::RADIOMETRICQUANTITY_UNIT_KW, 1, 0, 0, "U"},
+      // "N" (none), not "U". STDI-0002 Vol 1 App X Table X.6-1 pairs the
+      // RADIOMETRICQUANTITY default above ("UNCALIBRATED") with V, D or N
+      // only; "U" is spectral radiance in uW cm-2 sr-1 um-1, so the two
+      // defaults shipped together described a quantity in units that
+      // cannot express it. "N" is the neutral choice -- a writer that
+      // knows its pixels are volts or digital numbers should set V or D.
+      {ossim::nitf::RADIOMETRICQUANTITY_UNIT_KW, 1, 0, 0, "N"},
       {ossim::nitf::SCALE_FACTOR_KW, 4, 0, 0, "1"},
       {ossim::nitf::ADDITIVEFACTOR_KW, 4, 0, 0, "0"},
       {ossim::nitf::ROW_GSD_KW, 7, 3, 3},
