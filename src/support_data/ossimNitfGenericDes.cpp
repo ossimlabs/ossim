@@ -623,14 +623,22 @@ std::ostream &ossimNitfGenericDes::print(std::ostream &out, const std::string &p
             generatedFieldName = FIELD_DEFINITIONS[i].field + formatSuffix(suffix);
          }
          //Unique print actions
-         out << std::setiosflags(std::ios::left)
-             << pfx << std::setw(24) << generatedFieldName << ":"
-             << lookupFieldOrDefault(
-                   m_fields_map,
-                   generatedFieldName,
-                   get_desid(),
-                   "printing field",
-                   "") << "\n";
+         {
+            ossimString printValue = lookupFieldOrDefault(
+               m_fields_map,
+               generatedFieldName,
+               get_desid(),
+               "printing field",
+               "");
+            // See the Tag twin: raw IEEE binary would truncate the stream at
+            // its first NUL byte and swallow every later key.
+            if (FIELD_DEFINITIONS[i].dataFormat == IEEE_FLOAT)
+               printValue = ossimString::toString(fromIeee754Binary32(printValue));
+
+            out << std::setiosflags(std::ios::left)
+                << pfx << std::setw(24) << generatedFieldName << ":"
+                << printValue << "\n";
+         }
          i++;
       }
    }
@@ -644,7 +652,21 @@ void ossimNitfGenericDes::clearFields()
 
 ossimString ossimNitfGenericDes::get(const ossimString& fieldName)
 {
-   return lookupFieldOrDefault(m_fields_map, fieldName, get_desid(), "reading field", "");
+   ossimString value = lookupFieldOrDefault(m_fields_map, fieldName, get_desid(), "reading field", "");
+
+   // Hand back the number, not the four raw bytes. Callers treat this as
+   // text -- printing it, comparing it, putting it in a keywordlist -- and
+   // an IEEE_FLOAT value of 0.0 is NULs that would truncate any of those.
+   // setField() re-encodes on the way in, so get/set still round-trips.
+   std::string base = fieldName.string();
+   while (!base.empty() && std::isdigit(static_cast<unsigned char>(base.back())))
+      base.pop_back();
+   for (const auto& def : FIELD_DEFINITIONS)
+   {
+      if (def.dataFormat == IEEE_FLOAT && def.field.string() == base)
+         return ossimString::toString(fromIeee754Binary32(value));
+   }
+   return value;
 }
 
 void ossimNitfGenericDes::setField(const ossimString& fieldName, const ossimString& fieldValue)

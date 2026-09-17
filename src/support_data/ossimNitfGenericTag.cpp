@@ -615,14 +615,24 @@ std::ostream &ossimNitfGenericTag::print(std::ostream &out, const std::string &p
          }
          //Unique print actions
          if (generatedFieldName != "EXISTENCE_MASK")
+         {
+            ossimString printValue = lookupFieldOrDefault(
+               m_fields_map,
+               generatedFieldName,
+               getTagName(),
+               "printing field",
+               "");
+            // An IEEE_FLOAT field holds raw binary, and 0.0 is four NUL bytes.
+            // Streaming that verbatim truncates the caller's output at the
+            // first NUL -- ossim-info loses every key after it, which reads
+            // exactly like a TRE the parser could not decode. Print the number.
+            if (FIELD_DEFINITIONS[i].dataFormat == IEEE_FLOAT)
+               printValue = ossimString::toString(fromIeee754Binary32(printValue));
+
             out << std::setiosflags(std::ios::left)
                 << pfx << std::setw(24) << generatedFieldName << ":"
-                << lookupFieldOrDefault(
-                      m_fields_map,
-                      generatedFieldName,
-                      getTagName(),
-                      "printing field",
-                      "") << "\n";
+                << printValue << "\n";
+         }
          i++;
       }
    }
@@ -636,7 +646,21 @@ void ossimNitfGenericTag::clearFields()
 
 ossimString ossimNitfGenericTag::get(const ossimString& fieldName)
 {
-   return lookupFieldOrDefault(m_fields_map, fieldName, getTagName(), "reading field", "");
+   ossimString value = lookupFieldOrDefault(m_fields_map, fieldName, getTagName(), "reading field", "");
+
+   // Hand back the number, not the four raw bytes. Callers treat this as
+   // text -- printing it, comparing it, putting it in a keywordlist -- and
+   // an IEEE_FLOAT value of 0.0 is NULs that would truncate any of those.
+   // setField() re-encodes on the way in, so get/set still round-trips.
+   std::string base = fieldName.string();
+   while (!base.empty() && std::isdigit(static_cast<unsigned char>(base.back())))
+      base.pop_back();
+   for (const auto& def : FIELD_DEFINITIONS)
+   {
+      if (def.dataFormat == IEEE_FLOAT && def.field.string() == base)
+         return ossimString::toString(fromIeee754Binary32(value));
+   }
+   return value;
 }
 
 void ossimNitfGenericTag::setField(const ossimString& fieldName, const ossimString& fieldValue)
