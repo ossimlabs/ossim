@@ -50,7 +50,13 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
             {ossim::nitf::INTERP_ORDER_ATT_KW, 1, 1},
          {ossim::nitf::INTERP_TYPE_ATT_KW + " 1 >", IF_STATEMENT_END},
          {ossim::nitf::ATT_TYPE_KW, 1, 1},
-         {ossim::nitf::ECI_ECF_ATT_KW, 1, 1},
+         // Default "1" (ECF), matching the ECI_ECF_EPHEM_KW line in
+         // ossimNitfCsephbDes.cpp. Added in 67b022a8 and lost in 45272891
+         // when the literal field name became the KW constant, which
+         // silently flipped every CSATTB to "0" (ECI). With DESVER=01 that
+         // tells a consumer the dataset cannot be mensurated -- STDI-0002
+         // Vol 2 App M.
+         {ossim::nitf::ECI_ECF_ATT_KW, 1, 1, 0, "1"},
          /*{"ECI_ECF_ATT 0 = DESVER 1 > &", IF_STATEMENT_START}, Assuming desver 1
             {"TA_POLE", 19, 3, 11},
             {"A_POLE", 11, 4, 8},

@@ -49,9 +49,19 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
    {
       {ossim::nitf::COUNT_KW, 5, 1},
       {ossim::nitf::RADIOMETRICQUANTITY_KW, 24, 0, 0, "UNCALIBRATED"},
-      {ossim::nitf::RADIOMETRICQUANTITY_UNIT_KW, 1, 0, 0, "U"},
-      {ossim::nitf::SCALE_FACTOR_KW, 4, 0, 0, "1"},
-      {ossim::nitf::ADDITIVEFACTOR_KW, 4, 0, 0, "0"},
+      // "N" (none), not "U". STDI-0002 Vol 1 App X Table X.6-1 pairs the
+      // RADIOMETRICQUANTITY default above ("UNCALIBRATED") with V, D or N
+      // only; "U" is spectral radiance in uW cm-2 sr-1 um-1, so the two
+      // defaults shipped together described a quantity in units that
+      // cannot express it. "N" is the neutral choice -- a writer that
+      // knows its pixels are volts or digital numbers should set V or D.
+      {ossim::nitf::RADIOMETRICQUANTITY_UNIT_KW, 1, 0, 0, "N"},
+      // 4-byte IEEE 754-2008 binary32, NOT text. The spec gives these two
+      // defaults as exact bytes: 0x3F800000 for "+1.00" and 0x00000000 for
+      // "+0.00". Written as ASCII they became 0x31202020 / 0x30202020, which
+      // decode to 2.33e-09 and 5.83e-10 -- finite, plausible, and wrong.
+      {ossim::nitf::SCALE_FACTOR_KW, 4, IEEE_FLOAT, 0, "1"},
+      {ossim::nitf::ADDITIVEFACTOR_KW, 4, IEEE_FLOAT, 0, "0"},
       {ossim::nitf::ROW_GSD_KW, 7, 3, 3},
       {ossim::nitf::ROW_GSD_UNIT_KW, 1, 0, 0, "M"},
       {ossim::nitf::COL_GSD_KW, 7, 3, 3},
@@ -63,7 +73,11 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
       {ossim::nitf::DATA_FLD_1_KW, 48, 0},
       {ossim::nitf::EXISTENCE_MASK_KW, 4, 0, 0, ossimString(std::string{char(159), char(199), char(16), char(0)})},//10011111 11000111 00010000 00000000
       {ossim::nitf::RADIOMETRICADJUSTMENTSURFACE_KW, 24, 0, 0, "APERTURE"},
-      {ossim::nitf::ATMOSPHERICADJUSTMENTALTITUDE_KW, 4, 0, 0, "NaN"},
+      // Also IEEE 754 binary32. The literal string "NaN" padded to 4 bytes is
+      // 0x4E614E20, which decodes to 9.45e+08 -- a plausible-looking altitude
+      // rather than the not-a-number the spec asks for. "nan" now goes through
+      // toFloat64() and comes out as a real quiet NaN.
+      {ossim::nitf::ATMOSPHERICADJUSTMENTALTITUDE_KW, 4, IEEE_FLOAT, 0, "nan"},
       //{ossim::nitf::DIAMETER_KW, 7, 3, 2},
       //{ossim::nitf::DATA_FLD_2_KW, 32, 0},
       {ossim::nitf::WAVE_LENGTH_UNIT_KW, 1, 0},
@@ -79,9 +93,14 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
          //{ossim::nitf::NOM_WAVE_UNC_KW, 7, 3, 5},
          //{ossim::nitf::LBOUND_KW, 7, 3, 5},
          //{ossim::nitf::UBOUND_KW, 7, 3, 5},
-         {ossim::nitf::SCALE_FACTOR_KW, 4, 0, 0, "1"},
-         {ossim::nitf::ADDITIVEFACTOR_KW, 4, 0, 0, "0"},
-         {ossim::nitf::START_TIME_KW, 16, 1},
+         // Per-band mn / an. Same IEEE 754 binary32 as the cube-level pair.
+         {ossim::nitf::SCALE_FACTOR_KW, 4, IEEE_FLOAT, 0, "1"},
+         {ossim::nitf::ADDITIVEFACTOR_KW, 4, IEEE_FLOAT, 0, "0"},
+         // START_TIMEn is BCS-N, format YYMMDDhhmmss.sss (STDI-0002 Vol 1 App X) -
+         // it contains a decimal point, so it cannot be parsed as an unsigned
+         // integer (U_INT saturates to UINT32_MAX). Treat it as ASCII so the
+         // already-formatted 16-character string passes through verbatim.
+         {ossim::nitf::START_TIME_KW, 16, 0},
          {ossim::nitf::INT_TIME_KW, 6, 3, 5},
          //{ossim::nitf::CALDRK_KW, 6, 3, 5},
          //{ossim::nitf::CALIBRATIONSENSITIVITY_KW, 5, 3, 4},
@@ -112,7 +131,8 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
          {ossim::nitf::COUNT_KW, LOOP_START},
             {ossim::nitf::BAPF_KW + "m I =", IF_STATEMENT_START},
                {ossim::nitf::APN_KW, 10, 1},
-               {ossim::nitf::APR_KW, 4, 0},
+               // APRmn is "Auxiliary Parameter Real Value", 4-byte IEEE 754-2008.
+               {ossim::nitf::APR_KW, 4, IEEE_FLOAT},
                {ossim::nitf::APA_KW, 20, 0},
             {ossim::nitf::BAPF_KW + "m I =", IF_STATEMENT_END},
          {"End of the number of bands loop", LOOP_END},
@@ -124,7 +144,8 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
             {ossim::nitf::APN_KW, 10, 0},
          {ossim::nitf::CAPF_KW + "k I =", IF_STATEMENT_END},
          {ossim::nitf::CAPF_KW + "k R =", IF_STATEMENT_START},
-            {ossim::nitf::APR_KW, 4, 0},
+            // APRmn: 4-byte IEEE 754-2008, same as the per-band copy above.
+            {ossim::nitf::APR_KW, 4, IEEE_FLOAT},
          {ossim::nitf::CAPF_KW + "k R =", IF_STATEMENT_END},
          {ossim::nitf::CAPF_KW + "k A =", IF_STATEMENT_START},
             {ossim::nitf::APA_KW, 20, 0},
