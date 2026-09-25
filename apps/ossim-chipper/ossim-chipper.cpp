@@ -24,7 +24,6 @@
 #include <ossim/init/ossimInit.h>
 #include <ossim/util/ossimChipperUtil.h>
 
-#include <cstdlib> /* for exit */
 #include <iomanip>
 #include <iostream>
 
@@ -43,6 +42,7 @@ int main(int argc, char* argv[])
    // ossimInit::instance()->initialize
    //---
    int originalArgCount = argc;
+   int status = 0;
    
    ossimArgumentParser ap(&argc, argv);
 
@@ -84,11 +84,18 @@ int main(int argc, char* argv[])
       catch (const ossimException& e)
       {
          ossimNotify(ossimNotifyLevel_WARN) << e.what() << std::endl;
-         exit(1);
+
+         //---
+         // Do not exit() here. exit() does not unwind the stack, so chipper
+         // would never be released, and neither would the image handlers it
+         // owns. A handler that writes a temporary file and removes it in its
+         // destructor then leaves that file behind on every failed run.
+         //---
+         status = 1;
       }
       
-   } // End: if ( ( ap.argc() > 1 ) ...
+   } // End: if ( ( ap.argc() > 1 ) ... chipper is released here.
 
-   exit(0);
+   return status;
    
 } // End of main...
