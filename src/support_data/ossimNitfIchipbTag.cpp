@@ -545,14 +545,24 @@ void ossimNitfIchipbTag::getSubImageOffset(ossimDpt& pt) const
 
 ossim2dTo2dTransform* ossimNitfIchipbTag::newTransform()const
 {
-   return new ossim2dBilinearTransform(ossimDpt(getOpCol11(), getOpRow11()),
-                                       ossimDpt(getOpCol12(), getOpRow12()),
-                                       ossimDpt(getOpCol21(), getOpRow21()),
-                                       ossimDpt(getOpCol22(), getOpRow22()),
-                                       ossimDpt(getFiCol11(), getFiRow11()),
-                                       ossimDpt(getFiCol12(), getFiRow12()),
-                                       ossimDpt(getFiCol21(), getFiRow21()),
-                                       ossimDpt(getFiCol22(), getFiRow22()));
+   //---
+   // The tag stores "Pixel is Area" (see initialize()); the transform returned
+   // is applied to ossim "Pixel is Point" image coordinates, so convert every
+   // grid point back first, as getImageRect() and getFullImageRect() do.
+   // Fitting the stored values directly is only exact for a 1:1 chip, where
+   // the half-pixel cancels; otherwise it is off by 0.5 * (1 - scale) pixels.
+   //---
+   const ossim_float64 SHIFT = 0.5;
+
+   return new ossim2dBilinearTransform(
+      ossimDpt(getOpCol11() - SHIFT, getOpRow11() - SHIFT),
+      ossimDpt(getOpCol12() - SHIFT, getOpRow12() - SHIFT),
+      ossimDpt(getOpCol21() - SHIFT, getOpRow21() - SHIFT),
+      ossimDpt(getOpCol22() - SHIFT, getOpRow22() - SHIFT),
+      ossimDpt(getFiCol11() - SHIFT, getFiRow11() - SHIFT),
+      ossimDpt(getFiCol12() - SHIFT, getFiRow12() - SHIFT),
+      ossimDpt(getFiCol21() - SHIFT, getFiRow21() - SHIFT),
+      ossimDpt(getFiCol22() - SHIFT, getFiRow22() - SHIFT));
 }
 
 bool ossimNitfIchipbTag::initFromGeometry(const ossimImageGeometry* geom)
