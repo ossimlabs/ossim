@@ -68,6 +68,20 @@ public:
    char getImageMode()const;
    ossimString getCategory()const;
    ossimString getRepresentation()const;
+
+   /**
+    * @brief IREPBANDnn a writer should use for band `band` (0-based) of an
+    * image whose IREP is `irep`, when the caller supplies nothing better.
+    *
+    * STDI-0002 / MIL-STD-2500C: R, G, B for an RGB image's three bands, M
+    * for MONO, and spaces (a valid "no representation") for anything else --
+    * never the band index, which is not a legal value and leaves readers
+    * (e.g. ossimNitfTileSource::getRgbBandList(), GDAL ColorInterp) unable to
+    * find the colour bands. A caller that knows the bands (e.g. B,G,R,N)
+    * overrides this with an "IREPBANDnnn" image header property.
+    */
+   static ossimString defaultBandRepresentation(const ossimString& irep,
+                                                ossim_uint32 band);
    ossim_uint32 getBlocksPerRow()const;
    ossim_uint32 getBlocksPerCol()const;
    ossim_uint32 getNumberOfPixelsPerBlockRow()const;
