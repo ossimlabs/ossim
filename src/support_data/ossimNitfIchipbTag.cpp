@@ -211,7 +211,7 @@ bool ossimNitfIchipbTag::initialize( const ossimDrect& opRect,
    else
    {
       //---
-      // Method converts from ossim coordinates from "Pixel is Point" to
+      // Method converts ossim coordinates from "Pixel is Point" to
       // "Pixel is Area".
       //---
       const ossim_float64 SHIFT = 0.5;
@@ -586,23 +586,29 @@ bool ossimNitfIchipbTag::initFromGeometry(const ossimImageGeometry* geom)
    double scaleFactor = sqrt(viewRect.area() / imageArea);
    std::snprintf(theScaleFactor, sizeof(theScaleFactor), "%10.5f", scaleFactor);
 
-   std::snprintf(theOpCol11, sizeof(theOpCol11), "%12.3f", viewRect.ul().x);
-   std::snprintf(theOpRow11, sizeof(theOpRow11), "%12.3f", viewRect.ul().y);
-   std::snprintf(theOpCol12, sizeof(theOpCol12), "%12.3f", viewRect.ur().x);
-   std::snprintf(theOpRow12, sizeof(theOpRow12), "%12.3f", viewRect.ur().y);
-   std::snprintf(theOpCol21, sizeof(theOpCol21), "%12.3f", viewRect.ll().x);
-   std::snprintf(theOpRow21, sizeof(theOpRow21), "%12.3f", viewRect.ll().y);
-   std::snprintf(theOpCol22, sizeof(theOpCol22), "%12.3f", viewRect.lr().x);
-   std::snprintf(theOpRow22, sizeof(theOpRow22), "%12.3f", viewRect.lr().y);
+   //---
+   // Method converts ossim coordinates from "Pixel is Point" to
+   // "Pixel is Area".
+   //---
+   const double SHIFT = 0.5;
 
-   std::snprintf(theFiCol11, sizeof(theFiCol11), "%12.3f", ul.x);
-   std::snprintf(theFiRow11, sizeof(theFiRow11), "%12.3f", ul.y);
-   std::snprintf(theFiCol12, sizeof(theFiCol12), "%12.3f", ur.x);
-   std::snprintf(theFiRow12, sizeof(theFiRow12), "%12.3f", ur.y);
-   std::snprintf(theFiCol21, sizeof(theFiCol21), "%12.3f", ll.x);
-   std::snprintf(theFiRow21, sizeof(theFiRow21), "%12.3f", ll.y);
-   std::snprintf(theFiCol22, sizeof(theFiCol22), "%12.3f", lr.x);
-   std::snprintf(theFiRow22, sizeof(theFiRow22), "%12.3f", lr.y);
+   std::snprintf(theOpCol11, sizeof(theOpCol11), "%12.3f", viewRect.ul().x + SHIFT);
+   std::snprintf(theOpRow11, sizeof(theOpRow11), "%12.3f", viewRect.ul().y + SHIFT);
+   std::snprintf(theOpCol12, sizeof(theOpCol12), "%12.3f", viewRect.ur().x + SHIFT);
+   std::snprintf(theOpRow12, sizeof(theOpRow12), "%12.3f", viewRect.ur().y + SHIFT);
+   std::snprintf(theOpCol21, sizeof(theOpCol21), "%12.3f", viewRect.ll().x + SHIFT);
+   std::snprintf(theOpRow21, sizeof(theOpRow21), "%12.3f", viewRect.ll().y + SHIFT);
+   std::snprintf(theOpCol22, sizeof(theOpCol22), "%12.3f", viewRect.lr().x + SHIFT);
+   std::snprintf(theOpRow22, sizeof(theOpRow22), "%12.3f", viewRect.lr().y + SHIFT);
+
+   std::snprintf(theFiCol11, sizeof(theFiCol11), "%12.3f", ul.x + SHIFT);
+   std::snprintf(theFiRow11, sizeof(theFiRow11), "%12.3f", ul.y + SHIFT);
+   std::snprintf(theFiCol12, sizeof(theFiCol12), "%12.3f", ur.x + SHIFT);
+   std::snprintf(theFiRow12, sizeof(theFiRow12), "%12.3f", ur.y + SHIFT);
+   std::snprintf(theFiCol21, sizeof(theFiCol21), "%12.3f", ll.x + SHIFT);
+   std::snprintf(theFiRow21, sizeof(theFiRow21), "%12.3f", ll.y + SHIFT);
+   std::snprintf(theFiCol22, sizeof(theFiCol22), "%12.3f", lr.x + SHIFT);
+   std::snprintf(theFiRow22, sizeof(theFiRow22), "%12.3f", lr.y + SHIFT);
 
    return true;
 }
