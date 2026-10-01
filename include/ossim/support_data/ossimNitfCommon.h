@@ -193,7 +193,23 @@ namespace ossim
                             const std::string& field,
                             const std::string& value,
                             ossim_uint32 field_width);
-      
+
+      /**
+       * @brief IREPBANDnn a writer should use for band `band` (0-based) of an
+       * image whose IREP is `irep`, when the caller supplies nothing better.
+       *
+       * ISO/IEC Joint BIIF Profile:
+       * @param irep R, G, B for an RGB image's three bands, M
+       * for MONO, and spaces (a valid "no representation") for anything else --
+       * never the band index, which is not a legal value and leaves readers
+       * (e.g. ossimNitfTileSource::getRgbBandList(), GDAL ColorInterp) unable to
+       * find the colour bands. A caller that knows the bands (e.g. B,G,R,N)
+       * overrides this with an "IREPBANDnnn" image header property.
+       * @param band Zero based band number.
+       * @return IREPBAND as a string.
+       */
+      ossimString defaultBandRepresentation(const ossimString& irep,
+                                            ossim_uint32 band);
    } // End: namespace ossim::nitf
    
 } // End: namespace ossim

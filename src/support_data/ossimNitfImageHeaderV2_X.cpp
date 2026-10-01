@@ -577,22 +577,6 @@ bool ossimNitfImageHeaderV2_X::loadState(const ossimKeywordlist& kwl, const char
    return true;
 }
 
-ossimString ossimNitfImageHeaderV2_X::defaultBandRepresentation(const ossimString& irep,
-                                                              ossim_uint32 band)
-{
-   const ossimString rep = ossimString(irep).trim().upcase();
-   if (rep == "RGB")
-   {
-      static const char* const RGB[] = { "R", "G", "B" };
-      return (band < 3) ? ossimString(RGB[band]) : ossimString("  ");
-   }
-   if (rep == "MONO")
-   {
-      return ossimString("M");
-   }
-   return ossimString("  ");
-}
-
 namespace
 {
    //---

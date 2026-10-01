@@ -548,3 +548,19 @@ void ossim::nitf::truncatedWarning(const char* module,
       << " field width: " << field_width << " value width: " << value.size()
       << std::endl;
 }
+
+ossimString ossim::nitf::defaultBandRepresentation(const ossimString& irep,
+                                                   ossim_uint32 band)
+{
+   const ossimString rep = ossimString(irep).trim().upcase();
+   if (rep == "RGB")
+   {
+      static const char* const RGB[] = { "R", "G", "B" };
+      return (band < 3) ? ossimString(RGB[band]) : ossimString("  ");
+   }
+   if (rep == "MONO")
+   {
+      return ossimString("M");
+   }
+   return ossimString("  ");
+}

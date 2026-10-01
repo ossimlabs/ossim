@@ -421,7 +421,7 @@ bool ossimNitfWriter::writeBlockBandSeparate()
       // A legal default, never the band index; callers override per band with
       // an IREPBANDnnn image header property (see addImageHeaderProperties).
       bandInfo.setBandRepresentation(
-         ossimNitfImageHeaderV2_X::defaultBandRepresentation(
+         ossim::nitf::defaultBandRepresentation(
             m_imageHeader->getRepresentation(), idx));
       m_imageHeader->setBandInfo(idx, bandInfo);
    }
@@ -638,7 +638,7 @@ bool ossimNitfWriter::writeBlockBandSequential()
       // A legal default, never the band index; callers override per band with
       // an IREPBANDnnn image header property (see addImageHeaderProperties).
       bandInfo.setBandRepresentation(
-         ossimNitfImageHeaderV2_X::defaultBandRepresentation(
+         ossim::nitf::defaultBandRepresentation(
             m_imageHeader->getRepresentation(), idx));
       m_imageHeader->setBandInfo(idx, bandInfo);
    }

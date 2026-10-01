@@ -17,6 +17,7 @@
 //----------------------------------------------------------------------------
 
 #include <ossim/base/ossimStringProperty.h>
+#include <ossim/support_data/ossimNitfCommon.h>
 #include <ossim/support_data/ossimNitfImageBandV2_1.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
 
@@ -51,16 +52,16 @@ namespace
 
 int main(int /*argc*/, char* /*argv*/[])
 {
-   typedef ossimNitfImageHeaderV2_X H;
+   // typedef ossimNitfImageHeaderV2_X H;
 
    // 1. Writer defaults: legal values, never the index.
-   expect(H::defaultBandRepresentation("RGB", 0), "R", "RGB band 0");
-   expect(H::defaultBandRepresentation("RGB", 1), "G", "RGB band 1");
-   expect(H::defaultBandRepresentation("RGB", 2), "B", "RGB band 2");
-   expect(H::defaultBandRepresentation("MONO", 0), "M", "MONO band 0");
-   expect(H::defaultBandRepresentation("MULTI", 0), "  ", "MULTI band 0 is blank");
-   expect(H::defaultBandRepresentation("MULTI", 3), "  ", "MULTI band 3 is blank");
-   expect(H::defaultBandRepresentation("rgb ", 2), "B", "IREP is trimmed and case-insensitive");
+   expect(ossim::nitf::defaultBandRepresentation("RGB", 0), "R", "RGB band 0");
+   expect(ossim::nitf::defaultBandRepresentation("RGB", 1), "G", "RGB band 1");
+   expect(ossim::nitf::defaultBandRepresentation("RGB", 2), "B", "RGB band 2");
+   expect(ossim::nitf::defaultBandRepresentation("MONO", 0), "M", "MONO band 0");
+   expect(ossim::nitf::defaultBandRepresentation("MULTI", 0), "  ", "MULTI band 0 is blank");
+   expect(ossim::nitf::defaultBandRepresentation("MULTI", 3), "  ", "MULTI band 3 is blank");
+   expect(ossim::nitf::defaultBandRepresentation("rgb ", 2), "B", "IREP is trimmed and case-insensitive");
 
    // 2. Per-band caller overrides, the way a writer applies them after its
    //    band loop (ossimNitfWriterBase::addImageHeaderProperties).
@@ -69,7 +70,7 @@ int main(int /*argc*/, char* /*argv*/[])
    ossimNitfImageBandV2_1 blank;
    for (ossim_uint32 i = 0; i < 4; ++i)
    {
-      blank.setBandRepresentation(H::defaultBandRepresentation("MULTI", i));
+      blank.setBandRepresentation(ossim::nitf::defaultBandRepresentation("MULTI", i));
       hdr.setBandInfo(i, blank);
    }
    hdr.setRepresentation("MULTI");
