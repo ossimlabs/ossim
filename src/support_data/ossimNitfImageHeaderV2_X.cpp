@@ -1,4 +1,5 @@
 #include <ossim/support_data/ossimNitfImageHeaderV2_X.h>
+#include <ossim/support_data/ossimNitfImageBandV2_0.h>
 
 #include <cmath> /* for fmod */
 #include <iomanip>
@@ -576,17 +577,73 @@ bool ossimNitfImageHeaderV2_X::loadState(const ossimKeywordlist& kwl, const char
    return true;
 }
 
+namespace
+{
+   //---
+   // Per-band field in a property name: "IREPBAND001", "ISUBCAT4", or the same
+   // with a prefix ("nitf.image0.IREPBAND001"). Returns the 0-based band index,
+   // or -1 when `name` does not END in `field` followed by 1-3 digits.
+   //---
+   ossim_int32 perBandIndex(const std::string& name, const std::string& field)
+   {
+      const std::string::size_type pos = name.rfind(field);
+      if (pos == std::string::npos)
+      {
+         return -1;
+      }
+      const std::string digits = name.substr(pos + field.size());
+      if (digits.empty() || digits.size() > 3 ||
+          digits.find_first_not_of("0123456789") != std::string::npos)
+      {
+         return -1;
+      }
+      const int n = std::stoi(digits);
+      return (n >= 1) ? n - 1 : -1;
+   }
+}
+
 void ossimNitfImageHeaderV2_X::setProperty(ossimRefPtr<ossimProperty> property)
 {
+   if(!property) return;
+
    ossimString name = property->getName();
 
    // Make case insensitive:
    name.upcase();
-   
+
    std::ostringstream out;
-   
-   if(!property) return;
-   
+
+   //---
+   // Per-band fields first: "IREPBANDnnn" contains "IREP" and would otherwise
+   // be taken as the image-level IREP below, overwriting e.g. MULTI with the
+   // band's value. Writers call this after their band loop (see
+   // ossimNitfWriterBase::addImageHeaderProperties), so a caller can supply the
+   // band representation and subcategory the writer cannot know.
+   //---
+   const ossim_int32 irepband = perBandIndex(name.string(), "IREPBAND");
+   const ossim_int32 isubcat  = perBandIndex(name.string(), "ISUBCAT");
+   // Any IREPBAND/ISUBCAT name is a per-band field; a malformed or
+   // out-of-range one is ignored, never passed on to the IREP match below.
+   if ( name.contains("IREPBAND") || name.contains("ISUBCAT") )
+   {
+      const ossim_int32 idx = (irepband >= 0) ? irepband : isubcat;
+      if (idx < 0)
+      {
+         return;
+      }
+      ossimRefPtr<ossimNitfImageBand> band =
+         (idx < getNumberOfBands()) ? getBandInformation(idx) : ossimRefPtr<ossimNitfImageBand>();
+      ossimNitfImageBandV2_0* b = dynamic_cast<ossimNitfImageBandV2_0*>(band.get());
+      if (b)
+      {
+         if (irepband >= 0)
+            b->setBandRepresentation(property->valueToString());
+         else
+            b->setBandSignificance(property->valueToString());
+      }
+      return;
+   }
+
    if(name.contains(IID1_KW))
    {
       setImageId(property->valueToString());

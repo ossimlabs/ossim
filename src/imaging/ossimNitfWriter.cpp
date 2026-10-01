@@ -418,13 +418,11 @@ bool ossimNitfWriter::writeBlockBandSeparate()
    ossimNitfImageBandV2_1 bandInfo;
    for(idx = 0; idx < bands; ++idx)
    {
-      std::ostringstream out;
-      
-      out << std::setfill('0')
-          << std::setw(2)
-          << idx;
-      
-      bandInfo.setBandRepresentation(out.str().c_str());
+      // A legal default, never the band index; callers override per band with
+      // an IREPBANDnnn image header property (see addImageHeaderProperties).
+      bandInfo.setBandRepresentation(
+         ossim::nitf::defaultBandRepresentation(
+            m_imageHeader->getRepresentation(), idx));
       m_imageHeader->setBandInfo(idx, bandInfo);
    }
 
@@ -637,13 +635,11 @@ bool ossimNitfWriter::writeBlockBandSequential()
    ossimNitfImageBandV2_1 bandInfo;
    for(idx = 0; idx < bands; ++idx)
    {
-      std::ostringstream out;
-      
-      out << std::setfill('0')
-          << std::setw(2)
-          << idx;
-      
-      bandInfo.setBandRepresentation(out.str().c_str());
+      // A legal default, never the band index; callers override per band with
+      // an IREPBANDnnn image header property (see addImageHeaderProperties).
+      bandInfo.setBandRepresentation(
+         ossim::nitf::defaultBandRepresentation(
+            m_imageHeader->getRepresentation(), idx));
       m_imageHeader->setBandInfo(idx, bandInfo);
    }
 
