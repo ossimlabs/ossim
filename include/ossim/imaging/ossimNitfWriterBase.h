@@ -166,6 +166,33 @@ public:
     */
    virtual void setImageHeaderProperty( ossimRefPtr<ossimProperty> property );
 
+   /**
+    * @brief Complexity level (CLEVEL) for a still image, per JBP Table G-1.
+    *
+    * A file is marked no lower than the highest feature it exceeds, so this is
+    * the highest of what the image size (the larger of rows and columns) and
+    * the file size each require:
+    *
+    * <pre>
+    *   CLEVEL   rows or columns   file size (bytes)
+    *   03       <= 2048           <= 52,428,799
+    *   05       <= 8192           <= 1,073,741,823
+    *   06       <= 65536          <= 2,147,483,647
+    *   07       <= 99,999,999     <= 10,737,418,239
+    *   09       beyond CLEVEL 07
+    * </pre>
+    *
+    * Band count, segment counts and graphic size are not considered.
+    *
+    * @param width  Image columns, or 0 if unknown.
+    * @param height Image rows, or 0 if unknown.
+    * @param fileLength File length in bytes.
+    * @return "03", "05", "06", "07" or "09".
+    */
+   static ossimString getComplexityLevel(ossim_uint64 width,
+                                         ossim_uint64 height,
+                                         ossim_uint64 fileLength);
+
 protected:
 
    /**
@@ -229,6 +256,18 @@ protected:
     */
    void setComplexityLevel(std::streamoff,
                            ossimNitfFileHeaderV2_X* hdr);
+
+   /**
+    * @brief Sets the complexity level from the file length AND the image size.
+    *
+    * @param endPosition End seek position of the file, i.e. its length.
+    * @param width  Image columns.
+    * @param height Image rows.
+    */
+   void setComplexityLevel(std::streamoff endPosition,
+                           ossimNitfFileHeaderV2_X* hdr,
+                           ossim_uint64 width,
+                           ossim_uint64 height);
 
    void setComplexityLevel(ossimNitfFileHeaderV2_X* hdr, ossim_uint64 width=0, ossim_uint64 height=0);
 

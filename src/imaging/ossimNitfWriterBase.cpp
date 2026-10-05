@@ -426,37 +426,51 @@ void ossimNitfWriterBase::addRpcbTag(const ossimIrect& rect,
    } // matches: if (proj && hdr)
 }
 
+ossimString ossimNitfWriterBase::getComplexityLevel(ossim_uint64 width,
+                                                    ossim_uint64 height,
+                                                    ossim_uint64 fileLength)
+{
+   //---
+   // JBP Table G-1 (still imagery).  File sizes are binary megabytes and
+   // gigabytes: 50 MiB - 1, 1 GiB - 1, 2 GiB - 1 and 10 GiB - 1 bytes.
+   //---
+   const ossim_uint64 MiB = 1024ULL * 1024ULL;
+   const ossim_uint64 GiB = 1024ULL * MiB;
+   const ossim_uint64 side = (width > height) ? width : height;
+
+   int bySize = 3;
+   if      (side > 99999999ULL) bySize = 9;
+   else if (side > 65536ULL)    bySize = 7;
+   else if (side > 8192ULL)     bySize = 6;
+   else if (side > 2048ULL)     bySize = 5;
+
+   int byFile = 3;
+   if      (fileLength >= 10ULL * GiB) byFile = 9;
+   else if (fileLength >= 2ULL * GiB)  byFile = 7;
+   else if (fileLength >= GiB)         byFile = 6;
+   else if (fileLength >= 50ULL * MiB) byFile = 5;
+
+   const int level = (bySize > byFile) ? bySize : byFile;
+   return (level < 10) ? ossimString("0") + ossimString::toString(level)
+                       : ossimString::toString(level);
+}
+
 void ossimNitfWriterBase::setComplexityLevel(std::streamoff endPosition,
                                              ossimNitfFileHeaderV2_X* hdr)
 {
+   // File size only: the image size is not known to this caller.
+   setComplexityLevel(endPosition, hdr, 0, 0);
+}
+
+void ossimNitfWriterBase::setComplexityLevel(std::streamoff endPosition,
+                                             ossimNitfFileHeaderV2_X* hdr,
+                                             ossim_uint64 width,
+                                             ossim_uint64 height)
+{
    if (hdr)
    {
-      //---
-      // See MIL-STD-2500C, Table A-10:
-      //
-      // Lots of rules here, but for now we will key off of file size.
-      //---
-      const std::streamoff MB   = 1024 * 1024;
-      const std::streamoff MB50 = 50   * MB;
-      const std::streamoff GIG  = 1000 * MB;
-      const std::streamoff GIG2 = 2    * GIG;
-      
-      ossimString complexity = "03"; // Less than 50 mb.
-      
-      if ( (endPosition >= MB50) && (endPosition < GIG) )
-      {
-         complexity = "05";
-      }
-      else if ( (endPosition >= GIG) && (endPosition < GIG2) )
-      {
-         complexity = "06";
-      }
-      else if (endPosition >= GIG2)
-      {
-         complexity = "07";
-      }
-      
-      hdr->setComplexityLevel(complexity);
+      hdr->setComplexityLevel(
+         getComplexityLevel(width, height, static_cast<ossim_uint64>(endPosition)));
    }
 }
 
