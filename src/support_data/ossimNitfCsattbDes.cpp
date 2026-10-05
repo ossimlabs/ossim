@@ -34,7 +34,7 @@ void ossimNitfCsattbDes::initializeFieldDefinitions()
    FIELD_DEFINITIONS =
       {
          {ossim::nitf::UUID_KW, 36, 0},
-         {ossim::nitf::NUMAIS_KW, 3, 0},
+         {ossim::nitf::NUMAIS_KW, 3, 0, 0, "ALL"},
          {ossim::nitf::NUMAIS_KW, LOOP_START},
             {ossim::nitf::AISDLVL_KW, 3, 1},
          {ossim::nitf::NUMAIS_KW, LOOP_END},
