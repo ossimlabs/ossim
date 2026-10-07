@@ -494,17 +494,14 @@ void ossimNitfImageHeaderV2_1::writeStream(ossim::ostream &out)
          memcpy(theExtendedSubheaderDataLen, tempOut.str().c_str(), 5);
          
          out.write(theExtendedSubheaderDataLen, 5);
-         ossim_uint32 theExtendedSubheaderDataLenBytes = ossimString(theExtendedSubheaderDataLen).toUInt32();
 
-         if (theExtendedSubheaderDataLenBytes > 0)
-         {
-           strcpy(theExtendedSubheaderOverflow, ossimString("001").c_str());
-         }
-         else
-         {
-            memset(theExtendedSubheaderOverflow, '0', 3);
-         }
-         
+         //---
+         // IXSOFL is "000" unless TREs overflowed into a TRE_OVERFLOW DES, in
+         // which case checkForOverflow() has already stored that DES's number
+         // in theExtendedSubheaderOverflow.  It used to be forced to "001"
+         // here whenever the subheader held any TRE at all, which pointed
+         // every such image at DES 1 whether or not that was an overflow DES.
+         //---
          if(totalLength > 0)
          {
             out.write(theExtendedSubheaderOverflow, 3);
