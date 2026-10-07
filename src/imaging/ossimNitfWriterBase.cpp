@@ -428,7 +428,7 @@ void ossimNitfWriterBase::addRpcbTag(const ossimIrect& rect,
 
 ossimString ossimNitfWriterBase::getComplexityLevel(ossim_uint64 width,
                                                     ossim_uint64 height,
-                                                    ossim_uint64 fileLength)
+                                                    ossim_uint64 fileLength) const
 {
    //---
    // JBP Table G-1 (still imagery).  File sizes are binary megabytes and

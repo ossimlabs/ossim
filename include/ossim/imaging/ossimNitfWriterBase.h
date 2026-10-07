@@ -189,9 +189,9 @@ public:
     * @param fileLength File length in bytes.
     * @return "03", "05", "06", "07" or "09".
     */
-   static ossimString getComplexityLevel(ossim_uint64 width,
-                                         ossim_uint64 height,
-                                         ossim_uint64 fileLength);
+   virtual ossimString getComplexityLevel(ossim_uint64 width,
+                                          ossim_uint64 height,
+                                          ossim_uint64 fileLength) const;
 
 protected:
 

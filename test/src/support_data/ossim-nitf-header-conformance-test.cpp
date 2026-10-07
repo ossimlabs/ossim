@@ -19,7 +19,7 @@
 //        07        <= 99,999,999            <= 10,737,418,239
 //        09        beyond CLEVEL 07
 //
-//    A 92,398 row, 1.9 GB image was written as CLEVEL 06 and needs 07.
+//    A 90,000 row image of under 2 GiB was written as CLEVEL 06 and needs 07.
 //
 // 2. IXSOFL.  ossimNitfImageHeaderV2_1::writeStream() set the extended
 //    subheader overflow field to "001" whenever the subheader held ANY TRE, so
@@ -28,7 +28,7 @@
 //
 //----------------------------------------------------------------------------
 
-#include <ossim/imaging/ossimNitfWriterBase.h>
+#include <ossim/imaging/ossimNitfWriter.h>
 #include <ossim/support_data/ossimNitfImageHeaderV2_1.h>
 #include <ossim/support_data/ossimNitfTagInformation.h>
 
@@ -51,18 +51,20 @@ namespace
 
    std::string clevel(ossim_uint64 width, ossim_uint64 height, ossim_uint64 bytes)
    {
-      return ossimNitfWriterBase::getComplexityLevel(width, height, bytes).string();
+      // getComplexityLevel() is a member; the base class is abstract.
+      const ossimNitfWriter writer;
+      return writer.getComplexityLevel(width, height, bytes).string();
    }
 }
 
 int main(int /*argc*/, char* /*argv*/[])
 {
-   // 1. CLEVEL against JBP Table G-1.  The first rows are delivered products.
-   expect(clevel(42500, 92398, 1915066497ULL), "07", "92398 rows, 1.9 GB");
-   expect(clevel(42500, 68464, 1172621812ULL), "07", "68464 rows, 1.17 GB");
-   expect(clevel(29847, 30628, 338462939ULL),  "06", "30628 rows, 338 MB");
-   expect(clevel(10651, 17119, 244833240ULL),  "06", "17119 rows, 245 MB");
-   expect(clevel(7458, 7911, 73962606ULL),     "05", "7911 rows, 74 MB");
+   // 1. CLEVEL against JBP Table G-1: typical image shapes.
+   expect(clevel(40000, 90000, 1900000000ULL), "07", "90000 rows, 1.9 GB");
+   expect(clevel(40000, 70000, 1100000000ULL), "07", "70000 rows, 1.1 GB");
+   expect(clevel(30000, 30000, 340000000ULL),  "06", "30000 rows, 340 MB");
+   expect(clevel(10000, 17000, 240000000ULL),  "06", "17000 rows, 240 MB");
+   expect(clevel(7000, 7900, 74000000ULL),     "05", "7900 rows, 74 MB");
    expect(clevel(512, 512, 164413ULL),         "03", "512 x 512 chip");
 
    // The size limits themselves.
