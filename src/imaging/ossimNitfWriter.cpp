@@ -544,7 +544,7 @@ bool ossimNitfWriter::writeBlockBandSeparate()
 
    std::streamoff pos = m_str->tellp();
 
-   setComplexityLevel(pos, m_fileHeader.get());
+   setComplexityLevel(pos, m_fileHeader.get(), rect.width(), rect.height());
 
    /*
     * Need to change the way I compute file length and header length later
@@ -747,7 +747,7 @@ bool ossimNitfWriter::writeBlockBandSequential()
 
    ossim_uint64 pos = m_str->tellp();
 
-   setComplexityLevel(pos, m_fileHeader.get());
+   setComplexityLevel(pos, m_fileHeader.get(), rect.width(), rect.height());
 
    /*
     * Need to change the way I compute file length and header length later

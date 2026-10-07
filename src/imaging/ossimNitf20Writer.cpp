@@ -428,7 +428,7 @@ bool ossimNitf20Writer::writeBlockBandSeparate()
 
    std::streamoff pos = theOutputStream->tellp();
 
-   setComplexityLevel(pos, theFileHeader.get());
+   setComplexityLevel(pos, theFileHeader.get(), rect.width(), rect.height());
 
    /*
     * Need to change the way I compute file length and header length later
@@ -616,7 +616,7 @@ bool ossimNitf20Writer::writeBlockBandSequential()
    
    std::streamoff pos = theOutputStream->tellp();
 
-   setComplexityLevel(pos, theFileHeader.get());
+   setComplexityLevel(pos, theFileHeader.get(), rect.width(), rect.height());
 
    /*
     * Need to change the way I compute file length and header length later
