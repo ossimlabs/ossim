@@ -46,7 +46,7 @@ void ossimNitfCssfabDes::initializeFieldDefinitions()
    FIELD_DEFINITIONS =
    {
       {ossim::nitf::UUID_KW, 36},
-      {ossim::nitf::NUMAIS_KW, 3, U_INT},
+      {ossim::nitf::NUMAIS_KW, 3, ASCII, 0, "ALL"},
       {ossim::nitf::NUMAIS_KW, LOOP_START},
          {ossim::nitf::AISDLVL_KW, 3, U_INT},
       {ossim::nitf::NUMAIS_KW, LOOP_END},
@@ -54,7 +54,7 @@ void ossimNitfCssfabDes::initializeFieldDefinitions()
       {ossim::nitf::NUM_ASSOC_ELEM_KW, LOOP_START},
          {ossim::nitf::ASSOC_ELEM_UUID_KW, 36},
       {ossim::nitf::NUM_ASSOC_ELEM_KW, LOOP_END},
-      {ossim::nitf::RESERVEDSUBH_LEN_KW, 4},
+      {ossim::nitf::RESERVEDSUBH_LEN_KW, 4, U_INT},
       {ossim::nitf::RESERVEDSUBH_KW + " " + ossim::nitf::RESERVEDSUBH_LEN_KW, VARIABLE_LENGTH},
       {ossim::nitf::SENSOR_TYPE_KW, 1, ASCII, 0, "S"},
       {ossim::nitf::BAND_TYPE_KW, 1},

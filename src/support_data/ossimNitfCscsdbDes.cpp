@@ -48,7 +48,7 @@ void ossimNitfCscsdbDes::initializeFieldDefinitions()
         {ossim::nitf::NUMAIS_KW, LOOP_START},
             {ossim::nitf::AISDLVL_KW, 3, 1},
         {ossim::nitf::NUMAIS_KW, LOOP_END},
-        {ossim::nitf::NUM_ASSOC_ELEM_KW, 3, 1, 0, "1"},
+        {ossim::nitf::NUM_ASSOC_ELEM_KW, 3, 1},
         {ossim::nitf::NUM_ASSOC_ELEM_KW, LOOP_START},
             {ossim::nitf::ASSOC_ELEM_UUID_KW, 36, 0},
         {ossim::nitf::NUM_ASSOC_ELEM_KW, LOOP_END},
