@@ -63,7 +63,11 @@ macro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
 	 /opt/local/share/OpenCV/3rdparty/lib
 	 /usr/lib64
 	 /usr/lib
-         NO_DEFAULT_PATHS)
+         # Keep the first lookup scoped to OPENCV_HOME and the explicit
+         # platform paths.  The previous NO_DEFAULT_PATHS spelling is not a
+         # CMake keyword, so CMake could fall through to another installed
+         # OpenCV version and mix its libraries with the requested headers.
+         NO_DEFAULT_PATH)
    find_library( ${MYLIBRARY} NAMES "${MYLIBRARYNAME}${OPENCV_RELEASE_POSTFIX}")
 endmacro(FIND_OPENCV_LIBRARY MYLIBRARY MYLIBRARYNAME)
 

@@ -66,12 +66,18 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
       {ossim::nitf::ROW_GSD_UNIT_KW, 1, 0, 0, "M"},
       {ossim::nitf::COL_GSD_KW, 7, 3, 3},
       {ossim::nitf::COL_GSD_UNIT_KW, 1, 0, 0, "M"},
-      {ossim::nitf::SPT_RESP_ROW_KW, 7, 3, 3},
+      // The response function is unknown when the writer has no detector
+      // response metadata. Use the standard unavailable sentinel verbatim;
+      // numeric formatting turns the decimal string into 000.000.
+      {ossim::nitf::SPT_RESP_ROW_KW, 7, 0, 0, "999.999"},
       {ossim::nitf::SPT_RESP_UNIT_ROW_KW, 1, 0},
-      {ossim::nitf::SPT_RESP_COL_KW, 7, 3, 3},
+      {ossim::nitf::SPT_RESP_COL_KW, 7, 0, 0, "999.999"},
       {ossim::nitf::SPT_RESP_UNIT_COL_KW, 1, 0},
       {ossim::nitf::DATA_FLD_1_KW, 48, 0},
-      {ossim::nitf::EXISTENCE_MASK_KW, 4, 0, 0, ossimString(std::string{char(159), char(199), char(16), char(0)})},//10011111 11000111 00010000 00000000
+      // FWHM and FWHM_UNC (mask bits 23 and 22) are omitted unless measured
+      // values are supplied. Advertising them as 0.00000 is invalid and
+      // claiming 999.999 would fabricate a spectral width.
+      {ossim::nitf::EXISTENCE_MASK_KW, 4, 0, 0, ossimString(std::string{char(159), char(7), char(16), char(0)})},//10011111 00000111 00010000 00000000
       {ossim::nitf::RADIOMETRICADJUSTMENTSURFACE_KW, 24, 0, 0, "APERTURE"},
       // Also IEEE 754 binary32. The literal string "NaN" padded to 4 bytes is
       // 0x4E614E20, which decodes to 9.45e+08 -- a plausible-looking altitude
@@ -80,15 +86,22 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
       {ossim::nitf::ATMOSPHERICADJUSTMENTALTITUDE_KW, 4, IEEE_FLOAT, 0, "nan"},
       //{ossim::nitf::DIAMETER_KW, 7, 3, 2},
       //{ossim::nitf::DATA_FLD_2_KW, 32, 0},
-      {ossim::nitf::WAVE_LENGTH_UNIT_KW, 1, 0},
+      // CWAVE values supplied by the Maxar writer are micrometers.
+      {ossim::nitf::WAVE_LENGTH_UNIT_KW, 1, 0, 0, "U"},
       {ossim::nitf::COUNT_KW, LOOP_START},
          {ossim::nitf::BANDID_KW, 50, 0},
          {ossim::nitf::BAD_BAND_KW, 1, 1},
          {ossim::nitf::NIIRS_KW, 3, 3, 1},
          {ossim::nitf::FOCAL_LEN_KW, 5, 1},
-         {ossim::nitf::CWAVE_KW, 7, 3, 5},
-         {ossim::nitf::FWHM_KW, 7, 3, 5},
-         {ossim::nitf::FWHM_UNC_KW, 7, 3, 5},
+         // BCS-N values include a decimal point; preserve the text so
+         // wavelengths do not truncate to zero when parsed as integers.
+         {ossim::nitf::CWAVE_KW, 7, 0},
+         {ossim::nitf::EXISTENCE_MASK_KW + ":23", IF_STATEMENT_START},
+            {ossim::nitf::FWHM_KW, 7, 3, 5},
+         {"End of FWHM", IF_STATEMENT_END},
+         {ossim::nitf::EXISTENCE_MASK_KW + ":22", IF_STATEMENT_START},
+            {ossim::nitf::FWHM_UNC_KW, 7, 3, 5},
+         {"End of FWHM uncertainty", IF_STATEMENT_END},
          //{ossim::nitf::NOM_WAVE_KW, 7, 3, 5},
          //{ossim::nitf::NOM_WAVE_UNC_KW, 7, 3, 5},
          //{ossim::nitf::LBOUND_KW, 7, 3, 5},
@@ -101,7 +114,7 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
          // integer (U_INT saturates to UINT32_MAX). Treat it as ASCII so the
          // already-formatted 16-character string passes through verbatim.
          {ossim::nitf::START_TIME_KW, 16, 0},
-         {ossim::nitf::INT_TIME_KW, 6, 3, 5},
+         {ossim::nitf::INT_TIME_KW, 6, U_INT},
          //{ossim::nitf::CALDRK_KW, 6, 3, 5},
          //{ossim::nitf::CALIBRATIONSENSITIVITY_KW, 5, 3, 4},
          //{ossim::nitf::ROW_GSD_KW, 7, 3, 2},

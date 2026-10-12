@@ -27,6 +27,7 @@
 #include <set>
 #include <cctype>
 #include <cmath>
+#include <stdexcept>
 
 namespace
 {
@@ -286,12 +287,33 @@ int ossimNitfGenericTag::solveEquation(const ossimString& equation,std::vector<s
                else if (entry.contains(':'))
                {
                   colonSubStrings = entry.split(':');
-                  stack.push(
-                     lookupFieldOrDefault(
-                        m_fields_map,
-                        colonSubStrings[0] + formatSuffix(tempSuffix),
-                        getTagName(),
-                        "evaluating character lookup equation")[colonSubStrings[1].toInt()]);
+                  if (colonSubStrings[0] == "EXISTENCE_MASK")
+                  {
+                     // BANDSB's 32-bit existence mask numbers bits from the
+                     // least-significant end of its four-byte big-endian
+                     // value. The field definitions use EXISTENCE_MASK:n to
+                     // conditionally include optional per-band fields.
+                     const int bit = colonSubStrings[1].toInt();
+                     if (bit < 0 || bit >= 32)
+                        throw std::out_of_range("EXISTENCE_MASK bit index is outside 0..31");
+                     const ossimString mask = lookupFieldOrDefault(
+                        m_fields_map, "EXISTENCE_MASK", getTagName(),
+                        "evaluating existence-mask bit");
+                     const int byteIndex = 3 - bit / 8;
+                     if (mask.size() < 4)
+                        throw std::runtime_error("EXISTENCE_MASK must contain four bytes");
+                     const auto byte = static_cast<unsigned char>(mask[byteIndex]);
+                     stack.push((byte & (1u << (bit % 8))) ? "1" : "0");
+                  }
+                  else
+                  {
+                     stack.push(
+                        lookupFieldOrDefault(
+                           m_fields_map,
+                           colonSubStrings[0] + formatSuffix(tempSuffix),
+                           getTagName(),
+                           "evaluating character lookup equation")[colonSubStrings[1].toInt()]);
+                  }
                }
                else
                {

@@ -96,7 +96,7 @@ void ossimNitfCsdidaTag::clearFields()
    memset(theOperation, '0', 3);
    memset(theSensorId, ' ', 2);
    memset(theProductId, ' ', 2);
-   memcpy(theReservedField1, "00  ", 4);
+   memcpy(theReservedField1, "0000", 4);
    memset(theTime, '0', 14);
    memset(theProcessTime, '0', 14);
    memcpy(theReservedField2, "00", 2);
@@ -119,8 +119,8 @@ void ossimNitfCsdidaTag::clearFields()
    theProcessTime[14] = '\0';
    theReservedField2[2] = '\0';
    theReservedField3[2] = '\0';
-   theReservedField4[0] = '\0';
-   theReservedField5[0] = '\0';
+   theReservedField4[1] = '\0';
+   theReservedField5[1] = '\0';
    theSoftwareVersionNumber[10] = '\0';
 }
 

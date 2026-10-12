@@ -94,12 +94,16 @@ void ossimNitfCscsdbDes::initializeFieldDefinitions()
                             {ossim::nitf::NUM_PAIRINGS_BASIC_PL_KW, LOOP_END},
                         {ossim::nitf::NUM_BASIC_PL_KW, LOOP_END},
                     {ossim::nitf::BASIC_PL_FLAG_KW + " = 1", IF_STATEMENT_END},
-                    {ossim::nitf::BASIC_SR_FLAG_KW, 1, U_INT, 0, "1"},
+                    // No basic SR SPDCF is supplied by this writer. Do not
+                    // assert the optional field and then serialize its zero
+                    // default as an invalid SPDCF identifier.
+                    {ossim::nitf::BASIC_SR_FLAG_KW, 1, U_INT, 0, "0"},
                     {ossim::nitf::BASIC_SR_FLAG_KW + " = 1", IF_STATEMENT_START},
                         {ossim::nitf::BASIC_SR_SPDCF_KW, 2, U_INT},
                     {ossim::nitf::BASIC_SR_FLAG_KW + " = 1", IF_STATEMENT_END},
                 {ossim::nitf::BASIC_SUB_ALLOC_KW + " = 1", IF_STATEMENT_END},
-                {ossim::nitf::POST_SUB_ALLOC_KW, 1, U_INT, 0, "1"},
+                // Correction-post data is not populated by this writer.
+                {ossim::nitf::POST_SUB_ALLOC_KW, 1, U_INT, 0, "0"},
                 {ossim::nitf::POST_SUB_ALLOC_KW + " = 1", IF_STATEMENT_START},
                     {ossim::nitf::POST_START_DATE_KW, 8, U_INT},
                     {ossim::nitf::POST_START_TIME_KW, 15, U_DOUBLE, 9},
@@ -232,7 +236,8 @@ void ossimNitfCscsdbDes::initializeFieldDefinitions()
                 {ossim::nitf::TS_FL_SPDCF_KW, 2, U_INT},
             {ossim::nitf::NUM_TS_GRP_KW + " = 5", IF_STATEMENT_END},
         {ossim::nitf::TS_CAL_AP_KW + " = 1", IF_STATEMENT_END},
-        {ossim::nitf::UE_FLAG_KW, 1, U_INT, 0, "1"},
+        // No unmodeled-error covariance grid is supplied.
+        {ossim::nitf::UE_FLAG_KW, 1, U_INT, 0, "0"},
         {ossim::nitf::UE_FLAG_KW + " = 1", IF_STATEMENT_START},
             {ossim::nitf::LINE_DIMENSION_KW, 3, U_INT},
             {ossim::nitf::SAMPLE_DIMENSION_KW, 2, U_INT},

@@ -195,7 +195,7 @@ protected:
     *
     * Fill "N"
     */
-   char theReservedField4[1];
+   char theReservedField4[2];
 
    /**
     * FIELD: Reserved
@@ -204,7 +204,7 @@ protected:
     *
     * BCS-A "N"
     */
-   char theReservedField5[1];
+   char theReservedField5[2];
 
    /**
     * FIELD: SOFTWARE_VERSION_NUMBER
