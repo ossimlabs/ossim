@@ -5304,31 +5304,27 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect &originalR
 
    if (!originalRect.hasNans() && m_geom.valid())
    {
-      //---
       // Thumbnail setup:
-      //---
       ossimString thumbRes = m_kwl->findKey(THUMBNAIL_RESOLUTION_KW);
       if (thumbRes.size())
       {
          ossim_float64 thumbSize = thumbRes.toFloat64();
          ossim_float64 maxRectDimension =
             ossim::max(originalRect.width(), originalRect.height());
-         ossim_uint32 tw = originalRect.width();
-         ossim_uint32 th = originalRect.height();
-         ossim_float64 scale = 1.0;
          if (maxRectDimension > thumbSize)
          {
-            // Need to adjust scale:
-
-            // Get the corners before the scale change:
-            ossimGpt ulGpt;
-            ossimGpt lrGpt;
-
-            m_geom->localToWorld(ossimDpt(originalRect.ul()), ulGpt);
-            m_geom->localToWorld(ossimDpt(originalRect.lr()), lrGpt);
-
-            if (isChipMode() && m_ivt.valid()) // Chipping in image space.)
+            ossim_uint32 tw = originalRect.width();
+            ossim_uint32 th = originalRect.height();
+            ossim_float64 scale = 1.0;
+            ossimGpt ulGpt; // projected(ortho) output tie point
+            ossimDpt ulImg; // image space(chip) output tie point
+            
+            // Get the tie point before the scale change:
+            if (isChipMode() && m_ivt.valid()) // Chipping in image space.
             {
+               // Get the tie point in image space prior to adjusting.
+               m_ivt->viewToImage(originalRect.ul(), ulImg);
+               
                scale = thumbSize / maxRectDimension;
                if (m_ivt->getScale().hasNans())
                {
@@ -5338,37 +5334,48 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect &originalR
                {
                   m_ivt->scale(m_ivt->getScale().x * scale, m_ivt->getScale().y * scale);
                }
+               
                tw *= scale;
                th *= scale;
+               
+               if ( !m_ivt->getPivot().hasNans() )
+               {
+                  m_ivt->pivot(m_ivt->getPivot().x * scale, m_ivt->getPivot().y * scale);
+               }
             }
             else
             {
-               scale = maxRectDimension / thumbSize;
+               // Get the tie point in ground space prior to adjusting.
+               m_geom->localToWorld(ossimDpt(originalRect.ul()), ulGpt);
+               
                //---
                // Adjust the projection scale.  Note the "true" is to recenter
                // the tie point so it falls relative to the projection origin.
                //
                // This call also scales: ossimImageGeometry::m_imageSize
                //---
+               scale = maxRectDimension / thumbSize;
                m_geom->applyScale(ossimDpt(scale, scale), true);
                tw /= scale;
                th /= scale;
             }
-            if (tw < 1)
-               tw = 1;
-            if (th < 1)
-               th = 1;
+            
+            if (tw < 1) tw = 1;
+            if (th < 1) th = 1;
+            
             // Must call to reset the ossimImageRenderer's bounding rect for each input.
             propagateOutputProjectionToChains();
-
+            
             // Get the new upper left in view space.
-            ossimDpt dpt;
-            m_geom->worldToLocal(ulGpt, dpt);
-            ossimIpt ul(dpt);
-
-            // Get the new lower right in view space.
-            m_geom->worldToLocal(lrGpt, dpt);
-            ossimIpt lr(dpt);
+            ossimDpt ulView;
+            if ( isChipMode() && m_ivt.valid() )
+            {
+               m_ivt->imageToView(ulImg, ulView);
+            }
+            else
+            {
+               m_geom->worldToLocal(ulGpt, ulView);
+            }
 
             //---
             // Clamp to thumbnail bounds with padding if turned on.
@@ -5376,6 +5383,9 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect &originalR
             //---
             ossim_int32 ts = thumbSize;
             bool pad = padThumbnail();
+            ossimIpt ul;
+            ossimIpt lr;
+            ul = ulView;
             if (pad)
             {
                lr.x = ul.x + ts - 1;
@@ -5388,6 +5398,14 @@ void ossimChipperUtil::initializeThumbnailProjection(const ossimIrect &originalR
             }
 
             adjustedRect = ossimIrect(ul, lr);
+            if ( adjustedRect.hasNans() )
+            {
+               std::string errMsg = MODULE;
+               errMsg += " Adjusted thumbnail AOI has nans!";
+               throw(ossimException(errMsg));
+            }
+
+            m_geom->setImageSize( adjustedRect.size() );
          }
       }
 
