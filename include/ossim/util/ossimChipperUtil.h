@@ -170,6 +170,35 @@ protected:
     */
    std::vector< ossimRefPtr<ossimSingleImageChain> >& getSingleImageChainLayers();
 
+   /**
+    * @brief Gets the output band list from the m_imgLayer array for a given
+    * index.
+    *
+    * The bandList will be cleared if:
+    * - layerIndex is out of range.
+    * - The chain's band selector is not enabled.
+    * - The chain has no band selector(single band input).
+    *
+    * @param layerIndex
+    *
+    * @param bandList Reference to bandList initialized by this function.
+    */
+   void getImageLayerOutputBandList(
+      ossim_uint32 layerIndex, std::vector<ossim_uint32>& bandList) const;
+
+   /** @return true if BANDS keyword is set; false, if not. */
+   bool hasBandSelection() const;
+   
+   /**
+    * @brief Gets the band list if BANDS keyword is set.
+    *
+    * NOTE: BANDS keyword values are ONE based.  bandList values are
+    * ZERO based.
+    *
+    * @param bandList List initialized by this.
+    */
+   void getBandList( std::vector<ossim_uint32>& bandList ) const;
+
    /** Hold all options passed into intialize. */
    ossimRefPtr<ossimKeywordlist> m_kwl;
    
@@ -584,19 +613,6 @@ private:
     */
    void initializeThumbnailProjection(const ossimIrect& originalRect,
                                       ossimIrect& adjustedRect);
-
-   /** @return true if BANDS keyword is set; false, if not. */
-   bool hasBandSelection() const;
-
-   /**
-    * @brief Gets the band list if BANDS keyword is set.
-    *
-    * NOTE: BANDS keyword values are ONE based.  bandList values are
-    * ZERO based.
-    *
-    * @param bandList List initialized by this.
-    */
-   void getBandList( std::vector<ossim_uint32>& bandList ) const;
 
    /** @return true if annotation options are set; false, if not. */
    bool hasAnnotations() const;

@@ -6444,3 +6444,20 @@ std::vector< ossimRefPtr<ossimSingleImageChain> >& ossimChipperUtil::getSingleIm
 {
    return m_imgLayer;
 }
+
+void ossimChipperUtil::getImageLayerOutputBandList(
+   ossim_uint32 layerIndex, std::vector<ossim_uint32>& bandList ) const
+{
+   bandList.clear();
+   if (layerIndex < m_imgLayer.size())
+   {
+      if (m_imgLayer[layerIndex].valid())
+      {
+         ossimRefPtr<const ossimBandSelector> bs = m_imgLayer[layerIndex]->getBandSelector();
+         if (bs.valid())
+         {
+            bs->getOutputBandList(bandList);
+         }
+      }
+   }
+}
