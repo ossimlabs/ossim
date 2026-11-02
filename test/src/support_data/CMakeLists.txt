@@ -9,7 +9,8 @@ OSSIM_SETUP_APPLICATION(ossim-tiff-info-test INSTALL COMMAND_LINE COMPONENT_NAME
 OSSIM_SETUP_APPLICATION(ossim-wavelength-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-wavelength-test.cpp)
 
 OSSIM_SETUP_APPLICATION(ossim-nitf-generic-tag-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-nitf-generic-tag-test.cpp)
-OSSIM_SETUP_APPLICATION(ossim-nitf-comnta-tag-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-nitf-comnta-tag-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-nitf-bandsb-mask-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-nitf-bandsb-mask-test.cpp)
+OSSIM_SETUP_APPLICATION(ossim-nitf-comnta-tag-testINSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-nitf-comnta-tag-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-nitf-ichipb-tag-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-nitf-ichipb-tag-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-nitf-irepband-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-nitf-irepband-test.cpp)
 OSSIM_SETUP_APPLICATION(ossim-nitf-glas-des-defaults-test INSTALL COMMAND_LINE COMPONENT_NAME ossim SOURCE_FILES ossim-nitf-glas-des-defaults-test.cpp)
