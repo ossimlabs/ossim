@@ -25,6 +25,14 @@ static ossimTrace traceDebug("ossimNitfBandsbTag:debug");
 
 static const int FOREVER = 1;
 
+// The six EXISTENCE_MASK bits (b24..b19: CWAVE, FWHM, FWHM_UNC, NOM_WAVE, NOM_WAVE_UNC, LBOUND/UBOUND) that put WAVE_LENGTH_UNIT in the
+// tag, summed so a field definition can test "any of them" (0 means none): the equation language has no short form for it. The sum
+// is parenthesized on purpose: solveEquation does not order operators by precedence (it keeps stacked operators of HIGHER priority
+// waiting), so "a + b = 0" is read as "a + (b = 0)"; every existing definition that mixes operators parenthesizes them.
+static const std::string WAVELENGTH_BITS =
+   "( " + ossim::nitf::EXISTENCE_MASK_KW + "#24 + " + ossim::nitf::EXISTENCE_MASK_KW + "#23 + " + ossim::nitf::EXISTENCE_MASK_KW + "#22 + " +
+   ossim::nitf::EXISTENCE_MASK_KW + "#21 + " + ossim::nitf::EXISTENCE_MASK_KW + "#20 + " + ossim::nitf::EXISTENCE_MASK_KW + "#19 )";
+
 const std::string ossimNitfBandsbTag::CETAG_KW = "BANDSB";
 
 ossimNitfBandsbTag::ossimNitfBandsbTag()
@@ -72,56 +80,115 @@ void ossimNitfBandsbTag::initializeFieldDefinitions()
       {ossim::nitf::SPT_RESP_UNIT_COL_KW, 1, 0},
       {ossim::nitf::DATA_FLD_1_KW, 48, 0},
       {ossim::nitf::EXISTENCE_MASK_KW, 4, 0, 0, ossimString(std::string{char(159), char(199), char(16), char(0)})},//10011111 11000111 00010000 00000000
-      {ossim::nitf::RADIOMETRICADJUSTMENTSURFACE_KW, 24, 0, 0, "APERTURE"},
-      // Also IEEE 754 binary32. The literal string "NaN" padded to 4 bytes is
-      // 0x4E614E20, which decodes to 9.45e+08 -- a plausible-looking altitude
-      // rather than the not-a-number the spec asks for. "nan" now goes through
-      // toFloat64() and comes out as a real quiet NaN.
-      {ossim::nitf::ATMOSPHERICADJUSTMENTALTITUDE_KW, 4, IEEE_FLOAT, 0, "nan"},
-      //{ossim::nitf::DIAMETER_KW, 7, 3, 2},
-      //{ossim::nitf::DATA_FLD_2_KW, 32, 0},
-      {ossim::nitf::WAVE_LENGTH_UNIT_KW, 1, 0},
+      // Every field below the mask is conditional on its EXISTENCE_MASK bit (STDI-0002 Vol 1 App X Table X.6-1), as in GDAL's
+      // nitf_spec.xml. "EXISTENCE_MASK#n" is bit n of the mask; inside the band loop the leading ^ reaches the mask above the loop
+      // variable. The DEFAULT mask above is unchanged, so a tag nobody touches is written exactly as before; a writer that sets
+      // the mask (and the fields the new bits switch on) gets the layout it asked for, and a reader follows the mask in the file.
+      {ossim::nitf::EXISTENCE_MASK_KW + "#31", IF_STATEMENT_START},
+         {ossim::nitf::RADIOMETRICADJUSTMENTSURFACE_KW, 24, 0, 0, "APERTURE"},
+         // Also IEEE 754 binary32. The literal string "NaN" padded to 4 bytes is
+         // 0x4E614E20, which decodes to 9.45e+08 -- a plausible-looking altitude
+         // rather than the not-a-number the spec asks for. "nan" now goes through
+         // toFloat64() and comes out as a real quiet NaN.
+         {ossim::nitf::ATMOSPHERICADJUSTMENTALTITUDE_KW, 4, IEEE_FLOAT, 0, "nan"},
+      {ossim::nitf::EXISTENCE_MASK_KW + "#31", IF_STATEMENT_END},
+      {ossim::nitf::EXISTENCE_MASK_KW + "#30", IF_STATEMENT_START},
+         {ossim::nitf::DIAMETER_KW, 7, 3, 2},
+      {ossim::nitf::EXISTENCE_MASK_KW + "#30", IF_STATEMENT_END},
+      {ossim::nitf::EXISTENCE_MASK_KW + "#29", IF_STATEMENT_START},
+         {ossim::nitf::DATA_FLD_2_KW, 32, 0},
+      {ossim::nitf::EXISTENCE_MASK_KW + "#29", IF_STATEMENT_END},
+      // Present when any wavelength bit (b24..b19) is set, the condition GDAL uses; the unit is U (micrometers) or W (cm-1).
+      {"! ( " + WAVELENGTH_BITS + " = 0 )", IF_STATEMENT_START},
+         {ossim::nitf::WAVE_LENGTH_UNIT_KW, 1, 0},
+      {"! ( " + WAVELENGTH_BITS + " = 0 )", IF_STATEMENT_END},
       {ossim::nitf::COUNT_KW, LOOP_START},
-         {ossim::nitf::BANDID_KW, 50, 0},
-         {ossim::nitf::BAD_BAND_KW, 1, 1},
-         {ossim::nitf::NIIRS_KW, 3, 3, 1},
-         {ossim::nitf::FOCAL_LEN_KW, 5, 1},
-         {ossim::nitf::CWAVE_KW, 7, 3, 5},
-         {ossim::nitf::FWHM_KW, 7, 3, 5},
-         {ossim::nitf::FWHM_UNC_KW, 7, 3, 5},
-         //{ossim::nitf::NOM_WAVE_KW, 7, 3, 5},
-         //{ossim::nitf::NOM_WAVE_UNC_KW, 7, 3, 5},
-         //{ossim::nitf::LBOUND_KW, 7, 3, 5},
-         //{ossim::nitf::UBOUND_KW, 7, 3, 5},
-         // Per-band mn / an. Same IEEE 754 binary32 as the cube-level pair.
-         {ossim::nitf::SCALE_FACTOR_KW, 4, IEEE_FLOAT, 0, "1"},
-         {ossim::nitf::ADDITIVEFACTOR_KW, 4, IEEE_FLOAT, 0, "0"},
-         // START_TIMEn is BCS-N, format YYMMDDhhmmss.sss (STDI-0002 Vol 1 App X) -
-         // it contains a decimal point, so it cannot be parsed as an unsigned
-         // integer (U_INT saturates to UINT32_MAX). Treat it as ASCII so the
-         // already-formatted 16-character string passes through verbatim.
-         {ossim::nitf::START_TIME_KW, 16, 0},
-         {ossim::nitf::INT_TIME_KW, 6, 3, 5},
-         //{ossim::nitf::CALDRK_KW, 6, 3, 5},
-         //{ossim::nitf::CALIBRATIONSENSITIVITY_KW, 5, 3, 4},
-         //{ossim::nitf::ROW_GSD_KW, 7, 3, 2},
-         //{ossim::nitf::ROW_GSD_UNC_KW, 7, 3, 3},
-         //{ossim::nitf::ROW_GSD_UNIT_KW, 1, 0},
-         //{ossim::nitf::COL_GSD_KW, 7, 3, 2},
-         //{ossim::nitf::COL_GSD_UNC_KW, 7, 3, 2},
-         //{ossim::nitf::COL_GSD_UNIT_KW, 1, 0},
-         {ossim::nitf::BKNOISE_KW, 5, 3, 4},
-         {ossim::nitf::SCNNOISE_KW, 5, 3, 4},
-         //{ossim::nitf::SPT_RESP_FUNCTION_ROW_KW, 7, 3, 3},
-         //{ossim::nitf::SPT_RESP_UNCROW_KW, 7, 3, 3},
-         //{ossim::nitf::SPT_RESP_UNIT_ROW_KW, 1, 0},
-         //{ossim::nitf::SPT_RESP_FUNCTION_COL_KW, 7, 3, 3},
-         //{ossim::nitf::SPT_RESP_UNCCOL_KW, 7, 3, 3},
-         //{ossim::nitf::SPT_RESP_UNIT_COL_KW, 1, 0},
-         //{ossim::nitf::DATA_FLD_3_KW, 16, 0},
-         //{ossim::nitf::DATA_FLD_4_KW, 24, 0},
-         //{ossim::nitf::DATA_FLD_5_KW, 32, 0},
-         //{ossim::nitf::DATA_FLD_6_KW, 48, 0},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#28", IF_STATEMENT_START},
+            {ossim::nitf::BANDID_KW, 50, 0},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#28", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#27", IF_STATEMENT_START},
+            {ossim::nitf::BAD_BAND_KW, 1, 1},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#27", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#26", IF_STATEMENT_START},
+            {ossim::nitf::NIIRS_KW, 3, 3, 1},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#26", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#25", IF_STATEMENT_START},
+            {ossim::nitf::FOCAL_LEN_KW, 5, 1},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#25", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#24", IF_STATEMENT_START},
+            {ossim::nitf::CWAVE_KW, 7, 3, 5},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#24", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#23", IF_STATEMENT_START},
+            {ossim::nitf::FWHM_KW, 7, 3, 5},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#23", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#22", IF_STATEMENT_START},
+            {ossim::nitf::FWHM_UNC_KW, 7, 3, 5},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#22", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#21", IF_STATEMENT_START},
+            {ossim::nitf::NOM_WAVE_KW, 7, 3, 5},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#21", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#20", IF_STATEMENT_START},
+            {ossim::nitf::NOM_WAVE_UNC_KW, 7, 3, 5},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#20", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#19", IF_STATEMENT_START},
+            {ossim::nitf::LBOUND_KW, 7, 3, 5},
+            {ossim::nitf::UBOUND_KW, 7, 3, 5},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#19", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#18", IF_STATEMENT_START},
+            // Per-band mn / an. Same IEEE 754 binary32 as the cube-level pair.
+            {ossim::nitf::SCALE_FACTOR_KW, 4, IEEE_FLOAT, 0, "1"},
+            {ossim::nitf::ADDITIVEFACTOR_KW, 4, IEEE_FLOAT, 0, "0"},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#18", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#17", IF_STATEMENT_START},
+            // START_TIMEn is BCS-N, format YYMMDDhhmmss.sss (STDI-0002 Vol 1 App X) -
+            // it contains a decimal point, so it cannot be parsed as an unsigned
+            // integer (U_INT saturates to UINT32_MAX). Treat it as ASCII so the
+            // already-formatted 16-character string passes through verbatim.
+            {ossim::nitf::START_TIME_KW, 16, 0},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#17", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#16", IF_STATEMENT_START},
+            {ossim::nitf::INT_TIME_KW, 6, 3, 5},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#16", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#15", IF_STATEMENT_START},
+            {ossim::nitf::CALDRK_KW, 6, 3, 5},
+            {ossim::nitf::CALIBRATIONSENSITIVITY_KW, 5, 3, 4},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#15", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#14", IF_STATEMENT_START},
+            {ossim::nitf::ROW_GSD_KW, 7, 3, 2},
+            {ossim::nitf::ROW_GSD_UNIT_KW, 1, 0},
+            {ossim::nitf::COL_GSD_KW, 7, 3, 2},
+            {ossim::nitf::COL_GSD_UNIT_KW, 1, 0},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#14", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#13", IF_STATEMENT_START},
+            {ossim::nitf::ROW_GSD_UNC_KW, 7, 3, 3},
+            {ossim::nitf::COL_GSD_UNC_KW, 7, 3, 2},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#13", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#12", IF_STATEMENT_START},
+            {ossim::nitf::BKNOISE_KW, 5, 3, 4},
+            {ossim::nitf::SCNNOISE_KW, 5, 3, 4},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#12", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#11", IF_STATEMENT_START},
+            {ossim::nitf::SPT_RESP_FUNCTION_ROW_KW, 7, 3, 3},
+            {ossim::nitf::SPT_RESP_UNIT_ROW_KW, 1, 0},
+            {ossim::nitf::SPT_RESP_FUNCTION_COL_KW, 7, 3, 3},
+            {ossim::nitf::SPT_RESP_UNIT_COL_KW, 1, 0},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#11", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#10", IF_STATEMENT_START},
+            {ossim::nitf::SPT_RESP_UNCROW_KW, 7, 3, 3},
+            {ossim::nitf::SPT_RESP_UNCCOL_KW, 7, 3, 3},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#10", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#9", IF_STATEMENT_START},
+            {ossim::nitf::DATA_FLD_3_KW, 16, 0},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#9", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#8", IF_STATEMENT_START},
+            {ossim::nitf::DATA_FLD_4_KW, 24, 0},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#8", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#7", IF_STATEMENT_START},
+            {ossim::nitf::DATA_FLD_5_KW, 32, 0},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#7", IF_STATEMENT_END},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#6", IF_STATEMENT_START},
+            {ossim::nitf::DATA_FLD_6_KW, 48, 0},
+         {"^" + ossim::nitf::EXISTENCE_MASK_KW + "#6", IF_STATEMENT_END},
       {ossim::nitf::COUNT_KW, LOOP_END}
       /*, {ossim::nitf::NUM_AUX_B_KW, 2, 1},
       {ossim::nitf::NUM_AUX_C_KW, 2, 1},

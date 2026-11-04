@@ -105,6 +105,8 @@ static ossimString formatSuffix(std::vector<std::vector<ossim_int32> > suffixIn)
  *       ! Boolean not
  *    Modifiers:
  *       FIELD:n takes the nth character of the field
+ *       FIELD#n takes bit n of the field (1 or 0), the field being read as a big-endian binary value of any length and bit 0
+ *               being the least significant: how NITF existence masks number their bits (e.g. BANDSB EXISTENCE_MASK#24 is CWAVE)
  *       ^FIELD takes the value of the field one loop above the current suffix
  *       'STRING' use the literal string inside the quotes instead of searching for a field with the given name
  * @param suffixIn
@@ -186,6 +188,7 @@ int ossimNitfGenericTag::solveEquation(const ossimString& equation,std::vector<s
    std::stack<ossimString> stack;
    ossimString a, b;
    std::vector<ossimString> colonSubStrings;
+   std::vector<ossimString> hashSubStrings;
    std::vector<std::vector<ossim_int32>> tempSuffix = suffixIn;
    for(ossimString entry: output)
    {
@@ -292,6 +295,22 @@ int ossimNitfGenericTag::solveEquation(const ossimString& equation,std::vector<s
                         colonSubStrings[0] + formatSuffix(tempSuffix),
                         getTagName(),
                         "evaluating character lookup equation")[colonSubStrings[1].toInt()]);
+               }
+               else if (entry.contains('#'))
+               {
+                  hashSubStrings = entry.split('#');
+                  const ossimString raw = lookupFieldOrDefault(
+                     m_fields_map,
+                     hashSubStrings[0] + formatSuffix(tempSuffix),
+                     getTagName(),
+                     "evaluating bit lookup equation");
+                  const ossim_uint32 bit = hashSubStrings[1].toUInt32();
+                  const std::size_t byteFromEnd = bit / 8;
+                  if (byteFromEnd < raw.size() &&
+                      ((static_cast<unsigned char>(raw[raw.size() - 1 - byteFromEnd]) >> (bit % 8)) & 1))
+                     stack.push("1");
+                  else
+                     stack.push("0");
                }
                else
                {
