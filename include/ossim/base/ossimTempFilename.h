@@ -24,7 +24,22 @@ public:
                      bool autodelete=true,
                      bool useWildcardDelete=true);
 
+   /**
+    * @brief Creates a temporary file with an unpredictable name.
+    *
+    * The name is <temp dir>/<prefix><16 hexadecimal random characters>, with
+    * the extension appended when one was given.  The file is created
+    * atomically and never replaces an existing file or follows an existing
+    * symbolic link.  If no candidate can be created the filename is left
+    * empty.
+    */
    void generateRandomFile();
+
+   /**
+    * @brief Creates a temporary directory with an unpredictable name.
+    *
+    * Same naming and failure behavior as generateRandomFile().
+    */
    void generateRandomDir();
    
    ~ossimTempFilename();
