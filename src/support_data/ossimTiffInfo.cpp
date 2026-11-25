@@ -13,6 +13,8 @@
 
 #include <ossim/support_data/ossimTiffInfo.h>
 
+#include <limits>
+
 #include <ossim/base/ossimCommon.h>
 #include <ossim/base/ossimDirectory.h>
 #include <ossim/base/ossimDpt.h>
@@ -398,14 +400,21 @@ bool ossimTiffInfo::getTileInfo( ossim_uint32 ifdIndex,
                         arraySizeInBytes = getArraySizeInBytes(count, type);
                         if (arraySizeInBytes == 0)
                         {
-                           // Could be an unhandle type.  Gobble the value.
+                           // Could be an unhandle type.  Gobble the value and
+                           // drop the array of any previous tag so that it can
+                           // not be read back with this tag's type.
                            eatValue(*m_inputStream, version);
+                           if (valueArray)
+                           {
+                              delete [] valueArray;
+                              valueArray = 0;
+                           }
                         }
                         else
                         {
                            // Allocate array.
                            if (valueArray) delete [] valueArray;
-                           valueArray = new ossim_uint8[arraySizeInBytes];
+                           valueArray = new ossim_uint8[arraySizeInBytes]();
                         
                            if (arraySizeInBytes <= tagValueLength)
                            {
@@ -700,14 +709,21 @@ bool ossimTiffInfo::getStripInfo( ossim_uint32 ifdIndex,
                         arraySizeInBytes = getArraySizeInBytes(count, type);
                         if (arraySizeInBytes == 0)
                         {
-                           // Could be an unhandle type.  Gobble the value.
+                           // Could be an unhandle type.  Gobble the value and
+                           // drop the array of any previous tag so that it can
+                           // not be read back with this tag's type.
                            eatValue(*m_inputStream, version);
+                           if (valueArray)
+                           {
+                              delete [] valueArray;
+                              valueArray = 0;
+                           }
                         }
                         else
                         {
                            // Allocate array.
                            if (valueArray) delete [] valueArray;
-                           valueArray = new ossim_uint8[arraySizeInBytes];
+                           valueArray = new ossim_uint8[arraySizeInBytes]();
                         
                            if (arraySizeInBytes <= tagValueLength)
                            {
@@ -1119,15 +1135,22 @@ std::ostream &ossimTiffInfo::print(std::ostream &out) const
          arraySizeInBytes = getArraySizeInBytes(count, type);
          if (arraySizeInBytes == 0)
          {
-            // Could be an unhandled type.  Gobble the value.
+            // Could be an unhandled type.  Gobble the value and drop the array
+            // of any previous tag so that it can not be read back with this
+            // tag's type.
             eatValue(*m_inputStream, version);
+            if (valueArray)
+            {
+               delete [] valueArray;
+               valueArray = 0;
+            }
          }
          else
          {
             // Allocate array.
             if (valueArray)
                delete[] valueArray;
-            valueArray = new ossim_uint8[arraySizeInBytes];
+            valueArray = new ossim_uint8[arraySizeInBytes]();
 
             if (arraySizeInBytes <= tagValueLength)
             {
@@ -1556,15 +1579,22 @@ std::ostream &ossimTiffInfo::print(std::istream &inStr,
          arraySizeInBytes = getArraySizeInBytes(count, type);
          if (arraySizeInBytes == 0)
          {
-            // Could be an unhandled type.  Gobble the value.
+            // Could be an unhandled type.  Gobble the value and drop the array
+            // of any previous tag so that it can not be read back with this
+            // tag's type.
             eatValue(inStr, version);
+            if (valueArray)
+            {
+               delete [] valueArray;
+               valueArray = 0;
+            }
          }
          else
          {
             // Allocate array.
             if (valueArray)
                delete[] valueArray;
-            valueArray = new ossim_uint8[arraySizeInBytes];
+            valueArray = new ossim_uint8[arraySizeInBytes]();
 
             if (arraySizeInBytes <= tagValueLength)
             {
@@ -2250,7 +2280,22 @@ bool ossimTiffInfo::getValue(ossim_uint64 &value,
 ossim_uint64 ossimTiffInfo::getArraySizeInBytes(ossim_uint64 length,
                                                 ossim_uint16 type) const
 {
-   return length * getTypeByteSize(type);
+   const ossim_uint64 byteSize = getTypeByteSize(type);
+
+   if (byteSize == 0)
+   {
+      return 0;
+   }
+
+   // A malformed tag can carry a count that overflows when converted to bytes;
+   // return 0 so the value is skipped instead of allocating a buffer that is
+   // smaller than the amount of data the tag describes.
+   if (length > (std::numeric_limits<ossim_uint64>::max() / byteSize))
+   {
+      return 0;
+   }
+
+   return length * byteSize;
 }
 
 ossim_uint16 ossimTiffInfo::getTypeByteSize(ossim_uint16 type) const
@@ -2366,6 +2411,16 @@ std::ostream &ossimTiffInfo::print(std::ostream &out,
                                    ossim_uint64 arraySizeInBytes,
                                    ossim_uint8 *valueArray) const
 {
+   // A tag with an unhandled data type (or a truncated value) has no array
+   // behind it; printing it with the expected type would dereference a null or
+   // stale pointer.
+   if (!valueArray)
+   {
+      out << prefix << "tag " << tag << ": unhandled data type " << type
+          << ", count: " << count << ", bytes: " << arraySizeInBytes << "\n";
+      return out;
+   }
+
    switch (tag)
    {
       case ossim::TIFFTAG_SUBFILETYPE: // tag 254
@@ -2965,6 +3020,12 @@ std::ostream &ossimTiffInfo::printValue(std::ostream &out,
                                         ossim_uint16 type,
                                         ossim_uint8 *valueArray) const
 {
+   if (!valueArray)
+   {
+      out << "print_value_no_array type: " << type << "\n";
+      return out;
+   }
+
    switch (type)
    {
    case ossim::TIFF_BYTE:
