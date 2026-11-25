@@ -31,7 +31,11 @@ fi
 if [ -z "$OSSIM_BUILD_DIR" ]; then
    export OSSIM_BUILD_DIR=$OSSIM_DEV_HOME/build
 fi
-export CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config.sh
+# The repository directory is not necessarily named "ossim" (a release tarball
+# unpacks to "ossim-<version>" for example), so resolve the repository root
+# from this script's location instead of assuming $OSSIM_DEV_HOME/ossim.
+export OSSIM_SOURCE_ROOT=$( cd "$ENV_SCRIPT_DIR/.." && pwd -P )
+export CMAKE_CONFIG_SCRIPT=$OSSIM_SOURCE_ROOT/cmake/scripts/ossim-cmake-config.sh
 
 
 # Setup JAVA Home

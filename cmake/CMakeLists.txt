@@ -27,6 +27,16 @@ if(NOT EXISTS ${OSSIM_DEV_HOME})
    MESSAGE(FATAL_ERROR "Please pass in or define a valid OSSIM_DEV_HOME root path where all modules are located. This includes ossim, ossim-planet, ... etc.")
 ENDIF()
 
+# The ossim repository directory is not necessarily called "ossim": release
+# tarballs unpack to "ossim-<version>" for example. Resolve the repository root
+# from the location of this file instead of assuming ${OSSIM_DEV_HOME}/ossim,
+# otherwise a build from such a directory fails with messages about missing
+# directories that do exist under a different name.
+GET_FILENAME_COMPONENT(OSSIM_SOURCE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
+IF(NOT EXISTS "${OSSIM_SOURCE_ROOT}/include/ossim/base/ossimConstants.h")
+   MESSAGE(FATAL_ERROR "Expected the ossim source tree at ${OSSIM_SOURCE_ROOT}, resolved from ${CMAKE_CURRENT_SOURCE_DIR}.")
+ENDIF()
+
 IF ("$ENV{OSSIM_INSTALL_PREFIX}"  STREQUAL "")
    IF (EXISTS "$ENV{OSSIM_BUILD_DIR}")
       SET(OSSIM_INSTALL_PREFIX "$ENV{OSSIM_BUILD_DIR}" CACHE STRING "Cache the OSSIM install prefix" FORCE)
@@ -41,7 +51,7 @@ IF(NOT OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
    SET(OSSIM_BUILD_ADDITIONAL_DIRECTORIES "" CACHE PATH "Specify full paths separated by ; to additional libraries you wish to include into the ossim build framework" FORCE)
 ENDIF(NOT OSSIM_BUILD_ADDITIONAL_DIRECTORIES)
 
-SET(CMAKE_MODULE_PATH "${OSSIM_DEV_HOME}/ossim/cmake/CMakeModules")
+SET(CMAKE_MODULE_PATH "${OSSIM_SOURCE_ROOT}/cmake/CMakeModules")
 INCLUDE(OssimVersion)
 INCLUDE(OssimUtilities)
 INCLUDE(OssimCommonVariables)
@@ -88,7 +98,7 @@ IF(NOT OSSIM_LIBRARY)
 ENDIF(NOT OSSIM_LIBRARY)
 
 IF(NOT OSSIM_HOME)
-   SET(OSSIM_HOME "${OSSIM_DEV_HOME}/ossim" CACHE STRING "Caching" FORCE)
+   SET(OSSIM_HOME "${OSSIM_SOURCE_ROOT}" CACHE STRING "Caching" FORCE)
 ENDIF(NOT OSSIM_HOME)
 
 IF(NOT OSSIM_INCLUDE_DIR)
@@ -262,8 +272,8 @@ IF (DOXYGEN_FOUND)
 
      SET(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/doc/ossim-${OSSIM_VERSION}/ossimApi")
      OSSIM_GENERATE_DOXYGEN("${DOXYGEN_OUTPUT_DIRECTORY}"
-                      "${OSSIM_DEV_HOME}/ossim/doc/Doxyfile.in"
-                      "${OSSIM_DEV_HOME}/ossim/doc"
+                      "${OSSIM_SOURCE_ROOT}/doc/Doxyfile.in"
+                      "${OSSIM_SOURCE_ROOT}/doc"
                       "${CMAKE_BINARY_DIR}/OssimDoxyfile"
                       "ossim-api"
                       "ossim")
@@ -273,7 +283,7 @@ IF (DOXYGEN_FOUND)
      IF(BUILD_OSSIM_PLANET)
         SET(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/doc/ossim-${OSSIM_VERSION}/ossimPlanetApi")
         OSSIM_GENERATE_DOXYGEN("${DOXYGEN_OUTPUT_DIRECTORY}"
-                         "${OSSIM_DEV_HOME}/ossim/Doxyfile.in"
+                         "${OSSIM_SOURCE_ROOT}/Doxyfile.in"
                          "${OSSIM_DEV_HOME}/ossim-planet"
                          "${CMAKE_BINARY_DIR}/OssimPlanetDoxyfile"
                          "ossimPlanet-api"
@@ -295,7 +305,7 @@ ENDIF()
 # INSTALL(FILES ${OSSIM_DEV_HOME}/ossim_package_support/fonts/arial.ttf DESTINATION "share/ossim/fonts" COMPONENT ossim)
 # INSTALL(FILES ${OSSIM_DEV_HOME}/ossim_package_support/fonts/times.ttf DESTINATION "share/ossim/fonts" COMPONENT ossim)
 
-FILE(GLOB ossim_cmake_modules ${OSSIM_DEV_HOME}/ossim/cmake/CMakeModules/*.cmake* )
+FILE(GLOB ossim_cmake_modules ${OSSIM_SOURCE_ROOT}/cmake/CMakeModules/*.cmake* )
 INSTALL(FILES ${ossim_cmake_modules} DESTINATION share/ossim/CMakeModules COMPONENT ossim)
 
 FILE(GLOB projection_files "${OSSIM_HOME}/share/ossim/projection/*.csv"  "${OSSIM_HOME}/share/ossim/projection/*.txt")
@@ -317,7 +327,7 @@ ENDIF()
 set(PKGCONFIG_FILES ossim)
 
 foreach(PKGCONFIG_FILE ${PKGCONFIG_FILES})
-  configure_file(${OSSIM_DEV_HOME}/ossim/cmake/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
+  configure_file(${OSSIM_SOURCE_ROOT}/cmake/packaging/pkgconfig/${PKGCONFIG_FILE}.pc.in
     ${${PROJECT_NAME}_BINARY_DIR}/packaging/pkgconfig/${PKGCONFIG_FILE}.pc
     @ONLY
     )
