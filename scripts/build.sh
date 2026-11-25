@@ -23,11 +23,11 @@
 # Uncomment following line to debug script line by line:
 #set -x; trap read debug
 
-CMAKE_CONFIG_SCRIPT=$OSSIM_DEV_HOME/ossim/cmake/scripts/ossim-cmake-config.sh
 pushd `dirname ${BASH_SOURCE[0]}` >/dev/null
 export BUILD_SCRIPT_DIR=`pwd -P`
 popd >/dev/null
-# source variables used during the builds
+# source variables used during the builds (also resolves CMAKE_CONFIG_SCRIPT
+# relative to this repository, whatever the directory is called)
 . $BUILD_SCRIPT_DIR/env.sh
 
 # Consider whether running in interactive shell or batch for possible
@@ -65,7 +65,9 @@ popd >/dev/null
 if [ -x $CMAKE_CONFIG_SCRIPT ]; then
   . $CMAKE_CONFIG_SCRIPT $CMAKE_BUILD_TYPE
 else
-  echo; echo "Error: Cannot locate the cmake config script expected at $CMAKE_CONFIG_SCRIPT. Cannot continue."
+  echo; echo "Error: Cannot locate the cmake config script expected at $CMAKE_CONFIG_SCRIPT."
+  echo "       Expected to find the ossim source tree at $OSSIM_SOURCE_ROOT."
+  echo "       Cannot continue."
   exit 1
 fi
 if [ $? -ne 0 ]; then
